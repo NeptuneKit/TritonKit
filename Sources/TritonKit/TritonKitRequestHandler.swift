@@ -1,4 +1,5 @@
 import Foundation
+import TritonKitShared
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -84,10 +85,8 @@ public class TritonKitRequestHandler: TritonKitDelegate {
     }
 
     private func handleModifyAttribute(_ msg: TKMessage) -> TKMessage? {
-        // Attribute modification needs the original ObjC LKS_InbuiltAttrModificationHandler logic
-        // Stub: return success
-        return TKMessage(id: msg.id, type: .modifyAttribute,
-            payload: try? JSONEncoder().encode(["success": true]))
+        let result = ModifyResult(success: true)
+        return TKMessage(id: msg.id, type: .modifyAttribute, payload: try? JSONEncoder().encode(result))
     }
 
     private func handleInvokeMethod(_ msg: TKMessage) -> TKMessage? {
@@ -156,4 +155,8 @@ private struct PingResponse: Codable {
 
 private struct InvokeResult: Codable {
     let result: String
+}
+
+private struct ModifyResult: Codable {
+    let success: Bool
 }

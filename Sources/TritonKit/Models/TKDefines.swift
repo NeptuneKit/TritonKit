@@ -1,26 +1,12 @@
 import Foundation
-#if canImport(UIKit)
-import UIKit
-#endif
+import TritonKitShared
 
-// MARK: - Enums
+// These types are re-exported from TritonKitShared for convenience
+@_exported import enum TritonKitShared.TKRequestType
+@_exported import struct TritonKitShared.TKMessage
+@_exported import struct TritonKitShared.TKErrorPayload
 
-public enum TKRequestType: String, Codable {
-    case ping
-    case appInfo
-    case hierarchy
-    case hierarchyDetails
-    case modifyAttribute
-    case modifyAttributePatch
-    case invokeMethod
-    case fetchObject
-    case fetchImageViewImage
-    case modifyRecognizerEnable
-    case allAttrGroups
-    case allSelectorNames
-    case modifyCustomAttribute
-    case cancelHierarchyDetails
-}
+// MARK: - iOS-specific Enums
 
 public enum TKDeviceType: Int, Codable {
     case simulator = 0
@@ -53,30 +39,6 @@ public enum TKAttributesSectionStyle: Int, Codable {
     case style0 = 1
     case style1 = 2
     case style2 = 3
-}
-
-// MARK: - Message Protocol
-
-public struct TKMessage: Codable {
-    public let id: Int
-    public let type: TKRequestType
-    public let payload: Data?
-
-    public init(id: Int, type: TKRequestType, payload: Data? = nil) {
-        self.id = id
-        self.type = type
-        self.payload = payload
-    }
-}
-
-public struct TKErrorPayload: Codable {
-    public let message: String
-    public let code: Int
-
-    public init(message: String, code: Int = -1) {
-        self.message = message
-        self.code = code
-    }
 }
 
 // MARK: - Type Aliases
