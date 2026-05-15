@@ -19,13 +19,13 @@ public class TritonKitRequestHandler: TritonKitDelegate {
         // Errors handled by TritonKit itself (reconnect logic)
     }
 
-    public func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) -> TKMessage? {
-        return handle(message)
+    public func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? {
+        return await handle(message)
     }
 
     // MARK: - Message Routing
 
-    private func handle(_ msg: TKMessage) -> TKMessage? {
+    private func handle(_ msg: TKMessage) async -> TKMessage? {
         switch msg.type {
         case .ping:
             let pong = PingResponse(pong: true, timestamp: Date().timeIntervalSince1970)
@@ -38,7 +38,7 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             return TKMessage(id: msg.id, type: .appInfo, payload: payload)
 
         case .hierarchy:
-            let items = TKHierarchyBuilder.buildHierarchy(includeScreenshots: false)
+            let items = await TKHierarchyBuilder.buildHierarchy(includeScreenshots: false, uploader: nil)
             let appInfo = TKAppInfo()
             let hierarchy = TKHierarchyInfo(displayItems: items, appInfo: appInfo)
             let payload = try? JSONEncoder().encode(hierarchy)
@@ -120,7 +120,7 @@ public class TritonKitRequestHandler: TritonKitDelegate {
         }
         let obj = TKObject(
             oid: oid,
-            memoryAddress: String(format: "%p", unsafeBitCast(object, to: Int.self)),
+            memoryAddress: "\(Unmanaged.passUnretained(object).toOpaque())",
             classChainList: classChain(for: object)
         )
         let payload = try? JSONEncoder().encode(obj)

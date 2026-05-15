@@ -20,6 +20,6 @@ extension UIView {
     }
 
     var tk_memoryAddress: String {
-        String(format: "%p", unsafeBitCast(self, to: Int.self))
+        "\(Unmanaged.passUnretained(self).toOpaque())"
     }
 }

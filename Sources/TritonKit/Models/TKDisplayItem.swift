@@ -11,6 +11,7 @@ public struct TKDisplayItem: Codable {
     public var bounds: CGRect
     public var soloScreenshot: Data?
     public var groupScreenshot: Data?
+    public var screenshotRef: String?  // HTTP data ref from CLI's /data endpoint
     public var viewObject: TKObject?
     public var layerObject: TKObject?
     public var hostViewControllerObject: TKObject?
@@ -40,6 +41,7 @@ public struct TKDisplayItem: Codable {
         alpha: Float = 1,
         frame: CGRect = .zero,
         bounds: CGRect = .zero,
+        screenshotRef: String? = nil,
         viewObject: TKObject? = nil,
         layerObject: TKObject? = nil,
         hostViewControllerObject: TKObject? = nil,
@@ -57,6 +59,7 @@ public struct TKDisplayItem: Codable {
         self.alpha = alpha
         self.frame = frame
         self.bounds = bounds
+        self.screenshotRef = screenshotRef
         self.viewObject = viewObject
         self.layerObject = layerObject
         self.hostViewControllerObject = hostViewControllerObject

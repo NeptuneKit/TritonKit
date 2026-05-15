@@ -7,11 +7,11 @@ import UIKit
 public protocol TritonKitDelegate: AnyObject {
     func tritonKit(_ kit: TritonKit, didChangeState state: TritonKit.ConnectionState)
     func tritonKit(_ kit: TritonKit, didReceiveError error: Error)
-    func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) -> TKMessage?
+    func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage?
 }
 
 public extension TritonKitDelegate {
-    func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) -> TKMessage? { nil }
+    func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? { nil }
 }
 
 public class TritonKit {
@@ -34,6 +34,20 @@ public class TritonKit {
     private var port: UInt16 = 0
     private var reconnectTimer: Timer?
     private var pingTimer: Timer?
+
+    /// HTTP data uploader (for screenshots / heavy payloads)
+    public private(set) var uploader: TritonKitDataUploader?
+    private var _dataURL: URL?
+
+    /// Set the CLI's HTTP data endpoint URL (e.g., http://192.168.1.5:8080)
+    public var dataURL: URL? {
+        get { _dataURL }
+        set {
+            _dataURL = newValue
+            if let url = newValue { uploader = TritonKitDataUploader(baseURL: url) }
+            else { uploader = nil }
+        }
+    }
 
     private init() {
         NotificationCenter.default.addObserver(self, selector: #selector(appDidBecomeActive),
@@ -104,24 +118,22 @@ public class TritonKit {
     private func handle(_ wsMessage: URLSessionWebSocketTask.Message) {
         let data: Data
         switch wsMessage {
-        case .data(let d):
-            data = d
-        case .string(let text):
-            guard let d = text.data(using: .utf8) else { return }
-            data = d
-        @unknown default:
-            return
+        case .data(let d): data = d
+        case .string(let text): guard let d = text.data(using: .utf8) else { return }; data = d
+        @unknown default: return
         }
 
-        do {
-            let msg = try JSONDecoder().decode(TKMessage.self, from: data)
-            if let response = delegate?.tritonKit(self, didReceiveMessage: msg) {
-                send(response)
+        Task {
+            do {
+                let msg = try JSONDecoder().decode(TKMessage.self, from: data)
+                if let response = await delegate?.tritonKit(self, didReceiveMessage: msg) {
+                    send(response)
+                }
+            } catch {
+                send(TKMessage(id: 0, type: .ping, payload: try? JSONEncoder().encode(
+                    TKErrorPayload(message: "Parse error: \(error.localizedDescription)")
+                )))
             }
-        } catch {
-            send(TKMessage(id: 0, type: .ping, payload: try? JSONEncoder().encode(
-                TKErrorPayload(message: "Parse error: \(error.localizedDescription)")
-            )))
         }
     }
 

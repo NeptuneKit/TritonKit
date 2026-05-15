@@ -3,6 +3,7 @@ import Darwin
 import Foundation
 import Hummingbird
 import HummingbirdWebSocket
+import NIOFoundationCompat
 import NIOCore
 import TritonKitShared
 
@@ -12,7 +13,7 @@ import TritonKitShared
 struct TritonKitCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "tritonkit",
-        abstract: "TritonKit macOS CLI - WebSocket server for iOS view debugging",
+        abstract: "TritonKit macOS CLI - WebSocket control + HTTP data server for iOS view debugging",
         subcommands: [Serve.self]
     )
 }
@@ -20,32 +21,61 @@ struct TritonKitCLI: AsyncParsableCommand {
 // MARK: - Serve Command
 
 struct Serve: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        abstract: "Start WebSocket server and wait for iOS device connections"
-    )
+    static let configuration = CommandConfiguration(abstract: "Start server")
 
-    @Option(name: .shortAndLong, help: "Port to listen on")
-    var port: Int = 8080
-
-    @Option(name: .shortAndLong, help: "Host to bind to")
-    var host: String = "0.0.0.0"
+    @Option(name: .shortAndLong, help: "Port to listen on") var port: Int = 8080
+    @Option(name: .shortAndLong, help: "Host to bind to") var host: String = "0.0.0.0"
 
     func run() async throws {
+        let store = DataStore()
         let state = ConnectionState()
         let encoder = JSONEncoder()
         let counter = MessageCounter()
 
         let router = Router(context: BasicWebSocketRequestContext.self)
 
+        // ---- HTTP Data Endpoints ----
+
+        router.post("/data") { request, _ -> Response in
+            var bodyData = Data()
+            for try await chunk in request.body {
+                bodyData.append(Data(buffer: chunk))
+            }
+            guard !bodyData.isEmpty else {
+                return Response(status: .badRequest, body: .init(byteBuffer: ByteBuffer(string: "Empty body")))
+            }
+            let id = store.put(bodyData)
+            let resp = try JSONEncoder().encode(["id": id])
+            return Response(status: .ok, headers: [.contentType: "application/json"],
+                            body: .init(byteBuffer: ByteBuffer(data: resp)))
+        }
+
+        router.get("/data/:id") { request, _ -> Response in
+            guard let idStr = request.uri.path.split(separator: "/").last,
+                  let id = UUID(uuidString: String(idStr)),
+                  let data = store.get(id) else {
+                return Response(status: .notFound)
+            }
+            return Response(status: .ok, headers: [.contentType: "application/octet-stream"],
+                            body: .init(byteBuffer: ByteBuffer(data: data)))
+        }
+
         router.get("/health") { _, _ -> HTTPResponse.Status in .ok }
 
+        // ---- WebSocket Control Channel ----
+
         router.ws("/") { inbound, outbound, _ in
-            print("[tritonkit] iOS device connected")
+            log("[tritonkit] iOS device connected (ws)")
             state.set(outbound)
 
-            // Auto-request hierarchy on connect
+            // Test ping first to verify bidirectional communication
+            let pingId = counter.next()
+            log("[tritonkit] -> ping [id:\(pingId)]")
+            try await outbound.send(TKMessage(id: pingId, type: .ping), encoder: encoder)
+
+            // Then request hierarchy
             let id = counter.next()
-            print("[tritonkit] -> hierarchy [id:\(id)]")
+            log("[tritonkit] -> hierarchy [id:\(id)]")
             try await outbound.send(TKMessage(id: id, type: .hierarchy), encoder: encoder)
 
             do {
@@ -56,72 +86,62 @@ struct Serve: AsyncParsableCommand {
                     case .text: data = Data(String(buffer: frame.data).utf8)
                     default: continue
                     }
-                    handleResponse(data: data)
+                    handleResponse(data: data, store: store, state: state, counter: counter, encoder: encoder)
                 }
             } catch {
-                print("[tritonkit] Connection error: \(error)")
+                log("[tritonkit] Connection error: \(error)")
             }
 
-            print("[tritonkit] iOS device disconnected")
+            log("[tritonkit] iOS device disconnected")
             state.set(nil)
         }
 
         let app = Application(
             router: router,
-            server: .http1WebSocketUpgrade(
-                webSocketRouter: router,
-                configuration: .init(extensions: [])
-            ),
+            server: .http1WebSocketUpgrade(webSocketRouter: router, configuration: .init(extensions: [])),
             configuration: .init(address: .hostname(host, port: port))
         )
 
-        print("[tritonkit] WebSocket server on ws://\(host):\(port)")
-        print("[tritonkit] Waiting for iOS device connection...")
-        print("[tritonkit] Commands: h[ierarchy] | a[ppinfo] | p[ing] | q[uit]")
+        log("[tritonkit] Control: ws://\(host):\(port)/")
+        log("[tritonkit] Data:   http://\(host):\(port)/data")
+        log("[tritonkit] Commands: h[ierarchy] | a[ppinfo] | p[ing] | q[uit]")
 
-        // Stdin command loop
+        // Stdin
         Task {
             while let line = readLine() {
-                let cmd = line.trimmingCharacters(in: .whitespaces).lowercased()
-                switch cmd {
-                case "q", "quit", "exit":
-                    print("[tritonkit] Shutting down...")
-                    Darwin.exit(0)
+                switch line.trimmingCharacters(in: .whitespaces).lowercased() {
+                case "q", "quit", "exit": log("[tritonkit] Shut down."); Darwin.exit(0)
                 case "h", "hierarchy":
                     if let ws = state.outbound {
                         let id = counter.next()
-                        print("[tritonkit] -> hierarchy [id:\(id)]")
+                        log("[tritonkit] -> hierarchy [id:\(id)]")
                         try? await ws.send(TKMessage(id: id, type: .hierarchy), encoder: encoder)
-                    } else { print("[tritonkit] No iOS device connected") }
+                    } else { log("[tritonkit] No iOS device connected") }
                 case "a", "appinfo":
                     if let ws = state.outbound {
                         let id = counter.next()
-                        print("[tritonkit] -> appInfo [id:\(id)]")
+                        log("[tritonkit] -> appInfo [id:\(id)]")
                         try? await ws.send(TKMessage(id: id, type: .appInfo), encoder: encoder)
-                    } else { print("[tritonkit] No iOS device connected") }
+                    } else { log("[tritonkit] No iOS device connected") }
                 case "p", "ping":
                     if let ws = state.outbound {
                         let id = counter.next()
-                        print("[tritonkit] -> ping [id:\(id)]")
+                        log("[tritonkit] -> ping [id:\(id)]")
                         try? await ws.send(TKMessage(id: id, type: .ping), encoder: encoder)
-                    } else { print("[tritonkit] No iOS device connected") }
-                case "help", "?":
-                    print("[tritonkit] h[ierarchy] | a[ppinfo] | p[ing] | q[uit]")
+                    } else { log("[tritonkit] No iOS device connected") }
+                case "help", "?": log("[tritonkit] h[ierarchy] | a[ppinfo] | p[ing] | q[uit]")
                 case "": break
-                default:
-                    print("[tritonkit] Unknown: \(line). Try: h a p q")
+                default: log("[tritonkit] Unknown: \(line)")
                 }
             }
         }
 
-        // Signal handling
         signal(SIGINT, SIG_IGN)
-        let sigSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
-        sigSource.setEventHandler { print("\n[tritonkit] Interrupted."); Darwin.exit(0) }
-        sigSource.resume()
+        let sig = DispatchSource.makeSignalSource(signal: SIGINT, queue: .main)
+        sig.setEventHandler { log("\n[tritonkit] Interrupted."); Darwin.exit(0) }
+        sig.resume()
 
-        do { try await app.run() }
-        catch { print("[tritonkit] Server error: \(error)"); throw error }
+        do { try await app.run() } catch { log("[tritonkit] Error: \(error)"); throw error }
     }
 }
 
@@ -140,6 +160,28 @@ final class MessageCounter: @unchecked Sendable {
     func next() -> Int { lock.withLock { value += 1; return value } }
 }
 
+/// Thread-safe binary data store keyed by UUID
+final class DataStore: @unchecked Sendable {
+    private let lock = NSLock()
+    private var storage: [UUID: Data] = [:]
+
+    func put(_ data: Data) -> UUID {
+        let id = UUID()
+        lock.withLock { storage[id] = data }
+        return id
+    }
+
+    func get(_ id: UUID) -> Data? {
+        lock.withLock { storage[id] }
+    }
+}
+
+// Flush-printing to stderr for immediate output in piped environments
+func log(_ msg: String) {
+    fputs("\(msg)\n", stderr)
+    fflush(stderr)
+}
+
 // MARK: - Extensions
 
 extension WebSocketOutboundWriter {
@@ -151,45 +193,62 @@ extension WebSocketOutboundWriter {
 
 // MARK: - Response Handling
 
-func handleResponse(data: Data) {
+func handleResponse(data: Data, store: DataStore, state: ConnectionState, counter: MessageCounter, encoder: JSONEncoder) {
     guard let msg = try? JSONDecoder().decode(TKMessage.self, from: data) else {
         if let json = try? JSONSerialization.jsonObject(with: data),
-           let pretty = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted),
+           let pretty = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
            let str = String(data: pretty, encoding: .utf8) {
-            print("[tritonkit] <- raw:\n\(str)")
+            log("[tritonkit] <- raw:\n\(str)")
         }
         return
     }
 
-    print("[tritonkit] <- \(msg.type.rawValue) [id:\(msg.id)]")
+    log("[tritonkit] <- \(msg.type.rawValue) [id:\(msg.id)]")
 
     guard let payload = msg.payload,
           let json = try? JSONSerialization.jsonObject(with: payload) else { return }
 
     switch msg.type {
     case .hierarchy:
-        if let dict = json as? [String: Any], let items = dict["displayItems"] as? [[String: Any]] {
-            printHierarchy(items, indent: 0)
+        if let dict = json as? [String: Any] {
+            if let items = dict["displayItems"] as? [[String: Any]] {
+                printHierarchy(items, indent: 0)
+            }
             if let info = dict["appInfo"] as? [String: Any] {
-                print("── App: \(info["appName"] ?? "?") | \(info["deviceDescription"] ?? "?") | OS \(info["osDescription"] ?? "?")")
+                log("── App: \(info["appName"] ?? "?") | \(info["deviceDescription"] ?? "?") | OS \(info["osDescription"] ?? "?")")
             }
         }
+
     case .appInfo:
         if let dict = json as? [String: Any] {
-            print("── \(dict["appName"] ?? "?") | \(dict["appBundleIdentifier"] ?? "?") | \(dict["deviceDescription"] ?? "?") | OS \(dict["osDescription"] ?? "?") | Screen \(dict["screenWidth"] ?? 0)x\(dict["screenHeight"] ?? 0) @\(dict["screenScale"] ?? 0)x")
+            log("── \(dict["appName"] ?? "?") | \(dict["appBundleIdentifier"] ?? "?") | Device: \(dict["deviceDescription"] ?? "?")")
         }
-    case .ping: print("  Pong!")
+
+    case .hierarchyDetails:
+        checkAndShowImage(json: json, label: "solo", store: store)
+        checkAndShowImage(json: json, label: "group", store: store)
+
+    case .ping: log("  Pong!")
     default:
-        if let pretty = try? JSONSerialization.data(withJSONObject: json, options: .prettyPrinted),
-           let str = String(data: pretty, encoding: .utf8) { print(str) }
+        if let pretty = try? JSONSerialization.data(withJSONObject: json, options: [.prettyPrinted, .sortedKeys]),
+           let str = String(data: pretty, encoding: .utf8) { log(str) }
     }
+}
+
+func checkAndShowImage(json: Any, label: String, store: DataStore) {
+    guard let dict = json as? [String: Any],
+          let ref = dict["\(label)ScreenshotRef"] as? String,
+          let id = UUID(uuidString: ref),
+          let imgData = store.get(id) else { return }
+    let size = ByteCountFormatter.string(fromByteCount: Int64(imgData.count), countStyle: .file)
+    log("  [\(label) screenshot: \(size)]")
 }
 
 func printHierarchy(_ items: [[String: Any]], indent: Int) {
     for (i, item) in items.enumerated() {
         let isLast = i == items.count - 1
         let prefix: String
-        if indent == 0 { prefix = "" }
+        if indent == 0 { prefix = "  " }
         else { prefix = String(repeating: "  ", count: indent - 1) + (isLast ? "  └─ " : "  ├─ ") }
 
         let viewObj = item["viewObject"] as? [String: Any]
@@ -198,6 +257,7 @@ func printHierarchy(_ items: [[String: Any]], indent: Int) {
         let hidden = item["isHidden"] as? Bool ?? false
         let alpha = item["alpha"] as? Float ?? 1.0
         let title = item["customDisplayTitle"] as? String
+        let screenshotRef = item["screenshotRef"] as? String
 
         var line = "\(prefix)\(className)"
         if let t = title { line += " \"\(t)\"" }
@@ -208,7 +268,8 @@ func printHierarchy(_ items: [[String: Any]], indent: Int) {
         }
         if hidden { line += " [H]" }
         if alpha < 1 { line += String(format: " α:%.2f", alpha) }
-        print(line)
+        if screenshotRef != nil { line += " [📷]" }
+        log(line)
 
         if let subitems = item["subitems"] as? [[String: Any]] {
             printHierarchy(subitems, indent: indent + 1)

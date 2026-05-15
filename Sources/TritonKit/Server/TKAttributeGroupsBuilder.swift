@@ -46,7 +46,7 @@ public enum TKAttributeGroupsBuilder {
                     identifier: "address",
                     displayTitle: "Address",
                     attrType: 0,
-                    value: .string(String(format: "%p", unsafeBitCast(view, to: Int.self)))
+                    value: .string("\(Unmanaged.passUnretained(view).toOpaque())")
                 )
             ]
         )
