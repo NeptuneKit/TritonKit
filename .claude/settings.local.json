@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(lookinside --help)",
+      "Bash(lookinside list *)",
+      "Bash(lookinside hierarchy *)",
+      "Bash(lookinside export *)",
+      "Bash(lookinside inspect *)",
+      "Bash(otool -L /Users/linhey/.local/bin/lookinside)"
+    ]
+  }
+}
