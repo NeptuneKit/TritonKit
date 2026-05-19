@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-test-package:
+    name: Build, test, and package
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Test
+        run: swift test
+
+      - name: Build CLI
+        run: swift build -c release --product triton
+
+      - name: Package CLI artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          arch="$(uname -m)"
+          package_name="triton-macos-${arch}"
+          package_dir="dist/${package_name}"
+
+          mkdir -p "${package_dir}"
+          cp ".build/release/triton" "${package_dir}/triton"
+          chmod +x "${package_dir}/triton"
+
+          cat > "${package_dir}/README.txt" <<README
+          TritonKit CLI
+
+          Install:
+            cp triton /usr/local/bin/triton
+
+          Verify:
+            triton version --json
+          README
+
+          (
+            cd dist
+            tar -czf "${package_name}.tar.gz" "${package_name}"
+            ditto -c -k --keepParent "${package_name}" "${package_name}.zip"
+          )
+
+      - name: Package skill artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          skill_name="tritonkit-dev-feedback"
+          skill_dir=".agents/skills/${skill_name}"
+
+          test -f "${skill_dir}/SKILL.md"
+          test -f "${skill_dir}/agents/openai.yaml"
+          mkdir -p dist
+
+          (
+            cd .agents/skills
+            tar -czf "../../dist/${skill_name}.tar.gz" "${skill_name}"
+            ditto -c -k --keepParent "${skill_name}" "../../dist/${skill_name}.zip"
+          )
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tritonkit-release-assets
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          if ! gh release view "${tag}" >/dev/null 2>&1; then
+            gh release create "${tag}" \
+              --title "${tag}" \
+              --notes "Automated TritonKit release for ${GITHUB_SHA}."
+          fi
+
+          gh release upload "${tag}" dist/* --clobber
