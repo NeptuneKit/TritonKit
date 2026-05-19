@@ -59,6 +59,7 @@
 16. 当用户明确要求“由 subagent 去做、主控 agent 负责监督”时，主控 agent 必须承担需求边界、任务拆分、集成、验收、文档与最终完成判断，不得在“代码已改完”但截图、实机验证、文档写回等验收环节仍未完成时提前停止。
 17. GitHub CI / Release 产物必须包含可执行 `triton` CLI 包和项目级 skill 包，至少覆盖 `.agents/skills/tritonkit-dev-feedback`，确保使用者能同时拿到命令行工具与开发阶段反馈工作流。
 18. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
+19. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 必须保持 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CI 需校验 podspec 可 lint。
 
 ## 2. 标准工作流（必须）
 

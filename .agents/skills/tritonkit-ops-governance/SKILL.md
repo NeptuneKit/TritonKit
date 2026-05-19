@@ -16,6 +16,7 @@ description: TritonKit 流程治理：CLI/HTTP/Wails 开发回路、文档记忆
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。
 - 当前前端为空白 Wails 静态入口；任何恢复 UI 的工作必须先新建或更新 `space` 与 BDD 场景。
 - Package Manager 集成时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下 API 保持可编译但 runtime 必须 no-op，不按端类型或 UIKit 可导入性决定是否启用。
+- Package Manager 分发同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 规格必须保留 `TritonKitShared` / `TritonKit` 两个 Swift module，避免 `TritonKit` 中的 `import TritonKitShared` 在 pod 集成时失效。
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。
 - 新增外部依赖时先说明必要性；首期优先 Go 标准库。
 - GitHub CI / Release 必须同时产出 `triton` CLI 包和项目级 skill 包；当前至少包含 `.agents/skills/tritonkit-dev-feedback`，便于外部使用者拿到开发阶段反馈流程。

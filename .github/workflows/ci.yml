@@ -26,6 +26,23 @@ jobs:
       - name: Test
         run: swift test
 
+      - name: Install CocoaPods
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if ! command -v pod >/dev/null 2>&1; then
+            sudo gem install cocoapods --no-document
+          fi
+
+      - name: Validate CocoaPods specs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests
+          pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
+
       - name: Build CLI
         run: swift build -c release --product triton
 
