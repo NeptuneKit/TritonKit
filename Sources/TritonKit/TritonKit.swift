@@ -14,11 +14,23 @@ public extension TritonKitDelegate {
     func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? { nil }
 }
 
+public enum TritonKitRuntimeError: Error {
+    case disabledOutsideDebug
+}
+
 public class TritonKit {
     public enum ConnectionState {
         case disconnected
         case connecting
         case connected
+    }
+
+    public static var isRuntimeEnabled: Bool {
+        #if DEBUG
+        true
+        #else
+        false
+        #endif
     }
 
     public static let shared = TritonKit()
@@ -61,6 +73,10 @@ public class TritonKit {
     // MARK: - Public
 
     public func connect(host: String, port: UInt16) {
+        guard Self.isRuntimeEnabled else {
+            disconnect()
+            return
+        }
         self.host = host
         self.port = port
         disconnect()
@@ -86,6 +102,7 @@ public class TritonKit {
     }
 
     public func send(_ message: TKMessage) {
+        guard Self.isRuntimeEnabled else { return }
         guard let data = try? JSONEncoder().encode(message) else { return }
         task?.send(.data(data)) { [weak self] error in
             guard let self, let error else { return }
@@ -95,6 +112,7 @@ public class TritonKit {
 
     /// Send raw JSON string
     public func send(json: String) {
+        guard Self.isRuntimeEnabled else { return }
         task?.send(.string(json)) { [weak self] error in
             guard let self, let error else { return }
             self.delegate?.tritonKit(self, didReceiveError: error)
@@ -153,6 +171,7 @@ public class TritonKit {
     #endif
 
     private func scheduleReconnect() {
+        guard Self.isRuntimeEnabled else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
             guard let self, self.state == .disconnected, !self.host.isEmpty else { return }
             self.connect(host: self.host, port: self.port)
@@ -160,6 +179,7 @@ public class TritonKit {
     }
 
     private func startPing() {
+        guard Self.isRuntimeEnabled else { return }
         stopTimers()
         pingTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
             self?.task?.sendPing { _ in }

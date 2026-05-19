@@ -11,6 +11,8 @@ public enum TKHierarchyBuilder {
         maxDepth: Int = defaultMaxDepth,
         maxChildrenPerNode: Int = defaultMaxChildrenPerNode
     ) async -> [TKDisplayItem] {
+        guard TritonKit.isRuntimeEnabled else { return [] }
+
         // Collect all layer data in one MainActor hop (sync recursion)
         let rootLayerData = await MainActor.run { () -> [LayerData] in
             let windows: [UIWindow]

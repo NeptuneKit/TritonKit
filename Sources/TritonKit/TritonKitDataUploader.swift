@@ -15,6 +15,10 @@ public final class TritonKitDataUploader: @unchecked Sendable {
 
     /// Upload binary data, returns the data reference ID from the CLI
     public func upload(_ data: Data) async throws -> String {
+        guard TritonKit.isRuntimeEnabled else {
+            throw TritonKitRuntimeError.disabledOutsideDebug
+        }
+
         var request = URLRequest(url: baseURL)
         request.httpMethod = "POST"
         request.httpBody = data

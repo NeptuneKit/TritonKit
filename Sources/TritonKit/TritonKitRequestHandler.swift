@@ -20,6 +20,10 @@ public class TritonKitRequestHandler: TritonKitDelegate {
     }
 
     public func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? {
+        guard TritonKit.isRuntimeEnabled else {
+            return TKMessage(id: message.id, type: .ping,
+                payload: try? JSONEncoder().encode(TKErrorPayload(message: "TritonKit runtime is disabled outside DEBUG builds")))
+        }
         self.kit = kit
         return await handle(message)
     }
