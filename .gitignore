@@ -7,3 +7,4 @@ dist/
 .env.local
 .build/
 DerivedData/
+docs-linhay/references/baguette/
