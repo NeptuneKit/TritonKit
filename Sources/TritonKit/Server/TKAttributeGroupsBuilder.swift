@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import UIKit
 
 public enum TKAttributeGroupsBuilder {
@@ -189,3 +190,4 @@ public enum TKAttributeGroupsBuilder {
         )
     }
 }
+#endif

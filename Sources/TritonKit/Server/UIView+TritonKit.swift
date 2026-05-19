@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import UIKit
 
 extension UIView {
@@ -23,3 +24,4 @@ extension UIView {
         "\(Unmanaged.passUnretained(self).toOpaque())"
     }
 }
+#endif

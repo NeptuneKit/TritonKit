@@ -6,7 +6,7 @@ let package = Package(
     platforms: [.iOS(.v13), .macOS(.v14)],
     products: [
         .library(name: "TritonKit", targets: ["TritonKit"]),
-        .executable(name: "tritonkit", targets: ["TritonKitCLI"]),
+        .executable(name: "triton", targets: ["TritonKitCLI"]),
     ],
     dependencies: [
         .package(url: "https://github.com/hummingbird-project/hummingbird.git", from: "2.0.0"),
@@ -27,11 +27,22 @@ let package = Package(
             name: "TritonKitCLI",
             dependencies: [
                 "TritonKitShared",
+                "TritonKit",
                 .product(name: "Hummingbird", package: "hummingbird"),
                 .product(name: "HummingbirdWebSocket", package: "hummingbird-websocket"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
             ],
             path: "Sources/TritonKitCLI"
+        ),
+        .testTarget(
+            name: "TritonKitSharedTests",
+            dependencies: ["TritonKitShared"],
+            path: "Tests/TritonKitSharedTests"
+        ),
+        .testTarget(
+            name: "TritonKitTests",
+            dependencies: ["TritonKit"],
+            path: "Tests/TritonKitTests"
         ),
     ]
 )

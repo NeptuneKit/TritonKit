@@ -1,10 +1,15 @@
+#if canImport(UIKit)
 import UIKit
 
 public enum TKHierarchyBuilder {
+    public static let defaultMaxDepth = 64
+    public static let defaultMaxChildrenPerNode = 200
 
     public static func buildHierarchy(
         includeScreenshots: Bool = false,
-        uploader: TritonKitDataUploader? = nil
+        uploader: TritonKitDataUploader? = nil,
+        maxDepth: Int = defaultMaxDepth,
+        maxChildrenPerNode: Int = defaultMaxChildrenPerNode
     ) async -> [TKDisplayItem] {
         // Collect all layer data in one MainActor hop (sync recursion)
         let rootLayerData = await MainActor.run { () -> [LayerData] in
@@ -16,7 +21,14 @@ public enum TKHierarchyBuilder {
             } else {
                 windows = UIApplication.shared.windows
             }
-            return windows.compactMap { collectLayerData(from: $0.layer, depth: 0) }
+            return windows.compactMap {
+                collectLayerData(
+                    from: $0.layer,
+                    depth: 0,
+                    maxDepth: maxDepth,
+                    maxChildrenPerNode: maxChildrenPerNode
+                )
+            }
         }
 
         // Build items from collected data (no MainActor needed)
@@ -40,14 +52,24 @@ public enum TKHierarchyBuilder {
     }
 
     @MainActor
-    private static func collectLayerData(from layer: CALayer, depth: Int, maxDepth: Int = 10) -> LayerData? {
+    private static func collectLayerData(
+        from layer: CALayer,
+        depth: Int,
+        maxDepth: Int,
+        maxChildrenPerNode: Int
+    ) -> LayerData? {
         guard depth < maxDepth else { return nil }
         guard let view = layer.tk_hostView else { return nil }
 
         let rawChildren = layer.sublayers ?? []
-        let limitedChildren = rawChildren.prefix(100)
+        let limitedChildren = rawChildren.prefix(maxChildrenPerNode)
         let children = limitedChildren.compactMap {
-            collectLayerData(from: $0, depth: depth + 1, maxDepth: maxDepth)
+            collectLayerData(
+                from: $0,
+                depth: depth + 1,
+                maxDepth: maxDepth,
+                maxChildrenPerNode: maxChildrenPerNode
+            )
         }
 
         let vcChain: [String]? = view.tk_hostViewController.map { vc in
@@ -153,3 +175,18 @@ extension UIViewController {
         return chain
     }
 }
+#else
+public enum TKHierarchyBuilder {
+    public static let defaultMaxDepth = 64
+    public static let defaultMaxChildrenPerNode = 200
+
+    public static func buildHierarchy(
+        includeScreenshots: Bool = false,
+        uploader: TritonKitDataUploader? = nil,
+        maxDepth: Int = defaultMaxDepth,
+        maxChildrenPerNode: Int = defaultMaxChildrenPerNode
+    ) async -> [TKDisplayItem] {
+        []
+    }
+}
+#endif

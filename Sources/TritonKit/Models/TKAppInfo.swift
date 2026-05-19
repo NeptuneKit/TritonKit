@@ -38,6 +38,7 @@ public struct TKAppInfo: Codable {
             ?? Bundle.main.infoDictionary?["CFBundleName"] as? String
             ?? ""
         self.appBundleIdentifier = Bundle.main.bundleIdentifier ?? ""
+        #if canImport(UIKit)
         let device = UIDevice.current
         self.deviceDescription = device.model
         self.osDescription = device.systemVersion
@@ -53,5 +54,15 @@ public struct TKAppInfo: Codable {
         self.screenWidth = screen.bounds.width
         self.screenHeight = screen.bounds.height
         self.screenScale = screen.scale
+        #else
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersion
+        self.deviceDescription = Host.current().localizedName ?? "Mac"
+        self.osDescription = "\(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)"
+        self.osMainVersion = UInt(osVersion.majorVersion)
+        self.deviceType = .others
+        self.screenWidth = 0
+        self.screenHeight = 0
+        self.screenScale = 1
+        #endif
     }
 }

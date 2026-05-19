@@ -1,0 +1,532 @@
+import Foundation
+
+public let TKLocalTargetID = "triton:local"
+
+public struct TKStatusResponse: Codable, Equatable {
+    public let connected: Bool
+    public let latestHierarchyAvailable: Bool
+    public let targetCount: Int
+
+    public init(connected: Bool, latestHierarchyAvailable: Bool, targetCount: Int) {
+        self.connected = connected
+        self.latestHierarchyAvailable = latestHierarchyAvailable
+        self.targetCount = targetCount
+    }
+}
+
+public struct TKCLIStatusEnvelope: Codable, Equatable {
+    public let ok: Bool
+    public let serverReachable: Bool
+    public let connected: Bool
+    public let latestHierarchyAvailable: Bool
+    public let targetCount: Int
+    public let runtime: String
+
+    public init(
+        ok: Bool,
+        serverReachable: Bool,
+        connected: Bool,
+        latestHierarchyAvailable: Bool,
+        targetCount: Int,
+        runtime: String
+    ) {
+        self.ok = ok
+        self.serverReachable = serverReachable
+        self.connected = connected
+        self.latestHierarchyAvailable = latestHierarchyAvailable
+        self.targetCount = targetCount
+        self.runtime = runtime
+    }
+}
+
+public struct TKTargetSummary: Codable, Equatable {
+    public let id: String
+    public let transport: String
+    public let connected: Bool
+    public let latestHierarchyAvailable: Bool
+    public let appName: String?
+    public let bundleIdentifier: String?
+    public let deviceDescription: String?
+    public let osDescription: String?
+
+    public init(
+        id: String = TKLocalTargetID,
+        transport: String = "local-websocket",
+        connected: Bool,
+        latestHierarchyAvailable: Bool,
+        appName: String? = nil,
+        bundleIdentifier: String? = nil,
+        deviceDescription: String? = nil,
+        osDescription: String? = nil
+    ) {
+        self.id = id
+        self.transport = transport
+        self.connected = connected
+        self.latestHierarchyAvailable = latestHierarchyAvailable
+        self.appName = appName
+        self.bundleIdentifier = bundleIdentifier
+        self.deviceDescription = deviceDescription
+        self.osDescription = osDescription
+    }
+}
+
+public struct TKTargetsResponse: Codable, Equatable {
+    public let targets: [TKTargetSummary]
+
+    public init(targets: [TKTargetSummary]) {
+        self.targets = targets
+    }
+}
+
+public enum TKTargetResolutionError: Error, Equatable, CustomStringConvertible {
+    case notFound(String)
+    case ambiguous(requested: String, available: [String])
+
+    public var description: String {
+        switch self {
+        case .notFound(let requested):
+            return "Target not found: \(requested)"
+        case .ambiguous(let requested, let available):
+            return "Target is ambiguous: \(requested). Available targets: \(available.joined(separator: ", ")). Pass --target <id>."
+        }
+    }
+}
+
+public func TKNormalizeTargetID(_ target: String) -> String {
+    target == "local" ? TKLocalTargetID : target
+}
+
+public func TKResolveTargetSummary(_ target: String, in targets: [TKTargetSummary]) throws -> TKTargetSummary {
+    let normalized = TKNormalizeTargetID(target)
+    if let summary = targets.first(where: { $0.id == normalized }) {
+        return summary
+    }
+    if normalized == TKLocalTargetID, targets.count == 1, let only = targets.first {
+        return only
+    }
+    if normalized == TKLocalTargetID, targets.count > 1 {
+        throw TKTargetResolutionError.ambiguous(requested: target, available: targets.map(\.id))
+    }
+    throw TKTargetResolutionError.notFound(target)
+}
+
+public let TKDefaultHiddenHierarchyTreeClassNames: Set<String> = [
+    "UITransitionView",
+    "UIDropShadowView",
+]
+
+public func TKIsDefaultHiddenHierarchyTreeClass(_ className: String) -> Bool {
+    TKDefaultHiddenHierarchyTreeClassNames.contains(className)
+}
+
+public struct TKCLICommandRequest: Codable, Equatable {
+    public let type: String
+    public let payload: Data?
+
+    public init(type: String, payload: Data? = nil) {
+        self.type = type
+        self.payload = payload
+    }
+
+    public var requestType: TKRequestType? {
+        switch type.lowercased() {
+        case "ping": .ping
+        case "appinfo": .appInfo
+        case "hierarchy": .hierarchy
+        case "allattrgroups": .allAttrGroups
+        case "fetchobject": .fetchObject
+        case "hierarchydetails": .hierarchyDetails
+        case "input": .input
+        case "accessibility", "ax": .accessibility
+        case "hittest", "hit": .hitTest
+        case "screenshot": .screenshot
+        case "geometry": .geometry
+        default: nil
+        }
+    }
+}
+
+public struct TKCLICommandResponse: Codable, Equatable {
+    public let id: Int
+    public let type: String
+
+    public init(id: Int, type: String) {
+        self.id = id
+        self.type = type
+    }
+}
+
+public struct TKCLINextAction: Codable, Equatable {
+    public let command: String
+    public let args: [String]
+    public let requiresLongRunningProcess: Bool
+
+    public init(command: String, args: [String], requiresLongRunningProcess: Bool = false) {
+        self.command = command
+        self.args = args
+        self.requiresLongRunningProcess = requiresLongRunningProcess
+    }
+}
+
+public struct TKCLIErrorDetail: Codable, Equatable {
+    public let code: String
+    public let message: String
+    public let endpoint: String?
+    public let hint: String?
+    public let nextAction: TKCLINextAction?
+
+    public init(
+        code: String,
+        message: String,
+        endpoint: String? = nil,
+        hint: String? = nil,
+        nextAction: TKCLINextAction? = nil
+    ) {
+        self.code = code
+        self.message = message
+        self.endpoint = endpoint
+        self.hint = hint
+        self.nextAction = nextAction
+    }
+}
+
+public struct TKCLIErrorResponse: Codable, Equatable {
+    public let ok: Bool
+    public let error: TKCLIErrorDetail
+
+    public init(error: TKCLIErrorDetail) {
+        self.ok = false
+        self.error = error
+    }
+}
+
+public func TKCLIRuntimeTimeoutErrorDetail(requestType: String, endpoint: String) -> TKCLIErrorDetail {
+    let normalized = requestType.lowercased()
+    let uiMainActorRequestTypes: Set<String> = [
+        "input",
+        "accessibility",
+        "ax",
+        "geometry",
+        "hittest",
+        "hit",
+        "screenshot",
+        "hierarchy",
+    ]
+
+    if uiMainActorRequestTypes.contains(normalized) {
+        return TKCLIErrorDetail(
+            code: "runtime_ui_interrupted",
+            message: "Timed out waiting for runtime UI response; a system alert may be blocking the app",
+            endpoint: endpoint,
+            hint: "Dismiss the iOS system alert, then retry. TritonKit embedded runtime cannot inspect or tap SpringBoard/CoreSimulatorBridge alerts."
+        )
+    }
+
+    return TKCLIErrorDetail(
+        code: "request_timeout",
+        message: "Timed out waiting for response",
+        endpoint: endpoint,
+        hint: "Check the connected runtime logs and retry"
+    )
+}
+
+public struct TKCLIVersionResponse: Codable, Equatable {
+    public let ok: Bool
+    public let version: String
+    public let schemaVersion: Int
+    public let defaultHost: String
+    public let defaultPort: Int
+    public let language: String
+    public let supportedLanguages: [String]
+
+    public init(
+        ok: Bool = true,
+        version: String,
+        schemaVersion: Int = 1,
+        defaultHost: String = "127.0.0.1",
+        defaultPort: Int = 19421,
+        language: String = "en",
+        supportedLanguages: [String] = ["en", "zh"]
+    ) {
+        self.ok = ok
+        self.version = version
+        self.schemaVersion = schemaVersion
+        self.defaultHost = defaultHost
+        self.defaultPort = defaultPort
+        self.language = language
+        self.supportedLanguages = supportedLanguages
+    }
+}
+
+public struct TKInputBatchSummaryResponse: Codable, Equatable {
+    public let ok: Bool
+    public let actionCount: Int
+    public let failedCount: Int
+
+    public init(ok: Bool, actionCount: Int, failedCount: Int) {
+        self.ok = ok
+        self.actionCount = actionCount
+        self.failedCount = failedCount
+    }
+}
+
+public struct TKRuntimeCapability: Codable, Equatable {
+    public let name: String
+    public let supported: Bool
+    public let reason: String?
+
+    public init(name: String, supported: Bool, reason: String? = nil) {
+        self.name = name
+        self.supported = supported
+        self.reason = reason
+    }
+}
+
+public struct TKCapabilitiesResponse: Codable, Equatable {
+    public let ok: Bool
+    public let serverReachable: Bool
+    public let connected: Bool
+    public let latestHierarchyAvailable: Bool
+    public let targetCount: Int
+    public let runtime: String
+    public let capabilities: [TKRuntimeCapability]
+    public let error: TKCLIErrorDetail?
+
+    public init(
+        ok: Bool,
+        serverReachable: Bool,
+        connected: Bool,
+        latestHierarchyAvailable: Bool,
+        targetCount: Int,
+        runtime: String,
+        capabilities: [TKRuntimeCapability],
+        error: TKCLIErrorDetail? = nil
+    ) {
+        self.ok = ok
+        self.serverReachable = serverReachable
+        self.connected = connected
+        self.latestHierarchyAvailable = latestHierarchyAvailable
+        self.targetCount = targetCount
+        self.runtime = runtime
+        self.capabilities = capabilities
+        self.error = error
+    }
+}
+
+public struct TKCommandSchemaOption: Codable, Equatable {
+    public let name: String
+    public let type: String
+    public let required: Bool
+    public let defaultValue: String?
+    public let description: String
+
+    public init(
+        name: String,
+        type: String,
+        required: Bool = false,
+        defaultValue: String? = nil,
+        description: String
+    ) {
+        self.name = name
+        self.type = type
+        self.required = required
+        self.defaultValue = defaultValue
+        self.description = description
+    }
+}
+
+public struct TKCommandSchema: Codable, Equatable {
+    public let name: String
+    public let summary: String
+    public let requiresServer: Bool
+    public let requiresTarget: Bool
+    public let requiresHierarchy: Bool
+    public let runtimeScope: String
+    public let exitCodeOnFailure: Int
+    public let outputFormats: [String]
+    public let options: [TKCommandSchemaOption]
+    public let examples: [String]
+    public let successShape: String?
+    public let failureShape: String?
+    public let outputSemantics: String?
+    public let inputActions: [TKInputActionSchema]?
+    public let providedCapabilities: [String]
+
+    public init(
+        name: String,
+        summary: String,
+        requiresServer: Bool,
+        requiresTarget: Bool,
+        requiresHierarchy: Bool = false,
+        runtimeScope: String = "cli",
+        exitCodeOnFailure: Int = 1,
+        outputFormats: [String],
+        options: [TKCommandSchemaOption],
+        examples: [String],
+        successShape: String? = nil,
+        failureShape: String? = "{ ok: false, error: { code, message, endpoint, hint, nextAction? } }",
+        outputSemantics: String? = nil,
+        inputActions: [TKInputActionSchema]? = nil,
+        providedCapabilities: [String] = []
+    ) {
+        self.name = name
+        self.summary = summary
+        self.requiresServer = requiresServer
+        self.requiresTarget = requiresTarget
+        self.requiresHierarchy = requiresHierarchy
+        self.runtimeScope = runtimeScope
+        self.exitCodeOnFailure = exitCodeOnFailure
+        self.outputFormats = outputFormats
+        self.options = options
+        self.examples = examples
+        self.successShape = successShape
+        self.failureShape = failureShape
+        self.outputSemantics = outputSemantics
+        self.inputActions = inputActions
+        self.providedCapabilities = providedCapabilities
+    }
+}
+
+public struct TKHTTPManagementEndpointSchema: Codable, Equatable {
+    public let method: String
+    public let path: String
+    public let successShape: String
+    public let failureShape: String
+
+    public init(
+        method: String,
+        path: String,
+        successShape: String,
+        failureShape: String = "{ ok: false, error: { code, message, endpoint, hint } }"
+    ) {
+        self.method = method
+        self.path = path
+        self.successShape = successShape
+        self.failureShape = failureShape
+    }
+}
+
+public struct TKInputActionSchema: Codable, Equatable {
+    public let type: String
+    public let requiredFields: [String]
+    public let optionalFields: [String]
+    public let oneOfRequired: [[String]]
+    public let coordinateSpace: String?
+    public let fields: [TKInputActionFieldSchema]
+    public let example: String
+    public let resultShape: String
+
+    public init(
+        type: String,
+        requiredFields: [String],
+        optionalFields: [String],
+        oneOfRequired: [[String]] = [],
+        coordinateSpace: String? = nil,
+        fields: [TKInputActionFieldSchema],
+        example: String,
+        resultShape: String = "{ ok, action, message, targetOID, targetClassName }"
+    ) {
+        self.type = type
+        self.requiredFields = requiredFields
+        self.optionalFields = optionalFields
+        self.oneOfRequired = oneOfRequired
+        self.coordinateSpace = coordinateSpace
+        self.fields = fields
+        self.example = example
+        self.resultShape = resultShape
+    }
+}
+
+public struct TKInputActionFieldSchema: Codable, Equatable {
+    public let name: String
+    public let type: String
+    public let required: Bool
+    public let enumValues: [String]?
+    public let description: String
+
+    public init(
+        name: String,
+        type: String,
+        required: Bool = false,
+        enumValues: [String]? = nil,
+        description: String
+    ) {
+        self.name = name
+        self.type = type
+        self.required = required
+        self.enumValues = enumValues
+        self.description = description
+    }
+}
+
+public struct TKCLISchemaResponse: Codable, Equatable {
+    public let schemaVersion: Int
+    public let commands: [TKCommandSchema]
+    public let httpManagementAPI: [TKHTTPManagementEndpointSchema]
+
+    public init(
+        schemaVersion: Int = 1,
+        commands: [TKCommandSchema],
+        httpManagementAPI: [TKHTTPManagementEndpointSchema] = []
+    ) {
+        self.schemaVersion = schemaVersion
+        self.commands = commands
+        self.httpManagementAPI = httpManagementAPI
+    }
+}
+
+public struct TKWorkflowPlanStep: Codable, Equatable {
+    public let id: String
+    public let title: String
+    public let command: String
+    public let requiresServer: Bool
+    public let requiresTarget: Bool
+    public let when: String
+    public let expected: String
+
+    public init(
+        id: String,
+        title: String,
+        command: String,
+        requiresServer: Bool,
+        requiresTarget: Bool,
+        when: String,
+        expected: String
+    ) {
+        self.id = id
+        self.title = title
+        self.command = command
+        self.requiresServer = requiresServer
+        self.requiresTarget = requiresTarget
+        self.when = when
+        self.expected = expected
+    }
+}
+
+public struct TKWorkflowPlanResponse: Codable, Equatable {
+    public let ok: Bool
+    public let serverReachable: Bool
+    public let connected: Bool
+    public let runtime: String
+    public let nextStep: String
+    public let steps: [TKWorkflowPlanStep]
+    public let error: TKCLIErrorDetail?
+
+    public init(
+        ok: Bool,
+        serverReachable: Bool,
+        connected: Bool,
+        runtime: String,
+        nextStep: String,
+        steps: [TKWorkflowPlanStep],
+        error: TKCLIErrorDetail? = nil
+    ) {
+        self.ok = ok
+        self.serverReachable = serverReachable
+        self.connected = connected
+        self.runtime = runtime
+        self.nextStep = nextStep
+        self.steps = steps
+        self.error = error
+    }
+}

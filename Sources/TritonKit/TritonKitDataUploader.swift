@@ -27,6 +27,7 @@ public final class TritonKitDataUploader: @unchecked Sendable {
         return resp.id
     }
 
+    #if canImport(UIKit)
     /// Capture a UIView screenshot (png data) - must be called on main actor
     @MainActor
     public static func captureScreenshot(view: UIView) -> Data? {
@@ -46,4 +47,5 @@ public final class TritonKitDataUploader: @unchecked Sendable {
         guard let data = imageData else { return nil }
         return try? await upload(data)
     }
+    #endif
 }

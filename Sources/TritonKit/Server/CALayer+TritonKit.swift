@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import UIKit
 
 extension CALayer {
@@ -16,3 +17,4 @@ extension CALayer {
         return nil
     }
 }
+#endif

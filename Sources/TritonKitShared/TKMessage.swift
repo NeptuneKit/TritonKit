@@ -11,6 +11,11 @@ public enum TKRequestType: String, Codable, CaseIterable {
     case modifyAttributePatch
     case invokeMethod
     case fetchObject
+    case input
+    case accessibility
+    case hitTest
+    case screenshot
+    case geometry
     case fetchImageViewImage
     case modifyRecognizerEnable
     case allAttrGroups

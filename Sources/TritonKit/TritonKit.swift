@@ -50,8 +50,10 @@ public class TritonKit {
     }
 
     private init() {
+        #if canImport(UIKit)
         NotificationCenter.default.addObserver(self, selector: #selector(appDidBecomeActive),
                                                name: UIApplication.didBecomeActiveNotification, object: nil)
+        #endif
     }
 
     deinit { disconnect(); NotificationCenter.default.removeObserver(self) }
@@ -64,8 +66,8 @@ public class TritonKit {
         disconnect()
         state = .connecting
 
-        let url = URL(string: "ws://\(host):\(port)")!
-        var req = URLRequest(url: url, timeoutInterval: 10)
+        let url = URL(string: "ws://\(host):\(port)/")!
+        let req = URLRequest(url: url, timeoutInterval: 10)
 
         session = URLSession(configuration: .default)
         task = session?.webSocketTask(with: req)
@@ -86,14 +88,16 @@ public class TritonKit {
     public func send(_ message: TKMessage) {
         guard let data = try? JSONEncoder().encode(message) else { return }
         task?.send(.data(data)) { [weak self] error in
-            if let error { self?.delegate?.tritonKit(self!, didReceiveError: error) }
+            guard let self, let error else { return }
+            self.delegate?.tritonKit(self, didReceiveError: error)
         }
     }
 
     /// Send raw JSON string
     public func send(json: String) {
         task?.send(.string(json)) { [weak self] error in
-            if let error { self?.delegate?.tritonKit(self!, didReceiveError: error) }
+            guard let self, let error else { return }
+            self.delegate?.tritonKit(self, didReceiveError: error)
         }
     }
 
@@ -104,6 +108,9 @@ public class TritonKit {
             guard let self else { return }
             switch result {
             case .success(let message):
+                if self.state != .connected {
+                    self.state = .connected
+                }
                 self.handle(message)
             case .failure(let error):
                 self.state = .disconnected
@@ -139,9 +146,11 @@ public class TritonKit {
 
     // MARK: - Lifecycle
 
+    #if canImport(UIKit)
     @objc private func appDidBecomeActive() {
         if state == .disconnected, !host.isEmpty { connect(host: host, port: port) }
     }
+    #endif
 
     private func scheduleReconnect() {
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
