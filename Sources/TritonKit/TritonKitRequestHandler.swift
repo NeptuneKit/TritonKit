@@ -43,7 +43,7 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             return TKMessage(id: msg.id, type: .appInfo, payload: payload)
 
         case .hierarchy:
-            let items = await TKHierarchyBuilder.buildHierarchy(includeScreenshots: false, uploader: nil)
+            let items = await TKHierarchyBuilder.buildHierarchy()
             let appInfo = TKAppInfo()
             let hierarchy = TKHierarchyInfo(displayItems: items, appInfo: appInfo)
             let payload = try? JSONEncoder().encode(hierarchy)

@@ -1,7 +1,4 @@
 import Foundation
-#if canImport(UIKit)
-import UIKit
-#endif
 
 /// HTTP data uploader for sending screenshots / binary payloads to CLI
 public final class TritonKitDataUploader: @unchecked Sendable {
@@ -30,26 +27,4 @@ public final class TritonKitDataUploader: @unchecked Sendable {
         let resp = try JSONDecoder().decode(DataUploadResponse.self, from: responseData)
         return resp.id
     }
-
-    #if canImport(UIKit)
-    /// Capture a UIView screenshot (png data) - must be called on main actor
-    @MainActor
-    public static func captureScreenshot(view: UIView) -> Data? {
-        let format = UIGraphicsImageRendererFormat()
-        format.scale = 2.0
-        format.opaque = view.isOpaque
-        let renderer = UIGraphicsImageRenderer(bounds: view.bounds, format: format)
-        let image = renderer.image { ctx in
-            view.drawHierarchy(in: view.bounds, afterScreenUpdates: false)
-        }
-        return image.pngData()
-    }
-
-    /// Capture a view screenshot and upload it
-    public func captureAndUpload(view: UIView) async -> String? {
-        let imageData = await MainActor.run { TritonKitDataUploader.captureScreenshot(view: view) }
-        guard let data = imageData else { return nil }
-        return try? await upload(data)
-    }
-    #endif
 }

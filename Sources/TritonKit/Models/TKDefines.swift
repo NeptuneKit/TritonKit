@@ -20,25 +20,9 @@ public enum TKDoNotFetchScreenshotReason: Int, Codable {
     case userConfig = 2
 }
 
-public enum TKConstraintItemType: Int, Codable {
-    case unknown = 0
-    case null = 1
-    case view = 2
-    case selfRef = 3
-    case superRef = 4
-    case layoutGuide = 5
-}
-
 public enum TKEventHandlerType: Int, Codable {
     case targetAction = 0
     case gesture = 1
-}
-
-public enum TKAttributesSectionStyle: Int, Codable {
-    case defaultStyle = 0
-    case style0 = 1
-    case style1 = 2
-    case style2 = 3
 }
 
 // MARK: - Type Aliases

@@ -19,9 +19,5 @@ extension UIView {
         }
         return chain
     }
-
-    var tk_memoryAddress: String {
-        "\(Unmanaged.passUnretained(self).toOpaque())"
-    }
 }
 #endif

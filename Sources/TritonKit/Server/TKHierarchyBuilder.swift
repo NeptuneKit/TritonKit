@@ -6,8 +6,6 @@ public enum TKHierarchyBuilder {
     public static let defaultMaxChildrenPerNode = 200
 
     public static func buildHierarchy(
-        includeScreenshots: Bool = false,
-        uploader: TritonKitDataUploader? = nil,
         maxDepth: Int = defaultMaxDepth,
         maxChildrenPerNode: Int = defaultMaxChildrenPerNode
     ) async -> [TKDisplayItem] {
@@ -34,7 +32,7 @@ public enum TKHierarchyBuilder {
         }
 
         // Build items from collected data (no MainActor needed)
-        return rootLayerData.compactMap { buildItem(from: $0, includeScreenshots: includeScreenshots, uploader: uploader) }
+        return rootLayerData.compactMap { buildItem(from: $0) }
     }
 
     // MARK: - Data Collection (sync, on MainActor)
@@ -104,8 +102,6 @@ public enum TKHierarchyBuilder {
 
     private static func buildItem(
         from data: LayerData,
-        includeScreenshots: Bool,
-        uploader: TritonKitDataUploader?,
         indent: Int = 0
     ) -> TKDisplayItem {
         let registry = TKObjectRegistry.shared
@@ -132,7 +128,7 @@ public enum TKHierarchyBuilder {
         let bgColor = data.bgCGColor.flatMap { TKColor(uiColor: UIColor(cgColor: $0)) }
 
         let subitems = data.children.map { child in
-            buildItem(from: child, includeScreenshots: includeScreenshots, uploader: uploader, indent: indent + 1)
+            buildItem(from: child, indent: indent + 1)
         }
 
         return TKDisplayItem(
@@ -151,40 +147,12 @@ public enum TKHierarchyBuilder {
         )
     }
 }
-
-extension CALayer {
-    var classChain: [String] {
-        var chain: [String] = []
-        var cls: AnyClass = type(of: self)
-        while true {
-            chain.append(NSStringFromClass(cls))
-            guard let superCls = cls.superclass() else { break }
-            cls = superCls
-        }
-        return chain
-    }
-}
-
-extension UIViewController {
-    var classChain: [String] {
-        var chain: [String] = []
-        var cls: AnyClass = type(of: self)
-        while true {
-            chain.append(NSStringFromClass(cls))
-            guard let superCls = cls.superclass() else { break }
-            cls = superCls
-        }
-        return chain
-    }
-}
 #else
 public enum TKHierarchyBuilder {
     public static let defaultMaxDepth = 64
     public static let defaultMaxChildrenPerNode = 200
 
     public static func buildHierarchy(
-        includeScreenshots: Bool = false,
-        uploader: TritonKitDataUploader? = nil,
         maxDepth: Int = defaultMaxDepth,
         maxChildrenPerNode: Int = defaultMaxChildrenPerNode
     ) async -> [TKDisplayItem] {
