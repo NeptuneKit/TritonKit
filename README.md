@@ -77,6 +77,34 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 
 For a SwiftUI app, keep the same handler alive for the app lifetime, then call the same setup from `onAppear` or your app bootstrap object.
 
+## Install The CLI
+
+### Homebrew
+
+After a versioned release is published, install the macOS `triton` binary with Homebrew:
+
+```bash
+brew install NeptuneKit/tap/triton
+```
+
+Update it with:
+
+```bash
+brew update
+brew upgrade triton
+```
+
+Homebrew installs only the macOS CLI. The iOS runtime still needs SwiftPM or CocoaPods integration in the app target.
+
+### Manual Release Asset
+
+GitHub Releases provide architecture-specific CLI archives:
+
+- `triton-macos-arm64.tar.gz`
+- `triton-macos-x86_64.tar.gz`
+
+Download the archive for your Mac, then copy `triton` into a directory on `PATH`.
+
 ## Run The CLI
 
 Start the macOS-side server before launching the app:
@@ -119,9 +147,14 @@ If your app blocks cleartext development traffic through App Transport Security,
 
 GitHub CI publishes workflow artifacts that include:
 
-- `triton-macos-<arch>.tar.gz`
-- `triton-macos-<arch>.zip`
+- `triton-macos-arm64.tar.gz`
+- `triton-macos-arm64.zip`
+- `triton-macos-x86_64.tar.gz`
+- `triton-macos-x86_64.zip`
+- `tritonkit_checksums.txt`
 - `tritonkit-dev-feedback.tar.gz`
 - `tritonkit-dev-feedback.zip`
+- `tritonkit-real-project-regression.tar.gz`
+- `tritonkit-real-project-regression.zip`
 
-Tag pushes matching `v*` upload the same files as GitHub Release assets.
+Tag pushes matching `v*` upload the same files as GitHub Release assets and update the Homebrew tap formula when `TAP_GITHUB_TOKEN` is configured.

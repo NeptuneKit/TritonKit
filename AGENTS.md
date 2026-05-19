@@ -57,9 +57,10 @@
 14. 当用户明确说“整理”且语境指向刚完成的一轮工作会话时，默认触发一次会话沉淀流程：先按 `tritonkit-session-skill-distill` 提炼可复用模式，再按是否 repo-wide 决定是否同步更新 `AGENTS.md`、`docs-linhay/dev/`、`docs-linhay/memory/`，并执行 `qmd update` 与 `qmd embed`。
 15. 多份独立需求稿并行推进时，默认按“一个需求单元一个 `space`，必要时再配一个同 key 的 branch 与 `worktree`”组织，不按个人姓名或临时阶段单独命名工作目录。
 16. 当用户明确要求“由 subagent 去做、主控 agent 负责监督”时，主控 agent 必须承担需求边界、任务拆分、集成、验收、文档与最终完成判断，不得在“代码已改完”但截图、实机验证、文档写回等验收环节仍未完成时提前停止。
-17. GitHub CI / Release 产物必须包含可执行 `triton` CLI 包和项目级 skill 包，至少覆盖 `.agents/skills/tritonkit-dev-feedback`，确保使用者能同时拿到命令行工具与开发阶段反馈工作流。
-18. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
-19. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 必须保持 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CI 需校验 podspec 可 lint。
+17. GitHub CI / Release 产物必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和项目级 skill 包，至少覆盖 `.agents/skills/tritonkit-dev-feedback` 与 `.agents/skills/tritonkit-real-project-regression`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流与真实项目回归流程。
+18. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后应基于 GitHub Release 资产和 checksum manifest 更新 tap formula。
+19. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
+20. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 必须保持 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CI 需校验 podspec 可 lint。
 
 ## 2. 标准工作流（必须）
 

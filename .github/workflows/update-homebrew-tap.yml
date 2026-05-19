@@ -1,0 +1,89 @@
+name: Update Homebrew Tap
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+      tap_repository:
+        required: false
+        type: string
+        default: NeptuneKit/homebrew-tap
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish, for example v0.1.0"
+        required: true
+        type: string
+      tap_repository:
+        description: "Tap repository in owner/name form"
+        required: false
+        default: NeptuneKit/homebrew-tap
+
+permissions:
+  contents: read
+
+jobs:
+  update-tap:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout TritonKit
+        uses: actions/checkout@v4
+
+      - name: Download release checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p dist
+          gh release download "${VERSION}" \
+            --repo "${GITHUB_REPOSITORY}" \
+            --pattern tritonkit_checksums.txt \
+            --dir dist \
+            --clobber
+
+      - name: Render formula
+        env:
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          docs-linhay/scripts/render-homebrew-formula.sh \
+            "${VERSION}" \
+            "dist/tritonkit_checksums.txt" \
+            ".github/homebrew/triton.rb.template" \
+            "/tmp/triton.rb"
+
+          ruby -c /tmp/triton.rb >/dev/null
+
+      - name: Update tap repository
+        env:
+          TAP_GITHUB_TOKEN: ${{ secrets.TAP_GITHUB_TOKEN }}
+          TAP_REPOSITORY: ${{ inputs.tap_repository }}
+          VERSION: ${{ inputs.version }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ -z "${TAP_GITHUB_TOKEN:-}" ]]; then
+            echo "TAP_GITHUB_TOKEN is required to update ${TAP_REPOSITORY}" >&2
+            exit 1
+          fi
+
+          git clone "https://x-access-token:${TAP_GITHUB_TOKEN}@github.com/${TAP_REPOSITORY}.git" homebrew-tap
+
+          mkdir -p homebrew-tap/Formula
+          cp /tmp/triton.rb homebrew-tap/Formula/triton.rb
+
+          cd homebrew-tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Formula/triton.rb
+          git commit -m "Update triton to ${VERSION}" || echo "No changes to commit"
+          git push

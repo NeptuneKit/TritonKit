@@ -1,0 +1,33 @@
+# typed: false
+# frozen_string_literal: true
+
+class Triton < Formula
+  desc "DEBUG-only iOS app inspection and control CLI for AI agents"
+  homepage "https://github.com/NeptuneKit/TritonKit"
+  version "__VERSION__"
+  license :cannot_represent
+
+  on_arm do
+    url "https://github.com/NeptuneKit/TritonKit/releases/download/__TAG__/triton-macos-arm64.tar.gz"
+    sha256 "__SHA256_ARM64__"
+  end
+
+  on_intel do
+    url "https://github.com/NeptuneKit/TritonKit/releases/download/__TAG__/triton-macos-x86_64.tar.gz"
+    sha256 "__SHA256_X86_64__"
+  end
+
+  depends_on :macos
+
+  def install
+    binary = Dir["triton-macos-*/triton"].first
+    odie "triton binary not found in release archive" if binary.nil?
+
+    bin.install binary => "triton"
+  end
+
+  test do
+    assert_match version.to_s, shell_output("#{bin}/triton version")
+    assert_match '"ok":true', shell_output("#{bin}/triton version --json")
+  end
+end
