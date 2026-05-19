@@ -49,10 +49,10 @@
 6. 任何改动都要考虑对后续维护者的可理解性和可操作性。
 7. TritonKit 是 `CLI + HTTP server + Wails Web + 桌面壳` 组合应用；任何改动都要明确影响的是 CLI、HTTP transport、Wails binding、Web 前端、桌面壳，还是共享 core。
 8. TritonKit 优先供 AI agent 和自动化脚本使用与控制；CLI 和 HTTP 管理 API 是业务控制的事实入口，所有状态读取、动作执行、解释、回归验收和审计都必须优先具备机器可读契约。
-9. 人类侧首期可以仅展示；Web/Wails 默认只消费只读 DTO，用于展示状态、日志、截图、hierarchy、artifact、dry-run/preflight 计划和审计记录，不承载 create/update/delete/execute/approve/deny 等业务控制闭环。
+9. AI agent 首期不需要 Web 端；能通过 CLI/HTTP 机器可读契约完成读取和控制的需求，不新增 Web/SSE 渲染入口。
 10. TritonKit 必须使用独立端口组：HTTP 管理 API `127.0.0.1:19421`、Wails dev server `localhost:34126`、Vite dev server `127.0.0.1:34127`、Vite preview server `127.0.0.1:34128`；前端 dev/preview 必须启用 `strictPort`，禁止默认落到 `5173`、`5174`、`4173` 等常见端口。
 11. 当前没有活跃 Web / 前端页面；任何恢复前端体验的工作必须先重新建立 `space`、需求边界、BDD 场景、技术栈和验收方式，不预设执行方或历史设计方向。
-12. 前端改动若影响后端接口、领域模型或关键交互闭环，必须先明确 CLI/HTTP 契约、状态流转、测试门禁和回归验收，避免由 UI 先行定义业务控制能力。
+12. 前端改动若影响后端接口、领域模型或关键交互闭环，必须先明确 CLI/HTTP 契约、状态流转、测试门禁和回归验收，避免由 UI 先行定义业务控制能力；确需人类展示时，Web/Wails 默认只消费只读 DTO，不承载 create/update/delete/execute/approve/deny 等业务控制闭环。
 13. 当一次会话中出现“有用且重复出现”的行为模式、排障路径或交付动作时，必须先识别复用边界，再优先新增或更新项目级 `skills`；只有当规则已经上升为 repo-wide、长期稳定的约束时，才同步更新 `AGENTS.md`。
 14. 当用户明确说“整理”且语境指向刚完成的一轮工作会话时，默认触发一次会话沉淀流程：先按 `tritonkit-session-skill-distill` 提炼可复用模式，再按是否 repo-wide 决定是否同步更新 `AGENTS.md`、`docs-linhay/dev/`、`docs-linhay/memory/`，并执行 `qmd update` 与 `qmd embed`。
 15. 多份独立需求稿并行推进时，默认按“一个需求单元一个 `space`，必要时再配一个同 key 的 branch 与 `worktree`”组织，不按个人姓名或临时阶段单独命名工作目录。

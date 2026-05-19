@@ -11,6 +11,8 @@ description: TritonKit 流程治理：CLI/HTTP/Wails 开发回路、文档记忆
 - 先补失败测试，再实现最小代码。
 - HTTP handler 用 `httptest` 优先验证，只有进程生命周期或信号处理才启动真实 server。
 - CLI 行为优先测试参数解析和命令分发，不在单元测试里长期占用端口。
+- AI agent 首期只需要 CLI/HTTP 机器可读契约；能通过 CLI/HTTP 完成读取和控制时，不新增 Web/SSE 渲染入口。
+- 设备控制参考 Baguette 时，先区分 embedded TritonKit runtime 与 macOS host-side adapter：embedded runtime 只能承诺公开 UIKit API 可验证的 in-app 控制；SimulatorKit / HID / Home / App Switcher 等设备级动作必须等 host-side adapter，当前要返回明确 unsupported。
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。
 - 当前前端为空白 Wails 静态入口；任何恢复 UI 的工作必须先新建或更新 `space` 与 BDD 场景。
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。
