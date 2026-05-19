@@ -10,9 +10,14 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
    - `triton-macos-arm64.zip`
    - `triton-macos-x86_64.tar.gz`
    - `triton-macos-x86_64.zip`
-3. 汇总 job 生成 `tritonkit_checksums.txt`，并继续上传 `tritonkit-dev-feedback` 与 `tritonkit-real-project-regression` skill 包。
-4. `v*` tag 发布时上传所有资产到 GitHub Release。
-5. tag 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`。
+3. CI 从触发上下文解析版本号：
+   - `v*` tag：去掉前缀 `v` 后作为正式版本。
+   - 非 tag：使用 `0.1.0-dev+<short-sha>`。
+4. CLI 构建前写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`。
+5. skill 打包前写入 `SKILL.md` front matter 的 `metadata.version` 字段。
+6. 汇总 job 生成 `tritonkit_checksums.txt`，并继续上传 `tritonkit-dev-feedback` 与 `tritonkit-real-project-regression` skill 包。
+7. `v*` tag 发布时上传所有资产到 GitHub Release。
+8. tag 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`。
 
 ## Formula 契约
 
@@ -60,9 +65,10 @@ brew upgrade triton
 
 ```bash
 docs-linhay/scripts/verify-homebrew-formula.sh
+docs-linhay/scripts/verify-version-stamping.sh
 ```
 
-该脚本使用 fixture checksum 渲染 formula，并用 `ruby -c` 做语法检查。
+第一个脚本使用 fixture checksum 渲染 formula，并用 `ruby -c` 做语法检查。第二个脚本验证版本解析、CLI Swift 版本常量写入和 skill `metadata.version` 写入。
 
 ## 风险
 

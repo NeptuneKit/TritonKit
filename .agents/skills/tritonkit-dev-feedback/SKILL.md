@@ -1,6 +1,8 @@
 ---
 name: tritonkit-dev-feedback
 description: Use when Codex is helping someone try, adopt, evaluate, or integrate TritonKit during its development stage, especially when the user has any requirement, bug, missing capability, confusing behavior, documentation gap, or compatibility concern that should become a GitHub issue in NeptuneKit/TritonKit. The AI agent should reproduce or clarify the finding, collect evidence, and submit the GitHub issue directly instead of asking the user to file it themselves.
+metadata:
+  version: 0.1.0-dev
 ---
 
 # TritonKit Dev Feedback

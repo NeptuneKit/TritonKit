@@ -1,6 +1,8 @@
 ---
 name: tritonkit-ops-governance
 description: TritonKit 流程治理：CLI/HTTP/Wails 开发回路、文档记忆写回、AGENTS 同步与 qmd 索引。
+metadata:
+  version: 0.1.0-dev
 ---
 
 # TritonKit Operations & Governance
@@ -23,6 +25,7 @@ description: TritonKit 流程治理：CLI/HTTP/Wails 开发回路、文档记忆
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；tag release 后用 GitHub Release 资产和 `tritonkit_checksums.txt` 渲染并更新 tap formula。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；维护者需要在 `NeptuneKit/TritonKit` 配置 `TAP_GITHUB_TOKEN` 才能让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - 对外接入文档和 skill 中优先给使用者 `brew install NeptuneKit/tap/triton`；只有验证未发布源码改动时才要求 `swift build -c release --product triton`。
+- CLI 和对外发布的 skill 必须带版本号；CI 负责从 `v*` tag 或当前 commit 解析版本，写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion` 和打包后的 `SKILL.md` front matter `metadata.version`。
 
 ## 文档与记忆
 

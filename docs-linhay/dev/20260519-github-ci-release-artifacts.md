@@ -17,15 +17,19 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
    - `triton-macos-arm64.zip`
    - `triton-macos-x86_64.tar.gz`
    - `triton-macos-x86_64.zip`
-6. 生成 checksum manifest：
+6. CI 写入版本号：
+   - CLI：更新 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`，`triton version --json` 输出该版本。
+   - skill：打包前向 `SKILL.md` front matter 写入 `metadata.version`。
+   - tag `v1.2.3` 解析为 `1.2.3`；非 tag 构建解析为 `0.1.0-dev+<short-sha>`。
+7. 生成 checksum manifest：
    - `tritonkit_checksums.txt`
-7. 打包 skill：
+8. 打包 skill：
    - `tritonkit-dev-feedback.tar.gz`
    - `tritonkit-dev-feedback.zip`
    - `tritonkit-real-project-regression.tar.gz`
    - `tritonkit-real-project-regression.zip`
-8. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
-9. tag 发布完成后触发 Homebrew tap 更新 workflow。
+9. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
+10. tag 发布完成后触发 Homebrew tap 更新 workflow。
 
 ## 产物契约
 
@@ -34,6 +38,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 1. `triton` CLI 可执行文件包，必须同时覆盖 macOS arm64 与 x86_64。
 2. 面向外部使用者的项目级 skill 包，当前至少包括 `.agents/skills/tritonkit-dev-feedback` 与 `.agents/skills/tritonkit-real-project-regression`。
 3. `tritonkit_checksums.txt`，用于 Homebrew formula 渲染和用户校验。
+4. CLI 与 skill 包必须携带同一个 CI 解析出的版本号；skill 使用 `metadata.version`，保持 skill front matter 兼容。
 
 后续新增面向使用者的项目级 skill 时，应同步纳入 CI/release packaging。
 
@@ -65,4 +70,5 @@ brew upgrade triton
 - 本地运行 `swift build -c release --product triton` 通过。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` / `.zip` 产物。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
+- 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。
 - 用 Python YAML parser 校验 `.github/workflows/ci.yml` 语法可解析。

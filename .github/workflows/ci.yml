@@ -46,6 +46,9 @@ jobs:
       - name: Validate Homebrew formula template
         run: docs-linhay/scripts/verify-homebrew-formula.sh
 
+      - name: Validate version stamping scripts
+        run: docs-linhay/scripts/verify-version-stamping.sh
+
   build-cli:
     name: Build CLI (${{ matrix.arch }})
     needs: validate
@@ -62,6 +65,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Write CLI version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(docs-linhay/scripts/resolve-ci-version.sh)"
+          docs-linhay/scripts/write-cli-version.sh \
+            "${version}" \
+            "Sources/TritonKitCLI/main.swift"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "TritonKit CLI version: ${version}"
 
       - name: Build CLI
         run: swift build -c release --product triton
@@ -86,6 +102,9 @@ jobs:
 
           cat > "${package_dir}/README.txt" <<README
           TritonKit CLI
+
+          Version:
+            ${{ steps.version.outputs.version }}
 
           Install:
             cp triton /usr/local/bin/triton
@@ -128,6 +147,16 @@ jobs:
           path: dist
           merge-multiple: true
 
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(docs-linhay/scripts/resolve-ci-version.sh)"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "TritonKit release version: ${version}"
+
       - name: Package skill artifact
         shell: bash
         run: |
@@ -139,15 +168,20 @@ jobs:
           )
 
           mkdir -p dist
+          skills_work_dir="$(mktemp -d)"
 
           for skill_name in "${skills[@]}"; do
             skill_dir=".agents/skills/${skill_name}"
             test -f "${skill_dir}/SKILL.md"
+            cp -R "${skill_dir}" "${skills_work_dir}/${skill_name}"
+            docs-linhay/scripts/stamp-skill-version.sh \
+              "${{ steps.version.outputs.version }}" \
+              "${skills_work_dir}/${skill_name}/SKILL.md"
 
             (
-              cd .agents/skills
-              tar -czf "../../dist/${skill_name}.tar.gz" "${skill_name}"
-              zip -qr "../../dist/${skill_name}.zip" "${skill_name}"
+              cd "${skills_work_dir}"
+              tar -czf "${GITHUB_WORKSPACE}/dist/${skill_name}.tar.gz" "${skill_name}"
+              zip -qr "${GITHUB_WORKSPACE}/dist/${skill_name}.zip" "${skill_name}"
             )
           done
 
@@ -175,6 +209,8 @@ jobs:
           test -f dist/tritonkit-real-project-regression.tar.gz
           test -f dist/tritonkit-real-project-regression.zip
           test -f dist/tritonkit_checksums.txt
+          tar -xOf dist/tritonkit-dev-feedback.tar.gz tritonkit-dev-feedback/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
+          tar -xOf dist/tritonkit-real-project-regression.tar.gz tritonkit-real-project-regression/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
 
           docs-linhay/scripts/render-homebrew-formula.sh \
             "v0.1.0" \

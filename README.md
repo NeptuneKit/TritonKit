@@ -175,6 +175,13 @@ GitHub CI publishes workflow artifacts that include:
 
 Tag pushes matching `v*` upload the same files as GitHub Release assets and update the Homebrew tap formula when `TAP_GITHUB_TOKEN` is configured.
 
+CI writes the release version into both the CLI and packaged skills:
+
+- `triton version --json` reports the CI-resolved version.
+- Packaged `SKILL.md` files include `metadata.version` in front matter.
+- Tag builds use the tag without the leading `v`, for example `v1.2.3` becomes `1.2.3`.
+- Non-tag builds use a development version with the current short commit SHA.
+
 For maintainers, the release flow is:
 
 1. Push a version tag matching `v*`.

@@ -1,6 +1,8 @@
 ---
 name: tritonkit-real-project-regression
 description: Use when TritonKit moves from demo/self-test into a real iOS app or customer project for regression testing, adoption validation, or actual requirement discovery. Guides the AI agent to isolate external repo changes, run release CLI plus embedded runtime checks, collect machine-readable evidence, and turn real-project gaps into docs, fixes, or GitHub issues.
+metadata:
+  version: 0.1.0-dev
 ---
 
 # TritonKit Real Project Regression

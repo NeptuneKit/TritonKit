@@ -8,6 +8,10 @@ import NIOCore
 import TritonKit
 import TritonKitShared
 
+enum TritonKitBuildInfo {
+    static let cliVersion = "0.1.0-dev"
+}
+
 // MARK: - Entry Point
 
 @main
@@ -25,7 +29,7 @@ struct TritonKitCLI: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "triton",
         abstract: "TritonKit macOS CLI - WebSocket control + HTTP data server for iOS view debugging",
-        version: tritonCLIVersion,
+        version: TritonKitBuildInfo.cliVersion,
         subcommands: [
             Serve.self,
             Version.self,
@@ -503,7 +507,6 @@ struct LocalizationOptions: ParsableArguments {
     var language: CLILanguage?
 }
 
-let tritonCLIVersion = "0.1.0"
 let tritonWebSocketMaxFrameSize = 16_777_216
 
 func effectiveFormat(_ format: ClientOutputFormat, json: Bool) -> ClientOutputFormat {
@@ -765,7 +768,7 @@ struct Version: AsyncParsableCommand {
 
     func run() throws {
         let language = effectiveLanguage(localization.language)
-        let response = TKCLIVersionResponse(version: tritonCLIVersion, language: language.rawValue)
+        let response = TKCLIVersionResponse(version: TritonKitBuildInfo.cliVersion, language: language.rawValue)
         switch effectiveFormat(format, json: json) {
         case .json:
             print(try encodeJSON(response))
