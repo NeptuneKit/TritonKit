@@ -94,6 +94,20 @@ For SwiftUI, keep the `TritonKitRequestHandler` alive for the app lifetime and c
 
 ### CLI Verification
 
+Install or update the macOS CLI with Homebrew when using a released TritonKit build:
+
+```bash
+brew install NeptuneKit/tap/triton
+brew update
+brew upgrade triton
+```
+
+If the issue is about unreleased local changes, use the repo checkout and build `.build/release/triton` instead:
+
+```bash
+swift build -c release --product triton
+```
+
 Start the macOS server before launching the app:
 
 ```bash
@@ -120,6 +134,14 @@ triton ax --json
 - For physical devices or local-network testing, add `NSLocalNetworkUsageDescription` to the app target if iOS prompts for local network access.
 - If App Transport Security blocks cleartext local development traffic, use a debug-only ATS exception. Do not ship broad ATS exceptions in production.
 - Release builds should compile, but `TritonKit.isRuntimeEnabled` is false and the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages.
+
+### Distribution Notes
+
+- Repository: `https://github.com/NeptuneKit/TritonKit`
+- Homebrew install path: `brew install NeptuneKit/tap/triton`
+- Homebrew updates come from `NeptuneKit/homebrew-tap`.
+- GitHub Release assets include `triton-macos-arm64.tar.gz`, `triton-macos-x86_64.tar.gz`, `tritonkit_checksums.txt`, and project skill packages.
+- If Homebrew is unavailable, use the matching GitHub Release archive or build from source for unreleased changes.
 
 ## Issue Content
 

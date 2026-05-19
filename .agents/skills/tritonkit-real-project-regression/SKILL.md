@@ -15,7 +15,10 @@ Real-project validation is not the same as demo smoke. Treat the business app as
 2. Check both repos before changing anything:
    - TritonKit: `git status --short --branch`
    - real app repo: `git status --short --branch`
-3. Build TritonKit release CLI: `swift build -c release --product triton`.
+3. Prepare the macOS `triton` CLI:
+   - Prefer the released Homebrew binary when validating an external app: `brew install NeptuneKit/tap/triton` or `brew upgrade triton`.
+   - If testing unreleased TritonKit changes from this repo, build the release CLI locally: `swift build -c release --product triton`.
+   - Confirm the active binary with `triton version --json` or `.build/release/triton version --json`.
 4. Integrate TritonKit into the app only through the intended DEBUG-only package path:
    - SwiftPM or CocoaPods as requested.
    - Keep `TritonKitRequestHandler` alive for app lifetime.
@@ -34,6 +37,20 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - assert expected state through a second `ax`, `find`, `screenshot`, or archive check.
 9. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
 10. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly.
+
+## CLI Install Contract
+
+Use Homebrew for real-project adoption checks when the requirement does not depend on unreleased local source:
+
+```bash
+brew install NeptuneKit/tap/triton
+brew update
+brew upgrade triton
+```
+
+Homebrew installs only the macOS CLI. The app-side embedded runtime still comes from SwiftPM or CocoaPods and must remain DEBUG-only.
+
+Release assets live in `NeptuneKit/TritonKit` GitHub Releases and include arm64/x86_64 CLI archives plus `tritonkit_checksums.txt`. The Homebrew tap is updated from those release assets after `v*` tag releases when `TAP_GITHUB_TOKEN` is configured.
 
 ## Boundaries
 
