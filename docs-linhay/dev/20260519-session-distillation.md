@@ -34,6 +34,16 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - `.agents/skills/tritonkit-ops-governance/SKILL.md`
 - `docs-linhay/dev/20260519-debug-only-pm-runtime.md`
 
+### 真实项目回归入口
+
+当工作从 Demo / self-test 切到真实 iOS App 或客户项目时，默认把业务 App 当成外部被测系统：先确认外部仓状态，不混入 TritonKit 提交；用 release `triton` CLI、固定端口 `19421`、`status/list/geometry/ax/screenshot/export/input` 等机器可读命令做回归；发现缺口时进入 dev feedback issue 流程。
+
+复用入口：
+
+- `.agents/skills/tritonkit-real-project-regression/SKILL.md`
+- `docs-linhay/scripts/verify-overloaded-triton-smoke.sh`
+- `docs-linhay/scripts/verify-complex-harness.sh`
+
 ## 本轮不纳入的内容
 
 - “按端类型拆分 PM 集成”的误判不纳入规则。后续遇到 PM 相关需求，先确认用户说的是编译配置、平台、包管理器、还是发布产物，不直接把“环境”理解成 iOS/macOS 端类型。
@@ -45,6 +55,7 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 2. 需求涉及 CI、release、发布资产：先走 `tritonkit-ops-governance`，同步检查 CLI 包和 skill 包是否仍在产物契约里。
 3. 需求涉及业务 App 通过 PM 引入 TritonKit：默认检查 `DEBUG` / Release 双分支，不按端类型启停 runtime。
 4. 用户纠正需求语义时，先收窄到用户最新表述，再撤回过度实现方向，最后补双分支验证。
+5. 需求进入真实项目回归：先走 `tritonkit-real-project-regression`，用真实 App 状态和机器证据驱动后续实际需求。
 
 ## 已完成验证
 

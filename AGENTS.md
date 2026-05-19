@@ -135,6 +135,7 @@ Git `worktree` 治理：
 4. 涉及文档写回、memory 写回、`qmd update` / `qmd embed` 同步时，优先使用 `tritonkit-ops-governance`。
 5. 涉及 AGENTS 级长期治理规则时，优先使用 `tritonkit-ops-governance`；若用户明确说“整理”，同时使用 `tritonkit-session-skill-distill`。
 6. 涉及“主控 agent 监督、subagent 实做、直到完整需求闭环才停止”的执行模式时，优先使用 `tritonkit-subagent-supervision`。
+7. 涉及从 demo/self-test 切到真实 iOS App 或客户项目回归、试接入、实际需求发现时，优先使用 `tritonkit-real-project-regression`，并隔离外部仓改动、保留 CLI/HTTP 机器可读证据。
 
 ## 5. 记忆系统规则（必须）
 
