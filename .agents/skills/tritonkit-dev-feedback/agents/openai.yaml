@@ -1,0 +1,4 @@
+interface:
+  display_name: "TritonKit Dev Feedback"
+  short_description: "Use TritonKit and file dev-stage issues"
+  default_prompt: "Use $tritonkit-dev-feedback to try TritonKit, capture any need or bug, and file a GitHub issue for the repo."
