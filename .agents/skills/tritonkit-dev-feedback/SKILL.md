@@ -16,19 +16,110 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
 ## Workflow
 
 1. Clarify only the minimum missing detail needed to avoid filing a wrong issue.
-2. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
+2. If the user is adopting TritonKit in an iOS app, first guide them through the iOS integration checklist below.
+3. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
    - `triton status --json`
    - `triton doctor --json`
    - `triton schema --json`
    - `triton plan --json`
    - relevant `swift test`, smoke scripts, or app-level reproduction steps.
-3. Classify the issue:
+4. Classify the issue:
    - `bug`: behavior is broken, unstable, misleading, or inconsistent with documented/schema behavior.
    - `feature`: user needs a new capability or extension.
    - `docs`: documentation, onboarding, examples, or CLI help are unclear.
    - `question`: only if no concrete change is identifiable yet.
-4. Create the issue with `gh issue create --repo NeptuneKit/TritonKit`.
-5. Report the issue URL back to the user with a short summary and any local verification result.
+5. Create the issue with `gh issue create --repo NeptuneKit/TritonKit`.
+6. Report the issue URL back to the user with a short summary and any local verification result.
+
+## iOS Integration Checklist
+
+Use this when helping someone add TritonKit to an app.
+
+### Package Manager
+
+SwiftPM:
+
+```text
+https://github.com/NeptuneKit/TritonKit.git
+```
+
+Add the `TritonKit` product to the iOS app target.
+
+CocoaPods during development:
+
+```ruby
+target 'YourApp' do
+  use_frameworks!
+
+  pod 'TritonKitShared', :git => 'https://github.com/NeptuneKit/TritonKit.git', :branch => 'main'
+  pod 'TritonKit', :git => 'https://github.com/NeptuneKit/TritonKit.git', :branch => 'main'
+end
+```
+
+### App Bootstrap
+
+Keep the integration explicit in `DEBUG`. The runtime is also no-op outside `DEBUG`, but app code should make the development-only boundary obvious.
+
+```swift
+import UIKit
+
+#if DEBUG
+import TritonKit
+#endif
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    #if DEBUG
+    private let tritonHandler = TritonKitRequestHandler()
+    #endif
+
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        #if DEBUG
+        let host = ProcessInfo.processInfo.environment["TRITON_HOST"] ?? "127.0.0.1"
+        let port = UInt16(ProcessInfo.processInfo.environment["TRITON_PORT"] ?? "") ?? 19421
+
+        TritonKit.shared.delegate = tritonHandler
+        TritonKit.shared.dataURL = URL(string: "http://\(host):\(port)")
+        TritonKit.shared.connect(host: host, port: port)
+        #endif
+
+        return true
+    }
+}
+```
+
+For SwiftUI, keep the `TritonKitRequestHandler` alive for the app lifetime and call the same setup from the app bootstrap object or `onAppear`.
+
+### CLI Verification
+
+Start the macOS server before launching the app:
+
+```bash
+triton serve --host 127.0.0.1 --port 19421
+```
+
+For physical devices, bind to a reachable Mac interface and set `TRITON_HOST` to the Mac LAN IP:
+
+```bash
+triton serve --host 0.0.0.0 --port 19421
+```
+
+Then verify:
+
+```bash
+triton status --json
+triton list --json
+triton hierarchy --json
+triton ax --json
+```
+
+### Network Notes
+
+- For physical devices or local-network testing, add `NSLocalNetworkUsageDescription` to the app target if iOS prompts for local network access.
+- If App Transport Security blocks cleartext local development traffic, use a debug-only ATS exception. Do not ship broad ATS exceptions in production.
+- Release builds should compile, but `TritonKit.isRuntimeEnabled` is false and the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages.
 
 ## Issue Content
 
