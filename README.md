@@ -96,6 +96,22 @@ brew upgrade triton
 
 Homebrew installs only the macOS CLI. The iOS runtime still needs SwiftPM or CocoaPods integration in the app target.
 
+TritonKit's release workflow updates the default tap repository, `NeptuneKit/homebrew-tap`, when a tag matching `v*` is pushed. Maintainers need to configure `TAP_GITHUB_TOKEN` in this repository with permission to push to that tap. Without that secret, GitHub Release assets remain available, but the Homebrew formula will not update automatically.
+
+The tap formula is generated from:
+
+- `.github/homebrew/triton.rb.template`
+- `tritonkit_checksums.txt` from the GitHub Release assets
+
+For a release tag such as `v0.1.0`, the expected install and update path is:
+
+```bash
+brew tap NeptuneKit/tap
+brew install triton
+brew update
+brew upgrade triton
+```
+
 ### Manual Release Asset
 
 GitHub Releases provide architecture-specific CLI archives:
@@ -158,3 +174,11 @@ GitHub CI publishes workflow artifacts that include:
 - `tritonkit-real-project-regression.zip`
 
 Tag pushes matching `v*` upload the same files as GitHub Release assets and update the Homebrew tap formula when `TAP_GITHUB_TOKEN` is configured.
+
+For maintainers, the release flow is:
+
+1. Push a version tag matching `v*`.
+2. CI builds and uploads both macOS architectures.
+3. CI generates `tritonkit_checksums.txt`.
+4. CI renders the Homebrew formula from `.github/homebrew/triton.rb.template`.
+5. CI pushes `Formula/triton.rb` to `NeptuneKit/homebrew-tap` when `TAP_GITHUB_TOKEN` is configured.
