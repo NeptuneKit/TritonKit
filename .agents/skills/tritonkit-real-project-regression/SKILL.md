@@ -31,6 +31,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton status --json`
    - `triton list --json`
 7. Run observation before action:
+   - prefer one-shot regression capture when a full report is needed: `triton capture --case <case> --output /tmp/<case>.tritonevidence --json`.
    - prefer one-shot evidence when a report or issue needs attachable proof: `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`.
    - inspect an existing bundle without reconnecting runtime: `triton evidence inspect /tmp/<case>.tritonevidence --json`.
    - `triton geometry --json`
@@ -44,6 +45,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - replay committed flows with `triton replay <file.tritonplan> --json`, keeping secure values in environment variables and using `--var <name>-env=<ENV>`;
    - prefer `find`, `wait`, `tap`, `type`, `paste`, `clear`, `input --json --summary --strict`;
    - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
+   - use `triton assert text-exists|text-not-exists <text> --json` for final pass/fail checks; add `--within x,y,width,height`, `--role`, or `--count` when labels repeat across headers, sidebars, and cells;
    - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, archive check, or a fresh `evidence` bundle.
 9. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
 10. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly.
@@ -89,3 +91,4 @@ Release assets live in `NeptuneKit/TritonKit` GitHub Releases and include arm64/
 - Use `${variable}` placeholders for account names, passwords, hosts, or output paths.
 - Use `secure: true` on password-like `paste` or `type` steps; replay summaries must redact values.
 - Prefer an `evidence` step at the end of a reused smoke flow so the final state is attachable to issues and regression reports.
+- For stale-list regressions, pair `capture` with `assert text-not-exists <stale text> --within <right-list-bounds>` so the report contains both artifacts and a machine-readable pass/fail result.

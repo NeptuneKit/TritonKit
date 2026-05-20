@@ -162,16 +162,19 @@ triton tap --json "登录"
 triton wait --gone "登录" --timeout 15 --json
 triton wait --text "我的" --timeout 15 --json
 triton wait --predicate 'text.exists("我的") && !text.exists("登录")' --timeout 15 --json
+triton assert text-exists "我的" --json
+triton assert text-not-exists "Qinghai" --within 180,120,190,500 --json
 ```
 
 When a pass/fail decision needs attachable evidence, export a bundle with a machine-readable manifest:
 
 ```bash
+triton capture --case login-success --output /tmp/login-success.tritonevidence --json
 triton evidence --name login-success --output /tmp/login-success.tritonevidence --json
 triton evidence inspect /tmp/login-success.tritonevidence --json
 ```
 
-The first evidence bundle format is a directory package. It contains `manifest.json` plus artifacts such as `status.json`, `targets.json`, `version.json`, `hierarchy.json`, `ax.json`, `screenshot.png`, and `screenshot.json`. Unsupported requested artifacts, such as `logs` in the current embedded runtime, are recorded in `manifest.skipped` with reasons.
+The first evidence bundle format is a directory package. It contains `manifest.json` plus artifacts such as `status.json`, `targets.json`, `version.json`, `hierarchy.json`, `ax.json`, `geometry.json`, `archive.json`, `screenshot.png`, and `screenshot.json`. Unsupported requested artifacts, such as `logs` in the current embedded runtime, are recorded in `manifest.skipped` with reasons. `capture` is the regression-oriented one-shot wrapper; `evidence` remains the lower-level capture/inspect command.
 
 For repeatable short smoke flows, store the command sequence in a `.tritonplan` and replay it:
 

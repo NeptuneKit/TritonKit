@@ -22,6 +22,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
 3. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
    - `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`
    - `triton evidence inspect /tmp/<case>.tritonevidence --json`
+   - `triton capture --case <case> --output /tmp/<case>.tritonevidence --json`
+   - `triton assert text-exists|text-not-exists <text> --json`
    - `triton record --output /tmp/<case>.tritonplan --json` when a reusable plan template helps describe the flow
    - `triton plan inspect /tmp/<case>.tritonplan --json`
    - `triton replay /tmp/<case>.tritonplan --dry-run --json` before sharing a reusable flow
@@ -135,7 +137,9 @@ triton status --json
 triton list --json
 triton hierarchy --json
 triton ax --json
+triton assert text-exists first-check --json
 triton evidence --name first-check --output /tmp/first-check.tritonevidence --json
+triton capture --case first-check --output /tmp/first-check.tritonevidence --json
 triton record --output /tmp/first-flow.tritonplan --json
 triton replay /tmp/first-flow.tritonplan --dry-run --var username=alice --var password-env=TRITON_PASSWORD --json
 ```

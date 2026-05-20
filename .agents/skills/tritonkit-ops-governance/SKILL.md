@@ -15,6 +15,7 @@ metadata:
 - CLI 行为优先测试参数解析和命令分发，不在单元测试里长期占用端口。
 - AI agent 首期只需要 CLI/HTTP 机器可读契约；能通过 CLI/HTTP 完成读取和控制时，不新增 Web/SSE 渲染入口。
 - 真实项目回归或 issue 证据优先用 `triton evidence --name <case> --output <dir.tritonevidence> --json` 生成 manifest + artifacts；需要拆解时再单独跑 `status/list/ax/screenshot/export`。
+- 完整回归报告优先用 `triton capture --case <case> --output <dir.tritonevidence> --json`；最终 pass/fail 判断优先用 `triton assert text-exists|text-not-exists <text> --json`，重复文本用 `--within` / `--role` / `--count` 收敛。
 - 可复跑真实项目 smoke 优先沉淀为 `.tritonplan`：`record` 只生成模板，`plan inspect` 做离线摘要，`replay --dry-run` 先校验变量和脱敏命令，真实 `replay` 再执行并在失败步骤停止。
 - 设备控制参考 Baguette 时，先区分 embedded TritonKit runtime 与 macOS host-side adapter：embedded runtime 只能承诺公开 UIKit API 可验证的 in-app 控制；SimulatorKit / HID / Home / App Switcher 等设备级动作必须等 host-side adapter，当前要返回明确 unsupported。
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。

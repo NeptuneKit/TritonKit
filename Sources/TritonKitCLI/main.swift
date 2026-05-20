@@ -47,6 +47,8 @@ struct TritonKitCLI: AsyncParsableCommand {
             ObjectInfo.self,
             Export.self,
             Evidence.self,
+            Capture.self,
+            UIAssert.self,
             Record.self,
             Replay.self,
             Find.self,
@@ -661,6 +663,8 @@ func chineseRootHelp() -> String {
         ("object", "读取 view 或 layer oid 的对象元数据"),
         ("export", "导出可复用层级快照或 archive"),
         ("evidence", "导出 agent 回归证据包"),
+        ("capture", "一站式采集回归证据包"),
+        ("assert", "执行 agent 友好的 UI 文本断言"),
         ("record", "生成可编辑 replay plan 模板"),
         ("replay", "复跑 .tritonplan smoke 流程"),
         ("find", "解析一个可见文本或意图目标"),
@@ -763,6 +767,19 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--name <name>", "场景名，写入 manifest"),
             ("--note <note>", "备注，写入 manifest"),
             ("--refresh/--no-refresh", "导出 hierarchy/archive 前是否请求新层级"),
+        ]),
+        "capture": ChineseCommandHelp(name: "capture", overview: "一站式采集 agent 回归证据包。", usage: "triton capture --case <name> --output <path> [选项]", options: target + hostPort + formatTextJSON + [
+            ("--case <name>", "回归场景名，写入 manifest"),
+            ("--output <path>", "证据包目录路径，建议使用 .tritonevidence 后缀"),
+            ("--include <list>", "逗号分隔 artifact，默认包含 status,list,version,hierarchy,ax,screenshot,geometry,archive"),
+            ("--note <note>", "备注，写入 manifest"),
+        ]),
+        "assert": ChineseCommandHelp(name: "assert", overview: "断言 UI 可见文本存在或不存在。", usage: "triton assert <text-exists|text-not-exists> <text> [选项]", options: target + hostPort + formatTextJSON + [
+            ("--role <role>", "限制 AX role"),
+            ("--count <n>", "要求匹配数量等于 n"),
+            ("--min-count <n>", "要求匹配数量至少为 n"),
+            ("--max-count <n>", "要求匹配数量最多为 n"),
+            ("--within <x,y,w,h>", "只检查指定 window bounds 内的文本"),
         ]),
         "record": ChineseCommandHelp(name: "record", overview: "生成可编辑 .tritonplan 模板；首期不是交互式真实录制。", usage: "triton record --output <path> [选项]", options: formatTextJSON + [
             ("--output <path>", "写入 .tritonplan 文件"),
@@ -1377,6 +1394,129 @@ struct Evidence: AsyncParsableCommand {
         } catch {
             if error is ExitCode { throw error }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/evidence", host: host, port: port)
+        }
+    }
+}
+
+struct Capture: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Capture an agent-friendly regression evidence bundle"
+    )
+
+    @Option(name: .customLong("case"), help: "Regression case name stored in manifest") var caseName: String?
+    @Option(help: "Evidence bundle directory path") var output: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Comma-separated artifacts")
+    var include: String = "status,list,version,hierarchy,ax,screenshot,geometry,archive"
+    @Option(help: "Human note stored in manifest") var note: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(inversion: .prefixedNo, help: "Request a fresh hierarchy before capturing hierarchy/archive")
+    var refresh = true
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        let includes: [String]
+        do {
+            includes = try parseEvidenceIncludes(include)
+        } catch {
+            try failRegressionValidation("\(error)", command: "capture", outputFormat: outputFormat)
+        }
+        do {
+            let manifest = try await captureEvidenceBundle(
+                output: output,
+                includes: includes,
+                name: caseName,
+                note: note,
+                target: target,
+                host: host,
+                port: port,
+                refresh: refresh
+            )
+            try printEvidenceManifest(manifest, format: outputFormat)
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/capture", host: host, port: port)
+        }
+    }
+}
+
+struct UIAssert: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "assert",
+        abstract: "Assert visible UI text state for agent-driven regression"
+    )
+
+    @Argument(help: "Assertion condition: text-exists or text-not-exists") var condition: String
+    @Argument(help: "Visible text, AX label, identifier, title, or value to assert") var query: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Optional AX role filter") var role: String?
+    @Option(help: "Require exact match count") var count: Int?
+    @Option(name: .customLong("min-count"), help: "Require at least this many matches") var minCount: Int?
+    @Option(name: .customLong("max-count"), help: "Require at most this many matches") var maxCount: Int?
+    @Option(help: "Restrict assertion to bounds: x,y,width,height") var within: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            guard let assertionCondition = TKUIAssertCondition(rawValue: condition) else {
+                try failRegressionValidation("Unsupported assert condition: \(condition)", command: "assert", outputFormat: outputFormat)
+            }
+            let exactCountProvided = count != nil
+            if exactCountProvided && (minCount != nil || maxCount != nil) {
+                try failRegressionValidation("--count cannot be combined with --min-count or --max-count", command: "assert", outputFormat: outputFormat)
+            }
+            if let count, count < 0 {
+                try failRegressionValidation("--count must be non-negative", command: "assert", outputFormat: outputFormat)
+            }
+            if let minCount, minCount < 0 {
+                try failRegressionValidation("--min-count must be non-negative", command: "assert", outputFormat: outputFormat)
+            }
+            if let maxCount, maxCount < 0 {
+                try failRegressionValidation("--max-count must be non-negative", command: "assert", outputFormat: outputFormat)
+            }
+            if let minCount, let maxCount, minCount > maxCount {
+                try failRegressionValidation("--min-count cannot be greater than --max-count", command: "assert", outputFormat: outputFormat)
+            }
+            let bounds: TKRect?
+            do {
+                bounds = try within.map(parseAssertBounds)
+            } catch {
+                try failRegressionValidation("\(error)", command: "assert", outputFormat: outputFormat)
+            }
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let status: TKStatusResponse = try await client.getJSON("/status")
+            let accessibilityData = try await client.request(type: "accessibility")
+            let nodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
+            let request = TKUIAssertRequest(
+                condition: assertionCondition,
+                query: query,
+                role: role,
+                count: count,
+                minCount: minCount,
+                maxCount: maxCount,
+                within: bounds
+            )
+            let result = TKUIAssertEvaluate(
+                request,
+                nodes: nodes,
+                targetConnectionState: status.targetConnectionState,
+                hierarchyCacheState: status.hierarchyCacheState
+            )
+            try printAssertResult(result, format: outputFormat)
+            if !result.ok {
+                throw ExitCode.failure
+            }
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/assert", host: host, port: port)
         }
     }
 }
@@ -2461,6 +2601,8 @@ func runtimeCapabilities(connected: Bool) -> [TKRuntimeCapability] {
         TKRuntimeCapability(name: "hit", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "screenshot", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "wait", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "capture", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "assert", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "replay", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "tap", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "swipe", supported: connected, reason: requiresRuntime),
@@ -3156,6 +3298,58 @@ func commandSchemas() -> [TKCommandSchema] {
             successShape: "TKEvidenceManifest with { ok, formatVersion, output, artifacts[], skipped[], target?, cli }",
             failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
             providedCapabilities: ["evidence"]
+        ),
+        TKCommandSchema(
+            name: "capture",
+            summary: "Capture an agent-friendly regression evidence bundle",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "cli+embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--case", type: "String", description: "Regression case name stored in manifest"),
+                TKCommandSchemaOption(name: "--output", type: "Path", required: true, description: "Evidence bundle directory path"),
+                TKCommandSchemaOption(name: "--include", type: "String", defaultValue: "status,list,version,hierarchy,ax,screenshot,geometry,archive", description: "Comma-separated artifact kinds"),
+                TKCommandSchemaOption(name: "--note", type: "String", description: "Human note stored in manifest"),
+                TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before hierarchy/archive capture"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton capture --case job-search-area-filter --output /tmp/job-search-area-filter.tritonevidence --json",
+            ],
+            successShape: "TKEvidenceManifest with freshness metadata for captured artifacts",
+            failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            providedCapabilities: ["capture", "evidence"]
+        ),
+        TKCommandSchema(
+            name: "assert",
+            summary: "Assert visible UI text state for agent-driven regression",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "<condition>", type: "text-exists|text-not-exists", required: true, description: "Assertion condition"),
+                TKCommandSchemaOption(name: "<text>", type: "String", required: true, description: "Visible text, label, identifier, title, or value"),
+                TKCommandSchemaOption(name: "--role", type: "String", description: "Optional AX role filter"),
+                TKCommandSchemaOption(name: "--count", type: "Int", description: "Require exact match count"),
+                TKCommandSchemaOption(name: "--min-count", type: "Int", description: "Require at least this many matches"),
+                TKCommandSchemaOption(name: "--max-count", type: "Int", description: "Require at most this many matches"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict assertion to window bounds"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                #"triton assert text-exists "Macau" --json"#,
+                #"triton assert text-not-exists "Qinghai" --within 180,120,190,500 --json"#,
+                #"triton assert text-exists "Macau" --role text --count 1 --json"#,
+            ],
+            successShape: "{ ok, condition, query, role?, count, expectedCount?, minCount?, maxCount?, within?, matches[], sample[], targetConnectionState?, hierarchyCacheState?, message? }",
+            failureShape: "Failed assertions return the same result with ok=false and exit non-zero; validation/request failures use { ok:false, error:{ code, message, endpoint?, hint } }",
+            providedCapabilities: ["assert"]
         ),
         TKCommandSchema(
             name: "record",
@@ -4062,6 +4256,40 @@ func readReplayPlan(from path: String) throws -> TKReplayPlan {
     return plan
 }
 
+func parseAssertBounds(_ raw: String) throws -> TKRect {
+    let parts = raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    guard parts.count == 4,
+          let x = Double(parts[0]),
+          let y = Double(parts[1]),
+          let width = Double(parts[2]),
+          let height = Double(parts[3]),
+          width >= 0,
+          height >= 0 else {
+        throw RuntimeError("--within must use x,y,width,height with non-negative width and height")
+    }
+    return TKRect(x: x, y: y, width: width, height: height)
+}
+
+func printAssertResult(_ result: TKUIAssertResult, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(result))
+    case .text:
+        print("ok: \(result.ok)")
+        print("condition: \(result.condition)")
+        print("query: \(result.query)")
+        if let role = result.role { print("role: \(role)") }
+        print("count: \(result.count)")
+        if let expectedCount = result.expectedCount { print("expectedCount: \(expectedCount)") }
+        if let minCount = result.minCount { print("minCount: \(minCount)") }
+        if let maxCount = result.maxCount { print("maxCount: \(maxCount)") }
+        if let within = result.within { print("within: \(formatRect(within))") }
+        if let targetConnectionState = result.targetConnectionState { print("targetConnectionState: \(targetConnectionState)") }
+        if let hierarchyCacheState = result.hierarchyCacheState { print("hierarchyCacheState: \(hierarchyCacheState)") }
+        if let message = result.message { print("message: \(message)") }
+    }
+}
+
 func parseReplayVariables(_ assignments: [String]) throws -> [String: String] {
     var result: [String: String] = [:]
     for assignment in assignments {
@@ -4575,6 +4803,21 @@ func failReplayValidation(_ message: String, outputFormat: ClientOutputFormat) t
             code: "validation_failed",
             message: message,
             hint: "Run `triton schema --command replay --json` to inspect required fields"
+        ))
+        print(try encodeJSON(response))
+    case .text:
+        fputs("error: \(message)\n", stderr)
+    }
+    throw ExitCode.failure
+}
+
+func failRegressionValidation(_ message: String, command: String, outputFormat: ClientOutputFormat) throws -> Never {
+    switch outputFormat {
+    case .json:
+        let response = TKCLIErrorResponse(error: TKCLIErrorDetail(
+            code: "validation_failed",
+            message: message,
+            hint: "Run `triton schema --command \(command) --json` to inspect required fields"
         ))
         print(try encodeJSON(response))
     case .text:
