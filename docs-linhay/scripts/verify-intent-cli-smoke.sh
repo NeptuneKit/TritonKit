@@ -80,6 +80,36 @@ ax_nodes = [
         "viewOID": 88,
         "className": "UITextField",
         "children": [],
+    },
+    {
+        "role": "button",
+        "label": "hello",
+        "value": None,
+        "identifier": "hello.left",
+        "title": None,
+        "frame": {"x": 24, "y": 560, "width": 120, "height": 44},
+        "enabled": True,
+        "focused": False,
+        "hidden": False,
+        "targetOID": 501,
+        "viewOID": 501,
+        "className": "UIButton",
+        "children": [],
+    },
+    {
+        "role": "button",
+        "label": "hello",
+        "value": None,
+        "identifier": "hello.right",
+        "title": None,
+        "frame": {"x": 220, "y": 560, "width": 120, "height": 44},
+        "enabled": True,
+        "focused": False,
+        "hidden": False,
+        "targetOID": 502,
+        "viewOID": 502,
+        "className": "UIButton",
+        "children": [],
     }
 ]
 
@@ -198,6 +228,14 @@ class Handler(BaseHTTPRequestHandler):
             action = json.loads(payload.decode())
             if action.get("type") == "tap" and action.get("targetOID") == 42:
                 self.send_json(200, input_result)
+            elif action.get("type") == "tap" and action.get("targetOID") in (501, 502):
+                self.send_json(200, {
+                    "ok": True,
+                    "action": "tap",
+                    "message": "mock duplicate hello tapped",
+                    "targetOID": action.get("targetOID"),
+                    "targetClassName": "UIButton",
+                })
             elif action.get("type") == "tap" and action.get("x") == 243 and action.get("y") == 220:
                 self.send_json(200, {
                     "ok": True,
@@ -213,6 +251,17 @@ class Handler(BaseHTTPRequestHandler):
                     "message": "mock segment selected",
                     "targetOID": 99,
                     "targetClassName": "UISegmentedControl",
+                })
+            elif action.get("type") == "type" and action.get("text") == "hello":
+                self.send_json(200, {
+                    "ok": True,
+                    "action": "type",
+                    "message": "mock text inserted",
+                    "targetOID": 77,
+                    "targetClassName": "UIKeyInput",
+                    "secure": False,
+                    "redacted": False,
+                    "insertedLength": 5,
                 })
             else:
                 self.send_json(422, {"ok": False, "action": "tap", "message": "unexpected input"})
@@ -234,21 +283,31 @@ done
 
 jq -e '(.targets | length) == 1 and .targets[0].id == "triton:demo:single"' "$out_dir/list.json" >/dev/null
 
-"$triton" tap "HTTP" --host "$host" --port "$port" --json > "$out_dir/tap-http-omitted-target.json"
+"$triton" tap "HTTP" --host "$host" --port "$port" > "$out_dir/tap-http-omitted-target.json"
 jq -e '.ok == true and .targetOID == 42 and .targetClassName == "UISegmentedControl"' "$out_dir/tap-http-omitted-target.json" >/dev/null
 
 "$triton" find "名称" --host "$host" --port "$port" --json > "$out_dir/find-name-text-field.json"
 jq -e '.role == "textField" and .strategy == "coordinate" and .request.x == 243 and .request.y == 220' "$out_dir/find-name-text-field.json" >/dev/null
-"$triton" tap "名称" --host "$host" --port "$port" --json > "$out_dir/tap-name-text-field.json"
+"$triton" tap "名称" --host "$host" --port "$port" > "$out_dir/tap-name-text-field.json"
 jq -e '.ok == true and .targetClassName == "UITextField"' "$out_dir/tap-name-text-field.json" >/dev/null
 
 "$triton" find "HTTPS" --host "$host" --port "$port" --json > "$out_dir/find-https-visible-hierarchy.json"
 jq -e '.source == "hierarchy-text" and .strategy == "coordinate" and .frame.y == 330 and .request.y < 350' "$out_dir/find-https-visible-hierarchy.json" >/dev/null
-"$triton" tap "HTTPS" --host "$host" --port "$port" --json > "$out_dir/tap-https-visible-hierarchy.json"
+"$triton" tap "HTTPS" --host "$host" --port "$port" > "$out_dir/tap-https-visible-hierarchy.json"
 jq -e '.ok == true and .targetClassName == "UISegmentedControl"' "$out_dir/tap-https-visible-hierarchy.json" >/dev/null
 
+"$triton" type "hello" --host "$host" --port "$port" > "$out_dir/type-positional.json"
+jq -e '.ok == true and .action == "type" and .targetClassName == "UIKeyInput"' "$out_dir/type-positional.json" >/dev/null
+
+"$triton" find "hello" --all --host "$host" --port "$port" > "$out_dir/find-hello-all.json"
+jq -e '.matchCount == 2 and (.candidates | length) == 2 and .candidates[1].targetOID == 502' "$out_dir/find-hello-all.json" >/dev/null
+"$triton" tap "hello" --index 2 --host "$host" --port "$port" > "$out_dir/tap-hello-index.json"
+jq -e '.ok == true and .targetOID == 502 and .targetClassName == "UIButton"' "$out_dir/tap-hello-index.json" >/dev/null
+"$triton" tap "hello" --within 180,0,220,700 --host "$host" --port "$port" > "$out_dir/tap-hello-within.json"
+jq -e '.ok == true and .targetOID == 502 and .targetClassName == "UIButton"' "$out_dir/tap-hello-within.json" >/dev/null
+
 set +e
-"$triton" tap "Missing Label" --host "$host" --port "$port" --json > "$out_dir/tap-missing-label.json" 2>&1
+"$triton" tap "Missing Label" --host "$host" --port "$port" > "$out_dir/tap-missing-label.json" 2>&1
 missing_code=$?
 set -e
 if [[ "$missing_code" -eq 0 ]]; then
@@ -268,6 +327,11 @@ if [[ "$geometry_code" -eq 0 ]]; then
 fi
 jq -e '.ok == false and .error.code == "runtime_ui_interrupted"' "$out_dir/geometry-interrupted.json" >/dev/null
 
+"$triton" schema --command tap > "$out_dir/schema-tap-default.json"
+jq -e '.commands[0].options[] | select(.name == "--format" and .defaultValue == "json")' "$out_dir/schema-tap-default.json" >/dev/null
+"$triton" schema --command type > "$out_dir/schema-type-default.json"
+jq -e '.commands[0].options[] | select(.name == "<text>")' "$out_dir/schema-type-default.json" >/dev/null
+
 jq -s -e '
   any(.[]; .type == "input"
     and ((.payload | @base64d | fromjson).type == "tap")
@@ -283,5 +347,11 @@ find-name-text-field: $out_dir/find-name-text-field.json
 find-https-visible-hierarchy: $out_dir/find-https-visible-hierarchy.json
 tap-missing-label: $out_dir/tap-missing-label.json
 geometry-interrupted: $out_dir/geometry-interrupted.json
+type-positional: $out_dir/type-positional.json
+find-hello-all: $out_dir/find-hello-all.json
+tap-hello-index: $out_dir/tap-hello-index.json
+tap-hello-within: $out_dir/tap-hello-within.json
+schema-tap-default: $out_dir/schema-tap-default.json
+schema-type-default: $out_dir/schema-type-default.json
 requests: $out_dir/mock-requests.ndjson
 REPORT

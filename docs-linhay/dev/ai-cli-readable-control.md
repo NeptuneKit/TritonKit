@@ -43,14 +43,14 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton record --output <file.tritonplan> --format json`：生成可编辑 replay plan 模板；首期不是交互式真实录制，不捕获终端历史或全局输入事件。
 - `triton plan inspect <file.tritonplan> --format json`：离线读取 `.tritonplan` 摘要，返回 schema version、变量、step count、actions 和 target metadata。
 - `triton replay <file.tritonplan> --format json`：按 `.tritonplan` 复跑短 smoke 流程；支持 `--dry-run`、`--var key=value`、`--var key-env=ENV_NAME`，步骤覆盖 `tap/paste/type/clear/wait/screenshot/evidence`，secure 步骤只回显 `<redacted:length>`。
-- `triton find "HTTP" --format json`：按用户意图解析可见文本、AX label、identifier、value 或 segmented option title，只返回目标来源、策略、oid、layer、frame 与将执行的 input request。
+- `triton find "HTTP"`：按用户意图解析可见文本、AX label、identifier、value 或 segmented option title，只返回目标来源、策略、oid、layer、frame 与将执行的 input request；默认 JSON，`--format text` 可切换为人读输出。同文案多目标时使用 `triton find "hello" --all` 获取 `candidates[].index/frame/targetOID`。
 - `triton wait --text "我的" --timeout 15 --format json`：等待异步 UI 条件，支持 `--text`、`--gone`、`--exists --role`、`--idle`、`--hierarchy-change --since latest` 和安全谓词 `--predicate 'text.exists("console") && !text.exists("登录")'`；成功或超时都返回 `TKWaitResult`，包含 `elapsedMs/pollCount/timedOut/lastObservedTextSample/match`，超时以非 0 退出。
-- `triton tap "HTTP" --format json`：意图优先点击入口；调用方不需要区分 AX、hierarchy、坐标、oid 或 segmented option。仍保留 `--x/--y`、`--oid`、`--ax-oid`、`--ax-label` 作为诊断和精确控制入口。
-- `triton swipe --target triton:local --start-x <x> --start-y <y> --end-x <x> --end-y <y> --format json`：对命中的 `UIScrollView` 调整 `contentOffset`。
-- `triton type --target triton:local --text <text> --format json`：向当前 first responder 或 `--oid` 指定的 `UIKeyInput` 写入文本。
-- `triton paste "console" --format json`：向当前 first responder、`--oid` 或 `--x/--y` 命中的输入框精确插入文本；`--secure` 只回显 `insertedLength` 与 redaction 状态，不回显原文。
-- `triton clear --format json`：清空当前 first responder、`--oid` 或 `--x/--y` 命中的输入框。
-- `triton press --target triton:local --button <button> --format json`：保留设备按钮契约；embedded runtime 当前返回 unsupported。
+- `triton tap "HTTP"`：意图优先点击入口；调用方不需要区分 AX、hierarchy、坐标、oid 或 segmented option。默认选择第一个候选；同文案多目标可用 `--index <n>` 按 `find --all` 的序号点击，或用 `--within x,y,width,height` 限定区域。仍保留 `--x/--y`、`--oid`、`--ax-oid`、`--ax-label` 作为诊断和精确控制入口。
+- `triton swipe --target triton:local --start-x <x> --start-y <y> --end-x <x> --end-y <y>`：对命中的 `UIScrollView` 调整 `contentOffset`。
+- `triton type <text>` / `triton type --text <text>`：向当前 first responder 或 `--oid` 指定的 `UIKeyInput` 写入文本。
+- `triton paste "console"`：向当前 first responder、`--oid` 或 `--x/--y` 命中的输入框精确插入文本；`--secure` 只回显 `insertedLength` 与 redaction 状态，不回显原文。
+- `triton clear`：清空当前 first responder、`--oid` 或 `--x/--y` 命中的输入框。
+- `triton press --target triton:local --button <button>`：保留设备按钮契约；embedded runtime 当前返回 unsupported。
 - `triton geometry --target triton:local --format json`：读取当前可见 window 的 bounds、safe area、scale 与 orientation。
 - `triton ax --target triton:local --format json`：读取当前 App 内安全可操作控件索引树。
 - `triton hit --target triton:local --x <x> --y <y> --format json`：按坐标命中最深 UI 节点，并返回中心点。
@@ -89,7 +89,7 @@ CLI 支持人读输出语言切换：`--language en|zh`、`--lang en|zh`、`TRIT
 
 `triton version --json` 会返回当前语言和支持语言，例如 `language=zh`、`supportedLanguages=["en","zh"]`，便于 agent 发现能力但不需要根据语言解析不同 JSON shape。
 
-本地参数校验在 JSON 模式下也输出机器可读 envelope，例如 `triton tap --json` 缺少 `--oid` 或坐标时返回 `error.code=validation_failed`，stderr 保持为空，方便 agent 直接解析 stdout。
+本地参数校验在 JSON 模式下也输出机器可读 envelope；输入动作命令默认就是 JSON，例如 `triton tap` 缺少目标选择器时返回 `error.code=validation_failed`，stderr 保持为空，方便 agent 直接解析 stdout。
 
 HTTP 管理 API 的错误响应同样使用 `{ok:false,error:{code,message,endpoint,hint}}`。例如无 hierarchy 时 `/hierarchy/latest` 返回 `hierarchy_unavailable`，无连接 target 时 `/input` 返回 `target_unavailable`。
 
@@ -101,7 +101,7 @@ embedded runtime 的 `tap` 会对常见公开 UIKit 控件执行确定性动作�
 
 `UISegmentedControl` 的 valueChanged 触发不再直接依赖 `UIControl.sendActions(for:)` 的内部枚举，而是先稳定写入 `selectedSegmentIndex`，再在下一次 main queue tick 对已注册 target/action 调用 `UIApplication.sendAction`。这避免 Triton 侧 dispatch 与 App 侧重建 cell 时出现额外的 UIControl 内部重入。Overloaded 的 `HTTP`/`HTTPS` 协议切换冒烟还暴露了 App 自身 `SKPublished` setter 内同步 sink 读取同一属性的 Swift 独占访问问题；测试用 App 已在本地把 `scheme` 变化后的 `updateModels()` 延后一拍执行。
 
-普通未知 `UIControl` 的 target-action 派发也改为下一轮 main queue 异步执行，`tap` 只确认“已派发”而不等待 App 业务 action 完成。这个边界来自 Overloaded `导入连接` 场景：业务 action 会读取剪贴板并触发 iOS 系统权限弹窗；如果 runtime 在 request handler 内同步派发 action，控制通道会把业务弹窗阻塞误报为 HTTP 408。现在 `triton tap "导入连接" --json` 会立即返回 `ok=true,message=Dispatched UIControl.touchUpInside`，随后若系统弹窗挡住 App 内 UIKit tree，`triton ax` 会返回 `error.code=runtime_ui_interrupted`，hint 明确说明 embedded runtime 不能 inspect 或点击 SpringBoard/CoreSimulatorBridge 弹窗。相对地，`triton tap "添加连接"` 这类命中导航标题的 no-op control 会返回 `ok=false,message=Target UIControl has no primary or touchUpInside action` 或不可操作错误。
+普通未知 `UIControl` 的 target-action 派发也改为下一轮 main queue 异步执行，`tap` 只确认“已派发”而不等待 App 业务 action 完成。这个边界来自 Overloaded `导入连接` 场景：业务 action 会读取剪贴板并触发 iOS 系统权限弹窗；如果 runtime 在 request handler 内同步派发 action，控制通道会把业务弹窗阻塞误报为 HTTP 408。现在 `triton tap "导入连接"` 会立即返回 `ok=true,message=Dispatched UIControl.touchUpInside`，随后若系统弹窗挡住 App 内 UIKit tree，`triton ax` 会返回 `error.code=runtime_ui_interrupted`，hint 明确说明 embedded runtime 不能 inspect 或点击 SpringBoard/CoreSimulatorBridge 弹窗。相对地，`triton tap "添加连接"` 这类命中导航标题的 no-op control 会返回 `ok=false,message=Target UIControl has no primary or touchUpInside action` 或不可操作错误。
 
 复杂目标的可复跑端到端验收脚本是 `docs-linhay/scripts/verify-complex-harness.sh`。它要求 `triton serve` 已运行且 iOS Demo 已连接，随后自动执行 `ax` identifier 断言、七步 NDJSON input 控制、summary 状态断言、截图元数据校验和 archive 内容校验。
 
@@ -112,12 +112,12 @@ Overloaded 真实 App 的可复跑 smoke 脚本是 `docs-linhay/scripts/verify-o
 1. `ax --with-hierarchy` 能证明 AX 与 hierarchy 可以稳定映射，但 Overloaded 复杂表单中同名 AX 节点会出现多份候选；读状态和断言需要去重、当前可见候选标记或 ambiguity 解释。
 2. `hit` 对自定义 row button 已能提升到可操作父控件，但缺少 raw hit、actionable target、提升路径、reason 和 suggested input；这些字段能让 agent 在坐标失败时自动修正。
 3. `attrs` 仍主要是 class/layout/layer 样式。后续应补 Accessibility/Responder/Control groups，例如 label/value/identifier、firstResponder、UIButton title/enabled/selected、UITextField text/placeholder/secure、UISegmentedControl selectedSegmentIndex/segments、UIScrollView canScroll。
-4. `type` 与 `press` 还没有完全意图优先：当前仍需要 `type --text <text>`、`press --button home`。第一版 CLI 重设计可考虑支持 `triton type "hello"`、`triton press home`，保持旧参数作为精确/脚本入口。
+4. `type` 已支持 `triton type <text>`，并保留 `type --text <text>` 兼容入口；`press` 仍未完全意图优先，当前仍需要 `press --button home`，后续可考虑支持 `triton press home`。
 5. 输入控制缺少显式语义动作：`clearText`、`setText`、`focus`、`submit`、`selectSegment`、`scrollToVisible` 能减少 “tap 后再 type” 和坐标滚动的不确定性。
 
 意图解析有两个优先级约束：`UITextField`/`UITextView` 这类输入控件默认用 frame center 坐标点击，避免 AX oid 因 cell 重建后弱引用失效；hierarchy 文本 fallback 必须继承祖先可见性，隐藏 cell 或 alpha 为 0 的子 label 不能作为 `HTTP/HTTPS` 这类可点击选项候选。
 
-意图优先 CLI 的轻量 mock smoke 脚本是 `docs-linhay/scripts/verify-intent-cli-smoke.sh`。它不依赖 iOS App，覆盖唯一 target 时省略 `--target` 的 `triton tap "HTTP"`、输入框 `名称` 使用坐标策略、隐藏祖先中的 `HTTPS` 不参与 hierarchy 文本命中、找不到文本时的 JSON 错误 envelope、以及 HTTP 408 `runtime_ui_interrupted` 在 `--json` 下的稳定透传。
+意图优先 CLI 的轻量 mock smoke 脚本是 `docs-linhay/scripts/verify-intent-cli-smoke.sh`。它不依赖 iOS App，覆盖唯一 target 时省略 `--target` 的 `triton tap "HTTP"`、输入框 `名称` 使用坐标策略、`triton type "hello"` 位置参数、动作命令默认 JSON、隐藏祖先中的 `HTTPS` 不参与 hierarchy 文本命中、找不到文本时的 JSON 错误 envelope、以及 HTTP 408 `runtime_ui_interrupted` 的稳定透传。
 
 无服务 bootstrap 契约的可复跑验收脚本是 `docs-linhay/scripts/verify-cli-bootstrap.sh`。它要求 `19421` 无监听进程，随后验证 `version/schema/plan/doctor/capabilities/status` 的 JSON shape、退出码与 `nextAction`。
 

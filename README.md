@@ -158,12 +158,20 @@ triton ax --json
 For repeatable regression flows, wait for asynchronous UI state before the next action or assertion:
 
 ```bash
-triton tap --json "登录"
+triton tap "登录"
 triton wait --gone "登录" --timeout 15 --json
 triton wait --text "我的" --timeout 15 --json
 triton wait --predicate 'text.exists("我的") && !text.exists("登录")' --timeout 15 --json
 triton assert text-exists "我的" --json
 triton assert text-not-exists "Qinghai" --within 180,120,190,500 --json
+```
+
+When the same text appears multiple times, list candidates first and then select by index or bounds:
+
+```bash
+triton find "hello" --all
+triton tap "hello" --index 2
+triton tap "hello" --within 180,0,220,500
 ```
 
 When a pass/fail decision needs attachable evidence, export a bundle with a machine-readable manifest:

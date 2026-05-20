@@ -31,6 +31,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton doctor --json`
    - `triton schema --json`
    - `triton plan --json`
+   - `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, or `triton clear` for agent-facing action checks; these default to JSON, and `--format text` is only for human-readable debugging.
+   - When the same text appears multiple times, run `triton find "<text>" --all` first, then use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height` to disambiguate.
    - relevant `swift test`, smoke scripts, or app-level reproduction steps.
 4. Classify the issue:
    - `bug`: behavior is broken, unstable, misleading, or inconsistent with documented/schema behavior.
@@ -137,6 +139,10 @@ triton status --json
 triton list --json
 triton hierarchy --json
 triton ax --json
+triton tap "first-check"
+triton type "hello"
+triton find "hello" --all
+triton tap "hello" --index 2
 triton assert text-exists first-check --json
 triton evidence --name first-check --output /tmp/first-check.tritonevidence --json
 triton capture --case first-check --output /tmp/first-check.tritonevidence --json

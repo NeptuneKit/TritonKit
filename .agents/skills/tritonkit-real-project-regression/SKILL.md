@@ -43,7 +43,10 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - inspect reusable flows with `triton plan inspect <file.tritonplan> --json`;
    - dry-run reusable flows before touching the app: `triton replay <file.tritonplan> --dry-run --var key=value --var secret-env=ENV --json`;
    - replay committed flows with `triton replay <file.tritonplan> --json`, keeping secure values in environment variables and using `--var <name>-env=<ENV>`;
-   - prefer `find`, `wait`, `tap`, `type`, `paste`, `clear`, `input --json --summary --strict`;
+   - prefer action commands that are already machine-readable by default: `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, `triton clear`; use `--format text` only for human-readable debugging;
+   - when labels repeat, run `triton find "<text>" --all` and then choose `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`;
+   - keep `triton type --text <text>` only for compatibility with older scripts, never together with positional `<text>`;
+   - for batch input, use `triton input --json --summary --strict`;
    - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
    - use `triton assert text-exists|text-not-exists <text> --json` for final pass/fail checks; add `--within x,y,width,height`, `--role`, or `--count` when labels repeat across headers, sidebars, and cells;
    - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, archive check, or a fresh `evidence` bundle.

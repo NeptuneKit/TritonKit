@@ -793,6 +793,9 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         ]),
         "find": ChineseCommandHelp(name: "find", overview: "把可见文本、label、identifier 或选项标题解析为可操作目标。", usage: "triton find <文本> [选项]", options: target + hostPort + formatTextJSON + [
             ("<文本>", "要解析的用户意图，例如 HTTP"),
+            ("--all", "输出全部候选及 1 起始序号"),
+            ("--index <n>", "选择第 n 个候选"),
+            ("--within <x,y,w,h>", "只在指定 window bounds 内匹配"),
         ]),
         "wait": ChineseCommandHelp(name: "wait", overview: "等待文本出现、文本消失、目标空闲、层级变化或安全谓词成立。", usage: "triton wait [条件] [选项]", options: target + hostPort + formatTextJSON + [
             ("--text <text>", "等待可见文本出现"),
@@ -814,6 +817,8 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--ax-oid <oid>", "`triton ax` 输出的 targetOID/viewOID"),
             ("--ax-label <label>", "`triton ax` 输出的精确 label，优先按 AX oid 点击"),
             ("--duration <seconds>", "按住时长"),
+            ("--index <n>", "按 `find --all` 的 1 起始序号选择候选"),
+            ("--within <x,y,w,h>", "只在指定 window bounds 内匹配文本候选"),
         ]),
         "input": ChineseCommandHelp(name: "input", overview: "从 stdin 读取 NDJSON 输入动作。", usage: "triton input [选项] < gestures.ndjson", options: target + hostPort + formatTextJSON + [
             ("--fail-fast", "首个失败动作后停止"),
@@ -826,6 +831,13 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--oid <oid>", "可选 responder oid"),
             ("--x <x>", "window x 坐标，需与 --y 同时使用"),
             ("--y <y>", "window y 坐标，需与 --x 同时使用"),
+        ]),
+        "type": ChineseCommandHelp(name: "type", overview: "向已聚焦或 oid 指定的 UIKeyInput 输入文本。", usage: "triton type <text> [选项]", options: target + hostPort + formatTextJSON + [
+            ("<text>", "要插入的文本"),
+            ("--text <text>", "兼容入口；与位置参数二选一"),
+            ("--secure", "敏感文本，输出只回显长度和 redaction 状态"),
+            ("--oid <oid>", "可选 responder oid"),
+            ("--exact", "保留兼容选项，当前 embedded runtime 使用直接插入"),
         ]),
         "clear": ChineseCommandHelp(name: "clear", overview: "清空当前焦点或指定输入框。", usage: "triton clear [选项]", options: target + hostPort + formatTextJSON + [
             ("--oid <oid>", "可选 responder oid"),
@@ -1621,15 +1633,28 @@ struct Find: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(help: "Include all matching candidates with stable 1-based indexes") var all = false
+    @Option(help: "Select one matching candidate by 1-based index") var index: Int?
+    @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            let bounds = try within.map(parseBounds)
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             let client = TritonKitHTTPClient(host: host, port: port)
-            let resolution = try await resolveTapTarget(query, client: client, width: nil, height: nil, duration: nil)
+            let resolution = try await resolveTapTarget(
+                query,
+                client: client,
+                width: nil,
+                height: nil,
+                duration: nil,
+                index: index,
+                within: bounds,
+                includeCandidates: all
+            )
             switch outputFormat {
             case .json:
                 print(try encodeJSON(resolution))
@@ -1645,6 +1670,8 @@ struct Find: AsyncParsableCommand {
                 if let viewOID = resolution.viewOID { print("viewOID: \(viewOID)") }
                 if let layerOID = resolution.layerOID { print("layerOID: \(layerOID)") }
                 if let frame = resolution.frame { print("frame: \(formatRect(frame))") }
+                print("matchIndex: \(resolution.matchIndex)")
+                print("matchCount: \(resolution.matchCount)")
             }
         } catch {
             if error is ExitCode { throw error }
@@ -1752,7 +1779,7 @@ struct Tap: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Option(help: "Window x coordinate in points") var x: Double?
     @Option(help: "Window y coordinate in points") var y: Double?
@@ -1762,6 +1789,8 @@ struct Tap: AsyncParsableCommand {
     @Option(help: "Optional screen/window width in points") var width: Double?
     @Option(help: "Optional screen/window height in points") var height: Double?
     @Option(help: "Hold duration in seconds") var duration: Double?
+    @Option(help: "Select one matching query candidate by 1-based index") var index: Int?
+    @Option(help: "Restrict query matching to bounds: x,y,width,height") var within: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
@@ -1779,6 +1808,13 @@ struct Tap: AsyncParsableCommand {
             }
             throw RuntimeError("Provide exactly one target selector: <query>, --oid, --x/--y, --ax-oid, or --ax-label")
         }
+        if (index != nil || within != nil) && query == nil {
+            if outputFormat == .json {
+                try printValidationError("--index and --within can only be used with <query>")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--index and --within can only be used with <query>")
+        }
         if (x == nil) != (y == nil) {
             if outputFormat == .json {
                 try printValidationError("--x and --y must be provided together")
@@ -1791,7 +1827,16 @@ struct Tap: AsyncParsableCommand {
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             if let query {
                 let client = TritonKitHTTPClient(host: host, port: port)
-                let resolution = try await resolveTapTarget(query, client: client, width: width, height: height, duration: duration)
+                let bounds = try within.map(parseBounds)
+                let resolution = try await resolveTapTarget(
+                    query,
+                    client: client,
+                    width: width,
+                    height: height,
+                    duration: duration,
+                    index: index,
+                    within: bounds
+                )
                 try await runInputRequest(resolution.request, host: host, port: port, format: outputFormat)
                 return
             }
@@ -1835,7 +1880,7 @@ struct Swipe: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Option(name: .customLong("start-x"), help: "Start x coordinate in points") var startX: Double
     @Option(name: .customLong("start-y"), help: "Start y coordinate in points") var startY: Double
@@ -1871,12 +1916,13 @@ struct TypeText: AsyncParsableCommand {
         abstract: "Type text into a focused or oid-targeted UIKeyInput"
     )
 
+    @Argument(help: "Text to insert") var textArgument: String?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
-    @Option(help: "Text to insert") var text: String
+    @Option(help: "Text to insert; kept for compatibility with older scripts") var text: String?
     @Option(help: "Optional responder oid from `triton nodes`") var oid: UInt?
     @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
     @Flag(name: .customLong("exact"), help: "Use direct UIKeyInput insertion without keyboard autocorrect") var exact = false
@@ -1884,9 +1930,17 @@ struct TypeText: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            let selectorCount = [textArgument != nil, text != nil].filter { $0 }.count
+            guard selectorCount == 1 else {
+                if outputFormat == .json {
+                    try printValidationError("Provide exactly one text value: <text> or --text")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("Provide exactly one text value: <text> or --text")
+            }
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
-                TKInputRequest(type: .typeText, targetOID: oid, text: text, secure: secure),
+                TKInputRequest(type: .typeText, targetOID: oid, text: textArgument ?? text, secure: secure),
                 host: host,
                 port: port,
                 format: outputFormat
@@ -1907,7 +1961,7 @@ struct PasteText: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
     @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
@@ -1939,7 +1993,7 @@ struct ClearText: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
     @Option(help: "Window x coordinate to focus before clear") var x: Double?
@@ -1967,7 +2021,7 @@ struct Press: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Option(help: "Button name, for example home, lock, power, volume-up") var button: String
     @Option(help: "Hold duration in seconds") var duration: Double?
@@ -3040,6 +3094,7 @@ func commandSchemas() -> [TKCommandSchema] {
     let target = TKCommandSchemaOption(name: "--target", type: "String", defaultValue: TKLocalTargetID, description: "Target id from `triton list`; commands auto-select the only connected target when omitted")
     let jsonText = ["text", "json"]
     let formatTextJSON = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format")
+    let formatJSONText = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format")
     let jsonAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --format json")
     let languageOption = TKCommandSchemaOption(name: "--language/--lang", type: "en|zh", defaultValue: "TRITON_LANGUAGE or en", description: "Human-readable output language")
     let metadataJSONAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --metadata")
@@ -3404,13 +3459,17 @@ func commandSchemas() -> [TKCommandSchema] {
             options: hostPort + [
                 target,
                 TKCommandSchemaOption(name: "<query>", type: "String", required: true, description: "Visible text, AX label, identifier, value, or option title to resolve"),
-                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"),
+                TKCommandSchemaOption(name: "--all", type: "Bool", defaultValue: "false", description: "Include all candidates with stable 1-based indexes"),
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict matching to window bounds"),
+                formatJSONText,
                 jsonAlias,
             ],
             examples: [
-                #"triton find "HTTP" --json"#,
+                #"triton find "HTTP""#,
+                #"triton find "hello" --all"#,
             ],
-            successShape: "TapTargetResolution describing source, strategy, ids, frame, and request"
+            successShape: "TapTargetResolution describing selected target; with --all includes candidates[]"
         ),
         TKCommandSchema(
             name: "wait",
@@ -3526,14 +3585,18 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Target view oid"),
                 TKCommandSchemaOption(name: "--ax-oid", type: "UInt", description: "AX target/view oid from `triton ax`; taps by runtime oid"),
                 TKCommandSchemaOption(name: "--ax-label", type: "String", description: "Exact AX label from `triton ax`; taps by runtime oid"),
-                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"),
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one query candidate by 1-based index from `triton find --all`"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict query matching to window bounds"),
+                formatJSONText,
                 jsonAlias,
             ],
             examples: [
-                #"triton tap "HTTP" --json"#,
-                "triton tap --x 270 --y 300 --format json",
-                "triton tap --oid 13 --format json",
-                "triton tap --ax-label Save --json",
+                #"triton tap "HTTP""#,
+                #"triton tap "hello" --index 2"#,
+                #"triton tap "hello" --within 180,0,220,500"#,
+                "triton tap --x 270 --y 300",
+                "triton tap --oid 13",
+                "triton tap --ax-label Save",
             ],
             successShape: "{ ok, action, message, targetOID, targetClassName }"
         ),
@@ -3553,10 +3616,10 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--width", type: "Double", description: "Optional screen/window width in points"),
                 TKCommandSchemaOption(name: "--height", type: "Double", description: "Optional screen/window height in points"),
                 TKCommandSchemaOption(name: "--duration", type: "Double", description: "Gesture duration in seconds"),
-                formatTextJSON,
+                formatJSONText,
                 jsonAlias,
             ],
-            examples: ["triton swipe --start-x 350 --start-y 390 --end-x 100 --end-y 390 --format json"],
+            examples: ["triton swipe --start-x 350 --start-y 390 --end-x 100 --end-y 390"],
             successShape: "{ ok, action, message, targetOID, targetClassName }",
             providedCapabilities: ["swipe"]
         ),
@@ -3569,14 +3632,15 @@ func commandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: hostPort + [
                 target,
-                TKCommandSchemaOption(name: "--text", type: "String", required: true, description: "Text to insert"),
+                TKCommandSchemaOption(name: "<text>", type: "String", description: "Text to insert"),
+                TKCommandSchemaOption(name: "--text", type: "String", description: "Compatibility input; mutually exclusive with <text>"),
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid from `triton nodes`"),
                 TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact inserted text details in command output"),
                 TKCommandSchemaOption(name: "--exact", type: "Bool", defaultValue: "false", description: "Use direct UIKeyInput insertion without keyboard autocorrect"),
-                formatTextJSON,
+                formatJSONText,
                 jsonAlias,
             ],
-            examples: ["triton type --text hello --exact --format json"],
+            examples: ["triton type hello --exact", "triton type --text hello"],
             successShape: "{ ok, action, message, targetOID, targetClassName, secure?, redacted?, insertedLength? }",
             providedCapabilities: ["type"]
         ),
@@ -3594,13 +3658,13 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid"),
                 TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate to focus before paste"),
                 TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate to focus before paste"),
-                formatTextJSON,
+                formatJSONText,
                 jsonAlias,
             ],
             examples: [
-                #"triton paste "console" --json"#,
-                #"triton paste --secure "aa123654" --json"#,
-                #"triton paste --x 180 --y 250 "console" --json"#,
+                #"triton paste "console""#,
+                #"triton paste --secure "aa123654""#,
+                #"triton paste --x 180 --y 250 "console""#,
             ],
             successShape: "{ ok, action, message, targetOID, targetClassName, secure, redacted, insertedLength }",
             providedCapabilities: ["paste"]
@@ -3617,12 +3681,12 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid"),
                 TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate to focus before clear"),
                 TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate to focus before clear"),
-                formatTextJSON,
+                formatJSONText,
                 jsonAlias,
             ],
             examples: [
-                "triton clear --json",
-                "triton clear --x 180 --y 250 --json",
+                "triton clear",
+                "triton clear --x 180 --y 250",
             ],
             successShape: "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }",
             providedCapabilities: ["clear"]
@@ -3638,10 +3702,10 @@ func commandSchemas() -> [TKCommandSchema] {
                 target,
                 TKCommandSchemaOption(name: "--button", type: "String", required: true, description: "Button name, for example home"),
                 TKCommandSchemaOption(name: "--duration", type: "Double", description: "Hold duration in seconds"),
-                formatTextJSON,
+                formatJSONText,
                 jsonAlias,
             ],
-            examples: ["triton press --button home --format json"],
+            examples: ["triton press --button home"],
             successShape: "{ ok: false, action, message } in embedded runtime",
             providedCapabilities: ["press"]
         ),
@@ -4257,6 +4321,10 @@ func readReplayPlan(from path: String) throws -> TKReplayPlan {
 }
 
 func parseAssertBounds(_ raw: String) throws -> TKRect {
+    try parseBounds(raw)
+}
+
+func parseBounds(_ raw: String) throws -> TKRect {
     let parts = raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
     guard parts.count == 4,
           let x = Double(parts[0]),
@@ -5248,7 +5316,8 @@ func selectAXNode(_ nodes: [TKAXNode], oid: UInt?, label: String?) -> TKAXNode? 
         .first
 }
 
-struct TapTargetResolution: Codable {
+struct TapTargetCandidate: Codable {
+    let index: Int
     let query: String
     let source: String
     let strategy: String
@@ -5264,36 +5333,116 @@ struct TapTargetResolution: Codable {
     let request: TKInputRequest
 }
 
+struct TapTargetResolution: Codable {
+    let query: String
+    let source: String
+    let strategy: String
+    let role: String?
+    let label: String?
+    let value: String?
+    let identifier: String?
+    let className: String?
+    let viewOID: UInt?
+    let targetOID: UInt?
+    let layerOID: UInt?
+    let frame: TKRect?
+    let request: TKInputRequest
+    let matchIndex: Int
+    let matchCount: Int
+    let candidates: [TapTargetCandidate]?
+
+    init(selected: TapTargetCandidate, candidates: [TapTargetCandidate], includeCandidates: Bool) {
+        self.query = selected.query
+        self.source = selected.source
+        self.strategy = selected.strategy
+        self.role = selected.role
+        self.label = selected.label
+        self.value = selected.value
+        self.identifier = selected.identifier
+        self.className = selected.className
+        self.viewOID = selected.viewOID
+        self.targetOID = selected.targetOID
+        self.layerOID = selected.layerOID
+        self.frame = selected.frame
+        self.request = selected.request
+        self.matchIndex = selected.index
+        self.matchCount = candidates.count
+        self.candidates = includeCandidates ? candidates : nil
+    }
+}
+
 func resolveTapTarget(
     _ query: String,
     client: TritonKitHTTPClient,
     width: Double?,
     height: Double?,
-    duration: Double?
+    duration: Double?,
+    index: Int? = nil,
+    within: TKRect? = nil,
+    includeCandidates: Bool = false
 ) async throws -> TapTargetResolution {
+    if let index, index <= 0 {
+        throw RuntimeError("--index must be greater than 0")
+    }
+    let candidates = try await tapTargetCandidates(
+        query,
+        client: client,
+        width: width,
+        height: height,
+        duration: duration,
+        within: within
+    )
+    guard !candidates.isEmpty else {
+        throw RuntimeError("No tappable UI target matched query: \(query)")
+    }
+    let selectedIndex = index ?? 1
+    guard selectedIndex <= candidates.count else {
+        throw RuntimeError("Only \(candidates.count) tappable UI target(s) matched query: \(query); cannot select --index \(selectedIndex)")
+    }
+    return TapTargetResolution(
+        selected: candidates[selectedIndex - 1],
+        candidates: candidates,
+        includeCandidates: includeCandidates
+    )
+}
+
+func tapTargetCandidates(
+    _ query: String,
+    client: TritonKitHTTPClient,
+    width: Double?,
+    height: Double?,
+    duration: Double?,
+    within: TKRect?
+) async throws -> [TapTargetCandidate] {
     let accessibilityData = try await client.request(type: "accessibility")
     let axNodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
-    if let axNode = selectAXNodeByQuery(axNodes, query: query, includeValue: false) {
-        let request = tapRequest(for: axNode, width: width, height: height, duration: duration)
-        return TapTargetResolution(
-            query: query,
-            source: "ax",
-            strategy: axTapShouldUseCoordinate(axNode) ? "coordinate" : "oid",
-            role: axNode.role,
-            label: axNode.label,
-            value: axNode.value,
-            identifier: axNode.identifier,
-            className: axNode.className,
-            viewOID: axNode.viewOID,
-            targetOID: axNode.targetOID,
-            layerOID: axNode.layerOID,
-            frame: axNode.frame,
-            request: request
-        )
-    }
+    let directAXCandidates = selectAXNodesByQuery(axNodes, query: query, includeValue: false)
+        .map { axNode in
+            let request = tapRequest(for: axNode, width: width, height: height, duration: duration)
+            return TapTargetCandidate(
+                index: 0,
+                query: query,
+                source: "ax",
+                strategy: axTapShouldUseCoordinate(axNode) ? "coordinate" : "oid",
+                role: axNode.role,
+                label: axNode.label,
+                value: axNode.value,
+                identifier: axNode.identifier,
+                className: axNode.className,
+                viewOID: axNode.viewOID,
+                targetOID: axNode.targetOID,
+                layerOID: axNode.layerOID,
+                frame: axNode.frame,
+                request: request
+            )
+        }
 
     let hierarchyData = try await client.request(type: "hierarchy")
-    if let candidate = try await selectHierarchyTextCandidate(query, hierarchyData: hierarchyData, client: client) {
+    let hierarchyCandidates = try await selectHierarchyTextCandidates(
+        query,
+        hierarchyData: hierarchyData,
+        client: client
+    ).map { candidate in
         let request = TKInputRequest.tap(
             x: candidate.frame.centerX,
             y: candidate.frame.centerY,
@@ -5301,7 +5450,8 @@ func resolveTapTarget(
             height: height,
             duration: duration
         )
-        return TapTargetResolution(
+        return TapTargetCandidate(
+            index: 0,
             query: query,
             source: "hierarchy-text",
             strategy: "coordinate",
@@ -5318,29 +5468,58 @@ func resolveTapTarget(
         )
     }
 
-    if let axNode = selectAXNodeByQuery(axNodes, query: query, includeValue: true) {
-        let request = tapRequest(for: axNode, width: width, height: height, duration: duration)
-        return TapTargetResolution(
-            query: query,
-            source: "ax-value",
-            strategy: axTapShouldUseCoordinate(axNode) ? "coordinate" : "oid",
-            role: axNode.role,
-            label: axNode.label,
-            value: axNode.value,
-            identifier: axNode.identifier,
-            className: axNode.className,
-            viewOID: axNode.viewOID,
-            targetOID: axNode.targetOID,
-            layerOID: axNode.layerOID,
-            frame: axNode.frame,
-            request: request
+    let valueAXCandidates = selectAXNodesByQuery(axNodes, query: query, includeValue: true)
+        .filter { node in
+            !(node.label == query || node.identifier == query || node.title == query)
+        }
+        .map { axNode in
+            let request = tapRequest(for: axNode, width: width, height: height, duration: duration)
+            return TapTargetCandidate(
+                index: 0,
+                query: query,
+                source: "ax-value",
+                strategy: axTapShouldUseCoordinate(axNode) ? "coordinate" : "oid",
+                role: axNode.role,
+                label: axNode.label,
+                value: axNode.value,
+                identifier: axNode.identifier,
+                className: axNode.className,
+                viewOID: axNode.viewOID,
+                targetOID: axNode.targetOID,
+                layerOID: axNode.layerOID,
+                frame: axNode.frame,
+                request: request
+            )
+        }
+
+    let candidates = (directAXCandidates + hierarchyCandidates + valueAXCandidates)
+        .filter { candidate in
+            guard let within else { return true }
+            guard let frame = candidate.frame else { return false }
+            return TKRectIntersects(frame, within)
+        }
+
+    return candidates.enumerated().map { offset, candidate in
+        TapTargetCandidate(
+            index: offset + 1,
+            query: candidate.query,
+            source: candidate.source,
+            strategy: candidate.strategy,
+            role: candidate.role,
+            label: candidate.label,
+            value: candidate.value,
+            identifier: candidate.identifier,
+            className: candidate.className,
+            viewOID: candidate.viewOID,
+            targetOID: candidate.targetOID,
+            layerOID: candidate.layerOID,
+            frame: candidate.frame,
+            request: candidate.request
         )
     }
-
-    throw RuntimeError("No tappable UI target matched query: \(query)")
 }
 
-func selectAXNodeByQuery(_ nodes: [TKAXNode], query: String, includeValue: Bool = true) -> TKAXNode? {
+func selectAXNodesByQuery(_ nodes: [TKAXNode], query: String, includeValue: Bool = true) -> [TKAXNode] {
     TKFlattenAXNodes(nodes)
         .map(\.node)
         .filter { node in
@@ -5350,9 +5529,17 @@ func selectAXNodeByQuery(_ nodes: [TKAXNode], query: String, includeValue: Bool 
                 || (includeValue && node.value == query)
         }
         .sorted { lhs, rhs in
-            axTapPriority(lhs) > axTapPriority(rhs)
+            if axTapPriority(lhs) != axTapPriority(rhs) {
+                return axTapPriority(lhs) > axTapPriority(rhs)
+            }
+            if lhs.frame.y != rhs.frame.y {
+                return lhs.frame.y < rhs.frame.y
+            }
+            if lhs.frame.x != rhs.frame.x {
+                return lhs.frame.x < rhs.frame.x
+            }
+            return (lhs.targetOID ?? lhs.viewOID ?? 0) < (rhs.targetOID ?? rhs.viewOID ?? 0)
         }
-        .first
 }
 
 func tapRequest(
@@ -5393,25 +5580,35 @@ struct HierarchyTextCandidate {
     let depth: Int
 }
 
-func selectHierarchyTextCandidate(
+func selectHierarchyTextCandidates(
     _ query: String,
     hierarchyData: Data,
     client: TritonKitHTTPClient
-) async throws -> HierarchyTextCandidate? {
+) async throws -> [HierarchyTextCandidate] {
     let candidates = try hierarchyTextCandidates(hierarchyData)
         .sorted { lhs, rhs in
-            hierarchyTextCandidatePriority(lhs) > hierarchyTextCandidatePriority(rhs)
+            if hierarchyTextCandidatePriority(lhs) != hierarchyTextCandidatePriority(rhs) {
+                return hierarchyTextCandidatePriority(lhs) > hierarchyTextCandidatePriority(rhs)
+            }
+            if lhs.frame.y != rhs.frame.y {
+                return lhs.frame.y < rhs.frame.y
+            }
+            if lhs.frame.x != rhs.frame.x {
+                return lhs.frame.x < rhs.frame.x
+            }
+            return lhs.viewOID < rhs.viewOID
         }
 
+    var matches: [HierarchyTextCandidate] = []
     for candidate in candidates {
         let payload = try JSONEncoder().encode(candidate.layerOID)
         let data = try await client.request(type: "allAttrGroups", payload: payload)
         let groups = try JSONDecoder().decode([TKAttributesGroup].self, from: data)
         if attributeGroups(groups, containText: query) {
-            return candidate
+            matches.append(candidate)
         }
     }
-    return nil
+    return matches
 }
 
 func hierarchyTextCandidates(_ data: Data) throws -> [HierarchyTextCandidate] {
