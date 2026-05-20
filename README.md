@@ -79,6 +79,17 @@ For a SwiftUI app, keep the same handler alive for the app lifetime, then call t
 
 ## Install The CLI
 
+### Current Development Fallback
+
+Until the first versioned GitHub Release and `NeptuneKit/homebrew-tap` repository are available, build the macOS CLI from this checkout:
+
+```bash
+swift build -c release --product triton
+.build/release/triton version --json
+```
+
+Use that binary directly or copy it into a directory on `PATH` for local regression work.
+
 ### Homebrew
 
 After a versioned release is published, install the macOS `triton` binary with Homebrew:
@@ -114,7 +125,7 @@ brew upgrade triton
 
 ### Manual Release Asset
 
-GitHub Releases provide architecture-specific CLI archives:
+After a versioned release is published, GitHub Releases provide architecture-specific CLI archives:
 
 - `triton-macos-arm64.tar.gz`
 - `triton-macos-x86_64.tar.gz`

@@ -21,6 +21,12 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 
 ## Formula 契约
 
+当前发布状态检查：
+
+- 若 `NeptuneKit/TritonKit` 尚无 GitHub Release，外部接入者不能依赖 GitHub Release archive。
+- 若 `NeptuneKit/homebrew-tap` 尚不存在，外部接入者不能依赖 `brew install NeptuneKit/tap/triton`。
+- 在首个 `v*` release 和 tap 仓库可用前，README 与项目级 skill 必须先给出 `swift build -c release --product triton` 的本地 release CLI fallback。
+
 公式名：`triton`
 
 安装命令：

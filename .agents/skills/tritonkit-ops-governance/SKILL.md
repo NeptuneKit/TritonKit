@@ -24,7 +24,7 @@ metadata:
 - GitHub CI / Release 必须同时产出 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和项目级 skill 包；当前至少包含 `.agents/skills/tritonkit-dev-feedback` 与 `.agents/skills/tritonkit-real-project-regression`，便于外部使用者拿到开发阶段反馈流程和真实项目回归流程。
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；tag release 后用 GitHub Release 资产和 `tritonkit_checksums.txt` 渲染并更新 tap formula。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；维护者需要在 `NeptuneKit/TritonKit` 配置 `TAP_GITHUB_TOKEN` 才能让 `v*` tag release 自动推送 `Formula/triton.rb`。
-- 对外接入文档和 skill 中优先给使用者 `brew install NeptuneKit/tap/triton`；只有验证未发布源码改动时才要求 `swift build -c release --product triton`。
+- 首个 `v*` release 和 `NeptuneKit/homebrew-tap` 尚不可用时，对外接入文档和 skill 必须先给 `swift build -c release --product triton` fallback；release/tap 可用后再优先给 `brew install NeptuneKit/tap/triton`。
 - CLI 和对外发布的 skill 必须带版本号；CI 负责从 `v*` tag 或当前 commit 解析版本，写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion` 和打包后的 `SKILL.md` front matter `metadata.version`。
 
 ## 文档与记忆

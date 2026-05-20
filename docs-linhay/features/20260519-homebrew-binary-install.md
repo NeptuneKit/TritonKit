@@ -30,8 +30,17 @@
 - Then Homebrew formula 渲染脚本通过 fixture 校验
 - And CLI 包、skill 包和 checksum manifest 仍作为 workflow artifact 上传
 
+### 场景 4：首个 release / tap 不存在时文档给出可执行 fallback
+
+- Given `NeptuneKit/TritonKit` 还没有 GitHub Release
+- And `NeptuneKit/homebrew-tap` 还不存在
+- When 外部 AI agent 或开发者按 README / skill 接入 TritonKit
+- Then 文档先提示使用 `swift build -c release --product triton` 构建本地 release CLI
+- And Homebrew 被标记为首个 `v*` release 与 tap 可用后的安装路径
+
 ## 边界
 
 - Homebrew 安装只覆盖 macOS `triton` CLI，不安装 iOS embedded runtime；iOS runtime 仍通过 SwiftPM / CocoaPods 接入。
+- 首个 release / tap 未发布前，对外接入文档和 skill 必须把本地 release CLI fallback 放在 Homebrew 之前。
 - tap 仓库默认按 `NeptuneKit/homebrew-tap` 处理，可在 workflow dispatch 时通过输入覆盖。
 - 若未配置 `TAP_GITHUB_TOKEN`，tag release 仍发布 GitHub assets，但 tap 更新 job 会失败；这是发布配置问题，不影响源码测试。
