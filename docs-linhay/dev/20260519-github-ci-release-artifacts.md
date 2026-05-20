@@ -8,28 +8,32 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 
 新增 `.github/workflows/ci.yml`：
 
-1. `push` 到 `main`、`pull_request` 到 `main`、手动 `workflow_dispatch` 时运行。
-2. tag `v*` 推送时，在同一 workflow 内创建或复用 GitHub Release，并上传产物。
-3. 执行 `swift test`。
-4. 执行 `swift build -c release --product triton`。
-5. 按架构打包 CLI：
+1. `push` 到 `main`、`pull_request` 到 `main`、手动 `workflow_dispatch` 时运行 validate。
+2. 普通 `main` push / PR 只阻塞 validate，不等待双架构 CLI artifact 与 release asset 打包。
+3. `v*` tag 或手动 `workflow_dispatch` 才运行双架构 CLI build 和 release asset packaging。
+4. tag `v*` 推送时，在同一 workflow 内创建或复用 GitHub Release，并上传产物。
+5. validate 统一调用 `docs-linhay/scripts/verify.sh --ci-validate`，覆盖 Swift 测试、CocoaPods spec、Homebrew formula template 和版本脚本校验。
+6. CLI build 执行 `swift build -c release --product triton`。
+7. 按架构打包 CLI：
    - `triton-macos-arm64.tar.gz`
    - `triton-macos-arm64.zip`
    - `triton-macos-x86_64.tar.gz`
    - `triton-macos-x86_64.zip`
-6. CI 写入版本号：
+8. CI 写入版本号：
    - CLI：更新 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`，`triton version --json` 输出该版本。
    - skill：打包前向 `SKILL.md` front matter 写入 `metadata.version`。
    - tag `v1.2.3` 解析为 `1.2.3`；非 tag 构建解析为 `0.1.0-dev+<short-sha>`。
-7. 生成 checksum manifest：
+9. 生成 checksum manifest：
    - `tritonkit_checksums.txt`
-8. 打包 skill：
+10. 打包 skill：
    - `tritonkit-dev-feedback.tar.gz`
    - `tritonkit-dev-feedback.zip`
    - `tritonkit-real-project-regression.tar.gz`
    - `tritonkit-real-project-regression.zip`
-9. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
-10. tag 发布完成后触发 Homebrew tap 更新 workflow。
+11. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
+12. tag 发布完成后触发 Homebrew tap 更新 workflow。
+
+GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免 Node.js 20 deprecation annotation 干扰失败判断。
 
 ## 产物契约
 
@@ -68,7 +72,14 @@ brew upgrade triton
 
 - 本地运行 `swift test` 通过。
 - 本地运行 `swift build -c release --product triton` 通过。
+- 本地运行 `docs-linhay/scripts/verify.sh --local` 覆盖项目级默认门禁。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` / `.zip` 产物。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
 - 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。
 - 用 Python YAML parser 校验 `.github/workflows/ci.yml` 语法可解析。
+
+## 交付辅助脚本
+
+- `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`：低噪音观察 GitHub Actions run，只输出 job 状态和 URL；失败后再进入详细日志。
+- `docs-linhay/scripts/gh-issue-comment-file.sh <issue> <markdown-file>`：通过 `gh issue comment --body-file` 发送 Markdown，避免正文里的反引号命令被 shell 执行。
+- `docs-linhay/scripts/qmd-sync.sh`：固定 TritonKit 的 qmd 同步入口。当前 qmd CLI 不支持 `update/embed` 按 collection 过滤，所以脚本仍会执行全量 `qmd update` 与 `qmd embed`。

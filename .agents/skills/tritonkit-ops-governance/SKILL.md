@@ -29,6 +29,10 @@ metadata:
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；维护者需要在 `NeptuneKit/TritonKit` 配置 `TAP_GITHUB_TOKEN` 才能让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - 首个 `v*` release 和 `NeptuneKit/homebrew-tap` 尚不可用时，对外接入文档和 skill 必须先给 `swift build -c release --product triton` fallback；release/tap 可用后再优先给 `brew install NeptuneKit/tap/triton`。
 - CLI 和对外发布的 skill 必须带版本号；CI 负责从 `v*` tag 或当前 commit 解析版本，写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion` 和打包后的 `SKILL.md` front matter `metadata.version`。
+- 普通 `main` push / PR 的 CI 只阻塞 validate；双架构 CLI、skill 包、checksum 与 release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行。
+- 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 入口是 `docs-linhay/scripts/verify.sh --ci-validate`。
+- GitHub issue / PR 评论若包含 Markdown 命令片段，必须通过文件传给 `gh --body-file`，优先使用 `docs-linhay/scripts/gh-issue-comment-file.sh`，避免 shell 执行反引号内容。
+- GitHub Actions 状态观察优先使用 `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`；失败后再拉完整日志，避免 `gh run watch` 重复输出淹没关键状态。
 
 ## 文档与记忆
 
@@ -36,6 +40,7 @@ metadata:
 - 架构、技术方案、测试策略：`docs-linhay/dev/`。
 - 关键决策、里程碑、风险结论：`docs-linhay/memory/YYYY-MM-DD.md`。
 - 写回 docs 或 memory 后执行 `qmd update` 与 `qmd embed`。
+- qmd 写回同步优先使用 `docs-linhay/scripts/qmd-sync.sh`。当前 qmd CLI 不支持 `update/embed` 按 collection 过滤，脚本仍会执行全量维护并显式提示这一限制。
 - 调整 CI、Release 或发布产物契约时，同步更新 `docs-linhay/dev/` 与 memory。
 - 调整 Homebrew、tap、checksum 或 release asset 命名时，同步更新 README、`.github/homebrew/`、`docs-linhay/dev/` 与 memory。
 - 调整 replay plan schema、record/replay 行为或 `.tritonplan` 对外契约时，同步更新 README、`docs-linhay/dev/ai-cli-readable-control.md`、真实项目回归 skill 与 memory。

@@ -4,20 +4,21 @@
 
 TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 
-1. CI 在 macOS arm64 与 x86_64 runner 上分别构建 release `triton`。
-2. 每个架构产出一个压缩包：
+1. CI 只在 `v*` tag 或手动 `workflow_dispatch` 时进入发布物链路；普通 `main` push / PR 只跑 validate。
+2. 发布物链路在 macOS arm64 与 x86_64 runner 上分别构建 release `triton`。
+3. 每个架构产出一个压缩包：
    - `triton-macos-arm64.tar.gz`
    - `triton-macos-arm64.zip`
    - `triton-macos-x86_64.tar.gz`
    - `triton-macos-x86_64.zip`
-3. CI 从触发上下文解析版本号：
+4. CI 从触发上下文解析版本号：
    - `v*` tag：去掉前缀 `v` 后作为正式版本。
    - 非 tag：使用 `0.1.0-dev+<short-sha>`。
-4. CLI 构建前写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`。
-5. skill 打包前写入 `SKILL.md` front matter 的 `metadata.version` 字段。
-6. 汇总 job 生成 `tritonkit_checksums.txt`，并继续上传 `tritonkit-dev-feedback` 与 `tritonkit-real-project-regression` skill 包。
-7. `v*` tag 发布时上传所有资产到 GitHub Release。
-8. tag 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`。
+5. CLI 构建前写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`。
+6. skill 打包前写入 `SKILL.md` front matter 的 `metadata.version` 字段。
+7. 汇总 job 生成 `tritonkit_checksums.txt`，并继续上传 `tritonkit-dev-feedback` 与 `tritonkit-real-project-regression` skill 包。
+8. `v*` tag 发布时上传所有资产到 GitHub Release。
+9. tag 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`。
 
 ## Formula 契约
 
@@ -70,11 +71,12 @@ brew upgrade triton
 ## 本地校验
 
 ```bash
+docs-linhay/scripts/verify.sh --local
 docs-linhay/scripts/verify-homebrew-formula.sh
 docs-linhay/scripts/verify-version-stamping.sh
 ```
 
-第一个脚本使用 fixture checksum 渲染 formula，并用 `ruby -c` 做语法检查。第二个脚本验证版本解析、CLI Swift 版本常量写入和 skill `metadata.version` 写入。
+`verify.sh --local` 是本仓库默认交付门禁。`verify-homebrew-formula.sh` 使用 fixture checksum 渲染 formula，并用 `ruby -c` 做语法检查。`verify-version-stamping.sh` 验证版本解析、CLI Swift 版本常量写入和 skill `metadata.version` 写入。
 
 ## 风险
 

@@ -21,36 +21,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
-      - name: Test
-        run: swift test
-
-      - name: Install CocoaPods
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          if ! command -v pod >/dev/null 2>&1; then
-            sudo gem install cocoapods --no-document
-          fi
-
-      - name: Validate CocoaPods specs
-        shell: bash
-        run: |
-          set -euo pipefail
-
-          pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests
-          pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
-
-      - name: Validate Homebrew formula template
-        run: docs-linhay/scripts/verify-homebrew-formula.sh
-
-      - name: Validate version stamping scripts
-        run: docs-linhay/scripts/verify-version-stamping.sh
+      - name: Validate
+        run: docs-linhay/scripts/verify.sh --ci-validate
 
   build-cli:
     name: Build CLI (${{ matrix.arch }})
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     needs: validate
     strategy:
       fail-fast: false
@@ -64,7 +42,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Write CLI version
         id: version
@@ -133,12 +111,13 @@ jobs:
 
   package-release-assets:
     name: Package release assets
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     needs: build-cli
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Download CLI artifacts
         uses: actions/download-artifact@v4
