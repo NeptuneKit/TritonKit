@@ -14,6 +14,7 @@ metadata:
 - HTTP handler 用 `httptest` 优先验证，只有进程生命周期或信号处理才启动真实 server。
 - CLI 行为优先测试参数解析和命令分发，不在单元测试里长期占用端口。
 - AI agent 首期只需要 CLI/HTTP 机器可读契约；能通过 CLI/HTTP 完成读取和控制时，不新增 Web/SSE 渲染入口。
+- Emulator 接管当前产品边界是本机 CLI + 本机 iOS Simulator / Android Emulator / HarmonyOS DevEco Emulator；不要把该方向扩展成真机、远端 agent、设备云、Web/Wails UI、对外 HTTP 产品面或中台服务，除非另建 space 重新定边界。
 - 真实项目回归或 issue 证据优先用 `triton evidence --name <case> --output <dir.tritonevidence> --json` 生成 manifest + artifacts；需要拆解时再单独跑 `status/list/ax/screenshot/export`。
 - 完整回归报告优先用 `triton capture --case <case> --output <dir.tritonevidence> --json`；最终 pass/fail 判断优先用 `triton assert text-exists|text-not-exists <text> --json`，重复文本用 `--within` / `--role` / `--count` 收敛。
 - 可复跑真实项目 smoke 优先沉淀为 `.tritonplan`：`record` 只生成模板，`plan inspect` 做离线摘要，`replay --dry-run` 先校验变量和脱敏命令，真实 `replay` 再执行并在失败步骤停止。
@@ -26,7 +27,7 @@ metadata:
 - Package Manager 分发同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 规格必须保留 `TritonKitShared` / `TritonKit` 两个 Swift module，避免 `TritonKit` 中的 `import TritonKitShared` 在 pod 集成时失效。
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。
 - 新增外部依赖时先说明必要性；首期优先 Go 标准库。
-- GitHub CI / Release 必须同时产出 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和项目级 skill 包；当前至少包含 `.agents/skills/tritonkit-dev-feedback` 与 `.agents/skills/tritonkit-real-project-regression`，便于外部使用者拿到开发阶段反馈流程和真实项目回归流程。
+- GitHub CI / Release 必须同时产出 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和项目级 skill 包；当前至少包含 `.agents/skills/tritonkit-dev-feedback`、`.agents/skills/tritonkit-real-project-regression` 与 `.agents/skills/tritonkit-emulator-cli-takeover`，便于外部使用者拿到开发阶段反馈流程、真实项目回归流程和本机模拟器 CLI 接管流程。
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；维护者默认用 `docs-linhay/scripts/release.sh <version>` 发布，脚本负责前置检查、tag 推送、CI 观察、Release 资产验证和 Homebrew fetch 验证。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；`NeptuneKit/TritonKit` 必须配置 `TAP_GITHUB_TOKEN`，让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - `v0.1.0` 起 GitHub Release 和 `NeptuneKit/homebrew-tap` 已可用；对外接入文档和 skill 默认优先给 `brew install NeptuneKit/tap/triton`，只有验证未发布源码变更或 release/tap 不可用时才使用 `swift build -c release --product triton` fallback。

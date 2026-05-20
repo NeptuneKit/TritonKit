@@ -16,7 +16,7 @@ ai-phone 作为补充参考提供三端设备池视角：Harmony 不应只作为
 - `docs-linhay/spaces/20260520-harmony-emulator-alignment/plans/20260520-technical-implementation-assessment.md`
 - `.agents/skills/tritonkit-ops-governance/SKILL.md`
 - ai-phone 参考：`docs-linhay/references/ai-phone.md`
-- ai-phone device cloud：`docs-linhay/spaces/20260521-ai-phone-device-cloud/README.md`
+- ai-phone emulator CLI：`docs-linhay/spaces/20260521-ai-phone-emulator-cli/README.md`
 - Harmony upstream issue: `https://github.com/linhay/harmony-next.skills/issues/10`
 - Harmony scaffold upstream issue: `https://github.com/linhay/harmony-next.skills/issues/11`（已解决，`harmony-next` v1.3.7 起包含 Empty Ability scaffold）
 

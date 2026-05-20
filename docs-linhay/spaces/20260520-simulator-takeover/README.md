@@ -32,7 +32,7 @@ TritonKit 目前已经具备 embedded runtime 的 App 内观察和控制能力�
 - XcodeBuildMCP 参考：`docs-linhay/references/xcodebuildmcp.md`
 - Harness 参考：`docs-linhay/references/harness.md`
 - ai-phone 参考：`docs-linhay/references/ai-phone.md`
-- ai-phone device cloud：`docs-linhay/spaces/20260521-ai-phone-device-cloud/README.md`
+- ai-phone emulator CLI：`docs-linhay/spaces/20260521-ai-phone-emulator-cli/README.md`
 - Baguette 参考：`docs-linhay/dev/device-control-from-baguette.md`
 - AI CLI 契约：`docs-linhay/dev/ai-cli-readable-control.md`
 - Host adapter issue：`https://github.com/NeptuneKit/TritonKit/issues/11`
@@ -171,7 +171,7 @@ TritonKit 需要从单一 `triton:local` 扩展为可绑定的多层 target：
 ### P0：替代裸 xcrun 的最小闭环
 
 - `triton sim list/use/boot/shutdown/screenshot`
-- `triton app list/info/install/launch/terminate/open-url/container/prefs`
+- `triton app list/info/install/uninstall/launch/terminate/open-url/container/prefs`
 - `schema/doctor/capabilities/plan` 暴露 host adapter 能力
 - fake process runner 单元测试覆盖 argv 与 JSON 映射
 

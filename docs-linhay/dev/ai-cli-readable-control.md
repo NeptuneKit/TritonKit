@@ -47,7 +47,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton sim screenshot --simulator <udid|booted> --output <path> --format json`：采集 host-side simulator framebuffer 截图，不依赖 embedded runtime。
 - `triton app list --simulator <udid|booted> --user-only --format json`：读取已安装 App 列表，输出 bundle id、display name、version、application type、bundle/data/group container 等结构化字段。
 - `triton app info --bundle-id <id> --simulator <udid|booted> --format json`：读取单个已安装 App 元数据；当 `simctl appinfo` 对缺失 bundle 只回显 `CFBundleIdentifier` 时，归一为 `app_info_not_available`。
-- `triton app install --app <path.app> --simulator <udid|booted> --format json`、`triton app launch --bundle-id <id> --format json`、`triton app terminate --bundle-id <id> --format json`：App 生命周期首批入口，返回 host action envelope，业务就绪仍需继续用 `status/wait/find/assert/prefs` 验证。
+- `triton app install --app <path.app> --simulator <udid|booted> --format json`、`triton app uninstall --bundle-id <id> --simulator <udid|booted> --confirm --format json`、`triton app launch --bundle-id <id> --format json`、`triton app terminate --bundle-id <id> --format json`：App 生命周期首批入口，返回 host action envelope；`uninstall` 必须显式 `--confirm`，业务就绪仍需继续用 `status/wait/find/assert/prefs` 验证。
 - `triton app open-url <url> --simulator <udid|booted> --format json`：提交 deep link 或 URL 到 simulator；该命令只证明 URL 已提交，业务完成需继续用 `wait/find/assert` 或 preferences 验证。
 - `triton app container --bundle-id <id> --kind data --format json`：读取 simulator App container path。
 - `triton app prefs get <key> --bundle-id <id> --format json`、`triton app prefs dump --bundle-id <id> --format json`：读取 App preferences plist，避免 agent 解析 `plutil -p` 人读文本。
@@ -55,6 +55,8 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton device list --platform harmony --format json`：通过 host-side `hdc list targets -v` 列出 HDC target，输出 `harmony:<target>`、`target/state/transport/isConnected/source`；`Offline` target 保留在列表中，但不进入默认候选。
 - `triton device use --platform harmony --target <target> --format json`：解析一个 `Connected` HDC target；多 `Connected` 且未指定 target 时返回 `error.code=ambiguous_target` 与候选提示。
 - `triton device wait-ready --platform harmony --target <target> --format json`：轮询 `param get bootevent.boot.completed`，只接受 `true` 为 ready，超时返回 `device_not_ready`，所有 host 命令都带 timeout 和 `sourceCommand`。
+- `triton app inspect --platform harmony --bundle <bundle> --format json`：通过 HDC `bm dump -n` 读取 Harmony App 元数据摘要。
+- `triton app launch --platform harmony --bundle <bundle> --ability <ability> --format json`：通过 HDC `aa start` 启动 Harmony Ability，结果只代表启动命令已提交，仍需截图、AX 或日志验证业务状态。
 - Harmony DEBUG-only 内置采集器当前只固化共享 JSON 契约，不是已实现 CLI 入口。契约包含 `TKHarmonyCollectorManifest`、`TKHarmonyCollectorConfiguration`、`TKHarmonyCollectorSnapshot`、App/Page 状态、redaction status 和 screenshot metadata；Release 配置必须 `enabled=false` 且 capabilities 为空。
 - `triton list --format json`：列出可调试 target。
 - `triton inspect --target triton:local --format json`：查看 target 摘要。

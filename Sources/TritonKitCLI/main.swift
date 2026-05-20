@@ -227,6 +227,11 @@ struct SimScreenshot: AsyncParsableCommand {
 
 // MARK: - Host-Side App Commands
 
+enum HostAppPlatform: String, ExpressibleByArgument {
+    case ios
+    case harmony
+}
+
 struct HostApp: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "app",
@@ -234,7 +239,9 @@ struct HostApp: AsyncParsableCommand {
         subcommands: [
             HostAppList.self,
             HostAppInfo.self,
+            HostAppInspect.self,
             HostAppInstall.self,
+            HostAppUninstall.self,
             HostAppLaunch.self,
             HostAppTerminate.self,
             HostAppOpenURL.self,
@@ -314,6 +321,34 @@ struct HostAppInfo: AsyncParsableCommand {
     }
 }
 
+struct HostAppInspect: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "inspect", abstract: "Inspect a platform app with host tools")
+
+    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Harmony bundle name") var bundle: String
+    @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+            try runSimpleHostCommand(
+                action: "app.inspect",
+                runtimeScope: "host-harmony",
+                target: "harmony:\(selected.target)/app:\(bundle)",
+                command: TKHarmonyHDCCommand.appInspect(target: selected.target, bundleName: bundle, executable: hdc),
+                outputFormat: outputFormat,
+                note: "Harmony app metadata was inspected with bm dump."
+            )
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
 struct HostAppInstall: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "install", abstract: "Install an .app bundle into a simulator")
 
@@ -334,22 +369,90 @@ struct HostAppInstall: AsyncParsableCommand {
     }
 }
 
-struct HostAppLaunch: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "launch", abstract: "Launch an installed simulator app")
+struct HostAppUninstall: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "uninstall", abstract: "Uninstall an app from a simulator")
 
     @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
     @Option(help: "App bundle identifier") var bundleID: String
+    @Flag(help: "Confirm uninstalling the app from the simulator") var confirm = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        guard confirm else {
+            try failHostValidation(
+                code: "destructive_action_requires_policy",
+                message: "App uninstall requires --confirm.",
+                hint: "Rerun with `--confirm` after verifying the simulator and bundle id.",
+                outputFormat: outputFormat
+            )
+        }
         try runSimpleHostCommand(
-            action: "app.launch",
+            action: "app.uninstall",
             target: "sim:\(simulator)/app:\(bundleID)",
-            command: TKSimctlCommand.launchApp(udid: simulator, bundleID: bundleID),
-            outputFormat: effectiveFormat(format, json: json),
-            note: "App launch was requested; verify readiness with `triton status`, `triton wait`, or `triton app prefs get`."
+            command: TKSimctlCommand.uninstallApp(udid: simulator, bundleID: bundleID),
+            outputFormat: outputFormat,
+            note: "App uninstall was requested; verify with `triton app info --bundle-id <id> --json` or `triton app list --user-only --json`."
         )
+    }
+}
+
+struct HostAppLaunch: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "launch", abstract: "Launch an installed simulator app")
+
+    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform = .ios
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "iOS app bundle identifier") var bundleID: String?
+    @Option(help: "Harmony bundle name") var bundle: String?
+    @Option(help: "Harmony ability name") var ability: String?
+    @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        switch platform {
+        case .ios:
+            guard let bundleID else {
+                try failHostValidation(
+                    code: "validation_failed",
+                    message: "iOS app launch requires --bundle-id.",
+                    hint: "Pass `--bundle-id <id>` or use `--platform harmony --bundle <bundle> --ability <ability>`.",
+                    outputFormat: outputFormat
+                )
+            }
+            try runSimpleHostCommand(
+                action: "app.launch",
+                target: "sim:\(simulator)/app:\(bundleID)",
+                command: TKSimctlCommand.launchApp(udid: simulator, bundleID: bundleID),
+                outputFormat: outputFormat,
+                note: "App launch was requested; verify readiness with `triton status`, `triton wait`, or `triton app prefs get`."
+            )
+        case .harmony:
+            guard let bundle, let ability else {
+                try failHostValidation(
+                    code: "validation_failed",
+                    message: "Harmony app launch requires --bundle and --ability.",
+                    hint: "Pass `--platform harmony --bundle <bundle> --ability <ability>`.",
+                    outputFormat: outputFormat
+                )
+            }
+            do {
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                try runSimpleHostCommand(
+                    action: "app.launch",
+                    runtimeScope: "host-harmony",
+                    target: "harmony:\(selected.target)/app:\(bundle)",
+                    command: TKHarmonyHDCCommand.appLaunch(target: selected.target, bundleName: bundle, abilityName: ability, executable: hdc),
+                    outputFormat: outputFormat,
+                    note: "Harmony app launch was requested; verify readiness with `triton ax --platform harmony`, screenshot, or logs."
+                )
+            } catch {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+        }
     }
 }
 
@@ -806,6 +909,7 @@ struct HostPreferencesOutput: Encodable {
 
 func runSimpleHostCommand(
     action: String,
+    runtimeScope: String = "host-simulator",
     target: String,
     command: TKHostCommand,
     outputFormat: ClientOutputFormat,
@@ -819,7 +923,7 @@ func runSimpleHostCommand(
         let output = HostActionOutput(
             ok: true,
             action: action,
-            runtimeScope: "host-simulator",
+            runtimeScope: runtimeScope,
             target: target,
             tool: command.executable,
             exitCode: result.exitCode,
@@ -1189,6 +1293,18 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
     case .text:
         print(detail.message)
         if let hint = detail.hint { print("hint: \(hint)") }
+    }
+    throw ExitCode.failure
+}
+
+func failHostValidation(code: String, message: String, hint: String, outputFormat: ClientOutputFormat) throws -> Never {
+    let detail = TKCLIErrorDetail(code: code, message: message, hint: hint)
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+    case .text:
+        print(message)
+        print("hint: \(hint)")
     }
     throw ExitCode.failure
 }
@@ -4452,17 +4568,20 @@ func commandSchemas() -> [TKCommandSchema] {
         ),
         TKCommandSchema(
             name: "app",
-            summary: "Control simulator apps through host-side Apple tools",
+            summary: "Control local simulator and emulator apps through host-side tools",
             requiresServer: false,
             requiresTarget: false,
-            runtimeScope: "host-simulator",
+            runtimeScope: "host-simulator|host-harmony",
             exitCodeOnFailure: 1,
             outputFormats: jsonText,
             options: [
                 TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List installed simulator apps"),
                 TKCommandSchemaOption(name: "info --bundle-id <id>", type: "Subcommand", description: "Show installed app metadata"),
+                TKCommandSchemaOption(name: "inspect --platform harmony --bundle <bundle>", type: "Subcommand", description: "Inspect a Harmony app with bm dump"),
                 TKCommandSchemaOption(name: "install --app <path.app>", type: "Subcommand", description: "Install an .app bundle into the simulator"),
+                TKCommandSchemaOption(name: "uninstall --bundle-id <id> --confirm", type: "Subcommand", description: "Uninstall an app from the simulator"),
                 TKCommandSchemaOption(name: "launch --bundle-id <id>", type: "Subcommand", description: "Launch an installed simulator app"),
+                TKCommandSchemaOption(name: "launch --platform harmony --bundle <bundle> --ability <ability>", type: "Subcommand", description: "Launch a Harmony app ability"),
                 TKCommandSchemaOption(name: "terminate --bundle-id <id>", type: "Subcommand", description: "Terminate a running simulator app"),
                 TKCommandSchemaOption(name: "open-url <url>", type: "Subcommand", description: "Submit a URL to the simulator"),
                 TKCommandSchemaOption(name: "container --bundle-id <id>", type: "Subcommand", description: "Print app container path"),
@@ -4475,16 +4594,19 @@ func commandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton app list --user-only --json",
                 "triton app info --bundle-id com.example.app --json",
+                "triton app inspect --platform harmony --bundle com.example.app --json",
                 "triton app install --app /tmp/Demo.app --json",
+                "triton app uninstall --bundle-id com.example.app --confirm --json",
                 "triton app launch --bundle-id com.example.app --json",
+                "triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --json",
                 "triton app terminate --bundle-id com.example.app --json",
                 #"triton app open-url "example://debug" --simulator booted --json"#,
                 "triton app container --bundle-id com.example.app --kind data --json",
                 "triton app prefs get DEBUG-mock --bundle-id com.example.app --json",
             ],
-            successShape: "{ ok, action, simulatorUDID, apps[]?, app?, bundleID?, path? } or { ok, action, plistPath, value?, preferences? }",
+            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } or { ok, action, plistPath, value?, preferences? }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            providedCapabilities: ["host-app", "host-preferences"]
+            providedCapabilities: ["host-app", "host-preferences", "harmony-app"]
         ),
         TKCommandSchema(
             name: "list",

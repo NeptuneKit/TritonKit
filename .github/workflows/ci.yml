@@ -143,6 +143,7 @@ jobs:
 
           skills=(
             "tritonkit-dev-feedback"
+            "tritonkit-emulator-cli-takeover"
             "tritonkit-real-project-regression"
           )
 
@@ -185,10 +186,13 @@ jobs:
           test -f dist/triton-macos-x86_64.zip
           test -f dist/tritonkit-dev-feedback.tar.gz
           test -f dist/tritonkit-dev-feedback.zip
+          test -f dist/tritonkit-emulator-cli-takeover.tar.gz
+          test -f dist/tritonkit-emulator-cli-takeover.zip
           test -f dist/tritonkit-real-project-regression.tar.gz
           test -f dist/tritonkit-real-project-regression.zip
           test -f dist/tritonkit_checksums.txt
           tar -xOf dist/tritonkit-dev-feedback.tar.gz tritonkit-dev-feedback/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
+          tar -xOf dist/tritonkit-emulator-cli-takeover.tar.gz tritonkit-emulator-cli-takeover/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
           tar -xOf dist/tritonkit-real-project-regression.tar.gz tritonkit-real-project-regression/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
 
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then

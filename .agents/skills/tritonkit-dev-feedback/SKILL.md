@@ -39,6 +39,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton app list --simulator booted --user-only --json`
      - `triton app info --bundle-id <bundle-id> --simulator booted --json`
      - `triton app install --app <path.app> --simulator booted --json`
+     - `triton app uninstall --bundle-id <bundle-id> --simulator booted --confirm --json`
      - `triton app launch --bundle-id <bundle-id> --simulator booted --json`
      - `triton app terminate --bundle-id <bundle-id> --simulator booted --json`
      - `triton app open-url '<url>' --simulator booted --json`
@@ -48,6 +49,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton device doctor --platform harmony --json`
      - `triton device list --platform harmony --json`
      - `triton device wait-ready --platform harmony --target <hdc-target> --json`
+     - `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`
+     - `triton app launch --platform harmony --bundle <bundle> --ability <ability> --target <hdc-target> --json`
      - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--target`.
      - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
    - `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, or `triton clear` for agent-facing action checks; these default to JSON, and `--format text` is only for human-readable debugging.
@@ -170,10 +173,17 @@ triton sim use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
 triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl
 triton app list --simulator booted --user-only --json
 triton app info --bundle-id com.example.app --simulator booted --json
+triton app install --app /tmp/Demo.app --simulator booted --json
+triton app uninstall --bundle-id com.example.app --simulator booted --confirm --json
 triton app launch --bundle-id com.example.app --simulator booted --json
 triton app open-url 'example://debug' --simulator booted --json
 triton app container --bundle-id com.example.app --kind data --json
 triton app prefs get DEBUG-mock --bundle-id com.example.app --json
+triton device doctor --platform harmony --json
+triton device list --platform harmony --json
+triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
+triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
+triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
 triton hierarchy --json
 triton ax --json
 triton tap "first-check"

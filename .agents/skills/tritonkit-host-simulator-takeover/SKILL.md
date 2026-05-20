@@ -37,6 +37,7 @@ App commands:
 triton app list --simulator <udid-or-booted> --user-only --json
 triton app info --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app install --app <path.app> --simulator <udid-or-booted> --json
+triton app uninstall --bundle-id <bundle-id> --simulator <udid-or-booted> --confirm --json
 triton app launch --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app terminate --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app open-url '<url>' --simulator <udid-or-booted> --json
@@ -73,6 +74,7 @@ triton app prefs dump --bundle-id <bundle-id> --simulator <udid-or-booted> --jso
    - `README.md`;
    - `docs-linhay/dev/ai-cli-readable-control.md`;
    - simulator takeover space implementation notes;
+   - `tritonkit-emulator-cli-takeover` when cross-platform emulator CLI boundaries change;
    - `tritonkit-real-project-regression` when real app validation flow changes;
    - `tritonkit-dev-feedback` when issue evidence commands change;
    - memory entry for decisions, risks, and verification.
@@ -113,7 +115,7 @@ Avoid destructive or stateful smoke such as reinstalling business apps, erasing 
 
 Keep P0/P1 focused on real-project regression value:
 
-- P0 remaining: `app uninstall` with explicit confirmation policy, safer default simulator resolution, app install result enrichment.
+- P0 remaining: safer default simulator resolution, app install result enrichment.
 - P1: `sim privacy`, `sim location`, `sim ui/status-bar`, push notification, media/contact import, keychain certificates, pasteboard, iCloud sync, `.xcappdata`, logs, host evidence artifacts.
 - P2+: host UI snapshot/tap/type/press, record video, diagnose, xctrace, Xcode build/test, coverage, SwiftPM, runtime maintenance.
 

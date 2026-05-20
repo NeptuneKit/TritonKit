@@ -178,6 +178,7 @@ triton sim screenshot --simulator booted --output /tmp/sim.png --json
 triton app list --simulator booted --user-only --json
 triton app info --bundle-id com.example.app --simulator booted --json
 triton app install --app /tmp/Demo.app --simulator booted --json
+triton app uninstall --bundle-id com.example.app --simulator booted --confirm --json
 triton app launch --bundle-id com.example.app --simulator booted --json
 triton app terminate --bundle-id com.example.app --simulator booted --json
 triton app open-url "example://debug" --simulator booted --json
@@ -194,6 +195,8 @@ HarmonyOS NEXT / DevEco Emulator P0 discovery is exposed through the same host-s
 triton device doctor --platform harmony --json
 triton device list --platform harmony --json
 triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
+triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
+triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
 ```
 
 When multiple HDC targets are `Connected`, Triton returns `error.code=ambiguous_target` and requires an explicit `--target`. The adapter records `sourceCommand`; risk/policy metadata is for audit and configuration validation, not an interactive confirmation gate.
@@ -269,6 +272,8 @@ GitHub CI publishes workflow artifacts that include:
 - `tritonkit_checksums.txt`
 - `tritonkit-dev-feedback.tar.gz`
 - `tritonkit-dev-feedback.zip`
+- `tritonkit-emulator-cli-takeover.tar.gz`
+- `tritonkit-emulator-cli-takeover.zip`
 - `tritonkit-real-project-regression.tar.gz`
 - `tritonkit-real-project-regression.zip`
 

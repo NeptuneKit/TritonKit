@@ -9,7 +9,7 @@ TritonKit 的 simulator takeover 采用 `triton` 原生 host adapter，而不是
 P0/P1 优先覆盖真实项目回归中已经反复出现的能力：
 
 - simulator list/use/boot/shutdown/screenshot
-- app list/info/install/launch/terminate/open-url/container/prefs
+- app list/info/install/uninstall/launch/terminate/open-url/container/prefs
 - privacy/location/ui/status-bar/push
 - media/keychain/pasteboard/icloud/app data install
 - host action 进入 `.tritonplan`
@@ -17,7 +17,7 @@ P0/P1 优先覆盖真实项目回归中已经反复出现的能力：
 
 P2+ 再处理 host UI、日志流、录屏、诊断、xctrace、Xcode build/test、coverage、SPM、project scaffolding 和 runtime 维护。
 
-Harmony P0 已落地为 `triton device doctor/list/use/wait-ready --platform harmony`，用于只读工具探测、HDC target 列表、target 选择和 boot ready 轮询；App、UI 输入、截图、日志、capture/evidence 和 `.tritonplan` 仍按后续分期推进。Harmony 内置采集器不属于 P0/P1 host adapter 前置条件，当前仅在 `TritonKitShared` 固化 DEBUG-only JSON 契约，供后续 ArkTS/ArkUI runtime 复用。
+Harmony P0 已落地为 `triton device doctor/list/use/wait-ready --platform harmony`，用于只读工具探测、HDC target 列表、target 选择和 boot ready 轮询；App 元数据与启动已通过 `triton app inspect/launch --platform harmony` 接入 HDC `bm` / `aa`。UI 输入、截图、日志、capture/evidence 和 `.tritonplan` 仍按后续分期推进。Harmony 内置采集器不属于 P0/P1 host adapter 前置条件，当前仅在 `TritonKitShared` 固化 DEBUG-only JSON 契约，供后续 ArkTS/ArkUI runtime 复用。
 
 ## 架构约束
 
@@ -31,7 +31,8 @@ Harmony P0 已落地为 `triton device doctor/list/use/wait-ready --platform har
 
 ## 后续落地入口
 
-- 项目 skill：`.agents/skills/tritonkit-host-simulator-takeover/SKILL.md`
+- 跨平台项目 skill：`.agents/skills/tritonkit-emulator-cli-takeover/SKILL.md`
+- Apple Simulator 项目 skill：`.agents/skills/tritonkit-host-simulator-takeover/SKILL.md`
 - 需求规格：`docs-linhay/spaces/20260520-simulator-takeover/README.md`
 - 技术设计：`docs-linhay/spaces/20260520-simulator-takeover/technical-design.md`
 - 前置调研：`docs-linhay/spaces/20260520-xcrun-host-adapter-research/README.md`

@@ -15,7 +15,7 @@ ai-phone 与本 space 的关系：Harness 更强在单次 UX run 的可解释证
 - Harness GitHub：`https://github.com/awizemann/harness`
 - Harness 参考归档：`docs-linhay/references/harness.md`
 - ai-phone 参考归档：`docs-linhay/references/ai-phone.md`
-- ai-phone device cloud：`docs-linhay/spaces/20260521-ai-phone-device-cloud/README.md`
+- ai-phone emulator CLI：`docs-linhay/spaces/20260521-ai-phone-emulator-cli/README.md`
 - Simulator takeover：`docs-linhay/spaces/20260520-simulator-takeover/README.md`
 - Xcode workflow takeover：`docs-linhay/spaces/20260520-xcode-workflow-takeover/README.md`
 - AI CLI 契约：`docs-linhay/dev/ai-cli-readable-control.md`

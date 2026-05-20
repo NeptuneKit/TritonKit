@@ -28,6 +28,8 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 10. 打包 skill：
    - `tritonkit-dev-feedback.tar.gz`
    - `tritonkit-dev-feedback.zip`
+   - `tritonkit-emulator-cli-takeover.tar.gz`
+   - `tritonkit-emulator-cli-takeover.zip`
    - `tritonkit-real-project-regression.tar.gz`
    - `tritonkit-real-project-regression.zip`
 11. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
@@ -40,7 +42,7 @@ GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免
 发布产物必须至少包含：
 
 1. `triton` CLI 可执行文件包，必须同时覆盖 macOS arm64 与 x86_64。
-2. 面向外部使用者的项目级 skill 包，当前至少包括 `.agents/skills/tritonkit-dev-feedback` 与 `.agents/skills/tritonkit-real-project-regression`。
+2. 面向外部使用者的项目级 skill 包，当前至少包括 `.agents/skills/tritonkit-dev-feedback`、`.agents/skills/tritonkit-real-project-regression` 与 `.agents/skills/tritonkit-emulator-cli-takeover`。
 3. `tritonkit_checksums.txt`，用于 Homebrew formula 渲染和用户校验。
 4. CLI 与 skill 包必须携带同一个 CI 解析出的版本号；skill 使用 `metadata.version`，保持 skill front matter 兼容。
 

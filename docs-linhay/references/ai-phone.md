@@ -23,7 +23,7 @@ ai-phone 是一个面向中小型公司的三端真机 AI 自动化中台，支�
   -> HTML 报告 / 大盘 / 终态广播
 ```
 
-对 TritonKit 的参考价值集中在 **远端 host agent、设备池调度、Server-side command ledger、执行安全层、轨迹缓存、AI 可消费 case schema、跨平台 driver 抽象和终态事件契约**。不应把它当作 TritonKit 的技术栈模板或 GUI 产品模板。
+按最新边界重评估后，对 TritonKit 的参考价值集中在 **本机三端 emulator target、command ledger、执行安全层、AI 可消费 case schema、跨平台 driver 抽象和终态事件契约**。远端 host agent、真机设备池、Web 大盘、Postgres、Kafka、Webhook 不进入当前方向。
 
 ## 架构要点
 
@@ -266,7 +266,7 @@ artifactUrl
 
 - local submission batch 格式。
 - device alias pool 和设备锁。
-- 远端 host agent registry。
+- 本机三端 emulator target registry。
 - `.tritonplan` checkpoint / state landmark。
 - V2/V3 风格 intent replay。
 - Webhook 终态通知。
@@ -281,7 +281,7 @@ artifactUrl
 
 ## 与现有 TritonKit spaces 的关系
 
-- `20260521-ai-phone-device-cloud`：把 ai-phone 调研收敛成远端 host agent、设备池、执行安全层的独立需求空间。
+- `20260521-ai-phone-emulator-cli`：把 ai-phone 调研收敛成本机三端模拟器/仿真器 CLI、command ledger、执行安全层、case/batch 和 evidence 的独立需求空间。
 - `20260521-harness-ux-run-evidence`：Harness 补 UX run 证据形态，ai-phone 补生产调度、安全执行和终态汇总。
 - `20260520-simulator-takeover`：吸收 command ledger、device readiness、driver dispatcher、轨迹缓存 checkpoint 思路。
 - `20260520-harmony-emulator-alignment`：吸收三端设备池和 hdc / hypium / driver abstraction 视角。

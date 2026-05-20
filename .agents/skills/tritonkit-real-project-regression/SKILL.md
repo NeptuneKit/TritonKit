@@ -37,6 +37,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - list installed apps: `triton app list --simulator <udid-or-booted> --user-only --json`;
    - inspect installed app metadata: `triton app info --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
    - install simulator builds: `triton app install --app <path.app> --simulator <udid-or-booted> --json`;
+   - uninstall disposable simulator apps only with explicit policy: `triton app uninstall --bundle-id <bundle-id> --simulator <udid-or-booted> --confirm --json`;
    - launch or terminate apps: `triton app launch --bundle-id <bundle-id> --simulator <udid-or-booted> --json` / `triton app terminate --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
    - submit app debug routes: `triton app open-url '<url>' --simulator <udid-or-booted> --json`;
    - locate containers: `triton app container --bundle-id <bundle-id> --kind data --simulator <udid-or-booted> --json`;
@@ -47,6 +48,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - probe tools: `triton device doctor --platform harmony --json`;
    - list HDC targets: `triton device list --platform harmony --json`;
    - wait for boot readiness: `triton device wait-ready --platform harmony --target <hdc-target> --json`;
+   - inspect app metadata: `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`;
+   - launch an Ability: `triton app launch --platform harmony --bundle <bundle> --ability <ability> --target <hdc-target> --json`;
    - when multiple targets are `Connected`, pass `--target`; `ambiguous_target` is the expected machine-readable failure.
    - if a disposable Harmony fixture app is needed, use the local `harmony-next` skill's minimal Empty Ability scaffold:
      - guide: `references/quickStart/ets/minimal-project-scaffold.md`;

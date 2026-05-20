@@ -23,6 +23,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKSimctlCommand.listApps(udid: "U").argv == ["simctl", "listapps", "U"])
         #expect(TKSimctlCommand.appInfo(udid: "U", bundleID: "com.example.app").argv == ["simctl", "appinfo", "U", "com.example.app"])
         #expect(TKSimctlCommand.installApp(udid: "U", appPath: "/tmp/Demo.app").argv == ["simctl", "install", "U", "/tmp/Demo.app"])
+        #expect(TKSimctlCommand.uninstallApp(udid: "U", bundleID: "com.example.app").argv == ["simctl", "uninstall", "U", "com.example.app"])
         #expect(TKSimctlCommand.launchApp(udid: "U", bundleID: "com.example.app").argv == ["simctl", "launch", "U", "com.example.app"])
         #expect(TKSimctlCommand.terminateApp(udid: "U", bundleID: "com.example.app").argv == ["simctl", "terminate", "U", "com.example.app"])
         #expect(TKSimctlCommand.openURL(udid: "U", url: "example://debug").argv == ["simctl", "openurl", "U", "example://debug"])

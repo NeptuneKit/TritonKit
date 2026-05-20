@@ -50,17 +50,18 @@
 7. TritonKit 是 `CLI + HTTP server + Wails Web + 桌面壳` 组合应用；任何改动都要明确影响的是 CLI、HTTP transport、Wails binding、Web 前端、桌面壳，还是共享 core。
 8. TritonKit 优先供 AI agent 和自动化脚本使用与控制；CLI 和 HTTP 管理 API 是业务控制的事实入口，所有状态读取、动作执行、解释、回归验收和审计都必须优先具备机器可读契约。
 9. AI agent 首期不需要 Web 端；能通过 CLI/HTTP 机器可读契约完成读取和控制的需求，不新增 Web/SSE 渲染入口。
-10. TritonKit 必须使用独立端口组：HTTP 管理 API `127.0.0.1:19421`、Wails dev server `localhost:34126`、Vite dev server `127.0.0.1:34127`、Vite preview server `127.0.0.1:34128`；前端 dev/preview 必须启用 `strictPort`，禁止默认落到 `5173`、`5174`、`4173` 等常见端口。
-11. 当前没有活跃 Web / 前端页面；任何恢复前端体验的工作必须先重新建立 `space`、需求边界、BDD 场景、技术栈和验收方式，不预设执行方或历史设计方向。
-12. 前端改动若影响后端接口、领域模型或关键交互闭环，必须先明确 CLI/HTTP 契约、状态流转、测试门禁和回归验收，避免由 UI 先行定义业务控制能力；确需人类展示时，Web/Wails 默认只消费只读 DTO，不承载 create/update/delete/execute/approve/deny 等业务控制闭环。
-13. 当一次会话中出现“有用且重复出现”的行为模式、排障路径或交付动作时，必须先识别复用边界，再优先新增或更新项目级 `skills`；只有当规则已经上升为 repo-wide、长期稳定的约束时，才同步更新 `AGENTS.md`。
-14. 当用户明确说“整理”且语境指向刚完成的一轮工作会话时，默认触发一次会话沉淀流程：先按 `tritonkit-session-skill-distill` 提炼可复用模式，再按是否 repo-wide 决定是否同步更新 `AGENTS.md`、`docs-linhay/dev/`、`docs-linhay/memory/`，并执行 `qmd update` 与 `qmd embed`。
-15. 多份独立需求稿并行推进时，默认按“一个需求单元一个 `space`，必要时再配一个同 key 的 branch 与 `worktree`”组织，不按个人姓名或临时阶段单独命名工作目录。
-16. 当用户明确要求“由 subagent 去做、主控 agent 负责监督”时，主控 agent 必须承担需求边界、任务拆分、集成、验收、文档与最终完成判断，不得在“代码已改完”但截图、实机验证、文档写回等验收环节仍未完成时提前停止。
-17. GitHub CI / Release 产物必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和项目级 skill 包，至少覆盖 `.agents/skills/tritonkit-dev-feedback` 与 `.agents/skills/tritonkit-real-project-regression`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流与真实项目回归流程。
-18. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后应基于 GitHub Release 资产和 checksum manifest 更新 tap formula。
-19. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
-20. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 必须保持 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CI 需校验 podspec 可 lint。
+10. 当前 emulator 接管产品边界是本机 CLI + 本机模拟器/仿真器：iOS Simulator、Android Emulator、HarmonyOS / DevEco Emulator；默认不做真机、远端 agent、设备云、Web/Wails UI、对外 HTTP 产品面、Postgres/Kafka/Webhook、多租户或内置 VLM loop，除非单独新建 `space` 重新定义边界。
+11. TritonKit 必须使用独立端口组：HTTP 管理 API `127.0.0.1:19421`、Wails dev server `localhost:34126`、Vite dev server `127.0.0.1:34127`、Vite preview server `127.0.0.1:34128`；前端 dev/preview 必须启用 `strictPort`，禁止默认落到 `5173`、`5174`、`4173` 等常见端口。
+12. 当前没有活跃 Web / 前端页面；任何恢复前端体验的工作必须先重新建立 `space`、需求边界、BDD 场景、技术栈和验收方式，不预设执行方或历史设计方向。
+13. 前端改动若影响后端接口、领域模型或关键交互闭环，必须先明确 CLI/HTTP 契约、状态流转、测试门禁和回归验收，避免由 UI 先行定义业务控制能力；确需人类展示时，Web/Wails 默认只消费只读 DTO，不承载 create/update/delete/execute/approve/deny 等业务控制闭环。
+14. 当一次会话中出现“有用且重复出现”的行为模式、排障路径或交付动作时，必须先识别复用边界，再优先新增或更新项目级 `skills`；只有当规则已经上升为 repo-wide、长期稳定的约束时，才同步更新 `AGENTS.md`。
+15. 当用户明确说“整理”且语境指向刚完成的一轮工作会话时，默认触发一次会话沉淀流程：先按 `tritonkit-session-skill-distill` 提炼可复用模式，再按是否 repo-wide 决定是否同步更新 `AGENTS.md`、`docs-linhay/dev/`、`docs-linhay/memory/`，并执行 `qmd update` 与 `qmd embed`。
+16. 多份独立需求稿并行推进时，默认按“一个需求单元一个 `space`，必要时再配一个同 key 的 branch 与 `worktree`”组织，不按个人姓名或临时阶段单独命名工作目录。
+17. 当用户明确要求“由 subagent 去做、主控 agent 负责监督”时，主控 agent 必须承担需求边界、任务拆分、集成、验收、文档与最终完成判断，不得在“代码已改完”但截图、实机验证、文档写回等验收环节仍未完成时提前停止。
+18. GitHub CI / Release 产物必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和项目级 skill 包，至少覆盖 `.agents/skills/tritonkit-dev-feedback`、`.agents/skills/tritonkit-real-project-regression` 与 `.agents/skills/tritonkit-emulator-cli-takeover`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流、真实项目回归流程和本机模拟器 CLI 接管流程。
+19. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后应基于 GitHub Release 资产和 checksum manifest 更新 tap formula。
+20. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
+21. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 必须保持 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CI 需校验 podspec 可 lint。
 
 ## 2. 标准工作流（必须）
 
@@ -139,8 +140,9 @@ Git `worktree` 治理：
 5. 涉及 AGENTS 级长期治理规则时，优先使用 `tritonkit-ops-governance`；若用户明确说“整理”，同时使用 `tritonkit-session-skill-distill`。
 6. 涉及“主控 agent 监督、subagent 实做、直到完整需求闭环才停止”的执行模式时，优先使用 `tritonkit-subagent-supervision`。
 7. 涉及从 demo/self-test 切到真实 iOS App 或客户项目回归、试接入、实际需求发现时，优先使用 `tritonkit-real-project-regression`，并隔离外部仓改动、保留 CLI/HTTP 机器可读证据。
-8. 涉及设计、实现、扩展或验证 host-side Apple Simulator 接管能力（`triton sim`、`triton app`、`xcrun simctl` 封装、workspace simulator defaults、boot wait JSONL、App metadata/container/preferences、host artifacts、plan/evidence 集成）时，优先使用 `tritonkit-host-simulator-takeover`，并确认 agent 面对的是 Triton CLI/HTTP schema，而不是裸 `xcrun`。
-9. 涉及设计、实现、扩展或验证 Xcode workflow takeover 能力（project/workspace discovery、scheme/build settings、`xcodebuild` build/test/run、`.xcresult`、coverage、logs、SwiftPM、真机/macOS workflow、LLDB、host UI 集成，或评估 XcodeBuildMCP 能力取舍）时，优先使用 `tritonkit-xcode-workflow-takeover`，并坚持“吃能力，不吃 XcodeBuildMCP 对外 API”。
+8. 涉及设计、实现、扩展或验证三端本机模拟器/仿真器 CLI 接管能力（iOS Simulator、Android Emulator、HarmonyOS / DevEco Emulator、target discovery、App lifecycle、readiness、screenshot、AX/layout、logs、command ledger、evidence、destructive policy）时，优先使用 `tritonkit-emulator-cli-takeover`，并确认产品边界仍是本机 CLI、无 Web、无真机、无远端 agent。
+9. 涉及设计、实现、扩展或验证 host-side Apple Simulator 接管能力（`triton sim`、`triton app`、`xcrun simctl` 封装、workspace simulator defaults、boot wait JSONL、App metadata/container/preferences、host artifacts、plan/evidence 集成）时，优先使用 `tritonkit-host-simulator-takeover`，并确认 agent 面对的是 Triton CLI/HTTP schema，而不是裸 `xcrun`。
+10. 涉及设计、实现、扩展或验证 Xcode workflow takeover 能力（project/workspace discovery、scheme/build settings、`xcodebuild` build/test/run、`.xcresult`、coverage、logs、SwiftPM、真机/macOS workflow、LLDB、host UI 集成，或评估 XcodeBuildMCP 能力取舍）时，优先使用 `tritonkit-xcode-workflow-takeover`，并坚持“吃能力，不吃 XcodeBuildMCP 对外 API”。
 
 ## 5. 记忆系统规则（必须）
 
