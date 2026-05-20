@@ -112,4 +112,4 @@ Overloaded 真实 App 的可复跑 smoke 脚本是 `docs-linhay/scripts/verify-o
 
 设备控制参考 Baguette 的动作模型，但当前 TritonKit 运行在被测 App 进程内，不具备 host-side SimulatorKit / HID 权限。第一阶段只承诺公开 UIKit API 可验证的 in-app 控制；系统按钮、全局键盘、跨 App home/app-switcher 等能力需要后续新增 macOS host-side adapter。
 
-观察能力也遵循 embedded runtime 边界：`ax` 基于当前 App 内 UIKit view tree 生成安全控件索引树，首版只为 `UIControl`、`UILabel`、`UITextField`、`UITextView`、`UIScrollView`、`UIImageView` 等可读/可操作类型生成节点，避免递归读取 SwiftUI/UIKit 私有视图导致 App 断连；它不是 SpringBoard 或跨 App 的系统级 AX tree。`screenshot` 是当前 App window 截图，不是 host-side framebuffer。
+观察能力也遵循 embedded runtime 边界：`ax` 基于当前 App 内 UIKit view tree 生成安全控件索引树，只为 `UIControl`、`UILabel`、`UITextField`、`UITextView`、`UIScrollView`、`UIImageView` 等可读/可操作类型生成节点，避免递归读取 SwiftUI/UIKit 私有视图导致 App 断连；它不是 SpringBoard 或跨 App 的系统级 AX tree。`UICollectionView` / `UITableView` 这类 scroll 容器会继续展开可见子树，并把 cell 内可读文本挂到容器 `children` 下；无 label、无 identifier、无子节点的空 `UIImageView` / 空 label 不进入 AX 输出，避免复杂页面提前耗尽节点预算。`screenshot` 是当前 App window 截图，不是 host-side framebuffer。

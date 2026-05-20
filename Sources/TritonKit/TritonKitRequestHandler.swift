@@ -691,18 +691,18 @@ private func captureCurrentScreenshotData() -> ScreenshotCapture {
     )
 }
 
-private struct AXBuildContext {
+struct AXBuildContext {
     var remaining: Int
     let maxDepth: Int
 
-    init(maxNodes: Int = 200, maxDepth: Int = 12) {
+    init(maxNodes: Int = 800, maxDepth: Int = 32) {
         self.remaining = maxNodes
         self.maxDepth = maxDepth
     }
 }
 
 @MainActor
-private func buildAXWindowNode(
+func buildAXWindowNode(
     for window: UIWindow,
     context: inout AXBuildContext
 ) -> TKAXNode {
@@ -723,30 +723,45 @@ private func buildAXWindowNode(
 }
 
 @MainActor
-private func collectAXLeafNodes(
+func collectAXLeafNodes(
     from view: UIView,
     in window: UIWindow,
     context: inout AXBuildContext,
     depth: Int = 0
 ) -> [TKAXNode] {
-    guard context.remaining > 0, depth <= context.maxDepth else { return [] }
-    var nodes: [TKAXNode] = []
-    if isAXVisible(view), isAXSafeView(view), let node = buildAXLeafNode(for: view, in: window) {
-        context.remaining -= 1
-        nodes.append(node)
-    }
-    guard context.remaining > 0, depth < context.maxDepth else { return nodes }
-    for subview in view.subviews {
-        nodes.append(contentsOf: collectAXLeafNodes(from: subview, in: window, context: &context, depth: depth + 1))
-        if context.remaining <= 0 {
-            break
+    guard isAXVisible(view), context.remaining > 0, depth <= context.maxDepth else { return [] }
+
+    let children: [TKAXNode]
+    if shouldCollectAXChildren(from: view), depth < context.maxDepth {
+        var collected: [TKAXNode] = []
+        for subview in view.subviews {
+            collected.append(contentsOf: collectAXLeafNodes(from: subview, in: window, context: &context, depth: depth + 1))
+            if context.remaining <= 0 {
+                break
+            }
         }
+        children = collected
+    } else {
+        children = []
     }
-    return nodes
+
+    guard context.remaining > 0,
+          isAXSafeView(view),
+          let node = buildAXNode(for: view, in: window, children: shouldNestAXChildren(for: view) ? children : []),
+          shouldEmitAXNode(node, for: view) else {
+        return children
+    }
+    context.remaining -= 1
+    return [node]
 }
 
 @MainActor
-private func buildAXLeafNode(for view: UIView, in window: UIWindow) -> TKAXNode? {
+func buildAXLeafNode(for view: UIView, in window: UIWindow) -> TKAXNode? {
+    buildAXNode(for: view, in: window, children: [])
+}
+
+@MainActor
+private func buildAXNode(for view: UIView, in window: UIWindow, children: [TKAXNode]) -> TKAXNode? {
     guard isAXVisible(view) else { return nil }
     let identifier = identifier(for: view)
     let viewOID = oid(for: view)
@@ -763,7 +778,7 @@ private func buildAXLeafNode(for view: UIView, in window: UIWindow) -> TKAXNode?
         targetOID: viewOID,
         viewOID: identifier == nil ? nil : viewOID,
         className: NSStringFromClass(type(of: view)),
-        children: []
+        children: children
     )
 }
 
@@ -785,6 +800,42 @@ private func isAXSafeView(_ view: UIView) -> Bool {
     default:
         return false
     }
+}
+
+private func shouldCollectAXChildren(from view: UIView) -> Bool {
+    if view is UITextView {
+        return false
+    }
+    if view is UIScrollView {
+        return true
+    }
+    switch view {
+    case is UIControl, is UILabel, is UIImageView:
+        return false
+    default:
+        return true
+    }
+}
+
+private func shouldNestAXChildren(for view: UIView) -> Bool {
+    view is UIScrollView && !(view is UITextView)
+}
+
+private func shouldEmitAXNode(_ node: TKAXNode, for view: UIView) -> Bool {
+    if view is UIControl {
+        return true
+    }
+    if view is UIScrollView, !(view is UITextView) {
+        return hasAXSemantics(node) || !node.children.isEmpty
+    }
+    return hasAXSemantics(node)
+}
+
+private func hasAXSemantics(_ node: TKAXNode) -> Bool {
+    nonEmptyText(node.label) != nil
+        || nonEmptyText(node.value) != nil
+        || nonEmptyText(node.identifier) != nil
+        || nonEmptyText(node.title) != nil
 }
 
 private func isAXVisible(_ view: UIView) -> Bool {
@@ -819,24 +870,27 @@ private func role(for view: UIView) -> String {
 }
 
 private func label(for view: UIView) -> String? {
-    if let accessibilityLabel = view.accessibilityLabel, !accessibilityLabel.isEmpty {
+    if let accessibilityLabel = nonEmptyText(view.accessibilityLabel) {
         return accessibilityLabel
     }
     if let label = view as? UILabel {
-        return label.text
+        return nonEmptyText(label.text) ?? nonEmptyText(label.attributedText?.string)
     }
     if let button = view as? UIButton {
-        return button.currentTitle
+        return nonEmptyText(button.currentTitle) ?? nonEmptyText(button.currentAttributedTitle?.string)
+    }
+    if let field = view as? UITextField {
+        return nonEmptyText(field.placeholder)
     }
     return nil
 }
 
 private func value(for view: UIView) -> String? {
     if let field = view as? UITextField {
-        return field.text
+        return nonEmptyText(field.text) ?? nonEmptyText(field.placeholder)
     }
     if let textView = view as? UITextView {
-        return textView.text
+        return nonEmptyText(textView.text)
     }
     if let toggle = view as? UISwitch {
         return toggle.isOn ? "1" : "0"
@@ -851,13 +905,13 @@ private func value(for view: UIView) -> String? {
     if let stepper = view as? UIStepper {
         return String(format: "%.0f", stepper.value)
     }
-    return nil
+    return nonEmptyText(view.accessibilityValue)
 }
 
 private func identifier(for view: UIView) -> String? {
     switch view {
     case is UIControl, is UILabel, is UITextView, is UIImageView, is UIScrollView:
-        return view.accessibilityIdentifier
+        return nonEmptyText(view.accessibilityIdentifier)
     default:
         return nil
     }
@@ -865,9 +919,15 @@ private func identifier(for view: UIView) -> String? {
 
 private func title(for view: UIView) -> String? {
     if let button = view as? UIButton {
-        return button.currentTitle
+        return nonEmptyText(button.currentTitle) ?? nonEmptyText(button.currentAttributedTitle?.string)
     }
     return nil
+}
+
+private func nonEmptyText(_ text: String?) -> String? {
+    guard let text else { return nil }
+    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : trimmed
 }
 
 private func enabled(for view: UIView) -> Bool {
