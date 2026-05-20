@@ -41,6 +41,8 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton tap "HTTP" --format json`：意图优先点击入口；调用方不需要区分 AX、hierarchy、坐标、oid 或 segmented option。仍保留 `--x/--y`、`--oid`、`--ax-oid`、`--ax-label` 作为诊断和精确控制入口。
 - `triton swipe --target triton:local --start-x <x> --start-y <y> --end-x <x> --end-y <y> --format json`：对命中的 `UIScrollView` 调整 `contentOffset`。
 - `triton type --target triton:local --text <text> --format json`：向当前 first responder 或 `--oid` 指定的 `UIKeyInput` 写入文本。
+- `triton paste "console" --format json`：向当前 first responder、`--oid` 或 `--x/--y` 命中的输入框精确插入文本；`--secure` 只回显 `insertedLength` 与 redaction 状态，不回显原文。
+- `triton clear --format json`：清空当前 first responder、`--oid` 或 `--x/--y` 命中的输入框。
 - `triton press --target triton:local --button <button> --format json`：保留设备按钮契约；embedded runtime 当前返回 unsupported。
 - `triton geometry --target triton:local --format json`：读取当前可见 window 的 bounds、safe area、scale 与 orientation。
 - `triton ax --target triton:local --format json`：读取当前 App 内安全可操作控件索引树。

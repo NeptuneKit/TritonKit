@@ -279,7 +279,11 @@ private func performInput(_ request: TKInputRequest) -> TKInputResult {
     case .swipe:
         return performSwipe(request)
     case .typeText:
-        return performType(request)
+        return performExactTextInsertion(request)
+    case .paste:
+        return performExactTextInsertion(request)
+    case .clear:
+        return performClear(request)
     case .button:
         return TKInputResult.unsupported(
             action: request.type.rawValue,
@@ -521,21 +525,15 @@ private func performSwipe(_ request: TKInputRequest) -> TKInputResult {
 }
 
 @MainActor
-private func performType(_ request: TKInputRequest) -> TKInputResult {
+private func performExactTextInsertion(_ request: TKInputRequest) -> TKInputResult {
     let action = request.type.rawValue
     guard let text = request.text else {
         return TKInputResult.failure(action: action, message: "Missing text")
     }
 
-    let responder: UIResponder?
-    if let targetOID = request.targetOID {
-        responder = TKObjectRegistry.shared.object(for: targetOID) as? UIResponder
-    } else {
-        responder = keyWindows().compactMap { findFirstResponder(in: $0) }.first
-    }
-
-    guard let responder else {
-        return TKInputResult.failure(action: action, message: "No target responder")
+    let resolved = resolveTextInputResponder(request)
+    guard let responder = resolved.responder else {
+        return TKInputResult.failure(action: action, message: resolved.message)
     }
     guard let keyInput = responder as? UIKeyInput else {
         return TKInputResult.failure(
@@ -547,18 +545,117 @@ private func performType(_ request: TKInputRequest) -> TKInputResult {
     }
 
     keyInput.insertText(text)
+    notifyTextDidChange(for: responder)
+
+    let secure = request.secure == true
+    return TKInputResult.success(
+        action: action,
+        message: secure ? "Inserted redacted text" : "Inserted text",
+        targetOID: oid(for: responder),
+        targetClassName: NSStringFromClass(type(of: responder)),
+        secure: secure,
+        redacted: secure,
+        insertedLength: text.count
+    )
+}
+
+@MainActor
+private func performClear(_ request: TKInputRequest) -> TKInputResult {
+    let action = request.type.rawValue
+    let resolved = resolveTextInputResponder(request)
+    guard let responder = resolved.responder else {
+        return TKInputResult.failure(action: action, message: resolved.message)
+    }
+
+    if let textField = responder as? UITextField {
+        textField.text = ""
+    } else if let textView = responder as? UITextView {
+        textView.text = ""
+    } else if let keyInput = responder as? UIKeyInput {
+        var guardCount = 0
+        while keyInput.hasText && guardCount < 10_000 {
+            keyInput.deleteBackward()
+            guardCount += 1
+        }
+        if keyInput.hasText {
+            return TKInputResult.failure(
+                action: action,
+                message: "Target still has text after clear limit",
+                targetOID: oid(for: responder),
+                targetClassName: NSStringFromClass(type(of: responder))
+            )
+        }
+    } else {
+        return TKInputResult.failure(
+            action: action,
+            message: "Target does not conform to UIKeyInput",
+            targetOID: oid(for: responder),
+            targetClassName: NSStringFromClass(type(of: responder))
+        )
+    }
+
+    notifyTextDidChange(for: responder)
+    return TKInputResult.success(
+        action: action,
+        message: "Cleared text",
+        targetOID: oid(for: responder),
+        targetClassName: NSStringFromClass(type(of: responder)),
+        insertedLength: 0
+    )
+}
+
+@MainActor
+private func resolveTextInputResponder(_ request: TKInputRequest) -> (responder: UIResponder?, message: String) {
+    if let targetOID = request.targetOID {
+        guard let responder = TKObjectRegistry.shared.object(for: targetOID) as? UIResponder else {
+            return (nil, "Target oid is not a UIResponder: \(targetOID)")
+        }
+        return (responder, "Resolved target oid")
+    }
+
+    if request.x != nil || request.y != nil {
+        let resolved = resolveView(targetOID: nil, x: request.x, y: request.y)
+        guard let view = resolved.view else {
+            return (nil, resolved.message)
+        }
+        if let textField = nearestSuperview(of: view, matching: UITextField.self) {
+            textField.becomeFirstResponder()
+            return (textField, "Focused text field")
+        }
+        if let textView = nearestSuperview(of: view, matching: UITextView.self) {
+            textView.becomeFirstResponder()
+            return (textView, "Focused text view")
+        }
+        if let responder = nearestTextInputResponder(from: view) {
+            responder.becomeFirstResponder()
+            return (responder, "Focused text input responder")
+        }
+        return (nil, "Hit view does not expose a UIKeyInput responder")
+    }
+
+    guard let responder = keyWindows().compactMap({ findFirstResponder(in: $0) }).first else {
+        return (nil, "No target responder")
+    }
+    return (responder, "Resolved first responder")
+}
+
+private func nearestTextInputResponder(from view: UIView) -> UIResponder? {
+    var current: UIView? = view
+    while let view = current {
+        if view is UIKeyInput {
+            return view
+        }
+        current = view.superview
+    }
+    return nil
+}
+
+private func notifyTextDidChange(for responder: UIResponder) {
     if let textField = responder as? UITextField {
         textField.sendActions(for: .editingChanged)
     } else if let textView = responder as? UITextView {
         NotificationCenter.default.post(name: UITextView.textDidChangeNotification, object: textView)
     }
-
-    return TKInputResult.success(
-        action: action,
-        message: "Inserted text",
-        targetOID: oid(for: responder),
-        targetClassName: NSStringFromClass(type(of: responder))
-    )
 }
 
 @MainActor

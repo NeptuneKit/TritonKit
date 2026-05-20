@@ -5,6 +5,8 @@ public enum TKInputType: String, Codable, CaseIterable {
     case swipe
     case button
     case typeText = "type"
+    case paste
+    case clear
 }
 
 public struct TKInputRequest: Codable, Equatable {
@@ -21,6 +23,7 @@ public struct TKInputRequest: Codable, Equatable {
     public let duration: Double?
     public let text: String?
     public let button: String?
+    public let secure: Bool?
 
     public init(
         type: TKInputType,
@@ -35,7 +38,8 @@ public struct TKInputRequest: Codable, Equatable {
         height: Double? = nil,
         duration: Double? = nil,
         text: String? = nil,
-        button: String? = nil
+        button: String? = nil,
+        secure: Bool? = nil
     ) {
         self.type = type
         self.targetOID = targetOID
@@ -50,6 +54,7 @@ public struct TKInputRequest: Codable, Equatable {
         self.duration = duration
         self.text = text
         self.button = button
+        self.secure = secure
     }
 
     public static func tap(
@@ -99,6 +104,20 @@ public struct TKInputRequest: Codable, Equatable {
     public static func typeText(_ text: String, targetOID: UInt? = nil) -> TKInputRequest {
         TKInputRequest(type: .typeText, targetOID: targetOID, text: text)
     }
+
+    public static func paste(
+        _ text: String,
+        targetOID: UInt? = nil,
+        x: Double? = nil,
+        y: Double? = nil,
+        secure: Bool = false
+    ) -> TKInputRequest {
+        TKInputRequest(type: .paste, targetOID: targetOID, x: x, y: y, text: text, secure: secure)
+    }
+
+    public static func clear(targetOID: UInt? = nil, x: Double? = nil, y: Double? = nil) -> TKInputRequest {
+        TKInputRequest(type: .clear, targetOID: targetOID, x: x, y: y)
+    }
 }
 
 public struct TKInputResult: Codable, Equatable {
@@ -107,33 +126,48 @@ public struct TKInputResult: Codable, Equatable {
     public let message: String?
     public let targetOID: UInt?
     public let targetClassName: String?
+    public let secure: Bool?
+    public let redacted: Bool?
+    public let insertedLength: Int?
 
     public init(
         ok: Bool,
         action: String,
         message: String? = nil,
         targetOID: UInt? = nil,
-        targetClassName: String? = nil
+        targetClassName: String? = nil,
+        secure: Bool? = nil,
+        redacted: Bool? = nil,
+        insertedLength: Int? = nil
     ) {
         self.ok = ok
         self.action = action
         self.message = message
         self.targetOID = targetOID
         self.targetClassName = targetClassName
+        self.secure = secure
+        self.redacted = redacted
+        self.insertedLength = insertedLength
     }
 
     public static func success(
         action: String,
         message: String? = nil,
         targetOID: UInt? = nil,
-        targetClassName: String? = nil
+        targetClassName: String? = nil,
+        secure: Bool? = nil,
+        redacted: Bool? = nil,
+        insertedLength: Int? = nil
     ) -> TKInputResult {
         TKInputResult(
             ok: true,
             action: action,
             message: message,
             targetOID: targetOID,
-            targetClassName: targetClassName
+            targetClassName: targetClassName,
+            secure: secure,
+            redacted: redacted,
+            insertedLength: insertedLength
         )
     }
 

@@ -33,4 +33,40 @@ struct TKInputModelsTests {
         #expect(decoded.action == "button")
         #expect(decoded.message == "Host-side HID is not available")
     }
+
+    @Test("paste request preserves secure redaction intent")
+    func pasteRequestWireShape() throws {
+        let request = TKInputRequest.paste("aa123654", x: 180, y: 304, secure: true)
+        let data = try JSONEncoder().encode(request)
+        let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        #expect(json["type"] as? String == "paste")
+        #expect(json["text"] as? String == "aa123654")
+        #expect(json["x"] as? Double == 180)
+        #expect(json["y"] as? Double == 304)
+        #expect(json["secure"] as? Bool == true)
+    }
+
+    @Test("secure input result reports length without text")
+    func secureInputResultShape() throws {
+        let result = TKInputResult.success(
+            action: "paste",
+            message: "Inserted redacted text",
+            secure: true,
+            redacted: true,
+            insertedLength: 8
+        )
+
+        let data = try JSONEncoder().encode(result)
+        let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let decoded = try JSONDecoder().decode(TKInputResult.self, from: data)
+
+        #expect(json["secure"] as? Bool == true)
+        #expect(json["redacted"] as? Bool == true)
+        #expect(json["insertedLength"] as? Int == 8)
+        #expect(json["text"] == nil)
+        #expect(decoded.secure == true)
+        #expect(decoded.redacted == true)
+        #expect(decoded.insertedLength == 8)
+    }
 }

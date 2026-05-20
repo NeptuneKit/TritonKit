@@ -50,6 +50,8 @@ struct TritonKitCLI: AsyncParsableCommand {
             Tap.self,
             Swipe.self,
             TypeText.self,
+            PasteText.self,
+            ClearText.self,
             Press.self,
             Geometry.self,
             AccessibilityTree.self,
@@ -658,6 +660,8 @@ func chineseRootHelp() -> String {
         ("tap", "点击文本、坐标、view oid 或 AX 节点"),
         ("swipe", "在 App 内按 window points 执行滑动"),
         ("type", "向已聚焦或 oid 指定的 UIKeyInput 输入文本"),
+        ("paste", "向已聚焦、坐标或 oid 指定的输入框精确粘贴文本"),
+        ("clear", "清空已聚焦、坐标或 oid 指定的输入框"),
         ("press", "在当前运行时支持时按设备按钮"),
         ("geometry", "读取当前 window 几何信息"),
         ("ax", "读取 App 内安全可操作控件索引"),
@@ -761,6 +765,18 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--fail-fast", "首个失败动作后停止"),
             ("--summary", "输出最终批次 summary"),
             ("--strict", "任一动作失败时以非 0 退出"),
+        ]),
+        "paste": ChineseCommandHelp(name: "paste", overview: "向当前焦点或指定输入框精确粘贴文本。", usage: "triton paste <text> [选项]", options: target + hostPort + formatTextJSON + [
+            ("<text>", "要插入的文本"),
+            ("--secure", "敏感文本，输出只回显长度和 redaction 状态"),
+            ("--oid <oid>", "可选 responder oid"),
+            ("--x <x>", "window x 坐标，需与 --y 同时使用"),
+            ("--y <y>", "window y 坐标，需与 --x 同时使用"),
+        ]),
+        "clear": ChineseCommandHelp(name: "clear", overview: "清空当前焦点或指定输入框。", usage: "triton clear [选项]", options: target + hostPort + formatTextJSON + [
+            ("--oid <oid>", "可选 responder oid"),
+            ("--x <x>", "window x 坐标，需与 --y 同时使用"),
+            ("--y <y>", "window y 坐标，需与 --x 同时使用"),
         ]),
     ]
 }
@@ -1401,13 +1417,79 @@ struct TypeText: AsyncParsableCommand {
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Option(help: "Text to insert") var text: String
     @Option(help: "Optional responder oid from `triton nodes`") var oid: UInt?
+    @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
+    @Flag(name: .customLong("exact"), help: "Use direct UIKeyInput insertion without keyboard autocorrect") var exact = false
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
-                TKInputRequest.typeText(text, targetOID: oid),
+                TKInputRequest(type: .typeText, targetOID: oid, text: text, secure: secure),
+                host: host,
+                port: port,
+                format: outputFormat
+            )
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct PasteText: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "paste",
+        abstract: "Paste exact text into a focused, coordinate-targeted, or oid-targeted input"
+    )
+
+    @Argument(help: "Text to paste") var text: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
+    @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
+    @Option(help: "Window x coordinate to focus before paste") var x: Double?
+    @Option(help: "Window y coordinate to focus before paste") var y: Double?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            try await runInputRequest(
+                TKInputRequest.paste(text, targetOID: oid, x: x, y: y, secure: secure),
+                host: host,
+                port: port,
+                format: outputFormat
+            )
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct ClearText: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "clear",
+        abstract: "Clear a focused, coordinate-targeted, or oid-targeted input"
+    )
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
+    @Option(help: "Window x coordinate to focus before clear") var x: Double?
+    @Option(help: "Window y coordinate to focus before clear") var y: Double?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            try await runInputRequest(
+                TKInputRequest.clear(targetOID: oid, x: x, y: y),
                 host: host,
                 port: port,
                 format: outputFormat
@@ -2058,6 +2140,8 @@ func runtimeCapabilities(connected: Bool) -> [TKRuntimeCapability] {
         TKRuntimeCapability(name: "tap", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "swipe", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "type", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "paste", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "clear", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "input", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "press", supported: false, reason: "Host-side HID is not available in the embedded runtime"),
     ]
@@ -2849,12 +2933,61 @@ func commandSchemas() -> [TKCommandSchema] {
                 target,
                 TKCommandSchemaOption(name: "--text", type: "String", required: true, description: "Text to insert"),
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid from `triton nodes`"),
+                TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact inserted text details in command output"),
+                TKCommandSchemaOption(name: "--exact", type: "Bool", defaultValue: "false", description: "Use direct UIKeyInput insertion without keyboard autocorrect"),
                 formatTextJSON,
                 jsonAlias,
             ],
-            examples: ["triton type --text hello --format json"],
-            successShape: "{ ok, action, message, targetOID, targetClassName }",
+            examples: ["triton type --text hello --exact --format json"],
+            successShape: "{ ok, action, message, targetOID, targetClassName, secure?, redacted?, insertedLength? }",
             providedCapabilities: ["type"]
+        ),
+        TKCommandSchema(
+            name: "paste",
+            summary: "Paste exact text into a focused, coordinate-targeted, or oid-targeted input",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "<text>", type: "String", required: true, description: "Text to paste"),
+                TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact inserted text details in command output"),
+                TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid"),
+                TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate to focus before paste"),
+                TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate to focus before paste"),
+                formatTextJSON,
+                jsonAlias,
+            ],
+            examples: [
+                #"triton paste "console" --json"#,
+                #"triton paste --secure "aa123654" --json"#,
+                #"triton paste --x 180 --y 250 "console" --json"#,
+            ],
+            successShape: "{ ok, action, message, targetOID, targetClassName, secure, redacted, insertedLength }",
+            providedCapabilities: ["paste"]
+        ),
+        TKCommandSchema(
+            name: "clear",
+            summary: "Clear a focused, coordinate-targeted, or oid-targeted input",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid"),
+                TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate to focus before clear"),
+                TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate to focus before clear"),
+                formatTextJSON,
+                jsonAlias,
+            ],
+            examples: [
+                "triton clear --json",
+                "triton clear --x 180 --y 250 --json",
+            ],
+            successShape: "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }",
+            providedCapabilities: ["clear"]
         ),
         TKCommandSchema(
             name: "press",
@@ -2894,7 +3027,7 @@ func commandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "One TKInputResult JSON object per input line; with --summary, final { ok, actionCount, failedCount }",
             inputActions: inputActionSchemas(),
-            providedCapabilities: ["tap", "swipe", "type", "press"]
+            providedCapabilities: ["tap", "swipe", "type", "paste", "clear", "press"]
         ),
     ]
 }
@@ -2938,13 +3071,44 @@ func inputActionSchemas() -> [TKInputActionSchema] {
         TKInputActionSchema(
             type: "type",
             requiredFields: ["type", "text"],
-            optionalFields: ["targetOID"],
+            optionalFields: ["targetOID", "secure"],
             fields: [
                 inputField("type", "String", required: true, enumValues: ["type"], "Action discriminator"),
                 inputField("text", "String", required: true, "Text to insert into target or first responder"),
                 inputField("targetOID", "UInt", "Optional UIKeyInput target oid"),
+                inputField("secure", "Bool", "Redact inserted text details in command output"),
             ],
             example: #"{"type":"type","text":"hello"}"#
+        ),
+        TKInputActionSchema(
+            type: "paste",
+            requiredFields: ["type", "text"],
+            optionalFields: ["targetOID", "x", "y", "secure"],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["paste"], "Action discriminator"),
+                inputField("text", "String", required: true, "Exact text to insert into target or first responder"),
+                inputField("targetOID", "UInt", "Optional UIKeyInput target oid"),
+                inputField("x", "Double", "Window x coordinate to focus before paste; required with y"),
+                inputField("y", "Double", "Window y coordinate to focus before paste; required with x"),
+                inputField("secure", "Bool", "Redact inserted text details in command output"),
+            ],
+            example: #"{"type":"paste","text":"console","secure":false}"#,
+            resultShape: "{ ok, action, message, targetOID, targetClassName, secure, redacted, insertedLength }"
+        ),
+        TKInputActionSchema(
+            type: "clear",
+            requiredFields: ["type"],
+            optionalFields: ["targetOID", "x", "y"],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["clear"], "Action discriminator"),
+                inputField("targetOID", "UInt", "Optional UIKeyInput target oid"),
+                inputField("x", "Double", "Window x coordinate to focus before clear; required with y"),
+                inputField("y", "Double", "Window y coordinate to focus before clear; required with x"),
+            ],
+            example: #"{"type":"clear"}"#,
+            resultShape: "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }"
         ),
         TKInputActionSchema(
             type: "button",
@@ -3168,6 +3332,15 @@ func printInputResult(_ result: TKInputResult, format: ClientOutputFormat) throw
         }
         if let targetClassName = result.targetClassName {
             print("targetClassName: \(targetClassName)")
+        }
+        if let secure = result.secure {
+            print("secure: \(secure)")
+        }
+        if let redacted = result.redacted {
+            print("redacted: \(redacted)")
+        }
+        if let insertedLength = result.insertedLength {
+            print("insertedLength: \(insertedLength)")
         }
     }
 }
