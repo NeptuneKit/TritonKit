@@ -43,19 +43,37 @@ public struct TKEvidenceArtifact: Codable, Equatable {
     public let contentType: String?
     public let bytes: Int?
     public let freshness: TKEvidenceFreshness?
+    public let platform: String?
+    public let riskLevel: String?
+    public let policy: String?
+    public let redactionStatus: String?
+    public let sourceCommand: String?
+    public let target: String?
 
     public init(
         kind: String,
         path: String,
         contentType: String? = nil,
         bytes: Int? = nil,
-        freshness: TKEvidenceFreshness? = nil
+        freshness: TKEvidenceFreshness? = nil,
+        platform: String? = nil,
+        riskLevel: String? = nil,
+        policy: String? = nil,
+        redactionStatus: String? = nil,
+        sourceCommand: String? = nil,
+        target: String? = nil
     ) {
         self.kind = kind
         self.path = path
         self.contentType = contentType
         self.bytes = bytes
         self.freshness = freshness
+        self.platform = platform
+        self.riskLevel = riskLevel
+        self.policy = policy
+        self.redactionStatus = redactionStatus
+        self.sourceCommand = sourceCommand
+        self.target = target
     }
 }
 

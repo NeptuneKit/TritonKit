@@ -64,9 +64,1133 @@ struct TritonKitCLI: AsyncParsableCommand {
             Hit.self,
             Screenshot.self,
             Input.self,
+            Device.self,
+            Sim.self,
+            HostApp.self,
         ],
         defaultSubcommand: List.self
     )
+}
+
+// MARK: - Host-Side Simulator Commands
+
+struct Sim: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "sim",
+        abstract: "Control iOS simulators through host-side Apple tools",
+        subcommands: [SimList.self, SimUse.self, SimBoot.self, SimShutdown.self, SimScreenshot.self]
+    )
+}
+
+struct SimList: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "list", abstract: "List available simulators")
+
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let result = try runHostCommand(TKSimctlCommand.listAvailableDevices())
+            let simulators = try TKSimctlDeviceListParser.parse(result.stdoutData)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(HostSimulatorListOutput(ok: true, simulators: simulators)))
+            case .text:
+                for simulator in simulators {
+                    print("\(simulator.udid)\t\(simulator.state)\t\(simulator.runtime)\t\(simulator.name)")
+                }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct SimUse: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "use", abstract: "Set the workspace default simulator")
+
+    @Argument(help: "Simulator UDID") var udid: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let result = try runHostCommand(TKSimctlCommand.listAvailableDevices())
+            let simulators = try TKSimctlDeviceListParser.parse(result.stdoutData)
+            guard let simulator = simulators.first(where: { $0.udid == udid || $0.id == udid }) else {
+                throw HostSimulatorRunError.simulatorNotFound(udid)
+            }
+            let defaults = TKHostWorkspaceDefaults(defaultSimulatorUDID: simulator.udid)
+            let path = try saveHostWorkspaceDefaults(defaults)
+            let output = HostSimulatorUseOutput(
+                ok: true,
+                action: "sim.use",
+                simulator: simulator,
+                defaultsPath: path
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print(simulator.udid)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct SimBoot: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "boot", abstract: "Boot a simulator")
+
+    @Argument(help: "Simulator UDID") var udid: String
+    @Flag(help: "Wait until the simulator reports Booted") var wait = false
+    @Flag(help: "Emit compact JSON lines while waiting") var jsonl = false
+    @Option(help: "Timeout in seconds when --wait is set") var timeout: Double = 60
+    @Option(help: "Polling interval in seconds when --wait is set") var interval: Double = 1
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        guard wait else {
+            try runSimpleHostCommand(
+                action: "sim.boot",
+                target: "sim:\(udid)",
+                command: TKSimctlCommand.boot(udid: udid),
+                outputFormat: outputFormat,
+                note: "Simulator boot was requested."
+            )
+            return
+        }
+
+        do {
+            do {
+                _ = try runHostCommand(TKSimctlCommand.boot(udid: udid))
+            } catch {
+                if !(try simulatorIsBooted(udid: udid)) {
+                    throw error
+                }
+            }
+            try await waitForSimulatorBoot(
+                udid: udid,
+                timeout: timeout,
+                interval: interval,
+                outputFormat: outputFormat,
+                jsonl: jsonl
+            )
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct SimShutdown: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "shutdown", abstract: "Shutdown a simulator")
+
+    @Argument(help: "Simulator UDID or booted") var udid: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try runSimpleHostCommand(
+            action: "sim.shutdown",
+            target: "sim:\(udid)",
+            command: TKSimctlCommand.shutdown(udid: udid),
+            outputFormat: effectiveFormat(format, json: json),
+            note: "Simulator shutdown was requested."
+        )
+    }
+}
+
+struct SimScreenshot: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "screenshot", abstract: "Capture a host-side simulator framebuffer screenshot")
+
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Output PNG path") var output: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try runSimpleHostCommand(
+            action: "sim.screenshot",
+            target: "sim:\(simulator)",
+            command: TKSimctlCommand.screenshot(udid: simulator, output: output),
+            outputFormat: effectiveFormat(format, json: json),
+            artifacts: [output],
+            note: "Host-side simulator screenshot was written."
+        )
+    }
+}
+
+// MARK: - Host-Side App Commands
+
+struct HostApp: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "app",
+        abstract: "Control simulator apps through host-side Apple tools",
+        subcommands: [
+            HostAppList.self,
+            HostAppInfo.self,
+            HostAppInstall.self,
+            HostAppLaunch.self,
+            HostAppTerminate.self,
+            HostAppOpenURL.self,
+            HostAppContainer.self,
+            HostAppPrefs.self,
+        ]
+    )
+}
+
+struct HostAppList: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "list", abstract: "List installed simulator apps")
+
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Flag(help: "Only include User apps") var userOnly = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let result = try runHostCommand(TKSimctlCommand.listApps(udid: simulator))
+            var apps = try TKSimctlAppInfoParser.parseList(result.stdoutData)
+            if userOnly {
+                apps = apps.filter { $0.applicationType == "User" }
+            }
+            let output = HostAppListOutput(
+                ok: true,
+                action: "app.list",
+                simulatorUDID: simulator,
+                userOnly: userOnly,
+                count: apps.count,
+                apps: apps
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                for app in apps {
+                    print("\(app.bundleID)\t\(app.applicationType ?? "-")\t\(app.displayName ?? app.name ?? "-")\t\(app.path ?? "-")")
+                }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct HostAppInfo: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "info", abstract: "Show installed simulator app information")
+
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "App bundle identifier") var bundleID: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let result = try runHostCommand(TKSimctlCommand.appInfo(udid: simulator, bundleID: bundleID))
+            let app = try TKSimctlAppInfoParser.parseAppInfo(result.stdoutData, bundleID: bundleID)
+            let output = HostAppInfoOutput(
+                ok: true,
+                action: "app.info",
+                simulatorUDID: simulator,
+                bundleID: bundleID,
+                app: app
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print("\(app.bundleID)\t\(app.applicationType ?? "-")\t\(app.displayName ?? app.name ?? "-")\t\(app.path ?? "-")")
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct HostAppInstall: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "install", abstract: "Install an .app bundle into a simulator")
+
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Path to .app bundle") var app: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try runSimpleHostCommand(
+            action: "app.install",
+            target: "sim:\(simulator)",
+            command: TKSimctlCommand.installApp(udid: simulator, appPath: app),
+            outputFormat: effectiveFormat(format, json: json),
+            artifacts: [app],
+            note: "App install was requested; verify with `triton app list --user-only --json` or `triton app info --bundle-id <id> --json`."
+        )
+    }
+}
+
+struct HostAppLaunch: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "launch", abstract: "Launch an installed simulator app")
+
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "App bundle identifier") var bundleID: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try runSimpleHostCommand(
+            action: "app.launch",
+            target: "sim:\(simulator)/app:\(bundleID)",
+            command: TKSimctlCommand.launchApp(udid: simulator, bundleID: bundleID),
+            outputFormat: effectiveFormat(format, json: json),
+            note: "App launch was requested; verify readiness with `triton status`, `triton wait`, or `triton app prefs get`."
+        )
+    }
+}
+
+struct HostAppTerminate: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "terminate", abstract: "Terminate a running simulator app")
+
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "App bundle identifier") var bundleID: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try runSimpleHostCommand(
+            action: "app.terminate",
+            target: "sim:\(simulator)/app:\(bundleID)",
+            command: TKSimctlCommand.terminateApp(udid: simulator, bundleID: bundleID),
+            outputFormat: effectiveFormat(format, json: json),
+            note: "App terminate was requested."
+        )
+    }
+}
+
+struct HostAppOpenURL: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "open-url", abstract: "Open a URL in a simulator")
+
+    @Argument(help: "URL to open") var url: String
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try runSimpleHostCommand(
+            action: "app.open-url",
+            target: "sim:\(simulator)",
+            command: TKSimctlCommand.openURL(udid: simulator, url: url),
+            outputFormat: effectiveFormat(format, json: json),
+            note: "URL was submitted to the simulator; verify in-app completion with `triton wait`, `triton find`, or `triton assert`."
+        )
+    }
+}
+
+struct HostAppContainer: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "container", abstract: "Print a simulator app container path")
+
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "App bundle identifier") var bundleID: String
+    @Option(help: "Container kind: app, data, or groups") var kind: TKHostAppContainerKind = .data
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let result = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: kind))
+            let path = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            let response = HostAppContainerOutput(
+                ok: true,
+                action: "app.container",
+                simulatorUDID: simulator,
+                bundleID: bundleID,
+                kind: kind.rawValue,
+                path: path
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print(path)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct HostAppPrefs: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "prefs",
+        abstract: "Read simulator app preferences as JSON",
+        subcommands: [HostAppPrefsDump.self, HostAppPrefsGet.self]
+    )
+}
+
+struct HostAppPrefsDump: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "dump", abstract: "Dump app preferences")
+
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "App bundle identifier") var bundleID: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printPreferences(simulator: simulator, bundleID: bundleID, key: nil, outputFormat: effectiveFormat(format, json: json))
+    }
+}
+
+struct HostAppPrefsGet: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "get", abstract: "Read one app preference value")
+
+    @Argument(help: "Preference key") var key: String
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "App bundle identifier") var bundleID: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printPreferences(simulator: simulator, bundleID: bundleID, key: key, outputFormat: effectiveFormat(format, json: json))
+    }
+}
+
+extension TKHostAppContainerKind: ExpressibleByArgument {}
+
+// MARK: - Cross-Platform Host Device Commands
+
+enum HostPlatform: String, ExpressibleByArgument {
+    case harmony
+}
+
+struct Device: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "device",
+        abstract: "Discover and inspect host-side devices and emulators",
+        subcommands: [DeviceDoctor.self, DeviceList.self, DeviceUse.self, DeviceWaitReady.self]
+    )
+}
+
+struct DeviceDoctor: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "doctor", abstract: "Probe platform host tools")
+
+    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Optional path to DevEco Emulator executable") var emulator: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        let hdcProbe = probeHostTool(name: "hdc", command: TKHarmonyHDCCommand.version(executable: hdc))
+        let emulatorProbe = emulator.map { path in
+            probeHostTool(name: "emulator", command: TKHostCommand(executable: path, arguments: ["-version"]))
+        }
+        let output = HostDeviceDoctorOutput(
+            ok: hdcProbe.available,
+            platform: platform.rawValue,
+            tools: [hdcProbe] + Array(emulatorProbe.map { [$0] } ?? []),
+            capabilities: ["device.list", "device.wait-ready", "harmony.hdc-targets"],
+            artifactsSaved: false
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            for tool in output.tools {
+                print("\(tool.name)\t\(tool.available ? "available" : "unavailable")\t\(tool.path)")
+            }
+        }
+    }
+}
+
+struct DeviceList: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "list", abstract: "List platform targets")
+
+    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let result = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))
+            let targets = TKHdcTargetListParser.parse(result.stdout)
+            let output = HostDeviceListOutput(
+                ok: true,
+                platform: platform.rawValue,
+                targets: targets,
+                defaultTarget: TKHdcTargetListParser.defaultTarget(from: targets),
+                sourceCommand: result.sourceCommand
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                for target in targets {
+                    print("\(target.target)\t\(target.state)\t\(target.transport)")
+                }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceUse: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "use", abstract: "Resolve one platform target")
+
+    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(HostDeviceUseOutput(ok: true, platform: platform.rawValue, target: selected)))
+            case .text:
+                print(selected.target)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceWaitReady: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "wait-ready", abstract: "Wait until a platform target is ready")
+
+    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Timeout in seconds") var timeout: Double = 30
+    @Option(help: "Polling interval in seconds") var interval: Double = 1
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+            let deadline = Date().addingTimeInterval(timeout)
+            var attempt = 0
+            while Date() <= deadline {
+                attempt += 1
+                let command = TKHarmonyHDCCommand.bootCompleted(target: selected.target, executable: hdc)
+                let result = try runHostCommand(command)
+                let ready = TKHarmonyBootCompletedParser.isReady(result.stdout)
+                let event = HostDeviceReadyEvent(
+                    ok: ready,
+                    platform: platform.rawValue,
+                    target: selected,
+                    ready: ready,
+                    attempt: attempt,
+                    sourceCommand: result.sourceCommand,
+                    error: nil
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(event))
+                case .text:
+                    print("\(selected.target)\tready=\(ready)")
+                }
+                if ready { return }
+                try await Task.sleep(nanoseconds: UInt64(max(0.1, interval) * 1_000_000_000))
+            }
+            try failHostCommand(HostCommandRunError.deviceNotReady(target: selected.target, timeoutSeconds: timeout), outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct HostToolProbeOutput: Encodable {
+    let name: String
+    let path: String
+    let available: Bool
+    let versionSummary: String?
+    let error: String?
+    let sourceCommand: String
+}
+
+struct HostDeviceDoctorOutput: Encodable {
+    let ok: Bool
+    let platform: String
+    let tools: [HostToolProbeOutput]
+    let capabilities: [String]
+    let artifactsSaved: Bool
+}
+
+struct HostDeviceListOutput: Encodable {
+    let ok: Bool
+    let platform: String
+    let targets: [TKHarmonyTarget]
+    let defaultTarget: TKHarmonyTarget?
+    let sourceCommand: String
+}
+
+struct HostDeviceUseOutput: Encodable {
+    let ok: Bool
+    let platform: String
+    let target: TKHarmonyTarget
+}
+
+struct HostDeviceReadyEvent: Encodable {
+    let ok: Bool
+    let platform: String
+    let target: TKHarmonyTarget
+    let ready: Bool
+    let attempt: Int
+    let sourceCommand: String
+    let error: TKCLIErrorDetail?
+}
+
+enum HostSimulatorRunError: Error, CustomStringConvertible {
+    case simulatorNotFound(String)
+
+    var description: String {
+        switch self {
+        case .simulatorNotFound(let udid):
+            "Simulator was not found: \(udid)"
+        }
+    }
+}
+
+enum HostDeviceRunError: Error, CustomStringConvertible {
+    case ambiguousTarget([TKHarmonyTarget])
+    case targetOffline(String)
+    case targetNotFound(String)
+
+    var description: String {
+        switch self {
+        case .ambiguousTarget(let targets):
+            "Multiple connected Harmony targets found: \(targets.map(\.target).joined(separator: ", "))"
+        case .targetOffline(let target):
+            "Harmony target is offline: \(target)"
+        case .targetNotFound(let target):
+            "Harmony target was not found: \(target)"
+        }
+    }
+}
+
+struct HostProcessResult {
+    let stdoutData: Data
+    let stderrData: Data
+    let exitCode: Int32
+    let sourceCommand: String
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+
+    var stdout: String {
+        String(data: stdoutData, encoding: .utf8) ?? ""
+    }
+
+    var stderr: String {
+        String(data: stderrData, encoding: .utf8) ?? ""
+    }
+}
+
+enum HostCommandRunError: Error, CustomStringConvertible {
+    case launchFailed(String)
+    case timeout(command: TKHostCommand, timeoutSeconds: Double)
+    case nonZeroExit(command: TKHostCommand, result: HostProcessResult)
+    case deviceNotReady(target: String, timeoutSeconds: Double)
+    case missingPreferences(path: String)
+    case preferenceKeyNotFound(String)
+
+    var description: String {
+        switch self {
+        case .launchFailed(let message):
+            message
+        case .timeout(let command, let timeoutSeconds):
+            "Host command timed out after \(timeoutSeconds)s: \(hostSourceCommand(command))"
+        case .deviceNotReady(let target, let timeoutSeconds):
+            "Harmony target \(target) was not ready after \(timeoutSeconds)s"
+        case .nonZeroExit(_, let result):
+            result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Host command exited \(result.exitCode)" : result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+        case .missingPreferences(let path):
+            "Preferences plist not found: \(path)"
+        case .preferenceKeyNotFound(let key):
+            "Preference key not found: \(key)"
+        }
+    }
+}
+
+struct HostSimulatorListOutput: Encodable {
+    let ok: Bool
+    let simulators: [TKHostSimulatorTarget]
+}
+
+struct HostSimulatorUseOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let simulator: TKHostSimulatorTarget
+    let defaultsPath: String
+}
+
+struct HostSimulatorReadyEvent: Encodable {
+    let ok: Bool
+    let action: String
+    let simulatorUDID: String
+    let state: String?
+    let ready: Bool
+    let attempt: Int
+    let elapsedMs: Int
+    let sourceCommand: String?
+}
+
+struct HostActionOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let stdout: String?
+    let stderr: String?
+    let artifacts: [String]
+    let note: String?
+}
+
+struct HostAppContainerOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let simulatorUDID: String
+    let bundleID: String
+    let kind: String
+    let path: String
+}
+
+struct HostAppListOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let simulatorUDID: String
+    let userOnly: Bool
+    let count: Int
+    let apps: [TKHostInstalledApp]
+}
+
+struct HostAppInfoOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let simulatorUDID: String
+    let bundleID: String
+    let app: TKHostInstalledApp
+}
+
+struct HostPreferencesOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let simulatorUDID: String
+    let bundleID: String
+    let plistPath: String
+    let key: String?
+    let value: TKHostPreferenceValue?
+    let preferences: [String: TKHostPreferenceValue]?
+}
+
+func runSimpleHostCommand(
+    action: String,
+    target: String,
+    command: TKHostCommand,
+    outputFormat: ClientOutputFormat,
+    artifacts: [String] = [],
+    note: String? = nil
+) throws {
+    do {
+        let result = try runHostCommand(command)
+        let stdout = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = HostActionOutput(
+            ok: true,
+            action: action,
+            runtimeScope: "host-simulator",
+            target: target,
+            tool: command.executable,
+            exitCode: result.exitCode,
+            riskLevel: command.riskLevel.rawValue,
+            sourceCommand: result.sourceCommand,
+            stdoutTruncated: result.stdoutTruncated,
+            stderrTruncated: result.stderrTruncated,
+            stdout: stdout.isEmpty ? nil : stdout,
+            stderr: stderr.isEmpty ? nil : stderr,
+            artifacts: artifacts,
+            note: note
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            if let note { print(note) }
+            if !stdout.isEmpty { print(stdout) }
+        }
+    } catch {
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+}
+
+func saveHostWorkspaceDefaults(_ defaults: TKHostWorkspaceDefaults) throws -> String {
+    let path = TKHostWorkspaceDefaults.filePath(workspace: FileManager.default.currentDirectoryPath)
+    let url = URL(fileURLWithPath: path)
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    let data = try JSONEncoder().encode(defaults)
+    try data.write(to: url, options: [.atomic])
+    return path
+}
+
+func simulatorIsBooted(udid: String) throws -> Bool {
+    let result = try runHostCommand(TKSimctlCommand.listAvailableDevices())
+    let simulators = try TKSimctlDeviceListParser.parse(result.stdoutData)
+    guard let simulator = simulators.first(where: { $0.udid == udid || $0.id == udid }) else {
+        throw HostSimulatorRunError.simulatorNotFound(udid)
+    }
+    return simulator.isBooted
+}
+
+func waitForSimulatorBoot(
+    udid: String,
+    timeout: Double,
+    interval: Double,
+    outputFormat: ClientOutputFormat,
+    jsonl: Bool
+) async throws {
+    let startedAt = Date()
+    let deadline = startedAt.addingTimeInterval(timeout)
+    var attempt = 0
+    var lastEvent: HostSimulatorReadyEvent?
+    while Date() <= deadline {
+        attempt += 1
+        let result = try runHostCommand(TKSimctlCommand.listAvailableDevices())
+        let simulators = try TKSimctlDeviceListParser.parse(result.stdoutData)
+        guard let simulator = simulators.first(where: { $0.udid == udid || $0.id == udid }) else {
+            throw HostSimulatorRunError.simulatorNotFound(udid)
+        }
+        let event = HostSimulatorReadyEvent(
+            ok: simulator.isBooted,
+            action: "sim.boot.wait",
+            simulatorUDID: simulator.udid,
+            state: simulator.state,
+            ready: simulator.isBooted,
+            attempt: attempt,
+            elapsedMs: Int(Date().timeIntervalSince(startedAt) * 1000),
+            sourceCommand: result.sourceCommand
+        )
+        lastEvent = event
+        if jsonl {
+            print(try encodeCompactJSON(event))
+        } else if outputFormat == .text {
+            print("\(simulator.udid)\tstate=\(simulator.state)\tready=\(simulator.isBooted)")
+        }
+        if simulator.isBooted {
+            if !jsonl, outputFormat == .json {
+                print(try encodeJSON(event))
+            }
+            return
+        }
+        try await Task.sleep(nanoseconds: UInt64(max(0.1, interval) * 1_000_000_000))
+    }
+    if let lastEvent, jsonl {
+        print(try encodeCompactJSON(lastEvent))
+    }
+    throw HostCommandRunError.timeout(command: TKSimctlCommand.boot(udid: udid), timeoutSeconds: timeout)
+}
+
+func probeHostTool(name: String, command: TKHostCommand) -> HostToolProbeOutput {
+    do {
+        let result = try runHostCommand(command)
+        let summary = result.stdout
+            .split(whereSeparator: \.isNewline)
+            .first
+            .map(String.init)
+        return HostToolProbeOutput(
+            name: name,
+            path: command.executable,
+            available: true,
+            versionSummary: summary,
+            error: nil,
+            sourceCommand: result.sourceCommand
+        )
+    } catch {
+        return HostToolProbeOutput(
+            name: name,
+            path: command.executable,
+            available: false,
+            versionSummary: nil,
+            error: "\(error)",
+            sourceCommand: hostSourceCommand(command)
+        )
+    }
+}
+
+func resolveHarmonyTarget(target: String?, hdc: String) throws -> TKHarmonyTarget {
+    let result = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))
+    let targets = TKHdcTargetListParser.parse(result.stdout)
+    if let target {
+        guard let selected = targets.first(where: { $0.target == target || $0.id == target }) else {
+            throw HostDeviceRunError.targetNotFound(target)
+        }
+        guard selected.isConnected else {
+            throw HostDeviceRunError.targetOffline(selected.target)
+        }
+        return selected
+    }
+    if let selected = TKHdcTargetListParser.defaultTarget(from: targets) {
+        return selected
+    }
+    throw HostDeviceRunError.ambiguousTarget(targets.filter(\.isConnected))
+}
+
+func printPreferences(
+    simulator: String,
+    bundleID: String,
+    key: String?,
+    outputFormat: ClientOutputFormat
+) throws {
+    do {
+        let containerResult = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: .data))
+        let container = containerResult.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let plistPath = TKHostPreferencesSnapshot.plistPath(dataContainer: container, bundleID: bundleID)
+        guard FileManager.default.fileExists(atPath: plistPath) else {
+            throw HostCommandRunError.missingPreferences(path: plistPath)
+        }
+        let snapshot = try TKHostPreferencesSnapshot(bundleID: bundleID, plistPath: plistPath, data: Data(contentsOf: URL(fileURLWithPath: plistPath)))
+        let value = key.flatMap { snapshot.value(forKey: $0) }
+        if let key, value == nil {
+            throw HostCommandRunError.preferenceKeyNotFound(key)
+        }
+        let output = HostPreferencesOutput(
+            ok: true,
+            action: key == nil ? "app.prefs.dump" : "app.prefs.get",
+            simulatorUDID: simulator,
+            bundleID: bundleID,
+            plistPath: plistPath,
+            key: key,
+            value: value,
+            preferences: key == nil ? snapshot.preferences : nil
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            if let key {
+                print("\(key)=\(value.map(renderPreferenceValue) ?? "")")
+            } else {
+                for (key, value) in snapshot.preferences.sorted(by: { $0.key < $1.key }) {
+                    print("\(key)=\(renderPreferenceValue(value))")
+                }
+            }
+        }
+    } catch {
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+}
+
+func runHostCommand(_ command: TKHostCommand) throws -> HostProcessResult {
+    let timeoutSeconds = command.defaultTimeoutSeconds
+    let process = Process()
+    if command.executable.contains("/") {
+        process.executableURL = URL(fileURLWithPath: command.executable)
+        process.arguments = command.processArguments
+    } else if command.executable == "xcrun" {
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = command.processArguments
+    } else {
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = [command.executable] + command.processArguments
+    }
+
+    let stdout = Pipe()
+    let stderr = Pipe()
+    process.standardOutput = stdout
+    process.standardError = stderr
+
+    do {
+        try process.run()
+    } catch {
+        throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
+    let semaphore = DispatchSemaphore(value: 0)
+    DispatchQueue.global(qos: .utility).async {
+        process.waitUntilExit()
+        semaphore.signal()
+    }
+    if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
+        process.terminate()
+        throw HostCommandRunError.timeout(command: command, timeoutSeconds: timeoutSeconds)
+    }
+
+    let stdoutRead = truncatedData(stdout.fileHandleForReading.readDataToEndOfFile())
+    let stderrRead = truncatedData(stderr.fileHandleForReading.readDataToEndOfFile())
+    let result = HostProcessResult(
+        stdoutData: stdoutRead.data,
+        stderrData: stderrRead.data,
+        exitCode: process.terminationStatus,
+        sourceCommand: hostSourceCommand(command),
+        stdoutTruncated: stdoutRead.truncated,
+        stderrTruncated: stderrRead.truncated
+    )
+    if result.exitCode != 0 {
+        throw HostCommandRunError.nonZeroExit(command: command, result: result)
+    }
+    return result
+}
+
+func truncatedData(_ data: Data, maximumBytes: Int = 1_048_576) -> (data: Data, truncated: Bool) {
+    guard data.count > maximumBytes else {
+        return (data, false)
+    }
+    return (data.prefix(maximumBytes), true)
+}
+
+func hostSourceCommand(_ command: TKHostCommand) -> String {
+    ([command.executable] + command.arguments).map(shellEscaped).joined(separator: " ")
+}
+
+func shellEscaped(_ value: String) -> String {
+    guard !value.isEmpty else { return "''" }
+    if value.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.union(.init(charactersIn: #"'\"$`"#))) == nil {
+        return value
+    }
+    return "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+}
+
+func renderPreferenceValue(_ value: TKHostPreferenceValue) -> String {
+    switch value {
+    case .string(let value):
+        value
+    case .bool(let value):
+        value ? "true" : "false"
+    case .int(let value):
+        "\(value)"
+    case .double(let value):
+        "\(value)"
+    case .array(let values):
+        "[" + values.map(renderPreferenceValue).joined(separator: ",") + "]"
+    case .dictionary(let values):
+        "{" + values.keys.sorted().map { "\($0):\(renderPreferenceValue(values[$0]!))" }.joined(separator: ",") + "}"
+    case .data(let value):
+        value
+    }
+}
+
+func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws -> Never {
+    let detail: TKCLIErrorDetail
+    switch error {
+    case HostSimulatorRunError.simulatorNotFound:
+        detail = TKCLIErrorDetail(
+            code: "simulator_not_found",
+            message: "\(error)",
+            hint: "Run `triton sim list --json` to inspect available simulator UDIDs."
+        )
+    case HostDeviceRunError.ambiguousTarget(let targets):
+        detail = TKCLIErrorDetail(
+            code: "ambiguous_target",
+            message: "\(error)",
+            hint: "Pass --target with one of: \(targets.map(\.target).joined(separator: ", "))."
+        )
+    case HostDeviceRunError.targetOffline:
+        detail = TKCLIErrorDetail(
+            code: "target_offline",
+            message: "\(error)",
+            hint: "Start the target and wait until hdc reports Connected."
+        )
+    case HostDeviceRunError.targetNotFound:
+        detail = TKCLIErrorDetail(
+            code: "target_not_found",
+            message: "\(error)",
+            hint: "Run `triton device list --platform harmony --json` to inspect available targets."
+        )
+    case HostCommandRunError.deviceNotReady:
+        detail = TKCLIErrorDetail(
+            code: "device_not_ready",
+            message: "\(error)",
+            hint: "Check emulator boot state, increase --timeout, or inspect hdc shell param output."
+        )
+    case HostCommandRunError.timeout:
+        detail = TKCLIErrorDetail(
+            code: "host_command_timeout",
+            message: "\(error)",
+            hint: "Retry with a smaller target set or a command-specific timeout when supported."
+        )
+    case HostCommandRunError.missingPreferences:
+        detail = TKCLIErrorDetail(
+            code: "plist_not_found",
+            message: "\(error)",
+            hint: "Launch the app once or verify the bundle id and simulator data container."
+        )
+    case HostCommandRunError.preferenceKeyNotFound:
+        detail = TKCLIErrorDetail(
+            code: "preference_key_not_found",
+            message: "\(error)",
+            hint: "Run `triton app prefs dump --bundle-id <id> --json` to inspect available keys."
+        )
+    case TKSimctlAppInfoParserError.emptyInfo:
+        detail = TKCLIErrorDetail(
+            code: "app_info_not_available",
+            message: "Installed app information is not available.",
+            hint: "Verify the simulator is booted and the bundle id is installed."
+        )
+    case HostCommandRunError.nonZeroExit(let command, _):
+        let code: String
+        let hint: String
+        if command.arguments.contains("get_app_container") {
+            code = "app_container_not_found"
+            hint = "Verify the simulator is booted, the app is installed, and the bundle id is correct."
+        } else if command.arguments.contains("appinfo") || command.arguments.contains("listapps") {
+            code = "app_info_not_available"
+            hint = "Verify the simulator is booted, the app is installed, and the bundle id is correct."
+        } else if command.arguments.contains("install") {
+            code = "app_install_failed"
+            hint = "Verify the simulator is booted and the .app path points to a simulator build."
+        } else if command.arguments.contains("launch") {
+            code = "app_launch_failed"
+            hint = "Verify the simulator is booted and the bundle id is installed."
+        } else if command.arguments.contains("terminate") {
+            code = "app_terminate_failed"
+            hint = "Verify the simulator is booted and the bundle id is running or installed."
+        } else if command.arguments.contains("openurl") {
+            code = "host_open_url_failed"
+            hint = "Verify the simulator is booted and the URL scheme is valid."
+        } else {
+            code = "host_action_failed"
+            hint = "Check the simulator UDID, bundle id, Xcode selection, and underlying simctl availability."
+        }
+        detail = TKCLIErrorDetail(
+            code: code,
+            message: "\(error)",
+            hint: hint
+        )
+    default:
+        detail = TKCLIErrorDetail(
+            code: "host_action_failed",
+            message: "\(error)",
+            hint: "Check Xcode command line tools and retry with explicit simulator parameters."
+        )
+    }
+
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+    case .text:
+        print(detail.message)
+        if let hint = detail.hint { print("hint: \(hint)") }
+    }
+    throw ExitCode.failure
 }
 
 // MARK: - Serve Command
@@ -680,6 +1804,7 @@ func chineseRootHelp() -> String {
         ("hit", "对当前 App window 中一点做命中测试"),
         ("screenshot", "捕获当前 App PNG 截图"),
         ("input", "从 stdin 读取 NDJSON 输入动作"),
+        ("device", "发现和检查 host-side 设备与模拟器"),
     ]
     var lines = [
         "概览: TritonKit macOS CLI - iOS 视图调试的 WebSocket 控制与 HTTP 数据服务",
@@ -742,6 +1867,12 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         "schema": ChineseCommandHelp(name: "schema", overview: "输出机器可读命令 schema 和示例。", usage: "triton schema [--command <command>] [--format <format>] [--json]", options: [
             ("--command <command>", "筛选单个命令，例如 input 或 tap"),
         ] + formatTextJSON),
+        "device": ChineseCommandHelp(name: "device", overview: "发现和检查 host-side 平台设备。", usage: "triton device <doctor|list|use|wait-ready> --platform harmony [选项]", options: formatTextJSON + [
+            ("--platform <platform>", "平台适配器，目前支持 harmony"),
+            ("--hdc <path>", "HDC 可执行文件路径，默认 hdc"),
+            ("--target <target>", "Harmony target，例如 127.0.0.1:10100"),
+            ("--timeout <seconds>", "wait-ready 超时时间，默认 30"),
+        ]),
         "plan": ChineseCommandHelp(name: "plan", overview: "根据当前服务和目标状态输出推荐下一步；inspect 子动作可离线查看 .tritonplan 摘要。", usage: "triton plan [inspect <path>] [选项]", options: hostPort + formatTextJSON),
         "list": ChineseCommandHelp(name: "list", overview: "列出已连接的 TritonKit 目标。", usage: "triton list [选项]", options: hostPort + formatTextJSON + [
             ("--name-contains <text>", "按 App 名称片段过滤"),
@@ -2697,6 +3828,10 @@ func runtimeCapabilities(connected: Bool) -> [TKRuntimeCapability] {
         TKRuntimeCapability(name: "record", supported: true),
         TKRuntimeCapability(name: "replay-dry-run", supported: true),
         TKRuntimeCapability(name: "schema", supported: true),
+        TKRuntimeCapability(name: "host-device", supported: true),
+        TKRuntimeCapability(name: "harmony-device-doctor", supported: true),
+        TKRuntimeCapability(name: "harmony-device-list", supported: true),
+        TKRuntimeCapability(name: "harmony-device-wait-ready", supported: true),
         TKRuntimeCapability(name: "status", supported: true),
         TKRuntimeCapability(name: "list", supported: true),
         TKRuntimeCapability(name: "inspect", supported: connected, reason: requiresRuntime),
@@ -3255,6 +4390,101 @@ func commandSchemas() -> [TKCommandSchema] {
             ],
             examples: ["triton schema --json", "triton schema --command input --json"],
             successShape: "{ schemaVersion, commands[] }"
+        ),
+        TKCommandSchema(
+            name: "device",
+            summary: "Discover and inspect host-side platform devices",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-device",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText + ["jsonl"],
+            options: [
+                TKCommandSchemaOption(name: "doctor --platform harmony", type: "Subcommand", description: "Probe DevEco Emulator and HDC tool availability"),
+                TKCommandSchemaOption(name: "list --platform harmony", type: "Subcommand", description: "List Harmony HDC targets"),
+                TKCommandSchemaOption(name: "use --platform harmony --target <target>", type: "Subcommand", description: "Resolve one Connected target"),
+                TKCommandSchemaOption(name: "wait-ready --platform harmony --target <target>", type: "Subcommand", description: "Poll bootevent.boot.completed until ready"),
+                TKCommandSchemaOption(name: "--platform", type: "harmony", defaultValue: "harmony", description: "Host platform adapter"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
+                TKCommandSchemaOption(name: "--target", type: "String", description: "Harmony target, for example 127.0.0.1:10100"),
+                TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "30", description: "Bounded wait timeout in seconds"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton device doctor --platform harmony --json",
+                "triton device list --platform harmony --json",
+                "triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json",
+            ],
+            successShape: "{ ok, platform, tools[]?, targets[]?, defaultTarget?, target?, ready?, sourceCommand? }",
+            failureShape: "{ ok:false, error:{ code: ambiguous_target|target_offline|device_not_ready|host_action_failed, message, hint } }",
+            providedCapabilities: ["host-device", "harmony-device"]
+        ),
+        TKCommandSchema(
+            name: "sim",
+            summary: "Control simulators through host-side Apple tools",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-simulator",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText + ["jsonl"],
+            options: [
+                TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List available simulators"),
+                TKCommandSchemaOption(name: "use <udid>", type: "Subcommand", description: "Set workspace default simulator in .triton/host-defaults.json"),
+                TKCommandSchemaOption(name: "boot <udid>", type: "Subcommand", description: "Boot a simulator"),
+                TKCommandSchemaOption(name: "--wait", type: "Bool", defaultValue: "false", description: "Wait until booted"),
+                TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress with --wait"),
+                TKCommandSchemaOption(name: "shutdown <udid|booted>", type: "Subcommand", description: "Shutdown a simulator"),
+                TKCommandSchemaOption(name: "screenshot --output <path>", type: "Subcommand", description: "Capture simulator framebuffer screenshot"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton sim list --json",
+                "triton sim use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+                "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+                "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl",
+                "triton sim screenshot --simulator booted --output /tmp/sim.png --json",
+            ],
+            successShape: "{ ok, simulators[] } or { ok, action, simulator?, defaultsPath? } or { ok, action, runtimeScope, target, tool, exitCode, artifacts[], note? } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
+            providedCapabilities: ["host-simulator"]
+        ),
+        TKCommandSchema(
+            name: "app",
+            summary: "Control simulator apps through host-side Apple tools",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-simulator",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: [
+                TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List installed simulator apps"),
+                TKCommandSchemaOption(name: "info --bundle-id <id>", type: "Subcommand", description: "Show installed app metadata"),
+                TKCommandSchemaOption(name: "install --app <path.app>", type: "Subcommand", description: "Install an .app bundle into the simulator"),
+                TKCommandSchemaOption(name: "launch --bundle-id <id>", type: "Subcommand", description: "Launch an installed simulator app"),
+                TKCommandSchemaOption(name: "terminate --bundle-id <id>", type: "Subcommand", description: "Terminate a running simulator app"),
+                TKCommandSchemaOption(name: "open-url <url>", type: "Subcommand", description: "Submit a URL to the simulator"),
+                TKCommandSchemaOption(name: "container --bundle-id <id>", type: "Subcommand", description: "Print app container path"),
+                TKCommandSchemaOption(name: "prefs dump --bundle-id <id>", type: "Subcommand", description: "Dump app preferences plist as JSON"),
+                TKCommandSchemaOption(name: "prefs get <key> --bundle-id <id>", type: "Subcommand", description: "Read one app preference"),
+                TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton app list --user-only --json",
+                "triton app info --bundle-id com.example.app --json",
+                "triton app install --app /tmp/Demo.app --json",
+                "triton app launch --bundle-id com.example.app --json",
+                "triton app terminate --bundle-id com.example.app --json",
+                #"triton app open-url "example://debug" --simulator booted --json"#,
+                "triton app container --bundle-id com.example.app --kind data --json",
+                "triton app prefs get DEBUG-mock --bundle-id com.example.app --json",
+            ],
+            successShape: "{ ok, action, simulatorUDID, apps[]?, app?, bundleID?, path? } or { ok, action, plistPath, value?, preferences? }",
+            failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
+            providedCapabilities: ["host-app", "host-preferences"]
         ),
         TKCommandSchema(
             name: "list",

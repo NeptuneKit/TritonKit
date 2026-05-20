@@ -139,6 +139,8 @@ Git `worktree` 治理：
 5. 涉及 AGENTS 级长期治理规则时，优先使用 `tritonkit-ops-governance`；若用户明确说“整理”，同时使用 `tritonkit-session-skill-distill`。
 6. 涉及“主控 agent 监督、subagent 实做、直到完整需求闭环才停止”的执行模式时，优先使用 `tritonkit-subagent-supervision`。
 7. 涉及从 demo/self-test 切到真实 iOS App 或客户项目回归、试接入、实际需求发现时，优先使用 `tritonkit-real-project-regression`，并隔离外部仓改动、保留 CLI/HTTP 机器可读证据。
+8. 涉及设计、实现、扩展或验证 host-side Apple Simulator 接管能力（`triton sim`、`triton app`、`xcrun simctl` 封装、workspace simulator defaults、boot wait JSONL、App metadata/container/preferences、host artifacts、plan/evidence 集成）时，优先使用 `tritonkit-host-simulator-takeover`，并确认 agent 面对的是 Triton CLI/HTTP schema，而不是裸 `xcrun`。
+9. 涉及设计、实现、扩展或验证 Xcode workflow takeover 能力（project/workspace discovery、scheme/build settings、`xcodebuild` build/test/run、`.xcresult`、coverage、logs、SwiftPM、真机/macOS workflow、LLDB、host UI 集成，或评估 XcodeBuildMCP 能力取舍）时，优先使用 `tritonkit-xcode-workflow-takeover`，并坚持“吃能力，不吃 XcodeBuildMCP 对外 API”。
 
 ## 5. 记忆系统规则（必须）
 

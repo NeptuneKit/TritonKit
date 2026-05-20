@@ -31,6 +31,25 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton doctor --json`
    - `triton schema --json`
    - `triton plan --json`
+   - host-side simulator checks that do not require embedded runtime:
+     - `triton sim list --json`
+     - `triton sim use <udid> --json`
+     - `triton sim boot <udid> --wait --jsonl`
+     - `triton sim screenshot --simulator booted --output /tmp/<case>-sim.png --json`
+     - `triton app list --simulator booted --user-only --json`
+     - `triton app info --bundle-id <bundle-id> --simulator booted --json`
+     - `triton app install --app <path.app> --simulator booted --json`
+     - `triton app launch --bundle-id <bundle-id> --simulator booted --json`
+     - `triton app terminate --bundle-id <bundle-id> --simulator booted --json`
+     - `triton app open-url '<url>' --simulator booted --json`
+     - `triton app container --bundle-id <bundle-id> --kind data --json`
+     - `triton app prefs get <key> --bundle-id <bundle-id> --json`
+   - host-side Harmony checks that do not require embedded runtime:
+     - `triton device doctor --platform harmony --json`
+     - `triton device list --platform harmony --json`
+     - `triton device wait-ready --platform harmony --target <hdc-target> --json`
+     - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--target`.
+     - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
    - `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, or `triton clear` for agent-facing action checks; these default to JSON, and `--format text` is only for human-readable debugging.
    - When the same text appears multiple times, run `triton find "<text>" --all` first; if you know a point inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`.
    - relevant `swift test`, smoke scripts, or app-level reproduction steps.
@@ -146,6 +165,15 @@ Then verify:
 ```bash
 triton status --json
 triton list --json
+triton sim list --json
+triton sim use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
+triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl
+triton app list --simulator booted --user-only --json
+triton app info --bundle-id com.example.app --simulator booted --json
+triton app launch --bundle-id com.example.app --simulator booted --json
+triton app open-url 'example://debug' --simulator booted --json
+triton app container --bundle-id com.example.app --kind data --json
+triton app prefs get DEBUG-mock --bundle-id com.example.app --json
 triton hierarchy --json
 triton ax --json
 triton tap "first-check"

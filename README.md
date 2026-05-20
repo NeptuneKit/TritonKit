@@ -168,6 +168,38 @@ triton hierarchy --json
 triton ax --json
 ```
 
+Host-side simulator helpers are available without a running TritonKit runtime. They wrap `xcrun simctl` but keep JSON output and stable Triton error envelopes:
+
+```bash
+triton sim list --json
+triton sim use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
+triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl
+triton sim screenshot --simulator booted --output /tmp/sim.png --json
+triton app list --simulator booted --user-only --json
+triton app info --bundle-id com.example.app --simulator booted --json
+triton app install --app /tmp/Demo.app --simulator booted --json
+triton app launch --bundle-id com.example.app --simulator booted --json
+triton app terminate --bundle-id com.example.app --simulator booted --json
+triton app open-url "example://debug" --simulator booted --json
+triton app container --bundle-id com.example.app --kind data --json
+triton app prefs get DEBUG-mock --bundle-id com.example.app --json
+triton app prefs dump --bundle-id com.example.app --json
+```
+
+`app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, or `triton app prefs get` to verify the business state.
+
+HarmonyOS NEXT / DevEco Emulator P0 discovery is exposed through the same host-side contract. It does not require a running TritonKit embedded runtime:
+
+```bash
+triton device doctor --platform harmony --json
+triton device list --platform harmony --json
+triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
+```
+
+When multiple HDC targets are `Connected`, Triton returns `error.code=ambiguous_target` and requires an explicit `--target`. The adapter records `sourceCommand`; risk/policy metadata is for audit and configuration validation, not an interactive confirmation gate.
+
+Harmony embedded collection is a future optional DEBUG-only path, not a prerequisite for the host-side HDC adapter. The current shared contract defines manifest, configuration, snapshot, redaction, geometry, accessibility, and screenshot-metadata JSON shapes for a later ArkTS/ArkUI collector; Release builds must expose a disabled no-op surface and must not collect or upload data.
+
 For repeatable regression flows, wait for asynchronous UI state before the next action or assertion:
 
 ```bash
@@ -223,6 +255,8 @@ If your app blocks cleartext development traffic through App Transport Security,
 ## Runtime Boundary
 
 `TritonKit.isRuntimeEnabled` is `true` only in `DEBUG` builds. In Release builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages.
+
+The same boundary applies to the planned Harmony collector contract: DEBUG may expose `platform=harmony` and `transport=embedded-websocket` snapshot metadata, while Release stays `enabled=false` with no capabilities.
 
 ## Release Assets
 

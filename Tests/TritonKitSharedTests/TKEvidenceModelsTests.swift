@@ -26,6 +26,17 @@ struct TKEvidenceModelsTests {
                     )
                 ),
                 TKEvidenceArtifact(kind: "status", path: "status.json", contentType: "application/json"),
+                TKEvidenceArtifact(
+                    kind: "harmony.layout",
+                    path: "layout.json",
+                    contentType: "application/json",
+                    platform: "harmony",
+                    riskLevel: "evidence",
+                    policy: "automation",
+                    redactionStatus: "summary",
+                    sourceCommand: "hdc -t <target> shell uitest dumpLayout -p <path> -a",
+                    target: "harmony:127.0.0.1:10100"
+                ),
             ],
             skipped: [
                 TKEvidenceSkippedArtifact(kind: "logs", reason: "unsupported"),
@@ -46,8 +57,14 @@ struct TKEvidenceModelsTests {
 
         #expect(decoded.formatVersion == 1)
         #expect(decoded.name == "login-success")
-        #expect(decoded.artifacts.map(\.kind) == ["screenshot", "status"])
+        #expect(decoded.artifacts.map(\.kind) == ["screenshot", "status", "harmony.layout"])
         #expect(decoded.artifacts.first?.freshness?.source == "runtime")
+        #expect(decoded.artifacts.last?.platform == "harmony")
+        #expect(decoded.artifacts.last?.riskLevel == "evidence")
+        #expect(decoded.artifacts.last?.policy == "automation")
+        #expect(decoded.artifacts.last?.redactionStatus == "summary")
+        #expect(decoded.artifacts.last?.sourceCommand?.hasPrefix("hdc -t") == true)
+        #expect(decoded.artifacts.last?.target == "harmony:127.0.0.1:10100")
         #expect(decoded.skipped.first?.kind == "logs")
         #expect(decoded.target?.bundleIdentifier == "cn.dxy.iDxyer")
         #expect(decoded.cli.schemaVersion == 1)

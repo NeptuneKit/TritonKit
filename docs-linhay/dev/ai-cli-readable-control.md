@@ -22,6 +22,18 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 
 ## CLI 命令
 
+### CLI 能力进入原则
+
+后续从 ai-phone、Harness、XcodeBuildMCP 等参考项目吸收能力时，默认按以下标准决定是否进入 `triton` CLI：
+
+1. AI agent 在一次回归中需要直接观察、准备、执行、验证或归档。
+2. 能力需要稳定 JSON/JSONL 输出，供上层自动决策。
+3. 动作或结果需要进入 `.tritonevidence`、`.tritonplan` 或 command ledger。
+4. 它能替代裸 `xcrun`、`hdc`、`adb`、`plutil` 等不稳定人读命令。
+5. 无 Web/Wails、无运维大盘时仍应可复跑。
+
+不满足这些条件、且更偏后台调度、数据库、消息队列、权限、多租户或大盘展示的能力，不进入 CLI 首期。CLI 可以提供 `status/list/submit/cancel/fetch/test` 这类 agent 入口，但后台状态机归 `triton serve` 或部署配置负责。
+
 - `triton serve`：启动本地控制服务。
 - `triton --version` / `triton version --format json`：读取 CLI 版本、schema version 与默认 host/port。
 - `triton status --format json`：读取本地控制服务状态；成功态也返回 `ok/serverReachable/runtime/connected/latestHierarchyAvailable/activeHierarchyAvailable/hierarchyCacheState/targetConnectionState/targetCount` envelope，用于区分当前连接状态与 stale hierarchy cache。
@@ -29,6 +41,21 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton capabilities --format json`：输出当前 runtime 能力矩阵，说明哪些命令可用、哪些需要连接 target、哪些因 embedded runtime 边界 unsupported。
 - `triton schema --format json`：输出机器可读 CLI 契约，包括命令参数、默认值、依赖条件、runtime scope、退出码语义、示例、成功/失败 shape；`--command input` 可读取 NDJSON action 字段级 schema。
 - `triton plan --format json`：根据当前 server/target 状态输出下一步计划；server 不可达时返回 `nextStep=start-server` 与 `error.nextAction`，连接态返回观察、动作和 archive 导出的推荐序列。
+- `triton sim list --format json`：通过 host-side `xcrun simctl list devices available --json` 列出 simulator，输出 `sim:<udid>` target、runtime、platform、state、isBooted 与 source。
+- `triton sim use <udid> --format json`：将 workspace 默认 simulator 写入 `.triton/host-defaults.json`，后续可作为 session defaults 的本地状态来源。
+- `triton sim boot <udid> --format json`、`triton sim boot <udid> --wait --jsonl`、`triton sim shutdown <udid|booted> --format json`：首批 simulator lifecycle 入口，`--wait --jsonl` 输出 boot 轮询进度，失败时返回稳定 Triton error envelope。
+- `triton sim screenshot --simulator <udid|booted> --output <path> --format json`：采集 host-side simulator framebuffer 截图，不依赖 embedded runtime。
+- `triton app list --simulator <udid|booted> --user-only --format json`：读取已安装 App 列表，输出 bundle id、display name、version、application type、bundle/data/group container 等结构化字段。
+- `triton app info --bundle-id <id> --simulator <udid|booted> --format json`：读取单个已安装 App 元数据；当 `simctl appinfo` 对缺失 bundle 只回显 `CFBundleIdentifier` 时，归一为 `app_info_not_available`。
+- `triton app install --app <path.app> --simulator <udid|booted> --format json`、`triton app launch --bundle-id <id> --format json`、`triton app terminate --bundle-id <id> --format json`：App 生命周期首批入口，返回 host action envelope，业务就绪仍需继续用 `status/wait/find/assert/prefs` 验证。
+- `triton app open-url <url> --simulator <udid|booted> --format json`：提交 deep link 或 URL 到 simulator；该命令只证明 URL 已提交，业务完成需继续用 `wait/find/assert` 或 preferences 验证。
+- `triton app container --bundle-id <id> --kind data --format json`：读取 simulator App container path。
+- `triton app prefs get <key> --bundle-id <id> --format json`、`triton app prefs dump --bundle-id <id> --format json`：读取 App preferences plist，避免 agent 解析 `plutil -p` 人读文本。
+- `triton device doctor --platform harmony --format json`：只读探测 HarmonyOS NEXT / DevEco Emulator 的 HDC/Emulator 工具路径、版本摘要和 P0 能力，不保存真实 UI、layout、日志正文或设备文件。
+- `triton device list --platform harmony --format json`：通过 host-side `hdc list targets -v` 列出 HDC target，输出 `harmony:<target>`、`target/state/transport/isConnected/source`；`Offline` target 保留在列表中，但不进入默认候选。
+- `triton device use --platform harmony --target <target> --format json`：解析一个 `Connected` HDC target；多 `Connected` 且未指定 target 时返回 `error.code=ambiguous_target` 与候选提示。
+- `triton device wait-ready --platform harmony --target <target> --format json`：轮询 `param get bootevent.boot.completed`，只接受 `true` 为 ready，超时返回 `device_not_ready`，所有 host 命令都带 timeout 和 `sourceCommand`。
+- Harmony DEBUG-only 内置采集器当前只固化共享 JSON 契约，不是已实现 CLI 入口。契约包含 `TKHarmonyCollectorManifest`、`TKHarmonyCollectorConfiguration`、`TKHarmonyCollectorSnapshot`、App/Page 状态、redaction status 和 screenshot metadata；Release 配置必须 `enabled=false` 且 capabilities 为空。
 - `triton list --format json`：列出可调试 target。
 - `triton inspect --target triton:local --format json`：查看 target 摘要。
 - `triton hierarchy --target triton:local --format tree|json`：读取 hierarchy。
@@ -69,9 +96,13 @@ CLI/HTTP 是 AI 自动化控制入口；Web/Wails 不参与首期闭环。后续
 
 `attrs` 与 `object` 通过 `/request` 复用 WebSocket 请求/响应 id，属于实时读取；`nodes` 与 `node` 基于最新 hierarchy snapshot，适合 AI 先定位 oid。`export` 支持两类产物：`.json` 保持纯 hierarchy snapshot；archive 是单文件 JSON，包含 `schemaVersion`、`exportedAt`、`target`、`hierarchy`、`geometry`、`accessibility` 与内联 base64 screenshot。archive 不是 LookInside 原生归档格式；`.lookinside` 扩展名当前只作为便携 archive 自动推断入口，后续如需与 LookInside App 原生兼容，需要单独定义转换层。`evidence` 则面向测试报告和 GitHub issue 附件，首期采用目录包而不是 zip：`manifest.json` 记录 `formatVersion`、`artifacts[]`、`skipped[]`、target identity、connection/cache state、CLI version 和每个 artifact 的 freshness，artifact 路径均相对证据包目录。
 
-`doctor` 与 `capabilities` 是 AI 的首选探测入口。无服务时它们返回 `ok=false`、`serverReachable=false`、`error.code=server_unavailable`、启动 hint 和 `error.nextAction`，但进程退出码保持 0，方便上层读取诊断。普通动作命令如 `status --format json` 与 `list --format json` 在连接失败时返回同一 `{ok:false,error:{code,message,endpoint,hint,nextAction?}}` envelope，并以非 0 退出，方便 shell 流水线阻断。
+`doctor` 与 `capabilities` 是 AI 的首选探测入口。无服务时它们返回 `ok=false`、`serverReachable=false`、`error.code=server_unavailable`、启动 hint 和 `error.nextAction`，但进程退出码保持 0，方便上层读取诊断。`capabilities` 还暴露 host-side `host-device`、`harmony-device-doctor`、`harmony-device-list`、`harmony-device-wait-ready`，这些能力不依赖 embedded runtime。普通动作命令如 `status --format json` 与 `list --format json` 在连接失败时返回同一 `{ok:false,error:{code,message,endpoint,hint,nextAction?}}` envelope，并以非 0 退出，方便 shell 流水线阻断。
 
-`schema` 是 AI 的首选规划入口，不依赖 server。`schema --format json` 返回全部已实现命令的命令级 schema；`schema --command input --format json` 返回 NDJSON action schema，包含 `tap`、`swipe`、`type`、`button` 的 required/optional 字段、字段类型、enum、`oneOfRequired`、`coordinateSpace` 与 example。坐标统一为 window points，与 `geometry`、`ax`、`hit` 返回的 frame 坐标一致。
+`schema` 是 AI 的首选规划入口，不依赖 server。`schema --format json` 返回全部已实现命令的命令级 schema；`schema --command input --format json` 返回 NDJSON action schema，包含 `tap`、`swipe`、`type`、`button` 的 required/optional 字段、字段类型、enum、`oneOfRequired`、`coordinateSpace` 与 example；`schema --command device --format json` 返回 Harmony host adapter 的 doctor/list/use/wait-ready 参数、成功 shape 和 `ambiguous_target` / `device_not_ready` 等失败 shape。坐标统一为 window points，与 `geometry`、`ax`、`hit` 返回的 frame 坐标一致。
+
+Host-side adapter 使用 `riskLevel`、`requiredConfig` 和 execution policy 做审计与客观运行配置校验，不再使用交互式 `requiresConfirmation` gate。缺少 target、artifactDir、redaction policy、timeout 或 audit record 这类客观配置时应返回 machine-readable blocked/error；风险等级本身不打断长自动化。
+
+Harmony 有两条明确分层：host-side adapter 使用 HDC/DevEco 工具完成设备、App、UI、截图和日志自动化；未来 embedded collector 只在业务 App DEBUG 包内提供 App 内快照增强。两者的 `platform` 都是 `harmony`，但 transport 分别是 `hdc` 与 `embedded-websocket`，不能把 collector manifest 当成设备级能力。
 
 `plan` 是 AI 的状态恢复入口，不依赖 server 存活。它会把当前能力诊断收敛为 `nextStep` 和有序 `steps[]`：无 server 时第一步是可直接执行的 `triton serve --host 127.0.0.1 --port 19421`；server 与 target 已就绪时第一步是 `observe`，推荐 `geometry`、`ax`、`wait`、`hit`、`input --summary --strict`、`screenshot` 与 `export --format archive`。`error.nextAction` 的 `command` 不带 `triton` 前缀，调用方可用 `["triton", command] + args` 直接组装进程参数。
 

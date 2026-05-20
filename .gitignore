@@ -8,3 +8,4 @@ dist/
 .build/
 DerivedData/
 docs-linhay/references/baguette/
+.agents/skills/harmony-next/

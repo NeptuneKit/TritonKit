@@ -1,0 +1,12 @@
+{
+  "name": "tritonkit-harmony-collector-smoke",
+  "version": "1.0.0",
+  "ohos": {
+    "org": "neptunekit",
+    "buildTool": "hvigor",
+    "directoryLevel": "project"
+  },
+  "description": "TritonKit Harmony collector smoke fixture.",
+  "license": "UNLICENSED",
+  "dependencies": {}
+}
