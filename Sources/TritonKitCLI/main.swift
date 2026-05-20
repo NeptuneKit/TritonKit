@@ -121,10 +121,14 @@ struct Serve: AsyncParsableCommand {
         }
 
         router.get("/status") { _, _ -> Response in
-            jsonResponse(TKStatusResponse(
+            let cacheStatus = targetState.cacheStatus(connected: state.isConnected)
+            return jsonResponse(TKStatusResponse(
                 connected: state.isConnected,
                 latestHierarchyAvailable: targetState.latestHierarchy != nil,
-                targetCount: state.isConnected ? 1 : 0
+                targetCount: state.isConnected ? 1 : 0,
+                activeHierarchyAvailable: cacheStatus.activeHierarchyAvailable,
+                hierarchyCacheState: cacheStatus.hierarchyCacheState,
+                targetConnectionState: state.isConnected ? "connected" : "disconnected"
             ))
         }
 
@@ -391,7 +395,8 @@ struct Serve: AsyncParsableCommand {
 
         router.ws("/") { inbound, outbound, _ in
             log("[tritonkit] iOS device connected (ws)")
-            state.set(outbound)
+            let connectionID = state.connect(outbound)
+            targetState.beginConnection()
 
             // Test ping first to verify bidirectional communication
             let pingId = counter.next()
@@ -422,7 +427,9 @@ struct Serve: AsyncParsableCommand {
             }
 
             log("[tritonkit] iOS device disconnected")
-            state.set(nil)
+            if state.disconnect(connectionID: connectionID) {
+                targetState.endConnection()
+            }
         }
 
         let app = Application(
@@ -806,17 +813,26 @@ struct Status: AsyncParsableCommand {
                     connected: status.connected,
                     latestHierarchyAvailable: status.latestHierarchyAvailable,
                     targetCount: status.targetCount,
-                    runtime: status.connected ? "embedded" : "none"
+                    runtime: status.connected ? "embedded" : "none",
+                    activeHierarchyAvailable: status.activeHierarchyAvailable,
+                    hierarchyCacheState: status.hierarchyCacheState,
+                    targetConnectionState: status.targetConnectionState
                 )))
             case .text:
                 switch language {
                 case .en:
                     print("connected: \(status.connected)")
                     print("latestHierarchyAvailable: \(status.latestHierarchyAvailable)")
+                    print("activeHierarchyAvailable: \(status.activeHierarchyAvailable ?? (status.connected && status.latestHierarchyAvailable))")
+                    print("hierarchyCacheState: \(status.hierarchyCacheState ?? "unknown")")
+                    print("targetConnectionState: \(status.targetConnectionState ?? (status.connected ? "connected" : "disconnected"))")
                     print("targetCount: \(status.targetCount)")
                 case .zh:
                     print("已连接: \(status.connected)")
                     print("已有最新层级: \(status.latestHierarchyAvailable)")
+                    print("当前连接已有层级: \(status.activeHierarchyAvailable ?? (status.connected && status.latestHierarchyAvailable))")
+                    print("层级缓存状态: \(status.hierarchyCacheState ?? "unknown")")
+                    print("目标连接状态: \(status.targetConnectionState ?? (status.connected ? "connected" : "disconnected"))")
                     print("目标数量: \(status.targetCount)")
                 }
             }
@@ -1664,7 +1680,24 @@ struct Input: AsyncParsableCommand {
 final class ConnectionState: @unchecked Sendable {
     private let lock = NSLock()
     private var _outbound: WebSocketOutboundWriter?
-    func set(_ w: WebSocketOutboundWriter?) { lock.withLock { _outbound = w } }
+    private var connectionID = 0
+
+    func connect(_ w: WebSocketOutboundWriter) -> Int {
+        lock.withLock {
+            connectionID += 1
+            _outbound = w
+            return connectionID
+        }
+    }
+
+    func disconnect(connectionID id: Int) -> Bool {
+        lock.withLock {
+            guard connectionID == id else { return false }
+            _outbound = nil
+            return true
+        }
+    }
+
     var outbound: WebSocketOutboundWriter? { lock.withLock { _outbound } }
     var isConnected: Bool { lock.withLock { _outbound != nil } }
 }
@@ -1685,17 +1718,35 @@ struct TargetMetadata: Sendable {
 final class TargetState: @unchecked Sendable {
     private let lock = NSLock()
     private var _latestHierarchy: Data?
-    private var metadata = TargetMetadata()
+    private var metadata: TargetMetadata?
+    private var activeHierarchyAvailable = false
     private var responses: [Int: Data] = [:]
 
     var latestHierarchy: Data? {
         lock.withLock { _latestHierarchy }
     }
 
+    func beginConnection() {
+        lock.withLock {
+            metadata = nil
+            activeHierarchyAvailable = false
+            responses.removeAll()
+        }
+    }
+
+    func endConnection() {
+        lock.withLock {
+            metadata = nil
+            activeHierarchyAvailable = false
+            responses.removeAll()
+        }
+    }
+
     func setLatestHierarchy(_ data: Data) {
         let appInfo = extractAppInfo(fromHierarchy: data)
         lock.withLock {
             _latestHierarchy = data
+            activeHierarchyAvailable = true
             if let appInfo {
                 metadata = appInfo
             }
@@ -1714,11 +1765,24 @@ final class TargetState: @unchecked Sendable {
         return lock.withLock {
             TKTargetSummary(
                 connected: true,
-                latestHierarchyAvailable: _latestHierarchy != nil,
-                appName: metadata.appName,
-                bundleIdentifier: metadata.bundleIdentifier,
-                deviceDescription: metadata.deviceDescription,
-                osDescription: metadata.osDescription
+                latestHierarchyAvailable: activeHierarchyAvailable,
+                appName: metadata?.appName,
+                bundleIdentifier: metadata?.bundleIdentifier,
+                deviceDescription: metadata?.deviceDescription,
+                osDescription: metadata?.osDescription,
+                activeHierarchyAvailable: activeHierarchyAvailable,
+                cachedHierarchyAvailable: _latestHierarchy != nil,
+                hierarchyCacheState: hierarchyCacheState(connected: true),
+                identityState: metadata == nil ? "unknown" : "current"
+            )
+        }
+    }
+
+    func cacheStatus(connected: Bool) -> (activeHierarchyAvailable: Bool, hierarchyCacheState: String) {
+        lock.withLock {
+            (
+                activeHierarchyAvailable,
+                hierarchyCacheState(connected: connected)
             )
         }
     }
@@ -1761,6 +1825,12 @@ final class TargetState: @unchecked Sendable {
             deviceDescription: appInfo["deviceDescription"] as? String,
             osDescription: appInfo["osDescription"] as? String
         )
+    }
+
+    private func hierarchyCacheState(connected: Bool) -> String {
+        if connected && activeHierarchyAvailable { return "active" }
+        if _latestHierarchy != nil { return "stale" }
+        return "unavailable"
     }
 }
 
@@ -1946,7 +2016,10 @@ func buildCapabilities(host: String, port: Int) async -> TKCapabilitiesResponse 
             latestHierarchyAvailable: status.latestHierarchyAvailable,
             targetCount: status.targetCount,
             runtime: status.connected ? "embedded" : "none",
-            capabilities: runtimeCapabilities(connected: status.connected)
+            capabilities: runtimeCapabilities(connected: status.connected),
+            activeHierarchyAvailable: status.activeHierarchyAvailable,
+            hierarchyCacheState: status.hierarchyCacheState,
+            targetConnectionState: status.targetConnectionState
         )
     } catch {
         let detail = cliErrorDetail(for: error, endpoint: "/status", host: host, port: port)
@@ -2001,6 +2074,9 @@ func printCapabilities(_ response: TKCapabilitiesResponse, format: ClientOutputF
             print("serverReachable: \(response.serverReachable)")
             print("connected: \(response.connected)")
             print("latestHierarchyAvailable: \(response.latestHierarchyAvailable)")
+            print("activeHierarchyAvailable: \(response.activeHierarchyAvailable ?? (response.connected && response.latestHierarchyAvailable))")
+            print("hierarchyCacheState: \(response.hierarchyCacheState ?? "unknown")")
+            print("targetConnectionState: \(response.targetConnectionState ?? (response.connected ? "connected" : "disconnected"))")
             print("targetCount: \(response.targetCount)")
             print("runtime: \(response.runtime)")
         case .zh:
@@ -2008,6 +2084,9 @@ func printCapabilities(_ response: TKCapabilitiesResponse, format: ClientOutputF
             print("服务可达: \(response.serverReachable)")
             print("已连接: \(response.connected)")
             print("已有最新层级: \(response.latestHierarchyAvailable)")
+            print("当前连接已有层级: \(response.activeHierarchyAvailable ?? (response.connected && response.latestHierarchyAvailable))")
+            print("层级缓存状态: \(response.hierarchyCacheState ?? "unknown")")
+            print("目标连接状态: \(response.targetConnectionState ?? (response.connected ? "connected" : "disconnected"))")
             print("目标数量: \(response.targetCount)")
             print("运行时: \(response.runtime)")
         }
@@ -2384,6 +2463,8 @@ func renderTargetLine(_ target: TKTargetSummary) -> String {
     [
         target.id,
         target.transport,
+        target.identityState ?? "-",
+        target.hierarchyCacheState ?? "-",
         target.appName ?? "-",
         target.bundleIdentifier ?? "-",
         target.deviceDescription ?? "-",
@@ -2440,7 +2521,7 @@ func commandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
             examples: ["triton status --format json"],
-            successShape: "{ ok, serverReachable, connected, latestHierarchyAvailable, targetCount, runtime }",
+            successShape: "{ ok, serverReachable, connected, latestHierarchyAvailable, activeHierarchyAvailable, hierarchyCacheState, targetConnectionState, targetCount, runtime }",
             failureShape: "{ ok: false, error: { code, message, endpoint, hint, nextAction? } }"
         ),
         TKCommandSchema(
@@ -2453,7 +2534,7 @@ func commandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
             examples: ["triton doctor --format json"],
-            successShape: "{ ok, serverReachable, connected, latestHierarchyAvailable, runtime, capabilities, error? }"
+            successShape: "{ ok, serverReachable, connected, latestHierarchyAvailable, activeHierarchyAvailable, hierarchyCacheState, targetConnectionState, runtime, capabilities, error? }"
         ),
         TKCommandSchema(
             name: "plan",
@@ -2512,7 +2593,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--ids-only", type: "Bool", defaultValue: "false", description: "Print only target ids"),
             ],
             examples: ["triton list --format json", "triton list --ids-only"],
-            successShape: "{ targets: [{ id, transport, connected, appName, bundleIdentifier, deviceDescription, osDescription }] }"
+            successShape: "{ targets: [{ id, transport, connected, latestHierarchyAvailable, activeHierarchyAvailable, cachedHierarchyAvailable, hierarchyCacheState, identityState, appName, bundleIdentifier, deviceDescription, osDescription }] }"
         ),
         TKCommandSchema(
             name: "inspect",

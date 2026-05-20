@@ -24,7 +24,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 
 - `triton serve`：启动本地控制服务。
 - `triton --version` / `triton version --format json`：读取 CLI 版本、schema version 与默认 host/port。
-- `triton status --format json`：读取本地控制服务状态；成功态也返回 `ok/serverReachable/runtime/connected/latestHierarchyAvailable/targetCount` envelope。
+- `triton status --format json`：读取本地控制服务状态；成功态也返回 `ok/serverReachable/runtime/connected/latestHierarchyAvailable/activeHierarchyAvailable/hierarchyCacheState/targetConnectionState/targetCount` envelope，用于区分当前连接状态与 stale hierarchy cache。
 - `triton doctor --format json`：诊断 server、target、runtime 与能力状态；即使 server 不可达也输出机器可读诊断并以 0 退出。
 - `triton capabilities --format json`：输出当前 runtime 能力矩阵，说明哪些命令可用、哪些需要连接 target、哪些因 embedded runtime 边界 unsupported。
 - `triton schema --format json`：输出机器可读 CLI 契约，包括命令参数、默认值、依赖条件、runtime scope、退出码语义、示例、成功/失败 shape；`--command input` 可读取 NDJSON action 字段级 schema。

@@ -6,11 +6,28 @@ public struct TKStatusResponse: Codable, Equatable {
     public let connected: Bool
     public let latestHierarchyAvailable: Bool
     public let targetCount: Int
+    public let activeHierarchyAvailable: Bool?
+    public let hierarchyCacheState: String?
+    public let targetConnectionState: String?
 
-    public init(connected: Bool, latestHierarchyAvailable: Bool, targetCount: Int) {
+    public init(
+        connected: Bool,
+        latestHierarchyAvailable: Bool,
+        targetCount: Int,
+        activeHierarchyAvailable: Bool? = nil,
+        hierarchyCacheState: String? = nil,
+        targetConnectionState: String? = nil
+    ) {
         self.connected = connected
         self.latestHierarchyAvailable = latestHierarchyAvailable
         self.targetCount = targetCount
+        self.activeHierarchyAvailable = activeHierarchyAvailable ?? (connected && latestHierarchyAvailable)
+        self.hierarchyCacheState = hierarchyCacheState ?? {
+            if connected && latestHierarchyAvailable { return "active" }
+            if latestHierarchyAvailable { return "stale" }
+            return "unavailable"
+        }()
+        self.targetConnectionState = targetConnectionState ?? (connected ? "connected" : "disconnected")
     }
 }
 
@@ -21,6 +38,9 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
     public let latestHierarchyAvailable: Bool
     public let targetCount: Int
     public let runtime: String
+    public let activeHierarchyAvailable: Bool?
+    public let hierarchyCacheState: String?
+    public let targetConnectionState: String?
 
     public init(
         ok: Bool,
@@ -28,7 +48,10 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
         connected: Bool,
         latestHierarchyAvailable: Bool,
         targetCount: Int,
-        runtime: String
+        runtime: String,
+        activeHierarchyAvailable: Bool? = nil,
+        hierarchyCacheState: String? = nil,
+        targetConnectionState: String? = nil
     ) {
         self.ok = ok
         self.serverReachable = serverReachable
@@ -36,6 +59,13 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
         self.latestHierarchyAvailable = latestHierarchyAvailable
         self.targetCount = targetCount
         self.runtime = runtime
+        self.activeHierarchyAvailable = activeHierarchyAvailable ?? (connected && latestHierarchyAvailable)
+        self.hierarchyCacheState = hierarchyCacheState ?? {
+            if connected && latestHierarchyAvailable { return "active" }
+            if latestHierarchyAvailable { return "stale" }
+            return "unavailable"
+        }()
+        self.targetConnectionState = targetConnectionState ?? (connected ? "connected" : "disconnected")
     }
 }
 
@@ -48,6 +78,10 @@ public struct TKTargetSummary: Codable, Equatable {
     public let bundleIdentifier: String?
     public let deviceDescription: String?
     public let osDescription: String?
+    public let activeHierarchyAvailable: Bool?
+    public let cachedHierarchyAvailable: Bool?
+    public let hierarchyCacheState: String?
+    public let identityState: String?
 
     public init(
         id: String = TKLocalTargetID,
@@ -57,7 +91,11 @@ public struct TKTargetSummary: Codable, Equatable {
         appName: String? = nil,
         bundleIdentifier: String? = nil,
         deviceDescription: String? = nil,
-        osDescription: String? = nil
+        osDescription: String? = nil,
+        activeHierarchyAvailable: Bool? = nil,
+        cachedHierarchyAvailable: Bool? = nil,
+        hierarchyCacheState: String? = nil,
+        identityState: String? = nil
     ) {
         self.id = id
         self.transport = transport
@@ -67,6 +105,14 @@ public struct TKTargetSummary: Codable, Equatable {
         self.bundleIdentifier = bundleIdentifier
         self.deviceDescription = deviceDescription
         self.osDescription = osDescription
+        self.activeHierarchyAvailable = activeHierarchyAvailable ?? (connected && latestHierarchyAvailable)
+        self.cachedHierarchyAvailable = cachedHierarchyAvailable ?? latestHierarchyAvailable
+        self.hierarchyCacheState = hierarchyCacheState ?? {
+            if connected && latestHierarchyAvailable { return "active" }
+            if latestHierarchyAvailable { return "stale" }
+            return "unavailable"
+        }()
+        self.identityState = identityState ?? ((appName != nil || bundleIdentifier != nil) ? "current" : "unknown")
     }
 }
 
@@ -291,6 +337,9 @@ public struct TKCapabilitiesResponse: Codable, Equatable {
     public let runtime: String
     public let capabilities: [TKRuntimeCapability]
     public let error: TKCLIErrorDetail?
+    public let activeHierarchyAvailable: Bool?
+    public let hierarchyCacheState: String?
+    public let targetConnectionState: String?
 
     public init(
         ok: Bool,
@@ -300,7 +349,10 @@ public struct TKCapabilitiesResponse: Codable, Equatable {
         targetCount: Int,
         runtime: String,
         capabilities: [TKRuntimeCapability],
-        error: TKCLIErrorDetail? = nil
+        error: TKCLIErrorDetail? = nil,
+        activeHierarchyAvailable: Bool? = nil,
+        hierarchyCacheState: String? = nil,
+        targetConnectionState: String? = nil
     ) {
         self.ok = ok
         self.serverReachable = serverReachable
@@ -310,6 +362,13 @@ public struct TKCapabilitiesResponse: Codable, Equatable {
         self.runtime = runtime
         self.capabilities = capabilities
         self.error = error
+        self.activeHierarchyAvailable = activeHierarchyAvailable ?? (connected && latestHierarchyAvailable)
+        self.hierarchyCacheState = hierarchyCacheState ?? {
+            if connected && latestHierarchyAvailable { return "active" }
+            if latestHierarchyAvailable { return "stale" }
+            return "unavailable"
+        }()
+        self.targetConnectionState = targetConnectionState ?? (connected ? "connected" : "disconnected")
     }
 }
 

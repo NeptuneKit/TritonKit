@@ -29,6 +29,10 @@ struct TKCLITransportModelsTests {
         #expect(target.transport == "local-websocket")
         #expect(target.connected)
         #expect(target.latestHierarchyAvailable)
+        #expect(target.activeHierarchyAvailable == true)
+        #expect(target.cachedHierarchyAvailable == true)
+        #expect(target.hierarchyCacheState == "active")
+        #expect(target.identityState == "current")
         #expect(target.appName == "Demo")
         #expect(target.bundleIdentifier == "com.example.demo")
     }
@@ -167,7 +171,10 @@ struct TKCLITransportModelsTests {
             connected: true,
             latestHierarchyAvailable: true,
             targetCount: 1,
-            runtime: "embedded"
+            runtime: "embedded",
+            activeHierarchyAvailable: true,
+            hierarchyCacheState: "active",
+            targetConnectionState: "connected"
         )
 
         let data = try JSONEncoder().encode(response)
@@ -177,6 +184,56 @@ struct TKCLITransportModelsTests {
         #expect(decoded.serverReachable)
         #expect(decoded.runtime == "embedded")
         #expect(decoded.targetCount == 1)
+        #expect(decoded.activeHierarchyAvailable == true)
+        #expect(decoded.hierarchyCacheState == "active")
+        #expect(decoded.targetConnectionState == "connected")
+    }
+
+    @Test("status envelope distinguishes stale hierarchy cache from active target")
+    func statusEnvelopeDistinguishesStaleHierarchyCache() throws {
+        let response = TKCLIStatusEnvelope(
+            ok: true,
+            serverReachable: true,
+            connected: false,
+            latestHierarchyAvailable: true,
+            targetCount: 0,
+            runtime: "none",
+            activeHierarchyAvailable: false,
+            hierarchyCacheState: "stale",
+            targetConnectionState: "disconnected"
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKCLIStatusEnvelope.self, from: data)
+
+        #expect(decoded.latestHierarchyAvailable)
+        #expect(decoded.activeHierarchyAvailable == false)
+        #expect(decoded.hierarchyCacheState == "stale")
+        #expect(decoded.targetConnectionState == "disconnected")
+    }
+
+    @Test("target summary can expose connected target without stale identity")
+    func targetSummaryCanExposeUnknownIdentityWithoutStaleMetadata() throws {
+        let target = TKTargetSummary(
+            connected: true,
+            latestHierarchyAvailable: false,
+            activeHierarchyAvailable: false,
+            cachedHierarchyAvailable: true,
+            hierarchyCacheState: "stale",
+            identityState: "unknown"
+        )
+
+        let data = try JSONEncoder().encode(TKTargetsResponse(targets: [target]))
+        let decoded = try JSONDecoder().decode(TKTargetsResponse.self, from: data)
+        let decodedTarget = try #require(decoded.targets.first)
+
+        #expect(decodedTarget.connected)
+        #expect(decodedTarget.appName == nil)
+        #expect(decodedTarget.bundleIdentifier == nil)
+        #expect(decodedTarget.activeHierarchyAvailable == false)
+        #expect(decodedTarget.cachedHierarchyAvailable == true)
+        #expect(decodedTarget.hierarchyCacheState == "stale")
+        #expect(decodedTarget.identityState == "unknown")
     }
 
     @Test("CLI error envelope is stable JSON")
@@ -237,6 +294,9 @@ struct TKCLITransportModelsTests {
 
         #expect(decoded.ok)
         #expect(decoded.runtime == "embedded")
+        #expect(decoded.activeHierarchyAvailable == true)
+        #expect(decoded.hierarchyCacheState == "active")
+        #expect(decoded.targetConnectionState == "connected")
         #expect(decoded.capabilities.first(where: { $0.name == "tap" })?.supported == true)
         #expect(decoded.capabilities.first(where: { $0.name == "press" })?.supported == false)
     }
