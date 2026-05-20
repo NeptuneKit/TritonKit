@@ -155,6 +155,15 @@ triton hierarchy --json
 triton ax --json
 ```
 
+For repeatable regression flows, wait for asynchronous UI state before the next action or assertion:
+
+```bash
+triton tap --json "登录"
+triton wait --gone "登录" --timeout 15 --json
+triton wait --text "我的" --timeout 15 --json
+triton wait --predicate 'text.exists("我的") && !text.exists("登录")' --timeout 15 --json
+```
+
 ## iOS Network Notes
 
 For physical devices or local-network testing, add development-only network privacy text to the app target as needed:

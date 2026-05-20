@@ -36,8 +36,9 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton screenshot --json --output <path>`
    - `triton export --format archive --output <path>`
 8. Execute the smallest user-flow regression with machine-readable commands:
-   - prefer `find`, `tap`, `type`, `input --json --summary --strict`;
-   - assert expected state through a second `ax`, `find`, `screenshot`, or archive check.
+   - prefer `find`, `wait`, `tap`, `type`, `paste`, `clear`, `input --json --summary --strict`;
+   - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
+   - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, or archive check.
 9. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
 10. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly.
 

@@ -23,8 +23,8 @@
 3. 构建 release CLI：`swift build -c release --product triton`。
 4. 启动 `triton serve --host 127.0.0.1 --port 19421`。
 5. 真实 App 启动后跑 `status/list/geometry/ax/screenshot/export`。
-6. 用 `find/tap/type/input --json --summary --strict` 执行最小真实流程。
-7. 用二次 `ax/find/screenshot/archive` 验证状态变化。
+6. 用 `find/wait/tap/type/paste/clear/input --json --summary --strict` 执行最小真实流程。
+7. 点击、提交、导航后优先用 `triton wait --text/--gone/--idle/--predicate` 等待异步 UI 状态，再用二次 `ax/find/screenshot/archive` 验证状态变化。
 8. 发现 TritonKit 缺口时，按 `tritonkit-dev-feedback` 直接沉淀 GitHub issue。
 
 ## 当前可复用脚本

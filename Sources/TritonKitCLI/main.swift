@@ -47,6 +47,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             ObjectInfo.self,
             Export.self,
             Find.self,
+            Wait.self,
             Tap.self,
             Swipe.self,
             TypeText.self,
@@ -657,6 +658,7 @@ func chineseRootHelp() -> String {
         ("object", "读取 view 或 layer oid 的对象元数据"),
         ("export", "导出可复用层级快照或 archive"),
         ("find", "解析一个可见文本或意图目标"),
+        ("wait", "等待文本、消失、空闲或谓词条件"),
         ("tap", "点击文本、坐标、view oid 或 AX 节点"),
         ("swipe", "在 App 内按 window points 执行滑动"),
         ("type", "向已聚焦或 oid 指定的 UIKeyInput 输入文本"),
@@ -751,6 +753,18 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         ]),
         "find": ChineseCommandHelp(name: "find", overview: "把可见文本、label、identifier 或选项标题解析为可操作目标。", usage: "triton find <文本> [选项]", options: target + hostPort + formatTextJSON + [
             ("<文本>", "要解析的用户意图，例如 HTTP"),
+        ]),
+        "wait": ChineseCommandHelp(name: "wait", overview: "等待文本出现、文本消失、目标空闲、层级变化或安全谓词成立。", usage: "triton wait [条件] [选项]", options: target + hostPort + formatTextJSON + [
+            ("--text <text>", "等待可见文本出现"),
+            ("--gone <text>", "等待可见文本消失"),
+            ("--exists <text>", "等待可见文本出现，可配合 --role"),
+            ("--role <role>", "限制 AX role，例如 button"),
+            ("--idle", "等待当前 target 已连接且 hierarchy 连续稳定"),
+            ("--hierarchy-change", "等待 hierarchy 快照变化"),
+            ("--since <value>", "hierarchy-change 基线，目前支持 latest"),
+            ("--predicate <expr>", "安全谓词，例如 text.exists(\"console\") && !text.exists(\"登录\")"),
+            ("--timeout <seconds>", "超时时间，默认 10"),
+            ("--interval <seconds>", "轮询间隔，默认 0.5"),
         ]),
         "tap": ChineseCommandHelp(name: "tap", overview: "点击文本、坐标、view oid 或 AX 节点。", usage: "triton tap [文本] [选项]", options: target + hostPort + formatTextJSON + [
             ("<文本>", "要点击的可见文本、label、identifier 或选项标题，例如 HTTP"),
@@ -1281,6 +1295,98 @@ struct Find: AsyncParsableCommand {
             if error is ExitCode { throw error }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
+    }
+}
+
+struct Wait: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate"
+    )
+
+    @Option(name: .customLong("text"), help: "Visible text, AX label, identifier, title, or value to wait for") var text: String?
+    @Option(name: .customLong("gone"), help: "Visible text, AX label, identifier, title, or value to wait to disappear") var gone: String?
+    @Option(name: .customLong("exists"), help: "Alias for --text; can be combined with --role") var exists: String?
+    @Flag(name: .customLong("idle"), help: "Wait until the target is connected and hierarchy is stable across two polls") var idle = false
+    @Flag(name: .customLong("hierarchy-change"), help: "Wait until the hierarchy snapshot changes") var hierarchyChange = false
+    @Option(name: .customLong("since"), help: "Hierarchy change baseline; currently supports latest") var since: String = "latest"
+    @Option(name: .customLong("predicate"), help: "Safe predicate using text.exists/gone with &&, ||, !") var predicate: String?
+    @Option(name: .customLong("role"), help: "Optional AX role filter for --text or --exists") var role: String?
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(help: "Timeout in seconds") var timeout: Double = 10
+    @Option(help: "Polling interval in seconds") var interval: Double = 0.5
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selectorCount = [
+                text != nil,
+                gone != nil,
+                exists != nil,
+                idle,
+                hierarchyChange,
+                predicate != nil,
+            ].filter { $0 }.count
+            guard selectorCount == 1 else {
+                if outputFormat == .json {
+                    try printValidationError("Provide exactly one wait condition: --text, --gone, --exists, --idle, --hierarchy-change, or --predicate")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("Provide exactly one wait condition")
+            }
+            guard timeout > 0 else {
+                if outputFormat == .json {
+                    try printValidationError("--timeout must be greater than 0")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--timeout must be greater than 0")
+            }
+            guard interval > 0 else {
+                if outputFormat == .json {
+                    try printValidationError("--interval must be greater than 0")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--interval must be greater than 0")
+            }
+            if hierarchyChange && since != "latest" {
+                if outputFormat == .json {
+                    try printValidationError("--since currently supports only latest")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--since currently supports only latest")
+            }
+
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let request = WaitRequest(
+                condition: waitCondition(),
+                query: text ?? gone ?? exists,
+                predicate: predicate,
+                role: role,
+                timeout: timeout,
+                interval: interval
+            )
+            let result = try await performWait(request, client: client)
+            try printWaitResult(result, format: outputFormat)
+            if !result.ok {
+                throw ExitCode.failure
+            }
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+
+    private func waitCondition() -> TKWaitCondition {
+        if text != nil { return .text }
+        if gone != nil { return .gone }
+        if exists != nil { return .exists }
+        if idle { return .idle }
+        if hierarchyChange { return .hierarchyChange }
+        return .predicate
     }
 }
 
@@ -2137,6 +2243,7 @@ func runtimeCapabilities(connected: Bool) -> [TKRuntimeCapability] {
         TKRuntimeCapability(name: "ax", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "hit", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "screenshot", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "wait", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "tap", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "swipe", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "type", supported: connected, reason: requiresRuntime),
@@ -2318,6 +2425,15 @@ func buildWorkflowPlan(
                 requiresTarget: true,
                 when: "connected == true",
                 expected: "Safe machine-readable controls"
+            ),
+            TKWorkflowPlanStep(
+                id: "wait",
+                title: "Wait for asynchronous UI state",
+                command: "triton wait --host \(host) --port \(port) --text <text> --timeout 10 --format json",
+                requiresServer: true,
+                requiresTarget: true,
+                when: "after taps, submissions, and navigation",
+                expected: "Machine-readable wait result with elapsedMs and timeout state"
             ),
             TKWorkflowPlanStep(
                 id: "hit",
@@ -2809,6 +2925,40 @@ func commandSchemas() -> [TKCommandSchema] {
             successShape: "TapTargetResolution describing source, strategy, ids, frame, and request"
         ),
         TKCommandSchema(
+            name: "wait",
+            summary: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--text", type: "String", description: "Wait for visible text, AX label, identifier, title, or value"),
+                TKCommandSchemaOption(name: "--gone", type: "String", description: "Wait for visible text, AX label, identifier, title, or value to disappear"),
+                TKCommandSchemaOption(name: "--exists", type: "String", description: "Alias for --text; can be combined with --role"),
+                TKCommandSchemaOption(name: "--role", type: "String", description: "Optional AX role filter for --text or --exists"),
+                TKCommandSchemaOption(name: "--idle", type: "Bool", defaultValue: "false", description: "Wait until target is connected and hierarchy is stable across two polls"),
+                TKCommandSchemaOption(name: "--hierarchy-change", type: "Bool", defaultValue: "false", description: "Wait until hierarchy snapshot changes"),
+                TKCommandSchemaOption(name: "--since", type: "latest", defaultValue: "latest", description: "Hierarchy change baseline"),
+                TKCommandSchemaOption(name: "--predicate", type: "String", description: #"Safe predicate, e.g. text.exists("console") && !text.exists("登录")"#),
+                TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "10", description: "Timeout in seconds"),
+                TKCommandSchemaOption(name: "--interval", type: "Double", defaultValue: "0.5", description: "Polling interval in seconds"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                #"triton wait --text "console" --timeout 15 --interval 0.5 --json"#,
+                #"triton wait --gone "登录" --timeout 15 --json"#,
+                #"triton wait --exists "我的" --role button --timeout 10 --json"#,
+                "triton wait --idle --timeout 10 --json",
+                "triton wait --hierarchy-change --since latest --timeout 10 --json",
+                #"triton wait --predicate "text.exists(\"console\") && !text.exists(\"点我登录\")" --timeout 15 --json"#,
+            ],
+            successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? }",
+            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, lastObservedTextSample }; validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            providedCapabilities: ["wait"]
+        ),
+        TKCommandSchema(
             name: "ax",
             summary: "Read safe actionable control index",
             requiresServer: true,
@@ -3259,6 +3409,236 @@ func executeInputRequest(_ request: TKInputRequest, client: TritonKitHTTPClient)
     let payload = try JSONEncoder().encode(request)
     let data = try await client.request(type: "input", payload: payload)
     return try JSONDecoder().decode(TKInputResult.self, from: data)
+}
+
+struct WaitRequest {
+    let condition: TKWaitCondition
+    let query: String?
+    let predicate: String?
+    let role: String?
+    let timeout: Double
+    let interval: Double
+}
+
+func performWait(_ request: WaitRequest, client: TritonKitHTTPClient) async throws -> TKWaitResult {
+    let start = Date()
+    let deadline = start.addingTimeInterval(request.timeout)
+    var pollCount = 0
+    var lastObservation = TKWaitObservation()
+    var stableHierarchyHash: String?
+    var hierarchyChangeBaseline: String?
+
+    if request.condition == .hierarchyChange {
+        hierarchyChangeBaseline = try await latestHierarchyHash(client: client)
+    }
+
+    while true {
+        pollCount += 1
+        let observation = try await waitObservation(for: request.condition, client: client)
+        lastObservation = observation
+
+        let evaluation = try evaluateWait(request, observation: observation, stableHierarchyHash: stableHierarchyHash, hierarchyChangeBaseline: hierarchyChangeBaseline)
+        if evaluation.matched {
+            return waitResult(
+                request: request,
+                matched: true,
+                timedOut: false,
+                elapsedMs: elapsedMilliseconds(since: start),
+                pollCount: pollCount,
+                observation: observation,
+                match: evaluation.match
+            )
+        }
+
+        if request.condition == .idle, let hierarchyHash = observation.hierarchyHash {
+            stableHierarchyHash = hierarchyHash
+        }
+        if request.condition == .hierarchyChange, hierarchyChangeBaseline == nil {
+            hierarchyChangeBaseline = observation.hierarchyHash
+        }
+
+        if Date() >= deadline {
+            return waitResult(
+                request: request,
+                matched: false,
+                timedOut: true,
+                elapsedMs: elapsedMilliseconds(since: start),
+                pollCount: pollCount,
+                observation: lastObservation,
+                match: nil
+            )
+        }
+
+        let remaining = deadline.timeIntervalSinceNow
+        let sleepSeconds = max(0.01, min(request.interval, remaining))
+        try await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
+    }
+}
+
+private func waitObservation(for condition: TKWaitCondition, client: TritonKitHTTPClient) async throws -> TKWaitObservation {
+    let status: TKStatusResponse = try await client.getJSON("/status")
+    switch condition {
+    case .text, .gone, .predicate, .exists:
+        let accessibilityData = try await client.request(type: "accessibility")
+        let nodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
+        return TKWaitObservation(
+            nodes: nodes,
+            targetConnectionState: status.targetConnectionState,
+            hierarchyCacheState: status.hierarchyCacheState
+        )
+    case .idle:
+        let accessibilityData = try await client.request(type: "accessibility")
+        let nodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
+        return TKWaitObservation(
+            nodes: nodes,
+            targetConnectionState: status.targetConnectionState,
+            hierarchyCacheState: status.hierarchyCacheState,
+            hierarchyHash: stableAXSignatureHash(nodes)
+        )
+    case .hierarchyChange:
+        let hierarchyData = try await client.request(type: "hierarchy")
+        return TKWaitObservation(
+            targetConnectionState: status.targetConnectionState,
+            hierarchyCacheState: status.hierarchyCacheState,
+            hierarchyHash: stableDataHash(hierarchyData)
+        )
+    }
+}
+
+private func evaluateWait(
+    _ request: WaitRequest,
+    observation: TKWaitObservation,
+    stableHierarchyHash: String?,
+    hierarchyChangeBaseline: String?
+) throws -> (matched: Bool, match: TKWaitMatch?) {
+    switch request.condition {
+    case .text, .exists:
+        guard let query = request.query else { return (false, nil) }
+        let match = TKWaitFindTextMatch(in: observation.nodes, query: query, role: request.role)
+        return (match != nil, match)
+    case .gone:
+        guard let query = request.query else { return (false, nil) }
+        let match = TKWaitFindTextMatch(in: observation.nodes, query: query, role: request.role)
+        return (match == nil, nil)
+    case .predicate:
+        guard let predicate = request.predicate else { return (false, nil) }
+        return (try TKWaitEvaluatePredicate(predicate, nodes: observation.nodes), nil)
+    case .idle:
+        guard observation.targetConnectionState == "connected",
+              observation.hierarchyCacheState == "active",
+              let hierarchyHash = observation.hierarchyHash,
+              let stableHierarchyHash else {
+            return (false, nil)
+        }
+        return (hierarchyHash == stableHierarchyHash, nil)
+    case .hierarchyChange:
+        guard let hierarchyHash = observation.hierarchyHash,
+              let hierarchyChangeBaseline else {
+            return (false, nil)
+        }
+        return (hierarchyHash != hierarchyChangeBaseline, nil)
+    }
+}
+
+private func waitResult(
+    request: WaitRequest,
+    matched: Bool,
+    timedOut: Bool,
+    elapsedMs: Int,
+    pollCount: Int,
+    observation: TKWaitObservation,
+    match: TKWaitMatch?
+) -> TKWaitResult {
+    TKWaitResult(
+        ok: matched && !timedOut,
+        matched: matched,
+        condition: request.condition.rawValue,
+        query: request.query,
+        predicate: request.predicate,
+        role: request.role,
+        timedOut: timedOut,
+        elapsedMs: elapsedMs,
+        pollCount: pollCount,
+        timeoutSeconds: request.timeout,
+        intervalSeconds: request.interval,
+        targetConnectionState: observation.targetConnectionState,
+        hierarchyCacheState: observation.hierarchyCacheState,
+        lastObservedNodeCount: observation.nodes.isEmpty ? nil : TKFlattenAXNodes(observation.nodes).count,
+        lastObservedTextSample: TKWaitTextSample(from: observation.nodes),
+        lastObservedHierarchyHash: observation.hierarchyHash,
+        match: match
+    )
+}
+
+private func latestHierarchyHash(client: TritonKitHTTPClient) async throws -> String? {
+    do {
+        let data = try await client.getData("/hierarchy/latest")
+        return stableDataHash(data)
+    } catch {
+        return nil
+    }
+}
+
+private func stableDataHash(_ data: Data) -> String {
+    var hash: UInt64 = 0xcbf29ce484222325
+    for byte in data {
+        hash ^= UInt64(byte)
+        hash = hash &* 0x100000001b3
+    }
+    return String(format: "%016llx", hash)
+}
+
+private func stableAXSignatureHash(_ nodes: [TKAXNode]) -> String {
+    let signature = TKWaitVisibleTexts(from: nodes)
+        .map { match in
+            [
+                match.source,
+                match.role ?? "",
+                match.text,
+                match.frame.map(formatRect) ?? "",
+            ].joined(separator: ":")
+        }
+        .joined(separator: "\n")
+    return stableDataHash(Data(signature.utf8))
+}
+
+private func elapsedMilliseconds(since start: Date) -> Int {
+    max(0, Int(Date().timeIntervalSince(start) * 1000))
+}
+
+func printWaitResult(_ result: TKWaitResult, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeCompactJSON(result))
+    case .text:
+        print("ok: \(result.ok)")
+        print("matched: \(result.matched)")
+        print("condition: \(result.condition)")
+        if let query = result.query {
+            print("query: \(query)")
+        }
+        if let predicate = result.predicate {
+            print("predicate: \(predicate)")
+        }
+        if let role = result.role {
+            print("role: \(role)")
+        }
+        print("timedOut: \(result.timedOut)")
+        print("elapsedMs: \(result.elapsedMs)")
+        print("pollCount: \(result.pollCount)")
+        if let targetConnectionState = result.targetConnectionState {
+            print("targetConnectionState: \(targetConnectionState)")
+        }
+        if let hierarchyCacheState = result.hierarchyCacheState {
+            print("hierarchyCacheState: \(hierarchyCacheState)")
+        }
+        if let match = result.match {
+            print("match: \(match.text)")
+            if let role = match.role { print("matchRole: \(role)") }
+            if let frame = match.frame { print("matchFrame: \(formatRect(frame))") }
+            if let targetOID = match.targetOID { print("matchTargetOID: \(targetOID)") }
+        }
+    }
 }
 
 func screenshotImageData(_ screenshot: TKScreenshotResponse, client: TritonKitHTTPClient) async throws -> Data {
