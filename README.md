@@ -173,6 +173,17 @@ triton evidence inspect /tmp/login-success.tritonevidence --json
 
 The first evidence bundle format is a directory package. It contains `manifest.json` plus artifacts such as `status.json`, `targets.json`, `version.json`, `hierarchy.json`, `ax.json`, `screenshot.png`, and `screenshot.json`. Unsupported requested artifacts, such as `logs` in the current embedded runtime, are recorded in `manifest.skipped` with reasons.
 
+For repeatable short smoke flows, store the command sequence in a `.tritonplan` and replay it:
+
+```bash
+triton record --output /tmp/login-flow.tritonplan --json
+triton plan inspect /tmp/login-flow.tritonplan --json
+triton replay /tmp/login-flow.tritonplan --dry-run --var username=alice --var password-env=TRITON_PASSWORD --json
+triton replay /tmp/login-flow.tritonplan --var username=alice --var password-env=TRITON_PASSWORD --json
+```
+
+`record` currently writes an editable starter template; it does not capture live terminal history or global input events yet. `replay` supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence` steps, `${variable}` substitution, `--var key=value`, `--var key-env=ENV_NAME`, and secure value redaction in step summaries.
+
 ## iOS Network Notes
 
 For physical devices or local-network testing, add development-only network privacy text to the app target as needed:

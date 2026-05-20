@@ -38,6 +38,9 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton object --target triton:local --oid <oid> --format text|json`：实时读取对象 class chain 与地址。
 - `triton export --target triton:local --output <path>`：导出 hierarchy JSON；当 `--format archive` 或输出扩展名为 `.triton`、`.tritonkit`、`.archive`、`.lookinside` 时，导出自描述 archive。
 - `triton evidence --output <dir.tritonevidence> --format json`：导出 agent 回归证据包目录，固定写入 `manifest.json`，并按 `--include` 采集 `status/list/version/hierarchy/ax/screenshot/geometry/archive` 等 artifact；当前 embedded runtime 不支持的 `logs` 会进入 `manifest.skipped`，不静默忽略。`triton evidence inspect <dir.tritonevidence> --format json` 只读取 manifest，不重新连接 runtime。
+- `triton record --output <file.tritonplan> --format json`：生成可编辑 replay plan 模板；首期不是交互式真实录制，不捕获终端历史或全局输入事件。
+- `triton plan inspect <file.tritonplan> --format json`：离线读取 `.tritonplan` 摘要，返回 schema version、变量、step count、actions 和 target metadata。
+- `triton replay <file.tritonplan> --format json`：按 `.tritonplan` 复跑短 smoke 流程；支持 `--dry-run`、`--var key=value`、`--var key-env=ENV_NAME`，步骤覆盖 `tap/paste/type/clear/wait/screenshot/evidence`，secure 步骤只回显 `<redacted:length>`。
 - `triton find "HTTP" --format json`：按用户意图解析可见文本、AX label、identifier、value 或 segmented option title，只返回目标来源、策略、oid、layer、frame 与将执行的 input request。
 - `triton wait --text "我的" --timeout 15 --format json`：等待异步 UI 条件，支持 `--text`、`--gone`、`--exists --role`、`--idle`、`--hierarchy-change --since latest` 和安全谓词 `--predicate 'text.exists("console") && !text.exists("登录")'`；成功或超时都返回 `TKWaitResult`，包含 `elapsedMs/pollCount/timedOut/lastObservedTextSample/match`，超时以非 0 退出。
 - `triton tap "HTTP" --format json`：意图优先点击入口；调用方不需要区分 AX、hierarchy、坐标、oid 或 segmented option。仍保留 `--x/--y`、`--oid`、`--ax-oid`、`--ax-label` 作为诊断和精确控制入口。
@@ -69,6 +72,8 @@ CLI/HTTP 是 AI 自动化控制入口；Web/Wails 不参与首期闭环。后续
 `schema` 是 AI 的首选规划入口，不依赖 server。`schema --format json` 返回全部已实现命令的命令级 schema；`schema --command input --format json` 返回 NDJSON action schema，包含 `tap`、`swipe`、`type`、`button` 的 required/optional 字段、字段类型、enum、`oneOfRequired`、`coordinateSpace` 与 example。坐标统一为 window points，与 `geometry`、`ax`、`hit` 返回的 frame 坐标一致。
 
 `plan` 是 AI 的状态恢复入口，不依赖 server 存活。它会把当前能力诊断收敛为 `nextStep` 和有序 `steps[]`：无 server 时第一步是可直接执行的 `triton serve --host 127.0.0.1 --port 19421`；server 与 target 已就绪时第一步是 `observe`，推荐 `geometry`、`ax`、`wait`、`hit`、`input --summary --strict`、`screenshot` 与 `export --format archive`。`error.nextAction` 的 `command` 不带 `triton` 前缀，调用方可用 `["triton", command] + args` 直接组装进程参数。
+
+`record/replay` 是 AI 的可复跑 smoke artifact 入口。`.tritonplan` 首期 schema version 为 1，核心字段为 `name`、`variables`、`target` 和 `steps[]`；步骤中的字符串支持 `${name}` 占位。`replay --dry-run` 不连接 runtime，只检查变量并输出每一步将执行的命令摘要；真实 `replay` 默认在首个失败步骤停止，整体结果返回 `{ ok, dryRun, planName, stepCount, executedCount, failedStepIndex?, elapsedMs, steps[] }`。`record` 当前只生成模板，不能宣称已录制真实用户操作。
 
 `input --json` 输出真正的 JSONL：每个 action 结果是一行 compact JSON，`--summary` 的最终汇总也是一行 compact JSON。AI 自动化推荐显式使用 `--summary --strict --fail-fast`。这样既能继续消费每个 action 的细粒度 ack，又能用 summary 和退出码判断整批动作是否可靠完成；`--fail-fast` 还能避免前一步 tap 失败后，后续 `type` 继续写入旧 first responder。
 

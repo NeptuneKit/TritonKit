@@ -38,6 +38,10 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton screenshot --json --output <path>`
    - `triton export --format archive --output <path>`
 8. Execute the smallest user-flow regression with machine-readable commands:
+   - if the flow will be reused, first create or update a `.tritonplan`; use `triton record --output <file.tritonplan> --json` only as an editable starter template, not as proof that live recording happened;
+   - inspect reusable flows with `triton plan inspect <file.tritonplan> --json`;
+   - dry-run reusable flows before touching the app: `triton replay <file.tritonplan> --dry-run --var key=value --var secret-env=ENV --json`;
+   - replay committed flows with `triton replay <file.tritonplan> --json`, keeping secure values in environment variables and using `--var <name>-env=<ENV>`;
    - prefer `find`, `wait`, `tap`, `type`, `paste`, `clear`, `input --json --summary --strict`;
    - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
    - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, archive check, or a fresh `evidence` bundle.
@@ -78,3 +82,10 @@ Release assets live in `NeptuneKit/TritonKit` GitHub Releases and include arm64/
 - Generic complex harness: `docs-linhay/scripts/verify-complex-harness.sh`
 - Intent CLI smoke: `docs-linhay/scripts/verify-intent-cli-smoke.sh`
 - Overloaded real-app smoke: `docs-linhay/scripts/verify-overloaded-triton-smoke.sh`
+
+## Replay Plan Notes
+
+- `.tritonplan` schema version 1 supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence`.
+- Use `${variable}` placeholders for account names, passwords, hosts, or output paths.
+- Use `secure: true` on password-like `paste` or `type` steps; replay summaries must redact values.
+- Prefer an `evidence` step at the end of a reused smoke flow so the final state is attachable to issues and regression reports.
