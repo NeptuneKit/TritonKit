@@ -31,6 +31,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton status --json`
    - `triton list --json`
 7. Run observation before action:
+   - prefer one-shot evidence when a report or issue needs attachable proof: `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`.
+   - inspect an existing bundle without reconnecting runtime: `triton evidence inspect /tmp/<case>.tritonevidence --json`.
    - `triton geometry --json`
    - `triton ax --json`
    - `triton screenshot --json --output <path>`
@@ -38,7 +40,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
 8. Execute the smallest user-flow regression with machine-readable commands:
    - prefer `find`, `wait`, `tap`, `type`, `paste`, `clear`, `input --json --summary --strict`;
    - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
-   - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, or archive check.
+   - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, archive check, or a fresh `evidence` bundle.
 9. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
 10. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly.
 

@@ -46,6 +46,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             Attrs.self,
             ObjectInfo.self,
             Export.self,
+            Evidence.self,
             Find.self,
             Wait.self,
             Tap.self,
@@ -657,6 +658,7 @@ func chineseRootHelp() -> String {
         ("attrs", "读取节点 layer oid 的实时属性组"),
         ("object", "读取 view 或 layer oid 的对象元数据"),
         ("export", "导出可复用层级快照或 archive"),
+        ("evidence", "导出 agent 回归证据包"),
         ("find", "解析一个可见文本或意图目标"),
         ("wait", "等待文本、消失、空闲或谓词条件"),
         ("tap", "点击文本、坐标、view oid 或 AX 节点"),
@@ -750,6 +752,13 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--with-hierarchy", "把 AX 节点按 viewOID 映射到 hierarchy 节点"),
             ("--refresh/--no-refresh", "映射 hierarchy 前是否刷新层级"),
             ("--output <path>", "写入文件"),
+        ]),
+        "evidence": ChineseCommandHelp(name: "evidence", overview: "导出 agent 回归证据包，包含 manifest 与截图、AX、层级、状态等 artifact。", usage: "triton evidence [inspect <path>] [选项]", options: target + hostPort + formatTextJSON + [
+            ("--output <path>", "证据包目录路径，建议使用 .tritonevidence 后缀"),
+            ("--include <list>", "逗号分隔 artifact：screenshot,ax,hierarchy,status,list,version,geometry,archive,logs"),
+            ("--name <name>", "场景名，写入 manifest"),
+            ("--note <note>", "备注，写入 manifest"),
+            ("--refresh/--no-refresh", "导出 hierarchy/archive 前是否请求新层级"),
         ]),
         "find": ChineseCommandHelp(name: "find", overview: "把可见文本、label、identifier 或选项标题解析为可操作目标。", usage: "triton find <文本> [选项]", options: target + hostPort + formatTextJSON + [
             ("<文本>", "要解析的用户意图，例如 HTTP"),
@@ -1256,6 +1265,72 @@ struct Export: AsyncParsableCommand {
         }
         try data.write(to: URL(fileURLWithPath: output), options: .atomic)
         print(output)
+    }
+}
+
+struct Evidence: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Capture or inspect an agent-friendly regression evidence bundle"
+    )
+
+    @Argument(help: "Optional action. Use `inspect` to read an existing bundle manifest.") var action: String?
+    @Argument(help: "Evidence bundle path for `inspect`.") var input: String?
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Evidence bundle directory path") var output: String?
+    @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs")
+    var include: String = "status,list,version,hierarchy,ax,screenshot"
+    @Option(help: "Scenario name stored in manifest") var name: String?
+    @Option(help: "Human note stored in manifest") var note: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(inversion: .prefixedNo, help: "Request a fresh hierarchy before capturing hierarchy/archive")
+    var refresh = true
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        if let action {
+            guard action == "inspect" else {
+                try failEvidenceValidation("Unsupported evidence action: \(action)", outputFormat: outputFormat)
+            }
+            guard let input else {
+                try failEvidenceValidation("`triton evidence inspect` requires a bundle path", outputFormat: outputFormat)
+            }
+            let manifest = try readEvidenceManifest(from: input)
+            try printEvidenceManifest(manifest, format: outputFormat)
+            return
+        }
+
+        guard input == nil else {
+            try failEvidenceValidation("Unexpected evidence argument: \(input ?? "")", outputFormat: outputFormat)
+        }
+        guard let output else {
+            try failEvidenceValidation("`triton evidence` requires --output <path>", outputFormat: outputFormat)
+        }
+
+        let includes: [String]
+        do {
+            includes = try parseEvidenceIncludes(include)
+        } catch {
+            try failEvidenceValidation("\(error)", outputFormat: outputFormat)
+        }
+        do {
+            let manifest = try await captureEvidenceBundle(
+                output: output,
+                includes: includes,
+                name: name,
+                note: note,
+                target: target,
+                host: host,
+                port: port,
+                refresh: refresh
+            )
+            try printEvidenceManifest(manifest, format: outputFormat)
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/evidence", host: host, port: port)
+        }
     }
 }
 
@@ -2907,6 +2982,34 @@ func commandSchemas() -> [TKCommandSchema] {
             successShape: "File path on stdout; output file contains hierarchy JSON or TKExportArchive JSON"
         ),
         TKCommandSchema(
+            name: "evidence",
+            summary: "Capture or inspect an agent-friendly regression evidence bundle",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli+embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "inspect <path>", type: "Subcommand", description: "Read an existing bundle manifest without connecting to runtime"),
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Evidence bundle directory path; capture mode requires it"),
+                TKCommandSchemaOption(name: "--include", type: "String", defaultValue: "status,list,version,hierarchy,ax,screenshot", description: "Comma-separated artifact kinds"),
+                TKCommandSchemaOption(name: "--name", type: "String", description: "Scenario name stored in manifest"),
+                TKCommandSchemaOption(name: "--note", type: "String", description: "Human note stored in manifest"),
+                TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before hierarchy/archive capture"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton evidence --output /tmp/login-success.tritonevidence --json",
+                "triton evidence --include status,list,version,logs --output /tmp/partial.tritonevidence --json",
+                "triton evidence --name v11-login --note \"DEBUG mock disabled\" --output /tmp/login.tritonevidence --json",
+                "triton evidence inspect /tmp/login-success.tritonevidence --json",
+            ],
+            successShape: "TKEvidenceManifest with { ok, formatVersion, output, artifacts[], skipped[], target?, cli }",
+            failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            providedCapabilities: ["evidence"]
+        ),
+        TKCommandSchema(
             name: "find",
             summary: "Resolve a UI target by visible text, label, identifier, or option title",
             requiresServer: true,
@@ -3681,6 +3784,388 @@ func buildExportArchive(
         accessibility: accessibility,
         screenshot: embeddedScreenshot
     )
+}
+
+struct EvidenceScreenshotMetadata: Codable {
+    let format: String
+    let width: Double
+    let height: Double
+    let scale: Double
+    let dataRef: String?
+    let imagePath: String
+    let bytes: Int
+}
+
+func parseEvidenceIncludes(_ raw: String) throws -> [String] {
+    let aliases = [
+        "targets": "list",
+        "accessibility": "ax",
+        "export": "archive",
+    ]
+    let allowed: Set<String> = [
+        "screenshot",
+        "ax",
+        "hierarchy",
+        "status",
+        "list",
+        "version",
+        "geometry",
+        "archive",
+        "logs",
+    ]
+    var result: [String] = []
+    var seen = Set<String>()
+    for part in raw.split(separator: ",") {
+        let normalized = part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalized.isEmpty else { continue }
+        let kind = aliases[normalized] ?? normalized
+        guard allowed.contains(kind) else {
+            throw RuntimeError("Unsupported evidence include: \(normalized)")
+        }
+        if seen.insert(kind).inserted {
+            result.append(kind)
+        }
+    }
+    return result.isEmpty ? ["status", "list", "version", "hierarchy", "ax", "screenshot"] : result
+}
+
+func failEvidenceValidation(_ message: String, outputFormat: ClientOutputFormat) throws -> Never {
+    switch outputFormat {
+    case .json:
+        let response = TKCLIErrorResponse(error: TKCLIErrorDetail(
+            code: "validation_failed",
+            message: message,
+            hint: "Run `triton schema --command evidence --json` to inspect required fields"
+        ))
+        print(try encodeJSON(response))
+    case .text:
+        fputs("error: \(message)\n", stderr)
+    }
+    throw ExitCode.failure
+}
+
+func readEvidenceManifest(from path: String) throws -> TKEvidenceManifest {
+    let inputURL = URL(fileURLWithPath: path)
+    let manifestURL: URL
+    var isDirectory: ObjCBool = false
+    if FileManager.default.fileExists(atPath: inputURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+        manifestURL = inputURL.appendingPathComponent("manifest.json")
+    } else {
+        manifestURL = inputURL.lastPathComponent == "manifest.json"
+            ? inputURL
+            : inputURL.appendingPathComponent("manifest.json")
+    }
+    let data = try Data(contentsOf: manifestURL)
+    return try JSONDecoder().decode(TKEvidenceManifest.self, from: data)
+}
+
+func printEvidenceManifest(_ manifest: TKEvidenceManifest, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(manifest))
+    case .text:
+        print("ok: \(manifest.ok)")
+        print("output: \(manifest.output)")
+        if let name = manifest.name { print("name: \(name)") }
+        print("artifacts: \(manifest.artifacts.count)")
+        if !manifest.skipped.isEmpty {
+            print("skipped: \(manifest.skipped.count)")
+            for item in manifest.skipped {
+                print("- \(item.kind): \(item.reason)")
+            }
+        }
+    }
+}
+
+func captureEvidenceBundle(
+    output: String,
+    includes: [String],
+    name: String?,
+    note: String?,
+    target: String,
+    host: String,
+    port: Int,
+    refresh: Bool
+) async throws -> TKEvidenceManifest {
+    let outputURL = URL(fileURLWithPath: output)
+    try prepareEvidenceOutputDirectory(outputURL)
+
+    let client = TritonKitHTTPClient(host: host, port: port)
+    let startedAt = ISO8601DateFormatter().string(from: Date())
+    var artifacts: [TKEvidenceArtifact] = []
+    var skipped: [TKEvidenceSkippedArtifact] = []
+    var status: TKStatusResponse?
+    var targetSummary: TKTargetSummary?
+
+    for kind in includes {
+        switch kind {
+        case "version":
+            do {
+                let version = TKCLIVersionResponse(version: TritonKitBuildInfo.cliVersion, language: "en")
+                let data = try prettyEncodedData(version)
+                try appendEvidenceArtifact(
+                    kind: "version",
+                    relativePath: "version.json",
+                    data: data,
+                    contentType: "application/json",
+                    directory: outputURL,
+                    freshness: evidenceFreshness(source: "cli", status: status),
+                    artifacts: &artifacts
+                )
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+            }
+        case "status":
+            do {
+                let data = try await client.getData("/status")
+                status = try JSONDecoder().decode(TKStatusResponse.self, from: data)
+                try appendEvidenceArtifact(
+                    kind: "status",
+                    relativePath: "status.json",
+                    data: try prettyJSONData(data),
+                    contentType: "application/json",
+                    directory: outputURL,
+                    freshness: evidenceFreshness(source: "server", status: status),
+                    artifacts: &artifacts
+                )
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+            }
+        case "list":
+            do {
+                let data = try await client.getData("/targets")
+                let targets = try JSONDecoder().decode(TKTargetsResponse.self, from: data)
+                if targetSummary == nil {
+                    targetSummary = try? TKResolveTargetSummary(target, in: targets.targets)
+                }
+                try appendEvidenceArtifact(
+                    kind: "list",
+                    relativePath: "targets.json",
+                    data: try prettyJSONData(data),
+                    contentType: "application/json",
+                    directory: outputURL,
+                    freshness: evidenceFreshness(source: "server", status: status),
+                    artifacts: &artifacts
+                )
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+            }
+        case "logs":
+            skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "unsupported in the current embedded runtime"))
+        case "hierarchy", "ax", "geometry", "screenshot", "archive":
+            do {
+                if targetSummary == nil {
+                    targetSummary = try await resolveTarget(target, host: host, port: port)
+                }
+                switch kind {
+                case "hierarchy":
+                    let data = try await evidenceHierarchyData(client: client, refresh: refresh)
+                    try appendEvidenceArtifact(
+                        kind: "hierarchy",
+                        relativePath: "hierarchy.json",
+                        data: try prettyJSONData(data),
+                        contentType: "application/json",
+                        directory: outputURL,
+                        freshness: evidenceFreshness(source: refresh ? "runtime" : "server-cache", status: status),
+                        artifacts: &artifacts
+                    )
+                case "ax":
+                    let data = try await client.request(type: "accessibility")
+                    try appendEvidenceArtifact(
+                        kind: "ax",
+                        relativePath: "ax.json",
+                        data: try prettyJSONData(data),
+                        contentType: "application/json",
+                        directory: outputURL,
+                        freshness: evidenceFreshness(source: "runtime", status: status),
+                        artifacts: &artifacts
+                    )
+                case "geometry":
+                    let data = try await client.request(type: "geometry")
+                    try appendEvidenceArtifact(
+                        kind: "geometry",
+                        relativePath: "geometry.json",
+                        data: try prettyJSONData(data),
+                        contentType: "application/json",
+                        directory: outputURL,
+                        freshness: evidenceFreshness(source: "runtime", status: status),
+                        artifacts: &artifacts
+                    )
+                case "screenshot":
+                    try await captureEvidenceScreenshot(
+                        client: client,
+                        directory: outputURL,
+                        status: status,
+                        artifacts: &artifacts
+                    )
+                case "archive":
+                    let hierarchyData = try await evidenceHierarchyData(client: client, refresh: refresh)
+                    let archive = try await buildExportArchive(
+                        target: targetSummary ?? TKTargetSummary(connected: true, latestHierarchyAvailable: true),
+                        hierarchyData: hierarchyData,
+                        client: client
+                    )
+                    try appendEvidenceArtifact(
+                        kind: "archive",
+                        relativePath: "archive.json",
+                        data: try prettyEncodedData(archive),
+                        contentType: "application/json",
+                        directory: outputURL,
+                        freshness: evidenceFreshness(source: "runtime", status: status),
+                        artifacts: &artifacts
+                    )
+                default:
+                    break
+                }
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+            }
+        default:
+            skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "unsupported"))
+        }
+    }
+
+    if targetSummary == nil {
+        targetSummary = try? await resolveTarget(target, host: host, port: port)
+    }
+
+    let manifest = TKEvidenceManifest(
+        ok: true,
+        name: name,
+        note: note,
+        createdAt: startedAt,
+        output: outputURL.path,
+        artifacts: artifacts,
+        skipped: skipped,
+        target: targetSummary.map { summary in
+            TKEvidenceTarget(
+                id: summary.id,
+                connected: summary.connected,
+                appName: summary.appName,
+                bundleIdentifier: summary.bundleIdentifier,
+                deviceDescription: summary.deviceDescription,
+                osDescription: summary.osDescription,
+                identityState: summary.identityState ?? "unknown",
+                targetConnectionState: status?.targetConnectionState ?? (summary.connected ? "connected" : "disconnected"),
+                hierarchyCacheState: summary.hierarchyCacheState ?? status?.hierarchyCacheState
+            )
+        },
+        cli: TKEvidenceCLI(version: TritonKitBuildInfo.cliVersion)
+    )
+    try prettyEncodedData(manifest).write(to: outputURL.appendingPathComponent("manifest.json"), options: .atomic)
+    return manifest
+}
+
+func prepareEvidenceOutputDirectory(_ url: URL) throws {
+    var isDirectory: ObjCBool = false
+    if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+        guard isDirectory.boolValue else {
+            throw RuntimeError("Evidence output exists and is not a directory: \(url.path)")
+        }
+    } else {
+        try FileManager.default.createDirectory(
+            at: url,
+            withIntermediateDirectories: true
+        )
+    }
+}
+
+func appendEvidenceArtifact(
+    kind: String,
+    relativePath: String,
+    data: Data,
+    contentType: String,
+    directory: URL,
+    freshness: TKEvidenceFreshness,
+    artifacts: inout [TKEvidenceArtifact]
+) throws {
+    let fileURL = directory.appendingPathComponent(relativePath)
+    try FileManager.default.createDirectory(
+        at: fileURL.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    try data.write(to: fileURL, options: .atomic)
+    artifacts.append(TKEvidenceArtifact(
+        kind: kind,
+        path: relativePath,
+        contentType: contentType,
+        bytes: data.count,
+        freshness: freshness
+    ))
+}
+
+func captureEvidenceScreenshot(
+    client: TritonKitHTTPClient,
+    directory: URL,
+    status: TKStatusResponse?,
+    artifacts: inout [TKEvidenceArtifact]
+) async throws {
+    let screenshotData = try await client.request(type: "screenshot")
+    let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
+    let imageData = try await screenshotImageData(screenshot, client: client)
+    let freshness = evidenceFreshness(source: "runtime", status: status)
+    try appendEvidenceArtifact(
+        kind: "screenshot",
+        relativePath: "screenshot.png",
+        data: imageData,
+        contentType: "image/png",
+        directory: directory,
+        freshness: freshness,
+        artifacts: &artifacts
+    )
+    let metadata = EvidenceScreenshotMetadata(
+        format: screenshot.format,
+        width: screenshot.width,
+        height: screenshot.height,
+        scale: screenshot.scale,
+        dataRef: screenshot.dataRef,
+        imagePath: "screenshot.png",
+        bytes: imageData.count
+    )
+    try appendEvidenceArtifact(
+        kind: "screenshot-metadata",
+        relativePath: "screenshot.json",
+        data: try prettyEncodedData(metadata),
+        contentType: "application/json",
+        directory: directory,
+        freshness: freshness,
+        artifacts: &artifacts
+    )
+}
+
+func evidenceHierarchyData(client: TritonKitHTTPClient, refresh: Bool) async throws -> Data {
+    if refresh {
+        return try await client.request(type: "hierarchy")
+    }
+    return try await waitForHierarchy(client: client)
+}
+
+func evidenceFreshness(source: String, status: TKStatusResponse?) -> TKEvidenceFreshness {
+    TKEvidenceFreshness(
+        capturedAt: ISO8601DateFormatter().string(from: Date()),
+        source: source,
+        hierarchyCacheState: status?.hierarchyCacheState,
+        targetConnectionState: status?.targetConnectionState
+    )
+}
+
+func evidenceSkipReason(_ error: Error) -> String {
+    if let httpError = error as? CLIHTTPError,
+       let response = httpError.response {
+        return "\(response.error.code): \(response.error.message)"
+    }
+    return "\(error)"
+}
+
+func prettyEncodedData<T: Encodable>(_ value: T) throws -> Data {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    return try encoder.encode(value)
+}
+
+func prettyJSONData(_ data: Data) throws -> Data {
+    let object = try JSONSerialization.jsonObject(with: data)
+    return try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
 }
 
 func runInputRequest(

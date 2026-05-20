@@ -164,6 +164,15 @@ triton wait --text "我的" --timeout 15 --json
 triton wait --predicate 'text.exists("我的") && !text.exists("登录")' --timeout 15 --json
 ```
 
+When a pass/fail decision needs attachable evidence, export a bundle with a machine-readable manifest:
+
+```bash
+triton evidence --name login-success --output /tmp/login-success.tritonevidence --json
+triton evidence inspect /tmp/login-success.tritonevidence --json
+```
+
+The first evidence bundle format is a directory package. It contains `manifest.json` plus artifacts such as `status.json`, `targets.json`, `version.json`, `hierarchy.json`, `ax.json`, `screenshot.png`, and `screenshot.json`. Unsupported requested artifacts, such as `logs` in the current embedded runtime, are recorded in `manifest.skipped` with reasons.
+
 ## iOS Network Notes
 
 For physical devices or local-network testing, add development-only network privacy text to the app target as needed:

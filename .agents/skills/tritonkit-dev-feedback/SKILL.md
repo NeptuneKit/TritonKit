@@ -20,6 +20,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
 1. Clarify only the minimum missing detail needed to avoid filing a wrong issue.
 2. If the user is adopting TritonKit in an iOS app, first guide them through the iOS integration checklist below.
 3. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
+   - `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`
+   - `triton evidence inspect /tmp/<case>.tritonevidence --json`
    - `triton status --json`
    - `triton doctor --json`
    - `triton schema --json`
@@ -130,6 +132,7 @@ triton status --json
 triton list --json
 triton hierarchy --json
 triton ax --json
+triton evidence --name first-check --output /tmp/first-check.tritonevidence --json
 ```
 
 ### Network Notes

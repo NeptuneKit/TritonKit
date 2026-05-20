@@ -37,6 +37,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton attrs --target triton:local --oid <layerOid> --format text|json`：实时读取 layer 属性组。
 - `triton object --target triton:local --oid <oid> --format text|json`：实时读取对象 class chain 与地址。
 - `triton export --target triton:local --output <path>`：导出 hierarchy JSON；当 `--format archive` 或输出扩展名为 `.triton`、`.tritonkit`、`.archive`、`.lookinside` 时，导出自描述 archive。
+- `triton evidence --output <dir.tritonevidence> --format json`：导出 agent 回归证据包目录，固定写入 `manifest.json`，并按 `--include` 采集 `status/list/version/hierarchy/ax/screenshot/geometry/archive` 等 artifact；当前 embedded runtime 不支持的 `logs` 会进入 `manifest.skipped`，不静默忽略。`triton evidence inspect <dir.tritonevidence> --format json` 只读取 manifest，不重新连接 runtime。
 - `triton find "HTTP" --format json`：按用户意图解析可见文本、AX label、identifier、value 或 segmented option title，只返回目标来源、策略、oid、layer、frame 与将执行的 input request。
 - `triton wait --text "我的" --timeout 15 --format json`：等待异步 UI 条件，支持 `--text`、`--gone`、`--exists --role`、`--idle`、`--hierarchy-change --since latest` 和安全谓词 `--predicate 'text.exists("console") && !text.exists("登录")'`；成功或超时都返回 `TKWaitResult`，包含 `elapsedMs/pollCount/timedOut/lastObservedTextSample/match`，超时以非 0 退出。
 - `triton tap "HTTP" --format json`：意图优先点击入口；调用方不需要区分 AX、hierarchy、坐标、oid 或 segmented option。仍保留 `--x/--y`、`--oid`、`--ax-oid`、`--ax-label` 作为诊断和精确控制入口。
@@ -61,7 +62,7 @@ CLI/HTTP 是 AI 自动化控制入口；Web/Wails 不参与首期闭环。后续
 
 首期 hierarchy builder 使用有限深度和子节点上限，保证 smoke payload 适合 WebSocket 与 JSON 快照读取。后续需要完整树、增量更新或节点分页时，再单独扩展 CLI/HTTP 契约。
 
-`attrs` 与 `object` 通过 `/request` 复用 WebSocket 请求/响应 id，属于实时读取；`nodes` 与 `node` 基于最新 hierarchy snapshot，适合 AI 先定位 oid。`export` 支持两类产物：`.json` 保持纯 hierarchy snapshot；archive 是单文件 JSON，包含 `schemaVersion`、`exportedAt`、`target`、`hierarchy`、`geometry`、`accessibility` 与内联 base64 screenshot。archive 不是 LookInside 原生归档格式；`.lookinside` 扩展名当前只作为便携 archive 自动推断入口，后续如需与 LookInside App 原生兼容，需要单独定义转换层。
+`attrs` 与 `object` 通过 `/request` 复用 WebSocket 请求/响应 id，属于实时读取；`nodes` 与 `node` 基于最新 hierarchy snapshot，适合 AI 先定位 oid。`export` 支持两类产物：`.json` 保持纯 hierarchy snapshot；archive 是单文件 JSON，包含 `schemaVersion`、`exportedAt`、`target`、`hierarchy`、`geometry`、`accessibility` 与内联 base64 screenshot。archive 不是 LookInside 原生归档格式；`.lookinside` 扩展名当前只作为便携 archive 自动推断入口，后续如需与 LookInside App 原生兼容，需要单独定义转换层。`evidence` 则面向测试报告和 GitHub issue 附件，首期采用目录包而不是 zip：`manifest.json` 记录 `formatVersion`、`artifacts[]`、`skipped[]`、target identity、connection/cache state、CLI version 和每个 artifact 的 freshness，artifact 路径均相对证据包目录。
 
 `doctor` 与 `capabilities` 是 AI 的首选探测入口。无服务时它们返回 `ok=false`、`serverReachable=false`、`error.code=server_unavailable`、启动 hint 和 `error.nextAction`，但进程退出码保持 0，方便上层读取诊断。普通动作命令如 `status --format json` 与 `list --format json` 在连接失败时返回同一 `{ok:false,error:{code,message,endpoint,hint,nextAction?}}` envelope，并以非 0 退出，方便 shell 流水线阻断。
 
