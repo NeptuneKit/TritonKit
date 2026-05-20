@@ -22,11 +22,11 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 
 ## Formula 契约
 
-当前发布状态检查：
+当前发布状态：
 
-- 若 `NeptuneKit/TritonKit` 尚无 GitHub Release，外部接入者不能依赖 GitHub Release archive。
-- 若 `NeptuneKit/homebrew-tap` 尚不存在，外部接入者不能依赖 `brew install NeptuneKit/tap/triton`。
-- 在首个 `v*` release 和 tap 仓库可用前，README 与项目级 skill 必须先给出 `swift build -c release --product triton` 的本地 release CLI fallback。
+- `v0.1.0` 已发布到 `NeptuneKit/TritonKit` GitHub Releases。
+- `NeptuneKit/homebrew-tap` 已创建，`brew install NeptuneKit/tap/triton` 可用。
+- 本地 release CLI fallback 只用于验证未发布源码变更，或在外部网络/Release 资产不可用时应急。
 
 ## 本地 CLI 更新安全规则
 
@@ -82,6 +82,32 @@ brew upgrade triton
 自动更新 tap 需要在 `NeptuneKit/TritonKit` 配置：
 
 - `TAP_GITHUB_TOKEN`：具备推送 `NeptuneKit/homebrew-tap` 权限的 token。
+
+当前仓库已配置 `TAP_GITHUB_TOKEN`，并通过手动重跑 `update-homebrew-tap.yml` 验证了 `v0.1.0` 的 tap 更新权限。
+
+## 维护者发布入口
+
+维护者默认使用脚本发布新版本：
+
+```bash
+docs-linhay/scripts/release.sh 0.1.1
+```
+
+脚本会执行：
+
+1. 校验 worktree 干净、`main` 与 `origin/main` 同步、tag 不存在。
+2. 校验 `NeptuneKit/TritonKit`、`NeptuneKit/homebrew-tap` 和 `TAP_GITHUB_TOKEN`。
+3. 默认运行 `docs-linhay/scripts/verify.sh --local`。
+4. 创建 annotated tag 并推送。
+5. 观察 tag 触发的 GitHub Actions run。
+6. 下载 release checksum，重新渲染并语法检查 Homebrew formula。
+7. 执行 `brew fetch --formula NeptuneKit/tap/triton` 验证 Homebrew 可获取。
+
+只检查发布前置条件时使用：
+
+```bash
+docs-linhay/scripts/release.sh 0.1.1 --dry-run --skip-local-verify
+```
 
 手动触发 `.github/workflows/update-homebrew-tap.yml` 时可以覆盖：
 

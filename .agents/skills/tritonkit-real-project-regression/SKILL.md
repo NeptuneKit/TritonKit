@@ -18,8 +18,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - TritonKit: `git status --short --branch`
    - real app repo: `git status --short --branch`
 3. Prepare the macOS `triton` CLI:
-   - Until a versioned GitHub Release and `NeptuneKit/homebrew-tap` exist, build the release CLI locally from this repo: `swift build -c release --product triton`.
-   - After releases are available, prefer the released Homebrew binary when validating an external app: `brew install NeptuneKit/tap/triton` or `brew upgrade triton`.
+   - Prefer the released Homebrew binary when validating an external app: `brew install NeptuneKit/tap/triton` or `brew upgrade triton`.
    - If testing unreleased TritonKit changes from this repo, keep using the local release CLI.
    - If copying the local build into an existing `PATH` location while `triton serve` may be running from that path, stop the server first or replace through a temporary file and same-directory `mv`.
    - Confirm the active binary with `triton version --json` or `.build/release/triton version --json`.
@@ -73,7 +72,7 @@ mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
 ```
 
-Use Homebrew for real-project adoption checks only after a versioned GitHub Release and `NeptuneKit/homebrew-tap` are available:
+Use Homebrew for real-project adoption checks by default:
 
 ```bash
 brew install NeptuneKit/tap/triton
@@ -83,7 +82,7 @@ brew upgrade triton
 
 Homebrew installs only the macOS CLI. The app-side embedded runtime still comes from SwiftPM or CocoaPods and must remain DEBUG-only.
 
-Release assets live in `NeptuneKit/TritonKit` GitHub Releases and include arm64/x86_64 CLI archives plus `tritonkit_checksums.txt`. The Homebrew tap is updated from those release assets after `v*` tag releases when `TAP_GITHUB_TOKEN` is configured. If the release or tap is missing, do not fail the regression setup on Homebrew; use the local release CLI and file a TritonKit issue with the missing distribution evidence.
+Release assets live in `NeptuneKit/TritonKit` GitHub Releases and include arm64/x86_64 CLI archives plus `tritonkit_checksums.txt`. The Homebrew tap is updated from those release assets after `v*` tag releases. If the release or tap is unavailable in a test environment, do not fail the regression setup on Homebrew; use the local release CLI and file a TritonKit issue with the missing distribution evidence.
 
 ## Boundaries
 

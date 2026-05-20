@@ -191,8 +191,14 @@ jobs:
           tar -xOf dist/tritonkit-dev-feedback.tar.gz tritonkit-dev-feedback/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
           tar -xOf dist/tritonkit-real-project-regression.tar.gz tritonkit-real-project-regression/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
 
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            formula_tag="${GITHUB_REF_NAME}"
+          else
+            formula_tag="v${{ steps.version.outputs.version }}"
+          fi
+
           docs-linhay/scripts/render-homebrew-formula.sh \
-            "v0.1.0" \
+            "${formula_tag}" \
             "dist/tritonkit_checksums.txt" \
             ".github/homebrew/triton.rb.template" \
             "/tmp/triton.rb"

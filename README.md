@@ -79,9 +79,9 @@ For a SwiftUI app, keep the same handler alive for the app lifetime, then call t
 
 ## Install The CLI
 
-### Current Development Fallback
+### Local Source Fallback
 
-Until the first versioned GitHub Release and `NeptuneKit/homebrew-tap` repository are available, build the macOS CLI from this checkout:
+Use the local source build only when validating unreleased TritonKit changes from this checkout:
 
 ```bash
 swift build -c release --product triton
@@ -118,7 +118,7 @@ brew upgrade triton
 
 Homebrew installs only the macOS CLI. The iOS runtime still needs SwiftPM or CocoaPods integration in the app target.
 
-TritonKit's release workflow updates the default tap repository, `NeptuneKit/homebrew-tap`, when a tag matching `v*` is pushed. Maintainers need to configure `TAP_GITHUB_TOKEN` in this repository with permission to push to that tap. Without that secret, GitHub Release assets remain available, but the Homebrew formula will not update automatically.
+TritonKit's release workflow updates the default tap repository, `NeptuneKit/homebrew-tap`, when a tag matching `v*` is pushed. Maintainers should publish through `docs-linhay/scripts/release.sh <version>`, which checks the tap repository, `TAP_GITHUB_TOKEN`, local validation, the GitHub Actions run, GitHub Release assets, and Homebrew fetch.
 
 The tap formula is generated from:
 
@@ -249,8 +249,9 @@ CI writes the release version into both the CLI and packaged skills:
 
 For maintainers, the release flow is:
 
-1. Push a version tag matching `v*`.
-2. CI builds and uploads both macOS architectures.
-3. CI generates `tritonkit_checksums.txt`.
-4. CI renders the Homebrew formula from `.github/homebrew/triton.rb.template`.
-5. CI pushes `Formula/triton.rb` to `NeptuneKit/homebrew-tap` when `TAP_GITHUB_TOKEN` is configured.
+1. Run `docs-linhay/scripts/release.sh <version>`.
+2. The script verifies the clean checkout, tap repository, `TAP_GITHUB_TOKEN`, and local gate.
+3. The script creates and pushes an annotated `v*` tag.
+4. CI builds both macOS architectures, packages skills, generates `tritonkit_checksums.txt`, and uploads GitHub Release assets.
+5. CI renders the Homebrew formula from `.github/homebrew/triton.rb.template` and pushes `Formula/triton.rb` to `NeptuneKit/homebrew-tap`.
+6. The script watches the CI run and verifies the published release plus `brew fetch --formula NeptuneKit/tap/triton`.

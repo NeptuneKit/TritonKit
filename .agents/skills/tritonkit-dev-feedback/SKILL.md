@@ -105,7 +105,7 @@ For SwiftUI, keep the `TritonKitRequestHandler` alive for the app lifetime and c
 
 ### CLI Verification
 
-While TritonKit is pre-release or when the report depends on unreleased source changes, build and use the local release CLI first:
+When the report depends on unreleased source changes, build and use the local release CLI first:
 
 ```bash
 swift build -c release --product triton
@@ -121,7 +121,7 @@ mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
 ```
 
-Install or update the macOS CLI with Homebrew only when using a released TritonKit build and the tap exists:
+For released TritonKit builds, install or update the macOS CLI with Homebrew:
 
 ```bash
 brew install NeptuneKit/tap/triton
@@ -171,11 +171,11 @@ triton replay /tmp/first-flow.tritonplan --dry-run --var username=alice --var pa
 ### Distribution Notes
 
 - Repository: `https://github.com/NeptuneKit/TritonKit`
-- Current pre-release fallback: build `.build/release/triton` from the repo checkout.
+- Local source fallback: build `.build/release/triton` from the repo checkout when validating unreleased changes.
 - Manual local CLI updates must use a temporary file plus `mv`, or stop `triton serve` before replacing the active binary path.
 - Released Homebrew install path: `brew install NeptuneKit/tap/triton`.
-- Homebrew updates come from `NeptuneKit/homebrew-tap` after the tap exists and release automation has run.
-- GitHub Release assets include `triton-macos-arm64.tar.gz`, `triton-macos-x86_64.tar.gz`, `tritonkit_checksums.txt`, and project skill packages after the first release.
+- Homebrew updates come from `NeptuneKit/homebrew-tap` after release automation has run.
+- GitHub Release assets include `triton-macos-arm64.tar.gz`, `triton-macos-x86_64.tar.gz`, `tritonkit_checksums.txt`, and project skill packages.
 - If Homebrew or GitHub Release assets are unavailable, use the local release build and include the missing distribution evidence in the issue.
 
 ## Issue Content

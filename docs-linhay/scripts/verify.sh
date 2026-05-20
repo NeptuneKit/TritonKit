@@ -13,7 +13,7 @@ Modes:
   --local        Developer gate: Swift tests, release CLI build, CLI smoke,
                  optional Xcode simulator build, docs check, diff check.
   --ci-validate  CI gate: Swift tests, CocoaPods specs, Homebrew template,
-                 version stamping scripts.
+                 version stamping scripts, release automation contract.
 USAGE
 }
 
@@ -107,6 +107,7 @@ case "$mode" in
     run_step "Validate TritonKit podspec" pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
     run_step "Validate Homebrew formula template" "$root/docs-linhay/scripts/verify-homebrew-formula.sh"
     run_step "Validate version stamping scripts" "$root/docs-linhay/scripts/verify-version-stamping.sh"
+    run_step "Validate release automation contract" "$root/docs-linhay/scripts/verify-release-automation.sh"
     ;;
   -h|--help)
     usage

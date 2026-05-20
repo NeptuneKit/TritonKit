@@ -27,9 +27,9 @@ metadata:
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。
 - 新增外部依赖时先说明必要性；首期优先 Go 标准库。
 - GitHub CI / Release 必须同时产出 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和项目级 skill 包；当前至少包含 `.agents/skills/tritonkit-dev-feedback` 与 `.agents/skills/tritonkit-real-project-regression`，便于外部使用者拿到开发阶段反馈流程和真实项目回归流程。
-- `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；tag release 后用 GitHub Release 资产和 `tritonkit_checksums.txt` 渲染并更新 tap formula。
-- Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；维护者需要在 `NeptuneKit/TritonKit` 配置 `TAP_GITHUB_TOKEN` 才能让 `v*` tag release 自动推送 `Formula/triton.rb`。
-- 首个 `v*` release 和 `NeptuneKit/homebrew-tap` 尚不可用时，对外接入文档和 skill 必须先给 `swift build -c release --product triton` fallback；release/tap 可用后再优先给 `brew install NeptuneKit/tap/triton`。
+- `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；维护者默认用 `docs-linhay/scripts/release.sh <version>` 发布，脚本负责前置检查、tag 推送、CI 观察、Release 资产验证和 Homebrew fetch 验证。
+- Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；`NeptuneKit/TritonKit` 必须配置 `TAP_GITHUB_TOKEN`，让 `v*` tag release 自动推送 `Formula/triton.rb`。
+- `v0.1.0` 起 GitHub Release 和 `NeptuneKit/homebrew-tap` 已可用；对外接入文档和 skill 默认优先给 `brew install NeptuneKit/tap/triton`，只有验证未发布源码变更或 release/tap 不可用时才使用 `swift build -c release --product triton` fallback。
 - 手动更新已在 `PATH` 上的 `triton` CLI 时，如果 `triton serve` 可能正从该路径运行，禁止文档或 skill 推荐直接 `cp` 覆盖目标文件；必须先停止 server，或先写 `triton.new` 再用同目录 `mv` 原子替换。
 - CLI 和对外发布的 skill 必须带版本号；CI 负责从 `v*` tag 或当前 commit 解析版本，写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion` 和打包后的 `SKILL.md` front matter `metadata.version`。
 - 普通 `main` push / PR 的 CI 只阻塞 validate；双架构 CLI、skill 包、checksum 与 release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行。
