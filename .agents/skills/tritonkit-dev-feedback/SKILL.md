@@ -32,7 +32,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton schema --json`
    - `triton plan --json`
    - `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, or `triton clear` for agent-facing action checks; these default to JSON, and `--format text` is only for human-readable debugging.
-   - When the same text appears multiple times, run `triton find "<text>" --all` first, then use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height` to disambiguate.
+   - When the same text appears multiple times, run `triton find "<text>" --all` first; if you know a point inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`.
    - relevant `swift test`, smoke scripts, or app-level reproduction steps.
 4. Classify the issue:
    - `bug`: behavior is broken, unstable, misleading, or inconsistent with documented/schema behavior.
@@ -112,6 +112,15 @@ swift build -c release --product triton
 .build/release/triton version --json
 ```
 
+If installing that build into an existing `PATH` location while `triton serve` may be running from the old binary, stop the server first or replace the executable atomically:
+
+```bash
+swift build -c release --product triton
+cp .build/release/triton ~/.local/bin/triton.new
+mv ~/.local/bin/triton.new ~/.local/bin/triton
+triton version --json
+```
+
 Install or update the macOS CLI with Homebrew only when using a released TritonKit build and the tap exists:
 
 ```bash
@@ -142,7 +151,10 @@ triton ax --json
 triton tap "first-check"
 triton type "hello"
 triton find "hello" --all
+triton tap "hello" --at 240,580
 triton tap "hello" --index 2
+triton hit --at 240,580 --json
+triton press home
 triton assert text-exists first-check --json
 triton evidence --name first-check --output /tmp/first-check.tritonevidence --json
 triton capture --case first-check --output /tmp/first-check.tritonevidence --json
@@ -160,6 +172,7 @@ triton replay /tmp/first-flow.tritonplan --dry-run --var username=alice --var pa
 
 - Repository: `https://github.com/NeptuneKit/TritonKit`
 - Current pre-release fallback: build `.build/release/triton` from the repo checkout.
+- Manual local CLI updates must use a temporary file plus `mv`, or stop `triton serve` before replacing the active binary path.
 - Released Homebrew install path: `brew install NeptuneKit/tap/triton`.
 - Homebrew updates come from `NeptuneKit/homebrew-tap` after the tap exists and release automation has run.
 - GitHub Release assets include `triton-macos-arm64.tar.gz`, `triton-macos-x86_64.tar.gz`, `tritonkit_checksums.txt`, and project skill packages after the first release.

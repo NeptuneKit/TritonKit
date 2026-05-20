@@ -207,6 +207,16 @@ class Handler(BaseHTTPRequestHandler):
         request_type = request.get("type")
         if request_type == "accessibility":
             self.send_json(200, ax_nodes)
+        elif request_type == "hitTest":
+            payload = base64.b64decode(request.get("payload", ""))
+            point = json.loads(payload.decode())
+            self.send_json(200, {
+                "x": point.get("x"),
+                "y": point.get("y"),
+                "centerX": 243,
+                "centerY": 220,
+                "node": ax_nodes[1],
+            })
         elif request_type == "geometry":
             self.send_json(408, {
                 "ok": False,
@@ -263,6 +273,32 @@ class Handler(BaseHTTPRequestHandler):
                     "redacted": False,
                     "insertedLength": 5,
                 })
+            elif action.get("type") == "paste" and action.get("text") == "console" and action.get("x") == 243 and action.get("y") == 220:
+                self.send_json(200, {
+                    "ok": True,
+                    "action": "paste",
+                    "message": "mock text pasted",
+                    "targetOID": 77,
+                    "targetClassName": "UIKeyInput",
+                    "secure": False,
+                    "redacted": False,
+                    "insertedLength": 7,
+                })
+            elif action.get("type") == "clear" and action.get("x") == 243 and action.get("y") == 220:
+                self.send_json(200, {
+                    "ok": True,
+                    "action": "clear",
+                    "message": "mock text cleared",
+                    "targetOID": 77,
+                    "targetClassName": "UIKeyInput",
+                    "insertedLength": 0,
+                })
+            elif action.get("type") == "button" and action.get("button") == "home":
+                self.send_json(200, {
+                    "ok": True,
+                    "action": "button",
+                    "message": "mock button dispatched",
+                })
             else:
                 self.send_json(422, {"ok": False, "action": "tap", "message": "unexpected input"})
         else:
@@ -305,6 +341,20 @@ jq -e '.matchCount == 2 and (.candidates | length) == 2 and .candidates[1].targe
 jq -e '.ok == true and .targetOID == 502 and .targetClassName == "UIButton"' "$out_dir/tap-hello-index.json" >/dev/null
 "$triton" tap "hello" --within 180,0,220,700 --host "$host" --port "$port" > "$out_dir/tap-hello-within.json"
 jq -e '.ok == true and .targetOID == 502 and .targetClassName == "UIButton"' "$out_dir/tap-hello-within.json" >/dev/null
+"$triton" find "hello" --at 240,580 --host "$host" --port "$port" > "$out_dir/find-hello-at.json"
+jq -e '.matchCount == 1 and .matchIndex == 1 and .targetOID == 502' "$out_dir/find-hello-at.json" >/dev/null
+"$triton" tap "hello" --at 240,580 --host "$host" --port "$port" > "$out_dir/tap-hello-at.json"
+jq -e '.ok == true and .targetOID == 502 and .targetClassName == "UIButton"' "$out_dir/tap-hello-at.json" >/dev/null
+"$triton" tap --at 243,220 --host "$host" --port "$port" > "$out_dir/tap-at-coordinate.json"
+jq -e '.ok == true and .targetOID == 77 and .targetClassName == "UITextField"' "$out_dir/tap-at-coordinate.json" >/dev/null
+"$triton" hit --at 243,220 --host "$host" --port "$port" --json > "$out_dir/hit-at-coordinate.json"
+jq -e '.x == 243 and .y == 220 and .node.targetOID == 77' "$out_dir/hit-at-coordinate.json" >/dev/null
+"$triton" paste "console" --at 243,220 --host "$host" --port "$port" > "$out_dir/paste-at-coordinate.json"
+jq -e '.ok == true and .action == "paste" and .targetOID == 77 and .insertedLength == 7' "$out_dir/paste-at-coordinate.json" >/dev/null
+"$triton" clear --at 243,220 --host "$host" --port "$port" > "$out_dir/clear-at-coordinate.json"
+jq -e '.ok == true and .action == "clear" and .targetOID == 77 and .insertedLength == 0' "$out_dir/clear-at-coordinate.json" >/dev/null
+"$triton" press home --host "$host" --port "$port" > "$out_dir/press-positional.json" 2>&1
+jq -e '.ok == true and .action == "button" and .message == "mock button dispatched"' "$out_dir/press-positional.json" >/dev/null
 
 set +e
 "$triton" tap "Missing Label" --host "$host" --port "$port" > "$out_dir/tap-missing-label.json" 2>&1
@@ -329,8 +379,11 @@ jq -e '.ok == false and .error.code == "runtime_ui_interrupted"' "$out_dir/geome
 
 "$triton" schema --command tap > "$out_dir/schema-tap-default.json"
 jq -e '.commands[0].options[] | select(.name == "--format" and .defaultValue == "json")' "$out_dir/schema-tap-default.json" >/dev/null
+jq -e '.commands[0].options[] | select(.name == "--at")' "$out_dir/schema-tap-default.json" >/dev/null
 "$triton" schema --command type > "$out_dir/schema-type-default.json"
 jq -e '.commands[0].options[] | select(.name == "<text>")' "$out_dir/schema-type-default.json" >/dev/null
+"$triton" schema --command press > "$out_dir/schema-press-positional.json"
+jq -e '.commands[0].options[] | select(.name == "<button>")' "$out_dir/schema-press-positional.json" >/dev/null
 
 jq -s -e '
   any(.[]; .type == "input"
@@ -351,7 +404,15 @@ type-positional: $out_dir/type-positional.json
 find-hello-all: $out_dir/find-hello-all.json
 tap-hello-index: $out_dir/tap-hello-index.json
 tap-hello-within: $out_dir/tap-hello-within.json
+find-hello-at: $out_dir/find-hello-at.json
+tap-hello-at: $out_dir/tap-hello-at.json
+tap-at-coordinate: $out_dir/tap-at-coordinate.json
+hit-at-coordinate: $out_dir/hit-at-coordinate.json
+paste-at-coordinate: $out_dir/paste-at-coordinate.json
+clear-at-coordinate: $out_dir/clear-at-coordinate.json
+press-positional: $out_dir/press-positional.json
 schema-tap-default: $out_dir/schema-tap-default.json
 schema-type-default: $out_dir/schema-type-default.json
+schema-press-positional: $out_dir/schema-press-positional.json
 requests: $out_dir/mock-requests.ndjson
 REPORT

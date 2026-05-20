@@ -90,6 +90,17 @@ swift build -c release --product triton
 
 Use that binary directly or copy it into a directory on `PATH` for local regression work.
 
+If a `triton serve` process may already be running from the target path, do not overwrite that path in place. Stop the server first, or install through a temporary file and atomically move it into place:
+
+```bash
+swift build -c release --product triton
+cp .build/release/triton ~/.local/bin/triton.new
+mv ~/.local/bin/triton.new ~/.local/bin/triton
+triton version --json
+```
+
+This avoids confusing macOS failures where a newly invoked CLI is killed after the active binary file was overwritten.
+
 ### Homebrew
 
 After a versioned release is published, install the macOS `triton` binary with Homebrew:
@@ -132,6 +143,8 @@ After a versioned release is published, GitHub Releases provide architecture-spe
 
 Download the archive for your Mac, then copy `triton` into a directory on `PATH`.
 
+When replacing an existing `triton` executable manually, use the same temporary-file plus `mv` pattern above, or stop `triton serve` before copying over the active path.
+
 ## Run The CLI
 
 Start the macOS-side server before launching the app:
@@ -166,10 +179,11 @@ triton assert text-exists "我的" --json
 triton assert text-not-exists "Qinghai" --within 180,120,190,500 --json
 ```
 
-When the same text appears multiple times, list candidates first and then select by index or bounds:
+When the same text appears multiple times, list candidates first and then select by point, index, or bounds:
 
 ```bash
 triton find "hello" --all
+triton tap "hello" --at 240,580
 triton tap "hello" --index 2
 triton tap "hello" --within 180,0,220,500
 ```

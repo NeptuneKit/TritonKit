@@ -17,8 +17,8 @@ metadata:
 - 真实项目回归或 issue 证据优先用 `triton evidence --name <case> --output <dir.tritonevidence> --json` 生成 manifest + artifacts；需要拆解时再单独跑 `status/list/ax/screenshot/export`。
 - 完整回归报告优先用 `triton capture --case <case> --output <dir.tritonevidence> --json`；最终 pass/fail 判断优先用 `triton assert text-exists|text-not-exists <text> --json`，重复文本用 `--within` / `--role` / `--count` 收敛。
 - 可复跑真实项目 smoke 优先沉淀为 `.tritonplan`：`record` 只生成模板，`plan inspect` 做离线摘要，`replay --dry-run` 先校验变量和脱敏命令，真实 `replay` 再执行并在失败步骤停止。
-- 同文案多目标点击先用 `triton find "<text>" --all` 获取候选，再用 `triton tap "<text>" --index <n>` 或 `triton tap "<text>" --within x,y,width,height` 消歧；默认 `tap "<text>"` 仍选择第一个候选以兼容旧脚本。
-- 面向 agent 的 action 命令 `find/tap/swipe/type/paste/clear/press` 默认输出 JSON；示例默认省略 `--json`，只在人读调试时显式使用 `--format text`。`triton type <text>` 是首选入口，旧的 `triton type --text <text>` 只作为兼容路径，两者必须二选一。
+- 同文案多目标点击先用 `triton find "<text>" --all` 获取候选；已知目标点位时优先用 `triton tap "<text>" --at x,y` 消歧，也可用 `--index <n>` 或 `--within x,y,width,height`。`--within` 表示区域过滤，只有一个点位时不要把 width/height 伪造成 0；默认 `tap "<text>"` 仍选择第一个候选以兼容旧脚本。
+- 面向 agent 的 action 命令 `find/tap/swipe/type/paste/clear/press` 默认输出 JSON；示例默认省略 `--json`，只在人读调试时显式使用 `--format text`。`triton type <text>` 与 `triton press <button>` 是首选入口，旧的 `triton type --text <text>` / `triton press --button <button>` 只作为兼容路径，均必须二选一。
 - 设备控制参考 Baguette 时，先区分 embedded TritonKit runtime 与 macOS host-side adapter：embedded runtime 只能承诺公开 UIKit API 可验证的 in-app 控制；SimulatorKit / HID / Home / App Switcher 等设备级动作必须等 host-side adapter，当前要返回明确 unsupported。
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。
 - 当前前端为空白 Wails 静态入口；任何恢复 UI 的工作必须先新建或更新 `space` 与 BDD 场景。
@@ -30,6 +30,7 @@ metadata:
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；tag release 后用 GitHub Release 资产和 `tritonkit_checksums.txt` 渲染并更新 tap formula。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；维护者需要在 `NeptuneKit/TritonKit` 配置 `TAP_GITHUB_TOKEN` 才能让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - 首个 `v*` release 和 `NeptuneKit/homebrew-tap` 尚不可用时，对外接入文档和 skill 必须先给 `swift build -c release --product triton` fallback；release/tap 可用后再优先给 `brew install NeptuneKit/tap/triton`。
+- 手动更新已在 `PATH` 上的 `triton` CLI 时，如果 `triton serve` 可能正从该路径运行，禁止文档或 skill 推荐直接 `cp` 覆盖目标文件；必须先停止 server，或先写 `triton.new` 再用同目录 `mv` 原子替换。
 - CLI 和对外发布的 skill 必须带版本号；CI 负责从 `v*` tag 或当前 commit 解析版本，写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion` 和打包后的 `SKILL.md` front matter `metadata.version`。
 - 普通 `main` push / PR 的 CI 只阻塞 validate；双架构 CLI、skill 包、checksum 与 release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行。
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 入口是 `docs-linhay/scripts/verify.sh --ci-validate`。

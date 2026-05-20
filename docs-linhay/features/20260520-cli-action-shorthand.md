@@ -26,3 +26,15 @@
 - When 执行 `triton tap --x 120 --y 240`、`triton tap --oid 42` 或 `triton type --text hello`
 - Then 原有参数形式继续可用
 - And `--json` 作为兼容 alias 继续可用
+
+### 场景 4：坐标类命令支持点位简写
+
+- When 执行 `triton tap --at 120,240`、`triton hit --at 120,240`、`triton paste "console" --at 120,240` 或 `triton clear --at 120,240`
+- Then CLI 将 `--at` 解析为 window point `x/y`
+- And 原有 `--x/--y` 形式继续可用
+
+### 场景 5：设备按钮支持位置参数
+
+- When 执行 `triton press home`
+- Then CLI 等价于 `triton press --button home`
+- And 同时提供 `<button>` 与 `--button` 时返回机器可读参数错误

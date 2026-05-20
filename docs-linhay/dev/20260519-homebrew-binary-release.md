@@ -28,6 +28,26 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 - 若 `NeptuneKit/homebrew-tap` 尚不存在，外部接入者不能依赖 `brew install NeptuneKit/tap/triton`。
 - 在首个 `v*` release 和 tap 仓库可用前，README 与项目级 skill 必须先给出 `swift build -c release --product triton` 的本地 release CLI fallback。
 
+## 本地 CLI 更新安全规则
+
+当本地 fallback 或手动 release asset 需要更新 `~/.local/bin/triton`、`/usr/local/bin/triton` 等已在 `PATH` 上的 CLI 路径时，不能假设旧的 `triton serve` 已退出。若正在运行的 server 进程来自同一个二进制路径，直接 `cp` 覆盖该文件可能导致后续新进程被 macOS 杀掉，表现为无 stdout/stderr 的 exit 137。
+
+安全做法有两种：
+
+1. 先停止 `triton serve`，再覆盖 CLI 路径。
+2. 在同一目录写入临时文件，再用 `mv` 原子替换目标路径。
+
+推荐命令：
+
+```bash
+swift build -c release --product triton
+cp .build/release/triton ~/.local/bin/triton.new
+mv ~/.local/bin/triton.new ~/.local/bin/triton
+triton version --json
+```
+
+维护 README、项目级 skill 或真实项目回归文档时，凡是指导用户手动更新现有 `triton` 可执行文件，都必须使用上述模式，或明确要求先停止正在运行的 `triton serve`。
+
 公式名：`triton`
 
 安装命令：

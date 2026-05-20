@@ -38,9 +38,18 @@
 - Then 文档先提示使用 `swift build -c release --product triton` 构建本地 release CLI
 - And Homebrew 被标记为首个 `v*` release 与 tap 可用后的安装路径
 
+### 场景 5：运行中的 CLI 更新使用原子替换
+
+- Given `triton serve --host 127.0.0.1 --port 19421` 可能正从 `~/.local/bin/triton` 运行
+- When 开发者或 AI agent 将本地构建的 `.build/release/triton` 更新到该路径
+- Then README 与项目级 skill 必须推荐先复制到临时文件，再用同目录 `mv` 原子替换
+- And 文档必须说明也可以先停止 `triton serve`，再覆盖原路径
+- And 禁止推荐直接 `cp .build/release/triton ~/.local/bin/triton` 覆盖正在使用的 CLI 路径
+
 ## 边界
 
 - Homebrew 安装只覆盖 macOS `triton` CLI，不安装 iOS embedded runtime；iOS runtime 仍通过 SwiftPM / CocoaPods 接入。
 - 首个 release / tap 未发布前，对外接入文档和 skill 必须把本地 release CLI fallback 放在 Homebrew 之前。
+- 本地 fallback 或手动 release asset 更新现有 CLI 路径时，若 `triton serve` 可能仍在运行，必须使用临时文件加 `mv` 的原子替换方式，或先停止服务。
 - tap 仓库默认按 `NeptuneKit/homebrew-tap` 处理，可在 workflow dispatch 时通过输入覆盖。
 - 若未配置 `TAP_GITHUB_TOKEN`，tag release 仍发布 GitHub assets，但 tap 更新 job 会失败；这是发布配置问题，不影响源码测试。

@@ -27,14 +27,14 @@ Triton 当前运行时在被测 iOS App 进程内，通过 WebSocket 接收 CLI 
 CLI：
 
 ```bash
-triton tap --target triton:local --x 120 --y 240 --format json
+triton tap --target triton:local --at 120,240 --format json
 triton tap --target triton:local --oid 42 --format json
 triton swipe --target triton:local --start-x 200 --start-y 700 --end-x 200 --end-y 300 --format json
-triton type --target triton:local --text "hello" --format json
-triton press --target triton:local --button home --format json
+triton type --target triton:local "hello" --format json
+triton press --target triton:local home --format json
 triton geometry --target triton:local --format json
 triton ax --target triton:local --format json
-triton hit --target triton:local --x 120 --y 240 --format json
+triton hit --target triton:local --at 120,240 --format json
 triton screenshot --target triton:local --output /tmp/triton-shot.png
 triton input --target triton:local --format json < gestures.ndjson
 ```
@@ -77,6 +77,6 @@ Content-Type: application/json
 
 - `triton geometry --format json` 返回 window bounds、safe area、scale、orientation。
 - `triton ax --format json --output /tmp/triton-ax-smoke.json` 稳定输出 UIKit smoke panel 的 button、switch、text field、scroll、status 节点，不再导致 App 断连。
-- `triton hit --x 270 --y 300 --format json` 命中 `UIKitSmokeButton` 并返回 frame center。
+- `triton hit --at 270,300 --format json` 命中 `UIKitSmokeButton` 并返回 frame center。
 - `triton screenshot --output /tmp/triton-screenshot-smoke.png --metadata` 写出 PNG 截图。
 - `triton input --format json < gestures.ndjson` 完成 tap、focus/type、swipe 批量动作，并由 XcodeBuildMCP UI 快照确认界面状态。

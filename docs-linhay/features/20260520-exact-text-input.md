@@ -39,11 +39,13 @@ triton paste --secure "aa123654" --json
 当执行：
 
 ```bash
-triton paste --x 180 --y 250 "console" --json
-triton clear --x 180 --y 250 --json
+triton paste "console" --at 180,250 --json
+triton clear --at 180,250 --json
 ```
 
 则 runtime 先在当前 App window 内 hit-test 并聚焦命中的文本输入 responder，再执行插入或清空。
+
+旧的 `--x 180 --y 250` 形式保持兼容。
 
 ### 场景 4：NDJSON input 支持新动作
 

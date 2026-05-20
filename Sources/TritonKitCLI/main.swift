@@ -796,6 +796,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--all", "输出全部候选及 1 起始序号"),
             ("--index <n>", "选择第 n 个候选"),
             ("--within <x,y,w,h>", "只在指定 window bounds 内匹配"),
+            ("--at <x,y>", "只匹配包含该 window 点位的候选"),
         ]),
         "wait": ChineseCommandHelp(name: "wait", overview: "等待文本出现、文本消失、目标空闲、层级变化或安全谓词成立。", usage: "triton wait [条件] [选项]", options: target + hostPort + formatTextJSON + [
             ("--text <text>", "等待可见文本出现"),
@@ -819,6 +820,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--duration <seconds>", "按住时长"),
             ("--index <n>", "按 `find --all` 的 1 起始序号选择候选"),
             ("--within <x,y,w,h>", "只在指定 window bounds 内匹配文本候选"),
+            ("--at <x,y>", "无文本时按坐标点击；有文本时只匹配包含该点位的候选"),
         ]),
         "input": ChineseCommandHelp(name: "input", overview: "从 stdin 读取 NDJSON 输入动作。", usage: "triton input [选项] < gestures.ndjson", options: target + hostPort + formatTextJSON + [
             ("--fail-fast", "首个失败动作后停止"),
@@ -831,6 +833,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--oid <oid>", "可选 responder oid"),
             ("--x <x>", "window x 坐标，需与 --y 同时使用"),
             ("--y <y>", "window y 坐标，需与 --x 同时使用"),
+            ("--at <x,y>", "聚焦该 window 点位后粘贴"),
         ]),
         "type": ChineseCommandHelp(name: "type", overview: "向已聚焦或 oid 指定的 UIKeyInput 输入文本。", usage: "triton type <text> [选项]", options: target + hostPort + formatTextJSON + [
             ("<text>", "要插入的文本"),
@@ -841,6 +844,17 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         ]),
         "clear": ChineseCommandHelp(name: "clear", overview: "清空当前焦点或指定输入框。", usage: "triton clear [选项]", options: target + hostPort + formatTextJSON + [
             ("--oid <oid>", "可选 responder oid"),
+            ("--x <x>", "window x 坐标，需与 --y 同时使用"),
+            ("--y <y>", "window y 坐标，需与 --x 同时使用"),
+            ("--at <x,y>", "聚焦该 window 点位后清空"),
+        ]),
+        "press": ChineseCommandHelp(name: "press", overview: "按下运行时支持的设备按钮。", usage: "triton press <button> [选项]", options: target + hostPort + formatTextJSON + [
+            ("<button>", "按钮名，例如 home"),
+            ("--button <button>", "兼容入口；与位置参数二选一"),
+            ("--duration <seconds>", "按住时长"),
+        ]),
+        "hit": ChineseCommandHelp(name: "hit", overview: "对当前 App window 点位做 hit-test。", usage: "triton hit --at <x,y> [选项]", options: target + hostPort + formatTextJSON + [
+            ("--at <x,y>", "window 点位"),
             ("--x <x>", "window x 坐标，需与 --y 同时使用"),
             ("--y <y>", "window y 坐标，需与 --x 同时使用"),
         ]),
@@ -1638,11 +1652,20 @@ struct Find: AsyncParsableCommand {
     @Flag(help: "Include all matching candidates with stable 1-based indexes") var all = false
     @Option(help: "Select one matching candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
+    @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            if within != nil && at != nil {
+                if outputFormat == .json {
+                    try printValidationError("--within and --at cannot be used together")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--within and --at cannot be used together")
+            }
             let bounds = try within.map(parseBounds)
+            let point = try at.map(parsePoint)
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             let client = TritonKitHTTPClient(host: host, port: port)
             let resolution = try await resolveTapTarget(
@@ -1653,6 +1676,7 @@ struct Find: AsyncParsableCommand {
                 duration: nil,
                 index: index,
                 within: bounds,
+                at: point,
                 includeCandidates: all
             )
             switch outputFormat {
@@ -1791,6 +1815,7 @@ struct Tap: AsyncParsableCommand {
     @Option(help: "Hold duration in seconds") var duration: Double?
     @Option(help: "Select one matching query candidate by 1-based index") var index: Int?
     @Option(help: "Restrict query matching to bounds: x,y,width,height") var within: String?
+    @Option(help: "Coordinate selector or query disambiguation point: x,y") var at: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
@@ -1798,15 +1823,16 @@ struct Tap: AsyncParsableCommand {
             query != nil,
             oid != nil,
             x != nil || y != nil,
+            query == nil && at != nil,
             axOID != nil,
             axLabel != nil,
         ].filter { $0 }.count
         guard selectorCount == 1 else {
             if effectiveFormat(format, json: json) == .json {
-                try printValidationError("Provide exactly one target selector: <query>, --oid, --x/--y, --ax-oid, or --ax-label")
+                try printValidationError("Provide exactly one target selector: <query>, --oid, --x/--y, --at, --ax-oid, or --ax-label")
                 throw ExitCode.failure
             }
-            throw RuntimeError("Provide exactly one target selector: <query>, --oid, --x/--y, --ax-oid, or --ax-label")
+            throw RuntimeError("Provide exactly one target selector: <query>, --oid, --x/--y, --at, --ax-oid, or --ax-label")
         }
         if (index != nil || within != nil) && query == nil {
             if outputFormat == .json {
@@ -1814,6 +1840,20 @@ struct Tap: AsyncParsableCommand {
                 throw ExitCode.failure
             }
             throw RuntimeError("--index and --within can only be used with <query>")
+        }
+        if within != nil && at != nil {
+            if outputFormat == .json {
+                try printValidationError("--within and --at cannot be used together")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--within and --at cannot be used together")
+        }
+        if at != nil && (x != nil || y != nil) {
+            if outputFormat == .json {
+                try printValidationError("--at cannot be combined with --x/--y")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--at cannot be combined with --x/--y")
         }
         if (x == nil) != (y == nil) {
             if outputFormat == .json {
@@ -1824,6 +1864,7 @@ struct Tap: AsyncParsableCommand {
         }
 
         do {
+            let point = try at.map(parsePoint)
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             if let query {
                 let client = TritonKitHTTPClient(host: host, port: port)
@@ -1835,7 +1876,8 @@ struct Tap: AsyncParsableCommand {
                     height: height,
                     duration: duration,
                     index: index,
-                    within: bounds
+                    within: bounds,
+                    at: point
                 )
                 try await runInputRequest(resolution.request, host: host, port: port, format: outputFormat)
                 return
@@ -1859,8 +1901,8 @@ struct Tap: AsyncParsableCommand {
         }
 
             let request = TKInputRequest.tap(
-                x: x,
-                y: y,
+                x: point?.x ?? x,
+                y: point?.y ?? y,
                 targetOID: oid,
                 width: width,
                 height: height,
@@ -1967,13 +2009,15 @@ struct PasteText: AsyncParsableCommand {
     @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
     @Option(help: "Window x coordinate to focus before paste") var x: Double?
     @Option(help: "Window y coordinate to focus before paste") var y: Double?
+    @Option(help: "Window point to focus before paste: x,y") var at: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
-                TKInputRequest.paste(text, targetOID: oid, x: x, y: y, secure: secure),
+                TKInputRequest.paste(text, targetOID: oid, x: point?.x ?? x, y: point?.y ?? y, secure: secure),
                 host: host,
                 port: port,
                 format: outputFormat
@@ -1998,13 +2042,15 @@ struct ClearText: AsyncParsableCommand {
     @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
     @Option(help: "Window x coordinate to focus before clear") var x: Double?
     @Option(help: "Window y coordinate to focus before clear") var y: Double?
+    @Option(help: "Window point to focus before clear: x,y") var at: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
-                TKInputRequest.clear(targetOID: oid, x: x, y: y),
+                TKInputRequest.clear(targetOID: oid, x: point?.x ?? x, y: point?.y ?? y),
                 host: host,
                 port: port,
                 format: outputFormat
@@ -2018,20 +2064,29 @@ struct ClearText: AsyncParsableCommand {
 struct Press: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Press a device button when supported by the active runtime")
 
+    @Argument(help: "Button name, for example home, lock, power, volume-up") var buttonArgument: String?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
-    @Option(help: "Button name, for example home, lock, power, volume-up") var button: String
+    @Option(help: "Button name, for example home, lock, power, volume-up; kept for compatibility") var button: String?
     @Option(help: "Hold duration in seconds") var duration: Double?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            let selectorCount = [buttonArgument != nil, button != nil].filter { $0 }.count
+            guard selectorCount == 1 else {
+                if outputFormat == .json {
+                    try printValidationError("Provide exactly one button value: <button> or --button")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("Provide exactly one button value: <button> or --button")
+            }
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
-                TKInputRequest.press(button: button, duration: duration),
+                TKInputRequest.press(button: buttonArgument ?? button ?? "", duration: duration),
                 host: host,
                 port: port,
                 format: outputFormat
@@ -2134,15 +2189,17 @@ struct Hit: AsyncParsableCommand {
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
-    @Option(help: "Window x coordinate in points") var x: Double
-    @Option(help: "Window y coordinate in points") var y: Double
+    @Option(help: "Window x coordinate in points") var x: Double?
+    @Option(help: "Window y coordinate in points") var y: Double?
+    @Option(help: "Window point to hit-test: x,y") var at: String?
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            let point = try requiredPoint(at: at, x: x, y: y, outputFormat: outputFormat)
             _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             let client = TritonKitHTTPClient(host: host, port: port)
-            let payload = try JSONEncoder().encode(TKHitTestRequest(x: x, y: y))
+            let payload = try JSONEncoder().encode(TKHitTestRequest(x: point.x, y: point.y))
             let data = try await client.request(type: "hitTest", payload: payload)
             let response = try JSONDecoder().decode(TKHitTestResponse.self, from: data)
             switch outputFormat {
@@ -3462,12 +3519,14 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--all", type: "Bool", defaultValue: "false", description: "Include all candidates with stable 1-based indexes"),
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one candidate by 1-based index"),
                 TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict matching to window bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict matching to candidate containing this window point"),
                 formatJSONText,
                 jsonAlias,
             ],
             examples: [
                 #"triton find "HTTP""#,
                 #"triton find "hello" --all"#,
+                #"triton find "hello" --at 240,580"#,
             ],
             successShape: "TapTargetResolution describing selected target; with --all includes candidates[]"
         ),
@@ -3546,12 +3605,13 @@ func commandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: hostPort + [
                 target,
-                TKCommandSchemaOption(name: "--x", type: "Double", required: true, description: "Window x coordinate in points"),
-                TKCommandSchemaOption(name: "--y", type: "Double", required: true, description: "Window y coordinate in points"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Window point in points"),
+                TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate in points; compatibility pair with --y"),
+                TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate in points; compatibility pair with --x"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"),
                 jsonAlias,
             ],
-            examples: ["triton hit --x 270 --y 300 --format json"],
+            examples: ["triton hit --at 270,300 --format json", "triton hit --x 270 --y 300 --format json"],
             successShape: "{ x, y, centerX?, centerY?, node? }"
         ),
         TKCommandSchema(
@@ -3582,6 +3642,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "<query>", type: "String", description: "Visible text, AX label, identifier, value, or option title to tap"),
                 TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate"),
                 TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Coordinate selector without <query>, or query disambiguation point with <query>"),
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Target view oid"),
                 TKCommandSchemaOption(name: "--ax-oid", type: "UInt", description: "AX target/view oid from `triton ax`; taps by runtime oid"),
                 TKCommandSchemaOption(name: "--ax-label", type: "String", description: "Exact AX label from `triton ax`; taps by runtime oid"),
@@ -3593,7 +3654,9 @@ func commandSchemas() -> [TKCommandSchema] {
             examples: [
                 #"triton tap "HTTP""#,
                 #"triton tap "hello" --index 2"#,
+                #"triton tap "hello" --at 240,580"#,
                 #"triton tap "hello" --within 180,0,220,500"#,
+                "triton tap --at 270,300",
                 "triton tap --x 270 --y 300",
                 "triton tap --oid 13",
                 "triton tap --ax-label Save",
@@ -3658,12 +3721,14 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid"),
                 TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate to focus before paste"),
                 TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate to focus before paste"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Window point to focus before paste"),
                 formatJSONText,
                 jsonAlias,
             ],
             examples: [
                 #"triton paste "console""#,
                 #"triton paste --secure "aa123654""#,
+                #"triton paste "console" --at 180,250"#,
                 #"triton paste --x 180 --y 250 "console""#,
             ],
             successShape: "{ ok, action, message, targetOID, targetClassName, secure, redacted, insertedLength }",
@@ -3681,11 +3746,13 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid"),
                 TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate to focus before clear"),
                 TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate to focus before clear"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Window point to focus before clear"),
                 formatJSONText,
                 jsonAlias,
             ],
             examples: [
                 "triton clear",
+                "triton clear --at 180,250",
                 "triton clear --x 180 --y 250",
             ],
             successShape: "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }",
@@ -3700,12 +3767,13 @@ func commandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: hostPort + [
                 target,
-                TKCommandSchemaOption(name: "--button", type: "String", required: true, description: "Button name, for example home"),
+                TKCommandSchemaOption(name: "<button>", type: "String", description: "Button name, for example home"),
+                TKCommandSchemaOption(name: "--button", type: "String", description: "Compatibility input; mutually exclusive with <button>"),
                 TKCommandSchemaOption(name: "--duration", type: "Double", description: "Hold duration in seconds"),
                 formatJSONText,
                 jsonAlias,
             ],
-            examples: ["triton press --button home"],
+            examples: ["triton press home", "triton press --button home"],
             successShape: "{ ok: false, action, message } in embedded runtime",
             providedCapabilities: ["press"]
         ),
@@ -4336,6 +4404,68 @@ func parseBounds(_ raw: String) throws -> TKRect {
         throw RuntimeError("--within must use x,y,width,height with non-negative width and height")
     }
     return TKRect(x: x, y: y, width: width, height: height)
+}
+
+func parsePoint(_ raw: String) throws -> (x: Double, y: Double) {
+    let parts = raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    guard parts.count == 2,
+          let x = Double(parts[0]),
+          let y = Double(parts[1]) else {
+        throw RuntimeError("--at must use x,y")
+    }
+    return (x, y)
+}
+
+func requiredPoint(
+    at: String?,
+    x: Double?,
+    y: Double?,
+    outputFormat: ClientOutputFormat
+) throws -> (x: Double, y: Double) {
+    if at != nil && (x != nil || y != nil) {
+        if outputFormat == .json {
+            try printValidationError("--at cannot be combined with --x/--y")
+            throw ExitCode.failure
+        }
+        throw RuntimeError("--at cannot be combined with --x/--y")
+    }
+    if let at {
+        return try parsePoint(at)
+    }
+    guard let x, let y else {
+        if outputFormat == .json {
+            try printValidationError("Provide coordinates as --at x,y or --x/--y")
+            throw ExitCode.failure
+        }
+        throw RuntimeError("Provide coordinates as --at x,y or --x/--y")
+    }
+    return (x, y)
+}
+
+func inputFocusPoint(
+    at: String?,
+    x: Double?,
+    y: Double?,
+    outputFormat: ClientOutputFormat
+) throws -> (x: Double, y: Double)? {
+    if at != nil && (x != nil || y != nil) {
+        if outputFormat == .json {
+            try printValidationError("--at cannot be combined with --x/--y")
+            throw ExitCode.failure
+        }
+        throw RuntimeError("--at cannot be combined with --x/--y")
+    }
+    if (x == nil) != (y == nil) {
+        if outputFormat == .json {
+            try printValidationError("--x and --y must be provided together")
+            throw ExitCode.failure
+        }
+        throw RuntimeError("--x and --y must be provided together")
+    }
+    if let at {
+        return try parsePoint(at)
+    }
+    return nil
 }
 
 func printAssertResult(_ result: TKUIAssertResult, format: ClientOutputFormat) throws {
@@ -5379,6 +5509,7 @@ func resolveTapTarget(
     duration: Double?,
     index: Int? = nil,
     within: TKRect? = nil,
+    at: (x: Double, y: Double)? = nil,
     includeCandidates: Bool = false
 ) async throws -> TapTargetResolution {
     if let index, index <= 0 {
@@ -5390,7 +5521,8 @@ func resolveTapTarget(
         width: width,
         height: height,
         duration: duration,
-        within: within
+        within: within,
+        at: at
     )
     guard !candidates.isEmpty else {
         throw RuntimeError("No tappable UI target matched query: \(query)")
@@ -5412,7 +5544,8 @@ func tapTargetCandidates(
     width: Double?,
     height: Double?,
     duration: Double?,
-    within: TKRect?
+    within: TKRect?,
+    at: (x: Double, y: Double)?
 ) async throws -> [TapTargetCandidate] {
     let accessibilityData = try await client.request(type: "accessibility")
     let axNodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
@@ -5497,6 +5630,11 @@ func tapTargetCandidates(
             guard let within else { return true }
             guard let frame = candidate.frame else { return false }
             return TKRectIntersects(frame, within)
+        }
+        .filter { candidate in
+            guard let at else { return true }
+            guard let frame = candidate.frame else { return false }
+            return frame.contains(x: at.x, y: at.y)
         }
 
     return candidates.enumerated().map { offset, candidate in

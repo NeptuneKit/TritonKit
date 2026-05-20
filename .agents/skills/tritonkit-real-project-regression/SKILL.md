@@ -21,6 +21,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - Until a versioned GitHub Release and `NeptuneKit/homebrew-tap` exist, build the release CLI locally from this repo: `swift build -c release --product triton`.
    - After releases are available, prefer the released Homebrew binary when validating an external app: `brew install NeptuneKit/tap/triton` or `brew upgrade triton`.
    - If testing unreleased TritonKit changes from this repo, keep using the local release CLI.
+   - If copying the local build into an existing `PATH` location while `triton serve` may be running from that path, stop the server first or replace through a temporary file and same-directory `mv`.
    - Confirm the active binary with `triton version --json` or `.build/release/triton version --json`.
 4. Integrate TritonKit into the app only through the intended DEBUG-only package path:
    - SwiftPM or CocoaPods as requested.
@@ -44,8 +45,9 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - dry-run reusable flows before touching the app: `triton replay <file.tritonplan> --dry-run --var key=value --var secret-env=ENV --json`;
    - replay committed flows with `triton replay <file.tritonplan> --json`, keeping secure values in environment variables and using `--var <name>-env=<ENV>`;
    - prefer action commands that are already machine-readable by default: `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, `triton clear`; use `--format text` only for human-readable debugging;
-   - when labels repeat, run `triton find "<text>" --all` and then choose `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`;
+   - when labels repeat, run `triton find "<text>" --all`; if a known point lies inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise choose `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`;
    - keep `triton type --text <text>` only for compatibility with older scripts, never together with positional `<text>`;
+   - keep `triton press --button <button>` only for compatibility with older scripts; prefer positional `triton press <button>`;
    - for batch input, use `triton input --json --summary --strict`;
    - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
    - use `triton assert text-exists|text-not-exists <text> --json` for final pass/fail checks; add `--within x,y,width,height`, `--role`, or `--count` when labels repeat across headers, sidebars, and cells;
@@ -60,6 +62,15 @@ Use the local release CLI while TritonKit is pre-release or while validating unr
 ```bash
 swift build -c release --product triton
 .build/release/triton version --json
+```
+
+When installing that local build into `~/.local/bin/triton` or another existing `PATH` location, avoid overwriting a path that may be backing a running `triton serve` process. Stop the server first, or use atomic replacement:
+
+```bash
+swift build -c release --product triton
+cp .build/release/triton ~/.local/bin/triton.new
+mv ~/.local/bin/triton.new ~/.local/bin/triton
+triton version --json
 ```
 
 Use Homebrew for real-project adoption checks only after a versioned GitHub Release and `NeptuneKit/homebrew-tap` are available:
