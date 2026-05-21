@@ -37,6 +37,30 @@
 3. 回滚成本：每个能力独立挂到 manifest/capabilities，错误实现可以按 capability 关闭，不影响基础 `ax/hierarchy/input`。
 4. 前提坍塌：如果真实项目大量 SwiftUI 私有树无法解释，P0 仍保留 route/controller/AX 线索，业务语义转向 opt-in provider。
 
+## 技术调研执行表
+
+所有实现项必须先完成对应调研。调研产物优先放在本 space 根目录，文件名使用 `technical-research-<topic>-v01.md`；结论稳定后再同步到 `docs-linhay/dev/ai-cli-readable-control.md` 或 README。
+
+| 序号 | 阶段 | 调研主题 | 关键问题 | 调研产物 | 通过条件 | 后续实现切片 |
+| --- | --- | --- | --- | --- | --- | --- |
+| 1 | R0 | 现有 runtime/request/CLI 链路盘点 | 当前 `TKMessage`、HTTP `/request`、CLI schema、evidence 如何扩展最少？哪些命令已有可复用 parser？ | `technical-research-runtime-routing-v01.md` | 列出需新增的 request type、DTO、CLI command、测试文件；确认不破坏现有 `ax/hierarchy/input` | manifest、state、snapshot、ledger 契约测试 |
+| 2 | R0 | iOS 公开 API 可采集边界 | App、scene、window、route、first responder、control attrs 分别能用哪些公开 API？哪些 SwiftUI 内容不能承诺？ | `technical-research-uikit-public-api-v01.md` | 每个字段都有公开 API 来源或明确 unsupported reason；不使用私有 API | App/scene/route/responder/control attrs P0 |
+| 3 | R0 | 隐私与 DEBUG-only 边界 | secure text、UserDefaults、network、logs、clipboard、file artifacts 如何脱敏或禁止默认采集？Release no-op 如何验证？ | `technical-research-redaction-debug-boundary-v01.md` | 给出字段级 redaction 策略、P2 opt-in provider 边界、Release disabled 测试点 | manifest redaction、snapshot redaction、provider 后续设计 |
+| 4 | R1 | Snapshot payload 与 freshness | 一次性 snapshot 是否会过大？如何 include、limit、truncate、记录 freshness/skipped？ | `technical-research-snapshot-payload-v01.md` | 给出 payload budget、默认 include、截断 shape、evidence artifact 映射 | `triton snapshot`、capture/evidence snapshot artifact |
+| 5 | R1 | 语义 selector 与歧义处理 | `focus/set-text/select-segment/set-switch/scroll-to-visible` 如何复用现有 `find`？重复文本如何返回 ambiguity？ | `technical-research-semantic-selector-v01.md` | 每个命令定义 selector 解析顺序、`--index/--within/--at` 行为、失败 envelope | focus、set-text、select-segment、set-switch |
+| 6 | R1 | UIKit 控件语义动作 | UITextField submit、UISegmentedControl、UISwitch、UISlider、UIStepper、UIScrollView 哪些动作可确定触发？哪些只能 unsupported？ | `technical-research-uikit-actions-v01.md` | 每个控件给出 action 实现方式、事件派发方式、验证 harness 信号 | submit、set-slider、stepper、scroll、wait-idle |
+| 7 | R1 | Runtime ledger 设计 | ledger 存什么、不存什么？如何避免泄露 secure input？如何限制内存与输出量？ | `technical-research-runtime-ledger-v01.md` | 定义 ring buffer size、JSONL shape、redaction、source command、elapsedMs | `triton ledger --limit`、evidence ledger artifact |
+| 8 | R2 | Harness 与真实项目回归 | ComplexHarness 需要补哪些控件和页面？Overloaded 或真实 App smoke 如何验证最小闭环？ | `technical-research-harness-regression-v01.md` | 给出新增 harness 场景、脚本命令、截图/证据归档方式 | `verify-complex-harness.sh` 扩展、真实项目 smoke |
+| 9 | R2 | Opt-in provider API | 业务 debug state、network breadcrumbs、logs、UserDefaults allowlist 应如何注册、命名、脱敏和禁用？ | `technical-research-opt-in-provider-v01.md` | 只产出 API 草案和风险评估，不进入 P0 实现；确认默认不采集 | P2 provider 单独 space 或后续切片 |
+
+### 调研门禁
+
+1. 每个 R0/R1 调研文件必须包含：背景、现有代码入口、可用公开 API、不可做清单、推荐 DTO/命令 shape、测试建议、风险。
+2. 调研结论必须能映射到 BDD 场景；不能只列 API 名称。
+3. 未完成 R0 调研前，不新增生产代码；最多新增失败测试草案。
+4. R1 调研完成后才能实现对应语义命令；避免先写命令再补解释。
+5. R2 调研不阻塞 P0，但如果 R2 发现 P0 契约会妨碍真实项目回归，需要回头调整 DTO/schema。
+
 ## 实施步骤
 
 1. 契约红灯：在 `TritonKitShared` 新增 iOS runtime manifest、snapshot、state、attrs v2、ledger、semantic action DTO 的 Swift Testing 测试，先确认失败。
