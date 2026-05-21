@@ -8,15 +8,13 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 2. 发布物链路在 macOS arm64 与 x86_64 runner 上分别构建 release `triton`。
 3. 每个架构产出一个压缩包：
    - `triton-macos-arm64.tar.gz`
-   - `triton-macos-arm64.zip`
    - `triton-macos-x86_64.tar.gz`
-   - `triton-macos-x86_64.zip`
 4. CI 从触发上下文解析版本号：
    - `v*` tag：去掉前缀 `v` 后作为正式版本。
    - 非 tag：使用 `0.1.0-dev+<short-sha>`。
 5. CLI 构建前写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`。
 6. skill 打包前写入 `SKILL.md` front matter 的 `metadata.version` 字段。
-7. 汇总 job 生成 `tritonkit_checksums.txt`，并继续上传 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover` skill 包。
+7. 汇总 job 生成 `tritonkit_checksums.txt`，并上传合并后的 `tritonkit-skills.tar.gz` skill 包，包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`。
 8. `v*` tag 发布时上传所有资产到 GitHub Release。
 9. tag 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`。
 

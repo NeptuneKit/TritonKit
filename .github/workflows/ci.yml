@@ -97,7 +97,6 @@ jobs:
           (
             cd dist
             tar -czf "${package_name}.tar.gz" "${package_name}"
-            ditto -c -k --keepParent "${package_name}" "${package_name}.zip"
           )
 
       - name: Upload CLI artifact
@@ -106,7 +105,6 @@ jobs:
           name: triton-cli-${{ matrix.arch }}
           path: |
             dist/triton-macos-${{ matrix.arch }}.tar.gz
-            dist/triton-macos-${{ matrix.arch }}.zip
           if-no-files-found: error
 
   package-release-assets:
@@ -157,13 +155,12 @@ jobs:
             docs-linhay/scripts/stamp-skill-version.sh \
               "${{ steps.version.outputs.version }}" \
               "${skills_work_dir}/${skill_name}/SKILL.md"
-
-            (
-              cd "${skills_work_dir}"
-              tar -czf "${GITHUB_WORKSPACE}/dist/${skill_name}.tar.gz" "${skill_name}"
-              zip -qr "${GITHUB_WORKSPACE}/dist/${skill_name}.zip" "${skill_name}"
-            )
           done
+
+          (
+            cd "${skills_work_dir}"
+            tar -czf "${GITHUB_WORKSPACE}/dist/tritonkit-skills.tar.gz" "${skills[@]}"
+          )
 
       - name: Generate checksums
         shell: bash
@@ -172,7 +169,7 @@ jobs:
 
           (
             cd dist
-            sha256sum *.tar.gz *.zip | sort -k 2 > tritonkit_checksums.txt
+            sha256sum *.tar.gz | sort -k 2 > tritonkit_checksums.txt
           )
 
       - name: Validate release asset set
@@ -181,19 +178,16 @@ jobs:
           set -euo pipefail
 
           test -f dist/triton-macos-arm64.tar.gz
-          test -f dist/triton-macos-arm64.zip
           test -f dist/triton-macos-x86_64.tar.gz
-          test -f dist/triton-macos-x86_64.zip
-          test -f dist/tritonkit-dev-feedback.tar.gz
-          test -f dist/tritonkit-dev-feedback.zip
-          test -f dist/tritonkit-emulator-cli-takeover.tar.gz
-          test -f dist/tritonkit-emulator-cli-takeover.zip
-          test -f dist/tritonkit-real-project-regression.tar.gz
-          test -f dist/tritonkit-real-project-regression.zip
+          test -f dist/tritonkit-skills.tar.gz
           test -f dist/tritonkit_checksums.txt
-          tar -xOf dist/tritonkit-dev-feedback.tar.gz tritonkit-dev-feedback/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
-          tar -xOf dist/tritonkit-emulator-cli-takeover.tar.gz tritonkit-emulator-cli-takeover/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
-          tar -xOf dist/tritonkit-real-project-regression.tar.gz tritonkit-real-project-regression/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
+          ! compgen -G "dist/*.zip" >/dev/null
+          ! test -f dist/tritonkit-dev-feedback.tar.gz
+          ! test -f dist/tritonkit-emulator-cli-takeover.tar.gz
+          ! test -f dist/tritonkit-real-project-regression.tar.gz
+          tar -xOf dist/tritonkit-skills.tar.gz tritonkit-dev-feedback/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
+          tar -xOf dist/tritonkit-skills.tar.gz tritonkit-emulator-cli-takeover/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
+          tar -xOf dist/tritonkit-skills.tar.gz tritonkit-real-project-regression/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
 
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
             formula_tag="${GITHUB_REF_NAME}"

@@ -16,9 +16,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 6. CLI build 执行 `swift build -c release --product triton`。
 7. 按架构打包 CLI：
    - `triton-macos-arm64.tar.gz`
-   - `triton-macos-arm64.zip`
    - `triton-macos-x86_64.tar.gz`
-   - `triton-macos-x86_64.zip`
 8. CI 写入版本号：
    - CLI：更新 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`，`triton version --json` 输出该版本。
    - skill：打包前向 `SKILL.md` front matter 写入 `metadata.version`。
@@ -26,12 +24,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 9. 生成 checksum manifest：
    - `tritonkit_checksums.txt`
 10. 打包 skill：
-   - `tritonkit-dev-feedback.tar.gz`
-   - `tritonkit-dev-feedback.zip`
-   - `tritonkit-emulator-cli-takeover.tar.gz`
-   - `tritonkit-emulator-cli-takeover.zip`
-   - `tritonkit-real-project-regression.tar.gz`
-   - `tritonkit-real-project-regression.zip`
+   - `tritonkit-skills.tar.gz`，包含 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover` 与 `tritonkit-real-project-regression`
 11. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
 12. tag 发布完成后触发 Homebrew tap 更新 workflow。
 
@@ -42,7 +35,7 @@ GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免
 发布产物必须至少包含：
 
 1. `triton` CLI 可执行文件包，必须同时覆盖 macOS arm64 与 x86_64。
-2. 面向外部使用者的项目级 skill 包，当前至少包括 `.agents/skills/tritonkit-dev-feedback`、`.agents/skills/tritonkit-real-project-regression` 与 `.agents/skills/tritonkit-emulator-cli-takeover`。
+2. 面向外部使用者的项目级 skill 合并包 `tritonkit-skills.tar.gz`，当前至少包括 `.agents/skills/tritonkit-dev-feedback`、`.agents/skills/tritonkit-real-project-regression` 与 `.agents/skills/tritonkit-emulator-cli-takeover`。
 3. `tritonkit_checksums.txt`，用于 Homebrew formula 渲染和用户校验。
 4. CLI 与 skill 包必须携带同一个 CI 解析出的版本号；skill 使用 `metadata.version`，保持 skill front matter 兼容。
 
@@ -75,7 +68,7 @@ brew upgrade triton
 - 本地运行 `swift test` 通过。
 - 本地运行 `swift build -c release --product triton` 通过。
 - 本地运行 `docs-linhay/scripts/verify.sh --local` 覆盖项目级默认门禁。
-- 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` / `.zip` 产物。
+- 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
 - 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。
 - 用 Python YAML parser 校验 `.github/workflows/ci.yml` 语法可解析。

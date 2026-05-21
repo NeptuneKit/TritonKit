@@ -31,6 +31,19 @@ fi
 
 grep -q 'formula_tag=' "${ci_workflow}" || fail "ci workflow must derive formula_tag dynamically"
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"
+grep -q 'tritonkit-skills[.]tar[.]gz' "${ci_workflow}" || fail "ci workflow must publish a combined tritonkit-skills.tar.gz"
+grep -q 'sha256sum [*][.]tar[.]gz' "${ci_workflow}" || fail "ci workflow checksums should cover tar.gz release assets"
+if grep -q 'ditto .*zip' "${ci_workflow}" || grep -q 'zip -qr' "${ci_workflow}"; then
+  fail "ci workflow must not generate zip release assets"
+fi
+if grep -q 'path:.*[.]zip' "${ci_workflow}" || grep -q 'sha256sum .*[*][.]zip' "${ci_workflow}"; then
+  fail "ci workflow must not upload or checksum zip release assets"
+fi
+if grep -q 'tar -czf .*tritonkit-dev-feedback[.]tar[.]gz' "${ci_workflow}" \
+  || grep -q 'tar -czf .*tritonkit-real-project-regression[.]tar[.]gz' "${ci_workflow}" \
+  || grep -q 'tar -czf .*tritonkit-emulator-cli-takeover[.]tar[.]gz' "${ci_workflow}"; then
+  fail "ci workflow must not publish individual skill tarballs"
+fi
 grep -q 'workflow_dispatch:' "${tap_workflow}" || fail "tap workflow must support manual reruns"
 grep -q 'TAP_GITHUB_TOKEN is required' "${tap_workflow}" || fail "tap workflow must fail clearly when the secret is missing"
 

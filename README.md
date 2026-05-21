@@ -266,16 +266,9 @@ The same boundary applies to the planned Harmony collector contract: DEBUG may e
 GitHub CI publishes workflow artifacts that include:
 
 - `triton-macos-arm64.tar.gz`
-- `triton-macos-arm64.zip`
 - `triton-macos-x86_64.tar.gz`
-- `triton-macos-x86_64.zip`
+- `tritonkit-skills.tar.gz`
 - `tritonkit_checksums.txt`
-- `tritonkit-dev-feedback.tar.gz`
-- `tritonkit-dev-feedback.zip`
-- `tritonkit-emulator-cli-takeover.tar.gz`
-- `tritonkit-emulator-cli-takeover.zip`
-- `tritonkit-real-project-regression.tar.gz`
-- `tritonkit-real-project-regression.zip`
 
 Tag pushes matching `v*` upload the same files as GitHub Release assets and update the Homebrew tap formula when `TAP_GITHUB_TOKEN` is configured.
 

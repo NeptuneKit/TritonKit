@@ -14,8 +14,8 @@ TritonKit 仍处于开发阶段。外部试用、接入或评估时，如果用�
 
 GitHub CI 和 tag release 必须同时产出两类可分发资产：
 
-1. `triton` CLI 包：`triton-macos-<arch>.tar.gz` / `.zip`
-2. 项目级 skill 包：当前至少包含 `tritonkit-dev-feedback.tar.gz` / `.zip`、`tritonkit-real-project-regression.tar.gz` / `.zip` 与 `tritonkit-emulator-cli-takeover.tar.gz` / `.zip`
+1. `triton` CLI 包：`triton-macos-<arch>.tar.gz`
+2. 项目级 skill 合并包：`tritonkit-skills.tar.gz`，当前至少包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`
 
 复用入口：
 

@@ -27,7 +27,7 @@ metadata:
 - Package Manager 分发同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 规格必须保留 `TritonKitShared` / `TritonKit` 两个 Swift module，避免 `TritonKit` 中的 `import TritonKitShared` 在 pod 集成时失效。
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。
 - 新增外部依赖时先说明必要性；首期优先 Go 标准库。
-- GitHub CI / Release 必须同时产出 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和项目级 skill 包；当前至少包含 `.agents/skills/tritonkit-dev-feedback`、`.agents/skills/tritonkit-real-project-regression` 与 `.agents/skills/tritonkit-emulator-cli-takeover`，便于外部使用者拿到开发阶段反馈流程、真实项目回归流程和本机模拟器 CLI 接管流程。
+- GitHub CI / Release 必须同时产出 macOS arm64 / x86_64 `triton` CLI tar 包、checksum manifest 和合并后的项目级 `tritonkit-skills.tar.gz`；该 skill 包当前至少包含 `.agents/skills/tritonkit-dev-feedback`、`.agents/skills/tritonkit-real-project-regression` 与 `.agents/skills/tritonkit-emulator-cli-takeover`，便于外部使用者拿到开发阶段反馈流程、真实项目回归流程和本机模拟器 CLI 接管流程。
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；维护者默认用 `docs-linhay/scripts/release.sh <version>` 发布，脚本负责前置检查、tag 推送、CI 观察、Release 资产验证和 Homebrew fetch 验证。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；`NeptuneKit/TritonKit` 必须配置 `TAP_GITHUB_TOKEN`，让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - `v0.1.0` 起 GitHub Release 和 `NeptuneKit/homebrew-tap` 已可用；对外接入文档和 skill 默认优先给 `brew install NeptuneKit/tap/triton`，只有验证未发布源码变更或 release/tap 不可用时才使用 `swift build -c release --product triton` fallback。
