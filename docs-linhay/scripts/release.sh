@@ -190,34 +190,50 @@ done
 
 [[ -n "${run_id}" ]] || fail "could not find GitHub Actions run for ${tag}"
 
-if [[ -x "${root}/docs-linhay/scripts/gh-run-summary.sh" ]]; then
-  docs-linhay/scripts/gh-run-summary.sh --repo "${repo}" --watch "${run_id}"
-else
-  gh run watch "${run_id}" --repo "${repo}" --exit-status
-fi
-
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "${tmp_dir}"' EXIT
 
-gh release view "${tag}" --repo "${repo}" >/dev/null
-gh release download "${tag}" \
-  --repo "${repo}" \
-  --pattern tritonkit_checksums.txt \
-  --dir "${tmp_dir}" \
-  --clobber
-
-docs-linhay/scripts/render-homebrew-formula.sh \
-  "${tag}" \
-  "${tmp_dir}/tritonkit_checksums.txt" \
-  ".github/homebrew/triton.rb.template" \
-  "${tmp_dir}/triton.rb"
-ruby -c "${tmp_dir}/triton.rb" >/dev/null
-
 brew_tap="$(tap_name)"
-brew tap "${brew_tap}" >/dev/null
-brew update >/dev/null
-brew fetch --formula "${brew_tap}/triton"
+
+echo "Waiting for arm64 release assets and Homebrew tap for ${tag}..."
+release_ready=0
+for _ in {1..120}; do
+  rm -f "${tmp_dir}/tritonkit_checksums.txt" "${tmp_dir}/triton.rb"
+
+  if gh release view "${tag}" --repo "${repo}" >/dev/null 2>&1 \
+    && gh release download "${tag}" \
+      --repo "${repo}" \
+      --pattern tritonkit_checksums.txt \
+      --dir "${tmp_dir}" \
+      --clobber >/dev/null 2>&1 \
+    && grep -q 'triton-macos-arm64[.]tar[.]gz$' "${tmp_dir}/tritonkit_checksums.txt" \
+    && grep -q 'tritonkit-skills[.]tar[.]gz$' "${tmp_dir}/tritonkit_checksums.txt"; then
+    docs-linhay/scripts/render-homebrew-formula.sh \
+      "${tag}" \
+      "${tmp_dir}/tritonkit_checksums.txt" \
+      ".github/homebrew/triton.rb.template" \
+      "${tmp_dir}/triton.rb"
+    ruby -c "${tmp_dir}/triton.rb" >/dev/null
+
+    if brew tap "${brew_tap}" >/dev/null 2>&1 \
+      && brew update >/dev/null 2>&1 \
+      && brew fetch --formula "${brew_tap}/triton" >/dev/null 2>&1; then
+      release_ready=1
+      break
+    fi
+  fi
+
+  run_status="$(gh run view "${run_id}" --repo "${repo}" --json status,conclusion --jq '.status + ":" + (.conclusion // "")' 2>/dev/null || true)"
+  if [[ "${run_status}" == completed:* && "${run_status}" != "completed:success" ]]; then
+    fail "GitHub Actions run failed before arm64 release was ready: ${run_status}"
+  fi
+
+  sleep 10
+done
+
+[[ "${release_ready}" == "1" ]] || fail "arm64 release or Homebrew tap was not ready in time for ${tag}"
 
 echo "release complete: ${tag}"
 echo "GitHub Release: https://github.com/${repo}/releases/tag/${tag}"
 echo "Homebrew: brew install ${brew_tap}/triton"
+echo "x86_64 assets are published by the backfill job when the Intel runner finishes."

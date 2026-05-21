@@ -196,19 +196,11 @@ jobs:
               ;;
           esac
 
-  build-cli:
-    name: Build CLI (${{ matrix.arch }})
+  build-cli-arm64:
+    name: Build CLI (arm64)
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     needs: validate
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - arch: arm64
-            runner: macos-15
-          - arch: x86_64
-            runner: macos-15-intel
-    runs-on: ${{ matrix.runner }}
+    runs-on: macos-15
 
     steps:
       - name: Checkout
@@ -236,12 +228,12 @@ jobs:
           set -euo pipefail
 
           actual_arch="$(uname -m)"
-          if [[ "${actual_arch}" != "${{ matrix.arch }}" ]]; then
-            echo "runner architecture mismatch: expected ${{ matrix.arch }}, got ${actual_arch}" >&2
+          if [[ "${actual_arch}" != "arm64" ]]; then
+            echo "runner architecture mismatch: expected arm64, got ${actual_arch}" >&2
             exit 1
           fi
 
-          package_name="triton-macos-${{ matrix.arch }}"
+          package_name="triton-macos-arm64"
           package_dir="dist/${package_name}"
 
           mkdir -p "${package_dir}"
@@ -272,15 +264,88 @@ jobs:
       - name: Upload CLI artifact
         uses: actions/upload-artifact@v4
         with:
-          name: triton-cli-${{ matrix.arch }}
+          name: triton-cli-arm64
           path: |
-            dist/triton-macos-${{ matrix.arch }}.tar.gz
+            dist/triton-macos-arm64.tar.gz
+          if-no-files-found: error
+
+  build-cli-x86_64:
+    name: Build CLI (x86_64)
+    if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: macos-15-intel
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Write CLI version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          version="$(docs-linhay/scripts/resolve-ci-version.sh)"
+          docs-linhay/scripts/write-cli-version.sh \
+            "${version}" \
+            "Sources/TritonKitCLI/main.swift"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+          echo "TritonKit CLI version: ${version}"
+
+      - name: Build CLI
+        run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+
+      - name: Package CLI artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          actual_arch="$(uname -m)"
+          if [[ "${actual_arch}" != "x86_64" ]]; then
+            echo "runner architecture mismatch: expected x86_64, got ${actual_arch}" >&2
+            exit 1
+          fi
+
+          package_name="triton-macos-x86_64"
+          package_dir="dist/${package_name}"
+
+          mkdir -p "${package_dir}"
+          cp ".build/cli/release/triton" "${package_dir}/triton"
+          chmod +x "${package_dir}/triton"
+
+          cat > "${package_dir}/README.txt" <<README
+          TritonKit CLI
+
+          Version:
+            ${{ steps.version.outputs.version }}
+
+          Install:
+            cp triton /usr/local/bin/triton
+
+          Homebrew:
+            brew install NeptuneKit/tap/triton
+
+          Verify:
+            triton version --json
+          README
+
+          (
+            cd dist
+            tar -czf "${package_name}.tar.gz" "${package_name}"
+          )
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: triton-cli-x86_64
+          path: |
+            dist/triton-macos-x86_64.tar.gz
           if-no-files-found: error
 
   package-release-assets:
-    name: Package release assets
+    name: Package arm64 release assets
     if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
-    needs: build-cli
+    needs: build-cli-arm64
     runs-on: ubuntu-latest
 
     steps:
@@ -290,9 +355,8 @@ jobs:
       - name: Download CLI artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: triton-cli-*
+          name: triton-cli-arm64
           path: dist
-          merge-multiple: true
 
       - name: Resolve release version
         id: version
@@ -348,7 +412,6 @@ jobs:
           set -euo pipefail
 
           test -f dist/triton-macos-arm64.tar.gz
-          test -f dist/triton-macos-x86_64.tar.gz
           test -f dist/tritonkit-skills.tar.gz
           test -f dist/tritonkit_checksums.txt
           ! compgen -G "dist/*.zip" >/dev/null
@@ -395,10 +458,70 @@ jobs:
 
           gh release upload "${tag}" dist/* --clobber
 
+  publish-x86-release-asset:
+    name: Publish x86_64 release asset
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs:
+      - package-release-assets
+      - build-cli-x86_64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download x86_64 CLI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: triton-cli-x86_64
+          path: dist
+
+      - name: Merge release checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          gh release download "${tag}" \
+            --pattern tritonkit_checksums.txt \
+            --dir dist \
+            --clobber
+
+          (
+            cd dist
+            grep -v 'triton-macos-x86_64[.]tar[.]gz$' tritonkit_checksums.txt > tritonkit_checksums.merged.txt
+            sha256sum triton-macos-x86_64.tar.gz >> tritonkit_checksums.merged.txt
+            sort -k 2 tritonkit_checksums.merged.txt > tritonkit_checksums.txt
+          )
+
+      - name: Publish x86_64 release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          gh release upload "${GITHUB_REF_NAME}" \
+            dist/triton-macos-x86_64.tar.gz \
+            dist/tritonkit_checksums.txt \
+            --clobber
+
   update-homebrew-tap:
-    name: Update Homebrew tap
+    name: Update Homebrew tap (arm64)
     if: startsWith(github.ref, 'refs/tags/v')
     needs: package-release-assets
+    uses: ./.github/workflows/update-homebrew-tap.yml
+    with:
+      version: ${{ github.ref_name }}
+      tap_repository: NeptuneKit/homebrew-tap
+    secrets: inherit
+
+  update-homebrew-tap-x86:
+    name: Update Homebrew tap (x86_64 backfill)
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: publish-x86-release-asset
     uses: ./.github/workflows/update-homebrew-tap.yml
     with:
       version: ${{ github.ref_name }}

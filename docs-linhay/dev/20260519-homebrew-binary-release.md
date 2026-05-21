@@ -5,7 +5,7 @@
 TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 
 1. CI 只在 `v*` tag 或手动 `workflow_dispatch` 时进入发布物链路；普通 `main` push / PR 只跑 validate。
-2. 发布物链路在 macOS arm64 与 x86_64 runner 上分别构建 release `triton`。
+2. 发布物链路在 macOS arm64 与 x86_64 runner 上分别构建 release `triton`，但 arm64 完成后即可发布 Release / Homebrew，x86_64 作为后补资产上传。
 3. 每个架构产出一个压缩包：
    - `triton-macos-arm64.tar.gz`
    - `triton-macos-x86_64.tar.gz`
@@ -14,9 +14,9 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
    - 非 tag：使用 `0.1.0-dev+<short-sha>`。
 5. CLI 构建前写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`。
 6. skill 打包前写入 `SKILL.md` front matter 的 `metadata.version` 字段。
-7. 汇总 job 生成 `tritonkit_checksums.txt`，并上传合并后的 `tritonkit-skills.tar.gz` skill 包，包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`。
-8. `v*` tag 发布时上传所有资产到 GitHub Release。
-9. tag 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`。
+7. arm64 汇总 job 生成首版 `tritonkit_checksums.txt`，并上传合并后的 `tritonkit-skills.tar.gz` skill 包，包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`。
+8. `v*` tag 发布时先上传 arm64 CLI、skill 包和首版 checksum 到 GitHub Release。
+9. arm64 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`；x86_64 构建完成后补传 x86 包、合并 checksum，并再次更新 tap。
 
 `workflow_dispatch` 只作为发布物集合的云端演练入口：它会生成双架构 CLI、合并 skill 包和 checksum，并上传 workflow artifact；但不会渲染 Homebrew formula。Homebrew formula 只允许在真实 `v*` tag 上用 `GITHUB_REF_NAME` 渲染，避免把 `0.1.0-dev+<short-sha>` 这种 dev 版本拼成无效 tag。
 
@@ -70,7 +70,7 @@ brew update
 brew upgrade triton
 ```
 
-公式按架构分流：
+公式按架构分流；刚发布且 x86_64 后补尚未完成时，formula 可以只有 arm64 分支，后补完成后会再次写入 Intel 分支：
 
 - Apple Silicon 下载 `triton-macos-arm64.tar.gz`
 - Intel Mac 下载 `triton-macos-x86_64.tar.gz`
@@ -108,9 +108,9 @@ docs-linhay/scripts/release.sh 0.1.1
 2. 校验 `NeptuneKit/TritonKit`、`NeptuneKit/homebrew-tap` 和 `TAP_GITHUB_TOKEN`。
 3. 默认运行 `docs-linhay/scripts/verify.sh --local`。
 4. 创建 annotated tag 并推送。
-5. 观察 tag 触发的 GitHub Actions run。
+5. 观察 tag 触发的 GitHub Actions run，直到 arm64 Release 资产和 Homebrew tap 可用。
 6. 下载 release checksum，重新渲染并语法检查 Homebrew formula。
-7. 执行 `brew fetch --formula NeptuneKit/tap/triton` 验证 Homebrew 可获取。
+7. 执行 `brew fetch --formula NeptuneKit/tap/triton` 验证 Homebrew 可获取；x86_64 后补 job 继续在 CI 中运行并刷新 Release / tap。
 
 实现注意：发布脚本查找 tag 对应的 GitHub Actions run 时，必须从 `gh run list --json headBranch,url` 返回的 URL 字符串解析 run id。不要使用 `databaseId` 配合 `gh --template` 输出，因为 GitHub CLI 模板可能把大整数转成科学计数法，导致后续 `gh run view` 404。
 

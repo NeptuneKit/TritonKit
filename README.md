@@ -441,14 +441,13 @@ For the Harmony demo, `28767` is the host-access embedded runtime port exposed t
 
 ## Release Assets
 
-GitHub CI publishes workflow artifacts that include:
+GitHub CI publishes release artifacts in two phases:
 
 - `triton-macos-arm64.tar.gz`
-- `triton-macos-x86_64.tar.gz`
 - `tritonkit-skills.tar.gz`
 - `tritonkit_checksums.txt`
 
-Tag pushes matching `v*` upload the same files as GitHub Release assets and update the Homebrew tap formula when `TAP_GITHUB_TOKEN` is configured.
+The arm64 CLI package, combined skill package, and checksum manifest are enough to create the GitHub Release and update the Homebrew tap for Apple Silicon. `triton-macos-x86_64.tar.gz` is uploaded later by the Intel backfill job, which also refreshes `tritonkit_checksums.txt` and the tap formula.
 
 CI writes the release version into both the CLI and packaged skills:
 
@@ -462,6 +461,6 @@ For maintainers, the release flow is:
 1. Run `docs-linhay/scripts/release.sh <version>`.
 2. The script verifies the clean checkout, tap repository, `TAP_GITHUB_TOKEN`, and local gate.
 3. The script creates and pushes an annotated `v*` tag.
-4. CI builds both macOS architectures, packages skills, generates `tritonkit_checksums.txt`, and uploads GitHub Release assets.
-5. CI renders the Homebrew formula from `.github/homebrew/triton.rb.template` and pushes `Formula/triton.rb` to `NeptuneKit/homebrew-tap`.
-6. The script watches the CI run and verifies the published release plus `brew fetch --formula NeptuneKit/tap/triton`.
+4. CI builds arm64, packages skills, generates `tritonkit_checksums.txt`, uploads the initial GitHub Release assets, and updates the Homebrew tap.
+5. The script returns after the arm64 Release and `brew fetch --formula NeptuneKit/tap/triton` are ready.
+6. CI builds x86_64 independently; when the Intel runner finishes, it uploads the x86 asset, merges the checksum manifest, and updates the tap again.

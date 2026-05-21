@@ -58,8 +58,8 @@
 15. 当用户明确说“整理”且语境指向刚完成的一轮工作会话时，默认触发一次会话沉淀流程：先按 `tritonkit-session-skill-distill` 提炼可复用模式，再按是否 repo-wide 决定是否同步更新 `AGENTS.md`、`docs-linhay/dev/`、`docs-linhay/memory/`，并执行 `qmd update` 与 `qmd embed`。
 16. 多份独立需求稿并行推进时，默认按“一个需求单元一个 `space`，必要时再配一个同 key 的 branch 与 `worktree`”组织，不按个人姓名或临时阶段单独命名工作目录。
 17. 当用户明确要求“由 subagent 去做、主控 agent 负责监督”时，主控 agent 必须承担需求边界、任务拆分、集成、验收、文档与最终完成判断，不得在“代码已改完”但截图、实机验证、文档写回等验收环节仍未完成时提前停止。
-18. GitHub CI / Release 产物必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和对外项目级 skill 包，至少覆盖 `.agents/tritonkit-skills/public/tritonkit-dev-feedback`、`.agents/tritonkit-skills/public/tritonkit-real-project-regression` 与 `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流、真实项目回归流程和本机模拟器 CLI 接管流程。
-19. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后应基于 GitHub Release 资产和 checksum manifest 更新 tap formula。
+18. GitHub CI / Release 产物最终必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和对外项目级 skill 包，至少覆盖 `.agents/tritonkit-skills/public/tritonkit-dev-feedback`、`.agents/tritonkit-skills/public/tritonkit-real-project-regression` 与 `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流、真实项目回归流程和本机模拟器 CLI 接管流程。
+19. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后先以 arm64 CLI 包、skill 包和 checksum manifest 创建 GitHub Release 并更新 tap formula，x86_64 包由 Intel runner 后补上传并再次刷新 checksum / tap，避免 x86 runner 阻塞 Apple Silicon 发布。
 20. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
 21. 业务 App 侧 iOS 接入文件必须使用独立 Debug bootstrap 文件，并用文件级 `#if DEBUG` 包住 `import TritonKit` 与 `TritonKit.shared.start()` / `start { config in ... }` facade；AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点，不能只依赖库内部 Release no-op。只有需要自定义 delegate 或消息路由时才使用低层 `delegate` / `connect(host:port:)`。
 22. SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only 配置开关；对外接入指南必须明确：默认走源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
@@ -89,7 +89,7 @@
 7. Wails 绑定先测绑定对象和 DTO；涉及真实窗口、菜单、图标、原生能力时再做桌面验收。
 8. 纯文档或治理规则调整若无可执行测试，至少要完成结构自检、路径校对与引用校对，并在交付说明中明确写明“未运行自动化测试”的原因。
 9. 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 只跑 `TritonKit.podspec` lint，Shared/iOS/未分类改动在 CI 中并行跑 Swift tests、两个 podspec lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
-10. 普通 `main` push / PR 的 CI 只阻塞 validate；双架构 CLI、skill 包、checksum 与 release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行。
+10. 普通 `main` push / PR 的 CI 只阻塞 validate；CLI、skill 包、checksum 与 release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行；tag 发布时 arm64 资产先发布，x86_64 资产后补。
 
 ## 4. 文档系统规则（docs-linhay）
 

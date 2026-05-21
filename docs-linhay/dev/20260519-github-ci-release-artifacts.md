@@ -10,8 +10,8 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 
 1. `push` 到 `main`、`pull_request` 到 `main`、手动 `workflow_dispatch` 时运行 validate。
 2. 普通 `main` push / PR 只阻塞 validate，不等待双架构 CLI artifact 与 release asset 打包。
-3. `v*` tag 或手动 `workflow_dispatch` 才运行双架构 CLI build 和 release asset packaging。
-4. tag `v*` 推送时，在同一 workflow 内创建或复用 GitHub Release，并上传产物。
+3. `v*` tag 或手动 `workflow_dispatch` 才运行 CLI build 和 release asset packaging。
+4. tag `v*` 推送时，arm64 CLI 产物完成后先创建或复用 GitHub Release，并上传 arm64 CLI、skill 包与 checksum；x86_64 CLI 产物由后补 job 上传到同一个 Release。
 5. validate 先调用 `docs-linhay/scripts/ci-validate-mode.sh` 分类变更范围：
    - docs/skill-only：运行 `docs-linhay/scripts/verify.sh --ci-docs`，覆盖文档结构、diff whitespace、版本脚本和 release/skill packaging 契约。
    - swift-only：只跑 Swift tests、CLI release build 与 release/homebrew contract checks，跳过 CocoaPods lint；适用于 `Sources/TritonKitCLI/`、`CLI/Package.swift`、`CLI/Package.resolved`、`Tests/`、`Package.swift`、`Package.resolved`。
@@ -21,7 +21,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 6. CI 中保留名为 `Validate` 的聚合 job；full validate 内部拆成 `Validate Swift Tests`、`Validate Podspec (TritonKitShared)`、`Validate Podspec (TritonKit)` 与 `Validate Contracts` 并行执行，降低 wall-clock 等待时间，同时保持分支保护只需依赖稳定的 `Validate`。`podkit-only` 只运行 `Validate Podspec (TritonKit)`，不运行 Shared podspec lint。`docs` 与 `contracts` 短路径的实际检查直接在 `Classify Validate Scope` job 内完成，避免额外启动一个 Ubuntu job。
 7. `Validate Swift Tests` 使用 `actions/cache@v4` 缓存 `.build` 与 SwiftPM dependency cache，cache key 基于根 package 与 `CLI/` package 的 manifest / resolved 文件。
 8. CLI build 执行 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，根 `Package.swift` 只保留 iOS embedded SDK 依赖边界。
-9. 按架构打包 CLI：
+9. 按架构打包 CLI，发布顺序为 arm64 先发、x86_64 后补：
    - `triton-macos-arm64.tar.gz`
    - `triton-macos-x86_64.tar.gz`
 10. CI 写入版本号：
@@ -32,8 +32,8 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
    - `tritonkit_checksums.txt`
 12. 打包 skill：
    - `tritonkit-skills.tar.gz`，包含 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover` 与 `tritonkit-real-project-regression`
-13. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
-14. tag 发布完成后触发 Homebrew tap 更新 workflow。
+13. 所有包先作为 workflow artifact 上传；tag 发布时 arm64 包与 skill 包先作为 GitHub Release asset 上传，x86_64 包成功后再补传。
+14. arm64 发布完成后触发 Homebrew tap 更新 workflow；x86_64 后补完成后再次触发 tap 更新，让 Intel formula 分支拿到 checksum。
 
 Skill 源码分层约束：release packaging 只能读取 `.agents/tritonkit-skills/public/`。`.agents/tritonkit-skills/internal/` 只存放 repo 维护、治理、实现和监督用 skill，不进入 `tritonkit-skills.tar.gz`；`.agents/skills/` 只作为本地 agent discovery symlink，不作为打包源。
 
@@ -45,7 +45,7 @@ GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免
 
 发布产物必须至少包含：
 
-1. `triton` CLI 可执行文件包，必须同时覆盖 macOS arm64 与 x86_64。
+1. `triton` CLI 可执行文件包，最终必须同时覆盖 macOS arm64 与 x86_64；arm64 是首发门槛，x86_64 是后补资产。
 2. 面向外部使用者的项目级 skill 合并包 `tritonkit-skills.tar.gz`，当前至少包括 `.agents/tritonkit-skills/public/tritonkit-dev-feedback`、`.agents/tritonkit-skills/public/tritonkit-real-project-regression` 与 `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover`。
 3. `tritonkit_checksums.txt`，用于 Homebrew formula 渲染和用户校验。
 4. CLI 与 skill 包必须携带同一个 CI 解析出的版本号；skill 使用 `metadata.version`，保持 skill front matter 兼容。

@@ -32,14 +32,19 @@ extract_sha() {
 }
 
 sha_arm64="$(extract_sha "triton-macos-arm64[.]tar[.]gz")"
-sha_x86_64="$(extract_sha "triton-macos-x86_64[.]tar[.]gz")"
+sha_x86_64="$(extract_sha "triton-macos-x86_64[.]tar[.]gz" || true)"
 
-for sha in "${sha_arm64}" "${sha_x86_64}"; do
+for sha in "${sha_arm64}"; do
   if [[ ! "${sha}" =~ ^[0-9a-f]{64}$ ]]; then
     echo "invalid sha256: ${sha}" >&2
     exit 67
   fi
 done
+
+if [[ -n "${sha_x86_64}" && ! "${sha_x86_64}" =~ ^[0-9a-f]{64}$ ]]; then
+  echo "invalid sha256: ${sha_x86_64}" >&2
+  exit 67
+fi
 
 version="${tag#v}"
 mkdir -p "$(dirname "${output}")"
@@ -50,3 +55,13 @@ sed \
   -e "s/__SHA256_ARM64__/${sha_arm64}/g" \
   -e "s/__SHA256_X86_64__/${sha_x86_64}/g" \
   "${template}" > "${output}"
+
+if [[ -z "${sha_x86_64}" ]]; then
+  tmp_output="$(mktemp)"
+  awk '
+    /^  on_intel do$/ { skipping = 1; next }
+    skipping && /^  end$/ { skipping = 0; next }
+    !skipping { print }
+  ' "${output}" > "${tmp_output}"
+  mv "${tmp_output}" "${output}"
+fi

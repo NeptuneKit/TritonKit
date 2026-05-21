@@ -24,7 +24,8 @@ grep -Fq 'run_id="${run_url##*/}"' "${release_script}" || fail "release script m
 if grep -Fq -- '--json databaseId,headBranch' "${release_script}"; then
   fail "release script must not render databaseId through gh templates because large ids can become scientific notation"
 fi
-grep -Fq 'gh-run-summary.sh --repo "${repo}" --watch "${run_id}"' "${release_script}" || fail "release script must pass the selected repo to gh-run-summary"
+grep -Fq 'Waiting for arm64 release assets and Homebrew tap' "${release_script}" \
+  || fail "release script must return after arm64 release assets and Homebrew tap are ready"
 grep -q 'brew fetch --formula' "${release_script}" || fail "release script must verify Homebrew fetch"
 
 if grep -q 'render-homebrew-formula.sh .*v0[.]1[.]0' "${ci_workflow}"; then
@@ -69,6 +70,10 @@ for internal_skill in tritonkit-host-simulator-takeover tritonkit-ops-governance
   fi
 done
 grep -q 'tritonkit-skills[.]tar[.]gz' "${ci_workflow}" || fail "ci workflow must publish a combined tritonkit-skills.tar.gz"
+grep -q 'build-cli-arm64:' "${ci_workflow}" || fail "ci workflow must build arm64 CLI as an independent release gate"
+grep -q 'needs: build-cli-arm64' "${ci_workflow}" || fail "release asset packaging must depend on arm64 only"
+grep -q 'publish-x86-release-asset:' "${ci_workflow}" || fail "ci workflow must backfill the x86_64 release asset"
+grep -q 'Update Homebrew tap [(]x86_64 backfill[)]' "${ci_workflow}" || fail "ci workflow must update the tap again after x86_64 backfill"
 grep -q 'sha256sum [*][.]tar[.]gz' "${ci_workflow}" || fail "ci workflow checksums should cover tar.gz release assets"
 if grep -q 'ditto .*zip' "${ci_workflow}" || grep -q 'zip -qr' "${ci_workflow}"; then
   fail "ci workflow must not generate zip release assets"
