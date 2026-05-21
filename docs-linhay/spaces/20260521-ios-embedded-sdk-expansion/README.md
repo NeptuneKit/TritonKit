@@ -6,13 +6,28 @@ TritonKit 当前 iOS embedded runtime 已能在 DEBUG 包内提供基础 App 信
 
 本 space 用于规划 iOS 内置 SDK 的下一阶段采集与控制边界。核心原则是继续坚持 DEBUG-only、App 内、机器可读、可审计；系统弹窗、Home/App Switcher、SpringBoard、host framebuffer、安装卸载、deep link 提交等设备级能力仍归 host-side adapter。
 
+## 北极星目标
+
+本方向的目标不是单纯增加 CLI 命令数量，也不是把 embedded SDK 做成通用监控 SDK，而是让 AI 通过 `triton` CLI 直接和 App 内 embedded SDK 沟通，显著抬高 AI 操控 App 的能力边界上限。
+
+CLI 是 AI 的稳定控制入口，embedded SDK 是 App 进程内的感知与执行层。两者之间的契约必须让 AI 能完成五件事：
+
+1. **观察**：获取当前 App 内真实状态，而不是只看截图或猜测 UI。
+2. **解释**：知道为什么某个元素可点、不可点、被遮挡、重复、disabled 或需要滚动。
+3. **执行**：优先使用语义动作和公开 UIKit API，减少脆弱坐标操作。
+4. **验证**：用机器可读状态、断言、snapshot 和 evidence 判断业务是否完成。
+5. **复盘**：通过 ledger、source command、耗时、错误码和 redaction 状态定位失败原因。
+
+因此后续所有能力优先级都按“是否提升 AI 通过 CLI 操控 App 的闭环能力”排序，而不是按 SDK 能否采集更多数据排序。
+
 ## 目标
 
-1. 扩展 iOS embedded runtime 的采集面，使 agent 能一次性读取 runtime manifest、App/scene/window 状态、导航/页面状态、UI 语义树、控件属性、first responder、截图元数据、runtime request/action ledger。
-2. 扩展操作命令，使 agent 优先使用语义动作而不是脆弱坐标，包括 `focus`、`set-text`、`submit`、`select-segment`、`set-switch`、`set-slider`、`stepper`、`scroll-to-visible`、`scroll`、`wait-idle`。
-3. 建立红线：embedded SDK 不采集生产 Release、不采集系统级 UI、不默认读取敏感持久化数据、不自动 hook 全量网络或日志。
-4. 所有新能力先落到共享 DTO、CLI schema、HTTP request/response、测试和 evidence/capture，再考虑更高层封装。
-5. 让真实项目回归可以通过 `triton snapshot`、`triton state`、`triton attrs`、`triton action` 类命令收集完整问题证据。
+1. 建立 AI-facing 的 App 内能力契约，使 `triton schema/capabilities/manifest` 能清楚告诉 AI 当前 SDK 能观察什么、能操作什么、为什么不能做某件事。
+2. 扩展 iOS embedded runtime 的采集面，使 agent 能一次性读取 runtime manifest、App/scene/window 状态、导航/页面状态、UI 语义树、控件属性、first responder、截图元数据、runtime request/action ledger。
+3. 扩展操作命令，使 agent 优先使用语义动作而不是脆弱坐标，包括 `focus`、`set-text`、`submit`、`select-segment`、`set-switch`、`set-slider`、`stepper`、`scroll-to-visible`、`scroll`、`wait-idle`。
+4. 建立红线：embedded SDK 不采集生产 Release、不采集系统级 UI、不默认读取敏感持久化数据、不自动 hook 全量网络或日志。
+5. 所有新能力先落到共享 DTO、CLI schema、HTTP request/response、测试和 evidence/capture，再考虑更高层封装。
+6. 让真实项目回归可以通过 `triton snapshot`、`triton state`、`triton attrs`、`triton action` 类命令收集完整问题证据。
 
 ## 非目标
 
