@@ -83,6 +83,19 @@ CI validate 已按变更范围分类：docs、contracts、swift、podkit、full�
 - `docs-linhay/scripts/verify-release-automation.sh`
 - `docs-linhay/dev/20260519-github-ci-release-artifacts.md`
 
+### Release arm64 首发 / x86_64 后补
+
+发布流程的完成门槛改为 Apple Silicon 优先：arm64 CLI 包、合并 skill 包和首版 checksum 可用后，即可创建 GitHub Release、更新 Homebrew tap，并让 `docs-linhay/scripts/release.sh` 返回。x86_64 包不再阻塞首发，由 Intel runner 后补上传到同一个 Release，随后合并 checksum 并再次刷新 Homebrew tap。
+
+复用入口：
+
+- `.github/workflows/ci.yml`
+- `docs-linhay/scripts/release.sh`
+- `docs-linhay/scripts/render-homebrew-formula.sh`
+- `docs-linhay/scripts/verify-release-automation.sh`
+- `docs-linhay/dev/20260519-github-ci-release-artifacts.md`
+- `docs-linhay/dev/20260519-homebrew-binary-release.md`
+
 ### Harmony embedded provider 边界
 
 Harmony embedded SDK 的对齐策略不是“全部伪装支持”，而是：
@@ -134,6 +147,7 @@ Triton CLI 侧补充 `--runtime-base-url`，用于在 standalone embedded HTTP r
 - 不把真实 dxyer workspace 的长耗时 build 结果写成 TritonKit 已完成业务回归；它只证明默认 timeout 需要可配置和后续 streaming progress。
 - 不把 Harmony HAR 无法通用推断的 route/responder/action 伪装成默认支持。
 - 不把外部 Harmony SDK 仓库的工作区补丁混入 TritonKit 主仓整理提交。
+- 不把 x86_64 后补等待时间写成发布脚本阻塞条件；发布脚本只负责 arm64 首发可用性，x86_64 完整性由 CI run 和后补 tap 更新验证。
 
 ## 已完成验证
 
@@ -144,6 +158,9 @@ Triton CLI 侧补充 `--runtime-base-url`，用于在 standalone embedded HTTP r
 - 本仓新增 `docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`，用本地 mock embedded runtime 覆盖 `--runtime-base-url` 的 manifest、route state、snapshot、ledger 和 set-text provider path。
 - commit `aeb5fc8 fix: align harmony runtime default port` 已修正 Harmony direct runtime 默认端口，并新增真实 emulator smoke 脚本。
 - 本地已通过 `swift build --package-path CLI --scratch-path .build/cli-scratch --product triton -j 1`、`swift test`、`TRITON_BIN=.build/cli-scratch/debug/triton docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`、`TRITON_BIN=.build/cli-scratch/debug/triton docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh --target 127.0.0.1:10100 --no-forward`、`docs-linhay/scripts/check-docs.sh`。
+- commit `146e586 ci: release arm64 before x86 backfill` 已推送到 `origin/main`，并用 `docs-linhay/scripts/release.sh 0.1.5 --yes --skip-local-verify` 发布 `v0.1.5`。
+- GitHub Actions run `26220457958` 成功；`v0.1.5` Release 已包含 `triton-macos-arm64.tar.gz`、`triton-macos-x86_64.tar.gz`、`tritonkit-skills.tar.gz` 和 `tritonkit_checksums.txt`。
+- 本地已通过 `docs-linhay/scripts/verify-release-automation.sh`、`docs-linhay/scripts/verify-homebrew-formula.sh`、`docs-linhay/scripts/check-docs.sh`、`docs-linhay/scripts/verify.sh --ci-validate`；发布后 `brew fetch --formula NeptuneKit/tap/triton` 返回 `Formula triton (0.1.5)`。
 
 ## 后续行动
 
