@@ -15,9 +15,12 @@ permissions:
   contents: write
 
 jobs:
-  validate:
-    name: Validate
-    runs-on: macos-latest
+  classify-validate:
+    name: Classify Validate Scope
+    runs-on: ubuntu-latest
+
+    outputs:
+      mode: ${{ steps.validate-scope.outputs.mode }}
 
     steps:
       - name: Checkout
@@ -34,13 +37,128 @@ jobs:
           echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
           echo "validate mode: ${mode}"
 
-      - name: Validate
-        if: steps.validate-scope.outputs.mode == 'full'
-        run: docs-linhay/scripts/verify.sh --ci-validate
+  validate-docs:
+    name: Validate Docs
+    needs: classify-validate
+    if: needs.classify-validate.outputs.mode == 'docs'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - name: Validate docs and skills
-        if: steps.validate-scope.outputs.mode == 'docs'
         run: docs-linhay/scripts/verify.sh --ci-docs
+
+  validate-swift:
+    name: Validate Swift Tests
+    needs: classify-validate
+    if: needs.classify-validate.outputs.mode == 'full'
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Swift tests
+        run: swift test
+
+  validate-podspec:
+    name: Validate Podspec (${{ matrix.name }})
+    needs: classify-validate
+    if: needs.classify-validate.outputs.mode == 'full'
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: TritonKitShared
+            command: pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests
+          - name: TritonKit
+            command: pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install CocoaPods if needed
+        run: |
+          if ! command -v pod >/dev/null 2>&1; then
+            sudo gem install cocoapods --no-document
+          fi
+
+      - name: Validate podspec
+        run: ${{ matrix.command }}
+
+  validate-contracts:
+    name: Validate Contracts
+    needs: classify-validate
+    if: needs.classify-validate.outputs.mode == 'full'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate CI scope classifier
+        run: docs-linhay/scripts/verify-ci-validate-mode.sh
+
+      - name: Validate Homebrew formula template
+        run: docs-linhay/scripts/verify-homebrew-formula.sh
+
+      - name: Validate version stamping scripts
+        run: docs-linhay/scripts/verify-version-stamping.sh
+
+      - name: Validate release automation contract
+        run: docs-linhay/scripts/verify-release-automation.sh
+
+  validate:
+    name: Validate
+    needs:
+      - classify-validate
+      - validate-docs
+      - validate-swift
+      - validate-podspec
+      - validate-contracts
+    if: always()
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Summarize validate result
+        run: |
+          set -euo pipefail
+
+          mode="${{ needs.classify-validate.outputs.mode }}"
+          echo "validate mode: ${mode}"
+          echo "classify: ${{ needs.classify-validate.result }}"
+          echo "docs: ${{ needs.validate-docs.result }}"
+          echo "swift: ${{ needs.validate-swift.result }}"
+          echo "podspec: ${{ needs.validate-podspec.result }}"
+          echo "contracts: ${{ needs.validate-contracts.result }}"
+
+          if [[ "${{ needs.classify-validate.result }}" != "success" ]]; then
+            echo "classification failed" >&2
+            exit 1
+          fi
+
+          case "${mode}" in
+            docs)
+              [[ "${{ needs.validate-docs.result }}" == "success" ]] || exit 1
+              ;;
+            full)
+              [[ "${{ needs.validate-swift.result }}" == "success" ]] || exit 1
+              [[ "${{ needs.validate-podspec.result }}" == "success" ]] || exit 1
+              [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
+              ;;
+            *)
+              echo "unknown validate mode: ${mode}" >&2
+              exit 1
+              ;;
+          esac
 
   build-cli:
     name: Build CLI (${{ matrix.arch }})

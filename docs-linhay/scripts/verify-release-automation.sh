@@ -35,6 +35,12 @@ grep -q 'formula_tag=' "${ci_workflow}" || fail "ci workflow must derive formula
 if grep -Fq 'formula_tag="v${{ steps.version.outputs.version }}"' "${ci_workflow}"; then
   fail "ci workflow must not render Homebrew formula from non-tag dev versions"
 fi
+grep -q 'classify-validate:' "${ci_workflow}" || fail "ci workflow must classify validate scope before running gates"
+grep -q 'validate-docs:' "${ci_workflow}" || fail "ci workflow must keep a docs/skill-only validate path"
+grep -q 'validate-swift:' "${ci_workflow}" || fail "ci workflow must split Swift tests into an independent validate job"
+grep -q 'validate-podspec:' "${ci_workflow}" || fail "ci workflow must split podspec lint into an independent validate job"
+grep -q 'validate-contracts:' "${ci_workflow}" || fail "ci workflow must split release/homebrew contract checks into an independent validate job"
+grep -q 'name: Validate' "${ci_workflow}" || fail "ci workflow must keep a stable Validate aggregator job"
 grep -q 'skip Homebrew formula rendering for non-tag release asset validation' "${ci_workflow}" \
   || fail "ci workflow must skip Homebrew formula rendering for non-tag release asset validation"
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"

@@ -15,20 +15,21 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 5. validate 先调用 `docs-linhay/scripts/ci-validate-mode.sh` 分类变更范围：
    - docs/skill-only：运行 `docs-linhay/scripts/verify.sh --ci-docs`，覆盖文档结构、diff whitespace、版本脚本和 release/skill packaging 契约。
    - full：运行 `docs-linhay/scripts/verify.sh --ci-validate`，覆盖 Swift 测试、CocoaPods spec、Homebrew formula template、版本脚本和 release automation 契约。
-6. CLI build 执行 `swift build -c release --product triton`。
-7. 按架构打包 CLI：
+6. CI 中保留名为 `Validate` 的聚合 job；full validate 内部拆成 `Validate Swift Tests`、`Validate Podspec (TritonKitShared)`、`Validate Podspec (TritonKit)` 与 `Validate Contracts` 并行执行，降低 wall-clock 等待时间，同时保持分支保护只需依赖稳定的 `Validate`。
+7. CLI build 执行 `swift build -c release --product triton`。
+8. 按架构打包 CLI：
    - `triton-macos-arm64.tar.gz`
    - `triton-macos-x86_64.tar.gz`
-8. CI 写入版本号：
+9. CI 写入版本号：
    - CLI：更新 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`，`triton version --json` 输出该版本。
    - skill：打包前向 `SKILL.md` front matter 写入 `metadata.version`。
    - tag `v1.2.3` 解析为 `1.2.3`；非 tag 构建解析为 `0.1.0-dev+<short-sha>`。
-9. 生成 checksum manifest：
+10. 生成 checksum manifest：
    - `tritonkit_checksums.txt`
-10. 打包 skill：
+11. 打包 skill：
    - `tritonkit-skills.tar.gz`，包含 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover` 与 `tritonkit-real-project-regression`
-11. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
-12. tag 发布完成后触发 Homebrew tap 更新 workflow。
+12. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
+13. tag 发布完成后触发 Homebrew tap 更新 workflow。
 
 Skill 源码分层约束：release packaging 只能读取 `.agents/tritonkit-skills/public/`。`.agents/tritonkit-skills/internal/` 只存放 repo 维护、治理、实现和监督用 skill，不进入 `tritonkit-skills.tar.gz`；`.agents/skills/` 只作为本地 agent discovery symlink，不作为打包源。
 
@@ -76,6 +77,7 @@ brew upgrade triton
 - 本地运行 `docs-linhay/scripts/verify.sh --local` 覆盖项目级默认门禁。
 - CI docs/skill-only fast path 使用 `docs-linhay/scripts/verify.sh --ci-docs`；只允许 README、AGENTS、docs/memory/references/screenshots 与 `.agents/tritonkit-skills/` / `.agents/skills/` 进入 fast path，`Sources/`、`Tests/`、podspec、workflow、`docs-linhay/scripts/` 和 fixtures 默认触发 full validate。
 - 本地运行 `docs-linhay/scripts/verify-ci-validate-mode.sh` 验证 fast/full 分类边界。
+- Full validate 在 CI 中并行运行 Swift tests、两个 podspec lint 与 release/homebrew 契约检查；本地仍可用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
 - 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。
