@@ -18,7 +18,11 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
 ## Workflow
 
 1. Clarify only the minimum missing detail needed to avoid filing a wrong issue.
-2. If the user is adopting TritonKit in an iOS app, first guide them through the iOS integration checklist below.
+2. If the user is adopting TritonKit, first choose the matching checklist below:
+   - iOS app embedded runtime: SwiftPM/CocoaPods plus Debug-only bootstrap.
+   - Harmony host-side validation: `triton device/app --platform harmony` without embedded runtime.
+   - Harmony embedded SDK: package id/import path `tritonkit`, Debug-only runtime, provider-based app semantics, and `--runtime-base-url` checks while standalone.
+   - CLI-only use: Homebrew release install by default, local source build only for unreleased validation.
 3. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
    - `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`
    - `triton evidence inspect /tmp/<case>.tritonevidence --json`
@@ -216,7 +220,7 @@ struct YourApp: App {
 }
 ```
 
-### CLI Verification
+### CLI Installation And Verification
 
 When the report depends on unreleased source changes, build and use the local release CLI first:
 
@@ -303,6 +307,52 @@ triton replay /tmp/first-flow.tritonplan --dry-run --var username=alice --var pa
 - If App Transport Security blocks cleartext local development traffic, use a debug-only ATS exception. Do not ship broad ATS exceptions in production.
 - Release builds should compile, but `TritonKit.isRuntimeEnabled` is false and the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
+## Harmony App Integration Guide
+
+Use this when helping someone validate TritonKit with HarmonyOS / DevEco Emulator or add the Harmony embedded SDK to a Harmony app.
+
+### Choose The Harmony Path
+
+| Need | Path | App package change |
+| --- | --- | --- |
+| Discover emulator targets, wait for readiness, inspect/launch apps | Host-side HDC adapter through `triton device/app --platform harmony` | No |
+| Validate app-process manifest, snapshot, ledger, state providers, and semantic actions | Harmony embedded SDK direct runtime checks | Yes, Debug-only |
+
+Host-side Harmony validation does not require a running TritonKit embedded runtime:
+
+```bash
+triton device doctor --platform harmony --json
+triton device list --platform harmony --json
+triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
+triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
+triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
+```
+
+If multiple HDC targets are `Connected`, pass `--target`; `ambiguous_target` is the expected machine-readable failure.
+
+For Harmony embedded SDK work, use the TritonKit brand name but keep the actual OHPM package id and ArkTS import path lowercase:
+
+```text
+tritonkit
+```
+
+Until a published OHPM package exists, use the aligned `harmony-TritonKit` source/HAR for validation. Keep business app integration Debug-only. Release builds must expose disabled/no-op behavior and must not collect UI, screenshots, logs, route state, or action data.
+
+Business semantics must be app-provided. A generic HAR should return `unsupported_runtime_scope` for route, responder, semantic action, input, screenshot, hit-test, or system-alert capabilities unless the app registers the matching provider. Missing provider hooks are feature requests; falsely-supported capabilities are bugs.
+
+When validating a standalone embedded HTTP runtime before it is connected through `triton serve`, first ask Triton to prepare or discover the HDC fport URL, then use direct runtime commands:
+
+```bash
+triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json
+triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
+triton state route --runtime-base-url http://127.0.0.1:28767 --json
+triton snapshot --runtime-base-url http://127.0.0.1:28767 --json
+triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
+triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
+```
+
+For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` is the device-to-host gateway fallback port used by the demo UI. If an HDC fport already exists, use `docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh --target <hdc-target> --no-forward` to verify the live endpoint without re-registering the same port mapping.
+
 ### Distribution Notes
 
 - Repository: `https://github.com/NeptuneKit/TritonKit`
@@ -310,6 +360,7 @@ triton replay /tmp/first-flow.tritonplan --dry-run --var username=alice --var pa
 - Manual local CLI updates must use a temporary file plus `mv`, or stop `triton serve` before replacing the active binary path.
 - Released Homebrew install path: `brew install NeptuneKit/tap/triton`.
 - Homebrew updates come from `NeptuneKit/homebrew-tap` after release automation has run.
+- Homebrew installs only the macOS CLI. iOS embedded runtime still uses SwiftPM/CocoaPods; Harmony embedded SDK uses the Harmony package/source path.
 - GitHub Release assets include `triton-macos-arm64.tar.gz`, `triton-macos-x86_64.tar.gz`, `tritonkit_checksums.txt`, and project skill packages.
 - If Homebrew or GitHub Release assets are unavailable, use the local release build and include the missing distribution evidence in the issue.
 

@@ -55,6 +55,7 @@ metadata:
 - 调整 Homebrew、tap、checksum 或 release asset 命名时，同步更新 README、`.github/homebrew/`、`docs-linhay/dev/` 与 memory。
 - 调整 replay plan schema、record/replay 行为或 `.tritonplan` 对外契约时，同步更新 README、`docs-linhay/dev/ai-cli-readable-control.md`、真实项目回归 skill 与 memory。
 - 调整 agent-facing CLI 默认输出、参数简写或 command schema 时，同步更新 README、`docs-linhay/dev/ai-cli-readable-control.md`、真实项目回归 skill、开发反馈 skill 与 memory。
+- 调整 iOS / Harmony / CLI 接入使用指南时，同步更新 README、对应 dev 验收文档、`tritonkit-dev-feedback`、`tritonkit-real-project-regression`、必要时 `tritonkit-emulator-cli-takeover` 与 memory；接入口径必须拆分为 iOS embedded runtime、Harmony host-side HDC adapter、Harmony embedded SDK 和 macOS CLI install/run。
 
 ## AGENTS 同步
 

@@ -55,6 +55,23 @@ SwiftPM 的 external dependencies 是 package-level 入口，不能只靠 target
 - `AGENTS.md`
 - `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
 
+### iOS / Harmony / CLI 接入指南分流
+
+对外接入使用指南应先拆分用户意图，而不是把 iOS、Harmony 和 CLI 命令串成一个长流程：
+
+1. iOS embedded runtime：SwiftPM/CocoaPods、Debug-only bootstrap、文件级 `#if DEBUG`、Release no-op。
+2. Harmony host-side adapter：DevEco Emulator / HDC 发现、readiness、App inspect/launch，不要求 App 内接入 SDK。
+3. Harmony embedded SDK：package id / import path `tritonkit`、Debug-only、Release disabled/no-op、App provider 显式提供 route/responder/semantic action。
+4. macOS CLI：released build 默认 Homebrew；未发布源码验证才用 `CLI/Package.swift` local release build；手动替换二进制继续使用临时文件加 `mv` 或先停 server。
+
+复用入口：
+
+- `README.md`
+- `docs-linhay/dev/20260521-ios-harmony-cli-integration-guides.md`
+- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
+- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
+- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
+
 ### CI validate 优化
 
 CI validate 已按变更范围分类：docs、contracts、swift、podkit、full。普通 main push / PR 只阻塞 validate；release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行。后续调整 CI 时要保持分类脚本和 release 契约测试同步。

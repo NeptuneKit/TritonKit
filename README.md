@@ -1,10 +1,19 @@
 # TritonKit
 
-TritonKit provides a DEBUG-only embedded iOS runtime and a macOS `triton` CLI for inspecting and controlling an app during development. It is designed for AI agents and automation scripts that need machine-readable access to app hierarchy, accessibility nodes, geometry, screenshots, and supported in-app controls.
+TritonKit provides a DEBUG-only embedded iOS runtime, Harmony / DevEco Emulator host-side contracts, Harmony embedded runtime alignment notes, and a macOS `triton` CLI for inspecting and controlling apps during development. It is designed for AI agents and automation scripts that need machine-readable access to app hierarchy, accessibility nodes, geometry, screenshots, and supported in-app controls.
 
 TritonKit is in active development. If you hit a missing capability, unclear behavior, integration issue, or documentation gap, open an issue in `NeptuneKit/TritonKit`; AI agents using this repository should collect evidence and file the issue directly when they have GitHub access.
 
-## iOS App Integration Guide
+## Choose An Integration Path
+
+| Need | Start Here | Notes |
+| --- | --- | --- |
+| Add in-app runtime to an iOS app | [iOS Embedded Runtime Integration Guide](#ios-embedded-runtime-integration-guide) | SwiftPM or CocoaPods, always visibly Debug-only in app source. |
+| Install or update the macOS agent CLI | [CLI Integration Guide](#cli-integration-guide) | Homebrew for released builds, local source build only for unreleased validation. |
+| Prepare a HarmonyOS / DevEco Emulator | [Harmony App Integration Guide](#harmony-app-integration-guide) | Host-side HDC adapter works without embedded runtime. |
+| Validate a Harmony embedded runtime | [Harmony App Integration Guide](#harmony-app-integration-guide) | Use package id / import path `tritonkit` and `--runtime-base-url` direct checks while the SDK is standalone. |
+
+## iOS Embedded Runtime Integration Guide
 
 Use this shape when adding TritonKit to an iOS app. The app-side integration must be visibly Debug-only: put all TritonKit imports and startup code in a dedicated bootstrap file wrapped by `#if DEBUG`, then call that bootstrap only from a guarded app entry point.
 
@@ -160,7 +169,26 @@ struct YourApp: App {
 }
 ```
 
-### 3. Install The CLI
+### 3. iOS Network Notes
+
+For physical devices or local-network testing, add development-only network privacy text to the app target as needed:
+
+```xml
+<key>NSLocalNetworkUsageDescription</key>
+<string>Allow TritonKit to connect to the local development CLI.</string>
+```
+
+If your app blocks cleartext development traffic through App Transport Security, add a debug-only ATS exception for your local workflow. Do not ship broad ATS exceptions in production.
+
+### 4. iOS Runtime Boundary
+
+`TritonKit.isRuntimeEnabled` is `true` only in `DEBUG` builds. In Release builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
+
+## CLI Integration Guide
+
+Use the CLI guide independently when an agent only needs host-side simulator or Harmony / DevEco Emulator control. Use it together with the iOS or Harmony embedded runtime guides when the app process exposes TritonKit runtime endpoints.
+
+### 1. Install The CLI
 
 #### Local Source Fallback
 
@@ -228,7 +256,7 @@ Download the archive for your Mac, then copy `triton` into a directory on `PATH`
 
 When replacing an existing `triton` executable manually, use the same temporary-file plus `mv` pattern above, or stop `triton serve` before copying over the active path.
 
-### 4. Run The CLI
+### 2. Run The CLI
 
 Start the macOS-side server before launching the app:
 
@@ -257,7 +285,7 @@ triton hierarchy --json
 triton ax --json
 ```
 
-When validating a standalone embedded runtime HTTP endpoint, for example a Harmony SDK demo server before it is connected through `triton serve`, bypass the local control server with `--runtime-base-url`:
+When validating a standalone embedded runtime HTTP endpoint before it is connected through `triton serve`, bypass the local control server with `--runtime-base-url`:
 
 ```bash
 triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json
@@ -319,8 +347,6 @@ triton app launch --platform harmony --bundle com.example.app --ability EntryAbi
 
 When multiple HDC targets are `Connected`, Triton returns `error.code=ambiguous_target` and requires an explicit `--target`. The adapter records `sourceCommand`; risk/policy metadata is for audit and configuration validation, not an interactive confirmation gate.
 
-Harmony embedded collection is a future optional DEBUG-only path, not a prerequisite for the host-side HDC adapter. The current shared contract defines manifest, configuration, snapshot, redaction, geometry, accessibility, and screenshot-metadata JSON shapes for a later ArkTS/ArkUI collector; Release builds must expose a disabled no-op surface and must not collect or upload data.
-
 For repeatable regression flows, wait for asynchronous UI state before the next action or assertion:
 
 ```bash
@@ -375,22 +401,41 @@ triton replay /tmp/login-flow.tritonplan --var username=alice --var password-env
 
 `record` currently writes an editable starter template; it does not capture live terminal history or global input events yet. `replay` supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence` steps, `${variable}` substitution, `--var key=value`, `--var key-env=ENV_NAME`, and secure value redaction in step summaries.
 
-### 5. iOS Network Notes
+## Harmony App Integration Guide
 
-For physical devices or local-network testing, add development-only network privacy text to the app target as needed:
+Harmony has two separate integration paths. Keep them distinct when writing docs, issues, or smoke scripts:
 
-```xml
-<key>NSLocalNetworkUsageDescription</key>
-<string>Allow TritonKit to connect to the local development CLI.</string>
+| Path | Purpose | Requires app package changes |
+| --- | --- | --- |
+| Host-side HDC / DevEco Emulator adapter | Target discovery, readiness, app inspect, app launch, screenshots, layout, logs, and future evidence capture | No |
+| Harmony embedded SDK | App-process manifest, snapshot, ledger, app state, route/responder providers, and semantic action providers | Yes, Debug-only |
+
+For host-side emulator control, start with the CLI commands in [Run The CLI](#2-run-the-cli). This path is the default for emulator preparation and does not require a Harmony app to embed TritonKit.
+
+For Harmony embedded SDK work, use the TritonKit brand name but keep the actual OHPM package id and ArkTS import path lowercase:
+
+```text
+tritonkit
 ```
 
-If your app blocks cleartext development traffic through App Transport Security, add a debug-only ATS exception for your local workflow. Do not ship broad ATS exceptions in production.
+The Harmony SDK currently comes from the `harmony-TritonKit` alignment work. Until an OHPM package is published, use the aligned source/HAR from that project for SDK validation and keep the business app integration Debug-only.
 
-### 6. Runtime Boundary
+The embedded runtime must follow the same Release boundary as iOS: Debug builds may expose `platform=harmony` runtime metadata and app-provided semantics; Release builds must report disabled/no-op behavior and must not collect UI, screenshots, logs, route state, or action data.
 
-`TritonKit.isRuntimeEnabled` is `true` only in `DEBUG` builds. In Release builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
+Business semantics are opt-in provider hooks. A generic HAR must not pretend it can infer app-specific route, responder, or semantic action state. If the app registers scene, route, responder, or action providers, verify that `runtime.manifest` marks those capabilities as supported; otherwise `unsupported_runtime_scope` is the expected result.
 
-The same boundary applies to the planned Harmony collector contract: DEBUG may expose `platform=harmony` and `transport=embedded-websocket` snapshot metadata, while Release stays `enabled=false` with no capabilities.
+When the Harmony embedded runtime is reachable through HDC `fport` but has not been connected through `triton serve`, use direct runtime checks:
+
+```bash
+triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json
+triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
+triton state route --runtime-base-url http://127.0.0.1:28767 --json
+triton snapshot --runtime-base-url http://127.0.0.1:28767 --json
+triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
+triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
+```
+
+For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` remains the device-to-host gateway fallback port used by the demo UI.
 
 ## Release Assets
 
