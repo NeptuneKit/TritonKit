@@ -30,6 +30,11 @@ if grep -q 'render-homebrew-formula.sh .*v0[.]1[.]0' "${ci_workflow}"; then
 fi
 
 grep -q 'formula_tag=' "${ci_workflow}" || fail "ci workflow must derive formula_tag dynamically"
+if grep -Fq 'formula_tag="v${{ steps.version.outputs.version }}"' "${ci_workflow}"; then
+  fail "ci workflow must not render Homebrew formula from non-tag dev versions"
+fi
+grep -q 'skip Homebrew formula rendering for non-tag release asset validation' "${ci_workflow}" \
+  || fail "ci workflow must skip Homebrew formula rendering for non-tag release asset validation"
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"
 grep -q 'tritonkit-skills[.]tar[.]gz' "${ci_workflow}" || fail "ci workflow must publish a combined tritonkit-skills.tar.gz"
 grep -q 'sha256sum [*][.]tar[.]gz' "${ci_workflow}" || fail "ci workflow checksums should cover tar.gz release assets"

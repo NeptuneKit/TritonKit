@@ -28,6 +28,8 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 11. 所有包先作为 workflow artifact 上传；tag 发布时再作为 GitHub Release asset 上传。
 12. tag 发布完成后触发 Homebrew tap 更新 workflow。
 
+补充约束：`workflow_dispatch` 的非 tag 构建只验证 release asset 集合并上传 workflow artifact，不渲染 Homebrew formula。原因是非 tag 版本形如 `0.1.0-dev+<short-sha>`，不是可发布的 Homebrew release tag；只有真实 `v*` tag 构建才使用 `GITHUB_REF_NAME` 渲染 formula 并做 Ruby 语法检查。
+
 GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免 Node.js 20 deprecation annotation 干扰失败判断。
 
 ## 产物契约

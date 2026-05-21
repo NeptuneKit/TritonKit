@@ -191,16 +191,15 @@ jobs:
 
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
             formula_tag="${GITHUB_REF_NAME}"
+            docs-linhay/scripts/render-homebrew-formula.sh \
+              "${formula_tag}" \
+              "dist/tritonkit_checksums.txt" \
+              ".github/homebrew/triton.rb.template" \
+              "/tmp/triton.rb"
+            ruby -c /tmp/triton.rb >/dev/null
           else
-            formula_tag="v${{ steps.version.outputs.version }}"
+            echo "skip Homebrew formula rendering for non-tag release asset validation"
           fi
-
-          docs-linhay/scripts/render-homebrew-formula.sh \
-            "${formula_tag}" \
-            "dist/tritonkit_checksums.txt" \
-            ".github/homebrew/triton.rb.template" \
-            "/tmp/triton.rb"
-          ruby -c /tmp/triton.rb >/dev/null
 
       - name: Upload workflow artifacts
         uses: actions/upload-artifact@v4

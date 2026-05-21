@@ -18,6 +18,8 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 8. `v*` tag 发布时上传所有资产到 GitHub Release。
 9. tag 发布完成后调用 tap 更新 workflow，将 `.github/homebrew/triton.rb.template` 渲染到 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb`。
 
+`workflow_dispatch` 只作为发布物集合的云端演练入口：它会生成双架构 CLI、合并 skill 包和 checksum，并上传 workflow artifact；但不会渲染 Homebrew formula。Homebrew formula 只允许在真实 `v*` tag 上用 `GITHUB_REF_NAME` 渲染，避免把 `0.1.0-dev+<short-sha>` 这种 dev 版本拼成无效 tag。
+
 ## Formula 契约
 
 当前发布状态：
