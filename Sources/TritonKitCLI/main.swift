@@ -1500,7 +1500,6 @@ func runXcodeBuild(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Do
         derivedDataPath: invocation.derivedDataPath
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl)
-    let product = try? resolveBuiltAppProduct(invocation: invocation, timeout: timeout)
     return TKXcodeActionSummary(
         ok: true,
         action: "xcode.build",
@@ -1511,8 +1510,6 @@ func runXcodeBuild(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Do
         sdk: invocation.sdk,
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath,
-        appPath: product?.appPath,
-        bundleID: product?.bundleID,
         simulatorUDID: invocation.simulatorUDID,
         durationMs: durationMs,
         sourceCommand: result.sourceCommand,
@@ -1569,7 +1566,12 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
         throw XcodeWorkflowError.simulatorRequired
     }
     let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout)
-    let product = try resolveBuiltAppProduct(invocation: invocation, timeout: timeout)
+    let product = try resolveBuiltAppProduct(
+        invocation: invocation,
+        timeout: timeout,
+        jsonl: jsonl,
+        event: "xcode.run.settings"
+    )
     let bundleID: String
     if let productBundleID = product.bundleID {
         bundleID = productBundleID
@@ -1845,7 +1847,12 @@ func streamingSample(stream: String, data: Data, maximumBytes: Int = 2_000) -> S
     return "\(stream): \(text)\(suffix)"
 }
 
-func resolveBuiltAppProduct(invocation: ResolvedXcodeInvocation, timeout: Double? = nil) throws -> TKXcodeBuiltAppProduct {
+func resolveBuiltAppProduct(
+    invocation: ResolvedXcodeInvocation,
+    timeout: Double? = nil,
+    jsonl: Bool = false,
+    event: String = "xcode.settings.resolve"
+) throws -> TKXcodeBuiltAppProduct {
     let command = TKXcodebuildCommand.showBuildSettings(
         workspace: invocation.workspace,
         project: invocation.project,
@@ -1855,7 +1862,12 @@ func resolveBuiltAppProduct(invocation: ResolvedXcodeInvocation, timeout: Double
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath
     ).withTimeout(timeout)
-    let result = try runHostCommand(command)
+    let result: HostProcessResult
+    if jsonl {
+        result = try runXcodeHostCommand(command, event: event, jsonl: true).0
+    } else {
+        result = try runHostCommand(command)
+    }
     do {
         return try TKXcodeBuildSettingsParser.resolveBuiltApp(result.stdoutData)
     } catch {

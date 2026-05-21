@@ -63,6 +63,40 @@ release_cli_smoke() {
     echo "assert validation did not return validation_failed" >&2
     return 1
   fi
+
+  local fake_bin fake_calls
+  fake_bin="$(mktemp -d)"
+  fake_calls="$fake_bin/xcodebuild-calls.log"
+  cat >"$fake_bin/xcodebuild" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$*" >>"${TRITON_FAKE_XCODEBUILD_CALLS:?}"
+echo "** BUILD SUCCEEDED **"
+EOF
+  chmod +x "$fake_bin/xcodebuild"
+
+  TRITON_FAKE_XCODEBUILD_CALLS="$fake_calls" \
+    PATH="$fake_bin:$PATH" \
+    "$triton" xcode build \
+      --workspace App.xcworkspace \
+      --scheme App \
+      --configuration Debug \
+      --sdk iphonesimulator \
+      --destination "platform=iOS Simulator,id=SIM-1" \
+      --derived-data-path .triton/DerivedData \
+      --jsonl \
+      --timeout 1 \
+      >/tmp/triton-verify-xcode-build-jsonl.log
+
+  if ! grep -q '"event":"xcode.build.summary"' /tmp/triton-verify-xcode-build-jsonl.log; then
+    echo "xcode build smoke did not emit build summary" >&2
+    return 1
+  fi
+
+  if grep -q -- "-showBuildSettings" "$fake_calls"; then
+    echo "xcode build smoke unexpectedly invoked -showBuildSettings after build" >&2
+    return 1
+  fi
 }
 
 xcode_simulator_build_if_available() {

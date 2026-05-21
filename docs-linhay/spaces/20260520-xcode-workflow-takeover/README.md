@@ -132,7 +132,8 @@ P0 最小 `triton xcode` 入口已落地：
 1. XcodeBuildMCP 继续作为能力参考，不再作为默认 agent 执行入口；agent 面优先使用 `triton xcode`。
 2. `xcode run` 只覆盖 build、simulator install、simulator launch，不声明业务 ready；后续必须接 `triton status/wait/find/assert/screenshot/evidence`。
 3. `xcode settings/build/test/run --jsonl` 已输出 invocation、stdout/stderr sample、heartbeat、summary，以及 stdout/stderr log path 和 byte count；真实项目卡住时先看这些 artifact，不再盲等。
-4. `xcresult`、coverage、logs 与 evidence 的深度整合仍在后续切片，不在本次 P0 内宣称完成。
+4. `xcode build` 的成功 summary 是纯 build 结束边界；它不再在 summary 后隐式执行 `xcodebuild -showBuildSettings -json`。需要 `.app` 路径时使用 `xcode settings` 或 `xcode run`，其中 `xcode run --jsonl` 会把 settings 解析暴露为 `xcode.run.settings.*` 进度事件。
+5. `xcresult`、coverage、logs 与 evidence 的深度整合仍在后续切片，不在本次 P0 内宣称完成。
 
 ### P0：Xcode workflow 最小闭环
 
