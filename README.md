@@ -261,12 +261,14 @@ When validating a standalone embedded runtime HTTP endpoint, for example a Harmo
 
 ```bash
 triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json
-triton runtime manifest --runtime-base-url http://127.0.0.1:18765 --json
-triton state route --runtime-base-url http://127.0.0.1:18765 --json
-triton snapshot --runtime-base-url http://127.0.0.1:18765 --json
-triton ledger --runtime-base-url http://127.0.0.1:18765 --jsonl
-triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:18765 --json
+triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
+triton state route --runtime-base-url http://127.0.0.1:28767 --json
+triton snapshot --runtime-base-url http://127.0.0.1:28767 --json
+triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
+triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
 ```
+
+For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` remains the device-to-host gateway fallback port used by the demo UI.
 
 Host-side simulator helpers are available without a running TritonKit runtime. They wrap `xcrun simctl` but keep JSON output and stable Triton error envelopes:
 

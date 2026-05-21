@@ -160,6 +160,7 @@ env PATH=/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin:/Applications/D
 
 1. 新增共享 `TKEmbeddedRuntimeHTTPRoute`，把 `runtimeManifest`、`stateApp/Scene/Route/Responder`、`runtimeSnapshot`、`runtimeLedger`、`semanticAction` 映射到 Harmony SDK `/v2/runtime/*`。
 2. `triton runtime manifest`、`triton state app|scene|route|responder`、`triton snapshot`、`triton ledger`、`triton focus`、`triton set-text`、`triton select-segment`、`triton set-switch` 新增 `--runtime-base-url`。
-3. `triton device runtime-url --platform harmony` 新增 HDC fport 准备入口，返回可直接传给 `--runtime-base-url` 的 `baseURL`，并支持 `--probe-manifest` 探测 Harmony runtime manifest。
+3. `triton device runtime-url --platform harmony` 新增 HDC fport 准备入口，返回可直接传给 `--runtime-base-url` 的 `baseURL`，并支持 `--probe-manifest` 探测 Harmony runtime manifest；真实 DevEco Emulator demo 验证后，host-access embedded runtime 默认端口修正为 `28767`，`18765` 仅作为 demo 内 device-to-host gateway fallback 端口。
 4. 不传 `--runtime-base-url` 时仍走本机 `triton serve` `/request`；传入后绕过 Triton server，直接调用 embedded HTTP runtime，适合 Harmony SDK demo server 和业务 App provider smoke。
-5. 新增 `docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`，使用 mock Harmony runtime 和 fake HDC 验证 CLI schema 暴露、runtime-url、manifest、state route、snapshot、ledger JSONL 和 secure `set-text` provider action。
+5. 新增 `docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`，使用 mock Harmony runtime 和 fake HDC 验证 CLI schema 暴露、runtime-url 默认端口、manifest、state route、snapshot、ledger JSONL 和 secure `set-text` provider action。
+6. 新增 `docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh`，用于有真实 HDC target 时串联 wait-ready、可选 HAP install/start、`runtime-url --probe-manifest`、manifest/state/snapshot/ledger 验证。

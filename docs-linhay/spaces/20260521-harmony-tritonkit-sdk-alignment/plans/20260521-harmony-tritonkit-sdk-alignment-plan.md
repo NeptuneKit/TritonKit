@@ -80,7 +80,7 @@
 | H6 App Provider | 部分完成 | 已新增 scene/route/responder/action provider hook；App 可主动把业务状态和语义动作结果交给 embedded SDK；network breadcrumbs 等 opt-in 业务打点未展开 |
 | H4 HAR dry-run build | 完成 | 使用 DevEco 自带 `ohpm 6.0.1` 和 hvigor 成功生成 `library/build/default/outputs/default/library.har` |
 | H5 Demo smoke | 部分完成 | 脚本级 demo smoke 通过；未安装到 Harmony 模拟器做 HAP 实机 smoke |
-| H6 TritonKit CLI direct runtime | 完成首片 | 主仓新增 `TKEmbeddedRuntimeHTTPRoute`、`--runtime-base-url` 和 `triton device runtime-url --platform harmony`；CLI 可准备 HDC fport 并直接访问 Harmony SDK `/v2/runtime/manifest`、`state/*`、`snapshot`、`ledger`、`action`；mock smoke 已覆盖 schema、fake HDC 和 secure semantic action |
+| H6 TritonKit CLI direct runtime | 完成首片 | 主仓新增 `TKEmbeddedRuntimeHTTPRoute`、`--runtime-base-url` 和 `triton device runtime-url --platform harmony`；CLI 可准备 HDC fport 并直接访问 Harmony SDK `/v2/runtime/manifest`、`state/*`、`snapshot`、`ledger`、`action`；真实 DevEco Emulator demo 已确认 host-access runtime 端口为 `28767`，mock smoke 已覆盖 schema 默认端口、fake HDC 和 secure semantic action；有真实 HDC target 时可用 `docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh` 复跑 |
 
 剩余工作：
 

@@ -12,6 +12,12 @@ enum TritonKitBuildInfo {
     static let cliVersion = "0.1.0-dev"
 }
 
+enum TKHarmonyRuntimeDefaults {
+    static let hostAccessPort = 28767
+    static let gatewayPort = 18765
+    static let hostAccessBaseURL = "http://127.0.0.1:\(hostAccessPort)"
+}
+
 // MARK: - Entry Point
 
 @main
@@ -1033,8 +1039,8 @@ struct DeviceRuntimeURL: AsyncParsableCommand {
     @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
     @Option(help: "Target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
-    @Option(help: "Local TCP port for host-side runtime access") var localPort: Int = 18765
-    @Option(help: "Remote TCP port where the Harmony embedded runtime listens") var remotePort: Int = 18765
+    @Option(help: "Local TCP port for host-side runtime access") var localPort: Int = TKHarmonyRuntimeDefaults.hostAccessPort
+    @Option(help: "Remote TCP port where the Harmony embedded runtime listens") var remotePort: Int = TKHarmonyRuntimeDefaults.hostAccessPort
     @Flag(help: "Skip HDC fport setup and only print the local base URL") var noForward = false
     @Flag(help: "Probe /v2/runtime/manifest after preparing the base URL") var probeManifest = false
     @Flag(help: "Alias for --format json") var json = false
@@ -2975,8 +2981,8 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--hdc <path>", "HDC 可执行文件路径，默认 hdc"),
             ("--target <target>", "Harmony target，例如 127.0.0.1:10100"),
             ("--timeout <seconds>", "wait-ready 超时时间，默认 30"),
-            ("--local-port <port>", "runtime-url 本机端口，默认 18765"),
-            ("--remote-port <port>", "runtime-url 设备端 embedded runtime 端口，默认 18765"),
+            ("--local-port <port>", "runtime-url 本机 host-access 端口，默认 \(TKHarmonyRuntimeDefaults.hostAccessPort)"),
+            ("--remote-port <port>", "runtime-url 设备端 embedded runtime host-access 端口，默认 \(TKHarmonyRuntimeDefaults.hostAccessPort)"),
             ("--probe-manifest", "runtime-url 建立端口映射后验证 /v2/runtime/manifest"),
         ]),
         "plan": ChineseCommandHelp(name: "plan", overview: "根据当前服务和目标状态输出推荐下一步；inspect 子动作可离线查看 .tritonplan 摘要。", usage: "triton plan [inspect <path>] [选项]", options: hostPort + formatTextJSON),
@@ -3256,7 +3262,7 @@ struct RuntimeManifest: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -3316,7 +3322,7 @@ struct StateApp: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -3332,7 +3338,7 @@ struct StateScene: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -3348,7 +3354,7 @@ struct StateRoute: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -3364,7 +3370,7 @@ struct StateResponder: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -3425,7 +3431,7 @@ struct Snapshot: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Comma-separated sections: app,scene,route,responder,ax,geometry,screenshot-metadata") var include: String = "app,scene,route,ax,geometry"
     @Option(help: "Maximum AX nodes to return") var maxAXNodes: Int?
@@ -3464,7 +3470,7 @@ struct Focus: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
@@ -3498,7 +3504,7 @@ struct SetText: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Flag(name: .customLong("secure"), help: "Redact text in command output and ledger") var secure = false
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
@@ -3535,7 +3541,7 @@ struct SelectSegment: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
@@ -3571,7 +3577,7 @@ struct SetSwitch: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
@@ -3604,7 +3610,7 @@ struct Ledger: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767")
     var runtimeBaseURL: String?
     @Option(help: "Maximum ledger entries to return") var limit: Int = 50
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -6012,7 +6018,7 @@ func commandSchemas() -> [TKCommandSchema] {
     let formatJSONText = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format")
     let jsonAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --format json")
     let languageOption = TKCommandSchemaOption(name: "--language/--lang", type: "en|zh", defaultValue: "TRITON_LANGUAGE or en", description: "Human-readable output language")
-    let runtimeBaseURLOption = TKCommandSchemaOption(name: "--runtime-base-url", type: "URL", description: "Bypass Triton server and call a direct embedded runtime HTTP base URL, for example http://127.0.0.1:18765")
+    let runtimeBaseURLOption = TKCommandSchemaOption(name: "--runtime-base-url", type: "URL", description: "Bypass Triton server and call a direct embedded runtime HTTP base URL, for example \(TKHarmonyRuntimeDefaults.hostAccessBaseURL)")
     let metadataJSONAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --metadata")
     let refreshOption = TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before reading")
     return [
@@ -6174,7 +6180,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 jsonAlias,
                 languageOption,
             ],
-            examples: ["triton runtime manifest --json", "triton runtime manifest --runtime-base-url http://127.0.0.1:18765 --json"],
+            examples: ["triton runtime manifest --json", "triton runtime manifest --runtime-base-url \(TKHarmonyRuntimeDefaults.hostAccessBaseURL) --json"],
             successShape: "{ ok, platform, runtime, transport, enabled, sdkVersion, buildConfiguration, capabilities[], limits, redaction }",
             providedCapabilities: ["runtime-manifest"]
         ),
@@ -6362,8 +6368,8 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
                 TKCommandSchemaOption(name: "--target", type: "String", description: "Harmony target, for example 127.0.0.1:10100"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "30", description: "Bounded wait timeout in seconds"),
-                TKCommandSchemaOption(name: "--local-port", type: "Int", defaultValue: "18765", description: "Local TCP port used in the generated base URL"),
-                TKCommandSchemaOption(name: "--remote-port", type: "Int", defaultValue: "18765", description: "Remote TCP port where the Harmony embedded runtime listens"),
+                TKCommandSchemaOption(name: "--local-port", type: "Int", defaultValue: String(TKHarmonyRuntimeDefaults.hostAccessPort), description: "Local TCP port used in the generated base URL"),
+                TKCommandSchemaOption(name: "--remote-port", type: "Int", defaultValue: String(TKHarmonyRuntimeDefaults.hostAccessPort), description: "Remote TCP port where the Harmony embedded runtime host-access server listens"),
                 TKCommandSchemaOption(name: "--no-forward", type: "Bool", defaultValue: "false", description: "Skip HDC fport setup and only print the local URL"),
                 TKCommandSchemaOption(name: "--probe-manifest", type: "Bool", defaultValue: "false", description: "Probe /v2/runtime/manifest after preparing the URL"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),

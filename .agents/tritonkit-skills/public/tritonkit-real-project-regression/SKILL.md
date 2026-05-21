@@ -79,6 +79,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
      - validation path: `ohpm install`, `hvigorw --mode module -p module=entry@default assembleHap`, HDC install/start, `uitest dumpLayout`, and `uitest screenCap`.
    - when validating a standalone Harmony embedded HTTP runtime before it is connected through `triton serve`, use direct runtime checks:
      - `triton device runtime-url --platform harmony --target <hdc-target> --probe-manifest --json` to prepare HDC fport and get the `baseURL`;
+     - the Harmony demo host-access embedded runtime default is `http://127.0.0.1:28767`; `18765` is reserved for the demo device-to-host gateway fallback path;
      - `triton runtime manifest --runtime-base-url http://127.0.0.1:<port> --json`;
      - `triton state route --runtime-base-url http://127.0.0.1:<port> --json`;
      - `triton snapshot --runtime-base-url http://127.0.0.1:<port> --json`;

@@ -5,8 +5,9 @@ repo_root="$(cd "$(dirname "$0")/../.." && pwd)"
 triton="${TRITON_BIN:-$repo_root/.build/cli/debug/triton}"
 out_dir="${1:-$repo_root/.build/harmony-runtime-base-url-smoke}"
 host="127.0.0.1"
-port="${TRITON_HARMONY_RUNTIME_SMOKE_PORT:-18765}"
+port="${TRITON_HARMONY_RUNTIME_SMOKE_PORT:-31867}"
 base_url="http://$host:$port"
+default_base_url="http://$host:28767"
 
 mkdir -p "$out_dir"
 
@@ -46,6 +47,8 @@ jq -e '.commands[0].options[] | select(.name == "--runtime-base-url")' "$out_dir
 
 "$triton" schema --command device --json > "$out_dir/schema-device.json"
 jq -e '.commands[0].options[] | select(.name | startswith("runtime-url "))' "$out_dir/schema-device.json" >/dev/null
+jq -e '.commands[0].options[] | select(.name == "--local-port" and .defaultValue == "28767")' "$out_dir/schema-device.json" >/dev/null
+jq -e '.commands[0].options[] | select(.name == "--remote-port" and .defaultValue == "28767")' "$out_dir/schema-device.json" >/dev/null
 
 python3 - "$host" "$port" > "$out_dir/mock-server.log" 2>&1 <<'PY' &
 import json
@@ -191,6 +194,9 @@ for _ in {1..50}; do
 done
 
 jq -e '.ok == true and .platform == "harmony" and .runtime == "arkts-har" and (.capabilities[] | select(.name == "press" and .scope == "host-side"))' "$out_dir/runtime-manifest.json" >/dev/null
+
+"$triton" device runtime-url --platform harmony --target 127.0.0.1:10100 --hdc "$fake_hdc" --no-forward --json > "$out_dir/runtime-url-defaults.json"
+jq -e --arg base "$default_base_url" '.ok == true and .baseURL == $base and .localPort == 28767 and .remotePort == 28767 and .forwarded == false and (.manifest? == null)' "$out_dir/runtime-url-defaults.json" >/dev/null
 
 "$triton" device runtime-url --platform harmony --target 127.0.0.1:10100 --hdc "$fake_hdc" --local-port "$port" --remote-port "$port" --probe-manifest --json > "$out_dir/runtime-url.json"
 jq -e --arg base "$base_url" '.ok == true and .baseURL == $base and .forwarded == true and .manifest.platform == "harmony"' "$out_dir/runtime-url.json" >/dev/null
