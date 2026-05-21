@@ -36,7 +36,8 @@ if grep -Fq 'formula_tag="v${{ steps.version.outputs.version }}"' "${ci_workflow
   fail "ci workflow must not render Homebrew formula from non-tag dev versions"
 fi
 grep -q 'classify-validate:' "${ci_workflow}" || fail "ci workflow must classify validate scope before running gates"
-grep -q 'validate-docs:' "${ci_workflow}" || fail "ci workflow must keep a docs/skill-only validate path"
+grep -q 'Validate docs and skills' "${ci_workflow}" || fail "ci workflow must keep an in-classifier docs/skill-only validate path"
+grep -q 'Validate short-path contracts' "${ci_workflow}" || fail "ci workflow must keep an in-classifier contract-only validate path"
 grep -q 'validate-swift:' "${ci_workflow}" || fail "ci workflow must split Swift tests into an independent validate job"
 grep -q 'validate-podspec-shared:' "${ci_workflow}" || fail "ci workflow must split TritonKitShared podspec lint into an independent validate job"
 grep -q 'validate-podspec-kit:' "${ci_workflow}" || fail "ci workflow must split TritonKit podspec lint into an independent validate job"

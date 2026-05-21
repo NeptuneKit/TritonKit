@@ -37,20 +37,17 @@ jobs:
           echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
           echo "validate mode: ${mode}"
 
-  validate-docs:
-    name: Validate Docs
-    needs: classify-validate
-    if: needs.classify-validate.outputs.mode == 'docs'
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-        with:
-          fetch-depth: 0
-
       - name: Validate docs and skills
+        if: steps.validate-scope.outputs.mode == 'docs'
         run: docs-linhay/scripts/verify.sh --ci-docs
+
+      - name: Validate short-path contracts
+        if: steps.validate-scope.outputs.mode == 'contracts'
+        run: |
+          docs-linhay/scripts/verify-ci-validate-mode.sh
+          docs-linhay/scripts/verify-homebrew-formula.sh
+          docs-linhay/scripts/verify-version-stamping.sh
+          docs-linhay/scripts/verify-release-automation.sh
 
   validate-swift:
     name: Validate Swift Tests
@@ -117,7 +114,7 @@ jobs:
   validate-contracts:
     name: Validate Contracts
     needs: classify-validate
-    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'podkit' || needs.classify-validate.outputs.mode == 'swift' || needs.classify-validate.outputs.mode == 'contracts'
+    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'podkit' || needs.classify-validate.outputs.mode == 'swift'
     runs-on: ubuntu-latest
 
     steps:
@@ -142,7 +139,6 @@ jobs:
     name: Validate
     needs:
       - classify-validate
-      - validate-docs
       - validate-swift
       - validate-podspec-shared
       - validate-podspec-kit
@@ -158,7 +154,6 @@ jobs:
           mode="${{ needs.classify-validate.outputs.mode }}"
           echo "validate mode: ${mode}"
           echo "classify: ${{ needs.classify-validate.result }}"
-          echo "docs: ${{ needs.validate-docs.result }}"
           echo "swift: ${{ needs.validate-swift.result }}"
           echo "podspec-shared: ${{ needs.validate-podspec-shared.result }}"
           echo "podspec-kit: ${{ needs.validate-podspec-kit.result }}"
@@ -171,7 +166,6 @@ jobs:
 
           case "${mode}" in
             docs)
-              [[ "${{ needs.validate-docs.result }}" == "success" ]] || exit 1
               ;;
             full)
               [[ "${{ needs.validate-swift.result }}" == "success" ]] || exit 1
@@ -189,7 +183,6 @@ jobs:
               [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
               ;;
             contracts)
-              [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
               ;;
             *)
               echo "unknown validate mode: ${mode}" >&2
