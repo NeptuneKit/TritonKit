@@ -11,6 +11,7 @@ TritonKit 需要在仓库 README 和项目级 skill 中提供 iOS 侧接入指�
 - Given 使用者首次打开仓库
 - When 阅读 `README.md`
 - Then 能看到 SwiftPM 与 CocoaPods 的接入方式
+- And 能看到 SwiftPM 没有 CocoaPods-style Debug-only dependency switch 的限制与替代策略
 - And 能看到文件级 `#if DEBUG` 包裹的 `TritonKitDebugBootstrap.swift` 示例
 - And AppDelegate / SwiftUI 入口只保留 `#if DEBUG` 调用点
 - And 能看到 CLI server 启动与 `status/list/hierarchy/ax` 验证命令
@@ -25,7 +26,7 @@ TritonKit 需要在仓库 README 和项目级 skill 中提供 iOS 侧接入指�
 
 ## 接入口径
 
-1. SwiftPM：添加 `https://github.com/NeptuneKit/TritonKit.git`，选择 `TritonKit` product；业务 App 源码中所有 `import TritonKit` 与启动代码必须由 `#if DEBUG` 显式包住。
+1. SwiftPM：添加 `https://github.com/NeptuneKit/TritonKit.git`，选择 `TritonKit` product；SwiftPM / Xcode package product dependency 没有 CocoaPods 这种 `:configurations => ['Debug']` 开关，因此默认策略是业务 App 源码中所有 `import TritonKit` 与启动代码必须由 `#if DEBUG` 显式包住，并依赖 TritonKit Release no-op runtime；若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme，并只在那里挂 `TritonKit` product。
 2. CocoaPods：开发阶段显式添加 `TritonKitShared` 与 `TritonKit` 两个 pod，并指向 `main` 分支；Podfile 示例必须加 `:configurations => ['Debug']`。
 3. App 侧：优先新建独立 `TritonKitDebugBootstrap.swift`，整个文件从 `import TritonKit`、`TritonKitRequestHandler` 强引用，到 `delegate`、`dataURL`、`connect(host:port:)` 都包在文件级 `#if DEBUG` 内。
 4. 启动入口：AppDelegate、SceneDelegate 或 SwiftUI `onAppear` 只保留 `#if DEBUG` 调用点，例如 `TritonKitDebugBootstrap.shared.start()`；不要把 TritonKit 符号散落在生产入口文件里。

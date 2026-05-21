@@ -24,6 +24,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - Confirm the active binary with `triton version --json` or `.build/release/triton version --json`.
 4. Integrate TritonKit into the app only through the intended DEBUG-only package path:
    - SwiftPM or CocoaPods as requested; CocoaPods examples must use `:configurations => ['Debug']`.
+   - For SwiftPM, do not claim configuration-scoped package dependencies exist. Use source-level `#if DEBUG` isolation, or create a separate Debug-only app target/scheme if Release must not link TritonKit at all.
    - Put all app-side TritonKit code in a dedicated iOS file such as `TritonKitDebugBootstrap.swift`.
    - Wrap the entire file in `#if DEBUG`, including `import TritonKit`, `TritonKitRequestHandler` storage, `delegate`, `dataURL`, and `connect(host:port:)`.
    - Call the bootstrap only from a `#if DEBUG` branch in AppDelegate, SceneDelegate, or SwiftUI `onAppear`.
@@ -94,6 +95,8 @@ https://github.com/NeptuneKit/TritonKit.git
 ```
 
 Add the `TritonKit` product to the iOS app target. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the library's Release no-op behavior.
+
+SwiftPM / Xcode package product dependencies do not have a CocoaPods-style `:configurations => ['Debug']` switch. The supported SwiftPM path is source-level Debug isolation with the dedicated bootstrap file below, plus TritonKit's Release no-op runtime. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
 
 CocoaPods during development:
 

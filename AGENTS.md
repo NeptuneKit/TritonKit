@@ -62,7 +62,8 @@
 19. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后应基于 GitHub Release 资产和 checksum manifest 更新 tap formula。
 20. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
 21. 业务 App 侧 iOS 接入文件必须使用独立 Debug bootstrap 文件，并用文件级 `#if DEBUG` 包住 `import TritonKit`、`TritonKitRequestHandler` 强引用、`delegate`、`dataURL` 与 `connect(host:port:)`；AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点，不能只依赖库内部 Release no-op。
-22. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 必须保持 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CI 需校验 podspec 可 lint。
+22. SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only 配置开关；对外接入指南必须明确：默认走源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
+23. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 必须保持 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CI 需校验 podspec 可 lint。
 
 ## 2. 标准工作流（必须）
 

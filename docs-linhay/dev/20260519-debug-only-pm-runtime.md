@@ -28,6 +28,14 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - Then 这些符号必须放在独立 Debug bootstrap 文件中，并由文件级 `#if DEBUG` 包住
 - And AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点
 
+### 场景 4：SwiftPM 接入口径不伪造配置级依赖开关
+
+- Given README 或 public skill 提供 SwiftPM 接入说明
+- When 用户要求 Debug-only 接入
+- Then 文档必须说明 SwiftPM / Xcode package product dependency 没有 CocoaPods-style `:configurations => ['Debug']`
+- And 默认推荐源码级 `#if DEBUG` bootstrap + Release no-op runtime
+- And 若 Release target 必须完全不链接 TritonKit，则推荐独立 Debug-only app target / scheme
+
 ## 实现约定
 
 1. 用 `#if DEBUG` 定义 `TritonKit.isRuntimeEnabled`，作为 runtime 是否生效的唯一配置边界。
@@ -35,6 +43,7 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 3. Release 下 runtime 行为采用 no-op 或明确错误：`connect` / `send` / reconnect / ping no-op，hierarchy 返回空数组，data upload 抛出 `TritonKitRuntimeError.disabledOutsideDebug`，request handler 返回 disabled 错误。
 4. `canImport(UIKit)` 仍只用于保护 UIKit 符号可编译性，不用于决定 runtime 是否启用。
 5. 业务 App 示例必须推荐独立 `TritonKitDebugBootstrap.swift`，整个文件用 `#if DEBUG` 包住；CocoaPods 示例必须使用 `:configurations => ['Debug']`。
+6. SwiftPM 示例必须明确不能提供配置级 dependency gating；若需要 Release 不链接 TritonKit，使用独立 Debug-only app target / scheme。
 
 ## 验证
 
@@ -42,4 +51,4 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - `swift test -c release` 覆盖 Release 分支，确认 `TritonKit.isRuntimeEnabled == false`。
 - `swift build -c release --target TritonKit` 确认 Package Manager 的 Release library target 可编译。
 - `swift build -c release --product triton` 确认 CLI release 产物不受影响。
-- 文档、skill 与 `Examples/TritonKitDemo` 自检确认所有 app-side 接入示例都采用文件级 `#if DEBUG` 与 CocoaPods Debug-only 配置。
+- 文档、skill 与 `Examples/TritonKitDemo` 自检确认所有 app-side 接入示例都采用文件级 `#if DEBUG`、CocoaPods Debug-only 配置，并明确 SwiftPM 的 Debug-only target / source-level fallback 策略。
