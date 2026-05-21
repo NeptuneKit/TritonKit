@@ -18,6 +18,32 @@ public enum TritonKitRuntimeError: Error {
     case disabledOutsideDebug
 }
 
+public struct TritonKitStartPayload: Equatable {
+    public var host: String
+    public var port: UInt16
+    public var dataURL: URL?
+
+    public init(host: String = "127.0.0.1", port: UInt16 = 19421, dataURL: URL? = nil) {
+        self.host = host
+        self.port = port
+        self.dataURL = dataURL ?? Self.defaultDataURL(host: host, port: port)
+    }
+
+    public static func environment(
+        _ environment: [String: String] = ProcessInfo.processInfo.environment,
+        defaultHost: String = "127.0.0.1",
+        defaultPort: UInt16 = 19421
+    ) -> Self {
+        let host = environment["TRITON_HOST"] ?? defaultHost
+        let port = environment["TRITON_PORT"].flatMap(UInt16.init) ?? defaultPort
+        return Self(host: host, port: port)
+    }
+
+    private static func defaultDataURL(host: String, port: UInt16) -> URL? {
+        URL(string: "http://\(host):\(port)")
+    }
+}
+
 public class TritonKit {
     public enum ConnectionState {
         case disconnected
@@ -46,6 +72,7 @@ public class TritonKit {
     private var port: UInt16 = 0
     private var reconnectTimer: Timer?
     private var pingTimer: Timer?
+    private var defaultRequestHandler: TritonKitRequestHandler?
 
     /// HTTP data uploader (for screenshots / heavy payloads)
     public private(set) var uploader: TritonKitDataUploader?
@@ -71,6 +98,36 @@ public class TritonKit {
     deinit { disconnect(); NotificationCenter.default.removeObserver(self) }
 
     // MARK: - Public
+
+    @discardableResult
+    public func start(_ payload: TritonKitStartPayload = .environment()) -> Bool {
+        startRuntime(payload, delegate: nil)
+    }
+
+    @discardableResult
+    public func start(_ payload: TritonKitStartPayload, delegate: TritonKitDelegate) -> Bool {
+        startRuntime(payload, delegate: delegate)
+    }
+
+    private func startRuntime(_ payload: TritonKitStartPayload, delegate explicitDelegate: TritonKitDelegate?) -> Bool {
+        guard Self.isRuntimeEnabled else {
+            disconnect()
+            return false
+        }
+
+        if let explicitDelegate {
+            defaultRequestHandler = nil
+            delegate = explicitDelegate
+        } else {
+            let requestHandler = defaultRequestHandler ?? TritonKitRequestHandler()
+            defaultRequestHandler = requestHandler
+            delegate = requestHandler
+        }
+
+        dataURL = payload.dataURL
+        connect(host: payload.host, port: payload.port)
+        return true
+    }
 
     public func connect(host: String, port: UInt16) {
         guard Self.isRuntimeEnabled else {

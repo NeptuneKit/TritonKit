@@ -24,7 +24,7 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 ### 场景 3：业务 App 接入文件显式隔离 DEBUG
 
 - Given README、public skill 或真实项目回归指南提供 iOS 接入示例
-- When 示例出现 `import TritonKit`、`TritonKitRequestHandler`、`delegate`、`dataURL` 或 `connect(host:port:)`
+- When 示例出现 `import TritonKit` 或 `TritonKit.shared.start(...)`
 - Then 这些符号必须放在独立 Debug bootstrap 文件中，并由文件级 `#if DEBUG` 包住
 - And AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点
 
@@ -42,7 +42,7 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 2. Release 下保留 public API，避免业务 App 仅因依赖存在而编译失败。
 3. Release 下 runtime 行为采用 no-op 或明确错误：`connect` / `send` / reconnect / ping no-op，hierarchy 返回空数组，data upload 抛出 `TritonKitRuntimeError.disabledOutsideDebug`，request handler 返回 disabled 错误。
 4. `canImport(UIKit)` 仍只用于保护 UIKit 符号可编译性，不用于决定 runtime 是否启用。
-5. 业务 App 示例必须推荐独立 `TritonKitDebugBootstrap.swift`，整个文件用 `#if DEBUG` 包住；CocoaPods 示例必须使用 `:configurations => ['Debug']`。
+5. 业务 App 示例必须推荐独立 `TritonKitDebugBootstrap.swift`，整个文件用 `#if DEBUG` 包住，并优先调用 `TritonKit.shared.start(.environment())`；CocoaPods 示例必须使用 `:configurations => ['Debug']`。
 6. SwiftPM 示例必须明确不能提供配置级 dependency gating；若需要 Release 不链接 TritonKit，使用独立 Debug-only app target / scheme。
 
 ## 验证

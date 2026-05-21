@@ -35,7 +35,7 @@ TritonKit 需要支持业务 App 通过 CocoaPods 引入 embedded runtime，同�
 2. `TritonKit.podspec` 只包含 `Sources/TritonKit/**/*.swift`，并依赖同版本 `TritonKitShared`。
 3. CocoaPods 不打包 `Sources/TritonKitCLI`，避免把 macOS CLI / Hummingbird / ArgumentParser 依赖带入业务 App。
 4. README 与 public skill 中的 Podfile 示例必须给 `TritonKitShared` 与 `TritonKit` 同时加 `:configurations => ['Debug']`。
-5. 业务 App 侧推荐将全部 TritonKit 启动代码放入独立 `TritonKitDebugBootstrap.swift`，并用文件级 `#if DEBUG` 包住 `import TritonKit`、handler 强引用和 `connect` 调用。
+5. 业务 App 侧推荐将全部 TritonKit 启动代码放入独立 `TritonKitDebugBootstrap.swift`，并用文件级 `#if DEBUG` 包住 `import TritonKit` 和 `TritonKit.shared.start(.environment())` 调用。
 6. podspec 版本暂与当前 CLI 版本保持一致：`0.1.0`。正式发布 CocoaPods 前，需要先创建对应 `v0.1.0` tag，或在发布时同步调整版本。
 7. 当前项目仍处开发阶段，podspec license metadata 使用 `Custom`，正式发布前应补齐稳定 license 文件与发布策略。
 

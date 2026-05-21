@@ -9,11 +9,9 @@ final class TritonKitDebugBootstrap: TritonKitDelegate {
     private let requestHandler = TritonKitRequestHandler()
 
     func connect(host: String, port: UInt16) {
-        TritonKit.shared.delegate = self
         onStatusChange?("Connecting...")
         onLog?("WS: ws://\(host):\(port)/")
-        TritonKit.shared.dataURL = URL(string: "http://\(host):\(port)")
-        TritonKit.shared.connect(host: host, port: port)
+        TritonKit.shared.start(.init(host: host, port: port), delegate: self)
     }
 
     func disconnect() {

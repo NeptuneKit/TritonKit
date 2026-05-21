@@ -104,31 +104,17 @@ Put TritonKit bootstrap code in a dedicated iOS file and wrap the entire file in
 ```swift
 // TritonKitDebugBootstrap.swift
 #if DEBUG
-import UIKit
 import TritonKit
 
-final class TritonKitDebugBootstrap {
-    static let shared = TritonKitDebugBootstrap()
-
-    private let tritonHandler = TritonKitRequestHandler()
-    private var didStart = false
-
-    private init() {}
-
-    func start() {
-        guard !didStart else { return }
-        didStart = true
-
-        let host = ProcessInfo.processInfo.environment["TRITON_HOST"] ?? "127.0.0.1"
-        let port = UInt16(ProcessInfo.processInfo.environment["TRITON_PORT"] ?? "") ?? 19421
-
-        TritonKit.shared.delegate = tritonHandler
-        TritonKit.shared.dataURL = URL(string: "http://\(host):\(port)")
-        TritonKit.shared.connect(host: host, port: port)
+enum TritonKitDebugBootstrap {
+    static func start() {
+        TritonKit.shared.start(.environment())
     }
 }
 #endif
 ```
+
+Use `TritonKit.shared.start(.init(host: "192.168.1.20", port: 19421))` when a physical device needs to connect to a Mac LAN address. `start` retains the default request handler internally; only use the lower-level `delegate` / `connect(host:port:)` API when you need a custom delegate.
 
 Then call it only from a Debug branch in AppDelegate:
 
@@ -141,7 +127,7 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
     ) -> Bool {
         #if DEBUG
-        TritonKitDebugBootstrap.shared.start()
+        TritonKitDebugBootstrap.start()
         #endif
 
         return true
@@ -161,7 +147,7 @@ struct YourApp: App {
             ContentView()
                 .onAppear {
                     #if DEBUG
-                    TritonKitDebugBootstrap.shared.start()
+                    TritonKitDebugBootstrap.start()
                     #endif
                 }
         }

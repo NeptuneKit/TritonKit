@@ -26,10 +26,9 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - SwiftPM or CocoaPods as requested; CocoaPods examples must use `:configurations => ['Debug']`.
    - For SwiftPM, do not claim configuration-scoped package dependencies exist. Use source-level `#if DEBUG` isolation, or create a separate Debug-only app target/scheme if Release must not link TritonKit at all.
    - Put all app-side TritonKit code in a dedicated iOS file such as `TritonKitDebugBootstrap.swift`.
-   - Wrap the entire file in `#if DEBUG`, including `import TritonKit`, `TritonKitRequestHandler` storage, `delegate`, `dataURL`, and `connect(host:port:)`.
+   - Wrap the entire file in `#if DEBUG`, including `import TritonKit` and `TritonKit.shared.start(...)`.
    - Call the bootstrap only from a `#if DEBUG` branch in AppDelegate, SceneDelegate, or SwiftUI `onAppear`.
-   - Keep `TritonKitRequestHandler` alive for app lifetime.
-   - Set `dataURL`, then `connect(host:port:)`.
+   - Prefer `TritonKit.shared.start(.environment())`; only use lower-level `delegate` / `connect(host:port:)` when the real app needs a custom delegate.
 5. Start server with explicit port: `triton serve --host 127.0.0.1 --port 19421`.
 6. Verify connection and target identity:
    - `triton status --json`
@@ -120,37 +119,23 @@ Create a dedicated Debug bootstrap file:
 ```swift
 // TritonKitDebugBootstrap.swift
 #if DEBUG
-import UIKit
 import TritonKit
 
-final class TritonKitDebugBootstrap {
-    static let shared = TritonKitDebugBootstrap()
-
-    private let tritonHandler = TritonKitRequestHandler()
-    private var didStart = false
-
-    private init() {}
-
-    func start() {
-        guard !didStart else { return }
-        didStart = true
-
-        let host = ProcessInfo.processInfo.environment["TRITON_HOST"] ?? "127.0.0.1"
-        let port = UInt16(ProcessInfo.processInfo.environment["TRITON_PORT"] ?? "") ?? 19421
-
-        TritonKit.shared.delegate = tritonHandler
-        TritonKit.shared.dataURL = URL(string: "http://\(host):\(port)")
-        TritonKit.shared.connect(host: host, port: port)
+enum TritonKitDebugBootstrap {
+    static func start() {
+        TritonKit.shared.start(.environment())
     }
 }
 #endif
 ```
 
+Use `TritonKit.shared.start(.init(host: "192.168.1.20", port: 19421))` when a physical device needs to connect to a Mac LAN address. `start` retains the default request handler internally; only use the lower-level `delegate` / `connect(host:port:)` API when you need a custom delegate.
+
 Call the bootstrap only from a guarded app entry point:
 
 ```swift
 #if DEBUG
-TritonKitDebugBootstrap.shared.start()
+TritonKitDebugBootstrap.start()
 #endif
 ```
 
