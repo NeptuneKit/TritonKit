@@ -40,8 +40,8 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 推荐命令：
 
 ```bash
-swift build -c release --product triton
-cp .build/release/triton ~/.local/bin/triton.new
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+cp .build/cli/release/triton ~/.local/bin/triton.new
 mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
 ```

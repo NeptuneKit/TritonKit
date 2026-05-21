@@ -35,16 +35,16 @@
 - Given `NeptuneKit/TritonKit` 还没有 GitHub Release
 - And `NeptuneKit/homebrew-tap` 还不存在
 - When 外部 AI agent 或开发者按 README / skill 接入 TritonKit
-- Then 文档先提示使用 `swift build -c release --product triton` 构建本地 release CLI
+- Then 文档先提示使用 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` 构建本地 release CLI
 - And Homebrew 被标记为首个 `v*` release 与 tap 可用后的安装路径
 
 ### 场景 5：运行中的 CLI 更新使用原子替换
 
 - Given `triton serve --host 127.0.0.1 --port 19421` 可能正从 `~/.local/bin/triton` 运行
-- When 开发者或 AI agent 将本地构建的 `.build/release/triton` 更新到该路径
+- When 开发者或 AI agent 将本地构建的 `.build/cli/release/triton` 更新到该路径
 - Then README 与项目级 skill 必须推荐先复制到临时文件，再用同目录 `mv` 原子替换
 - And 文档必须说明也可以先停止 `triton serve`，再覆盖原路径
-- And 禁止推荐直接 `cp .build/release/triton ~/.local/bin/triton` 覆盖正在使用的 CLI 路径
+- And 禁止推荐直接 `cp .build/cli/release/triton ~/.local/bin/triton` 覆盖正在使用的 CLI 路径
 
 ## 边界
 

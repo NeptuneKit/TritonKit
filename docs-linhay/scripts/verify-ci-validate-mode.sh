@@ -27,6 +27,8 @@ expect_mode docs \
 expect_mode swift Sources/TritonKitCLI/main.swift
 expect_mode swift Tests/TritonKitSharedTests/TKCLITransportModelsTests.swift
 expect_mode swift Package.swift
+expect_mode swift CLI/Package.swift
+expect_mode swift CLI/Package.resolved README.md
 expect_mode swift Package.resolved README.md
 expect_mode swift Sources/TritonKitCLI/main.swift .github/workflows/ci.yml
 

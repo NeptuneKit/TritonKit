@@ -20,7 +20,7 @@
 
 1. 确认真实 App 仓库、分支、设备/模拟器、目标场景。
 2. 分别检查 TritonKit 和真实 App 工作区状态，外部仓改动不混入 TritonKit 提交。
-3. 构建 release CLI：`swift build -c release --product triton`；若需要更新 `~/.local/bin/triton` 等正在被 `triton serve` 使用过的路径，先停止 server，或使用 `cp .build/release/triton ~/.local/bin/triton.new && mv ~/.local/bin/triton.new ~/.local/bin/triton` 原子替换。
+3. 构建 release CLI：`swift build --package-path CLI --scratch-path .build/cli -c release --product triton`；若需要更新 `~/.local/bin/triton` 等正在被 `triton serve` 使用过的路径，先停止 server，或使用 `cp .build/cli/release/triton ~/.local/bin/triton.new && mv ~/.local/bin/triton.new ~/.local/bin/triton` 原子替换。
 4. 启动 `triton serve --host 127.0.0.1 --port 19421`。
 5. 真实 App 启动后优先跑 `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json` 生成证据包；需要拆解时再单独跑 `status/list/geometry/ax/screenshot/export`。
 6. 若流程需要复用，先沉淀 `.tritonplan`：`triton record --output <case>.tritonplan --json` 只作为模板，随后编辑真实步骤，使用 `triton plan inspect <case>.tritonplan --json` 和 `triton replay <case>.tritonplan --dry-run --var key=value --var secret-env=ENV --json` 校验。

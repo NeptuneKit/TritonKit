@@ -21,7 +21,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - Prefer the released Homebrew binary when validating an external app: `brew install NeptuneKit/tap/triton` or `brew upgrade triton`.
    - If testing unreleased TritonKit changes from this repo, keep using the local release CLI.
    - If copying the local build into an existing `PATH` location while `triton serve` may be running from that path, stop the server first or replace through a temporary file and same-directory `mv`.
-   - Confirm the active binary with `triton version --json` or `.build/release/triton version --json`.
+   - Confirm the active binary with `triton version --json` or `.build/cli/release/triton version --json`.
 4. Integrate TritonKit into the app only through the intended DEBUG-only package path:
    - SwiftPM or CocoaPods as requested; CocoaPods examples must use `:configurations => ['Debug']`.
    - For SwiftPM, do not claim configuration-scoped package dependencies exist. Use source-level `#if DEBUG` isolation, or create a separate Debug-only app target/scheme if Release must not link TritonKit at all.
@@ -58,11 +58,12 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - discover project containers: `triton xcode discover --path <repo> --json`;
    - set reusable defaults: `triton xcode use --workspace <workspace>|--project <project> --scheme <scheme> --configuration Debug --simulator <udid> --json`;
    - list schemes: `triton xcode schemes --json`;
-   - inspect app product settings: `triton xcode settings --json`;
+   - inspect app product settings: `triton xcode settings --jsonl --timeout <seconds>` for large workspaces, or `triton xcode settings --json` for quick projects;
    - build: `triton xcode build --jsonl`;
    - test: `triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl`;
    - build/install/launch: `triton xcode run --jsonl`;
    - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
+   - `xcode settings/build/test/run --jsonl` includes stdout/stderr log paths and byte counts; inspect those artifacts before waiting longer or falling back.
    - use XcodeBuildMCP only as a temporary fallback when `triton schema --command xcode --json` does not expose the needed capability.
 9. For HarmonyOS NEXT / DevEco Emulator validation, use Triton host-side device discovery before raw `hdc`:
    - probe tools: `triton device doctor --platform harmony --json`;
@@ -76,6 +77,13 @@ Real-project validation is not the same as demo smoke. Treat the business app as
      - template: `references/templates/empty-ability-app/`;
      - stable UI signals: `Harmony Smoke Ready`, `smoke-title`, `smoke-counter`, `smoke-increment`;
      - validation path: `ohpm install`, `hvigorw --mode module -p module=entry@default assembleHap`, HDC install/start, `uitest dumpLayout`, and `uitest screenCap`.
+   - when validating a standalone Harmony embedded HTTP runtime before it is connected through `triton serve`, use direct runtime checks:
+     - `triton device runtime-url --platform harmony --target <hdc-target> --probe-manifest --json` to prepare HDC fport and get the `baseURL`;
+     - `triton runtime manifest --runtime-base-url http://127.0.0.1:<port> --json`;
+     - `triton state route --runtime-base-url http://127.0.0.1:<port> --json`;
+     - `triton snapshot --runtime-base-url http://127.0.0.1:<port> --json`;
+     - `triton ledger --runtime-base-url http://127.0.0.1:<port> --jsonl`;
+     - `triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:<port> --json` when an app action provider is registered.
 10. Run observation before action:
    - prefer one-shot regression capture when a full report is needed: `triton capture --case <case> --output /tmp/<case>.tritonevidence --json`.
    - prefer one-shot evidence when a report or issue needs attachable proof: `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`.
@@ -211,15 +219,15 @@ TritonKitDebugBootstrap.start()
 Use the local release CLI while TritonKit is pre-release or while validating unreleased source changes:
 
 ```bash
-swift build -c release --product triton
-.build/release/triton version --json
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+.build/cli/release/triton version --json
 ```
 
 When installing that local build into `~/.local/bin/triton` or another existing `PATH` location, avoid overwriting a path that may be backing a running `triton serve` process. Stop the server first, or use atomic replacement:
 
 ```bash
-swift build -c release --product triton
-cp .build/release/triton ~/.local/bin/triton.new
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+cp .build/cli/release/triton ~/.local/bin/triton.new
 mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
 ```

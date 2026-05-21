@@ -50,5 +50,5 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - `swift test` 覆盖 Debug 分支，确认 `TritonKit.isRuntimeEnabled == true`。
 - `swift test -c release` 覆盖 Release 分支，确认 `TritonKit.isRuntimeEnabled == false`。
 - `swift build -c release --target TritonKit` 确认 Package Manager 的 Release library target 可编译。
-- `swift build -c release --product triton` 确认 CLI release 产物不受影响。
+- `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` 确认 CLI release 产物不受影响。
 - 文档、skill 与 `Examples/TritonKitDemo` 自检确认所有 app-side 接入示例都采用文件级 `#if DEBUG`、CocoaPods Debug-only 配置，并明确 SwiftPM 的 Debug-only target / source-level fallback 策略。

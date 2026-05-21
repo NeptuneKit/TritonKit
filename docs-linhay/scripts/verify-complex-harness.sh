@@ -2,7 +2,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-triton="${TRITON_BIN:-$root/.build/debug/triton}"
+triton="${TRITON_BIN:-$root/.build/cli/debug/triton}"
 host="${TRITON_HOST:-127.0.0.1}"
 port="${TRITON_PORT:-19421}"
 target="${TRITON_TARGET:-triton:local}"
@@ -13,7 +13,7 @@ mkdir -p "$out_dir"
 
 if [[ ! -x "$triton" ]]; then
   echo "missing triton binary: $triton" >&2
-  echo "run: swift build --product triton" >&2
+  echo "run: swift build --package-path CLI --scratch-path .build/cli --product triton" >&2
   exit 1
 fi
 

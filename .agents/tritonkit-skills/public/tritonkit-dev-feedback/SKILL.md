@@ -56,6 +56,12 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton app launch --platform harmony --bundle <bundle> --ability <ability> --target <hdc-target> --json`
      - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--target`.
      - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
+   - Harmony embedded SDK feedback should distinguish generic HAR capability from app-provided semantics:
+     - run `triton device runtime-url --platform harmony --target <hdc-target> --probe-manifest --json` first when the runtime is on a Harmony emulator/device and the host needs an HDC fport base URL;
+     - use `triton runtime manifest --runtime-base-url http://127.0.0.1:<port> --json`, `triton state route --runtime-base-url ... --json`, `triton snapshot --runtime-base-url ... --json`, `triton ledger --runtime-base-url ... --jsonl`, and `triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url ... --json` when validating a standalone embedded HTTP runtime before it is connected through `triton serve`;
+     - generic runtime endpoints may return `unsupported_runtime_scope` for scene, route, responder, semantic actions, input, screenshot, hit-test, or system alerts;
+     - if the app registers scene / route / responder / action providers, verify that `runtime.manifest` dynamically marks those capabilities as supported;
+     - report missing provider hooks as feature requests, and report falsely-supported capabilities as bugs.
    - `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, or `triton clear` for agent-facing action checks; these default to JSON, and `--format text` is only for human-readable debugging.
    - For form flows, prefer semantic embedded actions when available: `triton focus "用户名" --json`, `triton set-text "用户名" "alice" --json`, `triton set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton select-segment "协议" "HTTP" --json`, and `triton set-switch "记住我" on --json`.
    - When the same text appears multiple times, run `triton find "<text>" --all` first; if you know a point inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`.
@@ -213,15 +219,15 @@ struct YourApp: App {
 When the report depends on unreleased source changes, build and use the local release CLI first:
 
 ```bash
-swift build -c release --product triton
-.build/release/triton version --json
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+.build/cli/release/triton version --json
 ```
 
 If installing that build into an existing `PATH` location while `triton serve` may be running from the old binary, stop the server first or replace the executable atomically:
 
 ```bash
-swift build -c release --product triton
-cp .build/release/triton ~/.local/bin/triton.new
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+cp .build/cli/release/triton ~/.local/bin/triton.new
 mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
 ```
@@ -298,7 +304,7 @@ triton replay /tmp/first-flow.tritonplan --dry-run --var username=alice --var pa
 ### Distribution Notes
 
 - Repository: `https://github.com/NeptuneKit/TritonKit`
-- Local source fallback: build `.build/release/triton` from the repo checkout when validating unreleased changes.
+- Local source fallback: build `.build/cli/release/triton` from `CLI/Package.swift` when validating unreleased changes.
 - Manual local CLI updates must use a temporary file plus `mv`, or stop `triton serve` before replacing the active binary path.
 - Released Homebrew install path: `brew install NeptuneKit/tap/triton`.
 - Homebrew updates come from `NeptuneKit/homebrew-tap` after release automation has run.

@@ -167,8 +167,8 @@ struct YourApp: App {
 Use the local source build only when validating unreleased TritonKit changes from this checkout:
 
 ```bash
-swift build -c release --product triton
-.build/release/triton version --json
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+.build/cli/release/triton version --json
 ```
 
 Use that binary directly or copy it into a directory on `PATH` for local regression work.
@@ -176,8 +176,8 @@ Use that binary directly or copy it into a directory on `PATH` for local regress
 If a `triton serve` process may already be running from the target path, do not overwrite that path in place. Stop the server first, or install through a temporary file and atomically move it into place:
 
 ```bash
-swift build -c release --product triton
-cp .build/release/triton ~/.local/bin/triton.new
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+cp .build/cli/release/triton ~/.local/bin/triton.new
 mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
 ```
@@ -257,6 +257,17 @@ triton hierarchy --json
 triton ax --json
 ```
 
+When validating a standalone embedded runtime HTTP endpoint, for example a Harmony SDK demo server before it is connected through `triton serve`, bypass the local control server with `--runtime-base-url`:
+
+```bash
+triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json
+triton runtime manifest --runtime-base-url http://127.0.0.1:18765 --json
+triton state route --runtime-base-url http://127.0.0.1:18765 --json
+triton snapshot --runtime-base-url http://127.0.0.1:18765 --json
+triton ledger --runtime-base-url http://127.0.0.1:18765 --jsonl
+triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:18765 --json
+```
+
 Host-side simulator helpers are available without a running TritonKit runtime. They wrap `xcrun simctl` but keep JSON output and stable Triton error envelopes:
 
 ```bash
@@ -284,11 +295,13 @@ Xcode project discovery and `xcodebuild` execution are also exposed through Trit
 triton xcode discover --path . --json
 triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
 triton xcode schemes --json
-triton xcode settings --json
+triton xcode settings --jsonl --timeout 1800
 triton xcode build --jsonl --timeout 1800
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcode run --jsonl
 ```
+
+`xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts, which gives agents a way to inspect long-running builds without waiting blindly.
 
 `xcode run` proves build, install, and launch were submitted. It does not prove business readiness; continue with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
 

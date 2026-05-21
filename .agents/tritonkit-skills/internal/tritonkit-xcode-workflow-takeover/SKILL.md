@@ -49,7 +49,7 @@ Start from:
 triton xcode discover --path . --json
 triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator <udid> --json
 triton xcode schemes --json
-triton xcode settings --json
+triton xcode settings --jsonl --timeout <seconds>
 triton xcode build --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcode run --jsonl
@@ -59,6 +59,8 @@ Current boundaries:
 
 - `xcode run` covers build, simulator install, and simulator launch; it does not prove business readiness.
 - Continue readiness checks with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
+- Real workspaces may exceed default timeouts. Use `triton xcode settings/build/test/run --timeout <seconds>` before falling back to raw `xcodebuild`.
+- `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts. Use those artifacts before deciding to wait longer or fall back to raw `xcodebuild`.
 - `xcresult`, coverage, logs, and evidence xcode artifacts are still follow-up slices.
 
 ## Implementation Workflow
@@ -81,8 +83,8 @@ Minimum validation:
 
 ```bash
 swift test
-swift build --product triton
-.build/debug/triton schema --command xcode --json
+swift build --package-path CLI --scratch-path .build/cli --product triton
+.build/cli/debug/triton schema --command xcode --json
 docs-linhay/scripts/check-docs.sh
 docs-linhay/scripts/qmd-sync.sh
 ```
@@ -90,10 +92,10 @@ docs-linhay/scripts/qmd-sync.sh
 When implementation exists, add focused smoke:
 
 ```bash
-.build/debug/triton xcode discover --path <repo> --json
-.build/debug/triton xcode build --workspace <workspace> --scheme <scheme> --simulator <udid> --jsonl
-.build/debug/triton xcode test --workspace <workspace> --scheme <scheme> --result-bundle /tmp/<case>.xcresult --jsonl
-.build/debug/triton xcresult failures --path /tmp/<case>.xcresult --json
+.build/cli/debug/triton xcode discover --path <repo> --json
+.build/cli/debug/triton xcode build --workspace <workspace> --scheme <scheme> --simulator <udid> --jsonl
+.build/cli/debug/triton xcode test --workspace <workspace> --scheme <scheme> --result-bundle /tmp/<case>.xcresult --jsonl
+.build/cli/debug/triton xcresult failures --path /tmp/<case>.xcresult --json
 ```
 
 Use temporary or explicit output paths such as `/tmp` or `.triton/`; do not scatter build artifacts in repo root.

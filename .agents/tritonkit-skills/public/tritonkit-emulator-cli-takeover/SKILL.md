@@ -84,6 +84,17 @@ triton app inspect --platform harmony --bundle <bundle> --json
 triton app launch --platform harmony --bundle <bundle> --ability <ability> --json
 ```
 
+Standalone Harmony embedded HTTP runtime:
+
+```bash
+triton device runtime-url --platform harmony --target <hdc-target> --probe-manifest --json
+triton runtime manifest --runtime-base-url http://127.0.0.1:<port> --json
+triton state route --runtime-base-url http://127.0.0.1:<port> --json
+triton snapshot --runtime-base-url http://127.0.0.1:<port> --json
+triton ledger --runtime-base-url http://127.0.0.1:<port> --jsonl
+triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:<port> --json
+```
+
 Android Emulator is an accepted product direction but should be added as a later adapter slice. Keep DTOs and command ledger schemas platform-neutral now, but do not claim Android commands are implemented until `schema --command app --json` exposes them.
 
 ## Safety Rules
@@ -120,9 +131,9 @@ Minimum local validation:
 
 ```bash
 swift test
-swift build --product triton
-.build/debug/triton schema --command device --json
-.build/debug/triton schema --command app --json
+swift build --package-path CLI --scratch-path .build/cli --product triton
+.build/cli/debug/triton schema --command device --json
+.build/cli/debug/triton schema --command app --json
 docs-linhay/scripts/check-docs.sh
 docs-linhay/scripts/qmd-sync.sh
 ```
@@ -130,11 +141,11 @@ docs-linhay/scripts/qmd-sync.sh
 Run real emulator smoke only when safe for the current machine:
 
 ```bash
-.build/debug/triton sim list --json
-.build/debug/triton app uninstall --bundle-id com.example.missing --simulator booted --json
-.build/debug/triton app launch --bundle-id com.example.missing --simulator booted --json
-.build/debug/triton device list --platform harmony --json
-.build/debug/triton device wait-ready --platform harmony --target <hdc-target> --json
+.build/cli/debug/triton sim list --json
+.build/cli/debug/triton app uninstall --bundle-id com.example.missing --simulator booted --json
+.build/cli/debug/triton app launch --bundle-id com.example.missing --simulator booted --json
+.build/cli/debug/triton device list --platform harmony --json
+.build/cli/debug/triton device wait-ready --platform harmony --target <hdc-target> --json
 ```
 
 Avoid erasing emulators, uninstalling business apps, installing data bundles, changing privacy/location, or collecting broad logs unless the current task explicitly requires it and the command records policy metadata.

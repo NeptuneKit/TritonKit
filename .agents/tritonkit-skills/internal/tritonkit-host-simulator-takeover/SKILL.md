@@ -86,9 +86,9 @@ Minimum local validation for host simulator adapter changes:
 ```bash
 swift test --filter TKHostAdapterModelsTests
 swift test
-swift build --product triton
-.build/debug/triton schema --command sim --json
-.build/debug/triton schema --command app --json
+swift build --package-path CLI --scratch-path .build/cli --product triton
+.build/cli/debug/triton schema --command sim --json
+.build/cli/debug/triton schema --command app --json
 docs-linhay/scripts/check-docs.sh
 docs-linhay/scripts/qmd-sync.sh
 ```
@@ -96,10 +96,10 @@ docs-linhay/scripts/qmd-sync.sh
 Run real simulator smoke only when it is safe for the current machine state:
 
 ```bash
-.build/debug/triton sim list --json
-.build/debug/triton app list --simulator booted --user-only --json
-.build/debug/triton app info --bundle-id <known-bundle-id> --simulator booted --json
-.build/debug/triton app info --bundle-id com.example.missing --simulator booted --json
+.build/cli/debug/triton sim list --json
+.build/cli/debug/triton app list --simulator booted --user-only --json
+.build/cli/debug/triton app info --bundle-id <known-bundle-id> --simulator booted --json
+.build/cli/debug/triton app info --bundle-id com.example.missing --simulator booted --json
 ```
 
 For `sim use`, validate in `/tmp` or another disposable directory:

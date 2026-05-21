@@ -218,6 +218,7 @@ struct XcodeSettings: AsyncParsableCommand {
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
     @Option(help: "DerivedData path") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -243,12 +244,21 @@ struct XcodeSettings: AsyncParsableCommand {
                 destination: resolved.destination,
                 derivedDataPath: resolved.derivedDataPath
             ).withTimeout(timeout)
-            let result = try runHostCommand(command)
+            let (result, _) = try runXcodeHostCommand(command, event: "xcode.settings", jsonl: jsonl)
             let product = try TKXcodeBuildSettingsParser.resolveBuiltApp(result.stdoutData)
-            let output = XcodeSettingsOutput(ok: true, invocation: resolved, product: product, sourceCommand: result.sourceCommand)
+            let output = XcodeSettingsOutput(
+                ok: true,
+                invocation: resolved,
+                product: product,
+                sourceCommand: result.sourceCommand,
+                stdoutLogPath: result.stdoutLogPath,
+                stderrLogPath: result.stderrLogPath,
+                stdoutBytes: result.stdoutBytes,
+                stderrBytes: result.stderrBytes
+            )
             switch outputFormat {
             case .json:
-                print(try encodeJSON(output))
+                print(jsonl ? try encodeCompactJSON(output) : try encodeJSON(output))
             case .text:
                 print(product.appPath)
             }
@@ -1093,6 +1103,10 @@ struct HostProcessResult {
     let sourceCommand: String
     let stdoutTruncated: Bool
     let stderrTruncated: Bool
+    let stdoutLogPath: String?
+    let stderrLogPath: String?
+    let stdoutBytes: Int
+    let stderrBytes: Int
 
     var stdout: String {
         String(data: stdoutData, encoding: .utf8) ?? ""
@@ -1105,7 +1119,7 @@ struct HostProcessResult {
 
 enum HostCommandRunError: Error, CustomStringConvertible {
     case launchFailed(String)
-    case timeout(command: TKHostCommand, timeoutSeconds: Double)
+    case timeout(command: TKHostCommand, timeoutSeconds: Double, stdoutLogPath: String?, stderrLogPath: String?)
     case nonZeroExit(command: TKHostCommand, result: HostProcessResult)
     case deviceNotReady(target: String, timeoutSeconds: Double)
     case missingPreferences(path: String)
@@ -1115,8 +1129,12 @@ enum HostCommandRunError: Error, CustomStringConvertible {
         switch self {
         case .launchFailed(let message):
             message
-        case .timeout(let command, let timeoutSeconds):
-            "Host command timed out after \(timeoutSeconds)s: \(hostSourceCommand(command))"
+        case .timeout(let command, let timeoutSeconds, let stdoutLogPath, let stderrLogPath):
+            [
+                "Host command timed out after \(timeoutSeconds)s: \(hostSourceCommand(command))",
+                stdoutLogPath.map { "stdout: \($0)" },
+                stderrLogPath.map { "stderr: \($0)" },
+            ].compactMap { $0 }.joined(separator: "\n")
         case .deviceNotReady(let target, let timeoutSeconds):
             "Harmony target \(target) was not ready after \(timeoutSeconds)s"
         case .nonZeroExit(_, let result):
@@ -1237,6 +1255,10 @@ struct XcodeSettingsOutput: Encodable {
     let invocation: ResolvedXcodeInvocation
     let product: TKXcodeBuiltAppProduct
     let sourceCommand: String
+    let stdoutLogPath: String?
+    let stderrLogPath: String?
+    let stdoutBytes: Int?
+    let stderrBytes: Int?
 }
 
 func runSimpleHostCommand(
@@ -1420,6 +1442,10 @@ func runXcodeBuild(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Do
         exitCode: result.exitCode,
         stdoutTruncated: result.stdoutTruncated,
         stderrTruncated: result.stderrTruncated,
+        stdoutLogPath: result.stdoutLogPath,
+        stderrLogPath: result.stderrLogPath,
+        stdoutBytes: result.stdoutBytes,
+        stderrBytes: result.stderrBytes,
         note: "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`."
     )
 }
@@ -1453,6 +1479,10 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         exitCode: result.exitCode,
         stdoutTruncated: result.stdoutTruncated,
         stderrTruncated: result.stderrTruncated,
+        stdoutLogPath: result.stdoutLogPath,
+        stderrLogPath: result.stderrLogPath,
+        stdoutBytes: result.stdoutBytes,
+        stderrBytes: result.stderrBytes,
         note: "Test command finished. Use `triton xcresult failures --path <result.xcresult> --json` once xcresult parsing lands."
     )
 }
@@ -1493,21 +1523,249 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
         exitCode: launchResult.exitCode,
         stdoutTruncated: launchResult.stdoutTruncated,
         stderrTruncated: launchResult.stderrTruncated,
+        stdoutLogPath: launchResult.stdoutLogPath,
+        stderrLogPath: launchResult.stderrLogPath,
+        stdoutBytes: launchResult.stdoutBytes,
+        stderrBytes: launchResult.stderrBytes,
         note: "App launch was submitted to Simulator. Verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence."
     )
 }
 
 func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool) throws -> (HostProcessResult, Int) {
     let startedAt = Date()
+    let artifactPaths = try createXcodeArtifactPaths(event: event)
     if jsonl {
-        print(try encodeCompactJSON(TKXcodeProgressEvent(event: "\(event).invocation", message: "started", sourceCommand: hostSourceCommand(command), elapsedMs: 0)))
+        writeJSONLLine(try encodeCompactJSON(TKXcodeProgressEvent(
+            event: "\(event).invocation",
+            message: "started",
+            sourceCommand: hostSourceCommand(command),
+            elapsedMs: 0,
+            stdoutLogPath: artifactPaths.stdout.path,
+            stderrLogPath: artifactPaths.stderr.path,
+            stdoutBytes: 0,
+            stderrBytes: 0
+        )))
     }
-    let result = try runHostCommand(command)
+    let result = try runStreamingHostCommand(command, event: event, jsonl: jsonl, startedAt: startedAt, artifactPaths: artifactPaths)
     let durationMs = Int(Date().timeIntervalSince(startedAt) * 1000)
     if jsonl {
-        print(try encodeCompactJSON(TKXcodeProgressEvent(event: "\(event).summary", message: "finished", sourceCommand: result.sourceCommand, elapsedMs: durationMs)))
+        writeJSONLLine(try encodeCompactJSON(TKXcodeProgressEvent(
+            event: "\(event).summary",
+            message: "finished",
+            sourceCommand: result.sourceCommand,
+            elapsedMs: durationMs,
+            stdoutLogPath: result.stdoutLogPath,
+            stderrLogPath: result.stderrLogPath,
+            stdoutBytes: result.stdoutBytes,
+            stderrBytes: result.stderrBytes
+        )))
     }
     return (result, durationMs)
+}
+
+func writeJSONLLine(_ line: String) {
+    FileHandle.standardOutput.write(Data((line + "\n").utf8))
+}
+
+struct XcodeArtifactPaths {
+    let directory: URL
+    let stdout: URL
+    let stderr: URL
+}
+
+final class HostStreamAccumulator {
+    private let maximumBytes: Int
+    private let lock = NSLock()
+    private var storage = Data()
+    private var didTruncate = false
+    private var total = 0
+
+    init(maximumBytes: Int = 1_048_576) {
+        self.maximumBytes = maximumBytes
+    }
+
+    func append(_ data: Data) {
+        lock.lock()
+        total += data.count
+        if storage.count < maximumBytes {
+            let remaining = maximumBytes - storage.count
+            storage.append(data.prefix(remaining))
+        }
+        if total > maximumBytes {
+            didTruncate = true
+        }
+        lock.unlock()
+    }
+
+    func snapshot() -> (data: Data, truncated: Bool, bytes: Int) {
+        lock.lock()
+        let value = (storage, didTruncate, total)
+        lock.unlock()
+        return value
+    }
+}
+
+func createXcodeArtifactPaths(event: String) throws -> XcodeArtifactPaths {
+    let safeEvent = event.unicodeScalars.map { scalar in
+        CharacterSet.alphanumerics.contains(scalar) ? String(scalar) : "-"
+    }.joined()
+    let directoryName = "\(Int(Date().timeIntervalSince1970 * 1000))-\(String(safeEvent))-\(UUID().uuidString)"
+    let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+        .appendingPathComponent("triton-xcode-artifacts", isDirectory: true)
+        .appendingPathComponent(directoryName, isDirectory: true)
+    try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+    return XcodeArtifactPaths(
+        directory: directory,
+        stdout: directory.appendingPathComponent("stdout.log"),
+        stderr: directory.appendingPathComponent("stderr.log")
+    )
+}
+
+func runStreamingHostCommand(
+    _ command: TKHostCommand,
+    event: String,
+    jsonl: Bool,
+    startedAt: Date,
+    artifactPaths: XcodeArtifactPaths
+) throws -> HostProcessResult {
+    let timeoutSeconds = command.defaultTimeoutSeconds
+    let process = Process()
+    if command.executable.contains("/") {
+        process.executableURL = URL(fileURLWithPath: command.executable)
+        process.arguments = command.processArguments
+    } else if command.executable == "xcrun" {
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = command.processArguments
+    } else {
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = [command.executable] + command.processArguments
+    }
+
+    FileManager.default.createFile(atPath: artifactPaths.stdout.path, contents: nil)
+    FileManager.default.createFile(atPath: artifactPaths.stderr.path, contents: nil)
+    let stdoutLog = try FileHandle(forWritingTo: artifactPaths.stdout)
+    let stderrLog = try FileHandle(forWritingTo: artifactPaths.stderr)
+    defer {
+        try? stdoutLog.close()
+        try? stderrLog.close()
+    }
+
+    let stdout = Pipe()
+    let stderr = Pipe()
+    let stdoutAccumulator = HostStreamAccumulator()
+    let stderrAccumulator = HostStreamAccumulator()
+    let printLock = NSLock()
+    process.standardOutput = stdout
+    process.standardError = stderr
+
+    func emitProgress(_ progress: TKXcodeProgressEvent) {
+        guard jsonl, let line = try? encodeCompactJSON(progress) else { return }
+        printLock.lock()
+        writeJSONLLine(line)
+        printLock.unlock()
+    }
+
+    func handleChunk(_ data: Data, stream: String, log: FileHandle, accumulator: HostStreamAccumulator) {
+        guard !data.isEmpty else { return }
+        log.write(data)
+        accumulator.append(data)
+        let snapshot = accumulator.snapshot()
+        emitProgress(TKXcodeProgressEvent(
+            event: "\(event).\(stream)",
+            message: streamingSample(stream: stream, data: data),
+            sourceCommand: hostSourceCommand(command),
+            elapsedMs: Int(Date().timeIntervalSince(startedAt) * 1000),
+            stdoutLogPath: artifactPaths.stdout.path,
+            stderrLogPath: artifactPaths.stderr.path,
+            stdoutBytes: stream == "stdout" ? snapshot.bytes : stdoutAccumulator.snapshot().bytes,
+            stderrBytes: stream == "stderr" ? snapshot.bytes : stderrAccumulator.snapshot().bytes
+        ))
+    }
+
+    stdout.fileHandleForReading.readabilityHandler = { handle in
+        handleChunk(handle.availableData, stream: "stdout", log: stdoutLog, accumulator: stdoutAccumulator)
+    }
+    stderr.fileHandleForReading.readabilityHandler = { handle in
+        handleChunk(handle.availableData, stream: "stderr", log: stderrLog, accumulator: stderrAccumulator)
+    }
+
+    do {
+        try process.run()
+    } catch {
+        throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
+
+    let semaphore = DispatchSemaphore(value: 0)
+    DispatchQueue.global(qos: .utility).async {
+        process.waitUntilExit()
+        semaphore.signal()
+    }
+
+    let deadline = Date().addingTimeInterval(timeoutSeconds)
+    var nextHeartbeat = Date().addingTimeInterval(10)
+    while true {
+        let now = Date()
+        if now >= deadline {
+            process.terminate()
+            _ = semaphore.wait(timeout: .now() + 2)
+            stdout.fileHandleForReading.readabilityHandler = nil
+            stderr.fileHandleForReading.readabilityHandler = nil
+            throw HostCommandRunError.timeout(
+                command: command,
+                timeoutSeconds: timeoutSeconds,
+                stdoutLogPath: artifactPaths.stdout.path,
+                stderrLogPath: artifactPaths.stderr.path
+            )
+        }
+        let waitSeconds = min(1.0, max(0.1, min(deadline.timeIntervalSince(now), nextHeartbeat.timeIntervalSince(now))))
+        if semaphore.wait(timeout: .now() + waitSeconds) == .success {
+            break
+        }
+        if Date() >= nextHeartbeat {
+            emitProgress(TKXcodeProgressEvent(
+                event: "\(event).heartbeat",
+                message: "running",
+                sourceCommand: hostSourceCommand(command),
+                elapsedMs: Int(Date().timeIntervalSince(startedAt) * 1000),
+                stdoutLogPath: artifactPaths.stdout.path,
+                stderrLogPath: artifactPaths.stderr.path,
+                stdoutBytes: stdoutAccumulator.snapshot().bytes,
+                stderrBytes: stderrAccumulator.snapshot().bytes
+            ))
+            nextHeartbeat = Date().addingTimeInterval(10)
+        }
+    }
+
+    stdout.fileHandleForReading.readabilityHandler = nil
+    stderr.fileHandleForReading.readabilityHandler = nil
+    handleChunk(stdout.fileHandleForReading.availableData, stream: "stdout", log: stdoutLog, accumulator: stdoutAccumulator)
+    handleChunk(stderr.fileHandleForReading.availableData, stream: "stderr", log: stderrLog, accumulator: stderrAccumulator)
+
+    let stdoutSnapshot = stdoutAccumulator.snapshot()
+    let stderrSnapshot = stderrAccumulator.snapshot()
+    let result = HostProcessResult(
+        stdoutData: stdoutSnapshot.data,
+        stderrData: stderrSnapshot.data,
+        exitCode: process.terminationStatus,
+        sourceCommand: hostSourceCommand(command),
+        stdoutTruncated: stdoutSnapshot.truncated,
+        stderrTruncated: stderrSnapshot.truncated,
+        stdoutLogPath: artifactPaths.stdout.path,
+        stderrLogPath: artifactPaths.stderr.path,
+        stdoutBytes: stdoutSnapshot.bytes,
+        stderrBytes: stderrSnapshot.bytes
+    )
+    if result.exitCode != 0 {
+        throw HostCommandRunError.nonZeroExit(command: command, result: result)
+    }
+    return result
+}
+
+func streamingSample(stream: String, data: Data, maximumBytes: Int = 2_000) -> String {
+    let prefix = data.prefix(maximumBytes)
+    let text = String(data: prefix, encoding: .utf8) ?? "<\(data.count) bytes>"
+    let suffix = data.count > maximumBytes ? " ...<truncated>" : ""
+    return "\(stream): \(text)\(suffix)"
 }
 
 func resolveBuiltAppProduct(invocation: ResolvedXcodeInvocation, timeout: Double? = nil) throws -> TKXcodeBuiltAppProduct {
@@ -1610,7 +1868,7 @@ func waitForSimulatorBoot(
     if let lastEvent, jsonl {
         print(try encodeCompactJSON(lastEvent))
     }
-    throw HostCommandRunError.timeout(command: TKSimctlCommand.boot(udid: udid), timeoutSeconds: timeout)
+    throw HostCommandRunError.timeout(command: TKSimctlCommand.boot(udid: udid), timeoutSeconds: timeout, stdoutLogPath: nil, stderrLogPath: nil)
 }
 
 func probeHostTool(name: String, command: TKHostCommand) -> HostToolProbeOutput {
@@ -1734,18 +1992,24 @@ func runHostCommand(_ command: TKHostCommand) throws -> HostProcessResult {
     }
     if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
         process.terminate()
-        throw HostCommandRunError.timeout(command: command, timeoutSeconds: timeoutSeconds)
+        throw HostCommandRunError.timeout(command: command, timeoutSeconds: timeoutSeconds, stdoutLogPath: nil, stderrLogPath: nil)
     }
 
-    let stdoutRead = truncatedData(stdout.fileHandleForReading.readDataToEndOfFile())
-    let stderrRead = truncatedData(stderr.fileHandleForReading.readDataToEndOfFile())
+    let stdoutRaw = stdout.fileHandleForReading.readDataToEndOfFile()
+    let stderrRaw = stderr.fileHandleForReading.readDataToEndOfFile()
+    let stdoutRead = truncatedData(stdoutRaw)
+    let stderrRead = truncatedData(stderrRaw)
     let result = HostProcessResult(
         stdoutData: stdoutRead.data,
         stderrData: stderrRead.data,
         exitCode: process.terminationStatus,
         sourceCommand: hostSourceCommand(command),
         stdoutTruncated: stdoutRead.truncated,
-        stderrTruncated: stderrRead.truncated
+        stderrTruncated: stderrRead.truncated,
+        stdoutLogPath: nil,
+        stderrLogPath: nil,
+        stdoutBytes: stdoutRaw.count,
+        stderrBytes: stderrRaw.count
     )
     if result.exitCode != 0 {
         throw HostCommandRunError.nonZeroExit(command: command, result: result)

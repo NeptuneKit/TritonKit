@@ -47,6 +47,9 @@ grep -q "mode == 'swift'" "${ci_workflow}" || fail "ci workflow must support a s
 grep -q "mode == 'contracts'" "${ci_workflow}" || fail "ci workflow must support a contract-only validate mode"
 grep -q "mode == 'podkit'" "${ci_workflow}" || fail "ci workflow must support a TritonKit-only podspec validate mode"
 grep -q 'actions/cache@v4' "${ci_workflow}" || fail "ci workflow must cache SwiftPM dependencies/build products"
+grep -q 'verify-spm-dependency-boundary[.]sh' "${ci_workflow}" || fail "ci workflow must validate the SwiftPM iOS/CLI dependency boundary"
+grep -q 'swift build --package-path CLI --scratch-path [.]build/cli -c release --product triton' "${ci_workflow}" \
+  || fail "ci workflow must build the CLI from CLI/Package.swift"
 grep -q 'skip Homebrew formula rendering for non-tag release asset validation' "${ci_workflow}" \
   || fail "ci workflow must skip Homebrew formula rendering for non-tag release asset validation"
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"

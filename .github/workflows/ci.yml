@@ -66,12 +66,18 @@ jobs:
             .build
             ~/.cache/org.swift.swiftpm
             ~/Library/Caches/org.swift.swiftpm
-          key: ${{ runner.os }}-swiftpm-${{ hashFiles('Package.swift', 'Package.resolved') }}
+          key: ${{ runner.os }}-swiftpm-${{ hashFiles('Package.swift', 'Package.resolved', 'CLI/Package.swift', 'CLI/Package.resolved') }}
           restore-keys: |
             ${{ runner.os }}-swiftpm-
 
+      - name: SwiftPM dependency boundary
+        run: docs-linhay/scripts/verify-spm-dependency-boundary.sh
+
       - name: Swift tests
         run: swift test
+
+      - name: CLI release build
+        run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
 
   validate-podspec-shared:
     name: Validate Podspec (TritonKitShared)
@@ -222,7 +228,7 @@ jobs:
           echo "TritonKit CLI version: ${version}"
 
       - name: Build CLI
-        run: swift build -c release --product triton
+        run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
 
       - name: Package CLI artifact
         shell: bash
@@ -239,7 +245,7 @@ jobs:
           package_dir="dist/${package_name}"
 
           mkdir -p "${package_dir}"
-          cp ".build/release/triton" "${package_dir}/triton"
+          cp ".build/cli/release/triton" "${package_dir}/triton"
           chmod +x "${package_dir}/triton"
 
           cat > "${package_dir}/README.txt" <<README

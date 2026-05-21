@@ -29,10 +29,13 @@ is_swift_only_path() {
   local path="$1"
 
   case "$path" in
-    Package.swift|Package.resolved)
+    Package.swift|Package.resolved|CLI/Package.swift|CLI/Package.resolved)
       return 0
       ;;
     Sources/TritonKitCLI/*)
+      return 0
+      ;;
+    CLI/Sources/TritonKitCLI)
       return 0
       ;;
     Tests/*)
