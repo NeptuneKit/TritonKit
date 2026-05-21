@@ -15,7 +15,7 @@ final class TritonKitDebugBootstrap: TritonKitDelegate {
     }
 
     func disconnect() {
-        TritonKit.shared.disconnect()
+        TritonKit.shared.stop()
     }
 
     func tritonKit(_ kit: TritonKit, didChangeState state: TritonKit.ConnectionState) {

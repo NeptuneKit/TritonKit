@@ -39,6 +39,14 @@ public struct TritonKitStartPayload: Equatable {
         return Self(host: host, port: port)
     }
 
+    public static func local(port: UInt16 = 19421) -> Self {
+        Self(host: "127.0.0.1", port: port)
+    }
+
+    public static func device(_ host: String, port: UInt16 = 19421) -> Self {
+        Self(host: host, port: port)
+    }
+
     private static func defaultDataURL(host: String, port: UInt16) -> URL? {
         URL(string: "http://\(host):\(port)")
     }
@@ -49,6 +57,108 @@ public class TritonKit {
         case disconnected
         case connecting
         case connected
+    }
+
+    public typealias Endpoint = TritonKitStartPayload
+
+    public enum Feature: String, CaseIterable, Hashable {
+        case appInfo
+        case hierarchy
+        case accessibility
+        case geometry
+        case screenshot
+        case input
+    }
+
+    public struct RedactionPolicy: Equatable {
+        public enum SecureText: String, Equatable {
+            case lengthOnly
+            case hidden
+        }
+
+        public var secureText: SecureText
+        public var collectClipboard: Bool
+        public var collectNetwork: Bool
+        public var collectLogs: Bool
+
+        public init(
+            secureText: SecureText = .lengthOnly,
+            collectClipboard: Bool = false,
+            collectNetwork: Bool = false,
+            collectLogs: Bool = false
+        ) {
+            self.secureText = secureText
+            self.collectClipboard = collectClipboard
+            self.collectNetwork = collectNetwork
+            self.collectLogs = collectLogs
+        }
+    }
+
+    public struct AppIdentity: Equatable {
+        public var name: String
+        public var tags: [String]
+
+        public init(name: String, tags: [String] = []) {
+            self.name = name
+            self.tags = tags
+        }
+    }
+
+    public struct Configuration: Equatable {
+        public static let defaultFeatures: Set<Feature> = [
+            .appInfo,
+            .hierarchy,
+            .accessibility,
+            .geometry,
+            .screenshot,
+            .input,
+        ]
+
+        public var endpoint: Endpoint
+        public var autoReconnect: Bool
+        public var features: Set<Feature>
+        public var redaction: RedactionPolicy
+        public var appIdentity: AppIdentity?
+
+        public init(
+            endpoint: Endpoint = .environment(),
+            autoReconnect: Bool = true,
+            features: Set<Feature> = Configuration.defaultFeatures,
+            redaction: RedactionPolicy = RedactionPolicy(),
+            appIdentity: AppIdentity? = nil
+        ) {
+            self.endpoint = endpoint
+            self.autoReconnect = autoReconnect
+            self.features = features
+            self.redaction = redaction
+            self.appIdentity = appIdentity
+        }
+
+        public init(_ configure: (inout Configuration) -> Void) {
+            self.init()
+            configure(&self)
+        }
+    }
+
+    public final class ObservationToken {
+        private let lock = NSLock()
+        private var cancellation: (() -> Void)?
+
+        fileprivate init(_ cancellation: @escaping () -> Void) {
+            self.cancellation = cancellation
+        }
+
+        public func cancel() {
+            lock.lock()
+            let cancellation = self.cancellation
+            self.cancellation = nil
+            lock.unlock()
+            cancellation?()
+        }
+
+        deinit {
+            cancel()
+        }
     }
 
     public static var isRuntimeEnabled: Bool {
@@ -63,8 +173,12 @@ public class TritonKit {
 
     public weak var delegate: TritonKitDelegate?
     public private(set) var state: ConnectionState = .disconnected {
-        didSet { delegate?.tritonKit(self, didChangeState: state) }
+        didSet {
+            delegate?.tritonKit(self, didChangeState: state)
+            notifyStateObservers(state)
+        }
     }
+    public private(set) var configuration = Configuration()
 
     private var task: URLSessionWebSocketTask?
     private var session: URLSession?
@@ -73,6 +187,9 @@ public class TritonKit {
     private var reconnectTimer: Timer?
     private var pingTimer: Timer?
     private var defaultRequestHandler: TritonKitRequestHandler?
+    private var isStarted = false
+    private var stateObservers: [UUID: (ConnectionState) -> Void] = [:]
+    private var errorObservers: [UUID: (Error) -> Void] = [:]
 
     /// HTTP data uploader (for screenshots / heavy payloads)
     public private(set) var uploader: TritonKitDataUploader?
@@ -101,17 +218,57 @@ public class TritonKit {
 
     @discardableResult
     public func start(_ payload: TritonKitStartPayload = .environment()) -> Bool {
-        startRuntime(payload, delegate: nil)
+        start(Configuration(endpoint: payload))
+    }
+
+    @discardableResult
+    public func start(_ configuration: Configuration) -> Bool {
+        startRuntime(configuration, delegate: nil)
+    }
+
+    @discardableResult
+    public func start(_ configure: (inout Configuration) -> Void) -> Bool {
+        start(Configuration(configure))
     }
 
     @discardableResult
     public func start(_ payload: TritonKitStartPayload, delegate: TritonKitDelegate) -> Bool {
-        startRuntime(payload, delegate: delegate)
+        startRuntime(Configuration(endpoint: payload), delegate: delegate)
     }
 
-    private func startRuntime(_ payload: TritonKitStartPayload, delegate explicitDelegate: TritonKitDelegate?) -> Bool {
+    @discardableResult
+    public func start(_ configuration: Configuration, delegate: TritonKitDelegate) -> Bool {
+        startRuntime(configuration, delegate: delegate)
+    }
+
+    public func stop() {
+        isStarted = false
+        closeConnection()
+    }
+
+    @discardableResult
+    public func onStateChange(_ handler: @escaping (ConnectionState) -> Void) -> ObservationToken {
+        let id = UUID()
+        stateObservers[id] = handler
+        handler(state)
+        return ObservationToken { [weak self] in
+            self?.stateObservers.removeValue(forKey: id)
+        }
+    }
+
+    @discardableResult
+    public func onError(_ handler: @escaping (Error) -> Void) -> ObservationToken {
+        let id = UUID()
+        errorObservers[id] = handler
+        return ObservationToken { [weak self] in
+            self?.errorObservers.removeValue(forKey: id)
+        }
+    }
+
+    private func startRuntime(_ configuration: Configuration, delegate explicitDelegate: TritonKitDelegate?) -> Bool {
+        self.configuration = configuration
         guard Self.isRuntimeEnabled else {
-            disconnect()
+            stop()
             return false
         }
 
@@ -124,19 +281,30 @@ public class TritonKit {
             delegate = requestHandler
         }
 
-        dataURL = payload.dataURL
-        connect(host: payload.host, port: payload.port)
+        dataURL = configuration.endpoint.dataURL
+        connect(host: configuration.endpoint.host, port: configuration.endpoint.port, autoReconnect: configuration.autoReconnect)
         return true
     }
 
     public func connect(host: String, port: UInt16) {
+        connect(host: host, port: port, autoReconnect: true)
+    }
+
+    private func connect(host: String, port: UInt16, autoReconnect: Bool) {
         guard Self.isRuntimeEnabled else {
-            disconnect()
+            stop()
             return
         }
         self.host = host
         self.port = port
-        disconnect()
+        self.isStarted = true
+        if configuration.endpoint.host != host || configuration.endpoint.port != port {
+            configuration = Configuration(endpoint: Endpoint(host: host, port: port, dataURL: dataURL))
+        }
+        if configuration.autoReconnect != autoReconnect {
+            configuration.autoReconnect = autoReconnect
+        }
+        closeConnection()
         state = .connecting
 
         let url = URL(string: "ws://\(host):\(port)/")!
@@ -150,6 +318,10 @@ public class TritonKit {
     }
 
     public func disconnect() {
+        stop()
+    }
+
+    private func closeConnection() {
         task?.cancel(with: .goingAway, reason: nil)
         task = nil
         session?.invalidateAndCancel()
@@ -163,7 +335,7 @@ public class TritonKit {
         guard let data = try? JSONEncoder().encode(message) else { return }
         task?.send(.data(data)) { [weak self] error in
             guard let self, let error else { return }
-            self.delegate?.tritonKit(self, didReceiveError: error)
+            self.notifyError(error)
         }
     }
 
@@ -172,7 +344,7 @@ public class TritonKit {
         guard Self.isRuntimeEnabled else { return }
         task?.send(.string(json)) { [weak self] error in
             guard let self, let error else { return }
-            self.delegate?.tritonKit(self, didReceiveError: error)
+            self.notifyError(error)
         }
     }
 
@@ -189,7 +361,7 @@ public class TritonKit {
                 self.handle(message)
             case .failure(let error):
                 self.state = .disconnected
-                self.delegate?.tritonKit(self, didReceiveError: error)
+                self.notifyError(error)
                 self.scheduleReconnect()
                 return
             }
@@ -223,15 +395,22 @@ public class TritonKit {
 
     #if canImport(UIKit)
     @objc private func appDidBecomeActive() {
-        if state == .disconnected, !host.isEmpty { connect(host: host, port: port) }
+        if state == .disconnected, isStarted, configuration.autoReconnect, !host.isEmpty {
+            connect(host: host, port: port, autoReconnect: configuration.autoReconnect)
+        }
     }
     #endif
 
     private func scheduleReconnect() {
-        guard Self.isRuntimeEnabled else { return }
+        guard Self.isRuntimeEnabled, isStarted, configuration.autoReconnect else { return }
         DispatchQueue.main.asyncAfter(deadline: .now() + 5) { [weak self] in
-            guard let self, self.state == .disconnected, !self.host.isEmpty else { return }
-            self.connect(host: self.host, port: self.port)
+            guard let self,
+                  self.isStarted,
+                  self.configuration.autoReconnect,
+                  self.state == .disconnected,
+                  !self.host.isEmpty
+            else { return }
+            self.connect(host: self.host, port: self.port, autoReconnect: self.configuration.autoReconnect)
         }
     }
 
@@ -246,5 +425,18 @@ public class TritonKit {
     private func stopTimers() {
         pingTimer?.invalidate(); pingTimer = nil
         reconnectTimer?.invalidate(); reconnectTimer = nil
+    }
+
+    private func notifyStateObservers(_ state: ConnectionState) {
+        for observer in Array(stateObservers.values) {
+            observer(state)
+        }
+    }
+
+    private func notifyError(_ error: Error) {
+        delegate?.tritonKit(self, didReceiveError: error)
+        for observer in Array(errorObservers.values) {
+            observer(error)
+        }
     }
 }

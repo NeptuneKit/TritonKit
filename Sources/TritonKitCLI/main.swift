@@ -37,6 +37,8 @@ struct TritonKitCLI: AsyncParsableCommand {
             Doctor.self,
             Capabilities.self,
             Schema.self,
+            Runtime.self,
+            State.self,
             Plan.self,
             List.self,
             Inspect.self,
@@ -1893,6 +1895,7 @@ func chineseRootHelp() -> String {
         ("doctor", "诊断服务、目标和运行时能力"),
         ("capabilities", "输出 Triton 运行时能力矩阵"),
         ("schema", "输出机器可读命令 schema 和示例"),
+        ("runtime", "读取 embedded runtime manifest 和能力边界"),
         ("plan", "根据当前状态输出推荐下一步"),
         ("list (默认)", "列出已连接的 TritonKit 目标"),
         ("inspect", "查看单个 TritonKit 目标摘要"),
@@ -1983,6 +1986,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         "schema": ChineseCommandHelp(name: "schema", overview: "输出机器可读命令 schema 和示例。", usage: "triton schema [--command <command>] [--format <format>] [--json]", options: [
             ("--command <command>", "筛选单个命令，例如 input 或 tap"),
         ] + formatTextJSON),
+        "runtime": ChineseCommandHelp(name: "runtime", overview: "读取 embedded runtime manifest、能力边界、限制和脱敏策略。", usage: "triton runtime manifest [选项]", options: target + hostPort + formatTextJSON),
         "device": ChineseCommandHelp(name: "device", overview: "发现和检查 host-side 平台设备。", usage: "triton device <doctor|list|use|wait-ready> --platform harmony [选项]", options: formatTextJSON + [
             ("--platform <platform>", "平台适配器，目前支持 harmony"),
             ("--hdc <path>", "HDC 可执行文件路径，默认 hdc"),
@@ -2246,6 +2250,159 @@ struct Schema: AsyncParsableCommand {
         case .text:
             print(renderSchema(response, language: effectiveLanguage(localization.language)))
         }
+    }
+}
+
+struct Runtime: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "runtime",
+        abstract: "Inspect embedded runtime capabilities and boundaries",
+        subcommands: [RuntimeManifest.self]
+    )
+}
+
+struct RuntimeManifest: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "manifest",
+        abstract: "Read the embedded runtime manifest"
+    )
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let data = try await client.request(type: "runtimeManifest")
+            let manifest = try JSONDecoder().decode(TKRuntimeManifestResponse.self, from: data)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(manifest))
+            case .text:
+                print("ok: \(manifest.ok)")
+                print("platform: \(manifest.platform)")
+                print("runtime: \(manifest.runtime)")
+                print("transport: \(manifest.transport)")
+                print("enabled: \(manifest.enabled)")
+                print("sdkVersion: \(manifest.sdkVersion)")
+                print("buildConfiguration: \(manifest.buildConfiguration)")
+                print("capabilities:")
+                for capability in manifest.capabilities {
+                    let status = capability.supported ? "supported" : "unsupported"
+                    let reason = capability.reason.map { " reason=\($0)" } ?? ""
+                    print("  - \(capability.name): \(status) scope=\(capability.scope) boundary=\(capability.boundary)\(reason)")
+                }
+                print("limits: maxSnapshotBytes=\(manifest.limits.maxSnapshotBytes) maxAXNodes=\(manifest.limits.maxAXNodes) maxLedgerEntries=\(manifest.limits.maxLedgerEntries)")
+                print("redaction: secureText=\(manifest.redaction.secureText) clipboard=\(manifest.redaction.clipboard) network=\(manifest.redaction.network) logs=\(manifest.redaction.logs)")
+            }
+        } catch {
+            if let exitCode = error as? ExitCode {
+                throw exitCode
+            }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct State: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "state",
+        abstract: "Read embedded app runtime state",
+        subcommands: [StateApp.self, StateScene.self, StateRoute.self, StateResponder.self]
+    )
+}
+
+struct StateApp: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "app", abstract: "Read app identity and environment state")
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runStateRequest(type: "stateApp", target: target, host: host, port: port, format: format, json: json)
+    }
+}
+
+struct StateScene: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "scene", abstract: "Read scene and window state")
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runStateRequest(type: "stateScene", target: target, host: host, port: port, format: format, json: json)
+    }
+}
+
+struct StateRoute: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "route", abstract: "Read controller route and container state")
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runStateRequest(type: "stateRoute", target: target, host: host, port: port, format: format, json: json)
+    }
+}
+
+struct StateResponder: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "responder", abstract: "Read first responder and text input traits")
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runStateRequest(type: "stateResponder", target: target, host: host, port: port, format: format, json: json)
+    }
+}
+
+func runStateRequest(
+    type: String,
+    target: String,
+    host: String,
+    port: Int,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    do {
+        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+        let client = TritonKitHTTPClient(host: host, port: port)
+        let data = try await client.request(type: type)
+        switch outputFormat {
+        case .json:
+            print(String(data: data, encoding: .utf8) ?? "{}")
+        case .text:
+            if let object = try? JSONSerialization.jsonObject(with: data),
+               let pretty = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]),
+               let text = String(data: pretty, encoding: .utf8) {
+                print(text)
+            } else {
+                print(String(data: data, encoding: .utf8) ?? "")
+            }
+        }
+    } catch {
+        if let exitCode = error as? ExitCode {
+            throw exitCode
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
     }
 }
 
@@ -3944,6 +4101,11 @@ func runtimeCapabilities(connected: Bool) -> [TKRuntimeCapability] {
         TKRuntimeCapability(name: "record", supported: true),
         TKRuntimeCapability(name: "replay-dry-run", supported: true),
         TKRuntimeCapability(name: "schema", supported: true),
+        TKRuntimeCapability(name: "runtime-manifest", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "state-app", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "state-scene", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "state-route", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "state-responder", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "host-device", supported: true),
         TKRuntimeCapability(name: "harmony-device-doctor", supported: true),
         TKRuntimeCapability(name: "harmony-device-list", supported: true),
@@ -4506,6 +4668,52 @@ func commandSchemas() -> [TKCommandSchema] {
             ],
             examples: ["triton schema --json", "triton schema --command input --json"],
             successShape: "{ schemaVersion, commands[] }"
+        ),
+        TKCommandSchema(
+            name: "runtime",
+            summary: "Inspect embedded runtime manifest, capabilities, limits, and redaction policy",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "manifest", type: "Subcommand", description: "Read embedded runtime manifest"),
+                target,
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton runtime manifest --json"],
+            successShape: "{ ok, platform, runtime, transport, enabled, sdkVersion, buildConfiguration, capabilities[], limits, redaction }",
+            providedCapabilities: ["runtime-manifest"]
+        ),
+        TKCommandSchema(
+            name: "state",
+            summary: "Read embedded app, scene, route, and responder state",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "app", type: "Subcommand", description: "Read app identity, locale, display style, uptime, scene/window counts"),
+                TKCommandSchemaOption(name: "scene", type: "Subcommand", description: "Read UIWindowScene and UIWindow summaries"),
+                TKCommandSchemaOption(name: "route", type: "Subcommand", description: "Read visible UIViewController, navigation, tab, and presented stack"),
+                TKCommandSchemaOption(name: "responder", type: "Subcommand", description: "Read first responder identity and text input traits without text content"),
+                target,
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: [
+                "triton state app --json",
+                "triton state scene --json",
+                "triton state route --json",
+                "triton state responder --json",
+            ],
+            successShape: "{ ok, capturedAt, runtime, targetConnectionState, app|scenes|route|firstResponder, warnings[], unsupported[] }",
+            providedCapabilities: ["state-app", "state-scene", "state-route", "state-responder"]
         ),
         TKCommandSchema(
             name: "device",

@@ -5,6 +5,11 @@ import Foundation
 public enum TKRequestType: String, Codable, CaseIterable {
     case ping
     case appInfo
+    case runtimeManifest
+    case stateApp
+    case stateScene
+    case stateRoute
+    case stateResponder
     case hierarchy
     case hierarchyDetails
     case modifyAttribute

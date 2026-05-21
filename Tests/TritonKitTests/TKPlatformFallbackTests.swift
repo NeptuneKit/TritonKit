@@ -39,6 +39,71 @@ struct TKPlatformFallbackTests {
         #expect(fallbackPayload.port == 19421)
     }
 
+    @Test("endpoint conveniences describe local environment and device targets")
+    func endpointConveniences() {
+        let local = TritonKit.Endpoint.local()
+        let device = TritonKit.Endpoint.device("192.168.1.20", port: 19422)
+        let environment = TritonKit.Endpoint.environment([
+            "TRITON_HOST": "10.0.0.8",
+            "TRITON_PORT": "19423"
+        ])
+
+        #expect(local.host == "127.0.0.1")
+        #expect(local.port == 19421)
+        #expect(local.dataURL == URL(string: "http://127.0.0.1:19421"))
+        #expect(device.host == "192.168.1.20")
+        #expect(device.port == 19422)
+        #expect(device.dataURL == URL(string: "http://192.168.1.20:19422"))
+        #expect(environment.host == "10.0.0.8")
+        #expect(environment.port == 19423)
+    }
+
+    @Test("configuration builder keeps startup options in one facade")
+    func configurationBuilder() {
+        let configuration = TritonKit.Configuration { config in
+            config.endpoint = .device("192.168.1.20", port: 19422)
+            config.autoReconnect = false
+            config.features = [.hierarchy, .input]
+            config.redaction.secureText = .hidden
+            config.appIdentity = .init(name: "Demo", tags: ["smoke"])
+        }
+
+        #expect(configuration.endpoint.host == "192.168.1.20")
+        #expect(configuration.endpoint.port == 19422)
+        #expect(configuration.autoReconnect == false)
+        #expect(configuration.features == [.hierarchy, .input])
+        #expect(configuration.redaction.secureText == .hidden)
+        #expect(configuration.appIdentity?.name == "Demo")
+        #expect(configuration.appIdentity?.tags == ["smoke"])
+    }
+
+    @Test("configuration defaults are safe for debug app bootstrap")
+    func configurationDefaults() {
+        let configuration = TritonKit.Configuration()
+
+        #expect(configuration.endpoint.host == "127.0.0.1")
+        #expect(configuration.endpoint.port == 19421)
+        #expect(configuration.autoReconnect)
+        #expect(configuration.features.contains(.hierarchy))
+        #expect(configuration.features.contains(.accessibility))
+        #expect(configuration.features.contains(.input))
+        #expect(configuration.redaction.secureText == .lengthOnly)
+        #expect(configuration.redaction.collectClipboard == false)
+        #expect(configuration.redaction.collectNetwork == false)
+        #expect(configuration.redaction.collectLogs == false)
+    }
+
+    @Test("state observer token receives current state and can be cancelled")
+    func stateObserverToken() {
+        var observed: [TritonKit.ConnectionState] = []
+        let token = TritonKit.shared.onStateChange { state in
+            observed.append(state)
+        }
+
+        #expect(observed == [TritonKit.shared.state])
+        token.cancel()
+    }
+
     @Test("hierarchy builder returns an empty fallback on non-UIKit platforms")
     func hierarchyBuilderFallback() async {
         #if !canImport(UIKit)

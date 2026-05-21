@@ -21,6 +21,13 @@ public class TritonKitRequestHandler: TritonKitDelegate {
 
     public func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? {
         guard TritonKit.isRuntimeEnabled else {
+            if message.type == .runtimeManifest {
+                return TKMessage(
+                    id: message.id,
+                    type: .runtimeManifest,
+                    payload: try? JSONEncoder().encode(TKRuntimeManifestResponse.releaseDisabled(sdkVersion: "0.1.0-dev"))
+                )
+            }
             return TKMessage(id: message.id, type: .ping,
                 payload: try? JSONEncoder().encode(TKErrorPayload(message: "TritonKit runtime is disabled outside DEBUG builds")))
         }
@@ -41,6 +48,68 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             let info = TKHierarchyInfo(displayItems: [], appInfo: appInfo)
             let payload = try? JSONEncoder().encode(info)
             return TKMessage(id: msg.id, type: .appInfo, payload: payload)
+
+        case .runtimeManifest:
+            let manifest = TKRuntimeManifestResponse.debugDefault(sdkVersion: "0.1.0-dev")
+            let payload = try? JSONEncoder().encode(manifest)
+            return TKMessage(id: msg.id, type: .runtimeManifest, payload: payload)
+
+        case .stateApp:
+            #if canImport(UIKit)
+            let state = await MainActor.run { currentAppState() }
+            #else
+            let state = TKRuntimeAppStateResponse(
+                capturedAt: currentStateTimestamp(),
+                app: TKRuntimeAppState(
+                    bundleIdentifier: Bundle.main.bundleIdentifier ?? "",
+                    displayName: Bundle.main.infoDictionary?["CFBundleName"] as? String ?? "",
+                    version: Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String,
+                    build: Bundle.main.infoDictionary?["CFBundleVersion"] as? String,
+                    localeIdentifier: Locale.current.identifier,
+                    preferredLanguages: Locale.preferredLanguages,
+                    userInterfaceStyle: "unknown",
+                    processUptimeSeconds: ProcessInfo.processInfo.systemUptime,
+                    sceneCount: 0,
+                    windowCount: 0
+                ),
+                unsupported: [TKRuntimeUnsupportedState(field: "uikit", reason: "App state scene details require UIKit runtime")]
+            )
+            #endif
+            return TKMessage(id: msg.id, type: .stateApp, payload: try? JSONEncoder().encode(state))
+
+        case .stateScene:
+            #if canImport(UIKit)
+            let state = await MainActor.run { currentSceneState() }
+            #else
+            let state = TKRuntimeSceneStateResponse(
+                capturedAt: currentStateTimestamp(),
+                scenes: [],
+                unsupported: [TKRuntimeUnsupportedState(field: "scenes", reason: "Scene state requires UIKit runtime")]
+            )
+            #endif
+            return TKMessage(id: msg.id, type: .stateScene, payload: try? JSONEncoder().encode(state))
+
+        case .stateRoute:
+            #if canImport(UIKit)
+            let state = await MainActor.run { currentRouteState() }
+            #else
+            let state = TKRuntimeRouteStateResponse(
+                capturedAt: currentStateTimestamp(),
+                unsupported: [TKRuntimeUnsupportedState(field: "route", reason: "Route state requires UIKit runtime")]
+            )
+            #endif
+            return TKMessage(id: msg.id, type: .stateRoute, payload: try? JSONEncoder().encode(state))
+
+        case .stateResponder:
+            #if canImport(UIKit)
+            let state = await MainActor.run { currentResponderState() }
+            #else
+            let state = TKRuntimeResponderStateResponse(
+                capturedAt: currentStateTimestamp(),
+                unsupported: [TKRuntimeUnsupportedState(field: "firstResponder", reason: "Responder state requires UIKit runtime")]
+            )
+            #endif
+            return TKMessage(id: msg.id, type: .stateResponder, payload: try? JSONEncoder().encode(state))
 
         case .hierarchy:
             let items = await TKHierarchyBuilder.buildHierarchy()
@@ -693,6 +762,149 @@ private func keyWindows() -> [UIWindow] {
     return key.isEmpty ? sceneWindows : key
 }
 
+@MainActor
+private func currentAppState() -> TKRuntimeAppStateResponse {
+    let windows = allRuntimeWindows()
+    let info = Bundle.main.infoDictionary ?? [:]
+    let displayName = info["CFBundleDisplayName"] as? String
+        ?? info["CFBundleName"] as? String
+        ?? ""
+    let style = windows.first.map { userInterfaceStyleName($0.traitCollection.userInterfaceStyle) } ?? "unknown"
+    return TKRuntimeAppStateResponse(
+        capturedAt: currentStateTimestamp(),
+        app: TKRuntimeAppState(
+            bundleIdentifier: Bundle.main.bundleIdentifier ?? "",
+            displayName: displayName,
+            version: info["CFBundleShortVersionString"] as? String,
+            build: info["CFBundleVersion"] as? String,
+            localeIdentifier: Locale.current.identifier,
+            preferredLanguages: Locale.preferredLanguages,
+            preferredContentSizeCategory: UIApplication.shared.preferredContentSizeCategory.rawValue,
+            userInterfaceStyle: style,
+            processUptimeSeconds: ProcessInfo.processInfo.systemUptime,
+            sceneCount: UIApplication.shared.connectedScenes.count,
+            windowCount: windows.count
+        )
+    )
+}
+
+@MainActor
+private func currentSceneState() -> TKRuntimeSceneStateResponse {
+    let scenes = UIApplication.shared.connectedScenes
+        .compactMap { $0 as? UIWindowScene }
+        .enumerated()
+        .map { sceneIndex, scene in
+            let windows = scene.windows.enumerated().map { windowIndex, window in
+                runtimeWindowState(window, id: "scene-\(sceneIndex)-window-\(windowIndex)")
+            }
+            return TKRuntimeSceneState(
+                id: "scene-\(sceneIndex)",
+                activationState: activationStateName(scene.activationState),
+                interfaceOrientation: interfaceOrientationName(scene.interfaceOrientation),
+                screenBounds: tkRect(scene.screen.bounds),
+                screenScale: Double(scene.screen.scale),
+                windowCount: scene.windows.count,
+                windows: windows
+            )
+        }
+    return TKRuntimeSceneStateResponse(
+        capturedAt: currentStateTimestamp(),
+        scenes: scenes,
+        keyWindow: allRuntimeWindows().enumerated().first(where: { $0.element.isKeyWindow }).map {
+            runtimeWindowState($0.element, id: "window-\($0.offset)")
+        },
+        warnings: scenes.isEmpty ? ["No UIWindowScene is connected"] : []
+    )
+}
+
+@MainActor
+private func currentRouteState() -> TKRuntimeRouteStateResponse {
+    guard let root = keyWindows().first?.rootViewController else {
+        return TKRuntimeRouteStateResponse(
+            capturedAt: currentStateTimestamp(),
+            warnings: ["No key window root view controller"]
+        )
+    }
+    let visible = visibleController(from: root)
+    let navigationController = (visible as? UINavigationController) ?? visible?.navigationController ?? (root as? UINavigationController)
+    let tabController = (visible as? UITabBarController) ?? visible?.tabBarController ?? (root as? UITabBarController)
+    let navigationStack = navigationController?.viewControllers.map(controllerState) ?? []
+    let presentedStack = presentedControllerStack(from: root)
+    let tabState = tabController.map(runtimeTabState)
+    let controllers = [root, visible].compactMap { $0 } + navigationStack.compactMap { controller in
+        TKObjectRegistry.shared.object(for: controller.oid ?? 0) as? UIViewController
+    } + presentedStack.compactMap { controller in
+        TKObjectRegistry.shared.object(for: controller.oid ?? 0) as? UIViewController
+    }
+    let hasSwiftUIBoundary = controllers.contains { NSStringFromClass(type(of: $0)).contains("UIHostingController") }
+
+    return TKRuntimeRouteStateResponse(
+        capturedAt: currentStateTimestamp(),
+        rootController: controllerState(root),
+        visibleController: visible.map(controllerState),
+        presentedStack: presentedStack,
+        navigationStack: navigationStack,
+        tab: tabState,
+        swiftUIBoundary: hasSwiftUIBoundary,
+        warnings: hasSwiftUIBoundary ? ["SwiftUI private view tree is not reflected; only UIHostingController boundary is reported"] : []
+    )
+}
+
+@MainActor
+private func currentResponderState() -> TKRuntimeResponderStateResponse {
+    let windows = keyWindows()
+    for (windowIndex, window) in windows.enumerated() {
+        guard let responder = findFirstResponder(in: window) else { continue }
+        let view = responder as? UIView
+        let frame = view.map { tkRect(window.convert($0.bounds, from: $0)) }
+        let traits = responder as? UITextInputTraits
+        return TKRuntimeResponderStateResponse(
+            capturedAt: currentStateTimestamp(),
+            firstResponder: TKRuntimeResponderState(
+                oid: oid(for: responder),
+                className: NSStringFromClass(type(of: responder)),
+                frame: frame,
+                windowIndex: windowIndex,
+                isTextInput: responder is UIKeyInput,
+                isEditable: textInputEditable(responder),
+                isSecureTextEntry: traits?.isSecureTextEntry,
+                keyboardType: traits.flatMap { $0.keyboardType.map(keyboardTypeName) },
+                returnKeyType: traits.flatMap { $0.returnKeyType.map(returnKeyTypeName) }
+            ),
+            redaction: TKRuntimeStateRedaction()
+        )
+    }
+    return TKRuntimeResponderStateResponse(
+        capturedAt: currentStateTimestamp(),
+        warnings: ["No first responder found in key windows"]
+    )
+}
+
+@MainActor
+private func allRuntimeWindows() -> [UIWindow] {
+    UIApplication.shared.connectedScenes
+        .compactMap { $0 as? UIWindowScene }
+        .flatMap(\.windows)
+}
+
+private func runtimeWindowState(_ window: UIWindow, id: String) -> TKRuntimeWindowState {
+    TKRuntimeWindowState(
+        id: id,
+        isKeyWindow: window.isKeyWindow,
+        isHidden: window.isHidden,
+        alpha: Double(window.alpha),
+        windowLevel: Double(window.windowLevel.rawValue),
+        bounds: tkRect(window.bounds),
+        safeArea: TKInsets(
+            top: Double(window.safeAreaInsets.top),
+            left: Double(window.safeAreaInsets.left),
+            bottom: Double(window.safeAreaInsets.bottom),
+            right: Double(window.safeAreaInsets.right)
+        ),
+        rootViewControllerClass: window.rootViewController.map { NSStringFromClass(type(of: $0)) }
+    )
+}
+
 private func nearestSuperview<T: UIView>(of view: UIView, matching type: T.Type) -> T? {
     var current: UIView? = view
     while let view = current {
@@ -702,6 +914,62 @@ private func nearestSuperview<T: UIView>(of view: UIView, matching type: T.Type)
         current = view.superview
     }
     return nil
+}
+
+private func controllerState(_ controller: UIViewController) -> TKRuntimeControllerState {
+    TKRuntimeControllerState(
+        className: NSStringFromClass(type(of: controller)),
+        title: nonEmptyText(controller.title)
+            ?? nonEmptyText(controller.navigationItem.title)
+            ?? nonEmptyText(controller.tabBarItem.title),
+        oid: oid(for: controller)
+    )
+}
+
+private func visibleController(from controller: UIViewController?) -> UIViewController? {
+    guard let controller else { return nil }
+    if let presented = controller.presentedViewController {
+        return visibleController(from: presented)
+    }
+    if let tab = controller as? UITabBarController {
+        return visibleController(from: tab.selectedViewController) ?? tab
+    }
+    if let navigation = controller as? UINavigationController {
+        return visibleController(from: navigation.topViewController) ?? navigation
+    }
+    if let split = controller as? UISplitViewController, let last = split.viewControllers.last {
+        return visibleController(from: last) ?? split
+    }
+    if let page = controller as? UIPageViewController, let first = page.viewControllers?.first {
+        return visibleController(from: first) ?? page
+    }
+    return controller
+}
+
+private func presentedControllerStack(from controller: UIViewController) -> [TKRuntimeControllerState] {
+    var stack: [TKRuntimeControllerState] = []
+    var current = controller.presentedViewController
+    while let controller = current {
+        stack.append(controllerState(controller))
+        current = controller.presentedViewController
+    }
+    return stack
+}
+
+private func runtimeTabState(_ tabController: UITabBarController) -> TKRuntimeTabState {
+    let tabs = (tabController.viewControllers ?? []).map { controller in
+        nonEmptyText(controller.tabBarItem.title)
+            ?? nonEmptyText(controller.title)
+            ?? NSStringFromClass(type(of: controller))
+    }
+    let selectedTitle = tabController.selectedViewController.flatMap {
+        nonEmptyText($0.tabBarItem.title) ?? nonEmptyText($0.title)
+    }
+    return TKRuntimeTabState(
+        selectedIndex: tabController.selectedIndex,
+        selectedTitle: selectedTitle,
+        tabs: tabs
+    )
 }
 
 private func findFirstResponder(in view: UIView) -> UIResponder? {
@@ -718,6 +986,19 @@ private func findFirstResponder(in view: UIView) -> UIResponder? {
 
 private func oid(for object: UIResponder) -> UInt? {
     TKObjectRegistry.shared.register(object)
+}
+
+private func textInputEditable(_ responder: UIResponder) -> Bool? {
+    if let textField = responder as? UITextField {
+        return textField.isEnabled
+    }
+    if let textView = responder as? UITextView {
+        return textView.isEditable
+    }
+    if responder is UIKeyInput {
+        return true
+    }
+    return nil
 }
 
 @MainActor
@@ -1046,7 +1327,77 @@ private func currentOrientationName() -> String {
     @unknown default: return "unknown"
     }
 }
+
+private func interfaceOrientationName(_ orientation: UIInterfaceOrientation) -> String {
+    switch orientation {
+    case .portrait: return "portrait"
+    case .portraitUpsideDown: return "portraitUpsideDown"
+    case .landscapeLeft: return "landscapeLeft"
+    case .landscapeRight: return "landscapeRight"
+    case .unknown: return "unknown"
+    @unknown default: return "unknown"
+    }
+}
+
+private func activationStateName(_ state: UIScene.ActivationState) -> String {
+    switch state {
+    case .foregroundActive: return "foregroundActive"
+    case .foregroundInactive: return "foregroundInactive"
+    case .background: return "background"
+    case .unattached: return "unattached"
+    @unknown default: return "unknown"
+    }
+}
+
+private func userInterfaceStyleName(_ style: UIUserInterfaceStyle) -> String {
+    switch style {
+    case .unspecified: return "unspecified"
+    case .light: return "light"
+    case .dark: return "dark"
+    @unknown default: return "unknown"
+    }
+}
+
+private func keyboardTypeName(_ type: UIKeyboardType) -> String {
+    switch type {
+    case .default: return "default"
+    case .asciiCapable: return "asciiCapable"
+    case .numbersAndPunctuation: return "numbersAndPunctuation"
+    case .URL: return "URL"
+    case .numberPad: return "numberPad"
+    case .phonePad: return "phonePad"
+    case .namePhonePad: return "namePhonePad"
+    case .emailAddress: return "emailAddress"
+    case .decimalPad: return "decimalPad"
+    case .twitter: return "twitter"
+    case .webSearch: return "webSearch"
+    case .asciiCapableNumberPad: return "asciiCapableNumberPad"
+    @unknown default: return "unknown"
+    }
+}
+
+private func returnKeyTypeName(_ type: UIReturnKeyType) -> String {
+    switch type {
+    case .default: return "default"
+    case .go: return "go"
+    case .google: return "google"
+    case .join: return "join"
+    case .next: return "next"
+    case .route: return "route"
+    case .search: return "search"
+    case .send: return "send"
+    case .yahoo: return "yahoo"
+    case .done: return "done"
+    case .emergencyCall: return "emergencyCall"
+    case .continue: return "continue"
+    @unknown default: return "unknown"
+    }
+}
 #endif
+
+private func currentStateTimestamp() -> String {
+    ISO8601DateFormatter().string(from: Date())
+}
 
 // MARK: - Response Payloads
 

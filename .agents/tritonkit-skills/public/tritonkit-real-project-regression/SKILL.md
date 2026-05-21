@@ -28,11 +28,16 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - Put all app-side TritonKit code in a dedicated iOS file such as `TritonKitDebugBootstrap.swift`.
    - Wrap the entire file in `#if DEBUG`, including `import TritonKit` and `TritonKit.shared.start(...)`.
    - Call the bootstrap only from a `#if DEBUG` branch in AppDelegate, SceneDelegate, or SwiftUI `onAppear`.
-   - Prefer `TritonKit.shared.start(.environment())`; only use lower-level `delegate` / `connect(host:port:)` when the real app needs a custom delegate.
+   - Prefer `TritonKit.shared.start()` or the `start { config in ... }` facade; only use lower-level `delegate` / `connect(host:port:)` when the real app needs a custom delegate.
 5. Start server with explicit port: `triton serve --host 127.0.0.1 --port 19421`.
 6. Verify connection and target identity:
    - `triton status --json`
    - `triton list --json`
+   - `triton runtime manifest --json`
+   - `triton state app --json`
+   - `triton state scene --json`
+   - `triton state route --json`
+   - `triton state responder --json`
 7. Prepare host-side simulator state through Triton before falling back to raw `xcrun`:
    - list simulators: `triton sim list --json`;
    - set a workspace default simulator when a flow will be reused: `triton sim use <udid> --json`;
@@ -123,13 +128,45 @@ import TritonKit
 
 enum TritonKitDebugBootstrap {
     static func start() {
-        TritonKit.shared.start(.environment())
+        TritonKit.shared.start()
     }
 }
 #endif
 ```
 
-Use `TritonKit.shared.start(.init(host: "192.168.1.20", port: 19421))` when a physical device needs to connect to a Mac LAN address. `start` retains the default request handler internally; only use the lower-level `delegate` / `connect(host:port:)` API when you need a custom delegate.
+`start()` reads `TRITON_HOST` / `TRITON_PORT` and falls back to `127.0.0.1:19421`. Use `TritonKit.shared.start(.device("192.168.1.20", port: 19421))` when a physical device needs to connect to a Mac LAN address.
+
+For advanced debug bootstrap code, keep the same file-level `#if DEBUG` guard and configure the facade in one closure:
+
+```swift
+#if DEBUG
+TritonKit.shared.start { config in
+    config.endpoint = .device("192.168.1.20", port: 19421)
+    config.autoReconnect = true
+    config.features = [.hierarchy, .accessibility, .input]
+    config.redaction.secureText = .lengthOnly
+    config.appIdentity = .init(name: "YourApp", tags: ["smoke"])
+}
+#endif
+```
+
+Observe connection status without implementing a full delegate:
+
+```swift
+#if DEBUG
+enum TritonKitDebugObservers {
+    private static var stateToken: TritonKit.ObservationToken?
+
+    static func start() {
+        stateToken = TritonKit.shared.onStateChange { state in
+            print("TritonKit state:", state)
+        }
+    }
+}
+#endif
+```
+
+`start` retains the default request handler internally; only use the lower-level `delegate` / `connect(host:port:)` API when you need a custom delegate or custom message routing.
 
 Call the bootstrap only from a guarded app entry point:
 

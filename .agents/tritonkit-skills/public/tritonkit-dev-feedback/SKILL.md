@@ -108,13 +108,45 @@ import TritonKit
 
 enum TritonKitDebugBootstrap {
     static func start() {
-        TritonKit.shared.start(.environment())
+        TritonKit.shared.start()
     }
 }
 #endif
 ```
 
-Use `TritonKit.shared.start(.init(host: "192.168.1.20", port: 19421))` when a physical device needs to connect to a Mac LAN address. `start` retains the default request handler internally; only use the lower-level `delegate` / `connect(host:port:)` API when you need a custom delegate.
+`start()` reads `TRITON_HOST` / `TRITON_PORT` and falls back to `127.0.0.1:19421`. Use `TritonKit.shared.start(.device("192.168.1.20", port: 19421))` when a physical device needs to connect to a Mac LAN address.
+
+For advanced debug bootstrap code, keep the same file-level `#if DEBUG` guard and configure the facade in one closure:
+
+```swift
+#if DEBUG
+TritonKit.shared.start { config in
+    config.endpoint = .device("192.168.1.20", port: 19421)
+    config.autoReconnect = true
+    config.features = [.hierarchy, .accessibility, .input]
+    config.redaction.secureText = .lengthOnly
+    config.appIdentity = .init(name: "YourApp", tags: ["smoke"])
+}
+#endif
+```
+
+Observe connection status without implementing a full delegate:
+
+```swift
+#if DEBUG
+enum TritonKitDebugObservers {
+    private static var stateToken: TritonKit.ObservationToken?
+
+    static func start() {
+        stateToken = TritonKit.shared.onStateChange { state in
+            print("TritonKit state:", state)
+        }
+    }
+}
+#endif
+```
+
+`start` retains the default request handler internally; only use the lower-level `delegate` / `connect(host:port:)` API when you need a custom delegate or custom message routing.
 
 Then call it only from a Debug branch in AppDelegate:
 
@@ -198,6 +230,11 @@ Then verify:
 ```bash
 triton status --json
 triton list --json
+triton runtime manifest --json
+triton state app --json
+triton state scene --json
+triton state route --json
+triton state responder --json
 triton sim list --json
 triton sim use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
 triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl
@@ -216,6 +253,7 @@ triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.
 triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
 triton hierarchy --json
 triton ax --json
+triton runtime manifest --json
 triton tap "first-check"
 triton type "hello"
 triton find "hello" --all

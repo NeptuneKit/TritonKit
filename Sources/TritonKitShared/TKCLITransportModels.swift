@@ -178,6 +178,11 @@ public struct TKCLICommandRequest: Codable, Equatable {
         switch type.lowercased() {
         case "ping": .ping
         case "appinfo": .appInfo
+        case "runtimemanifest", "manifest": .runtimeManifest
+        case "stateapp", "state.app", "app": .stateApp
+        case "statescene", "state.scene", "scene": .stateScene
+        case "stateroute", "state.route", "route": .stateRoute
+        case "stateresponder", "state.responder", "responder": .stateResponder
         case "hierarchy": .hierarchy
         case "allattrgroups": .allAttrGroups
         case "fetchobject": .fetchObject

@@ -98,6 +98,19 @@
 | `swift test --filter TritonKitSharedTests` | 通过，Swift Testing 60 个测试通过 | Shared DTO、input、observation、assertion、evidence、schema、host adapter 等当前模型基线通过。 |
 | `TRITON_PORT=19432 docs-linhay/scripts/verify-cli-bootstrap.sh` | 未通过 | 环境前提不满足：本机默认 `127.0.0.1:19421` 已有 `triton` server 监听，裸 `triton` 直接连到当前 App；脚本预期 server unavailable。需停止 PID `62859` 或在脚本中避免裸命令使用默认端口后重跑。 |
 
+### S0 runtime manifest 执行结果
+
+执行时间：2026-05-21。
+
+| 项目 | 结果 | 证据 |
+| --- | --- | --- |
+| Shared DTO | 已实现 | `TKRuntimeManifestResponse`、`TKRuntimeCapabilityDetail`、`TKRuntimeLimits`、`TKRuntimeRedactionPolicy` |
+| Request type | 已实现 | `TKRequestType.runtimeManifest` 与 `TKCLICommandRequest(type: "manifest")` 映射 |
+| Embedded handler | 已实现 | DEBUG 返回 `debugDefault` manifest；Release disabled 路径返回 no-op manifest shape |
+| CLI | 已实现 | `triton runtime manifest --json` |
+| Schema/capabilities | 已实现 | `triton schema --command runtime --json` 暴露 `runtime-manifest`；`capabilities` 暴露 `runtime-manifest` |
+| Mock smoke | 已通过 | `verify-intent-cli-smoke.sh` 新增 mock `runtimeManifest` 响应与 schema 断言 |
+
 ## 头脑风暴池
 
 | ID | 来源轮次 | 想法 | 暂不执行原因 | 重新评估条件 |

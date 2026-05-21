@@ -205,7 +205,124 @@ class Handler(BaseHTTPRequestHandler):
             log.write(json.dumps(request, separators=(",", ":")) + "\n")
 
         request_type = request.get("type")
-        if request_type == "accessibility":
+        if request_type == "runtimeManifest":
+            self.send_json(200, {
+                "ok": True,
+                "platform": "ios",
+                "runtime": "embedded",
+                "transport": "embedded-websocket",
+                "enabled": True,
+                "sdkVersion": "mock",
+                "buildConfiguration": "debug",
+                "capabilities": [
+                    {"name": "runtime.manifest", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "state.app", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "state.scene", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "state.route", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "state.responder", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "press", "supported": False, "scope": "host-side", "boundary": "simulator-host", "reason": "Host-side HID is not available in the embedded runtime"},
+                ],
+                "limits": {"maxSnapshotBytes": 1048576, "maxAXNodes": 800, "maxLedgerEntries": 100},
+                "redaction": {
+                    "secureText": "length-only",
+                    "clipboard": "not-collected",
+                    "network": "opt-in-only",
+                    "logs": "opt-in-only",
+                    "fileArtifacts": "opt-in-only",
+                    "policy": None,
+                },
+            })
+        elif request_type == "stateApp":
+            self.send_json(200, {
+                "ok": True,
+                "capturedAt": "2026-05-21T12:00:00Z",
+                "runtime": "embedded",
+                "targetConnectionState": "connected",
+                "app": {
+                    "bundleIdentifier": "dev.triton.intent-smoke",
+                    "displayName": "Intent Smoke",
+                    "version": "1.0",
+                    "build": "42",
+                    "localeIdentifier": "en_US",
+                    "preferredLanguages": ["en-US"],
+                    "preferredContentSizeCategory": "UICTContentSizeCategoryM",
+                    "userInterfaceStyle": "light",
+                    "processUptimeSeconds": 12.5,
+                    "sceneCount": 1,
+                    "windowCount": 1,
+                },
+                "warnings": [],
+                "unsupported": [],
+            })
+        elif request_type == "stateScene":
+            window = {
+                "id": "window-0",
+                "isKeyWindow": True,
+                "isHidden": False,
+                "alpha": 1,
+                "windowLevel": 0,
+                "bounds": {"x": 0, "y": 0, "width": 390, "height": 844},
+                "safeArea": {"top": 59, "left": 0, "bottom": 34, "right": 0},
+                "rootViewControllerClass": "IntentSmoke.RootViewController",
+            }
+            self.send_json(200, {
+                "ok": True,
+                "capturedAt": "2026-05-21T12:00:00Z",
+                "runtime": "embedded",
+                "targetConnectionState": "connected",
+                "scenes": [{
+                    "id": "scene-0",
+                    "activationState": "foregroundActive",
+                    "interfaceOrientation": "portrait",
+                    "screenBounds": {"x": 0, "y": 0, "width": 390, "height": 844},
+                    "screenScale": 3,
+                    "windowCount": 1,
+                    "windows": [window],
+                }],
+                "keyWindow": window,
+                "warnings": [],
+                "unsupported": [],
+            })
+        elif request_type == "stateRoute":
+            self.send_json(200, {
+                "ok": True,
+                "capturedAt": "2026-05-21T12:00:00Z",
+                "runtime": "embedded",
+                "targetConnectionState": "connected",
+                "rootController": {"className": "UITabBarController", "title": None, "oid": 1},
+                "visibleController": {"className": "IntentSmoke.FormViewController", "title": "Form", "oid": 2},
+                "presentedStack": [],
+                "navigationStack": [
+                    {"className": "IntentSmoke.HomeViewController", "title": "Home", "oid": 3},
+                    {"className": "IntentSmoke.FormViewController", "title": "Form", "oid": 2},
+                ],
+                "tab": {"selectedIndex": 1, "selectedTitle": "Form", "tabs": ["Home", "Form"]},
+                "swiftUIBoundary": False,
+                "warnings": [],
+                "unsupported": [],
+            })
+        elif request_type == "stateResponder":
+            self.send_json(200, {
+                "ok": True,
+                "capturedAt": "2026-05-21T12:00:00Z",
+                "runtime": "embedded",
+                "targetConnectionState": "connected",
+                "firstResponder": {
+                    "oid": 99,
+                    "className": "UITextField",
+                    "frame": {"x": 120, "y": 198, "width": 246, "height": 44},
+                    "windowIndex": 0,
+                    "isTextInput": True,
+                    "isEditable": True,
+                    "isSecureTextEntry": False,
+                    "keyboardType": "default",
+                    "returnKeyType": "done",
+                },
+                "redaction": {"secureText": "length-only", "textContent": "not-collected"},
+                "warnings": [],
+                "unsupported": [],
+            })
+        elif request_type == "accessibility":
             self.send_json(200, ax_nodes)
         elif request_type == "hitTest":
             payload = base64.b64decode(request.get("payload", ""))
@@ -319,6 +436,18 @@ done
 
 jq -e '(.targets | length) == 1 and .targets[0].id == "triton:demo:single"' "$out_dir/list.json" >/dev/null
 
+"$triton" runtime manifest --host "$host" --port "$port" --json > "$out_dir/runtime-manifest.json"
+jq -e '.ok == true and .platform == "ios" and .runtime == "embedded" and .enabled == true and .redaction.secureText == "length-only" and (.capabilities[] | select(.name == "state.route" and .supported == true and .scope == "embedded")) and (.capabilities[] | select(.name == "press" and .supported == false and .scope == "host-side"))' "$out_dir/runtime-manifest.json" >/dev/null
+
+"$triton" state app --host "$host" --port "$port" --json > "$out_dir/state-app.json"
+jq -e '.ok == true and .app.bundleIdentifier == "dev.triton.intent-smoke" and .app.sceneCount == 1 and .app.windowCount == 1' "$out_dir/state-app.json" >/dev/null
+"$triton" state scene --host "$host" --port "$port" --json > "$out_dir/state-scene.json"
+jq -e '.ok == true and .scenes[0].activationState == "foregroundActive" and .keyWindow.isKeyWindow == true' "$out_dir/state-scene.json" >/dev/null
+"$triton" state route --host "$host" --port "$port" --json > "$out_dir/state-route.json"
+jq -e '.ok == true and .visibleController.className == "IntentSmoke.FormViewController" and .tab.selectedIndex == 1' "$out_dir/state-route.json" >/dev/null
+"$triton" state responder --host "$host" --port "$port" --json > "$out_dir/state-responder.json"
+jq -e '.ok == true and .firstResponder.className == "UITextField" and .firstResponder.isTextInput == true and .redaction.textContent == "not-collected"' "$out_dir/state-responder.json" >/dev/null
+
 "$triton" tap "HTTP" --host "$host" --port "$port" > "$out_dir/tap-http-omitted-target.json"
 jq -e '.ok == true and .targetOID == 42 and .targetClassName == "UISegmentedControl"' "$out_dir/tap-http-omitted-target.json" >/dev/null
 
@@ -384,6 +513,10 @@ jq -e '.commands[0].options[] | select(.name == "--at")' "$out_dir/schema-tap-de
 jq -e '.commands[0].options[] | select(.name == "<text>")' "$out_dir/schema-type-default.json" >/dev/null
 "$triton" schema --command press > "$out_dir/schema-press-positional.json"
 jq -e '.commands[0].options[] | select(.name == "<button>")' "$out_dir/schema-press-positional.json" >/dev/null
+"$triton" schema --command runtime > "$out_dir/schema-runtime.json"
+jq -e '.commands[0].providedCapabilities[] == "runtime-manifest" and .commands[0].runtimeScope == "embedded"' "$out_dir/schema-runtime.json" >/dev/null
+"$triton" schema --command state > "$out_dir/schema-state.json"
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "state-route")) and (.commands[0].examples[] | select(. == "triton state responder --json"))' "$out_dir/schema-state.json" >/dev/null
 
 jq -s -e '
   any(.[]; .type == "input"
@@ -395,6 +528,11 @@ jq -s -e '
 cat <<REPORT
 intent-first CLI smoke passed
 list: $out_dir/list.json
+runtime-manifest: $out_dir/runtime-manifest.json
+state-app: $out_dir/state-app.json
+state-scene: $out_dir/state-scene.json
+state-route: $out_dir/state-route.json
+state-responder: $out_dir/state-responder.json
 tap-http-omitted-target: $out_dir/tap-http-omitted-target.json
 find-name-text-field: $out_dir/find-name-text-field.json
 find-https-visible-hierarchy: $out_dir/find-https-visible-hierarchy.json
@@ -414,5 +552,7 @@ press-positional: $out_dir/press-positional.json
 schema-tap-default: $out_dir/schema-tap-default.json
 schema-type-default: $out_dir/schema-type-default.json
 schema-press-positional: $out_dir/schema-press-positional.json
+schema-runtime: $out_dir/schema-runtime.json
+schema-state: $out_dir/schema-state.json
 requests: $out_dir/mock-requests.ndjson
 REPORT
