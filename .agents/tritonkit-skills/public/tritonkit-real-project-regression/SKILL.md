@@ -111,7 +111,11 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - use `triton assert text-exists|text-not-exists <text> --json` for final pass/fail checks; add `--within x,y,width,height`, `--role`, or `--count` when labels repeat across headers, sidebars, and cells;
    - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, archive check, or a fresh `evidence` bundle.
 12. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
-13. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly.
+13. Before sharing evidence outside the real app repo, sanitize project and personal information:
+   - replace private project names, app names, bundle IDs, team IDs, organization names, user names, account IDs, email addresses, phone numbers, local usernames, internal domains, and absolute private paths with stable placeholders;
+   - keep platform/tool versions, TritonKit version, command names, error codes, redacted route shape, and minimal sanitized snippets needed for reproduction;
+   - do not attach full private logs, screenshots with personal data, unredacted `.tritonevidence`, `.tritonplan`, `.xcresult`, HDC/Simulator dumps, app archives, or credentials.
+14. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly after redaction.
 
 ## iOS App Integration Guide
 
@@ -259,7 +263,15 @@ For the Harmony demo, `28767` is the host-access embedded runtime port exposed t
 
 ## CLI Install Contract
 
-Use the local release CLI while TritonKit is pre-release or while validating unreleased source changes:
+Use Homebrew for real-project adoption checks by default:
+
+```bash
+brew install NeptuneKit/tap/triton
+brew update
+brew upgrade triton
+```
+
+Use the local release CLI only while TritonKit is pre-release, while validating unreleased source changes, or when Homebrew / GitHub Release assets are unavailable:
 
 ```bash
 swift build --package-path CLI --scratch-path .build/cli -c release --product triton
@@ -275,14 +287,6 @@ mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
 ```
 
-Use Homebrew for real-project adoption checks by default:
-
-```bash
-brew install NeptuneKit/tap/triton
-brew update
-brew upgrade triton
-```
-
 Homebrew installs only the macOS CLI. The app-side embedded runtime still comes from SwiftPM or CocoaPods and must remain DEBUG-only.
 
 Release assets live in `NeptuneKit/TritonKit` GitHub Releases and include arm64/x86_64 CLI archives plus `tritonkit_checksums.txt`. The Homebrew tap is updated from those release assets after `v*` tag releases. If the release or tap is unavailable in a test environment, do not fail the regression setup on Homebrew; use the local release CLI and file a TritonKit issue with the missing distribution evidence.
@@ -290,6 +294,8 @@ Release assets live in `NeptuneKit/TritonKit` GitHub Releases and include arm64/
 ## Boundaries
 
 - Do not commit or revert real app repo changes unless the user explicitly asks.
+- Do not publish real app identity, private bundle IDs, personal accounts, user names, emails, internal hosts, absolute private paths, or unredacted evidence in TritonKit issues.
+- Inspect evidence manifests, screenshot pixels, and artifact filenames before attaching them to public issues. If redaction cannot be verified, summarize the evidence instead.
 - Do not treat a successful tap as completion; verify the resulting app state.
 - Do not add Web/Wails UI to satisfy real-project needs when CLI/HTTP can provide the contract.
 - System alerts and SpringBoard-level controls remain outside embedded runtime scope; expect `runtime_ui_interrupted` or unsupported errors.

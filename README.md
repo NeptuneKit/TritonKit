@@ -4,6 +4,8 @@ TritonKit provides a DEBUG-only embedded iOS runtime, Harmony / DevEco Emulator 
 
 TritonKit is in active development. If you hit a missing capability, unclear behavior, integration issue, or documentation gap, open an issue in `NeptuneKit/TritonKit`; AI agents using this repository should collect evidence and file the issue directly when they have GitHub access.
 
+Before filing a public issue, redact private project and personal information. Do not include real app names, private bundle IDs, team IDs, organization names, user names, accounts, emails, phone numbers, internal hosts, absolute private paths, full private logs, or unredacted screenshots/evidence bundles. Use stable placeholders while keeping versions, commands, error codes, and the smallest sanitized reproduction details.
+
 ## Choose An Integration Path
 
 | Need | Start Here | Notes |
@@ -190,31 +192,9 @@ Use the CLI guide independently when an agent only needs host-side simulator or 
 
 ### 1. Install The CLI
 
-#### Local Source Fallback
-
-Use the local source build only when validating unreleased TritonKit changes from this checkout:
-
-```bash
-swift build --package-path CLI --scratch-path .build/cli -c release --product triton
-.build/cli/release/triton version --json
-```
-
-Use that binary directly or copy it into a directory on `PATH` for local regression work.
-
-If a `triton serve` process may already be running from the target path, do not overwrite that path in place. Stop the server first, or install through a temporary file and atomically move it into place:
-
-```bash
-swift build --package-path CLI --scratch-path .build/cli -c release --product triton
-cp .build/cli/release/triton ~/.local/bin/triton.new
-mv ~/.local/bin/triton.new ~/.local/bin/triton
-triton version --json
-```
-
-This avoids confusing macOS failures where a newly invoked CLI is killed after the active binary file was overwritten.
-
 #### Homebrew
 
-After a versioned release is published, install the macOS `triton` binary with Homebrew:
+Install the released macOS `triton` binary with Homebrew first:
 
 ```bash
 brew install NeptuneKit/tap/triton
@@ -244,6 +224,28 @@ brew install triton
 brew update
 brew upgrade triton
 ```
+
+#### Local Source Fallback
+
+Use the local source build only when validating unreleased TritonKit changes from this checkout, or when Homebrew / GitHub Release assets are unavailable:
+
+```bash
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+.build/cli/release/triton version --json
+```
+
+Use that binary directly or copy it into a directory on `PATH` for local regression work.
+
+If a `triton serve` process may already be running from the target path, do not overwrite that path in place. Stop the server first, or install through a temporary file and atomically move it into place:
+
+```bash
+swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+cp .build/cli/release/triton ~/.local/bin/triton.new
+mv ~/.local/bin/triton.new ~/.local/bin/triton
+triton version --json
+```
+
+This avoids confusing macOS failures where a newly invoked CLI is killed after the active binary file was overwritten.
 
 #### Manual Release Asset
 

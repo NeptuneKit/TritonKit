@@ -43,6 +43,14 @@
 - And skill 应按 iOS embedded、Harmony host-side、Harmony embedded、CLI install/run 分流
 - And 发现指南缺口、接入摩擦或实际能力不符时，按 dev feedback 流程沉淀 GitHub issue
 
+### 场景 5：GitHub issue 上报前完成脱敏
+
+- Given agent 在真实业务 App、客户项目或个人工程中复现了 TritonKit 问题
+- When 准备公开 GitHub issue、issue comment 或附件证据
+- Then 必须替换真实工程名、App 名、bundle ID、team ID、组织名、用户名、账号、邮箱、手机号、内网域名和绝对私有路径
+- And 不上传完整私有日志、未脱敏截图、未检查的 `.tritonevidence`、`.tritonplan`、`.xcresult`、HDC/Simulator dump 或 App archive
+- And 保留平台版本、TritonKit 版本、命令、错误码、最小复现步骤和裁剪后的脱敏日志片段
+
 ## 变更位置
 
 - `README.md`

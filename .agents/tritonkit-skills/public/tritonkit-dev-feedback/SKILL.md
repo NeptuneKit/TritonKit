@@ -72,13 +72,18 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - For form flows, prefer semantic embedded actions when available: `triton focus "用户名" --json`, `triton set-text "用户名" "alice" --json`, `triton set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton select-segment "协议" "HTTP" --json`, and `triton set-switch "记住我" on --json`.
    - When the same text appears multiple times, run `triton find "<text>" --all` first; if you know a point inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`.
    - relevant `swift test`, smoke scripts, or app-level reproduction steps.
-4. Classify the issue:
+4. Redact before filing or preparing an issue:
+   - replace private project names, app names, bundle IDs, team IDs, organization names, user names, account IDs, email addresses, phone numbers, local usernames, internal domains, and absolute private paths with stable placeholders such as `<private-app>`, `<bundle-id>`, `<team-id>`, `<user>`, `<account>`, `<internal-host>`, and `<repo-path>`;
+   - keep reproducibility-critical public facts such as platform, OS/tool versions, TritonKit version, command names, error codes, sanitized route shape, and minimal redacted snippets;
+   - do not attach full private logs, screenshots with personal data, unredacted `.tritonevidence`, `.tritonplan`, `.xcresult`, HDC/Simulator dumps, or app archives;
+   - inspect evidence manifests and artifact names before upload; if redaction cannot be verified, summarize the evidence instead of attaching it.
+5. Classify the issue:
    - `bug`: behavior is broken, unstable, misleading, or inconsistent with documented/schema behavior.
    - `feature`: user needs a new capability or extension.
    - `docs`: documentation, onboarding, examples, or CLI help are unclear.
    - `question`: only if no concrete change is identifiable yet.
-5. Create the issue with `gh issue create --repo NeptuneKit/TritonKit`.
-6. Report the issue URL back to the user with a short summary and any local verification result.
+6. Create the issue with `gh issue create --repo NeptuneKit/TritonKit`.
+7. Report the issue URL back to the user with a short summary and any local verification result.
 
 ## iOS App Integration Guide
 
@@ -222,7 +227,15 @@ struct YourApp: App {
 
 ### CLI Installation And Verification
 
-When the report depends on unreleased source changes, build and use the local release CLI first:
+For released TritonKit builds, install or update the macOS CLI with Homebrew first:
+
+```bash
+brew install NeptuneKit/tap/triton
+brew update
+brew upgrade triton
+```
+
+When the report depends on unreleased source changes, or Homebrew / GitHub Release assets are unavailable, build and use the local release CLI:
 
 ```bash
 swift build --package-path CLI --scratch-path .build/cli -c release --product triton
@@ -236,14 +249,6 @@ swift build --package-path CLI --scratch-path .build/cli -c release --product tr
 cp .build/cli/release/triton ~/.local/bin/triton.new
 mv ~/.local/bin/triton.new ~/.local/bin/triton
 triton version --json
-```
-
-For released TritonKit builds, install or update the macOS CLI with Homebrew:
-
-```bash
-brew install NeptuneKit/tap/triton
-brew update
-brew upgrade triton
 ```
 
 Start the macOS server before launching the app:
@@ -373,13 +378,13 @@ Use a concise, reproducible issue body:
 <What the user was trying to do. Mention TritonKit is in active development if relevant.>
 
 ## Current Behavior
-<Observed behavior, error envelope, logs, screenshots, or command output.>
+<Observed behavior, error envelope, sanitized logs, screenshots, or command output.>
 
 ## Expected Behavior
 <What should happen or what capability is needed.>
 
 ## Reproduction / Evidence
-<Commands, app/simulator context, files, versions, and whether reproduction was confirmed.>
+<Commands, sanitized app/simulator context, files, versions, and whether reproduction was confirmed.>
 
 ## Proposed Next Step
 <Smallest useful product or engineering action.>
@@ -396,7 +401,8 @@ Title format:
 
 - File issues for development-stage feedback even when the request is exploratory.
 - If GitHub auth or network access blocks issue creation, state the blocker and provide the exact `gh issue create` command and issue body that should be run.
-- Do not include secrets, private tokens, local-only credentials, or full private logs.
+- Do not include secrets, private tokens, local-only credentials, full private logs, real project names, private bundle IDs, user names, account identifiers, emails, phone numbers, internal hostnames, or absolute private filesystem paths.
+- Do not upload evidence bundles or screenshots until they have been checked for private project or personal information. Prefer sanitized excerpts and manifest summaries when in doubt.
 - When attaching a `.tritonplan`, keep secrets as `${variable}` placeholders and document the expected `--var key-env=ENV_NAME` bindings instead of writing secret values into the issue.
 - Do not create duplicate issues if an existing open issue clearly covers the same feedback; comment on the existing issue instead when appropriate.
 - Keep implementation work separate from feedback filing unless the user explicitly asks for a fix in the same turn.

@@ -15,7 +15,9 @@ TritonKit 仍处开发阶段，外部使用者在试用、接入、评估或自�
 1. 优先用 `triton status --json`、`triton doctor --json`、`triton schema --json`、`triton plan --json`、相关测试或 smoke 脚本收集证据。
 2. issue 内容至少包含背景、当前行为、期望行为、复现/证据和建议下一步。
 3. 若 GitHub auth 或网络阻塞，才输出阻塞原因和可直接执行的 `gh issue create` 命令。
-4. 不提交密钥、私有 token、完整私有日志或无关本地路径。
+4. 上报 issue 前必须脱敏工程和个人信息：真实工程名、App 名、bundle ID、team ID、组织名、用户名、账号、邮箱、手机号、内网域名、绝对私有路径、完整私有日志、未脱敏截图和证据包不得进入公开 issue。
+5. 脱敏后仍保留复现必要信息：平台/系统/工具版本、TritonKit 版本、命令、错误码、裁剪后的日志片段、最小复现步骤；私有字段用 `<private-app>`、`<bundle-id>`、`<user>`、`<internal-host>`、`<repo-path>` 等占位符。
+6. 证据包、截图、`.tritonplan`、`.xcresult`、HDC/Simulator dump 只有在检查 manifest、文件名和内容不含私有信息后才能附加；无法确认时只写摘要。
 
 ## 验证
 

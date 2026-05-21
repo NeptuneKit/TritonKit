@@ -40,6 +40,7 @@ metadata:
 - 手动 `workflow_dispatch` 只验证 release asset 集合并上传 workflow artifact，不渲染 Homebrew formula；只有真实 `v*` tag 构建才用 `GITHUB_REF_NAME` 渲染 formula，避免 dev 版本 `0.1.0-dev+<sha>` 被拼成无效 release tag。
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 只跑 `TritonKit.podspec` lint，Shared/iOS/未分类改动在 CI 中并行跑 Swift tests、两个 podspec lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - GitHub issue / PR 评论若包含 Markdown 命令片段，必须通过文件传给 `gh --body-file`，优先使用 `docs-linhay/scripts/gh-issue-comment-file.sh`，避免 shell 执行反引号内容。
+- 上报 GitHub issue 前必须脱敏工程和个人信息：真实工程名、App 名、bundle ID、team ID、组织名、用户名、账号、邮箱、手机号、内网域名、绝对私有路径、完整私有日志、未脱敏截图和证据包不得进入公开 issue；必要时使用 `<private-app>`、`<bundle-id>`、`<user>`、`<internal-host>`、`<repo-path>` 等占位符，并保留平台版本、TritonKit 版本、命令、错误码和最小可复现片段。
 - GitHub Actions 状态观察优先使用 `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`；失败后再拉完整日志，避免 `gh run watch` 重复输出淹没关键状态。
 - 发布脚本查找 GitHub Actions run 时必须从 `gh run list --json headBranch,url` 的 URL 字符串解析 run id；不要通过 `databaseId` + Go template 渲染大整数，避免被格式化成科学计数法后导致 `gh run view` 404。
 
