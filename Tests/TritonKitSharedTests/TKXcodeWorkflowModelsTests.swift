@@ -56,6 +56,53 @@ struct TKXcodeWorkflowModelsTests {
         ])
     }
 
+    @Test("xcode action progress and summary preserve streaming artifacts")
+    func xcodeStreamingArtifactsRoundTrip() throws {
+        let event = TKXcodeProgressEvent(
+            event: "xcode.build.heartbeat",
+            message: "running",
+            sourceCommand: "xcodebuild build",
+            elapsedMs: 12_000,
+            stdoutLogPath: "/tmp/triton-xcode-artifacts/case/stdout.log",
+            stderrLogPath: "/tmp/triton-xcode-artifacts/case/stderr.log",
+            stdoutBytes: 1_024,
+            stderrBytes: 128
+        )
+        let decodedEvent = try JSONDecoder().decode(TKXcodeProgressEvent.self, from: JSONEncoder().encode(event))
+
+        #expect(decodedEvent.stdoutLogPath == "/tmp/triton-xcode-artifacts/case/stdout.log")
+        #expect(decodedEvent.stderrLogPath == "/tmp/triton-xcode-artifacts/case/stderr.log")
+        #expect(decodedEvent.stdoutBytes == 1_024)
+        #expect(decodedEvent.stderrBytes == 128)
+
+        let summary = TKXcodeActionSummary(
+            ok: true,
+            action: "xcode.build",
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: "/tmp/DerivedData",
+            durationMs: 25_000,
+            sourceCommand: "xcodebuild build",
+            exitCode: 0,
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: "/tmp/triton-xcode-artifacts/case/stdout.log",
+            stderrLogPath: "/tmp/triton-xcode-artifacts/case/stderr.log",
+            stdoutBytes: 2_048,
+            stderrBytes: 512
+        )
+        let decodedSummary = try JSONDecoder().decode(TKXcodeActionSummary.self, from: JSONEncoder().encode(summary))
+
+        #expect(decodedSummary.stdoutLogPath == "/tmp/triton-xcode-artifacts/case/stdout.log")
+        #expect(decodedSummary.stderrLogPath == "/tmp/triton-xcode-artifacts/case/stderr.log")
+        #expect(decodedSummary.stdoutBytes == 2_048)
+        #expect(decodedSummary.stderrBytes == 512)
+    }
+
     @Test("xcodebuild list json parser returns schemes")
     func xcodebuildListParser() throws {
         let json = """

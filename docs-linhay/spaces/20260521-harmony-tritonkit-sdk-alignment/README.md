@@ -26,13 +26,16 @@ Harmony embedded SDK 的目标与 iOS embedded SDK 保持一致：让 AI 通过 
 4. 对齐 TritonKit embedded runtime 机器可读契约：manifest、capabilities、logs/sources、command callback、view tree/snapshot、ledger。
 5. 明确 host-side Harmony adapter 与 embedded Harmony SDK 的边界，避免把 hdc/uitest/DevEco Emulator 接管能力塞进 App 内 SDK。
 
+## 范围修订
+
+2026-05-21 继续 H6 后，本 space 已开始修改 TritonKit 主仓的 host-side CLI 适配层：新增 direct embedded runtime HTTP 映射，使 `triton` 在 Harmony SDK demo server 尚未接入 `triton serve` 时，也能通过 `--runtime-base-url` 直接访问 `/v2/runtime/*`。因此原“本 space 不直接修改 TritonKit 主仓代码”只适用于最初 H0-H5 Harmony SDK 仓库迁移阶段，H6 同步阶段已纳入 TritonKit 主仓文档、CLI schema、测试和 smoke 脚本。
+
 ## 非目标
 
-1. 本 space 不直接修改 TritonKit 主仓代码。
-2. 本 space 不立即发布 OHPM 包，不消耗 `OHPM_PRIVATE_KEY_PEM` 或 `OHPM_PUBLISH_ID`。
-3. 不把 Harmony embedded SDK 做成真机/模拟器 host-side 接管工具；host 侧仍由 `triton device/app --platform harmony` 方向负责。
-4. 不默认采集敏感存储、剪贴板、账号 token、业务日志正文或全量网络流量。
-5. 不破坏当前 iOS embedded SDK S0-S4 未提交改动。
+1. 本 space 不立即发布 OHPM 包，不消耗 `OHPM_PRIVATE_KEY_PEM` 或 `OHPM_PUBLISH_ID`。
+2. 不把 Harmony embedded SDK 做成真机/模拟器 host-side 接管工具；host 侧仍由 `triton device/app --platform harmony` 方向负责。
+3. 不默认采集敏感存储、剪贴板、账号 token、业务日志正文或全量网络流量。
+4. 不破坏当前 iOS embedded SDK S0-S4 未提交改动。
 
 ## 当前基线
 
@@ -143,3 +146,20 @@ env PATH=/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin:/Applications/D
 5. Harmony HAR 不能通用实现的 `scene/route/responder`、语义动作、input、screenshot、hit-test 等 endpoint 统一返回 `errorCode=unsupported_runtime_scope`，等待 App provider 或 host-side adapter。
 6. 新增 `scripts/verify-runtime-loop-contract.mjs`，并更新 `scripts/verify-runtime-manifest-contract.mjs`、`scripts/demo-smoke.mjs`。
 7. HAR 重新构建通过；过程中继续规避 ArkTS indexed access type 限制，使用显式 union/static 字符串类型约束 capability name/scope/boundary。
+
+继续 H6 后，已补 App provider 扩展点：
+
+1. 新增 `RuntimeStateProviderResponse`、`RuntimeSemanticActionRequest`、`RuntimeSemanticActionResponse`。
+2. `ExportServer` 新增 `setRuntimeSceneStateProvider`、`setRuntimeRouteStateProvider`、`setRuntimeResponderStateProvider`、`setRuntimeActionProvider`。
+3. `scene/route/responder` endpoint 优先返回 App provider 结果；未注册时继续返回 `unsupported_runtime_scope`。
+4. `POST /v2/runtime/action` 优先交给 App action provider；未注册或 provider 不处理时返回 `unsupported_runtime_scope`。
+5. manifest 中 `state.scene`、`state.route`、`state.responder`、`semantic.*` 会根据 provider 是否注册动态标记 supported。
+6. 新增 `scripts/verify-runtime-provider-contract.mjs`，HAR 构建继续通过。
+
+继续 H6 后，TritonKit 主仓已补第一片 host-side direct runtime 映射：
+
+1. 新增共享 `TKEmbeddedRuntimeHTTPRoute`，把 `runtimeManifest`、`stateApp/Scene/Route/Responder`、`runtimeSnapshot`、`runtimeLedger`、`semanticAction` 映射到 Harmony SDK `/v2/runtime/*`。
+2. `triton runtime manifest`、`triton state app|scene|route|responder`、`triton snapshot`、`triton ledger`、`triton focus`、`triton set-text`、`triton select-segment`、`triton set-switch` 新增 `--runtime-base-url`。
+3. `triton device runtime-url --platform harmony` 新增 HDC fport 准备入口，返回可直接传给 `--runtime-base-url` 的 `baseURL`，并支持 `--probe-manifest` 探测 Harmony runtime manifest。
+4. 不传 `--runtime-base-url` 时仍走本机 `triton serve` `/request`；传入后绕过 Triton server，直接调用 embedded HTTP runtime，适合 Harmony SDK demo server 和业务 App provider smoke。
+5. 新增 `docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`，使用 mock Harmony runtime 和 fake HDC 验证 CLI schema 暴露、runtime-url、manifest、state route、snapshot、ledger JSONL 和 secure `set-text` provider action。

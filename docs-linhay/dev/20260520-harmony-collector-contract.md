@@ -27,6 +27,32 @@ Host-side Harmony adapter 的 transport 是 `hdc`，负责设备发现、启动�
 
 二者可以在 evidence/capture 中汇合，但 source、transport、risk/policy 和 redaction status 必须分开记录。
 
+## 2026-05-21 Runtime Loop 对齐补充
+
+Harmony embedded SDK 的 runtime loop 对齐策略是“能直接对齐就直接对齐，不能通用推断的能力必须显式 unsupported 或交给 App provider”。
+
+已对齐的 runtime endpoint / capability：
+
+1. `GET /v2/runtime/manifest`
+2. `GET /v2/runtime/snapshot`
+3. `GET /v2/runtime/ledger`
+4. `GET /v2/runtime/state/app`
+5. `GET /v2/runtime/state/scene`
+6. `GET /v2/runtime/state/route`
+7. `GET /v2/runtime/state/responder`
+8. `POST /v2/runtime/action`
+
+能力命名对齐 iOS `TKRuntimeCapabilityName` raw value，包括 `runtime.manifest`、`state.*`、`snapshot`、`semantic.*`、`ledger`、`app.info`、`hierarchy`、`accessibility`、`geometry`、`hit-test`、`screenshot`、`input.*`、`press`、`system-alerts`、`network-breadcrumbs`；Harmony 侧保留 `logs`、`sources`、`ui-tree-*`、`client-command`、`gateway-discovery`、`websocket` 等平台能力。
+
+App provider 扩展点：
+
+1. `setRuntimeSceneStateProvider`
+2. `setRuntimeRouteStateProvider`
+3. `setRuntimeResponderStateProvider`
+4. `setRuntimeActionProvider`
+
+provider 注册后，manifest 中 `state.scene`、`state.route`、`state.responder` 和 `semantic.*` 会动态标记为 supported。未注册时继续返回 `unsupported_runtime_scope`，避免把 HAR 无法通用推断的业务语义伪装成已支持能力。
+
 ## 验证
 
 新增 `Tests/TritonKitSharedTests/TKHarmonyCollectorModelsTests.swift` 覆盖：
@@ -35,3 +61,12 @@ Host-side Harmony adapter 的 transport 是 `hdc`，负责设备发现、启动�
 2. Release disabled manifest/configuration。
 3. snapshot 复用 `TKGeometryResponse`、`TKAXNode` 和 `TKJSONValue`。
 4. screenshot metadata 不包含 `dataBase64`。
+
+Harmony SDK 外部仓本轮补充验证：
+
+1. `scripts/verify-runtime-manifest-contract.mjs`
+2. `scripts/verify-runtime-loop-contract.mjs`
+3. `scripts/verify-runtime-provider-contract.mjs`
+4. 全量 Node contract smoke
+5. DevEco `ohpm install --all`
+6. `bash scripts/ci/build-ohpm-har.sh 1.0.6`

@@ -88,6 +88,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKHarmonyHDCCommand.bootCompleted(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "param", "get", "bootevent.boot.completed"])
         #expect(TKHarmonyHDCCommand.appInspect(target: "127.0.0.1:10100", bundleName: "com.example.demo").argv == ["-t", "127.0.0.1:10100", "shell", "bm", "dump", "-n", "com.example.demo"])
         #expect(TKHarmonyHDCCommand.appLaunch(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-b", "com.example.demo", "-a", "EntryAbility"])
+        #expect(TKHarmonyHDCCommand.forwardPort(target: "127.0.0.1:10100", localPort: 18765, remotePort: 18765).argv == ["-t", "127.0.0.1:10100", "fport", "tcp:18765", "tcp:18765"])
         #expect(TKHarmonyHDCCommand.inputText(target: "127.0.0.1:10100", text: "hello world").argv == ["-t", "127.0.0.1:10100", "shell", "uitest", "uiInput", "text", "hello world"])
     }
 
@@ -129,6 +130,19 @@ struct TKHostAdapterModelsTests {
         #expect(!TKHarmonyBootCompletedParser.isReady("false\n"))
         #expect(!TKHarmonyBootCompletedParser.isReady("1\n"))
         #expect(!TKHarmonyBootCompletedParser.isReady(""))
+    }
+
+    @Test("embedded runtime HTTP routes map request model to Harmony SDK endpoints")
+    func embeddedRuntimeHTTPRoutes() throws {
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .runtimeManifest) == TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/manifest"))
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .stateApp) == TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/state/app"))
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .stateScene) == TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/state/scene"))
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .stateRoute) == TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/state/route"))
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .stateResponder) == TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/state/responder"))
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .runtimeSnapshot) == TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/snapshot"))
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .runtimeLedger) == TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/ledger"))
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .semanticAction) == TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/action"))
+        #expect(TKEmbeddedRuntimeHTTPRoute.route(for: .hierarchy) == nil)
     }
 
     @Test("simctl devices JSON decodes into simulator targets")

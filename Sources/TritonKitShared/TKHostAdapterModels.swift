@@ -242,6 +242,10 @@ public enum TKHarmonyHDCCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "aa", "start", "-b", bundleName, "-a", abilityName], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
+    public static func forwardPort(target: String, localPort: Int, remotePort: Int, executable: String = "hdc") -> TKHostCommand {
+        TKHostCommand(executable: executable, arguments: ["-t", target, "fport", "tcp:\(localPort)", "tcp:\(remotePort)"], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
     public static func inputText(target: String, text: String, executable: String = "hdc") -> TKHostCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "uitest", "uiInput", "text", text], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }

@@ -358,6 +358,10 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let exitCode: Int32
     public let stdoutTruncated: Bool
     public let stderrTruncated: Bool
+    public let stdoutLogPath: String?
+    public let stderrLogPath: String?
+    public let stdoutBytes: Int?
+    public let stderrBytes: Int?
     public let note: String?
 
     public init(
@@ -379,6 +383,10 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         exitCode: Int32,
         stdoutTruncated: Bool,
         stderrTruncated: Bool,
+        stdoutLogPath: String? = nil,
+        stderrLogPath: String? = nil,
+        stdoutBytes: Int? = nil,
+        stderrBytes: Int? = nil,
         note: String? = nil
     ) {
         self.ok = ok
@@ -399,6 +407,10 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.exitCode = exitCode
         self.stdoutTruncated = stdoutTruncated
         self.stderrTruncated = stderrTruncated
+        self.stdoutLogPath = stdoutLogPath
+        self.stderrLogPath = stderrLogPath
+        self.stdoutBytes = stdoutBytes
+        self.stderrBytes = stderrBytes
         self.note = note
     }
 }
@@ -409,12 +421,30 @@ public struct TKXcodeProgressEvent: Codable, Equatable {
     public let message: String
     public let sourceCommand: String?
     public let elapsedMs: Int?
+    public let stdoutLogPath: String?
+    public let stderrLogPath: String?
+    public let stdoutBytes: Int?
+    public let stderrBytes: Int?
 
-    public init(ok: Bool = true, event: String, message: String, sourceCommand: String? = nil, elapsedMs: Int? = nil) {
+    public init(
+        ok: Bool = true,
+        event: String,
+        message: String,
+        sourceCommand: String? = nil,
+        elapsedMs: Int? = nil,
+        stdoutLogPath: String? = nil,
+        stderrLogPath: String? = nil,
+        stdoutBytes: Int? = nil,
+        stderrBytes: Int? = nil
+    ) {
         self.ok = ok
         self.event = event
         self.message = message
         self.sourceCommand = sourceCommand
         self.elapsedMs = elapsedMs
+        self.stdoutLogPath = stdoutLogPath
+        self.stderrLogPath = stderrLogPath
+        self.stdoutBytes = stdoutBytes
+        self.stderrBytes = stderrBytes
     }
 }

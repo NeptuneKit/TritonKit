@@ -77,15 +77,18 @@
 | H1 元数据改名 | 完成 | `library/oh-package.json5` 改为 `"name": "tritonkit"`；`entry/oh-package.json5` 改为依赖 `"tritonkit": "file:../library"` |
 | H2 源码 namespace 改名 | 部分完成 | logging helper 已改为 `TritonKitHarmony*`；其余领域类型如 `Gateway*`、`LogQueue`、`ExportServer` 保持语义名不变 |
 | H3 Embedded 契约 | 基本完成 | 已新增 `/v2/runtime/manifest`、`/v2/runtime/snapshot`、`/v2/runtime/ledger`、`/v2/runtime/state/*`、`/v2/runtime/action`；capabilities 对齐 iOS raw value；无法由 HAR 通用实现的能力返回 `unsupported_runtime_scope` |
+| H6 App Provider | 部分完成 | 已新增 scene/route/responder/action provider hook；App 可主动把业务状态和语义动作结果交给 embedded SDK；network breadcrumbs 等 opt-in 业务打点未展开 |
 | H4 HAR dry-run build | 完成 | 使用 DevEco 自带 `ohpm 6.0.1` 和 hvigor 成功生成 `library/build/default/outputs/default/library.har` |
 | H5 Demo smoke | 部分完成 | 脚本级 demo smoke 通过；未安装到 Harmony 模拟器做 HAP 实机 smoke |
+| H6 TritonKit CLI direct runtime | 完成首片 | 主仓新增 `TKEmbeddedRuntimeHTTPRoute`、`--runtime-base-url` 和 `triton device runtime-url --platform harmony`；CLI 可准备 HDC fport 并直接访问 Harmony SDK `/v2/runtime/manifest`、`state/*`、`snapshot`、`ledger`、`action`；mock smoke 已覆盖 schema、fake HDC 和 secure semantic action |
 
 剩余工作：
 
 1. 决定是否改 GitHub remote / 创建真实 `NeptuneKit/harmony-tritonkit` 仓库。
 2. 处理 `.github/workflows/publish-ohpm.yml` 中 reusable workflow owner 与真实 publish secret。
-3. 继续 H3/H6：把 Harmony runtime loop 契约映射到 TritonKit host-side CLI/HTTP schema，并补 provider 扩展点设计。
-4. 若要跑 HAP Demo 实机 smoke，需要确认签名 profile 与 `AppScope.app.bundleName=io.github.tritonkit.sdk.harmony` 匹配。
+3. 继续 H6：补 provider 示例、network breadcrumbs opt-in 打点约定，以及真实 App 接入 smoke。
+4. 继续 Host-side：把 Harmony runtime loop 契约接入真实 HAP / DevEco Emulator，补 hdc port-forward / target discovery 后的端到端 smoke。
+5. 若要跑 HAP Demo 实机 smoke，需要确认签名 profile 与 `AppScope.app.bundleName=io.github.tritonkit.sdk.harmony` 匹配。
 
 ## 验证命令
 
@@ -101,6 +104,7 @@ docs-linhay/scripts/qmd-sync.sh
 ```bash
 node scripts/verify-runtime-manifest-contract.mjs
 node scripts/verify-runtime-loop-contract.mjs
+node scripts/verify-runtime-provider-contract.mjs
 node scripts/verify-harmony-log-integration.mjs
 node scripts/verify-client-callback-contract.mjs
 node scripts/verify-gateway-discovery.mjs
@@ -113,3 +117,11 @@ bash scripts/ci/build-ohpm-har.sh 0.0.0-dryrun
 ```
 
 若本机 `ohpm` 缺依赖或 DevEco SDK 不完整，至少先跑 Node contract verifiers，并在交付说明中明确 HAR build 未验证原因。
+
+TritonKit 主仓 direct runtime smoke：
+
+```bash
+swift test --filter TKHostAdapterModelsTests/embeddedRuntimeHTTPRoutes
+swift build --package-path CLI --scratch-path .build/cli --product triton
+TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh
+```

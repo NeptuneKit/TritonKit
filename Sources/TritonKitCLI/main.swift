@@ -872,7 +872,7 @@ struct HostAppPrefsGet: AsyncParsableCommand {
     }
 }
 
-extension TKHostAppContainerKind: ExpressibleByArgument {}
+extension TKHostAppContainerKind: @retroactive ExpressibleByArgument {}
 
 // MARK: - Cross-Platform Host Device Commands
 
@@ -884,7 +884,7 @@ struct Device: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "device",
         abstract: "Discover and inspect host-side devices and emulators",
-        subcommands: [DeviceDoctor.self, DeviceList.self, DeviceUse.self, DeviceWaitReady.self]
+        subcommands: [DeviceDoctor.self, DeviceList.self, DeviceUse.self, DeviceWaitReady.self, DeviceRuntimeURL.self]
     )
 }
 
@@ -1027,6 +1027,64 @@ struct DeviceWaitReady: AsyncParsableCommand {
     }
 }
 
+struct DeviceRuntimeURL: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "runtime-url", abstract: "Prepare and print a Harmony embedded runtime base URL")
+
+    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Local TCP port for host-side runtime access") var localPort: Int = 18765
+    @Option(help: "Remote TCP port where the Harmony embedded runtime listens") var remotePort: Int = 18765
+    @Flag(help: "Skip HDC fport setup and only print the local base URL") var noForward = false
+    @Flag(help: "Probe /v2/runtime/manifest after preparing the base URL") var probeManifest = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            try validateTCPPort(localPort, name: "--local-port")
+            try validateTCPPort(remotePort, name: "--remote-port")
+            let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+            let baseURL = "http://127.0.0.1:\(localPort)"
+            var sourceCommand: String?
+            var forwarded = false
+            if !noForward {
+                let result = try runHostCommand(TKHarmonyHDCCommand.forwardPort(target: selected.target, localPort: localPort, remotePort: remotePort, executable: hdc))
+                sourceCommand = result.sourceCommand
+                forwarded = true
+            }
+            let manifest: TKRuntimeManifestResponse?
+            if probeManifest {
+                let data = try await EmbeddedRuntimeHTTPClient(baseURL: baseURL).request(.runtimeManifest)
+                manifest = try JSONDecoder().decode(TKRuntimeManifestResponse.self, from: data)
+            } else {
+                manifest = nil
+            }
+            let output = HostRuntimeURLOutput(
+                ok: true,
+                platform: platform.rawValue,
+                target: selected,
+                localPort: localPort,
+                remotePort: remotePort,
+                baseURL: baseURL,
+                forwarded: forwarded,
+                sourceCommand: sourceCommand,
+                manifest: manifest,
+                note: "Use `--runtime-base-url \(baseURL)` with runtime, state, snapshot, ledger, and semantic action commands."
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print(baseURL)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
 struct HostToolProbeOutput: Encodable {
     let name: String
     let path: String
@@ -1066,6 +1124,19 @@ struct HostDeviceReadyEvent: Encodable {
     let attempt: Int
     let sourceCommand: String
     let error: TKCLIErrorDetail?
+}
+
+struct HostRuntimeURLOutput: Encodable {
+    let ok: Bool
+    let platform: String
+    let target: TKHarmonyTarget
+    let localPort: Int
+    let remotePort: Int
+    let baseURL: String
+    let forwarded: Bool
+    let sourceCommand: String?
+    let manifest: TKRuntimeManifestResponse?
+    let note: String
 }
 
 enum HostSimulatorRunError: Error, CustomStringConvertible {
@@ -1914,6 +1985,12 @@ func resolveHarmonyTarget(target: String?, hdc: String) throws -> TKHarmonyTarge
         return selected
     }
     throw HostDeviceRunError.ambiguousTarget(targets.filter(\.isConnected))
+}
+
+func validateTCPPort(_ port: Int, name: String) throws {
+    guard (1...65_535).contains(port) else {
+        throw RuntimeError("\(name) must be between 1 and 65535")
+    }
 }
 
 func printPreferences(
@@ -2893,11 +2970,14 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--command <command>", "筛选单个命令，例如 input 或 tap"),
         ] + formatTextJSON),
         "runtime": ChineseCommandHelp(name: "runtime", overview: "读取 embedded runtime manifest、能力边界、限制和脱敏策略。", usage: "triton runtime manifest [选项]", options: target + hostPort + formatTextJSON),
-        "device": ChineseCommandHelp(name: "device", overview: "发现和检查 host-side 平台设备。", usage: "triton device <doctor|list|use|wait-ready> --platform harmony [选项]", options: formatTextJSON + [
+        "device": ChineseCommandHelp(name: "device", overview: "发现和检查 host-side 平台设备。", usage: "triton device <doctor|list|use|wait-ready|runtime-url> --platform harmony [选项]", options: formatTextJSON + [
             ("--platform <platform>", "平台适配器，目前支持 harmony"),
             ("--hdc <path>", "HDC 可执行文件路径，默认 hdc"),
             ("--target <target>", "Harmony target，例如 127.0.0.1:10100"),
             ("--timeout <seconds>", "wait-ready 超时时间，默认 30"),
+            ("--local-port <port>", "runtime-url 本机端口，默认 18765"),
+            ("--remote-port <port>", "runtime-url 设备端 embedded runtime 端口，默认 18765"),
+            ("--probe-manifest", "runtime-url 建立端口映射后验证 /v2/runtime/manifest"),
         ]),
         "plan": ChineseCommandHelp(name: "plan", overview: "根据当前服务和目标状态输出推荐下一步；inspect 子动作可离线查看 .tritonplan 摘要。", usage: "triton plan [inspect <path>] [选项]", options: hostPort + formatTextJSON),
         "list": ChineseCommandHelp(name: "list", overview: "列出已连接的 TritonKit 目标。", usage: "triton list [选项]", options: hostPort + formatTextJSON + [
@@ -3176,15 +3256,22 @@ struct RuntimeManifest: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
-            let data = try await client.request(type: "runtimeManifest")
+            let data: Data
+            if let runtimeBaseURL {
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeManifest)
+            } else {
+                _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+                let client = TritonKitHTTPClient(host: host, port: port)
+                data = try await client.request(type: "runtimeManifest")
+            }
             let manifest = try JSONDecoder().decode(TKRuntimeManifestResponse.self, from: data)
             switch outputFormat {
             case .json:
@@ -3210,7 +3297,7 @@ struct RuntimeManifest: AsyncParsableCommand {
             if let exitCode = error as? ExitCode {
                 throw exitCode
             }
-            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+            try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
         }
     }
 }
@@ -3229,11 +3316,13 @@ struct StateApp: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
     func run() async throws {
-        try await runStateRequest(type: "stateApp", target: target, host: host, port: port, format: format, json: json)
+        try await runStateRequest(type: "stateApp", target: target, host: host, port: port, runtimeBaseURL: runtimeBaseURL, format: format, json: json)
     }
 }
 
@@ -3243,11 +3332,13 @@ struct StateScene: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
     func run() async throws {
-        try await runStateRequest(type: "stateScene", target: target, host: host, port: port, format: format, json: json)
+        try await runStateRequest(type: "stateScene", target: target, host: host, port: port, runtimeBaseURL: runtimeBaseURL, format: format, json: json)
     }
 }
 
@@ -3257,11 +3348,13 @@ struct StateRoute: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
     func run() async throws {
-        try await runStateRequest(type: "stateRoute", target: target, host: host, port: port, format: format, json: json)
+        try await runStateRequest(type: "stateRoute", target: target, host: host, port: port, runtimeBaseURL: runtimeBaseURL, format: format, json: json)
     }
 }
 
@@ -3271,11 +3364,13 @@ struct StateResponder: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
     func run() async throws {
-        try await runStateRequest(type: "stateResponder", target: target, host: host, port: port, format: format, json: json)
+        try await runStateRequest(type: "stateResponder", target: target, host: host, port: port, runtimeBaseURL: runtimeBaseURL, format: format, json: json)
     }
 }
 
@@ -3284,14 +3379,23 @@ func runStateRequest(
     target: String,
     host: String,
     port: Int,
+    runtimeBaseURL: String?,
     format: ClientOutputFormat,
     json: Bool
 ) async throws {
     let outputFormat = effectiveFormat(format, json: json)
     do {
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-        let client = TritonKitHTTPClient(host: host, port: port)
-        let data = try await client.request(type: type)
+        let data: Data
+        if let runtimeBaseURL {
+            guard let requestType = TKCLICommandRequest(type: type).requestType else {
+                throw RuntimeError("Unsupported runtime state request: \(type)")
+            }
+            data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(requestType)
+        } else {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            data = try await client.request(type: type)
+        }
         switch outputFormat {
         case .json:
             print(String(data: data, encoding: .utf8) ?? "{}")
@@ -3308,7 +3412,7 @@ func runStateRequest(
         if let exitCode = error as? ExitCode {
             throw exitCode
         }
-        try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
     }
 }
 
@@ -3321,6 +3425,8 @@ struct Snapshot: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Comma-separated sections: app,scene,route,responder,ax,geometry,screenshot-metadata") var include: String = "app,scene,route,ax,geometry"
     @Option(help: "Maximum AX nodes to return") var maxAXNodes: Int?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -3329,15 +3435,24 @@ struct Snapshot: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
             let includeList = include.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
-            let request = TKRuntimeSnapshotRequest(include: includeList, maxAXNodes: maxAXNodes)
-            let payload = try JSONEncoder().encode(request)
-            let data = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeSnapshot", payload: payload)
+            let data: Data
+            if let runtimeBaseURL {
+                var queryItems = [URLQueryItem(name: "include", value: includeList.joined(separator: ","))]
+                if let maxAXNodes {
+                    queryItems.append(URLQueryItem(name: "maxAXNodes", value: String(maxAXNodes)))
+                }
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeSnapshot, queryItems: queryItems)
+            } else {
+                _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+                let request = TKRuntimeSnapshotRequest(include: includeList, maxAXNodes: maxAXNodes)
+                let payload = try JSONEncoder().encode(request)
+                data = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeSnapshot", payload: payload)
+            }
             try printRawJSONData(data, format: outputFormat)
         } catch {
             if error is ExitCode { throw error }
-            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+            try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
         }
     }
 }
@@ -3349,6 +3464,8 @@ struct Focus: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
@@ -3366,6 +3483,7 @@ struct Focus: AsyncParsableCommand {
             index: index,
             within: within,
             at: at,
+            runtimeBaseURL: runtimeBaseURL,
             format: format,
             json: json
         )
@@ -3380,6 +3498,8 @@ struct SetText: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Flag(name: .customLong("secure"), help: "Redact text in command output and ledger") var secure = false
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
@@ -3400,6 +3520,7 @@ struct SetText: AsyncParsableCommand {
             index: index,
             within: within,
             at: at,
+            runtimeBaseURL: runtimeBaseURL,
             format: format,
             json: json
         )
@@ -3414,6 +3535,8 @@ struct SelectSegment: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
@@ -3433,6 +3556,7 @@ struct SelectSegment: AsyncParsableCommand {
             index: index,
             within: within,
             at: at,
+            runtimeBaseURL: runtimeBaseURL,
             format: format,
             json: json
         )
@@ -3447,6 +3571,8 @@ struct SetSwitch: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
     @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
@@ -3465,6 +3591,7 @@ struct SetSwitch: AsyncParsableCommand {
             index: index,
             within: within,
             at: at,
+            runtimeBaseURL: runtimeBaseURL,
             format: format,
             json: json
         )
@@ -3477,6 +3604,8 @@ struct Ledger: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:18765")
+    var runtimeBaseURL: String?
     @Option(help: "Maximum ledger entries to return") var limit: Int = 50
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -3485,10 +3614,17 @@ struct Ledger: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json || jsonl)
             let request = TKRuntimeLedgerRequest(limit: limit)
-            let payload = try JSONEncoder().encode(request)
-            let data = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeLedger", payload: payload)
+            let data: Data
+            if let runtimeBaseURL {
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeLedger, queryItems: [
+                    URLQueryItem(name: "limit", value: String(request.limit))
+                ])
+            } else {
+                _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json || jsonl)
+                let payload = try JSONEncoder().encode(request)
+                data = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeLedger", payload: payload)
+            }
             let response = try JSONDecoder().decode(TKRuntimeLedgerResponse.self, from: data)
             if jsonl {
                 for entry in response.entries {
@@ -3499,7 +3635,7 @@ struct Ledger: AsyncParsableCommand {
             }
         } catch {
             if error is ExitCode { throw error }
-            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+            try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
         }
     }
 }
@@ -3519,6 +3655,7 @@ func runSemanticSelectorAction(
     index: Int? = nil,
     within: String? = nil,
     at: String? = nil,
+    runtimeBaseURL: String? = nil,
     format: ClientOutputFormat,
     json: Bool
 ) async throws {
@@ -3533,36 +3670,54 @@ func runSemanticSelectorAction(
         }
         let bounds = try within.map(parseBounds)
         let point = try at.map(parsePoint)
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-        let client = TritonKitHTTPClient(host: host, port: port)
-        let resolution = try await resolveTapTarget(
-            selector,
-            client: client,
-            width: nil,
-            height: nil,
-            duration: nil,
-            index: index,
-            within: bounds,
-            at: point
-        )
-        let request = TKSemanticActionRequest(
-            action: action,
-            selector: selector,
-            sourceCommand: sourceCommand,
-            strategy: "selector-\(resolution.strategy)",
-            targetOID: resolution.request.targetOID,
-            x: resolution.request.x,
-            y: resolution.request.y,
-            text: text,
-            secure: secure,
-            segmentTitle: segmentTitle,
-            segmentIndex: segmentIndex,
-            switchValue: switchValue
-        )
-        try await runSemanticActionRequest(request, host: host, port: port, format: outputFormat)
+        if let runtimeBaseURL {
+            let request = TKSemanticActionRequest(
+                action: action,
+                selector: selector,
+                sourceCommand: sourceCommand,
+                strategy: "app-provider-selector",
+                targetOID: nil,
+                x: point?.x,
+                y: point?.y,
+                text: text,
+                secure: secure,
+                segmentTitle: segmentTitle,
+                segmentIndex: segmentIndex,
+                switchValue: switchValue
+            )
+            try await runSemanticActionRequest(request, runtimeBaseURL: runtimeBaseURL, format: outputFormat)
+        } else {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let resolution = try await resolveTapTarget(
+                selector,
+                client: client,
+                width: nil,
+                height: nil,
+                duration: nil,
+                index: index,
+                within: bounds,
+                at: point
+            )
+            let request = TKSemanticActionRequest(
+                action: action,
+                selector: selector,
+                sourceCommand: sourceCommand,
+                strategy: "selector-\(resolution.strategy)",
+                targetOID: resolution.request.targetOID,
+                x: resolution.request.x,
+                y: resolution.request.y,
+                text: text,
+                secure: secure,
+                segmentTitle: segmentTitle,
+                segmentIndex: segmentIndex,
+                switchValue: switchValue
+            )
+            try await runSemanticActionRequest(request, host: host, port: port, format: outputFormat)
+        }
     } catch {
         if error is ExitCode { throw error }
-        try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
     }
 }
 
@@ -3574,6 +3729,20 @@ func runSemanticActionRequest(
 ) async throws {
     let payload = try JSONEncoder().encode(request)
     let data = try await TritonKitHTTPClient(host: host, port: port).request(type: "semanticAction", payload: payload)
+    let result = try JSONDecoder().decode(TKSemanticActionResponse.self, from: data)
+    try printSemanticAction(result, format: format)
+    if !result.ok {
+        throw RuntimeError(result.message ?? result.error?.message ?? "Semantic action failed")
+    }
+}
+
+func runSemanticActionRequest(
+    _ request: TKSemanticActionRequest,
+    runtimeBaseURL: String,
+    format: ClientOutputFormat
+) async throws {
+    let payload = try JSONEncoder().encode(request)
+    let data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.semanticAction, body: payload)
     let result = try JSONDecoder().decode(TKSemanticActionResponse.self, from: data)
     try printSemanticAction(result, format: format)
     if !result.ok {
@@ -5222,6 +5391,56 @@ struct TritonKitHTTPClient {
     }
 }
 
+struct EmbeddedRuntimeHTTPClient {
+    let baseURL: URL
+
+    init(baseURL: String) throws {
+        guard let url = URL(string: baseURL), url.scheme != nil, url.host != nil else {
+            throw RuntimeError("Invalid embedded runtime base URL: \(baseURL)")
+        }
+        self.baseURL = url
+    }
+
+    func request(_ requestType: TKRequestType, queryItems: [URLQueryItem] = [], body: Data? = nil) async throws -> Data {
+        guard let route = TKEmbeddedRuntimeHTTPRoute.route(for: requestType) else {
+            throw RuntimeError("Unsupported embedded runtime HTTP request: \(requestType.rawValue)")
+        }
+
+        var request = URLRequest(url: try url(path: route.path, queryItems: queryItems))
+        request.httpMethod = route.method.rawValue
+        if let body {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = body
+        }
+        return try await data(for: request)
+    }
+
+    private func url(path: String, queryItems: [URLQueryItem]) throws -> URL {
+        guard let routeURL = URL(string: path, relativeTo: baseURL)?.absoluteURL,
+              var components = URLComponents(url: routeURL, resolvingAgainstBaseURL: false) else {
+            throw RuntimeError("Invalid embedded runtime route: \(path)")
+        }
+        if !queryItems.isEmpty {
+            components.queryItems = queryItems
+        }
+        guard let url = components.url else {
+            throw RuntimeError("Invalid embedded runtime URL: \(path)")
+        }
+        return url
+    }
+
+    private func data(for request: URLRequest) async throws -> Data {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse else {
+            throw RuntimeError("No HTTP response")
+        }
+        guard (200..<300).contains(http.statusCode) else {
+            throw CLIHTTPError(statusCode: http.statusCode, data: data)
+        }
+        return data
+    }
+}
+
 struct RuntimeError: Error, CustomStringConvertible {
     let description: String
 
@@ -5335,6 +5554,7 @@ func runtimeCapabilities(connected: Bool) -> [TKRuntimeCapability] {
         TKRuntimeCapability(name: "harmony-device-doctor", supported: true),
         TKRuntimeCapability(name: "harmony-device-list", supported: true),
         TKRuntimeCapability(name: "harmony-device-wait-ready", supported: true),
+        TKRuntimeCapability(name: "harmony-runtime-url", supported: true),
         TKRuntimeCapability(name: "status", supported: true),
         TKRuntimeCapability(name: "list", supported: true),
         TKRuntimeCapability(name: "inspect", supported: connected, reason: requiresRuntime),
@@ -5792,6 +6012,7 @@ func commandSchemas() -> [TKCommandSchema] {
     let formatJSONText = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format")
     let jsonAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --format json")
     let languageOption = TKCommandSchemaOption(name: "--language/--lang", type: "en|zh", defaultValue: "TRITON_LANGUAGE or en", description: "Human-readable output language")
+    let runtimeBaseURLOption = TKCommandSchemaOption(name: "--runtime-base-url", type: "URL", description: "Bypass Triton server and call a direct embedded runtime HTTP base URL, for example http://127.0.0.1:18765")
     let metadataJSONAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --metadata")
     let refreshOption = TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before reading")
     return [
@@ -5948,11 +6169,12 @@ func commandSchemas() -> [TKCommandSchema] {
             options: hostPort + [
                 TKCommandSchemaOption(name: "manifest", type: "Subcommand", description: "Read embedded runtime manifest"),
                 target,
+                runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
                 languageOption,
             ],
-            examples: ["triton runtime manifest --json"],
+            examples: ["triton runtime manifest --json", "triton runtime manifest --runtime-base-url http://127.0.0.1:18765 --json"],
             successShape: "{ ok, platform, runtime, transport, enabled, sdkVersion, buildConfiguration, capabilities[], limits, redaction }",
             providedCapabilities: ["runtime-manifest"]
         ),
@@ -5970,6 +6192,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "route", type: "Subcommand", description: "Read visible UIViewController, navigation, tab, and presented stack"),
                 TKCommandSchemaOption(name: "responder", type: "Subcommand", description: "Read first responder identity and text input traits without text content"),
                 target,
+                runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
                 languageOption,
@@ -5993,6 +6216,7 @@ func commandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: hostPort + [
                 target,
+                runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--include", type: "CSV", defaultValue: "app,scene,route,ax,geometry", description: "Sections: app,scene,route,responder,ax,geometry,screenshot-metadata"),
                 TKCommandSchemaOption(name: "--max-ax-nodes", type: "Int", description: "Maximum AX nodes to return before truncation"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
@@ -6014,6 +6238,7 @@ func commandSchemas() -> [TKCommandSchema] {
             options: hostPort + [
                 TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible placeholder to focus"),
                 target,
+                runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
                 TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
                 TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
@@ -6037,6 +6262,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible placeholder to target"),
                 TKCommandSchemaOption(name: "<text>", type: "String", description: "Exact text to set"),
                 target,
+                runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact text in command output and ledger"),
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
                 TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
@@ -6061,6 +6287,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible option title to target"),
                 TKCommandSchemaOption(name: "<value>", type: "String|Int", description: "Segment title or zero-based index"),
                 target,
+                runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
                 TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
                 TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
@@ -6084,6 +6311,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible option title to target"),
                 TKCommandSchemaOption(name: "<value>", type: "on|off|toggle", description: "Switch state to apply"),
                 target,
+                runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
                 TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
                 TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
@@ -6105,6 +6333,7 @@ func commandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText + ["jsonl"],
             options: hostPort + [
                 target,
+                runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--limit", type: "Int", defaultValue: "50", description: "Maximum entries to return"),
                 TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines entries instead of envelope"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
@@ -6128,10 +6357,15 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "list --platform harmony", type: "Subcommand", description: "List Harmony HDC targets"),
                 TKCommandSchemaOption(name: "use --platform harmony --target <target>", type: "Subcommand", description: "Resolve one Connected target"),
                 TKCommandSchemaOption(name: "wait-ready --platform harmony --target <target>", type: "Subcommand", description: "Poll bootevent.boot.completed until ready"),
+                TKCommandSchemaOption(name: "runtime-url --platform harmony --target <target>", type: "Subcommand", description: "Prepare HDC fport and print a direct embedded runtime base URL"),
                 TKCommandSchemaOption(name: "--platform", type: "harmony", defaultValue: "harmony", description: "Host platform adapter"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
                 TKCommandSchemaOption(name: "--target", type: "String", description: "Harmony target, for example 127.0.0.1:10100"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "30", description: "Bounded wait timeout in seconds"),
+                TKCommandSchemaOption(name: "--local-port", type: "Int", defaultValue: "18765", description: "Local TCP port used in the generated base URL"),
+                TKCommandSchemaOption(name: "--remote-port", type: "Int", defaultValue: "18765", description: "Remote TCP port where the Harmony embedded runtime listens"),
+                TKCommandSchemaOption(name: "--no-forward", type: "Bool", defaultValue: "false", description: "Skip HDC fport setup and only print the local URL"),
+                TKCommandSchemaOption(name: "--probe-manifest", type: "Bool", defaultValue: "false", description: "Probe /v2/runtime/manifest after preparing the URL"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
             ],
@@ -6139,10 +6373,11 @@ func commandSchemas() -> [TKCommandSchema] {
                 "triton device doctor --platform harmony --json",
                 "triton device list --platform harmony --json",
                 "triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json",
+                "triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json",
             ],
-            successShape: "{ ok, platform, tools[]?, targets[]?, defaultTarget?, target?, ready?, sourceCommand? }",
+            successShape: "{ ok, platform, tools[]?, targets[]?, defaultTarget?, target?, ready?, baseURL?, manifest?, sourceCommand? }",
             failureShape: "{ ok:false, error:{ code: ambiguous_target|target_offline|device_not_ready|host_action_failed, message, hint } }",
-            providedCapabilities: ["host-device", "harmony-device"]
+            providedCapabilities: ["host-device", "harmony-device", "harmony-runtime-url"]
         ),
         TKCommandSchema(
             name: "sim",
