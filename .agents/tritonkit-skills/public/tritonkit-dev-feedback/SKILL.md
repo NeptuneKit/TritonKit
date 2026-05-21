@@ -59,6 +59,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - Harmony embedded SDK feedback should distinguish generic HAR capability from app-provided semantics:
      - run `triton device runtime-url --platform harmony --target <hdc-target> --probe-manifest --json` first when the runtime is on a Harmony emulator/device and the host needs an HDC fport base URL;
      - Harmony demo host-access embedded runtime defaults to `http://127.0.0.1:28767`; `18765` is the demo device-to-host gateway fallback port and should not be treated as the host direct runtime default;
+     - if an HDC fport already exists, use `docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh --target <hdc-target> --no-forward` to verify the live endpoint without re-registering the same port mapping;
      - use `triton runtime manifest --runtime-base-url http://127.0.0.1:<port> --json`, `triton state route --runtime-base-url ... --json`, `triton snapshot --runtime-base-url ... --json`, `triton ledger --runtime-base-url ... --jsonl`, and `triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url ... --json` when validating a standalone embedded HTTP runtime before it is connected through `triton serve`;
      - generic runtime endpoints may return `unsupported_runtime_scope` for scene, route, responder, semantic actions, input, screenshot, hit-test, or system alerts;
      - if the app registers scene / route / responder / action providers, verify that `runtime.manifest` dynamically marks those capabilities as supported;
