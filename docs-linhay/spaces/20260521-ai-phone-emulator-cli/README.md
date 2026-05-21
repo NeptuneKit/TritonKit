@@ -97,6 +97,15 @@
 | Evidence | `triton capture/evidence/evidence inspect/evidence commands --json` |
 | Case lint / local batch | `triton case lint`、`triton run submit --file` |
 
+### Issue #14：坐标 tap 的非 UIControl 编辑 surface
+
+- Given 当前 App 页面存在富文本编辑器、WebView-backed editor 或自定义 UIKit 编辑 surface
+- And 坐标命中对象不是 `UIControl`，但 view 或其父链可成为 first responder / 符合 `UIKeyInput`
+- When agent 执行 `triton tap --at 70,135 --json`
+- Then embedded runtime 应聚焦该编辑 surface 并返回 `ok=true`
+- And 后续 `triton type <text>` / `triton paste <text>` 可写入当前 first responder
+- And 普通未知 `UIControl` 仍不得伪成功；没有 public target-action 或 text input responder 时继续返回明确失败
+
 ### 可以进 CLI，但非 P0
 
 | 能力 | 决策 |

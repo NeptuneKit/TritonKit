@@ -25,6 +25,11 @@ public final class TKObjectRegistry {
         lock.lock(); defer { lock.unlock() }
         return reverse[oid]?.value
     }
+
+    func objects<T: AnyObject>(of type: T.Type) -> [T] {
+        lock.lock(); defer { lock.unlock() }
+        return reverse.values.compactMap { $0.value as? T }
+    }
 }
 
 private final class WeakBox {

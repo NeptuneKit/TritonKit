@@ -546,6 +546,16 @@ private func performTap(_ request: TKInputRequest) -> TKInputResult {
         )
     }
 
+    if let responder = nearestTextInputResponder(from: view) {
+        responder.becomeFirstResponder()
+        return TKInputResult.success(
+            action: action,
+            message: "Focused text input responder",
+            targetOID: oid(for: responder),
+            targetClassName: NSStringFromClass(type(of: responder))
+        )
+    }
+
     guard let control = nearestSuperview(of: view, matching: UIControl.self) else {
         return TKInputResult.failure(
             action: action,
@@ -1100,8 +1110,20 @@ private func keyWindows() -> [UIWindow] {
         .compactMap { $0 as? UIWindowScene }
         .flatMap(\.windows)
         .filter { !$0.isHidden && $0.alpha > 0 }
+    let fallbackWindows = sceneWindows.isEmpty
+        ? UIApplication.shared.windows.filter { !$0.isHidden && $0.alpha > 0 }
+        : []
+    let registryWindows = sceneWindows.isEmpty && fallbackWindows.isEmpty
+        ? TKObjectRegistry.shared.objects(of: UIWindow.self).filter { !$0.isHidden && $0.alpha > 0 }
+        : []
     let key = sceneWindows.filter(\.isKeyWindow)
-    return key.isEmpty ? sceneWindows : key
+    if !key.isEmpty { return key }
+    let fallbackKey = fallbackWindows.filter(\.isKeyWindow)
+    if !fallbackKey.isEmpty { return fallbackKey }
+    let registryKey = registryWindows.filter(\.isKeyWindow)
+    if !registryKey.isEmpty { return registryKey }
+    if !sceneWindows.isEmpty { return sceneWindows }
+    return fallbackWindows.isEmpty ? registryWindows : fallbackWindows
 }
 
 @MainActor

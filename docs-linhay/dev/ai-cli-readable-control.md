@@ -140,7 +140,7 @@ HTTP 管理 API 的错误响应同样使用 `{ok:false,error:{code,message,endpo
 
 iOS Demo 现在内置 `ComplexHarness`，用于替代过于简单的单按钮 smoke。它同时覆盖嵌套 stack、状态标签、`UIButton`、`UISwitch`、`UISegmentedControl`、`UISlider`、`UIStepper`、`UITextField`、`UITextView` 与横向 `UIScrollView` carousel。所有关键控件都通过 `ComplexHarness*` accessibility identifier 暴露给 `triton ax`。
 
-embedded runtime 的 `tap` 会对常见公开 UIKit 控件执行确定性动作：`UITextField`/`UITextView` 聚焦，`UISwitch` toggle，`UISegmentedControl` 按坐标选择或按 oid 循环下一项，`UISlider` 按坐标设置或按 oid 递增，`UIStepper` 按坐标增减或按 oid 递增。普通未知 `UIControl` 只在能发现 `.primaryActionTriggered` 或 `.touchUpInside` target-action 时才返回成功并异步派发；没有可派发 action 的控件返回失败，避免导航标题等 no-op `UIControl` 造成假成功。这让 AI agent 可以只通过 `ax -> input --summary --strict --fail-fast -> wait -> ax/screenshot/export` 完成复杂状态回归。
+embedded runtime 的 `tap` 会对常见公开 UIKit 控件执行确定性动作：`UITextField`/`UITextView` 聚焦，自定义 `UIKeyInput`/可成为 first responder 的编辑 surface 可通过坐标 tap 聚焦，`UISwitch` toggle，`UISegmentedControl` 按坐标选择或按 oid 循环下一项，`UISlider` 按坐标设置或按 oid 递增，`UIStepper` 按坐标增减或按 oid 递增。普通未知 `UIControl` 只在能发现 `.primaryActionTriggered` 或 `.touchUpInside` target-action 时才返回成功并异步派发；没有可派发 action 的控件返回失败，避免导航标题等 no-op `UIControl` 造成假成功。这让 AI agent 可以只通过 `ax -> input --summary --strict --fail-fast -> wait -> ax/screenshot/export` 完成复杂状态回归。
 
 `UISegmentedControl` 的 valueChanged 触发不再直接依赖 `UIControl.sendActions(for:)` 的内部枚举，而是先稳定写入 `selectedSegmentIndex`，再在下一次 main queue tick 对已注册 target/action 调用 `UIApplication.sendAction`。这避免 Triton 侧 dispatch 与 App 侧重建 cell 时出现额外的 UIControl 内部重入。Overloaded 的 `HTTP`/`HTTPS` 协议切换冒烟还暴露了 App 自身 `SKPublished` setter 内同步 sink 读取同一属性的 Swift 独占访问问题；测试用 App 已在本地把 `scheme` 变化后的 `updateModels()` 延后一拍执行。
 
