@@ -44,6 +44,76 @@ is_swift_only_path() {
   esac
 }
 
+is_contract_only_path() {
+  local path="$1"
+
+  case "$path" in
+    .github/workflows/*)
+      return 0
+      ;;
+    docs-linhay/scripts/ci-validate-mode.sh|\
+docs-linhay/scripts/verify-ci-validate-mode.sh|\
+docs-linhay/scripts/verify-release-automation.sh|\
+docs-linhay/scripts/verify-homebrew-formula.sh|\
+docs-linhay/scripts/verify-version-stamping.sh|\
+docs-linhay/scripts/render-homebrew-formula.sh|\
+docs-linhay/scripts/resolve-ci-version.sh|\
+docs-linhay/scripts/write-cli-version.sh|\
+docs-linhay/scripts/stamp-skill-version.sh|\
+docs-linhay/scripts/gh-run-summary.sh|\
+docs-linhay/scripts/release.sh)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+is_podkit_path() {
+  local path="$1"
+
+  case "$path" in
+    TritonKit.podspec)
+      return 0
+      ;;
+    Sources/TritonKit/*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
+raise_mode() {
+  local next="$1"
+
+  case "$mode:$next" in
+    full:*)
+      ;;
+    *:full)
+      mode="full"
+      ;;
+    podkit:*)
+      ;;
+    *:podkit)
+      mode="podkit"
+      ;;
+    swift:contracts|contracts:swift)
+      mode="swift"
+      ;;
+    docs:*)
+      mode="$next"
+      ;;
+    *:docs)
+      ;;
+    *)
+      mode="$next"
+      ;;
+  esac
+}
+
 classify_paths() {
   local path
 
@@ -57,10 +127,18 @@ classify_paths() {
       continue
     fi
 
+    if is_contract_only_path "$path"; then
+      raise_mode "contracts"
+      continue
+    fi
+
     if is_swift_only_path "$path"; then
-      if [[ "$mode" == "docs" ]]; then
-        mode="swift"
-      fi
+      raise_mode "swift"
+      continue
+    fi
+
+    if is_podkit_path "$path"; then
+      raise_mode "podkit"
       continue
     fi
 

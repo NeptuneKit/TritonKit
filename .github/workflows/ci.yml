@@ -55,7 +55,7 @@ jobs:
   validate-swift:
     name: Validate Swift Tests
     needs: classify-validate
-    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'swift'
+    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'podkit' || needs.classify-validate.outputs.mode == 'swift'
     runs-on: macos-latest
 
     steps:
@@ -76,19 +76,11 @@ jobs:
       - name: Swift tests
         run: swift test
 
-  validate-podspec:
-    name: Validate Podspec (${{ matrix.name }})
+  validate-podspec-shared:
+    name: Validate Podspec (TritonKitShared)
     needs: classify-validate
     if: needs.classify-validate.outputs.mode == 'full'
     runs-on: macos-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - name: TritonKitShared
-            command: pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests
-          - name: TritonKit
-            command: pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
 
     steps:
       - name: Checkout
@@ -101,12 +93,31 @@ jobs:
           fi
 
       - name: Validate podspec
-        run: ${{ matrix.command }}
+        run: pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests
+
+  validate-podspec-kit:
+    name: Validate Podspec (TritonKit)
+    needs: classify-validate
+    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'podkit'
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install CocoaPods if needed
+        run: |
+          if ! command -v pod >/dev/null 2>&1; then
+            sudo gem install cocoapods --no-document
+          fi
+
+      - name: Validate podspec
+        run: pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
 
   validate-contracts:
     name: Validate Contracts
     needs: classify-validate
-    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'swift'
+    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'podkit' || needs.classify-validate.outputs.mode == 'swift' || needs.classify-validate.outputs.mode == 'contracts'
     runs-on: ubuntu-latest
 
     steps:
@@ -133,7 +144,8 @@ jobs:
       - classify-validate
       - validate-docs
       - validate-swift
-      - validate-podspec
+      - validate-podspec-shared
+      - validate-podspec-kit
       - validate-contracts
     if: always()
     runs-on: ubuntu-latest
@@ -148,7 +160,8 @@ jobs:
           echo "classify: ${{ needs.classify-validate.result }}"
           echo "docs: ${{ needs.validate-docs.result }}"
           echo "swift: ${{ needs.validate-swift.result }}"
-          echo "podspec: ${{ needs.validate-podspec.result }}"
+          echo "podspec-shared: ${{ needs.validate-podspec-shared.result }}"
+          echo "podspec-kit: ${{ needs.validate-podspec-kit.result }}"
           echo "contracts: ${{ needs.validate-contracts.result }}"
 
           if [[ "${{ needs.classify-validate.result }}" != "success" ]]; then
@@ -162,11 +175,20 @@ jobs:
               ;;
             full)
               [[ "${{ needs.validate-swift.result }}" == "success" ]] || exit 1
-              [[ "${{ needs.validate-podspec.result }}" == "success" ]] || exit 1
+              [[ "${{ needs.validate-podspec-shared.result }}" == "success" ]] || exit 1
+              [[ "${{ needs.validate-podspec-kit.result }}" == "success" ]] || exit 1
+              [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
+              ;;
+            podkit)
+              [[ "${{ needs.validate-swift.result }}" == "success" ]] || exit 1
+              [[ "${{ needs.validate-podspec-kit.result }}" == "success" ]] || exit 1
               [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
               ;;
             swift)
               [[ "${{ needs.validate-swift.result }}" == "success" ]] || exit 1
+              [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
+              ;;
+            contracts)
               [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
               ;;
             *)

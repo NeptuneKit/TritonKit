@@ -15,8 +15,10 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 5. validate 先调用 `docs-linhay/scripts/ci-validate-mode.sh` 分类变更范围：
    - docs/skill-only：运行 `docs-linhay/scripts/verify.sh --ci-docs`，覆盖文档结构、diff whitespace、版本脚本和 release/skill packaging 契约。
    - swift-only：只跑 Swift tests 与 release/homebrew contract checks，跳过 CocoaPods lint；适用于 `Sources/TritonKitCLI/`、`Tests/`、`Package.swift`、`Package.resolved`。
-   - full：运行 Swift tests、CocoaPods spec、Homebrew formula template、版本脚本和 release automation 契约；适用于 iOS runtime、Shared models、podspec、workflow、脚本和 fixtures。
-6. CI 中保留名为 `Validate` 的聚合 job；full validate 内部拆成 `Validate Swift Tests`、`Validate Podspec (TritonKitShared)`、`Validate Podspec (TritonKit)` 与 `Validate Contracts` 并行执行，降低 wall-clock 等待时间，同时保持分支保护只需依赖稳定的 `Validate`。
+   - contracts-only：只跑 release/homebrew/CI contract checks；适用于 `.github/workflows/` 与发布、版本、Homebrew、CI 分类相关脚本。
+   - podkit-only：跑 Swift tests、`TritonKit.podspec` lint 与 contract checks；适用于 `Sources/TritonKit/` 与 `TritonKit.podspec`。
+   - full：运行 Swift tests、两个 CocoaPods spec、Homebrew formula template、版本脚本和 release automation 契约；适用于 Shared models、`TritonKitShared.podspec`、未分类脚本和 fixtures。
+6. CI 中保留名为 `Validate` 的聚合 job；full validate 内部拆成 `Validate Swift Tests`、`Validate Podspec (TritonKitShared)`、`Validate Podspec (TritonKit)` 与 `Validate Contracts` 并行执行，降低 wall-clock 等待时间，同时保持分支保护只需依赖稳定的 `Validate`。`podkit-only` 只运行 `Validate Podspec (TritonKit)`，不运行 Shared podspec lint。
 7. `Validate Swift Tests` 使用 `actions/cache@v4` 缓存 `.build` 与 SwiftPM dependency cache，cache key 基于 `Package.swift` 和 `Package.resolved`。
 8. CLI build 执行 `swift build -c release --product triton`。
 9. 按架构打包 CLI：
@@ -80,6 +82,7 @@ brew upgrade triton
 - CI docs/skill-only fast path 使用 `docs-linhay/scripts/verify.sh --ci-docs`；只允许 README、AGENTS、docs/memory/references/screenshots 与 `.agents/tritonkit-skills/` / `.agents/skills/` 进入 fast path，`Sources/`、`Tests/`、podspec、workflow、`docs-linhay/scripts/` 和 fixtures 默认触发 full validate。
 - 本地运行 `docs-linhay/scripts/verify-ci-validate-mode.sh` 验证 fast/full 分类边界。
 - Swift-only fast path 会跳过 CocoaPods lint，只允许 CLI target、tests 和 SwiftPM manifest/lockfile；iOS runtime 与 Shared model 改动仍触发 full validate。
+- Contract-only fast path 会跳过 macOS Swift 和 CocoaPods job，只验证 CI/release/Homebrew 脚本契约；podkit-only 会跳过 `TritonKitShared.podspec` lint，只保留 `TritonKit.podspec` lint。
 - Full validate 在 CI 中并行运行 Swift tests、两个 podspec lint 与 release/homebrew 契约检查；本地仍可用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
