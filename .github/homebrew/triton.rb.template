@@ -27,7 +27,12 @@ class Triton < Formula
   end
 
   test do
+    require "json"
+
     assert_match version.to_s, shell_output("#{bin}/triton version")
-    assert_match '"ok":true', shell_output("#{bin}/triton version --json")
+
+    version_json = JSON.parse(shell_output("#{bin}/triton version --json"))
+    assert_equal true, version_json["ok"]
+    assert_equal version.to_s, version_json["version"]
   end
 end

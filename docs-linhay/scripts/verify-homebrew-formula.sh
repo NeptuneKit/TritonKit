@@ -25,6 +25,8 @@ grep -q 'releases/download/v0.1.0/triton-macos-x86_64.tar.gz' "${formula}"
 grep -q 'sha256 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"' "${formula}"
 grep -q 'sha256 "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"' "${formula}"
 grep -Fq 'Dir["triton-macos-*/triton"].first || Dir["triton"].first' "${formula}"
+grep -Fq 'JSON.parse(shell_output("#{bin}/triton version --json"))' "${formula}"
+grep -Fq 'assert_equal true, version_json["ok"]' "${formula}"
 
 ruby -c "${formula}" >/dev/null
 

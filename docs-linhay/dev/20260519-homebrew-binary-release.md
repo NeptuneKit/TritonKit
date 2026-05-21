@@ -82,6 +82,8 @@ Formula 的 `install` 逻辑必须同时兼容两种 Homebrew staging 布局：
 
 `docs-linhay/scripts/verify-homebrew-formula.sh` 会检查这两个候选路径，避免回退到只识别原始目录布局导致 `triton binary not found in release archive`。
 
+Formula 的 `test` 逻辑必须解析 `triton version --json`，不要用紧凑 JSON 字符串匹配。CLI 的 JSON 输出允许 pretty-print 空格和换行。
+
 安装后只提供 `triton` CLI。iOS runtime 的 SwiftPM / CocoaPods 接入方式不变。
 
 ## Secrets
