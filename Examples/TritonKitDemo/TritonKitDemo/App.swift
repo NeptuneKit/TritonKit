@@ -1,5 +1,4 @@
 import SwiftUI
-import TritonKit
 import UIKit
 
 @main
@@ -14,16 +13,28 @@ struct TritonKitDemoApp: App {
     }
 }
 
-final class DemoModel: ObservableObject, TritonKitDelegate {
+final class DemoModel: ObservableObject {
     @Published var status = "Disconnected"
     @Published var host = "127.0.0.1"
     @Published var port = "19421"
     @Published var log: [String] = []
 
-    private let requestHandler = TritonKitRequestHandler()
+    #if DEBUG
+    private let runtime = TritonKitDebugBootstrap()
+    #endif
+
+    init() {
+        #if DEBUG
+        runtime.onStatusChange = { [weak self] status in
+            self?.status = status
+        }
+        runtime.onLog = { [weak self] message in
+            self?.addLog(message)
+        }
+        #endif
+    }
 
     func autoConnect() {
-        TritonKit.shared.delegate = self
         connect()
     }
 
@@ -32,42 +43,22 @@ final class DemoModel: ObservableObject, TritonKitDelegate {
             addLog("Invalid port: \(port)")
             return
         }
-        status = "Connecting..."
-        addLog("WS: ws://\(host):\(portNum)/")
-        TritonKit.shared.dataURL = URL(string: "http://\(host):\(portNum)")
-        TritonKit.shared.connect(host: host, port: portNum)
+
+        #if DEBUG
+        runtime.connect(host: host, port: portNum)
+        #else
+        status = "Disabled"
+        addLog("TritonKit runtime is DEBUG-only")
+        #endif
     }
 
     func disconnect() {
-        TritonKit.shared.disconnect()
-    }
-
-    // MARK: - TritonKitDelegate
-
-    func tritonKit(_ kit: TritonKit, didChangeState state: TritonKit.ConnectionState) {
-        DispatchQueue.main.async {
-            switch state {
-            case .connected:
-                self.status = "Connected"
-                self.addLog("Connected to server!")
-            case .connecting:
-                self.status = "Connecting..."
-            case .disconnected:
-                self.status = "Disconnected"
-                self.addLog("Disconnected")
-            }
-        }
-    }
-
-    func tritonKit(_ kit: TritonKit, didReceiveError error: Error) {
-        DispatchQueue.main.async {
-            self.addLog("Error: \(error.localizedDescription)")
-        }
-    }
-
-    func tritonKit(_ kit: TritonKit, didReceiveMessage message: TKMessage) async -> TKMessage? {
-        addLog("Received: \(message.type.rawValue) [id:\(message.id)]")
-        return await requestHandler.tritonKit(kit, didReceiveMessage: message)
+        #if DEBUG
+        runtime.disconnect()
+        #else
+        status = "Disabled"
+        addLog("TritonKit runtime is DEBUG-only")
+        #endif
     }
 
     private func addLog(_ msg: String) {

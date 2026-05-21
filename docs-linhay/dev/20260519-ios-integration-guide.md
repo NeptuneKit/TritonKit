@@ -11,7 +11,8 @@ TritonKit 需要在仓库 README 和项目级 skill 中提供 iOS 侧接入指�
 - Given 使用者首次打开仓库
 - When 阅读 `README.md`
 - Then 能看到 SwiftPM 与 CocoaPods 的接入方式
-- And 能看到 Debug-only App 启动代码
+- And 能看到文件级 `#if DEBUG` 包裹的 `TritonKitDebugBootstrap.swift` 示例
+- And AppDelegate / SwiftUI 入口只保留 `#if DEBUG` 调用点
 - And 能看到 CLI server 启动与 `status/list/hierarchy/ax` 验证命令
 - And 能看到真机本地网络与 ATS 注意事项
 
@@ -24,15 +25,17 @@ TritonKit 需要在仓库 README 和项目级 skill 中提供 iOS 侧接入指�
 
 ## 接入口径
 
-1. SwiftPM：添加 `https://github.com/NeptuneKit/TritonKit.git`，选择 `TritonKit` product。
-2. CocoaPods：开发阶段显式添加 `TritonKitShared` 与 `TritonKit` 两个 pod，并指向 `main` 分支。
-3. App 侧：保持 `TritonKitRequestHandler` 强引用，在 `DEBUG` 下设置 `delegate`、`dataURL` 并调用 `connect(host:port:)`。
-4. CLI 侧：模拟器优先 `triton serve --host 127.0.0.1 --port 19421`；真机使用 `0.0.0.0` 监听并把 `TRITON_HOST` 设为 Mac LAN IP。
-5. 验证：使用 `triton status --json`、`triton list --json`、`triton hierarchy --json`、`triton ax --json`。
-6. Release：public API 保持可编译，但 `TritonKit.isRuntimeEnabled == false`，runtime 不连接、不采集、不上传、不响应控制。
+1. SwiftPM：添加 `https://github.com/NeptuneKit/TritonKit.git`，选择 `TritonKit` product；业务 App 源码中所有 `import TritonKit` 与启动代码必须由 `#if DEBUG` 显式包住。
+2. CocoaPods：开发阶段显式添加 `TritonKitShared` 与 `TritonKit` 两个 pod，并指向 `main` 分支；Podfile 示例必须加 `:configurations => ['Debug']`。
+3. App 侧：优先新建独立 `TritonKitDebugBootstrap.swift`，整个文件从 `import TritonKit`、`TritonKitRequestHandler` 强引用，到 `delegate`、`dataURL`、`connect(host:port:)` 都包在文件级 `#if DEBUG` 内。
+4. 启动入口：AppDelegate、SceneDelegate 或 SwiftUI `onAppear` 只保留 `#if DEBUG` 调用点，例如 `TritonKitDebugBootstrap.shared.start()`；不要把 TritonKit 符号散落在生产入口文件里。
+5. CLI 侧：模拟器优先 `triton serve --host 127.0.0.1 --port 19421`；真机使用 `0.0.0.0` 监听并把 `TRITON_HOST` 设为 Mac LAN IP。
+6. 验证：使用 `triton status --json`、`triton list --json`、`triton hierarchy --json`、`triton ax --json`。
+7. Release：public API 保持可编译，但 `TritonKit.isRuntimeEnabled == false`，runtime 不连接、不采集、不上传、不响应控制；接入示例仍必须显式 `#if DEBUG`，不能只依赖 no-op。
 
 ## 变更位置
 
 - `README.md`
 - `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
 - `docs-linhay/dev/20260519-ios-integration-guide.md`
+- `Examples/TritonKitDemo/TritonKitDemo/TritonKitDebugBootstrap.swift`

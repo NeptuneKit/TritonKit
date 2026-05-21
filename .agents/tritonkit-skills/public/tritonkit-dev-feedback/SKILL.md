@@ -76,46 +76,70 @@ SwiftPM:
 https://github.com/NeptuneKit/TritonKit.git
 ```
 
-Add the `TritonKit` product to the iOS app target.
+Add the `TritonKit` product to the iOS app target. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the library's Release no-op behavior.
 
-CocoaPods during development:
+CocoaPods during development, restricted to Debug configurations:
 
 ```ruby
 target 'YourApp' do
   use_frameworks!
 
-  pod 'TritonKitShared', :git => 'https://github.com/NeptuneKit/TritonKit.git', :branch => 'main'
-  pod 'TritonKit', :git => 'https://github.com/NeptuneKit/TritonKit.git', :branch => 'main'
+  pod 'TritonKitShared',
+      :git => 'https://github.com/NeptuneKit/TritonKit.git',
+      :branch => 'main',
+      :configurations => ['Debug']
+  pod 'TritonKit',
+      :git => 'https://github.com/NeptuneKit/TritonKit.git',
+      :branch => 'main',
+      :configurations => ['Debug']
 end
 ```
 
 ### App Bootstrap
 
-Keep the integration explicit in `DEBUG`. The runtime is also no-op outside `DEBUG`, but app code should make the development-only boundary obvious.
+Put TritonKit bootstrap code in a dedicated iOS file and wrap the entire file in `#if DEBUG`.
 
 ```swift
-import UIKit
-
+// TritonKitDebugBootstrap.swift
 #if DEBUG
+import UIKit
 import TritonKit
-#endif
 
-final class AppDelegate: NSObject, UIApplicationDelegate {
-    #if DEBUG
+final class TritonKitDebugBootstrap {
+    static let shared = TritonKitDebugBootstrap()
+
     private let tritonHandler = TritonKitRequestHandler()
-    #endif
+    private var didStart = false
 
-    func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-    ) -> Bool {
-        #if DEBUG
+    private init() {}
+
+    func start() {
+        guard !didStart else { return }
+        didStart = true
+
         let host = ProcessInfo.processInfo.environment["TRITON_HOST"] ?? "127.0.0.1"
         let port = UInt16(ProcessInfo.processInfo.environment["TRITON_PORT"] ?? "") ?? 19421
 
         TritonKit.shared.delegate = tritonHandler
         TritonKit.shared.dataURL = URL(string: "http://\(host):\(port)")
         TritonKit.shared.connect(host: host, port: port)
+    }
+}
+#endif
+```
+
+Then call it only from a Debug branch in AppDelegate:
+
+```swift
+import UIKit
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        #if DEBUG
+        TritonKitDebugBootstrap.shared.start()
         #endif
 
         return true
@@ -123,7 +147,25 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 }
 ```
 
-For SwiftUI, keep the `TritonKitRequestHandler` alive for the app lifetime and call the same setup from the app bootstrap object or `onAppear`.
+For SwiftUI, keep the same dedicated Debug bootstrap file and call it from a guarded `onAppear`:
+
+```swift
+import SwiftUI
+
+@main
+struct YourApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .onAppear {
+                    #if DEBUG
+                    TritonKitDebugBootstrap.shared.start()
+                    #endif
+                }
+        }
+    }
+}
+```
 
 ### CLI Verification
 
@@ -204,7 +246,7 @@ triton replay /tmp/first-flow.tritonplan --dry-run --var username=alice --var pa
 
 - For physical devices or local-network testing, add `NSLocalNetworkUsageDescription` to the app target if iOS prompts for local network access.
 - If App Transport Security blocks cleartext local development traffic, use a debug-only ATS exception. Do not ship broad ATS exceptions in production.
-- Release builds should compile, but `TritonKit.isRuntimeEnabled` is false and the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages.
+- Release builds should compile, but `TritonKit.isRuntimeEnabled` is false and the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
 ### Distribution Notes
 

@@ -23,7 +23,10 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - If copying the local build into an existing `PATH` location while `triton serve` may be running from that path, stop the server first or replace through a temporary file and same-directory `mv`.
    - Confirm the active binary with `triton version --json` or `.build/release/triton version --json`.
 4. Integrate TritonKit into the app only through the intended DEBUG-only package path:
-   - SwiftPM or CocoaPods as requested.
+   - SwiftPM or CocoaPods as requested; CocoaPods examples must use `:configurations => ['Debug']`.
+   - Put all app-side TritonKit code in a dedicated iOS file such as `TritonKitDebugBootstrap.swift`.
+   - Wrap the entire file in `#if DEBUG`, including `import TritonKit`, `TritonKitRequestHandler` storage, `delegate`, `dataURL`, and `connect(host:port:)`.
+   - Call the bootstrap only from a `#if DEBUG` branch in AppDelegate, SceneDelegate, or SwiftUI `onAppear`.
    - Keep `TritonKitRequestHandler` alive for app lifetime.
    - Set `dataURL`, then `connect(host:port:)`.
 5. Start server with explicit port: `triton serve --host 127.0.0.1 --port 19421`.

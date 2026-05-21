@@ -7,11 +7,13 @@
 
 /* Begin PBXBuildFile section */
 		A001 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001; };
+		A002 /* TritonKitDebugBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		F001 /* App.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = App.swift; sourceTree = "<group>"; };
 		F002 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		F003 /* TritonKitDebugBootstrap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TritonKitDebugBootstrap.swift; sourceTree = "<group>"; };
 		R001 /* TritonKitDemo.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TritonKitDemo.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -37,6 +39,7 @@
 			isa = PBXGroup;
 			children = (
 				F001 /* App.swift */,
+				F003 /* TritonKitDebugBootstrap.swift */,
 				F002 /* Info.plist */,
 			);
 			path = TritonKitDemo;
@@ -94,6 +97,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A001 /* App.swift in Sources */,
+				A002 /* TritonKitDebugBootstrap.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

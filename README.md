@@ -14,7 +14,7 @@ In Xcode, add this package URL:
 https://github.com/NeptuneKit/TritonKit.git
 ```
 
-Add the `TritonKit` product to the iOS app target. `TritonKitShared` is pulled in as a package target dependency.
+Add the `TritonKit` product to the iOS app target. `TritonKitShared` is pulled in as a package target dependency. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the library's Release no-op behavior.
 
 For command-line package manifests:
 
@@ -24,50 +24,74 @@ For command-line package manifests:
 
 ### CocoaPods
 
-During development, point CocoaPods at the repository:
+During development, point CocoaPods at the repository and restrict both pods to Debug configurations:
 
 ```ruby
 target 'YourApp' do
   use_frameworks!
 
-  pod 'TritonKitShared', :git => 'https://github.com/NeptuneKit/TritonKit.git', :branch => 'main'
-  pod 'TritonKit', :git => 'https://github.com/NeptuneKit/TritonKit.git', :branch => 'main'
+  pod 'TritonKitShared',
+      :git => 'https://github.com/NeptuneKit/TritonKit.git',
+      :branch => 'main',
+      :configurations => ['Debug']
+  pod 'TritonKit',
+      :git => 'https://github.com/NeptuneKit/TritonKit.git',
+      :branch => 'main',
+      :configurations => ['Debug']
 end
 ```
 
 After versioned pod publication, this can become:
 
 ```ruby
-pod 'TritonKit', '~> 0.1.0'
+pod 'TritonKit', '~> 0.1.0', :configurations => ['Debug']
 ```
 
 ## Start TritonKit In The App
 
-Keep the runtime behind `DEBUG`. The library also no-ops outside `DEBUG`, but guarding the integration keeps production code paths explicit.
+Put TritonKit bootstrap code in a dedicated iOS file and wrap the entire file in `#if DEBUG`.
 
 ```swift
-import UIKit
-
+// TritonKitDebugBootstrap.swift
 #if DEBUG
+import UIKit
 import TritonKit
-#endif
 
-final class AppDelegate: NSObject, UIApplicationDelegate {
-    #if DEBUG
+final class TritonKitDebugBootstrap {
+    static let shared = TritonKitDebugBootstrap()
+
     private let tritonHandler = TritonKitRequestHandler()
-    #endif
+    private var didStart = false
 
-    func application(
-        _ application: UIApplication,
-        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
-    ) -> Bool {
-        #if DEBUG
+    private init() {}
+
+    func start() {
+        guard !didStart else { return }
+        didStart = true
+
         let host = ProcessInfo.processInfo.environment["TRITON_HOST"] ?? "127.0.0.1"
         let port = UInt16(ProcessInfo.processInfo.environment["TRITON_PORT"] ?? "") ?? 19421
 
         TritonKit.shared.delegate = tritonHandler
         TritonKit.shared.dataURL = URL(string: "http://\(host):\(port)")
         TritonKit.shared.connect(host: host, port: port)
+    }
+}
+#endif
+```
+
+Then call it only from a Debug branch in the app bootstrap:
+
+```swift
+import UIKit
+
+final class AppDelegate: NSObject, UIApplicationDelegate {
+    func application(
+        _ application: UIApplication,
+        didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]? = nil
+    ) -> Bool {
+        #if DEBUG
+        TritonKitDebugBootstrap.shared.start()
         #endif
 
         return true
@@ -75,7 +99,25 @@ final class AppDelegate: NSObject, UIApplicationDelegate {
 }
 ```
 
-For a SwiftUI app, keep the same handler alive for the app lifetime, then call the same setup from `onAppear` or your app bootstrap object.
+For a SwiftUI app, keep the same dedicated Debug bootstrap file and call it from a guarded `onAppear`:
+
+```swift
+import SwiftUI
+
+@main
+struct YourApp: App {
+    var body: some Scene {
+        WindowGroup {
+            ContentView()
+                .onAppear {
+                    #if DEBUG
+                    TritonKitDebugBootstrap.shared.start()
+                    #endif
+                }
+        }
+    }
+}
+```
 
 ## Install The CLI
 
@@ -257,7 +299,7 @@ If your app blocks cleartext development traffic through App Transport Security,
 
 ## Runtime Boundary
 
-`TritonKit.isRuntimeEnabled` is `true` only in `DEBUG` builds. In Release builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages.
+`TritonKit.isRuntimeEnabled` is `true` only in `DEBUG` builds. In Release builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
 The same boundary applies to the planned Harmony collector contract: DEBUG may expose `platform=harmony` and `transport=embedded-websocket` snapshot metadata, while Release stays `enabled=false` with no capabilities.
 
