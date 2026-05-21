@@ -75,6 +75,13 @@ brew upgrade triton
 - Apple Silicon 下载 `triton-macos-arm64.tar.gz`
 - Intel Mac 下载 `triton-macos-x86_64.tar.gz`
 
+Formula 的 `install` 逻辑必须同时兼容两种 Homebrew staging 布局：
+
+- release archive 原始目录布局：`triton-macos-*/triton`
+- Homebrew 解包后扁平布局：`triton`
+
+`docs-linhay/scripts/verify-homebrew-formula.sh` 会检查这两个候选路径，避免回退到只识别原始目录布局导致 `triton binary not found in release archive`。
+
 安装后只提供 `triton` CLI。iOS runtime 的 SwiftPM / CocoaPods 接入方式不变。
 
 ## Secrets

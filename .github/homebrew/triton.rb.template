@@ -20,7 +20,7 @@ class Triton < Formula
   depends_on :macos
 
   def install
-    binary = Dir["triton-macos-*/triton"].first
+    binary = Dir["triton-macos-*/triton"].first || Dir["triton"].first
     odie "triton binary not found in release archive" if binary.nil?
 
     bin.install binary => "triton"

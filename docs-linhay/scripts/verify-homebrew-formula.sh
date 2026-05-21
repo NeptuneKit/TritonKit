@@ -24,6 +24,7 @@ grep -q 'releases/download/v0.1.0/triton-macos-arm64.tar.gz' "${formula}"
 grep -q 'releases/download/v0.1.0/triton-macos-x86_64.tar.gz' "${formula}"
 grep -q 'sha256 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"' "${formula}"
 grep -q 'sha256 "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"' "${formula}"
+grep -Fq 'Dir["triton-macos-*/triton"].first || Dir["triton"].first' "${formula}"
 
 ruby -c "${formula}" >/dev/null
 
