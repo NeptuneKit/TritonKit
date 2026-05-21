@@ -25,6 +25,25 @@ is_docs_only_path() {
   esac
 }
 
+is_swift_only_path() {
+  local path="$1"
+
+  case "$path" in
+    Package.swift|Package.resolved)
+      return 0
+      ;;
+    Sources/TritonKitCLI/*)
+      return 0
+      ;;
+    Tests/*)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 classify_paths() {
   local path
 
@@ -34,10 +53,19 @@ classify_paths() {
   fi
 
   for path in "$@"; do
-    if ! is_docs_only_path "$path"; then
-      mode="full"
-      break
+    if is_docs_only_path "$path"; then
+      continue
     fi
+
+    if is_swift_only_path "$path"; then
+      if [[ "$mode" == "docs" ]]; then
+        mode="swift"
+      fi
+      continue
+    fi
+
+    mode="full"
+    break
   done
 
   echo "$mode"

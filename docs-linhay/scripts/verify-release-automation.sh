@@ -41,6 +41,8 @@ grep -q 'validate-swift:' "${ci_workflow}" || fail "ci workflow must split Swift
 grep -q 'validate-podspec:' "${ci_workflow}" || fail "ci workflow must split podspec lint into an independent validate job"
 grep -q 'validate-contracts:' "${ci_workflow}" || fail "ci workflow must split release/homebrew contract checks into an independent validate job"
 grep -q 'name: Validate' "${ci_workflow}" || fail "ci workflow must keep a stable Validate aggregator job"
+grep -q "mode == 'swift'" "${ci_workflow}" || fail "ci workflow must support a swift-only validate mode"
+grep -q 'actions/cache@v4' "${ci_workflow}" || fail "ci workflow must cache SwiftPM dependencies/build products"
 grep -q 'skip Homebrew formula rendering for non-tag release asset validation' "${ci_workflow}" \
   || fail "ci workflow must skip Homebrew formula rendering for non-tag release asset validation"
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"

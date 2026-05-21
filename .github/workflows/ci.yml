@@ -55,12 +55,23 @@ jobs:
   validate-swift:
     name: Validate Swift Tests
     needs: classify-validate
-    if: needs.classify-validate.outputs.mode == 'full'
+    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'swift'
     runs-on: macos-latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+
+      - name: Restore SwiftPM cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+            ~/.cache/org.swift.swiftpm
+            ~/Library/Caches/org.swift.swiftpm
+          key: ${{ runner.os }}-swiftpm-${{ hashFiles('Package.swift', 'Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-swiftpm-
 
       - name: Swift tests
         run: swift test
@@ -95,7 +106,7 @@ jobs:
   validate-contracts:
     name: Validate Contracts
     needs: classify-validate
-    if: needs.classify-validate.outputs.mode == 'full'
+    if: needs.classify-validate.outputs.mode == 'full' || needs.classify-validate.outputs.mode == 'swift'
     runs-on: ubuntu-latest
 
     steps:
@@ -152,6 +163,10 @@ jobs:
             full)
               [[ "${{ needs.validate-swift.result }}" == "success" ]] || exit 1
               [[ "${{ needs.validate-podspec.result }}" == "success" ]] || exit 1
+              [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
+              ;;
+            swift)
+              [[ "${{ needs.validate-swift.result }}" == "success" ]] || exit 1
               [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
               ;;
             *)
