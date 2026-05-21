@@ -115,6 +115,24 @@
 
 ## 分期
 
+### 当前实现状态（2026-05-21）
+
+P0 最小 `triton xcode` 入口已落地：
+
+- `triton xcode discover --path . --json`
+- `triton xcode use --workspace <path>|--project <path> --scheme <scheme> --configuration Debug --simulator <udid> --json`
+- `triton xcode schemes --json`
+- `triton xcode settings --json`
+- `triton xcode build --jsonl --timeout <seconds>`
+- `triton xcode test --result-bundle /tmp/App.xcresult --jsonl`
+- `triton xcode run --jsonl`
+
+执行边界：
+
+1. XcodeBuildMCP 继续作为能力参考，不再作为默认 agent 执行入口；agent 面优先使用 `triton xcode`。
+2. `xcode run` 只覆盖 build、simulator install、simulator launch，不声明业务 ready；后续必须接 `triton status/wait/find/assert/screenshot/evidence`。
+3. `xcresult`、coverage、logs 与 evidence 的深度整合仍在后续切片，不在本次 P0 内宣称完成。
+
 ### P0：Xcode workflow 最小闭环
 
 - `triton xcode discover`

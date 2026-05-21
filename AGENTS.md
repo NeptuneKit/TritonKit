@@ -146,6 +146,7 @@ Git `worktree` 治理：
 9. 涉及设计、实现、扩展或验证三端本机模拟器/仿真器 CLI 接管能力（iOS Simulator、Android Emulator、HarmonyOS / DevEco Emulator、target discovery、App lifecycle、readiness、screenshot、AX/layout、logs、command ledger、evidence、destructive policy）时，优先使用 `tritonkit-emulator-cli-takeover`，并确认产品边界仍是本机 CLI、无 Web、无真机、无远端 agent。
 10. 涉及设计、实现、扩展或验证 host-side Apple Simulator 接管能力（`triton sim`、`triton app`、`xcrun simctl` 封装、workspace simulator defaults、boot wait JSONL、App metadata/container/preferences、host artifacts、plan/evidence 集成）时，优先使用 `tritonkit-host-simulator-takeover`，并确认 agent 面对的是 Triton CLI/HTTP schema，而不是裸 `xcrun`。
 11. 涉及设计、实现、扩展或验证 Xcode workflow takeover 能力（project/workspace discovery、scheme/build settings、`xcodebuild` build/test/run、`.xcresult`、coverage、logs、SwiftPM、真机/macOS workflow、LLDB、host UI 集成，或评估 XcodeBuildMCP 能力取舍）时，优先使用 `tritonkit-xcode-workflow-takeover`，并坚持“吃能力，不吃 XcodeBuildMCP 对外 API”。
+12. 涉及 Xcode project/workspace 发现、scheme 列表、build settings、`xcodebuild build/test` 或 build-install-launch 时，默认优先使用 `triton xcode`；只有 `triton schema --command xcode --json` 未暴露所需能力或当前实现明确不足时，才临时回退 XcodeBuildMCP 或裸 `xcodebuild`，且回退原因必须写入交付说明。
 
 ## 5. 记忆系统规则（必须）
 

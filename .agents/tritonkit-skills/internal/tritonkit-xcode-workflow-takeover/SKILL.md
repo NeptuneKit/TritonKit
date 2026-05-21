@@ -33,6 +33,7 @@ Start from:
 ## Adoption Rules
 
 - `triton xcode`, `triton xcresult`, `triton coverage`, `triton logs`, `triton spm`, `triton debug`, and `triton device` are the target command namespaces.
+- As of 2026-05-21, Xcode build/test/run should default to `triton xcode` instead of XcodeBuildMCP. Use XcodeBuildMCP only as a reference or temporary fallback when a needed Triton capability is missing.
 - Long-running build/test/run/log/debug commands emit JSONL progress and a final summary envelope.
 - Build/test/log/coverage artifacts must be eligible for `.tritonevidence`.
 - Build/run output must bind to simulator app targets and, when possible, embedded runtime targets.
@@ -41,6 +42,24 @@ Start from:
 - Do not add Node as a required runtime dependency. Any bridge must be optional and wrapped behind Triton output/error contracts.
 - Do not use Xcode IDE Bridge as a first-phase dependency.
 - Do not let host UI automation replace embedded runtime control; host UI is only for system UI / SpringBoard / simulator-level gaps.
+
+## Current Implemented Surface
+
+```bash
+triton xcode discover --path . --json
+triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator <udid> --json
+triton xcode schemes --json
+triton xcode settings --json
+triton xcode build --jsonl
+triton xcode test --result-bundle /tmp/App.xcresult --jsonl
+triton xcode run --jsonl
+```
+
+Current boundaries:
+
+- `xcode run` covers build, simulator install, and simulator launch; it does not prove business readiness.
+- Continue readiness checks with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
+- `xcresult`, coverage, logs, and evidence xcode artifacts are still follow-up slices.
 
 ## Implementation Workflow
 

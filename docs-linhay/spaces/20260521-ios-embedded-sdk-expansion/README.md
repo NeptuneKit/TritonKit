@@ -48,6 +48,16 @@ CLI 是 AI 的稳定控制入口，embedded SDK 是 App 进程内的感知与执
 - 输入：`tap`、`swipe`、`type`、`paste`、`clear`、`input` JSONL；`press` 在 embedded runtime 明确 unsupported。
 - 回归：`find`、`wait`、`assert`、`record/plan inspect/replay`。
 
+## 当前落地状态
+
+截至 2026-05-21，本 space 已完成首批 S0-S4 agent-facing 闭环：
+
+1. 能力发现：`triton runtime manifest --json` 输出 embedded runtime、capabilities、limits 与 redaction；manifest capability 名称、scope 和 boundary 在共享模型层使用枚举约束，wire JSON 继续保持稳定字符串。
+2. 状态读取：`triton state app|scene|route|responder --json` 已输出 App、scene/window、route/controller、first responder/text traits。
+3. 快照聚合：`triton snapshot --include app,scene,route,ax,geometry --json` 已返回 include、artifacts、skipped 与 truncation。
+4. 语义动作：`focus`、`set-text`、`select-segment`、`set-switch` 已接入 CLI schema、selector 消歧和 embedded `semanticAction`。
+5. 复盘：`triton ledger --limit 50 --jsonl` 已输出 runtime request/action/error ring buffer，并保留 secure input redaction 状态。
+
 ## 能力分层
 
 ### P0：可立即规划实现的 App 内公开 API 能力
@@ -103,7 +113,7 @@ P0 只使用 UIKit、Foundation、ProcessInfo、Bundle、UIAccessibility 这类�
 
 ```bash
 triton runtime manifest --target triton:local --json
-triton snapshot --target triton:local --include app,scene,route,ui,ax,geometry,screenshot-metadata --json
+triton snapshot --target triton:local --include app,scene,route,ax,geometry,screenshot-metadata --json
 triton state app --target triton:local --json
 triton state scene --target triton:local --json
 triton state route --target triton:local --json
@@ -148,7 +158,7 @@ triton wait-idle --timeout 2 --json
 ### 场景 2：agent 能一次性采集 App 内快照
 
 - Given 当前页面包含导航栏、输入框、分段控件、开关、列表和截图
-- When 执行 `triton snapshot --include app,scene,route,ui,ax,geometry,screenshot-metadata --json`
+- When 执行 `triton snapshot --include app,scene,route,ax,geometry,screenshot-metadata --json`
 - Then 返回 app、scene、route、geometry、ax/hierarchy 摘要和 screenshot metadata
 - And 每个 artifact 带 `capturedAt` 与 freshness
 - And secure text 只返回 redacted/length，不返回原文

@@ -8,9 +8,11 @@ public enum TKHostAppContainerKind: String, Codable, Equatable {
 
 public struct TKHostWorkspaceDefaults: Codable, Equatable {
     public let defaultSimulatorUDID: String?
+    public let xcode: TKXcodeWorkspaceDefaults?
 
-    public init(defaultSimulatorUDID: String? = nil) {
+    public init(defaultSimulatorUDID: String? = nil, xcode: TKXcodeWorkspaceDefaults? = nil) {
         self.defaultSimulatorUDID = defaultSimulatorUDID
+        self.xcode = xcode
     }
 
     public static func filePath(workspace: String) -> String {
@@ -58,6 +60,21 @@ public struct TKHostCommand: Codable, Equatable {
 
     public func missingRequiredConfig(policy: TKHostExecutionPolicy) -> [TKHostRequiredConfig] {
         TKHostRequiredConfig.allCases.filter { requiredConfig.contains($0) && !policy.provides($0) }
+    }
+
+    public func withTimeout(_ timeoutSeconds: Double?) -> TKHostCommand {
+        guard let timeoutSeconds else {
+            return self
+        }
+        return TKHostCommand(
+            executable: executable,
+            arguments: arguments,
+            riskLevel: riskLevel,
+            requiredConfig: requiredConfig,
+            defaultTimeoutSeconds: timeoutSeconds,
+            capturesArtifacts: capturesArtifacts,
+            sensitiveOutput: sensitiveOutput
+        )
     }
 }
 

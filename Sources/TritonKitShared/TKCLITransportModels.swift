@@ -183,6 +183,9 @@ public struct TKCLICommandRequest: Codable, Equatable {
         case "statescene", "state.scene", "scene": .stateScene
         case "stateroute", "state.route", "route": .stateRoute
         case "stateresponder", "state.responder", "responder": .stateResponder
+        case "runtimesnapshot", "snapshot": .runtimeSnapshot
+        case "semanticaction", "semantic.action": .semanticAction
+        case "runtimeledger", "ledger": .runtimeLedger
         case "hierarchy": .hierarchy
         case "allattrgroups": .allAttrGroups
         case "fetchobject": .fetchObject

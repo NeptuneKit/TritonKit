@@ -359,6 +359,37 @@ ONLY_ACTIVE_ARCH=YES
 
 ## P0 Implementation Tasks
 
+2026-05-21 已完成 P0 最小执行面：
+
+1. Shared models:
+   - `TKXcodeWorkspaceDefaults`
+   - `TKXcodeDiscoveryResult`
+   - `TKXcodebuildCommand`
+   - `TKXcodeSchemeList`
+   - `TKXcodeBuiltAppProduct`
+   - `TKXcodeActionSummary`
+   - `TKXcodeProgressEvent`
+2. Pure parsers:
+   - project/workspace/package discovery
+   - `xcodebuild -list -json` scheme parser
+   - `xcodebuild -showBuildSettings -json` app product parser
+3. CLI:
+   - `triton xcode discover`
+   - `triton xcode use`
+   - `triton xcode schemes`
+   - `triton xcode settings`
+   - `triton xcode build --jsonl`
+   - `triton xcode test --jsonl --result-bundle`
+   - `triton xcode run --jsonl`
+
+仍未完成：
+
+1. `triton xcresult summary/failures`
+2. coverage summary/uncovered
+3. logs stream/collect
+4. `capture/evidence --include xcode,host`
+5. 真正 streaming 的 xcodebuild stdout/stderr 细粒度 progress parser
+
 1. Shared models:
    - `TKXcodeDiscoveryResult`
    - `TKXcodeDefaults`

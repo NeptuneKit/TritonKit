@@ -42,6 +42,9 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton schema --format json`：输出机器可读 CLI 契约，包括命令参数、默认值、依赖条件、runtime scope、退出码语义、示例、成功/失败 shape；`--command input` 可读取 NDJSON action 字段级 schema。
 - `triton runtime manifest --format json`：通过 CLI 直连 iOS embedded SDK，读取 App 进程内 runtime manifest、platform、transport、DEBUG/Release enabled 状态、SDK version、capabilities、payload limits 与 redaction policy。该命令是 AI 判断 embedded SDK 能力边界和下一步操作的首选入口。
 - `triton state app|scene|route|responder --format json`：通过 CLI 直连 iOS embedded SDK，读取 App identity/environment、UIWindowScene/window、UIViewController route/container、first responder/text input traits。该命令只使用公开 UIKit/Foundation API；SwiftUI 私有 tree、系统窗口、剪贴板和文本内容默认不采集。
+- `triton snapshot --include app,scene,route,ax,geometry --format json`：通过 embedded runtime 返回一次聚合 App 内快照，包含 include 列表、app/scene/route/responder/geometry/ax/screenshot metadata、artifacts、skipped 与 truncation。它是 agent 决策输入，不替代写文件的 `capture/evidence`。
+- `triton focus <selector> --format json`、`triton set-text <selector> <text> --secure --format json`、`triton select-segment <selector> <title|index> --format json`、`triton set-switch <selector> on|off|toggle --format json`：语义动作入口，先复用 `find/tap` 的 selector 解析与 `--index/--within/--at` 消歧，再向 embedded runtime 发送 `semanticAction`。返回 `strategy/targetOID/targetClassName/elapsedMs/redaction`，让 agent 不必用脆弱的坐标链表达表单操作。
+- `triton ledger --limit 50 --jsonl`：读取 embedded runtime 最近 request/action/error ring buffer。每行是 `TKRuntimeLedgerEntry`，包含 request type、action、ok、elapsedMs、errorCode、message 与 redaction；secure input 不写入明文。
 - `triton plan --format json`：根据当前 server/target 状态输出下一步计划；server 不可达时返回 `nextStep=start-server` 与 `error.nextAction`，连接态返回观察、动作和 archive 导出的推荐序列。
 - `triton sim list --format json`：通过 host-side `xcrun simctl list devices available --json` 列出 simulator，输出 `sim:<udid>` target、runtime、platform、state、isBooted 与 source。
 - `triton sim use <udid> --format json`：将 workspace 默认 simulator 写入 `.triton/host-defaults.json`，后续可作为 session defaults 的本地状态来源。
@@ -53,6 +56,10 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton app open-url <url> --simulator <udid|booted> --format json`：提交 deep link 或 URL 到 simulator；该命令只证明 URL 已提交，业务完成需继续用 `wait/find/assert` 或 preferences 验证。
 - `triton app container --bundle-id <id> --kind data --format json`：读取 simulator App container path。
 - `triton app prefs get <key> --bundle-id <id> --format json`、`triton app prefs dump --bundle-id <id> --format json`：读取 App preferences plist，避免 agent 解析 `plutil -p` 人读文本。
+- `triton xcode discover --path . --format json`：发现 `.xcworkspace`、`.xcodeproj` 与 `Package.swift` 候选，作为未知 Apple repo 的入口；多候选时返回 candidates，不暴露 XcodeBuildMCP tool 名。
+- `triton xcode use --workspace <path>|--project <path> --scheme <scheme> --configuration Debug --simulator <udid> --format json`：写入 repo-local `.triton/host-defaults.json`，同时保留 `triton sim use` 的默认 simulator。
+- `triton xcode schemes/settings/build/test/run --format json|--jsonl`：封装 `xcodebuild -list -json`、`-showBuildSettings -json`、`build`、`test` 与 build/install/launch 复合流程；长任务使用 JSONL progress 加最终 summary envelope，大型 workspace 可用 `--timeout <seconds>` 放宽超时。
+- `triton xcode run --jsonl` 只证明 build/install/launch 已提交，业务就绪仍必须继续用 `triton status/wait/find/assert/screenshot/evidence` 验证。
 - `triton device doctor --platform harmony --format json`：只读探测 HarmonyOS NEXT / DevEco Emulator 的 HDC/Emulator 工具路径、版本摘要和 P0 能力，不保存真实 UI、layout、日志正文或设备文件。
 - `triton device list --platform harmony --format json`：通过 host-side `hdc list targets -v` 列出 HDC target，输出 `harmony:<target>`、`target/state/transport/isConnected/source`；`Offline` target 保留在列表中，但不进入默认候选。
 - `triton device use --platform harmony --target <target> --format json`：解析一个 `Connected` HDC target；多 `Connected` 且未指定 target 时返回 `error.code=ambiguous_target` 与候选提示。
@@ -148,11 +155,11 @@ Overloaded 真实 App 的可复跑 smoke 脚本是 `docs-linhay/scripts/verify-o
 2. `hit` 对自定义 row button 已能提升到可操作父控件，但缺少 raw hit、actionable target、提升路径、reason 和 suggested input；这些字段能让 agent 在坐标失败时自动修正。
 3. `attrs` 仍主要是 class/layout/layer 样式。后续应补 Accessibility/Responder/Control groups，例如 label/value/identifier、firstResponder、UIButton title/enabled/selected、UITextField text/placeholder/secure、UISegmentedControl selectedSegmentIndex/segments、UIScrollView canScroll。
 4. `type` 已支持 `triton type <text>`，并保留 `type --text <text>` 兼容入口；`press` 已支持 `triton press home`，旧的 `press --button home` 保持兼容。
-5. 输入控制缺少显式语义动作：`clearText`、`setText`、`focus`、`submit`、`selectSegment`、`scrollToVisible` 能减少 “tap 后再 type” 和坐标滚动的不确定性。
+5. 首批显式语义动作已落地：`focus`、`set-text`、`select-segment`、`set-switch`。后续仍缺 `submit`、`set-slider`、`stepper`、`scroll-to-visible` 和 `wait-idle`，这些能力继续按公开 UIKit API 与 harness 验证推进。
 
 意图解析有两个优先级约束：`UITextField`/`UITextView` 这类输入控件默认用 frame center 坐标点击，避免 AX oid 因 cell 重建后弱引用失效；hierarchy 文本 fallback 必须继承祖先可见性，隐藏 cell 或 alpha 为 0 的子 label 不能作为 `HTTP/HTTPS` 这类可点击选项候选。
 
-意图优先 CLI 的轻量 mock smoke 脚本是 `docs-linhay/scripts/verify-intent-cli-smoke.sh`。它不依赖 iOS App，覆盖唯一 target 时省略 `--target` 的 `triton tap "HTTP"`、输入框 `名称` 使用坐标策略、`triton type "hello"` 位置参数、动作命令默认 JSON、`tap/find --at` 点位消歧、`tap/hit/paste/clear --at` 坐标简写、`press home` 位置参数、隐藏祖先中的 `HTTPS` 不参与 hierarchy 文本命中、找不到文本时的 JSON 错误 envelope、以及 HTTP 408 `runtime_ui_interrupted` 的稳定透传。
+意图优先 CLI 的轻量 mock smoke 脚本是 `docs-linhay/scripts/verify-intent-cli-smoke.sh`。它不依赖 iOS App，覆盖唯一 target 时省略 `--target` 的 `triton tap "HTTP"`、输入框 `名称` 使用坐标策略、`triton type "hello"` 位置参数、动作命令默认 JSON、`tap/find --at` 点位消歧、`tap/hit/paste/clear --at` 坐标简写、`press home` 位置参数、隐藏祖先中的 `HTTPS` 不参与 hierarchy 文本命中、找不到文本时的 JSON 错误 envelope、HTTP 408 `runtime_ui_interrupted` 的稳定透传，以及 `snapshot/focus/set-text/select-segment/set-switch/ledger --jsonl` 的 agent-facing schema 与输出 shape。
 
 无服务 bootstrap 契约的可复跑验收脚本是 `docs-linhay/scripts/verify-cli-bootstrap.sh`。它要求 `19421` 无监听进程，随后验证 `version/schema/plan/doctor/capabilities/status` 的 JSON shape、退出码与 `nextAction`。
 

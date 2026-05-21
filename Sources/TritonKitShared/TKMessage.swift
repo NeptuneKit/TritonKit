@@ -10,6 +10,9 @@ public enum TKRequestType: String, Codable, CaseIterable {
     case stateScene
     case stateRoute
     case stateResponder
+    case runtimeSnapshot
+    case semanticAction
+    case runtimeLedger
     case hierarchy
     case hierarchyDetails
     case modifyAttribute

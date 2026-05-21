@@ -252,6 +252,7 @@ triton state app --json
 triton state scene --json
 triton state route --json
 triton state responder --json
+triton snapshot --include app,scene,route,ax,geometry --json
 triton hierarchy --json
 triton ax --json
 ```
@@ -276,6 +277,20 @@ triton app prefs dump --bundle-id com.example.app --json
 ```
 
 `app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, or `triton app prefs get` to verify the business state.
+
+Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts:
+
+```bash
+triton xcode discover --path . --json
+triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
+triton xcode schemes --json
+triton xcode settings --json
+triton xcode build --jsonl --timeout 1800
+triton xcode test --result-bundle /tmp/App.xcresult --jsonl
+triton xcode run --jsonl
+```
+
+`xcode run` proves build, install, and launch were submitted. It does not prove business readiness; continue with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
 
 HarmonyOS NEXT / DevEco Emulator P0 discovery is exposed through the same host-side contract. It does not require a running TritonKit embedded runtime:
 
@@ -310,6 +325,19 @@ triton tap "hello" --at 240,580
 triton tap "hello" --index 2
 triton tap "hello" --within 180,0,220,500
 ```
+
+For form-like flows, prefer embedded semantic commands over a fragile `tap` plus `type` chain:
+
+```bash
+triton focus "用户名" --json
+triton set-text "用户名" "alice" --json
+triton set-text "密码" "$TRITON_PASSWORD" --secure --json
+triton select-segment "协议" "HTTP" --json
+triton set-switch "记住我" on --json
+triton ledger --limit 50 --jsonl
+```
+
+`set-text --secure` redacts the text value in command output and runtime ledger while preserving inserted length. `ledger --jsonl` is the recent embedded request/action replay stream for debugging selector resolution, runtime errors, elapsed time, and redaction state.
 
 When a pass/fail decision needs attachable evidence, export a bundle with a machine-readable manifest:
 

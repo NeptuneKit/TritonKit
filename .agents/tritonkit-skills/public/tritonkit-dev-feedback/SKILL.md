@@ -31,6 +31,9 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton doctor --json`
    - `triton schema --json`
    - `triton plan --json`
+   - `triton runtime manifest --json`
+   - `triton snapshot --include app,scene,route,ax,geometry --json`
+   - `triton ledger --limit 50 --jsonl`
    - host-side simulator checks that do not require embedded runtime:
      - `triton sim list --json`
      - `triton sim use <udid> --json`
@@ -54,6 +57,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--target`.
      - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
    - `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, or `triton clear` for agent-facing action checks; these default to JSON, and `--format text` is only for human-readable debugging.
+   - For form flows, prefer semantic embedded actions when available: `triton focus "用户名" --json`, `triton set-text "用户名" "alice" --json`, `triton set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton select-segment "协议" "HTTP" --json`, and `triton set-switch "记住我" on --json`.
    - When the same text appears multiple times, run `triton find "<text>" --all` first; if you know a point inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`.
    - relevant `swift test`, smoke scripts, or app-level reproduction steps.
 4. Classify the issue:

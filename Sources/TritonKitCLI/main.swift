@@ -37,8 +37,10 @@ struct TritonKitCLI: AsyncParsableCommand {
             Doctor.self,
             Capabilities.self,
             Schema.self,
+            Xcode.self,
             Runtime.self,
             State.self,
+            Snapshot.self,
             Plan.self,
             List.self,
             Inspect.self,
@@ -55,6 +57,10 @@ struct TritonKitCLI: AsyncParsableCommand {
             Replay.self,
             Find.self,
             Wait.self,
+            Focus.self,
+            SetText.self,
+            SelectSegment.self,
+            SetSwitch.self,
             Tap.self,
             Swipe.self,
             TypeText.self,
@@ -66,12 +72,302 @@ struct TritonKitCLI: AsyncParsableCommand {
             Hit.self,
             Screenshot.self,
             Input.self,
+            Ledger.self,
             Device.self,
             Sim.self,
             HostApp.self,
         ],
         defaultSubcommand: List.self
     )
+}
+
+// MARK: - Xcode Workflow Commands
+
+struct Xcode: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "xcode",
+        abstract: "Discover, configure, build, test, and run Xcode projects through Triton contracts",
+        subcommands: [
+            XcodeDiscover.self,
+            XcodeUse.self,
+            XcodeSchemes.self,
+            XcodeSettings.self,
+            XcodeBuild.self,
+            XcodeTest.self,
+            XcodeRun.self,
+        ]
+    )
+}
+
+struct XcodeDiscover: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "discover", abstract: "Discover Xcode workspaces, projects, and Swift packages")
+
+    @Option(help: "Repository or workspace root path") var path: String = "."
+    @Option(help: "Maximum directory depth to scan") var maxDepth: Int = 2
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let result = try TKXcodeProjectDiscovery.discover(path: path, maxDepth: maxDepth)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(result))
+            case .text:
+                for workspace in result.workspaces { print("workspace\t\(workspace.path)") }
+                for project in result.projects { print("project\t\(project.path)") }
+                for package in result.packages { print("package\t\(package.path)") }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeUse: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "use", abstract: "Set workspace Xcode defaults")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String
+    @Option(help: "Build configuration") var configuration: String = "Debug"
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String = "iphonesimulator"
+    @Option(help: "Simulator UDID") var simulator: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String = ".triton/DerivedData"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            try validateXcodeContainer(workspace: workspace, project: project, outputFormat: outputFormat)
+            let existing = (try? loadHostWorkspaceDefaults()) ?? TKHostWorkspaceDefaults()
+            let resolvedDestination = destination ?? simulator.map { "platform=iOS Simulator,id=\($0)" }
+            let xcode = TKXcodeWorkspaceDefaults(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: resolvedDestination,
+                derivedDataPath: derivedDataPath
+            )
+            let defaults = TKHostWorkspaceDefaults(
+                defaultSimulatorUDID: simulator ?? existing.defaultSimulatorUDID,
+                xcode: xcode
+            )
+            let path = try saveHostWorkspaceDefaults(defaults)
+            let output = XcodeUseOutput(ok: true, action: "xcode.use", defaultsPath: path, defaults: defaults)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print(path)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeSchemes: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "schemes", abstract: "List Xcode schemes")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeContainer(workspace: workspace, project: project)
+            let command = TKXcodebuildCommand.listSchemes(workspace: resolved.workspace, project: resolved.project)
+            let result = try runHostCommand(command)
+            let schemes = try TKXcodebuildListParser.parseSchemes(result.stdoutData)
+            let output = XcodeSchemesOutput(
+                ok: true,
+                workspace: resolved.workspace,
+                project: resolved.project,
+                schemes: schemes.schemes,
+                sourceCommand: result.sourceCommand
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                for scheme in schemes.schemes { print(scheme) }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeSettings: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "settings", abstract: "Resolve Xcode build settings for the selected app product")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: destination,
+                simulator: simulator,
+                derivedDataPath: derivedDataPath
+            )
+            let command = TKXcodebuildCommand.showBuildSettings(
+                workspace: resolved.workspace,
+                project: resolved.project,
+                scheme: resolved.scheme,
+                configuration: resolved.configuration,
+                sdk: resolved.sdk,
+                destination: resolved.destination,
+                derivedDataPath: resolved.derivedDataPath
+            ).withTimeout(timeout)
+            let result = try runHostCommand(command)
+            let product = try TKXcodeBuildSettingsParser.resolveBuiltApp(result.stdoutData)
+            let output = XcodeSettingsOutput(ok: true, invocation: resolved, product: product, sourceCommand: result.sourceCommand)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print(product.appPath)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeBuild: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "build", abstract: "Build an Xcode scheme")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: destination,
+                simulator: simulator,
+                derivedDataPath: derivedDataPath
+            )
+            let summary = try runXcodeBuild(invocation: resolved, jsonl: jsonl, timeout: timeout)
+            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeTest: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "test", abstract: "Test an Xcode scheme")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Result bundle output path") var resultBundle: String?
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: destination,
+                simulator: simulator,
+                derivedDataPath: derivedDataPath
+            )
+            let summary = try runXcodeTest(invocation: resolved, resultBundlePath: resultBundle, jsonl: jsonl, timeout: timeout)
+            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeRun: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "run", abstract: "Build, install, and launch an Xcode app on a simulator")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "Simulator UDID") var simulator: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: destination,
+                simulator: simulator,
+                derivedDataPath: derivedDataPath
+            )
+            let summary = try runXcodeBuildInstallLaunch(invocation: resolved, jsonl: jsonl, timeout: timeout)
+            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
 }
 
 // MARK: - Host-Side Simulator Commands
@@ -124,7 +420,8 @@ struct SimUse: AsyncParsableCommand {
             guard let simulator = simulators.first(where: { $0.udid == udid || $0.id == udid }) else {
                 throw HostSimulatorRunError.simulatorNotFound(udid)
             }
-            let defaults = TKHostWorkspaceDefaults(defaultSimulatorUDID: simulator.udid)
+            let existing = (try? loadHostWorkspaceDefaults()) ?? TKHostWorkspaceDefaults()
+            let defaults = TKHostWorkspaceDefaults(defaultSimulatorUDID: simulator.udid, xcode: existing.xcode)
             let path = try saveHostWorkspaceDefaults(defaults)
             let output = HostSimulatorUseOutput(
                 ok: true,
@@ -909,6 +1206,39 @@ struct HostPreferencesOutput: Encodable {
     let preferences: [String: TKHostPreferenceValue]?
 }
 
+struct XcodeUseOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let defaultsPath: String
+    let defaults: TKHostWorkspaceDefaults
+}
+
+struct XcodeSchemesOutput: Encodable {
+    let ok: Bool
+    let workspace: String?
+    let project: String?
+    let schemes: [String]
+    let sourceCommand: String
+}
+
+struct ResolvedXcodeInvocation: Encodable {
+    let workspace: String?
+    let project: String?
+    let scheme: String
+    let configuration: String
+    let sdk: String?
+    let destination: String?
+    let derivedDataPath: String?
+    let simulatorUDID: String?
+}
+
+struct XcodeSettingsOutput: Encodable {
+    let ok: Bool
+    let invocation: ResolvedXcodeInvocation
+    let product: TKXcodeBuiltAppProduct
+    let sourceCommand: String
+}
+
 func runSimpleHostCommand(
     action: String,
     runtimeScope: String = "host-simulator",
@@ -950,6 +1280,14 @@ func runSimpleHostCommand(
     }
 }
 
+func loadHostWorkspaceDefaults() throws -> TKHostWorkspaceDefaults? {
+    let path = TKHostWorkspaceDefaults.filePath(workspace: FileManager.default.currentDirectoryPath)
+    guard FileManager.default.fileExists(atPath: path) else {
+        return nil
+    }
+    return try JSONDecoder().decode(TKHostWorkspaceDefaults.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+}
+
 func saveHostWorkspaceDefaults(_ defaults: TKHostWorkspaceDefaults) throws -> String {
     let path = TKHostWorkspaceDefaults.filePath(workspace: FileManager.default.currentDirectoryPath)
     let url = URL(fileURLWithPath: path)
@@ -957,6 +1295,265 @@ func saveHostWorkspaceDefaults(_ defaults: TKHostWorkspaceDefaults) throws -> St
     let data = try JSONEncoder().encode(defaults)
     try data.write(to: url, options: [.atomic])
     return path
+}
+
+func validateXcodeContainer(workspace: String?, project: String?, outputFormat: ClientOutputFormat) throws {
+    if workspace != nil, project != nil {
+        try failHostValidation(
+            code: "validation_failed",
+            message: "Pass either --workspace or --project, not both.",
+            hint: "Run `triton xcode discover --path . --json` to inspect candidates.",
+            outputFormat: outputFormat
+        )
+    }
+    if workspace == nil, project == nil {
+        try failHostValidation(
+            code: "validation_failed",
+            message: "Xcode workflow requires --workspace or --project.",
+            hint: "Run `triton xcode discover --path . --json` and then `triton xcode use ...`.",
+            outputFormat: outputFormat
+        )
+    }
+}
+
+func resolveXcodeContainer(workspace: String? = nil, project: String? = nil) throws -> (workspace: String?, project: String?) {
+    let defaults = try loadHostWorkspaceDefaults()
+    let resolvedWorkspace = workspace ?? defaults?.xcode?.workspace
+    let resolvedProject = project ?? defaults?.xcode?.project
+    guard !(resolvedWorkspace != nil && resolvedProject != nil) else {
+        throw XcodeWorkflowError.ambiguousContainer
+    }
+    guard resolvedWorkspace != nil || resolvedProject != nil else {
+        throw XcodeWorkflowError.missingContainer
+    }
+    return (resolvedWorkspace, resolvedProject)
+}
+
+func resolveXcodeInvocation(
+    workspace: String? = nil,
+    project: String? = nil,
+    scheme: String? = nil,
+    configuration: String? = nil,
+    sdk: String? = nil,
+    destination: String? = nil,
+    simulator: String? = nil,
+    derivedDataPath: String? = nil
+) throws -> ResolvedXcodeInvocation {
+    let defaults = try loadHostWorkspaceDefaults()
+    let xcode = defaults?.xcode
+    let container = try resolveXcodeContainer(workspace: workspace, project: project)
+    let resolvedWorkspace = container.workspace
+    let resolvedProject = container.project
+    guard let resolvedScheme = scheme ?? xcode?.scheme, !resolvedScheme.isEmpty else {
+        throw XcodeWorkflowError.missingScheme
+    }
+    let resolvedConfiguration = configuration ?? xcode?.configuration ?? "Debug"
+    let resolvedSDK = sdk ?? xcode?.sdk ?? "iphonesimulator"
+    let resolvedSimulator = simulator ?? defaults?.defaultSimulatorUDID
+    let resolvedDestination = destination ?? xcode?.destination ?? resolvedSimulator.map { "platform=iOS Simulator,id=\($0)" }
+    let resolvedDerivedDataPath = derivedDataPath ?? xcode?.derivedDataPath ?? ".triton/DerivedData"
+    return ResolvedXcodeInvocation(
+        workspace: resolvedWorkspace,
+        project: resolvedProject,
+        scheme: resolvedScheme,
+        configuration: resolvedConfiguration,
+        sdk: resolvedSDK,
+        destination: resolvedDestination,
+        derivedDataPath: resolvedDerivedDataPath,
+        simulatorUDID: resolvedSimulator
+    )
+}
+
+enum XcodeWorkflowError: Error, CustomStringConvertible {
+    case missingContainer
+    case ambiguousContainer
+    case missingScheme
+    case appPathUnresolved
+    case bundleIDUnresolved(String)
+    case simulatorRequired
+
+    var description: String {
+        switch self {
+        case .missingContainer:
+            "Xcode workflow requires --workspace or --project, or saved defaults from `triton xcode use`."
+        case .ambiguousContainer:
+            "Pass either --workspace or --project, not both."
+        case .missingScheme:
+            "Xcode workflow requires --scheme or saved defaults from `triton xcode use`."
+        case .appPathUnresolved:
+            "Built .app path could not be resolved from xcodebuild build settings."
+        case .bundleIDUnresolved(let appPath):
+            "Bundle identifier could not be resolved from \(appPath)."
+        case .simulatorRequired:
+            "Xcode run requires --simulator or `triton sim use <udid>` defaults."
+        }
+    }
+}
+
+func runXcodeBuild(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+    let command = TKXcodebuildCommand.build(
+        workspace: invocation.workspace,
+        project: invocation.project,
+        scheme: invocation.scheme,
+        configuration: invocation.configuration,
+        sdk: invocation.sdk,
+        destination: invocation.destination,
+        derivedDataPath: invocation.derivedDataPath
+    ).withTimeout(timeout)
+    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl)
+    let product = try? resolveBuiltAppProduct(invocation: invocation, timeout: timeout)
+    return TKXcodeActionSummary(
+        ok: true,
+        action: "xcode.build",
+        workspace: invocation.workspace,
+        project: invocation.project,
+        scheme: invocation.scheme,
+        configuration: invocation.configuration,
+        sdk: invocation.sdk,
+        destination: invocation.destination,
+        derivedDataPath: invocation.derivedDataPath,
+        appPath: product?.appPath,
+        bundleID: product?.bundleID,
+        simulatorUDID: invocation.simulatorUDID,
+        durationMs: durationMs,
+        sourceCommand: result.sourceCommand,
+        exitCode: result.exitCode,
+        stdoutTruncated: result.stdoutTruncated,
+        stderrTruncated: result.stderrTruncated,
+        note: "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`."
+    )
+}
+
+func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+    let command = TKXcodebuildCommand.test(
+        workspace: invocation.workspace,
+        project: invocation.project,
+        scheme: invocation.scheme,
+        configuration: invocation.configuration,
+        sdk: invocation.sdk,
+        destination: invocation.destination,
+        derivedDataPath: invocation.derivedDataPath,
+        resultBundlePath: resultBundlePath
+    ).withTimeout(timeout)
+    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl)
+    return TKXcodeActionSummary(
+        ok: true,
+        action: "xcode.test",
+        workspace: invocation.workspace,
+        project: invocation.project,
+        scheme: invocation.scheme,
+        configuration: invocation.configuration,
+        sdk: invocation.sdk,
+        destination: invocation.destination,
+        derivedDataPath: invocation.derivedDataPath,
+        resultBundlePath: resultBundlePath,
+        simulatorUDID: invocation.simulatorUDID,
+        durationMs: durationMs,
+        sourceCommand: result.sourceCommand,
+        exitCode: result.exitCode,
+        stdoutTruncated: result.stdoutTruncated,
+        stderrTruncated: result.stderrTruncated,
+        note: "Test command finished. Use `triton xcresult failures --path <result.xcresult> --json` once xcresult parsing lands."
+    )
+}
+
+func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+    guard let simulator = invocation.simulatorUDID, !simulator.isEmpty else {
+        throw XcodeWorkflowError.simulatorRequired
+    }
+    let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout)
+    let product = try resolveBuiltAppProduct(invocation: invocation, timeout: timeout)
+    let bundleID: String
+    if let productBundleID = product.bundleID {
+        bundleID = productBundleID
+    } else {
+        bundleID = try bundleIdentifier(appPath: product.appPath)
+    }
+
+    let installCommand = TKSimctlCommand.installApp(udid: simulator, appPath: product.appPath)
+    _ = try runXcodeHostCommand(installCommand, event: "xcode.run.install", jsonl: jsonl)
+    let launchCommand = TKSimctlCommand.launchApp(udid: simulator, bundleID: bundleID)
+    let (launchResult, launchDurationMs) = try runXcodeHostCommand(launchCommand, event: "xcode.run.launch", jsonl: jsonl)
+
+    return TKXcodeActionSummary(
+        ok: true,
+        action: "xcode.run",
+        workspace: invocation.workspace,
+        project: invocation.project,
+        scheme: invocation.scheme,
+        configuration: invocation.configuration,
+        sdk: invocation.sdk,
+        destination: invocation.destination,
+        derivedDataPath: invocation.derivedDataPath,
+        appPath: product.appPath,
+        bundleID: bundleID,
+        simulatorUDID: simulator,
+        durationMs: buildSummary.durationMs + launchDurationMs,
+        sourceCommand: launchResult.sourceCommand,
+        exitCode: launchResult.exitCode,
+        stdoutTruncated: launchResult.stdoutTruncated,
+        stderrTruncated: launchResult.stderrTruncated,
+        note: "App launch was submitted to Simulator. Verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence."
+    )
+}
+
+func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool) throws -> (HostProcessResult, Int) {
+    let startedAt = Date()
+    if jsonl {
+        print(try encodeCompactJSON(TKXcodeProgressEvent(event: "\(event).invocation", message: "started", sourceCommand: hostSourceCommand(command), elapsedMs: 0)))
+    }
+    let result = try runHostCommand(command)
+    let durationMs = Int(Date().timeIntervalSince(startedAt) * 1000)
+    if jsonl {
+        print(try encodeCompactJSON(TKXcodeProgressEvent(event: "\(event).summary", message: "finished", sourceCommand: result.sourceCommand, elapsedMs: durationMs)))
+    }
+    return (result, durationMs)
+}
+
+func resolveBuiltAppProduct(invocation: ResolvedXcodeInvocation, timeout: Double? = nil) throws -> TKXcodeBuiltAppProduct {
+    let command = TKXcodebuildCommand.showBuildSettings(
+        workspace: invocation.workspace,
+        project: invocation.project,
+        scheme: invocation.scheme,
+        configuration: invocation.configuration,
+        sdk: invocation.sdk,
+        destination: invocation.destination,
+        derivedDataPath: invocation.derivedDataPath
+    ).withTimeout(timeout)
+    let result = try runHostCommand(command)
+    do {
+        return try TKXcodeBuildSettingsParser.resolveBuiltApp(result.stdoutData)
+    } catch {
+        throw XcodeWorkflowError.appPathUnresolved
+    }
+}
+
+func bundleIdentifier(appPath: String) throws -> String {
+    let infoURL = URL(fileURLWithPath: appPath).appendingPathComponent("Info.plist")
+    let data = try Data(contentsOf: infoURL)
+    let plist = try PropertyListSerialization.propertyList(from: data, options: [], format: nil)
+    guard let dictionary = plist as? [String: Any],
+          let bundleID = dictionary["CFBundleIdentifier"] as? String,
+          !bundleID.isEmpty else {
+        throw XcodeWorkflowError.bundleIDUnresolved(appPath)
+    }
+    return bundleID
+}
+
+func printXcodeSummary(_ summary: TKXcodeActionSummary, jsonl: Bool, outputFormat: ClientOutputFormat) throws {
+    if jsonl || outputFormat == .json {
+        if jsonl {
+            print(try encodeCompactJSON(summary))
+        } else {
+            print(try encodeJSON(summary))
+        }
+    } else {
+        if let appPath = summary.appPath {
+            print(appPath)
+        } else {
+            print(summary.action)
+        }
+    }
 }
 
 func simulatorIsBooted(udid: String) throws -> Bool {
@@ -1197,6 +1794,48 @@ func renderPreferenceValue(_ value: TKHostPreferenceValue) -> String {
 func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws -> Never {
     let detail: TKCLIErrorDetail
     switch error {
+    case XcodeWorkflowError.missingContainer:
+        detail = TKCLIErrorDetail(
+            code: "invalid_workspace_path",
+            message: "\(error)",
+            hint: "Run `triton xcode discover --path . --json`, then `triton xcode use --workspace <path> --scheme <scheme> --simulator <udid> --json`."
+        )
+    case XcodeWorkflowError.ambiguousContainer:
+        detail = TKCLIErrorDetail(
+            code: "ambiguous_workspace",
+            message: "\(error)",
+            hint: "Pass exactly one of --workspace or --project."
+        )
+    case XcodeWorkflowError.missingScheme:
+        detail = TKCLIErrorDetail(
+            code: "scheme_not_found",
+            message: "\(error)",
+            hint: "Run `triton xcode schemes --workspace <path> --json` to inspect schemes."
+        )
+    case XcodeWorkflowError.appPathUnresolved, TKXcodeBuildSettingsError.appPathUnresolved:
+        detail = TKCLIErrorDetail(
+            code: "app_path_unresolved",
+            message: "\(error)",
+            hint: "Run `triton xcode settings --json` and check BUILT_PRODUCTS_DIR and FULL_PRODUCT_NAME."
+        )
+    case XcodeWorkflowError.bundleIDUnresolved:
+        detail = TKCLIErrorDetail(
+            code: "bundle_id_unresolved",
+            message: "\(error)",
+            hint: "Verify the built .app has an Info.plist with CFBundleIdentifier."
+        )
+    case XcodeWorkflowError.simulatorRequired:
+        detail = TKCLIErrorDetail(
+            code: "simulator_not_found",
+            message: "\(error)",
+            hint: "Pass `--simulator <udid>` or run `triton sim use <udid> --json` first."
+        )
+    case TKXcodeDiscoveryError.pathNotFound:
+        detail = TKCLIErrorDetail(
+            code: "invalid_workspace_path",
+            message: "\(error)",
+            hint: "Pass an existing repo path to `triton xcode discover --path <path> --json`."
+        )
     case HostSimulatorRunError.simulatorNotFound:
         detail = TKCLIErrorDetail(
             code: "simulator_not_found",
@@ -1254,7 +1893,10 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
     case HostCommandRunError.nonZeroExit(let command, _):
         let code: String
         let hint: String
-        if command.arguments.contains("get_app_container") {
+        if command.executable == "xcodebuild" {
+            code = "xcodebuild_failed"
+            hint = "Inspect the xcodebuild output, verify workspace/project, scheme, destination, signing, and DerivedData path."
+        } else if command.arguments.contains("get_app_container") {
             code = "app_container_not_found"
             hint = "Verify the simulator is booted, the app is installed, and the bundle id is correct."
         } else if command.arguments.contains("appinfo") || command.arguments.contains("listapps") {
@@ -2403,6 +3045,319 @@ func runStateRequest(
             throw exitCode
         }
         try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+    }
+}
+
+struct Snapshot: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "snapshot",
+        abstract: "Read an aggregated embedded runtime snapshot"
+    )
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Comma-separated sections: app,scene,route,responder,ax,geometry,screenshot-metadata") var include: String = "app,scene,route,ax,geometry"
+    @Option(help: "Maximum AX nodes to return") var maxAXNodes: Int?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let includeList = include.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            let request = TKRuntimeSnapshotRequest(include: includeList, maxAXNodes: maxAXNodes)
+            let payload = try JSONEncoder().encode(request)
+            let data = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeSnapshot", payload: payload)
+            try printRawJSONData(data, format: outputFormat)
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct Focus: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "focus", abstract: "Focus a text input by selector")
+
+    @Argument(help: "Text, label, identifier, or visible placeholder to focus") var selector: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
+    @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
+    @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runSemanticSelectorAction(
+            action: .focus,
+            sourceCommand: "focus",
+            selector: selector,
+            target: target,
+            host: host,
+            port: port,
+            index: index,
+            within: within,
+            at: at,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct SetText: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "set-text", abstract: "Clear and set exact text by selector")
+
+    @Argument(help: "Text, label, identifier, or visible placeholder to target") var selector: String
+    @Argument(help: "Exact text to set") var text: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Flag(name: .customLong("secure"), help: "Redact text in command output and ledger") var secure = false
+    @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
+    @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
+    @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runSemanticSelectorAction(
+            action: .setText,
+            sourceCommand: "set-text",
+            selector: selector,
+            target: target,
+            host: host,
+            port: port,
+            text: text,
+            secure: secure,
+            index: index,
+            within: within,
+            at: at,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct SelectSegment: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "select-segment", abstract: "Select a UISegmentedControl segment by title or index")
+
+    @Argument(help: "Text, label, identifier, or visible option title to target") var selector: String
+    @Argument(help: "Segment title or zero-based index") var value: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
+    @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
+    @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runSemanticSelectorAction(
+            action: .selectSegment,
+            sourceCommand: "select-segment",
+            selector: selector,
+            target: target,
+            host: host,
+            port: port,
+            segmentTitle: Int(value) == nil ? value : nil,
+            segmentIndex: Int(value),
+            index: index,
+            within: within,
+            at: at,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct SetSwitch: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "set-switch", abstract: "Set or toggle a UISwitch by selector")
+
+    @Argument(help: "Text, label, identifier, or visible option title to target") var selector: String
+    @Argument(help: "Switch value: on, off, or toggle") var value: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Select one matching selector candidate by 1-based index") var index: Int?
+    @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
+    @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runSemanticSelectorAction(
+            action: .setSwitch,
+            sourceCommand: "set-switch",
+            selector: selector,
+            target: target,
+            host: host,
+            port: port,
+            switchValue: value,
+            index: index,
+            within: within,
+            at: at,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct Ledger: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "ledger", abstract: "Read recent embedded runtime request and action ledger")
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Maximum ledger entries to return") var limit: Int = 50
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(help: "Emit JSON Lines entries instead of an envelope") var jsonl = false
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json || jsonl)
+            let request = TKRuntimeLedgerRequest(limit: limit)
+            let payload = try JSONEncoder().encode(request)
+            let data = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeLedger", payload: payload)
+            let response = try JSONDecoder().decode(TKRuntimeLedgerResponse.self, from: data)
+            if jsonl {
+                for entry in response.entries {
+                    print(try encodeCompactJSON(entry))
+                }
+            } else {
+                try printLedger(response, format: outputFormat)
+            }
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+func runSemanticSelectorAction(
+    action: TKSemanticActionType,
+    sourceCommand: String,
+    selector: String,
+    target: String,
+    host: String,
+    port: Int,
+    text: String? = nil,
+    secure: Bool = false,
+    segmentTitle: String? = nil,
+    segmentIndex: Int? = nil,
+    switchValue: String? = nil,
+    index: Int? = nil,
+    within: String? = nil,
+    at: String? = nil,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    do {
+        if within != nil && at != nil {
+            if outputFormat == .json {
+                try printValidationError("--within and --at cannot be used together")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--within and --at cannot be used together")
+        }
+        let bounds = try within.map(parseBounds)
+        let point = try at.map(parsePoint)
+        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+        let client = TritonKitHTTPClient(host: host, port: port)
+        let resolution = try await resolveTapTarget(
+            selector,
+            client: client,
+            width: nil,
+            height: nil,
+            duration: nil,
+            index: index,
+            within: bounds,
+            at: point
+        )
+        let request = TKSemanticActionRequest(
+            action: action,
+            selector: selector,
+            sourceCommand: sourceCommand,
+            strategy: "selector-\(resolution.strategy)",
+            targetOID: resolution.request.targetOID,
+            x: resolution.request.x,
+            y: resolution.request.y,
+            text: text,
+            secure: secure,
+            segmentTitle: segmentTitle,
+            segmentIndex: segmentIndex,
+            switchValue: switchValue
+        )
+        try await runSemanticActionRequest(request, host: host, port: port, format: outputFormat)
+    } catch {
+        if error is ExitCode { throw error }
+        try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+    }
+}
+
+func runSemanticActionRequest(
+    _ request: TKSemanticActionRequest,
+    host: String,
+    port: Int,
+    format: ClientOutputFormat
+) async throws {
+    let payload = try JSONEncoder().encode(request)
+    let data = try await TritonKitHTTPClient(host: host, port: port).request(type: "semanticAction", payload: payload)
+    let result = try JSONDecoder().decode(TKSemanticActionResponse.self, from: data)
+    try printSemanticAction(result, format: format)
+    if !result.ok {
+        throw RuntimeError(result.message ?? result.error?.message ?? "Semantic action failed")
+    }
+}
+
+func printRawJSONData(_ data: Data, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(String(data: data, encoding: .utf8) ?? "{}")
+    case .text:
+        if let object = try? JSONSerialization.jsonObject(with: data),
+           let pretty = try? JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys]),
+           let text = String(data: pretty, encoding: .utf8) {
+            print(text)
+        } else {
+            print(String(data: data, encoding: .utf8) ?? "")
+        }
+    }
+}
+
+func printSemanticAction(_ result: TKSemanticActionResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeCompactJSON(result))
+    case .text:
+        print("ok: \(result.ok)")
+        print("action: \(result.action.rawValue)")
+        print("strategy: \(result.strategy)")
+        if let targetOID = result.targetOID { print("targetOID: \(targetOID)") }
+        if let targetClassName = result.targetClassName { print("targetClassName: \(targetClassName)") }
+        print("elapsedMs: \(result.elapsedMs)")
+        if let message = result.message { print("message: \(message)") }
+        if let error = result.error { print("error: \(error.code) \(error.message)") }
+    }
+}
+
+func printLedger(_ response: TKRuntimeLedgerResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeCompactJSON(response))
+    case .text:
+        for entry in response.entries {
+            let status = entry.ok ? "ok" : "failed"
+            print("#\(entry.id) \(entry.timestamp) \(entry.requestType) \(entry.action ?? "-") \(status) \(entry.elapsedMs)ms")
+            if let message = entry.message { print("  \(message)") }
+        }
     }
 }
 
@@ -4106,6 +5061,12 @@ func runtimeCapabilities(connected: Bool) -> [TKRuntimeCapability] {
         TKRuntimeCapability(name: "state-scene", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "state-route", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "state-responder", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "snapshot", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "focus", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "set-text", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "select-segment", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "set-switch", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "ledger", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "host-device", supported: true),
         TKRuntimeCapability(name: "harmony-device-doctor", supported: true),
         TKRuntimeCapability(name: "harmony-device-list", supported: true),
@@ -4670,6 +5631,49 @@ func commandSchemas() -> [TKCommandSchema] {
             successShape: "{ schemaVersion, commands[] }"
         ),
         TKCommandSchema(
+            name: "xcode",
+            summary: "Discover, configure, build, test, and run Xcode projects without exposing XcodeBuildMCP APIs",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-xcode",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText + ["jsonl"],
+            options: [
+                TKCommandSchemaOption(name: "discover --path <path>", type: "Subcommand", description: "Discover .xcworkspace, .xcodeproj, and Package.swift candidates"),
+                TKCommandSchemaOption(name: "use --workspace <path>|--project <path> --scheme <scheme>", type: "Subcommand", description: "Set repo-local Xcode defaults in .triton/host-defaults.json"),
+                TKCommandSchemaOption(name: "schemes", type: "Subcommand", description: "List schemes via xcodebuild -list -json"),
+                TKCommandSchemaOption(name: "settings", type: "Subcommand", description: "Resolve app product path and bundle id from -showBuildSettings -json"),
+                TKCommandSchemaOption(name: "build", type: "Subcommand", description: "Run xcodebuild build"),
+                TKCommandSchemaOption(name: "test", type: "Subcommand", description: "Run xcodebuild test"),
+                TKCommandSchemaOption(name: "run", type: "Subcommand", description: "Run build, simulator install, and simulator launch"),
+                TKCommandSchemaOption(name: "--workspace", type: "Path", description: "Path to .xcworkspace"),
+                TKCommandSchemaOption(name: "--project", type: "Path", description: "Path to .xcodeproj"),
+                TKCommandSchemaOption(name: "--scheme", type: "String", description: "Xcode scheme"),
+                TKCommandSchemaOption(name: "--configuration", type: "String", defaultValue: "Debug", description: "Build configuration"),
+                TKCommandSchemaOption(name: "--sdk", type: "String", defaultValue: "iphonesimulator", description: "xcodebuild SDK"),
+                TKCommandSchemaOption(name: "--destination", type: "String", description: "xcodebuild destination"),
+                TKCommandSchemaOption(name: "--simulator", type: "String", description: "Simulator UDID; also used to synthesize destination"),
+                TKCommandSchemaOption(name: "--derived-data-path", type: "Path", defaultValue: ".triton/DerivedData", description: "Repo-local DerivedData path"),
+                TKCommandSchemaOption(name: "--result-bundle", type: "Path", description: "Result bundle path for test"),
+                TKCommandSchemaOption(name: "--timeout", type: "Double", description: "Command timeout in seconds for large workspaces"),
+                TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress for long commands"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton xcode discover --path . --json",
+                "triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+                "triton xcode schemes --json",
+                "triton xcode settings --json",
+                "triton xcode build --jsonl",
+                "triton xcode test --result-bundle /tmp/App.xcresult --jsonl",
+                "triton xcode run --jsonl",
+            ],
+            successShape: "discover/use/schemes/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
+            failureShape: "{ ok:false, error:{ code: invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcodebuild_failed|app_path_unresolved|bundle_id_unresolved, message, hint } }",
+            providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcodebuild", "xcode-run"]
+        ),
+        TKCommandSchema(
             name: "runtime",
             summary: "Inspect embedded runtime manifest, capabilities, limits, and redaction policy",
             requiresServer: true,
@@ -4714,6 +5718,138 @@ func commandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, capturedAt, runtime, targetConnectionState, app|scenes|route|firstResponder, warnings[], unsupported[] }",
             providedCapabilities: ["state-app", "state-scene", "state-route", "state-responder"]
+        ),
+        TKCommandSchema(
+            name: "snapshot",
+            summary: "Read one aggregated embedded runtime snapshot for agent decisions",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--include", type: "CSV", defaultValue: "app,scene,route,ax,geometry", description: "Sections: app,scene,route,responder,ax,geometry,screenshot-metadata"),
+                TKCommandSchemaOption(name: "--max-ax-nodes", type: "Int", description: "Maximum AX nodes to return before truncation"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton snapshot --include app,scene,route,ax,geometry --json"],
+            successShape: "{ ok, capturedAt, include, app?, scene?, route?, responder?, geometry?, ax?, screenshot?, artifacts[], skipped[], truncation }",
+            providedCapabilities: ["snapshot"]
+        ),
+        TKCommandSchema(
+            name: "focus",
+            summary: "Resolve a selector and focus the matching text input through the embedded runtime",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible placeholder to focus"),
+                target,
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton focus \"名称\" --json", "triton focus \"Email\" --within 0,120,390,220 --json"],
+            successShape: "{ ok, action, strategy, targetOID?, targetClassName?, elapsedMs, message?, redaction? }",
+            providedCapabilities: ["focus", "semantic-action"]
+        ),
+        TKCommandSchema(
+            name: "set-text",
+            summary: "Resolve a selector, clear editable text, and set exact text through the embedded runtime",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible placeholder to target"),
+                TKCommandSchemaOption(name: "<text>", type: "String", description: "Exact text to set"),
+                target,
+                TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact text in command output and ledger"),
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton set-text \"名称\" \"alice\" --json", "triton set-text \"密码\" \"secret\" --secure --json"],
+            successShape: "{ ok, action, strategy, targetOID?, targetClassName?, elapsedMs, message?, redaction: { secure, text, insertedLength? } }",
+            providedCapabilities: ["set-text", "semantic-action"]
+        ),
+        TKCommandSchema(
+            name: "select-segment",
+            summary: "Resolve a selector and select a segmented-control option by title or zero-based index",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible option title to target"),
+                TKCommandSchemaOption(name: "<value>", type: "String|Int", description: "Segment title or zero-based index"),
+                target,
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton select-segment \"协议\" \"HTTP\" --json", "triton select-segment \"协议\" 1 --json"],
+            successShape: "{ ok, action, strategy, targetOID?, targetClassName?, elapsedMs, message?, redaction? }",
+            providedCapabilities: ["select-segment", "semantic-action"]
+        ),
+        TKCommandSchema(
+            name: "set-switch",
+            summary: "Resolve a selector and set or toggle a switch through the embedded runtime",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible option title to target"),
+                TKCommandSchemaOption(name: "<value>", type: "on|off|toggle", description: "Switch state to apply"),
+                target,
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton set-switch \"记住我\" on --json", "triton set-switch \"Notifications\" toggle --json"],
+            successShape: "{ ok, action, strategy, targetOID?, targetClassName?, elapsedMs, message?, redaction? }",
+            providedCapabilities: ["set-switch", "semantic-action"]
+        ),
+        TKCommandSchema(
+            name: "ledger",
+            summary: "Read recent embedded runtime request/action ledger",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText + ["jsonl"],
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--limit", type: "Int", defaultValue: "50", description: "Maximum entries to return"),
+                TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines entries instead of envelope"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton ledger --limit 50 --jsonl", "triton ledger --limit 50 --json"],
+            successShape: "{ ok, entries[], limit, count, maxEntries } or JSONL TKRuntimeLedgerEntry",
+            providedCapabilities: ["ledger"]
         ),
         TKCommandSchema(
             name: "device",

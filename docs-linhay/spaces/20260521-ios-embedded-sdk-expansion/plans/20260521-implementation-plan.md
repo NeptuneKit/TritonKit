@@ -24,7 +24,7 @@
 
 ### 第一轮落地范围
 
-第一轮只做 S0 到 S3 的最小闭环，目标是让 AI 能稳定完成真实表单页操作：
+第一轮推进到 S4 的最小闭环，目标是让 AI 能稳定完成真实表单页操作，并能复盘最近一次失败链路：
 
 1. `runtime manifest`
 2. `capabilities/schema` 增强
@@ -155,6 +155,8 @@ docs-linhay/scripts/check-docs.sh
 
 ```bash
 swift test
+swift build --product triton
+docs-linhay/scripts/verify-intent-cli-smoke.sh
 docs-linhay/scripts/verify-complex-harness.sh
 docs-linhay/scripts/verify.sh --local
 ```

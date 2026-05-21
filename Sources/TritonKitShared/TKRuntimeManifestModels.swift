@@ -1,5 +1,45 @@
 import Foundation
 
+public enum TKRuntimeCapabilityName: String, Codable, CaseIterable {
+    case runtimeManifest = "runtime.manifest"
+    case stateApp = "state.app"
+    case stateScene = "state.scene"
+    case stateRoute = "state.route"
+    case stateResponder = "state.responder"
+    case snapshot
+    case semanticFocus = "semantic.focus"
+    case semanticSetText = "semantic.set-text"
+    case semanticSelectSegment = "semantic.select-segment"
+    case semanticSetSwitch = "semantic.set-switch"
+    case ledger
+    case appInfo = "app.info"
+    case hierarchy
+    case accessibility
+    case geometry
+    case hitTest = "hit-test"
+    case screenshot
+    case inputTap = "input.tap"
+    case inputSwipe = "input.swipe"
+    case inputType = "input.type"
+    case inputPaste = "input.paste"
+    case inputClear = "input.clear"
+    case press
+    case systemAlerts = "system-alerts"
+    case networkBreadcrumbs = "network-breadcrumbs"
+}
+
+public enum TKRuntimeCapabilityScope: String, Codable {
+    case embedded
+    case hostSide = "host-side"
+    case optInProvider = "opt-in-provider"
+}
+
+public enum TKRuntimeCapabilityBoundary: String, Codable {
+    case appProcess = "app-process"
+    case simulatorHost = "simulator-host"
+    case businessOptIn = "business-opt-in"
+}
+
 public struct TKRuntimeCapabilityDetail: Codable, Equatable {
     public let name: String
     public let supported: Bool
@@ -22,6 +62,24 @@ public struct TKRuntimeCapabilityDetail: Codable, Equatable {
         self.boundary = boundary
         self.reason = reason
         self.nextAction = nextAction
+    }
+
+    public init(
+        name: TKRuntimeCapabilityName,
+        supported: Bool,
+        scope: TKRuntimeCapabilityScope,
+        boundary: TKRuntimeCapabilityBoundary,
+        reason: String? = nil,
+        nextAction: TKCLINextAction? = nil
+    ) {
+        self.init(
+            name: name.rawValue,
+            supported: supported,
+            scope: scope.rawValue,
+            boundary: boundary.rawValue,
+            reason: reason,
+            nextAction: nextAction
+        )
     }
 }
 
@@ -131,41 +189,47 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
     }
 
     public static let defaultDebugCapabilities: [TKRuntimeCapabilityDetail] = [
-        TKRuntimeCapabilityDetail(name: "runtime.manifest", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "state.app", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "state.scene", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "state.route", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "state.responder", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "app.info", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "hierarchy", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "accessibility", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "geometry", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "hit-test", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "screenshot", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "input.tap", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "input.swipe", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "input.type", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "input.paste", supported: true, scope: "embedded", boundary: "app-process"),
-        TKRuntimeCapabilityDetail(name: "input.clear", supported: true, scope: "embedded", boundary: "app-process"),
+        TKRuntimeCapabilityDetail(name: .runtimeManifest, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .stateApp, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .stateScene, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .stateRoute, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .stateResponder, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .snapshot, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .semanticFocus, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .semanticSetText, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .semanticSelectSegment, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .semanticSetSwitch, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .ledger, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .appInfo, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .hierarchy, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .accessibility, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .geometry, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .hitTest, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .screenshot, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .inputTap, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .inputSwipe, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .inputType, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .inputPaste, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .inputClear, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(
-            name: "press",
+            name: .press,
             supported: false,
-            scope: "host-side",
-            boundary: "simulator-host",
+            scope: .hostSide,
+            boundary: .simulatorHost,
             reason: "Host-side HID is not available in the embedded runtime"
         ),
         TKRuntimeCapabilityDetail(
-            name: "system-alerts",
+            name: .systemAlerts,
             supported: false,
-            scope: "host-side",
-            boundary: "simulator-host",
+            scope: .hostSide,
+            boundary: .simulatorHost,
             reason: "SpringBoard and CoreSimulatorBridge UI are outside the embedded app process"
         ),
         TKRuntimeCapabilityDetail(
-            name: "network-breadcrumbs",
+            name: .networkBreadcrumbs,
             supported: false,
-            scope: "opt-in-provider",
-            boundary: "business-opt-in",
+            scope: .optInProvider,
+            boundary: .businessOptIn,
             reason: "Network breadcrumbs require explicit app integration and redaction"
         ),
     ]

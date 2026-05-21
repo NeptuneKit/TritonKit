@@ -32,7 +32,12 @@ public class TritonKitRequestHandler: TritonKitDelegate {
                 payload: try? JSONEncoder().encode(TKErrorPayload(message: "TritonKit runtime is disabled outside DEBUG builds")))
         }
         self.kit = kit
-        return await handle(message)
+        let startedAt = Date()
+        let response = await handle(message)
+        if message.type != .runtimeLedger {
+            recordRuntimeLedger(message: message, response: response, elapsedMs: elapsedMilliseconds(since: startedAt))
+        }
+        return response
     }
 
     // MARK: - Message Routing
@@ -110,6 +115,51 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             )
             #endif
             return TKMessage(id: msg.id, type: .stateResponder, payload: try? JSONEncoder().encode(state))
+
+        case .runtimeSnapshot:
+            let request = msg.payload.flatMap { try? JSONDecoder().decode(TKRuntimeSnapshotRequest.self, from: $0) } ?? TKRuntimeSnapshotRequest()
+            #if canImport(UIKit)
+            let snapshot = await MainActor.run { currentRuntimeSnapshot(request) }
+            #else
+            let snapshot = TKRuntimeSnapshotResponse(
+                capturedAt: currentStateTimestamp(),
+                include: request.include,
+                skipped: request.include.map { TKRuntimeSnapshotSkipped(name: $0, reason: "Runtime snapshot requires UIKit runtime") }
+            )
+            #endif
+            return TKMessage(id: msg.id, type: .runtimeSnapshot, payload: try? JSONEncoder().encode(snapshot))
+
+        case .semanticAction:
+            guard let data = msg.payload,
+                  let request = try? JSONDecoder().decode(TKSemanticActionRequest.self, from: data) else {
+                let result = TKSemanticActionResponse(
+                    ok: false,
+                    action: .focus,
+                    strategy: "invalid-payload",
+                    elapsedMs: 0,
+                    message: "Missing or invalid semantic action payload",
+                    error: TKCLIErrorDetail(code: "invalid_payload", message: "Missing or invalid semantic action payload")
+                )
+                return TKMessage(id: msg.id, type: .semanticAction, payload: try? JSONEncoder().encode(result))
+            }
+            #if canImport(UIKit)
+            let result = await MainActor.run { performSemanticAction(request) }
+            #else
+            let result = TKSemanticActionResponse(
+                ok: false,
+                action: request.action,
+                strategy: request.strategy ?? "unsupported-runtime",
+                elapsedMs: 0,
+                message: "Semantic actions require UIKit runtime",
+                error: TKCLIErrorDetail(code: "unsupported_runtime_scope", message: "Semantic actions require UIKit runtime")
+            )
+            #endif
+            return TKMessage(id: msg.id, type: .semanticAction, payload: try? JSONEncoder().encode(result))
+
+        case .runtimeLedger:
+            let request = msg.payload.flatMap { try? JSONDecoder().decode(TKRuntimeLedgerRequest.self, from: $0) } ?? TKRuntimeLedgerRequest()
+            let response = runtimeLedgerStore.response(limit: request.limit)
+            return TKMessage(id: msg.id, type: .runtimeLedger, payload: try? JSONEncoder().encode(response))
 
         case .hierarchy:
             let items = await TKHierarchyBuilder.buildHierarchy()
@@ -327,7 +377,7 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             payload: try? JSONEncoder().encode(TKErrorPayload(message: message)))
     }
 
-    private func classChain(for object: AnyObject) -> [String] {
+private func classChain(for object: AnyObject) -> [String] {
         var chain: [String] = []
         var cls: AnyClass = type(of: object)
         while true {
@@ -337,6 +387,123 @@ public class TritonKitRequestHandler: TritonKitDelegate {
         }
         return chain
     }
+}
+
+private let runtimeLedgerStore = RuntimeLedgerStore(maxEntries: 100)
+
+private final class RuntimeLedgerStore: @unchecked Sendable {
+    private let lock = NSLock()
+    private let maxEntries: Int
+    private var nextID = 1
+    private var entries: [TKRuntimeLedgerEntry] = []
+
+    init(maxEntries: Int) {
+        self.maxEntries = maxEntries
+    }
+
+    func append(_ entry: TKRuntimeLedgerEntry) {
+        lock.withLock {
+            entries.append(entry)
+            if entries.count > maxEntries {
+                entries.removeFirst(entries.count - maxEntries)
+            }
+        }
+    }
+
+    func nextEntryID() -> Int {
+        lock.withLock {
+            defer { nextID += 1 }
+            return nextID
+        }
+    }
+
+    func response(limit: Int) -> TKRuntimeLedgerResponse {
+        let boundedLimit = max(0, min(limit, maxEntries))
+        return lock.withLock {
+            TKRuntimeLedgerResponse(
+                entries: Array(entries.suffix(boundedLimit)),
+                limit: boundedLimit,
+                maxEntries: maxEntries
+            )
+        }
+    }
+}
+
+private func recordRuntimeLedger(message: TKMessage, response: TKMessage?, elapsedMs: Int) {
+    let details = runtimeLedgerDetails(message: message, response: response)
+    runtimeLedgerStore.append(TKRuntimeLedgerEntry(
+        id: runtimeLedgerStore.nextEntryID(),
+        timestamp: currentStateTimestamp(),
+        source: details.source,
+        requestType: message.type.rawValue,
+        action: details.action,
+        ok: details.ok,
+        elapsedMs: elapsedMs,
+        errorCode: details.errorCode,
+        message: details.message,
+        redaction: details.redaction
+    ))
+}
+
+private func runtimeLedgerDetails(
+    message: TKMessage,
+    response: TKMessage?
+) -> (source: String, action: String?, ok: Bool, errorCode: String?, message: String?, redaction: TKSemanticActionRedaction?) {
+    var source = "cli"
+    var action: String?
+    var redaction: TKSemanticActionRedaction?
+
+    if message.type == .semanticAction,
+       let payload = message.payload,
+       let request = try? JSONDecoder().decode(TKSemanticActionRequest.self, from: payload) {
+        source = request.sourceCommand ?? "cli"
+        action = request.action.rawValue
+        if request.secure == true {
+            redaction = TKSemanticActionRedaction(secure: true, text: "length-only", insertedLength: request.text?.count)
+        }
+    } else if message.type == .input,
+              let payload = message.payload,
+              let request = try? JSONDecoder().decode(TKInputRequest.self, from: payload) {
+        action = request.type.rawValue
+        if request.secure == true {
+            redaction = TKSemanticActionRedaction(secure: true, text: "length-only", insertedLength: request.text?.count)
+        }
+    }
+
+    guard let payload = response?.payload else {
+        return (source, action, false, "missing_response", "Runtime did not produce a response", redaction)
+    }
+    if let semantic = try? JSONDecoder().decode(TKSemanticActionResponse.self, from: payload) {
+        return (
+            source,
+            semantic.action.rawValue,
+            semantic.ok,
+            semantic.error?.code,
+            semantic.message,
+            semantic.redaction ?? redaction
+        )
+    }
+    if let input = try? JSONDecoder().decode(TKInputResult.self, from: payload) {
+        return (
+            source,
+            input.action,
+            input.ok,
+            input.ok ? nil : "action_failed",
+            input.message,
+            input.redacted == true ? TKSemanticActionRedaction(secure: input.secure == true, text: "length-only", insertedLength: input.insertedLength) : redaction
+        )
+    }
+    if let object = try? JSONSerialization.jsonObject(with: payload) as? [String: Any] {
+        let ok = object["ok"] as? Bool ?? true
+        let message = object["message"] as? String
+        let errorCode = (object["error"] as? [String: Any])?["code"] as? String
+        return (source, action, ok, errorCode, message, redaction)
+    }
+    return (source, action, true, nil, nil, redaction)
+}
+
+private func elapsedMilliseconds(since start: Date) -> Int {
+    max(0, Int(Date().timeIntervalSince(start) * 1000))
 }
 
 #if canImport(UIKit)
@@ -719,6 +886,181 @@ private func nearestTextInputResponder(from view: UIView) -> UIResponder? {
     return nil
 }
 
+@MainActor
+private func performSemanticAction(_ request: TKSemanticActionRequest) -> TKSemanticActionResponse {
+    let startedAt = Date()
+
+    func success(
+        strategy: String,
+        targetOID: UInt?,
+        targetClassName: String?,
+        message: String?,
+        redaction: TKSemanticActionRedaction? = nil
+    ) -> TKSemanticActionResponse {
+        TKSemanticActionResponse(
+            ok: true,
+            action: request.action,
+            strategy: strategy,
+            targetOID: targetOID,
+            targetClassName: targetClassName,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            message: message,
+            redaction: redaction
+        )
+    }
+
+    func failure(
+        code: String,
+        message: String,
+        strategy: String? = nil,
+        targetOID: UInt? = nil,
+        targetClassName: String? = nil,
+        redaction: TKSemanticActionRedaction? = nil
+    ) -> TKSemanticActionResponse {
+        TKSemanticActionResponse(
+            ok: false,
+            action: request.action,
+            strategy: strategy ?? request.strategy ?? "runtime",
+            targetOID: targetOID,
+            targetClassName: targetClassName,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            message: message,
+            error: TKCLIErrorDetail(code: code, message: message),
+            redaction: redaction
+        )
+    }
+
+    switch request.action {
+    case .focus:
+        let input = TKInputRequest.tap(x: request.x, y: request.y, targetOID: request.targetOID)
+        let resolved = resolveTextInputResponder(input)
+        guard let responder = resolved.responder else {
+            return failure(code: "action_not_supported", message: resolved.message)
+        }
+        responder.becomeFirstResponder()
+        return success(
+            strategy: request.strategy ?? "focus-responder",
+            targetOID: oid(for: responder),
+            targetClassName: NSStringFromClass(type(of: responder)),
+            message: "Focused text input responder"
+        )
+
+    case .setText:
+        guard let text = request.text else {
+            return failure(code: "invalid_payload", message: "Missing text")
+        }
+        let input = TKInputRequest(type: .typeText, targetOID: request.targetOID, x: request.x, y: request.y, text: text, secure: request.secure)
+        let clear = performClear(TKInputRequest.clear(targetOID: request.targetOID, x: request.x, y: request.y))
+        guard clear.ok else {
+            return failure(
+                code: "action_not_supported",
+                message: clear.message ?? "Could not clear text",
+                targetOID: clear.targetOID,
+                targetClassName: clear.targetClassName,
+                redaction: semanticRedaction(secure: request.secure == true, length: text.count)
+            )
+        }
+        let inserted = performExactTextInsertion(input)
+        guard inserted.ok else {
+            return failure(
+                code: "action_not_supported",
+                message: inserted.message ?? "Could not set text",
+                targetOID: inserted.targetOID,
+                targetClassName: inserted.targetClassName,
+                redaction: semanticRedaction(secure: request.secure == true, length: text.count)
+            )
+        }
+        return success(
+            strategy: request.strategy ?? "set-text-ui-key-input",
+            targetOID: inserted.targetOID,
+            targetClassName: inserted.targetClassName,
+            message: request.secure == true ? "Set redacted text" : "Set text",
+            redaction: semanticRedaction(secure: request.secure == true, length: text.count)
+        )
+
+    case .selectSegment:
+        guard let segmented = resolveControl(request, as: UISegmentedControl.self) else {
+            return failure(code: "action_not_supported", message: "Target is not a UISegmentedControl")
+        }
+        let index: Int?
+        if let segmentIndex = request.segmentIndex {
+            index = segmentIndex
+        } else if let title = request.segmentTitle {
+            index = (0..<segmented.numberOfSegments).first { segmented.titleForSegment(at: $0) == title }
+        } else {
+            index = nil
+        }
+        guard let index, index >= 0, index < segmented.numberOfSegments else {
+            return failure(
+                code: "ambiguous_target",
+                message: "Segment title or index did not match",
+                targetOID: oid(for: segmented),
+                targetClassName: NSStringFromClass(type(of: segmented))
+            )
+        }
+        segmented.selectedSegmentIndex = index
+        dispatchValueChangedActions(for: segmented)
+        return success(
+            strategy: request.strategy ?? "segmented-control",
+            targetOID: oid(for: segmented),
+            targetClassName: NSStringFromClass(type(of: segmented)),
+            message: "Selected segment index \(index)"
+        )
+
+    case .setSwitch:
+        guard let toggle = resolveControl(request, as: UISwitch.self) else {
+            return failure(code: "action_not_supported", message: "Target is not a UISwitch")
+        }
+        let nextValue: Bool
+        switch request.switchValue?.lowercased() {
+        case "on", "true", "1":
+            nextValue = true
+        case "off", "false", "0":
+            nextValue = false
+        case "toggle", nil:
+            nextValue = !toggle.isOn
+        default:
+            return failure(
+                code: "invalid_payload",
+                message: "Switch value must be on, off, or toggle",
+                targetOID: oid(for: toggle),
+                targetClassName: NSStringFromClass(type(of: toggle))
+            )
+        }
+        toggle.setOn(nextValue, animated: false)
+        toggle.sendActions(for: .valueChanged)
+        return success(
+            strategy: request.strategy ?? "switch-value",
+            targetOID: oid(for: toggle),
+            targetClassName: NSStringFromClass(type(of: toggle)),
+            message: nextValue ? "Set switch on" : "Set switch off"
+        )
+    }
+}
+
+@MainActor
+private func resolveControl<T: UIControl>(_ request: TKSemanticActionRequest, as type: T.Type) -> T? {
+    if let targetOID = request.targetOID {
+        if let direct = TKObjectRegistry.shared.object(for: targetOID) as? T {
+            return direct
+        }
+        if let view = TKObjectRegistry.shared.object(for: targetOID) as? UIView {
+            return nearestSuperview(of: view, matching: type)
+        }
+    }
+    let resolved = resolveView(targetOID: request.targetOID, x: request.x, y: request.y)
+    guard let view = resolved.view else { return nil }
+    return nearestSuperview(of: view, matching: type)
+}
+
+private func semanticRedaction(secure: Bool, length: Int?) -> TKSemanticActionRedaction {
+    TKSemanticActionRedaction(
+        secure: secure,
+        text: secure ? "length-only" : "not-collected",
+        insertedLength: length
+    )
+}
+
 private func notifyTextDidChange(for responder: UIResponder) {
     if let textField = responder as? UITextField {
         textField.sendActions(for: .editingChanged)
@@ -902,6 +1244,122 @@ private func runtimeWindowState(_ window: UIWindow, id: String) -> TKRuntimeWind
             right: Double(window.safeAreaInsets.right)
         ),
         rootViewControllerClass: window.rootViewController.map { NSStringFromClass(type(of: $0)) }
+    )
+}
+
+@MainActor
+private func currentRuntimeSnapshot(_ request: TKRuntimeSnapshotRequest) -> TKRuntimeSnapshotResponse {
+    let capturedAt = currentStateTimestamp()
+    let include = request.include.isEmpty ? ["app", "scene", "route", "ax", "geometry"] : request.include
+    let requested = Set(include.map { $0.lowercased() })
+    var artifacts: [TKRuntimeSnapshotArtifact] = []
+    var skipped: [TKRuntimeSnapshotSkipped] = []
+    var truncation = TKRuntimeSnapshotTruncation()
+
+    func includes(_ name: String) -> Bool {
+        requested.contains(name) || requested.contains("ui") && ["ax", "hierarchy"].contains(name)
+    }
+    func artifact(_ name: String) {
+        artifacts.append(TKRuntimeSnapshotArtifact(name: name, capturedAt: capturedAt, freshness: "fresh"))
+    }
+
+    let app: TKRuntimeAppState?
+    if includes("app") {
+        app = currentAppState().app
+        artifact("app")
+    } else {
+        app = nil
+        skipped.append(TKRuntimeSnapshotSkipped(name: "app", reason: "not requested"))
+    }
+
+    let scene: TKRuntimeSceneStateResponse?
+    if includes("scene") {
+        scene = currentSceneState()
+        artifact("scene")
+    } else {
+        scene = nil
+        skipped.append(TKRuntimeSnapshotSkipped(name: "scene", reason: "not requested"))
+    }
+
+    let route: TKRuntimeRouteStateResponse?
+    if includes("route") {
+        route = currentRouteState()
+        artifact("route")
+    } else {
+        route = nil
+        skipped.append(TKRuntimeSnapshotSkipped(name: "route", reason: "not requested"))
+    }
+
+    let responder: TKRuntimeResponderStateResponse?
+    if includes("responder") {
+        responder = currentResponderState()
+        artifact("responder")
+    } else {
+        responder = nil
+    }
+
+    let geometry: TKGeometryResponse?
+    if includes("geometry") {
+        geometry = currentGeometry()
+        artifact("geometry")
+    } else {
+        geometry = nil
+        skipped.append(TKRuntimeSnapshotSkipped(name: "geometry", reason: "not requested"))
+    }
+
+    let ax: [TKAXNode]?
+    if includes("ax") || includes("accessibility") {
+        let maxNodes = max(1, request.maxAXNodes ?? 800)
+        var context = AXBuildContext(maxNodes: maxNodes)
+        let nodes = keyWindows().map { window in
+            buildAXWindowNode(for: window, context: &context)
+        }
+        ax = nodes
+        if context.remaining == 0 {
+            truncation = TKRuntimeSnapshotTruncation(
+                truncated: true,
+                reason: "maxAXNodes reached",
+                originalCount: nil,
+                returnedCount: maxNodes
+            )
+        }
+        artifact("ax")
+    } else {
+        ax = nil
+        skipped.append(TKRuntimeSnapshotSkipped(name: "ax", reason: "not requested"))
+    }
+
+    let screenshot: TKRuntimeScreenshotMetadata?
+    if includes("screenshot-metadata") || includes("screenshot") {
+        if let window = keyWindows().first {
+            screenshot = TKRuntimeScreenshotMetadata(
+                format: "png",
+                width: Double(window.bounds.width),
+                height: Double(window.bounds.height),
+                scale: Double(window.screen.scale)
+            )
+            artifact("screenshot-metadata")
+        } else {
+            screenshot = nil
+            skipped.append(TKRuntimeSnapshotSkipped(name: "screenshot-metadata", reason: "no key window"))
+        }
+    } else {
+        screenshot = nil
+    }
+
+    return TKRuntimeSnapshotResponse(
+        capturedAt: capturedAt,
+        include: include,
+        app: app,
+        scene: scene,
+        route: route,
+        responder: responder,
+        geometry: geometry,
+        ax: ax,
+        screenshot: screenshot,
+        artifacts: artifacts,
+        skipped: skipped,
+        truncation: truncation
     )
 }
 

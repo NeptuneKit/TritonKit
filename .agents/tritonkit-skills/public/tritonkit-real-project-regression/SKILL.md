@@ -38,6 +38,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton state scene --json`
    - `triton state route --json`
    - `triton state responder --json`
+   - `triton snapshot --include app,scene,route,ax,geometry --json`
+   - `triton ledger --limit 50 --jsonl`
 7. Prepare host-side simulator state through Triton before falling back to raw `xcrun`:
    - list simulators: `triton sim list --json`;
    - set a workspace default simulator when a flow will be reused: `triton sim use <udid> --json`;
@@ -52,7 +54,17 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - verify App preferences: `triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
    - capture host-side framebuffer: `triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json`;
    - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`.
-8. For HarmonyOS NEXT / DevEco Emulator validation, use Triton host-side device discovery before raw `hdc`:
+8. Prepare Xcode build/test/run through Triton before falling back to XcodeBuildMCP or raw `xcodebuild`:
+   - discover project containers: `triton xcode discover --path <repo> --json`;
+   - set reusable defaults: `triton xcode use --workspace <workspace>|--project <project> --scheme <scheme> --configuration Debug --simulator <udid> --json`;
+   - list schemes: `triton xcode schemes --json`;
+   - inspect app product settings: `triton xcode settings --json`;
+   - build: `triton xcode build --jsonl`;
+   - test: `triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl`;
+   - build/install/launch: `triton xcode run --jsonl`;
+   - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
+   - use XcodeBuildMCP only as a temporary fallback when `triton schema --command xcode --json` does not expose the needed capability.
+9. For HarmonyOS NEXT / DevEco Emulator validation, use Triton host-side device discovery before raw `hdc`:
    - probe tools: `triton device doctor --platform harmony --json`;
    - list HDC targets: `triton device list --platform harmony --json`;
    - wait for boot readiness: `triton device wait-ready --platform harmony --target <hdc-target> --json`;
@@ -64,7 +76,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
      - template: `references/templates/empty-ability-app/`;
      - stable UI signals: `Harmony Smoke Ready`, `smoke-title`, `smoke-counter`, `smoke-increment`;
      - validation path: `ohpm install`, `hvigorw --mode module -p module=entry@default assembleHap`, HDC install/start, `uitest dumpLayout`, and `uitest screenCap`.
-9. Run observation before action:
+10. Run observation before action:
    - prefer one-shot regression capture when a full report is needed: `triton capture --case <case> --output /tmp/<case>.tritonevidence --json`.
    - prefer one-shot evidence when a report or issue needs attachable proof: `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`.
    - inspect an existing bundle without reconnecting runtime: `triton evidence inspect /tmp/<case>.tritonevidence --json`.
@@ -72,12 +84,13 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton ax --json`
    - `triton screenshot --json --output <path>`
    - `triton export --format archive --output <path>`
-10. Execute the smallest user-flow regression with machine-readable commands:
+11. Execute the smallest user-flow regression with machine-readable commands:
    - if the flow will be reused, first create or update a `.tritonplan`; use `triton record --output <file.tritonplan> --json` only as an editable starter template, not as proof that live recording happened;
    - inspect reusable flows with `triton plan inspect <file.tritonplan> --json`;
    - dry-run reusable flows before touching the app: `triton replay <file.tritonplan> --dry-run --var key=value --var secret-env=ENV --json`;
    - replay committed flows with `triton replay <file.tritonplan> --json`, keeping secure values in environment variables and using `--var <name>-env=<ENV>`;
    - prefer action commands that are already machine-readable by default: `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, `triton clear`; use `--format text` only for human-readable debugging;
+   - for form flows, prefer semantic embedded actions over a `tap` plus `type` chain: `triton focus "用户名" --json`, `triton set-text "用户名" "alice" --json`, `triton set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton select-segment "协议" "HTTP" --json`, `triton set-switch "记住我" on --json`;
    - when labels repeat, run `triton find "<text>" --all`; if a known point lies inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise choose `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`;
    - keep `triton type --text <text>` only for compatibility with older scripts, never together with positional `<text>`;
    - keep `triton press --button <button>` only for compatibility with older scripts; prefer positional `triton press <button>`;
@@ -85,8 +98,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
    - use `triton assert text-exists|text-not-exists <text> --json` for final pass/fail checks; add `--within x,y,width,height`, `--role`, or `--count` when labels repeat across headers, sidebars, and cells;
    - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, archive check, or a fresh `evidence` bundle.
-11. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
-12. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly.
+12. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
+13. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly.
 
 ## iOS App Integration Guide
 

@@ -10,16 +10,16 @@ struct TKRuntimeManifestModelsTests {
             sdkVersion: "0.1.1",
             capabilities: [
                 TKRuntimeCapabilityDetail(
-                    name: "state.app",
+                    name: .stateApp,
                     supported: true,
-                    scope: "embedded",
-                    boundary: "app-process"
+                    scope: .embedded,
+                    boundary: .appProcess
                 ),
                 TKRuntimeCapabilityDetail(
-                    name: "press",
+                    name: .press,
                     supported: false,
-                    scope: "host-side",
-                    boundary: "simulator-host",
+                    scope: .hostSide,
+                    boundary: .simulatorHost,
                     reason: "Host-side HID is not available in the embedded runtime",
                     nextAction: TKCLINextAction(command: "sim", args: ["<host-side-button-command>"])
                 ),
@@ -44,6 +44,35 @@ struct TKRuntimeManifestModelsTests {
         #expect(decoded.capabilities.first?.boundary == "app-process")
         #expect(decoded.capabilities.last?.supported == false)
         #expect(decoded.capabilities.last?.nextAction?.command == "sim")
+    }
+
+    @Test("typed runtime capability detail preserves wire strings")
+    func typedCapabilityWireShape() throws {
+        let capability = TKRuntimeCapabilityDetail(
+            name: .ledger,
+            supported: true,
+            scope: .embedded,
+            boundary: .appProcess
+        )
+
+        let data = try JSONEncoder().encode(capability)
+        let decoded = try JSONDecoder().decode(TKRuntimeCapabilityDetail.self, from: data)
+
+        #expect(decoded.name == "ledger")
+        #expect(decoded.scope == "embedded")
+        #expect(decoded.boundary == "app-process")
+    }
+
+    @Test("default debug capabilities are named from the shared capability catalog")
+    func defaultDebugCapabilityNames() {
+        let names = Set(TKRuntimeManifestResponse.defaultDebugCapabilities.map(\.name))
+
+        #expect(names.contains(TKRuntimeCapabilityName.snapshot.rawValue))
+        #expect(names.contains(TKRuntimeCapabilityName.semanticFocus.rawValue))
+        #expect(names.contains(TKRuntimeCapabilityName.semanticSetText.rawValue))
+        #expect(names.contains(TKRuntimeCapabilityName.semanticSelectSegment.rawValue))
+        #expect(names.contains(TKRuntimeCapabilityName.semanticSetSwitch.rawValue))
+        #expect(names.contains(TKRuntimeCapabilityName.ledger.rawValue))
     }
 
     @Test("release runtime manifest is disabled no-op surface")

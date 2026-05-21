@@ -67,6 +67,21 @@ ax_nodes = [
         "children": [],
     },
     {
+        "role": "secureTextField",
+        "label": "密码",
+        "value": "",
+        "identifier": None,
+        "title": None,
+        "frame": {"x": 116, "y": 249, "width": 254, "height": 34},
+        "enabled": True,
+        "focused": False,
+        "hidden": False,
+        "targetOID": 78,
+        "viewOID": 78,
+        "className": "UITextField",
+        "children": [],
+    },
+    {
         "role": "textField",
         "label": "协议",
         "value": "HTTPS",
@@ -79,6 +94,21 @@ ax_nodes = [
         "targetOID": 88,
         "viewOID": 88,
         "className": "UITextField",
+        "children": [],
+    },
+    {
+        "role": "switch",
+        "label": "记住我",
+        "value": "0",
+        "identifier": "remember.switch",
+        "title": None,
+        "frame": {"x": 298, "y": 522, "width": 52, "height": 32},
+        "enabled": True,
+        "focused": False,
+        "hidden": False,
+        "targetOID": 89,
+        "viewOID": 89,
+        "className": "UISwitch",
         "children": [],
     },
     {
@@ -220,6 +250,12 @@ class Handler(BaseHTTPRequestHandler):
                     {"name": "state.scene", "supported": True, "scope": "embedded", "boundary": "app-process"},
                     {"name": "state.route", "supported": True, "scope": "embedded", "boundary": "app-process"},
                     {"name": "state.responder", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "snapshot", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "semantic.focus", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "semantic.set-text", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "semantic.select-segment", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "semantic.set-switch", "supported": True, "scope": "embedded", "boundary": "app-process"},
+                    {"name": "ledger", "supported": True, "scope": "embedded", "boundary": "app-process"},
                     {"name": "press", "supported": False, "scope": "host-side", "boundary": "simulator-host", "reason": "Host-side HID is not available in the embedded runtime"},
                 ],
                 "limits": {"maxSnapshotBytes": 1048576, "maxAXNodes": 800, "maxLedgerEntries": 100},
@@ -322,6 +358,56 @@ class Handler(BaseHTTPRequestHandler):
                 "warnings": [],
                 "unsupported": [],
             })
+        elif request_type == "runtimeSnapshot":
+            self.send_json(200, {
+                "ok": True,
+                "capturedAt": "2026-05-21T12:00:01Z",
+                "runtime": "embedded",
+                "targetConnectionState": "connected",
+                "include": ["app", "scene", "route", "ax", "geometry"],
+                "app": {
+                    "bundleIdentifier": "dev.triton.intent-smoke",
+                    "displayName": "Intent Smoke",
+                    "version": "1.0",
+                    "build": "42",
+                    "localeIdentifier": "en_US",
+                    "preferredLanguages": ["en-US"],
+                    "preferredContentSizeCategory": "UICTContentSizeCategoryM",
+                    "userInterfaceStyle": "light",
+                    "processUptimeSeconds": 12.5,
+                    "sceneCount": 1,
+                    "windowCount": 1,
+                },
+                "scene": {
+                    "ok": True,
+                    "capturedAt": "2026-05-21T12:00:01Z",
+                    "runtime": "embedded",
+                    "targetConnectionState": "connected",
+                    "scenes": [],
+                    "keyWindow": None,
+                    "warnings": [],
+                    "unsupported": [],
+                },
+                "route": {
+                    "ok": True,
+                    "capturedAt": "2026-05-21T12:00:01Z",
+                    "runtime": "embedded",
+                    "targetConnectionState": "connected",
+                    "rootController": {"className": "UITabBarController", "title": None, "oid": 1},
+                    "visibleController": {"className": "IntentSmoke.FormViewController", "title": "Form", "oid": 2},
+                    "presentedStack": [],
+                    "navigationStack": [],
+                    "tab": {"selectedIndex": 1, "selectedTitle": "Form", "tabs": ["Home", "Form"]},
+                    "swiftUIBoundary": False,
+                    "warnings": [],
+                    "unsupported": [],
+                },
+                "geometry": {"screen": {"x": 0, "y": 0, "width": 390, "height": 844}, "windows": []},
+                "ax": ax_nodes,
+                "artifacts": [{"name": "ax", "capturedAt": "2026-05-21T12:00:01Z", "freshness": "fresh"}],
+                "skipped": [],
+                "truncation": {"truncated": False, "reason": None, "originalCount": None, "returnedCount": None},
+            })
         elif request_type == "accessibility":
             self.send_json(200, ax_nodes)
         elif request_type == "hitTest":
@@ -418,6 +504,61 @@ class Handler(BaseHTTPRequestHandler):
                 })
             else:
                 self.send_json(422, {"ok": False, "action": "tap", "message": "unexpected input"})
+        elif request_type == "semanticAction":
+            payload = base64.b64decode(request.get("payload", ""))
+            action = json.loads(payload.decode())
+            semantic_action = action.get("action")
+            secure = bool(action.get("secure", False))
+            inserted_length = len(action.get("text") or "")
+            response = {
+                "ok": True,
+                "action": semantic_action,
+                "strategy": action.get("strategy") or "selector-coordinate",
+                "targetOID": action.get("targetOID"),
+                "targetClassName": "UITextField" if semantic_action in ("focus", "setText") else ("UISwitch" if semantic_action == "setSwitch" else "UISegmentedControl"),
+                "elapsedMs": 3,
+                "message": "mock semantic action dispatched",
+                "error": None,
+                "redaction": {
+                    "secure": secure,
+                    "text": "length-only" if secure else "not-collected",
+                    "insertedLength": inserted_length if semantic_action == "setText" else None,
+                },
+            }
+            self.send_json(200, response)
+        elif request_type == "runtimeLedger":
+            self.send_json(200, {
+                "ok": True,
+                "entries": [
+                    {
+                        "id": 3,
+                        "timestamp": "2026-05-21T12:00:04Z",
+                        "source": "cli",
+                        "requestType": "semanticAction",
+                        "action": "setText",
+                        "ok": True,
+                        "elapsedMs": 3,
+                        "errorCode": None,
+                        "message": "mock semantic action dispatched",
+                        "redaction": {"secure": True, "text": "length-only", "insertedLength": 6},
+                    },
+                    {
+                        "id": 2,
+                        "timestamp": "2026-05-21T12:00:03Z",
+                        "source": "cli",
+                        "requestType": "runtimeSnapshot",
+                        "action": None,
+                        "ok": True,
+                        "elapsedMs": 5,
+                        "errorCode": None,
+                        "message": "snapshot returned",
+                        "redaction": None,
+                    },
+                ],
+                "limit": 50,
+                "count": 2,
+                "maxEntries": 100,
+            })
         else:
             self.send_json(400, {"ok": False, "error": {"code": "unsupported", "message": str(request_type)}})
 
@@ -447,6 +588,22 @@ jq -e '.ok == true and .scenes[0].activationState == "foregroundActive" and .key
 jq -e '.ok == true and .visibleController.className == "IntentSmoke.FormViewController" and .tab.selectedIndex == 1' "$out_dir/state-route.json" >/dev/null
 "$triton" state responder --host "$host" --port "$port" --json > "$out_dir/state-responder.json"
 jq -e '.ok == true and .firstResponder.className == "UITextField" and .firstResponder.isTextInput == true and .redaction.textContent == "not-collected"' "$out_dir/state-responder.json" >/dev/null
+
+"$triton" snapshot --include app,scene,route,ax,geometry --host "$host" --port "$port" --json > "$out_dir/snapshot.json"
+jq -e '.ok == true and .include == ["app","scene","route","ax","geometry"] and .app.bundleIdentifier == "dev.triton.intent-smoke" and (.ax | length) >= 7 and .truncation.truncated == false' "$out_dir/snapshot.json" >/dev/null
+
+"$triton" focus "名称" --host "$host" --port "$port" --json > "$out_dir/focus-name.json"
+jq -e '.ok == true and .action == "focus" and .targetClassName == "UITextField" and .strategy == "selector-coordinate"' "$out_dir/focus-name.json" >/dev/null
+"$triton" set-text "名称" "alice" --host "$host" --port "$port" --json > "$out_dir/set-text-name.json"
+jq -e '.ok == true and .action == "setText" and .redaction.secure == false and .redaction.insertedLength == 5' "$out_dir/set-text-name.json" >/dev/null
+"$triton" set-text "密码" "secret" --secure --host "$host" --port "$port" --json > "$out_dir/set-text-password-secure.json"
+jq -e '.ok == true and .action == "setText" and .redaction.secure == true and .redaction.text == "length-only" and .redaction.insertedLength == 6' "$out_dir/set-text-password-secure.json" >/dev/null
+"$triton" select-segment "协议" "HTTP" --host "$host" --port "$port" --json > "$out_dir/select-segment-protocol.json"
+jq -e '.ok == true and .action == "selectSegment" and .targetClassName == "UISegmentedControl"' "$out_dir/select-segment-protocol.json" >/dev/null
+"$triton" set-switch "记住我" on --host "$host" --port "$port" --json > "$out_dir/set-switch-remember.json"
+jq -e '.ok == true and .action == "setSwitch" and .targetClassName == "UISwitch"' "$out_dir/set-switch-remember.json" >/dev/null
+"$triton" ledger --limit 50 --host "$host" --port "$port" --jsonl > "$out_dir/ledger.jsonl"
+jq -s -e 'length == 2 and .[0].requestType == "semanticAction" and .[0].redaction.secure == true and .[1].requestType == "runtimeSnapshot"' "$out_dir/ledger.jsonl" >/dev/null
 
 "$triton" tap "HTTP" --host "$host" --port "$port" > "$out_dir/tap-http-omitted-target.json"
 jq -e '.ok == true and .targetOID == 42 and .targetClassName == "UISegmentedControl"' "$out_dir/tap-http-omitted-target.json" >/dev/null
@@ -517,12 +674,34 @@ jq -e '.commands[0].options[] | select(.name == "<button>")' "$out_dir/schema-pr
 jq -e '.commands[0].providedCapabilities[] == "runtime-manifest" and .commands[0].runtimeScope == "embedded"' "$out_dir/schema-runtime.json" >/dev/null
 "$triton" schema --command state > "$out_dir/schema-state.json"
 jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "state-route")) and (.commands[0].examples[] | select(. == "triton state responder --json"))' "$out_dir/schema-state.json" >/dev/null
+"$triton" schema --command snapshot > "$out_dir/schema-snapshot.json"
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "snapshot")) and (.commands[0].examples[] | select(. == "triton snapshot --include app,scene,route,ax,geometry --json"))' "$out_dir/schema-snapshot.json" >/dev/null
+"$triton" schema --command focus > "$out_dir/schema-focus.json"
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "focus")) and (.commands[0].options[] | select(.name == "<selector>"))' "$out_dir/schema-focus.json" >/dev/null
+"$triton" schema --command set-text > "$out_dir/schema-set-text.json"
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "set-text")) and (.commands[0].options[] | select(.name == "--secure"))' "$out_dir/schema-set-text.json" >/dev/null
+"$triton" schema --command select-segment > "$out_dir/schema-select-segment.json"
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "select-segment")) and (.commands[0].options[] | select(.name == "<value>"))' "$out_dir/schema-select-segment.json" >/dev/null
+"$triton" schema --command set-switch > "$out_dir/schema-set-switch.json"
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "set-switch")) and (.commands[0].options[] | select(.type == "on|off|toggle"))' "$out_dir/schema-set-switch.json" >/dev/null
+"$triton" schema --command ledger > "$out_dir/schema-ledger.json"
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "ledger")) and (.commands[0].outputFormats[] | select(. == "jsonl"))' "$out_dir/schema-ledger.json" >/dev/null
 
 jq -s -e '
   any(.[]; .type == "input"
     and ((.payload | @base64d | fromjson).type == "tap")
     and ((.payload | @base64d | fromjson).targetOID == 42)
   )
+' "$out_dir/mock-requests.ndjson" >/dev/null
+
+jq -s -e '
+  any(.[]; .type == "runtimeSnapshot")
+  and any(.[]; .type == "semanticAction"
+    and ((.payload | @base64d | fromjson).action == "setText")
+    and ((.payload | @base64d | fromjson).sourceCommand == "set-text")
+    and ((.payload | @base64d | fromjson).secure == true)
+  )
+  and any(.[]; .type == "runtimeLedger")
 ' "$out_dir/mock-requests.ndjson" >/dev/null
 
 cat <<REPORT
@@ -533,6 +712,13 @@ state-app: $out_dir/state-app.json
 state-scene: $out_dir/state-scene.json
 state-route: $out_dir/state-route.json
 state-responder: $out_dir/state-responder.json
+snapshot: $out_dir/snapshot.json
+focus-name: $out_dir/focus-name.json
+set-text-name: $out_dir/set-text-name.json
+set-text-password-secure: $out_dir/set-text-password-secure.json
+select-segment-protocol: $out_dir/select-segment-protocol.json
+set-switch-remember: $out_dir/set-switch-remember.json
+ledger-jsonl: $out_dir/ledger.jsonl
 tap-http-omitted-target: $out_dir/tap-http-omitted-target.json
 find-name-text-field: $out_dir/find-name-text-field.json
 find-https-visible-hierarchy: $out_dir/find-https-visible-hierarchy.json
@@ -554,5 +740,11 @@ schema-type-default: $out_dir/schema-type-default.json
 schema-press-positional: $out_dir/schema-press-positional.json
 schema-runtime: $out_dir/schema-runtime.json
 schema-state: $out_dir/schema-state.json
+schema-snapshot: $out_dir/schema-snapshot.json
+schema-focus: $out_dir/schema-focus.json
+schema-set-text: $out_dir/schema-set-text.json
+schema-select-segment: $out_dir/schema-select-segment.json
+schema-set-switch: $out_dir/schema-set-switch.json
+schema-ledger: $out_dir/schema-ledger.json
 requests: $out_dir/mock-requests.ndjson
 REPORT
