@@ -72,6 +72,19 @@ enum TritonKitDebugBootstrap {
 
 `start()` reads `TRITON_HOST` / `TRITON_PORT` and falls back to `127.0.0.1:19421`. Use `TritonKit.shared.start(.device("192.168.1.20", port: 19421))` when a physical device needs to connect to a Mac LAN address.
 
+Preferred facade APIs:
+
+| Need | API |
+| --- | --- |
+| Start with environment fallback | `TritonKit.shared.start()` |
+| Start with explicit local CLI port | `TritonKit.shared.start(.local(port: 19421))` |
+| Start from environment variables | `TritonKit.shared.start(.environment())` |
+| Start from a device to a Mac LAN address | `TritonKit.shared.start(.device("192.168.1.20", port: 19421))` |
+| Start with advanced options | `TritonKit.shared.start { config in ... }` |
+| Stop the debug runtime | `TritonKit.shared.stop()` |
+| Observe connection state | `TritonKit.shared.onStateChange { state in ... }` |
+| Observe connection errors | `TritonKit.shared.onError { error in ... }` |
+
 For advanced debug bootstrap code, keep the same file-level `#if DEBUG` guard and configure the facade in one closure:
 
 ```swift
@@ -92,17 +105,21 @@ Observe connection status without implementing a full delegate:
 #if DEBUG
 enum TritonKitDebugObservers {
     private static var stateToken: TritonKit.ObservationToken?
+    private static var errorToken: TritonKit.ObservationToken?
 
     static func start() {
         stateToken = TritonKit.shared.onStateChange { state in
             print("TritonKit state:", state)
+        }
+        errorToken = TritonKit.shared.onError { error in
+            print("TritonKit error:", error)
         }
     }
 }
 #endif
 ```
 
-`start` retains the default request handler internally; only use the lower-level `delegate` / `connect(host:port:)` API when you need a custom delegate or custom message routing.
+Retain observation tokens for as long as callbacks are needed, and call `cancel()` when an observer should be removed. `start` retains the default request handler internally; only use the lower-level `delegate` / `connect(host:port:)` API when you need a custom delegate or custom message routing.
 
 Then call it only from a Debug branch in the app bootstrap:
 
