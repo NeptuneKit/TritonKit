@@ -103,6 +103,8 @@ docs-linhay/scripts/release.sh 0.1.1
 6. 下载 release checksum，重新渲染并语法检查 Homebrew formula。
 7. 执行 `brew fetch --formula NeptuneKit/tap/triton` 验证 Homebrew 可获取。
 
+实现注意：发布脚本查找 tag 对应的 GitHub Actions run 时，必须从 `gh run list --json headBranch,url` 返回的 URL 字符串解析 run id。不要使用 `databaseId` 配合 `gh --template` 输出，因为 GitHub CLI 模板可能把大整数转成科学计数法，导致后续 `gh run view` 404。
+
 只检查发布前置条件时使用：
 
 ```bash

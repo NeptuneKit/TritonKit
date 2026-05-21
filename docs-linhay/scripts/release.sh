@@ -165,18 +165,22 @@ git push origin "${tag}"
 
 echo "Waiting for GitHub Actions run for ${tag}..."
 run_id=""
+run_url=""
 for _ in {1..60}; do
-  run_id="$(
+  run_url="$(
     gh run list \
       --repo "${repo}" \
       --workflow "${workflow_name}" \
       --event push \
       --branch "${tag}" \
       --limit 5 \
-      --json databaseId,headBranch \
-      --template '{{range .}}{{if eq .headBranch "'"${tag}"'"}}{{.databaseId}}{{"\n"}}{{end}}{{end}}' \
+      --json headBranch,url \
+      --jq '.[] | select(.headBranch == "'"${tag}"'") | .url' \
       | head -n 1
   )"
+  if [[ -n "${run_url}" ]]; then
+    run_id="${run_url##*/}"
+  fi
 
   if [[ -n "${run_id}" ]]; then
     break
@@ -187,7 +191,7 @@ done
 [[ -n "${run_id}" ]] || fail "could not find GitHub Actions run for ${tag}"
 
 if [[ -x "${root}/docs-linhay/scripts/gh-run-summary.sh" ]]; then
-  docs-linhay/scripts/gh-run-summary.sh --watch "${run_id}"
+  docs-linhay/scripts/gh-run-summary.sh --repo "${repo}" --watch "${run_id}"
 else
   gh run watch "${run_id}" --repo "${repo}" --exit-status
 fi

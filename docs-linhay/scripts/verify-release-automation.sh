@@ -17,6 +17,12 @@ grep -q 'TAP_GITHUB_TOKEN' "${release_script}" || fail "release script must chec
 grep -q 'NeptuneKit/homebrew-tap' "${release_script}" || fail "release script must check the default tap repo"
 grep -q 'git tag -a' "${release_script}" || fail "release script must create annotated version tags"
 grep -q 'gh run' "${release_script}" || fail "release script must observe GitHub Actions runs"
+grep -Fq -- '--json headBranch,url' "${release_script}" || fail "release script must resolve run ids from run URLs, not numeric databaseId templates"
+grep -Fq 'run_id="${run_url##*/}"' "${release_script}" || fail "release script must parse the run id from the run URL string"
+if grep -Fq -- '--json databaseId,headBranch' "${release_script}"; then
+  fail "release script must not render databaseId through gh templates because large ids can become scientific notation"
+fi
+grep -Fq 'gh-run-summary.sh --repo "${repo}" --watch "${run_id}"' "${release_script}" || fail "release script must pass the selected repo to gh-run-summary"
 grep -q 'brew fetch --formula' "${release_script}" || fail "release script must verify Homebrew fetch"
 
 if grep -q 'render-homebrew-formula.sh .*v0[.]1[.]0' "${ci_workflow}"; then

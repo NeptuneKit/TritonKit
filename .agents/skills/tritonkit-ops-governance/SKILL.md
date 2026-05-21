@@ -37,6 +37,7 @@ metadata:
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 入口是 `docs-linhay/scripts/verify.sh --ci-validate`。
 - GitHub issue / PR 评论若包含 Markdown 命令片段，必须通过文件传给 `gh --body-file`，优先使用 `docs-linhay/scripts/gh-issue-comment-file.sh`，避免 shell 执行反引号内容。
 - GitHub Actions 状态观察优先使用 `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`；失败后再拉完整日志，避免 `gh run watch` 重复输出淹没关键状态。
+- 发布脚本查找 GitHub Actions run 时必须从 `gh run list --json headBranch,url` 的 URL 字符串解析 run id；不要通过 `databaseId` + Go template 渲染大整数，避免被格式化成科学计数法后导致 `gh run view` 404。
 
 ## 文档与记忆
 
