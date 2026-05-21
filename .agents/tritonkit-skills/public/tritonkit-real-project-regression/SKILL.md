@@ -83,6 +83,74 @@ Real-project validation is not the same as demo smoke. Treat the business app as
 11. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
 12. If the real app exposes a missing TritonKit capability, unclear behavior, or bug, use `tritonkit-dev-feedback` and file/prepare the GitHub issue directly.
 
+## iOS App Integration Guide
+
+Use this exact shape when the real app needs TritonKit embedded runtime access.
+
+SwiftPM:
+
+```text
+https://github.com/NeptuneKit/TritonKit.git
+```
+
+Add the `TritonKit` product to the iOS app target. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the library's Release no-op behavior.
+
+CocoaPods during development:
+
+```ruby
+target 'YourApp' do
+  use_frameworks!
+
+  pod 'TritonKitShared',
+      :git => 'https://github.com/NeptuneKit/TritonKit.git',
+      :branch => 'main',
+      :configurations => ['Debug']
+  pod 'TritonKit',
+      :git => 'https://github.com/NeptuneKit/TritonKit.git',
+      :branch => 'main',
+      :configurations => ['Debug']
+end
+```
+
+Create a dedicated Debug bootstrap file:
+
+```swift
+// TritonKitDebugBootstrap.swift
+#if DEBUG
+import UIKit
+import TritonKit
+
+final class TritonKitDebugBootstrap {
+    static let shared = TritonKitDebugBootstrap()
+
+    private let tritonHandler = TritonKitRequestHandler()
+    private var didStart = false
+
+    private init() {}
+
+    func start() {
+        guard !didStart else { return }
+        didStart = true
+
+        let host = ProcessInfo.processInfo.environment["TRITON_HOST"] ?? "127.0.0.1"
+        let port = UInt16(ProcessInfo.processInfo.environment["TRITON_PORT"] ?? "") ?? 19421
+
+        TritonKit.shared.delegate = tritonHandler
+        TritonKit.shared.dataURL = URL(string: "http://\(host):\(port)")
+        TritonKit.shared.connect(host: host, port: port)
+    }
+}
+#endif
+```
+
+Call the bootstrap only from a guarded app entry point:
+
+```swift
+#if DEBUG
+TritonKitDebugBootstrap.shared.start()
+#endif
+```
+
 ## CLI Install Contract
 
 Use the local release CLI while TritonKit is pre-release or while validating unreleased source changes:

@@ -4,9 +4,13 @@ TritonKit provides a DEBUG-only embedded iOS runtime and a macOS `triton` CLI fo
 
 TritonKit is in active development. If you hit a missing capability, unclear behavior, integration issue, or documentation gap, open an issue in `NeptuneKit/TritonKit`; AI agents using this repository should collect evidence and file the issue directly when they have GitHub access.
 
-## Install The iOS Runtime
+## iOS App Integration Guide
 
-### SwiftPM
+Use this shape when adding TritonKit to an iOS app. The app-side integration must be visibly Debug-only: put all TritonKit imports and startup code in a dedicated bootstrap file wrapped by `#if DEBUG`, then call that bootstrap only from a guarded app entry point.
+
+### 1. Install The iOS Runtime
+
+#### SwiftPM
 
 In Xcode, add this package URL:
 
@@ -22,7 +26,7 @@ For command-line package manifests:
 .package(url: "https://github.com/NeptuneKit/TritonKit.git", branch: "main")
 ```
 
-### CocoaPods
+#### CocoaPods
 
 During development, point CocoaPods at the repository and restrict both pods to Debug configurations:
 
@@ -47,7 +51,7 @@ After versioned pod publication, this can become:
 pod 'TritonKit', '~> 0.1.0', :configurations => ['Debug']
 ```
 
-## Start TritonKit In The App
+### 2. Start TritonKit In The App
 
 Put TritonKit bootstrap code in a dedicated iOS file and wrap the entire file in `#if DEBUG`.
 
@@ -119,9 +123,9 @@ struct YourApp: App {
 }
 ```
 
-## Install The CLI
+### 3. Install The CLI
 
-### Local Source Fallback
+#### Local Source Fallback
 
 Use the local source build only when validating unreleased TritonKit changes from this checkout:
 
@@ -143,7 +147,7 @@ triton version --json
 
 This avoids confusing macOS failures where a newly invoked CLI is killed after the active binary file was overwritten.
 
-### Homebrew
+#### Homebrew
 
 After a versioned release is published, install the macOS `triton` binary with Homebrew:
 
@@ -176,7 +180,7 @@ brew update
 brew upgrade triton
 ```
 
-### Manual Release Asset
+#### Manual Release Asset
 
 After a versioned release is published, GitHub Releases provide architecture-specific CLI archives:
 
@@ -187,7 +191,7 @@ Download the archive for your Mac, then copy `triton` into a directory on `PATH`
 
 When replacing an existing `triton` executable manually, use the same temporary-file plus `mv` pattern above, or stop `triton serve` before copying over the active path.
 
-## Run The CLI
+### 4. Run The CLI
 
 Start the macOS-side server before launching the app:
 
@@ -286,7 +290,7 @@ triton replay /tmp/login-flow.tritonplan --var username=alice --var password-env
 
 `record` currently writes an editable starter template; it does not capture live terminal history or global input events yet. `replay` supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence` steps, `${variable}` substitution, `--var key=value`, `--var key-env=ENV_NAME`, and secure value redaction in step summaries.
 
-## iOS Network Notes
+### 5. iOS Network Notes
 
 For physical devices or local-network testing, add development-only network privacy text to the app target as needed:
 
@@ -297,7 +301,7 @@ For physical devices or local-network testing, add development-only network priv
 
 If your app blocks cleartext development traffic through App Transport Security, add a debug-only ATS exception for your local workflow. Do not ship broad ATS exceptions in production.
 
-## Runtime Boundary
+### 6. Runtime Boundary
 
 `TritonKit.isRuntimeEnabled` is `true` only in `DEBUG` builds. In Release builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 

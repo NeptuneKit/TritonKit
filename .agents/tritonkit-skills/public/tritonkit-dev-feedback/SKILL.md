@@ -64,7 +64,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
 5. Create the issue with `gh issue create --repo NeptuneKit/TritonKit`.
 6. Report the issue URL back to the user with a short summary and any local verification result.
 
-## iOS Integration Checklist
+## iOS App Integration Guide
 
 Use this when helping someone add TritonKit to an app.
 
