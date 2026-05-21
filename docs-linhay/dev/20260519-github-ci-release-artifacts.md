@@ -12,7 +12,9 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 2. 普通 `main` push / PR 只阻塞 validate，不等待双架构 CLI artifact 与 release asset 打包。
 3. `v*` tag 或手动 `workflow_dispatch` 才运行双架构 CLI build 和 release asset packaging。
 4. tag `v*` 推送时，在同一 workflow 内创建或复用 GitHub Release，并上传产物。
-5. validate 统一调用 `docs-linhay/scripts/verify.sh --ci-validate`，覆盖 Swift 测试、CocoaPods spec、Homebrew formula template 和版本脚本校验。
+5. validate 先调用 `docs-linhay/scripts/ci-validate-mode.sh` 分类变更范围：
+   - docs/skill-only：运行 `docs-linhay/scripts/verify.sh --ci-docs`，覆盖文档结构、diff whitespace、版本脚本和 release/skill packaging 契约。
+   - full：运行 `docs-linhay/scripts/verify.sh --ci-validate`，覆盖 Swift 测试、CocoaPods spec、Homebrew formula template、版本脚本和 release automation 契约。
 6. CLI build 执行 `swift build -c release --product triton`。
 7. 按架构打包 CLI：
    - `triton-macos-arm64.tar.gz`
@@ -72,6 +74,8 @@ brew upgrade triton
 - 本地运行 `swift test` 通过。
 - 本地运行 `swift build -c release --product triton` 通过。
 - 本地运行 `docs-linhay/scripts/verify.sh --local` 覆盖项目级默认门禁。
+- CI docs/skill-only fast path 使用 `docs-linhay/scripts/verify.sh --ci-docs`；只允许 README、AGENTS、docs/memory/references/screenshots 与 `.agents/tritonkit-skills/` / `.agents/skills/` 进入 fast path，`Sources/`、`Tests/`、podspec、workflow、`docs-linhay/scripts/` 和 fixtures 默认触发 full validate。
+- 本地运行 `docs-linhay/scripts/verify-ci-validate-mode.sh` 验证 fast/full 分类边界。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
 - 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。

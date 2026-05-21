@@ -22,9 +22,25 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Classify validate scope
+        id: validate-scope
+        env:
+          TRITON_CI_BASE_SHA: ${{ github.event.before }}
+        run: |
+          mode="$(docs-linhay/scripts/ci-validate-mode.sh)"
+          echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
+          echo "validate mode: ${mode}"
 
       - name: Validate
+        if: steps.validate-scope.outputs.mode == 'full'
         run: docs-linhay/scripts/verify.sh --ci-validate
+
+      - name: Validate docs and skills
+        if: steps.validate-scope.outputs.mode == 'docs'
+        run: docs-linhay/scripts/verify.sh --ci-docs
 
   build-cli:
     name: Build CLI (${{ matrix.arch }})

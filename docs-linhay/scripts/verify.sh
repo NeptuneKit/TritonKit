@@ -7,13 +7,15 @@ mode="${1:---local}"
 usage() {
   cat <<'USAGE'
 Usage:
-  docs-linhay/scripts/verify.sh [--local|--ci-validate]
+  docs-linhay/scripts/verify.sh [--local|--ci-validate|--ci-docs]
 
 Modes:
   --local        Developer gate: Swift tests, release CLI build, CLI smoke,
                  optional Xcode simulator build, docs check, diff check.
   --ci-validate  CI gate: Swift tests, CocoaPods specs, Homebrew template,
                  version stamping scripts, release automation contract.
+  --ci-docs      Fast CI gate for docs/skill-only changes: docs structure,
+                 diff check, skill/release contract, and CI scope classifier.
 USAGE
 }
 
@@ -101,11 +103,21 @@ case "$mode" in
     fi
     ;;
   --ci-validate)
+    run_step "Validate CI scope classifier" "$root/docs-linhay/scripts/verify-ci-validate-mode.sh"
     run_step "Swift tests" swift test
     run_step "Install CocoaPods if needed" ensure_cocoapods
     run_step "Validate TritonKitShared podspec" pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests
     run_step "Validate TritonKit podspec" pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
     run_step "Validate Homebrew formula template" "$root/docs-linhay/scripts/verify-homebrew-formula.sh"
+    run_step "Validate version stamping scripts" "$root/docs-linhay/scripts/verify-version-stamping.sh"
+    run_step "Validate release automation contract" "$root/docs-linhay/scripts/verify-release-automation.sh"
+    ;;
+  --ci-docs)
+    run_step "Validate CI scope classifier" "$root/docs-linhay/scripts/verify-ci-validate-mode.sh"
+    run_step "Docs structure" "$root/docs-linhay/scripts/check-docs.sh"
+    if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      run_step "Git diff whitespace check" git -C "$root" diff --check
+    fi
     run_step "Validate version stamping scripts" "$root/docs-linhay/scripts/verify-version-stamping.sh"
     run_step "Validate release automation contract" "$root/docs-linhay/scripts/verify-release-automation.sh"
     ;;
