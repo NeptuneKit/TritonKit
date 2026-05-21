@@ -34,5 +34,5 @@ TritonKit 需要在仓库 README 和项目级 skill 中提供 iOS 侧接入指�
 ## 变更位置
 
 - `README.md`
-- `.agents/skills/tritonkit-dev-feedback/SKILL.md`
+- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
 - `docs-linhay/dev/20260519-ios-integration-guide.md`

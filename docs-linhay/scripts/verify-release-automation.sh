@@ -5,6 +5,8 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 release_script="${root}/docs-linhay/scripts/release.sh"
 ci_workflow="${root}/.github/workflows/ci.yml"
 tap_workflow="${root}/.github/workflows/update-homebrew-tap.yml"
+public_skill_root="${root}/.agents/tritonkit-skills/public"
+internal_skill_root="${root}/.agents/tritonkit-skills/internal"
 
 fail() {
   echo "release automation verification failed: $*" >&2
@@ -36,6 +38,21 @@ fi
 grep -q 'skip Homebrew formula rendering for non-tag release asset validation' "${ci_workflow}" \
   || fail "ci workflow must skip Homebrew formula rendering for non-tag release asset validation"
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"
+grep -q '[.]agents/tritonkit-skills/public' "${ci_workflow}" || fail "ci workflow must package public skills from .agents/tritonkit-skills/public"
+if grep -q '[.]agents/skills/[$][{]skill_name[}]' "${ci_workflow}"; then
+  fail "ci workflow must not package release skills from .agents/skills discovery shims"
+fi
+for public_skill in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonkit-real-project-regression; do
+  test -f "${public_skill_root}/${public_skill}/SKILL.md" || fail "missing public skill source: ${public_skill}"
+  test -L "${root}/.agents/skills/${public_skill}" || fail "missing discovery symlink for public skill: ${public_skill}"
+done
+for internal_skill in tritonkit-host-simulator-takeover tritonkit-ops-governance tritonkit-session-skill-distill tritonkit-subagent-supervision tritonkit-xcode-workflow-takeover; do
+  test -f "${internal_skill_root}/${internal_skill}/SKILL.md" || fail "missing internal skill source: ${internal_skill}"
+  test -L "${root}/.agents/skills/${internal_skill}" || fail "missing discovery symlink for internal skill: ${internal_skill}"
+  if grep -q "${internal_skill}" "${ci_workflow}"; then
+    fail "ci workflow must not package internal skill: ${internal_skill}"
+  fi
+done
 grep -q 'tritonkit-skills[.]tar[.]gz' "${ci_workflow}" || fail "ci workflow must publish a combined tritonkit-skills.tar.gz"
 grep -q 'sha256sum [*][.]tar[.]gz' "${ci_workflow}" || fail "ci workflow checksums should cover tar.gz release assets"
 if grep -q 'ditto .*zip' "${ci_workflow}" || grep -q 'zip -qr' "${ci_workflow}"; then

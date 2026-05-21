@@ -8,7 +8,7 @@ TritonKit 仍处于开发阶段。外部试用、接入或评估时，如果用�
 
 复用入口：
 
-- `.agents/skills/tritonkit-dev-feedback/SKILL.md`
+- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
 
 ### CI / Release 产物契约
 
@@ -20,7 +20,7 @@ GitHub CI 和 tag release 必须同时产出两类可分发资产：
 复用入口：
 
 - `.github/workflows/ci.yml`
-- `.agents/skills/tritonkit-ops-governance/SKILL.md`
+- `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
 - `docs-linhay/dev/20260519-github-ci-release-artifacts.md`
 
 ### Package Manager Debug-only runtime
@@ -31,7 +31,7 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 
 - `TritonKit.isRuntimeEnabled`
 - `TritonKitRuntimeError.disabledOutsideDebug`
-- `.agents/skills/tritonkit-ops-governance/SKILL.md`
+- `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
 - `docs-linhay/dev/20260519-debug-only-pm-runtime.md`
 
 ### 真实项目回归入口
@@ -40,7 +40,7 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 
 复用入口：
 
-- `.agents/skills/tritonkit-real-project-regression/SKILL.md`
+- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
 - `docs-linhay/scripts/verify-overloaded-triton-smoke.sh`
 - `docs-linhay/scripts/verify-complex-harness.sh`
 

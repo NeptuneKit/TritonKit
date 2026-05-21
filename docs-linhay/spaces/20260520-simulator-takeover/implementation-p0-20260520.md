@@ -26,7 +26,7 @@
   - `triton app prefs get <key> --bundle-id <id> --simulator <udid|booted> --json`
   - `triton app prefs dump --bundle-id <id> --simulator <udid|booted> --json`
 - `triton schema --command sim --json` 与 `triton schema --command app --json` 已暴露 host-side 命令。
-- 新增项目级 skill：`.agents/skills/tritonkit-host-simulator-takeover/SKILL.md`，后续设计、实现、扩展或验证 host-side Apple Simulator 接管能力时优先使用。
+- 新增内部实现 skill：`.agents/tritonkit-skills/internal/tritonkit-host-simulator-takeover/SKILL.md`，后续设计、实现、扩展或验证 host-side Apple Simulator 接管能力时优先使用。
 
 ## 验证
 

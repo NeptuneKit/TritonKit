@@ -149,7 +149,7 @@ jobs:
           skills_work_dir="$(mktemp -d)"
 
           for skill_name in "${skills[@]}"; do
-            skill_dir=".agents/skills/${skill_name}"
+            skill_dir=".agents/tritonkit-skills/public/${skill_name}"
             test -f "${skill_dir}/SKILL.md"
             cp -R "${skill_dir}" "${skills_work_dir}/${skill_name}"
             docs-linhay/scripts/stamp-skill-version.sh \

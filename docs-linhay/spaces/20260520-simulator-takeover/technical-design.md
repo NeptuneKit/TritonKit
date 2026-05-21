@@ -415,8 +415,8 @@ HostProcessRunning.stream(command, args, env, cwd, timeout) -> AsyncSequence<Hos
 
 - `README.md`
 - `docs-linhay/dev/ai-cli-readable-control.md`
-- `.agents/skills/tritonkit-emulator-cli-takeover`
-- `.agents/skills/tritonkit-real-project-regression`
-- `.agents/skills/tritonkit-dev-feedback`
+- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover`
+- `.agents/tritonkit-skills/public/tritonkit-real-project-regression`
+- `.agents/tritonkit-skills/public/tritonkit-dev-feedback`
 - `docs-linhay/spaces/20260520-xcrun-host-adapter-research/README.md`
 - GitHub issue #11 和 #12 的状态
