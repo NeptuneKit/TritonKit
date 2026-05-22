@@ -5,6 +5,7 @@ import UIKit
 #endif
 
 #if canImport(UIKit)
+@MainActor
 func currentAppState() -> TKRuntimeAppStateResponse {
     let windows = allRuntimeWindows()
     let info = Bundle.main.infoDictionary ?? [:]

@@ -5,6 +5,7 @@ import UIKit
 #endif
 
 #if canImport(UIKit)
+@MainActor
 func performInput(_ request: TKInputRequest) -> TKInputResult {
     switch request.type {
     case .tap:

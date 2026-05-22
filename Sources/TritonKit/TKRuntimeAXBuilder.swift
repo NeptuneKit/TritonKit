@@ -5,6 +5,7 @@ import UIKit
 #endif
 
 #if canImport(UIKit)
+@MainActor
 func performHitTest(_ request: TKHitTestRequest) -> TKHitTestResponse {
     guard let window = keyWindows().first else {
         return TKHitTestResponse(x: request.x, y: request.y, node: nil)
