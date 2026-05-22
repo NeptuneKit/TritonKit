@@ -493,6 +493,15 @@ struct HostAppOpenURL: AsyncParsableCommand {
     @Option(help: "Harmony ability name") var ability: String?
     @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(name: .customLong("runtime-target"), help: "iOS embedded runtime target id from `triton list`") var runtimeTarget: String = TKLocalTargetID
+    @Flag(name: .customLong("wait-ready"), help: "After opening the URL, wait until the embedded runtime is connected and has an active hierarchy") var waitReady = false
+    @Flag(help: "After opening the URL, return an embedded runtime snapshot summary") var snapshot = false
+    @Option(name: .customLong("snapshot-include"), help: "Comma-separated snapshot sections") var snapshotInclude: String = "app,scene,route,ax,geometry"
+    @Option(name: .customLong("max-ax-nodes"), help: "Maximum AX nodes in the runtime snapshot") var maxAXNodes: Int?
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Runtime wait timeout in seconds") var timeout: Double = 20
+    @Option(help: "Runtime wait polling interval in seconds") var interval: Double = 0.5
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -500,13 +509,47 @@ struct HostAppOpenURL: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         switch platform {
         case .ios:
-            try runSimpleHostCommand(
-                action: "app.open-url",
-                target: "sim:\(simulator)",
-                command: TKSimctlCommand.openURL(udid: simulator, url: url),
-                outputFormat: outputFormat,
-                note: "URL was submitted to the simulator; verify in-app completion with `triton wait`, `triton find`, or `triton assert`."
-            )
+            if waitReady || snapshot {
+                do {
+                    let include = snapshotInclude.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+                    let summary = try await runIOSAppOpenURLFlow(options: IOSAppOpenURLFlowOptions(
+                        simulator: simulator,
+                        runtimeTarget: runtimeTarget,
+                        url: url,
+                        waitReady: waitReady,
+                        snapshot: snapshot,
+                        snapshotInclude: include,
+                        maxAXNodes: maxAXNodes,
+                        host: host,
+                        port: port,
+                        timeout: timeout,
+                        interval: interval
+                    ))
+                    switch outputFormat {
+                    case .json:
+                        print(try encodeJSON(summary))
+                    case .text:
+                        print("status: \(summary.status.rawValue)")
+                        print("source: \(summary.hostAction.sourceCommand)")
+                        if let ready = summary.ready {
+                            print("runtime: connected=\(ready.connected) hierarchy=\(ready.hierarchyCacheState ?? "-")")
+                        }
+                        if let snapshot = summary.snapshot {
+                            print("snapshot: app=\(snapshot.appName ?? "-") axNodes=\(snapshot.axNodeCount ?? 0)")
+                        }
+                    }
+                } catch {
+                    try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+                }
+            } else {
+                try runSimpleHostCommand(
+                    action: "app.open-url",
+                    target: "sim:\(simulator)",
+                    command: TKSimctlCommand.openURL(udid: simulator, url: url),
+                    outputFormat: outputFormat,
+                    note: "URL was submitted to the simulator; verify in-app completion with `triton wait`, `triton find`, or `triton assert`."
+                )
+            }
         case .harmony:
             guard let bundle, let ability else {
                 try failHostValidation(

@@ -62,6 +62,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton app launch --bundle-id <bundle-id> --simulator booted --json`
      - `triton app terminate --bundle-id <bundle-id> --simulator booted --json`
      - `triton app open-url '<url>' --simulator booted --json`
+     - `triton app open-url '<url>' --simulator booted --wait-ready --snapshot --json`
      - `triton app container --bundle-id <bundle-id> --kind data --json`
      - `triton app prefs get <key> --bundle-id <bundle-id> --json`
    - host-side Harmony checks that do not require embedded runtime:

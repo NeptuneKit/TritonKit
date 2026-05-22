@@ -80,6 +80,7 @@ triton app uninstall --bundle-id <bundle-id> --simulator <udid-or-booted> --conf
 triton app launch --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app terminate --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app open-url '<url>' --simulator <udid-or-booted> --json
+triton app open-url '<url>' --simulator <udid-or-booted> --wait-ready --snapshot --json
 triton app container --bundle-id <bundle-id> --kind data --simulator <udid-or-booted> --json
 triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app prefs dump --bundle-id <bundle-id> --simulator <udid-or-booted> --json

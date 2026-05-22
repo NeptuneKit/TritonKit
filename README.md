@@ -322,12 +322,14 @@ triton app uninstall --bundle-id com.example.app --simulator booted --confirm --
 triton app launch --bundle-id com.example.app --simulator booted --json
 triton app terminate --bundle-id com.example.app --simulator booted --json
 triton app open-url "example://debug" --simulator booted --json
+triton app open-url "example://debug" --simulator booted --wait-ready --snapshot --json
 triton app container --bundle-id com.example.app --kind data --json
 triton app prefs get DEBUG-mock --bundle-id com.example.app --json
 triton app prefs dump --bundle-id com.example.app --json
 ```
 
 `app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, or `triton app prefs get` to verify the business state.
+When an embedded runtime is expected to be connected, add `--wait-ready --snapshot` to make the one-shot result include runtime readiness and an app/route/AX snapshot summary.
 
 Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts:
 

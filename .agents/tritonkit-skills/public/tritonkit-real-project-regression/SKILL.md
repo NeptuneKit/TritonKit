@@ -61,7 +61,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - install simulator builds: `triton app install --app <path.app> --simulator <udid-or-booted> --json`;
    - uninstall disposable simulator apps only with explicit policy: `triton app uninstall --bundle-id <bundle-id> --simulator <udid-or-booted> --confirm --json`;
    - launch or terminate apps: `triton app launch --bundle-id <bundle-id> --simulator <udid-or-booted> --json` / `triton app terminate --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
-   - submit app debug routes: `triton app open-url '<url>' --simulator <udid-or-booted> --json`;
+   - submit app debug routes: `triton app open-url '<url>' --simulator <udid-or-booted> --json`; when a DEBUG embedded runtime is connected, prefer `triton app open-url '<url>' --simulator <udid-or-booted> --wait-ready --snapshot --json` to capture readiness and snapshot summary in the same result;
    - locate containers: `triton app container --bundle-id <bundle-id> --kind data --simulator <udid-or-booted> --json`;
    - verify App preferences: `triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
    - capture host-side framebuffer: `triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json`;

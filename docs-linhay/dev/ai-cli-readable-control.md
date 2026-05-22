@@ -54,7 +54,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton app list --simulator <udid|booted> --user-only --format json`：读取已安装 App 列表，输出 bundle id、display name、version、application type、bundle/data/group container 等结构化字段。
 - `triton app info --bundle-id <id> --simulator <udid|booted> --format json`：读取单个已安装 App 元数据；当 `simctl appinfo` 对缺失 bundle 只回显 `CFBundleIdentifier` 时，归一为 `app_info_not_available`。
 - `triton app install --app <path.app> --simulator <udid|booted> --format json`、`triton app uninstall --bundle-id <id> --simulator <udid|booted> --confirm --format json`、`triton app launch --bundle-id <id> --format json`、`triton app terminate --bundle-id <id> --format json`：App 生命周期首批入口，返回 host action envelope；`uninstall` 必须显式 `--confirm`，业务就绪仍需继续用 `status/wait/find/assert/prefs` 验证。
-- `triton app open-url <url> --simulator <udid|booted> --format json`：提交 deep link 或 URL 到 simulator；该命令只证明 URL 已提交，业务完成需继续用 `wait/find/assert` 或 preferences 验证。
+- `triton app open-url <url> --simulator <udid|booted> --format json`：提交 deep link 或 URL 到 simulator；该命令只证明 URL 已提交，业务完成需继续用 `wait/find/assert` 或 preferences 验证。若目标 App 已接入 DEBUG embedded runtime，可追加 `--wait-ready --snapshot --snapshot-include app,scene,route,ax,geometry --max-ax-nodes <n>`，让单次输出同时包含 host action、runtime readiness 和 app/route/AX snapshot 摘要。
 - `triton app container --bundle-id <id> --kind data --format json`：读取 simulator App container path。
 - `triton app prefs get <key> --bundle-id <id> --format json`、`triton app prefs dump --bundle-id <id> --format json`：读取 App preferences plist，避免 agent 解析 `plutil -p` 人读文本。
 - `triton xcode discover --path . --format json`：发现 `.xcworkspace`、`.xcodeproj` 与 `Package.swift` 候选，作为未知 Apple repo 的入口；多候选时返回 candidates，不暴露 XcodeBuildMCP tool 名。

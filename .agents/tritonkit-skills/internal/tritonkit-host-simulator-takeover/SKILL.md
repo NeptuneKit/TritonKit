@@ -41,6 +41,7 @@ triton app uninstall --bundle-id <bundle-id> --simulator <udid-or-booted> --conf
 triton app launch --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app terminate --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app open-url '<url>' --simulator <udid-or-booted> --json
+triton app open-url '<url>' --simulator <udid-or-booted> --wait-ready --snapshot --json
 triton app container --bundle-id <bundle-id> --kind data --simulator <udid-or-booted> --json
 triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app prefs dump --bundle-id <bundle-id> --simulator <udid-or-booted> --json
@@ -48,7 +49,7 @@ triton app prefs dump --bundle-id <bundle-id> --simulator <udid-or-booted> --jso
 
 `triton sim use` writes repo-local workspace defaults to `.triton/host-defaults.json`. Do not run smoke writes in the repository unless that file is intentionally part of the test. Use a temporary working directory for validation when possible.
 
-`triton app open-url` only proves that the URL was submitted to Simulator. Always verify business completion with `triton wait`, `triton find`, `triton assert`, `triton app prefs get`, a fresh screenshot, or an evidence bundle.
+`triton app open-url` only proves that the URL was submitted to Simulator. When an embedded runtime is connected, prefer `--wait-ready --snapshot` for a one-shot host action plus runtime readiness/snapshot summary. Otherwise always verify business completion with `triton wait`, `triton find`, `triton assert`, `triton app prefs get`, a fresh screenshot, or an evidence bundle.
 
 `simctl appinfo` can exit 0 for a missing bundle while only echoing `CFBundleIdentifier`; Triton normalizes this to `app_info_not_available`. Do not treat raw `simctl` exit code alone as proof of installed app metadata.
 

@@ -151,6 +151,7 @@ triton smoke harmony \
 - S0 方案与测试基线已完成：本 space 的 README 与 technical design 已落地。
 - S1 Xcode / host readiness diagnostics 已完成第一刀：`triton xcode status --json`、`triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json` 已进入 CLI 和 schema。
 - S2 `smoke ios` 已实现并接入 CLI / schema / help；已通过 mock tests、`swift build --package-path CLI --scratch-path .build/cli --product triton`、`swift test --package-path CLI --scratch-path .build/cli-tests`、`triton schema --command smoke --json`、`triton smoke ios --help`、本机 structured-failure 验证，以及真实 iOS Simulator / embedded runtime 正向复跑。#17 的本地关闭条件已满足；#18 继续推进 priority 2/3 与 evidence/failure diagnostics；#15/#12 仍未进入关闭条件。
+- #18 priority 2 已完成一刀：`triton app open-url <url> --wait-ready --snapshot --json` 可在提交 deep link 后等待 embedded runtime ready，并返回 host action、ready 状态和 compact snapshot summary；默认 `app open-url` 不带这些参数时仍保持原 host ack 行为。
 
 #### 2026-05-22 iOS runtime 正向复跑
 
@@ -159,6 +160,7 @@ triton smoke harmony \
 - 构建安装验证：`triton xcode run --project Examples/TritonKitDemo/TritonKitDemo.xcodeproj --scheme TritonKitDemo --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --derived-data-path .triton/DerivedData --timeout 180 --jsonl` 返回 `ok=true`。
 - 连接验证：`triton status --json` 返回 `connected=true`、`runtime=embedded`、`targetCount=1`；`triton list --json` 返回唯一 target `TritonKitDemo` / `com.neptunekit.tritonkit.demo` / `triton:local`。
 - URL 验证：`triton app open-url tritonkitdemo://smoke --simulator booted --json` 返回 `ok=true`，source command 为 `xcrun simctl openurl booted tritonkitdemo://smoke`。
+- 增强 URL 验证：`triton app open-url tritonkitdemo://smoke --simulator booted --wait-ready --snapshot --snapshot-include app,scene,route,ax,geometry --max-ax-nodes 80 --json` 返回 `ok=true`、`status=pass`；`ready.connected=true`、`hierarchyCacheState=active`、`targetConnectionState=connected`；snapshot 返回 `appName=TritonKitDemo`、bundle id `com.neptunekit.tritonkit.demo`、`sceneCount=1`、`windowCount=1`、`artifacts=[app,scene,route,geometry,ax]`、`truncated=false`。
 - 正向 smoke 命令：
 
 ```bash
