@@ -942,6 +942,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Target view oid"),
                 TKCommandSchemaOption(name: "--ax-oid", type: "UInt", description: "AX target/view oid from `triton ax`; taps by runtime oid"),
                 TKCommandSchemaOption(name: "--ax-label", type: "String", description: "Exact AX label from `triton ax`; taps by runtime oid"),
+                TKCommandSchemaOption(name: "--strategy", type: "smart|exact|ancestor", description: "Choose query or AX text activation target: query defaults to smart; AX selectors default to exact"),
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one query candidate by 1-based index from `triton find --all`"),
                 TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict query matching to window bounds"),
                 formatJSONText,
@@ -952,13 +953,14 @@ func commandSchemas() -> [TKCommandSchema] {
                 #"triton tap "我的" --platform harmony --json"#,
                 #"triton tap "hello" --index 2"#,
                 #"triton tap "hello" --at 240,580"#,
+                #"triton tap "hello" --strategy exact"#,
                 #"triton tap "hello" --within 180,0,220,500"#,
                 "triton tap --at 270,300",
                 "triton tap --x 270 --y 300",
                 "triton tap --oid 13",
                 "triton tap --ax-label Save",
             ],
-            successShape: "{ ok, action, message, targetOID, targetClassName } or HostHarmonyTapOutput",
+            successShape: "{ ok, action, message, targetOID, targetClassName, matchedOID?, matchedClassName?, activationOID?, activationClassName?, strategy? } or HostHarmonyTapOutput",
             providedCapabilities: ["tap", "harmony-tap-text"]
         ),
         TKCommandSchema(
@@ -1105,7 +1107,7 @@ func inputActionSchemas() -> [TKInputActionSchema] {
         TKInputActionSchema(
             type: "tap",
             requiredFields: ["type"],
-            optionalFields: ["x", "y", "targetOID", "width", "height", "duration"],
+            optionalFields: ["x", "y", "targetOID", "matchedOID", "matchedClassName", "activationStrategy", "width", "height", "duration"],
             oneOfRequired: [["x", "y"], ["targetOID"]],
             coordinateSpace: "window-points",
             fields: [
@@ -1113,6 +1115,9 @@ func inputActionSchemas() -> [TKInputActionSchema] {
                 inputField("x", "Double", "Window x coordinate in points; required with y unless targetOID is used"),
                 inputField("y", "Double", "Window y coordinate in points; required with x unless targetOID is used"),
                 inputField("targetOID", "UInt", "View oid from hierarchy/ax/hit; alternative to x/y"),
+                inputField("matchedOID", "UInt", "Original matched node oid for smart text activation"),
+                inputField("matchedClassName", "String", "Original matched node class name for smart text activation"),
+                inputField("activationStrategy", "String", enumValues: ["smart", "exact", "ancestor"], "Tap activation strategy"),
                 inputField("width", "Double", "Optional window width in points for caller bookkeeping"),
                 inputField("height", "Double", "Optional window height in points for caller bookkeeping"),
                 inputField("duration", "Double", "Optional hold duration in seconds"),

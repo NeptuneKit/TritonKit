@@ -8,6 +8,23 @@ import NIOCore
 import TritonKit
 import TritonKitShared
 
+enum TapStrategyOption: String, ExpressibleByArgument {
+    case smart
+    case exact
+    case ancestor
+
+    var activationStrategy: TKTapActivationStrategy {
+        switch self {
+        case .smart:
+            return .smart
+        case .exact:
+            return .exact
+        case .ancestor:
+            return .ancestor
+        }
+    }
+}
+
 struct Find: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Resolve a UI target by visible text, label, identifier, or option title")
 
@@ -257,6 +274,7 @@ struct Tap: AsyncParsableCommand {
     @Option(help: "Optional screen/window width in points") var width: Double?
     @Option(help: "Optional screen/window height in points") var height: Double?
     @Option(help: "Hold duration in seconds") var duration: Double?
+    @Option(help: "Activation strategy for query or AX text matches: smart, exact, or ancestor") var strategy: TapStrategyOption?
     @Option(help: "Select one matching query candidate by 1-based index") var index: Int?
     @Option(help: "Restrict query matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Coordinate selector or query disambiguation point: x,y") var at: String?
@@ -305,6 +323,13 @@ struct Tap: AsyncParsableCommand {
                 throw ExitCode.failure
             }
             throw RuntimeError("--x and --y must be provided together")
+        }
+        if strategy != nil, query == nil, axOID == nil, axLabel == nil {
+            if outputFormat == .json {
+                try printValidationError("--strategy can only be used with <query>, --ax-oid, or --ax-label")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--strategy can only be used with <query>, --ax-oid, or --ax-label")
         }
 
         if platform == .harmony {
@@ -385,6 +410,7 @@ struct Tap: AsyncParsableCommand {
                     width: width,
                     height: height,
                     duration: duration,
+                    activationStrategy: strategy?.activationStrategy ?? .smart,
                     index: index,
                     within: bounds,
                     at: point
@@ -405,7 +431,13 @@ struct Tap: AsyncParsableCommand {
                     }
                     throw RuntimeError(message)
             }
-            let request = tapRequest(for: node, width: width, height: height, duration: duration)
+            let request = tapRequest(
+                for: node,
+                width: width,
+                height: height,
+                duration: duration,
+                activationStrategy: strategy?.activationStrategy ?? .exact
+            )
             try await runInputRequest(request, client: client, format: outputFormat)
             return
         }

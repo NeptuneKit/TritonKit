@@ -9,9 +9,18 @@ public enum TKInputType: String, Codable, CaseIterable {
     case clear
 }
 
+public enum TKTapActivationStrategy: String, Codable, CaseIterable {
+    case smart
+    case exact
+    case ancestor
+}
+
 public struct TKInputRequest: Codable, Equatable {
     public let type: TKInputType
     public let targetOID: UInt?
+    public let matchedOID: UInt?
+    public let matchedClassName: String?
+    public let activationStrategy: TKTapActivationStrategy?
     public let x: Double?
     public let y: Double?
     public let startX: Double?
@@ -28,6 +37,9 @@ public struct TKInputRequest: Codable, Equatable {
     public init(
         type: TKInputType,
         targetOID: UInt? = nil,
+        matchedOID: UInt? = nil,
+        matchedClassName: String? = nil,
+        activationStrategy: TKTapActivationStrategy? = nil,
         x: Double? = nil,
         y: Double? = nil,
         startX: Double? = nil,
@@ -43,6 +55,9 @@ public struct TKInputRequest: Codable, Equatable {
     ) {
         self.type = type
         self.targetOID = targetOID
+        self.matchedOID = matchedOID
+        self.matchedClassName = matchedClassName
+        self.activationStrategy = activationStrategy
         self.x = x
         self.y = y
         self.startX = startX
@@ -63,11 +78,17 @@ public struct TKInputRequest: Codable, Equatable {
         targetOID: UInt? = nil,
         width: Double? = nil,
         height: Double? = nil,
-        duration: Double? = nil
+        duration: Double? = nil,
+        matchedOID: UInt? = nil,
+        matchedClassName: String? = nil,
+        activationStrategy: TKTapActivationStrategy? = nil
     ) -> TKInputRequest {
         TKInputRequest(
             type: .tap,
             targetOID: targetOID,
+            matchedOID: matchedOID,
+            matchedClassName: matchedClassName,
+            activationStrategy: activationStrategy,
             x: x,
             y: y,
             width: width,
@@ -126,6 +147,11 @@ public struct TKInputResult: Codable, Equatable {
     public let message: String?
     public let targetOID: UInt?
     public let targetClassName: String?
+    public let matchedOID: UInt?
+    public let matchedClassName: String?
+    public let activationOID: UInt?
+    public let activationClassName: String?
+    public let strategy: String?
     public let secure: Bool?
     public let redacted: Bool?
     public let insertedLength: Int?
@@ -136,6 +162,11 @@ public struct TKInputResult: Codable, Equatable {
         message: String? = nil,
         targetOID: UInt? = nil,
         targetClassName: String? = nil,
+        matchedOID: UInt? = nil,
+        matchedClassName: String? = nil,
+        activationOID: UInt? = nil,
+        activationClassName: String? = nil,
+        strategy: String? = nil,
         secure: Bool? = nil,
         redacted: Bool? = nil,
         insertedLength: Int? = nil
@@ -145,6 +176,11 @@ public struct TKInputResult: Codable, Equatable {
         self.message = message
         self.targetOID = targetOID
         self.targetClassName = targetClassName
+        self.matchedOID = matchedOID
+        self.matchedClassName = matchedClassName
+        self.activationOID = activationOID
+        self.activationClassName = activationClassName
+        self.strategy = strategy
         self.secure = secure
         self.redacted = redacted
         self.insertedLength = insertedLength
@@ -155,6 +191,11 @@ public struct TKInputResult: Codable, Equatable {
         message: String? = nil,
         targetOID: UInt? = nil,
         targetClassName: String? = nil,
+        matchedOID: UInt? = nil,
+        matchedClassName: String? = nil,
+        activationOID: UInt? = nil,
+        activationClassName: String? = nil,
+        strategy: String? = nil,
         secure: Bool? = nil,
         redacted: Bool? = nil,
         insertedLength: Int? = nil
@@ -165,6 +206,11 @@ public struct TKInputResult: Codable, Equatable {
             message: message,
             targetOID: targetOID,
             targetClassName: targetClassName,
+            matchedOID: matchedOID,
+            matchedClassName: matchedClassName,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy,
             secure: secure,
             redacted: redacted,
             insertedLength: insertedLength
@@ -175,18 +221,46 @@ public struct TKInputResult: Codable, Equatable {
         action: String,
         message: String,
         targetOID: UInt? = nil,
-        targetClassName: String? = nil
+        targetClassName: String? = nil,
+        matchedOID: UInt? = nil,
+        matchedClassName: String? = nil,
+        activationOID: UInt? = nil,
+        activationClassName: String? = nil,
+        strategy: String? = nil
     ) -> TKInputResult {
         TKInputResult(
             ok: false,
             action: action,
             message: message,
             targetOID: targetOID,
-            targetClassName: targetClassName
+            targetClassName: targetClassName,
+            matchedOID: matchedOID,
+            matchedClassName: matchedClassName,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
         )
     }
 
-    public static func unsupported(action: String, message: String) -> TKInputResult {
-        failure(action: action, message: message)
+    public static func unsupported(
+        action: String,
+        message: String,
+        strategy: String? = nil,
+        matchedOID: UInt? = nil,
+        matchedClassName: String? = nil,
+        activationOID: UInt? = nil,
+        activationClassName: String? = nil
+    ) -> TKInputResult {
+        failure(
+            action: action,
+            message: message,
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matchedOID,
+            matchedClassName: matchedClassName,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
+        )
     }
 }

@@ -6,7 +6,16 @@ import Testing
 struct TKInputModelsTests {
     @Test("tap request keeps Baguette-style wire fields")
     func tapRequestWireShape() throws {
-        let request = TKInputRequest.tap(x: 12, y: 34, width: 390, height: 844, duration: 0.05)
+        let request = TKInputRequest.tap(
+            x: 12,
+            y: 34,
+            width: 390,
+            height: 844,
+            duration: 0.05,
+            matchedOID: 7,
+            matchedClassName: "UILabel",
+            activationStrategy: .smart
+        )
         let data = try JSONEncoder().encode(request)
         let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
 
@@ -16,6 +25,9 @@ struct TKInputModelsTests {
         #expect(json["width"] as? Double == 390)
         #expect(json["height"] as? Double == 844)
         #expect(json["duration"] as? Double == 0.05)
+        #expect(json["matchedOID"] as? Int == 7)
+        #expect(json["matchedClassName"] as? String == "UILabel")
+        #expect(json["activationStrategy"] as? String == "smart")
     }
 
     @Test("input command maps to shared request type")
@@ -25,13 +37,26 @@ struct TKInputModelsTests {
 
     @Test("input result preserves unsupported message")
     func inputResultUnsupported() throws {
-        let result = TKInputResult.unsupported(action: "button", message: "Host-side HID is not available")
+        let result = TKInputResult.unsupported(
+            action: "button",
+            message: "Host-side HID is not available",
+            strategy: "ancestor-gesture-coordinate-unsupported",
+            matchedOID: 11,
+            matchedClassName: "UILabel",
+            activationOID: 9,
+            activationClassName: "UIView"
+        )
         let data = try JSONEncoder().encode(result)
         let decoded = try JSONDecoder().decode(TKInputResult.self, from: data)
 
         #expect(!decoded.ok)
         #expect(decoded.action == "button")
         #expect(decoded.message == "Host-side HID is not available")
+        #expect(decoded.strategy == "ancestor-gesture-coordinate-unsupported")
+        #expect(decoded.matchedOID == 11)
+        #expect(decoded.matchedClassName == "UILabel")
+        #expect(decoded.activationOID == 9)
+        #expect(decoded.activationClassName == "UIView")
     }
 
     @Test("paste request preserves secure redaction intent")

@@ -140,6 +140,7 @@ func resolveTapTarget(
     width: Double?,
     height: Double?,
     duration: Double?,
+    activationStrategy: TKTapActivationStrategy = .smart,
     index: Int? = nil,
     within: TKRect? = nil,
     at: (x: Double, y: Double)? = nil,
@@ -154,6 +155,7 @@ func resolveTapTarget(
         width: width,
         height: height,
         duration: duration,
+        activationStrategy: activationStrategy,
         within: within,
         at: at
     )
@@ -177,6 +179,7 @@ func tapTargetCandidates(
     width: Double?,
     height: Double?,
     duration: Double?,
+    activationStrategy: TKTapActivationStrategy,
     within: TKRect?,
     at: (x: Double, y: Double)?
 ) async throws -> [TapTargetCandidate] {
@@ -184,12 +187,18 @@ func tapTargetCandidates(
     let axNodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
     let directAXCandidates = selectAXNodesByQuery(axNodes, query: query, includeValue: false)
         .map { axNode in
-            let request = tapRequest(for: axNode, width: width, height: height, duration: duration)
+            let request = tapRequest(
+                for: axNode,
+                width: width,
+                height: height,
+                duration: duration,
+                activationStrategy: activationStrategy
+            )
             return TapTargetCandidate(
                 index: 0,
                 query: query,
                 source: "ax",
-                strategy: axTapShouldUseCoordinate(axNode) ? "coordinate" : "oid",
+                strategy: tapCandidateStrategy(for: axNode, activationStrategy: activationStrategy),
                 role: axNode.role,
                 label: axNode.label,
                 value: axNode.value,
@@ -209,18 +218,31 @@ func tapTargetCandidates(
         hierarchyData: hierarchyData,
         client: client
     ).map { candidate in
-        let request = TKInputRequest.tap(
-            x: candidate.frame.centerX,
-            y: candidate.frame.centerY,
-            width: width,
-            height: height,
-            duration: duration
-        )
+        let request: TKInputRequest
+        if activationStrategy == .exact {
+            request = TKInputRequest.tap(
+                x: candidate.frame.centerX,
+                y: candidate.frame.centerY,
+                width: width,
+                height: height,
+                duration: duration
+            )
+        } else {
+            request = TKInputRequest.tap(
+                targetOID: candidate.viewOID,
+                width: width,
+                height: height,
+                duration: duration,
+                matchedOID: candidate.viewOID,
+                matchedClassName: candidate.className,
+                activationStrategy: activationStrategy
+            )
+        }
         return TapTargetCandidate(
             index: 0,
             query: query,
             source: "hierarchy-text",
-            strategy: "coordinate",
+            strategy: activationStrategy == .exact ? "coordinate" : activationStrategy.rawValue,
             role: nil,
             label: query,
             value: nil,
@@ -239,12 +261,18 @@ func tapTargetCandidates(
             !(node.label == query || node.identifier == query || node.title == query)
         }
         .map { axNode in
-            let request = tapRequest(for: axNode, width: width, height: height, duration: duration)
+            let request = tapRequest(
+                for: axNode,
+                width: width,
+                height: height,
+                duration: duration,
+                activationStrategy: activationStrategy
+            )
             return TapTargetCandidate(
                 index: 0,
                 query: query,
                 source: "ax-value",
-                strategy: axTapShouldUseCoordinate(axNode) ? "coordinate" : "oid",
+                strategy: tapCandidateStrategy(for: axNode, activationStrategy: activationStrategy),
                 role: axNode.role,
                 label: axNode.label,
                 value: axNode.value,
@@ -317,8 +345,21 @@ func tapRequest(
     for node: TKAXNode,
     width: Double?,
     height: Double?,
-    duration: Double?
+    duration: Double?,
+    activationStrategy: TKTapActivationStrategy = .exact
 ) -> TKInputRequest {
+    if activationStrategy != .exact, let matchedOID = node.viewOID ?? node.targetOID {
+        return TKInputRequest.tap(
+            targetOID: matchedOID,
+            width: width,
+            height: height,
+            duration: duration,
+            matchedOID: matchedOID,
+            matchedClassName: node.className,
+            activationStrategy: activationStrategy
+        )
+    }
+
     if axTapShouldUseCoordinate(node) {
         return TKInputRequest.tap(
             x: node.frame.centerX,
@@ -334,6 +375,13 @@ func tapRequest(
         height: height,
         duration: duration
     )
+}
+
+func tapCandidateStrategy(for node: TKAXNode, activationStrategy: TKTapActivationStrategy) -> String {
+    if activationStrategy != .exact {
+        return activationStrategy.rawValue
+    }
+    return axTapShouldUseCoordinate(node) ? "coordinate" : "oid"
 }
 
 func axTapShouldUseCoordinate(_ node: TKAXNode) -> Bool {

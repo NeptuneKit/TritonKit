@@ -1,5 +1,10 @@
 import Foundation
 import TritonKitShared
+#if canImport(Darwin)
+import Darwin
+#elseif canImport(Glibc)
+import Glibc
+#endif
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -190,6 +195,8 @@ public class TritonKit {
     private var isStarted = false
     private var stateObservers: [UUID: (ConnectionState) -> Void] = [:]
     private var errorObservers: [UUID: (Error) -> Void] = [:]
+    internal var endpointReadinessTimeout: TimeInterval = 0.25
+    internal var endpointReadinessProbe: (String, UInt16, TimeInterval) -> Bool = TritonKit.probeEndpointReadiness
 
     /// HTTP data uploader (for screenshots / heavy payloads)
     public private(set) var uploader: TritonKitDataUploader?
@@ -306,6 +313,12 @@ public class TritonKit {
         }
         closeConnection()
         state = .connecting
+
+        guard endpointReadinessProbe(host, port, endpointReadinessTimeout) else {
+            state = .disconnected
+            scheduleReconnect()
+            return
+        }
 
         let url = URL(string: "ws://\(host):\(port)/")!
         let req = URLRequest(url: url, timeoutInterval: 10)
@@ -439,4 +452,73 @@ public class TritonKit {
             observer(error)
         }
     }
+
+    private static func probeEndpointReadiness(host: String, port: UInt16, timeout: TimeInterval) -> Bool {
+        #if canImport(Darwin) || canImport(Glibc)
+        var hints = addrinfo()
+        hints.ai_family = AF_UNSPEC
+        #if canImport(Glibc)
+        hints.ai_socktype = Int32(SOCK_STREAM.rawValue)
+        #else
+        hints.ai_socktype = SOCK_STREAM
+        #endif
+        hints.ai_protocol = IPPROTO_TCP
+
+        var results: UnsafeMutablePointer<addrinfo>?
+        let lookupResult = getaddrinfo(host, String(port), &hints, &results)
+        guard lookupResult == 0, let results else { return false }
+        defer { freeaddrinfo(results) }
+
+        let timeoutMilliseconds = max(1, Int32((timeout * 1000).rounded(.up)))
+        var current: UnsafeMutablePointer<addrinfo>? = results
+        while let candidate = current {
+            if probeSocketAddress(candidate, timeoutMilliseconds: timeoutMilliseconds) {
+                return true
+            }
+            current = candidate.pointee.ai_next
+        }
+        return false
+        #else
+        return true
+        #endif
+    }
+
+    #if canImport(Darwin) || canImport(Glibc)
+    private static func probeSocketAddress(
+        _ candidate: UnsafeMutablePointer<addrinfo>,
+        timeoutMilliseconds: Int32
+    ) -> Bool {
+        let descriptor = socket(candidate.pointee.ai_family, candidate.pointee.ai_socktype, candidate.pointee.ai_protocol)
+        guard descriptor >= 0 else { return false }
+        defer { close(descriptor) }
+
+        let currentFlags = fcntl(descriptor, F_GETFL, 0)
+        guard currentFlags >= 0 else { return false }
+        guard fcntl(descriptor, F_SETFL, currentFlags | O_NONBLOCK) >= 0 else { return false }
+
+        #if canImport(Darwin)
+        let connectionResult = Darwin.connect(descriptor, candidate.pointee.ai_addr, candidate.pointee.ai_addrlen)
+        #else
+        let connectionResult = Glibc.connect(descriptor, candidate.pointee.ai_addr, candidate.pointee.ai_addrlen)
+        #endif
+        if connectionResult == 0 {
+            return true
+        }
+
+        guard errno == EINPROGRESS else {
+            return false
+        }
+
+        var pollDescriptor = pollfd(fd: descriptor, events: Int16(POLLOUT), revents: 0)
+        let pollResult = poll(&pollDescriptor, nfds_t(1), timeoutMilliseconds)
+        guard pollResult > 0, (pollDescriptor.revents & Int16(POLLOUT)) != 0 else {
+            return false
+        }
+
+        var socketError: Int32 = 0
+        var socketErrorLength = socklen_t(MemoryLayout<Int32>.size)
+        let optionResult = getsockopt(descriptor, SOL_SOCKET, SO_ERROR, &socketError, &socketErrorLength)
+        return optionResult == 0 && socketError == 0
+    }
+    #endif
 }
