@@ -43,6 +43,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton runtime manifest --format json`：通过 CLI 读取 embedded SDK runtime manifest、platform、transport、DEBUG/Release enabled 状态、SDK version、capabilities、payload limits 与 redaction policy。默认经由本机 `triton serve` 和已连接 target；验证独立 embedded HTTP runtime（例如 Harmony SDK demo server）时可用 `--runtime-base-url http://127.0.0.1:<port>` 直连。
 - `triton state app|scene|route|responder --format json`：读取 App identity/environment、UIWindowScene/window、UIViewController route/container、first responder/text input traits，或在 Harmony provider 已注册时读取 App 主动上报的 scene/route/responder 语义。iOS 默认只使用公开 UIKit/Foundation API；SwiftUI 私有 tree、系统窗口、剪贴板和文本内容默认不采集。独立 embedded HTTP runtime 可用 `--runtime-base-url` 直连。
 - `triton snapshot --include app,scene,route,ax,geometry --format json`：通过 embedded runtime 返回一次聚合 App 内快照，包含 include 列表、app/scene/route/responder/geometry/ax/screenshot metadata、artifacts、skipped 与 truncation。它是 agent 决策输入，不替代写文件的 `capture/evidence`；独立 embedded HTTP runtime 可用 `--runtime-base-url` 直连。
+- `triton webview list|current|call|events --format json`：读取当前 WebView provider 元数据、执行页面显式 allowlist bridge、或读取页面事件 buffer。iOS 端的 `webview list/current` 直接读取当前可见 `WKWebView` metadata；`call` 只能调用页面或 App 显式注册的 allowlist 方法，不能退化成任意 JavaScript eval；`events` 只读页面主动上报的结构化事件。Harmony 未注册 WebView provider 时只保留 host-side layout/candidate 边界，不能声明 DOM、JS 或 bridge 可用。
 - `triton focus <selector> --format json`、`triton set-text <selector> <text> --secure --format json`、`triton select-segment <selector> <title|index> --format json`、`triton set-switch <selector> on|off|toggle --format json`：语义动作入口，默认先复用 `find/tap` 的 selector 解析与 `--index/--within/--at` 消歧，再向 embedded runtime 发送 `semanticAction`。使用 `--runtime-base-url` 时直接把 selector 和动作参数交给 App provider，适合 Harmony 等由业务侧实现语义动作的 runtime。返回 `strategy/targetOID/targetClassName/elapsedMs/redaction`，让 agent 不必用脆弱的坐标链表达表单操作。
 - `triton ledger --limit 50 --jsonl`：读取 embedded runtime 最近 request/action/error ring buffer。每行是 `TKRuntimeLedgerEntry`，包含 request type、action、ok、elapsedMs、errorCode、message 与 redaction；secure input 不写入明文。独立 embedded HTTP runtime 可用 `--runtime-base-url` 直连。
 - `triton plan --format json`：根据当前 server/target 状态输出下一步计划；server 不可达时返回 `nextStep=start-server` 与 `error.nextAction`，连接态返回观察、动作和 archive 导出的推荐序列。
@@ -109,6 +110,8 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 ## 边界
 
 CLI/HTTP 是 AI 自动化控制入口；Web/Wails 不参与首期闭环。后续如果需要 UI，也应只消费只读 DTO，不能先于 CLI/HTTP 定义业务控制能力。
+
+WebView 是 CLI 的一部分，但仍必须遵循 provider 边界：iOS 侧优先拿 metadata，再通过 allowlist bridge 读事件或执行业务动作；Harmony 侧没有 provider 时只能退回 host layout，不能把 Web 容器误报成可执行 DOM/JS 页面。
 
 ## 已知取舍
 
