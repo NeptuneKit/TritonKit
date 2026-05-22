@@ -120,6 +120,14 @@ docs-linhay/scripts/release.sh 0.1.1
 docs-linhay/scripts/release.sh 0.1.1 --dry-run --skip-local-verify
 ```
 
+### 发版前 WIP 隔离
+
+发版脚本要求 `main` 与 `origin/main` 同步，并且 `git status --porcelain` 为空。若主仓存在 WebView、issue worktree 合并残留、memory 写回或截图等未完成工作，先用 `git status --short --branch` 与 `git diff --stat` 确认范围，再把非 release 内容暂存到 stash 或独立 worktree。不要为了让 release 脚本通过而 `git add -A`。
+
+如果 `docs-linhay/scripts/verify.sh --local` 在创建 tag 前暴露 release blocker，应只修复阻塞发版的最小问题，单独提交并推送 `main`，再重新运行 release 脚本。未完成的业务功能、issue 文档和 memory 继续保留在 stash / worktree 中，不进入 tag。
+
+`v0.1.6` 的本地门禁曾在 iOS Simulator build 暴露 UIKit runtime helper 的 MainActor 隔离缺口；最终只提交 `9a66260 fix: isolate runtime UIKit helpers on main actor` 作为 release blocker 修复，并在 clean worktree 下重新发版。`v0.1.6` Release 已包含 `triton-macos-arm64.tar.gz`、`tritonkit-skills.tar.gz` 和 `tritonkit_checksums.txt`；x86_64 资产仍按后补 job 处理。
+
 手动触发 `.github/workflows/update-homebrew-tap.yml` 时可以覆盖：
 
 - `version`：例如 `v0.1.0`

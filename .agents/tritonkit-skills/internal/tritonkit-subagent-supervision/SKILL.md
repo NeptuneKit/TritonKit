@@ -26,6 +26,19 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
    - `qmd embed`
 5. 如果仍有未完成项，继续推进；如果卡住，明确写出 blocker 和剩余工作。
 
+## GitHub Issue 并行处理
+
+当用户要求用 subagent 处理多个 issue，且强调“不要串工作”时，默认按 issue 隔离执行：
+
+1. 一个 GitHub issue 对应一个 `space`、一个 branch、一个同 key worktree。
+2. worktree 路径使用 `../TritonKit-worktrees/<space-key>/`，不要放进主仓目录或 `/tmp`。
+3. branch 默认使用 `feat/<space-key>`；`space-key` 推荐 `<YYYYMMDD>-issue-<number>-<topic>`。
+4. 每个 subagent 只负责自己的 issue worktree，不跨 worktree 读取或修改同一批实现文件。
+5. 主控 agent 在主仓或独立只读上下文里监督，不把多个 issue 的代码、文档、memory 提交混在同一个 commit。
+6. 若主仓已有未提交改动，先记录为并行上下文，只读核对；除非用户明确要求，不 stage、不重置、不顺手修。
+7. issue 分支收尾时分别检查 `git status --short --branch`、最近 commit、测试结果、docs/memory/qmd 状态，再汇总给用户。
+8. 只有用户明确要求时才 push、开 PR、合并或删除 worktree。
+
 ## 停止条件
 
 只有以下情况可以停止：

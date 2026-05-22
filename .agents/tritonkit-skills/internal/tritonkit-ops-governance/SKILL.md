@@ -33,6 +33,7 @@ metadata:
 - 新增外部依赖时先说明必要性；首期优先 Go 标准库。
 - GitHub CI / Release 最终必须产出 macOS arm64 / x86_64 `triton` CLI tar 包、checksum manifest 和合并后的对外项目级 `tritonkit-skills.tar.gz`；发布顺序是 arm64 CLI + skill 包先创建 Release / 更新 Homebrew，x86_64 CLI 由 Intel runner 后补上传并再次刷新 checksum / tap。该 skill 包只能从 `.agents/tritonkit-skills/public/` 打包，当前至少包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`，便于外部使用者拿到开发阶段反馈流程、真实项目回归流程和本机模拟器 CLI 接管流程。
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；维护者默认用 `docs-linhay/scripts/release.sh <version>` 发布，脚本负责前置检查、tag 推送、CI 观察、Release 资产验证和 Homebrew fetch 验证。
+- 发版前必须保持主仓 worktree 完全干净，包含 memory、临时截图、未跟踪 space 和并行 issue WIP；若 release 途中需要抢修本地门禁 blocker，只做最小 release-blocker commit，推送 `main` 后重新跑 release 脚本，不把未完成 WebView/issue work 混入 tag。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；`NeptuneKit/TritonKit` 必须配置 `TAP_GITHUB_TOKEN`，让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - `v0.1.0` 起 GitHub Release 和 `NeptuneKit/homebrew-tap` 已可用；对外接入文档和 skill 默认优先给 `brew install NeptuneKit/tap/triton`，只有验证未发布源码变更或 release/tap 不可用时才使用 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` fallback。
 - 手动更新已在 `PATH` 上的 `triton` CLI 时，如果 `triton serve` 可能正从该路径运行，禁止文档或 skill 推荐直接 `cp` 覆盖目标文件；必须先停止 server，或先写 `triton.new` 再用同目录 `mv` 原子替换。
@@ -53,6 +54,7 @@ metadata:
 - 写回 docs 或 memory 后执行 `qmd update` 与 `qmd embed`。
 - qmd 写回同步优先使用 `docs-linhay/scripts/qmd-sync.sh`。当前 qmd CLI 不支持 `update/embed` 按 collection 过滤，脚本仍会执行全量维护并显式提示这一限制。
 - 用户要求“整理会话”时，先用 `git status --short --branch` 和 `git diff --stat` 隔离已提交代码、未提交文档、外部仓验证和临时产物；只 stage 本次整理相关文件，不默认 `git add -A`。
+- 用户要求 subagent 并行处理多个 GitHub issue 且强调不要串工作时，按 issue 建独立 `space` / `feat/<space-key>` / `../TritonKit-worktrees/<space-key>/`；主控 agent 逐 worktree 检查 clean status、commit、测试、docs/memory/qmd，不把多个 issue 或主仓并行改动混成一个提交。
 - 调整 CI、Release 或发布产物契约时，同步更新 `docs-linhay/dev/` 与 memory。
 - 调整 Homebrew、tap、checksum 或 release asset 命名时，同步更新 README、`.github/homebrew/`、`docs-linhay/dev/` 与 memory。
 - 调整 replay plan schema、record/replay 行为或 `.tritonplan` 对外契约时，同步更新 README、`docs-linhay/dev/ai-cli-readable-control.md`、真实项目回归 skill 与 memory。
@@ -72,6 +74,7 @@ metadata:
 - 只有用户明确要求 subagent / 并行 agent / 监督交付时才启用。
 - 主控 agent 负责边界、拆分、集成、验证、文档和最终完成判断。
 - subagent 任务必须有清晰写入面；多个 subagent 不应写同一批文件。
+- issue 级并行任务默认一 issue 一 worktree；主仓已有未提交改动时只读核对，不 stage、不重置、不顺手修。
 - 主控 agent 不把“代码已改完”当作完成，必须跑完验证与写回。
 
 ## 完成检查
