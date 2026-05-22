@@ -38,6 +38,14 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton runtime manifest --json`
    - `triton snapshot --include app,scene,route,ax,geometry --json`
    - `triton ledger --limit 50 --jsonl`
+   - WebView checks:
+     - `triton webview list --platform ios --json`
+     - `triton webview current --platform ios --json`
+     - `triton webview call <method> --platform ios --json`
+     - `triton webview events --platform ios --limit 50 --json`
+     - iOS `webview list/current` can expose visible `WKWebView` provider metadata such as URL, title, page session, loading state, progress, and frame;
+     - `webview call/events` require a page or app opt-in allowlist bridge and must not be reported as arbitrary JavaScript eval;
+     - Harmony without a registered WebView provider is host-only: layout candidates are useful evidence, but DOM, URL, JS, and bridge capabilities must remain unsupported.
    - iOS embedded runtime target checks:
      - `triton list --json` should expose iOS Simulator runtime targets as `triton:ios-simulator:<SIMULATOR_UDID>` with `simulatorUDID`;
      - pass either `--target triton:ios-simulator:<SIMULATOR_UDID>` or `--target <SIMULATOR_UDID>` when multiple simulator apps are connected;

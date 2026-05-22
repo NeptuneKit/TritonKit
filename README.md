@@ -186,6 +186,12 @@ If your app blocks cleartext development traffic through App Transport Security,
 
 `TritonKit.isRuntimeEnabled` is `true` only in `DEBUG` builds. In Release builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
+### 5. WebView Observation
+
+Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current --platform ios --json` can read visible `WKWebView` provider metadata such as URL, title, page session, loading state, progress, and frame. Page interaction remains opt-in: `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
+
+Harmony host-side layout can identify visible Web candidates without source changes, but it must not be treated as DOM or bridge access. Register a Harmony embedded WebView provider before claiming URL, DOM, JS, or page bridge capability.
+
 ## CLI Integration Guide
 
 Use the CLI guide independently when an agent only needs host-side simulator or Harmony / DevEco Emulator control. Use it together with the iOS or Harmony embedded runtime guides when the app process exposes TritonKit runtime endpoints.

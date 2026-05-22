@@ -45,6 +45,13 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton state responder --json`
    - `triton snapshot --include app,scene,route,ax,geometry --json`
    - `triton ledger --limit 50 --jsonl`
+   - when the real app has hybrid pages, verify WebView state explicitly:
+     - `triton webview list --platform ios --json`
+     - `triton webview current --platform ios --json`
+     - `triton webview call <method> --platform ios --json` only for page/app allowlisted methods;
+     - `triton webview events --platform ios --limit 50 --json`;
+     - treat iOS WebView metadata as provider evidence, not DOM control;
+     - treat Harmony host layout Web candidates as host-only until an embedded WebView provider is registered.
 7. Prepare host-side simulator state through Triton before falling back to raw `xcrun`:
    - list simulators: `triton sim list --json`;
    - set a workspace default simulator when a flow will be reused: `triton sim use <udid> --json`;
