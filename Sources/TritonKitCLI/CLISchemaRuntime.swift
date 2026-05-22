@@ -520,6 +520,32 @@ func commandSchemas() -> [TKCommandSchema] {
             providedCapabilities: ["observe", "observe-ios", "observe-harmony"]
         ),
         TKCommandSchema(
+            name: "webview",
+            summary: "List or resolve current WebView candidates while preserving provider boundaries",
+            requiresServer: false,
+            requiresTarget: true,
+            runtimeScope: "embedded|host-harmony",
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List visible WebView candidates"),
+                TKCommandSchemaOption(name: "current", type: "Subcommand", description: "Resolve current visible WebView candidate"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--platform", type: "ios|harmony", defaultValue: "ios", description: "Observation platform"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable for --platform harmony"),
+                TKCommandSchemaOption(name: "--webview-id", type: "String", description: "Select a candidate from `triton webview list`"),
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Harmony host layout artifact path"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton webview list --platform ios --json",
+                "triton webview current --platform harmony --target 127.0.0.1:10100 --json",
+            ],
+            successShape: "{ ok, action, platform, capturedAt, target, current?, candidates[], sources[], sourceCommands[], note } or { ok, action, platform, capturedAt, target, webView, sources[], sourceCommands[], note }",
+            providedCapabilities: ["webview-list", "webview-current"]
+        ),
+        TKCommandSchema(
             name: "hierarchy",
             summary: "Read latest hierarchy snapshot",
             requiresServer: true,

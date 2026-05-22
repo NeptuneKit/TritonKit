@@ -1,0 +1,970 @@
+{
+  "action" : "observe.tree",
+  "artifacts" : [
+    "app",
+    "scene",
+    "route",
+    "geometry",
+    "ax"
+  ],
+  "capturedAt" : "2026-05-22T06:57:58Z",
+  "nodes" : [
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : true,
+      "frame" : {
+        "height" : 874,
+        "width" : 402,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:1",
+      "role" : "window",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 34,
+        "width" : 140,
+        "x" : 87,
+        "y" : 171
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:12",
+      "role" : "textField",
+      "source" : "runtime-tree",
+      "text" : "Host"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 34,
+        "width" : 80,
+        "x" : 235,
+        "y" : 171
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:24",
+      "role" : "textField",
+      "source" : "runtime-tree",
+      "text" : "Port"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 15.666666666666686,
+        "width" : 125.33333333333331,
+        "x" : 28,
+        "y" : 274.6666666666667
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessStatus",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:42",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "Complex harness: 0"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 30,
+        "width" : 53,
+        "x" : 165.33333333333334,
+        "y" : 267.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessPrimary",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:44",
+      "role" : "button",
+      "source" : "runtime-tree",
+      "text" : "Primary"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 30,
+        "width" : 74.00000000000003,
+        "x" : 230.33333333333334,
+        "y" : 267.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessSecondary",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:48",
+      "role" : "button",
+      "source" : "runtime-tree",
+      "text" : "Secondary"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 28,
+        "width" : 59.666666666666686,
+        "x" : 316.3333333333333,
+        "y" : 268.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessSwitch",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:52",
+      "role" : "switch",
+      "source" : "runtime-tree",
+      "text" : "Enabled"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 16.333333333333314,
+        "width" : 346,
+        "x" : 28,
+        "y" : 313.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessMode",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:76",
+      "role" : "segmentedControl",
+      "source" : "runtime-tree",
+      "text" : "Mode"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 14.333333333333314,
+        "width" : 294,
+        "x" : 28,
+        "y" : 336.6666666666667
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessSlider",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:124",
+      "role" : "slider",
+      "source" : "runtime-tree",
+      "text" : "Progress"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 14.333333333333314,
+        "width" : 44,
+        "x" : 330,
+        "y" : 336.6666666666667
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessSliderValue",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:140",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "50%"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 14.333333333333314,
+        "width" : 36,
+        "x" : 28,
+        "y" : 359
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessStepperValue",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:144",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "2"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 14.333333333333314,
+        "width" : 298,
+        "x" : 76,
+        "y" : 359
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessStepper",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:146",
+      "role" : "stepper",
+      "source" : "runtime-tree",
+      "text" : "Count"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 62,
+        "width" : 346,
+        "x" : 28,
+        "y" : 389.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessTextView",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:164",
+      "role" : "textView",
+      "source" : "runtime-tree",
+      "text" : "Notes"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 346,
+        "x" : 28,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarousel",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:184",
+      "role" : "scrollView",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 28,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem1",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:188",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 1"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 110,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem2",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:190",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 2"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 192,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem3",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:192",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 3"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 274,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem4",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:194",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 4"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 356,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem5",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:196",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 5"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 438,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem6",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:198",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 6"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 520,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem7",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:200",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 7"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 602,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem8",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:202",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 8"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 684,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem9",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:204",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 9"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 766,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem10",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:206",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 10"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 848,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem11",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:208",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 11"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 930,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem12",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:210",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 12"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 1012,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem13",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:212",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 13"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 1094,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem14",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:214",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 14"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 1176,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem15",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:216",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 15"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 1258,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem16",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:218",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 16"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 1340,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem17",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:220",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 17"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 48,
+        "width" : 72,
+        "x" : 1422,
+        "y" : 459.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "ComplexHarnessCarouselItem18",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:222",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "item 18"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 14.333333333333371,
+        "width" : 346,
+        "x" : 28,
+        "y" : 543.3333333333333
+      },
+      "hidden" : false,
+      "identifier" : "WebViewSmokeNativeStatus",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:238",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "Web native status: ready"
+    },
+    {
+      "candidateOnly" : true,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.78,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 177.66666666666663,
+        "width" : 346,
+        "x" : 28,
+        "y" : 565.6666666666665
+      },
+      "hidden" : false,
+      "identifier" : "WebViewSmokeScrollView",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:242",
+      "role" : "scrollView",
+      "source" : "runtime-tree",
+      "text" : "Triton WebView Smoke Container"
+    }
+  ],
+  "note" : "iOS P0 observe uses the DEBUG embedded runtime AX tree. WebView DOM, JavaScript, and bridge state require a Web provider.",
+  "ok" : true,
+  "partial" : true,
+  "platform" : "ios",
+  "sourceCommands" : [
+    "triton runtimeSnapshot request"
+  ],
+  "sources" : [
+    {
+      "available" : false,
+      "name" : "host-layout",
+      "reason" : "iOS host layout is not available in P0; use embedded runtime AX",
+      "sourceCommands" : [
+
+      ]
+    },
+    {
+      "available" : true,
+      "name" : "runtime-tree",
+      "sourceCommands" : [
+        "triton runtimeSnapshot request"
+      ]
+    },
+    {
+      "available" : false,
+      "name" : "webview-provider",
+      "reason" : "provider not registered",
+      "sourceCommands" : [
+
+      ]
+    }
+  ],
+  "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+}

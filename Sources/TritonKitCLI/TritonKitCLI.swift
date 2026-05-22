@@ -40,6 +40,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             List.self,
             Inspect.self,
             Observe.self,
+            WebView.self,
             Hierarchy.self,
             Nodes.self,
             Node.self,

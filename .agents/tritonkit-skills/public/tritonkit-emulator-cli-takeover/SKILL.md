@@ -119,7 +119,11 @@ triton tap "登录" --target <SIMULATOR_UDID> --json
 triton observe current --platform ios --json
 triton observe tree --platform ios --runtime-base-url <baseURL> --json
 triton node resolve --platform ios --text "登录" --json
+triton webview list --platform ios --json
+triton webview current --platform ios --json
 ```
+
+`webview list/current` 当前是只读 descriptor 能力。没有 WebView provider 时，输出必须保持 `candidateOnly=true`、`providerStatus=unavailable`、`bridgeStatus=unavailable`，并在 `missingCapabilities` 中声明 `webview.url`、`webview.dom`、`webview.bridge-call`、`webview.tap`、`webview.type` 等缺失项；不得把 AX/WebKit 容器误报为 DOM/JS/bridge 可用。
 
 When multiple iOS Simulator apps connect to the same `triton serve`, embedded runtime targets use stable ids shaped as `triton:ios-simulator:<SIMULATOR_UDID>`. Runtime commands may pass either the full target id or the simulator UDID. If more than one runtime target is connected and the command still uses the default `triton:local`, the expected result is `error.code=ambiguous_target`, not last-connection wins.
 

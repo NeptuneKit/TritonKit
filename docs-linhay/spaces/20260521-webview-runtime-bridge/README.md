@@ -57,6 +57,13 @@ Harmony 侧优先使用 ArkWeb / Webview 公开能力和现有 embedded HTTP run
 12. runtime manifest / capabilities / schema 暴露 Host / Runtime / WebView 能力、边界和 unsafe eval 状态。
 13. ledger / evidence 记录 host layout、runtime snapshot、WebView call、event、timeout、JavaScript error、redaction 和 source command。
 
+### 本轮 P1 只读验收
+
+1. Given iOS DEBUG runtime 已连接，且当前页面包含可见 `WKWebView` / WebView 容器候选；When 执行 `triton webview list --platform ios --json`；Then 返回 `candidates[]`，每个候选带 `webViewID/platform/source/frame/candidateOnly/providerStatus/bridgeStatus/capabilities/missingCapabilities`。
+2. Given iOS DEBUG runtime 只有一个明确 WebView 候选；When 执行 `triton webview current --platform ios --json`；Then 返回同一个候选，且 `candidateOnly=true`、`providerStatus=unavailable`、`missingCapabilities` 包含 `webview.url/webview.dom/webview.bridge-call`。
+3. Given Harmony 模拟器 host layout 存在 Web 组件候选但未接入 embedded Web provider；When 执行 `triton webview list --platform harmony --target <hdc-target> --json`；Then 只声明 `host-coordinate-tap` / `host-scroll` 等 host 能力，不声明 DOM、URL、JS 或 bridge。
+4. Given 多个候选无法唯一判断 current；When 执行 `triton webview current --json`；Then 返回明确错误，提示先 `webview list` 再传 `--webview-id`，不能隐式猜测。
+
 ### Out of Scope
 
 1. 不恢复 Web/Wails UI。

@@ -165,4 +165,48 @@ struct TKObservationModelsTests {
         #expect(decoded.height == 200)
         #expect(Data(base64Encoded: decoded.dataBase64) == Data("png".utf8))
     }
+
+    @Test("WebView descriptor keeps provider boundary explicit")
+    func webViewDescriptorShape() throws {
+        let descriptor = TKWebViewDescriptor(
+            webViewID: "ios-runtime:242",
+            platform: "ios",
+            source: "runtime-tree",
+            nodeID: "ios-runtime:242",
+            role: "scrollView",
+            text: "Triton WebView Smoke Container",
+            identifier: "WebViewSmokeScrollView",
+            frame: TKRect(x: 16, y: 560, width: 370, height: 180),
+            visibleRatio: 1,
+            candidateOnly: true,
+            confidence: 0.74,
+            capabilities: ["visible", "runtime-oid"],
+            missingCapabilities: ["webview.url", "webview.dom", "webview.bridge-call"]
+        )
+
+        let response = TKWebViewListResponse(
+            ok: true,
+            action: "webview.list",
+            platform: "ios",
+            capturedAt: "2026-05-22T00:00:00Z",
+            target: "triton:ios-simulator:demo",
+            current: descriptor,
+            candidates: [descriptor],
+            sources: [
+                TKWebViewSource(name: "runtime-tree", available: true, sourceCommands: ["triton runtimeSnapshot request"]),
+                TKWebViewSource(name: "webview-provider", available: false, reason: "provider not registered"),
+            ],
+            sourceCommands: ["triton runtimeSnapshot request"],
+            note: "candidate only"
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKWebViewListResponse.self, from: data)
+
+        #expect(decoded.current?.candidateOnly == true)
+        #expect(decoded.current?.providerStatus == "unavailable")
+        #expect(decoded.current?.bridgeStatus == "unavailable")
+        #expect(decoded.current?.missingCapabilities.contains("webview.dom") == true)
+        #expect(decoded.sources.last?.available == false)
+    }
 }

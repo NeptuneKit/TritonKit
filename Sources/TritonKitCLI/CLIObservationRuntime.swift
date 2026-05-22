@@ -189,18 +189,20 @@ func observeNodes(fromAX nodes: [TKAXNode], source: String, prefix: String) -> [
 }
 
 func observeNode(fromAX node: TKAXNode, source: String, nodeID: String) -> ObserveNodeOutput {
-    let webCandidate = isWebCandidate(role: node.role, className: node.className)
+    let webCandidate = isWebCandidate(
+        role: node.role,
+        className: node.className,
+        identifier: node.identifier,
+        text: node.label ?? node.title ?? node.value
+    )
     var capabilities = ["visible"]
-    if node.enabled && !node.hidden {
+    if node.enabled && !node.hidden && !webCandidate {
         capabilities.append("tap")
     }
     if node.targetOID != nil || node.viewOID != nil {
         capabilities.append("runtime-oid")
     }
-    var missing = ["webview.dom", "webview.bridge-call"]
-    if !webCandidate {
-        missing.append("webview.url")
-    }
+    let missing = ["webview.url", "webview.dom", "webview.bridge-call"]
     return ObserveNodeOutput(
         nodeID: nodeID,
         source: source,
@@ -219,7 +221,12 @@ func observeNode(fromAX node: TKAXNode, source: String, nodeID: String) -> Obser
 }
 
 func observeNode(fromHarmony node: TKHarmonyLayoutNodeSummary) -> ObserveNodeOutput {
-    let webCandidate = isWebCandidate(role: node.type, className: nil)
+    let webCandidate = isWebCandidate(
+        role: node.type,
+        className: nil,
+        identifier: node.identifier ?? node.key ?? node.accessibilityID,
+        text: node.text ?? node.originalText
+    )
     var capabilities: [String] = []
     if node.visible != false {
         capabilities.append("visible")
@@ -250,12 +257,8 @@ func observeNode(fromHarmony node: TKHarmonyLayoutNodeSummary) -> ObserveNodeOut
     )
 }
 
-func isWebCandidate(role: String?, className: String?) -> Bool {
-    [role, className]
-        .compactMap { $0?.lowercased() }
-        .contains { value in
-            value.contains("web") || value.contains("wkwebview")
-        }
+func isWebCandidate(role: String?, className: String?, identifier: String? = nil, text: String? = nil) -> Bool {
+    webViewCandidateScore(role: role, className: className, identifier: identifier, text: text) != nil
 }
 
 func runNodeResolve(
