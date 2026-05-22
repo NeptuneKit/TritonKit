@@ -27,7 +27,7 @@ if [[ "${dev_version}" != "0.1.0-dev+0123456" ]]; then
   exit 1
 fi
 
-swift_file="${tmp_dir}/main.swift"
+swift_file="${tmp_dir}/CLIBuildInfo.swift"
 cat > "${swift_file}" <<'SWIFT'
 enum TritonKitBuildInfo {
     static let cliVersion = "0.1.0-dev"

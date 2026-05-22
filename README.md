@@ -344,10 +344,18 @@ triton device doctor --platform harmony --json
 triton device list --platform harmony --json
 triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
+triton app install --platform harmony --hap /tmp/Demo.hap --target 127.0.0.1:10100 --json
 triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
+triton app open-url --platform harmony --bundle com.example.app --ability EntryAbility "example://debug" --target 127.0.0.1:10100 --json
+triton ax --platform harmony --target 127.0.0.1:10100 --output /tmp/harmony-layout.json --json
+triton wait --platform harmony --target 127.0.0.1:10100 --text "目标页" --timeout 15 --json
+triton tap "我的" --platform harmony --target 127.0.0.1:10100 --json
+triton screenshot --platform harmony --target 127.0.0.1:10100 --output /tmp/smoke.jpeg --json
 ```
 
 When multiple HDC targets are `Connected`, Triton returns `error.code=ambiguous_target` and requires an explicit `--target`. The adapter records `sourceCommand`; risk/policy metadata is for audit and configuration validation, not an interactive confirmation gate.
+
+Harmony host-side `ax/wait/tap/screenshot` wrap `uitest dumpLayout`, `uitest uiInput click`, and `snapshot_display` with JSON envelopes. Layout and screenshot outputs can contain private UI data; inspect or redact artifacts before attaching them to public issues.
 
 For repeatable regression flows, wait for asynchronous UI state before the next action or assertion:
 

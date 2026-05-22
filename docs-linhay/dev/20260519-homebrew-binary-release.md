@@ -12,7 +12,7 @@ TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 4. CI 从触发上下文解析版本号：
    - `v*` tag：去掉前缀 `v` 后作为正式版本。
    - 非 tag：使用 `0.1.0-dev+<short-sha>`。
-5. CLI 构建前写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`。
+5. CLI 构建前写入 `Sources/TritonKitCLI/CLIBuildInfo.swift` 中的 `TritonKitBuildInfo.cliVersion`。
 6. skill 打包前写入 `SKILL.md` front matter 的 `metadata.version` 字段。
 7. arm64 汇总 job 生成首版 `tritonkit_checksums.txt`，并上传合并后的 `tritonkit-skills.tar.gz` skill 包，包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`。
 8. `v*` tag 发布时先上传 arm64 CLI、skill 包和首版 checksum 到 GitHub Release。

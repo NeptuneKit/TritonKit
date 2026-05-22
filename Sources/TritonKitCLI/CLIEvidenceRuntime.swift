@@ -1,0 +1,1081 @@
+import ArgumentParser
+import Darwin
+import Foundation
+import Hummingbird
+import HummingbirdWebSocket
+import NIOFoundationCompat
+import NIOCore
+import TritonKit
+import TritonKitShared
+
+struct EvidenceScreenshotMetadata: Codable {
+    let format: String
+    let width: Double
+    let height: Double
+    let scale: Double
+    let dataRef: String?
+    let imagePath: String
+    let bytes: Int
+}
+
+func parseEvidenceIncludes(_ raw: String) throws -> [String] {
+    let aliases = [
+        "targets": "list",
+        "accessibility": "ax",
+        "export": "archive",
+    ]
+    let allowed: Set<String> = [
+        "screenshot",
+        "ax",
+        "hierarchy",
+        "status",
+        "list",
+        "version",
+        "geometry",
+        "archive",
+        "logs",
+    ]
+    var result: [String] = []
+    var seen = Set<String>()
+    for part in raw.split(separator: ",") {
+        let normalized = part.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        guard !normalized.isEmpty else { continue }
+        let kind = aliases[normalized] ?? normalized
+        guard allowed.contains(kind) else {
+            throw RuntimeError("Unsupported evidence include: \(normalized)")
+        }
+        if seen.insert(kind).inserted {
+            result.append(kind)
+        }
+    }
+    return result.isEmpty ? ["status", "list", "version", "hierarchy", "ax", "screenshot"] : result
+}
+
+func failEvidenceValidation(_ message: String, outputFormat: ClientOutputFormat) throws -> Never {
+    switch outputFormat {
+    case .json:
+        let response = TKCLIErrorResponse(error: TKCLIErrorDetail(
+            code: "validation_failed",
+            message: message,
+            hint: "Run `triton schema --command evidence --json` to inspect required fields"
+        ))
+        print(try encodeJSON(response))
+    case .text:
+        fputs("error: \(message)\n", stderr)
+    }
+    throw ExitCode.failure
+}
+
+func readEvidenceManifest(from path: String) throws -> TKEvidenceManifest {
+    let inputURL = URL(fileURLWithPath: path)
+    let manifestURL: URL
+    var isDirectory: ObjCBool = false
+    if FileManager.default.fileExists(atPath: inputURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+        manifestURL = inputURL.appendingPathComponent("manifest.json")
+    } else {
+        manifestURL = inputURL.lastPathComponent == "manifest.json"
+            ? inputURL
+            : inputURL.appendingPathComponent("manifest.json")
+    }
+    let data = try Data(contentsOf: manifestURL)
+    return try JSONDecoder().decode(TKEvidenceManifest.self, from: data)
+}
+
+func readReplayPlan(from path: String) throws -> TKReplayPlan {
+    let data = try Data(contentsOf: URL(fileURLWithPath: path))
+    let plan = try JSONDecoder().decode(TKReplayPlan.self, from: data)
+    guard plan.schemaVersion == 1 else {
+        throw RuntimeError("Unsupported replay plan schemaVersion: \(plan.schemaVersion)")
+    }
+    guard !plan.steps.isEmpty else {
+        throw RuntimeError("Replay plan must contain at least one step")
+    }
+    return plan
+}
+
+func parseAssertBounds(_ raw: String) throws -> TKRect {
+    try parseBounds(raw)
+}
+
+func parseBounds(_ raw: String) throws -> TKRect {
+    let parts = raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    guard parts.count == 4,
+          let x = Double(parts[0]),
+          let y = Double(parts[1]),
+          let width = Double(parts[2]),
+          let height = Double(parts[3]),
+          width >= 0,
+          height >= 0 else {
+        throw RuntimeError("--within must use x,y,width,height with non-negative width and height")
+    }
+    return TKRect(x: x, y: y, width: width, height: height)
+}
+
+func parsePoint(_ raw: String) throws -> (x: Double, y: Double) {
+    let parts = raw.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+    guard parts.count == 2,
+          let x = Double(parts[0]),
+          let y = Double(parts[1]) else {
+        throw RuntimeError("--at must use x,y")
+    }
+    return (x, y)
+}
+
+func requiredPoint(
+    at: String?,
+    x: Double?,
+    y: Double?,
+    outputFormat: ClientOutputFormat
+) throws -> (x: Double, y: Double) {
+    if at != nil && (x != nil || y != nil) {
+        if outputFormat == .json {
+            try printValidationError("--at cannot be combined with --x/--y")
+            throw ExitCode.failure
+        }
+        throw RuntimeError("--at cannot be combined with --x/--y")
+    }
+    if let at {
+        return try parsePoint(at)
+    }
+    guard let x, let y else {
+        if outputFormat == .json {
+            try printValidationError("Provide coordinates as --at x,y or --x/--y")
+            throw ExitCode.failure
+        }
+        throw RuntimeError("Provide coordinates as --at x,y or --x/--y")
+    }
+    return (x, y)
+}
+
+func inputFocusPoint(
+    at: String?,
+    x: Double?,
+    y: Double?,
+    outputFormat: ClientOutputFormat
+) throws -> (x: Double, y: Double)? {
+    if at != nil && (x != nil || y != nil) {
+        if outputFormat == .json {
+            try printValidationError("--at cannot be combined with --x/--y")
+            throw ExitCode.failure
+        }
+        throw RuntimeError("--at cannot be combined with --x/--y")
+    }
+    if (x == nil) != (y == nil) {
+        if outputFormat == .json {
+            try printValidationError("--x and --y must be provided together")
+            throw ExitCode.failure
+        }
+        throw RuntimeError("--x and --y must be provided together")
+    }
+    if let at {
+        return try parsePoint(at)
+    }
+    return nil
+}
+
+func printAssertResult(_ result: TKUIAssertResult, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(result))
+    case .text:
+        print("ok: \(result.ok)")
+        print("condition: \(result.condition)")
+        print("query: \(result.query)")
+        if let role = result.role { print("role: \(role)") }
+        print("count: \(result.count)")
+        if let expectedCount = result.expectedCount { print("expectedCount: \(expectedCount)") }
+        if let minCount = result.minCount { print("minCount: \(minCount)") }
+        if let maxCount = result.maxCount { print("maxCount: \(maxCount)") }
+        if let within = result.within { print("within: \(formatRect(within))") }
+        if let targetConnectionState = result.targetConnectionState { print("targetConnectionState: \(targetConnectionState)") }
+        if let hierarchyCacheState = result.hierarchyCacheState { print("hierarchyCacheState: \(hierarchyCacheState)") }
+        if let message = result.message { print("message: \(message)") }
+    }
+}
+
+func parseReplayVariables(_ assignments: [String]) throws -> [String: String] {
+    var result: [String: String] = [:]
+    for assignment in assignments {
+        guard let equals = assignment.firstIndex(of: "=") else {
+            throw RuntimeError("Invalid --var assignment: \(assignment)")
+        }
+        let key = String(assignment[..<equals])
+        let value = String(assignment[assignment.index(after: equals)...])
+        guard !key.isEmpty else {
+            throw RuntimeError("Invalid --var assignment with empty key")
+        }
+        if key.hasSuffix("-env") {
+            let variableName = String(key.dropLast(4))
+            guard !variableName.isEmpty else {
+                throw RuntimeError("Invalid --var env assignment with empty key")
+            }
+            guard let envValue = ProcessInfo.processInfo.environment[value] else {
+                throw RuntimeError("Environment variable is not set for replay variable \(variableName): \(value)")
+            }
+            result[variableName] = envValue
+        } else {
+            result[key] = value
+        }
+    }
+    return result
+}
+
+func runReplayPlan(
+    _ plan: TKReplayPlan,
+    variables: [String: String],
+    dryRun: Bool,
+    target: String,
+    host: String,
+    port: Int
+) async throws -> TKReplayResult {
+    let start = Date()
+    var steps: [TKReplayStepResult] = []
+    var failedStepIndex: Int?
+    let client = TritonKitHTTPClient(host: host, port: port)
+    let commands = try plan.steps.enumerated().map { offset, step in
+        try replayCommand(for: step, plan: plan, index: offset + 1, variables: variables)
+    }
+
+    if !dryRun {
+        _ = try await resolveTarget(target, host: host, port: port, jsonError: true)
+    }
+
+    for (offset, step) in plan.steps.enumerated() {
+        let index = offset + 1
+        let command = commands[offset]
+        if dryRun {
+            steps.append(TKReplayStepResult(
+                index: index,
+                action: step.action.rawValue,
+                name: step.name ?? step.id,
+                ok: true,
+                dryRun: true,
+                elapsedMs: 0,
+                command: command,
+                message: "dry-run"
+            ))
+            continue
+        }
+
+        let stepStart = Date()
+        do {
+            let result = try await executeReplayStep(
+                step,
+                plan: plan,
+                index: index,
+                variables: variables,
+                target: target,
+                host: host,
+                port: port,
+                client: client,
+                command: command,
+                startedAt: stepStart
+            )
+            steps.append(result)
+            if !result.ok {
+                failedStepIndex = index
+                break
+            }
+        } catch {
+            failedStepIndex = index
+            steps.append(TKReplayStepResult(
+                index: index,
+                action: step.action.rawValue,
+                name: step.name ?? step.id,
+                ok: false,
+                dryRun: false,
+                elapsedMs: elapsedMilliseconds(since: stepStart),
+                command: command,
+                message: "\(error)"
+            ))
+            break
+        }
+    }
+
+    return TKReplayResult(
+        ok: failedStepIndex == nil,
+        dryRun: dryRun,
+        planName: plan.name,
+        stepCount: plan.steps.count,
+        executedCount: steps.count,
+        failedStepIndex: failedStepIndex,
+        elapsedMs: elapsedMilliseconds(since: start),
+        steps: steps
+    )
+}
+
+func executeReplayStep(
+    _ step: TKReplayPlanStep,
+    plan: TKReplayPlan,
+    index: Int,
+    variables: [String: String],
+    target: String,
+    host: String,
+    port: Int,
+    client: TritonKitHTTPClient,
+    command: [String],
+    startedAt: Date
+) async throws -> TKReplayStepResult {
+    switch step.action {
+    case .tap:
+        let request = try await replayTapRequest(step, variables: variables, client: client)
+        let input = try await executeInputRequest(request, client: client)
+        return TKReplayStepResult(
+            index: index,
+            action: step.action.rawValue,
+            name: step.name ?? step.id,
+            ok: input.ok,
+            dryRun: false,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            command: command,
+            message: input.message,
+            input: input
+        )
+    case .paste, .type, .clear:
+        let (request, redactedValue) = try replayTextInputRequest(step, variables: variables)
+        let input = try await executeInputRequest(request, client: client)
+        return TKReplayStepResult(
+            index: index,
+            action: step.action.rawValue,
+            name: step.name ?? step.id,
+            ok: input.ok,
+            dryRun: false,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            command: command,
+            message: input.message,
+            redactedValue: redactedValue,
+            input: input
+        )
+    case .wait:
+        let wait = try await performWait(replayWaitRequest(step, variables: variables), client: client)
+        return TKReplayStepResult(
+            index: index,
+            action: step.action.rawValue,
+            name: step.name ?? step.id,
+            ok: wait.ok,
+            dryRun: false,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            command: command,
+            message: wait.ok ? "matched" : "timed out",
+            wait: wait
+        )
+    case .screenshot:
+        let output = try replayOutputPath(
+            step.output,
+            fallback: "/tmp/\(replayArtifactName(plan: plan, step: step, index: index)).png",
+            variables: variables
+        )
+        let data = try await client.request(type: "screenshot")
+        let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
+        let imageData = try await screenshotImageData(screenshot, client: client)
+        let outputURL = URL(fileURLWithPath: output)
+        try FileManager.default.createDirectory(
+            at: outputURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try imageData.write(to: outputURL, options: .atomic)
+        return TKReplayStepResult(
+            index: index,
+            action: step.action.rawValue,
+            name: step.name ?? step.id,
+            ok: true,
+            dryRun: false,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            command: command,
+            message: "screenshot captured",
+            file: TKReplayFileArtifact(path: outputURL.path, bytes: imageData.count, contentType: "image/png")
+        )
+    case .evidence:
+        let output = try replayOutputPath(
+            step.output,
+            fallback: "/tmp/\(replayArtifactName(plan: plan, step: step, index: index)).tritonevidence",
+            variables: variables
+        )
+        let includes = try parseEvidenceIncludes(step.include ?? "status,list,version,hierarchy,ax,screenshot")
+        let manifest = try await captureEvidenceBundle(
+            output: output,
+            includes: includes,
+            name: step.name ?? plan.name,
+            note: step.note,
+            target: target,
+            host: host,
+            port: port,
+            refresh: step.refresh ?? true
+        )
+        return TKReplayStepResult(
+            index: index,
+            action: step.action.rawValue,
+            name: step.name ?? step.id,
+            ok: manifest.ok,
+            dryRun: false,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            command: command,
+            message: "evidence captured",
+            evidence: manifest
+        )
+    }
+}
+
+func replayTapRequest(
+    _ step: TKReplayPlanStep,
+    variables: [String: String],
+    client: TritonKitHTTPClient
+) async throws -> TKInputRequest {
+    let selectorCount = [
+        step.text != nil,
+        step.oid != nil,
+        step.x != nil || step.y != nil,
+        step.axOID != nil,
+        step.axLabel != nil,
+    ].filter { $0 }.count
+    guard selectorCount == 1 else {
+        throw RuntimeError("Replay tap step requires exactly one selector: text, oid, x/y, axOID, or axLabel")
+    }
+    if (step.x == nil) != (step.y == nil) {
+        throw RuntimeError("Replay tap step requires x and y together")
+    }
+    if let text = step.text {
+        let query = try TKReplaySubstituteVariables(text, variables: variables)
+        return try await resolveTapTarget(
+            query,
+            client: client,
+            width: step.width,
+            height: step.height,
+            duration: step.duration
+        ).request
+    }
+    if step.axOID != nil || step.axLabel != nil {
+        let data = try await client.request(type: "accessibility")
+        let nodes = try JSONDecoder().decode([TKAXNode].self, from: data)
+        let label = try step.axLabel.map { try TKReplaySubstituteVariables($0, variables: variables) }
+        guard let node = selectAXNode(nodes, oid: step.axOID, label: label) else {
+            throw RuntimeError("AX node not found for replay tap step")
+        }
+        return tapRequest(for: node, width: step.width, height: step.height, duration: step.duration)
+    }
+    return TKInputRequest.tap(
+        x: step.x,
+        y: step.y,
+        targetOID: step.oid,
+        width: step.width,
+        height: step.height,
+        duration: step.duration
+    )
+}
+
+func replayTextInputRequest(
+    _ step: TKReplayPlanStep,
+    variables: [String: String]
+) throws -> (request: TKInputRequest, redactedValue: String?) {
+    try validateReplayXYPair(step)
+    switch step.action {
+    case .paste:
+        let rawValue = step.value ?? step.text
+        guard let rawValue else {
+            throw RuntimeError("Replay paste step requires value or text")
+        }
+        let value = try TKReplaySubstituteVariables(rawValue, variables: variables)
+        return (
+            TKInputRequest.paste(value, targetOID: step.oid, x: step.x, y: step.y, secure: step.secure ?? false),
+            step.redactedValue(substitutedValue: value)
+        )
+    case .type:
+        let rawValue = step.value ?? step.text
+        guard let rawValue else {
+            throw RuntimeError("Replay type step requires value or text")
+        }
+        let value = try TKReplaySubstituteVariables(rawValue, variables: variables)
+        return (
+            TKInputRequest(type: .typeText, targetOID: step.oid, text: value, secure: step.secure),
+            step.redactedValue(substitutedValue: value)
+        )
+    case .clear:
+        return (TKInputRequest.clear(targetOID: step.oid, x: step.x, y: step.y), nil)
+    default:
+        throw RuntimeError("Replay text input builder received unsupported action: \(step.action.rawValue)")
+    }
+}
+
+func replayWaitRequest(_ step: TKReplayPlanStep, variables: [String: String]) throws -> WaitRequest {
+    let conditionCount = [
+        step.text != nil,
+        step.gone != nil,
+        step.exists != nil,
+        step.idle == true,
+        step.hierarchyChange == true,
+        step.predicate != nil,
+    ].filter { $0 }.count
+    guard conditionCount == 1 else {
+        throw RuntimeError("Replay wait step requires exactly one condition: text, gone, exists, idle, hierarchyChange, or predicate")
+    }
+    guard let condition = step.waitCondition else {
+        throw RuntimeError("Replay wait step requires one condition: text, gone, exists, idle, hierarchyChange, or predicate")
+    }
+    switch condition {
+    case .text:
+        return WaitRequest(
+            condition: .text,
+            query: try step.text.map { try TKReplaySubstituteVariables($0, variables: variables) },
+            predicate: nil,
+            role: step.role,
+            timeout: step.timeout ?? 10,
+            interval: step.interval ?? 0.5
+        )
+    case .gone:
+        return WaitRequest(
+            condition: .gone,
+            query: try step.gone.map { try TKReplaySubstituteVariables($0, variables: variables) },
+            predicate: nil,
+            role: step.role,
+            timeout: step.timeout ?? 10,
+            interval: step.interval ?? 0.5
+        )
+    case .exists:
+        return WaitRequest(
+            condition: .exists,
+            query: try step.exists.map { try TKReplaySubstituteVariables($0, variables: variables) },
+            predicate: nil,
+            role: step.role,
+            timeout: step.timeout ?? 10,
+            interval: step.interval ?? 0.5
+        )
+    case .idle:
+        return WaitRequest(condition: .idle, query: nil, predicate: nil, role: nil, timeout: step.timeout ?? 10, interval: step.interval ?? 0.5)
+    case .hierarchyChange:
+        return WaitRequest(condition: .hierarchyChange, query: nil, predicate: nil, role: nil, timeout: step.timeout ?? 10, interval: step.interval ?? 0.5)
+    case .predicate:
+        return WaitRequest(
+            condition: .predicate,
+            query: nil,
+            predicate: try step.predicate.map { try TKReplaySubstituteVariables($0, variables: variables) },
+            role: nil,
+            timeout: step.timeout ?? 10,
+            interval: step.interval ?? 0.5
+        )
+    }
+}
+
+func replayCommand(
+    for step: TKReplayPlanStep,
+    plan: TKReplayPlan,
+    index: Int,
+    variables: [String: String]
+) throws -> [String] {
+    switch step.action {
+    case .tap:
+        var command = ["triton", "tap"]
+        if let text = step.text {
+            command.append(try TKReplaySubstituteVariables(text, variables: variables))
+        } else if let x = step.x, let y = step.y {
+            command += ["--x", replayNumber(x), "--y", replayNumber(y)]
+        } else if let oid = step.oid {
+            command += ["--oid", "\(oid)"]
+        } else if let axOID = step.axOID {
+            command += ["--ax-oid", "\(axOID)"]
+        } else if let axLabel = step.axLabel {
+            command += ["--ax-label", try TKReplaySubstituteVariables(axLabel, variables: variables)]
+        } else {
+            throw RuntimeError("Replay tap step requires a target selector")
+        }
+        return command + ["--json"]
+    case .paste:
+        try validateReplayXYPair(step)
+        let rawValue = step.value ?? step.text
+        guard let rawValue else {
+            throw RuntimeError("Replay paste step requires value or text")
+        }
+        let value = try TKReplaySubstituteVariables(rawValue, variables: variables)
+        var command = ["triton", "paste"]
+        if step.secure == true {
+            command += ["--secure", step.redactedValue(substitutedValue: value)]
+        } else {
+            command.append(value)
+        }
+        if let x = step.x, let y = step.y {
+            command += ["--x", replayNumber(x), "--y", replayNumber(y)]
+        }
+        if let oid = step.oid {
+            command += ["--oid", "\(oid)"]
+        }
+        return command + ["--json"]
+    case .type:
+        try validateReplayXYPair(step)
+        let rawValue = step.value ?? step.text
+        guard let rawValue else {
+            throw RuntimeError("Replay type step requires value or text")
+        }
+        let value = try TKReplaySubstituteVariables(rawValue, variables: variables)
+        var command = ["triton", "type", "--text", step.redactedValue(substitutedValue: value)]
+        if step.secure == true {
+            command.append("--secure")
+        }
+        if let oid = step.oid {
+            command += ["--oid", "\(oid)"]
+        }
+        return command + ["--json"]
+    case .clear:
+        try validateReplayXYPair(step)
+        var command = ["triton", "clear"]
+        if let x = step.x, let y = step.y {
+            command += ["--x", replayNumber(x), "--y", replayNumber(y)]
+        }
+        if let oid = step.oid {
+            command += ["--oid", "\(oid)"]
+        }
+        return command + ["--json"]
+    case .wait:
+        var command = ["triton", "wait"]
+        let request = try replayWaitRequest(step, variables: variables)
+        switch TKWaitCondition(rawValue: request.condition.rawValue) ?? request.condition {
+        case .text:
+            command += ["--text", request.query ?? ""]
+        case .gone:
+            command += ["--gone", request.query ?? ""]
+        case .exists:
+            command += ["--exists", request.query ?? ""]
+        case .idle:
+            command.append("--idle")
+        case .hierarchyChange:
+            command.append("--hierarchy-change")
+        case .predicate:
+            command += ["--predicate", request.predicate ?? ""]
+        }
+        if let role = request.role {
+            command += ["--role", role]
+        }
+        command += ["--timeout", replayNumber(request.timeout), "--interval", replayNumber(request.interval), "--json"]
+        return command
+    case .screenshot:
+        let output = try replayOutputPath(
+            step.output,
+            fallback: "/tmp/\(replayArtifactName(plan: plan, step: step, index: index)).png",
+            variables: variables
+        )
+        return ["triton", "screenshot", "--output", output, "--json"]
+    case .evidence:
+        let output = try replayOutputPath(
+            step.output,
+            fallback: "/tmp/\(replayArtifactName(plan: plan, step: step, index: index)).tritonevidence",
+            variables: variables
+        )
+        var command = ["triton", "evidence", "--output", output, "--include", step.include ?? "status,list,version,hierarchy,ax,screenshot"]
+        if let name = step.name ?? plan.name {
+            command += ["--name", name]
+        }
+        if let note = step.note {
+            command += ["--note", note]
+        }
+        return command + ["--json"]
+    }
+}
+
+func validateReplayXYPair(_ step: TKReplayPlanStep) throws {
+    if (step.x == nil) != (step.y == nil) {
+        throw RuntimeError("Replay \(step.action.rawValue) step requires x and y together")
+    }
+}
+
+func replayOutputPath(_ raw: String?, fallback: String, variables: [String: String]) throws -> String {
+    try TKReplaySubstituteVariables(raw ?? fallback, variables: variables)
+}
+
+func replayArtifactName(plan: TKReplayPlan, step: TKReplayPlanStep, index: Int) -> String {
+    sanitizedPathComponent(step.name ?? step.id ?? plan.name ?? "triton-replay-step-\(index)")
+}
+
+func sanitizedPathComponent(_ value: String) -> String {
+    let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
+    let scalars = value.unicodeScalars.map { scalar -> Character in
+        allowed.contains(scalar) ? Character(scalar) : "-"
+    }
+    let collapsed = String(scalars).split(separator: "-").joined(separator: "-")
+    return collapsed.isEmpty ? "triton-replay" : collapsed
+}
+
+func replayNumber(_ value: Double) -> String {
+    if value.rounded() == value {
+        return String(Int(value))
+    }
+    return String(value)
+}
+
+func failReplayValidation(_ message: String, outputFormat: ClientOutputFormat) throws -> Never {
+    switch outputFormat {
+    case .json:
+        let response = TKCLIErrorResponse(error: TKCLIErrorDetail(
+            code: "validation_failed",
+            message: message,
+            hint: "Run `triton schema --command replay --json` to inspect required fields"
+        ))
+        print(try encodeJSON(response))
+    case .text:
+        fputs("error: \(message)\n", stderr)
+    }
+    throw ExitCode.failure
+}
+
+func failRegressionValidation(_ message: String, command: String, outputFormat: ClientOutputFormat) throws -> Never {
+    switch outputFormat {
+    case .json:
+        let response = TKCLIErrorResponse(error: TKCLIErrorDetail(
+            code: "validation_failed",
+            message: message,
+            hint: "Run `triton schema --command \(command) --json` to inspect required fields"
+        ))
+        print(try encodeJSON(response))
+    case .text:
+        fputs("error: \(message)\n", stderr)
+    }
+    throw ExitCode.failure
+}
+
+func printEvidenceManifest(_ manifest: TKEvidenceManifest, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(manifest))
+    case .text:
+        print("ok: \(manifest.ok)")
+        print("output: \(manifest.output)")
+        if let name = manifest.name { print("name: \(name)") }
+        print("artifacts: \(manifest.artifacts.count)")
+        if !manifest.skipped.isEmpty {
+            print("skipped: \(manifest.skipped.count)")
+            for item in manifest.skipped {
+                print("- \(item.kind): \(item.reason)")
+            }
+        }
+    }
+}
+
+func captureEvidenceBundle(
+    output: String,
+    includes: [String],
+    name: String?,
+    note: String?,
+    target: String,
+    host: String,
+    port: Int,
+    refresh: Bool
+) async throws -> TKEvidenceManifest {
+    let outputURL = URL(fileURLWithPath: output)
+    try prepareEvidenceOutputDirectory(outputURL)
+
+    let client = TritonKitHTTPClient(host: host, port: port)
+    let startedAt = ISO8601DateFormatter().string(from: Date())
+    var artifacts: [TKEvidenceArtifact] = []
+    var skipped: [TKEvidenceSkippedArtifact] = []
+    var status: TKStatusResponse?
+    var targetSummary: TKTargetSummary?
+
+    for kind in includes {
+        switch kind {
+        case "version":
+            do {
+                let version = TKCLIVersionResponse(version: TritonKitBuildInfo.cliVersion, language: "en")
+                let data = try prettyEncodedData(version)
+                try appendEvidenceArtifact(
+                    kind: "version",
+                    relativePath: "version.json",
+                    data: data,
+                    contentType: "application/json",
+                    directory: outputURL,
+                    freshness: evidenceFreshness(source: "cli", status: status),
+                    artifacts: &artifacts
+                )
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+            }
+        case "status":
+            do {
+                let data = try await client.getData("/status")
+                status = try JSONDecoder().decode(TKStatusResponse.self, from: data)
+                try appendEvidenceArtifact(
+                    kind: "status",
+                    relativePath: "status.json",
+                    data: try prettyJSONData(data),
+                    contentType: "application/json",
+                    directory: outputURL,
+                    freshness: evidenceFreshness(source: "server", status: status),
+                    artifacts: &artifacts
+                )
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+            }
+        case "list":
+            do {
+                let data = try await client.getData("/targets")
+                let targets = try JSONDecoder().decode(TKTargetsResponse.self, from: data)
+                if targetSummary == nil {
+                    targetSummary = try? TKResolveTargetSummary(target, in: targets.targets)
+                }
+                try appendEvidenceArtifact(
+                    kind: "list",
+                    relativePath: "targets.json",
+                    data: try prettyJSONData(data),
+                    contentType: "application/json",
+                    directory: outputURL,
+                    freshness: evidenceFreshness(source: "server", status: status),
+                    artifacts: &artifacts
+                )
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+            }
+        case "logs":
+            skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "unsupported in the current embedded runtime"))
+        case "hierarchy", "ax", "geometry", "screenshot", "archive":
+            do {
+                if targetSummary == nil {
+                    targetSummary = try await resolveTarget(target, host: host, port: port)
+                }
+                switch kind {
+                case "hierarchy":
+                    let data = try await evidenceHierarchyData(client: client, refresh: refresh)
+                    try appendEvidenceArtifact(
+                        kind: "hierarchy",
+                        relativePath: "hierarchy.json",
+                        data: try prettyJSONData(data),
+                        contentType: "application/json",
+                        directory: outputURL,
+                        freshness: evidenceFreshness(source: refresh ? "runtime" : "server-cache", status: status),
+                        artifacts: &artifacts
+                    )
+                case "ax":
+                    let data = try await client.request(type: "accessibility")
+                    try appendEvidenceArtifact(
+                        kind: "ax",
+                        relativePath: "ax.json",
+                        data: try prettyJSONData(data),
+                        contentType: "application/json",
+                        directory: outputURL,
+                        freshness: evidenceFreshness(source: "runtime", status: status),
+                        artifacts: &artifacts
+                    )
+                case "geometry":
+                    let data = try await client.request(type: "geometry")
+                    try appendEvidenceArtifact(
+                        kind: "geometry",
+                        relativePath: "geometry.json",
+                        data: try prettyJSONData(data),
+                        contentType: "application/json",
+                        directory: outputURL,
+                        freshness: evidenceFreshness(source: "runtime", status: status),
+                        artifacts: &artifacts
+                    )
+                case "screenshot":
+                    try await captureEvidenceScreenshot(
+                        client: client,
+                        directory: outputURL,
+                        status: status,
+                        artifacts: &artifacts
+                    )
+                case "archive":
+                    let hierarchyData = try await evidenceHierarchyData(client: client, refresh: refresh)
+                    let archive = try await buildExportArchive(
+                        target: targetSummary ?? TKTargetSummary(connected: true, latestHierarchyAvailable: true),
+                        hierarchyData: hierarchyData,
+                        client: client
+                    )
+                    try appendEvidenceArtifact(
+                        kind: "archive",
+                        relativePath: "archive.json",
+                        data: try prettyEncodedData(archive),
+                        contentType: "application/json",
+                        directory: outputURL,
+                        freshness: evidenceFreshness(source: "runtime", status: status),
+                        artifacts: &artifacts
+                    )
+                default:
+                    break
+                }
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+            }
+        default:
+            skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "unsupported"))
+        }
+    }
+
+    if targetSummary == nil {
+        targetSummary = try? await resolveTarget(target, host: host, port: port)
+    }
+
+    let manifest = TKEvidenceManifest(
+        ok: true,
+        name: name,
+        note: note,
+        createdAt: startedAt,
+        output: outputURL.path,
+        artifacts: artifacts,
+        skipped: skipped,
+        target: targetSummary.map { summary in
+            TKEvidenceTarget(
+                id: summary.id,
+                connected: summary.connected,
+                appName: summary.appName,
+                bundleIdentifier: summary.bundleIdentifier,
+                deviceDescription: summary.deviceDescription,
+                osDescription: summary.osDescription,
+                identityState: summary.identityState ?? "unknown",
+                targetConnectionState: status?.targetConnectionState ?? (summary.connected ? "connected" : "disconnected"),
+                hierarchyCacheState: summary.hierarchyCacheState ?? status?.hierarchyCacheState
+            )
+        },
+        cli: TKEvidenceCLI(version: TritonKitBuildInfo.cliVersion)
+    )
+    try prettyEncodedData(manifest).write(to: outputURL.appendingPathComponent("manifest.json"), options: .atomic)
+    return manifest
+}
+
+func prepareEvidenceOutputDirectory(_ url: URL) throws {
+    var isDirectory: ObjCBool = false
+    if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDirectory) {
+        guard isDirectory.boolValue else {
+            throw RuntimeError("Evidence output exists and is not a directory: \(url.path)")
+        }
+    } else {
+        try FileManager.default.createDirectory(
+            at: url,
+            withIntermediateDirectories: true
+        )
+    }
+}
+
+func appendEvidenceArtifact(
+    kind: String,
+    relativePath: String,
+    data: Data,
+    contentType: String,
+    directory: URL,
+    freshness: TKEvidenceFreshness,
+    artifacts: inout [TKEvidenceArtifact]
+) throws {
+    let fileURL = directory.appendingPathComponent(relativePath)
+    try FileManager.default.createDirectory(
+        at: fileURL.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    try data.write(to: fileURL, options: .atomic)
+    artifacts.append(TKEvidenceArtifact(
+        kind: kind,
+        path: relativePath,
+        contentType: contentType,
+        bytes: data.count,
+        freshness: freshness
+    ))
+}
+
+func captureEvidenceScreenshot(
+    client: TritonKitHTTPClient,
+    directory: URL,
+    status: TKStatusResponse?,
+    artifacts: inout [TKEvidenceArtifact]
+) async throws {
+    let screenshotData = try await client.request(type: "screenshot")
+    let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
+    let imageData = try await screenshotImageData(screenshot, client: client)
+    let freshness = evidenceFreshness(source: "runtime", status: status)
+    try appendEvidenceArtifact(
+        kind: "screenshot",
+        relativePath: "screenshot.png",
+        data: imageData,
+        contentType: "image/png",
+        directory: directory,
+        freshness: freshness,
+        artifacts: &artifacts
+    )
+    let metadata = EvidenceScreenshotMetadata(
+        format: screenshot.format,
+        width: screenshot.width,
+        height: screenshot.height,
+        scale: screenshot.scale,
+        dataRef: screenshot.dataRef,
+        imagePath: "screenshot.png",
+        bytes: imageData.count
+    )
+    try appendEvidenceArtifact(
+        kind: "screenshot-metadata",
+        relativePath: "screenshot.json",
+        data: try prettyEncodedData(metadata),
+        contentType: "application/json",
+        directory: directory,
+        freshness: freshness,
+        artifacts: &artifacts
+    )
+}
+
+func evidenceHierarchyData(client: TritonKitHTTPClient, refresh: Bool) async throws -> Data {
+    if refresh {
+        return try await client.request(type: "hierarchy")
+    }
+    return try await waitForHierarchy(client: client)
+}
+
+func evidenceFreshness(source: String, status: TKStatusResponse?) -> TKEvidenceFreshness {
+    TKEvidenceFreshness(
+        capturedAt: ISO8601DateFormatter().string(from: Date()),
+        source: source,
+        hierarchyCacheState: status?.hierarchyCacheState,
+        targetConnectionState: status?.targetConnectionState
+    )
+}
+
+func evidenceSkipReason(_ error: Error) -> String {
+    if let httpError = error as? CLIHTTPError,
+       let response = httpError.response {
+        return "\(response.error.code): \(response.error.message)"
+    }
+    return "\(error)"
+}
+
+func prettyEncodedData<T: Encodable>(_ value: T) throws -> Data {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    return try encoder.encode(value)
+}
+
+func prettyJSONData(_ data: Data) throws -> Data {
+    let object = try JSONSerialization.jsonObject(with: data)
+    return try JSONSerialization.data(withJSONObject: object, options: [.prettyPrinted, .sortedKeys])
+}
+
+func runInputRequest(
+    _ request: TKInputRequest,
+    host: String,
+    port: Int,
+    format: ClientOutputFormat
+) async throws {
+    let client = TritonKitHTTPClient(host: host, port: port)
+    let result = try await executeInputRequest(request, client: client)
+    try printInputResult(result, format: format)
+    if !result.ok {
+        throw RuntimeError(result.message ?? "Input request failed")
+    }
+}
+
+func printInputResult(_ result: TKInputResult, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeCompactJSON(result))
+    case .text:
+        print("ok: \(result.ok)")
+        print("action: \(result.action)")
+        if let message = result.message {
+            print("message: \(message)")
+        }
+        if let targetOID = result.targetOID {
+            print("targetOID: \(targetOID)")
+        }
+        if let targetClassName = result.targetClassName {
+            print("targetClassName: \(targetClassName)")
+        }
+        if let secure = result.secure {
+            print("secure: \(secure)")
+        }
+        if let redacted = result.redacted {
+            print("redacted: \(redacted)")
+        }
+        if let insertedLength = result.insertedLength {
+            print("insertedLength: \(insertedLength)")
+        }
+    }
+}

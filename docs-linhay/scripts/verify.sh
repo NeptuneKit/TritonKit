@@ -43,6 +43,13 @@ release_cli_smoke() {
   "$triton" version --json >/tmp/triton-verify-version.json
   "$triton" schema --command capture --json >/tmp/triton-verify-capture-schema.json
   "$triton" schema --command assert --json >/tmp/triton-verify-assert-schema.json
+  "$triton" schema --command app --json >/tmp/triton-verify-app-schema.json
+  "$triton" schema --command ax --json >/tmp/triton-verify-ax-schema.json
+  "$triton" schema --command wait --json >/tmp/triton-verify-wait-schema.json
+  "$triton" schema --command tap --json >/tmp/triton-verify-tap-schema.json
+  "$triton" schema --command screenshot --json >/tmp/triton-verify-screenshot-schema.json
+  "$triton" schema --command observe --json >/tmp/triton-verify-observe-schema.json
+  "$triton" schema --command node --json >/tmp/triton-verify-node-schema.json
 
   if "$triton" capture --include nope --output /tmp/triton-verify-nope.tritonevidence --json >/tmp/triton-verify-capture-invalid.json; then
     echo "expected capture validation to fail" >&2
@@ -131,6 +138,8 @@ case "$mode" in
     run_step "Swift tests" swift test
     run_step "Release CLI build" swift build --package-path "$root/CLI" --scratch-path "$root/.build/cli" -c release --product triton
     run_step "Release CLI smoke" release_cli_smoke
+    run_step "Harmony host smoke" env TRITON_BIN="$root/.build/cli/release/triton" "$root/docs-linhay/scripts/verify-harmony-host-smoke.sh"
+    run_step "iOS runtime observe smoke" env TRITON_BIN="$root/.build/cli/release/triton" "$root/docs-linhay/scripts/verify-ios-runtime-observe-smoke.sh"
     run_step "iOS Simulator build" xcode_simulator_build_if_available
     run_step "Docs structure" "$root/docs-linhay/scripts/check-docs.sh"
     if git -C "$root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then

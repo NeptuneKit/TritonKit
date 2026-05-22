@@ -215,7 +215,7 @@ jobs:
           version="$(docs-linhay/scripts/resolve-ci-version.sh)"
           docs-linhay/scripts/write-cli-version.sh \
             "${version}" \
-            "Sources/TritonKitCLI/main.swift"
+            "Sources/TritonKitCLI/CLIBuildInfo.swift"
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
           echo "TritonKit CLI version: ${version}"
 
@@ -288,7 +288,7 @@ jobs:
           version="$(docs-linhay/scripts/resolve-ci-version.sh)"
           docs-linhay/scripts/write-cli-version.sh \
             "${version}" \
-            "Sources/TritonKitCLI/main.swift"
+            "Sources/TritonKitCLI/CLIBuildInfo.swift"
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
           echo "TritonKit CLI version: ${version}"
 

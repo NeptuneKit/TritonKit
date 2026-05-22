@@ -1,0 +1,301 @@
+import ArgumentParser
+import TritonKitShared
+
+// MARK: - Xcode Workflow Commands
+
+struct Xcode: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "xcode",
+        abstract: "Discover, configure, build, test, and run Xcode projects through Triton contracts",
+        subcommands: [
+            XcodeDiscover.self,
+            XcodeUse.self,
+            XcodeSchemes.self,
+            XcodeSettings.self,
+            XcodeBuild.self,
+            XcodeTest.self,
+            XcodeRun.self,
+        ]
+    )
+}
+
+struct XcodeDiscover: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "discover", abstract: "Discover Xcode workspaces, projects, and Swift packages")
+
+    @Option(help: "Repository or workspace root path") var path: String = "."
+    @Option(help: "Maximum directory depth to scan") var maxDepth: Int = 2
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let result = try TKXcodeProjectDiscovery.discover(path: path, maxDepth: maxDepth)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(result))
+            case .text:
+                for workspace in result.workspaces { print("workspace\t\(workspace.path)") }
+                for project in result.projects { print("project\t\(project.path)") }
+                for package in result.packages { print("package\t\(package.path)") }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeUse: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "use", abstract: "Set workspace Xcode defaults")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String
+    @Option(help: "Build configuration") var configuration: String = "Debug"
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String = "iphonesimulator"
+    @Option(help: "Simulator UDID") var simulator: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String = ".triton/DerivedData"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            try validateXcodeContainer(workspace: workspace, project: project, outputFormat: outputFormat)
+            let existing = (try? loadHostWorkspaceDefaults()) ?? TKHostWorkspaceDefaults()
+            let resolvedDestination = destination ?? simulator.map { "platform=iOS Simulator,id=\($0)" }
+            let xcode = TKXcodeWorkspaceDefaults(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: resolvedDestination,
+                derivedDataPath: derivedDataPath
+            )
+            let defaults = TKHostWorkspaceDefaults(
+                defaultSimulatorUDID: simulator ?? existing.defaultSimulatorUDID,
+                xcode: xcode
+            )
+            let path = try saveHostWorkspaceDefaults(defaults)
+            let output = XcodeUseOutput(ok: true, action: "xcode.use", defaultsPath: path, defaults: defaults)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print(path)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeSchemes: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "schemes", abstract: "List Xcode schemes")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeContainer(workspace: workspace, project: project)
+            let command = TKXcodebuildCommand.listSchemes(workspace: resolved.workspace, project: resolved.project)
+            let result = try runHostCommand(command)
+            let schemes = try TKXcodebuildListParser.parseSchemes(result.stdoutData)
+            let output = XcodeSchemesOutput(
+                ok: true,
+                workspace: resolved.workspace,
+                project: resolved.project,
+                schemes: schemes.schemes,
+                sourceCommand: result.sourceCommand
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                for scheme in schemes.schemes { print(scheme) }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeSettings: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "settings", abstract: "Resolve Xcode build settings for the selected app product")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: destination,
+                simulator: simulator,
+                derivedDataPath: derivedDataPath
+            )
+            let command = TKXcodebuildCommand.showBuildSettings(
+                workspace: resolved.workspace,
+                project: resolved.project,
+                scheme: resolved.scheme,
+                configuration: resolved.configuration,
+                sdk: resolved.sdk,
+                destination: resolved.destination,
+                derivedDataPath: resolved.derivedDataPath
+            ).withTimeout(timeout)
+            let (result, _) = try runXcodeHostCommand(command, event: "xcode.settings", jsonl: jsonl)
+            let product = try TKXcodeBuildSettingsParser.resolveBuiltApp(result.stdoutData)
+            let output = XcodeSettingsOutput(
+                ok: true,
+                invocation: resolved,
+                product: product,
+                sourceCommand: result.sourceCommand,
+                stdoutLogPath: result.stdoutLogPath,
+                stderrLogPath: result.stderrLogPath,
+                stdoutBytes: result.stdoutBytes,
+                stderrBytes: result.stderrBytes
+            )
+            switch outputFormat {
+            case .json:
+                print(jsonl ? try encodeCompactJSON(output) : try encodeJSON(output))
+            case .text:
+                print(product.appPath)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeBuild: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "build", abstract: "Build an Xcode scheme")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: destination,
+                simulator: simulator,
+                derivedDataPath: derivedDataPath
+            )
+            let summary = try runXcodeBuild(invocation: resolved, jsonl: jsonl, timeout: timeout)
+            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeTest: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "test", abstract: "Test an Xcode scheme")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Result bundle output path") var resultBundle: String?
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: destination,
+                simulator: simulator,
+                derivedDataPath: derivedDataPath
+            )
+            let summary = try runXcodeTest(invocation: resolved, resultBundlePath: resultBundle, jsonl: jsonl, timeout: timeout)
+            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeRun: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "run", abstract: "Build, install, and launch an Xcode app on a simulator")
+
+    @Option(help: "Path to .xcworkspace") var workspace: String?
+    @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Scheme name") var scheme: String?
+    @Option(help: "Build configuration") var configuration: String?
+    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
+    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "Simulator UDID") var simulator: String?
+    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Emit JSON Lines progress") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let resolved = try resolveXcodeInvocation(
+                workspace: workspace,
+                project: project,
+                scheme: scheme,
+                configuration: configuration,
+                sdk: sdk,
+                destination: destination,
+                simulator: simulator,
+                derivedDataPath: derivedDataPath
+            )
+            let summary = try runXcodeBuildInstallLaunch(invocation: resolved, jsonl: jsonl, timeout: timeout)
+            try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}

@@ -25,7 +25,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
    - `triton-macos-arm64.tar.gz`
    - `triton-macos-x86_64.tar.gz`
 10. CI 写入版本号：
-   - CLI：更新 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion`，`triton version --json` 输出该版本。
+   - CLI：更新 `Sources/TritonKitCLI/CLIBuildInfo.swift` 中的 `TritonKitBuildInfo.cliVersion`，`triton version --json` 输出该版本。
    - skill：打包前向 `SKILL.md` front matter 写入 `metadata.version`。
    - tag `v1.2.3` 解析为 `1.2.3`；非 tag 构建解析为 `0.1.0-dev+<short-sha>`。
 11. 生成 checksum manifest：

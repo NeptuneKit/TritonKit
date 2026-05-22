@@ -57,8 +57,15 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton device list --platform harmony --json`
      - `triton device wait-ready --platform harmony --target <hdc-target> --json`
      - `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`
+     - `triton app install --platform harmony --hap <debug-signed.hap> --target <hdc-target> --json`
      - `triton app launch --platform harmony --bundle <bundle> --ability <ability> --target <hdc-target> --json`
+     - `triton app open-url --platform harmony --bundle <bundle> --ability <ability> '<url>' --target <hdc-target> --json`
+     - `triton ax --platform harmony --target <hdc-target> --output /tmp/<case>-layout.json --json`
+     - `triton wait --platform harmony --target <hdc-target> --text '<text>' --timeout 15 --json`
+     - `triton tap '<text>' --platform harmony --target <hdc-target> --json`
+     - `triton screenshot --platform harmony --target <hdc-target> --output /tmp/<case>.jpeg --json`
      - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--target`.
+     - host-side layout and screenshot artifacts may contain private UI data; inspect or summarize instead of attaching raw files when redaction is uncertain.
      - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
    - Harmony embedded SDK feedback should distinguish generic HAR capability from app-provided semantics:
      - run `triton device runtime-url --platform harmony --target <hdc-target> --probe-manifest --json` first when the runtime is on a Harmony emulator/device and the host needs an HDC fport base URL;

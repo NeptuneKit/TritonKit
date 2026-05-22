@@ -1,0 +1,19 @@
+{
+  "artifactsSaved" : false,
+  "capabilities" : [
+    "device.list",
+    "device.wait-ready",
+    "harmony.hdc-targets"
+  ],
+  "ok" : true,
+  "platform" : "harmony",
+  "tools" : [
+    {
+      "available" : true,
+      "name" : "hdc",
+      "path" : "hdc",
+      "sourceCommand" : "hdc -v",
+      "versionSummary" : "Ver: 3.2.0c"
+    }
+  ]
+}

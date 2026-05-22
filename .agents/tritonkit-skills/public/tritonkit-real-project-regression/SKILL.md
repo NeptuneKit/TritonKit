@@ -233,10 +233,17 @@ triton device doctor --platform harmony --json
 triton device list --platform harmony --json
 triton device wait-ready --platform harmony --target <hdc-target> --json
 triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json
+triton app install --platform harmony --hap <debug-signed.hap> --target <hdc-target> --json
 triton app launch --platform harmony --bundle <bundle> --ability <ability> --target <hdc-target> --json
+triton app open-url --platform harmony --bundle <bundle> --ability <ability> '<url>' --target <hdc-target> --json
+triton ax --platform harmony --target <hdc-target> --output /tmp/<case>-layout.json --json
+triton wait --platform harmony --target <hdc-target> --text '<text>' --timeout 15 --json
+triton tap '<text>' --platform harmony --target <hdc-target> --json
+triton screenshot --platform harmony --target <hdc-target> --output /tmp/<case>.jpeg --json
 ```
 
 When multiple HDC targets are `Connected`, pass `--target`; `ambiguous_target` is the expected machine-readable failure.
+Host-side layout and screenshot artifacts may contain private UI data; inspect or summarize them before attaching evidence to public issues.
 
 For Harmony embedded SDK work, keep the TritonKit brand separate from the OHPM package id. The actual package id and ArkTS import path are lowercase:
 

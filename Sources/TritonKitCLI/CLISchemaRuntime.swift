@@ -1,0 +1,1220 @@
+import ArgumentParser
+import Darwin
+import Foundation
+import Hummingbird
+import HummingbirdWebSocket
+import NIOFoundationCompat
+import NIOCore
+import TritonKit
+import TritonKitShared
+
+func commandSchemas() -> [TKCommandSchema] {
+    let hostPort = [
+        TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "127.0.0.1", description: "Triton server host"),
+        TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Triton server port"),
+    ]
+    let target = TKCommandSchemaOption(name: "--target", type: "String", defaultValue: TKLocalTargetID, description: "Target id from `triton list`; commands auto-select the only connected target when omitted")
+    let jsonText = ["text", "json"]
+    let formatTextJSON = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format")
+    let formatJSONText = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format")
+    let jsonAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --format json")
+    let languageOption = TKCommandSchemaOption(name: "--language/--lang", type: "en|zh", defaultValue: "TRITON_LANGUAGE or en", description: "Human-readable output language")
+    let runtimeBaseURLOption = TKCommandSchemaOption(name: "--runtime-base-url", type: "URL", description: "Bypass Triton server and call a direct embedded runtime HTTP base URL, for example \(TKHarmonyRuntimeDefaults.hostAccessBaseURL)")
+    let metadataJSONAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --metadata")
+    let refreshOption = TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before reading")
+    return [
+        TKCommandSchema(
+            name: "version",
+            summary: "Print Triton CLI version and bootstrap defaults",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 0,
+            outputFormats: jsonText,
+            options: [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
+            examples: ["triton version --format json"],
+            successShape: "{ ok, version, schemaVersion, defaultHost, defaultPort, language, supportedLanguages }"
+        ),
+        TKCommandSchema(
+            name: "serve",
+            summary: "Start the local WebSocket and HTTP control server",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli-long-running",
+            exitCodeOnFailure: 1,
+            outputFormats: ["logs"],
+            options: [
+                TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "0.0.0.0", description: "Host to bind to"),
+                TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Port to listen on"),
+            ],
+            examples: ["triton serve --host 127.0.0.1 --port 19421"],
+            successShape: "Long-running process; exposes /status, /targets, /request, /input, /hierarchy/latest and WebSocket /"
+        ),
+        TKCommandSchema(
+            name: "status",
+            summary: "Read local TritonKit server status",
+            requiresServer: true,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            outputFormats: jsonText,
+            options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
+            examples: ["triton status --format json"],
+            successShape: "{ ok, serverReachable, connected, latestHierarchyAvailable, activeHierarchyAvailable, hierarchyCacheState, targetConnectionState, targetCount, runtime }",
+            failureShape: "{ ok: false, error: { code, message, endpoint, hint, nextAction? } }"
+        ),
+        TKCommandSchema(
+            name: "doctor",
+            summary: "Diagnose server, target, and runtime capabilities",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 0,
+            outputFormats: jsonText,
+            options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
+            examples: ["triton doctor --format json"],
+            successShape: "{ ok, serverReachable, connected, latestHierarchyAvailable, activeHierarchyAvailable, hierarchyCacheState, targetConnectionState, runtime, capabilities, error? }"
+        ),
+        TKCommandSchema(
+            name: "plan",
+            summary: "Print recommended next CLI steps or inspect a replay plan",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 0,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "inspect <path>", type: "Subcommand", description: "Read a .tritonplan summary without connecting to runtime"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton plan --format json", "triton plan --format text", "triton plan inspect login-flow.tritonplan --json"],
+            successShape: "{ ok, serverReachable, connected, runtime, nextStep, steps[], error? } or { ok, path, schemaVersion, name, variables, stepCount, actions, target? }",
+            failureShape: nil,
+            providedCapabilities: ["plan"]
+        ),
+        TKCommandSchema(
+            name: "capabilities",
+            summary: "Print runtime capability matrix",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 0,
+            outputFormats: jsonText,
+            options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"), jsonAlias, languageOption],
+            examples: ["triton capabilities --format json"],
+            successShape: "{ ok, serverReachable, connected, runtime, capabilities[] }"
+        ),
+        TKCommandSchema(
+            name: "schema",
+            summary: "Print machine-readable command schemas and examples",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: [
+                TKCommandSchemaOption(name: "--command", type: "String", description: "Optional command name to filter"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton schema --json", "triton schema --command input --json"],
+            successShape: "{ schemaVersion, commands[] }"
+        ),
+        TKCommandSchema(
+            name: "xcode",
+            summary: "Discover, configure, build, test, and run Xcode projects without exposing XcodeBuildMCP APIs",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-xcode",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText + ["jsonl"],
+            options: [
+                TKCommandSchemaOption(name: "discover --path <path>", type: "Subcommand", description: "Discover .xcworkspace, .xcodeproj, and Package.swift candidates"),
+                TKCommandSchemaOption(name: "use --workspace <path>|--project <path> --scheme <scheme>", type: "Subcommand", description: "Set repo-local Xcode defaults in .triton/host-defaults.json"),
+                TKCommandSchemaOption(name: "schemes", type: "Subcommand", description: "List schemes via xcodebuild -list -json"),
+                TKCommandSchemaOption(name: "settings", type: "Subcommand", description: "Resolve app product path and bundle id from -showBuildSettings -json"),
+                TKCommandSchemaOption(name: "build", type: "Subcommand", description: "Run xcodebuild build"),
+                TKCommandSchemaOption(name: "test", type: "Subcommand", description: "Run xcodebuild test"),
+                TKCommandSchemaOption(name: "run", type: "Subcommand", description: "Run build, simulator install, and simulator launch"),
+                TKCommandSchemaOption(name: "--workspace", type: "Path", description: "Path to .xcworkspace"),
+                TKCommandSchemaOption(name: "--project", type: "Path", description: "Path to .xcodeproj"),
+                TKCommandSchemaOption(name: "--scheme", type: "String", description: "Xcode scheme"),
+                TKCommandSchemaOption(name: "--configuration", type: "String", defaultValue: "Debug", description: "Build configuration"),
+                TKCommandSchemaOption(name: "--sdk", type: "String", defaultValue: "iphonesimulator", description: "xcodebuild SDK"),
+                TKCommandSchemaOption(name: "--destination", type: "String", description: "xcodebuild destination"),
+                TKCommandSchemaOption(name: "--simulator", type: "String", description: "Simulator UDID; also used to synthesize destination"),
+                TKCommandSchemaOption(name: "--derived-data-path", type: "Path", defaultValue: ".triton/DerivedData", description: "Repo-local DerivedData path"),
+                TKCommandSchemaOption(name: "--result-bundle", type: "Path", description: "Result bundle path for test"),
+                TKCommandSchemaOption(name: "--timeout", type: "Double", description: "Command timeout in seconds for large workspaces"),
+                TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress for long commands"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton xcode discover --path . --json",
+                "triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+                "triton xcode schemes --json",
+                "triton xcode settings --json",
+                "triton xcode build --jsonl",
+                "triton xcode test --result-bundle /tmp/App.xcresult --jsonl",
+                "triton xcode run --jsonl",
+            ],
+            successShape: "discover/use/schemes/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
+            failureShape: "{ ok:false, error:{ code: invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcodebuild_failed|app_path_unresolved|bundle_id_unresolved, message, hint } }",
+            providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcodebuild", "xcode-run"]
+        ),
+        TKCommandSchema(
+            name: "runtime",
+            summary: "Inspect embedded runtime manifest, capabilities, limits, and redaction policy",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "manifest", type: "Subcommand", description: "Read embedded runtime manifest"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton runtime manifest --json", "triton runtime manifest --runtime-base-url \(TKHarmonyRuntimeDefaults.hostAccessBaseURL) --json"],
+            successShape: "{ ok, platform, runtime, transport, enabled, sdkVersion, buildConfiguration, capabilities[], limits, redaction }",
+            providedCapabilities: ["runtime-manifest"]
+        ),
+        TKCommandSchema(
+            name: "state",
+            summary: "Read embedded app, scene, route, and responder state",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "app", type: "Subcommand", description: "Read app identity, locale, display style, uptime, scene/window counts"),
+                TKCommandSchemaOption(name: "scene", type: "Subcommand", description: "Read UIWindowScene and UIWindow summaries"),
+                TKCommandSchemaOption(name: "route", type: "Subcommand", description: "Read visible UIViewController, navigation, tab, and presented stack"),
+                TKCommandSchemaOption(name: "responder", type: "Subcommand", description: "Read first responder identity and text input traits without text content"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: [
+                "triton state app --json",
+                "triton state scene --json",
+                "triton state route --json",
+                "triton state responder --json",
+            ],
+            successShape: "{ ok, capturedAt, runtime, targetConnectionState, app|scenes|route|firstResponder, warnings[], unsupported[] }",
+            providedCapabilities: ["state-app", "state-scene", "state-route", "state-responder"]
+        ),
+        TKCommandSchema(
+            name: "snapshot",
+            summary: "Read one aggregated embedded runtime snapshot for agent decisions",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--include", type: "CSV", defaultValue: "app,scene,route,ax,geometry", description: "Sections: app,scene,route,responder,ax,geometry,screenshot-metadata"),
+                TKCommandSchemaOption(name: "--max-ax-nodes", type: "Int", description: "Maximum AX nodes to return before truncation"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton snapshot --include app,scene,route,ax,geometry --json"],
+            successShape: "{ ok, capturedAt, include, app?, scene?, route?, responder?, geometry?, ax?, screenshot?, artifacts[], skipped[], truncation }",
+            providedCapabilities: ["snapshot"]
+        ),
+        TKCommandSchema(
+            name: "focus",
+            summary: "Resolve a selector and focus the matching text input through the embedded runtime",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible placeholder to focus"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton focus \"名称\" --json", "triton focus \"Email\" --within 0,120,390,220 --json"],
+            successShape: "{ ok, action, strategy, targetOID?, targetClassName?, elapsedMs, message?, redaction? }",
+            providedCapabilities: ["focus", "semantic-action"]
+        ),
+        TKCommandSchema(
+            name: "set-text",
+            summary: "Resolve a selector, clear editable text, and set exact text through the embedded runtime",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible placeholder to target"),
+                TKCommandSchemaOption(name: "<text>", type: "String", description: "Exact text to set"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact text in command output and ledger"),
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton set-text \"名称\" \"alice\" --json", "triton set-text \"密码\" \"secret\" --secure --json"],
+            successShape: "{ ok, action, strategy, targetOID?, targetClassName?, elapsedMs, message?, redaction: { secure, text, insertedLength? } }",
+            providedCapabilities: ["set-text", "semantic-action"]
+        ),
+        TKCommandSchema(
+            name: "select-segment",
+            summary: "Resolve a selector and select a segmented-control option by title or zero-based index",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible option title to target"),
+                TKCommandSchemaOption(name: "<value>", type: "String|Int", description: "Segment title or zero-based index"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton select-segment \"协议\" \"HTTP\" --json", "triton select-segment \"协议\" 1 --json"],
+            successShape: "{ ok, action, strategy, targetOID?, targetClassName?, elapsedMs, message?, redaction? }",
+            providedCapabilities: ["select-segment", "semantic-action"]
+        ),
+        TKCommandSchema(
+            name: "set-switch",
+            summary: "Resolve a selector and set or toggle a switch through the embedded runtime",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "<selector>", type: "String", description: "Text, label, identifier, or visible option title to target"),
+                TKCommandSchemaOption(name: "<value>", type: "on|off|toggle", description: "Switch state to apply"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict selector matching to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict selector matching to a candidate containing this point"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton set-switch \"记住我\" on --json", "triton set-switch \"Notifications\" toggle --json"],
+            successShape: "{ ok, action, strategy, targetOID?, targetClassName?, elapsedMs, message?, redaction? }",
+            providedCapabilities: ["set-switch", "semantic-action"]
+        ),
+        TKCommandSchema(
+            name: "ledger",
+            summary: "Read recent embedded runtime request/action ledger",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText + ["jsonl"],
+            options: hostPort + [
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--limit", type: "Int", defaultValue: "50", description: "Maximum entries to return"),
+                TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines entries instead of envelope"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton ledger --limit 50 --jsonl", "triton ledger --limit 50 --json"],
+            successShape: "{ ok, entries[], limit, count, maxEntries } or JSONL TKRuntimeLedgerEntry",
+            providedCapabilities: ["ledger"]
+        ),
+        TKCommandSchema(
+            name: "device",
+            summary: "Discover and inspect host-side platform devices",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-device",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText + ["jsonl"],
+            options: [
+                TKCommandSchemaOption(name: "doctor --platform harmony", type: "Subcommand", description: "Probe DevEco Emulator and HDC tool availability"),
+                TKCommandSchemaOption(name: "list --platform harmony", type: "Subcommand", description: "List Harmony HDC targets"),
+                TKCommandSchemaOption(name: "use --platform harmony --target <target>", type: "Subcommand", description: "Resolve one Connected target"),
+                TKCommandSchemaOption(name: "wait-ready --platform harmony --target <target>", type: "Subcommand", description: "Poll bootevent.boot.completed until ready"),
+                TKCommandSchemaOption(name: "runtime-url --platform harmony --target <target>", type: "Subcommand", description: "Prepare HDC fport and print a direct embedded runtime base URL"),
+                TKCommandSchemaOption(name: "--platform", type: "harmony", defaultValue: "harmony", description: "Host platform adapter"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
+                TKCommandSchemaOption(name: "--target", type: "String", description: "Harmony target, for example 127.0.0.1:10100"),
+                TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "30", description: "Bounded wait timeout in seconds"),
+                TKCommandSchemaOption(name: "--local-port", type: "Int", defaultValue: String(TKHarmonyRuntimeDefaults.hostAccessPort), description: "Local TCP port used in the generated base URL"),
+                TKCommandSchemaOption(name: "--remote-port", type: "Int", defaultValue: String(TKHarmonyRuntimeDefaults.hostAccessPort), description: "Remote TCP port where the Harmony embedded runtime host-access server listens"),
+                TKCommandSchemaOption(name: "--no-forward", type: "Bool", defaultValue: "false", description: "Skip HDC fport setup and only print the local URL"),
+                TKCommandSchemaOption(name: "--probe-manifest", type: "Bool", defaultValue: "false", description: "Probe /v2/runtime/manifest after preparing the URL"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton device doctor --platform harmony --json",
+                "triton device list --platform harmony --json",
+                "triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json",
+                "triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json",
+            ],
+            successShape: "{ ok, platform, tools[]?, targets[]?, defaultTarget?, target?, ready?, baseURL?, manifest?, sourceCommand? }",
+            failureShape: "{ ok:false, error:{ code: ambiguous_target|target_offline|device_not_ready|host_action_failed, message, hint } }",
+            providedCapabilities: ["host-device", "harmony-device", "harmony-runtime-url"]
+        ),
+        TKCommandSchema(
+            name: "sim",
+            summary: "Control simulators through host-side Apple tools",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-simulator",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText + ["jsonl"],
+            options: [
+                TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List available simulators"),
+                TKCommandSchemaOption(name: "use <udid>", type: "Subcommand", description: "Set workspace default simulator in .triton/host-defaults.json"),
+                TKCommandSchemaOption(name: "boot <udid>", type: "Subcommand", description: "Boot a simulator"),
+                TKCommandSchemaOption(name: "--wait", type: "Bool", defaultValue: "false", description: "Wait until booted"),
+                TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress with --wait"),
+                TKCommandSchemaOption(name: "shutdown <udid|booted>", type: "Subcommand", description: "Shutdown a simulator"),
+                TKCommandSchemaOption(name: "screenshot --output <path>", type: "Subcommand", description: "Capture simulator framebuffer screenshot"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton sim list --json",
+                "triton sim use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+                "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+                "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl",
+                "triton sim screenshot --simulator booted --output /tmp/sim.png --json",
+            ],
+            successShape: "{ ok, simulators[] } or { ok, action, simulator?, defaultsPath? } or { ok, action, runtimeScope, target, tool, exitCode, artifacts[], note? } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
+            providedCapabilities: ["host-simulator"]
+        ),
+        TKCommandSchema(
+            name: "app",
+            summary: "Control local simulator and emulator apps through host-side tools",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-simulator|host-harmony",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: [
+                TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List installed simulator apps"),
+                TKCommandSchemaOption(name: "info --bundle-id <id>", type: "Subcommand", description: "Show installed app metadata"),
+                TKCommandSchemaOption(name: "inspect --platform harmony --bundle <bundle>", type: "Subcommand", description: "Inspect a Harmony app with bm dump"),
+                TKCommandSchemaOption(name: "install --app <path.app>", type: "Subcommand", description: "Install an .app bundle into the simulator"),
+                TKCommandSchemaOption(name: "install --platform harmony --hap <path.hap>", type: "Subcommand", description: "Install a Harmony HAP through hdc install -r"),
+                TKCommandSchemaOption(name: "uninstall --bundle-id <id> --confirm", type: "Subcommand", description: "Uninstall an app from the simulator"),
+                TKCommandSchemaOption(name: "launch --bundle-id <id>", type: "Subcommand", description: "Launch an installed simulator app"),
+                TKCommandSchemaOption(name: "launch --platform harmony --bundle <bundle> --ability <ability>", type: "Subcommand", description: "Launch a Harmony app ability"),
+                TKCommandSchemaOption(name: "terminate --bundle-id <id>", type: "Subcommand", description: "Terminate a running simulator app"),
+                TKCommandSchemaOption(name: "terminate --platform harmony --bundle <bundle>", type: "Subcommand", description: "Force-stop a Harmony app"),
+                TKCommandSchemaOption(name: "open-url <url>", type: "Subcommand", description: "Submit a URL to the simulator"),
+                TKCommandSchemaOption(name: "open-url --platform harmony --bundle <bundle> --ability <ability> <url>", type: "Subcommand", description: "Open a Harmony deep link through aa start -U"),
+                TKCommandSchemaOption(name: "container --bundle-id <id>", type: "Subcommand", description: "Print app container path"),
+                TKCommandSchemaOption(name: "prefs dump --bundle-id <id>", type: "Subcommand", description: "Dump app preferences plist as JSON"),
+                TKCommandSchemaOption(name: "prefs get <key> --bundle-id <id>", type: "Subcommand", description: "Read one app preference"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|harmony", defaultValue: "ios", description: "Host app platform adapter"),
+                TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted"),
+                TKCommandSchemaOption(name: "--target", type: "String", description: "Harmony target, for example 127.0.0.1:10100"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton app list --user-only --json",
+                "triton app info --bundle-id com.example.app --json",
+                "triton app inspect --platform harmony --bundle com.example.app --json",
+                "triton app install --app /tmp/Demo.app --json",
+                "triton app install --platform harmony --hap /tmp/Demo.hap --json",
+                "triton app uninstall --bundle-id com.example.app --confirm --json",
+                "triton app launch --bundle-id com.example.app --json",
+                "triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --json",
+                "triton app open-url --platform harmony --bundle com.example.app --ability EntryAbility example://debug --json",
+                "triton app terminate --bundle-id com.example.app --json",
+                #"triton app open-url "example://debug" --simulator booted --json"#,
+                "triton app container --bundle-id com.example.app --kind data --json",
+                "triton app prefs get DEBUG-mock --bundle-id com.example.app --json",
+            ],
+            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } or { ok, action, plistPath, value?, preferences? }",
+            failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
+            providedCapabilities: ["host-app", "host-preferences", "harmony-app", "harmony-app-install", "harmony-app-open-url"]
+        ),
+        TKCommandSchema(
+            name: "list",
+            summary: "List connected Triton targets",
+            requiresServer: true,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"),
+                jsonAlias,
+                languageOption,
+                TKCommandSchemaOption(name: "--ids-only", type: "Bool", defaultValue: "false", description: "Print only target ids"),
+            ],
+            examples: ["triton list --format json", "triton list --ids-only"],
+            successShape: "{ targets: [{ id, transport, connected, latestHierarchyAvailable, activeHierarchyAvailable, cachedHierarchyAvailable, hierarchyCacheState, identityState, appName, bundleIdentifier, deviceDescription, osDescription }] }"
+        ),
+        TKCommandSchema(
+            name: "inspect",
+            summary: "Inspect one Triton target summary",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "cli",
+            outputFormats: jsonText,
+            options: hostPort + [target, formatTextJSON, jsonAlias],
+            examples: ["triton inspect --target triton:local --format json"],
+            successShape: "{ id, transport, connected, latestHierarchyAvailable, appName, bundleIdentifier, deviceDescription, osDescription }"
+        ),
+        TKCommandSchema(
+            name: "observe",
+            summary: "Read the current app surface using iOS runtime or Harmony host layout sources",
+            requiresServer: false,
+            requiresTarget: true,
+            runtimeScope: "embedded|host-harmony",
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "current", type: "Subcommand", description: "Read current visible app snapshot"),
+                TKCommandSchemaOption(name: "tree", type: "Subcommand", description: "Read current visible node tree"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--platform", type: "ios|harmony", defaultValue: "ios", description: "Observation platform"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable for --platform harmony"),
+                TKCommandSchemaOption(name: "--max-nodes", type: "Int", description: "Maximum nodes to return"),
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Harmony host layout artifact path"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton observe current --platform ios --json",
+                "triton observe tree --platform harmony --target 127.0.0.1:10100 --json",
+            ],
+            successShape: "{ ok, action, platform, capturedAt, partial, target, sources[], nodes[], artifacts[], sourceCommands[], note }",
+            providedCapabilities: ["observe", "observe-ios", "observe-harmony"]
+        ),
+        TKCommandSchema(
+            name: "hierarchy",
+            summary: "Read latest hierarchy snapshot",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: ["tree", "json"],
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--format", type: "tree|json", defaultValue: "tree", description: "Output format"),
+                jsonAlias,
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Optional output file"),
+                TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before reading"),
+                TKCommandSchemaOption(name: "--hide-noise/--no-hide-noise", type: "Bool", defaultValue: "true", description: "Hide low-signal UIKit wrapper views in tree output"),
+            ],
+            examples: ["triton hierarchy --target triton:local --format json --output /tmp/hierarchy.json"],
+            successShape: "TKHierarchyInfo JSON or rendered tree"
+        ),
+        TKCommandSchema(
+            name: "nodes",
+            summary: "List node summaries from the latest hierarchy snapshot",
+            requiresServer: true,
+            requiresTarget: true,
+            requiresHierarchy: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [target, formatTextJSON, jsonAlias, refreshOption],
+            examples: ["triton nodes --target triton:local --format json"],
+            successShape: "{ nodes: [{ oid, viewOid, layerOid, className, depth, frame, hidden, alpha }] }"
+        ),
+        TKCommandSchema(
+            name: "node",
+            summary: "Inspect one hierarchy node by oid, or resolve a current UI node",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded|host-harmony",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "resolve --text <text>", type: "Subcommand", description: "Resolve current visible node on iOS runtime or Harmony host layout"),
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--platform", type: "ios|harmony", defaultValue: "ios", description: "Platform for `node resolve`"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable for `node resolve --platform harmony`"),
+                TKCommandSchemaOption(name: "--oid", type: "UInt", description: "View or layer oid from `triton nodes`"),
+                TKCommandSchemaOption(name: "--text", type: "String", description: "Text/id/key/accessibility id for `node resolve`"),
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one current-node candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict current-node candidates to bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict current-node candidates to a point"),
+                TKCommandSchemaOption(name: "--all", type: "Bool", defaultValue: "false", description: "Include all current-node candidates"),
+                formatTextJSON,
+                jsonAlias,
+                refreshOption,
+            ],
+            examples: [
+                "triton node --target triton:local --oid 1 --format json",
+                #"triton node resolve --platform ios --text "登录" --json"#,
+                #"triton node resolve --platform harmony --target 127.0.0.1:10100 --text "登录" --all --json"#,
+            ],
+            successShape: "{ oid, viewOid, layerOid, className, depth, frame, hidden, alpha } or { ok, action, platform, query, matchIndex, matchCount, node, candidates?, sourceCommands[] }",
+            providedCapabilities: ["node", "node-resolve"]
+        ),
+        TKCommandSchema(
+            name: "attrs",
+            summary: "Fetch live attribute groups for a node layer oid",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--oid", type: "UInt", required: true, description: "Layer oid from `triton nodes`"),
+                formatTextJSON,
+                jsonAlias,
+            ],
+            examples: ["triton attrs --target triton:local --oid 2 --format json"],
+            successShape: "[TKAttributesGroup]"
+        ),
+        TKCommandSchema(
+            name: "object",
+            summary: "Fetch live object metadata for a view or layer oid",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--oid", type: "UInt", required: true, description: "View or layer oid from `triton nodes`"),
+                formatTextJSON,
+                jsonAlias,
+            ],
+            examples: ["triton object --target triton:local --oid 1 --format json"],
+            successShape: "{ oid, memoryAddress, rawClassName, classChainList }"
+        ),
+        TKCommandSchema(
+            name: "export",
+            summary: "Export hierarchy JSON or self-contained archive",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: ["auto", "json", "archive"],
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--output", type: "Path", required: true, description: "Output file path"),
+                TKCommandSchemaOption(name: "--format", type: "auto|json|archive", defaultValue: "auto", description: "Export format"),
+                jsonAlias,
+                TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before exporting"),
+            ],
+            examples: [
+                "triton export --output /tmp/triton-hierarchy.json",
+                "triton export --format archive --output /tmp/triton-smoke.triton",
+            ],
+            successShape: "File path on stdout; output file contains hierarchy JSON or TKExportArchive JSON"
+        ),
+        TKCommandSchema(
+            name: "evidence",
+            summary: "Capture or inspect an agent-friendly regression evidence bundle",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli+embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "inspect <path>", type: "Subcommand", description: "Read an existing bundle manifest without connecting to runtime"),
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Evidence bundle directory path; capture mode requires it"),
+                TKCommandSchemaOption(name: "--include", type: "String", defaultValue: "status,list,version,hierarchy,ax,screenshot", description: "Comma-separated artifact kinds"),
+                TKCommandSchemaOption(name: "--name", type: "String", description: "Scenario name stored in manifest"),
+                TKCommandSchemaOption(name: "--note", type: "String", description: "Human note stored in manifest"),
+                TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before hierarchy/archive capture"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton evidence --output /tmp/login-success.tritonevidence --json",
+                "triton evidence --include status,list,version,logs --output /tmp/partial.tritonevidence --json",
+                "triton evidence --name v11-login --note \"DEBUG mock disabled\" --output /tmp/login.tritonevidence --json",
+                "triton evidence inspect /tmp/login-success.tritonevidence --json",
+            ],
+            successShape: "TKEvidenceManifest with { ok, formatVersion, output, artifacts[], skipped[], target?, cli }",
+            failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            providedCapabilities: ["evidence"]
+        ),
+        TKCommandSchema(
+            name: "capture",
+            summary: "Capture an agent-friendly regression evidence bundle",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "cli+embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--case", type: "String", description: "Regression case name stored in manifest"),
+                TKCommandSchemaOption(name: "--output", type: "Path", required: true, description: "Evidence bundle directory path"),
+                TKCommandSchemaOption(name: "--include", type: "String", defaultValue: "status,list,version,hierarchy,ax,screenshot,geometry,archive", description: "Comma-separated artifact kinds"),
+                TKCommandSchemaOption(name: "--note", type: "String", description: "Human note stored in manifest"),
+                TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before hierarchy/archive capture"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton capture --case job-search-area-filter --output /tmp/job-search-area-filter.tritonevidence --json",
+            ],
+            successShape: "TKEvidenceManifest with freshness metadata for captured artifacts",
+            failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            providedCapabilities: ["capture", "evidence"]
+        ),
+        TKCommandSchema(
+            name: "assert",
+            summary: "Assert visible UI text state for agent-driven regression",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "<condition>", type: "text-exists|text-not-exists", required: true, description: "Assertion condition"),
+                TKCommandSchemaOption(name: "<text>", type: "String", required: true, description: "Visible text, label, identifier, title, or value"),
+                TKCommandSchemaOption(name: "--role", type: "String", description: "Optional AX role filter"),
+                TKCommandSchemaOption(name: "--count", type: "Int", description: "Require exact match count"),
+                TKCommandSchemaOption(name: "--min-count", type: "Int", description: "Require at least this many matches"),
+                TKCommandSchemaOption(name: "--max-count", type: "Int", description: "Require at most this many matches"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict assertion to window bounds"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                #"triton assert text-exists "Macau" --json"#,
+                #"triton assert text-not-exists "Qinghai" --within 180,120,190,500 --json"#,
+                #"triton assert text-exists "Macau" --role text --count 1 --json"#,
+            ],
+            successShape: "{ ok, condition, query, role?, count, expectedCount?, minCount?, maxCount?, within?, matches[], sample[], targetConnectionState?, hierarchyCacheState?, message? }",
+            failureShape: "Failed assertions return the same result with ok=false and exit non-zero; validation/request failures use { ok:false, error:{ code, message, endpoint?, hint } }",
+            providedCapabilities: ["assert"]
+        ),
+        TKCommandSchema(
+            name: "record",
+            summary: "Create an editable .tritonplan template. This is not interactive recording yet.",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            outputFormats: jsonText,
+            options: [
+                TKCommandSchemaOption(name: "--output", type: "Path", required: true, description: "Output .tritonplan path"),
+                TKCommandSchemaOption(name: "--name", type: "String", description: "Plan name; defaults to output basename"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton record --output login-flow.tritonplan --json",
+            ],
+            successShape: "{ ok, output, templateOnly, message, plan }",
+            failureShape: "Validation/file failures use { ok:false, error:{ code, message, hint } }",
+            providedCapabilities: ["record"]
+        ),
+        TKCommandSchema(
+            name: "replay",
+            summary: "Replay a .tritonplan smoke-test flow",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli+embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "<path>", type: "Path", required: true, description: ".tritonplan file path"),
+                TKCommandSchemaOption(name: "--dry-run", type: "Bool", defaultValue: "false", description: "Validate and print commands without connecting to runtime"),
+                TKCommandSchemaOption(name: "--var", type: "String", description: "Variable assignment: key=value or key-env=ENV_NAME; repeatable"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton replay login-flow.tritonplan --dry-run --json",
+                "triton replay login-flow.tritonplan --var username=alice --var password-env=TRITON_PASSWORD --json",
+            ],
+            successShape: "{ ok, dryRun, planName, stepCount, executedCount, failedStepIndex?, elapsedMs, steps[] }",
+            failureShape: "Validation/request failures use { ok:false, error:{ code, message, hint } }; step failures return ok=false with failedStepIndex",
+            providedCapabilities: ["replay"]
+        ),
+        TKCommandSchema(
+            name: "find",
+            summary: "Resolve a UI target by visible text, label, identifier, or option title",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "<query>", type: "String", required: true, description: "Visible text, AX label, identifier, value, or option title to resolve"),
+                TKCommandSchemaOption(name: "--all", type: "Bool", defaultValue: "false", description: "Include all candidates with stable 1-based indexes"),
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one candidate by 1-based index"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict matching to window bounds"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Restrict matching to candidate containing this window point"),
+                formatJSONText,
+                jsonAlias,
+            ],
+            examples: [
+                #"triton find "HTTP""#,
+                #"triton find "hello" --all"#,
+                #"triton find "hello" --at 240,580"#,
+            ],
+            successShape: "TapTargetResolution describing selected target; with --all includes candidates[]"
+        ),
+        TKCommandSchema(
+            name: "wait",
+            summary: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded|host-harmony",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--platform", type: "harmony", description: "Use Harmony host-side layout polling instead of embedded runtime"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
+                TKCommandSchemaOption(name: "--text", type: "String", description: "Wait for visible text, AX label, identifier, title, or value"),
+                TKCommandSchemaOption(name: "--gone", type: "String", description: "Wait for visible text, AX label, identifier, title, or value to disappear"),
+                TKCommandSchemaOption(name: "--exists", type: "String", description: "Alias for --text; can be combined with --role"),
+                TKCommandSchemaOption(name: "--role", type: "String", description: "Optional AX role filter for --text or --exists"),
+                TKCommandSchemaOption(name: "--idle", type: "Bool", defaultValue: "false", description: "Wait until target is connected and hierarchy is stable across two polls"),
+                TKCommandSchemaOption(name: "--hierarchy-change", type: "Bool", defaultValue: "false", description: "Wait until hierarchy snapshot changes"),
+                TKCommandSchemaOption(name: "--since", type: "latest", defaultValue: "latest", description: "Hierarchy change baseline"),
+                TKCommandSchemaOption(name: "--predicate", type: "String", description: #"Safe predicate, e.g. text.exists("console") && !text.exists("登录")"#),
+                TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "10", description: "Timeout in seconds"),
+                TKCommandSchemaOption(name: "--interval", type: "Double", defaultValue: "0.5", description: "Polling interval in seconds"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                #"triton wait --text "console" --timeout 15 --interval 0.5 --json"#,
+                #"triton wait --platform harmony --text "目标页" --timeout 15 --json"#,
+                #"triton wait --gone "登录" --timeout 15 --json"#,
+                #"triton wait --exists "我的" --role button --timeout 10 --json"#,
+                "triton wait --idle --timeout 10 --json",
+                "triton wait --hierarchy-change --since latest --timeout 10 --json",
+                #"triton wait --predicate "text.exists(\"console\") && !text.exists(\"点我登录\")" --timeout 15 --json"#,
+            ],
+            successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? }",
+            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, lastObservedTextSample }; validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            providedCapabilities: ["wait", "harmony-wait-text"]
+        ),
+        TKCommandSchema(
+            name: "ax",
+            summary: "Read safe actionable control index",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded|host-harmony",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--platform", type: "harmony", description: "Dump Harmony host-side layout through hdc uitest"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"),
+                jsonAlias,
+                TKCommandSchemaOption(name: "--with-hierarchy", type: "Bool", defaultValue: "false", description: "Join AX nodes to hierarchy viewObject.oid and expose layer oid/path/frame"),
+                TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before joining with --with-hierarchy"),
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Optional output file"),
+            ],
+            examples: [
+                "triton ax --format json --output /tmp/ax.json",
+                "triton ax --platform harmony --output /tmp/harmony-layout.json --json",
+                "triton ax --with-hierarchy --json",
+            ],
+            successShape: "[TKAXNode] by default; TKAXHierarchyMapResponse when --with-hierarchy is used; HostHarmonyArtifactOutput for --platform harmony",
+            providedCapabilities: ["ax", "harmony-ax"]
+        ),
+        TKCommandSchema(
+            name: "geometry",
+            summary: "Read current window geometry",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [target, formatTextJSON, jsonAlias],
+            examples: ["triton geometry --format json"],
+            successShape: "{ bounds, safeArea, scale, orientation }"
+        ),
+        TKCommandSchema(
+            name: "hit",
+            summary: "Hit-test one window coordinate",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Window point in points"),
+                TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate in points; compatibility pair with --y"),
+                TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate in points; compatibility pair with --x"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: ["triton hit --at 270,300 --format json", "triton hit --x 270 --y 300 --format json"],
+            successShape: "{ x, y, centerX?, centerY?, node? }"
+        ),
+        TKCommandSchema(
+            name: "screenshot",
+            summary: "Capture current app screenshot",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded|host-harmony",
+            outputFormats: ["file", "json-metadata"],
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--platform", type: "harmony", description: "Capture Harmony host-side screenshot through hdc snapshot_display"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
+                TKCommandSchemaOption(name: "--output", type: "Path", required: true, description: "Output PNG path"),
+                TKCommandSchemaOption(name: "--metadata", type: "Bool", defaultValue: "false", description: "Print JSON metadata after writing"),
+                metadataJSONAlias,
+            ],
+            examples: ["triton screenshot --output /tmp/triton.png --metadata", "triton screenshot --platform harmony --output /tmp/smoke.jpeg --json"],
+            successShape: "{ format, width, height, scale, output, bytes } when --metadata is used; HostHarmonyArtifactOutput for --platform harmony",
+            providedCapabilities: ["screenshot", "harmony-screenshot"]
+        ),
+        TKCommandSchema(
+            name: "tap",
+            summary: "Tap a UI target by text, coordinate, view oid, or AX node",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded|host-harmony",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--platform", type: "harmony", description: "Tap by Harmony layout text or coordinates through hdc uitest"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
+                TKCommandSchemaOption(name: "<query>", type: "String", description: "Visible text, AX label, identifier, value, or option title to tap"),
+                TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate"),
+                TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Coordinate selector without <query>, or query disambiguation point with <query>"),
+                TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Target view oid"),
+                TKCommandSchemaOption(name: "--ax-oid", type: "UInt", description: "AX target/view oid from `triton ax`; taps by runtime oid"),
+                TKCommandSchemaOption(name: "--ax-label", type: "String", description: "Exact AX label from `triton ax`; taps by runtime oid"),
+                TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one query candidate by 1-based index from `triton find --all`"),
+                TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict query matching to window bounds"),
+                formatJSONText,
+                jsonAlias,
+            ],
+            examples: [
+                #"triton tap "HTTP""#,
+                #"triton tap "我的" --platform harmony --json"#,
+                #"triton tap "hello" --index 2"#,
+                #"triton tap "hello" --at 240,580"#,
+                #"triton tap "hello" --within 180,0,220,500"#,
+                "triton tap --at 270,300",
+                "triton tap --x 270 --y 300",
+                "triton tap --oid 13",
+                "triton tap --ax-label Save",
+            ],
+            successShape: "{ ok, action, message, targetOID, targetClassName } or HostHarmonyTapOutput",
+            providedCapabilities: ["tap", "harmony-tap-text"]
+        ),
+        TKCommandSchema(
+            name: "swipe",
+            summary: "Swipe inside the app using window-point coordinates",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--start-x", type: "Double", required: true, description: "Start x coordinate in window points"),
+                TKCommandSchemaOption(name: "--start-y", type: "Double", required: true, description: "Start y coordinate in window points"),
+                TKCommandSchemaOption(name: "--end-x", type: "Double", required: true, description: "End x coordinate in window points"),
+                TKCommandSchemaOption(name: "--end-y", type: "Double", required: true, description: "End y coordinate in window points"),
+                TKCommandSchemaOption(name: "--width", type: "Double", description: "Optional screen/window width in points"),
+                TKCommandSchemaOption(name: "--height", type: "Double", description: "Optional screen/window height in points"),
+                TKCommandSchemaOption(name: "--duration", type: "Double", description: "Gesture duration in seconds"),
+                formatJSONText,
+                jsonAlias,
+            ],
+            examples: ["triton swipe --start-x 350 --start-y 390 --end-x 100 --end-y 390"],
+            successShape: "{ ok, action, message, targetOID, targetClassName }",
+            providedCapabilities: ["swipe"]
+        ),
+        TKCommandSchema(
+            name: "type",
+            summary: "Type text into a focused or oid-targeted UIKeyInput",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "<text>", type: "String", description: "Text to insert"),
+                TKCommandSchemaOption(name: "--text", type: "String", description: "Compatibility input; mutually exclusive with <text>"),
+                TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid from `triton nodes`"),
+                TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact inserted text details in command output"),
+                TKCommandSchemaOption(name: "--exact", type: "Bool", defaultValue: "false", description: "Use direct UIKeyInput insertion without keyboard autocorrect"),
+                formatJSONText,
+                jsonAlias,
+            ],
+            examples: ["triton type hello --exact", "triton type --text hello"],
+            successShape: "{ ok, action, message, targetOID, targetClassName, secure?, redacted?, insertedLength? }",
+            providedCapabilities: ["type"]
+        ),
+        TKCommandSchema(
+            name: "paste",
+            summary: "Paste exact text into a focused, coordinate-targeted, or oid-targeted input",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "<text>", type: "String", required: true, description: "Text to paste"),
+                TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact inserted text details in command output"),
+                TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid"),
+                TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate to focus before paste"),
+                TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate to focus before paste"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Window point to focus before paste"),
+                formatJSONText,
+                jsonAlias,
+            ],
+            examples: [
+                #"triton paste "console""#,
+                #"triton paste --secure "aa123654""#,
+                #"triton paste "console" --at 180,250"#,
+                #"triton paste --x 180 --y 250 "console""#,
+            ],
+            successShape: "{ ok, action, message, targetOID, targetClassName, secure, redacted, insertedLength }",
+            providedCapabilities: ["paste"]
+        ),
+        TKCommandSchema(
+            name: "clear",
+            summary: "Clear a focused, coordinate-targeted, or oid-targeted input",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--oid", type: "UInt", description: "Optional responder oid"),
+                TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate to focus before clear"),
+                TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate to focus before clear"),
+                TKCommandSchemaOption(name: "--at", type: "x,y", description: "Window point to focus before clear"),
+                formatJSONText,
+                jsonAlias,
+            ],
+            examples: [
+                "triton clear",
+                "triton clear --at 180,250",
+                "triton clear --x 180 --y 250",
+            ],
+            successShape: "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }",
+            providedCapabilities: ["clear"]
+        ),
+        TKCommandSchema(
+            name: "press",
+            summary: "Press a device button when supported by the active runtime",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "<button>", type: "String", description: "Button name, for example home"),
+                TKCommandSchemaOption(name: "--button", type: "String", description: "Compatibility input; mutually exclusive with <button>"),
+                TKCommandSchemaOption(name: "--duration", type: "Double", description: "Hold duration in seconds"),
+                formatJSONText,
+                jsonAlias,
+            ],
+            examples: ["triton press home", "triton press --button home"],
+            successShape: "{ ok: false, action, message } in embedded runtime",
+            providedCapabilities: ["press"]
+        ),
+        TKCommandSchema(
+            name: "input",
+            summary: "Run newline-delimited JSON actions from stdin",
+            requiresServer: true,
+            requiresTarget: true,
+            runtimeScope: "embedded",
+            outputFormats: jsonText,
+            options: hostPort + [
+                target,
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                TKCommandSchemaOption(name: "--fail-fast", type: "Bool", defaultValue: "false", description: "Stop on first failed action"),
+                TKCommandSchemaOption(name: "--summary", type: "Bool", defaultValue: "false", description: "Print a final JSON batch summary"),
+                TKCommandSchemaOption(name: "--strict", type: "Bool", defaultValue: "false", description: "Exit non-zero when any action fails"),
+            ],
+            examples: [
+                #"printf '%s\n' '{"type":"tap","x":270,"y":300}' '{"type":"type","text":"hello"}' | triton input --format json --summary --strict"#,
+            ],
+            successShape: "One TKInputResult JSON object per input line; with --summary, final { ok, actionCount, failedCount }",
+            inputActions: inputActionSchemas(),
+            providedCapabilities: ["tap", "swipe", "type", "paste", "clear", "press"]
+        ),
+    ]
+}
+
+func inputActionSchemas() -> [TKInputActionSchema] {
+    [
+        TKInputActionSchema(
+            type: "tap",
+            requiredFields: ["type"],
+            optionalFields: ["x", "y", "targetOID", "width", "height", "duration"],
+            oneOfRequired: [["x", "y"], ["targetOID"]],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["tap"], "Action discriminator"),
+                inputField("x", "Double", "Window x coordinate in points; required with y unless targetOID is used"),
+                inputField("y", "Double", "Window y coordinate in points; required with x unless targetOID is used"),
+                inputField("targetOID", "UInt", "View oid from hierarchy/ax/hit; alternative to x/y"),
+                inputField("width", "Double", "Optional window width in points for caller bookkeeping"),
+                inputField("height", "Double", "Optional window height in points for caller bookkeeping"),
+                inputField("duration", "Double", "Optional hold duration in seconds"),
+            ],
+            example: #"{"type":"tap","x":270,"y":300}"#
+        ),
+        TKInputActionSchema(
+            type: "swipe",
+            requiredFields: ["type", "startX", "startY", "endX", "endY"],
+            optionalFields: ["width", "height", "duration"],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["swipe"], "Action discriminator"),
+                inputField("startX", "Double", required: true, "Start x coordinate in window points"),
+                inputField("startY", "Double", required: true, "Start y coordinate in window points"),
+                inputField("endX", "Double", required: true, "End x coordinate in window points"),
+                inputField("endY", "Double", required: true, "End y coordinate in window points"),
+                inputField("width", "Double", "Optional window width in points for caller bookkeeping"),
+                inputField("height", "Double", "Optional window height in points for caller bookkeeping"),
+                inputField("duration", "Double", "Optional gesture duration in seconds"),
+            ],
+            example: #"{"type":"swipe","startX":350,"startY":390,"endX":100,"endY":390}"#
+        ),
+        TKInputActionSchema(
+            type: "type",
+            requiredFields: ["type", "text"],
+            optionalFields: ["targetOID", "secure"],
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["type"], "Action discriminator"),
+                inputField("text", "String", required: true, "Text to insert into target or first responder"),
+                inputField("targetOID", "UInt", "Optional UIKeyInput target oid"),
+                inputField("secure", "Bool", "Redact inserted text details in command output"),
+            ],
+            example: #"{"type":"type","text":"hello"}"#
+        ),
+        TKInputActionSchema(
+            type: "paste",
+            requiredFields: ["type", "text"],
+            optionalFields: ["targetOID", "x", "y", "secure"],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["paste"], "Action discriminator"),
+                inputField("text", "String", required: true, "Exact text to insert into target or first responder"),
+                inputField("targetOID", "UInt", "Optional UIKeyInput target oid"),
+                inputField("x", "Double", "Window x coordinate to focus before paste; required with y"),
+                inputField("y", "Double", "Window y coordinate to focus before paste; required with x"),
+                inputField("secure", "Bool", "Redact inserted text details in command output"),
+            ],
+            example: #"{"type":"paste","text":"console","secure":false}"#,
+            resultShape: "{ ok, action, message, targetOID, targetClassName, secure, redacted, insertedLength }"
+        ),
+        TKInputActionSchema(
+            type: "clear",
+            requiredFields: ["type"],
+            optionalFields: ["targetOID", "x", "y"],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["clear"], "Action discriminator"),
+                inputField("targetOID", "UInt", "Optional UIKeyInput target oid"),
+                inputField("x", "Double", "Window x coordinate to focus before clear; required with y"),
+                inputField("y", "Double", "Window y coordinate to focus before clear; required with x"),
+            ],
+            example: #"{"type":"clear"}"#,
+            resultShape: "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }"
+        ),
+        TKInputActionSchema(
+            type: "button",
+            requiredFields: ["type", "button"],
+            optionalFields: ["duration"],
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["button"], "Action discriminator"),
+                inputField("button", "String", required: true, enumValues: ["home"], "Device button name; embedded runtime returns unsupported"),
+                inputField("duration", "Double", "Optional press duration in seconds"),
+            ],
+            example: #"{"type":"button","button":"home"}"#,
+            resultShape: "{ ok: false, action, message } in embedded runtime"
+        ),
+    ]
+}
+
+func inputField(
+    _ name: String,
+    _ type: String,
+    required: Bool = false,
+    enumValues: [String]? = nil,
+    _ description: String
+) -> TKInputActionFieldSchema {
+    TKInputActionFieldSchema(
+        name: name,
+        type: type,
+        required: required,
+        enumValues: enumValues,
+        description: description
+    )
+}
+
+func renderSchema(_ response: TKCLISchemaResponse, language: CLILanguage = effectiveLanguage(nil)) -> String {
+    response.commands.map { command in
+        var lines = ["\(command.name): \(command.summary)"]
+        lines.append("  \(language == .zh ? "需要服务" : "requiresServer"): \(command.requiresServer)")
+        lines.append("  \(language == .zh ? "需要目标" : "requiresTarget"): \(command.requiresTarget)")
+        lines.append("  \(language == .zh ? "需要层级" : "requiresHierarchy"): \(command.requiresHierarchy)")
+        lines.append("  \(language == .zh ? "运行时范围" : "runtimeScope"): \(command.runtimeScope)")
+        lines.append("  \(language == .zh ? "失败退出码" : "exitCodeOnFailure"): \(command.exitCodeOnFailure)")
+        lines.append("  \(language == .zh ? "输出格式" : "outputFormats"): \(command.outputFormats.joined(separator: ","))")
+        if !command.options.isEmpty {
+            lines.append("  \(language == .zh ? "选项" : "options"):")
+            for option in command.options {
+                let required = option.required ? " required" : ""
+                let defaultValue = option.defaultValue.map { " default=\($0)" } ?? ""
+                lines.append("    \(option.name): \(option.type)\(required)\(defaultValue) - \(option.description)")
+            }
+        }
+        if !command.examples.isEmpty {
+            lines.append("  \(language == .zh ? "示例" : "examples"):")
+            lines.append(contentsOf: command.examples.map { "    \($0)" })
+        }
+        if let inputActions = command.inputActions, !inputActions.isEmpty {
+            lines.append("  inputActions:")
+            for action in inputActions {
+                lines.append("    \(action.type): required=\(action.requiredFields.joined(separator: ",")) optional=\(action.optionalFields.joined(separator: ","))")
+                if let coordinateSpace = action.coordinateSpace {
+                    lines.append("      coordinateSpace: \(coordinateSpace)")
+                }
+                if !action.oneOfRequired.isEmpty {
+                    let oneOf = action.oneOfRequired.map { $0.joined(separator: "+") }.joined(separator: " | ")
+                    lines.append("      oneOfRequired: \(oneOf)")
+                }
+                lines.append("      fields:")
+                for field in action.fields {
+                    let required = field.required ? " required" : ""
+                    let enumValues = field.enumValues.map { " enum=\($0.joined(separator: "|"))" } ?? ""
+                    lines.append("        \(field.name): \(field.type)\(required)\(enumValues) - \(field.description)")
+                }
+                lines.append("      example: \(action.example)")
+            }
+        }
+        return lines.joined(separator: "\n")
+    }.joined(separator: "\n\n")
+}

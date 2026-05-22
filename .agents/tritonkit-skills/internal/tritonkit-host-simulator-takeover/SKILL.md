@@ -64,7 +64,7 @@ triton app prefs dump --bundle-id <bundle-id> --simulator <udid-or-booted> --jso
    - parser behavior for JSON/OpenStep plist/plain text outputs;
    - stable error edge cases such as missing apps or ambiguous targets.
 4. Implement shared contracts in `Sources/TritonKitShared/TKHostAdapterModels.swift`.
-5. Expose CLI commands in `Sources/TritonKitCLI/main.swift`, keeping output machine-readable:
+5. Expose CLI commands in a focused file under `Sources/TritonKitCLI/`, keeping output machine-readable:
    - one-shot commands return JSON;
    - progress commands return JSONL when requested;
    - failures return `{ ok:false, error:{ code, message, hint, nextAction? } }`;

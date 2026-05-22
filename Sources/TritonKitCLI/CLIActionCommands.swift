@@ -1,0 +1,896 @@
+import ArgumentParser
+import Darwin
+import Foundation
+import Hummingbird
+import HummingbirdWebSocket
+import NIOFoundationCompat
+import NIOCore
+import TritonKit
+import TritonKitShared
+
+struct Find: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "Resolve a UI target by visible text, label, identifier, or option title")
+
+    @Argument(help: "Text, label, identifier, or visible option title to resolve") var query: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(help: "Include all matching candidates with stable 1-based indexes") var all = false
+    @Option(help: "Select one matching candidate by 1-based index") var index: Int?
+    @Option(help: "Restrict matching to bounds: x,y,width,height") var within: String?
+    @Option(help: "Restrict matching to candidate containing point: x,y") var at: String?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            if within != nil && at != nil {
+                if outputFormat == .json {
+                    try printValidationError("--within and --at cannot be used together")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--within and --at cannot be used together")
+            }
+            let bounds = try within.map(parseBounds)
+            let point = try at.map(parsePoint)
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let resolution = try await resolveTapTarget(
+                query,
+                client: client,
+                width: nil,
+                height: nil,
+                duration: nil,
+                index: index,
+                within: bounds,
+                at: point,
+                includeCandidates: all
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(resolution))
+            case .text:
+                print("query: \(resolution.query)")
+                print("source: \(resolution.source)")
+                print("strategy: \(resolution.strategy)")
+                if let label = resolution.label { print("label: \(label)") }
+                if let value = resolution.value { print("value: \(value)") }
+                if let identifier = resolution.identifier { print("identifier: \(identifier)") }
+                if let className = resolution.className { print("className: \(className)") }
+                if let targetOID = resolution.targetOID { print("targetOID: \(targetOID)") }
+                if let viewOID = resolution.viewOID { print("viewOID: \(viewOID)") }
+                if let layerOID = resolution.layerOID { print("layerOID: \(layerOID)") }
+                if let frame = resolution.frame { print("frame: \(formatRect(frame))") }
+                print("matchIndex: \(resolution.matchIndex)")
+                print("matchCount: \(resolution.matchCount)")
+            }
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct Wait: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        abstract: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate"
+    )
+
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(name: .customLong("text"), help: "Visible text, AX label, identifier, title, or value to wait for") var text: String?
+    @Option(name: .customLong("gone"), help: "Visible text, AX label, identifier, title, or value to wait to disappear") var gone: String?
+    @Option(name: .customLong("exists"), help: "Alias for --text; can be combined with --role") var exists: String?
+    @Flag(name: .customLong("idle"), help: "Wait until the target is connected and hierarchy is stable across two polls") var idle = false
+    @Flag(name: .customLong("hierarchy-change"), help: "Wait until the hierarchy snapshot changes") var hierarchyChange = false
+    @Option(name: .customLong("since"), help: "Hierarchy change baseline; currently supports latest") var since: String = "latest"
+    @Option(name: .customLong("predicate"), help: "Safe predicate using text.exists/gone with &&, ||, !") var predicate: String?
+    @Option(name: .customLong("role"), help: "Optional AX role filter for --text or --exists") var role: String?
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(help: "Timeout in seconds") var timeout: Double = 10
+    @Option(help: "Polling interval in seconds") var interval: Double = 0.5
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selectorCount = [
+                text != nil,
+                gone != nil,
+                exists != nil,
+                idle,
+                hierarchyChange,
+                predicate != nil,
+            ].filter { $0 }.count
+            guard selectorCount == 1 else {
+                if outputFormat == .json {
+                    try printValidationError("Provide exactly one wait condition: --text, --gone, --exists, --idle, --hierarchy-change, or --predicate")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("Provide exactly one wait condition")
+            }
+            guard timeout > 0 else {
+                if outputFormat == .json {
+                    try printValidationError("--timeout must be greater than 0")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--timeout must be greater than 0")
+            }
+            guard interval > 0 else {
+                if outputFormat == .json {
+                    try printValidationError("--interval must be greater than 0")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--interval must be greater than 0")
+            }
+            if hierarchyChange && since != "latest" {
+                if outputFormat == .json {
+                    try printValidationError("--since currently supports only latest")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--since currently supports only latest")
+            }
+
+            if platform == .harmony {
+                guard text != nil || gone != nil || exists != nil else {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Harmony host wait currently supports --text, --exists, or --gone.",
+                        hint: "Use `triton ax --platform harmony --output <path> --json` for raw layout evidence.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let query = text ?? gone ?? exists ?? ""
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let startedAt = Date()
+                let deadline = startedAt.addingTimeInterval(timeout)
+                var pollCount = 0
+                var lastMatch: TKHarmonyLayoutTextMatch?
+                var sourceCommands: [String] = []
+                while true {
+                    pollCount += 1
+                    let layout = try dumpHarmonyLayout(selected: selected, hdc: hdc, output: nil)
+                    sourceCommands.append(contentsOf: layout.sourceCommands)
+                    lastMatch = try TKHarmonyLayoutParser.firstTextMatch(in: layout.data, text: query)
+                    let matched = gone != nil ? lastMatch == nil : lastMatch != nil
+                    if matched {
+                        let response = HostHarmonyWaitOutput(
+                            ok: true,
+                            action: "wait",
+                            platform: "harmony",
+                            target: selected,
+                            condition: gone != nil ? "gone" : "text",
+                            query: query,
+                            matched: true,
+                            timedOut: false,
+                            elapsedMs: elapsedMilliseconds(since: startedAt),
+                            pollCount: pollCount,
+                            match: lastMatch,
+                            sourceCommands: sourceCommands
+                        )
+                        switch outputFormat {
+                        case .json:
+                            print(try encodeJSON(response))
+                        case .text:
+                            print("matched \(query)")
+                        }
+                        return
+                    }
+                    if Date() >= deadline {
+                        let response = HostHarmonyWaitOutput(
+                            ok: false,
+                            action: "wait",
+                            platform: "harmony",
+                            target: selected,
+                            condition: gone != nil ? "gone" : "text",
+                            query: query,
+                            matched: false,
+                            timedOut: true,
+                            elapsedMs: elapsedMilliseconds(since: startedAt),
+                            pollCount: pollCount,
+                            match: lastMatch,
+                            sourceCommands: sourceCommands
+                        )
+                        switch outputFormat {
+                        case .json:
+                            print(try encodeJSON(response))
+                        case .text:
+                            print("timed out waiting for \(query)")
+                        }
+                        throw ExitCode.failure
+                    }
+                    let remaining = deadline.timeIntervalSinceNow
+                    let sleepSeconds = max(0.01, min(interval, remaining))
+                    try await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
+                }
+            }
+
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let request = WaitRequest(
+                condition: waitCondition(),
+                query: text ?? gone ?? exists,
+                predicate: predicate,
+                role: role,
+                timeout: timeout,
+                interval: interval
+            )
+            let result = try await performWait(request, client: client)
+            try printWaitResult(result, format: outputFormat)
+            if !result.ok {
+                throw ExitCode.failure
+            }
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+
+    private func waitCondition() -> TKWaitCondition {
+        if text != nil { return .text }
+        if gone != nil { return .gone }
+        if exists != nil { return .exists }
+        if idle { return .idle }
+        if hierarchyChange { return .hierarchyChange }
+        return .predicate
+    }
+}
+
+struct Tap: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "Tap a UI target by text, coordinate, oid, or AX node")
+
+    @Argument(help: "Text, label, identifier, or visible option title to tap") var query: String?
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(help: "Window x coordinate in points") var x: Double?
+    @Option(help: "Window y coordinate in points") var y: Double?
+    @Option(help: "View oid from `triton nodes`") var oid: UInt?
+    @Option(name: .customLong("ax-oid"), help: "AX target/view oid from `triton ax`") var axOID: UInt?
+    @Option(name: .customLong("ax-label"), help: "Exact AX label to tap by AX target/view oid") var axLabel: String?
+    @Option(help: "Optional screen/window width in points") var width: Double?
+    @Option(help: "Optional screen/window height in points") var height: Double?
+    @Option(help: "Hold duration in seconds") var duration: Double?
+    @Option(help: "Select one matching query candidate by 1-based index") var index: Int?
+    @Option(help: "Restrict query matching to bounds: x,y,width,height") var within: String?
+    @Option(help: "Coordinate selector or query disambiguation point: x,y") var at: String?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        let selectorCount = [
+            query != nil,
+            oid != nil,
+            x != nil || y != nil,
+            query == nil && at != nil,
+            axOID != nil,
+            axLabel != nil,
+        ].filter { $0 }.count
+        guard selectorCount == 1 else {
+            if effectiveFormat(format, json: json) == .json {
+                try printValidationError("Provide exactly one target selector: <query>, --oid, --x/--y, --at, --ax-oid, or --ax-label")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("Provide exactly one target selector: <query>, --oid, --x/--y, --at, --ax-oid, or --ax-label")
+        }
+        if (index != nil || within != nil) && query == nil {
+            if outputFormat == .json {
+                try printValidationError("--index and --within can only be used with <query>")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--index and --within can only be used with <query>")
+        }
+        if within != nil && at != nil {
+            if outputFormat == .json {
+                try printValidationError("--within and --at cannot be used together")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--within and --at cannot be used together")
+        }
+        if at != nil && (x != nil || y != nil) {
+            if outputFormat == .json {
+                try printValidationError("--at cannot be combined with --x/--y")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--at cannot be combined with --x/--y")
+        }
+        if (x == nil) != (y == nil) {
+            if outputFormat == .json {
+                try printValidationError("--x and --y must be provided together")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--x and --y must be provided together")
+        }
+
+        if platform == .harmony {
+            do {
+                if oid != nil || axOID != nil || axLabel != nil || within != nil || index != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Harmony host tap currently supports <query>, --x/--y, or --at.",
+                        hint: "Use `triton ax --platform harmony --output <path> --json` to inspect attributes.text and bounds.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let sourceCommands: [String]
+                let match: TKHarmonyLayoutTextMatch?
+                let tapX: Int
+                let tapY: Int
+                if let query {
+                    let layout = try dumpHarmonyLayout(selected: selected, hdc: hdc, output: nil)
+                    guard let resolved = try TKHarmonyLayoutParser.firstTextMatch(in: layout.data, text: query) else {
+                        throw HostCommandRunError.layoutTextNotFound(query)
+                    }
+                    let tapResult = try runHostCommand(TKHarmonyHDCCommand.tapCoordinate(target: selected.target, x: resolved.centerX, y: resolved.centerY, executable: hdc))
+                    sourceCommands = layout.sourceCommands + [tapResult.sourceCommand]
+                    match = resolved
+                    tapX = resolved.centerX
+                    tapY = resolved.centerY
+                } else {
+                    let point = try at.map(parsePoint)
+                    guard let tapPointX = point?.x ?? x, let tapPointY = point?.y ?? y else {
+                        try failHostValidation(
+                            code: "validation_failed",
+                            message: "Harmony host tap requires <query>, --x/--y, or --at.",
+                            hint: "Pass visible text or explicit coordinates.",
+                            outputFormat: outputFormat
+                        )
+                    }
+                    tapX = Int(tapPointX.rounded())
+                    tapY = Int(tapPointY.rounded())
+                    let tapResult = try runHostCommand(TKHarmonyHDCCommand.tapCoordinate(target: selected.target, x: tapX, y: tapY, executable: hdc))
+                    sourceCommands = [tapResult.sourceCommand]
+                    match = nil
+                }
+                let response = HostHarmonyTapOutput(
+                    ok: true,
+                    action: "tap",
+                    platform: "harmony",
+                    target: selected,
+                    query: query,
+                    x: tapX,
+                    y: tapY,
+                    match: match,
+                    sourceCommands: sourceCommands,
+                    note: "Harmony tap was submitted through uitest; verify business state with wait, ax, or screenshot."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print("\(tapX),\(tapY)")
+                }
+            } catch {
+                if error is ExitCode { throw error }
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
+        }
+
+        do {
+            let point = try at.map(parsePoint)
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            if let query {
+                let client = TritonKitHTTPClient(host: host, port: port)
+                let bounds = try within.map(parseBounds)
+                let resolution = try await resolveTapTarget(
+                    query,
+                    client: client,
+                    width: width,
+                    height: height,
+                    duration: duration,
+                    index: index,
+                    within: bounds,
+                    at: point
+                )
+                try await runInputRequest(resolution.request, host: host, port: port, format: outputFormat)
+                return
+            }
+
+            if axOID != nil || axLabel != nil {
+                let client = TritonKitHTTPClient(host: host, port: port)
+                let data = try await client.request(type: "accessibility")
+                let nodes = try JSONDecoder().decode([TKAXNode].self, from: data)
+                guard let node = selectAXNode(nodes, oid: axOID, label: axLabel) else {
+                    let message = axOID.map { "AX node not found for oid \($0)" } ?? "AX node not found for label \(axLabel ?? "")"
+                    if outputFormat == .json {
+                        try printValidationError(message)
+                        throw ExitCode.failure
+                    }
+                    throw RuntimeError(message)
+            }
+            let request = tapRequest(for: node, width: width, height: height, duration: duration)
+            try await runInputRequest(request, host: host, port: port, format: outputFormat)
+            return
+        }
+
+            let request = TKInputRequest.tap(
+                x: point?.x ?? x,
+                y: point?.y ?? y,
+                targetOID: oid,
+                width: width,
+                height: height,
+                duration: duration
+            )
+            try await runInputRequest(request, host: host, port: port, format: outputFormat)
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct Swipe: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "Swipe inside the app using window-point coordinates")
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(name: .customLong("start-x"), help: "Start x coordinate in points") var startX: Double
+    @Option(name: .customLong("start-y"), help: "Start y coordinate in points") var startY: Double
+    @Option(name: .customLong("end-x"), help: "End x coordinate in points") var endX: Double
+    @Option(name: .customLong("end-y"), help: "End y coordinate in points") var endY: Double
+    @Option(help: "Optional screen/window width in points") var width: Double?
+    @Option(help: "Optional screen/window height in points") var height: Double?
+    @Option(help: "Gesture duration in seconds") var duration: Double?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let request = TKInputRequest.swipe(
+                startX: startX,
+                startY: startY,
+                endX: endX,
+                endY: endY,
+                width: width,
+                height: height,
+                duration: duration
+            )
+            try await runInputRequest(request, host: host, port: port, format: outputFormat)
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct TypeText: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "type",
+        abstract: "Type text into a focused or oid-targeted UIKeyInput"
+    )
+
+    @Argument(help: "Text to insert") var textArgument: String?
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(help: "Text to insert; kept for compatibility with older scripts") var text: String?
+    @Option(help: "Optional responder oid from `triton nodes`") var oid: UInt?
+    @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
+    @Flag(name: .customLong("exact"), help: "Use direct UIKeyInput insertion without keyboard autocorrect") var exact = false
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selectorCount = [textArgument != nil, text != nil].filter { $0 }.count
+            guard selectorCount == 1 else {
+                if outputFormat == .json {
+                    try printValidationError("Provide exactly one text value: <text> or --text")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("Provide exactly one text value: <text> or --text")
+            }
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            try await runInputRequest(
+                TKInputRequest(type: .typeText, targetOID: oid, text: textArgument ?? text, secure: secure),
+                host: host,
+                port: port,
+                format: outputFormat
+            )
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct PasteText: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "paste",
+        abstract: "Paste exact text into a focused, coordinate-targeted, or oid-targeted input"
+    )
+
+    @Argument(help: "Text to paste") var text: String
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
+    @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
+    @Option(help: "Window x coordinate to focus before paste") var x: Double?
+    @Option(help: "Window y coordinate to focus before paste") var y: Double?
+    @Option(help: "Window point to focus before paste: x,y") var at: String?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            try await runInputRequest(
+                TKInputRequest.paste(text, targetOID: oid, x: point?.x ?? x, y: point?.y ?? y, secure: secure),
+                host: host,
+                port: port,
+                format: outputFormat
+            )
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct ClearText: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "clear",
+        abstract: "Clear a focused, coordinate-targeted, or oid-targeted input"
+    )
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
+    @Option(help: "Window x coordinate to focus before clear") var x: Double?
+    @Option(help: "Window y coordinate to focus before clear") var y: Double?
+    @Option(help: "Window point to focus before clear: x,y") var at: String?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            try await runInputRequest(
+                TKInputRequest.clear(targetOID: oid, x: point?.x ?? x, y: point?.y ?? y),
+                host: host,
+                port: port,
+                format: outputFormat
+            )
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct Press: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "Press a device button when supported by the active runtime")
+
+    @Argument(help: "Button name, for example home, lock, power, volume-up") var buttonArgument: String?
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(help: "Button name, for example home, lock, power, volume-up; kept for compatibility") var button: String?
+    @Option(help: "Hold duration in seconds") var duration: Double?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selectorCount = [buttonArgument != nil, button != nil].filter { $0 }.count
+            guard selectorCount == 1 else {
+                if outputFormat == .json {
+                    try printValidationError("Provide exactly one button value: <button> or --button")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("Provide exactly one button value: <button> or --button")
+            }
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            try await runInputRequest(
+                TKInputRequest.press(button: buttonArgument ?? button ?? "", duration: duration),
+                host: host,
+                port: port,
+                format: outputFormat
+            )
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct Geometry: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "Read current window geometry")
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let data = try await client.request(type: "geometry")
+            let geometry = try JSONDecoder().decode(TKGeometryResponse.self, from: data)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(geometry))
+            case .text:
+                print("bounds: \(formatRect(geometry.bounds))")
+                print("safeArea: top=\(geometry.safeArea.top) left=\(geometry.safeArea.left) bottom=\(geometry.safeArea.bottom) right=\(geometry.safeArea.right)")
+                print("scale: \(geometry.scale)")
+                print("orientation: \(geometry.orientation)")
+            }
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct AccessibilityTree: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "ax",
+        abstract: "Read current in-app safe actionable control index"
+    )
+
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(name: .customLong("with-hierarchy"), help: "Join AX nodes to latest hierarchy by view oid") var withHierarchy = false
+    @Flag(inversion: .prefixedNo, help: "Request a fresh hierarchy before joining with --with-hierarchy") var refresh = true
+    @Option(help: "Write output to a file instead of stdout") var output: String?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        if platform == .harmony {
+            do {
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let result = try dumpHarmonyLayout(selected: selected, hdc: hdc, output: output)
+                let response = HostHarmonyArtifactOutput(
+                    ok: true,
+                    action: "ax",
+                    platform: "harmony",
+                    target: selected,
+                    artifact: result.localPath,
+                    sourceCommands: result.sourceCommands,
+                    note: "Harmony layout was saved as an artifact; inspect attributes.text and attributes.bounds, then verify with wait/tap/screenshot."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print(result.localPath)
+                }
+            } catch {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
+        }
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let data = try await client.request(type: "accessibility")
+            let rendered: String
+            switch outputFormat {
+            case .json:
+                if withHierarchy {
+                    let nodes = try JSONDecoder().decode([TKAXNode].self, from: data)
+                    let hierarchyData = refresh
+                        ? try await client.request(type: "hierarchy")
+                        : try await waitForHierarchy(client: client)
+                    let response = try TKBuildAXHierarchyMap(axNodes: nodes, hierarchyData: hierarchyData)
+                    rendered = try encodeJSON(response)
+                } else {
+                    rendered = try prettyJSON(data)
+                }
+            case .text:
+                let nodes = try JSONDecoder().decode([TKAXNode].self, from: data)
+                if withHierarchy {
+                    let hierarchyData = refresh
+                        ? try await client.request(type: "hierarchy")
+                        : try await waitForHierarchy(client: client)
+                    let response = try TKBuildAXHierarchyMap(axNodes: nodes, hierarchyData: hierarchyData)
+                    rendered = renderAXHierarchyMap(response)
+                } else {
+                    rendered = renderAXTree(nodes)
+                }
+            }
+            try writeOrPrint(rendered, output: output)
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct Hit: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "Hit-test one point in the current app window")
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Option(help: "Window x coordinate in points") var x: Double?
+    @Option(help: "Window y coordinate in points") var y: Double?
+    @Option(help: "Window point to hit-test: x,y") var at: String?
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let point = try requiredPoint(at: at, x: x, y: y, outputFormat: outputFormat)
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let payload = try JSONEncoder().encode(TKHitTestRequest(x: point.x, y: point.y))
+            let data = try await client.request(type: "hitTest", payload: payload)
+            let response = try JSONDecoder().decode(TKHitTestResponse.self, from: data)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("x: \(response.x)")
+                print("y: \(response.y)")
+                print("center: \(response.centerX.map(String.init(describing:)) ?? "-"),\(response.centerY.map(String.init(describing:)) ?? "-")")
+                if let node = response.node {
+                    print("role: \(node.role)")
+                    print("label: \(node.label ?? "-")")
+                    print("identifier: \(node.identifier ?? "-")")
+                    print("targetOID: \(node.targetOID.map(String.init(describing:)) ?? "-")")
+                    print("className: \(node.className ?? "-")")
+                    print("frame: \(formatRect(node.frame))")
+                } else {
+                    print("node: -")
+                }
+            }
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct Screenshot: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(abstract: "Capture current app screenshot as PNG")
+
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output PNG file path") var output: String
+    @Flag(help: "Print screenshot metadata as JSON after writing the file") var metadata = false
+    @Flag(name: .customLong("json"), help: "Alias for --metadata") var json = false
+
+    func run() async throws {
+        let outputFormat: ClientOutputFormat = metadata || json ? .json : .text
+        if platform == .harmony {
+            do {
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let result = try captureHarmonyScreenshot(selected: selected, hdc: hdc, output: output)
+                let response = HostHarmonyArtifactOutput(
+                    ok: true,
+                    action: "screenshot",
+                    platform: "harmony",
+                    target: selected,
+                    artifact: output,
+                    sourceCommands: result.sourceCommands,
+                    note: "Harmony screenshot was captured through snapshot_display using remote artifact \(result.remotePath); screenshot contents may contain private UI data."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print(output)
+                }
+            } catch {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
+        }
+        do {
+            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let client = TritonKitHTTPClient(host: host, port: port)
+            let data = try await client.request(type: "screenshot")
+            let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
+            let imageData = try await screenshotImageData(screenshot, client: client)
+            try imageData.write(to: URL(fileURLWithPath: output), options: .atomic)
+            if outputFormat == .json {
+                let summary: [String: Any] = [
+                    "format": screenshot.format,
+                    "width": screenshot.width,
+                    "height": screenshot.height,
+                    "scale": screenshot.scale,
+                    "output": output,
+                    "bytes": imageData.count,
+                ]
+                print(try encodeJSONObject(summary))
+            } else {
+                print(output)
+            }
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+struct Input: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "input",
+        abstract: "Read newline-delimited JSON input actions from stdin"
+    )
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+    @Flag(help: "Stop on the first failed action") var failFast = false
+    @Flag(help: "Print a final JSON batch summary") var summary = false
+    @Flag(help: "Exit non-zero when any action fails") var strict = false
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+        let client = TritonKitHTTPClient(host: host, port: port)
+        var hadFailure = false
+        var actionCount = 0
+        var failedCount = 0
+
+        while let line = readLine() {
+            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            if trimmed.isEmpty { continue }
+            actionCount += 1
+            let result: TKInputResult
+            do {
+                let data = Data(trimmed.utf8)
+                let input = try JSONDecoder().decode(TKInputRequest.self, from: data)
+                result = try await executeInputRequest(input, client: client)
+            } catch {
+                result = TKInputResult.failure(action: "input", message: "\(error)")
+            }
+            try printInputResult(result, format: outputFormat)
+            fflush(stdout)
+            if !result.ok {
+                hadFailure = true
+                failedCount += 1
+                if failFast { break }
+            }
+        }
+
+        if summary {
+            let response = TKInputBatchSummaryResponse(
+                ok: failedCount == 0,
+                actionCount: actionCount,
+                failedCount: failedCount
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeCompactJSON(response))
+            case .text:
+                print("summary: ok=\(response.ok) actionCount=\(response.actionCount) failedCount=\(response.failedCount)")
+            }
+            fflush(stdout)
+        }
+
+        if hadFailure && (failFast || strict) {
+            throw RuntimeError("Input failed")
+        }
+    }
+}
+
+// MARK: - State

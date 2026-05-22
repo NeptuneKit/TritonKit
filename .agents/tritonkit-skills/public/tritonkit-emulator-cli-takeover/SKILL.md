@@ -45,6 +45,7 @@ Default in-scope CLI domains:
 - app lifecycle: `list/info/install/uninstall/launch/terminate/open-url`;
 - app data: containers, preferences, safe data reset/snapshot when policy is explicit;
 - UI artifacts: screenshot, AX/layout tree, bounded logs;
+- hybrid observation: host-side emulator layout/screenshot/frontmost-app evidence fused with DEBUG-only embedded runtime snapshots when available;
 - runtime actions: `find/tap/swipe/type/paste/clear/wait/assert`;
 - replay and evidence: `.tritonplan`, `.tritonevidence`, command ledger, case lint, local batch.
 
@@ -93,6 +94,9 @@ triton device use --platform harmony --target <hdc-target> --json
 triton device wait-ready --platform harmony --target <hdc-target> --json
 triton app inspect --platform harmony --bundle <bundle> --json
 triton app launch --platform harmony --bundle <bundle> --ability <ability> --json
+triton observe current --platform harmony --target <hdc-target> --json
+triton observe tree --platform harmony --target <hdc-target> --json
+triton node resolve --platform harmony --target <hdc-target> --text "登录" --json
 ```
 
 Standalone Harmony embedded HTTP runtime:
@@ -104,6 +108,14 @@ triton state route --runtime-base-url http://127.0.0.1:28767 --json
 triton snapshot --runtime-base-url http://127.0.0.1:28767 --json
 triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
 triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
+```
+
+iOS embedded runtime observation:
+
+```bash
+triton observe current --platform ios --json
+triton observe tree --platform ios --runtime-base-url <baseURL> --json
+triton node resolve --platform ios --text "登录" --json
 ```
 
 For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` is the device-to-host gateway fallback port.
@@ -125,6 +137,7 @@ Android Emulator is an accepted product direction but should be added as a later
 - Multiple local targets must return `ambiguous_target` instead of picking an unsafe default.
 - Every host action should preserve source command, target, elapsed time, risk/policy metadata when available, and next verification advice.
 - Logs, screenshots, layout dumps, and data snapshots must be bounded and redacted when persisted into evidence.
+- When a platform has both host-side and embedded runtime observation, keep source boundaries visible. Host layout can prove current visible nodes and coordinates; embedded runtime can prove App-private route, responder, semantic action, WebView controller, and bridge state; WebView/page bridge can prove DOM/JS/page events. Fusion may produce stable `fusedNodeId` values, but must preserve `sources`, `confidence`, `missingSources`, and `candidateOnly` when Web/runtime semantics are absent.
 
 ## Implementation Workflow
 
@@ -135,7 +148,7 @@ Android Emulator is an accepted product direction but should be added as a later
    - Android adb parser behavior when that adapter lands;
    - error envelopes and destructive policy failures.
 3. Implement shared contracts before CLI glue when a DTO or source-command shape is reusable.
-4. Expose the CLI in `Sources/TritonKitCLI/main.swift`, keeping JSON / JSONL as the agent-facing default.
+4. Expose the CLI in a focused file under `Sources/TritonKitCLI/`, keeping JSON / JSONL as the agent-facing default.
 5. Update `commandSchemas()` for every agent-facing command.
 6. Sync docs and skills:
    - `README.md`;
@@ -155,6 +168,7 @@ swift test
 swift build --package-path CLI --scratch-path .build/cli --product triton
 .build/cli/debug/triton schema --command device --json
 .build/cli/debug/triton schema --command app --json
+TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-host-smoke.sh
 docs-linhay/scripts/check-docs.sh
 docs-linhay/scripts/qmd-sync.sh
 ```

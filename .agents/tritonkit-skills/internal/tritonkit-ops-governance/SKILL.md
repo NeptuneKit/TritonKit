@@ -28,6 +28,7 @@ metadata:
 - SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only 配置开关；对外接入指南必须明确：默认走源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
 - Package Manager 分发同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 规格必须保留 `TritonKitShared` / `TritonKit` 两个 Swift module，避免 `TritonKit` 中的 `import TritonKitShared` 在 pod 集成时失效。
 - SwiftPM 根 `Package.swift` 只描述业务 App 可依赖的 embedded SDK product，不声明 `triton` CLI executable、不声明 Hummingbird / ArgumentParser 等 CLI-only package dependencies；macOS CLI 统一由 `CLI/Package.swift` 构建，命令为 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，避免 iOS App 解析 SwiftPM 时拉入 CLI 依赖。
+- Swift 源文件超过 1500 行即进入治理范围；新增或扩展 CLI 能力时，默认按 `*Commands.swift`、`*Runtime.swift` / `*Service.swift`、`*Models.swift` 拆分。`*Models.swift` 只放 Codable/Encodable/Argument enum 等 wire contract，`*Commands.swift` 只放 ArgumentParser 参数和 glue，执行逻辑进入 runtime/service 文件。
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。
 - 新增外部依赖时先说明必要性；首期优先 Go 标准库。
 - GitHub CI / Release 最终必须产出 macOS arm64 / x86_64 `triton` CLI tar 包、checksum manifest 和合并后的对外项目级 `tritonkit-skills.tar.gz`；发布顺序是 arm64 CLI + skill 包先创建 Release / 更新 Homebrew，x86_64 CLI 由 Intel runner 后补上传并再次刷新 checksum / tap。该 skill 包只能从 `.agents/tritonkit-skills/public/` 打包，当前至少包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`，便于外部使用者拿到开发阶段反馈流程、真实项目回归流程和本机模拟器 CLI 接管流程。
@@ -35,7 +36,7 @@ metadata:
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；`NeptuneKit/TritonKit` 必须配置 `TAP_GITHUB_TOKEN`，让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - `v0.1.0` 起 GitHub Release 和 `NeptuneKit/homebrew-tap` 已可用；对外接入文档和 skill 默认优先给 `brew install NeptuneKit/tap/triton`，只有验证未发布源码变更或 release/tap 不可用时才使用 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` fallback。
 - 手动更新已在 `PATH` 上的 `triton` CLI 时，如果 `triton serve` 可能正从该路径运行，禁止文档或 skill 推荐直接 `cp` 覆盖目标文件；必须先停止 server，或先写 `triton.new` 再用同目录 `mv` 原子替换。
-- CLI 和对外发布的 skill 必须带版本号；CI 负责从 `v*` tag 或当前 commit 解析版本，写入 `Sources/TritonKitCLI/main.swift` 中的 `TritonKitBuildInfo.cliVersion` 和打包后的 `SKILL.md` front matter `metadata.version`。
+- CLI 和对外发布的 skill 必须带版本号；CI 负责从 `v*` tag 或当前 commit 解析版本，写入 `Sources/TritonKitCLI/CLIBuildInfo.swift` 中的 `TritonKitBuildInfo.cliVersion` 和打包后的 `SKILL.md` front matter `metadata.version`。
 - 普通 `main` push / PR 的 CI 只阻塞 validate；双架构 CLI、skill 包、checksum 与 release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行。
 - 手动 `workflow_dispatch` 只验证 release asset 集合并上传 workflow artifact，不渲染 Homebrew formula；只有真实 `v*` tag 构建才用 `GITHUB_REF_NAME` 渲染 formula，避免 dev 版本 `0.1.0-dev+<sha>` 被拼成无效 release tag。
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 只跑 `TritonKit.podspec` lint，Shared/iOS/未分类改动在 CI 中并行跑 Swift tests、两个 podspec lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。

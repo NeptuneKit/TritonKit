@@ -65,6 +65,7 @@
 22. SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only 配置开关；对外接入指南必须明确：默认走源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
 23. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 必须保持 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CI 需校验 podspec 可 lint。
 24. SwiftPM 根 `Package.swift` 只描述业务 App 可依赖的 embedded SDK product，不声明 `triton` CLI executable、不声明 Hummingbird / ArgumentParser 等 CLI-only package dependencies；macOS CLI 统一由 `CLI/Package.swift` 构建，命令为 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，避免 iOS App 解析 SwiftPM 时拉入 CLI 依赖。
+25. Swift 源文件超过 1500 行即进入治理范围；新增或扩展 CLI 能力时，默认按 `*Commands.swift`、`*Runtime.swift` / `*Service.swift`、`*Models.swift` 拆分，入口文件只保留 root command 注册与少量共享 glue，禁止继续把新子命令和 wire model 堆回巨型文件。
 
 ## 2. 标准工作流（必须）
 

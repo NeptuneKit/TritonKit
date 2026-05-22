@@ -1,0 +1,31 @@
+{
+  "action" : "tap",
+  "match" : {
+    "bounds" : {
+      "height" : 41,
+      "width" : 71,
+      "x" : 853,
+      "y" : 2720
+    },
+    "text" : "点赞"
+  },
+  "note" : "Harmony tap was submitted through uitest; verify business state with wait, ax, or screenshot.",
+  "ok" : true,
+  "platform" : "harmony",
+  "query" : "点赞",
+  "sourceCommands" : [
+    "hdc -t 127.0.0.1:10100 shell uitest dumpLayout",
+    "hdc -t 127.0.0.1:10100 file recv \/data\/local\/tmp\/layout_19019372478.json \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-layout-B8371360-2FE5-4D98-8248-9006017C3E67.json",
+    "hdc -t 127.0.0.1:10100 shell uitest uiInput click 889 2741"
+  ],
+  "target" : {
+    "id" : "harmony:127.0.0.1:10100",
+    "isConnected" : true,
+    "source" : "hdc",
+    "state" : "Connected",
+    "target" : "127.0.0.1:10100",
+    "transport" : "TCP"
+  },
+  "x" : 889,
+  "y" : 2741
+}

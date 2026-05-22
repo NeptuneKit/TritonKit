@@ -90,6 +90,120 @@ struct TKHostAdapterModelsTests {
         #expect(TKHarmonyHDCCommand.appLaunch(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-b", "com.example.demo", "-a", "EntryAbility"])
         #expect(TKHarmonyHDCCommand.forwardPort(target: "127.0.0.1:10100", localPort: 18765, remotePort: 18765).argv == ["-t", "127.0.0.1:10100", "fport", "tcp:18765", "tcp:18765"])
         #expect(TKHarmonyHDCCommand.inputText(target: "127.0.0.1:10100", text: "hello world").argv == ["-t", "127.0.0.1:10100", "shell", "uitest", "uiInput", "text", "hello world"])
+        #expect(TKHarmonyHDCCommand.installHap(target: "127.0.0.1:10100", hapPath: "/tmp/Demo.hap").argv == ["-t", "127.0.0.1:10100", "install", "-r", "/tmp/Demo.hap"])
+        #expect(TKHarmonyHDCCommand.forceStop(target: "127.0.0.1:10100", bundleName: "com.example.demo").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "force-stop", "com.example.demo"])
+        #expect(TKHarmonyHDCCommand.appOpenURL(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility", url: "demo://nativejump/index").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-a", "EntryAbility", "-b", "com.example.demo", "-U", "demo://nativejump/index"])
+        #expect(TKHarmonyHDCCommand.dumpLayout(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "uitest", "dumpLayout"])
+        #expect(TKHarmonyHDCCommand.recvFile(target: "127.0.0.1:10100", remotePath: "/data/local/tmp/layout.json", localPath: "/tmp/layout.json").argv == ["-t", "127.0.0.1:10100", "file", "recv", "/data/local/tmp/layout.json", "/tmp/layout.json"])
+        #expect(TKHarmonyHDCCommand.tapCoordinate(target: "127.0.0.1:10100", x: 120, y: 640).argv == ["-t", "127.0.0.1:10100", "shell", "uitest", "uiInput", "click", "120", "640"])
+        #expect(TKHarmonyHDCCommand.screenshot(target: "127.0.0.1:10100", remotePath: "/data/local/tmp/smoke.jpeg").argv == ["-t", "127.0.0.1:10100", "shell", "snapshot_display", "-f", "/data/local/tmp/smoke.jpeg"])
+    }
+
+    @Test("Harmony dumpLayout parser extracts remote file path")
+    func harmonyDumpLayoutRemotePathParser() throws {
+        let output = """
+        some preface
+        DumpLayout saved to:/data/local/tmp/layout_001.json
+        """
+
+        #expect(try TKHarmonyDumpLayoutParser.remotePath(from: output) == "/data/local/tmp/layout_001.json")
+        #expect(throws: TKHarmonyDumpLayoutParserError.remotePathNotFound) {
+            _ = try TKHarmonyDumpLayoutParser.remotePath(from: "No layout path")
+        }
+    }
+
+    @Test("Harmony layout parser finds text node bounds center")
+    func harmonyLayoutTextBoundsParser() throws {
+        let layout = """
+        {
+          "attributes": { "text": "root", "bounds": "[0,0][390,844]" },
+          "children": [
+            {
+              "attributes": {
+                "text": "目标",
+                "bounds": "[24,600][144,680]"
+              }
+            }
+          ]
+        }
+        """
+
+        let parsed = try TKHarmonyLayoutParser.firstTextMatch(in: Data(layout.utf8), text: "目标")
+        let match = try #require(parsed)
+
+        #expect(match.text == "目标")
+        #expect(match.bounds == TKRect(x: 24, y: 600, width: 120, height: 80))
+        #expect(match.centerX == 84)
+        #expect(match.centerY == 640)
+        let missing = try TKHarmonyLayoutParser.firstTextMatch(in: Data(layout.utf8), text: "missing")
+        #expect(missing == nil)
+    }
+
+    @Test("Harmony layout parser flattens host nodes for observe and node resolve")
+    func harmonyLayoutNodeSummaries() throws {
+        let layout = """
+        {
+          "attributes": {
+            "accessibilityId": "0",
+            "hierarchy": "ROOT1",
+            "type": "root",
+            "text": "",
+            "bounds": "[0,0][390,844]",
+            "clickable": "false",
+            "enabled": "true",
+            "visible": "true"
+          },
+          "children": [
+            {
+              "attributes": {
+                "accessibilityId": "10",
+                "hierarchy": "ROOT1,0",
+                "type": "Web",
+                "text": "resource:/RAWFILE/index.html",
+                "bounds": "[0,100][390,700]",
+                "clickable": "false",
+                "enabled": "true",
+                "focused": "true",
+                "scrollable": "false",
+                "visible": "true"
+              },
+              "children": [
+                {
+                  "attributes": {
+                    "accessibilityId": "11",
+                    "hierarchy": "ROOT1,0,0",
+                    "id": "loginBt",
+                    "key": "loginBt",
+                    "type": "button",
+                    "text": "登录",
+                    "bounds": "[24,600][144,680]",
+                    "clickable": "true",
+                    "enabled": "true",
+                    "visible": "true"
+                  },
+                  "children": []
+                }
+              ]
+            }
+          ]
+        }
+        """
+
+        let nodes = try TKHarmonyLayoutParser.nodeSummaries(in: Data(layout.utf8))
+
+        #expect(nodes.count == 3)
+        #expect(nodes.map(\.nodeID) == ["ROOT1", "ROOT1,0", "ROOT1,0,0"])
+        let web = try #require(nodes.first { $0.type == "Web" })
+        #expect(web.text == "resource:/RAWFILE/index.html")
+        #expect(web.bounds == TKRect(x: 0, y: 100, width: 390, height: 600))
+        #expect(web.focused == true)
+        let login = try #require(nodes.first { $0.text == "登录" })
+        #expect(login.identifier == "loginBt")
+        #expect(login.key == "loginBt")
+        #expect(login.clickable == true)
+        #expect(login.depth == 2)
+        #expect(login.bounds?.centerX == 84)
+        #expect(login.bounds?.centerY == 640)
     }
 
     @Test("HDC target parser preserves offline entries and default candidates only connected targets")

@@ -1,0 +1,19 @@
+{
+  "action" : "screenshot",
+  "artifact" : "docs-linhay\/spaces\/20260521-webview-runtime-bridge\/screenshots\/20260522\/harmony-host-real\/20260522-harmony-host-screenshot-after-tap-like-real-v01.jpeg",
+  "note" : "Harmony screenshot was captured through snapshot_display using remote artifact \/data\/local\/tmp\/triton-smoke-083B8795-A5EC-4AFB-9779-8DD5A5FF0194.jpeg; screenshot contents may contain private UI data.",
+  "ok" : true,
+  "platform" : "harmony",
+  "sourceCommands" : [
+    "hdc -t 127.0.0.1:10100 shell snapshot_display -f \/data\/local\/tmp\/triton-smoke-083B8795-A5EC-4AFB-9779-8DD5A5FF0194.jpeg",
+    "hdc -t 127.0.0.1:10100 file recv \/data\/local\/tmp\/triton-smoke-083B8795-A5EC-4AFB-9779-8DD5A5FF0194.jpeg docs-linhay\/spaces\/20260521-webview-runtime-bridge\/screenshots\/20260522\/harmony-host-real\/20260522-harmony-host-screenshot-after-tap-like-real-v01.jpeg"
+  ],
+  "target" : {
+    "id" : "harmony:127.0.0.1:10100",
+    "isConnected" : true,
+    "source" : "hdc",
+    "state" : "Connected",
+    "target" : "127.0.0.1:10100",
+    "transport" : "TCP"
+  }
+}

@@ -24,13 +24,13 @@ expect_mode docs \
   .agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md \
   .agents/skills/tritonkit-dev-feedback
 
-expect_mode swift Sources/TritonKitCLI/main.swift
+expect_mode swift Sources/TritonKitCLI/TritonKitCLI.swift
 expect_mode swift Tests/TritonKitSharedTests/TKCLITransportModelsTests.swift
 expect_mode swift Package.swift
 expect_mode swift CLI/Package.swift
 expect_mode swift CLI/Package.resolved README.md
 expect_mode swift Package.resolved README.md
-expect_mode swift Sources/TritonKitCLI/main.swift .github/workflows/ci.yml
+expect_mode swift Sources/TritonKitCLI/TritonKitCLI.swift .github/workflows/ci.yml
 
 expect_mode contracts .github/workflows/ci.yml
 expect_mode contracts docs-linhay/scripts/ci-validate-mode.sh
@@ -38,7 +38,7 @@ expect_mode contracts docs-linhay/scripts/verify-release-automation.sh README.md
 
 expect_mode podkit Sources/TritonKit/TritonKit.swift
 expect_mode podkit TritonKit.podspec
-expect_mode podkit Sources/TritonKit/TritonKit.swift Sources/TritonKitCLI/main.swift
+expect_mode podkit Sources/TritonKit/TritonKit.swift Sources/TritonKitCLI/TritonKitCLI.swift
 
 expect_mode full Sources/TritonKitShared/TKCLITransportModels.swift
 expect_mode full TritonKitShared.podspec

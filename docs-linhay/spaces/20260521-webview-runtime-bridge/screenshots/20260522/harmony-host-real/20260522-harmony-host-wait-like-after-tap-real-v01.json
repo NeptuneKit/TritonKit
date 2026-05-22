@@ -1,0 +1,32 @@
+{
+  "action" : "wait",
+  "condition" : "text",
+  "elapsedMs" : 735,
+  "match" : {
+    "bounds" : {
+      "height" : 41,
+      "width" : 71,
+      "x" : 853,
+      "y" : 2720
+    },
+    "text" : "点赞"
+  },
+  "matched" : true,
+  "ok" : true,
+  "platform" : "harmony",
+  "pollCount" : 1,
+  "query" : "点赞",
+  "sourceCommands" : [
+    "hdc -t 127.0.0.1:10100 shell uitest dumpLayout",
+    "hdc -t 127.0.0.1:10100 file recv \/data\/local\/tmp\/layout_19033339554.json \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-layout-E3A9C007-1690-465C-A62A-CAF7A8ECEC89.json"
+  ],
+  "target" : {
+    "id" : "harmony:127.0.0.1:10100",
+    "isConnected" : true,
+    "source" : "hdc",
+    "state" : "Connected",
+    "target" : "127.0.0.1:10100",
+    "transport" : "TCP"
+  },
+  "timedOut" : false
+}

@@ -106,6 +106,33 @@
 - And 后续 `triton type <text>` / `triton paste <text>` 可写入当前 first responder
 - And 普通未知 `UIControl` 仍不得伪成功；没有 public target-action 或 text input responder 时继续返回明确失败
 
+### Issue #15：Harmony host-side smoke adapter
+
+- Given 本机存在一个 `hdc list targets -v` 可见且 Connected 的 DevEco / Harmony emulator target
+- When agent 执行 `triton app install --platform harmony --hap <debug-signed.hap> --json`
+- Then TritonKit 通过 `hdc -t <target> install -r <hap>` 安装 HAP
+- And JSON 输出保留 action、runtimeScope、target、sourceCommand 与后续验证提示
+
+- Given 已知 Harmony bundle、ability 与 deep link URL
+- When agent 执行 `triton app open-url --platform harmony <url> --bundle <bundle> --ability EntryAbility --json`
+- Then TritonKit 通过 `aa start -a EntryAbility -b <bundle> -U <url>` 发起深链
+- And 不把 host 命令成功误当作业务状态成功，提示继续使用 `wait`、`ax` 或 `screenshot` 验证
+
+- Given 当前页面有可通过 `uitest dumpLayout` 发现的语义文本
+- When agent 执行 `triton ax --platform harmony --output <path> --json`
+- Then TritonKit 执行 `uitest dumpLayout`、解析 `DumpLayout saved to:<remote>`、再 `file recv` 到本地 artifact
+- And JSON 输出返回本地 layout artifact 路径与 sourceCommand，不内联真实业务页面内容
+
+- Given layout 中存在 `.attributes.text == <text>` 且 `.attributes.bounds` 为 `[x1,y1][x2,y2]`
+- When agent 执行 `triton tap <text> --platform harmony --json`
+- Then TritonKit 计算 bounds 中心并通过 `uitest uiInput click <x> <y>` 点击
+- And `triton wait --platform harmony --text <text> --timeout <seconds> --json` 可轮询 layout，超时时返回机器可读失败
+
+- Given 需要 CI 截图证据
+- When agent 执行 `triton screenshot --platform harmony --output smoke.jpeg --json`
+- Then TritonKit 通过 `snapshot_display -f <remote.jpeg>` 截图并 `file recv` 到本地
+- And JSON 输出只返回 artifact 路径、target、sourceCommand 与 redaction 提示
+
 ### 可以进 CLI，但非 P0
 
 | 能力 | 决策 |
