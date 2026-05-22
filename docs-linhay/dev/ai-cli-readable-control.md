@@ -59,6 +59,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton app prefs get <key> --bundle-id <id> --format json`、`triton app prefs dump --bundle-id <id> --format json`：读取 App preferences plist，避免 agent 解析 `plutil -p` 人读文本。
 - `triton xcode discover --path . --format json`：发现 `.xcworkspace`、`.xcodeproj` 与 `Package.swift` 候选，作为未知 Apple repo 的入口；多候选时返回 candidates，不暴露 XcodeBuildMCP tool 名。
 - `triton xcode use --workspace <path>|--project <path> --scheme <scheme> --configuration Debug --simulator <udid> --format json`：写入 repo-local `.triton/host-defaults.json`，同时保留 `triton sim use` 的默认 simulator。
+- `triton xcode status --format json` / `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --format json`：诊断本机 `xcodebuild`、Swift build service 和 `xctest` 占用；`status` 返回 best-effort PID、workspace/project、scheme、destination、DerivedData 与 elapsed，`wait-idle` 超时返回 `xcode_not_idle` 和 blocking PIDs。
 - `triton xcode schemes/settings/build/test/run --format json|--jsonl`：封装 `xcodebuild -list -json`、`-showBuildSettings -json`、`build`、`test` 与 build/install/launch 复合流程；长任务使用 JSONL progress 加最终 summary envelope，大型 workspace 可用 `--timeout <seconds>` 放宽超时。`--jsonl` 会输出 invocation、stdout/stderr samples、heartbeat 和 summary，并带 stdout/stderr log path 与 byte count，便于 agent 判断是真卡住还是仍有输出。
 - `triton xcode run --jsonl` 只证明 build/install/launch 已提交，业务就绪仍必须继续用 `triton status/wait/find/assert/screenshot/evidence` 验证。
 - `triton device doctor --platform harmony --format json`：只读探测 HarmonyOS NEXT / DevEco Emulator 的 HDC/Emulator 工具路径、版本摘要和 P0 能力，不保存真实 UI、layout、日志正文或设备文件。
@@ -121,7 +122,7 @@ WebView 是 CLI 的一部分，但仍必须遵循 provider 边界：iOS 侧优�
 
 `doctor`、`capabilities` 与 `runtime manifest` 是 AI 的首选探测入口。无服务时 `doctor/capabilities` 返回 `ok=false`、`serverReachable=false`、`error.code=server_unavailable`、启动 hint 和 `error.nextAction`，但进程退出码保持 0，方便上层读取诊断。`runtime manifest` 需要已连接 embedded target；失败时返回稳定 error envelope，成功时返回 SDK manifest、capabilities、limits 与 redaction policy。`capabilities` 还暴露 host-side `host-device`、`harmony-device-doctor`、`harmony-device-list`、`harmony-device-wait-ready`、`harmony-app-install`、`harmony-app-open-url`、`harmony-ax`、`harmony-wait-text`、`harmony-tap-text` 和 `harmony-screenshot`，这些能力不依赖 embedded runtime。普通动作命令如 `status --format json` 与 `list --format json` 在连接失败时返回同一 `{ok:false,error:{code,message,endpoint,hint,nextAction?}}` envelope，并以非 0 退出，方便 shell 流水线阻断。
 
-`schema` 是 AI 的首选规划入口，不依赖 server。`schema --format json` 返回全部已实现命令的命令级 schema；`schema --command input --format json` 返回 NDJSON action schema，包含 `tap`、`swipe`、`type`、`button` 的 required/optional 字段、字段类型、enum、`oneOfRequired`、`coordinateSpace` 与 example；`schema --command device --format json` 返回 Harmony host adapter 的 doctor/list/use/wait-ready 参数，`schema --command app|ax|wait|tap|screenshot --format json` 返回 Harmony smoke adapter 的 host-side 参数、成功 shape 和失败 shape。坐标统一为 window points，与 `geometry`、`ax`、`hit` 返回的 frame 坐标一致；Harmony host-side 坐标来自 `uitest dumpLayout` 的 bounds。
+`schema` 是 AI 的首选规划入口，不依赖 server。`schema --format json` 返回全部已实现命令的命令级 schema；`schema --command input --format json` 返回 NDJSON action schema，包含 `tap`、`swipe`、`type`、`button` 的 required/optional 字段、字段类型、enum、`oneOfRequired`、`coordinateSpace` 与 example；`schema --command device --format json` 返回 Harmony host adapter 的 doctor/list/use/wait-ready 参数，`schema --command app|ax|wait|tap|screenshot --format json` 返回 Harmony smoke adapter 的 host-side 参数、成功 shape 和失败 shape，`schema --command smoke --format json` 返回 `smoke ios` 的 one-command summary / failure shape。坐标统一为 window points，与 `geometry`、`ax`、`hit` 返回的 frame 坐标一致；Harmony host-side 坐标来自 `uitest dumpLayout` 的 bounds。
 
 Host-side adapter 使用 `riskLevel`、`requiredConfig` 和 execution policy 做审计与客观运行配置校验，不再使用交互式 `requiresConfirmation` gate。缺少 target、artifactDir、redaction policy、timeout 或 audit record 这类客观配置时应返回 machine-readable blocked/error；风险等级本身不打断长自动化。
 
@@ -150,6 +151,8 @@ HTTP 管理 API 的错误响应同样使用 `{ok:false,error:{code,message,endpo
 ## 复杂测试目标
 
 iOS Demo 现在内置 `ComplexHarness`，用于替代过于简单的单按钮 smoke。它同时覆盖嵌套 stack、状态标签、`UIButton`、`UISwitch`、`UISegmentedControl`、`UISlider`、`UIStepper`、`UITextField`、`UITextView` 与横向 `UIScrollView` carousel。所有关键控件都通过 `ComplexHarness*` accessibility identifier 暴露给 `triton ax`。
+
+Demo 同时注册 `tritonkitdemo://` URL scheme，作为 `triton smoke ios` 的正向 open-url 入口。该 scheme 只用于让 iOS Simulator 将 Demo 拉到前台；业务 ready 仍必须由 embedded runtime 的 `wait` / `assert` 和 evidence target 状态证明，不能把 `simctl openurl` 的 host ack 当作 smoke 成功。
 
 embedded runtime 的 `tap` 会对常见公开 UIKit 控件执行确定性动作：`UITextField`/`UITextView` 聚焦，自定义 `UIKeyInput`/可成为 first responder 的编辑 surface 可通过坐标 tap 聚焦，`UISwitch` toggle，`UISegmentedControl` 按坐标选择或按 oid 循环下一项，`UISlider` 按坐标设置或按 oid 递增，`UIStepper` 按坐标增减或按 oid 递增。普通未知 `UIControl` 只在能发现 `.primaryActionTriggered` 或 `.touchUpInside` target-action 时才返回成功并异步派发；没有可派发 action 的控件返回失败，避免导航标题等 no-op `UIControl` 造成假成功。这让 AI agent 可以只通过 `ax -> input --summary --strict --fail-fast -> wait -> ax/screenshot/export` 完成复杂状态回归。
 

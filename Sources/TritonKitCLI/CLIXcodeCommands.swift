@@ -11,6 +11,8 @@ struct Xcode: AsyncParsableCommand {
             XcodeDiscover.self,
             XcodeUse.self,
             XcodeSchemes.self,
+            XcodeStatus.self,
+            XcodeWaitIdle.self,
             XcodeSettings.self,
             XcodeBuild.self,
             XcodeTest.self,
@@ -119,6 +121,65 @@ struct XcodeSchemes: AsyncParsableCommand {
                 print(try encodeJSON(output))
             case .text:
                 for scheme in schemes.schemes { print(scheme) }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeStatus: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "status", abstract: "Inspect active xcodebuild and build-service processes")
+
+    @Option(help: "Only include processes matching this .xcworkspace or .xcodeproj path") var workspace: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let output = try currentXcodeProcessStatus(workspace: workspace)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                if output.processes.isEmpty {
+                    print("idle")
+                } else {
+                    for process in output.processes {
+                        print("\(process.pid)\t\(process.name)\t\(process.workspace ?? "-")\t\(process.scheme ?? "-")")
+                    }
+                }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct XcodeWaitIdle: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "wait-idle", abstract: "Wait until matching Xcode build/test processes are idle")
+
+    @Option(help: "Only wait for processes matching this .xcworkspace or .xcodeproj path") var workspace: String?
+    @Option(help: "Timeout in seconds") var timeout: Double = 120
+    @Option(help: "Polling interval in seconds") var interval: Double = 2
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let output = try await waitForXcodeIdle(
+                workspace: workspace,
+                timeout: timeout,
+                interval: interval,
+                statusProvider: { try currentXcodeProcessStatus(workspace: workspace) }
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print("idle\tpolls=\(output.pollCount)\telapsedMs=\(output.elapsedMs)")
             }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)

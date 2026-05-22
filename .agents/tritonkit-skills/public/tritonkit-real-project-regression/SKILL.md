@@ -70,6 +70,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - discover project containers: `triton xcode discover --path <repo> --json`;
    - set reusable defaults: `triton xcode use --workspace <workspace>|--project <project> --scheme <scheme> --configuration Debug --simulator <udid> --json`;
    - list schemes: `triton xcode schemes --json`;
+   - diagnose current Xcode build/test occupancy before starting a smoke run: `triton xcode status --json`;
+   - wait for the current workspace to stop building/testing: `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`;
    - inspect app product settings: `triton xcode settings --jsonl --timeout <seconds>` for large workspaces, or `triton xcode settings --json` for quick projects;
    - build: `triton xcode build --jsonl`;
    - test: `triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl`;

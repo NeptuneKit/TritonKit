@@ -49,6 +49,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             Export.self,
             Evidence.self,
             Capture.self,
+            Smoke.self,
             UIAssert.self,
             Record.self,
             Replay.self,

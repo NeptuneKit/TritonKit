@@ -134,6 +134,8 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "discover --path <path>", type: "Subcommand", description: "Discover .xcworkspace, .xcodeproj, and Package.swift candidates"),
                 TKCommandSchemaOption(name: "use --workspace <path>|--project <path> --scheme <scheme>", type: "Subcommand", description: "Set repo-local Xcode defaults in .triton/host-defaults.json"),
                 TKCommandSchemaOption(name: "schemes", type: "Subcommand", description: "List schemes via xcodebuild -list -json"),
+                TKCommandSchemaOption(name: "status", type: "Subcommand", description: "Inspect active xcodebuild and build-service processes"),
+                TKCommandSchemaOption(name: "wait-idle", type: "Subcommand", description: "Wait until matching Xcode build/test processes are idle"),
                 TKCommandSchemaOption(name: "settings", type: "Subcommand", description: "Resolve app product path and bundle id from -showBuildSettings -json"),
                 TKCommandSchemaOption(name: "build", type: "Subcommand", description: "Run xcodebuild build"),
                 TKCommandSchemaOption(name: "test", type: "Subcommand", description: "Run xcodebuild test"),
@@ -156,14 +158,16 @@ func commandSchemas() -> [TKCommandSchema] {
                 "triton xcode discover --path . --json",
                 "triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
                 "triton xcode schemes --json",
+                "triton xcode status --json",
+                "triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json",
                 "triton xcode settings --json",
                 "triton xcode build --jsonl",
                 "triton xcode test --result-bundle /tmp/App.xcresult --jsonl",
                 "triton xcode run --jsonl",
             ],
-            successShape: "discover/use/schemes/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
-            failureShape: "{ ok:false, error:{ code: invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcodebuild_failed|app_path_unresolved|bundle_id_unresolved, message, hint } }",
-            providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcodebuild", "xcode-run"]
+            successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
+            failureShape: "{ ok:false, error:{ code: invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcode_not_idle|xcodebuild_failed|app_path_unresolved|bundle_id_unresolved, message, hint } }",
+            providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-run"]
         ),
         TKCommandSchema(
             name: "runtime",
@@ -718,6 +722,23 @@ func commandSchemas() -> [TKCommandSchema] {
             successShape: "TKEvidenceManifest with freshness metadata for captured artifacts",
             failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
             providedCapabilities: ["capture", "evidence"]
+        ),
+        TKCommandSchema(
+            name: "smoke",
+            summary: "Run one-command smoke flows for real-project regression",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            outputFormats: jsonText,
+            options: [
+                TKCommandSchemaOption(name: "ios", type: "Subcommand", description: "Run one-command iOS smoke evidence flow"),
+            ],
+            examples: [
+                "triton smoke ios --bundle-id com.example.app --open-url myapp://home --wait-text Ready --json",
+            ],
+            successShape: "SmokeRunSummary with { ok, action, platform, status, target, steps[], assertions[], artifacts[], evidence?, failure?, startedAt, endedAt, elapsedMs }",
+            failureShape: "SmokeRunSummary with ok=false and failure.step/code/message/hint populated",
+            providedCapabilities: ["smoke-ios"]
         ),
         TKCommandSchema(
             name: "assert",

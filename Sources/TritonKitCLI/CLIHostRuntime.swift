@@ -464,6 +464,12 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: "Run `triton app prefs dump --bundle-id <id> --json` to inspect available keys."
         )
+    case XcodeDiagnosticsError.notIdle(let status):
+        detail = TKCLIErrorDetail(
+            code: "xcode_not_idle",
+            message: "\(error)",
+            hint: "Wait for the listed PIDs to finish, cancel stale builds, or retry with a more specific --workspace. Blocking PIDs: \(status.processes.map { "\($0.pid)" }.joined(separator: ", "))."
+        )
     case TKSimctlAppInfoParserError.emptyInfo:
         detail = TKCLIErrorDetail(
             code: "app_info_not_available",

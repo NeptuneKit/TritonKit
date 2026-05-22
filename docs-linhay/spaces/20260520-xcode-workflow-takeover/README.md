@@ -122,6 +122,8 @@ P0 最小 `triton xcode` 入口已落地：
 - `triton xcode discover --path . --json`
 - `triton xcode use --workspace <path>|--project <path> --scheme <scheme> --configuration Debug --simulator <udid> --json`
 - `triton xcode schemes --json`
+- `triton xcode status --json`
+- `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`
 - `triton xcode settings --jsonl --timeout <seconds>`
 - `triton xcode build --jsonl --timeout <seconds>`
 - `triton xcode test --result-bundle /tmp/App.xcresult --jsonl`
@@ -133,13 +135,16 @@ P0 最小 `triton xcode` 入口已落地：
 2. `xcode run` 只覆盖 build、simulator install、simulator launch，不声明业务 ready；后续必须接 `triton status/wait/find/assert/screenshot/evidence`。
 3. `xcode settings/build/test/run --jsonl` 已输出 invocation、stdout/stderr sample、heartbeat、summary，以及 stdout/stderr log path 和 byte count；真实项目卡住时先看这些 artifact，不再盲等。
 4. `xcode build` 的成功 summary 是纯 build 结束边界；它不再在 summary 后隐式执行 `xcodebuild -showBuildSettings -json`。需要 `.app` 路径时使用 `xcode settings` 或 `xcode run`，其中 `xcode run --jsonl` 会把 settings 解析暴露为 `xcode.run.settings.*` 进度事件。
-5. `xcresult`、coverage、logs 与 evidence 的深度整合仍在后续切片，不在本次 P0 内宣称完成。
+5. `xcode status/wait-idle` 是只读 best-effort host 诊断：先用 `pgrep` 缩小 Xcode build/test 相关 PID，再用 `ps -p` 采样，避免全量进程输出卡住；无法可靠推断的 workspace/scheme/destination 字段保持为空或低置信度。
+6. `xcresult`、coverage、logs 与 evidence 的深度整合仍在后续切片，不在本次 P0 内宣称完成。
 
 ### P0：Xcode workflow 最小闭环
 
 - `triton xcode discover`
 - `triton xcode use`
 - `triton xcode schemes`
+- `triton xcode status`
+- `triton xcode wait-idle`
 - `triton xcode settings`
 - `triton xcode build --jsonl`
 - `triton xcode test --jsonl --result-bundle`

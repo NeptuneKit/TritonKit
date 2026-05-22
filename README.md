@@ -335,6 +335,8 @@ Xcode project discovery and `xcodebuild` execution are also exposed through Trit
 triton xcode discover --path . --json
 triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
 triton xcode schemes --json
+triton xcode status --json
+triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json
 triton xcode settings --jsonl --timeout 1800
 triton xcode build --jsonl --timeout 1800
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl

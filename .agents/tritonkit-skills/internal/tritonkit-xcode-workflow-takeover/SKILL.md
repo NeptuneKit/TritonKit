@@ -49,6 +49,8 @@ Start from:
 triton xcode discover --path . --json
 triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator <udid> --json
 triton xcode schemes --json
+triton xcode status --json
+triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json
 triton xcode settings --jsonl --timeout <seconds>
 triton xcode build --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
@@ -60,6 +62,7 @@ Current boundaries:
 - `xcode run` covers build, simulator install, and simulator launch; it does not prove business readiness.
 - Continue readiness checks with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
 - Real workspaces may exceed default timeouts. Use `triton xcode settings/build/test/run --timeout <seconds>` before falling back to raw `xcodebuild`.
+- When build/test behavior looks stuck, run `triton xcode status --json` first, then `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`; timeout returns `xcode_not_idle` with blocking PIDs.
 - `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts. Use those artifacts before deciding to wait longer or fall back to raw `xcodebuild`.
 - `xcresult`, coverage, logs, and evidence xcode artifacts are still follow-up slices.
 
