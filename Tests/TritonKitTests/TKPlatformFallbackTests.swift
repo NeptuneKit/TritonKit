@@ -1,6 +1,9 @@
 import Foundation
 import Testing
 @testable import TritonKit
+#if canImport(Darwin)
+import Darwin
+#endif
 
 @Suite
 struct TKPlatformFallbackTests {
@@ -104,6 +107,31 @@ struct TKPlatformFallbackTests {
         token.cancel()
     }
 
+    @Test("missing local server does not surface connection refused noise")
+    func missingLocalServerDoesNotSurfaceConnectionNoise() async throws {
+        let kit = TritonKit.shared
+        kit.stop()
+        var observedErrors: [Error] = []
+        let token = kit.onError { error in
+            observedErrors.append(error)
+        }
+        defer {
+            token.cancel()
+            kit.stop()
+        }
+
+        let port = try Self.unusedLocalPort()
+        let started = kit.start(TritonKit.Configuration { config in
+            config.endpoint = .local(port: port)
+            config.autoReconnect = false
+        })
+
+        #expect(started)
+        try await Task.sleep(nanoseconds: 500_000_000)
+        #expect(kit.state == .disconnected)
+        #expect(observedErrors.isEmpty)
+    }
+
     @Test("hierarchy builder returns an empty fallback on non-UIKit platforms")
     func hierarchyBuilderFallback() async {
         #if !canImport(UIKit)
@@ -117,5 +145,45 @@ struct TKPlatformFallbackTests {
     func hierarchyBuilderDefaultTraversalLimits() {
         #expect(TKHierarchyBuilder.defaultMaxDepth >= 32)
         #expect(TKHierarchyBuilder.defaultMaxChildrenPerNode >= 100)
+    }
+
+    private static func unusedLocalPort() throws -> UInt16 {
+        #if canImport(Darwin)
+        let fd = socket(AF_INET, SOCK_STREAM, 0)
+        guard fd >= 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        defer { close(fd) }
+
+        var address = sockaddr_in()
+        address.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
+        address.sin_family = sa_family_t(AF_INET)
+        address.sin_port = 0
+        address.sin_addr = in_addr(s_addr: inet_addr("127.0.0.1"))
+
+        let bindResult = withUnsafePointer(to: &address) { pointer in
+            pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { socketAddress in
+                bind(fd, socketAddress, socklen_t(MemoryLayout<sockaddr_in>.size))
+            }
+        }
+        guard bindResult == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+
+        var boundAddress = sockaddr_in()
+        var length = socklen_t(MemoryLayout<sockaddr_in>.size)
+        let nameResult = withUnsafeMutablePointer(to: &boundAddress) { pointer in
+            pointer.withMemoryRebound(to: sockaddr.self, capacity: 1) { socketAddress in
+                getsockname(fd, socketAddress, &length)
+            }
+        }
+        guard nameResult == 0 else {
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+
+        return UInt16(bigEndian: boundAddress.sin_port)
+        #else
+        throw POSIXError(.ENOTSUP)
+        #endif
     }
 }
