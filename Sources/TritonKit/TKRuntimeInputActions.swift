@@ -54,6 +54,11 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         )
     }
 
+    if shouldUseAncestorTapActivation(request),
+       let result = performAncestorTapActivation(from: view, request: request, action: action) {
+        return result
+    }
+
     guard let control = nearestSuperview(of: view, matching: UIControl.self) else {
         return TKInputResult.failure(
             action: action,
@@ -63,12 +68,32 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         )
     }
 
+    return performControlTap(control, request: request, action: action, matchedView: nil, strategy: nil)
+}
+
+@MainActor
+func performControlTap(
+    _ control: UIControl,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView?,
+    strategy: String?
+) -> TKInputResult {
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let activationOID = oid(for: control)
+    let activationClassName = NSStringFromClass(type(of: control))
+
     guard control.isEnabled else {
         return TKInputResult.failure(
             action: action,
             message: "Target UIControl is disabled",
-            targetOID: oid(for: control),
-            targetClassName: NSStringFromClass(type(of: control))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
         )
     }
 
@@ -77,8 +102,13 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         return TKInputResult.success(
             action: action,
             message: "Focused text field",
-            targetOID: oid(for: textField),
-            targetClassName: NSStringFromClass(type(of: textField))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
         )
     }
 
@@ -88,8 +118,13 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         return TKInputResult.success(
             action: action,
             message: "Toggled UISwitch",
-            targetOID: oid(for: toggle),
-            targetClassName: NSStringFromClass(type(of: toggle))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
         )
     }
 
@@ -107,8 +142,13 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         return TKInputResult.success(
             action: action,
             message: "Selected UISegmentedControl index \(nextIndex)",
-            targetOID: oid(for: segmented),
-            targetClassName: NSStringFromClass(type(of: segmented))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
         )
     }
 
@@ -126,8 +166,13 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         return TKInputResult.success(
             action: action,
             message: String(format: "Set UISlider value to %.2f", nextValue),
-            targetOID: oid(for: slider),
-            targetClassName: NSStringFromClass(type(of: slider))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
         )
     }
 
@@ -146,8 +191,13 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         return TKInputResult.success(
             action: action,
             message: String(format: "Set UIStepper value to %.0f", nextValue),
-            targetOID: oid(for: stepper),
-            targetClassName: NSStringFromClass(type(of: stepper))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
         )
     }
 
@@ -155,17 +205,211 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         return TKInputResult.failure(
             action: action,
             message: "Target UIControl has no primary or touchUpInside action",
-            targetOID: oid(for: control),
-            targetClassName: NSStringFromClass(type(of: control))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy
         )
     }
     dispatchControlActions(dispatch.actions, for: control, fallbackEvent: dispatch.event)
     return TKInputResult.success(
         action: action,
         message: "Dispatched \(dispatch.eventName)",
-        targetOID: oid(for: control),
-        targetClassName: NSStringFromClass(type(of: control))
+        targetOID: activationOID,
+        targetClassName: activationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        strategy: strategy
     )
+}
+
+@MainActor
+func performAncestorTapActivation(from view: UIView, request: TKInputRequest, action: String) -> TKInputResult? {
+    if let control = nearestSuperview(of: view, matching: UIControl.self) {
+        return performControlTap(
+            control,
+            request: request,
+            action: action,
+            matchedView: view,
+            strategy: "ancestor-control-action"
+        )
+    }
+
+    if let tableCell = nearestSuperview(of: view, matching: UITableViewCell.self),
+       let result = performTableCellTap(tableCell, request: request, action: action, matchedView: view) {
+        return result
+    }
+
+    if let collectionCell = nearestSuperview(of: view, matching: UICollectionViewCell.self),
+       let result = performCollectionCellTap(collectionCell, request: request, action: action, matchedView: view) {
+        return result
+    }
+
+    if let gestureView = nearestTapGestureView(from: view) {
+        let matched = tapMatchedContext(request, fallback: view)
+        let activationOID = oid(for: gestureView)
+        let activationClassName = NSStringFromClass(type(of: gestureView))
+        return TKInputResult.failure(
+            action: action,
+            message: "Matched text node has a tap gesture ancestor, but embedded runtime cannot dispatch arbitrary tap gesture recognizers through public UIKit API",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: "ancestor-gesture-coordinate-unsupported"
+        )
+    }
+
+    return nil
+}
+
+@MainActor
+func performTableCellTap(
+    _ cell: UITableViewCell,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView
+) -> TKInputResult? {
+    guard let tableView = nearestSuperview(of: cell, matching: UITableView.self),
+          let indexPath = tableView.indexPath(for: cell) else {
+        return nil
+    }
+
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let activationOID = oid(for: cell)
+    let activationClassName = NSStringFromClass(type(of: cell))
+    guard tableView.allowsSelection, cell.isUserInteractionEnabled else {
+        return TKInputResult.failure(
+            action: action,
+            message: "UITableViewCell ancestor is not selectable",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: "ancestor-table-cell-selection-blocked"
+        )
+    }
+    if tableView.delegate?.responds(to: #selector(UITableViewDelegate.tableView(_:willSelectRowAt:))) == true,
+       tableView.delegate?.tableView?(tableView, willSelectRowAt: indexPath) == nil {
+        return TKInputResult.failure(
+            action: action,
+            message: "UITableViewCell ancestor selection was denied by delegate",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: "ancestor-table-cell-selection-denied"
+        )
+    }
+
+    tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
+    tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+
+    return TKInputResult.success(
+        action: action,
+        message: "Matched text node; selected UITableViewCell ancestor",
+        targetOID: activationOID,
+        targetClassName: activationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        strategy: "ancestor-table-cell-selection"
+    )
+}
+
+@MainActor
+func performCollectionCellTap(
+    _ cell: UICollectionViewCell,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView
+) -> TKInputResult? {
+    guard let collectionView = nearestSuperview(of: cell, matching: UICollectionView.self),
+          let indexPath = collectionView.indexPath(for: cell) else {
+        return nil
+    }
+
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let activationOID = oid(for: cell)
+    let activationClassName = NSStringFromClass(type(of: cell))
+    guard collectionView.allowsSelection, cell.isUserInteractionEnabled else {
+        return TKInputResult.failure(
+            action: action,
+            message: "UICollectionViewCell ancestor is not selectable",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: "ancestor-collection-cell-selection-blocked"
+        )
+    }
+    if collectionView.delegate?.responds(to: #selector(UICollectionViewDelegate.collectionView(_:shouldSelectItemAt:))) == true,
+       collectionView.delegate?.collectionView?(collectionView, shouldSelectItemAt: indexPath) == false {
+        return TKInputResult.failure(
+            action: action,
+            message: "UICollectionViewCell ancestor selection was denied by delegate",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: "ancestor-collection-cell-selection-denied"
+        )
+    }
+
+    collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+    collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: indexPath)
+
+    return TKInputResult.success(
+        action: action,
+        message: "Matched text node; selected UICollectionViewCell ancestor",
+        targetOID: activationOID,
+        targetClassName: activationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        strategy: "ancestor-collection-cell-selection"
+    )
+}
+
+func shouldUseAncestorTapActivation(_ request: TKInputRequest) -> Bool {
+    request.activationStrategy == .smart || request.activationStrategy == .ancestor
+}
+
+func tapMatchedContext(_ request: TKInputRequest, fallback view: UIView?) -> (oid: UInt?, className: String?) {
+    (
+        oid: request.matchedOID ?? view.flatMap { oid(for: $0) },
+        className: request.matchedClassName ?? view.map { NSStringFromClass(type(of: $0)) }
+    )
+}
+
+func nearestTapGestureView(from view: UIView) -> UIView? {
+    var current: UIView? = view
+    while let view = current {
+        if view.gestureRecognizers?.contains(where: { gesture in
+            gesture is UITapGestureRecognizer && gesture.isEnabled
+        }) == true {
+            return view
+        }
+        current = view.superview
+    }
+    return nil
 }
 
 @MainActor
@@ -199,14 +443,18 @@ func dispatchControlActions(
     for control: UIControl,
     fallbackEvent: UIControl.Event
 ) {
-    DispatchQueue.main.async {
-        guard !targetActions.isEmpty else {
-            control.sendActions(for: fallbackEvent)
-            return
-        }
-        for targetAction in targetActions {
-            UIApplication.shared.sendAction(targetAction.action, to: targetAction.target, from: control, for: nil)
-        }
+    guard !targetActions.isEmpty else {
+        control.sendActions(for: fallbackEvent)
+        return
+    }
+    var dispatched = false
+    for targetAction in targetActions {
+        guard let target = targetAction.target as AnyObject? else { continue }
+        dispatchTargetAction(targetAction.action, to: target, sender: control)
+        dispatched = true
+    }
+    if !dispatched {
+        control.sendActions(for: fallbackEvent)
     }
 }
 
@@ -214,14 +462,31 @@ func dispatchControlActions(
 func dispatchValueChangedActions(for control: UIControl) {
     let targetActions = targetActions(for: control, event: .valueChanged)
 
-    DispatchQueue.main.async {
-        guard !targetActions.isEmpty else {
-            control.sendActions(for: .valueChanged)
-            return
-        }
-        for targetAction in targetActions {
-            UIApplication.shared.sendAction(targetAction.action, to: targetAction.target, from: control, for: nil)
-        }
+    guard !targetActions.isEmpty else {
+        control.sendActions(for: .valueChanged)
+        return
+    }
+    var dispatched = false
+    for targetAction in targetActions {
+        guard let target = targetAction.target as AnyObject? else { continue }
+        dispatchTargetAction(targetAction.action, to: target, sender: control)
+        dispatched = true
+    }
+    if !dispatched {
+        control.sendActions(for: .valueChanged)
+    }
+}
+
+@MainActor
+func dispatchTargetAction(_ action: Selector, to target: AnyObject, sender: UIControl) {
+    let argumentCount = NSStringFromSelector(action).filter { $0 == ":" }.count
+    switch argumentCount {
+    case 0:
+        _ = target.perform(action)
+    case 1:
+        _ = target.perform(action, with: sender)
+    default:
+        _ = target.perform(action, with: sender, with: nil)
     }
 }
 

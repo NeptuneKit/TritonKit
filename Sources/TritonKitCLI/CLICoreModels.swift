@@ -341,6 +341,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--oid <oid>", "hierarchy view oid"),
             ("--ax-oid <oid>", "`triton ax` 输出的 targetOID/viewOID"),
             ("--ax-label <label>", "`triton ax` 输出的精确 label，优先按 AX oid 点击"),
+            ("--strategy <smart|exact|ancestor>", "query/AX 文本点击的激活目标策略；query 默认 smart，AX 默认 exact"),
             ("--duration <seconds>", "按住时长"),
             ("--index <n>", "按 `find --all` 的 1 起始序号选择候选"),
             ("--within <x,y,w,h>", "只在指定 window bounds 内匹配文本候选"),
