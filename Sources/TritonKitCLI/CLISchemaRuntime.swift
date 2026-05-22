@@ -529,11 +529,17 @@ func commandSchemas() -> [TKCommandSchema] {
             options: hostPort + [
                 TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List visible WebView candidates"),
                 TKCommandSchemaOption(name: "current", type: "Subcommand", description: "Resolve current visible WebView candidate"),
+                TKCommandSchemaOption(name: "call <method>", type: "Subcommand", description: "Call a page opt-in bridge method; arbitrary JavaScript eval remains unsupported"),
+                TKCommandSchemaOption(name: "events", type: "Subcommand", description: "Read buffered opt-in WebView page events"),
                 target,
                 runtimeBaseURLOption,
                 TKCommandSchemaOption(name: "--platform", type: "ios|harmony", defaultValue: "ios", description: "Observation platform"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable for --platform harmony"),
                 TKCommandSchemaOption(name: "--webview-id", type: "String", description: "Select a candidate from `triton webview list`"),
+                TKCommandSchemaOption(name: "--page-session-id", type: "String", description: "Expected page session id from `triton webview current`"),
+                TKCommandSchemaOption(name: "--arg", type: "key=value", description: "Bridge call argument; repeat for multiple values"),
+                TKCommandSchemaOption(name: "--timeout-ms", type: "Int", description: "Bridge call timeout in milliseconds"),
+                TKCommandSchemaOption(name: "--limit", type: "Int", defaultValue: "50", description: "Maximum events to return"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Harmony host layout artifact path"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
@@ -541,9 +547,12 @@ func commandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton webview list --platform ios --json",
                 "triton webview current --platform harmony --target 127.0.0.1:10100 --json",
+                "triton webview call getRouteState --platform ios --json",
+                "triton webview events --platform ios --limit 50 --json",
             ],
-            successShape: "{ ok, action, platform, capturedAt, target, current?, candidates[], sources[], sourceCommands[], note } or { ok, action, platform, capturedAt, target, webView, sources[], sourceCommands[], note }",
-            providedCapabilities: ["webview-list", "webview-current"]
+            successShape: "{ ok, action, platform, capturedAt, target, current?, candidates[], sources[], sourceCommands[], note } or { ok, action, platform, capturedAt, target, webView, sources[], sourceCommands[], note } or { ok, action, capturedAt, platform, target, webViewID, pageSessionID?, method, result?, elapsedMs, redaction } or { ok, action, capturedAt, platform, target, events[], limit }",
+            failureShape: "{ ok:false, action, platform, target, error:{ code: webview_not_found|ambiguous_webview|webview_id_not_found|webview_provider_unavailable|webview_bridge_unavailable|webview_method_not_allowed|webview_navigation_changed|javascript_error, message, hint, nextAction? }, candidates?[] }",
+            providedCapabilities: ["webview-list", "webview-current", "webview-bridge-call", "webview-events"]
         ),
         TKCommandSchema(
             name: "hierarchy",

@@ -27,6 +27,8 @@ hdc list targets -v
 .build/cli/release/triton ax --platform harmony --target 127.0.0.1:10100 --output docs-linhay/spaces/20260521-webview-runtime-bridge/screenshots/20260522/harmony-host-real/20260522-harmony-host-layout-after-tap-like-real-v02.json --json
 .build/cli/release/triton observe tree --platform harmony --target 127.0.0.1:10100 --max-nodes 80 --output docs-linhay/spaces/20260521-webview-runtime-bridge/screenshots/20260522/harmony-host-real/20260522-harmony-host-observe-tree-layout-real-v02.json --json
 .build/cli/release/triton node resolve --platform harmony --target 127.0.0.1:10100 --text console --all --json
+.build/cli/debug/triton webview list --platform harmony --target 127.0.0.1:10100 --json
+.build/cli/debug/triton webview current --platform harmony --target 127.0.0.1:10100 --json
 ```
 
 ## 结果
@@ -45,6 +47,8 @@ hdc list targets -v
 12. `observe tree` 在 `--max-nodes 80` 下返回 `partial=true`、`nodeCount=80`，其中 2 个疑似 Web 节点标记 `candidateOnly=true`，缺失能力包含 `webview.dom` 与 `webview.bridge-call`。
 13. `node resolve --platform harmony --text console --all` 成功解析当前可见节点，返回 `ok=true`、`matchCount=1`、`node.text=console`、`node.source=host-layout`、`candidateOnly=false`，bounds 为 `x=168,y=690,width=147,height=50`。
 14. 曾出现一次把两条 `node resolve` 并发写入同一 artifact 的污染文件，最终证据以串行重跑后的 `20260522-harmony-host-node-resolve-console-real-v02.json` 为准。真实 Harmony `uitest dumpLayout` / host layout 采集应串行执行，避免 timeout 或 stdout artifact 交错。
+15. 追加执行 `webview list --platform harmony --target 127.0.0.1:10100 --json`，当前前台页面返回空 `candidates[]`，但 `host-layout` source 可用，`runtime-tree` 因未提供 runtime base URL 不可用，`webview-provider` 因未注册 provider 不可用。
+16. 追加执行 `webview current --platform harmony --target 127.0.0.1:10100 --json`，返回稳定 `ok=false,error.code=webview_not_found`，并给出 `webview list --platform harmony --target 127.0.0.1:10100 --json` 的 nextAction。
 
 ## 已知边界
 

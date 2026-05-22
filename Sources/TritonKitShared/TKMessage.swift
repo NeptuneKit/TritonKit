@@ -11,6 +11,14 @@ public enum TKRequestType: String, Codable, CaseIterable {
     case stateRoute
     case stateResponder
     case runtimeSnapshot
+    case webViewList
+    case webViewCurrent
+    case webViewSnapshot
+    case webViewBridgeCall
+    case webViewBridgePost
+    case webViewWait
+    case webViewEvents
+    case webViewLedger
     case semanticAction
     case runtimeLedger
     case hierarchy

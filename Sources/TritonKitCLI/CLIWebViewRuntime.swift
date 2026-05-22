@@ -49,9 +49,11 @@ func runWebViewCurrent(
     json: Bool
 ) async throws {
     let outputFormat = effectiveFormat(format, json: json)
+    var resolvedTarget = target
     do {
         let list = try await webViewCandidates(action: "webview.current", platform: platform, target: target, hdc: hdc, host: host, port: port, runtimeBaseURL: runtimeBaseURL, output: output)
-        let selected = try selectCurrentWebView(from: list.candidates, webViewID: webViewID)
+        resolvedTarget = list.target
+        let selected = try TKSelectCurrentWebView(from: list.candidates, webViewID: webViewID)
         let response = TKWebViewCurrentResponse(ok: true, action: "webview.current", platform: list.platform, capturedAt: list.capturedAt, target: list.target, webView: selected, sources: list.sources, sourceCommands: list.sourceCommands, note: list.note)
         switch outputFormat {
         case .json:
@@ -61,7 +63,126 @@ func runWebViewCurrent(
         }
     } catch {
         if error is ExitCode { throw error }
+        if let selectionError = error as? TKWebViewSelectionError {
+            try failWebViewCommand(selectionError, action: "webview.current", platform: platform, target: resolvedTarget, runtimeBaseURL: runtimeBaseURL, outputFormat: outputFormat)
+        }
         if platform == .harmony {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+func runWebViewCall(
+    method: String,
+    args: [String],
+    platform: ObservationPlatform,
+    target: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    pageSessionID: String?,
+    timeoutMs: Int?,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    do {
+        let request = TKWebViewBridgeCallRequest(
+            webViewID: webViewID,
+            pageSessionID: pageSessionID,
+            method: method,
+            arguments: try parseWebViewBridgeArgs(args),
+            timeoutMs: timeoutMs,
+            sourceCommand: "triton webview call \(method)"
+        )
+        let payload = try JSONEncoder().encode(request)
+        let data: Data
+        switch platform {
+        case .ios:
+            if let runtimeBaseURL {
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewBridgeCall, body: payload)
+            } else {
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                data = try await client.request(type: "webViewBridgeCall", payload: payload)
+            }
+        case .harmony:
+            guard let runtimeBaseURL else {
+                throw RuntimeError("Harmony WebView bridge calls require --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
+            }
+            data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewBridgeCall, body: payload)
+        }
+        let response = try JSONDecoder().decode(TKWebViewBridgeCallResponse.self, from: data)
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            if response.ok {
+                print("ok: true")
+                print("method: \(response.method)")
+                if let result = response.result { print("result: \(result)") }
+            } else {
+                print("\(response.error?.code.rawValue ?? "webview_bridge_call_failed"): \(response.error?.message ?? "Bridge call failed")")
+            }
+        }
+        if !response.ok {
+            throw ExitCode.failure
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        if platform == .harmony, runtimeBaseURL == nil {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+func runWebViewEvents(
+    platform: ObservationPlatform,
+    target: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    limit: Int,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    do {
+        let queryItems = [URLQueryItem(name: "limit", value: "\(limit)")]
+        let data: Data
+        switch platform {
+        case .ios:
+            if let runtimeBaseURL {
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewEvents, queryItems: queryItems)
+            } else {
+                let payload = try JSONEncoder().encode(["limit": limit])
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                data = try await client.request(type: "webViewEvents", payload: payload)
+            }
+        case .harmony:
+            guard let runtimeBaseURL else {
+                throw RuntimeError("Harmony WebView events require --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
+            }
+            data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewEvents, queryItems: queryItems)
+        }
+        let response = try JSONDecoder().decode(TKWebViewEventsResponse.self, from: data)
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            print("events: \(response.events.count)")
+            for event in response.events {
+                print("\(event.timestamp) \(event.name) webViewID=\(event.webViewID)")
+            }
+        }
+        if !response.ok {
+            throw ExitCode.failure
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        if platform == .harmony, runtimeBaseURL == nil {
             try failHostCommand(error, outputFormat: outputFormat)
         }
         try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
@@ -86,17 +207,47 @@ private func webViewCandidates(
     }
 }
 
+private func parseWebViewBridgeArgs(_ args: [String]) throws -> [String: TKJSONValue] {
+    var parsed: [String: TKJSONValue] = [:]
+    for arg in args {
+        guard let separator = arg.firstIndex(of: "="), separator > arg.startIndex else {
+            throw RuntimeError("Invalid --arg \(arg). Expected key=value.")
+        }
+        let key = String(arg[..<separator])
+        let value = String(arg[arg.index(after: separator)...])
+        parsed[key] = parseWebViewBridgeArgValue(value)
+    }
+    return parsed
+}
+
+private func parseWebViewBridgeArgValue(_ value: String) -> TKJSONValue {
+    if value == "true" { return .bool(true) }
+    if value == "false" { return .bool(false) }
+    if value == "null" { return .null }
+    if let intValue = Int(value) { return .int(intValue) }
+    if let doubleValue = Double(value) { return .double(doubleValue) }
+    return .string(value)
+}
+
 private func iOSWebViewCandidates(action: String, target: String, host: String, port: Int, runtimeBaseURL: String?) async throws -> TKWebViewListResponse {
     let snapshotData: Data
     let targetID: String
     let sourceCommands: [String]
     if let runtimeBaseURL {
+        if let provider = try? await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewList),
+           let response = try? JSONDecoder().decode(TKWebViewListResponse.self, from: provider) {
+            return normalizeProviderWebViewList(response, action: action, target: runtimeBaseURL)
+        }
         snapshotData = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeSnapshot, queryItems: [URLQueryItem(name: "include", value: "ax")])
         targetID = runtimeBaseURL
         sourceCommands = ["GET \(runtimeBaseURL)/snapshot"]
     } else {
         let (summary, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
         targetID = summary.id
+        if let provider = try? await client.request(type: "webViewList"),
+           let response = try? JSONDecoder().decode(TKWebViewListResponse.self, from: provider) {
+            return normalizeProviderWebViewList(response, action: action, target: targetID)
+        }
         let payload = try JSONEncoder().encode(TKRuntimeSnapshotRequest(include: ["ax"]))
         snapshotData = try await client.request(type: "runtimeSnapshot", payload: payload)
         sourceCommands = ["triton runtimeSnapshot request"]
@@ -109,7 +260,7 @@ private func iOSWebViewCandidates(action: String, target: String, host: String, 
         platform: "ios",
         capturedAt: snapshot.capturedAt,
         target: targetID,
-        current: try? selectCurrentWebView(from: candidates, webViewID: nil),
+        current: try? TKSelectCurrentWebView(from: candidates, webViewID: nil),
         candidates: candidates,
         sources: [
             TKWebViewSource(name: "runtime-tree", available: true, sourceCommands: sourceCommands),
@@ -117,6 +268,21 @@ private func iOSWebViewCandidates(action: String, target: String, host: String, 
         ],
         sourceCommands: sourceCommands,
         note: "iOS WebView candidates come from DEBUG runtime AX. URL, DOM, JavaScript, bridge calls, and DOM input require a WebView provider."
+    )
+}
+
+private func normalizeProviderWebViewList(_ response: TKWebViewListResponse, action: String, target: String) -> TKWebViewListResponse {
+    TKWebViewListResponse(
+        ok: response.ok,
+        action: action,
+        platform: response.platform,
+        capturedAt: response.capturedAt,
+        target: target,
+        current: try? TKSelectCurrentWebView(from: response.candidates),
+        candidates: response.candidates,
+        sources: response.sources,
+        sourceCommands: response.sourceCommands,
+        note: response.note
     )
 }
 
@@ -130,7 +296,7 @@ private func harmonyWebViewCandidates(action: String, target: String, hdc: Strin
         platform: "harmony",
         capturedAt: ISO8601DateFormatter().string(from: Date()),
         target: selected.target,
-        current: try? selectCurrentWebView(from: candidates, webViewID: nil),
+        current: try? TKSelectCurrentWebView(from: candidates, webViewID: nil),
         candidates: candidates,
         sources: [
             TKWebViewSource(name: "host-layout", available: true, sourceCommands: layout.sourceCommands),
@@ -210,29 +376,8 @@ func webViewCandidateScore(role: String?, className: String?, identifier: String
     return nil
 }
 
-private func selectCurrentWebView(from candidates: [TKWebViewDescriptor], webViewID: String?) throws -> TKWebViewDescriptor {
-    if let webViewID {
-        guard let selected = candidates.first(where: { $0.webViewID == webViewID || $0.nodeID == webViewID }) else {
-            throw RuntimeError("No WebView candidate matched --webview-id \(webViewID)")
-        }
-        return selected
-    }
-    guard let first = candidates.first else {
-        throw RuntimeError("No visible WebView candidate found")
-    }
-    if candidates.count > 1, abs(first.confidence - candidates[1].confidence) < 0.05 {
-        throw RuntimeError("Multiple visible WebView candidates matched; run `triton webview list --json` and pass --webview-id")
-    }
-    return first
-}
-
 private func webViewDescriptorSort(_ lhs: TKWebViewDescriptor, _ rhs: TKWebViewDescriptor) -> Bool {
-    if lhs.confidence != rhs.confidence {
-        return lhs.confidence > rhs.confidence
-    }
-    let leftArea = (lhs.frame?.width ?? 0) * (lhs.frame?.height ?? 0)
-    let rightArea = (rhs.frame?.width ?? 0) * (rhs.frame?.height ?? 0)
-    return leftArea > rightArea
+    TKWebViewDescriptorSort(lhs, rhs)
 }
 
 private func renderWebViewCandidate(_ candidate: TKWebViewDescriptor) -> String {
@@ -240,4 +385,40 @@ private func renderWebViewCandidate(_ candidate: TKWebViewDescriptor) -> String 
     let identifier = candidate.identifier.map { " identifier=\($0)" } ?? ""
     let text = candidate.text.map { " text=\"\($0)\"" } ?? ""
     return "\(candidate.webViewID) source=\(candidate.source) candidateOnly=\(candidate.candidateOnly) confidence=\(candidate.confidence)\(identifier)\(text)\(frame)"
+}
+
+private func failWebViewCommand(
+    _ error: TKWebViewSelectionError,
+    action: String,
+    platform: ObservationPlatform,
+    target: String,
+    runtimeBaseURL: String?,
+    outputFormat: ClientOutputFormat
+) throws -> Never {
+    let nextArgs: [String]
+    if let runtimeBaseURL {
+        nextArgs = ["list", "--platform", platform.rawValue, "--runtime-base-url", runtimeBaseURL, "--json"]
+    } else {
+        nextArgs = ["list", "--platform", platform.rawValue, "--target", target, "--json"]
+    }
+    let detail = TKCLIErrorDetail(
+        code: error.detail.code.rawValue,
+        message: error.detail.message,
+        hint: error.detail.hint,
+        nextAction: TKCLINextAction(command: "webview", args: nextArgs)
+    )
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(TKWebViewErrorResponse(
+            action: action,
+            platform: platform.rawValue,
+            target: target,
+            error: detail,
+            candidates: error.detail.candidates
+        )))
+    case .text:
+        print("\(detail.code): \(detail.message)")
+        if let hint = detail.hint { print("hint: \(hint)") }
+    }
+    throw ExitCode.failure
 }

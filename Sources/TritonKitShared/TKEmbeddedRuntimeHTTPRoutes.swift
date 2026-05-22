@@ -28,6 +28,22 @@ public struct TKEmbeddedRuntimeHTTPRoute: Codable, Equatable {
             TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/state/responder")
         case .runtimeSnapshot:
             TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/snapshot")
+        case .webViewList:
+            TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/webview/list")
+        case .webViewCurrent:
+            TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/webview/current")
+        case .webViewSnapshot:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/snapshot")
+        case .webViewBridgeCall:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/call")
+        case .webViewBridgePost:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/post")
+        case .webViewWait:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/wait")
+        case .webViewEvents:
+            TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/webview/events")
+        case .webViewLedger:
+            TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/webview/ledger")
         case .runtimeLedger:
             TKEmbeddedRuntimeHTTPRoute(method: .get, path: "/v2/runtime/ledger")
         case .semanticAction:

@@ -192,6 +192,14 @@ public struct TKCLICommandRequest: Codable, Equatable {
         case "stateroute", "state.route", "route": .stateRoute
         case "stateresponder", "state.responder", "responder": .stateResponder
         case "runtimesnapshot", "snapshot": .runtimeSnapshot
+        case "webviewlist", "webview.list": .webViewList
+        case "webviewcurrent", "webview.current": .webViewCurrent
+        case "webviewsnapshot", "webview.snapshot": .webViewSnapshot
+        case "webviewbridgecall", "webview.bridgecall", "webview.bridge-call", "webview.call": .webViewBridgeCall
+        case "webviewbridgepost", "webview.bridgepost", "webview.bridge-post", "webview.post": .webViewBridgePost
+        case "webviewwait", "webview.wait": .webViewWait
+        case "webviewevents", "webview.events": .webViewEvents
+        case "webviewledger", "webview.ledger": .webViewLedger
         case "semanticaction", "semantic.action": .semanticAction
         case "runtimeledger", "ledger": .runtimeLedger
         case "hierarchy": .hierarchy

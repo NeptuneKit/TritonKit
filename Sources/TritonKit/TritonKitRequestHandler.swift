@@ -55,7 +55,7 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             return TKMessage(id: msg.id, type: .appInfo, payload: payload)
 
         case .runtimeManifest:
-            let manifest = TKRuntimeManifestResponse.debugDefault(sdkVersion: "0.1.0-dev")
+            let manifest = currentRuntimeManifestWithWebViewProvider(sdkVersion: "0.1.0-dev")
             let payload = try? JSONEncoder().encode(manifest)
             return TKMessage(id: msg.id, type: .runtimeManifest, payload: payload)
 
@@ -128,6 +128,57 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             )
             #endif
             return TKMessage(id: msg.id, type: .runtimeSnapshot, payload: try? JSONEncoder().encode(snapshot))
+
+        case .webViewList:
+            #if canImport(UIKit) && canImport(WebKit)
+            let response = await MainActor.run { currentWebViewListResponse() }
+            return TKMessage(id: msg.id, type: .webViewList, payload: try? JSONEncoder().encode(response))
+            #else
+            return webViewErrorMessage(id: msg.id, type: .webViewList, action: "webview.list", code: .webViewProviderUnavailable, message: "WebView provider is not available in this runtime.", hint: "Use an iOS DEBUG runtime with WebKit support or register a Harmony WebView provider.")
+            #endif
+
+        case .webViewCurrent:
+            let request = msg.payload.flatMap { try? JSONDecoder().decode(TKWebViewSnapshotRequest.self, from: $0) }
+            #if canImport(UIKit) && canImport(WebKit)
+            do {
+                let response = try await MainActor.run { try currentWebViewCurrentResponse(webViewID: request?.webViewID) }
+                return TKMessage(id: msg.id, type: .webViewCurrent, payload: try? JSONEncoder().encode(response))
+            } catch let error as TKWebViewSelectionError {
+                return webViewErrorMessage(id: msg.id, type: .webViewCurrent, action: "webview.current", code: error.detail.code, message: error.detail.message, hint: error.detail.hint, candidates: error.detail.candidates)
+            } catch {
+                return webViewErrorMessage(id: msg.id, type: .webViewCurrent, action: "webview.current", code: .webViewProviderUnavailable, message: "\(error)", hint: "Run `triton webview list --json` to inspect available WebView candidates.")
+            }
+            #else
+            return webViewErrorMessage(id: msg.id, type: .webViewCurrent, action: "webview.current", code: .webViewProviderUnavailable, message: "WebView provider is not available in this runtime.", hint: "Use an iOS DEBUG runtime with WebKit support or register a Harmony WebView provider.")
+            #endif
+
+        case .webViewSnapshot:
+            return webViewErrorMessage(id: msg.id, type: .webViewSnapshot, action: "webview.snapshot", code: .webViewProviderUnavailable, message: "WebView snapshot provider is not registered.", hint: "Register an opt-in WebView provider before requesting DOM, text, forms, or links.")
+
+        case .webViewBridgeCall:
+            guard let data = msg.payload,
+                  let request = try? JSONDecoder().decode(TKWebViewBridgeCallRequest.self, from: data) else {
+                return webViewErrorMessage(id: msg.id, type: .webViewBridgeCall, action: "webview.call", code: .javascriptError, message: "Missing or invalid WebView bridge call payload.", hint: "Pass a method and JSON-serializable arguments.")
+            }
+            #if canImport(UIKit) && canImport(WebKit)
+            let result = await performWebViewBridgeCall(request)
+            return TKMessage(id: msg.id, type: .webViewBridgeCall, payload: try? JSONEncoder().encode(result))
+            #else
+            return webViewErrorMessage(id: msg.id, type: .webViewBridgeCall, action: "webview.call", code: .webViewBridgeUnavailable, message: "WebView bridge is not available.", hint: "Use an iOS DEBUG runtime with WebKit support or register a Harmony WebView bridge provider.")
+            #endif
+
+        case .webViewEvents:
+            let limit = msg.payload
+                .flatMap { try? JSONDecoder().decode([String: Int].self, from: $0) }?["limit"] ?? 50
+            #if canImport(UIKit) && canImport(WebKit)
+            let response = currentWebViewEventsResponse(limit: limit)
+            return TKMessage(id: msg.id, type: .webViewEvents, payload: try? JSONEncoder().encode(response))
+            #else
+            return webViewErrorMessage(id: msg.id, type: .webViewEvents, action: "webview.events", code: .webViewBridgeUnavailable, message: "WebView events are not available.", hint: "Use an iOS DEBUG runtime with WebKit support or register a Harmony WebView event provider.")
+            #endif
+
+        case .webViewBridgePost, .webViewWait, .webViewLedger:
+            return webViewErrorMessage(id: msg.id, type: msg.type, action: msg.type.rawValue, code: .webViewBridgeUnavailable, message: "WebView bridge is not available.", hint: "Expose an opt-in page bridge allowlist before calling methods, posting events, waiting on events, or reading event buffers.")
 
         case .semanticAction:
             guard let data = msg.payload,
@@ -209,6 +260,25 @@ public class TritonKitRequestHandler: TritonKitDelegate {
     private func handleHierarchyDetails(_ msg: TKMessage) -> TKMessage? {
         // For now, return empty details list
         return TKMessage(id: msg.id, type: .hierarchyDetails, payload: try? JSONEncoder().encode([TKDisplayItemDetail]()))
+    }
+
+    private func webViewErrorMessage(
+        id: Int,
+        type: TKRequestType,
+        action: String,
+        code: TKWebViewErrorCode,
+        message: String,
+        hint: String?,
+        candidates: [TKWebViewDescriptor]? = nil
+    ) -> TKMessage {
+        let response = TKWebViewErrorResponse(
+            action: action,
+            platform: "ios",
+            target: "embedded-runtime",
+            error: TKCLIErrorDetail(code: code.rawValue, message: message, hint: hint),
+            candidates: candidates
+        )
+        return TKMessage(id: id, type: type, payload: try? JSONEncoder().encode(response))
     }
 
     private func handleAllAttrGroups(_ msg: TKMessage) -> TKMessage? {

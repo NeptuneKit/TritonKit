@@ -94,6 +94,11 @@ func runtimeLedgerDetails(
         if request.secure == true {
             redaction = TKSemanticActionRedaction(secure: true, text: "length-only", insertedLength: request.text?.count)
         }
+    } else if message.type == .webViewBridgeCall,
+              let payload = message.payload,
+              let request = try? JSONDecoder().decode(TKWebViewBridgeCallRequest.self, from: payload) {
+        source = request.sourceCommand ?? "cli"
+        action = "webview.call"
     }
 
     guard let payload = response?.payload else {
@@ -107,6 +112,16 @@ func runtimeLedgerDetails(
             semantic.error?.code,
             semantic.message,
             semantic.redaction ?? redaction
+        )
+    }
+    if let webView = try? JSONDecoder().decode(TKWebViewBridgeCallResponse.self, from: payload) {
+        return (
+            source,
+            webView.action,
+            webView.ok,
+            webView.error?.code.rawValue,
+            webView.error?.message,
+            redaction
         )
     }
     if let input = try? JSONDecoder().decode(TKInputResult.self, from: payload) {

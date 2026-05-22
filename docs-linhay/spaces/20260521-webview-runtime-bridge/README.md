@@ -57,12 +57,14 @@ Harmony 侧优先使用 ArkWeb / Webview 公开能力和现有 embedded HTTP run
 12. runtime manifest / capabilities / schema 暴露 Host / Runtime / WebView 能力、边界和 unsafe eval 状态。
 13. ledger / evidence 记录 host layout、runtime snapshot、WebView call、event、timeout、JavaScript error、redaction 和 source command。
 
-### 本轮 P1 只读验收
+### 当前阶段验收
 
-1. Given iOS DEBUG runtime 已连接，且当前页面包含可见 `WKWebView` / WebView 容器候选；When 执行 `triton webview list --platform ios --json`；Then 返回 `candidates[]`，每个候选带 `webViewID/platform/source/frame/candidateOnly/providerStatus/bridgeStatus/capabilities/missingCapabilities`。
-2. Given iOS DEBUG runtime 只有一个明确 WebView 候选；When 执行 `triton webview current --platform ios --json`；Then 返回同一个候选，且 `candidateOnly=true`、`providerStatus=unavailable`、`missingCapabilities` 包含 `webview.url/webview.dom/webview.bridge-call`。
-3. Given Harmony 模拟器 host layout 存在 Web 组件候选但未接入 embedded Web provider；When 执行 `triton webview list --platform harmony --target <hdc-target> --json`；Then 只声明 `host-coordinate-tap` / `host-scroll` 等 host 能力，不声明 DOM、URL、JS 或 bridge。
-4. Given 多个候选无法唯一判断 current；When 执行 `triton webview current --json`；Then 返回明确错误，提示先 `webview list` 再传 `--webview-id`，不能隐式猜测。
+1. Given iOS DEBUG runtime 已连接，且当前页面包含可见 `WKWebView`；When 执行 `triton webview list --platform ios --json`；Then 返回 `source=webview-provider` 的 `candidates[]`，每个候选带 `webViewID/pageSessionID/url/title/frame/candidateOnly=false/providerStatus=available/capabilities/missingCapabilities`。
+2. Given iOS DEBUG runtime 只有一个明确 WebView provider 候选；When 执行 `triton webview current --platform ios --json`；Then 返回同一个候选，且 metadata 可用；DOM、tap、type 和页面 bridge 仍按 capability 单独声明。
+3. Given iOS 页面显式暴露 `window.__tritonBridge.methods` allowlist；When 执行 `triton webview call <method> --platform ios --json`；Then 只允许调用 allowlist 方法，返回结构化 result/error，并写入 runtime ledger。
+4. Given iOS 页面通过 `window.webkit.messageHandlers.triton.postMessage` 上报事件；When 执行 `triton webview events --platform ios --limit 10 --json`；Then 返回页面事件 buffer，输出中的 `limit` 保持调用方传入值。
+5. Given Harmony 模拟器 host layout 存在 Web 组件候选但未接入 embedded Web provider；When 执行 `triton webview list --platform harmony --target <hdc-target> --json`；Then 只声明 host layout 来源，不声明 DOM、URL、JS 或 bridge。
+6. Given 多个候选无法唯一判断 current；When 执行 `triton webview current --json`；Then 返回明确错误，提示先 `webview list` 再传 `--webview-id`，不能隐式猜测。
 
 ### Out of Scope
 
@@ -115,7 +117,7 @@ Harmony 侧优先使用 ArkWeb / Webview 公开能力和现有 embedded HTTP run
 3. P2 再实现 Web provider / page bridge，让业务页面定义 allowlist 方法和事件；`TritonWeb` wrapper 只作为新页面或集中托管 Web 组件时的增强入口。
 4. P3 再讨论 unsafe eval，仅允许 iOS `TritonKit.start { config.allowWebViewEval = true }` 或 Harmony `tritonkit` runtime config 显式打开，且 CLI 追加 `--unsafe-eval` 时生效，并强制写入 ledger。
 
-## 当前 P0 落地
+## 当前 P0-P4 落地
 
 已实现并进入 schema 的命令：
 
@@ -126,18 +128,24 @@ triton observe current --platform harmony --target <target> --json
 triton observe tree --platform harmony --target <target> --json
 triton node resolve --platform ios --text "登录" --json
 triton node resolve --platform harmony --target <target> --text "登录" --json
+triton webview list --platform ios --json
+triton webview current --platform ios --json
+triton webview call getRouteState --platform ios --json
+triton webview events --platform ios --limit 10 --json
 ```
 
 边界：
 
 1. iOS 侧当前通过 DEBUG embedded runtime 的 AX / runtime snapshot 获取动态节点。
 2. Harmony 侧当前通过 HDC / `uitest dumpLayout` 获取 host layout，支持不改源码、不替换 `Web(...)` 的场景。
-3. Web 容器当前只标记 `candidateOnly=true` 和缺失能力；没有 Web provider 时不能声明 DOM、JS 或 bridge 可用。
-4. `node resolve` 支持 `--index`、`--within`、`--at`、`--all`，用于避免多候选时隐式猜测目标。
+3. iOS `WKWebView` provider 已能返回当前页面 metadata：`url/title/pageSessionID/isLoading/estimatedProgress/canGoBack/canGoForward/frame`，并把 `source` 标记为 `webview-provider`。
+4. iOS bridge / events 已进入最小可用状态，但只调用页面显式暴露的 allowlist 方法；当前 Demo 覆盖 `getRouteState`、`submitSearch` 与 `search.submitted` event。
+5. Web 容器在没有 Web provider 时仍只能标记 `candidateOnly=true` 和缺失能力；没有 provider 或 bridge 时不能声明 DOM、JS 或 bridge 可用。
+6. `node resolve` 支持 `--index`、`--within`、`--at`、`--all`，用于避免多候选时隐式猜测目标。
 
 攻击面校验：
 
-1. 依赖失败：页面或 Harmony App provider 未接入 bridge 时，CLI 仍能通过 host layout 返回 current app snapshot；WebView current 只能返回 `candidateOnly=true` 或 `webview_provider_unavailable`，不能伪装具备 DOM/JS 能力。
+1. 依赖失败：页面或 Harmony App provider 未接入 bridge 时，CLI 仍能通过 host layout 返回 current app snapshot；WebView current 只能返回 provider metadata、`candidateOnly=true` 或 `webview_provider_unavailable`，不能伪装具备 DOM/JS/bridge 能力。
 2. 规模扩大：DOM 文本和节点数量按 manifest limits 截断，snapshot 返回 `truncation`，避免大页面拖垮 WebSocket。
 3. 回滚成本：所有能力都是 DEBUG-only runtime capability，关闭 manifest capability 或 App config 后 CLI 返回 unsupported，不需要迁移数据。
 4. 前提坍塌：如果当前页面不是 iOS `WKWebView` / Harmony Web 组件，或存在多个可见 WebView，`current` 必须返回 `webview_not_found` 或 `ambiguous_webview`，不能猜测目标。
@@ -289,9 +297,10 @@ Harmony App provider 负责把 ArkWeb 回调、JavaScriptProxy 调用和 WebMess
 平台能力要求：
 
 1. iOS `runtime manifest` 在 DEBUG 且 WebKit 可用时暴露 `webview.*` capability。
-2. Harmony `runtime manifest` 只有在 App 注册 WebView provider 后才把 `webview.current/list/snapshot` 标记 supported；未注册 provider 时 capability 应为 unsupported，reason 为 `Harmony WebView provider is not registered`。
-3. Harmony `webview.bridge-call/events/wait` 只有在 provider 暴露 allowlist bridge 或事件 buffer 后才标记 supported。
-4. `webview.eval` 两端都默认 unsupported。
+2. iOS `runtime manifest` 可以在没有可见 `WKWebView` 时保持 WebView provider unsupported；当运行时扫描到可见 `WKWebView` 后，`webview.current/list/metadata` 由 runtime request 动态证明可用。
+3. Harmony `runtime manifest` 只有在 App 注册 WebView provider 后才把 `webview.current/list/snapshot` 标记 supported；未注册 provider 时 capability 应为 unsupported，reason 为 `Harmony WebView provider is not registered`。
+4. Harmony `webview.bridge-call/events/wait` 只有在 provider 暴露 allowlist bridge 或事件 buffer 后才标记 supported。
+5. `webview.eval` 两端都默认 unsupported。
 
 ## Host + Runtime 联合观测
 
@@ -370,7 +379,8 @@ triton snapshot --platform harmony --target <hdc-target> --include host-layout,r
 - When 执行 `triton webview current --json`
 - Then 返回 `ok=true`
 - And 返回 `webViewId/pageSessionId/url/title/frame/visibleRatio/isLoading/estimatedProgress`
-- And `capabilities` 标记 WebView current/snapshot 可用
+- And `capabilities` 标记 WebView current/list/metadata 可用
+- And DOM、tap、type、bridge 仍在缺失能力中单独声明，除非页面显式接入 opt-in bridge
 
 ### 场景 2：CLI 能通过 Harmony provider 发现当前 Web 组件
 
@@ -475,14 +485,16 @@ triton snapshot --platform harmony --target <hdc-target> --include host-layout,r
 
 ## 分期计划
 
-1. P0a 契约：Shared DTO、TKRequestType、CLI schema、capabilities、错误码、Harmony embedded HTTP route 映射。
-2. P0b iOS 发现：iOS runtime 扫描当前可见 `WKWebView`，实现 `list/current`。
-3. P0c Harmony provider：`harmony-tritonkit` 增加 WebView provider interface、manifest capability 动态标记和 `/v2/runtime/webview/current|list`。
-4. P0d snapshot：两端实现 DOM 轻量摘要、redaction、truncation、`webview snapshot`。
-5. P1a bridge call：两端实现页面 / provider opt-in method call 和稳定 result/error envelope。
-6. P1b events/wait：两端实现页面事件 ring buffer、`events --jsonl` 和 `wait --event/--selector/--text`。
-7. P1c evidence/replay：WebView artifacts 进入 evidence，`.tritonplan` 支持 `webview.call` / `webview.wait` step。
-8. P2 unsafe eval：仅在明确配置后进入诊断能力，默认不支持。
+1. P0a 契约：Shared DTO、TKRequestType、CLI schema、capabilities、错误码、Harmony embedded HTTP route 映射。已完成。
+2. P0b host / runtime current：iOS runtime 与 Harmony host layout 均可输出 WebView candidate 和稳定错误 envelope。已完成。
+3. P1 iOS provider metadata：iOS runtime 扫描当前可见 `WKWebView`，实现 `list/current` provider metadata。已完成并通过真实 iOS Simulator smoke。
+4. P2 provider 契约：`webViewSnapshot`、`webViewBridgeCall`、`webViewBridgePost`、`webViewWait`、`webViewEvents`、`webViewLedger` DTO 与 Harmony embedded HTTP route。已完成契约与路由映射。
+5. P3 iOS opt-in bridge：页面 / App 显式 allowlist method call 和稳定 result/error envelope。已完成最小 Demo smoke，未开放任意 eval。
+6. P4 iOS events：页面事件 ring buffer 与 `webview events --json`。已完成最小 Demo smoke。
+7. P5 snapshot / wait：两端实现 DOM 轻量摘要、redaction、truncation、`webview snapshot` 与 `wait --event/--selector/--text`。未完成。
+8. P6 Harmony provider：`harmony-tritonkit` 增加 ArkWeb provider interface、manifest capability 动态标记和 `/v2/runtime/webview/current|list|call|events` 实现。未完成，当前仍为 host-only 验证。
+9. P7 evidence/replay：WebView artifacts 进入 evidence，`.tritonplan` 支持 `webview.call` / `webview.wait` step。未完成。
+10. P8 unsafe eval：仅在明确配置后进入诊断能力，默认不支持。未完成，且不是内测前置。
 
 ## 风险与约束
 

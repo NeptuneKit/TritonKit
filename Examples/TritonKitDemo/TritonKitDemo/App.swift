@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import WebKit
 
 @main
 struct TritonKitDemoApp: App {
@@ -91,7 +92,10 @@ struct ContentView: View {
             }
 
             UIKitSmokePanel()
-                .frame(height: 390)
+                .frame(height: 320)
+
+            WebViewSmokePanel()
+                .frame(height: 150)
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
@@ -113,6 +117,78 @@ struct UIKitSmokePanel: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIKitSmokeView, context: Context) {}
+}
+
+struct WebViewSmokePanel: UIViewRepresentable {
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView(frame: .zero)
+        webView.accessibilityIdentifier = "WebViewSmokeWebView"
+        webView.scrollView.accessibilityIdentifier = "WebViewSmokeScrollView"
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        webView.loadHTMLString(Self.html, baseURL: URL(string: "https://tritonkit.local/smoke"))
+        return webView
+    }
+
+    func updateUIView(_ uiView: WKWebView, context: Context) {}
+
+    private static let html = """
+    <!doctype html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Triton WebView Smoke</title>
+      <style>
+        body { margin: 0; font: -apple-system-body; color: #111827; background: #eef6f2; }
+        main { padding: 14px; }
+        h1 { font-size: 18px; margin: 0 0 8px; }
+        p { font-size: 13px; margin: 0 0 10px; color: #475569; }
+        button { appearance: none; border: 0; border-radius: 6px; background: #0f766e; color: white; padding: 8px 12px; font-weight: 600; }
+        input { border: 1px solid #94a3b8; border-radius: 6px; padding: 7px 8px; width: 140px; margin-left: 8px; }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1>Triton WebView Smoke</h1>
+        <p id="route">route=/smoke ready=true</p>
+        <button id="submit">Submit</button>
+        <input id="keyword" aria-label="Keyword" value="triton">
+      </main>
+      <script>
+        window.__tritonBridge = {
+          version: 1,
+          methods: {
+            getRouteState: function() {
+              return {
+                route: "/smoke",
+                title: document.title,
+                ready: true
+              };
+            },
+            submitSearch: function(args) {
+              var keyword = (args && args.keyword) || "";
+              document.getElementById("keyword").value = keyword;
+              document.getElementById("route").textContent = "route=/smoke ready=true keyword=" + keyword;
+              if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.triton) {
+                window.webkit.messageHandlers.triton.postMessage({
+                  type: "event",
+                  name: "search.submitted",
+                  payload: {
+                    keywordLength: keyword.length
+                  }
+                });
+              }
+              return {
+                ok: true,
+                keywordLength: keyword.length
+              };
+            }
+          }
+        };
+      </script>
+    </body>
+    </html>
+    """
 }
 
 final class UIKitSmokeView: UIView {

@@ -7,6 +7,14 @@ public enum TKRuntimeCapabilityName: String, Codable, CaseIterable {
     case stateRoute = "state.route"
     case stateResponder = "state.responder"
     case snapshot
+    case webViewList = "webview.list"
+    case webViewCurrent = "webview.current"
+    case webViewSnapshot = "webview.snapshot"
+    case webViewBridgeCall = "webview.bridge-call"
+    case webViewBridgePost = "webview.bridge-post"
+    case webViewWait = "webview.wait"
+    case webViewEvents = "webview.events"
+    case webViewEval = "webview.eval"
     case semanticFocus = "semantic.focus"
     case semanticSetText = "semantic.set-text"
     case semanticSelectSegment = "semantic.select-segment"
@@ -195,6 +203,62 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
         TKRuntimeCapabilityDetail(name: .stateRoute, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .stateResponder, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .snapshot, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(
+            name: .webViewList,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView provider is not registered"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewCurrent,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView provider is not registered"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewSnapshot,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView provider is not registered"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewBridgeCall,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView bridge requires an opt-in allowlist provider"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewBridgePost,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView bridge requires an opt-in allowlist provider"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewWait,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView wait requires provider events or DOM snapshot support"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewEvents,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView events require page bridge or provider event buffering"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewEval,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "Unsafe JavaScript eval requires explicit DEBUG config and CLI --unsafe-eval"
+        ),
         TKRuntimeCapabilityDetail(name: .semanticFocus, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .semanticSetText, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .semanticSelectSegment, supported: true, scope: .embedded, boundary: .appProcess),
