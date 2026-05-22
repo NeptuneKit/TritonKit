@@ -17,7 +17,6 @@ struct Serve: AsyncParsableCommand {
     func run() async throws {
         let store = DataStore()
         let state = ConnectionState()
-        let targetState = TargetState()
         let encoder = JSONEncoder()
         let counter = MessageCounter()
 
@@ -51,8 +50,14 @@ struct Serve: AsyncParsableCommand {
 
         router.get("/health") { _, _ -> HTTPResponse.Status in .ok }
 
-        router.get("/hierarchy/latest") { _, _ -> Response in
-            guard let data = targetState.latestHierarchy else {
+        router.get("/hierarchy/latest") { request, _ -> Response in
+            let connection: TargetConnection
+            do {
+                connection = try state.resolve(queryTarget(from: request))
+            } catch {
+                return jsonError(detail: cliErrorDetail(for: error, endpoint: "/hierarchy/latest", host: host, port: port), status: .conflict)
+            }
+            guard let data = connection.state.latestHierarchy else {
                 return jsonError(
                     code: "hierarchy_unavailable",
                     message: "No hierarchy received yet",
@@ -66,11 +71,11 @@ struct Serve: AsyncParsableCommand {
         }
 
         router.get("/status") { _, _ -> Response in
-            let cacheStatus = targetState.cacheStatus(connected: state.isConnected)
+            let cacheStatus = state.cacheStatus()
             return jsonResponse(TKStatusResponse(
                 connected: state.isConnected,
-                latestHierarchyAvailable: targetState.latestHierarchy != nil,
-                targetCount: state.isConnected ? 1 : 0,
+                latestHierarchyAvailable: cacheStatus.latestHierarchyAvailable,
+                targetCount: state.targetCount,
                 activeHierarchyAvailable: cacheStatus.activeHierarchyAvailable,
                 hierarchyCacheState: cacheStatus.hierarchyCacheState,
                 targetConnectionState: state.isConnected ? "connected" : "disconnected"
@@ -78,8 +83,7 @@ struct Serve: AsyncParsableCommand {
         }
 
         router.get("/targets") { _, _ -> Response in
-            let targets = targetState.summary(connected: state.isConnected).map { [$0] } ?? []
-            return jsonResponse(TKTargetsResponse(targets: targets))
+            return jsonResponse(TKTargetsResponse(targets: state.summaries()))
         }
 
         router.get("/geometry") { _, _ -> Response in
@@ -87,7 +91,6 @@ struct Serve: AsyncParsableCommand {
                 let payload = try await requestPayload(
                     type: .geometry,
                     state: state,
-                    targetState: targetState,
                     counter: counter,
                     encoder: encoder
                 )
@@ -115,7 +118,6 @@ struct Serve: AsyncParsableCommand {
                 let payload = try await requestPayload(
                     type: .accessibility,
                     state: state,
-                    targetState: targetState,
                     counter: counter,
                     encoder: encoder
                 )
@@ -158,7 +160,6 @@ struct Serve: AsyncParsableCommand {
                     type: .hitTest,
                     payload: hitPayload,
                     state: state,
-                    targetState: targetState,
                     counter: counter,
                     encoder: encoder
                 )
@@ -186,7 +187,6 @@ struct Serve: AsyncParsableCommand {
                 let payload = try await requestPayload(
                     type: .screenshot,
                     state: state,
-                    targetState: targetState,
                     counter: counter,
                     encoder: encoder
                 )
@@ -220,16 +220,6 @@ struct Serve: AsyncParsableCommand {
         }
 
         router.post("/command") { request, _ -> Response in
-            guard let ws = state.outbound else {
-                return jsonError(
-                    code: "target_unavailable",
-                    message: "No iOS device connected",
-                    endpoint: "/command",
-                    hint: "Launch an app that embeds TritonKit and connect it to this server",
-                    status: .conflict
-                )
-            }
-
             var bodyData = Data()
             for try await chunk in request.body {
                 bodyData.append(Data(buffer: chunk))
@@ -248,23 +238,20 @@ struct Serve: AsyncParsableCommand {
                 )
             }
 
+            let connection: TargetConnection
+            do {
+                connection = try state.resolve(command.target)
+            } catch {
+                return jsonError(detail: cliErrorDetail(for: error, endpoint: "/command", host: host, port: port), status: .conflict)
+            }
+
             let id = counter.next()
             log("[tritonkit] -> \(type.rawValue) [id:\(id)]")
-            try await ws.send(TKMessage(id: id, type: type, payload: command.payload), encoder: encoder)
+            try await connection.outbound.send(TKMessage(id: id, type: type, payload: command.payload), encoder: encoder)
             return jsonResponse(TKCLICommandResponse(id: id, type: type.rawValue))
         }
 
         router.post("/request") { request, _ -> Response in
-            guard let ws = state.outbound else {
-                return jsonError(
-                    code: "target_unavailable",
-                    message: "No iOS device connected",
-                    endpoint: "/request",
-                    hint: "Launch an app that embeds TritonKit and connect it to this server",
-                    status: .conflict
-                )
-            }
-
             var bodyData = Data()
             for try await chunk in request.body {
                 bodyData.append(Data(buffer: chunk))
@@ -283,10 +270,17 @@ struct Serve: AsyncParsableCommand {
                 )
             }
 
+            let connection: TargetConnection
+            do {
+                connection = try state.resolve(command.target)
+            } catch {
+                return jsonError(detail: cliErrorDetail(for: error, endpoint: "/request", host: host, port: port), status: .conflict)
+            }
+
             let id = counter.next()
             log("[tritonkit] -> \(type.rawValue) [id:\(id)]")
-            try await ws.send(TKMessage(id: id, type: type, payload: command.payload), encoder: encoder)
-            guard let payload = await targetState.waitForResponse(id: id) else {
+            try await connection.outbound.send(TKMessage(id: id, type: type, payload: command.payload), encoder: encoder)
+            guard let payload = await connection.state.waitForResponse(id: id) else {
                 return jsonError(
                     detail: TKCLIRuntimeTimeoutErrorDetail(requestType: type.rawValue, endpoint: "/request"),
                     status: .requestTimeout
@@ -297,14 +291,11 @@ struct Serve: AsyncParsableCommand {
         }
 
         router.post("/input") { request, _ -> Response in
-            guard let ws = state.outbound else {
-                return jsonError(
-                    code: "target_unavailable",
-                    message: "No iOS device connected",
-                    endpoint: "/input",
-                    hint: "Launch an app that embeds TritonKit and connect it to this server",
-                    status: .conflict
-                )
+            let connection: TargetConnection
+            do {
+                connection = try state.resolve(nil)
+            } catch {
+                return jsonError(detail: cliErrorDetail(for: error, endpoint: "/input", host: host, port: port), status: .conflict)
             }
 
             var bodyData = Data()
@@ -325,8 +316,8 @@ struct Serve: AsyncParsableCommand {
 
             let id = counter.next()
             log("[tritonkit] -> input [id:\(id)]")
-            try await ws.send(TKMessage(id: id, type: .input, payload: payload), encoder: encoder)
-            guard let responsePayload = await targetState.waitForResponse(id: id) else {
+            try await connection.outbound.send(TKMessage(id: id, type: .input, payload: payload), encoder: encoder)
+            guard let responsePayload = await connection.state.waitForResponse(id: id) else {
                 return jsonError(
                     detail: TKCLIRuntimeTimeoutErrorDetail(requestType: "input", endpoint: "/input"),
                     status: .requestTimeout
@@ -340,13 +331,17 @@ struct Serve: AsyncParsableCommand {
 
         router.ws("/") { inbound, outbound, _ in
             log("[tritonkit] iOS device connected (ws)")
-            let connectionID = state.connect(outbound)
-            targetState.beginConnection()
+            let connection = state.connect(outbound)
+            let connectionID = connection.connectionID
+            connection.state.beginConnection()
 
             // Test ping first to verify bidirectional communication
             let pingId = counter.next()
             log("[tritonkit] -> ping [id:\(pingId)]")
             try await outbound.send(TKMessage(id: pingId, type: .ping), encoder: encoder)
+            let appInfoID = counter.next()
+            log("[tritonkit] -> appInfo [id:\(appInfoID)]")
+            try await outbound.send(TKMessage(id: appInfoID, type: .appInfo), encoder: encoder)
 
             // Then request hierarchy
             let id = counter.next()
@@ -364,7 +359,7 @@ struct Serve: AsyncParsableCommand {
                     handleResponse(
                         data: data,
                         store: store,
-                        targetState: targetState
+                        targetState: connection.state
                     )
                 }
             } catch {
@@ -373,7 +368,7 @@ struct Serve: AsyncParsableCommand {
 
             log("[tritonkit] iOS device disconnected")
             if state.disconnect(connectionID: connectionID) {
-                targetState.endConnection()
+                connection.state.endConnection()
             }
         }
 
@@ -429,6 +424,10 @@ struct Serve: AsyncParsableCommand {
 
         do { try await app.run() } catch { log("[tritonkit] Error: \(error)"); throw error }
     }
+}
+
+private func queryTarget(from request: Request) -> String? {
+    request.uri.queryParameters["target"].map(String.init)
 }
 
 // MARK: - Client Commands

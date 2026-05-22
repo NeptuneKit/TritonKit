@@ -113,10 +113,15 @@ triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://1
 iOS embedded runtime observation:
 
 ```bash
+triton list --json
+triton ax --target triton:ios-simulator:<SIMULATOR_UDID> --json
+triton tap "登录" --target <SIMULATOR_UDID> --json
 triton observe current --platform ios --json
 triton observe tree --platform ios --runtime-base-url <baseURL> --json
 triton node resolve --platform ios --text "登录" --json
 ```
+
+When multiple iOS Simulator apps connect to the same `triton serve`, embedded runtime targets use stable ids shaped as `triton:ios-simulator:<SIMULATOR_UDID>`. Runtime commands may pass either the full target id or the simulator UDID. If more than one runtime target is connected and the command still uses the default `triton:local`, the expected result is `error.code=ambiguous_target`, not last-connection wins.
 
 For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` is the device-to-host gateway fallback port.
 

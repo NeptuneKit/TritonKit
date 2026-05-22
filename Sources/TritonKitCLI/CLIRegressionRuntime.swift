@@ -12,7 +12,7 @@ func waitForHierarchy(client: TritonKitHTTPClient) async throws -> Data {
     var lastError: Error?
     for _ in 0..<10 {
         do {
-            return try await client.getData("/hierarchy/latest")
+            return try await client.latestHierarchyData()
         } catch {
             lastError = error
             try await Task.sleep(nanoseconds: 200_000_000)
@@ -61,17 +61,15 @@ func requestPayload(
     type: TKRequestType,
     payload: Data? = nil,
     state: ConnectionState,
-    targetState: TargetState,
     counter: MessageCounter,
-    encoder: JSONEncoder
+    encoder: JSONEncoder,
+    target: String? = nil
 ) async throws -> Data {
-    guard let ws = state.outbound else {
-        throw RuntimeError("No iOS device connected")
-    }
+    let connection = try state.resolve(target)
     let id = counter.next()
     log("[tritonkit] -> \(type.rawValue) [id:\(id)]")
-    try await ws.send(TKMessage(id: id, type: type, payload: payload), encoder: encoder)
-    guard let responsePayload = await targetState.waitForResponse(id: id) else {
+    try await connection.outbound.send(TKMessage(id: id, type: type, payload: payload), encoder: encoder)
+    guard let responsePayload = await connection.state.waitForResponse(id: id) else {
         throw RuntimeRequestTimeoutError(requestType: type.rawValue)
     }
     return responsePayload

@@ -65,6 +65,7 @@ TritonKit 需要从单一 `triton:local` 扩展为可绑定的多层 target：
 - `sim:<udid>`：一个 simulator。
 - `sim:<udid>:app:<bundle-id>`：simulator 上的 App。
 - `runtime:<target-id>`：已连接 TritonKit embedded runtime 的 App 进程。
+- `triton:ios-simulator:<udid>`：由 iOS Simulator 内 embedded runtime 暴露的稳定 target id；`triton list --json` 同时返回 `simulatorUDID`，runtime 命令的 `--target` 可传该 id 或直接传 UDID。
 - `host:<workspace>`：当前仓库/工作区的 host adapter session。
 
 默认选择规则：
@@ -75,6 +76,16 @@ TritonKit 需要从单一 `triton:local` 扩展为可绑定的多层 target：
 4. 多个候选时返回 `ambiguous_target`，列出 candidates 和推荐参数。
 
 ## 验收场景
+
+### 场景零：并行 simulator 的 embedded runtime 消歧
+
+- Given 两个 iOS Simulator 同时运行同一个启用 TritonKit 的 App
+- When 两个 App 都连接到同一个 `triton serve`
+- Then `triton list --json` 返回两个 embedded runtime target，且每个 iOS Simulator target id 为 `triton:ios-simulator:<SIMULATOR_UDID>`
+- When 执行 `triton ax --json` 或 `triton tap "筛选" --json` 且未显式传 `--target`
+- Then 返回 `error.code=ambiguous_target`，不静默选择最后连接的 runtime
+- When 执行 `triton ax --target <SIMULATOR_UDID> --json` 或 `triton tap "筛选" --target triton:ios-simulator:<SIMULATOR_UDID> --json`
+- Then 命令只发送到对应 simulator 的 embedded runtime WebSocket
 
 ### 场景一：发现并选择 simulator
 

@@ -22,15 +22,14 @@ struct Export: AsyncParsableCommand {
 
     func run() async throws {
         let resolvedFormat = try resolveExportFormat(effectiveFormat(format, json: json), output: output)
-        let targetSummary = try await resolveTarget(
-            target,
+        let (targetSummary, client) = try await resolveRuntimeClient(
+            target: target,
             host: host,
             port: port,
             jsonError: json || resolvedFormat == .json
         )
-        let client = TritonKitHTTPClient(host: host, port: port)
         if refresh {
-            try await client.sendCommand("hierarchy")
+            _ = try await client.request(type: "hierarchy")
         }
         let hierarchyData = try await waitForHierarchy(client: client)
         let data: Data
@@ -210,8 +209,7 @@ struct UIAssert: AsyncParsableCommand {
             } catch {
                 try failRegressionValidation("\(error)", command: "assert", outputFormat: outputFormat)
             }
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let status: TKStatusResponse = try await client.getJSON("/status")
             let accessibilityData = try await client.request(type: "accessibility")
             let nodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)

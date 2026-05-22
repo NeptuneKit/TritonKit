@@ -231,13 +231,14 @@ func runReplayPlan(
     let start = Date()
     var steps: [TKReplayStepResult] = []
     var failedStepIndex: Int?
-    let client = TritonKitHTTPClient(host: host, port: port)
     let commands = try plan.steps.enumerated().map { offset, step in
         try replayCommand(for: step, plan: plan, index: offset + 1, variables: variables)
     }
+    var client = TritonKitHTTPClient(host: host, port: port)
 
     if !dryRun {
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: true)
+        let resolved = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+        client = resolved.client
     }
 
     for (offset, step) in plan.steps.enumerated() {
@@ -760,7 +761,7 @@ func captureEvidenceBundle(
     let outputURL = URL(fileURLWithPath: output)
     try prepareEvidenceOutputDirectory(outputURL)
 
-    let client = TritonKitHTTPClient(host: host, port: port)
+    var client = TritonKitHTTPClient(host: host, port: port)
     let startedAt = ISO8601DateFormatter().string(from: Date())
     var artifacts: [TKEvidenceArtifact] = []
     var skipped: [TKEvidenceSkippedArtifact] = []
@@ -825,7 +826,9 @@ func captureEvidenceBundle(
         case "hierarchy", "ax", "geometry", "screenshot", "archive":
             do {
                 if targetSummary == nil {
-                    targetSummary = try await resolveTarget(target, host: host, port: port)
+                    let resolved = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                    targetSummary = resolved.summary
+                    client = resolved.client
                 }
                 switch kind {
                 case "hierarchy":
@@ -896,7 +899,10 @@ func captureEvidenceBundle(
     }
 
     if targetSummary == nil {
-        targetSummary = try? await resolveTarget(target, host: host, port: port)
+        if let resolved = try? await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true) {
+            targetSummary = resolved.summary
+            client = resolved.client
+        }
     }
 
     let manifest = TKEvidenceManifest(
@@ -1044,7 +1050,18 @@ func runInputRequest(
     port: Int,
     format: ClientOutputFormat
 ) async throws {
-    let client = TritonKitHTTPClient(host: host, port: port)
+    try await runInputRequest(
+        request,
+        client: TritonKitHTTPClient(host: host, port: port),
+        format: format
+    )
+}
+
+func runInputRequest(
+    _ request: TKInputRequest,
+    client: TritonKitHTTPClient,
+    format: ClientOutputFormat
+) async throws {
     let result = try await executeInputRequest(request, client: client)
     try printInputResult(result, format: format)
     if !result.ok {

@@ -10,27 +10,96 @@ import TritonKitShared
 
 final class ConnectionState: @unchecked Sendable {
     private let lock = NSLock()
-    private var _outbound: WebSocketOutboundWriter?
     private var connectionID = 0
+    private var connections: [Int: TargetConnection] = [:]
 
-    func connect(_ w: WebSocketOutboundWriter) -> Int {
+    func connect(_ w: WebSocketOutboundWriter) -> TargetConnection {
         lock.withLock {
             connectionID += 1
-            _outbound = w
-            return connectionID
+            let connection = TargetConnection(connectionID: connectionID, outbound: w)
+            connections[connectionID] = connection
+            return connection
         }
     }
 
     func disconnect(connectionID id: Int) -> Bool {
         lock.withLock {
-            guard connectionID == id else { return false }
-            _outbound = nil
-            return true
+            connections.removeValue(forKey: id) != nil
         }
     }
 
-    var outbound: WebSocketOutboundWriter? { lock.withLock { _outbound } }
-    var isConnected: Bool { lock.withLock { _outbound != nil } }
+    var outbound: WebSocketOutboundWriter? { lock.withLock { resolveLocked(TKLocalTargetID)?.outbound } }
+    var isConnected: Bool { lock.withLock { !connections.isEmpty } }
+    var targetCount: Int { lock.withLock { connections.count } }
+
+    func summaries() -> [TKTargetSummary] {
+        lock.withLock {
+            connections.values
+                .compactMap { $0.summary() }
+                .sorted { $0.id < $1.id }
+        }
+    }
+
+    func cacheStatus() -> (activeHierarchyAvailable: Bool, latestHierarchyAvailable: Bool, hierarchyCacheState: String) {
+        lock.withLock {
+            let connected = !connections.isEmpty
+            let statuses = connections.values.map { $0.state.cacheStatus(connected: connected) }
+            let active = statuses.contains { $0.activeHierarchyAvailable }
+            let latest = connections.values.contains { $0.state.latestHierarchy != nil }
+            let cacheState: String
+            if active {
+                cacheState = "active"
+            } else if latest {
+                cacheState = "stale"
+            } else {
+                cacheState = "unavailable"
+            }
+            return (active, latest, cacheState)
+        }
+    }
+
+    func resolve(_ requested: String?) throws -> TargetConnection {
+        let target = requested ?? TKLocalTargetID
+        if let connection = lock.withLock({ resolveLocked(target) }) {
+            return connection
+        }
+        let normalized = TKNormalizeTargetID(target)
+        let available = summaries()
+        if normalized == TKLocalTargetID, available.count > 1 {
+            throw TKTargetResolutionError.ambiguous(requested: target, available: available.map(\.id))
+        }
+        throw TKTargetResolutionError.notFound(target)
+    }
+
+    private func resolveLocked(_ requested: String) -> TargetConnection? {
+        let normalized = TKNormalizeTargetID(requested)
+        if normalized == TKLocalTargetID, connections.count == 1 {
+            return connections.values.first
+        }
+        for connection in connections.values {
+            let summary = connection.summary()
+            if summary?.id == normalized || summary?.simulatorUDID == requested {
+                return connection
+            }
+        }
+        return nil
+    }
+
+}
+
+final class TargetConnection: @unchecked Sendable {
+    let connectionID: Int
+    let outbound: WebSocketOutboundWriter
+    let state = TargetState()
+
+    init(connectionID: Int, outbound: WebSocketOutboundWriter) {
+        self.connectionID = connectionID
+        self.outbound = outbound
+    }
+
+    func summary() -> TKTargetSummary? {
+        state.summary(connected: true, connectionID: connectionID)
+    }
 }
 
 final class MessageCounter: @unchecked Sendable {
@@ -44,6 +113,7 @@ struct TargetMetadata: Sendable {
     var bundleIdentifier: String?
     var deviceDescription: String?
     var osDescription: String?
+    var simulatorUDID: String?
 }
 
 final class TargetState: @unchecked Sendable {
@@ -91,16 +161,18 @@ final class TargetState: @unchecked Sendable {
         }
     }
 
-    func summary(connected: Bool) -> TKTargetSummary? {
+    func summary(connected: Bool, connectionID: Int) -> TKTargetSummary? {
         guard connected else { return nil }
         return lock.withLock {
             TKTargetSummary(
+                id: targetID(connectionID: connectionID),
                 connected: true,
                 latestHierarchyAvailable: activeHierarchyAvailable,
                 appName: metadata?.appName,
                 bundleIdentifier: metadata?.bundleIdentifier,
                 deviceDescription: metadata?.deviceDescription,
                 osDescription: metadata?.osDescription,
+                simulatorUDID: metadata?.simulatorUDID,
                 activeHierarchyAvailable: activeHierarchyAvailable,
                 cachedHierarchyAvailable: _latestHierarchy != nil,
                 hierarchyCacheState: hierarchyCacheState(connected: true),
@@ -154,8 +226,16 @@ final class TargetState: @unchecked Sendable {
             appName: appInfo["appName"] as? String,
             bundleIdentifier: appInfo["appBundleIdentifier"] as? String,
             deviceDescription: appInfo["deviceDescription"] as? String,
-            osDescription: appInfo["osDescription"] as? String
+            osDescription: appInfo["osDescription"] as? String,
+            simulatorUDID: appInfo["simulatorUDID"] as? String
         )
+    }
+
+    private func targetID(connectionID: Int) -> String {
+        if let simulatorUDID = metadata?.simulatorUDID, !simulatorUDID.isEmpty {
+            return "triton:ios-simulator:\(simulatorUDID)"
+        }
+        return connectionID == 1 ? TKLocalTargetID : "triton:connection:\(connectionID)"
     }
 
     private func hierarchyCacheState(connected: Bool) -> String {

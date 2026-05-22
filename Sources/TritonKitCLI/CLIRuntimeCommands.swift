@@ -37,8 +37,7 @@ struct RuntimeManifest: AsyncParsableCommand {
             if let runtimeBaseURL {
                 data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeManifest)
             } else {
-                _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-                let client = TritonKitHTTPClient(host: host, port: port)
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
                 data = try await client.request(type: "runtimeManifest")
             }
             let manifest = try JSONDecoder().decode(TKRuntimeManifestResponse.self, from: data)
@@ -161,8 +160,7 @@ func runStateRequest(
             }
             data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(requestType)
         } else {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             data = try await client.request(type: type)
         }
         switch outputFormat {
@@ -213,10 +211,10 @@ struct Snapshot: AsyncParsableCommand {
                 }
                 data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeSnapshot, queryItems: queryItems)
             } else {
-                _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
                 let request = TKRuntimeSnapshotRequest(include: includeList, maxAXNodes: maxAXNodes)
                 let payload = try JSONEncoder().encode(request)
-                data = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeSnapshot", payload: payload)
+                data = try await client.request(type: "runtimeSnapshot", payload: payload)
             }
             try printRawJSONData(data, format: outputFormat)
         } catch {
@@ -390,9 +388,9 @@ struct Ledger: AsyncParsableCommand {
                     URLQueryItem(name: "limit", value: String(request.limit))
                 ])
             } else {
-                _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json || jsonl)
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json || jsonl)
                 let payload = try JSONEncoder().encode(request)
-                data = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeLedger", payload: payload)
+                data = try await client.request(type: "runtimeLedger", payload: payload)
             }
             let response = try JSONDecoder().decode(TKRuntimeLedgerResponse.self, from: data)
             if jsonl {

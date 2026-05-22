@@ -78,6 +78,7 @@ public struct TKTargetSummary: Codable, Equatable {
     public let bundleIdentifier: String?
     public let deviceDescription: String?
     public let osDescription: String?
+    public let simulatorUDID: String?
     public let activeHierarchyAvailable: Bool?
     public let cachedHierarchyAvailable: Bool?
     public let hierarchyCacheState: String?
@@ -92,6 +93,7 @@ public struct TKTargetSummary: Codable, Equatable {
         bundleIdentifier: String? = nil,
         deviceDescription: String? = nil,
         osDescription: String? = nil,
+        simulatorUDID: String? = nil,
         activeHierarchyAvailable: Bool? = nil,
         cachedHierarchyAvailable: Bool? = nil,
         hierarchyCacheState: String? = nil,
@@ -105,6 +107,7 @@ public struct TKTargetSummary: Codable, Equatable {
         self.bundleIdentifier = bundleIdentifier
         self.deviceDescription = deviceDescription
         self.osDescription = osDescription
+        self.simulatorUDID = simulatorUDID
         self.activeHierarchyAvailable = activeHierarchyAvailable ?? (connected && latestHierarchyAvailable)
         self.cachedHierarchyAvailable = cachedHierarchyAvailable ?? latestHierarchyAvailable
         self.hierarchyCacheState = hierarchyCacheState ?? {
@@ -147,6 +150,9 @@ public func TKResolveTargetSummary(_ target: String, in targets: [TKTargetSummar
     if let summary = targets.first(where: { $0.id == normalized }) {
         return summary
     }
+    if let simulator = targets.first(where: { $0.simulatorUDID == target }) {
+        return simulator
+    }
     if normalized == TKLocalTargetID, targets.count == 1, let only = targets.first {
         return only
     }
@@ -168,10 +174,12 @@ public func TKIsDefaultHiddenHierarchyTreeClass(_ className: String) -> Bool {
 public struct TKCLICommandRequest: Codable, Equatable {
     public let type: String
     public let payload: Data?
+    public let target: String?
 
-    public init(type: String, payload: Data? = nil) {
+    public init(type: String, payload: Data? = nil, target: String? = nil) {
         self.type = type
         self.payload = payload
+        self.target = target
     }
 
     public var requestType: TKRequestType? {

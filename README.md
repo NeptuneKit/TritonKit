@@ -287,6 +287,8 @@ triton hierarchy --json
 triton ax --json
 ```
 
+When multiple iOS Simulator apps are connected to the same `triton serve`, `triton list --json` exposes stable embedded runtime targets shaped as `triton:ios-simulator:<SIMULATOR_UDID>`. Pass either the full target id or the simulator UDID through `--target`; commands that still rely on the default `triton:local` return `error.code=ambiguous_target` instead of choosing a connection implicitly.
+
 When validating a standalone embedded runtime HTTP endpoint before it is connected through `triton serve`, bypass the local control server with `--runtime-base-url`:
 
 ```bash

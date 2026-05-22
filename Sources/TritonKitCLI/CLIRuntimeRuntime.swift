@@ -55,8 +55,7 @@ func runSemanticSelectorAction(
             )
             try await runSemanticActionRequest(request, runtimeBaseURL: runtimeBaseURL, format: outputFormat)
         } else {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let resolution = try await resolveTapTarget(
                 selector,
                 client: client,
@@ -81,7 +80,7 @@ func runSemanticSelectorAction(
                 segmentIndex: segmentIndex,
                 switchValue: switchValue
             )
-            try await runSemanticActionRequest(request, host: host, port: port, format: outputFormat)
+            try await runSemanticActionRequest(request, client: client, format: outputFormat)
         }
     } catch {
         if error is ExitCode { throw error }
@@ -95,8 +94,16 @@ func runSemanticActionRequest(
     port: Int,
     format: ClientOutputFormat
 ) async throws {
+    try await runSemanticActionRequest(request, client: TritonKitHTTPClient(host: host, port: port), format: format)
+}
+
+func runSemanticActionRequest(
+    _ request: TKSemanticActionRequest,
+    client: TritonKitHTTPClient,
+    format: ClientOutputFormat
+) async throws {
     let payload = try JSONEncoder().encode(request)
-    let data = try await TritonKitHTTPClient(host: host, port: port).request(type: "semanticAction", payload: payload)
+    let data = try await client.request(type: "semanticAction", payload: payload)
     let result = try JSONDecoder().decode(TKSemanticActionResponse.self, from: data)
     try printSemanticAction(result, format: format)
     if !result.ok {

@@ -12,11 +12,11 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 ## 接口
 
 - `GET /status`：返回 `connected` 与 `latestHierarchyAvailable`。
-- `GET /targets`：返回当前可调试 target 列表；首期只有本地连接 target。
-- `POST /command`：请求体为 `{"type":"ping"}`、`{"type":"appInfo"}` 或 `{"type":"hierarchy"}`；成功返回请求 `id` 和 `type`。
-- `POST /request`：请求体为 `{"type":"<requestType>","payload":"..."}`；会等待 iOS 端按 request id 返回 payload，适合 `attrs`、`object`、`input` 等同步读取/控制。
+- `GET /targets`：返回当前可调试 target 列表；`triton serve` 支持多个 embedded runtime WebSocket 同时连接。
+- `POST /command`：请求体为 `{"type":"ping","target":"<target-id>"}`、`{"type":"appInfo","target":"<target-id>"}` 或 `{"type":"hierarchy","target":"<target-id>"}`；成功返回请求 `id` 和 `type`。
+- `POST /request`：请求体为 `{"type":"<requestType>","payload":"...","target":"<target-id>"}`；会等待 iOS 端按 request id 返回 payload，适合 `attrs`、`object`、`input` 等同步读取/控制。
 - `POST /input`：请求体直接使用 Baguette 风格 input payload，例如 `{"type":"tap","x":120,"y":240}`；成功或失败都返回 `TKInputResult` JSON。
-- `GET /hierarchy/latest`：返回最近一次 hierarchy JSON；尚未收到 hierarchy 时返回 `404`。
+- `GET /hierarchy/latest?target=<target-id>`：返回指定 target 最近一次 hierarchy JSON；尚未收到 hierarchy 时返回 `404`。
 - `POST /data` 与 `GET /data/:id`：保留为二进制数据通道。
 - `ws://host:19421/`：保留为 iOS 与 CLI 的控制通道。
 
@@ -76,6 +76,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton screenshot --platform harmony --output <path.jpeg> --format json`：通过 HDC `snapshot_display -f /data/local/tmp/<name>.jpeg` 截图再 `file recv` 到本地；artifact 可能包含真实 UI 数据，公开前必须检查和脱敏。
 - Harmony DEBUG-only 内置采集器当前只固化共享 JSON 契约，不是已实现 CLI 入口。契约包含 `TKHarmonyCollectorManifest`、`TKHarmonyCollectorConfiguration`、`TKHarmonyCollectorSnapshot`、App/Page 状态、redaction status 和 screenshot metadata；Release 配置必须 `enabled=false` 且 capabilities 为空。
 - `triton list --format json`：列出可调试 target。
+- iOS Simulator embedded runtime target id 采用 `triton:ios-simulator:<SIMULATOR_UDID>`；`TKTargetSummary` 同时暴露 `simulatorUDID`。`--target` 可传完整 target id，也可直接传 simulator UDID。只有一个 runtime target 时 `triton:local` 会自动选择；多个 runtime target 同时连接时，默认 `triton:local` 返回 `error.code=ambiguous_target`，要求显式传 `--target`，避免并行模拟器误控。
 - `triton inspect --target triton:local --format json`：查看 target 摘要。
 - `triton hierarchy --target triton:local --format tree|json`：读取 hierarchy。
 - `triton nodes --target triton:local --format text|json`：列出 hierarchy 节点摘要。
@@ -141,7 +142,7 @@ CLI 支持人读输出语言切换：`--language en|zh`、`--lang en|zh`、`TRIT
 
 本地参数校验在 JSON 模式下也输出机器可读 envelope；输入动作命令默认就是 JSON，例如 `triton tap` 缺少目标选择器时返回 `error.code=validation_failed`，stderr 保持为空，方便 agent 直接解析 stdout。
 
-HTTP 管理 API 的错误响应同样使用 `{ok:false,error:{code,message,endpoint,hint}}`。例如无 hierarchy 时 `/hierarchy/latest` 返回 `hierarchy_unavailable`，无连接 target 时 `/input` 返回 `target_unavailable`。
+HTTP 管理 API 的错误响应同样使用 `{ok:false,error:{code,message,endpoint,hint}}`。例如无 hierarchy 时 `/hierarchy/latest` 返回 `hierarchy_unavailable`，无连接 target 时 `/input` 返回 `target_not_found`，多 embedded target 且未指定目标时返回 `ambiguous_target`。
 
 ## 复杂测试目标
 

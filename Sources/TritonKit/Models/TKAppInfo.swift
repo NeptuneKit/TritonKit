@@ -15,6 +15,7 @@ public struct TKAppInfo: Codable {
     public let appBundleIdentifier: String
     public let deviceDescription: String
     public let osDescription: String
+    public let simulatorUDID: String?
     public let osMainVersion: UInt
     public let deviceType: TKDeviceType
     public let screenWidth: Double
@@ -42,6 +43,11 @@ public struct TKAppInfo: Codable {
         let device = UIDevice.current
         self.deviceDescription = device.model
         self.osDescription = device.systemVersion
+        #if targetEnvironment(simulator)
+        self.simulatorUDID = ProcessInfo.processInfo.environment["SIMULATOR_UDID"]
+        #else
+        self.simulatorUDID = nil
+        #endif
         self.osMainVersion = UInt(device.systemVersion.split(separator: ".").first ?? "0") ?? 0
         self.deviceType = {
             #if targetEnvironment(simulator)
@@ -58,6 +64,7 @@ public struct TKAppInfo: Codable {
         let osVersion = ProcessInfo.processInfo.operatingSystemVersion
         self.deviceDescription = Host.current().localizedName ?? "Mac"
         self.osDescription = "\(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)"
+        self.simulatorUDID = nil
         self.osMainVersion = UInt(osVersion.majorVersion)
         self.deviceType = .others
         self.screenWidth = 0

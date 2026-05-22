@@ -11,6 +11,7 @@ import TritonKitShared
 struct TritonKitHTTPClient {
     let host: String
     let port: Int
+    var target: String? = nil
 
     func getData(_ path: String) async throws -> Data {
         try await data(for: URLRequest(url: url(path)))
@@ -19,6 +20,10 @@ struct TritonKitHTTPClient {
     func getJSON<T: Decodable>(_ path: String) async throws -> T {
         let data = try await getData(path)
         return try JSONDecoder().decode(T.self, from: data)
+    }
+
+    func latestHierarchyData() async throws -> Data {
+        try await data(for: URLRequest(url: url(path: "/hierarchy/latest", queryItems: targetQueryItems())))
     }
 
     func postJSON<Request: Encodable, Response: Decodable>(_ path: String, body: Request) async throws -> Response {
@@ -31,20 +36,35 @@ struct TritonKitHTTPClient {
     }
 
     func sendCommand(_ type: String) async throws {
-        let _: TKCLICommandResponse = try await postJSON("/command", body: TKCLICommandRequest(type: type))
+        let _: TKCLICommandResponse = try await postJSON("/command", body: TKCLICommandRequest(type: type, target: target))
     }
 
-    func request(type: String, payload: Data? = nil) async throws -> Data {
-        try await postRawJSON("/request", body: TKCLICommandRequest(type: type, payload: payload))
+    func request(type: String, payload: Data? = nil, target explicitTarget: String? = nil) async throws -> Data {
+        try await postRawJSON("/request", body: TKCLICommandRequest(
+            type: type,
+            payload: payload,
+            target: explicitTarget ?? target
+        ))
     }
 
     private func url(_ path: String) -> URL {
+        url(path: path, queryItems: [])
+    }
+
+    private func url(path: String, queryItems: [URLQueryItem]) -> URL {
         var components = URLComponents()
         components.scheme = "http"
         components.host = host
         components.port = port
         components.path = path.hasPrefix("/") ? path : "/\(path)"
+        if !queryItems.isEmpty {
+            components.queryItems = queryItems
+        }
         return components.url!
+    }
+
+    private func targetQueryItems() -> [URLQueryItem] {
+        target.map { [URLQueryItem(name: "target", value: $0)] } ?? []
     }
 
     private func data(for request: URLRequest) async throws -> Data {
@@ -175,6 +195,16 @@ func resolveTarget(
         printCLIErrorText(error, endpoint: "/targets", host: host, port: port, language: effectiveLanguage(nil))
         throw ExitCode.failure
     }
+}
+
+func resolveRuntimeClient(
+    target: String,
+    host: String,
+    port: Int,
+    jsonError: Bool
+) async throws -> (summary: TKTargetSummary, client: TritonKitHTTPClient) {
+    let summary = try await resolveTarget(target, host: host, port: port, jsonError: jsonError)
+    return (summary, TritonKitHTTPClient(host: host, port: port, target: summary.id))
 }
 
 func buildCapabilities(host: String, port: Int) async -> TKCapabilitiesResponse {
@@ -660,6 +690,21 @@ func cliErrorDetail(for error: Error, endpoint: String, host: String, port: Int)
             message: runtime.description,
             endpoint: url,
             hint: "Check `triton doctor --format json` for server and target state"
+        )
+    }
+    if let targetError = error as? TKTargetResolutionError {
+        let code: String
+        switch targetError {
+        case .ambiguous:
+            code = "ambiguous_target"
+        case .notFound:
+            code = "target_not_found"
+        }
+        return TKCLIErrorDetail(
+            code: code,
+            message: targetError.description,
+            endpoint: url,
+            hint: "Run `triton list --json` and pass the exact --target id, or the simulator UDID for an iOS simulator runtime."
         )
     }
     return TKCLIErrorDetail(

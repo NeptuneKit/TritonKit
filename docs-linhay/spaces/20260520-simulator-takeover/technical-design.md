@@ -63,6 +63,7 @@ host:<workspace-id>
 sim:<udid>
 sim:<udid>:app:<bundle-id>
 runtime:<target-id>
+triton:ios-simulator:<udid>
 ```
 
 ### 解析规则
@@ -71,10 +72,28 @@ runtime:<target-id>
 2. workspace defaults 次之：由 `triton sim use <udid>` 写入。
 3. 单一 booted simulator 可自动选择。
 4. 单一 runtime target 可自动选择。
-5. App target 和 runtime target bundle id 一致时建立绑定。
-6. 多候选时返回 `ambiguous_target`，输出候选列表和推荐命令。
+5. iOS Simulator embedded runtime 优先使用 `triton:ios-simulator:<SIMULATOR_UDID>`，并允许 `--target <SIMULATOR_UDID>` 作为便捷匹配。
+6. App target 和 runtime target bundle id 一致时建立绑定。
+7. 多候选时返回 `ambiguous_target`，输出候选列表和推荐命令。
 
 ## 数据契约
+
+### EmbeddedRuntimeTarget
+
+```json
+{
+  "id": "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+  "transport": "local-websocket",
+  "connected": true,
+  "latestHierarchyAvailable": true,
+  "appName": "Example",
+  "bundleIdentifier": "cn.example.app",
+  "deviceDescription": "iPhone",
+  "osDescription": "26.5",
+  "simulatorUDID": "0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+  "identityState": "current"
+}
+```
 
 ### SimulatorTarget
 

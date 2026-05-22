@@ -152,11 +152,11 @@ func observeIOS(
         ])
         targetID = runtimeBaseURL
     } else {
-        let summary = try await resolveTarget(target, host: host, port: port, jsonError: true)
+        let (summary, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
         targetID = summary.id
         let request = TKRuntimeSnapshotRequest(include: ["app", "scene", "route", "ax", "geometry"], maxAXNodes: maxNodes)
         let payload = try JSONEncoder().encode(request)
-        snapshotData = try await TritonKitHTTPClient(host: host, port: port).request(type: "runtimeSnapshot", payload: payload)
+        snapshotData = try await client.request(type: "runtimeSnapshot", payload: payload)
     }
     let snapshot = try JSONDecoder().decode(TKRuntimeSnapshotResponse.self, from: snapshotData)
     var nodes = observeNodes(fromAX: snapshot.ax ?? [], source: "runtime-tree", prefix: "ios-runtime")
@@ -397,8 +397,7 @@ func resolveIOSNode(
         nodes = observeNodes(fromAX: snapshot.ax ?? [], source: "runtime-tree", prefix: "ios-runtime")
         sourceCommands = ["GET \(runtimeBaseURL)/snapshot"]
     } else {
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: true)
-        let client = TritonKitHTTPClient(host: host, port: port)
+        let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
         let data = try await client.request(type: "accessibility")
         let axNodes = try JSONDecoder().decode([TKAXNode].self, from: data)
         nodes = observeNodes(fromAX: axNodes, source: "runtime-tree", prefix: "ios-runtime")

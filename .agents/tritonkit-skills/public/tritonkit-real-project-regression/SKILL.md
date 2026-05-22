@@ -36,6 +36,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
 6. Verify connection and target identity:
    - `triton status --json`
    - `triton list --json`
+   - for iOS Simulator embedded runtime, confirm `triton list --json` exposes `triton:ios-simulator:<SIMULATOR_UDID>` and `simulatorUDID`;
+   - if multiple iOS Simulator runtime targets are connected, pass `--target <SIMULATOR_UDID>` or `--target triton:ios-simulator:<SIMULATOR_UDID>` for runtime commands; default `triton:local` should return `ambiguous_target`.
    - `triton runtime manifest --json`
    - `triton state app --json`
    - `triton state scene --json`

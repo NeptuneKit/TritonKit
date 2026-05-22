@@ -38,7 +38,8 @@ struct TKCLITransportModelsTests {
             appName: "Demo",
             bundleIdentifier: "com.example.demo",
             deviceDescription: "iPhone",
-            osDescription: "26.5"
+            osDescription: "26.5",
+            simulatorUDID: "SIM-UDID-1"
         )
 
         #expect(target.id == TKLocalTargetID)
@@ -51,6 +52,41 @@ struct TKCLITransportModelsTests {
         #expect(target.identityState == "current")
         #expect(target.appName == "Demo")
         #expect(target.bundleIdentifier == "com.example.demo")
+        #expect(target.simulatorUDID == "SIM-UDID-1")
+    }
+
+    @Test("target summary preserves simulator identity during JSON roundtrip")
+    func targetSummaryPreservesSimulatorIdentity() throws {
+        let target = TKTargetSummary(
+            id: "triton:ios-simulator:SIM-UDID-2",
+            connected: true,
+            latestHierarchyAvailable: false,
+            simulatorUDID: "SIM-UDID-2",
+            identityState: "current"
+        )
+
+        let data = try JSONEncoder().encode(target)
+        let decoded = try JSONDecoder().decode(TKTargetSummary.self, from: data)
+
+        #expect(decoded.id == "triton:ios-simulator:SIM-UDID-2")
+        #expect(decoded.simulatorUDID == "SIM-UDID-2")
+        #expect(try TKResolveTargetSummary("SIM-UDID-2", in: [decoded]) == decoded)
+    }
+
+    @Test("command request preserves explicit target during JSON roundtrip")
+    func commandRequestPreservesTarget() throws {
+        let request = TKCLICommandRequest(
+            type: "accessibility",
+            payload: Data(#"{"sample":true}"#.utf8),
+            target: "triton:ios-simulator:SIM-UDID-3"
+        )
+
+        let data = try JSONEncoder().encode(request)
+        let decoded = try JSONDecoder().decode(TKCLICommandRequest.self, from: data)
+
+        #expect(decoded.type == "accessibility")
+        #expect(decoded.payload == Data(#"{"sample":true}"#.utf8))
+        #expect(decoded.target == "triton:ios-simulator:SIM-UDID-3")
     }
 
     @Test("target resolution auto-selects the only target for default CLI target")

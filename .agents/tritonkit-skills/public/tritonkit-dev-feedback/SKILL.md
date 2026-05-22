@@ -38,6 +38,10 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton runtime manifest --json`
    - `triton snapshot --include app,scene,route,ax,geometry --json`
    - `triton ledger --limit 50 --jsonl`
+   - iOS embedded runtime target checks:
+     - `triton list --json` should expose iOS Simulator runtime targets as `triton:ios-simulator:<SIMULATOR_UDID>` with `simulatorUDID`;
+     - pass either `--target triton:ios-simulator:<SIMULATOR_UDID>` or `--target <SIMULATOR_UDID>` when multiple simulator apps are connected;
+     - when multiple runtime targets are connected and the command still relies on default `triton:local`, expect `error.code=ambiguous_target` instead of last-connection wins.
    - host-side simulator checks that do not require embedded runtime:
      - `triton sim list --json`
      - `triton sim use <udid> --json`
@@ -298,6 +302,7 @@ triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.
 triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
 triton hierarchy --json
 triton ax --json
+triton ax --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
 triton runtime manifest --json
 triton tap "first-check"
 triton type "hello"
@@ -312,6 +317,8 @@ triton capture --case first-check --output /tmp/first-check.tritonevidence --jso
 triton record --output /tmp/first-flow.tritonplan --json
 triton replay /tmp/first-flow.tritonplan --dry-run --var username=alice --var password-env=TRITON_PASSWORD --json
 ```
+
+If more than one iOS Simulator app connects to the same `triton serve`, use `triton list --json` to read `simulatorUDID` and pass it as `--target`. The full target id also works: `triton:ios-simulator:<SIMULATOR_UDID>`. A default `triton:local` command returning `ambiguous_target` is the expected safe behavior in that state.
 
 ### Network Notes
 

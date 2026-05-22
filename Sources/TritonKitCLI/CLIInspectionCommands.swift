@@ -175,12 +175,8 @@ struct Hierarchy: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-        let client = TritonKitHTTPClient(host: host, port: port)
-        if refresh {
-            try await client.sendCommand("hierarchy")
-        }
-        let data = try await waitForHierarchy(client: client)
+        let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
+        let data = refresh ? try await client.request(type: "hierarchy") : try await waitForHierarchy(client: client)
         let rendered: String
         switch outputFormat {
         case .json:
@@ -205,12 +201,8 @@ struct Nodes: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-        let client = TritonKitHTTPClient(host: host, port: port)
-        if refresh {
-            try await client.sendCommand("hierarchy")
-        }
-        let data = try await waitForHierarchy(client: client)
+        let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
+        let data = refresh ? try await client.request(type: "hierarchy") : try await waitForHierarchy(client: client)
         let nodes = try hierarchyNodeSummaries(data)
         switch outputFormat {
         case .json:
@@ -247,12 +239,8 @@ struct Node: AsyncParsableCommand {
             }
             throw RuntimeError("`triton node` requires --oid, or use `triton node resolve --text <text>`")
         }
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-        let client = TritonKitHTTPClient(host: host, port: port)
-        if refresh {
-            try await client.sendCommand("hierarchy")
-        }
-        let data = try await waitForHierarchy(client: client)
+        let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
+        let data = refresh ? try await client.request(type: "hierarchy") : try await waitForHierarchy(client: client)
         guard let oid, let node = try hierarchyNodeSummaries(data).first(where: { nodeMatches($0, oid: oid) }) else {
             throw RuntimeError("Node not found: \(self.oid ?? 0)")
         }
@@ -284,8 +272,7 @@ struct Attrs: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-        let client = TritonKitHTTPClient(host: host, port: port)
+        let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
         let payload = try JSONEncoder().encode(oid)
         let data = try await client.request(type: "allAttrGroups", payload: payload)
         switch outputFormat {
@@ -313,8 +300,7 @@ struct ObjectInfo: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-        let client = TritonKitHTTPClient(host: host, port: port)
+        let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
         let payload = try JSONEncoder().encode(oid)
         let data = try await client.request(type: "fetchObject", payload: payload)
         switch outputFormat {

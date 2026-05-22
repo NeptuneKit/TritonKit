@@ -13,7 +13,7 @@ func commandSchemas() -> [TKCommandSchema] {
         TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "127.0.0.1", description: "Triton server host"),
         TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Triton server port"),
     ]
-    let target = TKCommandSchemaOption(name: "--target", type: "String", defaultValue: TKLocalTargetID, description: "Target id from `triton list`; commands auto-select the only connected target when omitted")
+    let target = TKCommandSchemaOption(name: "--target", type: "String", defaultValue: TKLocalTargetID, description: "Target id from `triton list`, or simulator UDID for iOS simulator runtime targets; commands auto-select the only connected target when omitted")
     let jsonText = ["text", "json"]
     let formatTextJSON = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format")
     let formatJSONText = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format")

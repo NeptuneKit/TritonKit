@@ -34,8 +34,7 @@ struct Find: AsyncParsableCommand {
             }
             let bounds = try within.map(parseBounds)
             let point = try at.map(parsePoint)
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let resolution = try await resolveTapTarget(
                 query,
                 client: client,
@@ -209,8 +208,7 @@ struct Wait: AsyncParsableCommand {
                 }
             }
 
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let request = WaitRequest(
                 condition: waitCondition(),
                 query: text ?? gone ?? exists,
@@ -377,9 +375,9 @@ struct Tap: AsyncParsableCommand {
 
         do {
             let point = try at.map(parsePoint)
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let (_, runtimeClient) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             if let query {
-                let client = TritonKitHTTPClient(host: host, port: port)
+                let client = runtimeClient
                 let bounds = try within.map(parseBounds)
                 let resolution = try await resolveTapTarget(
                     query,
@@ -391,12 +389,12 @@ struct Tap: AsyncParsableCommand {
                     within: bounds,
                     at: point
                 )
-                try await runInputRequest(resolution.request, host: host, port: port, format: outputFormat)
+                try await runInputRequest(resolution.request, client: client, format: outputFormat)
                 return
             }
 
             if axOID != nil || axLabel != nil {
-                let client = TritonKitHTTPClient(host: host, port: port)
+                let client = runtimeClient
                 let data = try await client.request(type: "accessibility")
                 let nodes = try JSONDecoder().decode([TKAXNode].self, from: data)
                 guard let node = selectAXNode(nodes, oid: axOID, label: axLabel) else {
@@ -408,7 +406,7 @@ struct Tap: AsyncParsableCommand {
                     throw RuntimeError(message)
             }
             let request = tapRequest(for: node, width: width, height: height, duration: duration)
-            try await runInputRequest(request, host: host, port: port, format: outputFormat)
+            try await runInputRequest(request, client: client, format: outputFormat)
             return
         }
 
@@ -420,7 +418,7 @@ struct Tap: AsyncParsableCommand {
                 height: height,
                 duration: duration
             )
-            try await runInputRequest(request, host: host, port: port, format: outputFormat)
+            try await runInputRequest(request, client: runtimeClient, format: outputFormat)
         } catch {
             if error is ExitCode { throw error }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
@@ -447,7 +445,7 @@ struct Swipe: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let request = TKInputRequest.swipe(
                 startX: startX,
                 startY: startY,
@@ -457,7 +455,7 @@ struct Swipe: AsyncParsableCommand {
                 height: height,
                 duration: duration
             )
-            try await runInputRequest(request, host: host, port: port, format: outputFormat)
+            try await runInputRequest(request, client: client, format: outputFormat)
         } catch {
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
@@ -492,11 +490,10 @@ struct TypeText: AsyncParsableCommand {
                 }
                 throw RuntimeError("Provide exactly one text value: <text> or --text")
             }
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
                 TKInputRequest(type: .typeText, targetOID: oid, text: textArgument ?? text, secure: secure),
-                host: host,
-                port: port,
+                client: client,
                 format: outputFormat
             )
         } catch {
@@ -527,11 +524,10 @@ struct PasteText: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
                 TKInputRequest.paste(text, targetOID: oid, x: point?.x ?? x, y: point?.y ?? y, secure: secure),
-                host: host,
-                port: port,
+                client: client,
                 format: outputFormat
             )
         } catch {
@@ -560,11 +556,10 @@ struct ClearText: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
                 TKInputRequest.clear(targetOID: oid, x: point?.x ?? x, y: point?.y ?? y),
-                host: host,
-                port: port,
+                client: client,
                 format: outputFormat
             )
         } catch {
@@ -596,11 +591,10 @@ struct Press: AsyncParsableCommand {
                 }
                 throw RuntimeError("Provide exactly one button value: <button> or --button")
             }
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
                 TKInputRequest.press(button: buttonArgument ?? button ?? "", duration: duration),
-                host: host,
-                port: port,
+                client: client,
                 format: outputFormat
             )
         } catch {
@@ -621,8 +615,7 @@ struct Geometry: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let data = try await client.request(type: "geometry")
             let geometry = try JSONDecoder().decode(TKGeometryResponse.self, from: data)
             switch outputFormat {
@@ -684,8 +677,7 @@ struct AccessibilityTree: AsyncParsableCommand {
             return
         }
         do {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let data = try await client.request(type: "accessibility")
             let rendered: String
             switch outputFormat {
@@ -735,8 +727,7 @@ struct Hit: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             let point = try requiredPoint(at: at, x: x, y: y, outputFormat: outputFormat)
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let payload = try JSONEncoder().encode(TKHitTestRequest(x: point.x, y: point.y))
             let data = try await client.request(type: "hitTest", payload: payload)
             let response = try JSONDecoder().decode(TKHitTestResponse.self, from: data)
@@ -803,8 +794,7 @@ struct Screenshot: AsyncParsableCommand {
             return
         }
         do {
-            _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-            let client = TritonKitHTTPClient(host: host, port: port)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let data = try await client.request(type: "screenshot")
             let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
             let imageData = try await screenshotImageData(screenshot, client: client)
@@ -845,8 +835,7 @@ struct Input: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        _ = try await resolveTarget(target, host: host, port: port, jsonError: outputFormat == .json)
-        let client = TritonKitHTTPClient(host: host, port: port)
+        let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
         var hadFailure = false
         var actionCount = 0
         var failedCount = 0
