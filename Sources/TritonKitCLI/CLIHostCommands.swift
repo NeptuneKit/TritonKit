@@ -613,8 +613,8 @@ struct HostAppContainer: AsyncParsableCommand {
 struct HostAppPrefs: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "prefs",
-        abstract: "Read simulator app preferences as JSON",
-        subcommands: [HostAppPrefsDump.self, HostAppPrefsGet.self]
+        abstract: "Read and update simulator app preferences as JSON",
+        subcommands: [HostAppPrefsDump.self, HostAppPrefsGet.self, HostAppPrefsSet.self]
     )
 }
 
@@ -642,6 +642,27 @@ struct HostAppPrefsGet: AsyncParsableCommand {
 
     func run() async throws {
         try printPreferences(simulator: simulator, bundleID: bundleID, key: key, outputFormat: effectiveFormat(format, json: json))
+    }
+}
+
+struct HostAppPrefsSet: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "set", abstract: "Set one simulator app preference value from JSON")
+
+    @Argument(help: "Preference key") var key: String
+    @Argument(help: "JSON value to write") var value: String
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "App bundle identifier") var bundleID: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try setPreference(
+            simulator: simulator,
+            bundleID: bundleID,
+            key: key,
+            value: value,
+            outputFormat: effectiveFormat(format, json: json)
+        )
     }
 }
 

@@ -15,7 +15,7 @@ prepare host target -> launch/open route -> wait/assert runtime or host state ->
 - iOS Simulator / App P0 host adapter：`sim list/use/boot/shutdown/screenshot` 与 `app list/info/install/uninstall/launch/terminate/open-url/container/prefs`。
 - Xcode P0：`xcode discover/use/schemes/settings/build/test/run`。
 - Runtime / action / evidence：`status/list/wait/assert/find/tap/screenshot/capture/evidence/record/replay`。
-- Harmony host-side P0/P1 部分能力：`device doctor/list/wait-ready`、`app inspect/launch`、`observe current/tree`、`node resolve`。
+- Harmony host-side P0/P1 能力：`device doctor/list/wait-ready`、`app inspect/install/launch/open-url/terminate`、`ax/wait/tap/screenshot`、`observe current/tree`、`node resolve`。
 - WebView provider metadata 与 allowlist bridge：`webview list/current/call/events`。
 
 缺口不是单个命令，而是跨 host、runtime、evidence 的稳定编排层。
@@ -150,8 +150,23 @@ triton smoke harmony \
 
 - S0 方案与测试基线已完成：本 space 的 README 与 technical design 已落地。
 - S1 Xcode / host readiness diagnostics 已完成第一刀：`triton xcode status --json`、`triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json` 已进入 CLI 和 schema。
-- S2 `smoke ios` 已实现并接入 CLI / schema / help；已通过 mock tests、`swift build --package-path CLI --scratch-path .build/cli --product triton`、`swift test --package-path CLI --scratch-path .build/cli-tests`、`triton schema --command smoke --json`、`triton smoke ios --help`、本机 structured-failure 验证，以及真实 iOS Simulator / embedded runtime 正向复跑。#17 的本地关闭条件已满足；#18 继续推进 priority 2/3 与 evidence/failure diagnostics；#15/#12 仍未进入关闭条件。
+- S2 `smoke ios` 已实现并接入 CLI / schema / help；已通过 mock tests、`swift build --package-path CLI --scratch-path .build/cli --product triton`、`swift test --package-path CLI --scratch-path .build/cli-tests`、`triton schema --command smoke --json`、`triton smoke ios --help`、本机 structured-failure 验证，以及真实 iOS Simulator / embedded runtime 正向复跑。#17 的本地关闭条件已满足；#18 继续推进 evidence/failure diagnostics；#15 已有等价 host-side smoke adapter 验证，但 `smoke harmony` 编排入口仍是后续可选增强；#12 仍作为 simulator takeover epic open。
 - #18 priority 2 已完成一刀：`triton app open-url <url> --wait-ready --snapshot --json` 可在提交 deep link 后等待 embedded runtime ready，并返回 host action、ready 状态和 compact snapshot summary；默认 `app open-url` 不带这些参数时仍保持原 host ack 行为。
+- #18 S3 已完成：`triton webview current-url --json`、`triton route assert-current-url <url> --json`、`triton app prefs set <key> <json-value> --bundle-id <bundle-id> --json` 已接入 CLI / schema / help。preferences 值使用自然 JSON 编码，支持 string/bool/int/double/array/object，拒绝 `null`。
+- #15 host-side adapter 已完成等价闭环：`docs-linhay/scripts/verify-harmony-host-smoke.sh` 使用 fake HDC 覆盖 `device/app/ax/wait/tap/screenshot/observe/node` schema 与成功/失败 envelope；2026-05-23 本机真实 HDC 只发现 `127.0.0.1:10100` 为 `Offline`，未执行真实设备写入或截图。
+
+#### 2026-05-23 WebView URL / prefs set 正向复跑
+
+- 环境：`TritonKitDemo`，bundle id `com.neptunekit.tritonkit.demo`，iOS Simulator UDID `0333546D-2AC6-4C22-AF01-293E2F4BA5BC`。
+- 前置：重建当前源码 CLI 后重启 `triton serve --host 127.0.0.1 --port 19421`，避免旧 serve 二进制不识别新 `/request` type 而回退到 AX candidate。
+- `triton list --json` 返回唯一 connected target `triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC`。
+- `triton webview list --platform ios --json` 返回 `providerStatus=available`、`candidateOnly=false`、URL `https://tritonkit.local/smoke`、title `Triton WebView Smoke`。
+- `triton webview current-url --platform ios --json` 返回 `ok=true`、URL `https://tritonkit.local/smoke`。
+- `triton route assert-current-url https://tritonkit.local/smoke --platform ios --json` 返回 `ok=true`、`status=pass`。
+- `triton route assert-current-url 'https://tritonkit.local/smoke?debug=1' --ignore-query --platform ios --json` 返回 `ok=true`、`status=pass`。
+- `triton route assert-current-url https://tritonkit.local/other --platform ios --json` 返回 `ok=false`、`status=fail` 并以 1 退出。
+- `triton app prefs set TritonSmokeFlag false --bundle-id com.neptunekit.tritonkit.demo --simulator booted --json` 返回 `ok=true`、`previousValue=true`、`newValue=false`。
+- `triton app prefs set TritonSmokeConfig '{"enabled":true,"count":2,"labels":["a","b"]}' --bundle-id com.neptunekit.tritonkit.demo --simulator booted --json` 返回自然 JSON `newValue`；随后 `prefs get/dump` 均能读回该对象。
 
 #### 2026-05-22 iOS runtime 正向复跑
 

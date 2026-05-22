@@ -188,7 +188,7 @@ If your app blocks cleartext development traffic through App Transport Security,
 
 ### 5. WebView Observation
 
-Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current --platform ios --json` can read visible `WKWebView` provider metadata such as URL, title, page session, loading state, progress, and frame. Page interaction remains opt-in: `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
+Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current/current-url --platform ios --json` can read visible `WKWebView` provider metadata such as URL, title, page session, loading state, progress, and frame. Use `triton route assert-current-url '<url>' --platform ios --json` for smoke cases that only need to prove the native flow opened the expected H5 link. Page interaction remains opt-in: `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
 
 Harmony host-side layout can identify visible Web candidates without source changes, but it must not be treated as DOM or bridge access. Register a Harmony embedded WebView provider before claiming URL, DOM, JS, or page bridge capability.
 
@@ -323,12 +323,15 @@ triton app launch --bundle-id com.example.app --simulator booted --json
 triton app terminate --bundle-id com.example.app --simulator booted --json
 triton app open-url "example://debug" --simulator booted --json
 triton app open-url "example://debug" --simulator booted --wait-ready --snapshot --json
+triton webview current-url --platform ios --json
+triton route assert-current-url "https://example.invalid/path" --platform ios --json
 triton app container --bundle-id com.example.app --kind data --json
 triton app prefs get DEBUG-mock --bundle-id com.example.app --json
+triton app prefs set DEBUG-mock true --bundle-id com.example.app --simulator booted --json
 triton app prefs dump --bundle-id com.example.app --json
 ```
 
-`app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, or `triton app prefs get` to verify the business state.
+`app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
 When an embedded runtime is expected to be connected, add `--wait-ready --snapshot` to make the one-shot result include runtime readiness and an app/route/AX snapshot summary.
 
 Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts:

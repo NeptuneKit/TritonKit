@@ -122,11 +122,13 @@ triton observe tree --platform ios --runtime-base-url <baseURL> --json
 triton node resolve --platform ios --text "登录" --json
 triton webview list --platform ios --json
 triton webview current --platform ios --json
+triton webview current-url --platform ios --json
+triton route assert-current-url https://example.invalid/path --platform ios --json
 triton webview call <method> --platform ios --json
 triton webview events --platform ios --limit 50 --json
 ```
 
-`webview list/current` 当前是 provider metadata 能力。iOS 已能从当前可见 `WKWebView` 读取 `url/title/pageSessionID/isLoading/estimatedProgress/frame` 等元数据；真正的 DOM、页面事件和业务动作仍必须通过页面或 App 显式 opt-in 的 allowlist bridge 暴露。`webview call` 只能调用 allowlist 方法，不是任意 JavaScript eval。没有 WebView provider 时，输出必须保持 `candidateOnly=true`、`providerStatus=unavailable`、`bridgeStatus=unavailable`，并在 `missingCapabilities` 中声明 `webview.url`、`webview.dom`、`webview.bridge-call`、`webview.tap`、`webview.type` 等缺失项；不得把 AX/WebKit 容器误报为 DOM/JS/bridge 可用。Harmony 侧若未注册 WebView provider，也只能保持 host-only layout/candidate 边界，不能声明页面 bridge 可用。
+`webview list/current/current-url` 当前是 provider metadata 能力。iOS 已能从当前可见 `WKWebView` 读取 `url/title/pageSessionID/isLoading/estimatedProgress/frame` 等元数据；`route assert-current-url` 只断言 provider URL，不操作 H5 页面。真正的 DOM、页面事件和业务动作仍必须通过页面或 App 显式 opt-in 的 allowlist bridge 暴露。`webview call` 只能调用 allowlist 方法，不是任意 JavaScript eval。没有 WebView provider 时，输出必须保持 `candidateOnly=true`、`providerStatus=unavailable`、`bridgeStatus=unavailable`，并在 `missingCapabilities` 中声明 `webview.url`、`webview.dom`、`webview.bridge-call`、`webview.tap`、`webview.type` 等缺失项；不得把 AX/WebKit 容器误报为 DOM/JS/bridge 可用。Harmony 侧若未注册 WebView provider，也只能保持 host-only layout/candidate 边界，不能声明页面 bridge 可用。
 
 When multiple iOS Simulator apps connect to the same `triton serve`, embedded runtime targets use stable ids shaped as `triton:ios-simulator:<SIMULATOR_UDID>`. Runtime commands may pass either the full target id or the simulator UDID. If more than one runtime target is connected and the command still uses the default `triton:local`, the expected result is `error.code=ambiguous_target`, not last-connection wins.
 

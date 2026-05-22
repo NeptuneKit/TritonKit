@@ -265,6 +265,135 @@ func printPreferences(
     }
 }
 
+func setPreference(
+    simulator: String,
+    bundleID: String,
+    key: String,
+    value: String,
+    outputFormat: ClientOutputFormat
+) throws {
+    do {
+        let newValue = try parseHostPreferenceJSONValue(value)
+        let containerResult = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: .data))
+        let container = containerResult.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let plistPath = TKHostPreferencesSnapshot.plistPath(dataContainer: container, bundleID: bundleID)
+        let existingData = FileManager.default.fileExists(atPath: plistPath) ? try Data(contentsOf: URL(fileURLWithPath: plistPath)) : nil
+        let update = try updatingPreferencePlistData(
+            existingData: existingData,
+            bundleID: bundleID,
+            plistPath: plistPath,
+            key: key,
+            newValue: newValue
+        )
+        try ensureParentDirectory(for: plistPath)
+        try update.data.write(to: URL(fileURLWithPath: plistPath), options: .atomic)
+        let output = HostPreferencesSetOutput(
+            ok: true,
+            action: "app.prefs.set",
+            simulatorUDID: simulator,
+            bundleID: bundleID,
+            plistPath: plistPath,
+            key: key,
+            previousValue: update.previousValue,
+            newValue: update.newValue,
+            restartAdvice: "Terminate and relaunch the app if it reads this preference only at startup."
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            print("\(key)=\(renderPreferenceValue(update.newValue))")
+        }
+    } catch {
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+}
+
+func parseHostPreferenceJSONValue(_ value: String) throws -> TKHostPreferenceValue {
+    let data = Data(value.utf8)
+    let object = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
+    return try hostPreferenceValue(fromJSONObject: object)
+}
+
+func updatingPreferencePlistData(
+    existingData: Data?,
+    bundleID: String,
+    plistPath: String,
+    key: String,
+    newValue: TKHostPreferenceValue
+) throws -> HostPreferencePlistUpdateResult {
+    let dictionary: [String: Any]
+    if let existingData {
+        let object = try PropertyListSerialization.propertyList(from: existingData, options: [], format: nil)
+        guard let existing = object as? [String: Any] else {
+            throw TKHostPreferencesError.invalidRoot
+        }
+        dictionary = existing
+    } else {
+        dictionary = [:]
+    }
+
+    let snapshotData = try PropertyListSerialization.data(fromPropertyList: dictionary, format: .binary, options: 0)
+    let snapshot = try TKHostPreferencesSnapshot(bundleID: bundleID, plistPath: plistPath, data: snapshotData)
+    let previousValue = snapshot.value(forKey: key)
+    var updated = dictionary
+    updated[key] = try propertyListObject(fromPreferenceValue: newValue)
+    let data = try PropertyListSerialization.data(fromPropertyList: updated, format: .binary, options: 0)
+    return HostPreferencePlistUpdateResult(data: data, previousValue: previousValue, newValue: newValue)
+}
+
+private func hostPreferenceValue(fromJSONObject object: Any) throws -> TKHostPreferenceValue {
+    switch object {
+    case let value as String:
+        return .string(value)
+    case let value as NSNumber:
+        if isBooleanNumber(value) {
+            return .bool(value.boolValue)
+        }
+        let doubleValue = value.doubleValue
+        if floor(doubleValue) == doubleValue {
+            return .int(value.intValue)
+        }
+        return .double(doubleValue)
+    case let value as Bool:
+        return .bool(value)
+    case let value as [Any]:
+        return .array(try value.map(hostPreferenceValue(fromJSONObject:)))
+    case let value as [String: Any]:
+        return .dictionary(try value.mapValues(hostPreferenceValue(fromJSONObject:)))
+    case _ as NSNull:
+        throw RuntimeError("Property list preferences do not support null. Use a string, number, bool, array, or object.")
+    default:
+        throw RuntimeError("Unsupported preference JSON value.")
+    }
+}
+
+private func isBooleanNumber(_ value: NSNumber) -> Bool {
+    CFGetTypeID(value) == CFBooleanGetTypeID() || String(cString: value.objCType) == "c" || String(cString: value.objCType) == "B"
+}
+
+private func propertyListObject(fromPreferenceValue value: TKHostPreferenceValue) throws -> Any {
+    switch value {
+    case .string(let value):
+        return value
+    case .bool(let value):
+        return value
+    case .int(let value):
+        return value
+    case .double(let value):
+        return value
+    case .array(let values):
+        return try values.map(propertyListObject(fromPreferenceValue:))
+    case .dictionary(let values):
+        return try values.mapValues(propertyListObject(fromPreferenceValue:))
+    case .data(let value):
+        guard let data = Data(base64Encoded: value) else {
+            throw RuntimeError("Invalid base64 data preference value.")
+        }
+        return data
+    }
+}
+
 func runHostCommand(_ command: TKHostCommand) throws -> HostProcessResult {
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()

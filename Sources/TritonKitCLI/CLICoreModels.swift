@@ -166,9 +166,14 @@ func chineseRootHelp() -> String {
         ("capabilities", "输出 Triton 运行时能力矩阵"),
         ("schema", "输出机器可读命令 schema 和示例"),
         ("runtime", "读取 embedded runtime manifest 和能力边界"),
+        ("state", "读取 App、scene、route 和 responder 状态"),
+        ("snapshot", "读取 App 内聚合快照"),
         ("plan", "根据当前状态输出推荐下一步"),
         ("list (默认)", "列出已连接的 TritonKit 目标"),
         ("inspect", "查看单个 TritonKit 目标摘要"),
+        ("observe", "读取当前可见节点或平台观察树"),
+        ("webview", "读取 WebView 候选、URL 和 opt-in bridge 状态"),
+        ("route", "断言当前 route 或 WebView URL"),
         ("hierarchy", "读取目标最新视图层级"),
         ("nodes", "列出最新层级中的节点摘要"),
         ("node", "查看单个层级节点"),
@@ -195,6 +200,8 @@ func chineseRootHelp() -> String {
         ("screenshot", "捕获当前 App PNG 截图"),
         ("input", "从 stdin 读取 NDJSON 输入动作"),
         ("device", "发现和检查 host-side 设备与模拟器"),
+        ("sim", "控制 iOS Simulator 生命周期和截图"),
+        ("app", "控制 simulator / emulator App 生命周期和偏好"),
     ]
     var lines = [
         "概览: TritonKit macOS CLI - iOS 视图调试的 WebSocket 控制与 HTTP 数据服务",

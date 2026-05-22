@@ -48,6 +48,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - when the real app has hybrid pages, verify WebView state explicitly:
      - `triton webview list --platform ios --json`
      - `triton webview current --platform ios --json`
+     - `triton webview current-url --platform ios --json`
+     - `triton route assert-current-url '<expected-url>' --platform ios --json`
      - `triton webview call <method> --platform ios --json` only for page/app allowlisted methods;
      - `triton webview events --platform ios --limit 50 --json`;
      - treat iOS WebView metadata as provider evidence, not DOM control;
@@ -64,6 +66,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - submit app debug routes: `triton app open-url '<url>' --simulator <udid-or-booted> --json`; when a DEBUG embedded runtime is connected, prefer `triton app open-url '<url>' --simulator <udid-or-booted> --wait-ready --snapshot --json` to capture readiness and snapshot summary in the same result;
    - locate containers: `triton app container --bundle-id <bundle-id> --kind data --simulator <udid-or-booted> --json`;
    - verify App preferences: `triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
+   - set simulator App preferences from property-list compatible JSON values: `triton app prefs set <key> <json-value> --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
    - capture host-side framebuffer: `triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json`;
    - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`.
 8. Prepare Xcode build/test/run through Triton before falling back to XcodeBuildMCP or raw `xcodebuild`:

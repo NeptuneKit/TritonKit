@@ -41,6 +41,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - WebView checks:
      - `triton webview list --platform ios --json`
      - `triton webview current --platform ios --json`
+     - `triton webview current-url --platform ios --json`
+     - `triton route assert-current-url '<expected-url>' --platform ios --json`
      - `triton webview call <method> --platform ios --json`
      - `triton webview events --platform ios --limit 50 --json`
      - iOS `webview list/current` can expose visible `WKWebView` provider metadata such as URL, title, page session, loading state, progress, and frame;
@@ -65,6 +67,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton app open-url '<url>' --simulator booted --wait-ready --snapshot --json`
      - `triton app container --bundle-id <bundle-id> --kind data --json`
      - `triton app prefs get <key> --bundle-id <bundle-id> --json`
+     - `triton app prefs set <key> <json-value> --bundle-id <bundle-id> --json`
    - host-side Harmony checks that do not require embedded runtime:
      - `triton device doctor --platform harmony --json`
      - `triton device list --platform harmony --json`

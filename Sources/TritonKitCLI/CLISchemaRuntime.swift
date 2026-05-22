@@ -445,6 +445,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "container --bundle-id <id>", type: "Subcommand", description: "Print app container path"),
                 TKCommandSchemaOption(name: "prefs dump --bundle-id <id>", type: "Subcommand", description: "Dump app preferences plist as JSON"),
                 TKCommandSchemaOption(name: "prefs get <key> --bundle-id <id>", type: "Subcommand", description: "Read one app preference"),
+                TKCommandSchemaOption(name: "prefs set <key> <json-value> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference from a property-list compatible JSON value"),
                 TKCommandSchemaOption(name: "--platform", type: "ios|harmony", defaultValue: "ios", description: "Host app platform adapter"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted"),
                 TKCommandSchemaOption(name: "--runtime-target", type: "String", defaultValue: TKLocalTargetID, description: "iOS embedded runtime target for open-url readiness/snapshot verification"),
@@ -476,8 +477,9 @@ func commandSchemas() -> [TKCommandSchema] {
                 #"triton app open-url "example://debug" --simulator booted --wait-ready --snapshot --json"#,
                 "triton app container --bundle-id com.example.app --kind data --json",
                 "triton app prefs get DEBUG-mock --bundle-id com.example.app --json",
+                #"triton app prefs set DEBUG-mock true --bundle-id com.example.app --json"#,
             ],
-            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } or { ok, action, plistPath, value?, preferences? } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
+            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } or { ok, action, plistPath, value?, preferences? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, newValue, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
             providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "harmony-app", "harmony-app-install", "harmony-app-open-url"]
         ),
@@ -544,6 +546,7 @@ func commandSchemas() -> [TKCommandSchema] {
             options: hostPort + [
                 TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List visible WebView candidates"),
                 TKCommandSchemaOption(name: "current", type: "Subcommand", description: "Resolve current visible WebView candidate"),
+                TKCommandSchemaOption(name: "current-url", type: "Subcommand", description: "Resolve current WebView provider URL without DOM or JS access"),
                 TKCommandSchemaOption(name: "call <method>", type: "Subcommand", description: "Call a page opt-in bridge method; arbitrary JavaScript eval remains unsupported"),
                 TKCommandSchemaOption(name: "events", type: "Subcommand", description: "Read buffered opt-in WebView page events"),
                 target,
@@ -562,12 +565,40 @@ func commandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton webview list --platform ios --json",
                 "triton webview current --platform harmony --target 127.0.0.1:10100 --json",
+                "triton webview current-url --platform ios --json",
                 "triton webview call getRouteState --platform ios --json",
                 "triton webview events --platform ios --limit 50 --json",
             ],
-            successShape: "{ ok, action, platform, capturedAt, target, current?, candidates[], sources[], sourceCommands[], note } or { ok, action, platform, capturedAt, target, webView, sources[], sourceCommands[], note } or { ok, action, capturedAt, platform, target, webViewID, pageSessionID?, method, result?, elapsedMs, redaction } or { ok, action, capturedAt, platform, target, events[], limit }",
+            successShape: "{ ok, action, platform, capturedAt, target, current?, candidates[], sources[], sourceCommands[], note } or { ok, action, platform, capturedAt, target, webView, sources[], sourceCommands[], note } or { ok, action:webview.current-url, platform, capturedAt, target, webViewID, url, title?, pageSessionID?, providerStatus, bridgeStatus } or { ok, action, capturedAt, platform, target, webViewID, pageSessionID?, method, result?, elapsedMs, redaction } or { ok, action, capturedAt, platform, target, events[], limit }",
             failureShape: "{ ok:false, action, platform, target, error:{ code: webview_not_found|ambiguous_webview|webview_id_not_found|webview_provider_unavailable|webview_bridge_unavailable|webview_method_not_allowed|webview_navigation_changed|javascript_error, message, hint, nextAction? }, candidates?[] }",
-            providedCapabilities: ["webview-list", "webview-current", "webview-bridge-call", "webview-events"]
+            providedCapabilities: ["webview-list", "webview-current", "webview-current-url", "webview-bridge-call", "webview-events"]
+        ),
+        TKCommandSchema(
+            name: "route",
+            summary: "Assert current route and WebView navigation state",
+            requiresServer: false,
+            requiresTarget: true,
+            runtimeScope: "embedded|host-harmony",
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "assert-current-url <expected-url>", type: "Subcommand", description: "Assert the current WebView provider URL"),
+                target,
+                runtimeBaseURLOption,
+                TKCommandSchemaOption(name: "--ignore-query", type: "Bool", defaultValue: "false", description: "Ignore query items when comparing URLs"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|harmony", defaultValue: "ios", description: "Observation platform"),
+                TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable for --platform harmony"),
+                TKCommandSchemaOption(name: "--webview-id", type: "String", description: "Select a candidate from `triton webview list`"),
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Harmony host layout artifact path"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                #"triton route assert-current-url "https://example.invalid/path" --json"#,
+                #"triton route assert-current-url "https://example.invalid/path" --ignore-query --json"#,
+            ],
+            successShape: "{ ok, action:route.assert-current-url, status, expectedURL, actualURL, matched, ignoreQuery, platform, target, webViewID, title?, pageSessionID?, hint? }",
+            failureShape: "For URL mismatch returns same shape with ok=false,status=fail and exit 1; provider/selection failures return WebView error envelope",
+            providedCapabilities: ["route-current-url-assert"]
         ),
         TKCommandSchema(
             name: "hierarchy",

@@ -73,6 +73,153 @@ func runWebViewCurrent(
     }
 }
 
+func runWebViewCurrentURL(
+    platform: ObservationPlatform,
+    target: String,
+    hdc: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    output: String?,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    var resolvedTarget = target
+    do {
+        let list = try await webViewCandidates(action: "webview.current-url", platform: platform, target: target, hdc: hdc, host: host, port: port, runtimeBaseURL: runtimeBaseURL, output: output)
+        resolvedTarget = list.target
+        let summary = try makeWebViewCurrentURLSummary(from: list, webViewID: webViewID)
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(summary))
+        case .text:
+            print(summary.url)
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        if let selectionError = error as? TKWebViewSelectionError {
+            try failWebViewCommand(selectionError, action: "webview.current-url", platform: platform, target: resolvedTarget, runtimeBaseURL: runtimeBaseURL, outputFormat: outputFormat)
+        }
+        if platform == .harmony {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+func runRouteAssertCurrentURL(
+    expectedURL: String,
+    ignoreQuery: Bool,
+    platform: ObservationPlatform,
+    target: String,
+    hdc: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    output: String?,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    var resolvedTarget = target
+    do {
+        let list = try await webViewCandidates(action: "route.assert-current-url", platform: platform, target: target, hdc: hdc, host: host, port: port, runtimeBaseURL: runtimeBaseURL, output: output)
+        resolvedTarget = list.target
+        let current = try makeWebViewCurrentURLSummary(from: list, webViewID: webViewID)
+        let summary = makeRouteCurrentURLAssertion(expectedURL: expectedURL, current: current, ignoreQuery: ignoreQuery)
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(summary))
+        case .text:
+            print(summary.matched ? "pass" : "fail")
+            print("expected: \(summary.expectedURL)")
+            print("actual: \(summary.actualURL)")
+        }
+        if !summary.ok {
+            throw ExitCode.failure
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        if let selectionError = error as? TKWebViewSelectionError {
+            try failWebViewCommand(selectionError, action: "route.assert-current-url", platform: platform, target: resolvedTarget, runtimeBaseURL: runtimeBaseURL, outputFormat: outputFormat)
+        }
+        if platform == .harmony {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+func makeWebViewCurrentURLSummary(from list: TKWebViewListResponse, webViewID: String?) throws -> WebViewCurrentURLSummary {
+    let selected = try TKSelectCurrentWebView(from: list.candidates, webViewID: webViewID)
+    guard let url = selected.url, !url.isEmpty else {
+        throw TKWebViewSelectionError(detail: TKWebViewError(
+            code: .webViewProviderUnavailable,
+            message: "Current WebView URL is unavailable because no WebView provider metadata is available.",
+            hint: "Use an app DEBUG build with an opt-in WebView provider, or keep this smoke at the native route/layout boundary.",
+            webViewID: selected.webViewID,
+            candidates: list.candidates
+        ))
+    }
+    return WebViewCurrentURLSummary(
+        ok: true,
+        action: "webview.current-url",
+        platform: list.platform,
+        capturedAt: list.capturedAt,
+        target: list.target,
+        webViewID: selected.webViewID,
+        url: url,
+        title: selected.title,
+        pageSessionID: selected.pageSessionID,
+        providerStatus: selected.providerStatus,
+        bridgeStatus: selected.bridgeStatus,
+        sourceCommands: list.sourceCommands
+    )
+}
+
+func makeRouteCurrentURLAssertion(
+    expectedURL: String,
+    current: WebViewCurrentURLSummary,
+    ignoreQuery: Bool
+) -> RouteCurrentURLAssertionSummary {
+    let matched = routeURLsMatch(actual: current.url, expected: expectedURL, ignoreQuery: ignoreQuery)
+    return RouteCurrentURLAssertionSummary(
+        ok: matched,
+        action: "route.assert-current-url",
+        status: matched ? .pass : .fail,
+        expectedURL: expectedURL,
+        actualURL: current.url,
+        matched: matched,
+        ignoreQuery: ignoreQuery,
+        platform: current.platform,
+        target: current.target,
+        webViewID: current.webViewID,
+        title: current.title,
+        pageSessionID: current.pageSessionID,
+        hint: matched ? nil : "Run `triton webview current-url --json` to inspect the current provider URL."
+    )
+}
+
+func routeURLsMatch(actual: String, expected: String, ignoreQuery: Bool) -> Bool {
+    guard ignoreQuery else {
+        return actual == expected
+    }
+    return normalizedRouteURL(actual, ignoreQuery: true) == normalizedRouteURL(expected, ignoreQuery: true)
+}
+
+private func normalizedRouteURL(_ value: String, ignoreQuery: Bool) -> String {
+    guard ignoreQuery,
+          var components = URLComponents(string: value) else {
+        return value
+    }
+    components.query = nil
+    components.percentEncodedQuery = nil
+    return components.string ?? value
+}
+
 func runWebViewCall(
     method: String,
     args: [String],

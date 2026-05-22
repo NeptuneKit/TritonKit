@@ -254,3 +254,21 @@ struct HostPreferencesOutput: Encodable {
     let value: TKHostPreferenceValue?
     let preferences: [String: TKHostPreferenceValue]?
 }
+
+struct HostPreferencesSetOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let simulatorUDID: String
+    let bundleID: String
+    let plistPath: String
+    let key: String
+    let previousValue: TKHostPreferenceValue?
+    let newValue: TKHostPreferenceValue
+    let restartAdvice: String
+}
+
+struct HostPreferencePlistUpdateResult {
+    let data: Data
+    let previousValue: TKHostPreferenceValue?
+    let newValue: TKHostPreferenceValue
+}

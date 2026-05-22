@@ -714,6 +714,45 @@ public enum TKHostPreferenceValue: Codable, Equatable {
         case .data: "data"
         }
     }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? container.decode(Int.self) {
+            self = .int(value)
+        } else if let value = try? container.decode(Double.self) {
+            self = .double(value)
+        } else if let value = try? container.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? container.decode([TKHostPreferenceValue].self) {
+            self = .array(value)
+        } else if let value = try? container.decode([String: TKHostPreferenceValue].self) {
+            self = .dictionary(value)
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported host preference value")
+        }
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value):
+            try container.encode(value)
+        case .bool(let value):
+            try container.encode(value)
+        case .int(let value):
+            try container.encode(value)
+        case .double(let value):
+            try container.encode(value)
+        case .array(let values):
+            try container.encode(values)
+        case .dictionary(let values):
+            try container.encode(values)
+        case .data(let value):
+            try container.encode(["data": value])
+        }
+    }
 }
 
 public struct TKHostPreferencesSnapshot: Codable, Equatable {
