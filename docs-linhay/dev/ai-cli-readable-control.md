@@ -52,6 +52,17 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton sim use <udid> --format json`：将 workspace 默认 simulator 写入 `.triton/host-defaults.json`，后续可作为 session defaults 的本地状态来源。
 - `triton sim boot <udid> --format json`、`triton sim boot <udid> --wait --jsonl`、`triton sim shutdown <udid|booted> --format json`：首批 simulator lifecycle 入口，`--wait --jsonl` 输出 boot 轮询进度，失败时返回稳定 Triton error envelope。
 - `triton sim screenshot --simulator <udid|booted> --output <path> --format json`：采集 host-side simulator framebuffer 截图，不依赖 embedded runtime。
+- `triton sim record --simulator <udid|booted> --output <path.mov> --duration <seconds> --format json`：录制 host-side simulator framebuffer video，内部用 `simctl io recordVideo` 并在 duration 到点后发起 interrupt，输出 path、source command 和执行结果。
+- `triton sim logs --simulator <udid|booted> --output <path.ndjson> --duration <seconds> --format json`：通过 `simctl spawn <udid> log stream` 采集有边界的 OSLog，默认 `ndjson`，输出 artifact path、bytes 与 truncation 摘要，不把完整日志塞进 JSON。
+- `triton sim diagnose --output <path> --format json`：收集 simulator diagnostics archive / logs；输出 path 与 source command，适合排查本机模拟器问题。
+- `triton sim logverbose [--simulator <udid|booted>] enable|disable --format json`：开启或关闭 simulator verbose logging，便于配合 `diagnose` 使用。
+- `triton sim runtime list|verify --format json`：读取已安装 simulator runtime 目录与签名状态，或对指定 runtime 重新 verify。
+- `triton sim status-bar list|clear|override --simulator <udid|booted> --format json`：读取、清除或覆盖 simulator 状态栏；`override` 继续通过 JSON envelope 回传 source command 和执行结果，便于 agent 复跑与审计。
+- `triton sim privacy grant|revoke|reset <service> [bundle-id] --simulator <udid|booted> --format json`：通过 host-side `xcrun simctl privacy` 管理 iOS Simulator 权限，适合真实项目回归前做环境准备。
+- `triton sim location list|clear|set|run|start --simulator <udid|booted> --format json`：管理模拟位置；`set` 接受 `<lat>,<lon>`，`start` 接受两个以上 waypoints，坐标非法时返回 `invalid_location_value`。
+- `triton sim ui appearance|increase-contrast|content-size [value] --simulator <udid|booted> --format json`：读取或设置外观、对比度和内容字号；省略参数时走 query 模式。
+- `triton sim pasteboard set|get|sync --simulator <udid|booted> --format json`：`set` 通过 stdin 转发到 `simctl pbcopy`，`get` 读取 device pasteboard，`sync host device` / `sync device host` 用于主机与模拟器之间同步剪贴板。
+- `triton sim push --bundle-id <id> --payload <path|-> --simulator <udid|booted> --format json`：通过 `simctl push` 发送 simulated push notification；`--payload` 可是 JSON 文件路径或 `-`。
 - `triton app list --simulator <udid|booted> --user-only --format json`：读取已安装 App 列表，输出 bundle id、display name、version、application type、bundle/data/group container 等结构化字段。
 - `triton app info --bundle-id <id> --simulator <udid|booted> --format json`：读取单个已安装 App 元数据；当 `simctl appinfo` 对缺失 bundle 只回显 `CFBundleIdentifier` 时，归一为 `app_info_not_available`。
 - `triton app install --app <path.app> --simulator <udid|booted> --format json`、`triton app uninstall --bundle-id <id> --simulator <udid|booted> --confirm --format json`、`triton app launch --bundle-id <id> --format json`、`triton app terminate --bundle-id <id> --format json`：App 生命周期首批入口，返回 host action envelope；`uninstall` 必须显式 `--confirm`，业务就绪仍需继续用 `status/wait/find/assert/prefs` 验证。

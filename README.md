@@ -315,6 +315,17 @@ triton sim list --json
 triton sim use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
 triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl
 triton sim screenshot --simulator booted --output /tmp/sim.png --json
+triton sim record --simulator booted --output /tmp/sim.mov --duration 10 --json
+triton sim logs --simulator booted --output /tmp/sim.ndjson --duration 5 --style ndjson --json
+triton sim status-bar list --simulator booted --json
+triton sim status-bar override --simulator booted --time "09:41" --batteryLevel 100 --json
+triton sim privacy grant location com.example.app --simulator booted --json
+triton sim location set 37.7749,-122.4194 --simulator booted --json
+triton sim ui appearance dark --simulator booted --json
+triton sim pasteboard set "hello" --simulator booted --json
+triton sim pasteboard get --simulator booted --json
+triton sim pasteboard sync host device --simulator booted --json
+triton sim push --bundle-id com.example.app --payload /tmp/push.json --simulator booted --json
 triton app list --simulator booted --user-only --json
 triton app info --bundle-id com.example.app --simulator booted --json
 triton app install --app /tmp/Demo.app --simulator booted --json

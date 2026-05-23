@@ -10,10 +10,11 @@ func runSimpleHostCommand(
     command: TKHostCommand,
     outputFormat: ClientOutputFormat,
     artifacts: [String] = [],
-    note: String? = nil
+    note: String? = nil,
+    interruptAfter: Double? = nil
 ) throws {
     do {
-        let result = try runHostCommand(command)
+        let result = try runHostCommand(command, interruptAfter: interruptAfter)
         let stdout = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
         let output = HostActionOutput(
@@ -38,6 +39,49 @@ func runSimpleHostCommand(
         case .text:
             if let note { print(note) }
             if !stdout.isEmpty { print(stdout) }
+        }
+    } catch {
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+}
+
+func runHostCommandCapturingStdoutArtifact(
+    action: String,
+    runtimeScope: String = "host-simulator",
+    target: String,
+    command: TKHostCommand,
+    outputPath: String,
+    outputFormat: ClientOutputFormat,
+    note: String? = nil
+) throws {
+    do {
+        try ensureParentDirectory(for: outputPath)
+        let result = try runHostCommand(command)
+        try result.stdoutData.write(to: URL(fileURLWithPath: outputPath), options: .atomic)
+        let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = HostArtifactCaptureOutput(
+            ok: true,
+            action: action,
+            runtimeScope: runtimeScope,
+            target: target,
+            tool: command.executable,
+            exitCode: result.exitCode,
+            riskLevel: command.riskLevel.rawValue,
+            sourceCommand: result.sourceCommand,
+            artifact: outputPath,
+            stdoutBytes: result.stdoutBytes,
+            stderrBytes: result.stderrBytes,
+            stdoutTruncated: result.stdoutTruncated,
+            stderrTruncated: result.stderrTruncated,
+            stderr: stderr.isEmpty ? nil : stderr,
+            note: note
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            print(outputPath)
+            if let note { print(note) }
         }
     } catch {
         try failHostCommand(error, outputFormat: outputFormat)
@@ -394,7 +438,7 @@ private func propertyListObject(fromPreferenceValue value: TKHostPreferenceValue
     }
 }
 
-func runHostCommand(_ command: TKHostCommand) throws -> HostProcessResult {
+func runHostCommand(_ command: TKHostCommand, interruptAfter: Double? = nil) throws -> HostProcessResult {
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()
     if command.executable.contains("/") {
@@ -412,11 +456,32 @@ func runHostCommand(_ command: TKHostCommand) throws -> HostProcessResult {
     let stderr = Pipe()
     process.standardOutput = stdout
     process.standardError = stderr
+    let stdinData = command.stdinData
+    let stdinPipe: Pipe? = stdinData.map { _ in Pipe() }
+    if let stdinPipe {
+        process.standardInput = stdinPipe
+    }
 
     do {
         try process.run()
     } catch {
         throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
+    if let stdinData, let stdinPipe {
+        do {
+            try stdinPipe.fileHandleForWriting.write(contentsOf: stdinData)
+            try stdinPipe.fileHandleForWriting.close()
+        } catch {
+            process.terminate()
+            throw HostCommandRunError.launchFailed(error.localizedDescription)
+        }
+    }
+    if let interruptAfter {
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + interruptAfter) {
+            if process.isRunning {
+                process.interrupt()
+            }
+        }
     }
     let semaphore = DispatchSemaphore(value: 0)
     DispatchQueue.global(qos: .utility).async {
@@ -615,6 +680,42 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         } else if isHDC && command.arguments.contains("list") && command.arguments.contains("targets") {
             code = "host_action_failed"
             hint = "Verify hdc is installed, available on PATH, and can list Harmony targets."
+        } else if command.arguments.contains("status_bar") {
+            code = "status_bar_operation_failed"
+            hint = "Verify the simulator is booted and the requested status bar flags are supported."
+        } else if command.arguments.contains("diagnose") {
+            code = "sim_diagnose_failed"
+            hint = "Verify the simulator is booted, the output path is writable, and the requested log/archive flags are supported."
+        } else if command.arguments.contains("logverbose") {
+            code = "sim_logverbose_failed"
+            hint = "Verify the simulator is booted and the requested verbose logging state is supported."
+        } else if command.arguments.contains("recordVideo") {
+            code = "sim_record_failed"
+            hint = "Verify the simulator is booted, the output path is writable, and the requested codec, display, and mask options are supported."
+        } else if command.arguments.contains("stream") && command.arguments.contains("log") {
+            code = "sim_logs_failed"
+            hint = "Verify the simulator is booted, the output path is writable, and the requested predicate, level, style, and type options are supported."
+        } else if command.arguments.contains("privacy") {
+            code = "privacy_operation_failed"
+            hint = "Verify the simulator is booted, the privacy service is supported, and the bundle id is installed."
+        } else if command.arguments.contains("location") {
+            code = "location_operation_failed"
+            hint = "Verify the simulator is booted and the requested location scenario or coordinate is valid."
+        } else if command.arguments.contains("ui") {
+            code = "ui_operation_failed"
+            hint = "Verify the simulator is booted and the requested UI option is supported."
+        } else if command.arguments.contains("pbcopy") || command.arguments.contains("pbpaste") || command.arguments.contains("pbsync") {
+            code = "pasteboard_operation_failed"
+            hint = "Verify the simulator is booted and the requested pasteboard endpoints are valid."
+        } else if command.arguments.contains("push") {
+            code = "push_payload_invalid"
+            hint = "Verify the push payload path or stdin payload, bundle id, and JSON structure."
+        } else if command.arguments.contains("runtime") && command.arguments.contains("verify") {
+            code = "runtime_verify_failed"
+            hint = "Verify the runtime identifier and that the selected runtime is installed and verifiable."
+        } else if command.arguments.contains("runtime") && command.arguments.contains("list") {
+            code = "runtime_list_failed"
+            hint = "Verify simctl can list installed simulator runtimes on this machine."
         } else if isHDC && command.arguments.contains("install") {
             code = "app_install_failed"
             hint = "Verify the Harmony target is Connected and --hap points to a debug-signed HAP."

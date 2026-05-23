@@ -41,7 +41,7 @@ Default in-scope CLI domains:
 
 - `schema`, `doctor`, `capabilities`, and `plan`;
 - `device list/use/wait-ready --platform ios|android|harmony`;
-- iOS `sim list/use/boot/shutdown/screenshot`;
+- iOS `sim list/use/boot/shutdown/screenshot/status-bar/privacy/location/ui/pasteboard/push`;
 - app lifecycle: `list/info/install/uninstall/launch/terminate/open-url`;
 - app data: containers, preferences, safe data reset/snapshot when policy is explicit;
 - UI artifacts: screenshot, AX/layout tree, bounded logs;
@@ -72,6 +72,17 @@ triton sim use <udid> --json
 triton sim boot <udid> --wait --jsonl
 triton sim shutdown <udid-or-booted> --json
 triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json
+triton sim record --simulator <udid-or-booted> --output /tmp/<case>-sim.mov --duration 10 --json
+triton sim logs --simulator <udid-or-booted> --output /tmp/<case>-sim.ndjson --duration 5 --json
+triton sim status-bar list --simulator booted --json
+triton sim privacy grant location com.example.app --simulator booted --json
+triton sim location set 37.7749,-122.4194 --simulator booted --json
+triton sim ui appearance dark --simulator booted --json
+triton sim diagnose --output /tmp/sim-diagnostics --json
+triton sim logverbose booted enable --json
+triton sim runtime list --json
+triton sim pasteboard set "hello" --simulator booted --json
+triton sim push --bundle-id com.example.app --payload /tmp/push.json --simulator booted --json
 
 triton app list --simulator <udid-or-booted> --user-only --json
 triton app info --bundle-id <bundle-id> --simulator <udid-or-booted> --json
@@ -198,6 +209,7 @@ Run real emulator smoke only when safe for the current machine:
 
 ```bash
 .build/cli/debug/triton sim list --json
+.build/cli/debug/triton sim status-bar list --simulator booted --json
 .build/cli/debug/triton app uninstall --bundle-id com.example.missing --simulator booted --json
 .build/cli/debug/triton app launch --bundle-id com.example.missing --simulator booted --json
 .build/cli/debug/triton device list --platform harmony --json

@@ -30,6 +30,78 @@ struct TKHostAdapterModelsTests {
         #expect(TKSimctlCommand.appContainer(udid: "U", bundleID: "com.example.app", kind: .data).argv == ["simctl", "get_app_container", "U", "com.example.app", "data"])
     }
 
+    @Test("simctl command builder emits advanced simulator maintenance argv")
+    func simctlCommandBuilderAdvancedArgv() {
+        #expect(TKSimctlCommand.diagnose(output: "/tmp/sim-diagnostics", timeout: 15, noArchive: true, allLogs: true, dataContainers: true, udids: ["U1", "U2"]).argv == ["simctl", "diagnose", "--timeout", "15.0", "--output", "/tmp/sim-diagnostics", "--no-archive", "--all-logs", "--data-containers", "--udid", "U1", "--udid", "U2"])
+        #expect(TKSimctlCommand.recordVideo(udid: "U", output: "/tmp/sim.mov", codec: "hevc", display: "internal", mask: "black", force: true, defaultTimeoutSeconds: 90).argv == ["simctl", "io", "U", "recordVideo", "--codec=hevc", "--display=internal", "--mask=black", "--force", "/tmp/sim.mov"])
+        #expect(TKSimctlCommand.logStream(udid: "U", duration: 5, style: "ndjson", level: "debug", predicate: "subsystem == \"com.example.app\"", source: true, type: "log").argv == ["simctl", "spawn", "U", "log", "stream", "--style", "ndjson", "--timeout", "5", "--level", "debug", "--predicate", "subsystem == \"com.example.app\"", "--source", "--type", "log"])
+        #expect(TKSimctlCommand.logVerbose(udid: "U", enabled: true).argv == ["simctl", "logverbose", "U", "enable"])
+        #expect(TKSimctlCommand.logVerbose(enabled: false).argv == ["simctl", "logverbose", "disable"])
+        #expect(TKSimctlCommand.runtimeList().argv == ["simctl", "runtime", "list", "-j"])
+        #expect(TKSimctlCommand.runtimeVerify(identifier: "com.apple.CoreSimulator.SimRuntime.iOS-26-5").argv == ["simctl", "runtime", "verify", "com.apple.CoreSimulator.SimRuntime.iOS-26-5"])
+        #expect(TKSimctlCommand.statusBarList(udid: "U").argv == ["simctl", "status_bar", "U", "list"])
+        #expect(TKSimctlCommand.statusBarClear(udid: "U").argv == ["simctl", "status_bar", "U", "clear"])
+        #expect(TKSimctlCommand.statusBarOverride(udid: "U", time: "09:41", batteryLevel: 100).argv == ["simctl", "status_bar", "U", "override", "--time", "09:41", "--batteryLevel", "100"])
+        #expect(TKSimctlCommand.privacy(udid: "U", action: "grant", service: "location", bundleID: "com.example.app").argv == ["simctl", "privacy", "U", "grant", "location", "com.example.app"])
+        #expect(TKSimctlCommand.locationList(udid: "U").argv == ["simctl", "location", "U", "list"])
+        #expect(TKSimctlCommand.locationClear(udid: "U").argv == ["simctl", "location", "U", "clear"])
+        #expect(TKSimctlCommand.locationSet(udid: "U", coordinate: "37.7749,-122.4194").argv == ["simctl", "location", "U", "set", "37.7749,-122.4194"])
+        #expect(TKSimctlCommand.locationRun(udid: "U", scenario: "city-run").argv == ["simctl", "location", "U", "run", "city-run"])
+        #expect(TKSimctlCommand.locationStart(udid: "U", waypoints: ["37.629538,-122.395733", "40.628083,-73.768254"], speed: 260, distance: 1000).argv == ["simctl", "location", "U", "start", "--speed=260.0", "--distance=1000.0", "37.629538,-122.395733", "40.628083,-73.768254"])
+        #expect(TKSimctlCommand.uiAppearance(udid: "U").argv == ["simctl", "ui", "U", "appearance"])
+        #expect(TKSimctlCommand.uiAppearance(udid: "U", value: "dark").argv == ["simctl", "ui", "U", "appearance", "dark"])
+        #expect(TKSimctlCommand.uiIncreaseContrast(udid: "U").argv == ["simctl", "ui", "U", "increase_contrast"])
+        #expect(TKSimctlCommand.uiIncreaseContrast(udid: "U", value: "enabled").argv == ["simctl", "ui", "U", "increase_contrast", "enabled"])
+        #expect(TKSimctlCommand.uiContentSize(udid: "U").argv == ["simctl", "ui", "U", "content_size"])
+        #expect(TKSimctlCommand.uiContentSize(udid: "U", value: "accessibility-large").argv == ["simctl", "ui", "U", "content_size", "accessibility-large"])
+        #expect(TKSimctlCommand.pasteboardCopy(udid: "U", text: "hello").argv == ["simctl", "pbcopy", "U"])
+        #expect(TKSimctlCommand.pasteboardPaste(udid: "U").argv == ["simctl", "pbpaste", "U"])
+        #expect(TKSimctlCommand.pasteboardSync(source: "host", destination: "U").argv == ["simctl", "pbsync", "host", "U"])
+        #expect(TKSimctlCommand.push(udid: "U", bundleID: "com.example.app", payload: "/tmp/push.json").argv == ["simctl", "push", "U", "com.example.app", "/tmp/push.json"])
+    }
+
+    @Test("simctl runtime JSON decodes into runtime summaries")
+    func simctlRuntimeListDecoding() throws {
+        let json = """
+        {
+          "67DA9196-7AB6-49E0-80F1-1C9C1D0C90B5" : {
+            "build" : "23F77",
+            "deletable" : true,
+            "identifier" : "67DA9196-7AB6-49E0-80F1-1C9C1D0C90B5",
+            "kind" : "Patchable Cryptex Disk Image",
+            "lastUsedAt" : "2026-05-22T15:40:45Z",
+            "mountPath" : "/Library/Developer/CoreSimulator/Volumes/iOS_23F77",
+            "parentMountPath" : "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/af14d04fa4f5b29c2471951b01491c6403eab68f.asset/AssetData",
+            "path" : "/System/Library/AssetsV2/com_apple_MobileAsset_iOSSimulatorRuntime/af14d04fa4f5b29c2471951b01491c6403eab68f.asset/AssetData/Restore/iOSSimulatorRuntime_Cryptex.dmg",
+            "platformIdentifier" : "com.apple.platform.iphonesimulator",
+            "runtimeBundlePath" : "/Library/Developer/CoreSimulator/Volumes/iOS_23F77/Library/Developer/CoreSimulator/Profiles/Runtimes/iOS 26.5.simruntime",
+            "runtimeIdentifier" : "com.apple.CoreSimulator.SimRuntime.iOS-26-5",
+            "signatureState" : "Verified",
+            "sizeBytes" : 10597197700,
+            "state" : "Ready",
+            "supportedArchitectures" : [
+              "x86_64",
+              "arm64"
+            ],
+            "version" : "26.5"
+          }
+        }
+        """
+
+        let runtimes = try TKSimctlRuntimeListParser.parse(Data(json.utf8))
+        let runtime = try #require(runtimes.first)
+
+        #expect(runtimes.count == 1)
+        #expect(runtime.id == "runtime:67DA9196-7AB6-49E0-80F1-1C9C1D0C90B5")
+        #expect(runtime.identifier == "67DA9196-7AB6-49E0-80F1-1C9C1D0C90B5")
+        #expect(runtime.runtimeIdentifier == "com.apple.CoreSimulator.SimRuntime.iOS-26-5")
+        #expect(runtime.platformIdentifier == "com.apple.platform.iphonesimulator")
+        #expect(runtime.version == "26.5")
+        #expect(runtime.kind == "Patchable Cryptex Disk Image")
+        #expect(runtime.supportedArchitectures == ["x86_64", "arm64"])
+        #expect(runtime.source == "simctl")
+    }
+
     @Test("host commands expose risk and objective runtime config instead of confirmation gates")
     func hostCommandsExposeRiskAndRuntimeConfig() {
         #expect(TKSimctlCommand.boot(udid: "U").riskLevel == .automation)

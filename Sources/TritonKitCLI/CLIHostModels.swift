@@ -183,6 +183,14 @@ struct HostSimulatorListOutput: Encodable {
     let simulators: [TKHostSimulatorTarget]
 }
 
+struct HostSimulatorRuntimeListOutput: Encodable {
+    let ok: Bool
+    let runtimes: [TKHostSimulatorRuntime]
+    let count: Int
+    let verbose: Bool
+    let sourceCommand: String
+}
+
 struct HostSimulatorUseOutput: Encodable {
     let ok: Bool
     let action: String
@@ -215,6 +223,24 @@ struct HostActionOutput: Encodable {
     let stdout: String?
     let stderr: String?
     let artifacts: [String]
+    let note: String?
+}
+
+struct HostArtifactCaptureOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let artifact: String
+    let stdoutBytes: Int
+    let stderrBytes: Int
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let stderr: String?
     let note: String?
 }
 

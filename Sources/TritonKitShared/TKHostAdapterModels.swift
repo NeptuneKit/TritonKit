@@ -31,6 +31,7 @@ public struct TKHostCommand: Codable, Equatable {
     public let defaultTimeoutSeconds: Double
     public let capturesArtifacts: Bool
     public let sensitiveOutput: Bool
+    public let stdinData: Data?
 
     public init(
         executable: String = "xcrun",
@@ -39,7 +40,8 @@ public struct TKHostCommand: Codable, Equatable {
         requiredConfig: Set<TKHostRequiredConfig> = [.timeout],
         defaultTimeoutSeconds: Double = 30,
         capturesArtifacts: Bool = false,
-        sensitiveOutput: Bool = false
+        sensitiveOutput: Bool = false,
+        stdinData: Data? = nil
     ) {
         self.executable = executable
         self.arguments = arguments
@@ -48,6 +50,7 @@ public struct TKHostCommand: Codable, Equatable {
         self.defaultTimeoutSeconds = defaultTimeoutSeconds
         self.capturesArtifacts = capturesArtifacts
         self.sensitiveOutput = sensitiveOutput
+        self.stdinData = stdinData
     }
 
     public var argv: [String] {
@@ -73,7 +76,8 @@ public struct TKHostCommand: Codable, Equatable {
             requiredConfig: requiredConfig,
             defaultTimeoutSeconds: timeoutSeconds,
             capturesArtifacts: capturesArtifacts,
-            sensitiveOutput: sensitiveOutput
+            sensitiveOutput: sensitiveOutput,
+            stdinData: stdinData
         )
     }
 }
@@ -158,25 +162,151 @@ public struct TKHostExecutionPolicy: Codable, Equatable {
 }
 
 public enum TKSimctlCommand {
+    private static func command(
+        _ arguments: [String],
+        riskLevel: TKHostRiskLevel = .readonly,
+        requiredConfig: Set<TKHostRequiredConfig> = [.timeout],
+        defaultTimeoutSeconds: Double = 30,
+        capturesArtifacts: Bool = false,
+        sensitiveOutput: Bool = false,
+        stdinData: Data? = nil
+    ) -> TKHostCommand {
+        TKHostCommand(
+            arguments: arguments,
+            riskLevel: riskLevel,
+            requiredConfig: requiredConfig,
+            defaultTimeoutSeconds: defaultTimeoutSeconds,
+            capturesArtifacts: capturesArtifacts,
+            sensitiveOutput: sensitiveOutput,
+            stdinData: stdinData
+        )
+    }
+
     public static func listAvailableDevices() -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "list", "devices", "available", "--json"])
+        command(["simctl", "list", "devices", "available", "--json"])
+    }
+
+    public static func diagnose(
+        output: String? = nil,
+        timeout: Double? = 300,
+        noArchive: Bool = false,
+        allLogs: Bool = false,
+        dataContainers: Bool = false,
+        udids: [String] = []
+    ) -> TKHostCommand {
+        var arguments = ["simctl", "diagnose"]
+        if let timeout {
+            arguments += ["--timeout", "\(timeout)"]
+        }
+        if let output {
+            arguments += ["--output", output]
+        }
+        if noArchive {
+            arguments.append("--no-archive")
+        }
+        if allLogs {
+            arguments.append("--all-logs")
+        }
+        if dataContainers {
+            arguments.append("--data-containers")
+        }
+        for udid in udids {
+            arguments += ["--udid", udid]
+        }
+        return command(arguments, riskLevel: .diagnostic, requiredConfig: [.timeout, .auditRecord], defaultTimeoutSeconds: timeout ?? 300, capturesArtifacts: output != nil, sensitiveOutput: true)
+    }
+
+    public static func recordVideo(
+        udid: String,
+        output: String,
+        codec: String? = nil,
+        display: String? = nil,
+        mask: String? = nil,
+        force: Bool = false,
+        defaultTimeoutSeconds: Double = 600
+    ) -> TKHostCommand {
+        var arguments = ["simctl", "io", udid, "recordVideo"]
+        if let codec {
+            arguments.append("--codec=\(codec)")
+        }
+        if let display {
+            arguments.append("--display=\(display)")
+        }
+        if let mask {
+            arguments.append("--mask=\(mask)")
+        }
+        if force {
+            arguments.append("--force")
+        }
+        arguments.append(output)
+        return command(
+            arguments,
+            riskLevel: .evidence,
+            requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
+            defaultTimeoutSeconds: defaultTimeoutSeconds,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
+    }
+
+    public static func logStream(
+        udid: String,
+        duration: Double,
+        style: String = "ndjson",
+        level: String? = nil,
+        predicate: String? = nil,
+        source: Bool = false,
+        type: String? = nil,
+        defaultTimeoutSeconds: Double? = nil
+    ) -> TKHostCommand {
+        let timeout = max(1, Int(ceil(duration)))
+        var arguments = ["simctl", "spawn", udid, "log", "stream", "--style", style, "--timeout", "\(timeout)"]
+        if let level {
+            arguments += ["--level", level]
+        }
+        if let predicate {
+            arguments += ["--predicate", predicate]
+        }
+        if source {
+            arguments.append("--source")
+        }
+        if let type {
+            arguments += ["--type", type]
+        }
+        return command(
+            arguments,
+            riskLevel: .evidence,
+            requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
+            defaultTimeoutSeconds: defaultTimeoutSeconds ?? duration + 10,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
+    }
+
+    public static func logVerbose(udid: String? = nil, enabled: Bool) -> TKHostCommand {
+        var arguments = ["simctl", "logverbose"]
+        if let udid {
+            arguments.append(udid)
+        }
+        arguments.append(enabled ? "enable" : "disable")
+        return command(arguments, riskLevel: .diagnostic, requiredConfig: udid == nil ? [.timeout, .auditRecord] : [.target, .timeout, .auditRecord])
     }
 
     public static func boot(udid: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "boot", udid], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+        command(["simctl", "boot", udid], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func shutdown(udid: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "shutdown", udid], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+        command(["simctl", "shutdown", udid], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func erase(udid: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "erase", udid], riskLevel: .breakGlass, requiredConfig: [.target, .timeout, .auditRecord])
+        command(["simctl", "erase", udid], riskLevel: .breakGlass, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func screenshot(udid: String, output: String) -> TKHostCommand {
-        TKHostCommand(
-            arguments: ["simctl", "io", udid, "screenshot", output],
+        command(
+            ["simctl", "io", udid, "screenshot", output],
             riskLevel: .evidence,
             requiredConfig: [.artifactDir, .redactionPolicy, .timeout, .auditRecord],
             capturesArtifacts: true,
@@ -185,39 +315,183 @@ public enum TKSimctlCommand {
     }
 
     public static func appInfo(udid: String, bundleID: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "appinfo", udid, bundleID])
+        command(["simctl", "appinfo", udid, bundleID])
     }
 
     public static func listApps(udid: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "listapps", udid])
+        command(["simctl", "listapps", udid])
     }
 
     public static func installApp(udid: String, appPath: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "install", udid, appPath], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+        command(["simctl", "install", udid, appPath], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func uninstallApp(udid: String, bundleID: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "uninstall", udid, bundleID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+        command(["simctl", "uninstall", udid, bundleID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func launchApp(udid: String, bundleID: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "launch", udid, bundleID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+        command(["simctl", "launch", udid, bundleID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func terminateApp(udid: String, bundleID: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "terminate", udid, bundleID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+        command(["simctl", "terminate", udid, bundleID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func openURL(udid: String, url: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "openurl", udid, url], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+        command(["simctl", "openurl", udid, url], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func appContainer(udid: String, bundleID: String, kind: TKHostAppContainerKind) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "get_app_container", udid, bundleID, kind.rawValue])
+        command(["simctl", "get_app_container", udid, bundleID, kind.rawValue])
     }
 
     public static func installAppData(udid: String, xcappdata: String) -> TKHostCommand {
-        TKHostCommand(arguments: ["simctl", "install_app_data", udid, xcappdata], riskLevel: .evidence, requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord], capturesArtifacts: true)
+        command(["simctl", "install_app_data", udid, xcappdata], riskLevel: .evidence, requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord], capturesArtifacts: true)
+    }
+
+    public static func statusBarList(udid: String) -> TKHostCommand {
+        command(["simctl", "status_bar", udid, "list"])
+    }
+
+    public static func statusBarClear(udid: String) -> TKHostCommand {
+        command(["simctl", "status_bar", udid, "clear"], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func statusBarOverride(
+        udid: String,
+        time: String? = nil,
+        dataNetwork: String? = nil,
+        wifiMode: String? = nil,
+        wifiBars: Int? = nil,
+        cellularMode: String? = nil,
+        cellularBars: Int? = nil,
+        operatorName: String? = nil,
+        batteryState: String? = nil,
+        batteryLevel: Int? = nil
+    ) -> TKHostCommand {
+        var arguments = ["simctl", "status_bar", udid, "override"]
+        if let time { arguments += ["--time", time] }
+        if let dataNetwork { arguments += ["--dataNetwork", dataNetwork] }
+        if let wifiMode { arguments += ["--wifiMode", wifiMode] }
+        if let wifiBars { arguments += ["--wifiBars", "\(wifiBars)"] }
+        if let cellularMode { arguments += ["--cellularMode", cellularMode] }
+        if let cellularBars { arguments += ["--cellularBars", "\(cellularBars)"] }
+        if let operatorName { arguments += ["--operatorName", operatorName] }
+        if let batteryState { arguments += ["--batteryState", batteryState] }
+        if let batteryLevel { arguments += ["--batteryLevel", "\(batteryLevel)"] }
+        return command(arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func privacy(udid: String, action: String, service: String, bundleID: String? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "privacy", udid, action, service]
+        if let bundleID {
+            arguments.append(bundleID)
+        }
+        return command(arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func locationList(udid: String) -> TKHostCommand {
+        command(["simctl", "location", udid, "list"])
+    }
+
+    public static func locationClear(udid: String) -> TKHostCommand {
+        command(["simctl", "location", udid, "clear"], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func locationSet(udid: String, coordinate: String) -> TKHostCommand {
+        command(["simctl", "location", udid, "set", coordinate], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func locationRun(udid: String, scenario: String) -> TKHostCommand {
+        command(["simctl", "location", udid, "run", scenario], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func locationStart(
+        udid: String,
+        waypoints: [String],
+        speed: Double? = nil,
+        distance: Double? = nil,
+        interval: Double? = nil
+    ) -> TKHostCommand {
+        var arguments = ["simctl", "location", udid, "start"]
+        if let speed { arguments.append("--speed=\(speed)") }
+        if let distance { arguments.append("--distance=\(distance)") }
+        if let interval { arguments.append("--interval=\(interval)") }
+        arguments += waypoints
+        return command(arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func uiAppearance(udid: String, value: String? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "ui", udid, "appearance"]
+        if let value {
+            arguments.append(value)
+        }
+        return command(arguments, riskLevel: value == nil ? .readonly : .automation, requiredConfig: value == nil ? [.timeout] : [.target, .timeout, .auditRecord])
+    }
+
+    public static func uiIncreaseContrast(udid: String, value: String? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "ui", udid, "increase_contrast"]
+        if let value {
+            arguments.append(value)
+        }
+        return command(arguments, riskLevel: value == nil ? .readonly : .automation, requiredConfig: value == nil ? [.timeout] : [.target, .timeout, .auditRecord])
+    }
+
+    public static func uiContentSize(udid: String, value: String? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "ui", udid, "content_size"]
+        if let value {
+            arguments.append(value)
+        }
+        return command(arguments, riskLevel: value == nil ? .readonly : .automation, requiredConfig: value == nil ? [.timeout] : [.target, .timeout, .auditRecord])
+    }
+
+    public static func pasteboardCopy(udid: String, text: String, verbose: Bool = false) -> TKHostCommand {
+        var arguments = ["simctl", "pbcopy"]
+        if verbose {
+            arguments.append("-v")
+        }
+        arguments.append(udid)
+        return command(arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord], stdinData: Data(text.utf8))
+    }
+
+    public static func pasteboardPaste(udid: String) -> TKHostCommand {
+        command(["simctl", "pbpaste", udid])
+    }
+
+    public static func pasteboardSync(source: String, destination: String, promises: Bool = false, verbose: Bool = false) -> TKHostCommand {
+        var arguments = ["simctl", "pbsync"]
+        if promises {
+            arguments.append("-p")
+        }
+        if verbose {
+            arguments.append("-v")
+        }
+        arguments.append(source)
+        arguments.append(destination)
+        return command(arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func push(udid: String, bundleID: String? = nil, payload: String, stdinData: Data? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "push", udid]
+        if let bundleID {
+            arguments.append(bundleID)
+        }
+        arguments.append(payload)
+        return command(arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord], stdinData: stdinData)
+    }
+
+    public static func runtimeList(verbose: Bool = false) -> TKHostCommand {
+        var arguments = ["simctl", "runtime", "list"]
+        if verbose {
+            arguments.append("-v")
+        }
+        arguments.append("-j")
+        return command(arguments)
+    }
+
+    public static func runtimeVerify(identifier: String) -> TKHostCommand {
+        command(["simctl", "runtime", "verify", identifier], riskLevel: .diagnostic, requiredConfig: [.timeout, .auditRecord])
     }
 }
 
@@ -577,6 +851,67 @@ public struct TKHostSimulatorTarget: Codable, Equatable {
     }
 }
 
+public struct TKHostSimulatorRuntime: Codable, Equatable {
+    public let id: String
+    public let identifier: String
+    public let build: String
+    public let deletable: Bool
+    public let kind: String
+    public let lastUsedAt: String?
+    public let mountPath: String?
+    public let parentMountPath: String?
+    public let path: String
+    public let platformIdentifier: String
+    public let runtimeBundlePath: String
+    public let runtimeIdentifier: String
+    public let signatureState: String
+    public let sizeBytes: Int64
+    public let state: String
+    public let supportedArchitectures: [String]
+    public let version: String
+    public let source: String
+
+    fileprivate init(record: RuntimeRecord, source: String = "simctl") {
+        self.id = "runtime:\(record.identifier)"
+        self.identifier = record.identifier
+        self.build = record.build
+        self.deletable = record.deletable
+        self.kind = record.kind
+        self.lastUsedAt = record.lastUsedAt
+        self.mountPath = record.mountPath
+        self.parentMountPath = record.parentMountPath
+        self.path = record.path
+        self.platformIdentifier = record.platformIdentifier
+        self.runtimeBundlePath = record.runtimeBundlePath
+        self.runtimeIdentifier = record.runtimeIdentifier
+        self.signatureState = record.signatureState
+        self.sizeBytes = record.sizeBytes
+        self.state = record.state
+        self.supportedArchitectures = record.supportedArchitectures
+        self.version = record.version
+        self.source = source
+    }
+}
+
+private struct RuntimeRecord: Decodable {
+    let build: String
+    let deletable: Bool
+    let identifier: String
+    let kind: String
+    let lastUsedAt: String?
+    let mountPath: String?
+    let parentMountPath: String?
+    let path: String
+    let platformIdentifier: String
+    let runtimeBundlePath: String
+    let runtimeIdentifier: String
+    let signatureState: String
+    let sizeBytes: Int64
+    let state: String
+    let supportedArchitectures: [String]
+    let version: String
+}
+
 public enum TKSimctlDeviceListParser {
     private struct Response: Decodable {
         let devices: [String: [Device]]
@@ -608,6 +943,17 @@ public enum TKSimctlDeviceListParser {
             if lhs.isBooted != rhs.isBooted { return lhs.isBooted && !rhs.isBooted }
             return lhs.name.localizedStandardCompare(rhs.name) == .orderedAscending
         }
+    }
+}
+
+public enum TKSimctlRuntimeListParser {
+    public static func parse(_ data: Data) throws -> [TKHostSimulatorRuntime] {
+        let runtimes = try JSONDecoder().decode([String: RuntimeRecord].self, from: data)
+        return runtimes.values
+            .map { TKHostSimulatorRuntime(record: $0) }
+            .sorted { lhs, rhs in
+                lhs.identifier.localizedStandardCompare(rhs.identifier) == .orderedAscending
+            }
     }
 }
 
