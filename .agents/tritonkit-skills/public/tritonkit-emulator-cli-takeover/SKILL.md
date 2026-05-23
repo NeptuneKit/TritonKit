@@ -84,6 +84,8 @@ triton app open-url '<url>' --simulator <udid-or-booted> --wait-ready --snapshot
 triton app container --bundle-id <bundle-id> --kind data --simulator <udid-or-booted> --json
 triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 triton app prefs dump --bundle-id <bundle-id> --simulator <udid-or-booted> --json
+triton app prefs set <key> <json-value> --bundle-id <bundle-id> --simulator <udid-or-booted> --json
+triton smoke ios --simulator <udid-or-booted> --bundle-id <bundle-id> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.png --evidence /tmp/<case>.tritonevidence --json
 ```
 
 HarmonyOS / DevEco Emulator:
@@ -95,6 +97,7 @@ triton device use --platform harmony --target <hdc-target> --json
 triton device wait-ready --platform harmony --target <hdc-target> --json
 triton app inspect --platform harmony --bundle <bundle> --json
 triton app launch --platform harmony --bundle <bundle> --ability <ability> --json
+triton smoke harmony --target <hdc-target> --bundle <bundle> --ability <ability> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json
 triton observe current --platform harmony --target <hdc-target> --json
 triton observe tree --platform harmony --target <hdc-target> --json
 triton node resolve --platform harmony --target <hdc-target> --text "登录" --json
@@ -126,6 +129,8 @@ triton webview current-url --platform ios --json
 triton route assert-current-url https://example.invalid/path --platform ios --json
 triton webview call <method> --platform ios --json
 triton webview events --platform ios --limit 50 --json
+triton evidence summary /tmp/<case>.tritonevidence --json
+triton evidence redact /tmp/<case>.tritonevidence --profile ios-private --output /tmp/<case>-redacted.tritonevidence --json
 ```
 
 `webview list/current/current-url` 当前是 provider metadata 能力。iOS 已能从当前可见 `WKWebView` 读取 `url/title/pageSessionID/isLoading/estimatedProgress/frame` 等元数据；`route assert-current-url` 只断言 provider URL，不操作 H5 页面。真正的 DOM、页面事件和业务动作仍必须通过页面或 App 显式 opt-in 的 allowlist bridge 暴露。`webview call` 只能调用 allowlist 方法，不是任意 JavaScript eval。没有 WebView provider 时，输出必须保持 `candidateOnly=true`、`providerStatus=unavailable`、`bridgeStatus=unavailable`，并在 `missingCapabilities` 中声明 `webview.url`、`webview.dom`、`webview.bridge-call`、`webview.tap`、`webview.type` 等缺失项；不得把 AX/WebKit 容器误报为 DOM/JS/bridge 可用。Harmony 侧若未注册 WebView provider，也只能保持 host-only layout/candidate 边界，不能声明页面 bridge 可用。
@@ -182,6 +187,8 @@ swift test
 swift build --package-path CLI --scratch-path .build/cli --product triton
 .build/cli/debug/triton schema --command device --json
 .build/cli/debug/triton schema --command app --json
+.build/cli/debug/triton schema --command smoke --json
+.build/cli/debug/triton schema --command evidence --json
 TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-host-smoke.sh
 docs-linhay/scripts/check-docs.sh
 docs-linhay/scripts/qmd-sync.sh

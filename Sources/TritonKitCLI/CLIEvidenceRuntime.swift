@@ -81,6 +81,191 @@ func readEvidenceManifest(from path: String) throws -> TKEvidenceManifest {
     return try JSONDecoder().decode(TKEvidenceManifest.self, from: data)
 }
 
+func evidenceBundleRoot(from path: String) -> URL {
+    let inputURL = URL(fileURLWithPath: path)
+    var isDirectory: ObjCBool = false
+    if FileManager.default.fileExists(atPath: inputURL.path, isDirectory: &isDirectory), isDirectory.boolValue {
+        return inputURL
+    }
+    if inputURL.lastPathComponent == "manifest.json" {
+        return inputURL.deletingLastPathComponent()
+    }
+    return inputURL.deletingLastPathComponent()
+}
+
+func summarizeEvidenceBundle(input: String, profile: String = "ios-private") throws -> TKEvidenceSummaryResponse {
+    let manifest = try readEvidenceManifest(from: input)
+    let artifacts = manifest.artifacts.map(evidenceArtifactSummary)
+    let sensitiveArtifactCount = manifest.artifacts.filter(evidenceArtifactIsSensitive).count
+    let summary = TKEvidenceSummaryResponse(
+        action: "evidence.summary",
+        input: input,
+        profile: profile,
+        createdAt: manifest.createdAt,
+        name: manifest.name,
+        note: manifest.note,
+        output: manifest.output,
+        artifactCount: manifest.artifacts.count,
+        sensitiveArtifactCount: sensitiveArtifactCount,
+        skippedCount: manifest.skipped.count,
+        target: manifest.target,
+        cli: manifest.cli,
+        artifacts: artifacts,
+        skipped: manifest.skipped,
+        suggestedCommands: [
+            "triton evidence redact \(shellQuotedEvidencePath(input)) --profile \(profile) --output \(shellQuotedEvidencePath(evidenceBundleRoot(from: input).appendingPathComponent("redacted").path)) --json",
+        ]
+    )
+    return summary
+}
+
+func redactEvidenceBundle(input: String, output: String, profile: String) throws -> TKEvidenceRedactionResponse {
+    let manifest = try readEvidenceManifest(from: input)
+    let inputRoot = evidenceBundleRoot(from: input)
+    let outputURL = URL(fileURLWithPath: output)
+    try prepareEvidenceOutputDirectory(outputURL)
+
+    var redactedArtifacts: [TKEvidenceArtifact] = []
+    var keptArtifacts: [TKEvidenceArtifact] = []
+    var redactedSummaries: [TKEvidenceArtifactSummary] = []
+    var keptSummaries: [TKEvidenceArtifactSummary] = []
+    var outputArtifacts: [TKEvidenceArtifact] = []
+    var outputSummaries: [TKEvidenceArtifactSummary] = []
+
+    for artifact in manifest.artifacts {
+        if evidenceArtifactIsSensitive(artifact) {
+            let placeholderPath = "redacted/\(sanitizedEvidencePathComponent(artifact.kind)).json"
+            let placeholderURL = outputURL.appendingPathComponent(placeholderPath)
+            try FileManager.default.createDirectory(at: placeholderURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            let placeholderData = try prettyEncodedData(TKEvidenceArtifactSummary(
+                kind: artifact.kind,
+                path: artifact.path,
+                contentType: artifact.contentType,
+                bytes: artifact.bytes,
+                platform: artifact.platform,
+                riskLevel: artifact.riskLevel,
+                policy: profile,
+                redactionStatus: "redacted",
+                target: artifact.target
+            ))
+            try placeholderData.write(to: placeholderURL, options: .atomic)
+            let summary = TKEvidenceArtifactSummary(
+                kind: artifact.kind,
+                path: placeholderPath,
+                contentType: "application/json",
+                bytes: placeholderData.count,
+                platform: artifact.platform,
+                riskLevel: artifact.riskLevel,
+                policy: profile,
+                redactionStatus: "redacted",
+                target: artifact.target
+            )
+            redactedSummaries.append(summary)
+            let redactedArtifact = TKEvidenceArtifact(
+                kind: artifact.kind,
+                path: placeholderPath,
+                contentType: "application/json",
+                bytes: placeholderData.count,
+                freshness: artifact.freshness,
+                platform: artifact.platform,
+                riskLevel: artifact.riskLevel,
+                policy: profile,
+                redactionStatus: "redacted",
+                sourceCommand: artifact.sourceCommand,
+                target: artifact.target
+            )
+            redactedArtifacts.append(redactedArtifact)
+            outputArtifacts.append(redactedArtifact)
+            outputSummaries.append(summary)
+        } else {
+            let sourceURL = inputRoot.appendingPathComponent(artifact.path)
+            let destinationURL = outputURL.appendingPathComponent(artifact.path)
+            try FileManager.default.createDirectory(at: destinationURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+            if FileManager.default.fileExists(atPath: sourceURL.path) {
+                try FileManager.default.copyItem(at: sourceURL, to: destinationURL)
+            } else {
+                let placeholderData = Data()
+                try placeholderData.write(to: destinationURL, options: .atomic)
+            }
+            let summary = TKEvidenceArtifactSummary(
+                kind: artifact.kind,
+                path: artifact.path,
+                contentType: artifact.contentType,
+                bytes: artifact.bytes,
+                platform: artifact.platform,
+                riskLevel: artifact.riskLevel,
+                policy: artifact.policy,
+                redactionStatus: "included",
+                target: artifact.target
+            )
+            keptSummaries.append(summary)
+            let keptArtifact = TKEvidenceArtifact(
+                kind: artifact.kind,
+                path: artifact.path,
+                contentType: artifact.contentType,
+                bytes: artifact.bytes,
+                freshness: artifact.freshness,
+                platform: artifact.platform,
+                riskLevel: artifact.riskLevel,
+                policy: artifact.policy,
+                redactionStatus: "included",
+                sourceCommand: artifact.sourceCommand,
+                target: artifact.target
+            )
+            keptArtifacts.append(keptArtifact)
+            outputArtifacts.append(keptArtifact)
+            outputSummaries.append(summary)
+        }
+    }
+
+    let redactedManifest = TKEvidenceManifest(
+        ok: manifest.ok,
+        formatVersion: manifest.formatVersion,
+        name: manifest.name,
+        note: manifest.note.map { "\($0) [redacted profile: \(profile)]" } ?? "[redacted profile: \(profile)]",
+        createdAt: manifest.createdAt,
+        output: outputURL.path,
+        artifacts: outputArtifacts,
+        skipped: manifest.skipped,
+        target: manifest.target,
+        cli: manifest.cli
+    )
+    let summaryPath = outputURL.appendingPathComponent("summary.json").path
+    let summary = TKEvidenceSummaryResponse(
+        action: "evidence.summary",
+        input: input,
+        profile: profile,
+        createdAt: manifest.createdAt,
+        name: manifest.name,
+        note: manifest.note,
+        output: manifest.output,
+        artifactCount: manifest.artifacts.count,
+        sensitiveArtifactCount: redactedSummaries.count,
+        skippedCount: manifest.skipped.count,
+        target: manifest.target,
+        cli: manifest.cli,
+        artifacts: outputSummaries,
+        skipped: manifest.skipped,
+        suggestedCommands: []
+    )
+    try prettyEncodedData(redactedManifest).write(to: outputURL.appendingPathComponent("manifest.json"), options: .atomic)
+    try prettyEncodedData(summary).write(to: URL(fileURLWithPath: summaryPath), options: .atomic)
+    return TKEvidenceRedactionResponse(
+        action: "evidence.redact",
+        input: input,
+        output: outputURL.path,
+        profile: profile,
+        createdAt: manifest.createdAt,
+        artifactCount: manifest.artifacts.count,
+        redactedArtifactCount: redactedSummaries.count,
+        keptArtifactCount: keptSummaries.count,
+        manifest: redactedManifest,
+        redactedArtifacts: redactedSummaries,
+        keptArtifacts: keptSummaries,
+        summaryPath: summaryPath
+    )
+}
+
 func readReplayPlan(from path: String) throws -> TKReplayPlan {
     let data = try Data(contentsOf: URL(fileURLWithPath: path))
     let plan = try JSONDecoder().decode(TKReplayPlan.self, from: data)
@@ -190,6 +375,10 @@ func printAssertResult(_ result: TKUIAssertResult, format: ClientOutputFormat) t
         if let targetConnectionState = result.targetConnectionState { print("targetConnectionState: \(targetConnectionState)") }
         if let hierarchyCacheState = result.hierarchyCacheState { print("hierarchyCacheState: \(hierarchyCacheState)") }
         if let message = result.message { print("message: \(message)") }
+        if let nearestText = result.nearestText, !nearestText.isEmpty { print("nearestText: \(nearestText.joined(separator: ", "))") }
+        if let suggestedCommands = result.suggestedCommands, !suggestedCommands.isEmpty {
+            print("suggestedCommands: \(suggestedCommands.joined(separator: " | "))")
+        }
     }
 }
 
@@ -746,6 +935,65 @@ func printEvidenceManifest(_ manifest: TKEvidenceManifest, format: ClientOutputF
             }
         }
     }
+}
+
+func printEvidenceSummary(_ summary: TKEvidenceSummaryResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(summary))
+    case .text:
+        print("ok: \(summary.ok)")
+        print("input: \(summary.input)")
+        print("profile: \(summary.profile)")
+        print("artifacts: \(summary.artifactCount)")
+        print("sensitiveArtifacts: \(summary.sensitiveArtifactCount)")
+        print("skipped: \(summary.skippedCount)")
+    }
+}
+
+func printEvidenceRedaction(_ redaction: TKEvidenceRedactionResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(redaction))
+    case .text:
+        print("ok: \(redaction.ok)")
+        print("output: \(redaction.output)")
+        print("profile: \(redaction.profile)")
+        print("redactedArtifacts: \(redaction.redactedArtifactCount)")
+        print("keptArtifacts: \(redaction.keptArtifactCount)")
+    }
+}
+
+func evidenceArtifactSummary(_ artifact: TKEvidenceArtifact) -> TKEvidenceArtifactSummary {
+    TKEvidenceArtifactSummary(
+        kind: artifact.kind,
+        path: artifact.path,
+        contentType: artifact.contentType,
+        bytes: artifact.bytes,
+        platform: artifact.platform,
+        riskLevel: artifact.riskLevel,
+        policy: artifact.policy,
+        redactionStatus: artifact.redactionStatus,
+        target: artifact.target
+    )
+}
+
+func evidenceArtifactIsSensitive(_ artifact: TKEvidenceArtifact) -> Bool {
+    let sensitiveKinds: Set<String> = ["screenshot", "ax", "hierarchy", "geometry", "archive", "logs"]
+    return sensitiveKinds.contains(artifact.kind)
+}
+
+func sanitizedEvidencePathComponent(_ value: String) -> String {
+    let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
+    let scalars = value.unicodeScalars.map { scalar -> Character in
+        allowed.contains(scalar) ? Character(scalar) : "-"
+    }
+    let collapsed = String(scalars).split(separator: "-").joined(separator: "-")
+    return collapsed.isEmpty ? "evidence" : collapsed
+}
+
+func shellQuotedEvidencePath(_ value: String) -> String {
+    "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
 }
 
 func captureEvidenceBundle(

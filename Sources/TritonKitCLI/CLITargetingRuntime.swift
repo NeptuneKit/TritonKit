@@ -134,6 +134,16 @@ struct TapTargetResolution: Codable {
     }
 }
 
+struct TKTapTargetResolutionFailure: Error, CustomStringConvertible {
+    let query: String
+    let message: String
+    let candidateCount: Int
+    let nearestCandidates: [String]
+    let suggestedCommands: [String]
+
+    var description: String { message }
+}
+
 func resolveTapTarget(
     _ query: String,
     client: TritonKitHTTPClient,
@@ -160,11 +170,23 @@ func resolveTapTarget(
         at: at
     )
     guard !candidates.isEmpty else {
-        throw RuntimeError("No tappable UI target matched query: \(query)")
+        throw TKTapTargetResolutionFailure(
+            query: query,
+            message: "No tappable UI target matched query: \(query)",
+            candidateCount: 0,
+            nearestCandidates: [],
+            suggestedCommands: tapTargetSuggestedCommands(query: query)
+        )
     }
     let selectedIndex = index ?? 1
     guard selectedIndex <= candidates.count else {
-        throw RuntimeError("Only \(candidates.count) tappable UI target(s) matched query: \(query); cannot select --index \(selectedIndex)")
+        throw TKTapTargetResolutionFailure(
+            query: query,
+            message: "Only \(candidates.count) tappable UI target(s) matched query: \(query); cannot select --index \(selectedIndex)",
+            candidateCount: candidates.count,
+            nearestCandidates: tapTargetNearestCandidates(candidates),
+            suggestedCommands: tapTargetSuggestedCommands(query: query, candidates: candidates)
+        )
     }
     return TapTargetResolution(
         selected: candidates[selectedIndex - 1],
@@ -382,6 +404,30 @@ func tapCandidateStrategy(for node: TKAXNode, activationStrategy: TKTapActivatio
         return activationStrategy.rawValue
     }
     return axTapShouldUseCoordinate(node) ? "coordinate" : "oid"
+}
+
+func tapTargetNearestCandidates(_ candidates: [TapTargetCandidate], limit: Int = 5) -> [String] {
+    candidates.prefix(limit).map { candidate in
+        var parts: [String] = ["[\(candidate.index)]", candidate.source, candidate.strategy]
+        if let label = candidate.label { parts.append("label=\(label)") }
+        if let value = candidate.value { parts.append("value=\(value)") }
+        if let identifier = candidate.identifier { parts.append("identifier=\(identifier)") }
+        if let className = candidate.className { parts.append("class=\(className)") }
+        if let frame = candidate.frame { parts.append("frame=\(frame.x),\(frame.y),\(frame.width),\(frame.height)") }
+        return parts.joined(separator: " ")
+    }
+}
+
+func tapTargetSuggestedCommands(query: String, candidates: [TapTargetCandidate] = []) -> [String] {
+    var commands = ["triton find \(shellQuoted(query)) --all --json", "triton screenshot --json"]
+    if !candidates.isEmpty {
+        commands.insert("triton tap \(shellQuoted(query)) --index 1 --json", at: 1)
+    }
+    return commands
+}
+
+private func shellQuoted(_ value: String) -> String {
+    "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
 }
 
 func axTapShouldUseCoordinate(_ node: TKAXNode) -> Bool {

@@ -88,6 +88,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - wait for boot readiness: `triton device wait-ready --platform harmony --target <hdc-target> --json`;
    - inspect app metadata: `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`;
    - launch an Ability: `triton app launch --platform harmony --bundle <bundle> --ability <ability> --target <hdc-target> --json`;
+   - run the one-command host smoke when available: `triton smoke harmony --target <hdc-target> --bundle <bundle> --ability <ability> --open-url <url> --wait-text <text> --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json`;
    - when multiple targets are `Connected`, pass `--target`; `ambiguous_target` is the expected machine-readable failure.
    - if a disposable Harmony fixture app is needed, use the local `harmony-next` skill's minimal Empty Ability scaffold:
      - guide: `references/quickStart/ets/minimal-project-scaffold.md`;
@@ -106,6 +107,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - prefer one-shot regression capture when a full report is needed: `triton capture --case <case> --output /tmp/<case>.tritonevidence --json`.
    - prefer one-shot evidence when a report or issue needs attachable proof: `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`.
    - inspect an existing bundle without reconnecting runtime: `triton evidence inspect /tmp/<case>.tritonevidence --json`.
+   - summarize evidence before public handoff: `triton evidence summary /tmp/<case>.tritonevidence --json`.
+   - write a safe handoff bundle: `triton evidence redact /tmp/<case>.tritonevidence --profile ios-private --output /tmp/<case>-redacted.tritonevidence --json`.
    - `triton geometry --json`
    - `triton ax --json`
    - `triton screenshot --json --output <path>`
@@ -118,6 +121,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - prefer action commands that are already machine-readable by default: `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, `triton clear`; use `--format text` only for human-readable debugging;
    - for form flows, prefer semantic embedded actions over a `tap` plus `type` chain: `triton focus "用户名" --json`, `triton set-text "用户名" "alice" --json`, `triton set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton select-segment "协议" "HTTP" --json`, `triton set-switch "记住我" on --json`;
    - when labels repeat, run `triton find "<text>" --all`; if a known point lies inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise choose `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`;
+   - when `tap` or `assert` fails, read nearest candidates / nearestText and suggestedCommands from the JSON envelope before changing the test flow;
    - keep `triton type --text <text>` only for compatibility with older scripts, never together with positional `<text>`;
    - keep `triton press --button <button>` only for compatibility with older scripts; prefer positional `triton press <button>`;
    - for batch input, use `triton input --json --summary --strict`;
@@ -144,7 +148,7 @@ Use this checklist before commenting on or closing a real-project smoke issue su
 7. Update the owning `docs-linhay/spaces/<space-key>/README.md` or technical note with the current state, including which issues are still open.
 8. Write memory for the decision, closure criteria, residual risks, and follow-up issues.
 9. Run docs/skill sync for pure documentation closures, or the full relevant test gate for code closures.
-10. Only close the issue once the issue-specific closure criteria are met. Keep epics such as simulator takeover open unless the scoped P1/P2 acceptance criteria are explicitly satisfied.
+10. Only close the issue once the issue-specific closure criteria are met. Keep epics such as simulator takeover open unless the scoped P0/P1 acceptance criteria are satisfied and remaining advanced scope has been split into follow-up issues or explicitly deferred in the closure comment.
 
 Do not collapse multiple open issues into a single closure comment just because they share an orchestration layer. A shared implementation can close one issue and leave related issue slices open.
 
@@ -271,6 +275,7 @@ triton ax --platform harmony --target <hdc-target> --output /tmp/<case>-layout.j
 triton wait --platform harmony --target <hdc-target> --text '<text>' --timeout 15 --json
 triton tap '<text>' --platform harmony --target <hdc-target> --json
 triton screenshot --platform harmony --target <hdc-target> --output /tmp/<case>.jpeg --json
+triton smoke harmony --target <hdc-target> --bundle <bundle> --ability <ability> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json
 ```
 
 When multiple HDC targets are `Connected`, pass `--target`; `ambiguous_target` is the expected machine-readable failure.

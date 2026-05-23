@@ -244,19 +244,28 @@ public struct TKCLIErrorDetail: Codable, Equatable {
     public let endpoint: String?
     public let hint: String?
     public let nextAction: TKCLINextAction?
+    public let nearestCandidates: [String]?
+    public let suggestedCommands: [String]?
+    public let candidateCount: Int?
 
     public init(
         code: String,
         message: String,
         endpoint: String? = nil,
         hint: String? = nil,
-        nextAction: TKCLINextAction? = nil
+        nextAction: TKCLINextAction? = nil,
+        nearestCandidates: [String]? = nil,
+        suggestedCommands: [String]? = nil,
+        candidateCount: Int? = nil
     ) {
         self.code = code
         self.message = message
         self.endpoint = endpoint
         self.hint = hint
         self.nextAction = nextAction
+        self.nearestCandidates = nearestCandidates
+        self.suggestedCommands = suggestedCommands
+        self.candidateCount = candidateCount
     }
 }
 

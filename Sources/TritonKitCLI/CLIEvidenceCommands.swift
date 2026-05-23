@@ -53,11 +53,11 @@ struct Export: AsyncParsableCommand {
 
 struct Evidence: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        abstract: "Capture or inspect an agent-friendly regression evidence bundle"
+        abstract: "Capture, inspect, summarize, or redact an agent-friendly regression evidence bundle"
     )
 
-    @Argument(help: "Optional action. Use `inspect` to read an existing bundle manifest.") var action: String?
-    @Argument(help: "Evidence bundle path for `inspect`.") var input: String?
+    @Argument(help: "Optional action. Use `inspect`, `summary`, or `redact` for existing bundles.") var action: String?
+    @Argument(help: "Evidence bundle path for `inspect`, `summary`, or `redact`.") var input: String?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -66,6 +66,7 @@ struct Evidence: AsyncParsableCommand {
     var include: String = "status,list,version,hierarchy,ax,screenshot"
     @Option(help: "Scenario name stored in manifest") var name: String?
     @Option(help: "Human note stored in manifest") var note: String?
+    @Option(help: "Redaction profile for existing evidence bundles") var profile: String = "ios-private"
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Flag(inversion: .prefixedNo, help: "Request a fresh hierarchy before capturing hierarchy/archive")
@@ -74,15 +75,34 @@ struct Evidence: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         if let action {
-            guard action == "inspect" else {
+            switch action {
+            case "inspect":
+                guard let input else {
+                    try failEvidenceValidation("`triton evidence inspect` requires a bundle path", outputFormat: outputFormat)
+                }
+                let manifest = try readEvidenceManifest(from: input)
+                try printEvidenceManifest(manifest, format: outputFormat)
+                return
+            case "summary":
+                guard let input else {
+                    try failEvidenceValidation("`triton evidence summary` requires a bundle path", outputFormat: outputFormat)
+                }
+                let summary = try summarizeEvidenceBundle(input: input, profile: profile)
+                try printEvidenceSummary(summary, format: outputFormat)
+                return
+            case "redact":
+                guard let input else {
+                    try failEvidenceValidation("`triton evidence redact` requires a bundle path", outputFormat: outputFormat)
+                }
+                guard let output else {
+                    try failEvidenceValidation("`triton evidence redact` requires --output <path>", outputFormat: outputFormat)
+                }
+                let redacted = try redactEvidenceBundle(input: input, output: output, profile: profile)
+                try printEvidenceRedaction(redacted, format: outputFormat)
+                return
+            default:
                 try failEvidenceValidation("Unsupported evidence action: \(action)", outputFormat: outputFormat)
             }
-            guard let input else {
-                try failEvidenceValidation("`triton evidence inspect` requires a bundle path", outputFormat: outputFormat)
-            }
-            let manifest = try readEvidenceManifest(from: input)
-            try printEvidenceManifest(manifest, format: outputFormat)
-            return
         }
 
         guard input == nil else {

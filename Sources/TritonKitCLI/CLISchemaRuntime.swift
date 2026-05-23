@@ -715,7 +715,7 @@ func commandSchemas() -> [TKCommandSchema] {
         ),
         TKCommandSchema(
             name: "evidence",
-            summary: "Capture or inspect an agent-friendly regression evidence bundle",
+            summary: "Capture, inspect, summarize, or redact an agent-friendly regression evidence bundle",
             requiresServer: false,
             requiresTarget: false,
             runtimeScope: "cli+embedded",
@@ -723,10 +723,13 @@ func commandSchemas() -> [TKCommandSchema] {
             options: hostPort + [
                 target,
                 TKCommandSchemaOption(name: "inspect <path>", type: "Subcommand", description: "Read an existing bundle manifest without connecting to runtime"),
+                TKCommandSchemaOption(name: "summary <path>", type: "Subcommand", description: "Print a safe high-level evidence summary without binary artifacts"),
+                TKCommandSchemaOption(name: "redact <path> --output <path>", type: "Subcommand", description: "Write a redacted evidence bundle for safe handoff"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Evidence bundle directory path; capture mode requires it"),
                 TKCommandSchemaOption(name: "--include", type: "String", defaultValue: "status,list,version,hierarchy,ax,screenshot", description: "Comma-separated artifact kinds"),
                 TKCommandSchemaOption(name: "--name", type: "String", description: "Scenario name stored in manifest"),
                 TKCommandSchemaOption(name: "--note", type: "String", description: "Human note stored in manifest"),
+                TKCommandSchemaOption(name: "--profile", type: "String", defaultValue: "ios-private", description: "Redaction profile for summary/redact"),
                 TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before hierarchy/archive capture"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
@@ -736,10 +739,12 @@ func commandSchemas() -> [TKCommandSchema] {
                 "triton evidence --include status,list,version,logs --output /tmp/partial.tritonevidence --json",
                 "triton evidence --name v11-login --note \"DEBUG mock disabled\" --output /tmp/login.tritonevidence --json",
                 "triton evidence inspect /tmp/login-success.tritonevidence --json",
+                "triton evidence summary /tmp/login-success.tritonevidence --json",
+                "triton evidence redact /tmp/login-success.tritonevidence --profile ios-private --output /tmp/login-redacted.tritonevidence --json",
             ],
-            successShape: "TKEvidenceManifest with { ok, formatVersion, output, artifacts[], skipped[], target?, cli }",
+            successShape: "TKEvidenceManifest, TKEvidenceSummaryResponse, or TKEvidenceRedactionResponse",
             failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
-            providedCapabilities: ["evidence"]
+            providedCapabilities: ["evidence", "evidence-summary", "evidence-redact"]
         ),
         TKCommandSchema(
             name: "capture",
@@ -774,13 +779,26 @@ func commandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: [
                 TKCommandSchemaOption(name: "ios", type: "Subcommand", description: "Run one-command iOS smoke evidence flow"),
+                TKCommandSchemaOption(name: "harmony", type: "Subcommand", description: "Run one-command Harmony host-side smoke evidence flow"),
+                TKCommandSchemaOption(name: "--target", type: "String", description: "Target id for iOS runtime or Harmony hdc target"),
+                TKCommandSchemaOption(name: "--bundle-id", type: "String", description: "iOS bundle identifier"),
+                TKCommandSchemaOption(name: "--bundle", type: "String", description: "Harmony bundle name"),
+                TKCommandSchemaOption(name: "--ability", type: "String", description: "Harmony ability name"),
+                TKCommandSchemaOption(name: "--open-url", type: "URL", description: "Deep link URL to open"),
+                TKCommandSchemaOption(name: "--wait-text", type: "String", description: "Visible text to wait for"),
+                TKCommandSchemaOption(name: "--tap-text", type: "String", description: "Harmony text to tap after first wait passes"),
+                TKCommandSchemaOption(name: "--post-tap-wait-text", type: "String", description: "Harmony text to wait for after tap"),
+                TKCommandSchemaOption(name: "--screenshot", type: "Path", description: "Host screenshot output path"),
+                TKCommandSchemaOption(name: "--evidence", type: "Path", description: "Evidence bundle output directory"),
+                TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "20", description: "Wait timeout in seconds"),
             ],
             examples: [
                 "triton smoke ios --bundle-id com.example.app --open-url myapp://home --wait-text Ready --json",
+                "triton smoke harmony --target 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --open-url example://home --wait-text Ready --screenshot /tmp/smoke.jpeg --evidence /tmp/harmony.tritonevidence --json",
             ],
             successShape: "SmokeRunSummary with { ok, action, platform, status, target, steps[], assertions[], artifacts[], evidence?, failure?, startedAt, endedAt, elapsedMs }",
             failureShape: "SmokeRunSummary with ok=false and failure.step/code/message/hint populated",
-            providedCapabilities: ["smoke-ios"]
+            providedCapabilities: ["smoke-ios", "smoke-harmony"]
         ),
         TKCommandSchema(
             name: "assert",

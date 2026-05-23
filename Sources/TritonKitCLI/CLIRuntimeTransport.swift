@@ -609,6 +609,15 @@ func printCLIErrorText(_ error: Error, endpoint: String, host: String, port: Int
         let command = (["triton", nextAction.command] + nextAction.args).joined(separator: " ")
         fputs("\(language == .zh ? "下一步" : "next"): \(command)\n", stderr)
     }
+    if let nearestCandidates = detail.nearestCandidates, !nearestCandidates.isEmpty {
+        fputs("\(language == .zh ? "邻近候选" : "nearest"): \(nearestCandidates.joined(separator: " | "))\n", stderr)
+    }
+    if let suggestedCommands = detail.suggestedCommands, !suggestedCommands.isEmpty {
+        fputs("\(language == .zh ? "建议命令" : "suggested"): \(suggestedCommands.joined(separator: " | "))\n", stderr)
+    }
+    if let candidateCount = detail.candidateCount {
+        fputs("\(language == .zh ? "候选数" : "candidateCount"): \(candidateCount)\n", stderr)
+    }
 }
 
 func failCommand(
@@ -705,6 +714,17 @@ func cliErrorDetail(for error: Error, endpoint: String, host: String, port: Int)
             message: targetError.description,
             endpoint: url,
             hint: "Run `triton list --json` and pass the exact --target id, or the simulator UDID for an iOS simulator runtime."
+        )
+    }
+    if let tapError = error as? TKTapTargetResolutionFailure {
+        return TKCLIErrorDetail(
+            code: "text_not_found",
+            message: tapError.message,
+            endpoint: url,
+            hint: "Run `triton find \(tapError.query.isEmpty ? "''" : "'" + tapError.query.replacingOccurrences(of: "'", with: "'\\''") + "'") --all --json` and `triton screenshot --json` to inspect the current UI.",
+            nearestCandidates: tapError.nearestCandidates,
+            suggestedCommands: tapError.suggestedCommands,
+            candidateCount: tapError.candidateCount
         )
     }
     return TKCLIErrorDetail(

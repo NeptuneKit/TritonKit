@@ -48,6 +48,8 @@ public struct TKUIAssertResult: Codable, Equatable {
     public let targetConnectionState: String?
     public let hierarchyCacheState: String?
     public let message: String?
+    public let nearestText: [String]?
+    public let suggestedCommands: [String]?
 
     public init(
         ok: Bool,
@@ -63,7 +65,9 @@ public struct TKUIAssertResult: Codable, Equatable {
         sample: [String],
         targetConnectionState: String? = nil,
         hierarchyCacheState: String? = nil,
-        message: String? = nil
+        message: String? = nil,
+        nearestText: [String]? = nil,
+        suggestedCommands: [String]? = nil
     ) {
         self.ok = ok
         self.condition = condition
@@ -79,6 +83,8 @@ public struct TKUIAssertResult: Codable, Equatable {
         self.targetConnectionState = targetConnectionState
         self.hierarchyCacheState = hierarchyCacheState
         self.message = message
+        self.nearestText = nearestText
+        self.suggestedCommands = suggestedCommands
     }
 }
 
@@ -129,7 +135,9 @@ public func TKUIAssertEvaluate(
         sample: TKWaitTextSample(from: nodes),
         targetConnectionState: targetConnectionState,
         hierarchyCacheState: hierarchyCacheState,
-        message: ok ? nil : TKUIAssertFailureMessage(request: request, count: count)
+        message: ok ? nil : TKUIAssertFailureMessage(request: request, count: count),
+        nearestText: ok ? nil : TKWaitTextSample(from: nodes, limit: 5),
+        suggestedCommands: ok ? nil : TKUIAssertSuggestedCommands(request: request)
     )
 }
 
@@ -156,4 +164,23 @@ public func TKUIAssertFailureMessage(request: TKUIAssertRequest, count: Int) -> 
     case .textNotExists:
         return "Expected text not to exist: \(request.query), found \(count) match(es)"
     }
+}
+
+public func TKUIAssertSuggestedCommands(request: TKUIAssertRequest) -> [String] {
+    var commands = ["triton find \(shellQuoted(request.query)) --all --json", "triton screenshot --json"]
+    if let role = request.role {
+        commands[0] += " --role \(shellQuoted(role))"
+    }
+    if let within = request.within {
+        commands[0] += " --within \(shellRect(within))"
+    }
+    return commands
+}
+
+private func shellQuoted(_ value: String) -> String {
+    "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+}
+
+private func shellRect(_ rect: TKRect) -> String {
+    "\(rect.x),\(rect.y),\(rect.width),\(rect.height)"
 }

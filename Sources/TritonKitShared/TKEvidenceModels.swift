@@ -149,3 +149,138 @@ public struct TKEvidenceCLI: Codable, Equatable {
         self.schemaVersion = schemaVersion
     }
 }
+
+public struct TKEvidenceArtifactSummary: Codable, Equatable {
+    public let kind: String
+    public let path: String
+    public let contentType: String?
+    public let bytes: Int?
+    public let platform: String?
+    public let riskLevel: String?
+    public let policy: String?
+    public let redactionStatus: String?
+    public let target: String?
+
+    public init(
+        kind: String,
+        path: String,
+        contentType: String? = nil,
+        bytes: Int? = nil,
+        platform: String? = nil,
+        riskLevel: String? = nil,
+        policy: String? = nil,
+        redactionStatus: String? = nil,
+        target: String? = nil
+    ) {
+        self.kind = kind
+        self.path = path
+        self.contentType = contentType
+        self.bytes = bytes
+        self.platform = platform
+        self.riskLevel = riskLevel
+        self.policy = policy
+        self.redactionStatus = redactionStatus
+        self.target = target
+    }
+}
+
+public struct TKEvidenceSummaryResponse: Codable, Equatable {
+    public let ok: Bool
+    public let action: String
+    public let input: String
+    public let profile: String
+    public let createdAt: String
+    public let name: String?
+    public let note: String?
+    public let output: String
+    public let artifactCount: Int
+    public let sensitiveArtifactCount: Int
+    public let skippedCount: Int
+    public let target: TKEvidenceTarget?
+    public let cli: TKEvidenceCLI
+    public let artifacts: [TKEvidenceArtifactSummary]
+    public let skipped: [TKEvidenceSkippedArtifact]
+    public let suggestedCommands: [String]
+
+    public init(
+        ok: Bool = true,
+        action: String,
+        input: String,
+        profile: String,
+        createdAt: String,
+        name: String? = nil,
+        note: String? = nil,
+        output: String,
+        artifactCount: Int,
+        sensitiveArtifactCount: Int,
+        skippedCount: Int,
+        target: TKEvidenceTarget? = nil,
+        cli: TKEvidenceCLI,
+        artifacts: [TKEvidenceArtifactSummary],
+        skipped: [TKEvidenceSkippedArtifact],
+        suggestedCommands: [String]
+    ) {
+        self.ok = ok
+        self.action = action
+        self.input = input
+        self.profile = profile
+        self.createdAt = createdAt
+        self.name = name
+        self.note = note
+        self.output = output
+        self.artifactCount = artifactCount
+        self.sensitiveArtifactCount = sensitiveArtifactCount
+        self.skippedCount = skippedCount
+        self.target = target
+        self.cli = cli
+        self.artifacts = artifacts
+        self.skipped = skipped
+        self.suggestedCommands = suggestedCommands
+    }
+}
+
+public struct TKEvidenceRedactionResponse: Codable, Equatable {
+    public let ok: Bool
+    public let action: String
+    public let input: String
+    public let output: String
+    public let profile: String
+    public let createdAt: String
+    public let artifactCount: Int
+    public let redactedArtifactCount: Int
+    public let keptArtifactCount: Int
+    public let manifest: TKEvidenceManifest
+    public let redactedArtifacts: [TKEvidenceArtifactSummary]
+    public let keptArtifacts: [TKEvidenceArtifactSummary]
+    public let summaryPath: String
+
+    public init(
+        ok: Bool = true,
+        action: String,
+        input: String,
+        output: String,
+        profile: String,
+        createdAt: String,
+        artifactCount: Int,
+        redactedArtifactCount: Int,
+        keptArtifactCount: Int,
+        manifest: TKEvidenceManifest,
+        redactedArtifacts: [TKEvidenceArtifactSummary],
+        keptArtifacts: [TKEvidenceArtifactSummary],
+        summaryPath: String
+    ) {
+        self.ok = ok
+        self.action = action
+        self.input = input
+        self.output = output
+        self.profile = profile
+        self.createdAt = createdAt
+        self.artifactCount = artifactCount
+        self.redactedArtifactCount = redactedArtifactCount
+        self.keptArtifactCount = keptArtifactCount
+        self.manifest = manifest
+        self.redactedArtifacts = redactedArtifacts
+        self.keptArtifacts = keptArtifacts
+        self.summaryPath = summaryPath
+    }
+}

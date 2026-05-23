@@ -114,6 +114,13 @@ triton smoke harmony \
 7. write evidence artifacts。
 8. emit summary。
 
+2026-05-23 实现状态：
+
+- `smoke harmony` 已接入 `triton schema --command smoke --json`，success shape 与 `smoke ios` 共用 `SmokeRunSummary`。
+- 编排支持 `--target`、`--bundle`、`--ability`、`--open-url`、`--wait-text`、`--tap-text`、`--post-tap-wait-text`、`--screenshot`、`--evidence`、`--timeout` 和 `--json`。
+- 单元测试使用 fake HDC dependencies 覆盖 device readiness、app inspect/open-url、layout wait、semantic tap、post-tap wait、layout/screenshot artifact 和 evidence manifest。
+- 本机真实 HDC target `127.0.0.1:10100` 当前为 `Offline`；真实写入或截图必须等 target `Connected` 后再执行。
+
 ### WebView / route assertion
 
 ```bash
@@ -166,6 +173,13 @@ triton evidence redact <dir.tritonevidence> --profile ios-private --output <reda
 - screenshot binary。
 - full logs。
 - raw private bundle id / URL / account / local absolute path。
+
+2026-05-23 实现状态：
+
+- `summary` 输出 artifact count、sensitive count、skipped count、target、CLI version、artifact metadata 与 suggested redaction command。
+- `redact` 复制非敏感 artifact 并在 redacted manifest 中标记 `redactionStatus=included`；截图、AX、hierarchy、geometry、archive、logs 等敏感 artifact 写成 `redacted/<kind>.json` 占位并标记 `redactionStatus=redacted`。
+- CLI fixture 正向复跑已覆盖 `summary -> redact -> inspect`，确认 redacted manifest 同时包含 included 与 redacted artifact。
+- 失败诊断已对 `tap` text resolution failure 和 `assert` failure 增加 nearest candidates / nearestText、candidateCount 与 suggestedCommands。
 
 ## 数据模型
 
@@ -301,9 +315,10 @@ case.tritonevidence/
 5. HDC target ambiguous。
 6. screenshot `.jpeg` suffix 处理。
 7. evidence summary 默认排除敏感 artifact。
-8. evidence redact profile path rewrite。
+8. evidence redact profile path rewrite，并确认 manifest 保留 included artifact。
 9. prefs set JSON scalar / array / object / invalid JSON。
 10. Xcode status parser 解析常见 `xcodebuild` argv。
+11. `tap` / `assert` 失败诊断返回 nearest candidates 与 suggested commands。
 
 ### CLI schema tests
 
@@ -334,16 +349,15 @@ TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-host-smoke
 
 ## 实施顺序
 
-1. 文档与 BDD：本 space。
-2. S1：Xcode diagnostics，最小可独立交付。
-3. S2：Smoke shared models + `smoke ios` mock tests。
-4. S3：Evidence summary/redact。
-5. S4：WebView current URL / route assertion / prefs set。
-6. S5：`smoke harmony`。
-7. S6：failure diagnostics 统一补强。
-8. GitHub issue 评论与关闭。
+1. 文档与 BDD：本 space，已完成。
+2. S1：Xcode diagnostics，已完成。
+3. S2：Smoke shared models + `smoke ios` mock tests，已完成并关闭 #17。
+4. S3：WebView current URL / route assertion / prefs set，已完成。
+5. S4：`smoke harmony`，已完成并满足 #15 关闭条件；真实 HDC target 当前 Offline，issue 评论需透明说明。
+6. S5：Evidence summary/redact 与 failure diagnostics，已完成并满足 #18 剩余关闭条件。
+7. S6：#12 剩余高级 simulator takeover 项拆 follow-up，再关闭原 epic。
 
-这个顺序让 #18 的最高优先级先落地，再关闭 #17，随后关闭 #15。#12 保持 epic 追踪，除非 P1 后续全部完成。
+这个顺序让 #18 的剩余诊断和 #15 的聚合入口先落地；#12 只能按 P0/P1 主闭环关闭，原 epic 中未实现的高级接管项必须在 follow-up 中继续跟踪。
 
 ## 文档同步
 

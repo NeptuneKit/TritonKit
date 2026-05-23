@@ -24,8 +24,8 @@ prepare host target -> launch/open route -> wait/assert runtime or host state ->
 
 | Issue | 角色 | 本 space 处理策略 |
 | --- | --- | --- |
-| #12 Add comprehensive simulator takeover | Epic | 继续作为 P1+ 能力池；本轮只选真实 smoke 需要的高价值 slice，不默认关闭 |
-| #15 Add Harmony host-side smoke adapter commands | Feature | 通过 `smoke harmony` 或等价编排闭环关闭 |
+| #12 Add comprehensive simulator takeover | Epic | P0/P1 真实 smoke 主闭环已满足；privacy/location/logs/video/diagnostics/xctrace/runtime maintenance 等高级项拆 follow-up 后关闭 |
+| #15 Add Harmony host-side smoke adapter commands | Feature | 通过 `smoke harmony` 编排入口关闭 |
 | #17 Add one-command iOS smoke evidence flow | Feature | 通过 `smoke ios` 关闭 |
 | #18 Improve real-project iOS smoke diagnostics | Feature bundle | 优先落地 Xcode occupancy、open-url wait snapshot、WebView URL/assert、prefs set、evidence summary/redact、failure diagnostics；剩余项必要时拆 issue |
 
@@ -150,10 +150,26 @@ triton smoke harmony \
 
 - S0 方案与测试基线已完成：本 space 的 README 与 technical design 已落地。
 - S1 Xcode / host readiness diagnostics 已完成第一刀：`triton xcode status --json`、`triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json` 已进入 CLI 和 schema。
-- S2 `smoke ios` 已实现并接入 CLI / schema / help；已通过 mock tests、`swift build --package-path CLI --scratch-path .build/cli --product triton`、`swift test --package-path CLI --scratch-path .build/cli-tests`、`triton schema --command smoke --json`、`triton smoke ios --help`、本机 structured-failure 验证，以及真实 iOS Simulator / embedded runtime 正向复跑。#17 的本地关闭条件已满足；#18 继续推进 evidence/failure diagnostics；#15 已有等价 host-side smoke adapter 验证，但 `smoke harmony` 编排入口仍是后续可选增强；#12 仍作为 simulator takeover epic open。
+- S2 `smoke ios` 已实现并接入 CLI / schema / help；已通过 mock tests、`swift build --package-path CLI --scratch-path .build/cli --product triton`、`swift test --package-path CLI --scratch-path .build/cli-tests`、`triton schema --command smoke --json`、`triton smoke ios --help`、本机 structured-failure 验证，以及真实 iOS Simulator / embedded runtime 正向复跑。#17 的本地关闭条件已满足。
 - #18 priority 2 已完成一刀：`triton app open-url <url> --wait-ready --snapshot --json` 可在提交 deep link 后等待 embedded runtime ready，并返回 host action、ready 状态和 compact snapshot summary；默认 `app open-url` 不带这些参数时仍保持原 host ack 行为。
 - #18 S3 已完成：`triton webview current-url --json`、`triton route assert-current-url <url> --json`、`triton app prefs set <key> <json-value> --bundle-id <bundle-id> --json` 已接入 CLI / schema / help。preferences 值使用自然 JSON 编码，支持 string/bool/int/double/array/object，拒绝 `null`。
-- #15 host-side adapter 已完成等价闭环：`docs-linhay/scripts/verify-harmony-host-smoke.sh` 使用 fake HDC 覆盖 `device/app/ax/wait/tap/screenshot/observe/node` schema 与成功/失败 envelope；2026-05-23 本机真实 HDC 只发现 `127.0.0.1:10100` 为 `Offline`，未执行真实设备写入或截图。
+- #15 host-side adapter 已完成等价闭环：`smoke harmony` 已接入 CLI / schema / help，编排 `device.wait-ready`、`app.inspect`、`app.launch/open-url`、`wait`、`tap`、`layout`、`screenshot`、`evidence.capture`；`docs-linhay/scripts/verify-harmony-host-smoke.sh` 使用 fake HDC 覆盖 `device/app/ax/wait/tap/screenshot/observe/node` schema 与成功/失败 envelope。2026-05-23 本机真实 HDC 只发现 `127.0.0.1:10100` 为 `Offline`，短 timeout `device wait-ready` 返回 `target_offline`，未执行真实设备写入或截图。
+- #18 S5 已完成：`triton evidence summary <dir> --json`、`triton evidence redact <dir> --profile ios-private --output <dir> --json` 已接入 CLI / schema / help；redacted manifest 保留非敏感 artifact 为 `included`，敏感 screenshot/AX/hierarchy/geometry/archive/logs 写入 `redacted/*.json` 占位。`tap` / `assert` 失败诊断输出 nearest text/candidates、candidateCount 与 suggestedCommands。
+- #12 P0/P1 主闭环已满足真实 smoke 需要：sim/app lifecycle、open-url readiness、preferences get/set、host screenshot、xcode workflow、Harmony host adapter、smoke iOS/Harmony、evidence summary/redact 均有机器可读 schema 与本地验证。原 epic 中 privacy/location/status bar/push/logs/video/diagnostics/xctrace/watch/runtime maintenance 等高级能力不在本轮实现内，关闭前应拆 follow-up issue。
+
+#### 2026-05-23 Evidence / Harmony smoke / failure diagnostics 验证
+
+- `swift test --package-path CLI --scratch-path .build/cli-tests --filter EvidenceBundleTests` 通过，覆盖 summary/redact 对敏感 artifact 的剔除与 redacted manifest 写回。
+- `swift test --package-path CLI --scratch-path .build/cli-tests --filter SmokeHarmonyRuntimeTests` 通过，覆盖 `smoke harmony` 的 host steps、tap、screenshot 与 evidence 写入。
+- `swift test --package-path CLI --scratch-path .build/cli-tests --filter FailureDiagnosticsTests` 通过，覆盖 `tap` text-not-found 与 `assert` 失败诊断。
+- `swift test --package-path CLI --scratch-path .build/cli-tests` 通过，18 个 CLI tests 全绿。
+- `swift test` 通过，100 个 root package tests 全绿。
+- `swift build --package-path CLI --scratch-path .build/cli --product triton` 通过。
+- `.build/cli/debug/triton schema --command evidence --json` 暴露 `evidence-summary` 与 `evidence-redact`。
+- `.build/cli/debug/triton schema --command smoke --json` 暴露 `smoke-harmony`。
+- 本地 evidence fixture 复跑 `summary -> redact -> inspect` 通过，redacted manifest 同时包含 `status` included artifact 与 `screenshot` redacted placeholder。
+- `TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-host-smoke.sh` 通过。
+- `.build/cli/debug/triton device list --platform harmony --json` 只发现 `127.0.0.1:10100` 且 `state=Offline`；`.build/cli/debug/triton device wait-ready --platform harmony --target 127.0.0.1:10100 --timeout 1 --json` 返回 `target_offline`，因此未做真实 HDC 写入或截图。
 
 #### 2026-05-23 WebView URL / prefs set 正向复跑
 

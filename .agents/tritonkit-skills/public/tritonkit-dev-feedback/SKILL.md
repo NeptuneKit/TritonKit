@@ -26,6 +26,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
 3. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
    - `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`
    - `triton evidence inspect /tmp/<case>.tritonevidence --json`
+   - `triton evidence summary /tmp/<case>.tritonevidence --json`
+   - `triton evidence redact /tmp/<case>.tritonevidence --profile ios-private --output /tmp/<case>-redacted.tritonevidence --json`
    - `triton capture --case <case> --output /tmp/<case>.tritonevidence --json`
    - `triton assert text-exists|text-not-exists <text> --json`
    - `triton record --output /tmp/<case>.tritonplan --json` when a reusable plan template helps describe the flow
@@ -80,6 +82,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton wait --platform harmony --target <hdc-target> --text '<text>' --timeout 15 --json`
      - `triton tap '<text>' --platform harmony --target <hdc-target> --json`
      - `triton screenshot --platform harmony --target <hdc-target> --output /tmp/<case>.jpeg --json`
+     - `triton smoke harmony --target <hdc-target> --bundle <bundle> --ability <ability> --open-url <url> --wait-text <text> --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json`
      - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--target`.
      - host-side layout and screenshot artifacts may contain private UI data; inspect or summarize instead of attaching raw files when redaction is uncertain.
      - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
@@ -94,6 +97,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, or `triton clear` for agent-facing action checks; these default to JSON, and `--format text` is only for human-readable debugging.
    - For form flows, prefer semantic embedded actions when available: `triton focus "用户名" --json`, `triton set-text "用户名" "alice" --json`, `triton set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton select-segment "协议" "HTTP" --json`, and `triton set-switch "记住我" on --json`.
    - When the same text appears multiple times, run `triton find "<text>" --all` first; if you know a point inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`.
+   - When `tap` or `assert` fails, preserve the JSON envelope's nearest candidates / nearestText, candidateCount, and suggestedCommands in the issue summary instead of reducing it to "not found".
    - relevant `swift test`, smoke scripts, or app-level reproduction steps.
 4. Redact before filing or preparing an issue:
    - replace private project names, app names, bundle IDs, team IDs, organization names, user names, account IDs, email addresses, phone numbers, local usernames, internal domains, and absolute private paths with stable placeholders such as `<private-app>`, `<bundle-id>`, `<team-id>`, `<user>`, `<account>`, `<internal-host>`, and `<repo-path>`;
