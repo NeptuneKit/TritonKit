@@ -54,7 +54,8 @@
 | Simulator lifecycle | 已部分吃进来 | `triton sim list/use/boot/shutdown/screenshot` | 后续补 privacy/location/ui/logs |
 | Logs capture/stream | 吃进来 | `triton logs stream/collect --jsonl` | P1，回归证据核心 |
 | xcresult summary | 吃进来 | `triton xcresult summary/failures/attachments` | P1，测试失败定位 |
-| Coverage | 吃进来 | `triton coverage summary/uncovered` | P1/P2，覆盖率报告 |
+| Coverage | 吃进来 | `triton coverage report` | P1/P2，覆盖率报告 artifact |
+| Instruments trace | 吃进来 | `triton xctrace record` | P1/P2，性能 trace 作为 host artifact，不证明业务成功 |
 | SwiftPM build/test/run | 吃进来 | `triton spm build/test/run --jsonl` | P2，适合库项目和 CLI 项目 |
 | Physical device workflow | 吃进来但延后 | `triton device list/use/install/launch/build/test` | P2/P3，基于 `devicectl`，签名复杂度高 |
 | macOS app workflow | 吃进来但延后 | `triton macos build/test/run` 或并入 `triton xcode` | P3，非 iOS 回归主路径 |
@@ -102,12 +103,18 @@
 ### 场景五：覆盖率
 
 - Given test result 含 coverage
-- When 执行 `triton coverage summary --xcresult /tmp/app.xcresult --json`
-- Then 输出 target summary、line/function coverage、低覆盖 target
-- When 执行 `triton coverage uncovered --target App --json`
-- Then 输出文件、函数和未覆盖行区间
+- When 执行 `triton coverage report --xcresult /tmp/app.xcresult --output /tmp/coverage.json --json`
+- Then 输出机器可读 artifact envelope
+- And 完整 coverage JSON 只写入 artifact，不内嵌到 CLI summary
 
-### 场景六：证据包整合
+### 场景六：Instruments trace
+
+- Given agent 需要宿主侧性能证据
+- When 执行 `triton xctrace record --template "Time Profiler" --device <udid> --time-limit 5s --output /tmp/app.trace --json`
+- Then 返回机器可读 artifact envelope
+- And `.trace` 只作为证据，不等价于业务 ready 或测试通过
+
+### 场景七：证据包整合
 
 - Given build/test/run 已执行
 - When 执行 `triton capture --case login --include host,xcode,runtime --output /tmp/login.tritonevidence --json`
@@ -115,7 +122,7 @@
 
 ## 分期
 
-### 当前实现状态（2026-05-21）
+### 当前实现状态（2026-05-23）
 
 P0 最小 `triton xcode` 入口已落地：
 
@@ -128,6 +135,8 @@ P0 最小 `triton xcode` 入口已落地：
 - `triton xcode build --jsonl --timeout <seconds>`
 - `triton xcode test --result-bundle /tmp/App.xcresult --jsonl`
 - `triton xcode run --jsonl`
+- `triton xctrace record --template "Time Profiler" --device <udid> --time-limit 5s --output /tmp/App.trace --json`
+- `triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json`
 
 执行边界：
 
@@ -136,7 +145,8 @@ P0 最小 `triton xcode` 入口已落地：
 3. `xcode settings/build/test/run --jsonl` 已输出 invocation、stdout/stderr sample、heartbeat、summary，以及 stdout/stderr log path 和 byte count；真实项目卡住时先看这些 artifact，不再盲等。
 4. `xcode build` 的成功 summary 是纯 build 结束边界；它不再在 summary 后隐式执行 `xcodebuild -showBuildSettings -json`。需要 `.app` 路径时使用 `xcode settings` 或 `xcode run`，其中 `xcode run --jsonl` 会把 settings 解析暴露为 `xcode.run.settings.*` 进度事件。
 5. `xcode status/wait-idle` 是只读 best-effort host 诊断：先用 `pgrep` 缩小 Xcode build/test 相关 PID，再用 `ps -p` 采样，避免全量进程输出卡住；无法可靠推断的 workspace/scheme/destination 字段保持为空或低置信度。
-6. `xcresult`、coverage、logs 与 evidence 的深度整合仍在后续切片，不在本次 P0 内宣称完成。
+6. `xctrace record` 和 `coverage report` 已先落为 artifact 型契约：Triton 只返回 artifact path、bytes/truncation 或 source command 摘要，不把大型 `.trace` / coverage JSON 当作 inline 输出。
+7. `xcresult` summary/failures/attachments、coverage 语义汇总和 evidence 深度整合仍在后续切片，不在本次内宣称完成。
 
 ### P0：Xcode workflow 最小闭环
 
@@ -153,7 +163,8 @@ P0 最小 `triton xcode` 入口已落地：
 
 ### P1：真实回归报告闭环
 
-- `triton coverage summary/uncovered`
+- `triton coverage report`
+- `triton xctrace record`
 - `triton logs stream/collect`
 - `capture/evidence --include xcode,host`
 - build/test/run 进入 `.tritonplan`

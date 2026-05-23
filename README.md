@@ -357,11 +357,15 @@ triton xcode settings --jsonl --timeout 1800
 triton xcode build --jsonl --timeout 1800
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcode run --jsonl
+triton xctrace record --template "Time Profiler" --device 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --time-limit 5s --output /tmp/App.trace --json
+triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
 ```
 
 `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts, which gives agents a way to inspect long-running builds without waiting blindly.
 
 `xcode run` proves build, install, and launch were submitted. It does not prove business readiness; continue with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
+
+`xctrace record` and `coverage report` are artifact commands. They return paths, source commands, and byte/truncation summaries; they do not inline large `.trace` or coverage payloads and do not prove app business readiness by themselves.
 
 HarmonyOS NEXT / DevEco Emulator P0 discovery is exposed through the same host-side contract. It does not require a running TritonKit embedded runtime:
 

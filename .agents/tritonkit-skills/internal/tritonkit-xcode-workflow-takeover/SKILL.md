@@ -55,6 +55,8 @@ triton xcode settings --jsonl --timeout <seconds>
 triton xcode build --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcode run --jsonl
+triton xctrace record --template "Time Profiler" --device <udid> --time-limit 5s --output /tmp/App.trace --json
+triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
 ```
 
 Current boundaries:
@@ -64,7 +66,8 @@ Current boundaries:
 - Real workspaces may exceed default timeouts. Use `triton xcode settings/build/test/run --timeout <seconds>` before falling back to raw `xcodebuild`.
 - When build/test behavior looks stuck, run `triton xcode status --json` first, then `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`; timeout returns `xcode_not_idle` with blocking PIDs.
 - `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts. Use those artifacts before deciding to wait longer or fall back to raw `xcodebuild`.
-- `xcresult`, coverage, logs, and evidence xcode artifacts are still follow-up slices.
+- `xctrace record` and `coverage report` are artifact-first host commands. They return paths/source commands/byte summaries; large trace or coverage payloads stay in artifacts and do not prove business readiness.
+- `xcresult` summary/failures/attachments, semantic coverage summaries, logs, and evidence xcode artifact ingestion are still follow-up slices.
 
 ## Implementation Workflow
 
@@ -98,6 +101,8 @@ When implementation exists, add focused smoke:
 .build/cli/debug/triton xcode discover --path <repo> --json
 .build/cli/debug/triton xcode build --workspace <workspace> --scheme <scheme> --simulator <udid> --jsonl
 .build/cli/debug/triton xcode test --workspace <workspace> --scheme <scheme> --result-bundle /tmp/<case>.xcresult --jsonl
+.build/cli/debug/triton xctrace record --template "Time Profiler" --device <udid> --time-limit 1s --output /tmp/<case>.trace --json
+.build/cli/debug/triton coverage report --xcresult /tmp/<case>.xcresult --output /tmp/<case>-coverage.json --json
 .build/cli/debug/triton xcresult failures --path /tmp/<case>.xcresult --json
 ```
 

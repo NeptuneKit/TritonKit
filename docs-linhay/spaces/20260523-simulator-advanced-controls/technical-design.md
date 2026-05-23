@@ -83,6 +83,16 @@ triton sim logs --output /tmp/sim.ndjson --duration 5 --style ndjson --json
 triton sim logs --output /tmp/app.ndjson --duration 5 --predicate 'subsystem == "com.example.app"' --json
 ```
 
+### Xctrace / coverage artifacts
+
+```bash
+triton xctrace record --template "Time Profiler" --device <udid> --time-limit 5s --output /tmp/app.trace --json
+triton coverage report --xcresult /tmp/app.xcresult --output /tmp/coverage.json --json
+triton coverage report --xcresult /tmp/app.xcresult --target App --output /tmp/coverage-files.json --json
+```
+
+这两个命令属于 host-side Xcode artifact 能力，不放进 `triton sim`。trace 和 coverage JSON 可能很大，CLI envelope 只返回 artifact path / bytes / truncation / sourceCommand，不内嵌完整内容。
+
 ## 数据模型
 
 ### Shared host command support

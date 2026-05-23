@@ -269,6 +269,97 @@ public enum TKXcodebuildCommand {
     }
 }
 
+public enum TKXctraceCommand {
+    public static func record(
+        template: String,
+        output: String,
+        device: String? = nil,
+        timeLimit: String? = nil,
+        allProcesses: Bool = false,
+        attach: String? = nil,
+        launchCommand: [String] = [],
+        noPrompt: Bool = true,
+        appendRun: Bool = false,
+        runName: String? = nil
+    ) -> TKHostCommand {
+        var arguments = ["xctrace", "record", "--template", template, "--output", output]
+        if let device, !device.isEmpty {
+            arguments += ["--device", device]
+        }
+        if let timeLimit, !timeLimit.isEmpty {
+            arguments += ["--time-limit", timeLimit]
+        }
+        if appendRun {
+            arguments.append("--append-run")
+        }
+        if let runName, !runName.isEmpty {
+            arguments += ["--run-name", runName]
+        }
+        if allProcesses {
+            arguments.append("--all-processes")
+        }
+        if let attach, !attach.isEmpty {
+            arguments += ["--attach", attach]
+        }
+        if !launchCommand.isEmpty {
+            arguments += ["--launch", "--"]
+            arguments += launchCommand
+        }
+        if noPrompt {
+            arguments.append("--no-prompt")
+        }
+        return TKHostCommand(
+            executable: "xcrun",
+            arguments: arguments,
+            riskLevel: .evidence,
+            requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
+            defaultTimeoutSeconds: 600,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
+    }
+}
+
+public enum TKXccovReportMode: Equatable {
+    case summary
+    case onlyTargets
+    case filesForTarget(String)
+    case functionsForFile(String)
+}
+
+public enum TKXccovCommand {
+    public static func viewReport(
+        xcresult: String,
+        mode: TKXccovReportMode = .summary,
+        json: Bool = true
+    ) -> TKHostCommand {
+        var arguments = ["xccov", "view", "--report"]
+        switch mode {
+        case .summary:
+            break
+        case .onlyTargets:
+            arguments.append("--only-targets")
+        case .filesForTarget(let target):
+            arguments += ["--files-for-target", target]
+        case .functionsForFile(let file):
+            arguments += ["--functions-for-file", file]
+        }
+        if json {
+            arguments.append("--json")
+        }
+        arguments.append(xcresult)
+        return TKHostCommand(
+            executable: "xcrun",
+            arguments: arguments,
+            riskLevel: .evidence,
+            requiredConfig: [.artifactDir, .redactionPolicy, .timeout, .auditRecord],
+            defaultTimeoutSeconds: 120,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
+    }
+}
+
 public struct TKXcodeSchemeList: Codable, Equatable {
     public let containerName: String?
     public let schemes: [String]

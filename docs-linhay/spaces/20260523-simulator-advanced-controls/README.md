@@ -12,7 +12,7 @@ P0/P1 real-project smoke 已经收口，但还有一批更偏 simulator maintena
 - UI appearance / contrast / content size
 - pasteboard sync
 - simulated push notifications
-- diagnostics collection / verbose logging / runtime list-verify / video recording / bounded logs
+- diagnostics collection / verbose logging / runtime list-verify / video recording / bounded logs / xctrace / coverage artifacts
 
 这些能力不属于 smoke 主线，但它们能显著降低真实项目回归时的人手操作成本，并且都应继续保持 CLI + JSON 机器可读契约。
 
@@ -31,7 +31,7 @@ P0/P1 real-project smoke 已经收口，但还有一批更偏 simulator maintena
 
 ## 非目标
 
-1. 不在这一轮吃完 xctrace / coverage / runtime upgrade / clone / pair / unpair。
+1. 不在这一轮吃完 runtime upgrade / clone / pair / unpair。
 2. 不做真机默认流程。
 3. 不把 simulator control-plane 改成人读脚本输出。
 4. 不把 host action ack 直接算作 smoke 通过。
@@ -90,8 +90,17 @@ P0/P1 real-project smoke 已经收口，但还有一批更偏 simulator maintena
 - Then 返回机器可读 success envelope
 - And 完整日志写入 artifact，JSON 只返回 path、bytes 和 truncation 摘要
 
+### 场景八：xctrace / coverage artifact 可复跑
+
+- Given agent 需要宿主侧性能或覆盖率证据
+- When 执行 `triton xctrace record --template "Time Profiler" --device <udid> --time-limit 5s --output /tmp/app.trace --json`
+- Then 返回机器可读 artifact envelope
+- And `.trace` 作为证据归档，不声明业务成功
+- When 执行 `triton coverage report --xcresult /tmp/app.xcresult --output /tmp/coverage.json --json`
+- Then coverage JSON 写入 artifact，CLI summary 只返回 path、bytes、source command 与 truncation 摘要
+
 ## 当前分期
 
 - Phase 1：status bar / privacy / location / ui / pasteboard / push。
-- Phase 2：diagnose / verbose logging / runtime list-verify / video / bounded logs。
+- Phase 2：diagnose / verbose logging / runtime list-verify / video / bounded logs / xctrace / coverage artifacts。
 - Phase 3：clone / pair / unpair / runtime maintenance / personalization。

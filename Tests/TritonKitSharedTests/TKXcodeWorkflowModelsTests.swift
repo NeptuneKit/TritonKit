@@ -56,6 +56,44 @@ struct TKXcodeWorkflowModelsTests {
         ])
     }
 
+    @Test("xctrace and coverage command builders emit stable argv")
+    func xctraceAndCoverageCommandBuilders() {
+        let trace = TKXctraceCommand.record(
+            template: "Time Profiler",
+            output: "/tmp/App.trace",
+            device: "SIM-1",
+            timeLimit: "5s",
+            allProcesses: true,
+            attach: nil,
+            launchCommand: []
+        )
+        #expect(trace.executable == "xcrun")
+        #expect(trace.argv == [
+            "xctrace", "record",
+            "--template", "Time Profiler",
+            "--output", "/tmp/App.trace",
+            "--device", "SIM-1",
+            "--time-limit", "5s",
+            "--all-processes",
+            "--no-prompt",
+        ])
+        #expect(trace.capturesArtifacts)
+
+        let coverage = TKXccovCommand.viewReport(
+            xcresult: "/tmp/App.xcresult",
+            mode: .filesForTarget("App"),
+            json: true
+        )
+        #expect(coverage.executable == "xcrun")
+        #expect(coverage.argv == [
+            "xccov", "view",
+            "--report",
+            "--files-for-target", "App",
+            "--json",
+            "/tmp/App.xcresult",
+        ])
+    }
+
     @Test("xcode action progress and summary preserve streaming artifacts")
     func xcodeStreamingArtifactsRoundTrip() throws {
         let event = TKXcodeProgressEvent(

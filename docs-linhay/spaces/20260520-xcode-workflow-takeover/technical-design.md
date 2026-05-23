@@ -142,9 +142,19 @@ triton xcode clean --json
 triton xcresult summary --path /tmp/App.xcresult --json
 triton xcresult failures --path /tmp/App.xcresult --json
 triton xcresult attachments --path /tmp/App.xcresult --output /tmp/attachments --json
-triton coverage summary --xcresult /tmp/App.xcresult --json
-triton coverage uncovered --xcresult /tmp/App.xcresult --target App --json
+triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
+triton coverage report --xcresult /tmp/App.xcresult --only-targets --output /tmp/coverage-targets.json --json
+triton coverage report --xcresult /tmp/App.xcresult --target App --output /tmp/coverage-files.json --json
 ```
+
+### Instruments Trace
+
+```bash
+triton xctrace record --template "Time Profiler" --device <udid> --time-limit 5s --output /tmp/App.trace --json
+triton xctrace record --template "Allocations" --output /tmp/tool.trace --time-limit 10s -- /tmp/tool arg1
+```
+
+`xctrace record` 默认在未指定 `--attach` 或 launch command 时走 `--all-processes`，并加 `--no-prompt`，避免 agent 运行时被 GUI prompt 阻塞。`.trace` 文件只作为 host evidence artifact；业务成功仍必须通过 runtime wait/assert/screenshot/evidence 证明。
 
 ### Logs
 

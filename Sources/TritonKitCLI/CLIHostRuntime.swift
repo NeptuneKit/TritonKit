@@ -677,6 +677,12 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         if command.executable == "xcodebuild" {
             code = "xcodebuild_failed"
             hint = "Inspect the xcodebuild output, verify workspace/project, scheme, destination, signing, and DerivedData path."
+        } else if command.arguments.first == "xctrace" {
+            code = "xctrace_record_failed"
+            hint = "Verify the template, target device, attach/launch selection, time limit, privacy prompt state, and output path."
+        } else if command.arguments.first == "xccov" {
+            code = "coverage_report_failed"
+            hint = "Verify the .xcresult contains coverage data and that --target or --file matches the coverage report."
         } else if isHDC && command.arguments.contains("list") && command.arguments.contains("targets") {
             code = "host_action_failed"
             hint = "Verify hdc is installed, available on PATH, and can list Harmony targets."

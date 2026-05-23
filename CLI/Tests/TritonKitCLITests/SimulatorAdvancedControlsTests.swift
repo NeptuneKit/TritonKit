@@ -39,4 +39,15 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.providedCapabilities.contains("sim-runtime"))
         #expect(sim.providedCapabilities.contains("sim-push"))
     }
+
+    @Test("schema exposes xctrace and coverage artifact commands")
+    func schemaExposesXctraceAndCoverageCommands() throws {
+        let xctrace = try #require(commandSchemas().first { $0.name == "xctrace" })
+        let coverage = try #require(commandSchemas().first { $0.name == "coverage" })
+
+        #expect(xctrace.options.map(\.name).contains(where: { $0.hasPrefix("record") }))
+        #expect(xctrace.providedCapabilities.contains("xctrace-record"))
+        #expect(coverage.options.map(\.name).contains(where: { $0.hasPrefix("report") }))
+        #expect(coverage.providedCapabilities.contains("coverage-report"))
+    }
 }

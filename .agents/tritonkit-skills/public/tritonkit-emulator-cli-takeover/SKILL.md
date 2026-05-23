@@ -142,6 +142,8 @@ triton webview call <method> --platform ios --json
 triton webview events --platform ios --limit 50 --json
 triton evidence summary /tmp/<case>.tritonevidence --json
 triton evidence redact /tmp/<case>.tritonevidence --profile ios-private --output /tmp/<case>-redacted.tritonevidence --json
+triton xctrace record --template "Time Profiler" --device <SIMULATOR_UDID> --time-limit 5s --output /tmp/<case>.trace --json
+triton coverage report --xcresult /tmp/<case>.xcresult --output /tmp/<case>-coverage.json --json
 ```
 
 `webview list/current/current-url` 当前是 provider metadata 能力。iOS 已能从当前可见 `WKWebView` 读取 `url/title/pageSessionID/isLoading/estimatedProgress/frame` 等元数据；`route assert-current-url` 只断言 provider URL，不操作 H5 页面。真正的 DOM、页面事件和业务动作仍必须通过页面或 App 显式 opt-in 的 allowlist bridge 暴露。`webview call` 只能调用 allowlist 方法，不是任意 JavaScript eval。没有 WebView provider 时，输出必须保持 `candidateOnly=true`、`providerStatus=unavailable`、`bridgeStatus=unavailable`，并在 `missingCapabilities` 中声明 `webview.url`、`webview.dom`、`webview.bridge-call`、`webview.tap`、`webview.type` 等缺失项；不得把 AX/WebKit 容器误报为 DOM/JS/bridge 可用。Harmony 侧若未注册 WebView provider，也只能保持 host-only layout/candidate 边界，不能声明页面 bridge 可用。
