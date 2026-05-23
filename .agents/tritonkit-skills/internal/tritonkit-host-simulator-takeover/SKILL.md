@@ -47,6 +47,34 @@ triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> 
 triton app prefs dump --bundle-id <bundle-id> --simulator <udid-or-booted> --json
 ```
 
+Phase 3 host-side maintenance commands:
+
+```bash
+triton sim pair <watch-udid> <phone-udid> --json
+triton sim unpair <pair-uuid> --json
+triton sim clone <udid> "Clone for Smoke" --json
+triton sim erase <udid> --confirm --json
+triton sim upgrade <udid> <runtime-id> --json
+triton sim runtime list --json
+triton sim runtime verify <runtime-id> --json
+triton sim runtime add /tmp/iOSSimulatorRuntime.dmg --json
+triton sim runtime delete all --dry-run --json
+triton sim runtime delete <runtime-id> --confirm --json
+triton sim runtime unmount <runtime-id> --json
+triton sim runtime scan-and-mount --json
+triton sim runtime match list --json
+triton sim runtime match set iphoneos26.5 23F77 --json
+triton sim runtime match set iphoneos26.5 --default --json
+triton sim runtime dyld-cache update <runtime-id> --json
+triton sim runtime dyld-cache remove <runtime-id> --confirm --json
+triton sim personalization personalize <runtime-id> --json
+triton sim personalization remove-manifest manifest.plist --confirm --json
+triton sim personalization remove-all-manifests --confirm --json
+triton sim personalization remove-personalization <id> --confirm --json
+triton sim personalization revoke-manifests --confirm --json
+triton sim personalization scan-and-personalize --json
+```
+
 `triton sim use` writes repo-local workspace defaults to `.triton/host-defaults.json`. Do not run smoke writes in the repository unless that file is intentionally part of the test. Use a temporary working directory for validation when possible.
 
 `triton app open-url` only proves that the URL was submitted to Simulator. When an embedded runtime is connected, prefer `--wait-ready --snapshot` for a one-shot host action plus runtime readiness/snapshot summary. Otherwise always verify business completion with `triton wait`, `triton find`, `triton assert`, `triton app prefs get`, a fresh screenshot, or an evidence bundle.
@@ -118,7 +146,7 @@ Keep P0/P1 focused on real-project regression value:
 
 - P0 remaining: safer default simulator resolution, app install result enrichment.
 - P1: `sim privacy`, `sim location`, `sim ui/status-bar`, push notification, media/contact import, keychain certificates, pasteboard, iCloud sync, `.xcappdata`, logs, host evidence artifacts.
-- P2+: host UI snapshot/tap/type/press, record video, diagnose, xctrace, Xcode build/test, coverage, SwiftPM, runtime maintenance.
+- P2+: host UI snapshot/tap/type/press, record video, diagnose, xctrace, Xcode build/test, coverage, SwiftPM.
 
 ## Boundaries
 

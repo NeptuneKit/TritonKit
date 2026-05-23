@@ -60,6 +60,28 @@ struct TKHostAdapterModelsTests {
         #expect(TKSimctlCommand.push(udid: "U", bundleID: "com.example.app", payload: "/tmp/push.json").argv == ["simctl", "push", "U", "com.example.app", "/tmp/push.json"])
     }
 
+    @Test("simctl command builder emits phase three simulator maintenance argv")
+    func simctlCommandBuilderPhaseThreeArgv() {
+        #expect(TKSimctlCommand.pair(watchDevice: "WATCH", phoneDevice: "PHONE").argv == ["simctl", "pair", "WATCH", "PHONE"])
+        #expect(TKSimctlCommand.unpair(pairUUID: "PAIR").argv == ["simctl", "unpair", "PAIR"])
+        #expect(TKSimctlCommand.clone(device: "U", newName: "Clone").argv == ["simctl", "clone", "U", "Clone"])
+        #expect(TKSimctlCommand.clone(device: "U", newName: "Clone", destinationDeviceSet: "/tmp/deviceset").argv == ["simctl", "clone", "U", "Clone", "/tmp/deviceset"])
+        #expect(TKSimctlCommand.upgrade(device: "U", runtimeIdentifier: "com.apple.CoreSimulator.SimRuntime.iOS-26-5").argv == ["simctl", "upgrade", "U", "com.apple.CoreSimulator.SimRuntime.iOS-26-5"])
+        #expect(TKSimctlCommand.runtimeAdd(path: "/tmp/iOS.dmg", move: true, async: true).argv == ["simctl", "runtime", "add", "/tmp/iOS.dmg", "--move", "--async"])
+        #expect(TKSimctlCommand.runtimeDelete(identifier: "RUNTIME", dryRun: true, keepAsset: true).argv == ["simctl", "runtime", "delete", "RUNTIME", "--dry-run", "--keep-asset"])
+        #expect(TKSimctlCommand.runtimeDelete(notUsedSinceDays: 30, dryRun: true, keepAsset: true).argv == ["simctl", "runtime", "delete", "--notUsedSinceDays", "30", "--dry-run", "--keep-asset"])
+        #expect(TKSimctlCommand.runtimeUnmount(identifier: "RUNTIME").argv == ["simctl", "runtime", "unmount", "RUNTIME"])
+        #expect(TKSimctlCommand.runtimeScanAndMount().argv == ["simctl", "runtime", "scan-and-mount"])
+        #expect(TKSimctlCommand.runtimeMatchList(verbose: true).argv == ["simctl", "runtime", "match", "list", "-v", "-j"])
+        #expect(TKSimctlCommand.runtimeMatchSet(sdkName: "iphonesimulator26.0", runtimeBuild: "23F77", sdkBuild: "23F66").argv == ["simctl", "runtime", "match", "set", "iphonesimulator26.0", "23F77", "--sdkBuild", "23F66"])
+        #expect(TKSimctlCommand.runtimeMatchSetDefault(sdkName: "iphonesimulator26.0", sdkBuild: "23F66").argv == ["simctl", "runtime", "match", "set", "iphonesimulator26.0", "--default", "--sdkBuild", "23F66"])
+        #expect(TKSimctlCommand.runtimeDyldSharedCacheUpdate(runtime: "RUNTIME", force: true).argv == ["simctl", "runtime", "dyld_shared_cache", "update", "RUNTIME", "--force"])
+        #expect(TKSimctlCommand.runtimeDyldSharedCacheUpdate(all: true).argv == ["simctl", "runtime", "dyld_shared_cache", "update", "--all"])
+        #expect(TKSimctlCommand.runtimeDyldSharedCacheRemove(all: true).argv == ["simctl", "runtime", "dyld_shared_cache", "remove", "--all"])
+        #expect(TKSimctlCommand.personalization(action: "personalize", arguments: ["RUNTIME"]).argv == ["simctl", "personalization", "personalize", "RUNTIME"])
+        #expect(TKSimctlCommand.personalization(action: "remove-all-manifests", riskLevel: .breakGlass).argv == ["simctl", "personalization", "remove-all-manifests"])
+    }
+
     @Test("simctl runtime JSON decodes into runtime summaries")
     func simctlRuntimeListDecoding() throws {
         let json = """
@@ -106,6 +128,9 @@ struct TKHostAdapterModelsTests {
     func hostCommandsExposeRiskAndRuntimeConfig() {
         #expect(TKSimctlCommand.boot(udid: "U").riskLevel == .automation)
         #expect(TKSimctlCommand.erase(udid: "U").riskLevel == .breakGlass)
+        #expect(TKSimctlCommand.runtimeDelete(identifier: "RUNTIME").riskLevel == .breakGlass)
+        #expect(TKSimctlCommand.runtimeDelete(identifier: "RUNTIME", dryRun: true).riskLevel == .readonly)
+        #expect(TKSimctlCommand.personalization(action: "remove-all-manifests", riskLevel: .breakGlass).riskLevel == .breakGlass)
         #expect(TKSimctlCommand.uninstallApp(udid: "U", bundleID: "com.example.app").riskLevel == .automation)
         #expect(TKSimctlCommand.installAppData(udid: "U", xcappdata: "/tmp/state.xcappdata").requiredConfig.contains(.auditRecord))
         #expect(TKSimctlCommand.screenshot(udid: "U", output: "/tmp/shot.png").requiredConfig == [.artifactDir, .redactionPolicy, .timeout, .auditRecord])

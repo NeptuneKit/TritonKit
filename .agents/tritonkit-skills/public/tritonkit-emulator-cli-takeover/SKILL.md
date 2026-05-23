@@ -83,6 +83,28 @@ triton sim logverbose booted enable --json
 triton sim runtime list --json
 triton sim pasteboard set "hello" --simulator booted --json
 triton sim push --bundle-id com.example.app --payload /tmp/push.json --simulator booted --json
+triton sim pair <watch-udid> <phone-udid> --json
+triton sim unpair <pair-uuid> --json
+triton sim clone <udid> "Clone for Smoke" --json
+triton sim erase <udid> --confirm --json
+triton sim upgrade <udid> <runtime-id> --json
+triton sim runtime verify <runtime-id> --json
+triton sim runtime add /tmp/iOSSimulatorRuntime.dmg --json
+triton sim runtime delete all --dry-run --json
+triton sim runtime delete <runtime-id> --confirm --json
+triton sim runtime unmount <runtime-id> --json
+triton sim runtime scan-and-mount --json
+triton sim runtime match list --json
+triton sim runtime match set iphoneos26.5 23F77 --json
+triton sim runtime match set iphoneos26.5 --default --json
+triton sim runtime dyld-cache update <runtime-id> --json
+triton sim runtime dyld-cache remove <runtime-id> --confirm --json
+triton sim personalization personalize <runtime-id> --json
+triton sim personalization remove-manifest manifest.plist --confirm --json
+triton sim personalization remove-all-manifests --confirm --json
+triton sim personalization remove-personalization <id> --confirm --json
+triton sim personalization revoke-manifests --confirm --json
+triton sim personalization scan-and-personalize --json
 
 triton app list --simulator <udid-or-booted> --user-only --json
 triton app info --bundle-id <bundle-id> --simulator <udid-or-booted> --json

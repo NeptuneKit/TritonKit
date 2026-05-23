@@ -93,6 +93,36 @@ triton coverage report --xcresult /tmp/app.xcresult --target App --output /tmp/c
 
 这两个命令属于 host-side Xcode artifact 能力，不放进 `triton sim`。trace 和 coverage JSON 可能很大，CLI envelope 只返回 artifact path / bytes / truncation / sourceCommand，不内嵌完整内容。
 
+### Phase 3 simulator maintenance
+
+```bash
+triton sim pair <watch-udid> <phone-udid> --json
+triton sim unpair <pair-uuid> --json
+triton sim clone <udid> "Clone for Smoke" --json
+triton sim erase <udid> --confirm --json
+triton sim upgrade <udid> <runtime-id> --json
+triton sim runtime list --json
+triton sim runtime verify <runtime-id> --json
+triton sim runtime add /tmp/iOSSimulatorRuntime.dmg --json
+triton sim runtime delete all --dry-run --json
+triton sim runtime delete <runtime-id> --confirm --json
+triton sim runtime unmount <runtime-id> --json
+triton sim runtime scan-and-mount --json
+triton sim runtime match list --json
+triton sim runtime match set iphoneos26.5 23F77 --json
+triton sim runtime match set iphoneos26.5 --default --json
+triton sim runtime dyld-cache update <runtime-id> --json
+triton sim runtime dyld-cache remove <runtime-id> --confirm --json
+triton sim personalization personalize <runtime-id> --json
+triton sim personalization remove-manifest manifest.plist --confirm --json
+triton sim personalization remove-all-manifests --confirm --json
+triton sim personalization remove-personalization <id> --confirm --json
+triton sim personalization revoke-manifests --confirm --json
+triton sim personalization scan-and-personalize --json
+```
+
+破坏性命令必须显式 `--confirm`，而 `runtime delete` 允许先用 `--dry-run` 复跑输出。`erase`、`runtime dyld-cache remove` 和 `personalization remove-*` 都应返回 machine-readable confirmation gate failure，而不是默默执行。
+
 ## 数据模型
 
 ### Shared host command support
@@ -118,6 +148,18 @@ triton coverage report --xcresult /tmp/app.xcresult --target App --output /tmp/c
 | `sim_logverbose_failed` | verbose logging 切换失败 |
 | `runtime_list_failed` | runtime list 失败 |
 | `runtime_verify_failed` | runtime verify 失败 |
+| `sim_pair_failed` | pair 失败 |
+| `sim_unpair_failed` | unpair 失败 |
+| `sim_clone_failed` | clone 失败 |
+| `sim_erase_failed` | erase 失败 |
+| `sim_upgrade_failed` | upgrade 失败 |
+| `runtime_add_failed` | runtime add 失败 |
+| `runtime_delete_failed` | runtime delete 失败 |
+| `runtime_unmount_failed` | runtime unmount 失败 |
+| `runtime_scan_and_mount_failed` | runtime scan-and-mount 失败 |
+| `runtime_match_failed` | runtime match 失败 |
+| `runtime_dyld_cache_failed` | runtime dyld cache 失败 |
+| `sim_personalization_failed` | personalization 失败 |
 | `sim_record_failed` | video recording 失败 |
 | `sim_logs_failed` | bounded log capture 失败 |
 
@@ -128,6 +170,7 @@ triton coverage report --xcresult /tmp/app.xcresult --target App --output /tmp/c
 3. `sim` 命令参数解析测试。
 4. status bar / privacy / location / ui / pasteboard / push / diagnostics / runtime / video / logs 的成功与失败 envelope 测试。
 5. schema 暴露测试。
+6. Phase 3 maintenance 的 confirm / dry-run policy gate 测试。
 
 ## 交付顺序
 
@@ -139,3 +182,4 @@ triton coverage report --xcresult /tmp/app.xcresult --target App --output /tmp/c
 6. `push`
 7. `diagnose / logverbose / runtime list-verify`
 8. `logs / xctrace / coverage`
+9. `pair / unpair / clone / erase / upgrade / runtime maintenance / personalization`

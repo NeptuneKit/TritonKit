@@ -57,6 +57,11 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton sim diagnose --output <path> --format json`：收集 simulator diagnostics archive / logs；输出 path 与 source command，适合排查本机模拟器问题。
 - `triton sim logverbose [--simulator <udid|booted>] enable|disable --format json`：开启或关闭 simulator verbose logging，便于配合 `diagnose` 使用。
 - `triton sim runtime list|verify --format json`：读取已安装 simulator runtime 目录与签名状态，或对指定 runtime 重新 verify。
+- `triton sim pair|unpair|clone|erase|upgrade ... --format json`：管理 watch/phone pair、克隆 device、擦除 device、升级 runtime；`erase` 必须显式 `--confirm`。
+- `triton sim runtime add|delete|unmount|scan-and-mount --format json`：维护 simulator runtime image；`delete` 支持 `--dry-run` 先复跑输出，非 dry-run 需要 `--confirm`。
+- `triton sim runtime match list|set --format json`：读取或覆盖 SDK-to-runtime build matching；`set` 支持 `--default` 回退默认匹配。
+- `triton sim runtime dyld-cache update|remove --format json`：更新或移除 runtime dyld shared cache；`remove` 需要 `--confirm`。
+- `triton sim personalization personalize|remove-manifest|remove-all-manifests|remove-personalization|revoke-manifests|scan-and-personalize --format json`：管理 runtime personalization manifests；所有 remove/revoke 动作都需要 `--confirm`。
 - `triton sim status-bar list|clear|override --simulator <udid|booted> --format json`：读取、清除或覆盖 simulator 状态栏；`override` 继续通过 JSON envelope 回传 source command 和执行结果，便于 agent 复跑与审计。
 - `triton sim privacy grant|revoke|reset <service> [bundle-id] --simulator <udid|booted> --format json`：通过 host-side `xcrun simctl privacy` 管理 iOS Simulator 权限，适合真实项目回归前做环境准备。
 - `triton sim location list|clear|set|run|start --simulator <udid|booted> --format json`：管理模拟位置；`set` 接受 `<lat>,<lon>`，`start` 接受两个以上 waypoints，坐标非法时返回 `invalid_location_value`。

@@ -674,6 +674,7 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         let code: String
         let hint: String
         let isHDC = command.executable == "hdc" || command.executable.hasSuffix("/hdc")
+        let simctlSubcommand = command.arguments.dropFirst().first
         if command.executable == "xcodebuild" {
             code = "xcodebuild_failed"
             hint = "Inspect the xcodebuild output, verify workspace/project, scheme, destination, signing, and DerivedData path."
@@ -716,6 +717,42 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         } else if command.arguments.contains("push") {
             code = "push_payload_invalid"
             hint = "Verify the push payload path or stdin payload, bundle id, and JSON structure."
+        } else if simctlSubcommand == "pair" {
+            code = "sim_pair_failed"
+            hint = "Verify the watch and phone simulator UDIDs exist and are compatible."
+        } else if simctlSubcommand == "unpair" {
+            code = "sim_unpair_failed"
+            hint = "Verify the device pair UUID exists. Run `xcrun simctl list pairs` if Triton schema does not yet expose pair listing."
+        } else if simctlSubcommand == "clone" {
+            code = "sim_clone_failed"
+            hint = "Verify the source simulator exists, the new name is valid, and the destination device set path is writable."
+        } else if simctlSubcommand == "erase" {
+            code = "sim_erase_failed"
+            hint = "Verify the simulator exists, is not in an incompatible state, and the erase was intentionally run with --confirm."
+        } else if simctlSubcommand == "upgrade" {
+            code = "sim_upgrade_failed"
+            hint = "Verify the simulator exists and the runtime identifier is newer and available on this machine."
+        } else if command.arguments.contains("personalization") {
+            code = "sim_personalization_failed"
+            hint = "Verify the personalization action, runtime or manifest identifier, and whether the destructive action requires --confirm."
+        } else if command.arguments.contains("runtime") && command.arguments.contains("add") {
+            code = "runtime_add_failed"
+            hint = "Verify the runtime image path exists and the runtime can be staged, verified, and mounted."
+        } else if command.arguments.contains("runtime") && command.arguments.contains("delete") {
+            code = "runtime_delete_failed"
+            hint = "Run with --dry-run first, then pass --confirm only when deleting the selected runtimes is intentional."
+        } else if command.arguments.contains("runtime") && command.arguments.contains("unmount") {
+            code = "runtime_unmount_failed"
+            hint = "Verify the runtime identifier exists and no required simulator is actively using it."
+        } else if command.arguments.contains("runtime") && command.arguments.contains("scan-and-mount") {
+            code = "runtime_scan_and_mount_failed"
+            hint = "Verify CoreSimulator runtime storage is readable and retry after any active simulator maintenance finishes."
+        } else if command.arguments.contains("runtime") && command.arguments.contains("match") {
+            code = "runtime_match_failed"
+            hint = "Verify the SDK canonical name, runtime build, and optional SDK build match installed Xcode/runtime data."
+        } else if command.arguments.contains("runtime") && command.arguments.contains("dyld_shared_cache") {
+            code = "runtime_dyld_cache_failed"
+            hint = "Verify the runtime identifier exists; removal requires an intentional --confirm gate in Triton."
         } else if command.arguments.contains("runtime") && command.arguments.contains("verify") {
             code = "runtime_verify_failed"
             hint = "Verify the runtime identifier and that the selected runtime is installed and verifiable."

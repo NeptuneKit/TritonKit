@@ -20,7 +20,7 @@ P0/P1 real-project smoke 已经收口，但还有一批更偏 simulator maintena
 
 | Issue | 角色 | 本 space 处理策略 |
 | --- | --- | --- |
-| #23 Remaining advanced simulator takeover controls | Epic | 先落地一批最稳定的 host-side controls，再逐步补 diagnostics / logs / video / xctrace |
+| #23 Remaining advanced simulator takeover controls | Epic | 已完成 Phase 3 的 host-side controls 收口，继续保留 JSON 契约和安全门禁 |
 
 ## 目标
 
@@ -31,10 +31,10 @@ P0/P1 real-project smoke 已经收口，但还有一批更偏 simulator maintena
 
 ## 非目标
 
-1. 不在这一轮吃完 runtime upgrade / clone / pair / unpair。
-2. 不做真机默认流程。
-3. 不把 simulator control-plane 改成人读脚本输出。
-4. 不把 host action ack 直接算作 smoke 通过。
+1. 不做真机默认流程。
+2. 不把 simulator control-plane 改成人读脚本输出。
+3. 不把 host action ack 直接算作 smoke 通过。
+4. 不把破坏性维护命令做成无门槛默认值。
 
 ## BDD 验收场景
 
@@ -99,8 +99,20 @@ P0/P1 real-project smoke 已经收口，但还有一批更偏 simulator maintena
 - When 执行 `triton coverage report --xcresult /tmp/app.xcresult --output /tmp/coverage.json --json`
 - Then coverage JSON 写入 artifact，CLI summary 只返回 path、bytes、source command 与 truncation 摘要
 
+### 场景九：Phase 3 维护动作可复跑
+
+- Given iOS Simulator 已 boot 或存在可用 runtime
+- When 执行 `triton sim pair <watch-udid> <phone-udid> --json`
+- Then 返回机器可读 success envelope
+- And `unpair`、`clone`、`upgrade` 也有同等契约
+- When 执行 `triton sim runtime delete all --dry-run --json`
+- Then 只返回 readonly dry-run 结果，不删除任何 runtime
+- When 执行 `triton sim erase <udid> --json`
+- Then 返回 `confirmation_required`
+- And `erase`、`runtime delete`、`runtime dyld-cache remove`、`personalization remove-*` 都保留确认门禁
+
 ## 当前分期
 
 - Phase 1：status bar / privacy / location / ui / pasteboard / push。
 - Phase 2：diagnose / verbose logging / runtime list-verify / video / bounded logs / xctrace / coverage artifacts。
-- Phase 3：clone / pair / unpair / runtime maintenance / personalization。
+- Phase 3：clone / pair / unpair / runtime maintenance / personalization（已完成）。

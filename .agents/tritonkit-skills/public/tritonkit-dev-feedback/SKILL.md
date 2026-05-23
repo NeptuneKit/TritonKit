@@ -70,6 +70,19 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton app container --bundle-id <bundle-id> --kind data --json`
      - `triton app prefs get <key> --bundle-id <bundle-id> --json`
      - `triton app prefs set <key> <json-value> --bundle-id <bundle-id> --json`
+     - `triton sim pair <watch-udid> <phone-udid> --json`
+     - `triton sim unpair <pair-uuid> --json`
+     - `triton sim clone <udid> "Clone for Smoke" --json`
+     - `triton sim erase <udid> --confirm --json`
+     - `triton sim upgrade <udid> <runtime-id> --json`
+     - `triton sim runtime list --json`
+     - `triton sim runtime verify <runtime-id> --json`
+     - `triton sim runtime delete all --dry-run --json`
+     - `triton sim runtime delete <runtime-id> --confirm --json`
+     - `triton sim runtime match list --json`
+     - `triton sim runtime dyld-cache remove <runtime-id> --confirm --json`
+     - `triton sim personalization scan-and-personalize --json`
+     - destructive maintenance commands should be checked with `--confirm` or `--dry-run` before filing feedback.
    - host-side Harmony checks that do not require embedded runtime:
      - `triton device doctor --platform harmony --json`
      - `triton device list --platform harmony --json`

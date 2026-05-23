@@ -317,6 +317,11 @@ triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl
 triton sim screenshot --simulator booted --output /tmp/sim.png --json
 triton sim record --simulator booted --output /tmp/sim.mov --duration 10 --json
 triton sim logs --simulator booted --output /tmp/sim.ndjson --duration 5 --style ndjson --json
+triton sim pair <watch-udid> <phone-udid> --json
+triton sim unpair <pair-uuid> --json
+triton sim clone <udid> "Clone for Smoke" --json
+triton sim erase <udid> --confirm --json
+triton sim upgrade <udid> <runtime-id> --json
 triton sim status-bar list --simulator booted --json
 triton sim status-bar override --simulator booted --time "09:41" --batteryLevel 100 --json
 triton sim privacy grant location com.example.app --simulator booted --json
@@ -326,6 +331,24 @@ triton sim pasteboard set "hello" --simulator booted --json
 triton sim pasteboard get --simulator booted --json
 triton sim pasteboard sync host device --simulator booted --json
 triton sim push --bundle-id com.example.app --payload /tmp/push.json --simulator booted --json
+triton sim runtime list --json
+triton sim runtime verify com.apple.CoreSimulator.SimRuntime.iOS-26-5 --json
+triton sim runtime add /tmp/iOSSimulatorRuntime.dmg --json
+triton sim runtime delete all --dry-run --json
+triton sim runtime delete com.apple.CoreSimulator.SimRuntime.iOS-26-5 --confirm --json
+triton sim runtime unmount com.apple.CoreSimulator.SimRuntime.iOS-26-5 --json
+triton sim runtime scan-and-mount --json
+triton sim runtime match list --json
+triton sim runtime match set iphoneos26.5 23F77 --json
+triton sim runtime match set iphoneos26.5 --default --json
+triton sim runtime dyld-cache update com.apple.CoreSimulator.SimRuntime.iOS-26-5 --json
+triton sim runtime dyld-cache remove com.apple.CoreSimulator.SimRuntime.iOS-26-5 --confirm --json
+triton sim personalization personalize com.apple.CoreSimulator.SimRuntime.iOS-26-5 --json
+triton sim personalization remove-manifest manifest.plist --confirm --json
+triton sim personalization remove-all-manifests --confirm --json
+triton sim personalization remove-personalization 12345 --confirm --json
+triton sim personalization revoke-manifests --confirm --json
+triton sim personalization scan-and-personalize --json
 triton app list --simulator booted --user-only --json
 triton app info --bundle-id com.example.app --simulator booted --json
 triton app install --app /tmp/Demo.app --simulator booted --json
@@ -341,6 +364,8 @@ triton app prefs get DEBUG-mock --bundle-id com.example.app --json
 triton app prefs set DEBUG-mock true --bundle-id com.example.app --simulator booted --json
 triton app prefs dump --bundle-id com.example.app --json
 ```
+
+破坏性命令默认要求 `--confirm`，而 `runtime delete` 也支持先用 `--dry-run` 复跑确认输出。
 
 `app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
 When an embedded runtime is expected to be connected, add `--wait-ready --snapshot` to make the one-shot result include runtime readiness and an app/route/AX snapshot summary.

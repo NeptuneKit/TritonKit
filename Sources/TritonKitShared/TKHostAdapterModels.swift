@@ -300,8 +300,28 @@ public enum TKSimctlCommand {
         command(["simctl", "shutdown", udid], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
+    public static func pair(watchDevice: String, phoneDevice: String) -> TKHostCommand {
+        command(["simctl", "pair", watchDevice, phoneDevice], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func unpair(pairUUID: String) -> TKHostCommand {
+        command(["simctl", "unpair", pairUUID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func clone(device: String, newName: String, destinationDeviceSet: String? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "clone", device, newName]
+        if let destinationDeviceSet {
+            arguments.append(destinationDeviceSet)
+        }
+        return command(arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
     public static func erase(udid: String) -> TKHostCommand {
         command(["simctl", "erase", udid], riskLevel: .breakGlass, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func upgrade(device: String, runtimeIdentifier: String) -> TKHostCommand {
+        command(["simctl", "upgrade", device, runtimeIdentifier], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func screenshot(udid: String, output: String) -> TKHostCommand {
@@ -492,6 +512,112 @@ public enum TKSimctlCommand {
 
     public static func runtimeVerify(identifier: String) -> TKHostCommand {
         command(["simctl", "runtime", "verify", identifier], riskLevel: .diagnostic, requiredConfig: [.timeout, .auditRecord])
+    }
+
+    public static func runtimeAdd(path: String, move: Bool = false, async: Bool = false) -> TKHostCommand {
+        var arguments = ["simctl", "runtime", "add", path]
+        if move {
+            arguments.append("--move")
+        }
+        if async {
+            arguments.append("--async")
+        }
+        return command(arguments, riskLevel: .automation, requiredConfig: [.timeout, .auditRecord], defaultTimeoutSeconds: async ? 30 : 600)
+    }
+
+    public static func runtimeDelete(
+        identifier: String? = nil,
+        notUsedSinceDays: Int? = nil,
+        dryRun: Bool = false,
+        keepAsset: Bool = false
+    ) -> TKHostCommand {
+        var arguments = ["simctl", "runtime", "delete"]
+        if let identifier {
+            arguments.append(identifier)
+        } else if let notUsedSinceDays {
+            arguments += ["--notUsedSinceDays", "\(notUsedSinceDays)"]
+        }
+        if dryRun {
+            arguments.append("--dry-run")
+        }
+        if keepAsset {
+            arguments.append("--keep-asset")
+        }
+        return command(
+            arguments,
+            riskLevel: dryRun ? .readonly : .breakGlass,
+            requiredConfig: dryRun ? [.timeout] : [.timeout, .auditRecord],
+            defaultTimeoutSeconds: 300
+        )
+    }
+
+    public static func runtimeUnmount(identifier: String) -> TKHostCommand {
+        command(["simctl", "runtime", "unmount", identifier], riskLevel: .automation, requiredConfig: [.timeout, .auditRecord], defaultTimeoutSeconds: 120)
+    }
+
+    public static func runtimeScanAndMount() -> TKHostCommand {
+        command(["simctl", "runtime", "scan-and-mount"], riskLevel: .automation, requiredConfig: [.timeout, .auditRecord], defaultTimeoutSeconds: 300)
+    }
+
+    public static func runtimeMatchList(verbose: Bool = false) -> TKHostCommand {
+        var arguments = ["simctl", "runtime", "match", "list"]
+        if verbose {
+            arguments.append("-v")
+        }
+        arguments.append("-j")
+        return command(arguments)
+    }
+
+    public static func runtimeMatchSet(sdkName: String, runtimeBuild: String, sdkBuild: String? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "runtime", "match", "set", sdkName, runtimeBuild]
+        if let sdkBuild {
+            arguments += ["--sdkBuild", sdkBuild]
+        }
+        return command(arguments, riskLevel: .automation, requiredConfig: [.timeout, .auditRecord])
+    }
+
+    public static func runtimeMatchSetDefault(sdkName: String, sdkBuild: String? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "runtime", "match", "set", sdkName, "--default"]
+        if let sdkBuild {
+            arguments += ["--sdkBuild", sdkBuild]
+        }
+        return command(arguments, riskLevel: .automation, requiredConfig: [.timeout, .auditRecord])
+    }
+
+    public static func runtimeDyldSharedCacheUpdate(runtime: String? = nil, all: Bool = false, force: Bool = false) -> TKHostCommand {
+        var arguments = ["simctl", "runtime", "dyld_shared_cache", "update"]
+        if all {
+            arguments.append("--all")
+        } else if let runtime {
+            arguments.append(runtime)
+        }
+        if force {
+            arguments.append("--force")
+        }
+        return command(arguments, riskLevel: force ? .automation : .diagnostic, requiredConfig: [.timeout, .auditRecord], defaultTimeoutSeconds: 300)
+    }
+
+    public static func runtimeDyldSharedCacheRemove(runtime: String? = nil, all: Bool = false) -> TKHostCommand {
+        var arguments = ["simctl", "runtime", "dyld_shared_cache", "remove"]
+        if all {
+            arguments.append("--all")
+        } else if let runtime {
+            arguments.append(runtime)
+        }
+        return command(arguments, riskLevel: .breakGlass, requiredConfig: [.timeout, .auditRecord], defaultTimeoutSeconds: 300)
+    }
+
+    public static func personalization(
+        action: String,
+        arguments personalizationArguments: [String] = [],
+        riskLevel: TKHostRiskLevel = .diagnostic
+    ) -> TKHostCommand {
+        command(
+            ["simctl", "personalization", action] + personalizationArguments,
+            riskLevel: riskLevel,
+            requiredConfig: riskLevel == .breakGlass ? [.timeout, .auditRecord] : [.timeout],
+            defaultTimeoutSeconds: 300
+        )
     }
 }
 

@@ -107,6 +107,34 @@ private func isValidSimctlCoordinate(_ value: String) -> Bool {
     return (-90...90).contains(latitude) && (-180...180).contains(longitude)
 }
 
+func requireConfirmation(
+    _ confirmed: Bool,
+    action: String,
+    hint: String,
+    outputFormat: ClientOutputFormat
+) throws {
+    guard confirmed else {
+        try failHostValidation(
+            code: "confirmation_required",
+            message: "\(action) requires --confirm.",
+            hint: hint,
+            outputFormat: outputFormat
+        )
+    }
+}
+
+func requireExactlyOneSelector(
+    selected: Int,
+    code: String,
+    message: String,
+    hint: String,
+    outputFormat: ClientOutputFormat
+) throws {
+    guard selected == 1 else {
+        try failHostValidation(code: code, message: message, hint: hint, outputFormat: outputFormat)
+    }
+}
+
 struct Sim: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "sim",
@@ -116,6 +144,11 @@ struct Sim: AsyncParsableCommand {
             SimUse.self,
             SimBoot.self,
             SimShutdown.self,
+            SimPair.self,
+            SimUnpair.self,
+            SimClone.self,
+            SimErase.self,
+            SimUpgrade.self,
             SimScreenshot.self,
             SimRecord.self,
             SimLogs.self,
@@ -128,6 +161,7 @@ struct Sim: AsyncParsableCommand {
             SimUI.self,
             SimPasteboard.self,
             SimPush.self,
+            SimPersonalization.self,
         ]
     )
 }
@@ -408,65 +442,6 @@ struct SimLogVerbose: AsyncParsableCommand {
             command: TKSimctlCommand.logVerbose(udid: simulator, enabled: action == .enable),
             outputFormat: effectiveFormat(format, json: json),
             note: action == .enable ? "Verbose logging was enabled." : "Verbose logging was disabled."
-        )
-    }
-}
-
-struct SimRuntime: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(
-        commandName: "runtime",
-        abstract: "Inspect simulator runtime maintenance state",
-        subcommands: [SimRuntimeList.self, SimRuntimeVerify.self]
-    )
-}
-
-struct SimRuntimeList: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "list", abstract: "List installed simulator runtimes")
-
-    @Flag(help: "Include verbose runtime details") var verbose = false
-    @Flag(help: "Alias for --format json") var json = false
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
-
-    func run() async throws {
-        let outputFormat = effectiveFormat(format, json: json)
-        do {
-            let result = try runHostCommand(TKSimctlCommand.runtimeList(verbose: verbose))
-            let runtimes = try TKSimctlRuntimeListParser.parse(result.stdoutData)
-            let output = HostSimulatorRuntimeListOutput(
-                ok: true,
-                runtimes: runtimes,
-                count: runtimes.count,
-                verbose: verbose,
-                sourceCommand: result.sourceCommand
-            )
-            switch outputFormat {
-            case .json:
-                print(try encodeJSON(output))
-            case .text:
-                for runtime in runtimes {
-                    print("\(runtime.identifier)\t\(runtime.state)\t\(runtime.version)\t\(runtime.kind)")
-                }
-            }
-        } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
-        }
-    }
-}
-
-struct SimRuntimeVerify: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "verify", abstract: "Verify a simulator runtime signature")
-
-    @Argument(help: "Runtime identifier") var identifier: String
-    @Flag(help: "Alias for --format json") var json = false
-    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
-
-    func run() async throws {
-        try runSimpleHostCommand(
-            action: "sim.runtime.verify",
-            target: "runtime:\(identifier)",
-            command: TKSimctlCommand.runtimeVerify(identifier: identifier),
-            outputFormat: effectiveFormat(format, json: json),
-            note: "Runtime signature verification was requested."
         )
     }
 }
