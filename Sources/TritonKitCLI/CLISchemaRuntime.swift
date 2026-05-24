@@ -496,7 +496,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 "triton xctrace record --template 'Time Profiler' --device 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --time-limit 5s --output /tmp/App.trace --json",
             ],
             successShape: "{ ok, action, runtimeScope, target, tool, exitCode, sourceCommand, artifacts[], stdout?, stderr?, note? }",
-            failureShape: "{ ok:false, error:{ code: xctrace_record_failed|host_command_failed, message, hint } }",
+            failureShape: "{ ok:false, error:{ code: artifact_output_rejected|xctrace_record_failed|host_command_failed, message, hint } }",
             requiredOptions: ["record:--template", "record:--output"],
             artifacts: ["trace"],
             retryable: true,
@@ -524,7 +524,7 @@ func commandSchemas() -> [TKCommandSchema] {
                     ])
                 ),
             ],
-            failureCodes: ["xctrace_record_failed", "host_command_failed"],
+            failureCodes: ["artifact_output_rejected", "xctrace_record_failed", "host_command_failed"],
             subcommands: [
                 TKCommandSubcommandSchema(
                     name: "record",
@@ -534,7 +534,7 @@ func commandSchemas() -> [TKCommandSchema] {
                     artifacts: ["trace"],
                     retryable: true,
                     outputSelectors: ["xctrace.record"],
-                    failureCodes: ["xctrace_record_failed", "host_command_failed"]
+                    failureCodes: ["artifact_output_rejected", "xctrace_record_failed", "host_command_failed"]
                 ),
             ],
             providedCapabilities: ["xctrace-record"]
