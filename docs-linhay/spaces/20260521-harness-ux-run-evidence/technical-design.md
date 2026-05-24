@@ -237,6 +237,17 @@ public enum TKEvidenceFrictionKind: String, Codable, Sendable {
 
 实现时不要强行用一个巨型 enum 承载所有 payload；可以用 tagged envelope + per-kind payload，保证 forward compatibility。
 
+### 2026-05-24 implementation checkpoint
+
+已落地首期 Shared-only 模型与 parser：
+
+1. `Sources/TritonKitShared/TKEvidenceRunModels.swift` 新增 `TKEvidenceRunEvent`、`TKEvidenceRunEventKind`、`TKEvidenceFrictionKind`、`TKEvidenceRunVerdict`、`TKEvidenceRunMetadata` 与 parse result / warning / summary 类型。
+2. `TKEvidenceRunEventKind` 使用 raw-value wrapper，而不是封闭 enum；已知 kind 有静态常量，未知 kind 可以保留 raw value 并由 parser 产生 `unknown_kind` warning。
+3. `TKEvidenceRunLogParser` 已支持逐行解析、最后一行 partial JSON 截断容忍、中间坏行 `malformedEvent`、`run_started` 首行校验、unsupported schemaVersion 稳定错误、缺少 `run_completed` 时返回 `incomplete`。
+4. `TKEvidenceRunCredential` 只建模 `label` / `username`，不提供 password / token / secret 字段。
+
+本 checkpoint 暂不包含 writer、CLI / HTTP 写入口、`capture` / `replay` 集成或 manifest run artifact 引用。
+
 ## Writer / Parser
 
 ### Writer
@@ -372,3 +383,9 @@ harmony
 3. `.tritonevidence` manifest 能引用 `run/events.jsonl`。
 4. `capture` 或 `replay` 至少一个入口能写基础 run events。
 5. docs 和 skill 明确 Harness 是 UX evidence 参考，不是 GUI 产品模板。
+
+2026-05-24 状态：
+
+1. 已完成：`TKEvidenceRunEvent` / friction models 可编解码。
+2. 已部分完成：parser 覆盖 partial tail、unknown kind、middle malformed line、`run_started` 首行约束和 credential public identity；writer 尚未实现。
+3. 未完成：manifest run artifact 引用、`capture` / `replay` 写入入口、CLI / HTTP 写入口。

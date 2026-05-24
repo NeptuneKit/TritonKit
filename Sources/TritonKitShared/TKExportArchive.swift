@@ -1,6 +1,6 @@
 import Foundation
 
-public enum TKJSONValue: Codable, Equatable {
+public enum TKJSONValue: Codable, Equatable, Sendable {
     case null
     case bool(Bool)
     case int(Int)
