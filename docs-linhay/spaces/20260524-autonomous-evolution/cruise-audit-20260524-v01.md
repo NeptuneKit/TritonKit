@@ -100,9 +100,10 @@ swift test --filter TKXcodeWorkflowModelsTests
 11. `evidence --include host,xcode` 只读 artifact 契约：`host` 与 `xcode` 已进入 evidence/capture include allowlist 和 schema/help；首期采集 repo-local defaults、simulator list、Xcode process status 和浅层 discovery，写入 `artifacts/host/` / `artifacts/xcode/` 并标记 sensitive；不可用来源逐项进入 `manifest.skipped`。仅包含这些 include 时不会额外连接 runtime。
 12. `xcode test` final summary top failures：`xcode test --result-bundle ...` 的 final `TKXcodeActionSummary` 会默认脱敏内联 `testResultSummary` 与 `topFailures`；测试失败时输出 `ok:false` summary 并以非 0 退出，保留 `.xcresult` 给 `triton xcresult failures` 深挖。
 13. 显式 Xcode action summary 证据导入：`triton evidence/capture --include xcode --xcode-summary <summary.json>` 会把已保存的 `TKXcodeActionSummary` 规范化写入 `artifacts/xcode/action-summary.json` 并标记 sensitive；不读取或复制 summary 引用的 stdout/stderr log、raw `.xcresult`、`.trace`，也不扫描临时目录或 DerivedData。
+14. `xctrace record` 输出防覆盖：普通 `--output <path.trace>` 在路径已存在时先返回 `artifact_output_rejected`，`--append-run` 只允许已存在且非 symlink 的 trace 路径，symlink 输出始终拒绝，避免 agent 覆盖或跟随非预期 artifact。
 
 ### 继续延期
 
-1. 为更多非 stdout-backed artifact 命令补齐 explicit artifact-dir / force 策略，降低 agent 自动执行时覆盖非预期文件的风险。
+1. 为更多非 stdout-backed artifact 命令补齐 explicit artifact-dir / force 策略，降低 agent 自动执行时覆盖非预期文件的风险；`xctrace record` 已完成基础 overwrite/symlink guard。
 2. 将 subcommand schema contract 继续推进为更多命令共享的轻量 contract builder，减少 `CLISchemaRuntime.swift` 内联重复。
 3. 继续实现 `capture/evidence --include xcode,host` 对已显式生成的 xcode stdout/stderr、默认脱敏 xcresult summary/failures、coverage JSON 和 trace artifact 的 manifest 整合；不自动执行 build/test/run，不扫 `/tmp` 或 DerivedData。已完成的 action summary 导入只覆盖 summary JSON 自身，不覆盖 raw log / xcresult / trace 复制。

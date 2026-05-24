@@ -33,7 +33,7 @@ struct XctraceRecord: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         let effectiveAllProcesses = allProcesses || (attach == nil && !launch && launchCommand.isEmpty)
         do {
-            try ensureParentDirectory(for: output)
+            try prepareXctraceArtifactOutputPath(output, appendRun: appendRun)
             try runSimpleHostCommand(
                 action: "xctrace.record",
                 runtimeScope: "host-xcode",
@@ -56,6 +56,21 @@ struct XctraceRecord: AsyncParsableCommand {
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
         }
+    }
+}
+
+func prepareXctraceArtifactOutputPath(_ path: String, appendRun: Bool) throws {
+    try ensureParentDirectory(for: path)
+    if (try? FileManager.default.destinationOfSymbolicLink(atPath: path)) != nil {
+        throw HostArtifactOutputError.rejected(path: path, reason: "symbolic links are not accepted for xctrace output")
+    }
+    let exists = FileManager.default.fileExists(atPath: path)
+    if appendRun {
+        guard exists else {
+            throw HostArtifactOutputError.rejected(path: path, reason: "--append-run requires an existing trace output")
+        }
+    } else if exists {
+        throw HostArtifactOutputError.rejected(path: path, reason: "path already exists; use a fresh trace path or --append-run")
     }
 }
 

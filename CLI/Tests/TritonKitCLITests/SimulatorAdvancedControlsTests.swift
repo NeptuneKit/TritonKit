@@ -75,6 +75,33 @@ struct SimulatorAdvancedControlsTests {
         #expect(try String(contentsOf: target, encoding: .utf8) == "target")
     }
 
+    @Test("xctrace output path rejects accidental overwrite but allows explicit append")
+    func xctraceOutputPathRejectsOverwriteButAllowsExplicitAppend() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-xctrace-output-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let trace = directory.appendingPathComponent("App.trace")
+        let target = directory.appendingPathComponent("target.trace")
+        let symlink = directory.appendingPathComponent("link.trace")
+        try FileManager.default.createDirectory(at: trace, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: target, withIntermediateDirectories: true)
+        try FileManager.default.createSymbolicLink(at: symlink, withDestinationURL: target)
+
+        #expect(throws: HostArtifactOutputError.self) {
+            try prepareXctraceArtifactOutputPath(trace.path, appendRun: false)
+        }
+        #expect(throws: HostArtifactOutputError.self) {
+            try prepareXctraceArtifactOutputPath(symlink.path, appendRun: true)
+        }
+        #expect(throws: HostArtifactOutputError.self) {
+            try prepareXctraceArtifactOutputPath(directory.appendingPathComponent("missing.trace").path, appendRun: true)
+        }
+
+        try prepareXctraceArtifactOutputPath(trace.path, appendRun: true)
+        try prepareXctraceArtifactOutputPath(directory.appendingPathComponent("new.trace").path, appendRun: false)
+    }
+
     @Test("host artifact capture removes partial output when command fails")
     func hostArtifactCaptureRemovesPartialOutputOnFailure() throws {
         let output = FileManager.default.temporaryDirectory

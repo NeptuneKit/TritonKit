@@ -135,6 +135,15 @@
 - And manifest 将该 artifact 标记为 `riskLevel=readonly`、`policy=explicit-xcode-summary`、`redactionStatus=sensitive`
 - And 不读取 summary 中的 stdout/stderr log 原文、不复制 `.xcresult`、不复制 `.trace`、不扫描临时目录或 DerivedData
 
+### 场景九：Xcode artifact 输出路径防覆盖
+
+- Given agent 准备执行 `triton xctrace record --output /tmp/App.trace --json`
+- When `/tmp/App.trace` 已经存在且没有显式 `--append-run`
+- Then 命令在执行 `xctrace` 前返回 `artifact_output_rejected`
+- And 不覆盖既有 trace
+- And `--append-run` 只允许追加到已存在且非符号链接的 trace 路径
+- And 符号链接输出路径始终被拒绝
+
 ## 分期
 
 ### 当前实现状态（2026-05-24）
