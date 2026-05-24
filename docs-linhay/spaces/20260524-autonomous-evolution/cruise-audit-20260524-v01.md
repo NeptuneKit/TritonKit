@@ -91,14 +91,15 @@ swift test --filter TKXcodeWorkflowModelsTests
 2. timeout cleanup：SIGTERM 后有限等待，必要时 SIGKILL，并有限等待 stdout / stderr drain group。
 3. failed run fallback：failed test run 即使没有 diagnostic child，也会输出 fallback failure record。
 4. parse error mapping：`xcresult_parse_failed` 通过 `XcresultCLIError.parseFailed` 与 `failHostCommand` 保持稳定错误码。
-5. 完整本地门禁：`docs-linhay/scripts/verify.sh --local` 通过，覆盖 109 tests / 17 suites、release CLI build、smoke checks、iOS Simulator build、docs structure 和 diff whitespace check。
+5. 完整本地门禁：`docs-linhay/scripts/verify.sh --local` 通过，覆盖 111 tests / 17 suites、release CLI build、release CLI smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build、docs structure 和 diff whitespace check。
 6. artifact output safety：stdout-backed artifact 捕获默认拒绝覆盖已有文件和符号链接，并通过 `artifact_output_rejected` 暴露稳定错误码。
 7. `xcresult summary/failures` 默认 redaction / `--include-sensitive`：默认对 JSON 与 text 输出中的私有路径、邮箱、Bearer/token/password/API-key 片段、长 token-like 字符串、`path` 和 `sourceCommand/sourceCommands` 脱敏；显式 `--include-sensitive` 只用于本机私有调试，不用于公开 issue。
+8. Xcode schema structured contract：`xcode`、`xcresult`、`xctrace`、`coverage` schema 新增结构化 agent-planning 字段，覆盖 required options、defaults inheritance、JSONL event templates、final event kind、artifacts、retryable、next commands、output contracts 和 failure codes。
 
 ### 继续延期
 
 1. 为更多非 stdout-backed artifact 命令补齐 explicit artifact-dir / force 策略，降低 agent 自动执行时覆盖非预期文件的风险。
-2. 将 schema 从 prose `successShape/failureShape` 推进为结构化 subcommand contract：`requiredOptions`、`inheritsDefaultsFrom`、`jsonlEvents`、`finalEventKind`、`artifacts`、`retryable`、`nextCommands`。
+2. 将结构化 schema contract 从命令级推进到 subcommand 级，避免用字符串表达 `use:--scheme` 这类复合规则。
 3. 实现 `capture/evidence --include xcode,host` 自动 manifest 整合。
 4. 为 `xcresult_parse_failed` 增加 CLI 级 fixture / snapshot 测试。
 5. 继续补 Xcode test final summary 中的 top failures，但不能把 build/install/launch 当作业务 ready。

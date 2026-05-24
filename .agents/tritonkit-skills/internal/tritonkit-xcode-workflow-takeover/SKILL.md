@@ -71,6 +71,7 @@ Current boundaries:
 - `xctrace record` and `coverage report` are artifact-first host commands. They return paths/source commands/byte summaries; large trace or coverage payloads stay in artifacts and do not prove business readiness.
 - Stdout-backed artifact writes reject existing output files and symbolic links by default. Use fresh paths under `/tmp`, `.triton/`, or an explicit artifact directory for repeatable agent runs.
 - `xcresult summary/failures` is available for result bundle triage. Output is redacted by default across JSON and text, including `path`, `sourceCommand/sourceCommands`, private paths, emails, Bearer/token/password/API-key fragments, and long token-like strings. Use `--include-sensitive` only for local private debugging. `xcresult` attachments, semantic coverage summaries, logs, and evidence xcode artifact ingestion are still follow-up slices.
+- `triton schema --command xcode|xcresult|coverage --json` exposes structured agent-planning fields in addition to prose shapes: `requiredOptions`, `inheritsDefaultsFrom`, `jsonlEvents`, `finalEventKind`, `artifacts`, `retryable`, `nextCommands`, `outputContracts`, and `failureCodes`. Treat these as planning/output-selection hints; concrete commands still validate their own arguments.
 
 ## Error Recovery
 

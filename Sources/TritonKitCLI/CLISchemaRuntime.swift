@@ -22,6 +22,9 @@ func commandSchemas() -> [TKCommandSchema] {
     let runtimeBaseURLOption = TKCommandSchemaOption(name: "--runtime-base-url", type: "URL", description: "Bypass Triton server and call a direct embedded runtime HTTP base URL, for example \(TKHarmonyRuntimeDefaults.hostAccessBaseURL)")
     let metadataJSONAlias = TKCommandSchemaOption(name: "--json", type: "Bool", defaultValue: "false", description: "Alias for --metadata")
     let refreshOption = TKCommandSchemaOption(name: "--refresh/--no-refresh", type: "Bool", defaultValue: "true", description: "Request fresh hierarchy before reading")
+    func fields(_ specs: [(String, String, Bool, String)]) -> [TKCommandSchemaField] {
+        specs.map { TKCommandSchemaField(name: $0.0, type: $0.1, required: $0.2, description: $0.3) }
+    }
     return [
         TKCommandSchema(
             name: "version",
@@ -167,6 +170,88 @@ func commandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
             failureShape: "{ ok:false, error:{ code: invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|xcode_not_idle|xcodebuild_failed|app_path_unresolved|bundle_id_unresolved, message, hint } }",
+            requiredOptions: [
+                "use:--scheme",
+                "use:--workspace|--project",
+                "build/test/run:workspace defaults or --workspace|--project + --scheme",
+            ],
+            inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
+            jsonlEvents: [
+                "xcode.<action>.invocation",
+                "xcode.<action>.stdout",
+                "xcode.<action>.stderr",
+                "xcode.<action>.heartbeat",
+                "xcode.<action>.summary",
+            ],
+            finalEventKind: "xcode.<action>.summary",
+            artifacts: ["stdout-log", "stderr-log", "result-bundle"],
+            retryable: true,
+            nextCommands: [
+                "triton xcresult summary --path <result.xcresult> --json",
+                "triton xcresult failures --path <result.xcresult> --json",
+                "triton status --json",
+                "triton assert text-exists <text> --json",
+            ],
+            outputContracts: [
+                TKCommandOutputContract(
+                    selector: "xcode.progress",
+                    format: "jsonl",
+                    kind: "progress-event",
+                    model: "TKXcodeProgressEvent",
+                    fields: fields([
+                        ("ok", "Bool", true, "Whether the progress event is valid"),
+                        ("event", "String", true, "Progress event kind"),
+                        ("message", "String", true, "Human-readable progress message"),
+                        ("sourceCommand", "String?", false, "Underlying host command"),
+                        ("elapsedMs", "Int?", false, "Elapsed milliseconds"),
+                        ("stdoutLogPath", "String?", false, "Stdout artifact path"),
+                        ("stderrLogPath", "String?", false, "Stderr artifact path"),
+                        ("stdoutBytes", "Int?", false, "Total stdout bytes"),
+                        ("stderrBytes", "Int?", false, "Total stderr bytes"),
+                    ])
+                ),
+                TKCommandOutputContract(
+                    selector: "xcode.final",
+                    format: "jsonl",
+                    kind: "final-event",
+                    model: "TKXcodeActionSummary",
+                    fields: fields([
+                        ("ok", "Bool", true, "Whether the action completed"),
+                        ("action", "String", true, "xcode.build, xcode.test, or xcode.run"),
+                        ("workspace", "String?", false, "Workspace path"),
+                        ("project", "String?", false, "Project path"),
+                        ("scheme", "String", true, "Scheme name"),
+                        ("configuration", "String", true, "Build configuration"),
+                        ("sdk", "String?", false, "SDK"),
+                        ("destination", "String?", false, "xcodebuild destination"),
+                        ("derivedDataPath", "String?", false, "DerivedData path"),
+                        ("appPath", "String?", false, "Built app path"),
+                        ("bundleID", "String?", false, "Resolved bundle id"),
+                        ("resultBundlePath", "String?", false, "Result bundle path"),
+                        ("simulatorUDID", "String?", false, "Simulator UDID"),
+                        ("durationMs", "Int", true, "Duration in milliseconds"),
+                        ("sourceCommand", "String", true, "Underlying host command"),
+                        ("exitCode", "Int32", true, "Host process exit code"),
+                        ("stdoutTruncated", "Bool", true, "Whether stdout sample was truncated"),
+                        ("stderrTruncated", "Bool", true, "Whether stderr sample was truncated"),
+                        ("stdoutLogPath", "String?", false, "Stdout artifact path"),
+                        ("stderrLogPath", "String?", false, "Stderr artifact path"),
+                        ("stdoutBytes", "Int?", false, "Total stdout bytes"),
+                        ("stderrBytes", "Int?", false, "Total stderr bytes"),
+                        ("note", "String?", false, "Boundary or next-step note"),
+                    ])
+                ),
+            ],
+            failureCodes: [
+                "invalid_workspace_path",
+                "ambiguous_workspace",
+                "scheme_not_found",
+                "simulator_not_found",
+                "xcode_not_idle",
+                "xcodebuild_failed",
+                "app_path_unresolved",
+                "bundle_id_unresolved",
+            ],
             providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-run"]
         ),
         TKCommandSchema(
@@ -191,6 +276,50 @@ func commandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, action, path, summary, sourceCommand, redaction } or { ok, action, path, summary, failures[], sourceCommands[], redaction }",
             failureShape: "{ ok:false, error:{ code: result_bundle_not_found|xcresulttool_failed|xcresult_parse_failed|xcresult_output_too_large|host_command_failed, message, hint } }",
+            requiredOptions: ["summary/failures:--path"],
+            artifacts: ["none-inline-summary"],
+            retryable: true,
+            nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+            outputContracts: [
+                TKCommandOutputContract(
+                    selector: "xcresult.summary",
+                    format: "json",
+                    kind: "envelope",
+                    model: "HostXcresultSummaryOutput",
+                    fields: fields([
+                        ("ok", "Bool", true, "Whether parsing succeeded"),
+                        ("action", "String", true, "xcresult.summary"),
+                        ("path", "String", true, "Result bundle path, redacted by default"),
+                        ("summary", "TKXcresultSummaryMetrics", true, "Parsed summary metrics"),
+                        ("sourceCommand", "String", true, "Underlying xcresulttool command, redacted by default"),
+                        ("redaction", "String", true, "Redaction status"),
+                        ("note", "String?", false, "Suggested next command"),
+                    ])
+                ),
+                TKCommandOutputContract(
+                    selector: "xcresult.failures",
+                    format: "json",
+                    kind: "envelope",
+                    model: "HostXcresultFailuresOutput",
+                    fields: fields([
+                        ("ok", "Bool", true, "Whether parsing succeeded"),
+                        ("action", "String", true, "xcresult.failures"),
+                        ("path", "String", true, "Result bundle path, redacted by default"),
+                        ("summary", "TKXcresultSummaryMetrics", true, "Parsed summary metrics"),
+                        ("failures", "[TKXcresultFailureRecord]", true, "Structured failure records"),
+                        ("sourceCommands", "[String]", true, "Underlying xcresulttool commands, redacted by default"),
+                        ("redaction", "String", true, "Redaction status"),
+                        ("note", "String?", false, "Empty-failure note"),
+                    ])
+                ),
+            ],
+            failureCodes: [
+                "result_bundle_not_found",
+                "xcresulttool_failed",
+                "xcresult_parse_failed",
+                "xcresult_output_too_large",
+                "host_command_failed",
+            ],
             providedCapabilities: ["xcresult-summary", "xcresult-failures"]
         ),
         TKCommandSchema(
@@ -219,6 +348,34 @@ func commandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, action, runtimeScope, target, tool, exitCode, sourceCommand, artifacts[], stdout?, stderr?, note? }",
             failureShape: "{ ok:false, error:{ code: xctrace_record_failed|host_command_failed, message, hint } }",
+            requiredOptions: ["record:--template", "record:--output"],
+            artifacts: ["trace"],
+            retryable: true,
+            outputContracts: [
+                TKCommandOutputContract(
+                    selector: "xctrace.record",
+                    format: "json",
+                    kind: "artifact-envelope",
+                    model: "HostActionOutput",
+                    fields: fields([
+                        ("ok", "Bool", true, "Whether recording completed"),
+                        ("action", "String", true, "xctrace.record"),
+                        ("runtimeScope", "String", true, "host-xcode"),
+                        ("target", "String", true, "Recording target"),
+                        ("tool", "String", true, "Host executable"),
+                        ("exitCode", "Int32", true, "Host process exit code"),
+                        ("riskLevel", "String", true, "Host risk level"),
+                        ("sourceCommand", "String", true, "Underlying xctrace command"),
+                        ("stdoutTruncated", "Bool", true, "Whether stdout was truncated"),
+                        ("stderrTruncated", "Bool", true, "Whether stderr was truncated"),
+                        ("stdout", "String?", false, "Bounded stdout sample"),
+                        ("stderr", "String?", false, "Bounded stderr sample"),
+                        ("artifacts", "[String]", true, "Trace artifact paths"),
+                        ("note", "String?", false, "Completion note"),
+                    ])
+                ),
+            ],
+            failureCodes: ["xctrace_record_failed", "host_command_failed"],
             providedCapabilities: ["xctrace-record"]
         ),
         TKCommandSchema(
@@ -244,6 +401,40 @@ func commandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated, sourceCommand, note? }",
             failureShape: "{ ok:false, error:{ code: validation_failed|artifact_output_rejected|coverage_report_failed|host_command_failed, message, hint } }",
+            requiredOptions: ["report:--xcresult", "report:--output"],
+            artifacts: ["coverage-json"],
+            retryable: true,
+            outputContracts: [
+                TKCommandOutputContract(
+                    selector: "coverage.report",
+                    format: "json",
+                    kind: "artifact-envelope",
+                    model: "HostArtifactCaptureOutput",
+                    fields: fields([
+                        ("ok", "Bool", true, "Whether export completed"),
+                        ("action", "String", true, "coverage.report"),
+                        ("runtimeScope", "String", true, "host-xcode"),
+                        ("target", "String", true, "xcresult target"),
+                        ("tool", "String", true, "Host executable"),
+                        ("exitCode", "Int32", true, "Host process exit code"),
+                        ("riskLevel", "String", true, "Host risk level"),
+                        ("sourceCommand", "String", true, "Underlying xccov command"),
+                        ("artifact", "String", true, "Coverage JSON path"),
+                        ("stdoutBytes", "Int", true, "Written stdout bytes"),
+                        ("stderrBytes", "Int", true, "Captured stderr bytes"),
+                        ("stdoutTruncated", "Bool", true, "Whether stdout was truncated"),
+                        ("stderrTruncated", "Bool", true, "Whether stderr was truncated"),
+                        ("stderr", "String?", false, "Bounded stderr sample"),
+                        ("note", "String?", false, "Completion note"),
+                    ])
+                ),
+            ],
+            failureCodes: [
+                "validation_failed",
+                "artifact_output_rejected",
+                "coverage_report_failed",
+                "host_command_failed",
+            ],
             providedCapabilities: ["coverage-report"]
         ),
         TKCommandSchema(

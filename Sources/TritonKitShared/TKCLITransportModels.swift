@@ -427,6 +427,47 @@ public struct TKCommandSchemaOption: Codable, Equatable {
     }
 }
 
+public struct TKCommandSchemaField: Codable, Equatable {
+    public let name: String
+    public let type: String
+    public let required: Bool
+    public let description: String
+
+    public init(
+        name: String,
+        type: String,
+        required: Bool = true,
+        description: String
+    ) {
+        self.name = name
+        self.type = type
+        self.required = required
+        self.description = description
+    }
+}
+
+public struct TKCommandOutputContract: Codable, Equatable {
+    public let selector: String
+    public let format: String
+    public let kind: String
+    public let model: String?
+    public let fields: [TKCommandSchemaField]
+
+    public init(
+        selector: String,
+        format: String,
+        kind: String,
+        model: String? = nil,
+        fields: [TKCommandSchemaField]
+    ) {
+        self.selector = selector
+        self.format = format
+        self.kind = kind
+        self.model = model
+        self.fields = fields
+    }
+}
+
 public struct TKCommandSchema: Codable, Equatable {
     public let name: String
     public let summary: String
@@ -441,8 +482,44 @@ public struct TKCommandSchema: Codable, Equatable {
     public let successShape: String?
     public let failureShape: String?
     public let outputSemantics: String?
+    public let requiredOptions: [String]
+    public let inheritsDefaultsFrom: [String]
+    public let jsonlEvents: [String]
+    public let finalEventKind: String?
+    public let artifacts: [String]
+    public let retryable: Bool
+    public let nextCommands: [String]
+    public let outputContracts: [TKCommandOutputContract]
+    public let failureCodes: [String]
     public let inputActions: [TKInputActionSchema]?
     public let providedCapabilities: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case summary
+        case requiresServer
+        case requiresTarget
+        case requiresHierarchy
+        case runtimeScope
+        case exitCodeOnFailure
+        case outputFormats
+        case options
+        case examples
+        case successShape
+        case failureShape
+        case outputSemantics
+        case requiredOptions
+        case inheritsDefaultsFrom
+        case jsonlEvents
+        case finalEventKind
+        case artifacts
+        case retryable
+        case nextCommands
+        case outputContracts
+        case failureCodes
+        case inputActions
+        case providedCapabilities
+    }
 
     public init(
         name: String,
@@ -458,6 +535,15 @@ public struct TKCommandSchema: Codable, Equatable {
         successShape: String? = nil,
         failureShape: String? = "{ ok: false, error: { code, message, endpoint, hint, nextAction? } }",
         outputSemantics: String? = nil,
+        requiredOptions: [String] = [],
+        inheritsDefaultsFrom: [String] = [],
+        jsonlEvents: [String] = [],
+        finalEventKind: String? = nil,
+        artifacts: [String] = [],
+        retryable: Bool = false,
+        nextCommands: [String] = [],
+        outputContracts: [TKCommandOutputContract] = [],
+        failureCodes: [String] = [],
         inputActions: [TKInputActionSchema]? = nil,
         providedCapabilities: [String] = []
     ) {
@@ -474,8 +560,47 @@ public struct TKCommandSchema: Codable, Equatable {
         self.successShape = successShape
         self.failureShape = failureShape
         self.outputSemantics = outputSemantics
+        self.requiredOptions = requiredOptions
+        self.inheritsDefaultsFrom = inheritsDefaultsFrom
+        self.jsonlEvents = jsonlEvents
+        self.finalEventKind = finalEventKind
+        self.artifacts = artifacts
+        self.retryable = retryable
+        self.nextCommands = nextCommands
+        self.outputContracts = outputContracts
+        self.failureCodes = failureCodes
         self.inputActions = inputActions
         self.providedCapabilities = providedCapabilities
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            name: try container.decode(String.self, forKey: .name),
+            summary: try container.decode(String.self, forKey: .summary),
+            requiresServer: try container.decode(Bool.self, forKey: .requiresServer),
+            requiresTarget: try container.decode(Bool.self, forKey: .requiresTarget),
+            requiresHierarchy: try container.decodeIfPresent(Bool.self, forKey: .requiresHierarchy) ?? false,
+            runtimeScope: try container.decodeIfPresent(String.self, forKey: .runtimeScope) ?? "cli",
+            exitCodeOnFailure: try container.decodeIfPresent(Int.self, forKey: .exitCodeOnFailure) ?? 1,
+            outputFormats: try container.decode([String].self, forKey: .outputFormats),
+            options: try container.decode([TKCommandSchemaOption].self, forKey: .options),
+            examples: try container.decode([String].self, forKey: .examples),
+            successShape: try container.decodeIfPresent(String.self, forKey: .successShape),
+            failureShape: try container.decodeIfPresent(String.self, forKey: .failureShape) ?? "{ ok: false, error: { code, message, endpoint, hint, nextAction? } }",
+            outputSemantics: try container.decodeIfPresent(String.self, forKey: .outputSemantics),
+            requiredOptions: try container.decodeIfPresent([String].self, forKey: .requiredOptions) ?? [],
+            inheritsDefaultsFrom: try container.decodeIfPresent([String].self, forKey: .inheritsDefaultsFrom) ?? [],
+            jsonlEvents: try container.decodeIfPresent([String].self, forKey: .jsonlEvents) ?? [],
+            finalEventKind: try container.decodeIfPresent(String.self, forKey: .finalEventKind),
+            artifacts: try container.decodeIfPresent([String].self, forKey: .artifacts) ?? [],
+            retryable: try container.decodeIfPresent(Bool.self, forKey: .retryable) ?? false,
+            nextCommands: try container.decodeIfPresent([String].self, forKey: .nextCommands) ?? [],
+            outputContracts: try container.decodeIfPresent([TKCommandOutputContract].self, forKey: .outputContracts) ?? [],
+            failureCodes: try container.decodeIfPresent([String].self, forKey: .failureCodes) ?? [],
+            inputActions: try container.decodeIfPresent([TKInputActionSchema].self, forKey: .inputActions),
+            providedCapabilities: try container.decodeIfPresent([String].self, forKey: .providedCapabilities) ?? []
+        )
     }
 }
 

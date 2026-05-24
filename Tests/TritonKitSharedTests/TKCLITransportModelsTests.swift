@@ -392,6 +392,23 @@ struct TKCLITransportModelsTests {
                 examples: ["triton tap --x 270 --y 300 --format json"],
                 successShape: "{ ok, action, message, targetOID, targetClassName }",
                 outputSemantics: "One compact JSON object on stdout",
+                requiredOptions: ["--x|--y or --targetOID"],
+                artifacts: ["none"],
+                retryable: true,
+                nextCommands: ["triton status --format json"],
+                outputContracts: [
+                    TKCommandOutputContract(
+                        selector: "tap.result",
+                        format: "json",
+                        kind: "envelope",
+                        model: "TKInputResult",
+                        fields: [
+                            TKCommandSchemaField(name: "ok", type: "Bool", description: "Whether the action succeeded"),
+                            TKCommandSchemaField(name: "action", type: "String", description: "Action name"),
+                        ]
+                    ),
+                ],
+                failureCodes: ["server_unavailable", "target_not_found"],
                 inputActions: [
                     TKInputActionSchema(
                         type: "tap",
@@ -438,6 +455,13 @@ struct TKCLITransportModelsTests {
         #expect(decoded.commands.first?.options.first?.name == "--x")
         #expect(decoded.commands.first?.examples.first?.contains("triton tap") == true)
         #expect(decoded.commands.first?.outputSemantics?.contains("compact JSON") == true)
+        #expect(decoded.commands.first?.requiredOptions == ["--x|--y or --targetOID"])
+        #expect(decoded.commands.first?.artifacts == ["none"])
+        #expect(decoded.commands.first?.retryable == true)
+        #expect(decoded.commands.first?.nextCommands == ["triton status --format json"])
+        #expect(decoded.commands.first?.outputContracts.first?.selector == "tap.result")
+        #expect(decoded.commands.first?.outputContracts.first?.fields.first?.name == "ok")
+        #expect(decoded.commands.first?.failureCodes == ["server_unavailable", "target_not_found"])
         #expect(decoded.commands.first?.inputActions?.first?.type == "tap")
         #expect(decoded.commands.first?.inputActions?.first?.coordinateSpace == "window-points")
         #expect(decoded.commands.first?.inputActions?.first?.oneOfRequired.first == ["x", "y"])
@@ -445,6 +469,45 @@ struct TKCLITransportModelsTests {
         #expect(decoded.commands.first?.providedCapabilities == ["tap"])
         #expect(decoded.httpManagementAPI.first?.path == "/input")
         #expect(decoded.httpManagementAPI.first?.failureShape.contains("error") == true)
+    }
+
+    @Test("CLI schema decodes older command objects without structured contract keys")
+    func cliSchemaDefaultsStructuredContractFields() throws {
+        let data = Data("""
+        {
+          "schemaVersion": 1,
+          "commands": [
+            {
+              "name": "status",
+              "summary": "Read runtime status",
+              "requiresServer": true,
+              "requiresTarget": false,
+              "outputFormats": ["json"],
+              "options": [],
+              "examples": ["triton status --json"]
+            }
+          ],
+          "httpManagementAPI": []
+        }
+        """.utf8)
+
+        let decoded = try JSONDecoder().decode(TKCLISchemaResponse.self, from: data)
+        let command = try #require(decoded.commands.first)
+
+        #expect(command.requiresHierarchy == false)
+        #expect(command.runtimeScope == "cli")
+        #expect(command.exitCodeOnFailure == 1)
+        #expect(command.failureShape?.contains("error") == true)
+        #expect(command.requiredOptions == [])
+        #expect(command.inheritsDefaultsFrom == [])
+        #expect(command.jsonlEvents == [])
+        #expect(command.finalEventKind == nil)
+        #expect(command.artifacts == [])
+        #expect(command.retryable == false)
+        #expect(command.nextCommands == [])
+        #expect(command.outputContracts == [])
+        #expect(command.failureCodes == [])
+        #expect(command.providedCapabilities == [])
     }
 
     @Test("workflow plan carries next step and command sequence")
