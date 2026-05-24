@@ -5,6 +5,31 @@ import TritonKitShared
 
 @Suite
 struct EvidenceBundleTests {
+    @Test("evidence capture accepts host and xcode includes as explicit skipped artifacts")
+    func captureAcceptsHostAndXcodeIncludesAsSkippedArtifacts() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("evidence-host-xcode-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        #expect(try parseEvidenceIncludes("host,xcode") == ["host", "xcode"])
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["host", "xcode"],
+            name: "host-xcode-contract",
+            note: nil,
+            target: "triton:local",
+            host: "127.0.0.1",
+            port: 1,
+            refresh: false
+        )
+
+        #expect(manifest.artifacts.isEmpty)
+        #expect(manifest.skipped.map(\.kind) == ["host", "xcode"])
+        #expect(manifest.skipped.first { $0.kind == "host" }?.reason.contains("not implemented yet") == true)
+        #expect(manifest.skipped.first { $0.kind == "xcode" }?.reason.contains("not implemented yet") == true)
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("manifest.json").path))
+    }
+
     @Test("evidence summary and redact exclude sensitive artifacts")
     func summaryAndRedactExcludeSensitiveArtifacts() throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("evidence-\(UUID().uuidString)", isDirectory: true)

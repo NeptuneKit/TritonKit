@@ -34,6 +34,8 @@ func parseEvidenceIncludes(_ raw: String) throws -> [String] {
         "geometry",
         "archive",
         "logs",
+        "host",
+        "xcode",
     ]
     var result: [String] = []
     var seen = Set<String>()
@@ -1071,6 +1073,10 @@ func captureEvidenceBundle(
             }
         case "logs":
             skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "unsupported in the current embedded runtime"))
+        case "host":
+            skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "host artifact ingestion is not implemented yet"))
+        case "xcode":
+            skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "xcode artifact ingestion is not implemented yet"))
         case "hierarchy", "ax", "geometry", "screenshot", "archive":
             do {
                 if targetSummary == nil {
@@ -1143,13 +1149,6 @@ func captureEvidenceBundle(
             }
         default:
             skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "unsupported"))
-        }
-    }
-
-    if targetSummary == nil {
-        if let resolved = try? await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true) {
-            targetSummary = resolved.summary
-            client = resolved.client
         }
     }
 

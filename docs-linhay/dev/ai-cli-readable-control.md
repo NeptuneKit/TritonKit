@@ -110,7 +110,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton attrs --target triton:local --oid <layerOid> --format text|json`：实时读取 layer 属性组。
 - `triton object --target triton:local --oid <oid> --format text|json`：实时读取对象 class chain 与地址。
 - `triton export --target triton:local --output <path>`：导出 hierarchy JSON；当 `--format archive` 或输出扩展名为 `.triton`、`.tritonkit`、`.archive`、`.lookinside` 时，导出自描述 archive。
-- `triton evidence --output <dir.tritonevidence> --format json`：导出 agent 回归证据包目录，固定写入 `manifest.json`，并按 `--include` 采集 `status/list/version/hierarchy/ax/screenshot/geometry/archive` 等 artifact；当前 embedded runtime 不支持的 `logs` 会进入 `manifest.skipped`，不静默忽略。`triton evidence inspect <dir.tritonevidence> --format json` 只读取 manifest，不重新连接 runtime。
+- `triton evidence --output <dir.tritonevidence> --format json`：导出 agent 回归证据包目录，固定写入 `manifest.json`，并按 `--include` 采集 `status/list/version/hierarchy/ax/screenshot/geometry/archive` 等 artifact；当前未接入的 `logs`、`host`、`xcode` 会进入 `manifest.skipped`，不静默忽略。`triton evidence inspect <dir.tritonevidence> --format json` 只读取 manifest，不重新连接 runtime。
 - `triton evidence summary <dir.tritonevidence> --format json`：离线读取 evidence manifest 并输出 artifact count、sensitive count、skipped count、target、CLI version、artifact metadata 和建议的 redaction 命令，不内联截图、完整日志或私有 UI 内容。
 - `triton evidence redact <dir.tritonevidence> --profile ios-private --output <redacted.tritonevidence> --format json`：写出可公开转交的 redacted evidence。非敏感 artifact 会复制并标记 `included`；截图、AX、hierarchy、geometry、archive、logs 等敏感 artifact 写成 `redacted/<kind>.json` 占位并标记 `redacted`。
 - `triton capture --case <case> --output <dir.tritonevidence> --format json`：一站式回归证据包入口，默认采集 `status/list/version/hierarchy/ax/screenshot/geometry/archive`。

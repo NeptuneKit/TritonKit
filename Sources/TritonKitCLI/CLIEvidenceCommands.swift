@@ -62,7 +62,7 @@ struct Evidence: AsyncParsableCommand {
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Evidence bundle directory path") var output: String?
-    @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs")
+    @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs,host,xcode")
     var include: String = "status,list,version,hierarchy,ax,screenshot"
     @Option(help: "Scenario name stored in manifest") var name: String?
     @Option(help: "Human note stored in manifest") var note: String?
@@ -147,7 +147,7 @@ struct Capture: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Comma-separated artifacts")
+    @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs,host,xcode")
     var include: String = "status,list,version,hierarchy,ax,screenshot,geometry,archive"
     @Option(help: "Human note stored in manifest") var note: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
