@@ -277,7 +277,8 @@ func redactEvidenceBundle(input: String, output: String, profile: String) throws
         artifacts: outputArtifacts,
         skipped: manifest.skipped,
         target: manifest.target,
-        cli: manifest.cli
+        cli: manifest.cli,
+        run: manifest.run
     )
     let summaryPath = outputURL.appendingPathComponent("summary.json").path
     let summary = TKEvidenceSummaryResponse(

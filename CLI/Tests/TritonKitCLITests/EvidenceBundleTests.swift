@@ -245,7 +245,20 @@ struct EvidenceBundleTests {
                 osDescription: "iOS",
                 identityState: "debug"
             ),
-            cli: TKEvidenceCLI(version: "test")
+            cli: TKEvidenceCLI(version: "test"),
+            run: TKEvidenceRunManifest(
+                eventsPath: "run/events.jsonl",
+                metaPath: "run/meta.json",
+                screenshotPaths: ["screenshot.png"],
+                eventCount: 2,
+                status: .completed,
+                summary: TKEvidenceRunSummary(
+                    runID: "run-1",
+                    verdict: .success,
+                    frictionCount: 0,
+                    stepCount: 1
+                )
+            )
         )
         try prettyEncodedData(manifest).write(to: root.appendingPathComponent("manifest.json"), options: .atomic)
 
@@ -264,6 +277,9 @@ struct EvidenceBundleTests {
         #expect(output.manifest.artifacts.first { $0.kind == "screenshot" }?.redactionStatus == "redacted")
         #expect(output.manifest.artifacts.first { $0.kind == "screenshot" }?.sourceCommand == nil)
         #expect(output.manifest.artifacts.first { $0.kind == "screenshot" }?.path.hasPrefix("redacted/") == true)
+        #expect(output.manifest.run?.eventsPath == "run/events.jsonl")
+        #expect(output.manifest.run?.metaPath == "run/meta.json")
+        #expect(output.manifest.run?.summary?.verdict == .success)
         #expect(FileManager.default.fileExists(atPath: redacted.appendingPathComponent("manifest.json").path))
         #expect(FileManager.default.fileExists(atPath: redacted.appendingPathComponent("summary.json").path))
     }

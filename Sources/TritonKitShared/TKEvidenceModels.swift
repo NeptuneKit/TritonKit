@@ -11,6 +11,7 @@ public struct TKEvidenceManifest: Codable, Equatable {
     public let skipped: [TKEvidenceSkippedArtifact]
     public let target: TKEvidenceTarget?
     public let cli: TKEvidenceCLI
+    public let run: TKEvidenceRunManifest?
 
     public init(
         ok: Bool,
@@ -22,7 +23,8 @@ public struct TKEvidenceManifest: Codable, Equatable {
         artifacts: [TKEvidenceArtifact],
         skipped: [TKEvidenceSkippedArtifact] = [],
         target: TKEvidenceTarget? = nil,
-        cli: TKEvidenceCLI
+        cli: TKEvidenceCLI,
+        run: TKEvidenceRunManifest? = nil
     ) {
         self.ok = ok
         self.formatVersion = formatVersion
@@ -34,6 +36,35 @@ public struct TKEvidenceManifest: Codable, Equatable {
         self.skipped = skipped
         self.target = target
         self.cli = cli
+        self.run = run
+    }
+}
+
+public struct TKEvidenceRunManifest: Codable, Equatable, Sendable {
+    public let eventsPath: String
+    public let metaPath: String
+    public let screenshotPaths: [String]
+    public let debugArtifactPaths: [String]
+    public let eventCount: Int?
+    public let status: TKEvidenceRunParseStatus?
+    public let summary: TKEvidenceRunSummary?
+
+    public init(
+        eventsPath: String = "run/events.jsonl",
+        metaPath: String = "run/meta.json",
+        screenshotPaths: [String] = [],
+        debugArtifactPaths: [String] = [],
+        eventCount: Int? = nil,
+        status: TKEvidenceRunParseStatus? = nil,
+        summary: TKEvidenceRunSummary? = nil
+    ) {
+        self.eventsPath = eventsPath
+        self.metaPath = metaPath
+        self.screenshotPaths = screenshotPaths
+        self.debugArtifactPaths = debugArtifactPaths
+        self.eventCount = eventCount
+        self.status = status
+        self.summary = summary
     }
 }
 
