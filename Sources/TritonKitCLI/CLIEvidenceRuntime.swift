@@ -1059,6 +1059,7 @@ func captureEvidenceBundle(
     host: String,
     port: Int,
     refresh: Bool,
+    xcodeSummaryPath: String? = nil,
     hostXcodeProviders: EvidenceHostXcodeArtifactProviders = .live
 ) async throws -> TKEvidenceManifest {
     let outputURL = URL(fileURLWithPath: output)
@@ -1137,6 +1138,7 @@ func captureEvidenceBundle(
             appendXcodeEvidenceArtifacts(
                 directory: outputURL,
                 providers: hostXcodeProviders,
+                xcodeSummaryPath: xcodeSummaryPath,
                 artifacts: &artifacts,
                 skipped: &skipped
             )
@@ -1345,6 +1347,7 @@ func appendHostEvidenceArtifacts(
 func appendXcodeEvidenceArtifacts(
     directory: URL,
     providers: EvidenceHostXcodeArtifactProviders,
+    xcodeSummaryPath: String?,
     artifacts: inout [TKEvidenceArtifact],
     skipped: inout [TKEvidenceSkippedArtifact]
 ) {
@@ -1369,6 +1372,15 @@ func appendXcodeEvidenceArtifacts(
         }
     } catch {
         skipped.append(TKEvidenceSkippedArtifact(kind: "xcode.defaults", reason: evidenceSkipReason(error)))
+    }
+
+    if let xcodeSummaryPath, !xcodeSummaryPath.isEmpty {
+        appendXcodeActionSummaryArtifact(
+            path: xcodeSummaryPath,
+            directory: directory,
+            artifacts: &artifacts,
+            skipped: &skipped
+        )
     }
 
     do {
@@ -1409,6 +1421,36 @@ func appendXcodeEvidenceArtifacts(
         )
     } catch {
         skipped.append(TKEvidenceSkippedArtifact(kind: "xcode.discovery", reason: evidenceSkipReason(error)))
+    }
+}
+
+func appendXcodeActionSummaryArtifact(
+    path: String,
+    directory: URL,
+    artifacts: inout [TKEvidenceArtifact],
+    skipped: inout [TKEvidenceSkippedArtifact]
+) {
+    do {
+        let summaryURL = URL(fileURLWithPath: path)
+        let data = try Data(contentsOf: summaryURL)
+        let summary = try JSONDecoder().decode(TKXcodeActionSummary.self, from: data)
+        try appendEvidenceArtifact(
+            kind: "xcode.action-summary",
+            relativePath: "artifacts/xcode/action-summary.json",
+            data: try prettyEncodedData(summary),
+            contentType: "application/json",
+            directory: directory,
+            freshness: evidenceFreshness(source: "host", status: nil),
+            artifacts: &artifacts,
+            platform: "xcode",
+            riskLevel: "readonly",
+            policy: "explicit-xcode-summary",
+            redactionStatus: "sensitive",
+            sourceCommand: "read --xcode-summary"
+        )
+    } catch {
+        let reason = TKXcresultRedaction.redact(evidenceSkipReason(error))
+        skipped.append(TKEvidenceSkippedArtifact(kind: "xcode.action-summary", reason: reason))
     }
 }
 

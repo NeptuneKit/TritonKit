@@ -126,6 +126,15 @@
 - And artifact 落在 `artifacts/host/` 与 `artifacts/xcode/`，manifest 记录相对路径、bytes、risk、policy 和 redaction 状态
 - And 不自动执行 build/test/run、不扫 `/tmp/triton-xcode-artifacts`、DerivedData、Simulator device set 或用户 Home 目录
 
+### 场景八：显式 Xcode action summary 进入证据包
+
+- Given `triton xcode build/test/run --json` 已经把 `TKXcodeActionSummary` 保存到显式路径
+- When 执行 `triton evidence --include xcode --xcode-summary /tmp/xcode-summary.json --output /tmp/app.tritonevidence --json`
+- Then evidence 只读取这个显式 summary 文件
+- And 将规范化后的 summary 写入 `artifacts/xcode/action-summary.json`
+- And manifest 将该 artifact 标记为 `riskLevel=readonly`、`policy=explicit-xcode-summary`、`redactionStatus=sensitive`
+- And 不读取 summary 中的 stdout/stderr log 原文、不复制 `.xcresult`、不复制 `.trace`、不扫描临时目录或 DerivedData
+
 ## 分期
 
 ### 当前实现状态（2026-05-24）

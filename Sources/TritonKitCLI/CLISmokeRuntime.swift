@@ -139,7 +139,8 @@ struct IOSSmokeDependencies {
                     target: target,
                     host: host,
                     port: port,
-                    refresh: refresh
+                    refresh: refresh,
+                    xcodeSummaryPath: nil
                 )
             }
         )

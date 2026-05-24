@@ -66,6 +66,8 @@ struct Evidence: AsyncParsableCommand {
     var include: String = "status,list,version,hierarchy,ax,screenshot"
     @Option(help: "Scenario name stored in manifest") var name: String?
     @Option(help: "Human note stored in manifest") var note: String?
+    @Option(name: .customLong("xcode-summary"), help: "Explicit TKXcodeActionSummary JSON file to import when --include contains xcode")
+    var xcodeSummary: String?
     @Option(help: "Redaction profile for existing evidence bundles") var profile: String = "ios-private"
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -127,7 +129,8 @@ struct Evidence: AsyncParsableCommand {
                 target: target,
                 host: host,
                 port: port,
-                refresh: refresh
+                refresh: refresh,
+                xcodeSummaryPath: xcodeSummary
             )
             try printEvidenceManifest(manifest, format: outputFormat)
         } catch {
@@ -150,6 +153,8 @@ struct Capture: AsyncParsableCommand {
     @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs,host,xcode")
     var include: String = "status,list,version,hierarchy,ax,screenshot,geometry,archive"
     @Option(help: "Human note stored in manifest") var note: String?
+    @Option(name: .customLong("xcode-summary"), help: "Explicit TKXcodeActionSummary JSON file to import when --include contains xcode")
+    var xcodeSummary: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Flag(inversion: .prefixedNo, help: "Request a fresh hierarchy before capturing hierarchy/archive")
@@ -172,7 +177,8 @@ struct Capture: AsyncParsableCommand {
                 target: target,
                 host: host,
                 port: port,
-                refresh: refresh
+                refresh: refresh,
+                xcodeSummaryPath: xcodeSummary
             )
             try printEvidenceManifest(manifest, format: outputFormat)
         } catch {

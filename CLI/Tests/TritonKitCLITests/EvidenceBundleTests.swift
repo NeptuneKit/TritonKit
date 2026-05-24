@@ -5,6 +5,16 @@ import TritonKitShared
 
 @Suite
 struct EvidenceBundleTests {
+    @Test("schema exposes explicit xcode summary evidence import option")
+    func schemaExposesExplicitXcodeSummaryEvidenceImportOption() throws {
+        let evidence = try #require(commandSchemas().first { $0.name == "evidence" })
+        let capture = try #require(commandSchemas().first { $0.name == "capture" })
+
+        #expect(evidence.options.map { $0.name }.contains("--xcode-summary"))
+        #expect(capture.options.map { $0.name }.contains("--xcode-summary"))
+        #expect(evidence.examples.contains { $0.contains("--xcode-summary") })
+    }
+
     @Test("evidence capture writes host and xcode read-only artifacts without runtime")
     func captureWritesHostAndXcodeReadOnlyArtifactsWithoutRuntime() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("evidence-host-xcode-\(UUID().uuidString)", isDirectory: true)
@@ -125,6 +135,78 @@ struct EvidenceBundleTests {
             "xcode.discovery",
         ])
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("manifest.json").path))
+    }
+
+    @Test("evidence capture imports explicit xcode action summary without copying logs")
+    func captureImportsExplicitXcodeActionSummaryWithoutCopyingLogs() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("evidence-xcode-summary-\(UUID().uuidString)", isDirectory: true)
+        let summaryURL = FileManager.default.temporaryDirectory.appendingPathComponent("xcode-action-summary-\(UUID().uuidString).json")
+        defer {
+            try? FileManager.default.removeItem(at: root)
+            try? FileManager.default.removeItem(at: summaryURL)
+        }
+
+        let actionSummary = TKXcodeActionSummary(
+            ok: false,
+            action: "xcode.test",
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData",
+            resultBundlePath: "/tmp/App.xcresult",
+            simulatorUDID: "SIM-1",
+            durationMs: 42,
+            sourceCommand: "xcodebuild test -workspace App.xcworkspace",
+            exitCode: 65,
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: "/tmp/triton-xcode-artifacts/stdout.log",
+            stderrLogPath: "/tmp/triton-xcode-artifacts/stderr.log",
+            stdoutBytes: 123,
+            stderrBytes: 456,
+            note: "Test failed."
+        )
+        try prettyEncodedData(actionSummary).write(to: summaryURL, options: .atomic)
+
+        let providers = EvidenceHostXcodeArtifactProviders(
+            loadDefaults: { nil },
+            simulatorList: { throw RuntimeError("not used") },
+            xcodeStatus: { throw RuntimeError("not available") },
+            xcodeDiscovery: { throw RuntimeError("not available") }
+        )
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["xcode"],
+            name: "xcode-summary-import",
+            note: nil,
+            target: "triton:local",
+            host: "127.0.0.1",
+            port: 1,
+            refresh: false,
+            xcodeSummaryPath: summaryURL.path,
+            hostXcodeProviders: providers
+        )
+
+        let artifact = try #require(manifest.artifacts.first { $0.kind == "xcode.action-summary" })
+        #expect(artifact.path == "artifacts/xcode/action-summary.json")
+        #expect(artifact.riskLevel == "readonly")
+        #expect(artifact.policy == "explicit-xcode-summary")
+        #expect(artifact.redactionStatus == "sensitive")
+        #expect(artifact.sourceCommand == "read --xcode-summary")
+        #expect(manifest.artifacts.count == 1)
+        #expect(manifest.skipped.map { $0.kind } == ["xcode.defaults", "xcode.status", "xcode.discovery"])
+        #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/xcode/action-summary.json").path))
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/xcode/stdout.log").path))
+        #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/xcode/stderr.log").path))
+
+        let importedData = try Data(contentsOf: root.appendingPathComponent("artifacts/xcode/action-summary.json"))
+        let imported = try JSONDecoder().decode(TKXcodeActionSummary.self, from: importedData)
+        #expect(imported.stdoutLogPath == "/tmp/triton-xcode-artifacts/stdout.log")
+        #expect(try summarizeEvidenceBundle(input: root.path).sensitiveArtifactCount == 1)
     }
 
     @Test("evidence summary and redact exclude sensitive artifacts")
