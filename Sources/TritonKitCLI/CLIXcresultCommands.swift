@@ -27,32 +27,12 @@ struct XcresultSummary: AsyncParsableCommand {
         do {
             let command = TKXcresultCommand.summary(path: path)
             let result = try runHostCommand(command, maximumOutputBytes: xcresultInlineJSONLimit)
-            if result.stdoutTruncated {
-                throw XcresultCLIError.outputTooLarge(kind: "summary", bytes: result.stdoutBytes, maximumBytes: xcresultInlineJSONLimit)
-            }
-            let summary: TKXcresultSummaryMetrics
-            do {
-                summary = try TKXcresultSummaryParser.parse(result.stdoutData)
-            } catch {
-                throw XcresultCLIError.parseFailed(kind: "summary", underlying: error)
-            }
-            let publicPath = includeSensitive ? path : TKXcresultRedaction.redact(path)
-            let publicSummary = includeSensitive ? summary : TKXcresultRedaction.redact(summary)
-            let publicSourceCommand = includeSensitive ? result.sourceCommand : TKXcresultRedaction.redact(result.sourceCommand)
-            let output = HostXcresultSummaryOutput(
-                ok: true,
-                action: "xcresult.summary",
-                path: publicPath,
-                summary: publicSummary,
-                sourceCommand: publicSourceCommand,
-                redaction: includeSensitive ? "included-sensitive" : "default",
-                note: "Use `triton xcresult failures --path <result.xcresult> --json` for a structured failure list."
-            )
+            let output = try makeHostXcresultSummaryOutput(path: path, includeSensitive: includeSensitive, result: result)
             switch outputFormat {
             case .json:
                 print(try encodeJSON(output))
             case .text:
-                print("\(summary.result)\tpassed=\(summary.passedTests)\tfailed=\(summary.failedTests)\tskipped=\(summary.skippedTests)")
+                print("\(output.summary.result)\tpassed=\(output.summary.passedTests)\tfailed=\(output.summary.failedTests)\tskipped=\(output.summary.skippedTests)")
             }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
@@ -72,49 +52,16 @@ struct XcresultFailures: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             let summaryResult = try runHostCommand(TKXcresultCommand.summary(path: path), maximumOutputBytes: xcresultInlineJSONLimit)
-            if summaryResult.stdoutTruncated {
-                throw XcresultCLIError.outputTooLarge(kind: "summary", bytes: summaryResult.stdoutBytes, maximumBytes: xcresultInlineJSONLimit)
-            }
-            let summary: TKXcresultSummaryMetrics
-            do {
-                summary = try TKXcresultSummaryParser.parse(summaryResult.stdoutData)
-            } catch {
-                throw XcresultCLIError.parseFailed(kind: "summary", underlying: error)
-            }
             let testsResult = try runHostCommand(TKXcresultCommand.tests(path: path), maximumOutputBytes: xcresultInlineJSONLimit)
-            if testsResult.stdoutTruncated {
-                throw XcresultCLIError.outputTooLarge(kind: "tests", bytes: testsResult.stdoutBytes, maximumBytes: xcresultInlineJSONLimit)
-            }
-            let failures: [TKXcresultFailureRecord]
-            do {
-                failures = try TKXcresultTestsParser.parseFailures(testsResult.stdoutData)
-            } catch {
-                throw XcresultCLIError.parseFailed(kind: "tests", underlying: error)
-            }
-            let publicPath = includeSensitive ? path : TKXcresultRedaction.redact(path)
-            let publicSummary = includeSensitive ? summary : TKXcresultRedaction.redact(summary)
-            let publicFailures = includeSensitive ? failures : TKXcresultRedaction.redact(failures)
-            let publicSourceCommands = includeSensitive
-                ? [summaryResult.sourceCommand, testsResult.sourceCommand]
-                : [summaryResult.sourceCommand, testsResult.sourceCommand].map(TKXcresultRedaction.redact(_:))
-            let output = HostXcresultFailuresOutput(
-                ok: true,
-                action: "xcresult.failures",
-                path: publicPath,
-                summary: publicSummary,
-                failures: publicFailures,
-                sourceCommands: publicSourceCommands,
-                redaction: includeSensitive ? "included-sensitive" : "default",
-                note: publicFailures.isEmpty ? "No failing tests were found in the result bundle." : nil
-            )
+            let output = try makeHostXcresultFailuresOutput(path: path, includeSensitive: includeSensitive, summaryResult: summaryResult, testsResult: testsResult)
             switch outputFormat {
             case .json:
                 print(try encodeJSON(output))
             case .text:
-                if publicFailures.isEmpty {
+                if output.failures.isEmpty {
                     print("no failures")
                 } else {
-                    for failure in publicFailures {
+                    for failure in output.failures {
                         var line = "\(failure.targetName)\t\(failure.testName)\t\(failure.message)"
                         if let location = failure.location {
                             line += "\t\(location)"
@@ -127,6 +74,67 @@ struct XcresultFailures: AsyncParsableCommand {
             try failHostCommand(error, outputFormat: outputFormat)
         }
     }
+}
+
+func makeHostXcresultSummaryOutput(path: String, includeSensitive: Bool, result: HostProcessResult) throws -> HostXcresultSummaryOutput {
+    if result.stdoutTruncated {
+        throw XcresultCLIError.outputTooLarge(kind: "summary", bytes: result.stdoutBytes, maximumBytes: xcresultInlineJSONLimit)
+    }
+    let summary: TKXcresultSummaryMetrics
+    do {
+        summary = try TKXcresultSummaryParser.parse(result.stdoutData)
+    } catch {
+        throw XcresultCLIError.parseFailed(kind: "summary", underlying: error)
+    }
+    let publicPath = includeSensitive ? path : TKXcresultRedaction.redact(path)
+    let publicSummary = includeSensitive ? summary : TKXcresultRedaction.redact(summary)
+    let publicSourceCommand = includeSensitive ? result.sourceCommand : TKXcresultRedaction.redact(result.sourceCommand)
+    return HostXcresultSummaryOutput(
+        ok: true,
+        action: "xcresult.summary",
+        path: publicPath,
+        summary: publicSummary,
+        sourceCommand: publicSourceCommand,
+        redaction: includeSensitive ? "included-sensitive" : "default",
+        note: "Use `triton xcresult failures --path <result.xcresult> --json` for a structured failure list."
+    )
+}
+
+func makeHostXcresultFailuresOutput(path: String, includeSensitive: Bool, summaryResult: HostProcessResult, testsResult: HostProcessResult) throws -> HostXcresultFailuresOutput {
+    if summaryResult.stdoutTruncated {
+        throw XcresultCLIError.outputTooLarge(kind: "summary", bytes: summaryResult.stdoutBytes, maximumBytes: xcresultInlineJSONLimit)
+    }
+    let summary: TKXcresultSummaryMetrics
+    do {
+        summary = try TKXcresultSummaryParser.parse(summaryResult.stdoutData)
+    } catch {
+        throw XcresultCLIError.parseFailed(kind: "summary", underlying: error)
+    }
+    if testsResult.stdoutTruncated {
+        throw XcresultCLIError.outputTooLarge(kind: "tests", bytes: testsResult.stdoutBytes, maximumBytes: xcresultInlineJSONLimit)
+    }
+    let failures: [TKXcresultFailureRecord]
+    do {
+        failures = try TKXcresultTestsParser.parseFailures(testsResult.stdoutData)
+    } catch {
+        throw XcresultCLIError.parseFailed(kind: "tests", underlying: error)
+    }
+    let publicPath = includeSensitive ? path : TKXcresultRedaction.redact(path)
+    let publicSummary = includeSensitive ? summary : TKXcresultRedaction.redact(summary)
+    let publicFailures = includeSensitive ? failures : TKXcresultRedaction.redact(failures)
+    let publicSourceCommands = includeSensitive
+        ? [summaryResult.sourceCommand, testsResult.sourceCommand]
+        : [summaryResult.sourceCommand, testsResult.sourceCommand].map(TKXcresultRedaction.redact(_:))
+    return HostXcresultFailuresOutput(
+        ok: true,
+        action: "xcresult.failures",
+        path: publicPath,
+        summary: publicSummary,
+        failures: publicFailures,
+        sourceCommands: publicSourceCommands,
+        redaction: includeSensitive ? "included-sensitive" : "default",
+        note: publicFailures.isEmpty ? "No failing tests were found in the result bundle." : nil
+    )
 }
 
 struct HostXcresultSummaryOutput: Encodable {
