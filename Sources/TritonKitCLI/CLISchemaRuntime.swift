@@ -252,6 +252,130 @@ func commandSchemas() -> [TKCommandSchema] {
                 "app_path_unresolved",
                 "bundle_id_unresolved",
             ],
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "discover",
+                    summary: "Discover Xcode workspaces, projects, and packages",
+                    optionalOptions: ["--path"],
+                    retryable: true,
+                    failureCodes: ["invalid_workspace_path"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "use",
+                    summary: "Persist repo-local Xcode defaults",
+                    requiredOptions: ["--scheme"],
+                    oneOfRequiredOptions: [["--workspace"], ["--project"]],
+                    optionalOptions: ["--configuration", "--simulator"],
+                    defaultProviders: ["triton sim use"],
+                    inheritsDefaultsFrom: ["triton sim use"],
+                    retryable: true,
+                    failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "schemes",
+                    summary: "List shared Xcode schemes",
+                    optionalOptions: ["--workspace", "--project"],
+                    defaultProviders: ["triton xcode use"],
+                    inheritsDefaultsFrom: ["triton xcode use"],
+                    retryable: true,
+                    failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "xcodebuild_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "status",
+                    summary: "Inspect active xcodebuild and build-service processes",
+                    optionalOptions: ["--workspace"],
+                    retryable: true
+                ),
+                TKCommandSubcommandSchema(
+                    name: "wait-idle",
+                    summary: "Wait until matching Xcode build processes are idle",
+                    optionalOptions: ["--workspace", "--timeout"],
+                    retryable: true,
+                    failureCodes: ["xcode_not_idle"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "settings",
+                    summary: "Resolve build settings, app path, and bundle id",
+                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--derived-data-path", "--timeout"],
+                    defaultProviders: ["triton xcode use", "triton sim use"],
+                    inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
+                    jsonlEvents: [
+                        "xcode.settings.invocation",
+                        "xcode.settings.stdout",
+                        "xcode.settings.stderr",
+                        "xcode.settings.heartbeat",
+                        "xcode.settings.summary",
+                    ],
+                    finalEventKind: "xcode.settings.summary",
+                    artifacts: ["stdout-log", "stderr-log"],
+                    retryable: true,
+                    outputSelectors: ["xcode.progress", "xcode.final"],
+                    failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "xcodebuild_failed", "app_path_unresolved", "bundle_id_unresolved"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "build",
+                    summary: "Run xcodebuild build and emit bounded JSONL progress",
+                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--derived-data-path", "--timeout", "--jsonl"],
+                    defaultProviders: ["triton xcode use", "triton sim use"],
+                    inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
+                    jsonlEvents: [
+                        "xcode.build.invocation",
+                        "xcode.build.stdout",
+                        "xcode.build.stderr",
+                        "xcode.build.heartbeat",
+                        "xcode.build.summary",
+                    ],
+                    finalEventKind: "xcode.build.summary",
+                    artifacts: ["stdout-log", "stderr-log"],
+                    retryable: true,
+                    nextCommands: ["triton xcode run --jsonl", "triton status --json"],
+                    outputSelectors: ["xcode.progress", "xcode.final"],
+                    failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "xcodebuild_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "test",
+                    summary: "Run xcodebuild test and optionally write a result bundle",
+                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--derived-data-path", "--result-bundle", "--timeout", "--jsonl"],
+                    defaultProviders: ["triton xcode use", "triton sim use"],
+                    inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
+                    jsonlEvents: [
+                        "xcode.test.invocation",
+                        "xcode.test.stdout",
+                        "xcode.test.stderr",
+                        "xcode.test.heartbeat",
+                        "xcode.test.summary",
+                    ],
+                    finalEventKind: "xcode.test.summary",
+                    artifacts: ["stdout-log", "stderr-log", "result-bundle"],
+                    retryable: true,
+                    nextCommands: [
+                        "triton xcresult summary --path <result.xcresult> --json",
+                        "triton xcresult failures --path <result.xcresult> --json",
+                    ],
+                    outputSelectors: ["xcode.progress", "xcode.final"],
+                    failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "xcodebuild_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "run",
+                    summary: "Build, install, and launch on a selected simulator without claiming business readiness",
+                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--derived-data-path", "--timeout", "--jsonl"],
+                    defaultProviders: ["triton xcode use", "triton sim use"],
+                    inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
+                    jsonlEvents: [
+                        "xcode.run.invocation",
+                        "xcode.run.stdout",
+                        "xcode.run.stderr",
+                        "xcode.run.heartbeat",
+                        "xcode.run.summary",
+                    ],
+                    finalEventKind: "xcode.run.summary",
+                    artifacts: ["stdout-log", "stderr-log"],
+                    retryable: true,
+                    nextCommands: ["triton status --json", "triton wait --json", "triton assert text-exists <text> --json"],
+                    outputSelectors: ["xcode.progress", "xcode.final"],
+                    failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "xcodebuild_failed", "app_path_unresolved", "bundle_id_unresolved"]
+                ),
+            ],
             providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-run"]
         ),
         TKCommandSchema(
@@ -320,6 +444,28 @@ func commandSchemas() -> [TKCommandSchema] {
                 "xcresult_output_too_large",
                 "host_command_failed",
             ],
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "summary",
+                    summary: "Read test counts and environment summary from an .xcresult bundle",
+                    requiredOptions: ["--path"],
+                    optionalOptions: ["--include-sensitive"],
+                    retryable: true,
+                    nextCommands: ["triton xcresult failures --path <result.xcresult> --json"],
+                    outputSelectors: ["xcresult.summary"],
+                    failureCodes: ["result_bundle_not_found", "xcresulttool_failed", "xcresult_parse_failed", "xcresult_output_too_large", "host_command_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "failures",
+                    summary: "Read structured failing test cases from an .xcresult bundle",
+                    requiredOptions: ["--path"],
+                    optionalOptions: ["--include-sensitive"],
+                    retryable: true,
+                    nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+                    outputSelectors: ["xcresult.failures"],
+                    failureCodes: ["result_bundle_not_found", "xcresulttool_failed", "xcresult_parse_failed", "xcresult_output_too_large", "host_command_failed"]
+                ),
+            ],
             providedCapabilities: ["xcresult-summary", "xcresult-failures"]
         ),
         TKCommandSchema(
@@ -376,6 +522,18 @@ func commandSchemas() -> [TKCommandSchema] {
                 ),
             ],
             failureCodes: ["xctrace_record_failed", "host_command_failed"],
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "record",
+                    summary: "Record an Instruments trace artifact",
+                    requiredOptions: ["--template", "--output"],
+                    optionalOptions: ["--device", "--time-limit", "--all-processes", "--attach", "--launch", "--append-run", "--run-name", "--timeout"],
+                    artifacts: ["trace"],
+                    retryable: true,
+                    outputSelectors: ["xctrace.record"],
+                    failureCodes: ["xctrace_record_failed", "host_command_failed"]
+                ),
+            ],
             providedCapabilities: ["xctrace-record"]
         ),
         TKCommandSchema(
@@ -434,6 +592,18 @@ func commandSchemas() -> [TKCommandSchema] {
                 "artifact_output_rejected",
                 "coverage_report_failed",
                 "host_command_failed",
+            ],
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "report",
+                    summary: "Export xccov report JSON into an artifact",
+                    requiredOptions: ["--xcresult", "--output"],
+                    optionalOptions: ["--only-targets", "--target", "--file", "--timeout"],
+                    artifacts: ["coverage-json"],
+                    retryable: true,
+                    outputSelectors: ["coverage.report"],
+                    failureCodes: ["validation_failed", "artifact_output_rejected", "coverage_report_failed", "host_command_failed"]
+                ),
             ],
             providedCapabilities: ["coverage-report"]
         ),

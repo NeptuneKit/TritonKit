@@ -409,6 +409,18 @@ struct TKCLITransportModelsTests {
                     ),
                 ],
                 failureCodes: ["server_unavailable", "target_not_found"],
+                subcommands: [
+                    TKCommandSubcommandSchema(
+                        name: "coordinate",
+                        summary: "Tap by coordinate",
+                        requiredOptions: [],
+                        oneOfRequiredOptions: [["--x", "--y"], ["--targetOID"]],
+                        optionalOptions: ["--duration"],
+                        defaultProviders: ["triton target use"],
+                        outputSelectors: ["tap.result"],
+                        failureCodes: ["server_unavailable"]
+                    ),
+                ],
                 inputActions: [
                     TKInputActionSchema(
                         type: "tap",
@@ -462,6 +474,10 @@ struct TKCLITransportModelsTests {
         #expect(decoded.commands.first?.outputContracts.first?.selector == "tap.result")
         #expect(decoded.commands.first?.outputContracts.first?.fields.first?.name == "ok")
         #expect(decoded.commands.first?.failureCodes == ["server_unavailable", "target_not_found"])
+        #expect(decoded.commands.first?.subcommands.first?.name == "coordinate")
+        #expect(decoded.commands.first?.subcommands.first?.oneOfRequiredOptions == [["--x", "--y"], ["--targetOID"]])
+        #expect(decoded.commands.first?.subcommands.first?.defaultProviders == ["triton target use"])
+        #expect(decoded.commands.first?.subcommands.first?.outputSelectors == ["tap.result"])
         #expect(decoded.commands.first?.inputActions?.first?.type == "tap")
         #expect(decoded.commands.first?.inputActions?.first?.coordinateSpace == "window-points")
         #expect(decoded.commands.first?.inputActions?.first?.oneOfRequired.first == ["x", "y"])
@@ -484,7 +500,13 @@ struct TKCLITransportModelsTests {
               "requiresTarget": false,
               "outputFormats": ["json"],
               "options": [],
-              "examples": ["triton status --json"]
+              "examples": ["triton status --json"],
+              "subcommands": [
+                {
+                  "name": "summary",
+                  "summary": "Read a summary"
+                }
+              ]
             }
           ],
           "httpManagementAPI": []
@@ -507,6 +529,11 @@ struct TKCLITransportModelsTests {
         #expect(command.nextCommands == [])
         #expect(command.outputContracts == [])
         #expect(command.failureCodes == [])
+        #expect(command.subcommands.first?.name == "summary")
+        #expect(command.subcommands.first?.requiredOptions == [])
+        #expect(command.subcommands.first?.oneOfRequiredOptions == [])
+        #expect(command.subcommands.first?.defaultProviders == [])
+        #expect(command.subcommands.first?.outputSelectors == [])
         #expect(command.providedCapabilities == [])
     }
 

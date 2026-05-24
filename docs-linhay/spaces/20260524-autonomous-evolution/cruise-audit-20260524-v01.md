@@ -95,11 +95,12 @@ swift test --filter TKXcodeWorkflowModelsTests
 6. artifact output safety：stdout-backed artifact 捕获默认拒绝覆盖已有文件和符号链接，并通过 `artifact_output_rejected` 暴露稳定错误码。
 7. `xcresult summary/failures` 默认 redaction / `--include-sensitive`：默认对 JSON 与 text 输出中的私有路径、邮箱、Bearer/token/password/API-key 片段、长 token-like 字符串、`path` 和 `sourceCommand/sourceCommands` 脱敏；显式 `--include-sensitive` 只用于本机私有调试，不用于公开 issue。
 8. Xcode schema structured contract：`xcode`、`xcresult`、`xctrace`、`coverage` schema 新增结构化 agent-planning 字段，覆盖 required options、defaults inheritance、JSONL event templates、final event kind、artifacts、retryable、next commands、output contracts 和 failure codes。
+9. Xcode schema subcommand contract：`xcode`、`xcresult`、`xctrace`、`coverage` schema 新增 `subcommands[]`，用原子 `requiredOptions`、`oneOfRequiredOptions`、`optionalOptions`、`defaultProviders`、`outputSelectors` 和 subcommand 级 failure codes 表达规划契约，避免 agent 解析命令级复合字符串。
 
 ### 继续延期
 
 1. 为更多非 stdout-backed artifact 命令补齐 explicit artifact-dir / force 策略，降低 agent 自动执行时覆盖非预期文件的风险。
-2. 将结构化 schema contract 从命令级推进到 subcommand 级，避免用字符串表达 `use:--scheme` 这类复合规则。
+2. 将 subcommand schema contract 继续推进为更多命令共享的轻量 contract builder，减少 `CLISchemaRuntime.swift` 内联重复。
 3. 实现 `capture/evidence --include xcode,host` 自动 manifest 整合。
 4. 为 `xcresult_parse_failed` 增加 CLI 级 fixture / snapshot 测试。
 5. 继续补 Xcode test final summary 中的 top failures，但不能把 build/install/launch 当作业务 ready。
