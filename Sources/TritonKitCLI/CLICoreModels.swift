@@ -166,6 +166,7 @@ func chineseRootHelp() -> String {
         ("capabilities", "输出 Triton 运行时能力矩阵"),
         ("schema", "输出机器可读命令 schema 和示例"),
         ("xcode", "发现、构建、测试和运行 Xcode 工程"),
+        ("xcresult", "读取 Xcode result bundle 汇总和失败列表"),
         ("xctrace", "采集 Instruments .trace 证据"),
         ("coverage", "导出 Xcode 覆盖率报告 artifact"),
         ("runtime", "读取 embedded runtime manifest 和能力边界"),
@@ -267,6 +268,22 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         "schema": ChineseCommandHelp(name: "schema", overview: "输出机器可读命令 schema 和示例。", usage: "triton schema [--command <command>] [--format <format>] [--json]", options: [
             ("--command <command>", "筛选单个命令，例如 input 或 tap"),
         ] + formatTextJSON),
+        "xcode": ChineseCommandHelp(name: "xcode", overview: "发现、配置、构建、测试和运行 Xcode 工程。", usage: "triton xcode <discover|use|schemes|status|wait-idle|settings|build|test|run> [选项]", options: formatTextJSON + [
+            ("discover --path <path>", "发现 workspace / project / Package.swift 候选"),
+            ("use --workspace <path> --scheme <name>", "写入工作区 Xcode 默认值"),
+            ("schemes", "列出可用 schemes"),
+            ("status", "检查活跃 xcodebuild 进程"),
+            ("wait-idle", "等待 workspace 相关 xcodebuild 空闲"),
+            ("settings", "解析 app product 路径与 bundle id"),
+            ("build", "运行 xcodebuild build"),
+            ("test --result-bundle <path>", "运行 xcodebuild test"),
+            ("run", "执行 build/install/launch 一体化流程"),
+        ]),
+        "xcresult": ChineseCommandHelp(name: "xcresult", overview: "读取 Xcode result bundle 的测试汇总和失败列表。", usage: "triton xcresult <summary|failures> --path <path.xcresult> [选项]", options: formatTextJSON + [
+            ("summary --path <path.xcresult>", "读取测试计数、环境描述和结果状态"),
+            ("failures --path <path.xcresult>", "读取结构化失败列表和 top failure"),
+            ("--include-sensitive", "输出私有路径、邮箱和 token-like 片段；默认关闭并自动脱敏"),
+        ]),
         "runtime": ChineseCommandHelp(name: "runtime", overview: "读取 embedded runtime manifest、能力边界、限制和脱敏策略。", usage: "triton runtime manifest [选项]", options: target + hostPort + formatTextJSON),
         "sim": ChineseCommandHelp(name: "sim", overview: "控制 iOS Simulator 生命周期、截图和维护。", usage: "triton sim <list|use|boot|shutdown|screenshot|record|logs|diagnose|logverbose|runtime|status-bar|privacy|location|ui|pasteboard|push> [选项]", options: formatTextJSON + [
             ("list", "列出可用 simulator"),

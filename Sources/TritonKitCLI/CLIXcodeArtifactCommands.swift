@@ -81,24 +81,30 @@ struct CoverageReport: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
+        let mode: TKXccovReportMode
         do {
-            let mode = try reportMode()
-            try runHostCommandCapturingStdoutArtifact(
-                action: "coverage.report",
-                runtimeScope: "host-xcode",
-                target: "xcresult:\(xcresult)",
-                command: TKXccovCommand.viewReport(
-                    xcresult: xcresult,
-                    mode: mode,
-                    json: true
-                ).withTimeout(timeout),
-                outputPath: output,
-                outputFormat: outputFormat,
-                note: "Coverage report JSON was written."
+            mode = try reportMode()
+        } catch let error as ValidationError {
+            try failHostValidation(
+                code: "validation_failed",
+                message: "\(error)",
+                hint: "Use only one of --only-targets, --target, or --file.",
+                outputFormat: outputFormat
             )
-        } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
         }
+        try runHostCommandCapturingStdoutArtifact(
+            action: "coverage.report",
+            runtimeScope: "host-xcode",
+            target: "xcresult:\(xcresult)",
+            command: TKXccovCommand.viewReport(
+                xcresult: xcresult,
+                mode: mode,
+                json: true
+            ).withTimeout(timeout),
+            outputPath: output,
+            outputFormat: outputFormat,
+            note: "Coverage report JSON was written."
+        )
     }
 
     private func reportMode() throws -> TKXccovReportMode {

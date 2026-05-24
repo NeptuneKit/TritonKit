@@ -12,6 +12,7 @@ Before filing a public issue, redact private project and personal information. D
 | --- | --- | --- |
 | Add in-app runtime to an iOS app | [iOS Embedded Runtime Integration Guide](#ios-embedded-runtime-integration-guide) | SwiftPM or CocoaPods, always visibly Debug-only in app source. |
 | Install or update the macOS agent CLI | [CLI Integration Guide](#cli-integration-guide) | Homebrew for released builds, local source build only for unreleased validation. |
+| Build, test, run, and diagnose an unknown Apple repo | [CLI Integration Guide](#cli-integration-guide) | Use `triton xcode`, `triton xcresult`, and artifact commands before raw `xcodebuild`. |
 | Prepare a HarmonyOS / DevEco Emulator | [Harmony App Integration Guide](#harmony-app-integration-guide) | Host-side HDC adapter works without embedded runtime. |
 | Validate a Harmony embedded runtime | [Harmony App Integration Guide](#harmony-app-integration-guide) | Use package id / import path `tritonkit` and `--runtime-base-url` direct checks while the SDK is standalone. |
 
@@ -365,7 +366,7 @@ triton app prefs set DEBUG-mock true --bundle-id com.example.app --simulator boo
 triton app prefs dump --bundle-id com.example.app --json
 ```
 
-破坏性命令默认要求 `--confirm`，而 `runtime delete` 也支持先用 `--dry-run` 复跑确认输出。
+Destructive commands require `--confirm` by default, and `runtime delete` supports `--dry-run` first so agents can inspect the selected runtimes before deleting anything.
 
 `app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
 When an embedded runtime is expected to be connected, add `--wait-ready --snapshot` to make the one-shot result include runtime readiness and an app/route/AX snapshot summary.
@@ -381,6 +382,8 @@ triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json
 triton xcode settings --jsonl --timeout 1800
 triton xcode build --jsonl --timeout 1800
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
+triton xcresult summary --path /tmp/App.xcresult --json
+triton xcresult failures --path /tmp/App.xcresult --json
 triton xcode run --jsonl
 triton xctrace record --template "Time Profiler" --device 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --time-limit 5s --output /tmp/App.trace --json
 triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
@@ -388,9 +391,13 @@ triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json 
 
 `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts, which gives agents a way to inspect long-running builds without waiting blindly.
 
+`xcode test` writes the result bundle but does not yet inline all test counts or failures into the final build summary. Run `triton xcresult summary` and `triton xcresult failures` against the bundle to produce issue-ready test evidence.
+
+`xcresult summary/failures` redact private paths, emails, bearer tokens, password/token/API-key fragments, and long token-like strings by default across JSON and text output, including `path` and `sourceCommand`. Use `--include-sensitive` only for local private debugging, not for public issues.
+
 `xcode run` proves build, install, and launch were submitted. It does not prove business readiness; continue with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
 
-`xctrace record` and `coverage report` are artifact commands. They return paths, source commands, and byte/truncation summaries; they do not inline large `.trace` or coverage payloads and do not prove app business readiness by themselves.
+`xctrace record` and `coverage report` are artifact commands. They return paths, source commands, and byte summaries; they do not inline large `.trace` or coverage payloads and do not prove app business readiness by themselves. Stdout-backed artifact writes reject existing files and symbolic links by default to avoid accidental overwrite during agent runs.
 
 HarmonyOS NEXT / DevEco Emulator P0 discovery is exposed through the same host-side contract. It does not require a running TritonKit embedded runtime:
 

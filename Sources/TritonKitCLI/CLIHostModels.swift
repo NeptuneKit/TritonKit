@@ -178,6 +178,31 @@ enum HostCommandRunError: Error, CustomStringConvertible {
     }
 }
 
+enum HostArtifactOutputError: Error, CustomStringConvertible {
+    case rejected(path: String, reason: String)
+
+    var description: String {
+        switch self {
+        case .rejected(let path, let reason):
+            "Artifact output path rejected: \(path) (\(reason))"
+        }
+    }
+}
+
+enum XcresultCLIError: Error, CustomStringConvertible {
+    case parseFailed(kind: String, underlying: Error)
+    case outputTooLarge(kind: String, bytes: Int, maximumBytes: Int)
+
+    var description: String {
+        switch self {
+        case .parseFailed(let kind, let underlying):
+            "Failed to parse xcresult \(kind) JSON: \(underlying)"
+        case .outputTooLarge(let kind, let bytes, let maximumBytes):
+            "xcresult \(kind) JSON is too large to parse inline: \(bytes) bytes exceeds \(maximumBytes) bytes"
+        }
+    }
+}
+
 struct HostSimulatorListOutput: Encodable {
     let ok: Bool
     let simulators: [TKHostSimulatorTarget]

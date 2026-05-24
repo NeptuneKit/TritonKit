@@ -107,6 +107,13 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - generic runtime endpoints may return `unsupported_runtime_scope` for scene, route, responder, semantic actions, input, screenshot, hit-test, or system alerts;
      - if the app registers scene / route / responder / action providers, verify that `runtime.manifest` dynamically marks those capabilities as supported;
      - report missing provider hooks as feature requests, and report falsely-supported capabilities as bugs.
+   - Xcode workflow feedback should include the smallest machine-readable evidence path available:
+     - `triton schema --command xcode --json`, `triton schema --command xcresult --json`, and `triton schema --command coverage --json` when reporting command contract mismatches;
+     - `triton xcode discover --path . --json` and the selected `triton xcode use ... --json` command, with private paths and scheme/app names redacted;
+     - `triton xcode build --jsonl --timeout <seconds>` or `triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl`, preserving stdout/stderr artifact paths and error codes;
+     - `triton xcresult summary --path /tmp/<case>.xcresult --json` and `triton xcresult failures --path /tmp/<case>.xcresult --json` for test failures; these are redacted by default, and `--include-sensitive` must not be used for public issue material;
+     - `triton coverage report --xcresult /tmp/<case>.xcresult --output /tmp/<case>-coverage.json --json` only when coverage is relevant; attach summaries, not raw private coverage files;
+     - clearly state whether `xcode run` only reached build/install/launch or whether runtime `status/wait/assert/screenshot/evidence` also proved business readiness.
    - `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, or `triton clear` for agent-facing action checks; these default to JSON, and `--format text` is only for human-readable debugging.
    - For form flows, prefer semantic embedded actions when available: `triton focus "用户名" --json`, `triton set-text "用户名" "alice" --json`, `triton set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton select-segment "协议" "HTTP" --json`, and `triton set-switch "记住我" on --json`.
    - When the same text appears multiple times, run `triton find "<text>" --all` first; if you know a point inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise use `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`.

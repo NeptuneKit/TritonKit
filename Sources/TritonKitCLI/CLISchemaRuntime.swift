@@ -170,6 +170,30 @@ func commandSchemas() -> [TKCommandSchema] {
             providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-run"]
         ),
         TKCommandSchema(
+            name: "xcresult",
+            summary: "Inspect Xcode result bundles for summary counts and structured failures",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "host-xcode",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: [
+                TKCommandSchemaOption(name: "summary", type: "Subcommand", description: "Read test counts and environment summary from an .xcresult bundle"),
+                TKCommandSchemaOption(name: "failures", type: "Subcommand", description: "Read structured failing test cases from an .xcresult bundle"),
+                TKCommandSchemaOption(name: "--path", type: "Path", description: "Input .xcresult bundle path"),
+                TKCommandSchemaOption(name: "--include-sensitive", type: "Bool", defaultValue: "false", description: "Include private paths, emails, and token-like values in output"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+            ],
+            examples: [
+                "triton xcresult summary --path /tmp/App.xcresult --json",
+                "triton xcresult failures --path /tmp/App.xcresult --json",
+            ],
+            successShape: "{ ok, action, path, summary, sourceCommand, redaction } or { ok, action, path, summary, failures[], sourceCommands[], redaction }",
+            failureShape: "{ ok:false, error:{ code: result_bundle_not_found|xcresulttool_failed|xcresult_parse_failed|xcresult_output_too_large|host_command_failed, message, hint } }",
+            providedCapabilities: ["xcresult-summary", "xcresult-failures"]
+        ),
+        TKCommandSchema(
             name: "xctrace",
             summary: "Record Instruments traces as bounded host artifacts",
             requiresServer: false,
@@ -219,7 +243,7 @@ func commandSchemas() -> [TKCommandSchema] {
                 "triton coverage report --xcresult /tmp/App.xcresult --only-targets --output /tmp/coverage-targets.json --json",
             ],
             successShape: "{ ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated, sourceCommand, note? }",
-            failureShape: "{ ok:false, error:{ code: coverage_report_failed|host_command_failed, message, hint } }",
+            failureShape: "{ ok:false, error:{ code: validation_failed|artifact_output_rejected|coverage_report_failed|host_command_failed, message, hint } }",
             providedCapabilities: ["coverage-report"]
         ),
         TKCommandSchema(

@@ -141,7 +141,8 @@ triton xcode clean --json
 ```bash
 triton xcresult summary --path /tmp/App.xcresult --json
 triton xcresult failures --path /tmp/App.xcresult --json
-triton xcresult attachments --path /tmp/App.xcresult --output /tmp/attachments --json
+# P1 follow-up, not currently implemented:
+# triton xcresult attachments --path /tmp/App.xcresult --output /tmp/attachments --json
 triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
 triton coverage report --xcresult /tmp/App.xcresult --only-targets --output /tmp/coverage-targets.json --json
 triton coverage report --xcresult /tmp/App.xcresult --target App --output /tmp/coverage-files.json --json
@@ -394,11 +395,10 @@ ONLY_ACTIVE_ARCH=YES
 
 仍未完成：
 
-1. `triton xcresult summary/failures`
-2. coverage summary/uncovered
-3. logs stream/collect
-4. `capture/evidence --include xcode,host`
-5. 真正 streaming 的 xcodebuild stdout/stderr 细粒度 progress parser
+1. coverage summary/uncovered
+2. logs stream/collect
+3. `capture/evidence --include xcode,host`
+4. 真正 streaming 的 xcodebuild stdout/stderr 细粒度 progress parser
 
 1. Shared models:
    - `TKXcodeDiscoveryResult`

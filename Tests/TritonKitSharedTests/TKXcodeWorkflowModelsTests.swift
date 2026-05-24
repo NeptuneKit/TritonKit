@@ -94,6 +94,24 @@ struct TKXcodeWorkflowModelsTests {
         ])
     }
 
+    @Test("xcresult command builders emit stable argv")
+    func xcresultCommandBuilders() {
+        let summary = TKXcresultCommand.summary(path: "/tmp/App.xcresult")
+        let tests = TKXcresultCommand.tests(path: "/tmp/App.xcresult")
+
+        #expect(summary.executable == "xcrun")
+        #expect(summary.argv == [
+            "xcresulttool", "get", "test-results", "summary",
+            "--path", "/tmp/App.xcresult",
+            "--compact",
+        ])
+        #expect(tests.argv == [
+            "xcresulttool", "get", "test-results", "tests",
+            "--path", "/tmp/App.xcresult",
+            "--compact",
+        ])
+    }
+
     @Test("xcode action progress and summary preserve streaming artifacts")
     func xcodeStreamingArtifactsRoundTrip() throws {
         let event = TKXcodeProgressEvent(
@@ -178,6 +196,295 @@ struct TKXcodeWorkflowModelsTests {
         #expect(product.target == "App")
         #expect(product.appPath == "/tmp/DerivedData/Build/Products/Debug-iphonesimulator/App.app")
         #expect(product.bundleID == "com.example.App")
+    }
+
+    @Test("xcresult summary parser resolves counts and duration")
+    func xcresultSummaryParser() throws {
+        let json = """
+        {
+          "title": "AppTests",
+          "startTime": 10.0,
+          "finishTime": 12.5,
+          "environmentDescription": "iPhone 17, iOS 26.5",
+          "topInsights": [
+            { "impact": "high", "category": "assertion", "text": "One failing test" }
+          ],
+          "result": "Failed",
+          "totalTestCount": 3,
+          "passedTests": 2,
+          "failedTests": 1,
+          "skippedTests": 0,
+          "expectedFailures": 0,
+          "statistics": [
+            { "title": "Tests", "subtitle": "3 total" }
+          ],
+          "devicesAndConfigurations": {
+            "device": {
+              "deviceId": "SIM-1",
+              "deviceName": "iPhone 17",
+              "architecture": "arm64",
+              "modelName": "iPhone 17",
+              "platform": "iOS",
+              "osVersion": "26.5",
+              "osBuildNumber": "23F"
+            },
+            "testPlanConfiguration": {
+              "configurationId": "cfg-1",
+              "configurationName": "Debug"
+            },
+            "passedTests": 2,
+            "failedTests": 1,
+            "skippedTests": 0,
+            "expectedFailures": 0
+          },
+          "testFailures": {
+            "testName": "AppTests/testLogin()",
+            "targetName": "AppTests",
+            "failureText": "XCTAssertEqual failed: 1 is not equal to 2",
+            "testIdentifier": 42,
+            "testIdentifierString": "42",
+            "testIdentifierURL": "xcresult://test/42"
+          }
+        }
+        """
+
+        let summary = try TKXcresultSummaryParser.parse(Data(json.utf8))
+
+        #expect(summary.title == "AppTests")
+        #expect(summary.status == "failed")
+        #expect(summary.durationMs == 2_500)
+        #expect(summary.totalTestCount == 3)
+        #expect(summary.failedTests == 1)
+        #expect(summary.devicesAndConfigurations?.device.deviceName == "iPhone 17")
+        #expect(summary.testFailure?.testIdentifierString == "42")
+    }
+
+    @Test("xcresult redaction removes private paths emails and token-like values")
+    func xcresultRedactionRemovesSensitiveStrings() {
+        let summary = TKXcresultSummaryMetrics(
+            title: "AppTests",
+            startTime: nil,
+            finishTime: nil,
+            environmentDescription: "runner=/Users/alice/Private/App token=abc123456789secret alice@example.com",
+            topInsights: [
+                TKXcresultInsightSummary(
+                    impact: "high",
+                    category: "assertion",
+                    text: "Bearer sk_test_1234567890abcdef1234567890abcdef at /Users/alice/App/Tests/LoginTests.swift:42"
+                )
+            ],
+            result: "Failed",
+            totalTestCount: 1,
+            passedTests: 0,
+            failedTests: 1,
+            skippedTests: 0,
+            expectedFailures: 0,
+            statistics: [],
+            devicesAndConfigurations: nil,
+            testFailure: TKXcresultTestFailure(
+                testName: "testLogin()",
+                targetName: "AppTests",
+                failureText: "failed for alice@example.com password=hunter2secret",
+                testIdentifierString: "42",
+                testIdentifierURL: "xcresult://test/42"
+            )
+        )
+        let failures = [
+            TKXcresultFailureRecord(
+                suiteName: "LoginSuite",
+                testName: "testLogin()",
+                targetName: "AppTests",
+                message: "XCTAssert failed at /Users/alice/App/Tests/LoginTests.swift with token=1234567890abcdef1234567890abcdef",
+                location: "/Users/alice/App/Tests/LoginTests.swift:42",
+                attachmentNames: ["file:///Users/alice/App/shot.png"]
+            )
+        ]
+
+        let redactedSummary = TKXcresultRedaction.redact(summary)
+        let redactedFailures = TKXcresultRedaction.redact(failures)
+        let encodedSummary = String(data: try! JSONEncoder().encode(redactedSummary), encoding: .utf8)!
+        let encodedFailures = String(data: try! JSONEncoder().encode(redactedFailures), encoding: .utf8)!
+
+        #expect(!encodedSummary.contains("/Users/alice"))
+        #expect(!encodedSummary.contains("alice@example.com"))
+        #expect(!encodedSummary.contains("sk_test_1234567890abcdef1234567890abcdef"))
+        #expect(encodedSummary.contains("<private-path>"))
+        #expect(encodedSummary.contains("<email>"))
+        #expect(encodedSummary.contains("Bearer <redacted>"))
+        #expect(!encodedFailures.contains("/Users/alice"))
+        #expect(!encodedFailures.contains("1234567890abcdef1234567890abcdef"))
+        #expect(encodedFailures.contains("<private-path>"))
+        #expect(encodedFailures.contains("token=<redacted>"))
+    }
+
+    @Test("xcresult tests parser extracts structured failures")
+    func xcresultTestsParser() throws {
+        let json = """
+        {
+          "testPlanConfigurations": [
+            { "configurationId": "cfg-1", "configurationName": "Debug" }
+          ],
+          "devices": [
+            {
+              "deviceId": "SIM-1",
+              "deviceName": "iPhone 17",
+              "architecture": "arm64",
+              "modelName": "iPhone 17",
+              "platform": "iOS",
+              "osVersion": "26.5",
+              "osBuildNumber": "23F"
+            }
+          ],
+          "testNodes": [
+            {
+              "nodeIdentifier": "bundle-1",
+              "nodeIdentifierURL": "xcresult://bundle/1",
+              "nodeType": "Unit test bundle",
+              "name": "AppTests",
+              "children": [
+                {
+                  "nodeIdentifier": "suite-1",
+                  "nodeIdentifierURL": "xcresult://suite/1",
+                  "nodeType": "Test Suite",
+                  "name": "AppTests",
+                  "children": [
+                    {
+                      "nodeIdentifier": "case-1",
+                      "nodeIdentifierURL": "xcresult://case/1",
+                      "nodeType": "Test Case",
+                      "name": "testLogin()",
+                      "children": [
+                        {
+                          "nodeIdentifier": "run-1",
+                          "nodeIdentifierURL": "xcresult://run/1",
+                          "nodeType": "Test Case Run",
+                          "name": "testLogin()",
+                          "result": "Failed",
+                          "children": [
+                            {
+                              "nodeIdentifier": "failure-1",
+                              "nodeType": "Failure Message",
+                              "name": "XCTAssertEqual failed",
+                              "details": "XCTAssertEqual failed: 1 is not equal to 2"
+                            },
+                            {
+                              "nodeIdentifier": "source-1",
+                              "nodeType": "Source Code Reference",
+                              "name": "Tests/AppTests.swift:42",
+                              "details": "Tests/AppTests.swift:42"
+                            },
+                            {
+                              "nodeIdentifier": "attachment-1",
+                              "nodeType": "Attachment",
+                              "name": "Screenshot",
+                              "details": "Screenshot"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+        """
+
+        let failures = try TKXcresultTestsParser.parseFailures(Data(json.utf8))
+
+        #expect(failures.count == 1)
+        #expect(failures.first?.suiteName == "AppTests")
+        #expect(failures.first?.testName == "testLogin()")
+        #expect(failures.first?.targetName == "AppTests")
+        #expect(failures.first?.location == "Tests/AppTests.swift:42")
+        #expect(failures.first?.attachmentNames == ["Screenshot"])
+        #expect(failures.first?.message.contains("XCTAssertEqual failed") == true)
+    }
+
+    @Test("xcresult tests parser tolerates nodes without identifiers")
+    func xcresultTestsParserToleratesMissingIdentifiers() throws {
+        let json = """
+        {
+          "testPlanConfigurations": [],
+          "devices": [],
+          "testNodes": [
+            {
+              "nodeType": "Unit test bundle",
+              "name": "AppTests",
+              "children": [
+                {
+                  "nodeType": "Test Suite",
+                  "name": "AppTests",
+                  "children": [
+                    {
+                      "nodeType": "Test Case",
+                      "name": "testMissingIdentifier()",
+                      "children": [
+                        {
+                          "nodeType": "Test Case Run",
+                          "name": "testMissingIdentifier()",
+                          "result": "Failed",
+                          "children": [
+                            {
+                              "nodeType": "Failure Message",
+                              "name": "XCTAssertTrue failed",
+                              "details": "XCTAssertTrue failed"
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+        """
+
+        let failures = try TKXcresultTestsParser.parseFailures(Data(json.utf8))
+
+        #expect(failures.count == 1)
+        #expect(failures.first?.testName == "testMissingIdentifier()")
+        #expect(failures.first?.testIdentifierString == nil)
+        #expect(failures.first?.message == "XCTAssertTrue failed")
+    }
+
+    @Test("xcresult tests parser keeps failed runs without diagnostic children")
+    func xcresultTestsParserKeepsFailedRunsWithoutDiagnostics() throws {
+        let json = """
+        {
+          "testPlanConfigurations": [],
+          "devices": [],
+          "testNodes": [
+            {
+              "nodeType": "Unit test bundle",
+              "name": "AppTests",
+              "children": [
+                {
+                  "nodeType": "Test Case",
+                  "name": "testCrash()",
+                  "children": [
+                    {
+                      "nodeType": "Test Case Run",
+                      "name": "testCrash()",
+                      "details": "Test crashed before recording a failure message",
+                      "result": "Failed"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+        """
+
+        let failures = try TKXcresultTestsParser.parseFailures(Data(json.utf8))
+
+        #expect(failures.count == 1)
+        #expect(failures.first?.testName == "testCrash()")
+        #expect(failures.first?.message == "Test crashed before recording a failure message")
     }
 
     @Test("xcode discovery finds workspace project and package without nested build noise")

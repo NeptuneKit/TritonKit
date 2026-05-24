@@ -163,7 +163,7 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         stderrLogPath: result.stderrLogPath,
         stdoutBytes: result.stdoutBytes,
         stderrBytes: result.stderrBytes,
-        note: "Test command finished. Use `triton xcresult failures --path <result.xcresult> --json` once xcresult parsing lands."
+        note: "Test command finished. Use `triton xcresult summary --path <result.xcresult> --json` or `triton xcresult failures --path <result.xcresult> --json` for structured result parsing."
     )
 }
 

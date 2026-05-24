@@ -360,6 +360,631 @@ public enum TKXccovCommand {
     }
 }
 
+public enum TKXcresultCommand {
+    public static func summary(path: String) -> TKHostCommand {
+        TKHostCommand(
+            executable: "xcrun",
+            arguments: ["xcresulttool", "get", "test-results", "summary", "--path", path, "--compact"],
+            riskLevel: .evidence,
+            requiredConfig: [.timeout],
+            defaultTimeoutSeconds: 120,
+            sensitiveOutput: true
+        )
+    }
+
+    public static func tests(path: String) -> TKHostCommand {
+        TKHostCommand(
+            executable: "xcrun",
+            arguments: ["xcresulttool", "get", "test-results", "tests", "--path", path, "--compact"],
+            riskLevel: .evidence,
+            requiredConfig: [.timeout],
+            defaultTimeoutSeconds: 120,
+            sensitiveOutput: true
+        )
+    }
+}
+
+public struct TKXcresultInsightSummary: Codable, Equatable {
+    public let impact: String
+    public let category: String
+    public let text: String
+
+    public init(impact: String, category: String, text: String) {
+        self.impact = impact
+        self.category = category
+        self.text = text
+    }
+}
+
+public struct TKXcresultStatistic: Codable, Equatable {
+    public let title: String
+    public let subtitle: String
+
+    public init(title: String, subtitle: String) {
+        self.title = title
+        self.subtitle = subtitle
+    }
+}
+
+public struct TKXcresultDeviceSummary: Codable, Equatable {
+    public let deviceId: String
+    public let deviceName: String
+    public let architecture: String?
+    public let modelName: String?
+    public let platform: String?
+    public let osVersion: String
+    public let osBuildNumber: String?
+
+    public init(
+        deviceId: String,
+        deviceName: String,
+        architecture: String? = nil,
+        modelName: String? = nil,
+        platform: String? = nil,
+        osVersion: String,
+        osBuildNumber: String? = nil
+    ) {
+        self.deviceId = deviceId
+        self.deviceName = deviceName
+        self.architecture = architecture
+        self.modelName = modelName
+        self.platform = platform
+        self.osVersion = osVersion
+        self.osBuildNumber = osBuildNumber
+    }
+}
+
+public struct TKXcresultConfigurationSummary: Codable, Equatable {
+    public let configurationId: String
+    public let configurationName: String
+
+    public init(configurationId: String, configurationName: String) {
+        self.configurationId = configurationId
+        self.configurationName = configurationName
+    }
+}
+
+public struct TKXcresultDeviceAndConfigurationSummary: Codable, Equatable {
+    public let device: TKXcresultDeviceSummary
+    public let testPlanConfiguration: TKXcresultConfigurationSummary
+    public let passedTests: Int
+    public let failedTests: Int
+    public let skippedTests: Int
+    public let expectedFailures: Int
+
+    public init(
+        device: TKXcresultDeviceSummary,
+        testPlanConfiguration: TKXcresultConfigurationSummary,
+        passedTests: Int,
+        failedTests: Int,
+        skippedTests: Int,
+        expectedFailures: Int
+    ) {
+        self.device = device
+        self.testPlanConfiguration = testPlanConfiguration
+        self.passedTests = passedTests
+        self.failedTests = failedTests
+        self.skippedTests = skippedTests
+        self.expectedFailures = expectedFailures
+    }
+}
+
+public struct TKXcresultTestFailure: Codable, Equatable {
+    public let testName: String
+    public let targetName: String
+    public let failureText: String
+    public let testIdentifier: Int64?
+    public let testIdentifierString: String
+    public let testIdentifierURL: String?
+
+    public init(
+        testName: String,
+        targetName: String,
+        failureText: String,
+        testIdentifier: Int64? = nil,
+        testIdentifierString: String,
+        testIdentifierURL: String? = nil
+    ) {
+        self.testName = testName
+        self.targetName = targetName
+        self.failureText = failureText
+        self.testIdentifier = testIdentifier
+        self.testIdentifierString = testIdentifierString
+        self.testIdentifierURL = testIdentifierURL
+    }
+}
+
+public struct TKXcresultSummaryMetrics: Codable, Equatable {
+    public let title: String
+    public let startTime: Double?
+    public let finishTime: Double?
+    public let environmentDescription: String
+    public let topInsights: [TKXcresultInsightSummary]
+    public let result: String
+    public let status: String
+    public let durationMs: Int?
+    public let totalTestCount: Int
+    public let passedTests: Int
+    public let failedTests: Int
+    public let skippedTests: Int
+    public let expectedFailures: Int
+    public let statistics: [TKXcresultStatistic]
+    public let devicesAndConfigurations: TKXcresultDeviceAndConfigurationSummary?
+    public let testFailure: TKXcresultTestFailure?
+
+    public init(
+        title: String,
+        startTime: Double?,
+        finishTime: Double?,
+        environmentDescription: String,
+        topInsights: [TKXcresultInsightSummary],
+        result: String,
+        durationMs: Int? = nil,
+        totalTestCount: Int,
+        passedTests: Int,
+        failedTests: Int,
+        skippedTests: Int,
+        expectedFailures: Int,
+        statistics: [TKXcresultStatistic],
+        devicesAndConfigurations: TKXcresultDeviceAndConfigurationSummary?,
+        testFailure: TKXcresultTestFailure?
+    ) {
+        self.title = title
+        self.startTime = startTime
+        self.finishTime = finishTime
+        self.environmentDescription = environmentDescription
+        self.topInsights = topInsights
+        self.result = result
+        self.status = TKXcresultSummaryMetrics.statusString(for: result)
+        self.durationMs = durationMs
+        self.totalTestCount = totalTestCount
+        self.passedTests = passedTests
+        self.failedTests = failedTests
+        self.skippedTests = skippedTests
+        self.expectedFailures = expectedFailures
+        self.statistics = statistics
+        self.devicesAndConfigurations = devicesAndConfigurations
+        self.testFailure = testFailure
+    }
+
+    private static func statusString(for result: String) -> String {
+        result
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: " ", with: "_")
+            .lowercased()
+    }
+}
+
+public struct TKXcresultSummaryResponse: Codable, Equatable {
+    public let title: String
+    public let startTime: Double?
+    public let finishTime: Double?
+    public let environmentDescription: String
+    public let topInsights: [TKXcresultInsightSummary]
+    public let result: String
+    public let totalTestCount: Int
+    public let passedTests: Int
+    public let failedTests: Int
+    public let skippedTests: Int
+    public let expectedFailures: Int
+    public let statistics: [TKXcresultStatistic]
+    public let devicesAndConfigurations: TKXcresultDeviceAndConfigurationSummary?
+    public let testFailures: TKXcresultTestFailure?
+
+    public init(
+        title: String,
+        startTime: Double? = nil,
+        finishTime: Double? = nil,
+        environmentDescription: String,
+        topInsights: [TKXcresultInsightSummary] = [],
+        result: String,
+        totalTestCount: Int,
+        passedTests: Int,
+        failedTests: Int,
+        skippedTests: Int,
+        expectedFailures: Int,
+        statistics: [TKXcresultStatistic] = [],
+        devicesAndConfigurations: TKXcresultDeviceAndConfigurationSummary? = nil,
+        testFailures: TKXcresultTestFailure? = nil
+    ) {
+        self.title = title
+        self.startTime = startTime
+        self.finishTime = finishTime
+        self.environmentDescription = environmentDescription
+        self.topInsights = topInsights
+        self.result = result
+        self.totalTestCount = totalTestCount
+        self.passedTests = passedTests
+        self.failedTests = failedTests
+        self.skippedTests = skippedTests
+        self.expectedFailures = expectedFailures
+        self.statistics = statistics
+        self.devicesAndConfigurations = devicesAndConfigurations
+        self.testFailures = testFailures
+    }
+}
+
+public enum TKXcresultSummaryParser {
+    public static func parse(_ data: Data) throws -> TKXcresultSummaryMetrics {
+        let response = try JSONDecoder().decode(TKXcresultSummaryResponse.self, from: data)
+        let durationMs: Int?
+        if let startTime = response.startTime, let finishTime = response.finishTime {
+            let computed = max(0, Int(((finishTime - startTime) * 1_000).rounded()))
+            durationMs = computed
+        } else {
+            durationMs = nil
+        }
+        return TKXcresultSummaryMetrics(
+            title: response.title,
+            startTime: response.startTime,
+            finishTime: response.finishTime,
+            environmentDescription: response.environmentDescription,
+            topInsights: response.topInsights,
+            result: response.result,
+            durationMs: durationMs,
+            totalTestCount: response.totalTestCount,
+            passedTests: response.passedTests,
+            failedTests: response.failedTests,
+            skippedTests: response.skippedTests,
+            expectedFailures: response.expectedFailures,
+            statistics: response.statistics,
+            devicesAndConfigurations: response.devicesAndConfigurations,
+            testFailure: response.testFailures
+        )
+    }
+}
+
+public enum TKXcresultTestNodeType: String, Codable, Equatable {
+    case testPlan = "Test Plan"
+    case unitTestBundle = "Unit test bundle"
+    case uiTestBundle = "UI test bundle"
+    case testSuite = "Test Suite"
+    case testCase = "Test Case"
+    case device = "Device"
+    case testPlanConfiguration = "Test Plan Configuration"
+    case arguments = "Arguments"
+    case repetition = "Repetition"
+    case testCaseRun = "Test Case Run"
+    case failureMessage = "Failure Message"
+    case sourceCodeReference = "Source Code Reference"
+    case attachment = "Attachment"
+    case expression = "Expression"
+    case testValue = "Test Value"
+    case runtimeWarning = "Runtime Warning"
+    case other
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let raw = try container.decode(String.self)
+        self = TKXcresultTestNodeType(rawValue: raw) ?? .other
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue == "other" ? "other" : rawValue)
+    }
+}
+
+public struct TKXcresultTestNode: Codable, Equatable {
+    public let nodeIdentifier: String?
+    public let nodeIdentifierURL: String?
+    public let nodeType: TKXcresultTestNodeType
+    public let name: String
+    public let details: String?
+    public let duration: String?
+    public let durationInSeconds: Double?
+    public let result: String?
+    public let tags: [String]
+    public let children: [TKXcresultTestNode]
+
+    public init(
+        nodeIdentifier: String? = nil,
+        nodeIdentifierURL: String? = nil,
+        nodeType: TKXcresultTestNodeType,
+        name: String,
+        details: String? = nil,
+        duration: String? = nil,
+        durationInSeconds: Double? = nil,
+        result: String? = nil,
+        tags: [String] = [],
+        children: [TKXcresultTestNode] = []
+    ) {
+        self.nodeIdentifier = nodeIdentifier
+        self.nodeIdentifierURL = nodeIdentifierURL
+        self.nodeType = nodeType
+        self.name = name
+        self.details = details
+        self.duration = duration
+        self.durationInSeconds = durationInSeconds
+        self.result = result
+        self.tags = tags
+        self.children = children
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.nodeIdentifier = try container.decodeIfPresent(String.self, forKey: .nodeIdentifier)
+        self.nodeIdentifierURL = try container.decodeIfPresent(String.self, forKey: .nodeIdentifierURL)
+        self.nodeType = try container.decode(TKXcresultTestNodeType.self, forKey: .nodeType)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.details = try container.decodeIfPresent(String.self, forKey: .details)
+        self.duration = try container.decodeIfPresent(String.self, forKey: .duration)
+        self.durationInSeconds = try container.decodeIfPresent(Double.self, forKey: .durationInSeconds)
+        self.result = try container.decodeIfPresent(String.self, forKey: .result)
+        self.tags = try container.decodeIfPresent([String].self, forKey: .tags) ?? []
+        self.children = try container.decodeIfPresent([TKXcresultTestNode].self, forKey: .children) ?? []
+    }
+}
+
+public struct TKXcresultTestsResponse: Codable, Equatable {
+    public let testPlanConfigurations: [TKXcresultConfigurationSummary]
+    public let devices: [TKXcresultDeviceSummary]
+    public let testNodes: [TKXcresultTestNode]
+
+    public init(
+        testPlanConfigurations: [TKXcresultConfigurationSummary],
+        devices: [TKXcresultDeviceSummary],
+        testNodes: [TKXcresultTestNode]
+    ) {
+        self.testPlanConfigurations = testPlanConfigurations
+        self.devices = devices
+        self.testNodes = testNodes
+    }
+}
+
+public struct TKXcresultFailureRecord: Codable, Equatable {
+    public let suiteName: String?
+    public let testName: String
+    public let targetName: String
+    public let message: String
+    public let location: String?
+    public let testIdentifierString: String?
+    public let testIdentifierURL: String?
+    public let attachmentNames: [String]
+
+    public init(
+        suiteName: String?,
+        testName: String,
+        targetName: String,
+        message: String,
+        location: String? = nil,
+        testIdentifierString: String? = nil,
+        testIdentifierURL: String? = nil,
+        attachmentNames: [String] = []
+    ) {
+        self.suiteName = suiteName
+        self.testName = testName
+        self.targetName = targetName
+        self.message = message
+        self.location = location
+        self.testIdentifierString = testIdentifierString
+        self.testIdentifierURL = testIdentifierURL
+        self.attachmentNames = attachmentNames
+    }
+}
+
+public enum TKXcresultRedaction {
+    public static func redact(_ value: String) -> String {
+        var redacted = value
+        redacted = replacing(
+            #"\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b"#,
+            in: redacted,
+            with: "<email>",
+            options: [.caseInsensitive]
+        )
+        redacted = replacing(
+            #"file:///(?:Users|private|var|tmp|Volumes)/[^\s"'<>,)]+"#,
+            in: redacted,
+            with: "<private-path>"
+        )
+        redacted = replacing(
+            #"/(?:Users|private|var|tmp|Volumes)/[^\s"'<>,)]+"#,
+            in: redacted,
+            with: "<private-path>"
+        )
+        redacted = replacing(
+            #"(?i)\bBearer\s+[A-Za-z0-9._\-+/=]{8,}"#,
+            in: redacted,
+            with: "Bearer <redacted>"
+        )
+        redacted = replacing(
+            #"(?i)\b(token|secret|password|passwd|api[_-]?key|authorization)\s*[:=]\s*[^\s,;"']{6,}"#,
+            in: redacted,
+            with: "$1=<redacted>"
+        )
+        redacted = replacing(
+            #"\b[A-Za-z0-9_\-]{32,}\b"#,
+            in: redacted,
+            with: "<redacted-token>"
+        )
+        return redacted
+    }
+
+    public static func redact(_ summary: TKXcresultSummaryMetrics) -> TKXcresultSummaryMetrics {
+        TKXcresultSummaryMetrics(
+            title: redact(summary.title),
+            startTime: summary.startTime,
+            finishTime: summary.finishTime,
+            environmentDescription: redact(summary.environmentDescription),
+            topInsights: summary.topInsights.map(redact(_:)),
+            result: summary.result,
+            durationMs: summary.durationMs,
+            totalTestCount: summary.totalTestCount,
+            passedTests: summary.passedTests,
+            failedTests: summary.failedTests,
+            skippedTests: summary.skippedTests,
+            expectedFailures: summary.expectedFailures,
+            statistics: summary.statistics.map(redact(_:)),
+            devicesAndConfigurations: summary.devicesAndConfigurations.map(redact(_:)),
+            testFailure: summary.testFailure.map(redact(_:))
+        )
+    }
+
+    public static func redact(_ failures: [TKXcresultFailureRecord]) -> [TKXcresultFailureRecord] {
+        failures.map(redact(_:))
+    }
+
+    private static func redact(_ insight: TKXcresultInsightSummary) -> TKXcresultInsightSummary {
+        TKXcresultInsightSummary(
+            impact: redact(insight.impact),
+            category: redact(insight.category),
+            text: redact(insight.text)
+        )
+    }
+
+    private static func redact(_ statistic: TKXcresultStatistic) -> TKXcresultStatistic {
+        TKXcresultStatistic(title: redact(statistic.title), subtitle: redact(statistic.subtitle))
+    }
+
+    private static func redact(_ summary: TKXcresultDeviceAndConfigurationSummary) -> TKXcresultDeviceAndConfigurationSummary {
+        TKXcresultDeviceAndConfigurationSummary(
+            device: redact(summary.device),
+            testPlanConfiguration: redact(summary.testPlanConfiguration),
+            passedTests: summary.passedTests,
+            failedTests: summary.failedTests,
+            skippedTests: summary.skippedTests,
+            expectedFailures: summary.expectedFailures
+        )
+    }
+
+    private static func redact(_ device: TKXcresultDeviceSummary) -> TKXcresultDeviceSummary {
+        TKXcresultDeviceSummary(
+            deviceId: redact(device.deviceId),
+            deviceName: redact(device.deviceName),
+            architecture: device.architecture.map(redact(_:)),
+            modelName: device.modelName.map(redact(_:)),
+            platform: device.platform.map(redact(_:)),
+            osVersion: redact(device.osVersion),
+            osBuildNumber: device.osBuildNumber.map(redact(_:))
+        )
+    }
+
+    private static func redact(_ configuration: TKXcresultConfigurationSummary) -> TKXcresultConfigurationSummary {
+        TKXcresultConfigurationSummary(
+            configurationId: redact(configuration.configurationId),
+            configurationName: redact(configuration.configurationName)
+        )
+    }
+
+    private static func redact(_ failure: TKXcresultTestFailure) -> TKXcresultTestFailure {
+        TKXcresultTestFailure(
+            testName: redact(failure.testName),
+            targetName: redact(failure.targetName),
+            failureText: redact(failure.failureText),
+            testIdentifier: failure.testIdentifier,
+            testIdentifierString: redact(failure.testIdentifierString),
+            testIdentifierURL: failure.testIdentifierURL.map(redact(_:))
+        )
+    }
+
+    private static func redact(_ failure: TKXcresultFailureRecord) -> TKXcresultFailureRecord {
+        TKXcresultFailureRecord(
+            suiteName: failure.suiteName.map(redact(_:)),
+            testName: redact(failure.testName),
+            targetName: redact(failure.targetName),
+            message: redact(failure.message),
+            location: failure.location.map(redact(_:)),
+            testIdentifierString: failure.testIdentifierString.map(redact(_:)),
+            testIdentifierURL: failure.testIdentifierURL.map(redact(_:)),
+            attachmentNames: failure.attachmentNames.map(redact(_:))
+        )
+    }
+
+    private static func replacing(
+        _ pattern: String,
+        in value: String,
+        with replacement: String,
+        options: NSRegularExpression.Options = []
+    ) -> String {
+        guard let expression = try? NSRegularExpression(pattern: pattern, options: options) else {
+            return value
+        }
+        let range = NSRange(value.startIndex..<value.endIndex, in: value)
+        return expression.stringByReplacingMatches(in: value, range: range, withTemplate: replacement)
+    }
+}
+
+public enum TKXcresultTestsParser {
+    public static func parseFailures(_ data: Data) throws -> [TKXcresultFailureRecord] {
+        let response = try JSONDecoder().decode(TKXcresultTestsResponse.self, from: data)
+        return collectFailures(from: response.testNodes)
+    }
+
+    private static func collectFailures(from nodes: [TKXcresultTestNode], ancestors: [TKXcresultTestNode] = []) -> [TKXcresultFailureRecord] {
+        var failures: [TKXcresultFailureRecord] = []
+        for node in nodes {
+            let chain = ancestors + [node]
+            if node.nodeType == .testCaseRun, node.result?.localizedCaseInsensitiveCompare("Failed") == .orderedSame {
+                if let record = failureRecord(for: node, ancestors: ancestors) {
+                    failures.append(record)
+                }
+            }
+            if !node.children.isEmpty {
+                failures.append(contentsOf: collectFailures(from: node.children, ancestors: chain))
+            }
+        }
+        return failures
+    }
+
+    private static func failureRecord(for node: TKXcresultTestNode, ancestors: [TKXcresultTestNode]) -> TKXcresultFailureRecord? {
+        let suiteName = ancestors.reversed().first(where: { $0.nodeType == .testSuite })?.name
+        let targetName = ancestors.reversed().first(where: { $0.nodeType == .unitTestBundle || $0.nodeType == .uiTestBundle })?.name
+            ?? ancestors.reversed().first(where: { $0.nodeType == .testPlanConfiguration })?.name
+            ?? ancestors.reversed().first(where: { $0.nodeType == .testPlan })?.name
+            ?? "unknown"
+        let testName = ancestors.reversed().first(where: { $0.nodeType == .testCase })?.name ?? node.name
+        let messages = failureMessages(from: node)
+        let attachments = attachmentNames(from: node)
+        let location = sourceReference(from: node)
+        return TKXcresultFailureRecord(
+            suiteName: suiteName,
+            testName: testName,
+            targetName: targetName,
+            message: messages.isEmpty ? node.details ?? node.name : messages.joined(separator: "\n"),
+            location: location,
+            testIdentifierString: node.nodeIdentifier,
+            testIdentifierURL: node.nodeIdentifierURL,
+            attachmentNames: attachments
+        )
+    }
+
+    private static func failureMessages(from node: TKXcresultTestNode) -> [String] {
+        node.children.flatMap { child -> [String] in
+            switch child.nodeType {
+            case .failureMessage:
+                return [child.details ?? child.name]
+            default:
+                return failureMessages(from: child)
+            }
+        }.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+
+    private static func attachmentNames(from node: TKXcresultTestNode) -> [String] {
+        node.children.flatMap { child -> [String] in
+            switch child.nodeType {
+            case .attachment:
+                return [child.details ?? child.name]
+            default:
+                return attachmentNames(from: child)
+            }
+        }.filter { !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+    }
+
+    private static func sourceReference(from node: TKXcresultTestNode) -> String? {
+        let direct = node.children.first(where: { $0.nodeType == .sourceCodeReference })?.details
+            ?? node.children.first(where: { $0.nodeType == .sourceCodeReference })?.name
+        if let direct, !direct.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return direct
+        }
+        for child in node.children {
+            if let location = sourceReference(from: child) {
+                return location
+            }
+        }
+        return nil
+    }
+}
+
 public struct TKXcodeSchemeList: Codable, Equatable {
     public let containerName: String?
     public let schemes: [String]

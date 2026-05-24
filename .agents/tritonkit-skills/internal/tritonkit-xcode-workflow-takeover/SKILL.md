@@ -55,6 +55,8 @@ triton xcode settings --jsonl --timeout <seconds>
 triton xcode build --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcode run --jsonl
+triton xcresult summary --path /tmp/App.xcresult --json
+triton xcresult failures --path /tmp/App.xcresult --json
 triton xctrace record --template "Time Profiler" --device <udid> --time-limit 5s --output /tmp/App.trace --json
 triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
 ```
@@ -67,7 +69,30 @@ Current boundaries:
 - When build/test behavior looks stuck, run `triton xcode status --json` first, then `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`; timeout returns `xcode_not_idle` with blocking PIDs.
 - `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts. Use those artifacts before deciding to wait longer or fall back to raw `xcodebuild`.
 - `xctrace record` and `coverage report` are artifact-first host commands. They return paths/source commands/byte summaries; large trace or coverage payloads stay in artifacts and do not prove business readiness.
-- `xcresult` summary/failures/attachments, semantic coverage summaries, logs, and evidence xcode artifact ingestion are still follow-up slices.
+- Stdout-backed artifact writes reject existing output files and symbolic links by default. Use fresh paths under `/tmp`, `.triton/`, or an explicit artifact directory for repeatable agent runs.
+- `xcresult summary/failures` is available for result bundle triage. Output is redacted by default across JSON and text, including `path`, `sourceCommand/sourceCommands`, private paths, emails, Bearer/token/password/API-key fragments, and long token-like strings. Use `--include-sensitive` only for local private debugging. `xcresult` attachments, semantic coverage summaries, logs, and evidence xcode artifact ingestion are still follow-up slices.
+
+## Error Recovery
+
+Use this table before falling back to raw `xcodebuild`:
+
+| Error code | Meaning | Next action |
+| --- | --- | --- |
+| `invalid_workspace_path` | Missing or invalid workspace/project/repo path | Run `triton xcode discover --path . --json`, then pass an explicit `--workspace` or `--project`. |
+| `ambiguous_workspace` | Multiple containers or conflicting options | Pick exactly one discovered `.xcworkspace` or `.xcodeproj`; then run `triton xcode use ... --json`. |
+| `scheme_not_found` | Scheme is absent or not shared | Run `triton xcode schemes --workspace <path> --json`; use a shared scheme or fix the project. |
+| `simulator_not_found` | No simulator default or invalid UDID | Run `triton sim list --json`, boot/select one simulator, then pass `--simulator <udid>` or `triton sim use <udid> --json`. |
+| `xcode_not_idle` | Existing build/test processes still match the workspace | Run `triton xcode status --json`; wait, cancel stale PIDs manually, or retry with a more specific workspace. |
+| `xcodebuild_failed` | Underlying build/test failed | Inspect stdout/stderr artifact paths from the JSONL summary; then run `triton xcresult summary/failures` if a result bundle exists. |
+| `app_path_unresolved` | Build settings did not resolve `.app` path | Run `triton xcode settings --jsonl`; inspect `BUILT_PRODUCTS_DIR` and `FULL_PRODUCT_NAME`. |
+| `bundle_id_unresolved` | Built app has no readable bundle id | Inspect the built `.app` Info.plist and verify `CFBundleIdentifier`. |
+| `result_bundle_not_found` | `.xcresult` path is missing/incomplete | Check the `--result-bundle` path and rerun `triton xcode test --result-bundle <path> --jsonl`. |
+| `xcresulttool_failed` | `xcrun xcresulttool` returned non-zero | Verify Xcode selection and result bundle compatibility; keep stderr as sanitized issue evidence. |
+| `xcresult_parse_failed` | Apple changed JSON shape or parser is too strict | Keep the bundle and sanitized compact JSON output; file a parser compatibility issue. |
+| `xcresult_output_too_large` | Compact xcresult JSON exceeded the inline parse limit | Preserve the `.xcresult` bundle and use smaller follow-up queries when available; do not attach raw private JSON publicly. |
+| `artifact_output_rejected` | Artifact output path already exists or is a symbolic link | Choose a fresh path under an explicit artifact directory; do not overwrite or follow symlinks during automated runs. |
+| `coverage_report_failed` | `xccov` failed or coverage is absent | Verify tests were run with coverage and narrow with `--only-targets`, `--target`, or `--file`. |
+| `validation_failed` | Local CLI arguments conflict | Fix the argument combination before retrying; for coverage, use only one of `--only-targets`, `--target`, or `--file`. |
 
 ## Implementation Workflow
 
@@ -103,6 +128,7 @@ When implementation exists, add focused smoke:
 .build/cli/debug/triton xcode test --workspace <workspace> --scheme <scheme> --result-bundle /tmp/<case>.xcresult --jsonl
 .build/cli/debug/triton xctrace record --template "Time Profiler" --device <udid> --time-limit 1s --output /tmp/<case>.trace --json
 .build/cli/debug/triton coverage report --xcresult /tmp/<case>.xcresult --output /tmp/<case>-coverage.json --json
+.build/cli/debug/triton xcresult summary --path /tmp/<case>.xcresult --json
 .build/cli/debug/triton xcresult failures --path /tmp/<case>.xcresult --json
 ```
 

@@ -55,9 +55,8 @@ func runHostCommandCapturingStdoutArtifact(
     note: String? = nil
 ) throws {
     do {
-        try ensureParentDirectory(for: outputPath)
-        let result = try runHostCommand(command)
-        try result.stdoutData.write(to: URL(fileURLWithPath: outputPath), options: .atomic)
+        try prepareHostArtifactOutputPath(outputPath)
+        let result = try runHostCommandWritingStdoutArtifact(command, outputPath: outputPath)
         let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
         let output = HostArtifactCaptureOutput(
             ok: true,
@@ -86,6 +85,62 @@ func runHostCommandCapturingStdoutArtifact(
     } catch {
         try failHostCommand(error, outputFormat: outputFormat)
     }
+}
+
+private struct HostPipeDrainResult {
+    let data: Data
+    let bytes: Int
+    let truncated: Bool
+}
+
+private func drainPipe(_ pipe: Pipe, maximumBytes: Int?) -> HostPipeDrainResult {
+    let handle = pipe.fileHandleForReading
+    var data = Data()
+    var bytes = 0
+    var truncated = false
+    while true {
+        guard let chunk = try? handle.read(upToCount: 64 * 1024), !chunk.isEmpty else {
+            break
+        }
+        bytes += chunk.count
+        guard let maximumBytes else {
+            data.append(chunk)
+            continue
+        }
+        let remaining = maximumBytes - data.count
+        if remaining > 0 {
+            data.append(chunk.prefix(remaining))
+        }
+        if chunk.count > remaining || bytes > maximumBytes {
+            truncated = true
+        }
+    }
+    return HostPipeDrainResult(data: data, bytes: bytes, truncated: truncated)
+}
+
+private func drainPipeToFile(_ pipe: Pipe, outputPath: String) -> (bytes: Int, error: Error?) {
+    let flags = O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW
+    let fd = open(outputPath, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+    guard fd >= 0 else {
+        let message = String(cString: strerror(errno))
+        return (0, HostArtifactOutputError.rejected(path: outputPath, reason: message))
+    }
+    let output = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+    defer { try? output.close() }
+    let input = pipe.fileHandleForReading
+    var bytes = 0
+    while true {
+        guard let chunk = try? input.read(upToCount: 64 * 1024), !chunk.isEmpty else {
+            break
+        }
+        do {
+            try output.write(contentsOf: chunk)
+            bytes += chunk.count
+        } catch {
+            return (bytes, error)
+        }
+    }
+    return (bytes, nil)
 }
 
 func loadHostWorkspaceDefaults() throws -> TKHostWorkspaceDefaults? {
@@ -214,6 +269,16 @@ func resolveHarmonyTarget(target: String, hdc: String) throws -> TKHarmonyTarget
 func ensureParentDirectory(for path: String) throws {
     let directory = URL(fileURLWithPath: path).deletingLastPathComponent()
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+}
+
+func prepareHostArtifactOutputPath(_ path: String) throws {
+    try ensureParentDirectory(for: path)
+    if (try? FileManager.default.destinationOfSymbolicLink(atPath: path)) != nil {
+        throw HostArtifactOutputError.rejected(path: path, reason: "symbolic links are not accepted for artifact output")
+    }
+    if FileManager.default.fileExists(atPath: path) {
+        throw HostArtifactOutputError.rejected(path: path, reason: "path already exists")
+    }
 }
 
 func temporaryHarmonyArtifactPath(prefix: String, extension fileExtension: String) -> String {
@@ -438,7 +503,11 @@ private func propertyListObject(fromPreferenceValue value: TKHostPreferenceValue
     }
 }
 
-func runHostCommand(_ command: TKHostCommand, interruptAfter: Double? = nil) throws -> HostProcessResult {
+func runHostCommand(
+    _ command: TKHostCommand,
+    interruptAfter: Double? = nil,
+    maximumOutputBytes: Int? = 1_048_576
+) throws -> HostProcessResult {
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()
     if command.executable.contains("/") {
@@ -483,6 +552,21 @@ func runHostCommand(_ command: TKHostCommand, interruptAfter: Double? = nil) thr
             }
         }
     }
+    let stdoutGroup = DispatchGroup()
+    let stderrGroup = DispatchGroup()
+    var stdoutRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
+    var stderrRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
+    stdoutGroup.enter()
+    DispatchQueue.global(qos: .utility).async {
+        stdoutRead = drainPipe(stdout, maximumBytes: maximumOutputBytes)
+        stdoutGroup.leave()
+    }
+    stderrGroup.enter()
+    DispatchQueue.global(qos: .utility).async {
+        stderrRead = drainPipe(stderr, maximumBytes: maximumOutputBytes)
+        stderrGroup.leave()
+    }
+
     let semaphore = DispatchSemaphore(value: 0)
     DispatchQueue.global(qos: .utility).async {
         process.waitUntilExit()
@@ -490,13 +574,23 @@ func runHostCommand(_ command: TKHostCommand, interruptAfter: Double? = nil) thr
     }
     if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
         process.terminate()
+        if semaphore.wait(timeout: .now() + 2) == .timedOut {
+            kill(process.processIdentifier, SIGKILL)
+            _ = semaphore.wait(timeout: .now() + 2)
+        }
+        if stdoutGroup.wait(timeout: .now() + 2) == .timedOut {
+            try? stdout.fileHandleForReading.close()
+            _ = stdoutGroup.wait(timeout: .now() + 1)
+        }
+        if stderrGroup.wait(timeout: .now() + 2) == .timedOut {
+            try? stderr.fileHandleForReading.close()
+            _ = stderrGroup.wait(timeout: .now() + 1)
+        }
         throw HostCommandRunError.timeout(command: command, timeoutSeconds: timeoutSeconds, stdoutLogPath: nil, stderrLogPath: nil)
     }
+    stdoutGroup.wait()
+    stderrGroup.wait()
 
-    let stdoutRaw = stdout.fileHandleForReading.readDataToEndOfFile()
-    let stderrRaw = stderr.fileHandleForReading.readDataToEndOfFile()
-    let stdoutRead = truncatedData(stdoutRaw)
-    let stderrRead = truncatedData(stderrRaw)
     let result = HostProcessResult(
         stdoutData: stdoutRead.data,
         stderrData: stderrRead.data,
@@ -506,8 +600,8 @@ func runHostCommand(_ command: TKHostCommand, interruptAfter: Double? = nil) thr
         stderrTruncated: stderrRead.truncated,
         stdoutLogPath: nil,
         stderrLogPath: nil,
-        stdoutBytes: stdoutRaw.count,
-        stderrBytes: stderrRaw.count
+        stdoutBytes: stdoutRead.bytes,
+        stderrBytes: stderrRead.bytes
     )
     if result.exitCode != 0 {
         throw HostCommandRunError.nonZeroExit(command: command, result: result)
@@ -515,7 +609,101 @@ func runHostCommand(_ command: TKHostCommand, interruptAfter: Double? = nil) thr
     return result
 }
 
-func truncatedData(_ data: Data, maximumBytes: Int = 1_048_576) -> (data: Data, truncated: Bool) {
+func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: String) throws -> HostProcessResult {
+    try prepareHostArtifactOutputPath(outputPath)
+    let timeoutSeconds = command.defaultTimeoutSeconds
+    let process = Process()
+    if command.executable.contains("/") {
+        process.executableURL = URL(fileURLWithPath: command.executable)
+        process.arguments = command.processArguments
+    } else if command.executable == "xcrun" {
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
+        process.arguments = command.processArguments
+    } else {
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = [command.executable] + command.processArguments
+    }
+
+    let stdout = Pipe()
+    let stderr = Pipe()
+    process.standardOutput = stdout
+    process.standardError = stderr
+
+    do {
+        try process.run()
+    } catch {
+        throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
+
+    let stdoutGroup = DispatchGroup()
+    let stderrGroup = DispatchGroup()
+    var stdoutBytes = 0
+    var stdoutError: Error?
+    var stderrRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
+    stdoutGroup.enter()
+    DispatchQueue.global(qos: .utility).async {
+        let result = drainPipeToFile(stdout, outputPath: outputPath)
+        stdoutBytes = result.bytes
+        stdoutError = result.error
+        stdoutGroup.leave()
+    }
+    stderrGroup.enter()
+    DispatchQueue.global(qos: .utility).async {
+        stderrRead = drainPipe(stderr, maximumBytes: 1_048_576)
+        stderrGroup.leave()
+    }
+
+    let semaphore = DispatchSemaphore(value: 0)
+    DispatchQueue.global(qos: .utility).async {
+        process.waitUntilExit()
+        semaphore.signal()
+    }
+    if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
+        process.terminate()
+        if semaphore.wait(timeout: .now() + 2) == .timedOut {
+            kill(process.processIdentifier, SIGKILL)
+            _ = semaphore.wait(timeout: .now() + 2)
+        }
+        if stdoutGroup.wait(timeout: .now() + 2) == .timedOut {
+            try? stdout.fileHandleForReading.close()
+            _ = stdoutGroup.wait(timeout: .now() + 1)
+        }
+        if stderrGroup.wait(timeout: .now() + 2) == .timedOut {
+            try? stderr.fileHandleForReading.close()
+            _ = stderrGroup.wait(timeout: .now() + 1)
+        }
+        throw HostCommandRunError.timeout(command: command, timeoutSeconds: timeoutSeconds, stdoutLogPath: outputPath, stderrLogPath: nil)
+    }
+    stdoutGroup.wait()
+    stderrGroup.wait()
+    if let stdoutError {
+        try? FileManager.default.removeItem(atPath: outputPath)
+        throw HostCommandRunError.launchFailed(stdoutError.localizedDescription)
+    }
+
+    let result = HostProcessResult(
+        stdoutData: Data(),
+        stderrData: stderrRead.data,
+        exitCode: process.terminationStatus,
+        sourceCommand: hostSourceCommand(command),
+        stdoutTruncated: false,
+        stderrTruncated: stderrRead.truncated,
+        stdoutLogPath: outputPath,
+        stderrLogPath: nil,
+        stdoutBytes: stdoutBytes,
+        stderrBytes: stderrRead.bytes
+    )
+    if result.exitCode != 0 {
+        try? FileManager.default.removeItem(atPath: outputPath)
+        throw HostCommandRunError.nonZeroExit(command: command, result: result)
+    }
+    return result
+}
+
+func truncatedData(_ data: Data, maximumBytes: Int? = 1_048_576) -> (data: Data, truncated: Bool) {
+    guard let maximumBytes else {
+        return (data, false)
+    }
     guard data.count > maximumBytes else {
         return (data, false)
     }
@@ -664,13 +852,31 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: "Wait for the listed PIDs to finish, cancel stale builds, or retry with a more specific --workspace. Blocking PIDs: \(status.processes.map { "\($0.pid)" }.joined(separator: ", "))."
         )
+    case XcresultCLIError.parseFailed:
+        detail = TKCLIErrorDetail(
+            code: "xcresult_parse_failed",
+            message: "\(error)",
+            hint: "The .xcresult may have been produced by an unsupported Xcode version. Keep the bundle and file an issue with sanitized compact xcresulttool JSON output."
+        )
+    case XcresultCLIError.outputTooLarge:
+        detail = TKCLIErrorDetail(
+            code: "xcresult_output_too_large",
+            message: "\(error)",
+            hint: "Use a smaller result bundle or wait for the follow-up artifact-backed xcresult parser; do not attach raw private xcresult JSON to public issues."
+        )
+    case let error as HostArtifactOutputError:
+        detail = TKCLIErrorDetail(
+            code: "artifact_output_rejected",
+            message: "\(error)",
+            hint: "Use a fresh artifact path under an explicit output directory. Existing files and symbolic links are rejected to avoid accidental overwrite."
+        )
     case TKSimctlAppInfoParserError.emptyInfo:
         detail = TKCLIErrorDetail(
             code: "app_info_not_available",
             message: "Installed app information is not available.",
             hint: "Verify the simulator is booted and the bundle id is installed."
         )
-    case HostCommandRunError.nonZeroExit(let command, _):
+    case HostCommandRunError.nonZeroExit(let command, let result):
         let code: String
         let hint: String
         let isHDC = command.executable == "hdc" || command.executable.hasSuffix("/hdc")
@@ -681,6 +887,14 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         } else if command.arguments.first == "xctrace" {
             code = "xctrace_record_failed"
             hint = "Verify the template, target device, attach/launch selection, time limit, privacy prompt state, and output path."
+        } else if command.arguments.first == "xcresulttool" {
+            if result.stderr.lowercased().contains("no such file") || result.stderr.lowercased().contains("does not exist") || result.stderr.lowercased().contains("not found") {
+                code = "result_bundle_not_found"
+                hint = "Verify the .xcresult path exists and points to a complete result bundle."
+            } else {
+                code = "xcresulttool_failed"
+                hint = "Verify the result bundle path and inspect the xcresulttool output."
+            }
         } else if command.arguments.first == "xccov" {
             code = "coverage_report_failed"
             hint = "Verify the .xcresult contains coverage data and that --target or --file matches the coverage report."

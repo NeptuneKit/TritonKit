@@ -53,7 +53,7 @@
 | App install/launch/terminate | 已部分吃进来 | `triton app install/launch/terminate` | 已有 P0，后续和 `xcode run` 串联 |
 | Simulator lifecycle | 已部分吃进来 | `triton sim list/use/boot/shutdown/screenshot` | 后续补 privacy/location/ui/logs |
 | Logs capture/stream | 吃进来 | `triton logs stream/collect --jsonl` | P1，回归证据核心 |
-| xcresult summary | 吃进来 | `triton xcresult summary/failures/attachments` | P1，测试失败定位 |
+| xcresult summary | 吃进来 | `triton xcresult summary/failures` | P1，测试失败定位 |
 | Coverage | 吃进来 | `triton coverage report` | P1/P2，覆盖率报告 artifact |
 | Instruments trace | 吃进来 | `triton xctrace record` | P1/P2，性能 trace 作为 host artifact，不证明业务成功 |
 | SwiftPM build/test/run | 吃进来 | `triton spm build/test/run --jsonl` | P2，适合库项目和 CLI 项目 |
@@ -96,7 +96,9 @@
 - Given project 有可运行 test scheme
 - When 执行 `triton xcode test --result-bundle /tmp/app.xcresult --jsonl`
 - Then JSONL 输出 build/test progress
-- And summary 包含 passed/failed/skipped、失败测试、result bundle path
+- And summary 至少包含 action、exit code、stdout/stderr artifact 和 result bundle path
+- When 执行 `triton xcresult summary --path /tmp/app.xcresult --json`
+- Then 返回 passed/failed/skipped、环境描述和结果状态
 - When 执行 `triton xcresult failures --path /tmp/app.xcresult --json`
 - Then 返回可供 issue 直接引用的失败摘要
 
@@ -117,12 +119,13 @@
 ### 场景七：证据包整合
 
 - Given build/test/run 已执行
-- When 执行 `triton capture --case login --include host,xcode,runtime --output /tmp/login.tritonevidence --json`
-- Then evidence 包含 build log、test summary、xcresult summary、coverage summary、host screenshot、runtime ax/screenshot 和 action trace
+- When 手工把 xcode stdout/stderr、`.xcresult` summary/failures、coverage artifact 和 runtime evidence 一起归档
+- Then issue 能引用这些 artifact 的 path、bytes、error code 和摘要
+- And `triton capture --include xcode,host` 的自动 manifest 整合仍属于 P1 后续切片
 
 ## 分期
 
-### 当前实现状态（2026-05-23）
+### 当前实现状态（2026-05-24）
 
 P0 最小 `triton xcode` 入口已落地：
 
@@ -135,6 +138,8 @@ P0 最小 `triton xcode` 入口已落地：
 - `triton xcode build --jsonl --timeout <seconds>`
 - `triton xcode test --result-bundle /tmp/App.xcresult --jsonl`
 - `triton xcode run --jsonl`
+- `triton xcresult summary --path /tmp/App.xcresult --json`
+- `triton xcresult failures --path /tmp/App.xcresult --json`
 - `triton xctrace record --template "Time Profiler" --device <udid> --time-limit 5s --output /tmp/App.trace --json`
 - `triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json`
 
@@ -145,8 +150,8 @@ P0 最小 `triton xcode` 入口已落地：
 3. `xcode settings/build/test/run --jsonl` 已输出 invocation、stdout/stderr sample、heartbeat、summary，以及 stdout/stderr log path 和 byte count；真实项目卡住时先看这些 artifact，不再盲等。
 4. `xcode build` 的成功 summary 是纯 build 结束边界；它不再在 summary 后隐式执行 `xcodebuild -showBuildSettings -json`。需要 `.app` 路径时使用 `xcode settings` 或 `xcode run`，其中 `xcode run --jsonl` 会把 settings 解析暴露为 `xcode.run.settings.*` 进度事件。
 5. `xcode status/wait-idle` 是只读 best-effort host 诊断：先用 `pgrep` 缩小 Xcode build/test 相关 PID，再用 `ps -p` 采样，避免全量进程输出卡住；无法可靠推断的 workspace/scheme/destination 字段保持为空或低置信度。
-6. `xctrace record` 和 `coverage report` 已先落为 artifact 型契约：Triton 只返回 artifact path、bytes/truncation 或 source command 摘要，不把大型 `.trace` / coverage JSON 当作 inline 输出。
-7. `xcresult` summary/failures/attachments、coverage 语义汇总和 evidence 深度整合仍在后续切片，不在本次内宣称完成。
+6. `xctrace record` 和 `coverage report` 已先落为 artifact 型契约：Triton 只返回 artifact path、bytes 或 source command 摘要，不把大型 `.trace` / coverage JSON 当作 inline 输出；coverage artifact 写入不应被 stdout sample 截断。
+7. `xcresult` summary/failures 已落地，并对大输出使用不截断读取；attachments、coverage 语义汇总和 evidence 深度整合仍在后续切片，不在本次内宣称完成。
 
 ### P0：Xcode workflow 最小闭环
 
@@ -193,8 +198,8 @@ P0 最小 `triton xcode` 入口已落地：
 
 ## 完成定义
 
-1. `triton schema --command xcode --json` 可发现 P0 命令。
+1. `triton schema --command xcode --json` 可发现 P0 命令，`triton schema --command xcresult --json` 可发现 result bundle 读取入口。
 2. 未知 repo 能通过 `discover -> use -> build/test/run` 完成闭环。
-3. `xcresult` 失败摘要和 coverage 能进入 `.tritonevidence`。
+3. `xcresult` 失败摘要和 coverage 能作为 artifact 手工进入回归报告；自动写入 `.tritonevidence` manifest 属于 P1。
 4. 所有命令有稳定 JSON/JSONL 和 error code。
 5. XcodeBuildMCP 只作为参考或内部 bridge，不成为用户-facing API。

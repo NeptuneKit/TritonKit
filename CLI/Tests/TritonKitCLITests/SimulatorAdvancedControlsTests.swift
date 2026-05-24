@@ -16,6 +16,113 @@ struct SimulatorAdvancedControlsTests {
         #expect(result.sourceCommand == "/bin/cat")
     }
 
+    @Test("host artifact capture writes full stdout without truncating the artifact")
+    func hostArtifactCaptureWritesFullStdout() throws {
+        let output = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-large-artifact-\(UUID().uuidString).txt")
+            .path
+        defer { try? FileManager.default.removeItem(atPath: output) }
+        let expectedBytes = 1_048_576 + 128
+        let command = TKHostCommand(
+            executable: "/usr/bin/perl",
+            arguments: ["-e", "print \"a\" x \(expectedBytes)"]
+        )
+
+        try runHostCommandCapturingStdoutArtifact(
+            action: "test.large-artifact",
+            target: "host",
+            command: command,
+            outputPath: output,
+            outputFormat: .text
+        )
+
+        let data = try Data(contentsOf: URL(fileURLWithPath: output))
+        #expect(data.count == expectedBytes)
+        #expect(data.last == Character("a").asciiValue)
+    }
+
+    @Test("host artifact capture refuses to overwrite an existing output file")
+    func hostArtifactCaptureRefusesExistingOutputFile() throws {
+        let output = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-existing-artifact-\(UUID().uuidString).txt")
+        try Data("existing".utf8).write(to: output)
+        defer { try? FileManager.default.removeItem(at: output) }
+        let command = TKHostCommand(executable: "/bin/echo", arguments: ["new"])
+
+        #expect(throws: (any Error).self) {
+            try runHostCommandWritingStdoutArtifact(command, outputPath: output.path)
+        }
+
+        #expect(try String(contentsOf: output, encoding: .utf8) == "existing")
+    }
+
+    @Test("host artifact capture refuses symlink output paths")
+    func hostArtifactCaptureRefusesSymlinkOutputPath() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-artifact-symlink-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let target = directory.appendingPathComponent("target.txt")
+        let symlink = directory.appendingPathComponent("link.txt")
+        try Data("target".utf8).write(to: target)
+        try FileManager.default.createSymbolicLink(at: symlink, withDestinationURL: target)
+        let command = TKHostCommand(executable: "/bin/echo", arguments: ["new"])
+
+        #expect(throws: (any Error).self) {
+            try runHostCommandWritingStdoutArtifact(command, outputPath: symlink.path)
+        }
+
+        #expect(try String(contentsOf: target, encoding: .utf8) == "target")
+    }
+
+    @Test("host artifact capture removes partial output when command fails")
+    func hostArtifactCaptureRemovesPartialOutputOnFailure() throws {
+        let output = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-partial-artifact-\(UUID().uuidString).txt")
+        defer { try? FileManager.default.removeItem(at: output) }
+        let command = TKHostCommand(
+            executable: "/bin/sh",
+            arguments: ["-c", "printf partial; exit 7"]
+        )
+
+        #expect(throws: HostCommandRunError.self) {
+            try runHostCommandWritingStdoutArtifact(command, outputPath: output.path)
+        }
+
+        #expect(!FileManager.default.fileExists(atPath: output.path))
+    }
+
+    @Test("host command drains large stdout while keeping only a bounded sample")
+    func runHostCommandBoundsLargeStdoutSample() throws {
+        let expectedBytes = 1_048_576 + 128
+        let command = TKHostCommand(
+            executable: "/usr/bin/perl",
+            arguments: ["-e", "print \"b\" x \(expectedBytes)"]
+        )
+
+        let result = try runHostCommand(command)
+
+        #expect(result.stdoutBytes == expectedBytes)
+        #expect(result.stdoutData.count == 1_048_576)
+        #expect(result.stdoutTruncated)
+    }
+
+    @Test("host command timeout terminates process and leaves later commands usable")
+    func runHostCommandTimeoutCleansUpProcess() throws {
+        let command = TKHostCommand(
+            executable: "/bin/sh",
+            arguments: ["-c", "trap '' TERM; while true; do printf x; sleep 0.01; done"],
+            defaultTimeoutSeconds: 0.2
+        )
+
+        #expect(throws: HostCommandRunError.self) {
+            try runHostCommand(command)
+        }
+
+        let result = try runHostCommand(TKHostCommand(executable: "/bin/echo", arguments: ["ok"]))
+        #expect(result.stdout == "ok\n")
+    }
+
     @Test("sim schema exposes advanced simulator maintenance commands")
     func simSchemaExposesAdvancedCommands() throws {
         let sim = try #require(commandSchemas().first { $0.name == "sim" })
@@ -53,10 +160,21 @@ struct SimulatorAdvancedControlsTests {
     func schemaExposesXctraceAndCoverageCommands() throws {
         let xctrace = try #require(commandSchemas().first { $0.name == "xctrace" })
         let coverage = try #require(commandSchemas().first { $0.name == "coverage" })
+        let xcresult = try #require(commandSchemas().first { $0.name == "xcresult" })
 
         #expect(xctrace.options.map(\.name).contains(where: { $0.hasPrefix("record") }))
         #expect(xctrace.providedCapabilities.contains("xctrace-record"))
         #expect(coverage.options.map(\.name).contains(where: { $0.hasPrefix("report") }))
         #expect(coverage.providedCapabilities.contains("coverage-report"))
+        #expect(coverage.failureShape?.contains("validation_failed") == true)
+        #expect(coverage.failureShape?.contains("artifact_output_rejected") == true)
+        #expect(xcresult.options.map(\.name).contains(where: { $0.hasPrefix("summary") }))
+        #expect(xcresult.options.map(\.name).contains(where: { $0.hasPrefix("failures") }))
+        #expect(xcresult.options.map(\.name).contains("--include-sensitive"))
+        #expect(xcresult.successShape?.contains("redaction") == true)
+        #expect(xcresult.providedCapabilities.contains("xcresult-summary"))
+        #expect(xcresult.providedCapabilities.contains("xcresult-failures"))
+        #expect(xcresult.failureShape?.contains("xcresult_parse_failed") == true)
+        #expect(xcresult.failureShape?.contains("xcresult_output_too_large") == true)
     }
 }
