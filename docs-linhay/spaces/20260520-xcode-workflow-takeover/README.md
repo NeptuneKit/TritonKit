@@ -151,7 +151,8 @@ P0 最小 `triton xcode` 入口已落地：
 4. `xcode build` 的成功 summary 是纯 build 结束边界；它不再在 summary 后隐式执行 `xcodebuild -showBuildSettings -json`。需要 `.app` 路径时使用 `xcode settings` 或 `xcode run`，其中 `xcode run --jsonl` 会把 settings 解析暴露为 `xcode.run.settings.*` 进度事件。
 5. `xcode status/wait-idle` 是只读 best-effort host 诊断：先用 `pgrep` 缩小 Xcode build/test 相关 PID，再用 `ps -p` 采样，避免全量进程输出卡住；无法可靠推断的 workspace/scheme/destination 字段保持为空或低置信度。
 6. `xctrace record` 和 `coverage report` 已先落为 artifact 型契约：Triton 只返回 artifact path、bytes 或 source command 摘要，不把大型 `.trace` / coverage JSON 当作 inline 输出；coverage artifact 写入不应被 stdout sample 截断。
-7. `xcresult` summary/failures 已落地，并对大输出使用不截断读取；attachments、coverage 语义汇总和 evidence 深度整合仍在后续切片，不在本次内宣称完成。
+7. `xcode test --result-bundle ...` 的最终 summary 会默认脱敏内联 `testResultSummary` 与 `topFailures`；测试失败时输出 `ok:false` summary 并以非 0 退出，仍保留 stdout/stderr 与 `.xcresult` artifact 供后续深挖。
+8. `xcresult` summary/failures 已落地，并对大输出使用不截断读取；attachments、coverage 语义汇总和 evidence 深度整合仍在后续切片，不在本次内宣称完成。
 
 ### P0：Xcode workflow 最小闭环
 

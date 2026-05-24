@@ -1078,6 +1078,9 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let stderrLogPath: String?
     public let stdoutBytes: Int?
     public let stderrBytes: Int?
+    public let testResultSummary: TKXcresultSummaryMetrics?
+    public let topFailures: [TKXcresultFailureRecord]?
+    public let xcresultNote: String?
     public let note: String?
 
     public init(
@@ -1103,6 +1106,9 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         stderrLogPath: String? = nil,
         stdoutBytes: Int? = nil,
         stderrBytes: Int? = nil,
+        testResultSummary: TKXcresultSummaryMetrics? = nil,
+        topFailures: [TKXcresultFailureRecord]? = nil,
+        xcresultNote: String? = nil,
         note: String? = nil
     ) {
         self.ok = ok
@@ -1127,6 +1133,9 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.stderrLogPath = stderrLogPath
         self.stdoutBytes = stdoutBytes
         self.stderrBytes = stderrBytes
+        self.testResultSummary = testResultSummary
+        self.topFailures = topFailures
+        self.xcresultNote = xcresultNote
         self.note = note
     }
 }

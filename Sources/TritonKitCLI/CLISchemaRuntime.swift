@@ -238,6 +238,9 @@ func commandSchemas() -> [TKCommandSchema] {
                         ("stderrLogPath", "String?", false, "Stderr artifact path"),
                         ("stdoutBytes", "Int?", false, "Total stdout bytes"),
                         ("stderrBytes", "Int?", false, "Total stderr bytes"),
+                        ("testResultSummary", "TKXcresultSummaryMetrics?", false, "Inline parsed xcresult test counts for xcode.test when --result-bundle is available"),
+                        ("topFailures", "[TKXcresultFailureRecord]?", false, "Default-redacted top test failures for xcode.test"),
+                        ("xcresultNote", "String?", false, "Inline xcresult parsing note"),
                         ("note", "String?", false, "Boundary or next-step note"),
                     ])
                 ),

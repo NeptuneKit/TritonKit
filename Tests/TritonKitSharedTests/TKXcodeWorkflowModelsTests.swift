@@ -117,7 +117,7 @@ struct TKXcodeWorkflowModelsTests {
         let event = TKXcodeProgressEvent(
             event: "xcode.build.heartbeat",
             message: "running",
-            sourceCommand: "xcodebuild build",
+            sourceCommand: "xcodebuild test",
             elapsedMs: 12_000,
             stdoutLogPath: "/tmp/triton-xcode-artifacts/case/stdout.log",
             stderrLogPath: "/tmp/triton-xcode-artifacts/case/stderr.log",
@@ -133,7 +133,7 @@ struct TKXcodeWorkflowModelsTests {
 
         let summary = TKXcodeActionSummary(
             ok: true,
-            action: "xcode.build",
+            action: "xcode.test",
             workspace: "App.xcworkspace",
             project: nil,
             scheme: "App",
@@ -141,15 +141,43 @@ struct TKXcodeWorkflowModelsTests {
             sdk: "iphonesimulator",
             destination: "platform=iOS Simulator,id=SIM-1",
             derivedDataPath: "/tmp/DerivedData",
+            resultBundlePath: "/tmp/App.xcresult",
             durationMs: 25_000,
-            sourceCommand: "xcodebuild build",
+            sourceCommand: "xcodebuild test",
             exitCode: 0,
             stdoutTruncated: false,
             stderrTruncated: false,
             stdoutLogPath: "/tmp/triton-xcode-artifacts/case/stdout.log",
             stderrLogPath: "/tmp/triton-xcode-artifacts/case/stderr.log",
             stdoutBytes: 2_048,
-            stderrBytes: 512
+            stderrBytes: 512,
+            testResultSummary: TKXcresultSummaryMetrics(
+                title: "AppTests",
+                startTime: 10.0,
+                finishTime: 12.5,
+                environmentDescription: "iPhone 17, iOS 26.5",
+                topInsights: [],
+                result: "Failed",
+                durationMs: 2_500,
+                totalTestCount: 2,
+                passedTests: 1,
+                failedTests: 1,
+                skippedTests: 0,
+                expectedFailures: 0,
+                statistics: [],
+                devicesAndConfigurations: nil,
+                testFailure: nil
+            ),
+            topFailures: [
+                TKXcresultFailureRecord(
+                    suiteName: "LoginTests",
+                    testName: "testSubmit()",
+                    targetName: "AppTests",
+                    message: "Expected Home",
+                    location: "LoginTests.swift:42"
+                ),
+            ],
+            xcresultNote: "Showing top 1 of 2 failures."
         )
         let decodedSummary = try JSONDecoder().decode(TKXcodeActionSummary.self, from: JSONEncoder().encode(summary))
 
@@ -157,6 +185,9 @@ struct TKXcodeWorkflowModelsTests {
         #expect(decodedSummary.stderrLogPath == "/tmp/triton-xcode-artifacts/case/stderr.log")
         #expect(decodedSummary.stdoutBytes == 2_048)
         #expect(decodedSummary.stderrBytes == 512)
+        #expect(decodedSummary.testResultSummary?.failedTests == 1)
+        #expect(decodedSummary.topFailures?.map { $0.testName } == ["testSubmit()"])
+        #expect(decodedSummary.xcresultNote == "Showing top 1 of 2 failures.")
     }
 
     @Test("xcodebuild list json parser returns schemes")

@@ -4,7 +4,7 @@ import TritonKitShared
 
 // MARK: - xcresult Commands
 
-private let xcresultInlineJSONLimit = 16 * 1_024 * 1_024
+let xcresultInlineJSONLimit = 16 * 1_024 * 1_024
 
 struct Xcresult: AsyncParsableCommand {
     static let configuration = CommandConfiguration(

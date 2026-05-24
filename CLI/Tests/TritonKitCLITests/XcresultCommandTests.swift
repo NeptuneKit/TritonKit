@@ -1,9 +1,25 @@
 import Foundation
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite
 struct XcresultCommandTests {
+    @Test("xcode test result details inline top failures from xcresult")
+    func xcodeTestResultDetailsInlineTopFailures() throws {
+        let details = xcodeTestResultBundleDetails(resultBundlePath: "/tmp/App.xcresult", maximumFailures: 1) { command in
+            if command.arguments.contains("summary") {
+                return hostProcessResult(stdout: validSummaryJSON)
+            }
+            return hostProcessResult(stdout: validTestsJSON)
+        }
+
+        #expect(details.summary?.failedTests == 1)
+        #expect(details.topFailures?.map(\.testName) == ["testLogin()"])
+        #expect(details.topFailures?.first?.message.contains("XCTAssertEqual failed") == true)
+        #expect(details.note == nil)
+    }
+
     @Test("xcresult summary output maps invalid JSON to parse failed")
     func summaryOutputMapsInvalidJSONToParseFailed() throws {
         let result = hostProcessResult(stdout: #"{"unexpected":true}"#)
@@ -64,5 +80,59 @@ private let validSummaryJSON = """
   "skippedTests": 0,
   "expectedFailures": 0,
   "statistics": []
+}
+"""
+
+private let validTestsJSON = """
+{
+  "testPlanConfigurations": [],
+  "devices": [],
+  "testNodes": [
+    {
+      "nodeIdentifier": "bundle-1",
+      "nodeIdentifierURL": "xcresult://bundle/1",
+      "nodeType": "Unit test bundle",
+      "name": "AppTests",
+      "children": [
+        {
+          "nodeIdentifier": "suite-1",
+          "nodeIdentifierURL": "xcresult://suite/1",
+          "nodeType": "Test Suite",
+          "name": "AppTests",
+          "children": [
+            {
+              "nodeIdentifier": "case-1",
+              "nodeIdentifierURL": "xcresult://case/1",
+              "nodeType": "Test Case",
+              "name": "testLogin()",
+              "children": [
+                {
+                  "nodeIdentifier": "run-1",
+                  "nodeIdentifierURL": "xcresult://run/1",
+                  "nodeType": "Test Case Run",
+                  "name": "testLogin()",
+                  "result": "Failed",
+                  "children": [
+                    {
+                      "nodeIdentifier": "failure-1",
+                      "nodeType": "Failure Message",
+                      "name": "XCTAssertEqual failed",
+                      "details": "XCTAssertEqual failed: 1 is not equal to 2"
+                    },
+                    {
+                      "nodeIdentifier": "source-1",
+                      "nodeType": "Source Code Reference",
+                      "name": "Tests/AppTests.swift:42",
+                      "details": "Tests/AppTests.swift:42"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
 }
 """

@@ -98,10 +98,10 @@ swift test --filter TKXcodeWorkflowModelsTests
 9. Xcode schema subcommand contract：`xcode`、`xcresult`、`xctrace`、`coverage` schema 新增 `subcommands[]`，用原子 `requiredOptions`、`oneOfRequiredOptions`、`optionalOptions`、`defaultProviders`、`outputSelectors` 和 subcommand 级 failure codes 表达规划契约，避免 agent 解析命令级复合字符串。
 10. `xcresult_parse_failed` CLI fixture：`xcresult summary/failures` 的 host stdout 解析逻辑抽为 CLI helper，新增 `XcresultCommandTests` 用无效 summary / tests JSON fixture 验证 parse failure 稳定映射为 `XcresultCLIError.parseFailed`。
 11. `evidence --include host,xcode` 占位契约：`host` 与 `xcode` 已进入 evidence/capture include allowlist 和 schema/help；当前会写入 `manifest.skipped`，不再 validation fail，也不假装已采集 artifact。仅包含这些占位 include 时不会额外连接 runtime。
+12. `xcode test` final summary top failures：`xcode test --result-bundle ...` 的 final `TKXcodeActionSummary` 会默认脱敏内联 `testResultSummary` 与 `topFailures`；测试失败时输出 `ok:false` summary 并以非 0 退出，保留 `.xcresult` 给 `triton xcresult failures` 深挖。
 
 ### 继续延期
 
 1. 为更多非 stdout-backed artifact 命令补齐 explicit artifact-dir / force 策略，降低 agent 自动执行时覆盖非预期文件的风险。
 2. 将 subcommand schema contract 继续推进为更多命令共享的轻量 contract builder，减少 `CLISchemaRuntime.swift` 内联重复。
 3. 实现 `capture/evidence --include xcode,host` 的真实 host / Xcode artifact 采集与 manifest 整合。
-4. 继续补 Xcode test final summary 中的 top failures，但不能把 build/install/launch 当作业务 ready。

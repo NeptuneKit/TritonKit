@@ -141,9 +141,10 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         derivedDataPath: invocation.derivedDataPath,
         resultBundlePath: resultBundlePath
     ).withTimeout(timeout)
-    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl)
+    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl, allowNonZeroExit: true)
+    let resultDetails = xcodeTestResultBundleDetails(resultBundlePath: resultBundlePath)
     return TKXcodeActionSummary(
-        ok: true,
+        ok: result.exitCode == 0,
         action: "xcode.test",
         workspace: invocation.workspace,
         project: invocation.project,
@@ -163,6 +164,9 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         stderrLogPath: result.stderrLogPath,
         stdoutBytes: result.stdoutBytes,
         stderrBytes: result.stderrBytes,
+        testResultSummary: resultDetails.summary,
+        topFailures: resultDetails.topFailures,
+        xcresultNote: resultDetails.note,
         note: "Test command finished. Use `triton xcresult summary --path <result.xcresult> --json` or `triton xcresult failures --path <result.xcresult> --json` for structured result parsing."
     )
 }
@@ -216,7 +220,7 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
     )
 }
 
-func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool) throws -> (HostProcessResult, Int) {
+func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool, allowNonZeroExit: Bool = false) throws -> (HostProcessResult, Int) {
     let startedAt = Date()
     let artifactPaths = try createXcodeArtifactPaths(event: event)
     if jsonl {
@@ -231,7 +235,14 @@ func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool) t
             stderrBytes: 0
         )))
     }
-    let result = try runStreamingHostCommand(command, event: event, jsonl: jsonl, startedAt: startedAt, artifactPaths: artifactPaths)
+    let result = try runStreamingHostCommand(
+        command,
+        event: event,
+        jsonl: jsonl,
+        startedAt: startedAt,
+        artifactPaths: artifactPaths,
+        allowNonZeroExit: allowNonZeroExit
+    )
     let durationMs = Int(Date().timeIntervalSince(startedAt) * 1000)
     if jsonl {
         writeJSONLLine(try encodeCompactJSON(TKXcodeProgressEvent(
@@ -311,7 +322,8 @@ func runStreamingHostCommand(
     event: String,
     jsonl: Bool,
     startedAt: Date,
-    artifactPaths: XcodeArtifactPaths
+    artifactPaths: XcodeArtifactPaths,
+    allowNonZeroExit: Bool = false
 ) throws -> HostProcessResult {
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()
@@ -440,10 +452,54 @@ func runStreamingHostCommand(
         stdoutBytes: stdoutSnapshot.bytes,
         stderrBytes: stderrSnapshot.bytes
     )
-    if result.exitCode != 0 {
+    if result.exitCode != 0, !allowNonZeroExit {
         throw HostCommandRunError.nonZeroExit(command: command, result: result)
     }
     return result
+}
+
+struct XcodeTestResultBundleDetails {
+    let summary: TKXcresultSummaryMetrics?
+    let topFailures: [TKXcresultFailureRecord]?
+    let note: String?
+}
+
+func xcodeTestResultBundleDetails(
+    resultBundlePath: String?,
+    maximumFailures: Int = 3,
+    runCommand: (TKHostCommand) throws -> HostProcessResult = { command in
+        try runHostCommand(command, maximumOutputBytes: xcresultInlineJSONLimit)
+    }
+) -> XcodeTestResultBundleDetails {
+    guard let resultBundlePath, !resultBundlePath.isEmpty else {
+        return XcodeTestResultBundleDetails(summary: nil, topFailures: nil, note: nil)
+    }
+
+    do {
+        let summaryResult = try runCommand(TKXcresultCommand.summary(path: resultBundlePath))
+        let testsResult = try runCommand(TKXcresultCommand.tests(path: resultBundlePath))
+        let output = try makeHostXcresultFailuresOutput(
+            path: resultBundlePath,
+            includeSensitive: false,
+            summaryResult: summaryResult,
+            testsResult: testsResult
+        )
+        let topFailures = Array(output.failures.prefix(maximumFailures))
+        let note = output.failures.count > maximumFailures
+            ? "Showing top \(maximumFailures) of \(output.failures.count) failures. Use `triton xcresult failures --path <result.xcresult> --json` for the full list."
+            : nil
+        return XcodeTestResultBundleDetails(
+            summary: output.summary,
+            topFailures: topFailures,
+            note: note
+        )
+    } catch {
+        return XcodeTestResultBundleDetails(
+            summary: nil,
+            topFailures: [],
+            note: "Result bundle was not parsed for inline failures: \(TKXcresultRedaction.redact(String(describing: error)))"
+        )
+    }
 }
 
 func streamingSample(stream: String, data: Data, maximumBytes: Int = 2_000) -> String {

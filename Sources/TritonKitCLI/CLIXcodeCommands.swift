@@ -318,6 +318,11 @@ struct XcodeTest: AsyncParsableCommand {
             )
             let summary = try runXcodeTest(invocation: resolved, resultBundlePath: resultBundle, jsonl: jsonl, timeout: timeout)
             try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+            if !summary.ok {
+                throw ExitCode.failure
+            }
+        } catch let exitCode as ExitCode {
+            throw exitCode
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
         }
