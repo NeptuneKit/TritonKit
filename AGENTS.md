@@ -143,12 +143,13 @@ Git `worktree` 治理：
 4. 涉及 `space` 创建、命名、README 模板、截图或 debate 归档时，优先使用 `tritonkit-ops-governance`。
 5. 涉及文档写回、memory 写回、`qmd update` / `qmd embed` 同步时，优先使用 `tritonkit-ops-governance`。
 6. 涉及 AGENTS 级长期治理规则时，优先使用 `tritonkit-ops-governance`；若用户明确说“整理”，同时使用 `tritonkit-session-skill-distill`。
-7. 涉及“主控 agent 监督、subagent 实做、直到完整需求闭环才停止”的执行模式时，优先使用 `tritonkit-subagent-supervision`。
-8. 涉及从 demo/self-test 切到真实 iOS App 或客户项目回归、试接入、实际需求发现时，优先使用 `tritonkit-real-project-regression`，并隔离外部仓改动、保留 CLI/HTTP 机器可读证据。
-9. 涉及设计、实现、扩展或验证三端本机模拟器/仿真器 CLI 接管能力（iOS Simulator、Android Emulator、HarmonyOS / DevEco Emulator、target discovery、App lifecycle、readiness、screenshot、AX/layout、logs、command ledger、evidence、destructive policy）时，优先使用 `tritonkit-emulator-cli-takeover`，并确认产品边界仍是本机 CLI、无 Web、无真机、无远端 agent。
-10. 涉及设计、实现、扩展或验证 host-side Apple Simulator 接管能力（`triton sim`、`triton app`、`xcrun simctl` 封装、workspace simulator defaults、boot wait JSONL、App metadata/container/preferences、host artifacts、plan/evidence 集成）时，优先使用 `tritonkit-host-simulator-takeover`，并确认 agent 面对的是 Triton CLI/HTTP schema，而不是裸 `xcrun`。
-11. 涉及设计、实现、扩展或验证 Xcode workflow takeover 能力（project/workspace discovery、scheme/build settings、`xcodebuild` build/test/run、`.xcresult`、coverage、logs、SwiftPM、真机/macOS workflow、LLDB、host UI 集成，或评估 XcodeBuildMCP 能力取舍）时，优先使用 `tritonkit-xcode-workflow-takeover`，并坚持“吃能力，不吃 XcodeBuildMCP 对外 API”。
-12. 涉及 Xcode project/workspace 发现、scheme 列表、build settings、`xcodebuild build/test` 或 build-install-launch 时，默认优先使用 `triton xcode`；只有 `triton schema --command xcode --json` 未暴露所需能力或当前实现明确不足时，才临时回退 XcodeBuildMCP 或裸 `xcodebuild`，且回退原因必须写入交付说明。
+7. 涉及长期计划、自动巡航、提前巡航、无人值守推进、离开一段时间让 agent 自主进化或巡航收尾时，优先使用 `tritonkit-autonomous-cruise`，并坚持小切片、checkpoint、验证、报告、memory/qmd 与本地提交闭环；默认不 push、不 tag、不 release。
+8. 涉及“主控 agent 监督、subagent 实做、直到完整需求闭环才停止”的执行模式时，优先使用 `tritonkit-subagent-supervision`。
+9. 涉及从 demo/self-test 切到真实 iOS App 或客户项目回归、试接入、实际需求发现时，优先使用 `tritonkit-real-project-regression`，并隔离外部仓改动、保留 CLI/HTTP 机器可读证据。
+10. 涉及设计、实现、扩展或验证三端本机模拟器/仿真器 CLI 接管能力（iOS Simulator、Android Emulator、HarmonyOS / DevEco Emulator、target discovery、App lifecycle、readiness、screenshot、AX/layout、logs、command ledger、evidence、destructive policy）时，优先使用 `tritonkit-emulator-cli-takeover`，并确认产品边界仍是本机 CLI、无 Web、无真机、无远端 agent。
+11. 涉及设计、实现、扩展或验证 host-side Apple Simulator 接管能力（`triton sim`、`triton app`、`xcrun simctl` 封装、workspace simulator defaults、boot wait JSONL、App metadata/container/preferences、host artifacts、plan/evidence 集成）时，优先使用 `tritonkit-host-simulator-takeover`，并确认 agent 面对的是 Triton CLI/HTTP schema，而不是裸 `xcrun`。
+12. 涉及设计、实现、扩展或验证 Xcode workflow takeover 能力（project/workspace discovery、scheme/build settings、`xcodebuild` build/test/run、`.xcresult`、coverage、logs、SwiftPM、真机/macOS workflow、LLDB、host UI 集成，或评估 XcodeBuildMCP 能力取舍）时，优先使用 `tritonkit-xcode-workflow-takeover`，并坚持“吃能力，不吃 XcodeBuildMCP 对外 API”。
+13. 涉及 Xcode project/workspace 发现、scheme 列表、build settings、`xcodebuild build/test` 或 build-install-launch 时，默认优先使用 `triton xcode`；只有 `triton schema --command xcode --json` 未暴露所需能力或当前实现明确不足时，才临时回退 XcodeBuildMCP 或裸 `xcodebuild`，且回退原因必须写入交付说明。
 
 ## 5. 记忆系统规则（必须）
 
