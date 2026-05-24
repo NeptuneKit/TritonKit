@@ -130,7 +130,18 @@ struct IOSSmokeDependencies {
                 let result = try runHostCommand(TKSimctlCommand.screenshot(udid: simulator, output: output))
                 return result.sourceCommand
             },
-            captureEvidence: captureEvidenceBundle
+            captureEvidence: { output, includes, name, note, target, host, port, refresh in
+                try await captureEvidenceBundle(
+                    output: output,
+                    includes: includes,
+                    name: name,
+                    note: note,
+                    target: target,
+                    host: host,
+                    port: port,
+                    refresh: refresh
+                )
+            }
         )
     }
 }

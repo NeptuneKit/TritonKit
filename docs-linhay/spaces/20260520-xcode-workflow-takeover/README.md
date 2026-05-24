@@ -119,9 +119,12 @@
 ### 场景七：证据包整合
 
 - Given build/test/run 已执行
-- When 手工把 xcode stdout/stderr、`.xcresult` summary/failures、coverage artifact 和 runtime evidence 一起归档
-- Then issue 能引用这些 artifact 的 path、bytes、error code 和摘要
-- And `triton capture --include xcode,host` 的自动 manifest 整合仍属于 P1 后续切片
+- When 执行 `triton evidence --include host,xcode --output /tmp/app.tritonevidence --json`
+- Then 不连接 embedded runtime 也能生成 `manifest.json`
+- And `host` 首期只采集 repo-local `.triton/host-defaults.json` 和只读 simulator list
+- And `xcode` 首期只采集 xcode defaults、只读 Xcode process status 和浅层 discovery
+- And artifact 落在 `artifacts/host/` 与 `artifacts/xcode/`，manifest 记录相对路径、bytes、risk、policy 和 redaction 状态
+- And 不自动执行 build/test/run、不扫 `/tmp/triton-xcode-artifacts`、DerivedData、Simulator device set 或用户 Home 目录
 
 ## 分期
 

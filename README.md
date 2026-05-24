@@ -460,7 +460,7 @@ triton evidence --name login-success --output /tmp/login-success.tritonevidence 
 triton evidence inspect /tmp/login-success.tritonevidence --json
 ```
 
-The first evidence bundle format is a directory package. It contains `manifest.json` plus artifacts such as `status.json`, `targets.json`, `version.json`, `hierarchy.json`, `ax.json`, `geometry.json`, `archive.json`, `screenshot.png`, and `screenshot.json`. Unsupported requested artifacts, such as `logs` in the current embedded runtime, are recorded in `manifest.skipped` with reasons. `capture` is the regression-oriented one-shot wrapper; `evidence` remains the lower-level capture/inspect command.
+The first evidence bundle format is a directory package. It contains `manifest.json` plus artifacts such as `status.json`, `targets.json`, `version.json`, `hierarchy.json`, `ax.json`, `geometry.json`, `archive.json`, `screenshot.png`, and `screenshot.json`. `--include host,xcode` adds small read-only host/Xcode artifacts under `artifacts/host/` and `artifacts/xcode/`, including repo-local defaults, simulator list, Xcode process status, and shallow discovery when available; these artifacts are marked sensitive for redaction. Unsupported requested artifacts, such as `logs` in the current embedded runtime, are recorded in `manifest.skipped` with reasons. `capture` is the regression-oriented one-shot wrapper; `evidence` remains the lower-level capture/inspect command.
 
 For repeatable short smoke flows, store the command sequence in a `.tritonplan` and replay it:
 
