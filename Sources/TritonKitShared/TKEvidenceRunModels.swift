@@ -435,3 +435,107 @@ public struct TKEvidenceRunLogParser: Sendable {
         )
     }
 }
+
+public enum TKEvidenceRunLogWriteError: Error, Equatable, CustomStringConvertible {
+    case invalidRelativePath(String)
+    case artifactAlreadyExists(String)
+    case runAlreadyCompleted
+    case runStartedNotFirst
+    case truncatedTail
+
+    public var description: String {
+        switch self {
+        case .invalidRelativePath(let path):
+            return "Evidence run artifact path must be relative and stay inside the evidence directory: \(path)"
+        case .artifactAlreadyExists(let path):
+            return "Evidence run artifact already exists: \(path)"
+        case .runAlreadyCompleted:
+            return "Evidence run log is already completed"
+        case .runStartedNotFirst:
+            return "Evidence run log must start with run_started"
+        case .truncatedTail:
+            return "Evidence run log has a truncated tail and cannot be appended safely"
+        }
+    }
+}
+
+public struct TKEvidenceRunLogWriter: Sendable {
+    public let evidenceDirectory: URL
+    public let runDirectoryURL: URL
+    public let eventsURL: URL
+    public let metadataURL: URL
+
+    public init(evidenceDirectory: URL, metadata: TKEvidenceRunMetadata) throws {
+        self.evidenceDirectory = evidenceDirectory
+        self.runDirectoryURL = evidenceDirectory.appendingPathComponent("run", isDirectory: true)
+        self.eventsURL = try Self.artifactURL(evidenceDirectory: evidenceDirectory, relativePath: metadata.eventsPath)
+        self.metadataURL = try Self.artifactURL(evidenceDirectory: evidenceDirectory, relativePath: metadata.metaPath)
+
+        try FileManager.default.createDirectory(at: runDirectoryURL, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(
+            at: metadataURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try encodedJSON(metadata).write(to: metadataURL, options: .atomic)
+        try FileManager.default.createDirectory(
+            at: eventsURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        if !FileManager.default.fileExists(atPath: eventsURL.path) {
+            FileManager.default.createFile(atPath: eventsURL.path, contents: nil)
+        }
+    }
+
+    @discardableResult
+    public func writeArtifact(_ data: Data, relativePath: String) throws -> String {
+        let destination = try Self.artifactURL(evidenceDirectory: evidenceDirectory, relativePath: relativePath)
+        try FileManager.default.createDirectory(
+            at: destination.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        if FileManager.default.fileExists(atPath: destination.path)
+            || (try? FileManager.default.destinationOfSymbolicLink(atPath: destination.path)) != nil
+        {
+            throw TKEvidenceRunLogWriteError.artifactAlreadyExists(relativePath)
+        }
+        try data.write(to: destination, options: .atomic)
+        return relativePath
+    }
+
+    public func append(_ event: TKEvidenceRunEvent) throws {
+        let existing = try TKEvidenceRunLogParser().parse(Data(contentsOf: eventsURL))
+        guard existing.status != .completed else {
+            throw TKEvidenceRunLogWriteError.runAlreadyCompleted
+        }
+        guard !existing.truncatedTail else {
+            throw TKEvidenceRunLogWriteError.truncatedTail
+        }
+        if existing.events.isEmpty, event.kind != .runStarted {
+            throw TKEvidenceRunLogWriteError.runStartedNotFirst
+        }
+
+        let line = try encodedJSON(event) + Data("\n".utf8)
+        let handle = try FileHandle(forWritingTo: eventsURL)
+        defer { handle.closeFile() }
+        handle.seekToEndOfFile()
+        handle.write(line)
+    }
+
+    private static func artifactURL(evidenceDirectory: URL, relativePath: String) throws -> URL {
+        let components = relativePath.split(separator: "/", omittingEmptySubsequences: false)
+        guard !relativePath.isEmpty,
+              !relativePath.hasPrefix("/"),
+              !components.contains(".."),
+              !components.contains(".")
+        else {
+            throw TKEvidenceRunLogWriteError.invalidRelativePath(relativePath)
+        }
+        return evidenceDirectory.appendingPathComponent(relativePath)
+    }
+}
+
+private func encodedJSON<T: Encodable>(_ value: T) throws -> Data {
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+    return try encoder.encode(value)
+}

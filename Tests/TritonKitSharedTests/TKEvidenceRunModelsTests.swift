@@ -179,4 +179,164 @@ struct TKEvidenceRunModelsTests {
         #expect(!json.contains("token"))
         #expect(!json.contains("secret"))
     }
+
+    @Test("writer creates run directory metadata and append-only JSONL events")
+    func writerCreatesRunDirectoryAndEvents() throws {
+        let root = temporaryRunRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let writer = try TKEvidenceRunLogWriter(
+            evidenceDirectory: root,
+            metadata: TKEvidenceRunMetadata(
+                runID: "run-1",
+                caseName: "login-smoke",
+                createdAt: "2026-05-21T10:12:13.000Z"
+            )
+        )
+        try writer.append(TKEvidenceRunEvent(
+            runID: "run-1",
+            timestamp: "2026-05-21T10:12:13.000Z",
+            kind: .runStarted,
+            caseName: "login-smoke"
+        ))
+        try writer.append(TKEvidenceRunEvent(
+            runID: "run-1",
+            timestamp: "2026-05-21T10:12:14.000Z",
+            kind: .runCompleted,
+            verdict: .success,
+            stepCount: 0
+        ))
+
+        let metaData = try Data(contentsOf: root.appendingPathComponent("run/meta.json"))
+        let meta = try JSONDecoder().decode(TKEvidenceRunMetadata.self, from: metaData)
+        let eventsData = try Data(contentsOf: root.appendingPathComponent("run/events.jsonl"))
+        let eventsText = String(decoding: eventsData, as: UTF8.self)
+        let parsed = try TKEvidenceRunLogParser().parse(eventsData)
+
+        #expect(meta.runID == "run-1")
+        #expect(meta.eventsPath == "run/events.jsonl")
+        #expect(eventsText.split(separator: "\n").count == 2)
+        #expect(eventsText.hasSuffix("\n"))
+        #expect(parsed.status == .completed)
+        #expect(parsed.events.map(\.kind) == [.runStarted, .runCompleted])
+    }
+
+    @Test("writer rejects appends after run_completed and unsafe artifact paths")
+    func writerRejectsCompletedRunsAndUnsafeArtifactPaths() throws {
+        let root = temporaryRunRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let writer = try TKEvidenceRunLogWriter(
+            evidenceDirectory: root,
+            metadata: TKEvidenceRunMetadata(runID: "run-1", createdAt: "2026-05-21T10:12:13.000Z")
+        )
+        try writer.append(TKEvidenceRunEvent(
+            runID: "run-1",
+            timestamp: "2026-05-21T10:12:13.000Z",
+            kind: .runStarted
+        ))
+        try writer.append(TKEvidenceRunEvent(
+            runID: "run-1",
+            timestamp: "2026-05-21T10:12:14.000Z",
+            kind: .runCompleted,
+            verdict: .blocked
+        ))
+
+        #expect(throws: TKEvidenceRunLogWriteError.runAlreadyCompleted) {
+            try writer.append(TKEvidenceRunEvent(
+                runID: "run-1",
+                timestamp: "2026-05-21T10:12:15.000Z",
+                kind: .friction,
+                frictionKind: .agentBlocked
+            ))
+        }
+        #expect(throws: TKEvidenceRunLogWriteError.invalidRelativePath("/tmp/leak.png")) {
+            try writer.writeArtifact(Data("png".utf8), relativePath: "/tmp/leak.png")
+        }
+        #expect(throws: TKEvidenceRunLogWriteError.invalidRelativePath("../leak.png")) {
+            try writer.writeArtifact(Data("png".utf8), relativePath: "../leak.png")
+        }
+        #expect(throws: TKEvidenceRunLogWriteError.invalidRelativePath("")) {
+            try writer.writeArtifact(Data("png".utf8), relativePath: "")
+        }
+        #expect(throws: TKEvidenceRunLogWriteError.invalidRelativePath(".")) {
+            try writer.writeArtifact(Data("png".utf8), relativePath: ".")
+        }
+    }
+
+    @Test("writer stores clean screenshots before step events")
+    func writerStoresScreenshotsBeforeStepEvents() throws {
+        let root = temporaryRunRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let writer = try TKEvidenceRunLogWriter(
+            evidenceDirectory: root,
+            metadata: TKEvidenceRunMetadata(runID: "run-1", createdAt: "2026-05-21T10:12:13.000Z")
+        )
+        let screenshot = try writer.writeArtifact(Data("clean-png".utf8), relativePath: "run/step-001.png")
+        try writer.append(TKEvidenceRunEvent(
+            runID: "run-1",
+            timestamp: "2026-05-21T10:12:13.000Z",
+            kind: .runStarted
+        ))
+        try writer.append(TKEvidenceRunEvent(
+            runID: "run-1",
+            timestamp: "2026-05-21T10:12:14.000Z",
+            kind: .stepStarted,
+            step: 1,
+            screenshot: screenshot
+        ))
+
+        let screenshotURL = root.appendingPathComponent("run/step-001.png")
+        let parsed = try TKEvidenceRunLogParser().parse(Data(contentsOf: writer.eventsURL))
+
+        #expect(screenshot == "run/step-001.png")
+        #expect(try Data(contentsOf: screenshotURL) == Data("clean-png".utf8))
+        #expect(parsed.events.last?.screenshot == "run/step-001.png")
+    }
+
+    @Test("writer rejects first event that is not run_started and unsafe metadata paths")
+    func writerRejectsInvalidFirstEventAndMetadataPaths() throws {
+        let root = temporaryRunRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let writer = try TKEvidenceRunLogWriter(
+            evidenceDirectory: root,
+            metadata: TKEvidenceRunMetadata(runID: "run-1", createdAt: "2026-05-21T10:12:13.000Z")
+        )
+
+        #expect(throws: TKEvidenceRunLogWriteError.runStartedNotFirst) {
+            try writer.append(TKEvidenceRunEvent(
+                runID: "run-1",
+                timestamp: "2026-05-21T10:12:13.000Z",
+                kind: .stepStarted,
+                step: 1
+            ))
+        }
+        #expect(throws: TKEvidenceRunLogWriteError.invalidRelativePath("../events.jsonl")) {
+            _ = try TKEvidenceRunLogWriter(
+                evidenceDirectory: root,
+                metadata: TKEvidenceRunMetadata(
+                    runID: "run-1",
+                    createdAt: "2026-05-21T10:12:13.000Z",
+                    eventsPath: "../events.jsonl"
+                )
+            )
+        }
+        #expect(throws: TKEvidenceRunLogWriteError.invalidRelativePath("/tmp/meta.json")) {
+            _ = try TKEvidenceRunLogWriter(
+                evidenceDirectory: root,
+                metadata: TKEvidenceRunMetadata(
+                    runID: "run-1",
+                    createdAt: "2026-05-21T10:12:13.000Z",
+                    metaPath: "/tmp/meta.json"
+                )
+            )
+        }
+    }
+
+    private func temporaryRunRoot() -> URL {
+        FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-evidence-run-\(UUID().uuidString).tritonevidence")
+    }
 }

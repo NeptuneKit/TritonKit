@@ -101,11 +101,11 @@ swift test --filter TKXcodeWorkflowModelsTests
 12. `xcode test` final summary top failures：`xcode test --result-bundle ...` 的 final `TKXcodeActionSummary` 会默认脱敏内联 `testResultSummary` 与 `topFailures`；测试失败时输出 `ok:false` summary 并以非 0 退出，保留 `.xcresult` 给 `triton xcresult failures` 深挖。
 13. 显式 Xcode action summary 证据导入：`triton evidence/capture --include xcode --xcode-summary <summary.json>` 会把已保存的 `TKXcodeActionSummary` 规范化写入 `artifacts/xcode/action-summary.json` 并标记 sensitive；不读取或复制 summary 引用的 stdout/stderr log、raw `.xcresult`、`.trace`，也不扫描临时目录或 DerivedData。
 14. `xctrace record` 输出防覆盖：普通 `--output <path.trace>` 在路径已存在时先返回 `artifact_output_rejected`，`--append-run` 只允许已存在且非 symlink 的 trace 路径，symlink 输出始终拒绝，避免 agent 覆盖或跟随非预期 artifact。
-15. UX run evidence Shared-only 模型：新增 `TKEvidenceRunEvent` / event kind / friction taxonomy / metadata / parse result 与 JSONL parser；parser 容忍最后一行 partial JSON，保留 unknown kind warning，中间坏行返回稳定错误，缺少 `run_completed` 视为 incomplete，并校验 `run_started` 必须是第一条有效事件。
+15. UX run evidence Shared-only 模型与 writer/parser：新增 `TKEvidenceRunEvent` / event kind / friction taxonomy / metadata / parse result、JSONL parser 与 append-only writer；parser 容忍最后一行 partial JSON，保留 unknown kind warning，中间坏行返回稳定错误，缺少 `run_completed` 视为 incomplete；writer 创建 `run/meta.json` 和 `run/events.jsonl`，compact JSONL 追加，`run_completed` 后拒绝追加，校验首条事件必须是 `run_started`，并拒绝绝对路径、上级路径等非安全 artifact / metadata 路径。
 
 ### 继续延期
 
 1. 为更多非 stdout-backed artifact 命令补齐 explicit artifact-dir / force 策略，降低 agent 自动执行时覆盖非预期文件的风险；`xctrace record` 已完成基础 overwrite/symlink guard。
 2. 将 subcommand schema contract 继续推进为更多命令共享的轻量 contract builder，减少 `CLISchemaRuntime.swift` 内联重复。
 3. 继续实现 `capture/evidence --include xcode,host` 对已显式生成的 xcode stdout/stderr、默认脱敏 xcresult summary/failures、coverage JSON 和 trace artifact 的 manifest 整合；不自动执行 build/test/run，不扫 `/tmp` 或 DerivedData。已完成的 action summary 导入只覆盖 summary JSON 自身，不覆盖 raw log / xcresult / trace 复制。
-4. UX run evidence 仍需后续补 writer、manifest run artifact 引用、`capture` / `.tritonplan replay` 至少一个写入入口，以及 public skill / README 的外部 agent 写入说明。
+4. UX run evidence 仍需后续补 manifest run artifact 引用、`capture` / `.tritonplan replay` 至少一个写入入口，以及 public skill / README 的外部 agent 写入说明。

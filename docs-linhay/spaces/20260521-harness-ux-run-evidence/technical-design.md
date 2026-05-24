@@ -239,14 +239,15 @@ public enum TKEvidenceFrictionKind: String, Codable, Sendable {
 
 ### 2026-05-24 implementation checkpoint
 
-已落地首期 Shared-only 模型与 parser：
+已落地首期 Shared-only 模型、writer 与 parser：
 
 1. `Sources/TritonKitShared/TKEvidenceRunModels.swift` 新增 `TKEvidenceRunEvent`、`TKEvidenceRunEventKind`、`TKEvidenceFrictionKind`、`TKEvidenceRunVerdict`、`TKEvidenceRunMetadata` 与 parse result / warning / summary 类型。
 2. `TKEvidenceRunEventKind` 使用 raw-value wrapper，而不是封闭 enum；已知 kind 有静态常量，未知 kind 可以保留 raw value 并由 parser 产生 `unknown_kind` warning。
 3. `TKEvidenceRunLogParser` 已支持逐行解析、最后一行 partial JSON 截断容忍、中间坏行 `malformedEvent`、`run_started` 首行校验、unsupported schemaVersion 稳定错误、缺少 `run_completed` 时返回 `incomplete`。
 4. `TKEvidenceRunCredential` 只建模 `label` / `username`，不提供 password / token / secret 字段。
+5. `TKEvidenceRunLogWriter` 已支持创建 `run/`、原子写 `meta.json`、compact JSONL 追加事件、`run_completed` 后拒绝追加、首条事件必须是 `run_started`、artifact 相对路径安全校验，以及 screenshot / debug artifact 文件先落盘再由事件引用。
 
-本 checkpoint 暂不包含 writer、CLI / HTTP 写入口、`capture` / `replay` 集成或 manifest run artifact 引用。
+本 checkpoint 暂不包含 CLI / HTTP 写入口、`capture` / `replay` 集成或 manifest run artifact 引用。
 
 ## Writer / Parser
 
@@ -387,5 +388,5 @@ harmony
 2026-05-24 状态：
 
 1. 已完成：`TKEvidenceRunEvent` / friction models 可编解码。
-2. 已部分完成：parser 覆盖 partial tail、unknown kind、middle malformed line、`run_started` 首行约束和 credential public identity；writer 尚未实现。
+2. 已完成：writer / parser 覆盖 partial tail、unknown kind、middle malformed line、`run_started` 首行约束、completed 后拒绝追加、相对路径安全和 credential public identity。
 3. 未完成：manifest run artifact 引用、`capture` / `replay` 写入入口、CLI / HTTP 写入口。
