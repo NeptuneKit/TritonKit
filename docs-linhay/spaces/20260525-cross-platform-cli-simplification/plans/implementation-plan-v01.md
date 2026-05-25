@@ -23,6 +23,11 @@
 - 明确 iOS / Harmony 的共性字段与平台附加字段。
 - 通过测试锁住命令解析与 schema 示例。
 
+进展：
+
+- 已发现并修复 `device use --platform ios --ready` / `device use --platform harmony --ready` 这类过滤式选择的 current 写回问题：无显式 selector 时，current 现在写入稳定 target id（如 `sim:<udid>` / `harmony:<target>`），避免写入 `ios` / `ready` 这种后续不可复用的过滤词。
+- 已新增测试锁住 current selector 写回策略和跨平台唯一 ready target 自动解析。
+
 ### M2. 实现与测试
 
 - 补齐或调整 `device` 的共享 resolver 和 action 实现。
@@ -48,10 +53,13 @@
 - 真实 smoke 证据
 - 结构化文档与 memory 记录
 
+## 验证记录
+
+- `swift test --package-path CLI --scratch-path .build/cli --filter DeviceCrossPlatformTests`：通过，覆盖 13 个 `device` / selector / schema 测试。
+
 ## 约束
 
 1. 不删除旧入口。
 2. 不把 Web/Wails UI 拉进本轮。
 3. 不扩到 Android。
 4. 不改 Release / Homebrew 契约。
-

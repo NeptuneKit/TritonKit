@@ -1808,7 +1808,7 @@ struct DeviceUse: AsyncParsableCommand {
                 hdc: hdc
             )
             var store = try loadHostTargetAliasStore()
-            store.current = selector ?? target ?? selected.selector
+            store.current = hostDeviceCurrentSelector(explicitSelector: selector, explicitTarget: target, selected: selected)
             let defaultsPath = try saveHostTargetAliasStore(store)
             switch outputFormat {
             case .json:

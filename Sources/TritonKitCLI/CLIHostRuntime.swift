@@ -482,6 +482,20 @@ func resolveHostDeviceSelection(request: HostDeviceSelectionRequest, hdc: String
     return try resolveHostDeviceSelection(request: request, candidates: candidates, aliases: aliases)
 }
 
+func hostDeviceCurrentSelector(
+    explicitSelector: String?,
+    explicitTarget: String?,
+    selected: HostDeviceSelectionResult
+) -> String {
+    if let explicitSelector, !explicitSelector.isEmpty {
+        return explicitSelector
+    }
+    if let explicitTarget, !explicitTarget.isEmpty {
+        return explicitTarget
+    }
+    return selected.target.id
+}
+
 func resolveHostDeviceTarget(platform: HostDevicePlatform, target: String?, hdc: String) throws -> HostDeviceTarget {
     switch platform {
     case .ios:

@@ -167,3 +167,8 @@ swift test --filter TKHostAdapterModelsTests
 ## 下一步
 
 下一轮实现计划见 [implementation-plan-v01.md](plans/implementation-plan-v01.md)。当前优先级是把统一 `device` 契约继续收口，补稳测试与真实 smoke，再考虑是否把 `app / observe / webview` 的可复用部分继续抹平。
+
+2026-05-25 追加推进：
+
+- M1 契约收口已补一个真实修复：`device use` 通过过滤条件自动选中唯一目标时，current 写回稳定 target id，而不是过滤词本身。
+- 该行为已由 `DeviceCrossPlatformTests` 覆盖，避免后续 `device current` 无法解析 current selector。

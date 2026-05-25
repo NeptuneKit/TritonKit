@@ -127,6 +127,48 @@ struct DeviceCrossPlatformTests {
         #expect(selectHostDeviceTarget(target: nil, candidates: [second]) == second)
     }
 
+    @Test("host device current selector falls back to stable target ids")
+    func hostDeviceCurrentSelectorFallsBackToStableTargetIDs() {
+        let selected = HostDeviceSelectionResult(
+            platform: .ios,
+            target: iosTarget(udid: "SIM-1"),
+            selector: "ios",
+            source: .platformFilter,
+            filters: HostDeviceSelectionFilters(request: HostDeviceSelectionRequest(platform: .ios))
+        )
+
+        #expect(hostDeviceCurrentSelector(explicitSelector: "iphone15", explicitTarget: nil, selected: selected) == "iphone15")
+        #expect(hostDeviceCurrentSelector(explicitSelector: nil, explicitTarget: "sim:SIM-1", selected: selected) == "sim:SIM-1")
+        #expect(hostDeviceCurrentSelector(explicitSelector: nil, explicitTarget: nil, selected: selected) == "sim:SIM-1")
+    }
+
+    @Test("host device selector can resolve a single ready target across platforms")
+    func hostDeviceSelectorResolvesUniqueReadyTargetAcrossPlatforms() throws {
+        let ios = iosTarget(udid: "SIM-1", state: "Booted", ready: true, name: "iPhone 15")
+        let harmony = HostDeviceTarget(
+            platform: "harmony",
+            id: "harmony:127.0.0.1:10100",
+            target: "127.0.0.1:10100",
+            state: "Connected",
+            ready: false,
+            source: "hdc",
+            name: nil,
+            runtime: nil,
+            transport: "TCP"
+        )
+
+        let resolved = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(),
+            candidates: [.ios: [ios], .harmony: [harmony]],
+            aliases: .empty
+        )
+
+        #expect(resolved.platform == .ios)
+        #expect(resolved.target == ios)
+        #expect(resolved.selector == "ready")
+        #expect(resolved.source == .globalUnique)
+    }
+
     @Test("host device screenshot rejects not-ready targets before invoking platform tools")
     func hostDeviceScreenshotRejectsNotReadyTargets() {
         let target = iosTarget(udid: "SIM-2", state: "Shutdown", ready: false)
