@@ -50,6 +50,7 @@ ai-phone 作为补充参考提供三端设备池视角：Harmony 不应只作为
 这些能力可以做，但需要明确 target、artifactDir、脱敏策略、timeout、审计记录和版本探测，不能变成无界后台任务：
 
 1. **启动或停止 DevEco Emulator**：需要 HVD 名称、路径、imageRoot、trace name 等版本敏感参数。
+   - 若由 TritonKit 的 `triton-harmony-emulator` launchd keepalive job 启动，停止命令必须先卸载该 job，再执行 DevEco `Emulator -stop`，否则 stop 成功后会被 launchd 重新拉起。
 2. **安装、卸载、清数据**：涉及设备写入或破坏性操作，必须进入明确的自动化模式并记录 source command。
 3. **真实 layout / 截图 / 日志归档**：可能包含业务文本、路径、账号或调试信息，必须提供 artifactDir 和脱敏策略。
 4. **端口转发**：`fport/rport` 会改变本地网络状态，必须记录端口、目标和清理动作。

@@ -124,6 +124,7 @@ Android adapter 可以后续接入；接入时只承诺 emulator target，不承
 
 ```text
 triton device doctor --platform harmony --json
+triton device stop --platform harmony --hvd <hvd-name> --path <deployed-path> --confirm --json
 triton app inspect --platform harmony --bundle <bundle> --json
 triton app launch --platform harmony --bundle <bundle> --ability <ability> --json
 triton screenshot --platform harmony --output <png> --json
@@ -132,6 +133,7 @@ triton logs collect --platform harmony --output <dir> --json
 ```
 
 底层可用 `hdc list targets -v`、`param get bootevent.boot.completed`、`aa start`、`bm dump`、`uitest dumpLayout`、`uitest screenCap`、`hilog`。
+当 TritonKit 使用 launchd keepalive 监督 DevEco Emulator 时，关闭链路必须先检查并卸载 `gui/<uid>/triton-harmony-emulator`，再执行 `Emulator -stop <hvd-name> -path <deployed-path>`，避免 `Emulator -stop` 成功后被 Triton 自己的 launchd job 重新拉起。
 
 ### Evidence / replay
 

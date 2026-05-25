@@ -195,6 +195,30 @@ struct HostDeviceArtifactOutput: Encodable {
     let note: String
 }
 
+struct HarmonyEmulatorStopPlan {
+    let action: String
+    let platform: String
+    let hvd: String
+    let deployedPath: String
+    let emulator: String
+    let launchdLabel: String?
+    let launchdDomain: String?
+    let commands: [TKHostCommand]
+}
+
+struct HostDeviceStopOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let hvd: String
+    let deployedPath: String
+    let emulator: String
+    let launchdLabel: String?
+    let launchdDomain: String?
+    let sourceCommands: [String]
+    let note: String
+}
+
 enum HostDeviceSelectionError: Error, CustomStringConvertible {
     case ambiguousTargets([HostDeviceTarget])
     case targetNotFound(String)

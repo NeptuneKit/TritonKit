@@ -420,6 +420,7 @@ triton device list --platform harmony --json
 triton device use --platform harmony --target 127.0.0.1:10100 --json
 triton device wait-ready --device 127.0.0.1:10100 --json
 triton device screenshot --device 127.0.0.1:10100 --output /tmp/smoke.jpeg --json
+triton device stop --platform harmony --hvd "Codex Test Phone" --path ~/.Huawei/Emulator/deployed --confirm --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
 triton app install --device 127.0.0.1:10100 --hap /tmp/Demo.hap --json
 triton app launch --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
@@ -431,6 +432,8 @@ triton screenshot --platform harmony --target 127.0.0.1:10100 --output /tmp/smok
 ```
 
 When multiple HDC targets are `Connected`, Triton returns `error.code=ambiguous_target` and requires an explicit `--target`. The adapter records `sourceCommand`; risk/policy metadata is for audit and configuration validation, not an interactive confirmation gate.
+
+When Triton starts a Harmony HVD through its `triton-harmony-emulator` launchd keepalive job, close it with `triton device stop --platform harmony ... --confirm --json` instead of raw `Emulator -stop`. The Triton command unloads `gui/<uid>/triton-harmony-emulator` before calling DevEco `Emulator -stop`, so launchd does not restart the emulator after a successful stop.
 
 Harmony host-side `ax/wait/tap/screenshot` wrap `uitest dumpLayout`, `uitest uiInput click`, and `snapshot_display` with JSON envelopes. Layout and screenshot outputs can contain private UI data; inspect or redact artifacts before attaching them to public issues.
 

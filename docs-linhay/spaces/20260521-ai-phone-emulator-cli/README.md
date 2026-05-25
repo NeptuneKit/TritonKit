@@ -170,7 +170,7 @@
 
 ### P1：Harmony Emulator Core
 
-- Harmony: `device doctor/list/use/wait-ready`、`app inspect/launch`、`ax/screenshot`。
+- Harmony: `device doctor/list/use/wait-ready/stop`、`app inspect/launch`、`ax/screenshot`。
 - 三端 command ledger schema 先保持可容纳 Android，但 Android adapter 可以后续接入。
 
 ### P2：Environment + Evidence
@@ -216,6 +216,15 @@
 - Given host 命令或 runtime tap 返回 ok
 - When 后续没有 `wait/assert/screenshot/evidence`
 - Then evidence 写入 `unverified_host_action` 或 `unverified_runtime_action` warning
+
+### 场景五：Harmony Emulator stop 不被 Triton launchd keepalive 拉起
+
+- Given TritonKit 通过 `triton-harmony-emulator` launchd job 启动并监督 Harmony Emulator
+- When agent 执行 `triton device stop --platform harmony --hvd <name> --path <deployed-path> --confirm --json`
+- Then TritonKit 先对 `gui/<uid>/triton-harmony-emulator` 执行 launchd 检查与 `bootout`
+- And 随后执行 DevEco `Emulator -stop <name> -path <deployed-path>`
+- And JSON 输出包含 `sourceCommands`、launchd label/domain、HVD 名称与下一步验证建议
+- And `Emulator -stop` 成功后不会因为 TritonKit 自己的 keepalive job 自动重启
 
 ## 完成定义
 

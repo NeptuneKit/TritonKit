@@ -90,6 +90,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton device list --platform harmony --json`
      - `triton device alias set harmony-a --platform harmony --target <hdc-target> --json` for repeated multi-emulator validation;
      - `triton device wait-ready --device harmony-a --json`
+     - `triton device stop --platform harmony --hvd <hvd-name> --path <deployed-path> --confirm --json` when Triton's `triton-harmony-emulator` launchd keepalive job started the HVD;
      - `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`
      - `triton app install --device harmony-a --hap <debug-signed.hap> --json`
      - `triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json`

@@ -547,6 +547,89 @@ func harmonyTarget(from target: HostDeviceTarget) -> TKHarmonyTarget {
     )
 }
 
+func defaultLaunchdDomain() -> String {
+    "gui/\(getuid())"
+}
+
+func harmonyLaunchctlPrintCommand(domain: String, label: String) -> TKHostCommand {
+    TKHostCommand(
+        executable: "launchctl",
+        arguments: ["print", "\(domain)/\(label)"],
+        riskLevel: .readonly,
+        requiredConfig: [.timeout]
+    )
+}
+
+func harmonyLaunchctlBootoutCommand(domain: String, label: String) -> TKHostCommand {
+    TKHostCommand(
+        executable: "launchctl",
+        arguments: ["bootout", "\(domain)/\(label)"],
+        riskLevel: .automation,
+        requiredConfig: [.timeout, .auditRecord]
+    )
+}
+
+func harmonyEmulatorStopCommand(hvd: String, deployedPath: String, emulator: String) -> TKHostCommand {
+    TKHostCommand(
+        executable: emulator,
+        arguments: ["-stop", hvd, "-path", deployedPath],
+        riskLevel: .automation,
+        requiredConfig: [.target, .timeout, .auditRecord]
+    )
+}
+
+func harmonyEmulatorStopPlan(
+    hvd: String,
+    deployedPath: String,
+    emulator: String,
+    launchdLabel: String,
+    launchdDomain: String,
+    includeLaunchd: Bool,
+    confirmed: Bool
+) throws -> HarmonyEmulatorStopPlan {
+    guard confirmed else {
+        throw HostDeviceSelectionError.parameterConflict("device stop requires --confirm.")
+    }
+    let trimmedHVD = hvd.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedPath = deployedPath.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedEmulator = emulator.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedHVD.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device stop requires --hvd.")
+    }
+    guard !trimmedPath.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device stop requires --path.")
+    }
+    guard !trimmedEmulator.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device stop requires --emulator.")
+    }
+
+    var commands: [TKHostCommand] = []
+    let label = launchdLabel.trimmingCharacters(in: .whitespacesAndNewlines)
+    let domain = launchdDomain.trimmingCharacters(in: .whitespacesAndNewlines)
+    if includeLaunchd {
+        guard !label.isEmpty else {
+            throw HostDeviceSelectionError.parameterConflict("Harmony device stop requires --launchd-label unless --skip-launchd is set.")
+        }
+        guard !domain.isEmpty else {
+            throw HostDeviceSelectionError.parameterConflict("Harmony device stop requires --launchd-domain unless --skip-launchd is set.")
+        }
+        commands.append(harmonyLaunchctlPrintCommand(domain: domain, label: label))
+        commands.append(harmonyLaunchctlBootoutCommand(domain: domain, label: label))
+    }
+    commands.append(harmonyEmulatorStopCommand(hvd: trimmedHVD, deployedPath: trimmedPath, emulator: trimmedEmulator))
+
+    return HarmonyEmulatorStopPlan(
+        action: "device.stop",
+        platform: "harmony",
+        hvd: trimmedHVD,
+        deployedPath: trimmedPath,
+        emulator: trimmedEmulator,
+        launchdLabel: includeLaunchd ? label : nil,
+        launchdDomain: includeLaunchd ? domain : nil,
+        commands: commands
+    )
+}
+
 func ensureParentDirectory(for path: String) throws {
     let directory = URL(fileURLWithPath: path).deletingLastPathComponent()
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)

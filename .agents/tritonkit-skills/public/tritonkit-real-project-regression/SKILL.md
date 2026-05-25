@@ -90,6 +90,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - list HDC targets: `triton device list --platform harmony --json`;
    - for repeated multi-emulator work, create a stable selector: `triton device alias set harmony-a --platform harmony --target <hdc-target> --json`;
    - wait for boot readiness: `triton device wait-ready --device harmony-a --json`;
+   - close a Triton-supervised HVD with launchd cleanup: `triton device stop --platform harmony --hvd <hvd-name> --path <deployed-path> --confirm --json`;
    - inspect app metadata: `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`;
    - install a debug HAP when needed: `triton app install --device harmony-a --hap <debug-signed.hap> --json`;
    - launch an Ability: `triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json`;

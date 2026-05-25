@@ -19,11 +19,13 @@ struct DeviceCrossPlatformTests {
         #expect(optionNames.contains("wait-ready --device <selector>"))
         #expect(optionNames.contains("screenshot --device <selector> --output <path>"))
         #expect(optionNames.contains("runtime-url --device <selector>"))
+        #expect(optionNames.contains("stop --platform harmony --hvd <name> --path <deployed-path> --confirm"))
         #expect(optionNames.contains("--device"))
         #expect(optionNames.contains("--name"))
         #expect(optionNames.contains("--runtime"))
         #expect(optionNames.contains("runtime-url --platform harmony --target <target>"))
         #expect(device.examples.contains("triton device runtime-url --device harmony-a --probe-manifest --json"))
+        #expect(device.examples.contains("triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --confirm --json"))
         #expect(device.providedCapabilities.contains("host-device"))
         #expect(device.providedCapabilities.contains("device-alias"))
         #expect(device.providedCapabilities.contains("host-device-selector"))
@@ -31,6 +33,46 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("device-use"))
         #expect(device.providedCapabilities.contains("device-wait-ready"))
         #expect(device.providedCapabilities.contains("device-screenshot"))
+        #expect(device.providedCapabilities.contains("harmony-device-stop"))
+    }
+
+    @Test("Harmony emulator stop plans launchd bootout before DevEco stop")
+    func harmonyEmulatorStopPlansLaunchdBootoutBeforeDevEcoStop() throws {
+        let plan = try harmonyEmulatorStopPlan(
+            hvd: "Codex Test Phone",
+            deployedPath: "/Users/linhey/.Huawei/Emulator/deployed",
+            emulator: "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator",
+            launchdLabel: "triton-harmony-emulator",
+            launchdDomain: "gui/501",
+            includeLaunchd: true,
+            confirmed: true
+        )
+
+        #expect(plan.action == "device.stop")
+        #expect(plan.platform == "harmony")
+        #expect(plan.hvd == "Codex Test Phone")
+        #expect(plan.launchdLabel == "triton-harmony-emulator")
+        #expect(plan.launchdDomain == "gui/501")
+        #expect(plan.commands.map(hostSourceCommand) == [
+            "launchctl print gui/501/triton-harmony-emulator",
+            "launchctl bootout gui/501/triton-harmony-emulator",
+            "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator -stop 'Codex Test Phone' -path /Users/linhey/.Huawei/Emulator/deployed",
+        ])
+    }
+
+    @Test("Harmony emulator stop requires explicit confirmation")
+    func harmonyEmulatorStopRequiresConfirmation() {
+        #expect(throws: HostDeviceSelectionError.self) {
+            _ = try harmonyEmulatorStopPlan(
+                hvd: "Codex Test Phone",
+                deployedPath: "/Users/linhey/.Huawei/Emulator/deployed",
+                emulator: "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator",
+                launchdLabel: "triton-harmony-emulator",
+                launchdDomain: "gui/501",
+                includeLaunchd: true,
+                confirmed: false
+            )
+        }
     }
 
     @Test("app and smoke schemas expose unified device selector with compatibility paths")

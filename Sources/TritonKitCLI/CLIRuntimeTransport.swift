@@ -270,6 +270,7 @@ func runtimeCapabilities(connected: Bool) -> [TKRuntimeCapability] {
         TKRuntimeCapability(name: "harmony-device-use", supported: true),
         TKRuntimeCapability(name: "harmony-device-wait-ready", supported: true),
         TKRuntimeCapability(name: "harmony-device-screenshot", supported: true),
+        TKRuntimeCapability(name: "harmony-device-stop", supported: true),
         TKRuntimeCapability(name: "harmony-runtime-url", supported: true),
         TKRuntimeCapability(name: "harmony-app-install", supported: true),
         TKRuntimeCapability(name: "harmony-app-open-url", supported: true),

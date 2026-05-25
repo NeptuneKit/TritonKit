@@ -80,9 +80,12 @@ triton device wait-ready --device iphone15 --json
 triton device wait-ready --device harmony-a --json
 triton device screenshot --device iphone15 --output /tmp/<case>-sim.png --json
 triton device screenshot --device harmony-a --output /tmp/<case>.jpeg --json
+triton device stop --platform harmony --hvd "Codex Test Phone" --path ~/.Huawei/Emulator/deployed --confirm --json
 ```
 
 Use `--device <selector>` as the default agent-facing target selector for common host-side commands. Selectors can be aliases, full ids such as `sim:<udid>` / `harmony:<target>`, raw platform ids, `booted`, or `current`. `--platform`, `--name`, `--runtime`, `--state`, and `--ready` are filters; they may auto-select only when the filtered candidate set is unique. Keep `sim` for iOS-only advanced maintenance; `device runtime-url --device <selector>` is the Harmony embedded runtime port-forward setup path, with `--platform harmony --target <target>` retained for compatibility.
+
+When a Harmony HVD was started through Triton's `triton-harmony-emulator` launchd keepalive job, stop it through `triton device stop --platform harmony ... --confirm --json`. The command checks and unloads `gui/<uid>/triton-harmony-emulator` before running DevEco `Emulator -stop`, which prevents launchd from immediately restarting the emulator.
 
 iOS Simulator:
 

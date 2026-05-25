@@ -1694,7 +1694,7 @@ struct Device: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "device",
         abstract: "Discover and inspect host-side devices and emulators",
-        subcommands: [DeviceDoctor.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self]
+        subcommands: [DeviceDoctor.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStop.self]
     )
 }
 
@@ -2131,6 +2131,64 @@ struct DeviceRuntimeURL: AsyncParsableCommand {
                 print(try encodeJSON(output))
             case .text:
                 print(baseURL)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceStop: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "stop", abstract: "Stop a host-side device or emulator")
+
+    @Option(help: "Platform adapter: harmony") var platform: HostDevicePlatform = .harmony
+    @Option(help: "Harmony HVD name, for example Codex Test Phone") var hvd: String
+    @Option(help: "DevEco deployed emulator path, for example ~/.Huawei/Emulator/deployed") var path: String
+    @Option(help: "Path to DevEco Emulator executable") var emulator: String = "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator"
+    @Option(help: "Triton launchd job label to unload before stopping") var launchdLabel: String = "triton-harmony-emulator"
+    @Option(help: "launchd domain, defaults to gui/<uid>") var launchdDomain: String = defaultLaunchdDomain()
+    @Flag(help: "Skip launchd print/bootout and only run Emulator -stop") var skipLaunchd = false
+    @Flag(help: "Confirm stopping the emulator and unloading Triton launchd supervision") var confirm = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            guard platform == .harmony else {
+                throw RuntimeError("device stop currently supports Harmony Emulator only")
+            }
+            let plan = try harmonyEmulatorStopPlan(
+                hvd: hvd,
+                deployedPath: path,
+                emulator: emulator,
+                launchdLabel: launchdLabel,
+                launchdDomain: launchdDomain,
+                includeLaunchd: !skipLaunchd,
+                confirmed: confirm
+            )
+            var sourceCommands: [String] = []
+            for command in plan.commands {
+                let result = try runHostCommand(command)
+                sourceCommands.append(result.sourceCommand)
+            }
+            let output = HostDeviceStopOutput(
+                ok: true,
+                action: plan.action,
+                platform: plan.platform,
+                hvd: plan.hvd,
+                deployedPath: plan.deployedPath,
+                emulator: plan.emulator,
+                launchdLabel: plan.launchdLabel,
+                launchdDomain: plan.launchdDomain,
+                sourceCommands: sourceCommands,
+                note: "Harmony emulator stop completed. Verify with `triton device list --platform harmony --json`; the target should remain disconnected or absent."
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print(output.note)
             }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
