@@ -14,10 +14,40 @@ struct TritonKitDemoApp: App {
     }
 }
 
+enum DemoScenario: String, CaseIterable, Identifiable {
+    case overview
+    case runtimeBasic
+    case nativeControls
+    case webViewBasic
+    case webViewEdge
+    case webViewNavigation
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .overview:
+            return "Overview"
+        case .runtimeBasic:
+            return "Runtime"
+        case .nativeControls:
+            return "Native"
+        case .webViewBasic:
+            return "Web Basic"
+        case .webViewEdge:
+            return "Web Edge"
+        case .webViewNavigation:
+            return "Web Nav"
+        }
+    }
+
+}
+
 final class DemoModel: ObservableObject {
     @Published var status = "Disconnected"
     @Published var host = "127.0.0.1"
     @Published var port = "19421"
+    @Published var scenario: DemoScenario = .overview
     @Published var log: [String] = []
 
     #if DEBUG
@@ -91,11 +121,40 @@ struct ContentView: View {
                 Button("Disconnect", action: model.disconnect)
             }
 
-            UIKitSmokePanel()
-                .frame(height: 320)
+            Picker("Harness Scenario", selection: $model.scenario) {
+                ForEach(DemoScenario.allCases) { scenario in
+                    Text(scenario.title).tag(scenario)
+                }
+            }
+            .pickerStyle(.segmented)
+            .accessibilityIdentifier("HarnessScenarioPicker")
 
-            WebViewSmokePanel()
-                .frame(height: 150)
+            Group {
+                switch model.scenario {
+                case .overview:
+                    VStack(spacing: 12) {
+                        UIKitSmokePanel()
+                            .frame(height: 320)
+                        WebViewSmokePanel(variant: .basic)
+                            .frame(height: 150)
+                    }
+                case .runtimeBasic:
+                    RuntimeBasicPanel(status: model.status)
+                        .frame(height: 220)
+                case .nativeControls:
+                    UIKitSmokePanel()
+                        .frame(height: 360)
+                case .webViewBasic:
+                    WebViewSmokePanel(variant: .basic)
+                        .frame(height: 220)
+                case .webViewEdge:
+                    WebViewSmokePanel(variant: .edge)
+                        .frame(height: 280)
+                case .webViewNavigation:
+                    WebViewSmokePanel(variant: .navigation)
+                        .frame(height: 240)
+                }
+            }
 
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 2) {
@@ -111,6 +170,32 @@ struct ContentView: View {
     }
 }
 
+struct RuntimeBasicPanel: View {
+    let status: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("runtime-basic ready")
+                .font(.headline)
+                .accessibilityIdentifier("HarnessRuntimeReadyText")
+            Text("scenario=runtime-basic status=\(status)")
+                .font(.system(size: 13, design: .monospaced))
+                .textSelection(.enabled)
+                .accessibilityIdentifier("HarnessRuntimeStatusText")
+            Text("capabilities=manifest,snapshot,observe,webview")
+                .font(.system(size: 13, design: .monospaced))
+                .textSelection(.enabled)
+                .accessibilityIdentifier("HarnessRuntimeCapabilitiesText")
+            Spacer(minLength: 0)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Color(.secondarySystemGroupedBackground))
+        .cornerRadius(8)
+        .accessibilityIdentifier("HarnessRuntimePanel")
+    }
+}
+
 struct UIKitSmokePanel: UIViewRepresentable {
     func makeUIView(context: Context) -> UIKitSmokeView {
         UIKitSmokeView()
@@ -119,33 +204,52 @@ struct UIKitSmokePanel: UIViewRepresentable {
     func updateUIView(_ uiView: UIKitSmokeView, context: Context) {}
 }
 
-struct WebViewSmokePanel: UIViewRepresentable {
-    func makeUIView(context: Context) -> WKWebView {
-        let webView = WKWebView(frame: .zero)
-        webView.accessibilityIdentifier = "WebViewSmokeWebView"
-        webView.scrollView.accessibilityIdentifier = "WebViewSmokeScrollView"
-        webView.isOpaque = false
-        webView.backgroundColor = .clear
-        webView.loadHTMLString(Self.html, baseURL: URL(string: "https://tritonkit.local/smoke"))
-        return webView
+enum WebViewSmokeVariant {
+    case basic
+    case edge
+    case navigation
+
+    var baseURL: URL? {
+        switch self {
+        case .basic:
+            return URL(string: "https://tritonkit.local/smoke")
+        case .edge:
+            return URL(string: "https://tritonkit.local/edge")
+        case .navigation:
+            return URL(string: "https://tritonkit.local/navigation")
+        }
     }
 
-    func updateUIView(_ uiView: WKWebView, context: Context) {}
+    var html: String {
+        switch self {
+        case .basic:
+            return Self.basicHTML
+        case .edge:
+            return Self.edgeHTML
+        case .navigation:
+            return Self.navigationHTML
+        }
+    }
 
-    private static let html = """
-    <!doctype html>
-    <html>
-    <head>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <title>Triton WebView Smoke</title>
+    private static let sharedStyle = """
       <style>
         body { margin: 0; font: -apple-system-body; color: #111827; background: #eef6f2; }
         main { padding: 14px; }
         h1 { font-size: 18px; margin: 0 0 8px; }
         p { font-size: 13px; margin: 0 0 10px; color: #475569; }
-        button { appearance: none; border: 0; border-radius: 6px; background: #0f766e; color: white; padding: 8px 12px; font-weight: 600; }
-        input { border: 1px solid #94a3b8; border-radius: 6px; padding: 7px 8px; width: 140px; margin-left: 8px; }
+        button { appearance: none; border: 0; border-radius: 6px; background: #0f766e; color: white; padding: 8px 12px; font-weight: 600; margin-right: 8px; }
+        input { border: 1px solid #94a3b8; border-radius: 6px; padding: 7px 8px; width: 140px; margin: 0 8px 8px 0; }
+        a { display: inline-block; margin: 0 8px 8px 0; color: #0f766e; }
       </style>
+    """
+
+    private static let basicHTML = """
+    <!doctype html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Triton WebView Smoke</title>
+      \(sharedStyle)
     </head>
     <body>
       <main>
@@ -189,6 +293,139 @@ struct WebViewSmokePanel: UIViewRepresentable {
     </body>
     </html>
     """
+
+    private static let edgeHTML = """
+    <!doctype html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Triton WebView Edge</title>
+      \(sharedStyle)
+    </head>
+    <body>
+      <main>
+        <h1>Triton WebView Edge</h1>
+        <p id="edge-route">route=/edge ready=true long-text=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz</p>
+        <label for="keyword:edge.1">Edge Keyword</label>
+        <input id="keyword:edge.1" name="keyword-edge" value="triton-edge">
+        <label for="password:edge.1">Edge Secret</label>
+        <input id="password:edge.1" name="edge-password" type="password" value="secret-value">
+        <input id="edge-extra-1" name="edge-extra-1" value="one">
+        <input id="edge-extra-2" name="edge-extra-2" value="two">
+        <input id="edge-extra-3" name="edge-extra-3" value="three">
+        <input id="edge-extra-4" name="edge-extra-4" value="four">
+        <a id="edge-link-1" href="https://tritonkit.local/edge/1">Edge Link 1</a>
+        <a id="edge-link-2" href="https://tritonkit.local/edge/2">Edge Link 2</a>
+        <a id="edge-link-3" href="https://tritonkit.local/edge/3">Edge Link 3</a>
+        <a id="edge-link-4" href="https://tritonkit.local/edge/4">Edge Link 4</a>
+        <a id="edge-link-5" href="https://tritonkit.local/edge/5">Edge Link 5</a>
+        <button id="edge-ready">Edge Ready</button>
+      </main>
+      <script>
+        window.__tritonBridge = {
+          version: 1,
+          methods: {
+            getRouteState: function() {
+              return {
+                route: "/edge",
+                title: document.title,
+                ready: true
+              };
+            },
+            emitEdgeEvent: function() {
+              if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.triton) {
+                window.webkit.messageHandlers.triton.postMessage({
+                  type: "event",
+                  name: "edge.ready",
+                  payload: { formCount: document.querySelectorAll("input").length }
+                });
+              }
+              return { ok: true };
+            }
+          }
+        };
+      </script>
+    </body>
+    </html>
+    """
+
+    private static let navigationHTML = """
+    <!doctype html>
+    <html>
+    <head>
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Triton WebView Navigation A</title>
+      \(sharedStyle)
+    </head>
+    <body>
+      <main>
+        <h1 id="nav-title">Triton WebView Navigation A</h1>
+        <p id="nav-route">route=/navigation/a ready=true</p>
+        <button id="nav-button">Navigate</button>
+      </main>
+      <script>
+        window.__tritonBridge = {
+          version: 1,
+          methods: {
+            getRouteState: function() {
+              return {
+                route: location.pathname,
+                title: document.title,
+                ready: true
+              };
+            },
+            navigateDetails: function() {
+              history.pushState({}, "", "/navigation/b");
+              document.title = "Triton WebView Navigation B";
+              document.getElementById("nav-title").textContent = "Triton WebView Navigation B";
+              document.getElementById("nav-route").textContent = "route=/navigation/b ready=true";
+              if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.triton) {
+                window.webkit.messageHandlers.triton.postMessage({
+                  type: "event",
+                  name: "navigation.changed",
+                  payload: { route: "/navigation/b" }
+                });
+              }
+              return { ok: true, route: "/navigation/b" };
+            }
+          }
+        };
+      </script>
+    </body>
+    </html>
+    """
+}
+
+struct WebViewSmokePanel: UIViewRepresentable {
+    let variant: WebViewSmokeVariant
+
+    final class Coordinator {
+        var loadedVariant: WebViewSmokeVariant?
+    }
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator()
+    }
+
+    func makeUIView(context: Context) -> WKWebView {
+        let webView = WKWebView(frame: .zero)
+        webView.accessibilityIdentifier = "WebViewSmokeWebView"
+        webView.scrollView.accessibilityIdentifier = "WebViewSmokeScrollView"
+        webView.isOpaque = false
+        webView.backgroundColor = .clear
+        load(webView, context: context)
+        return webView
+    }
+
+    func updateUIView(_ uiView: WKWebView, context: Context) {
+        guard context.coordinator.loadedVariant != variant else { return }
+        load(uiView, context: context)
+    }
+
+    private func load(_ webView: WKWebView, context: Context) {
+        context.coordinator.loadedVariant = variant
+        webView.loadHTMLString(variant.html, baseURL: variant.baseURL)
+    }
 }
 
 final class UIKitSmokeView: UIView {

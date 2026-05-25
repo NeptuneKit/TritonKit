@@ -5,7 +5,7 @@ struct WebView: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "webview",
         abstract: "Inspect current WebView candidates without claiming DOM or bridge access",
-        subcommands: [WebViewList.self, WebViewCurrent.self, WebViewCurrentURL.self, WebViewCall.self, WebViewEvents.self]
+        subcommands: [WebViewList.self, WebViewCurrent.self, WebViewCurrentURL.self, WebViewSnapshot.self, WebViewCall.self, WebViewEvents.self]
     )
 }
 
@@ -125,6 +125,40 @@ struct WebViewCurrentURL: AsyncParsableCommand {
             runtimeBaseURL: runtimeBaseURL,
             webViewID: webviewID,
             output: output,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct WebViewSnapshot: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "snapshot", abstract: "Read a bounded WebView DOM/text/forms/link snapshot")
+
+    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform = .ios
+    @Option(help: "Target id from `triton list` or Harmony hdc target") var target: String = TKLocalTargetID
+    @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
+    @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
+    @Option(help: "Select a candidate id from `triton webview list`") var webviewID: String?
+    @Option(help: "Expected page session id from `triton webview current`") var pageSessionID: String?
+    @Option(help: "Comma-separated include list: metadata,dom,text,forms,links") var include: String = "metadata,dom,text,forms,links"
+    @Option(help: "Maximum DOM node summaries to return") var maxDOMNodes: Int?
+    @Option(help: "Maximum text bytes to return") var maxTextBytes: Int?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runWebViewSnapshot(
+            platform: platform,
+            target: target,
+            host: host,
+            port: port,
+            runtimeBaseURL: runtimeBaseURL,
+            webViewID: webviewID,
+            pageSessionID: pageSessionID,
+            include: include,
+            maxDOMNodes: maxDOMNodes,
+            maxTextBytes: maxTextBytes,
             format: format,
             json: json
         )

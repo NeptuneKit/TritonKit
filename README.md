@@ -399,12 +399,24 @@ triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json 
 
 `xctrace record` and `coverage report` are artifact commands. They return paths, source commands, and byte summaries; they do not inline large `.trace` or coverage payloads and do not prove app business readiness by themselves. Stdout-backed artifact writes reject existing files and symbolic links by default to avoid accidental overwrite during agent runs.
 
-HarmonyOS NEXT / DevEco Emulator P0 discovery is exposed through the same host-side contract. It does not require a running TritonKit embedded runtime:
+Common host device discovery, selection, readiness, and screenshots are exposed through `triton device --platform ios|harmony`. Keep `triton sim` for iOS-only advanced maintenance such as runtime, privacy, location, status bar, pasteboard, push, logs, and diagnostics.
+
+```bash
+triton device doctor --platform ios --json
+triton device list --platform ios --json
+triton device use --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
+triton device wait-ready --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
+triton device screenshot --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --output /tmp/sim.png --json
+```
+
+HarmonyOS NEXT / DevEco Emulator host-side discovery does not require a running TritonKit embedded runtime:
 
 ```bash
 triton device doctor --platform harmony --json
 triton device list --platform harmony --json
+triton device use --platform harmony --target 127.0.0.1:10100 --json
 triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
+triton device screenshot --platform harmony --target 127.0.0.1:10100 --output /tmp/smoke.jpeg --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
 triton app install --platform harmony --hap /tmp/Demo.hap --target 127.0.0.1:10100 --json
 triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json

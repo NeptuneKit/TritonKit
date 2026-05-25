@@ -662,6 +662,10 @@ public enum TKHarmonyHDCCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "uitest", "uiInput", "text", text], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
+    public static func inputTextAt(target: String, x: Int, y: Int, text: String, executable: String = "hdc") -> TKHostCommand {
+        TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "uitest", "uiInput", "inputText", "\(x)", "\(y)", text], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
     public static func dumpLayout(target: String, executable: String = "hdc") -> TKHostCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "uitest", "dumpLayout"], riskLevel: .evidence, requiredConfig: [.target, .timeout, .auditRecord], capturesArtifacts: true, sensitiveOutput: true)
     }
@@ -672,6 +676,18 @@ public enum TKHarmonyHDCCommand {
 
     public static func tapCoordinate(target: String, x: Int, y: Int, executable: String = "hdc") -> TKHostCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "uitest", "uiInput", "click", "\(x)", "\(y)"], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func swipeCoordinate(target: String, startX: Int, startY: Int, endX: Int, endY: Int, velocity: Int? = nil, executable: String = "hdc") -> TKHostCommand {
+        var arguments = ["-t", target, "shell", "uitest", "uiInput", "swipe", "\(startX)", "\(startY)", "\(endX)", "\(endY)"]
+        if let velocity {
+            arguments.append("\(velocity)")
+        }
+        return TKHostCommand(executable: executable, arguments: arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
+    public static func keyEvent(target: String, key: String, executable: String = "hdc") -> TKHostCommand {
+        TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "uitest", "uiInput", "keyEvent", key], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func screenshot(target: String, remotePath: String, executable: String = "hdc") -> TKHostCommand {

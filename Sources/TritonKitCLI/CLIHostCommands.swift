@@ -896,6 +896,76 @@ enum HostAppPlatform: String, ExpressibleByArgument {
     case harmony
 }
 
+private func hostDevicePlatform(from platform: HostAppPlatform) -> HostDevicePlatform {
+    switch platform {
+    case .ios:
+        return .ios
+    case .harmony:
+        return .harmony
+    }
+}
+
+private func hostAppPlatform(from platform: HostDevicePlatform) -> HostAppPlatform {
+    switch platform {
+    case .ios:
+        return .ios
+    case .harmony:
+        return .harmony
+    }
+}
+
+private func hostDeviceSelectionRequest(
+    device: String?,
+    platform: HostAppPlatform?,
+    defaultPlatform: HostDevicePlatform?,
+    name: String?,
+    runtime: String?,
+    state: String?,
+    ready: Bool
+) -> HostDeviceSelectionRequest {
+    HostDeviceSelectionRequest(
+        device: device,
+        platform: platform.map(hostDevicePlatform(from:)) ?? defaultPlatform,
+        name: name,
+        runtime: runtime,
+        state: state,
+        ready: ready
+    )
+}
+
+func ensureHostDeviceSelectorCompatibility(device: String?, simulator: String?, target: String?) throws {
+    if device != nil && (simulator != nil || target != nil) {
+        throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --simulator or Harmony --target.")
+    }
+}
+
+private func resolveHostAppDeviceSelection(
+    device: String?,
+    platform: HostAppPlatform?,
+    defaultPlatform: HostDevicePlatform?,
+    simulator: String?,
+    target: String?,
+    name: String?,
+    runtime: String?,
+    state: String?,
+    ready: Bool,
+    hdc: String
+) throws -> HostDeviceSelectionResult {
+    try ensureHostDeviceSelectorCompatibility(device: device, simulator: simulator, target: target)
+    return try resolveHostDeviceSelection(
+        request: hostDeviceSelectionRequest(
+            device: device ?? simulator ?? target,
+            platform: platform,
+            defaultPlatform: defaultPlatform,
+            name: name,
+            runtime: runtime,
+            state: state,
+            ready: ready
+        ),
+        hdc: hdc
+    )
+}
+
 struct HostApp: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "app",
@@ -918,7 +988,12 @@ struct HostApp: AsyncParsableCommand {
 struct HostAppList: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "list", abstract: "List installed simulator apps")
 
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Flag(help: "Only include User apps") var userOnly = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -926,7 +1001,19 @@ struct HostAppList: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let result = try runHostCommand(TKSimctlCommand.listApps(udid: simulator))
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: .ios,
+                defaultPlatform: .ios,
+                simulator: simulator,
+                target: nil,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: "hdc"
+            )
+            let result = try runHostCommand(TKSimctlCommand.listApps(udid: selection.target.target))
             var apps = try TKSimctlAppInfoParser.parseList(result.stdoutData)
             if userOnly {
                 apps = apps.filter { $0.applicationType == "User" }
@@ -934,7 +1021,7 @@ struct HostAppList: AsyncParsableCommand {
             let output = HostAppListOutput(
                 ok: true,
                 action: "app.list",
-                simulatorUDID: simulator,
+                simulatorUDID: selection.target.target,
                 userOnly: userOnly,
                 count: apps.count,
                 apps: apps
@@ -956,7 +1043,12 @@ struct HostAppList: AsyncParsableCommand {
 struct HostAppInfo: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "info", abstract: "Show installed simulator app information")
 
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "App bundle identifier") var bundleID: String
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -964,12 +1056,24 @@ struct HostAppInfo: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let result = try runHostCommand(TKSimctlCommand.appInfo(udid: simulator, bundleID: bundleID))
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: .ios,
+                defaultPlatform: .ios,
+                simulator: simulator,
+                target: nil,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: "hdc"
+            )
+            let result = try runHostCommand(TKSimctlCommand.appInfo(udid: selection.target.target, bundleID: bundleID))
             let app = try TKSimctlAppInfoParser.parseAppInfo(result.stdoutData, bundleID: bundleID)
             let output = HostAppInfoOutput(
                 ok: true,
                 action: "app.info",
-                simulatorUDID: simulator,
+                simulatorUDID: selection.target.target,
                 bundleID: bundleID,
                 app: app
             )
@@ -1016,18 +1120,37 @@ struct HostAppInspect: AsyncParsableCommand {
 struct HostAppInstall: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "install", abstract: "Install an app bundle into a simulator or emulator")
 
-    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform = .ios
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to .app bundle") var app: String?
     @Option(help: "Path to Harmony .hap package") var hap: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        switch platform {
+        let effectivePlatform = platform ?? (hap != nil ? .harmony : .ios)
+        do {
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: effectivePlatform,
+                defaultPlatform: nil,
+                simulator: simulator,
+                target: target,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: hdc
+            )
+            switch hostAppPlatform(from: selection.platform) {
         case .ios:
             guard let app else {
                 try failHostValidation(
@@ -1039,8 +1162,9 @@ struct HostAppInstall: AsyncParsableCommand {
             }
             try runSimpleHostCommand(
                 action: "app.install",
-                target: "sim:\(simulator)",
-                command: TKSimctlCommand.installApp(udid: simulator, appPath: app),
+                target: "sim:\(selection.target.target)",
+                selection: selection,
+                command: TKSimctlCommand.installApp(udid: selection.target.target, appPath: app),
                 outputFormat: outputFormat,
                 artifacts: [app],
                 note: "App install was requested; verify with `triton app list --user-only --json` or `triton app info --bundle-id <id> --json`."
@@ -1054,20 +1178,19 @@ struct HostAppInstall: AsyncParsableCommand {
                     outputFormat: outputFormat
                 )
             }
-            do {
-                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
-                try runSimpleHostCommand(
-                    action: "app.install",
-                    runtimeScope: "host-harmony",
-                    target: "harmony:\(selected.target)",
-                    command: TKHarmonyHDCCommand.installHap(target: selected.target, hapPath: hap, executable: hdc),
-                    outputFormat: outputFormat,
-                    artifacts: [hap],
-                    note: "Harmony HAP install was requested; verify with `triton app inspect --platform harmony --bundle <bundle> --json` or launch + wait."
-                )
-            } catch {
-                try failHostCommand(error, outputFormat: outputFormat)
+            try runSimpleHostCommand(
+                action: "app.install",
+                runtimeScope: "host-harmony",
+                target: "harmony:\(selection.target.target)",
+                selection: selection,
+                command: TKHarmonyHDCCommand.installHap(target: selection.target.target, hapPath: hap, executable: hdc),
+                outputFormat: outputFormat,
+                artifacts: [hap],
+                note: "Harmony HAP install was requested; verify with `triton app inspect --platform harmony --bundle <bundle> --json` or launch + wait."
+            )
             }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
         }
     }
 }
@@ -1075,7 +1198,12 @@ struct HostAppInstall: AsyncParsableCommand {
 struct HostAppUninstall: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "uninstall", abstract: "Uninstall an app from a simulator")
 
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "App bundle identifier") var bundleID: String
     @Flag(help: "Confirm uninstalling the app from the simulator") var confirm = false
     @Flag(help: "Alias for --format json") var json = false
@@ -1091,32 +1219,69 @@ struct HostAppUninstall: AsyncParsableCommand {
                 outputFormat: outputFormat
             )
         }
-        try runSimpleHostCommand(
-            action: "app.uninstall",
-            target: "sim:\(simulator)/app:\(bundleID)",
-            command: TKSimctlCommand.uninstallApp(udid: simulator, bundleID: bundleID),
-            outputFormat: outputFormat,
-            note: "App uninstall was requested; verify with `triton app info --bundle-id <id> --json` or `triton app list --user-only --json`."
-        )
+        do {
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: .ios,
+                defaultPlatform: .ios,
+                simulator: simulator,
+                target: nil,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: "hdc"
+            )
+            try runSimpleHostCommand(
+                action: "app.uninstall",
+                target: "sim:\(selection.target.target)/app:\(bundleID)",
+                selection: selection,
+                command: TKSimctlCommand.uninstallApp(udid: selection.target.target, bundleID: bundleID),
+                outputFormat: outputFormat,
+                note: "App uninstall was requested; verify with `triton app info --bundle-id <id> --json` or `triton app list --user-only --json`."
+            )
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
     }
 }
 
 struct HostAppLaunch: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "launch", abstract: "Launch an installed simulator app")
 
-    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform = .ios
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "iOS app bundle identifier") var bundleID: String?
     @Option(help: "Harmony bundle name") var bundle: String?
     @Option(help: "Harmony ability name") var ability: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        switch platform {
+        do {
+            try ensureHostDeviceSelectorCompatibility(device: device, simulator: simulator, target: target)
+            let defaultPlatform: HostDevicePlatform? = platform == nil && device == nil ? (bundle != nil ? .harmony : .ios) : nil
+            let selection = try resolveHostDeviceSelection(
+                request: hostDeviceSelectionRequest(
+                    device: device ?? simulator ?? target,
+                    platform: platform,
+                    defaultPlatform: defaultPlatform,
+                    name: name,
+                    runtime: runtime,
+                    state: state,
+                    ready: ready
+                ),
+                hdc: hdc
+            )
+            switch hostAppPlatform(from: selection.platform) {
         case .ios:
             guard let bundleID else {
                 try failHostValidation(
@@ -1128,8 +1293,9 @@ struct HostAppLaunch: AsyncParsableCommand {
             }
             try runSimpleHostCommand(
                 action: "app.launch",
-                target: "sim:\(simulator)/app:\(bundleID)",
-                command: TKSimctlCommand.launchApp(udid: simulator, bundleID: bundleID),
+                target: "sim:\(selection.target.target)/app:\(bundleID)",
+                selection: selection,
+                command: TKSimctlCommand.launchApp(udid: selection.target.target, bundleID: bundleID),
                 outputFormat: outputFormat,
                 note: "App launch was requested; verify readiness with `triton status`, `triton wait`, or `triton app prefs get`."
             )
@@ -1142,19 +1308,18 @@ struct HostAppLaunch: AsyncParsableCommand {
                     outputFormat: outputFormat
                 )
             }
-            do {
-                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
-                try runSimpleHostCommand(
-                    action: "app.launch",
-                    runtimeScope: "host-harmony",
-                    target: "harmony:\(selected.target)/app:\(bundle)",
-                    command: TKHarmonyHDCCommand.appLaunch(target: selected.target, bundleName: bundle, abilityName: ability, executable: hdc),
-                    outputFormat: outputFormat,
-                    note: "Harmony app launch was requested; verify readiness with `triton ax --platform harmony`, screenshot, or logs."
-                )
-            } catch {
-                try failHostCommand(error, outputFormat: outputFormat)
+            try runSimpleHostCommand(
+                action: "app.launch",
+                runtimeScope: "host-harmony",
+                target: "harmony:\(selection.target.target)/app:\(bundle)",
+                selection: selection,
+                command: TKHarmonyHDCCommand.appLaunch(target: selection.target.target, bundleName: bundle, abilityName: ability, executable: hdc),
+                outputFormat: outputFormat,
+                note: "Harmony app launch was requested; verify readiness with `triton ax --platform harmony`, screenshot, or logs."
+            )
             }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
         }
     }
 }
@@ -1162,18 +1327,37 @@ struct HostAppLaunch: AsyncParsableCommand {
 struct HostAppTerminate: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "terminate", abstract: "Terminate a running simulator or Harmony app")
 
-    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform = .ios
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "iOS app bundle identifier") var bundleID: String?
     @Option(help: "Harmony bundle name") var bundle: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        switch platform {
+        let effectivePlatform = platform ?? (bundle != nil ? .harmony : .ios)
+        do {
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: effectivePlatform,
+                defaultPlatform: nil,
+                simulator: simulator,
+                target: target,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: hdc
+            )
+            switch hostAppPlatform(from: selection.platform) {
         case .ios:
             guard let bundleID else {
                 try failHostValidation(
@@ -1185,8 +1369,9 @@ struct HostAppTerminate: AsyncParsableCommand {
             }
             try runSimpleHostCommand(
                 action: "app.terminate",
-                target: "sim:\(simulator)/app:\(bundleID)",
-                command: TKSimctlCommand.terminateApp(udid: simulator, bundleID: bundleID),
+                target: "sim:\(selection.target.target)/app:\(bundleID)",
+                selection: selection,
+                command: TKSimctlCommand.terminateApp(udid: selection.target.target, bundleID: bundleID),
                 outputFormat: outputFormat,
                 note: "App terminate was requested."
             )
@@ -1199,19 +1384,18 @@ struct HostAppTerminate: AsyncParsableCommand {
                     outputFormat: outputFormat
                 )
             }
-            do {
-                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
-                try runSimpleHostCommand(
-                    action: "app.terminate",
-                    runtimeScope: "host-harmony",
-                    target: "harmony:\(selected.target)/app:\(bundle)",
-                    command: TKHarmonyHDCCommand.forceStop(target: selected.target, bundleName: bundle, executable: hdc),
-                    outputFormat: outputFormat,
-                    note: "Harmony force-stop was requested."
-                )
-            } catch {
-                try failHostCommand(error, outputFormat: outputFormat)
+            try runSimpleHostCommand(
+                action: "app.terminate",
+                runtimeScope: "host-harmony",
+                target: "harmony:\(selection.target.target)/app:\(bundle)",
+                selection: selection,
+                command: TKHarmonyHDCCommand.forceStop(target: selection.target.target, bundleName: bundle, executable: hdc),
+                outputFormat: outputFormat,
+                note: "Harmony force-stop was requested."
+            )
             }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
         }
     }
 }
@@ -1220,11 +1404,16 @@ struct HostAppOpenURL: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "open-url", abstract: "Open a URL in a simulator or Harmony app")
 
     @Argument(help: "URL to open") var url: String
-    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform = .ios
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Harmony bundle name") var bundle: String?
     @Option(help: "Harmony ability name") var ability: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(name: .customLong("runtime-target"), help: "iOS embedded runtime target id from `triton list`") var runtimeTarget: String = TKLocalTargetID
     @Flag(name: .customLong("wait-ready"), help: "After opening the URL, wait until the embedded runtime is connected and has an active hierarchy") var waitReady = false
@@ -1240,13 +1429,28 @@ struct HostAppOpenURL: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        switch platform {
+        do {
+            try ensureHostDeviceSelectorCompatibility(device: device, simulator: simulator, target: target)
+            let defaultPlatform: HostDevicePlatform? = platform == nil && device == nil ? (bundle != nil ? .harmony : .ios) : nil
+            let selection = try resolveHostDeviceSelection(
+                request: hostDeviceSelectionRequest(
+                    device: device ?? simulator ?? target,
+                    platform: platform,
+                    defaultPlatform: defaultPlatform,
+                    name: name,
+                    runtime: runtime,
+                    state: state,
+                    ready: ready
+                ),
+                hdc: hdc
+            )
+            switch hostAppPlatform(from: selection.platform) {
         case .ios:
             if waitReady || snapshot {
                 do {
                     let include = snapshotInclude.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
                     let summary = try await runIOSAppOpenURLFlow(options: IOSAppOpenURLFlowOptions(
-                        simulator: simulator,
+                        simulator: selection.target.target,
                         runtimeTarget: runtimeTarget,
                         url: url,
                         waitReady: waitReady,
@@ -1277,8 +1481,9 @@ struct HostAppOpenURL: AsyncParsableCommand {
             } else {
                 try runSimpleHostCommand(
                     action: "app.open-url",
-                    target: "sim:\(simulator)",
-                    command: TKSimctlCommand.openURL(udid: simulator, url: url),
+                    target: "sim:\(selection.target.target)",
+                    selection: selection,
+                    command: TKSimctlCommand.openURL(udid: selection.target.target, url: url),
                     outputFormat: outputFormat,
                     note: "URL was submitted to the simulator; verify in-app completion with `triton wait`, `triton find`, or `triton assert`."
                 )
@@ -1292,19 +1497,18 @@ struct HostAppOpenURL: AsyncParsableCommand {
                     outputFormat: outputFormat
                 )
             }
-            do {
-                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
-                try runSimpleHostCommand(
-                    action: "app.open-url",
-                    runtimeScope: "host-harmony",
-                    target: "harmony:\(selected.target)/app:\(bundle)",
-                    command: TKHarmonyHDCCommand.appOpenURL(target: selected.target, bundleName: bundle, abilityName: ability, url: url, executable: hdc),
-                    outputFormat: outputFormat,
-                    note: "Harmony deep link was submitted; verify business completion with `triton wait --platform harmony`, `triton ax --platform harmony`, or screenshot."
-                )
-            } catch {
-                try failHostCommand(error, outputFormat: outputFormat)
+            try runSimpleHostCommand(
+                action: "app.open-url",
+                runtimeScope: "host-harmony",
+                target: "harmony:\(selection.target.target)/app:\(bundle)",
+                selection: selection,
+                command: TKHarmonyHDCCommand.appOpenURL(target: selection.target.target, bundleName: bundle, abilityName: ability, url: url, executable: hdc),
+                outputFormat: outputFormat,
+                note: "Harmony deep link was submitted; verify business completion with `triton wait --platform harmony`, `triton ax --platform harmony`, or screenshot."
+            )
             }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
         }
     }
 }
@@ -1312,7 +1516,12 @@ struct HostAppOpenURL: AsyncParsableCommand {
 struct HostAppContainer: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "container", abstract: "Print a simulator app container path")
 
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "App bundle identifier") var bundleID: String
     @Option(help: "Container kind: app, data, or groups") var kind: TKHostAppContainerKind = .data
     @Flag(help: "Alias for --format json") var json = false
@@ -1321,12 +1530,24 @@ struct HostAppContainer: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let result = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: kind))
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: .ios,
+                defaultPlatform: .ios,
+                simulator: simulator,
+                target: nil,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: "hdc"
+            )
+            let result = try runHostCommand(TKSimctlCommand.appContainer(udid: selection.target.target, bundleID: bundleID, kind: kind))
             let path = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
             let response = HostAppContainerOutput(
                 ok: true,
                 action: "app.container",
-                simulatorUDID: simulator,
+                simulatorUDID: selection.target.target,
                 bundleID: bundleID,
                 kind: kind.rawValue,
                 path: path
@@ -1354,13 +1575,35 @@ struct HostAppPrefs: AsyncParsableCommand {
 struct HostAppPrefsDump: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "dump", abstract: "Dump app preferences")
 
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "App bundle identifier") var bundleID: String
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
-        try printPreferences(simulator: simulator, bundleID: bundleID, key: nil, outputFormat: effectiveFormat(format, json: json))
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: .ios,
+                defaultPlatform: .ios,
+                simulator: simulator,
+                target: nil,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: "hdc"
+            )
+            try printPreferences(simulator: selection.target.target, bundleID: bundleID, key: nil, outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
     }
 }
 
@@ -1368,13 +1611,35 @@ struct HostAppPrefsGet: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "get", abstract: "Read one app preference value")
 
     @Argument(help: "Preference key") var key: String
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "App bundle identifier") var bundleID: String
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
-        try printPreferences(simulator: simulator, bundleID: bundleID, key: key, outputFormat: effectiveFormat(format, json: json))
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: .ios,
+                defaultPlatform: .ios,
+                simulator: simulator,
+                target: nil,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: "hdc"
+            )
+            try printPreferences(simulator: selection.target.target, bundleID: bundleID, key: key, outputFormat: outputFormat)
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
     }
 }
 
@@ -1383,19 +1648,41 @@ struct HostAppPrefsSet: AsyncParsableCommand {
 
     @Argument(help: "Preference key") var key: String
     @Argument(help: "JSON value to write") var value: String
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "App bundle identifier") var bundleID: String
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
-        try setPreference(
-            simulator: simulator,
-            bundleID: bundleID,
-            key: key,
-            value: value,
-            outputFormat: effectiveFormat(format, json: json)
-        )
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selection = try resolveHostAppDeviceSelection(
+                device: device,
+                platform: .ios,
+                defaultPlatform: .ios,
+                simulator: simulator,
+                target: nil,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready,
+                hdc: "hdc"
+            )
+            try setPreference(
+                simulator: selection.target.target,
+                bundleID: bundleID,
+                key: key,
+                value: value,
+                outputFormat: outputFormat
+            )
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
     }
 }
 
@@ -1403,22 +1690,18 @@ extension TKHostAppContainerKind: @retroactive ExpressibleByArgument {}
 
 // MARK: - Cross-Platform Host Device Commands
 
-enum HostPlatform: String, ExpressibleByArgument {
-    case harmony
-}
-
 struct Device: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "device",
         abstract: "Discover and inspect host-side devices and emulators",
-        subcommands: [DeviceDoctor.self, DeviceList.self, DeviceUse.self, DeviceWaitReady.self, DeviceRuntimeURL.self]
+        subcommands: [DeviceDoctor.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self]
     )
 }
 
 struct DeviceDoctor: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "doctor", abstract: "Probe platform host tools")
 
-    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform = .harmony
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Optional path to DevEco Emulator executable") var emulator: String?
     @Flag(help: "Alias for --format json") var json = false
@@ -1426,17 +1709,31 @@ struct DeviceDoctor: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
-        let hdcProbe = probeHostTool(name: "hdc", command: TKHarmonyHDCCommand.version(executable: hdc))
-        let emulatorProbe = emulator.map { path in
-            probeHostTool(name: "emulator", command: TKHostCommand(executable: path, arguments: ["-version"]))
+        let output: HostDeviceDoctorOutput
+        switch platform {
+        case .ios:
+            let simctlProbe = probeHostTool(name: "simctl", command: TKHostCommand(executable: "xcrun", arguments: ["simctl", "help"]))
+            let xcodebuildProbe = probeHostTool(name: "xcodebuild", command: TKHostCommand(executable: "xcodebuild", arguments: ["-version"]))
+            output = HostDeviceDoctorOutput(
+                ok: simctlProbe.available && xcodebuildProbe.available,
+                platform: platform.rawValue,
+                tools: [simctlProbe, xcodebuildProbe],
+                capabilities: ["device.list", "device.use", "device.wait-ready", "device.screenshot", "ios.simctl-targets"],
+                artifactsSaved: false
+            )
+        case .harmony:
+            let hdcProbe = probeHostTool(name: "hdc", command: TKHarmonyHDCCommand.version(executable: hdc))
+            let emulatorProbe = emulator.map { path in
+                probeHostTool(name: "emulator", command: TKHostCommand(executable: path, arguments: ["-version"]))
+            }
+            output = HostDeviceDoctorOutput(
+                ok: hdcProbe.available && (emulatorProbe?.available ?? true),
+                platform: platform.rawValue,
+                tools: [hdcProbe] + Array(emulatorProbe.map { [$0] } ?? []),
+                capabilities: ["device.list", "device.use", "device.wait-ready", "device.runtime-url", "device.screenshot", "harmony.hdc-targets"],
+                artifactsSaved: false
+            )
         }
-        let output = HostDeviceDoctorOutput(
-            ok: hdcProbe.available,
-            platform: platform.rawValue,
-            tools: [hdcProbe] + Array(emulatorProbe.map { [$0] } ?? []),
-            capabilities: ["device.list", "device.wait-ready", "harmony.hdc-targets"],
-            artifactsSaved: false
-        )
         switch outputFormat {
         case .json:
             print(try encodeJSON(output))
@@ -1451,7 +1748,7 @@ struct DeviceDoctor: AsyncParsableCommand {
 struct DeviceList: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "list", abstract: "List platform targets")
 
-    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform = .harmony
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -1459,21 +1756,25 @@ struct DeviceList: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let result = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))
-            let targets = TKHdcTargetListParser.parse(result.stdout)
+            let result = try hostDeviceTargets(platform: platform, hdc: hdc)
             let output = HostDeviceListOutput(
                 ok: true,
                 platform: platform.rawValue,
-                targets: targets,
-                defaultTarget: TKHdcTargetListParser.defaultTarget(from: targets),
+                targets: result.targets,
+                defaultTarget: selectHostDeviceTarget(target: nil, candidates: result.targets),
                 sourceCommand: result.sourceCommand
             )
             switch outputFormat {
             case .json:
                 print(try encodeJSON(output))
             case .text:
-                for target in targets {
-                    print("\(target.target)\t\(target.state)\t\(target.transport)")
+                for target in result.targets {
+                    switch platform {
+                    case .ios:
+                        print("\(target.target)\t\(target.state)\t\(target.runtime ?? "-")\t\(target.name ?? "-")")
+                    case .harmony:
+                        print("\(target.target)\t\(target.state)\t\(target.transport ?? "-")")
+                    }
                 }
             }
         } catch {
@@ -1483,10 +1784,15 @@ struct DeviceList: AsyncParsableCommand {
 }
 
 struct DeviceUse: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "use", abstract: "Resolve one platform target")
+    static let configuration = CommandConfiguration(commandName: "use", abstract: "Set the current agent host target")
 
-    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
-    @Option(help: "Target id, for example 127.0.0.1:10100") var target: String?
+    @Argument(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
+    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -1494,12 +1800,174 @@ struct DeviceUse: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+            if selector != nil && target != nil {
+                throw HostDeviceSelectionError.parameterConflict("device use accepts either <selector> or --target, not both.")
+            }
+            let selected = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(device: selector ?? target, platform: platform, name: name, runtime: runtime, state: state, ready: ready),
+                hdc: hdc
+            )
+            var store = try loadHostTargetAliasStore()
+            store.current = selector ?? target ?? selected.selector
+            let defaultsPath = try saveHostTargetAliasStore(store)
             switch outputFormat {
             case .json:
-                print(try encodeJSON(HostDeviceUseOutput(ok: true, platform: platform.rawValue, target: selected)))
+                print(try encodeJSON(HostDeviceUseOutput(ok: true, platform: selected.platform.rawValue, target: selected.target, defaultsPath: defaultsPath, selection: selected)))
             case .text:
-                print(selected.target)
+                print(selected.target.target)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceCurrent: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "current", abstract: "Show the current agent host target")
+
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let store = try loadHostTargetAliasStore()
+            let path = HostTargetAliasStore.filePath(workspace: FileManager.default.currentDirectoryPath)
+            let selection = try store.current.map {
+                try resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: $0), hdc: hdc)
+            }
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(HostDeviceCurrentOutput(ok: true, current: store.current, selection: selection, path: path)))
+            case .text:
+                print(selection?.target.target ?? "")
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceResolve: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "resolve", abstract: "Resolve one host target selector without executing an action")
+
+    @Argument(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
+    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let selection = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(device: selector, platform: platform, name: name, runtime: runtime, state: state, ready: ready),
+                hdc: hdc
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(HostDeviceResolveOutput(ok: true, selection: selection)))
+            case .text:
+                print(selection.target.target)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceAlias: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "alias",
+        abstract: "Manage stable host target aliases",
+        subcommands: [DeviceAliasList.self, DeviceAliasSet.self, DeviceAliasRemove.self]
+    )
+}
+
+struct DeviceAliasList: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "list", abstract: "List host target aliases")
+
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let store = try loadHostTargetAliasStore()
+            let path = HostTargetAliasStore.filePath(workspace: FileManager.default.currentDirectoryPath)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(HostDeviceAliasListOutput(ok: true, current: store.current, aliases: store.aliases, path: path)))
+            case .text:
+                for name in store.aliases.keys.sorted() {
+                    if let alias = store.aliases[name] {
+                        print("\(name)\t\(alias.platform.rawValue)\t\(alias.target)")
+                    }
+                }
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceAliasSet: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "set", abstract: "Set a host target alias")
+
+    @Argument(help: "Alias name") var name: String
+    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform
+    @Option(help: "Raw platform target id: iOS UDID or Harmony HDC target") var target: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            guard name.range(of: #"^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$"#, options: .regularExpression) != nil else {
+                throw HostDeviceSelectionError.parameterConflict("Alias name must be 1-64 characters and use letters, digits, dot, underscore, or hyphen.")
+            }
+            var store = try loadHostTargetAliasStore()
+            let alias = HostTargetAlias(platform: platform, target: target)
+            store.aliases[name] = alias
+            let path = try saveHostTargetAliasStore(store)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(HostDeviceAliasMutationOutput(ok: true, action: "device.alias.set", name: name, alias: alias, path: path)))
+            case .text:
+                print(name)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceAliasRemove: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "remove", abstract: "Remove a host target alias")
+
+    @Argument(help: "Alias name") var name: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            var store = try loadHostTargetAliasStore()
+            let removed = store.aliases.removeValue(forKey: name)
+            if store.current == name {
+                store.current = nil
+            }
+            let path = try saveHostTargetAliasStore(store)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(HostDeviceAliasMutationOutput(ok: true, action: "device.alias.remove", name: name, alias: removed, path: path)))
+            case .text:
+                print(name)
             }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
@@ -1510,8 +1978,13 @@ struct DeviceUse: AsyncParsableCommand {
 struct DeviceWaitReady: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "wait-ready", abstract: "Wait until a platform target is ready")
 
-    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
-    @Option(help: "Target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready targets before waiting") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Timeout in seconds") var timeout: Double = 30
     @Option(help: "Polling interval in seconds") var interval: Double = 1
@@ -1521,33 +1994,64 @@ struct DeviceWaitReady: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
-            let deadline = Date().addingTimeInterval(timeout)
-            var attempt = 0
-            while Date() <= deadline {
-                attempt += 1
-                let command = TKHarmonyHDCCommand.bootCompleted(target: selected.target, executable: hdc)
-                let result = try runHostCommand(command)
-                let ready = TKHarmonyBootCompletedParser.isReady(result.stdout)
-                let event = HostDeviceReadyEvent(
-                    ok: ready,
-                    platform: platform.rawValue,
-                    target: selected,
-                    ready: ready,
-                    attempt: attempt,
-                    sourceCommand: result.sourceCommand,
-                    error: nil
-                )
-                switch outputFormat {
-                case .json:
-                    print(try encodeJSON(event))
-                case .text:
-                    print("\(selected.target)\tready=\(ready)")
-                }
-                if ready { return }
-                try await Task.sleep(nanoseconds: UInt64(max(0.1, interval) * 1_000_000_000))
+            if device != nil && target != nil {
+                throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --target.")
             }
-            try failHostCommand(HostCommandRunError.deviceNotReady(target: selected.target, timeoutSeconds: timeout), outputFormat: outputFormat)
+            let selection = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(device: device ?? target, platform: platform, name: name, runtime: runtime, state: state, ready: ready),
+                hdc: hdc
+            )
+            let event = try await waitForHostDeviceReady(
+                platform: selection.platform,
+                selected: selection.target,
+                hdc: hdc,
+                timeout: timeout,
+                interval: interval
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(event))
+            case .text:
+                print("\(event.target.target)\tready=\(event.ready)")
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceScreenshot: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "screenshot", abstract: "Capture a host-side device screenshot")
+
+    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Output image path") var output: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            if device != nil && target != nil {
+                throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --target.")
+            }
+            let selection = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(device: device ?? target, platform: platform, name: name, runtime: runtime, state: state, ready: ready),
+                hdc: hdc
+            )
+            let artifact = try captureHostDeviceScreenshot(platform: selection.platform, target: selection.target, selection: selection, hdc: hdc, output: output)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(artifact))
+            case .text:
+                print(output)
+            }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
         }
@@ -1557,7 +2061,7 @@ struct DeviceWaitReady: AsyncParsableCommand {
 struct DeviceRuntimeURL: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "runtime-url", abstract: "Prepare and print a Harmony embedded runtime base URL")
 
-    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Platform adapter: harmony") var platform: HostDevicePlatform = .harmony
     @Option(help: "Target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Local TCP port for host-side runtime access") var localPort: Int = TKHarmonyRuntimeDefaults.hostAccessPort
@@ -1570,6 +2074,9 @@ struct DeviceRuntimeURL: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            guard platform == .harmony else {
+                throw RuntimeError("device runtime-url only supports Harmony targets")
+            }
             try validateTCPPort(localPort, name: "--local-port")
             try validateTCPPort(remotePort, name: "--remote-port")
             let selected = try resolveHarmonyTarget(target: target, hdc: hdc)

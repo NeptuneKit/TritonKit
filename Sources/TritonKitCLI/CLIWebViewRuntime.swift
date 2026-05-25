@@ -220,6 +220,117 @@ private func normalizedRouteURL(_ value: String, ignoreQuery: Bool) -> String {
     return components.string ?? value
 }
 
+func runWebViewSnapshot(
+    platform: ObservationPlatform,
+    target: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    pageSessionID: String?,
+    include: String,
+    maxDOMNodes: Int?,
+    maxTextBytes: Int?,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    do {
+        let request = makeWebViewSnapshotRequest(
+            webViewID: webViewID,
+            pageSessionID: pageSessionID,
+            include: include,
+            maxDOMNodes: maxDOMNodes,
+            maxTextBytes: maxTextBytes
+        )
+        let payload = try JSONEncoder().encode(request)
+        let data: Data
+        switch platform {
+        case .ios:
+            if let runtimeBaseURL {
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewSnapshot, body: payload)
+            } else {
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                data = try await client.request(type: "webViewSnapshot", payload: payload)
+            }
+        case .harmony:
+            guard let runtimeBaseURL else {
+                throw RuntimeError("Harmony WebView snapshot requires --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
+            }
+            data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewSnapshot, body: payload)
+        }
+        switch try decodeWebViewSnapshotRuntimeResult(data) {
+        case .snapshot(let response):
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("webViewID: \(response.webView.webViewID)")
+                print("text: \(response.text.count)")
+                print("dom: \(response.dom.count)")
+                print("forms: \(response.forms.count)")
+                print("links: \(response.links.count)")
+                if response.truncation.truncated {
+                    print("truncated: \(response.truncation.reason ?? "true")")
+                }
+            }
+            if !response.ok {
+                throw ExitCode.failure
+            }
+        case .error(let response):
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("\(response.error.code): \(response.error.message)")
+            }
+            throw ExitCode.failure
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        if platform == .harmony, runtimeBaseURL == nil {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+enum WebViewSnapshotRuntimeResult {
+    case snapshot(TKWebViewSnapshotResponse)
+    case error(TKWebViewErrorResponse)
+}
+
+func decodeWebViewSnapshotRuntimeResult(_ data: Data) throws -> WebViewSnapshotRuntimeResult {
+    let decoder = JSONDecoder()
+    if let response = try? decoder.decode(TKWebViewSnapshotResponse.self, from: data) {
+        return .snapshot(response)
+    }
+    if let response = try? decoder.decode(TKWebViewErrorResponse.self, from: data) {
+        return .error(response)
+    }
+    return .snapshot(try decoder.decode(TKWebViewSnapshotResponse.self, from: data))
+}
+
+func makeWebViewSnapshotRequest(
+    webViewID: String?,
+    pageSessionID: String?,
+    include: String,
+    maxDOMNodes: Int?,
+    maxTextBytes: Int?
+) -> TKWebViewSnapshotRequest {
+    let includeItems = include
+        .split(separator: ",")
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+    return TKWebViewSnapshotRequest(
+        webViewID: webViewID,
+        pageSessionID: pageSessionID,
+        include: includeItems.isEmpty ? ["metadata", "dom", "text", "forms", "links"] : includeItems,
+        maxDOMNodes: maxDOMNodes,
+        maxTextBytes: maxTextBytes
+    )
+}
+
 func runWebViewCall(
     method: String,
     args: [String],

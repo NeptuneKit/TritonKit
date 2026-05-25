@@ -297,14 +297,15 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("logverbose [--simulator <udid>] enable|disable", "打开或关闭 verbose logging"),
             ("runtime list|verify", "查看 simulator runtime 或验证 runtime 签名"),
         ]),
-        "device": ChineseCommandHelp(name: "device", overview: "发现和检查 host-side 平台设备。", usage: "triton device <doctor|list|use|wait-ready|runtime-url> --platform harmony [选项]", options: formatTextJSON + [
-            ("--platform <platform>", "平台适配器，目前支持 harmony"),
+        "device": ChineseCommandHelp(name: "device", overview: "发现和检查 host-side 平台设备。", usage: "triton device <doctor|list|use|wait-ready|screenshot|runtime-url> --platform ios|harmony [选项]", options: formatTextJSON + [
+            ("--platform <platform>", "平台适配器：ios 或 harmony；默认 harmony 以保持兼容"),
             ("--hdc <path>", "HDC 可执行文件路径，默认 hdc"),
-            ("--target <target>", "Harmony target，例如 127.0.0.1:10100"),
+            ("--target <target>", "iOS simulator UDID 或 Harmony target，例如 127.0.0.1:10100"),
+            ("screenshot --output <path>", "通过统一入口采集 iOS/Harmony host-side 截图"),
             ("--timeout <seconds>", "wait-ready 超时时间，默认 30"),
             ("--local-port <port>", "runtime-url 本机 host-access 端口，默认 \(TKHarmonyRuntimeDefaults.hostAccessPort)"),
             ("--remote-port <port>", "runtime-url 设备端 embedded runtime host-access 端口，默认 \(TKHarmonyRuntimeDefaults.hostAccessPort)"),
-            ("--probe-manifest", "runtime-url 建立端口映射后验证 /v2/runtime/manifest"),
+            ("--probe-manifest", "runtime-url 建立 Harmony 端口映射后验证 /v2/runtime/manifest"),
         ]),
         "plan": ChineseCommandHelp(name: "plan", overview: "根据当前服务和目标状态输出推荐下一步；inspect 子动作可离线查看 .tritonplan 摘要。", usage: "triton plan [inspect <path>] [选项]", options: hostPort + formatTextJSON),
         "list": ChineseCommandHelp(name: "list", overview: "列出已连接的 TritonKit 目标。", usage: "triton list [选项]", options: hostPort + formatTextJSON + [

@@ -56,20 +56,22 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - when multiple runtime targets are connected and the command still relies on default `triton:local`, expect `error.code=ambiguous_target` instead of last-connection wins.
    - host-side simulator checks that do not require embedded runtime:
      - `triton sim list --json`
+     - `triton device alias set iphone15 --platform ios --target <udid> --json` for repeated multi-simulator validation;
+     - prefer `--device <alias-or-id>` on common host-side commands; keep `--simulator booted|<udid>` for compatibility checks;
      - `triton sim use <udid> --json`
      - `triton sim boot <udid> --wait --jsonl`
      - `triton sim screenshot --simulator booted --output /tmp/<case>-sim.png --json`
-     - `triton app list --simulator booted --user-only --json`
-     - `triton app info --bundle-id <bundle-id> --simulator booted --json`
-     - `triton app install --app <path.app> --simulator booted --json`
-     - `triton app uninstall --bundle-id <bundle-id> --simulator booted --confirm --json`
-     - `triton app launch --bundle-id <bundle-id> --simulator booted --json`
-     - `triton app terminate --bundle-id <bundle-id> --simulator booted --json`
-     - `triton app open-url '<url>' --simulator booted --json`
-     - `triton app open-url '<url>' --simulator booted --wait-ready --snapshot --json`
-     - `triton app container --bundle-id <bundle-id> --kind data --json`
-     - `triton app prefs get <key> --bundle-id <bundle-id> --json`
-     - `triton app prefs set <key> <json-value> --bundle-id <bundle-id> --json`
+     - `triton app list --device iphone15 --user-only --json`
+     - `triton app info --device iphone15 --bundle-id <bundle-id> --json`
+     - `triton app install --device iphone15 --app <path.app> --json`
+     - `triton app uninstall --device iphone15 --bundle-id <bundle-id> --confirm --json`
+     - `triton app launch --device iphone15 --bundle-id <bundle-id> --json`
+     - `triton app terminate --device iphone15 --bundle-id <bundle-id> --json`
+     - `triton app open-url '<url>' --device iphone15 --json`
+     - `triton app open-url '<url>' --device iphone15 --wait-ready --snapshot --json`
+     - `triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json`
+     - `triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json`
+     - `triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json`
      - `triton sim pair <watch-udid> <phone-udid> --json`
      - `triton sim unpair <pair-uuid> --json`
      - `triton sim clone <udid> "Clone for Smoke" --json`
@@ -86,17 +88,18 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - host-side Harmony checks that do not require embedded runtime:
      - `triton device doctor --platform harmony --json`
      - `triton device list --platform harmony --json`
-     - `triton device wait-ready --platform harmony --target <hdc-target> --json`
+     - `triton device alias set harmony-a --platform harmony --target <hdc-target> --json` for repeated multi-emulator validation;
+     - `triton device wait-ready --device harmony-a --json`
      - `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`
-     - `triton app install --platform harmony --hap <debug-signed.hap> --target <hdc-target> --json`
-     - `triton app launch --platform harmony --bundle <bundle> --ability <ability> --target <hdc-target> --json`
-     - `triton app open-url --platform harmony --bundle <bundle> --ability <ability> '<url>' --target <hdc-target> --json`
+     - `triton app install --device harmony-a --hap <debug-signed.hap> --json`
+     - `triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json`
+     - `triton app open-url --device harmony-a --bundle <bundle> --ability <ability> '<url>' --json`
      - `triton ax --platform harmony --target <hdc-target> --output /tmp/<case>-layout.json --json`
      - `triton wait --platform harmony --target <hdc-target> --text '<text>' --timeout 15 --json`
      - `triton tap '<text>' --platform harmony --target <hdc-target> --json`
-     - `triton screenshot --platform harmony --target <hdc-target> --output /tmp/<case>.jpeg --json`
-     - `triton smoke harmony --target <hdc-target> --bundle <bundle> --ability <ability> --open-url <url> --wait-text <text> --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json`
-     - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--target`.
+     - `triton screenshot --device harmony-a --output /tmp/<case>.jpeg --json`
+     - `triton smoke harmony --device harmony-a --bundle <bundle> --ability <ability> --open-url <url> --wait-text <text> --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json`
+     - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--device <alias-or-id>` or keep compatibility `--target`.
      - host-side layout and screenshot artifacts may contain private UI data; inspect or summarize instead of attaching raw files when redaction is uncertain.
      - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
    - Harmony embedded SDK feedback should distinguish generic HAR capability from app-provided semantics:

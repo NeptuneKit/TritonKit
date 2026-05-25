@@ -210,6 +210,13 @@ Harmony target 选择规则：
 - 支持 HVD 参数探测和失败摘要。
 - 不沉淀私有 trace pipe 协议为稳定产品契约。
 
+## 2026-05-25 验证记录
+
+- 本机 `Codex Test Phone` 已完成完整 Harmony smoke：`triton device list/wait-ready`、`ax`、`observe tree`、`screenshot`。
+- 真实 app smoke 已通过：安装 `/Users/linhey/Desktop/linhay-open-sources/harmony-tritonkit/entry/build/default/outputs/default/entry-default-unsigned.hap`，解锁后执行 `aa start -b com.neptunekit.tritonkit.collectorsmoke -a EntryAbility`，`aa dump -r` 里可见 `com.neptunekit.tritonkit.collectorsmoke` 进入 `FOREGROUND`。
+- embedded runtime smoke 已通过：`docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh --target 127.0.0.1:10100 --hap /Users/linhey/Desktop/linhay-open-sources/harmony-tritonkit/entry/build/default/outputs/default/entry-default-unsigned.hap` 返回 `ok=true`，`baseURL=http://127.0.0.1:28767`，`runtime-manifest`、`snapshot`、`ledger` 通过；`state.route` 返回 `unsupported_runtime_scope`，属于脚本允许的受限结果。
+- 证据文件：`docs-linhay/screenshots/20260525/harmony/20260525-harmony-emulator-visible-after-v02.png`、`docs-linhay/screenshots/20260525/harmony/20260525-harmony-collector-smoke-screen-after-start-v01.png`、`docs-linhay/screenshots/20260525/harmony/20260525-harmony-collector-smoke-ax-after-start-v01.json`。
+
 ## Harmony DEBUG-only 内置采集器
 
 结论：Harmony P0/P1 不依赖内置采集器，host-side `hdc` / `uitest` adapter 仍是首选入口。内置采集器只作为中长期增强，用于在业务 App 主动集成 TritonKit 时提供更高质量的 App 内状态、ArkUI 语义树、路由、脱敏快照和截图元数据。
@@ -331,5 +338,12 @@ Harmony target 选择规则：
 - 第二轮证据已归档：
   - `20260521-harmony-collector-layout-before-v02.json`
   - `20260521-harmony-collector-screen-before-v02.png`
-  - `20260521-harmony-collector-layout-after-v02.json`
-  - `20260521-harmony-collector-screen-after-v02.png`
+ - `20260521-harmony-collector-layout-after-v02.json`
+ - `20260521-harmony-collector-screen-after-v02.png`
+
+2026-05-25 全量对齐结论：
+
+- Harmony host action 层本轮已补齐 `swipe`、`type`、`paste`、`press` 的 host-side HDC 分支。
+- `clear` 已明确标记为 `unsupported_capability`，避免把缺口伪装成已对齐。
+- `webview list --platform harmony` 当前仍只有 host-layout 候选，`runtime-tree` 与 `webview-provider` 均未注册，因此 `current-url`、`snapshot`、`call`、`events` 仍未达到 iOS provider 级对齐。
+- 完整报告见 [20260525 Harmony 全量对齐报告](./20260525-full-alignment-report.md)。

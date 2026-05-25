@@ -461,7 +461,9 @@ struct Tap: AsyncParsableCommand {
 struct Swipe: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Swipe inside the app using window-point coordinates")
 
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -476,6 +478,61 @@ struct Swipe: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
+        if platform == .harmony {
+            do {
+                if width != nil || height != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Harmony host swipe uses absolute screen coordinates and does not support --width or --height normalization.",
+                        hint: "Use coordinates from `triton observe tree --platform harmony --json` or screenshot pixels.",
+                        outputFormat: outputFormat
+                    )
+                }
+                if let duration, duration <= 0 {
+                    try failHostValidation(
+                        code: "validation_failed",
+                        message: "--duration must be greater than 0.",
+                        hint: "Omit --duration to use the Harmony uitest default velocity.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let command = TKHarmonyHDCCommand.swipeCoordinate(
+                    target: selected.target,
+                    startX: Int(startX.rounded()),
+                    startY: Int(startY.rounded()),
+                    endX: Int(endX.rounded()),
+                    endY: Int(endY.rounded()),
+                    velocity: harmonySwipeVelocity(startX: startX, startY: startY, endX: endX, endY: endY, duration: duration),
+                    executable: hdc
+                )
+                let result = try runHostCommand(command)
+                let response = HostHarmonySwipeOutput(
+                    ok: true,
+                    action: "swipe",
+                    platform: "harmony",
+                    target: selected,
+                    startX: Int(startX.rounded()),
+                    startY: Int(startY.rounded()),
+                    endX: Int(endX.rounded()),
+                    endY: Int(endY.rounded()),
+                    velocity: harmonySwipeVelocity(startX: startX, startY: startY, endX: endX, endY: endY, duration: duration),
+                    sourceCommands: [result.sourceCommand],
+                    note: "Harmony swipe was submitted through uitest; verify business state with wait, ax, or screenshot."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print("\(response.startX),\(response.startY) -> \(response.endX),\(response.endY)")
+                }
+            } catch {
+                if error is ExitCode { throw error }
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
+        }
+
         do {
             let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             let request = TKInputRequest.swipe(
@@ -489,6 +546,9 @@ struct Swipe: AsyncParsableCommand {
             )
             try await runInputRequest(request, client: client, format: outputFormat)
         } catch {
+            if platform == .harmony {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
     }
@@ -501,7 +561,9 @@ struct TypeText: AsyncParsableCommand {
     )
 
     @Argument(help: "Text to insert") var textArgument: String?
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -522,13 +584,46 @@ struct TypeText: AsyncParsableCommand {
                 }
                 throw RuntimeError("Provide exactly one text value: <text> or --text")
             }
+            let value = textArgument ?? text ?? ""
+            if platform == .harmony {
+                if oid != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Harmony host type currently targets the focused field only and does not support --oid.",
+                        hint: "Focus the field with `triton tap --platform harmony` first, then run `triton type --platform harmony <text>`.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let command = TKHarmonyHDCCommand.inputText(target: selected.target, text: value, executable: hdc)
+                let result = try runHostCommand(command)
+                let response = HostHarmonyTextInputOutput(
+                    ok: true,
+                    action: "type",
+                    platform: "harmony",
+                    target: selected,
+                    x: nil,
+                    y: nil,
+                    secure: secure,
+                    redacted: secure,
+                    insertedLength: value.count,
+                    sourceCommands: [harmonyTextSourceCommand(command, text: value, secure: secure)],
+                    note: "Harmony text input was submitted to the focused field through uitest; verify field state with wait, ax, or screenshot."
+                )
+                try printHarmonyTextInput(response, format: outputFormat)
+                _ = result
+                return
+            }
             let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
-                TKInputRequest(type: .typeText, targetOID: oid, text: textArgument ?? text, secure: secure),
+                TKInputRequest(type: .typeText, targetOID: oid, text: value, secure: secure),
                 client: client,
                 format: outputFormat
             )
         } catch {
+            if platform == .harmony {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
     }
@@ -541,7 +636,9 @@ struct PasteText: AsyncParsableCommand {
     )
 
     @Argument(help: "Text to paste") var text: String
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -556,6 +653,48 @@ struct PasteText: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
+            if platform == .harmony {
+                if oid != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Harmony host paste currently supports focused input or coordinate focus, not --oid.",
+                        hint: "Use `--at x,y` or tap the field before pasting.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                var sourceCommands: [String] = []
+                let focusX = point?.x ?? x
+                let focusY = point?.y ?? y
+                if let focusX, let focusY {
+                    let tapCommand = TKHarmonyHDCCommand.tapCoordinate(target: selected.target, x: Int(focusX.rounded()), y: Int(focusY.rounded()), executable: hdc)
+                    let tapResult = try runHostCommand(tapCommand)
+                    sourceCommands.append(tapResult.sourceCommand)
+                }
+                let inputCommand: TKHostCommand
+                if let focusX, let focusY {
+                    inputCommand = TKHarmonyHDCCommand.inputTextAt(target: selected.target, x: Int(focusX.rounded()), y: Int(focusY.rounded()), text: text, executable: hdc)
+                } else {
+                    inputCommand = TKHarmonyHDCCommand.inputText(target: selected.target, text: text, executable: hdc)
+                }
+                _ = try runHostCommand(inputCommand)
+                sourceCommands.append(harmonyTextSourceCommand(inputCommand, text: text, secure: secure))
+                let response = HostHarmonyTextInputOutput(
+                    ok: true,
+                    action: "paste",
+                    platform: "harmony",
+                    target: selected,
+                    x: focusX.map { Int($0.rounded()) },
+                    y: focusY.map { Int($0.rounded()) },
+                    secure: secure,
+                    redacted: secure,
+                    insertedLength: text.count,
+                    sourceCommands: sourceCommands,
+                    note: "Harmony paste is implemented as focused uitest text insertion; verify final field state with wait, ax, or screenshot."
+                )
+                try printHarmonyTextInput(response, format: outputFormat)
+                return
+            }
             let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
                 TKInputRequest.paste(text, targetOID: oid, x: point?.x ?? x, y: point?.y ?? y, secure: secure),
@@ -563,6 +702,9 @@ struct PasteText: AsyncParsableCommand {
                 format: outputFormat
             )
         } catch {
+            if platform == .harmony {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
     }
@@ -574,7 +716,9 @@ struct ClearText: AsyncParsableCommand {
         abstract: "Clear a focused, coordinate-targeted, or oid-targeted input"
     )
 
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -587,6 +731,15 @@ struct ClearText: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            if platform == .harmony {
+                _ = try resolveHarmonyTarget(target: target, hdc: hdc)
+                try failHostValidation(
+                    code: "unsupported_capability",
+                    message: "Harmony host clear is not implemented because uitest does not expose a stable clear-current-field primitive.",
+                    hint: "Use a provider semantic action or replace the field value through an app-level DEBUG runtime when available.",
+                    outputFormat: outputFormat
+                )
+            }
             let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
             let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
@@ -595,6 +748,9 @@ struct ClearText: AsyncParsableCommand {
                 format: outputFormat
             )
         } catch {
+            if platform == .harmony {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
     }
@@ -604,7 +760,9 @@ struct Press: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Press a device button when supported by the active runtime")
 
     @Argument(help: "Button name, for example home, lock, power, volume-up") var buttonArgument: String?
+    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -623,15 +781,80 @@ struct Press: AsyncParsableCommand {
                 }
                 throw RuntimeError("Provide exactly one button value: <button> or --button")
             }
+            let value = buttonArgument ?? button ?? ""
+            if platform == .harmony {
+                if duration != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Harmony host press does not support hold duration through uitest keyEvent.",
+                        hint: "Omit --duration, or use a platform-specific provider when long press semantics are required.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                let key = harmonyKeyEventName(for: value)
+                let command = TKHarmonyHDCCommand.keyEvent(target: selected.target, key: key, executable: hdc)
+                try runSimpleHostCommand(
+                    action: "press",
+                    runtimeScope: "host-harmony",
+                    target: "harmony:\(selected.target)",
+                    command: command,
+                    outputFormat: outputFormat,
+                    note: "Harmony keyEvent \(key) was submitted through uitest; verify business state with wait, ax, or screenshot."
+                )
+                return
+            }
             let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
             try await runInputRequest(
-                TKInputRequest.press(button: buttonArgument ?? button ?? "", duration: duration),
+                TKInputRequest.press(button: value, duration: duration),
                 client: client,
                 format: outputFormat
             )
         } catch {
+            if platform == .harmony {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
+    }
+}
+
+func harmonySwipeVelocity(startX: Double, startY: Double, endX: Double, endY: Double, duration: Double?) -> Int? {
+    guard let duration else { return nil }
+    let distance = hypot(endX - startX, endY - startY)
+    let velocity = Int((distance / max(duration, 0.01)).rounded())
+    return min(40_000, max(200, velocity))
+}
+
+func harmonyTextSourceCommand(_ command: TKHostCommand, text: String, secure: Bool) -> String {
+    guard secure else {
+        return hostSourceCommand(command)
+    }
+    let redacted = "<redacted:length=\(text.count)>"
+    return ([command.executable] + command.arguments.map { $0 == text ? redacted : $0 })
+        .map(shellEscaped)
+        .joined(separator: " ")
+}
+
+func harmonyKeyEventName(for button: String) -> String {
+    switch button.lowercased() {
+    case "home":
+        return "Home"
+    case "back":
+        return "Back"
+    case "power", "lock":
+        return "Power"
+    default:
+        return button
+    }
+}
+
+func printHarmonyTextInput(_ response: HostHarmonyTextInputOutput, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(response))
+    case .text:
+        print("\(response.action): insertedLength=\(response.insertedLength)")
     }
 }
 
@@ -790,8 +1013,13 @@ struct Hit: AsyncParsableCommand {
 struct Screenshot: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Capture current app screenshot as PNG")
 
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
-    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Host platform adapter: ios or harmony") var platform: HostDevicePlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Target id from `triton list` or compatibility host target") var target: String = TKLocalTargetID
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted or connected") var state: String?
+    @Flag(help: "Only match ready host targets") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -801,18 +1029,28 @@ struct Screenshot: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat: ClientOutputFormat = metadata || json ? .json : .text
-        if platform == .harmony {
+        if platform != nil || device != nil {
             do {
-                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
-                let result = try captureHarmonyScreenshot(selected: selected, hdc: hdc, output: output)
-                let response = HostHarmonyArtifactOutput(
-                    ok: true,
-                    action: "screenshot",
-                    platform: "harmony",
-                    target: selected,
-                    artifact: output,
-                    sourceCommands: result.sourceCommands,
-                    note: "Harmony screenshot was captured through snapshot_display using remote artifact \(result.remotePath); screenshot contents may contain private UI data."
+                if device != nil && target != TKLocalTargetID {
+                    throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --target.")
+                }
+                let selection = try resolveHostDeviceSelection(
+                    request: HostDeviceSelectionRequest(
+                        device: device ?? (target == TKLocalTargetID ? nil : target),
+                        platform: platform,
+                        name: name,
+                        runtime: runtime,
+                        state: state,
+                        ready: ready
+                    ),
+                    hdc: hdc
+                )
+                let response = try captureHostDeviceScreenshot(
+                    platform: selection.platform,
+                    target: selection.target,
+                    selection: selection,
+                    hdc: hdc,
+                    output: output
                 )
                 switch outputFormat {
                 case .json:

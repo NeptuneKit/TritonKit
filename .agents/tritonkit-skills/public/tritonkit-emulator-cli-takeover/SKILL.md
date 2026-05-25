@@ -64,6 +64,26 @@ When changing iOS / Harmony / CLI onboarding or usage guides, keep these entry p
 
 ## Current Implemented Surface
 
+Cross-platform host device entry:
+
+```bash
+triton device doctor --platform ios --json
+triton device doctor --platform harmony --json
+triton device list --platform ios --json
+triton device list --platform harmony --json
+triton device alias set iphone15 --platform ios --target <simulator-udid> --json
+triton device alias set harmony-a --platform harmony --target <hdc-target> --json
+triton device use iphone15 --json
+triton device current --json
+triton device resolve iphone15 --json
+triton device wait-ready --device iphone15 --json
+triton device wait-ready --device harmony-a --json
+triton device screenshot --device iphone15 --output /tmp/<case>-sim.png --json
+triton device screenshot --device harmony-a --output /tmp/<case>.jpeg --json
+```
+
+Use `--device <selector>` as the default agent-facing target selector for common host-side commands. Selectors can be aliases, full ids such as `sim:<udid>` / `harmony:<target>`, raw platform ids, `booted`, or `current`. `--platform`, `--name`, `--runtime`, `--state`, and `--ready` are filters; they may auto-select only when the filtered candidate set is unique. Keep `sim` for iOS-only advanced maintenance and `device runtime-url` for Harmony embedded runtime port-forward setup.
+
 iOS Simulator:
 
 ```bash
@@ -106,19 +126,19 @@ triton sim personalization remove-personalization <id> --confirm --json
 triton sim personalization revoke-manifests --confirm --json
 triton sim personalization scan-and-personalize --json
 
-triton app list --simulator <udid-or-booted> --user-only --json
-triton app info --bundle-id <bundle-id> --simulator <udid-or-booted> --json
-triton app install --app <path.app> --simulator <udid-or-booted> --json
-triton app uninstall --bundle-id <bundle-id> --simulator <udid-or-booted> --confirm --json
-triton app launch --bundle-id <bundle-id> --simulator <udid-or-booted> --json
-triton app terminate --bundle-id <bundle-id> --simulator <udid-or-booted> --json
-triton app open-url '<url>' --simulator <udid-or-booted> --json
-triton app open-url '<url>' --simulator <udid-or-booted> --wait-ready --snapshot --json
-triton app container --bundle-id <bundle-id> --kind data --simulator <udid-or-booted> --json
-triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> --json
-triton app prefs dump --bundle-id <bundle-id> --simulator <udid-or-booted> --json
-triton app prefs set <key> <json-value> --bundle-id <bundle-id> --simulator <udid-or-booted> --json
-triton smoke ios --simulator <udid-or-booted> --bundle-id <bundle-id> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.png --evidence /tmp/<case>.tritonevidence --json
+triton app list --device iphone15 --user-only --json
+triton app info --device iphone15 --bundle-id <bundle-id> --json
+triton app install --device iphone15 --app <path.app> --json
+triton app uninstall --device iphone15 --bundle-id <bundle-id> --confirm --json
+triton app launch --device iphone15 --bundle-id <bundle-id> --json
+triton app terminate --device iphone15 --bundle-id <bundle-id> --json
+triton app open-url '<url>' --device iphone15 --json
+triton app open-url '<url>' --device iphone15 --wait-ready --snapshot --json
+triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json
+triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json
+triton app prefs dump --device iphone15 --bundle-id <bundle-id> --json
+triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json
+triton smoke ios --device iphone15 --bundle-id <bundle-id> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.png --evidence /tmp/<case>.tritonevidence --json
 ```
 
 HarmonyOS / DevEco Emulator:
@@ -126,14 +146,15 @@ HarmonyOS / DevEco Emulator:
 ```bash
 triton device doctor --platform harmony --json
 triton device list --platform harmony --json
-triton device use --platform harmony --target <hdc-target> --json
-triton device wait-ready --platform harmony --target <hdc-target> --json
+triton device use harmony-a --json
+triton device wait-ready --device harmony-a --json
 triton app inspect --platform harmony --bundle <bundle> --json
-triton app launch --platform harmony --bundle <bundle> --ability <ability> --json
-triton smoke harmony --target <hdc-target> --bundle <bundle> --ability <ability> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json
-triton observe current --platform harmony --target <hdc-target> --json
-triton observe tree --platform harmony --target <hdc-target> --json
-triton node resolve --platform harmony --target <hdc-target> --text "登录" --json
+triton app install --device harmony-a --hap <debug-signed.hap> --json
+triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json
+triton smoke harmony --device harmony-a --bundle <bundle> --ability <ability> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json
+triton observe current --device harmony-a --json
+triton observe tree --device harmony-a --json
+triton node resolve --device harmony-a --text "登录" --json
 ```
 
 Standalone Harmony embedded HTTP runtime:
@@ -234,10 +255,10 @@ Run real emulator smoke only when safe for the current machine:
 ```bash
 .build/cli/debug/triton sim list --json
 .build/cli/debug/triton sim status-bar list --simulator booted --json
-.build/cli/debug/triton app uninstall --bundle-id com.example.missing --simulator booted --json
-.build/cli/debug/triton app launch --bundle-id com.example.missing --simulator booted --json
+.build/cli/debug/triton app uninstall --device booted --bundle-id com.example.missing --confirm --json
+.build/cli/debug/triton app launch --device booted --bundle-id com.example.missing --json
 .build/cli/debug/triton device list --platform harmony --json
-.build/cli/debug/triton device wait-ready --platform harmony --target <hdc-target> --json
+.build/cli/debug/triton device wait-ready --device <hdc-target> --json
 TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh
 TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh --target <hdc-target> --no-forward
 ```

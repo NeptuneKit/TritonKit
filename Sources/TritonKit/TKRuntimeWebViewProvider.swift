@@ -1,6 +1,168 @@
 import Foundation
 import TritonKitShared
 
+struct RuntimeWebViewSnapshotPayload: Decodable, Equatable {
+    let text: [String]
+    let dom: [TKWebViewDOMNodeSummary]
+    let forms: [TKWebViewFormFieldSummary]
+    let links: [TKWebViewLinkSummary]
+    let truncation: TKWebViewSnapshotTruncation
+    let redaction: TKWebViewRedaction
+}
+
+func decodeRuntimeWebViewSnapshotPayload(_ json: String) throws -> RuntimeWebViewSnapshotPayload {
+    try JSONDecoder().decode(RuntimeWebViewSnapshotPayload.self, from: Data(json.utf8))
+}
+
+func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextBytes: Int?) throws -> String {
+    let includeData = try JSONEncoder().encode(include)
+    guard let includeLiteral = String(data: includeData, encoding: .utf8) else {
+        throw NSError(domain: "TritonKit.WebViewSnapshot", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode snapshot include"])
+    }
+    let maxNodesLiteral = maxDOMNodes.map(String.init) ?? "80"
+    let maxBytesLiteral = maxTextBytes.map(String.init) ?? "8192"
+    return """
+    (function() {
+      var include = new Set(\(includeLiteral));
+      var maxNodes = Math.max(0, \(maxNodesLiteral));
+      var maxBytes = Math.max(0, \(maxBytesLiteral));
+      var text = [];
+      var dom = [];
+      var forms = [];
+      var links = [];
+      var returnedBytes = 0;
+      var truncated = false;
+      var truncationReason = null;
+
+      function clean(value) {
+        return String(value || "").replace(/\\s+/g, " ").trim();
+      }
+      function appendText(value) {
+        var cleaned = clean(value);
+        if (!cleaned) { return; }
+        var nextBytes = returnedBytes + cleaned.length;
+        if (nextBytes > maxBytes) {
+          truncated = true;
+          truncationReason = truncationReason || "maxTextBytes";
+          if (returnedBytes >= maxBytes) { return; }
+          cleaned = cleaned.slice(0, Math.max(0, maxBytes - returnedBytes));
+          nextBytes = maxBytes;
+        }
+        if (cleaned) {
+          text.push(cleaned);
+          returnedBytes = nextBytes;
+        }
+      }
+      function frameFor(element) {
+        try {
+          var rect = element.getBoundingClientRect();
+          return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        } catch (_) {
+          return null;
+        }
+      }
+      function visible(element) {
+        var rect = frameFor(element);
+        if (!rect || rect.width <= 0 || rect.height <= 0) { return false; }
+        var style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+        return !style || (style.visibility !== "hidden" && style.display !== "none" && style.opacity !== "0");
+      }
+      function roleFor(element, tag) {
+        var explicit = element.getAttribute("role");
+        if (explicit) { return explicit; }
+        if (tag === "button") { return "button"; }
+        if (tag === "a") { return "link"; }
+        if (tag === "input" || tag === "textarea" || tag === "select") { return "form-field"; }
+        if (/^h[1-6]$/.test(tag)) { return "heading"; }
+        return null;
+      }
+      function labelFor(element) {
+        var aria = element.getAttribute("aria-label");
+        if (aria) { return clean(aria); }
+        if (element.id) {
+          var labels = Array.prototype.slice.call(document.getElementsByTagName("label"));
+          for (var index = 0; index < labels.length; index += 1) {
+            if (labels[index].getAttribute("for") === element.id) {
+              return clean(labels[index].innerText || labels[index].textContent);
+            }
+          }
+        }
+        return null;
+      }
+
+      if (include.has("text")) {
+        var bodyText = document.body ? document.body.innerText || document.body.textContent : "";
+        clean(bodyText).split(/\\n+/).forEach(appendText);
+      }
+
+      var elements = Array.prototype.slice.call(document.querySelectorAll("body *"));
+      for (var index = 0; index < elements.length; index += 1) {
+        var element = elements[index];
+        if (!visible(element)) { continue; }
+        var tag = String(element.tagName || "").toLowerCase();
+        var nodeText = clean(element.innerText || element.textContent || element.getAttribute("aria-label") || "");
+        var frame = frameFor(element);
+
+        if (include.has("dom") && dom.length < maxNodes) {
+          dom.push({
+            nodeID: element.id || ("dom-" + (index + 1)),
+            role: roleFor(element, tag),
+            tagName: tag || null,
+            text: nodeText || null,
+            frame: frame
+          });
+        } else if (include.has("dom") && dom.length >= maxNodes) {
+          truncated = true;
+          truncationReason = truncationReason || "maxDOMNodes";
+        }
+
+        if (include.has("forms") && (tag === "input" || tag === "textarea" || tag === "select") && forms.length < maxNodes) {
+          var inputType = tag === "input" ? String(element.getAttribute("type") || "text").toLowerCase() : tag;
+          var rawLength = element.value ? String(element.value).length : 0;
+          forms.push({
+            name: element.getAttribute("name") || element.id || null,
+            inputType: inputType,
+            label: labelFor(element),
+            valueRedaction: "length-only",
+            valueLength: rawLength,
+            frame: frame
+          });
+        } else if (include.has("forms") && (tag === "input" || tag === "textarea" || tag === "select") && forms.length >= maxNodes) {
+          truncated = true;
+          truncationReason = truncationReason || "maxNodes";
+        }
+
+        if (include.has("links") && tag === "a" && links.length < maxNodes) {
+          links.push({
+            text: nodeText || null,
+            href: element.href || element.getAttribute("href") || null,
+            frame: frame
+          });
+        } else if (include.has("links") && tag === "a" && links.length >= maxNodes) {
+          truncated = true;
+          truncationReason = truncationReason || "maxNodes";
+        }
+      }
+
+      return JSON.stringify({
+        text: include.has("text") ? text : [],
+        dom: include.has("dom") ? dom : [],
+        forms: include.has("forms") ? forms : [],
+        links: include.has("links") ? links : [],
+        truncation: {
+          truncated: truncated,
+          reason: truncationReason,
+          maxNodes: maxNodes,
+          returnedNodes: dom.length + forms.length + links.length,
+          maxBytes: maxBytes,
+          returnedBytes: returnedBytes
+        },
+        redaction: { secureText: "length-only" }
+      });
+    })()
+    """
+}
+
 #if canImport(UIKit) && canImport(WebKit)
 import UIKit
 import WebKit
@@ -25,7 +187,7 @@ func currentWebViewListResponse(action: String = "webview.list") -> TKWebViewLis
             TKWebViewSource(name: "webview-provider", available: true, sourceCommands: ["triton webViewList request"]),
         ],
         sourceCommands: ["triton webViewList request"],
-        note: "iOS WKWebView provider exposes metadata only. DOM, bridge calls, DOM input, and page events require an opt-in page bridge."
+        note: "iOS WKWebView provider exposes metadata and bounded DOM/text/form/link snapshots. Bridge calls, DOM input, and page events require an opt-in page bridge."
     )
 }
 
@@ -43,6 +205,57 @@ func currentWebViewCurrentResponse(webViewID: String? = nil) throws -> TKWebView
         sources: list.sources,
         sourceCommands: list.sourceCommands,
         note: list.note
+    )
+}
+
+@MainActor
+func currentWebViewSnapshotResponse(_ request: TKWebViewSnapshotRequest) async throws -> TKWebViewSnapshotResponse {
+    let pairs = currentWKWebViewsWithDescriptors()
+    let selected = try TKSelectCurrentWebView(from: pairs.map(\.descriptor), webViewID: request.webViewID)
+    guard let pair = pairs.first(where: { $0.descriptor.webViewID == selected.webViewID }) else {
+        throw TKWebViewSelectionError(detail: TKWebViewError(
+            code: .webviewNotFound,
+            message: "Selected WebView is no longer available.",
+            hint: "Run `triton webview current --json` again and retry."
+        ))
+    }
+    if let requestedSession = request.pageSessionID,
+       let actualSession = selected.pageSessionID,
+       requestedSession != actualSession {
+        throw TKWebViewSelectionError(detail: TKWebViewError(
+            code: .webViewNavigationChanged,
+            message: "WebView page session changed.",
+            hint: "Run `triton webview current --json` and retry against the new pageSessionID.",
+            webViewID: selected.webViewID
+        ))
+    }
+
+    let script = try runtimeWebViewSnapshotScript(
+        include: request.include,
+        maxDOMNodes: request.maxDOMNodes,
+        maxTextBytes: request.maxTextBytes
+    )
+    let value = try await evaluateJavaScript(script, in: pair.webView)
+    let json = value as? String ?? "\(value)"
+    let payload = try decodeRuntimeWebViewSnapshotPayload(json)
+    let supported = Set(["metadata", "dom", "text", "forms", "links"])
+    let skipped = request.include
+        .filter { !supported.contains($0) }
+        .map { TKRuntimeSnapshotSkipped(name: $0, reason: "Unsupported WebView snapshot include") }
+
+    return TKWebViewSnapshotResponse(
+        capturedAt: currentStateTimestamp(),
+        platform: "ios",
+        target: "embedded-runtime",
+        webView: selected,
+        include: request.include,
+        text: payload.text,
+        dom: payload.dom,
+        forms: payload.forms,
+        links: payload.links,
+        skipped: skipped,
+        truncation: payload.truncation,
+        redaction: payload.redaction
     )
 }
 
@@ -174,8 +387,8 @@ private func webViewDescriptor(for webView: WKWebView) -> TKWebViewDescriptor {
         canGoForward: webView.canGoForward,
         providerStatus: "available",
         bridgeStatus: "unavailable",
-        capabilities: ["visible", "webview.current", "webview.list", "webview.metadata"],
-        missingCapabilities: ["webview.dom", "webview.bridge-call", "webview.events", "webview.tap", "webview.type"]
+        capabilities: ["visible", "webview.current", "webview.list", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links"],
+        missingCapabilities: ["webview.bridge-call", "webview.events", "webview.tap", "webview.type"]
     )
 }
 

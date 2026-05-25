@@ -13,7 +13,12 @@ struct Smoke: AsyncParsableCommand {
 struct SmokeIOS: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "ios", abstract: "Run one-command iOS smoke evidence flow")
 
-    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Runtime target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "App bundle identifier") var bundleID: String
     @Option(help: "URL to open") var openURL: String
@@ -33,8 +38,20 @@ struct SmokeIOS: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            try ensureHostDeviceSelectorCompatibility(device: device, simulator: simulator, target: nil)
+            let selection = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(
+                    device: device ?? simulator ?? "booted",
+                    platform: .ios,
+                    name: name,
+                    runtime: runtime,
+                    state: state,
+                    ready: ready
+                ),
+                hdc: "hdc"
+            )
             let summary = try await runIOSSmoke(options: IOSSmokeOptions(
-                simulator: simulator,
+                simulator: selection.target.target,
                 target: target,
                 bundleID: bundleID,
                 openURL: openURL,
@@ -66,7 +83,12 @@ struct SmokeIOS: AsyncParsableCommand {
 struct SmokeHarmony: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "harmony", abstract: "Run one-command Harmony host-side smoke evidence flow")
 
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String = TKLocalTargetID
+    @Option(help: "Unified host device selector: alias, harmony:<target>, raw id, or current") var device: String?
+    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Device name filter when available") var name: String?
+    @Option(help: "Runtime filter when available") var runtime: String?
+    @Option(help: "Target state filter, for example connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Harmony bundle name") var bundle: String
     @Option(help: "Harmony ability name") var ability: String
@@ -86,8 +108,20 @@ struct SmokeHarmony: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            try ensureHostDeviceSelectorCompatibility(device: device, simulator: nil, target: target)
+            let selection = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(
+                    device: device ?? target,
+                    platform: .harmony,
+                    name: name,
+                    runtime: runtime,
+                    state: state,
+                    ready: ready
+                ),
+                hdc: hdc
+            )
             let summary = try await runHarmonySmoke(options: HarmonySmokeOptions(
-                target: target,
+                target: selection.target.target,
                 hdc: hdc,
                 bundle: bundle,
                 ability: ability,

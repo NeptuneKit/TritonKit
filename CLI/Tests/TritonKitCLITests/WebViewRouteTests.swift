@@ -63,6 +63,47 @@ struct WebViewRouteTests {
         #expect(mismatch.status == .fail)
         #expect(mismatch.hint == "Run `triton webview current-url --json` to inspect the current provider URL.")
     }
+
+    @Test("snapshot request keeps include and limits machine readable")
+    func snapshotRequestShape() {
+        let request = makeWebViewSnapshotRequest(
+            webViewID: "webview-1",
+            pageSessionID: "page-1",
+            include: "metadata,text,forms",
+            maxDOMNodes: 25,
+            maxTextBytes: 512
+        )
+
+        #expect(request.webViewID == "webview-1")
+        #expect(request.pageSessionID == "page-1")
+        #expect(request.include == ["metadata", "text", "forms"])
+        #expect(request.maxDOMNodes == 25)
+        #expect(request.maxTextBytes == 512)
+    }
+
+    @Test("snapshot decoder preserves WebView error envelopes")
+    func snapshotDecoderPreservesWebViewErrorEnvelope() throws {
+        let data = try JSONEncoder().encode(TKWebViewErrorResponse(
+            action: "webview.snapshot",
+            platform: "ios",
+            target: "embedded-runtime",
+            error: TKCLIErrorDetail(
+                code: "webview_navigation_changed",
+                message: "WebView page session changed.",
+                hint: "Run `triton webview current --json` and retry."
+            )
+        ))
+
+        let result = try decodeWebViewSnapshotRuntimeResult(data)
+
+        switch result {
+        case .snapshot:
+            Issue.record("Expected WebView error envelope")
+        case .error(let response):
+            #expect(response.ok == false)
+            #expect(response.error.code == "webview_navigation_changed")
+        }
+    }
 }
 
 private func webViewList(candidates: [TKWebViewDescriptor]) -> TKWebViewListResponse {

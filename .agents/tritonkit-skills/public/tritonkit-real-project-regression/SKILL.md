@@ -56,17 +56,20 @@ Real-project validation is not the same as demo smoke. Treat the business app as
      - treat Harmony host layout Web candidates as host-only until an embedded WebView provider is registered.
 7. Prepare host-side simulator state through Triton before falling back to raw `xcrun`:
    - list simulators: `triton sim list --json`;
+   - for repeated multi-simulator work, create a stable selector: `triton device alias set iphone15 --platform ios --target <udid> --json`;
+   - prefer unified selectors for common host actions: `--device <alias-or-id>`; keep `--simulator <udid-or-booted>` for compatibility with existing scripts;
    - set a workspace default simulator when a flow will be reused: `triton sim use <udid> --json`;
    - boot and wait for readiness: `triton sim boot <udid> --wait --jsonl`;
-   - list installed apps: `triton app list --simulator <udid-or-booted> --user-only --json`;
-   - inspect installed app metadata: `triton app info --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
-   - install simulator builds: `triton app install --app <path.app> --simulator <udid-or-booted> --json`;
-   - uninstall disposable simulator apps only with explicit policy: `triton app uninstall --bundle-id <bundle-id> --simulator <udid-or-booted> --confirm --json`;
-   - launch or terminate apps: `triton app launch --bundle-id <bundle-id> --simulator <udid-or-booted> --json` / `triton app terminate --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
-   - submit app debug routes: `triton app open-url '<url>' --simulator <udid-or-booted> --json`; when a DEBUG embedded runtime is connected, prefer `triton app open-url '<url>' --simulator <udid-or-booted> --wait-ready --snapshot --json` to capture readiness and snapshot summary in the same result;
-   - locate containers: `triton app container --bundle-id <bundle-id> --kind data --simulator <udid-or-booted> --json`;
-   - verify App preferences: `triton app prefs get <key> --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
-   - set simulator App preferences from property-list compatible JSON values: `triton app prefs set <key> <json-value> --bundle-id <bundle-id> --simulator <udid-or-booted> --json`;
+   - list installed apps: `triton app list --device iphone15 --user-only --json`;
+   - inspect installed app metadata: `triton app info --device iphone15 --bundle-id <bundle-id> --json`;
+   - install simulator builds: `triton app install --device iphone15 --app <path.app> --json`;
+   - uninstall disposable simulator apps only with explicit policy: `triton app uninstall --device iphone15 --bundle-id <bundle-id> --confirm --json`;
+   - launch apps: `triton app launch --device iphone15 --bundle-id <bundle-id> --json`;
+   - terminate apps: `triton app terminate --device iphone15 --bundle-id <bundle-id> --json`;
+   - submit app debug routes: `triton app open-url '<url>' --device iphone15 --json`; when a DEBUG embedded runtime is connected, prefer `triton app open-url '<url>' --device iphone15 --wait-ready --snapshot --json` to capture readiness and snapshot summary in the same result;
+   - locate containers: `triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json`;
+   - verify App preferences: `triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json`;
+   - set simulator App preferences from property-list compatible JSON values: `triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json`;
    - capture host-side framebuffer: `triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json`;
    - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`.
 8. Prepare Xcode build/test/run through Triton before falling back to XcodeBuildMCP or raw `xcodebuild`:
@@ -85,11 +88,13 @@ Real-project validation is not the same as demo smoke. Treat the business app as
 9. For HarmonyOS NEXT / DevEco Emulator validation, use Triton host-side device discovery before raw `hdc`:
    - probe tools: `triton device doctor --platform harmony --json`;
    - list HDC targets: `triton device list --platform harmony --json`;
-   - wait for boot readiness: `triton device wait-ready --platform harmony --target <hdc-target> --json`;
+   - for repeated multi-emulator work, create a stable selector: `triton device alias set harmony-a --platform harmony --target <hdc-target> --json`;
+   - wait for boot readiness: `triton device wait-ready --device harmony-a --json`;
    - inspect app metadata: `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`;
-   - launch an Ability: `triton app launch --platform harmony --bundle <bundle> --ability <ability> --target <hdc-target> --json`;
-   - run the one-command host smoke when available: `triton smoke harmony --target <hdc-target> --bundle <bundle> --ability <ability> --open-url <url> --wait-text <text> --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json`;
-   - when multiple targets are `Connected`, pass `--target`; `ambiguous_target` is the expected machine-readable failure.
+   - install a debug HAP when needed: `triton app install --device harmony-a --hap <debug-signed.hap> --json`;
+   - launch an Ability: `triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json`;
+   - run the one-command host smoke when available: `triton smoke harmony --device harmony-a --bundle <bundle> --ability <ability> --open-url <url> --wait-text <text> --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json`;
+   - when multiple targets are `Connected`, pass `--device <alias-or-id>` or narrow with `--platform`, `--name`, `--runtime`, `--state`, and `--ready`; `ambiguous_target` is the expected machine-readable failure.
    - if a disposable Harmony fixture app is needed, use the local `harmony-next` skill's minimal Empty Ability scaffold:
      - guide: `references/quickStart/ets/minimal-project-scaffold.md`;
      - template: `references/templates/empty-ability-app/`;

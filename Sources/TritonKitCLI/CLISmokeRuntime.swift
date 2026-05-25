@@ -645,7 +645,7 @@ func waitForHarmonyTargetReady(
         let event = HostDeviceReadyEvent(
             ok: ready,
             platform: "harmony",
-            target: selected,
+            target: hostDeviceTarget(from: selected),
             ready: ready,
             attempt: attempt,
             sourceCommand: result.sourceCommand,

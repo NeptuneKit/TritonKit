@@ -17,7 +17,7 @@ CLI 仍是 AI agent 的唯一稳定控制入口。iOS embedded runtime 负责在
 3. **P2 Web provider / bridge 增强**：只有需要 URL、DOM、JS bridge、页面事件时，才接入 Web provider、`registerWebView`、`TritonWeb` 或页面 bridge。
 4. **可验证可复盘**：所有 host layout、runtime snapshot、Web provider 调用、事件、超时、错误和脱敏状态进入 JSON/JSONL 输出、runtime ledger 和 evidence。
 
-本期执行入口见 [WebView Runtime Bridge 技术方案整理 v02](./technical-scheme-v02-summary.md)，长版设计见 [Technical Scheme v02: Host + Runtime First](./technical-scheme-v02-host-runtime-first.md)。
+本期执行入口见 [WebView Runtime Bridge 技术方案整理 v02](./technical-scheme-v02-summary.md)，长版设计见 [Technical Scheme v02: Host + Runtime First](./technical-scheme-v02-host-runtime-first.md)。iOS Simulator harness 设计见 [iOS Simulator Harness Design v01](./simulator-harness-design-v01.md)，真实回归记录见 [20260525 iOS Simulator WebView Harness Real Smoke](./real-smoke-20260525-ios-simulator-harness.md)。
 
 ## 官方能力基线
 
@@ -130,6 +130,7 @@ triton node resolve --platform ios --text "登录" --json
 triton node resolve --platform harmony --target <target> --text "登录" --json
 triton webview list --platform ios --json
 triton webview current --platform ios --json
+triton webview snapshot --platform ios --include metadata,dom,text,forms,links --json
 triton webview call getRouteState --platform ios --json
 triton webview events --platform ios --limit 10 --json
 ```
@@ -491,7 +492,7 @@ triton snapshot --platform harmony --target <hdc-target> --include host-layout,r
 4. P2 provider 契约：`webViewSnapshot`、`webViewBridgeCall`、`webViewBridgePost`、`webViewWait`、`webViewEvents`、`webViewLedger` DTO 与 Harmony embedded HTTP route。已完成契约与路由映射。
 5. P3 iOS opt-in bridge：页面 / App 显式 allowlist method call 和稳定 result/error envelope。已完成最小 Demo smoke，未开放任意 eval。
 6. P4 iOS events：页面事件 ring buffer 与 `webview events --json`。已完成最小 Demo smoke。
-7. P5 snapshot / wait：两端实现 DOM 轻量摘要、redaction、truncation、`webview snapshot` 与 `wait --event/--selector/--text`。未完成。
+7. P5 snapshot / wait：两端实现 DOM 轻量摘要、redaction、truncation、`webview snapshot` 与 `wait --event/--selector/--text`。iOS `webview snapshot` CLI / runtime provider 已进入最小可用状态，默认只执行固定摘要脚本并对表单值做 length-only 脱敏；真实 smoke 记录见 [20260524 iOS WebView Snapshot Real Smoke](./real-smoke-20260524-ios-webview-snapshot.md) 与 [20260525 iOS Simulator WebView Harness Real Smoke](./real-smoke-20260525-ios-simulator-harness.md)。`wait`、Harmony provider snapshot 与 evidence/replay 仍未完成。
 8. P6 Harmony provider：`harmony-tritonkit` 增加 ArkWeb provider interface、manifest capability 动态标记和 `/v2/runtime/webview/current|list|call|events` 实现。未完成，当前仍为 host-only 验证。
 9. P7 evidence/replay：WebView artifacts 进入 evidence，`.tritonplan` 支持 `webview.call` / `webview.wait` step。未完成。
 10. P8 unsafe eval：仅在明确配置后进入诊断能力，默认不支持。未完成，且不是内测前置。

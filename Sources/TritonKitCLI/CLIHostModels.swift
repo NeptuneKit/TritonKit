@@ -1,5 +1,17 @@
+import ArgumentParser
 import Foundation
 import TritonKitShared
+
+enum HostDevicePlatform: String, ExpressibleByArgument {
+    case ios
+    case harmony
+}
+
+extension HostDevicePlatform: Codable {}
+
+enum HostPlatform: String, ExpressibleByArgument {
+    case harmony
+}
 
 struct HostToolProbeOutput: Encodable {
     let name: String
@@ -8,6 +20,101 @@ struct HostToolProbeOutput: Encodable {
     let versionSummary: String?
     let error: String?
     let sourceCommand: String
+}
+
+struct HostDeviceTarget: Encodable, Equatable {
+    let platform: String
+    let id: String
+    let target: String
+    let state: String
+    let ready: Bool
+    let source: String
+    let name: String?
+    let runtime: String?
+    let transport: String?
+}
+
+struct HostTargetAlias: Codable, Equatable {
+    let platform: HostDevicePlatform
+    let target: String
+}
+
+struct HostTargetAliasStore: Codable, Equatable {
+    let schemaVersion: Int
+    var current: String?
+    var aliases: [String: HostTargetAlias]
+
+    init(schemaVersion: Int = 1, current: String? = nil, aliases: [String: HostTargetAlias] = [:]) {
+        self.schemaVersion = schemaVersion
+        self.current = current
+        self.aliases = aliases
+    }
+
+    static let empty = HostTargetAliasStore()
+
+    static func filePath(workspace: String) -> String {
+        URL(fileURLWithPath: workspace)
+            .appendingPathComponent(".triton")
+            .appendingPathComponent("host-targets.json")
+            .path
+    }
+}
+
+enum HostDeviceSelectorSource: String, Codable {
+    case alias
+    case explicit
+    case current
+    case platformFilter = "platform-filter"
+    case globalUnique = "global-unique"
+}
+
+struct HostDeviceSelectionRequest: Equatable {
+    var device: String?
+    var platform: HostDevicePlatform?
+    var name: String?
+    var runtime: String?
+    var state: String?
+    var ready: Bool
+
+    init(
+        device: String? = nil,
+        platform: HostDevicePlatform? = nil,
+        name: String? = nil,
+        runtime: String? = nil,
+        state: String? = nil,
+        ready: Bool = false
+    ) {
+        self.device = device
+        self.platform = platform
+        self.name = name
+        self.runtime = runtime
+        self.state = state
+        self.ready = ready
+    }
+}
+
+struct HostDeviceSelectionResult: Encodable, Equatable {
+    let platform: HostDevicePlatform
+    let target: HostDeviceTarget
+    let selector: String
+    let source: HostDeviceSelectorSource
+    let filters: HostDeviceSelectionFilters
+}
+
+struct HostDeviceSelectionFilters: Encodable, Equatable {
+    let platform: String?
+    let name: String?
+    let runtime: String?
+    let state: String?
+    let ready: Bool
+
+    init(request: HostDeviceSelectionRequest) {
+        self.platform = request.platform?.rawValue
+        self.name = request.name
+        self.runtime = request.runtime
+        self.state = request.state
+        self.ready = request.ready
+    }
 }
 
 struct HostDeviceDoctorOutput: Encodable {
@@ -21,25 +128,91 @@ struct HostDeviceDoctorOutput: Encodable {
 struct HostDeviceListOutput: Encodable {
     let ok: Bool
     let platform: String
-    let targets: [TKHarmonyTarget]
-    let defaultTarget: TKHarmonyTarget?
+    let targets: [HostDeviceTarget]
+    let defaultTarget: HostDeviceTarget?
     let sourceCommand: String
 }
 
 struct HostDeviceUseOutput: Encodable {
     let ok: Bool
     let platform: String
-    let target: TKHarmonyTarget
+    let target: HostDeviceTarget
+    let defaultsPath: String?
+    let selection: HostDeviceSelectionResult?
+}
+
+struct HostDeviceAliasListOutput: Encodable {
+    let ok: Bool
+    let current: String?
+    let aliases: [String: HostTargetAlias]
+    let path: String
+}
+
+struct HostDeviceAliasMutationOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let name: String
+    let alias: HostTargetAlias?
+    let path: String
+}
+
+struct HostDeviceCurrentOutput: Encodable {
+    let ok: Bool
+    let current: String?
+    let selection: HostDeviceSelectionResult?
+    let path: String
+}
+
+struct HostDeviceResolveOutput: Encodable {
+    let ok: Bool
+    let selection: HostDeviceSelectionResult
+}
+
+struct HostDeviceSelectionErrorOutput: Encodable {
+    let ok: Bool
+    let error: TKCLIErrorDetail
+    let candidates: [HostDeviceTarget]
 }
 
 struct HostDeviceReadyEvent: Encodable {
     let ok: Bool
     let platform: String
-    let target: TKHarmonyTarget
+    let target: HostDeviceTarget
     let ready: Bool
     let attempt: Int
     let sourceCommand: String
     let error: TKCLIErrorDetail?
+}
+
+struct HostDeviceArtifactOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: HostDeviceTarget
+    let selection: HostDeviceSelectionResult?
+    let artifact: String
+    let sourceCommands: [String]
+    let note: String
+}
+
+enum HostDeviceSelectionError: Error, CustomStringConvertible {
+    case ambiguousTargets([HostDeviceTarget])
+    case targetNotFound(String)
+    case platformMismatch(selector: String, expected: HostDevicePlatform, actual: HostDevicePlatform)
+    case parameterConflict(String)
+
+    var description: String {
+        switch self {
+        case .ambiguousTargets(let targets):
+            "Multiple connected host devices found: \(targets.map(\.target).joined(separator: ", "))"
+        case .targetNotFound(let target):
+            "Host device was not found: \(target)"
+        case .platformMismatch(let selector, let expected, let actual):
+            "Host device selector \(selector) resolved to \(actual.rawValue), but \(expected.rawValue) was requested"
+        case .parameterConflict(let message):
+            message
+        }
+    }
 }
 
 struct HostRuntimeURLOutput: Encodable {
@@ -74,6 +247,34 @@ struct HostHarmonyTapOutput: Encodable {
     let x: Int
     let y: Int
     let match: TKHarmonyLayoutTextMatch?
+    let sourceCommands: [String]
+    let note: String
+}
+
+struct HostHarmonySwipeOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: TKHarmonyTarget
+    let startX: Int
+    let startY: Int
+    let endX: Int
+    let endY: Int
+    let velocity: Int?
+    let sourceCommands: [String]
+    let note: String
+}
+
+struct HostHarmonyTextInputOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: TKHarmonyTarget
+    let x: Int?
+    let y: Int?
+    let secure: Bool
+    let redacted: Bool
+    let insertedLength: Int
     let sourceCommands: [String]
     let note: String
 }
@@ -163,7 +364,7 @@ enum HostCommandRunError: Error, CustomStringConvertible {
                 stderrLogPath.map { "stderr: \($0)" },
             ].compactMap { $0 }.joined(separator: "\n")
         case .deviceNotReady(let target, let timeoutSeconds):
-            "Harmony target \(target) was not ready after \(timeoutSeconds)s"
+            "Host device target \(target) was not ready after \(timeoutSeconds)s"
         case .nonZeroExit(_, let result):
             result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Host command exited \(result.exitCode)" : result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
         case .missingPreferences(let path):
@@ -239,6 +440,7 @@ struct HostActionOutput: Encodable {
     let action: String
     let runtimeScope: String
     let target: String
+    let selection: HostDeviceSelectionResult?
     let tool: String
     let exitCode: Int32
     let riskLevel: String
@@ -249,6 +451,40 @@ struct HostActionOutput: Encodable {
     let stderr: String?
     let artifacts: [String]
     let note: String?
+
+    init(
+        ok: Bool,
+        action: String,
+        runtimeScope: String,
+        target: String,
+        selection: HostDeviceSelectionResult? = nil,
+        tool: String,
+        exitCode: Int32,
+        riskLevel: String,
+        sourceCommand: String,
+        stdoutTruncated: Bool,
+        stderrTruncated: Bool,
+        stdout: String?,
+        stderr: String?,
+        artifacts: [String],
+        note: String?
+    ) {
+        self.ok = ok
+        self.action = action
+        self.runtimeScope = runtimeScope
+        self.target = target
+        self.selection = selection
+        self.tool = tool
+        self.exitCode = exitCode
+        self.riskLevel = riskLevel
+        self.sourceCommand = sourceCommand
+        self.stdoutTruncated = stdoutTruncated
+        self.stderrTruncated = stderrTruncated
+        self.stdout = stdout
+        self.stderr = stderr
+        self.artifacts = artifacts
+        self.note = note
+    }
 }
 
 struct HostArtifactCaptureOutput: Encodable {

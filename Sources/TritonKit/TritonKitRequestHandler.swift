@@ -153,7 +153,19 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             #endif
 
         case .webViewSnapshot:
+            let request = msg.payload.flatMap { try? JSONDecoder().decode(TKWebViewSnapshotRequest.self, from: $0) } ?? TKWebViewSnapshotRequest()
+            #if canImport(UIKit) && canImport(WebKit)
+            do {
+                let response = try await currentWebViewSnapshotResponse(request)
+                return TKMessage(id: msg.id, type: .webViewSnapshot, payload: try? JSONEncoder().encode(response))
+            } catch let error as TKWebViewSelectionError {
+                return webViewErrorMessage(id: msg.id, type: .webViewSnapshot, action: "webview.snapshot", code: error.detail.code, message: error.detail.message, hint: error.detail.hint, candidates: error.detail.candidates)
+            } catch {
+                return webViewErrorMessage(id: msg.id, type: .webViewSnapshot, action: "webview.snapshot", code: .javascriptError, message: "\(error)", hint: "Reduce --include or --max-dom-nodes and retry with `triton webview current --json` metadata.")
+            }
+            #else
             return webViewErrorMessage(id: msg.id, type: .webViewSnapshot, action: "webview.snapshot", code: .webViewProviderUnavailable, message: "WebView snapshot provider is not registered.", hint: "Register an opt-in WebView provider before requesting DOM, text, forms, or links.")
+            #endif
 
         case .webViewBridgeCall:
             guard let data = msg.payload,

@@ -18,7 +18,7 @@ struct SmokeHarmonyRuntimeTests {
                 HostDeviceReadyEvent(
                     ok: true,
                     platform: "harmony",
-                    target: selected,
+                    target: hostDeviceTarget(from: selected),
                     ready: true,
                     attempt: 1,
                     sourceCommand: "hdc boot-ready",
