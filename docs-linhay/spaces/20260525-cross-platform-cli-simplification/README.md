@@ -163,3 +163,7 @@ swift test --filter TKHostAdapterModelsTests
 4. WebView provider / DOM / bridge 能力没有并入 `device`。iOS WebView provider 已有 metadata/snapshot/bridge 路径，Harmony 仍是 host-layout candidate 边界。
 5. Android 仍未实现，只保留 DTO 与命令命名的未来兼容空间。
 6. Alias 只保存稳定 selector，不保证目标一直 ready；截图等 artifact 动作会在执行前检查 ready 并返回明确错误。
+
+## 下一步
+
+下一轮实现计划见 [implementation-plan-v01.md](plans/implementation-plan-v01.md)。当前优先级是把统一 `device` 契约继续收口，补稳测试与真实 smoke，再考虑是否把 `app / observe / webview` 的可复用部分继续抹平。
