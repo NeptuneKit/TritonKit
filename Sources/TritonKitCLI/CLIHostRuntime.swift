@@ -1102,6 +1102,10 @@ func renderPreferenceValue(_ value: TKHostPreferenceValue) -> String {
 }
 
 func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws -> Never {
+    if let exitCode = error as? ExitCode {
+        throw exitCode
+    }
+
     let detail: TKCLIErrorDetail
     var hostDeviceCandidates: [HostDeviceTarget]?
     switch error {

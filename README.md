@@ -350,20 +350,20 @@ triton sim personalization remove-all-manifests --confirm --json
 triton sim personalization remove-personalization 12345 --confirm --json
 triton sim personalization revoke-manifests --confirm --json
 triton sim personalization scan-and-personalize --json
-triton app list --simulator booted --user-only --json
-triton app info --bundle-id com.example.app --simulator booted --json
-triton app install --app /tmp/Demo.app --simulator booted --json
-triton app uninstall --bundle-id com.example.app --simulator booted --confirm --json
-triton app launch --bundle-id com.example.app --simulator booted --json
-triton app terminate --bundle-id com.example.app --simulator booted --json
-triton app open-url "example://debug" --simulator booted --json
-triton app open-url "example://debug" --simulator booted --wait-ready --snapshot --json
+triton app list --device booted --user-only --json
+triton app info --device booted --bundle-id com.example.app --json
+triton app install --device booted --app /tmp/Demo.app --json
+triton app uninstall --device booted --bundle-id com.example.app --confirm --json
+triton app launch --device booted --bundle-id com.example.app --json
+triton app terminate --device booted --bundle-id com.example.app --json
+triton app open-url "example://debug" --device booted --json
+triton app open-url "example://debug" --device booted --wait-ready --snapshot --json
 triton webview current-url --platform ios --json
 triton route assert-current-url "https://example.invalid/path" --platform ios --json
-triton app container --bundle-id com.example.app --kind data --json
-triton app prefs get DEBUG-mock --bundle-id com.example.app --json
-triton app prefs set DEBUG-mock true --bundle-id com.example.app --simulator booted --json
-triton app prefs dump --bundle-id com.example.app --json
+triton app container --device booted --bundle-id com.example.app --kind data --json
+triton app prefs get DEBUG-mock --device booted --bundle-id com.example.app --json
+triton app prefs set DEBUG-mock true --device booted --bundle-id com.example.app --json
+triton app prefs dump --device booted --bundle-id com.example.app --json
 ```
 
 Destructive commands require `--confirm` by default, and `runtime delete` supports `--dry-run` first so agents can inspect the selected runtimes before deleting anything.
@@ -415,12 +415,12 @@ HarmonyOS NEXT / DevEco Emulator host-side discovery does not require a running 
 triton device doctor --platform harmony --json
 triton device list --platform harmony --json
 triton device use --platform harmony --target 127.0.0.1:10100 --json
-triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
-triton device screenshot --platform harmony --target 127.0.0.1:10100 --output /tmp/smoke.jpeg --json
+triton device wait-ready --device 127.0.0.1:10100 --json
+triton device screenshot --device 127.0.0.1:10100 --output /tmp/smoke.jpeg --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
-triton app install --platform harmony --hap /tmp/Demo.hap --target 127.0.0.1:10100 --json
-triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
-triton app open-url --platform harmony --bundle com.example.app --ability EntryAbility "example://debug" --target 127.0.0.1:10100 --json
+triton app install --device 127.0.0.1:10100 --hap /tmp/Demo.hap --json
+triton app launch --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
+triton app open-url --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility "example://debug" --json
 triton ax --platform harmony --target 127.0.0.1:10100 --output /tmp/harmony-layout.json --json
 triton wait --platform harmony --target 127.0.0.1:10100 --text "目标页" --timeout 15 --json
 triton tap "我的" --platform harmony --target 127.0.0.1:10100 --json

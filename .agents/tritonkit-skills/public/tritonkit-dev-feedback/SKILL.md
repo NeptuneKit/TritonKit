@@ -326,19 +326,19 @@ triton state responder --json
 triton sim list --json
 triton sim use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
 triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl
-triton app list --simulator booted --user-only --json
-triton app info --bundle-id com.example.app --simulator booted --json
-triton app install --app /tmp/Demo.app --simulator booted --json
-triton app uninstall --bundle-id com.example.app --simulator booted --confirm --json
-triton app launch --bundle-id com.example.app --simulator booted --json
-triton app open-url 'example://debug' --simulator booted --json
-triton app container --bundle-id com.example.app --kind data --json
-triton app prefs get DEBUG-mock --bundle-id com.example.app --json
+triton app list --device booted --user-only --json
+triton app info --device booted --bundle-id com.example.app --json
+triton app install --device booted --app /tmp/Demo.app --json
+triton app uninstall --device booted --bundle-id com.example.app --confirm --json
+triton app launch --device booted --bundle-id com.example.app --json
+triton app open-url 'example://debug' --device booted --json
+triton app container --device booted --bundle-id com.example.app --kind data --json
+triton app prefs get DEBUG-mock --device booted --bundle-id com.example.app --json
 triton device doctor --platform harmony --json
 triton device list --platform harmony --json
-triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
+triton device wait-ready --device 127.0.0.1:10100 --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
-triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
+triton app launch --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
 triton hierarchy --json
 triton ax --json
 triton ax --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
@@ -381,12 +381,12 @@ Host-side Harmony validation does not require a running TritonKit embedded runti
 ```bash
 triton device doctor --platform harmony --json
 triton device list --platform harmony --json
-triton device wait-ready --platform harmony --target 127.0.0.1:10100 --json
+triton device wait-ready --device 127.0.0.1:10100 --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
-triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --target 127.0.0.1:10100 --json
+triton app launch --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
 ```
 
-If multiple HDC targets are `Connected`, pass `--target`; `ambiguous_target` is the expected machine-readable failure.
+If multiple HDC targets are `Connected`, pass `--device <alias-or-id>` or compatibility `--target`; `ambiguous_target` is the expected machine-readable failure.
 
 For Harmony embedded SDK work, use the TritonKit brand name but keep the actual OHPM package id and ArkTS import path lowercase:
 
