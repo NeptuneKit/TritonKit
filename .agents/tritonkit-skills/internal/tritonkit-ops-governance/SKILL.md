@@ -46,6 +46,8 @@ metadata:
 - 上报 GitHub issue 前必须脱敏工程和个人信息：真实工程名、App 名、bundle ID、team ID、组织名、用户名、账号、邮箱、手机号、内网域名、绝对私有路径、完整私有日志、未脱敏截图和证据包不得进入公开 issue；必要时使用 `<private-app>`、`<bundle-id>`、`<user>`、`<internal-host>`、`<repo-path>` 等占位符，并保留平台版本、TritonKit 版本、命令、错误码和最小可复现片段。
 - GitHub Actions 状态观察优先使用 `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`；失败后再拉完整日志，避免 `gh run watch` 重复输出淹没关键状态。
 - 发布脚本查找 GitHub Actions run 时必须从 `gh run list --json headBranch,url` 的 URL 字符串解析 run id；不要通过 `databaseId` + Go template 渲染大整数，避免被格式化成科学计数法后导致 `gh run view` 404。
+- Release 脚本完成后，完成定义是 arm64 CLI 包、skill 包、checksum manifest、GitHub Release 和 Homebrew tap 已可用；x86_64 CLI 资产由 Intel runner 后补，不阻塞 Apple Silicon 发布闭环。若额外开了 `gh-run-summary --watch` 观察 backfill，release 脚本完成后可停止本地 watcher，但不要取消 GitHub Actions run。
+- Release tag 推送完成后再写 memory 时，只用 docs-only commit 推回 `main`，不要移动 tag；随后观察该 docs-only main CI 通过，作为整理收尾证据。
 
 ## 文档与记忆
 
