@@ -47,6 +47,7 @@ jq -e '.commands[0].options[] | select(.name == "--runtime-base-url")' "$out_dir
 
 "$triton" schema --command device --json > "$out_dir/schema-device.json"
 jq -e '.commands[0].options[] | select(.name | startswith("runtime-url "))' "$out_dir/schema-device.json" >/dev/null
+jq -e '.commands[0].options[] | select(.name == "runtime-url --device <selector>")' "$out_dir/schema-device.json" >/dev/null
 jq -e '.commands[0].options[] | select(.name == "--local-port" and .defaultValue == "28767")' "$out_dir/schema-device.json" >/dev/null
 jq -e '.commands[0].options[] | select(.name == "--remote-port" and .defaultValue == "28767")' "$out_dir/schema-device.json" >/dev/null
 
@@ -197,6 +198,9 @@ jq -e '.ok == true and .platform == "harmony" and .runtime == "arkts-har" and (.
 
 "$triton" device runtime-url --platform harmony --target 127.0.0.1:10100 --hdc "$fake_hdc" --no-forward --json > "$out_dir/runtime-url-defaults.json"
 jq -e --arg base "$default_base_url" '.ok == true and .baseURL == $base and .localPort == 28767 and .remotePort == 28767 and .forwarded == false and (.manifest? == null)' "$out_dir/runtime-url-defaults.json" >/dev/null
+
+"$triton" device runtime-url --device 127.0.0.1:10100 --hdc "$fake_hdc" --no-forward --json > "$out_dir/runtime-url-device-defaults.json"
+jq -e --arg base "$default_base_url" '.ok == true and .baseURL == $base and .localPort == 28767 and .remotePort == 28767 and .forwarded == false and (.manifest? == null)' "$out_dir/runtime-url-device-defaults.json" >/dev/null
 
 "$triton" device runtime-url --platform harmony --target 127.0.0.1:10100 --hdc "$fake_hdc" --local-port "$port" --remote-port "$port" --probe-manifest --json > "$out_dir/runtime-url.json"
 jq -e --arg base "$base_url" '.ok == true and .baseURL == $base and .forwarded == true and .manifest.platform == "harmony"' "$out_dir/runtime-url.json" >/dev/null

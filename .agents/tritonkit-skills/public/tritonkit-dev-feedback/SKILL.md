@@ -103,7 +103,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - host-side layout and screenshot artifacts may contain private UI data; inspect or summarize instead of attaching raw files when redaction is uncertain.
      - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
    - Harmony embedded SDK feedback should distinguish generic HAR capability from app-provided semantics:
-     - run `triton device runtime-url --platform harmony --target <hdc-target> --probe-manifest --json` first when the runtime is on a Harmony emulator/device and the host needs an HDC fport base URL;
+     - run `triton device runtime-url --device harmony-a --probe-manifest --json` first when the runtime is on a Harmony emulator/device and the host needs an HDC fport base URL; `--platform harmony --target <hdc-target>` remains available as a compatibility path;
      - Harmony demo host-access embedded runtime defaults to `http://127.0.0.1:28767`; `18765` is the demo device-to-host gateway fallback port and should not be treated as the host direct runtime default;
      - if an HDC fport already exists, use `docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh --target <hdc-target> --no-forward` to verify the live endpoint without re-registering the same port mapping;
      - use `triton runtime manifest --runtime-base-url http://127.0.0.1:<port> --json`, `triton state route --runtime-base-url ... --json`, `triton snapshot --runtime-base-url ... --json`, `triton ledger --runtime-base-url ... --jsonl`, and `triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url ... --json` when validating a standalone embedded HTTP runtime before it is connected through `triton serve`;
@@ -401,7 +401,8 @@ Business semantics must be app-provided. A generic HAR should return `unsupporte
 When validating a standalone embedded HTTP runtime before it is connected through `triton serve`, first ask Triton to prepare or discover the HDC fport URL, then use direct runtime commands:
 
 ```bash
-triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json
+triton device alias set harmony-a --platform harmony --target 127.0.0.1:10100 --json
+triton device runtime-url --device harmony-a --probe-manifest --json
 triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
 triton state route --runtime-base-url http://127.0.0.1:28767 --json
 triton snapshot --runtime-base-url http://127.0.0.1:28767 --json

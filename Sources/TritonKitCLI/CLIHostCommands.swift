@@ -2062,7 +2062,12 @@ struct DeviceRuntimeURL: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "runtime-url", abstract: "Prepare and print a Harmony embedded runtime base URL")
 
     @Option(help: "Platform adapter: harmony") var platform: HostDevicePlatform = .harmony
-    @Option(help: "Target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Unified host device selector: alias, harmony:<target>, raw id, or current") var device: String?
+    @Option(help: "Target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Device name filter when available") var name: String?
+    @Option(help: "Runtime filter when available") var runtime: String?
+    @Option(help: "Target state filter, for example connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Local TCP port for host-side runtime access") var localPort: Int = TKHarmonyRuntimeDefaults.hostAccessPort
     @Option(help: "Remote TCP port where the Harmony embedded runtime listens") var remotePort: Int = TKHarmonyRuntimeDefaults.hostAccessPort
@@ -2077,9 +2082,23 @@ struct DeviceRuntimeURL: AsyncParsableCommand {
             guard platform == .harmony else {
                 throw RuntimeError("device runtime-url only supports Harmony targets")
             }
+            if device != nil && target != nil {
+                throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --target.")
+            }
             try validateTCPPort(localPort, name: "--local-port")
             try validateTCPPort(remotePort, name: "--remote-port")
-            let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+            let selection = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(
+                    device: device ?? target,
+                    platform: .harmony,
+                    name: name,
+                    runtime: runtime,
+                    state: state,
+                    ready: ready
+                ),
+                hdc: hdc
+            )
+            let selected = harmonyTarget(from: selection.target)
             let baseURL = "http://127.0.0.1:\(localPort)"
             var sourceCommand: String?
             var forwarded = false

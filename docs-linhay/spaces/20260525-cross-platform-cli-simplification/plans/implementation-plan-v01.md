@@ -27,6 +27,7 @@
 
 - 已发现并修复 `device use --platform ios --ready` / `device use --platform harmony --ready` 这类过滤式选择的 current 写回问题：无显式 selector 时，current 现在写入稳定 target id（如 `sim:<udid>` / `harmony:<target>`），避免写入 `ios` / `ready` 这种后续不可复用的过滤词。
 - 已新增测试锁住 current selector 写回策略和跨平台唯一 ready target 自动解析。
+- 已将 Harmony embedded runtime URL 准备动作接入统一 selector：`triton device runtime-url --device harmony-a --probe-manifest --json` 现在可复用 alias / raw id / `current`，旧 `--platform harmony --target <target>` 仍为兼容路径。
 
 ### M2. 实现与测试
 
@@ -55,7 +56,10 @@
 
 ## 验证记录
 
-- `swift test --package-path CLI --scratch-path .build/cli --filter DeviceCrossPlatformTests`：通过，覆盖 13 个 `device` / selector / schema 测试。
+- `swift test --package-path CLI --scratch-path .build/cli --filter DeviceCrossPlatformTests`：通过，覆盖 14 个 `device` / selector / schema 测试。
+- `swift test --package-path CLI --scratch-path .build/cli`：通过，覆盖 54 个 CLI 测试。
+- `docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`：通过，覆盖 `runtime-url --device` schema、selector 默认端口、旧 `--platform harmony --target` 兼容路径和 direct runtime mock endpoint。
+- `docs-linhay/scripts/verify.sh --local`：通过，覆盖 SwiftPM dependency boundary、根 Swift tests、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build、docs structure 与 whitespace check。
 
 ## 约束
 

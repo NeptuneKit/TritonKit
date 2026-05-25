@@ -538,6 +538,15 @@ func hostDeviceTarget(from target: TKHarmonyTarget) -> HostDeviceTarget {
     )
 }
 
+func harmonyTarget(from target: HostDeviceTarget) -> TKHarmonyTarget {
+    TKHarmonyTarget(
+        target: target.target,
+        state: target.state,
+        transport: target.transport ?? "hdc",
+        source: target.source
+    )
+}
+
 func ensureParentDirectory(for path: String) throws {
     let directory = URL(fileURLWithPath: path).deletingLastPathComponent()
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -614,13 +623,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             note: "Host-side iOS simulator screenshot was written."
         )
     case .harmony:
-        let harmonyTarget = TKHarmonyTarget(
-            target: target.target,
-            state: target.state,
-            transport: target.transport ?? "hdc",
-            source: target.source
-        )
-        let capture = try captureHarmonyScreenshot(selected: harmonyTarget, hdc: hdc, output: output)
+        let capture = try captureHarmonyScreenshot(selected: harmonyTarget(from: target), hdc: hdc, output: output)
         return HostDeviceArtifactOutput(
             ok: true,
             action: "screenshot",
@@ -667,12 +670,7 @@ func waitForHostDeviceReady(
                 return event
             }
         case .harmony:
-            let harmonyTarget = TKHarmonyTarget(
-                target: selected.target,
-                state: selected.state,
-                transport: selected.transport ?? "hdc",
-                source: selected.source
-            )
+            let harmonyTarget = harmonyTarget(from: selected)
             let command = TKHarmonyHDCCommand.bootCompleted(target: harmonyTarget.target, executable: hdc)
             let result = try runHostCommand(command)
             let ready = TKHarmonyBootCompletedParser.isReady(result.stdout)

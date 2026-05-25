@@ -299,13 +299,16 @@ When multiple iOS Simulator apps are connected to the same `triton serve`, `trit
 When validating a standalone embedded runtime HTTP endpoint before it is connected through `triton serve`, bypass the local control server with `--runtime-base-url`:
 
 ```bash
-triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json
+triton device alias set harmony-a --platform harmony --target 127.0.0.1:10100 --json
+triton device runtime-url --device harmony-a --probe-manifest --json
 triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
 triton state route --runtime-base-url http://127.0.0.1:28767 --json
 triton snapshot --runtime-base-url http://127.0.0.1:28767 --json
 triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
 triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
 ```
+
+`triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json` remains available as a compatibility path.
 
 For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` remains the device-to-host gateway fallback port used by the demo UI.
 
@@ -511,13 +514,16 @@ Business semantics are opt-in provider hooks. A generic HAR must not pretend it 
 When the Harmony embedded runtime is reachable through HDC `fport` but has not been connected through `triton serve`, use direct runtime checks:
 
 ```bash
-triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json
+triton device alias set harmony-a --platform harmony --target 127.0.0.1:10100 --json
+triton device runtime-url --device harmony-a --probe-manifest --json
 triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
 triton state route --runtime-base-url http://127.0.0.1:28767 --json
 triton snapshot --runtime-base-url http://127.0.0.1:28767 --json
 triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
 triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
 ```
+
+`triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json` remains available as a compatibility path.
 
 For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` remains the device-to-host gateway fallback port used by the demo UI.
 

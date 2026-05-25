@@ -18,10 +18,12 @@ struct DeviceCrossPlatformTests {
         #expect(optionNames.contains("resolve <selector>"))
         #expect(optionNames.contains("wait-ready --device <selector>"))
         #expect(optionNames.contains("screenshot --device <selector> --output <path>"))
+        #expect(optionNames.contains("runtime-url --device <selector>"))
         #expect(optionNames.contains("--device"))
         #expect(optionNames.contains("--name"))
         #expect(optionNames.contains("--runtime"))
         #expect(optionNames.contains("runtime-url --platform harmony --target <target>"))
+        #expect(device.examples.contains("triton device runtime-url --device harmony-a --probe-manifest --json"))
         #expect(device.providedCapabilities.contains("host-device"))
         #expect(device.providedCapabilities.contains("device-alias"))
         #expect(device.providedCapabilities.contains("host-device-selector"))
@@ -94,6 +96,28 @@ struct DeviceCrossPlatformTests {
         #expect(harmony.target == "127.0.0.1:10100")
         #expect(harmony.ready)
         #expect(harmony.transport == "TCP")
+    }
+
+    @Test("host device target can round-trip into Harmony runtime target")
+    func hostDeviceTargetCanRoundTripIntoHarmonyRuntimeTarget() {
+        let target = HostDeviceTarget(
+            platform: "harmony",
+            id: "harmony:127.0.0.1:10100",
+            target: "127.0.0.1:10100",
+            state: "Connected",
+            ready: true,
+            source: "hdc",
+            name: nil,
+            runtime: nil,
+            transport: "TCP"
+        )
+
+        let harmony = harmonyTarget(from: target)
+
+        #expect(harmony.target == "127.0.0.1:10100")
+        #expect(harmony.state == "Connected")
+        #expect(harmony.transport == "TCP")
+        #expect(harmony.source == "hdc")
     }
 
     @Test("host device selector prefers explicit matches and unique ready candidates")

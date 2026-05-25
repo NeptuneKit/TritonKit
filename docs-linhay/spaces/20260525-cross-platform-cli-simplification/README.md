@@ -100,6 +100,7 @@ triton device wait-ready --device ios-dedicated --json
 triton device wait-ready --device harmony-a --json
 triton device screenshot --device ios-dedicated --output <path.png> --json
 triton device screenshot --device harmony-a --output <path.jpeg> --json
+triton device runtime-url --device harmony-a --probe-manifest --json
 ```
 
 统一输出 envelope 以 `HostDeviceTarget` 为核心：
@@ -158,7 +159,7 @@ swift test --filter TKHostAdapterModelsTests
 本轮只精简了最常用 host device 操作，没有把所有平台能力强行拉平：
 
 1. `triton sim` 仍保留 iOS 高级维护能力，包括 boot/shutdown/record/logs/diagnose/runtime/status-bar/privacy/location/ui/pasteboard/push/personalization；这些能力暂不迁入 `device`。
-2. `device runtime-url` 仍仅支持 Harmony，因为这是 Harmony embedded HTTP runtime 的 HDC `fport` 准备动作；iOS embedded runtime 继续通过 `triton serve` 与 runtime target 选择处理。
+2. `device runtime-url` 已支持统一 `--device <selector>`，但仍仅支持 Harmony，因为这是 Harmony embedded HTTP runtime 的 HDC `fport` 准备动作；`--platform harmony --target <target>` 作为兼容路径保留。iOS embedded runtime 继续通过 `triton serve` 与 runtime target 选择处理。
 3. `device screenshot` 在 iOS 侧输出 PNG，在 Harmony 侧通过 `snapshot_display` 输出 JPEG；统一的是命令入口和 artifact envelope，不伪装图片格式。
 4. WebView provider / DOM / bridge 能力没有并入 `device`。iOS WebView provider 已有 metadata/snapshot/bridge 路径，Harmony 仍是 host-layout candidate 边界。
 5. Android 仍未实现，只保留 DTO 与命令命名的未来兼容空间。
@@ -172,3 +173,4 @@ swift test --filter TKHostAdapterModelsTests
 
 - M1 契约收口已补一个真实修复：`device use` 通过过滤条件自动选中唯一目标时，current 写回稳定 target id，而不是过滤词本身。
 - 该行为已由 `DeviceCrossPlatformTests` 覆盖，避免后续 `device current` 无法解析 current selector。
+- M1 继续补齐 `device runtime-url --device <selector>`：Harmony embedded runtime 的 HDC fport 准备现在可复用 alias、`harmony:<target>`、raw id 或 `current`，并保留 `--platform harmony --target <target>` 兼容路径。
