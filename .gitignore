@@ -8,4 +8,5 @@ dist/
 .build/
 DerivedData/
 docs-linhay/references/baguette/
+docs-linhay/references/revyl-cli/
 .agents/skills/harmony-next/

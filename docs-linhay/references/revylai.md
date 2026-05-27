@@ -3,9 +3,12 @@
 ## 来源
 
 - GitHub organization: `https://github.com/RevylAI`
+- 本地源码参考：`docs-linhay/references/revyl-cli/`
+- Source repo: `https://github.com/RevylAI/revyl-cli`
+- Clone HEAD: `9931a77`
 - Issue: `https://github.com/NeptuneKit/TritonKit/issues/24`
 - 调研日期：2026-05-24
-- 本轮未克隆源码，只基于公开 GitHub README、repo metadata 和组织页做产品/架构归档。
+- 源码克隆日期：2026-05-27
 
 ## 项目定位
 
