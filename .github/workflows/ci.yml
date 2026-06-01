@@ -418,9 +418,17 @@ jobs:
           ! test -f dist/tritonkit-dev-feedback.tar.gz
           ! test -f dist/tritonkit-emulator-cli-takeover.tar.gz
           ! test -f dist/tritonkit-real-project-regression.tar.gz
-          tar -xOf dist/tritonkit-skills.tar.gz tritonkit-dev-feedback/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
-          tar -xOf dist/tritonkit-skills.tar.gz tritonkit-emulator-cli-takeover/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
-          tar -xOf dist/tritonkit-skills.tar.gz tritonkit-real-project-regression/SKILL.md | grep -Fxq "  version: ${{ steps.version.outputs.version }}"
+          expected_skill_version_line="  version: ${{ steps.version.outputs.version }}"
+          for skill_name in \
+            tritonkit-dev-feedback \
+            tritonkit-emulator-cli-takeover \
+            tritonkit-real-project-regression; do
+            skill_version_line="$(
+              tar -xOf dist/tritonkit-skills.tar.gz "${skill_name}/SKILL.md" \
+                | rg '^  version: '
+            )"
+            [[ "${skill_version_line}" == "${expected_skill_version_line}" ]]
+          done
 
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
             formula_tag="${GITHUB_REF_NAME}"
