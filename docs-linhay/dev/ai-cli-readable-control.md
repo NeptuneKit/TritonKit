@@ -410,3 +410,5 @@ Round 171 新增 capability group 维度的 nextAction 输出模式门禁：除 
 Round 172 新增 `nextAction --output` 参数契约门禁：凡是能力恢复命令包含 `--output`，后继值必须是 `<...>` 占位符，并且 capability 必须落入显式白名单，绑定固定 artifact 类型（例如 `<file.tritonplan>`、`<path.mov>`、`<path.ndjson>`、`<dir.tritonevidence>`、`<path.png>`）。这保证 agent 在 evidence/record/screenshot/sim 相关恢复路径上拿到稳定可推断的输出形状。
 
 Round 173 新增目标选择参数占位符门禁：`nextAction` 的 `--device`、`--simulator`、`--bundle-id` 统一使用 canonical token（`smoke` 使用 `<device>`，其余 `--device` 使用 `<selector>`，`--simulator` 使用 `<udid|booted>`，`--bundle-id` 使用 `<bundle-id>`）。这样 agent 在 target/simulator/bundle 相关恢复路径不需要为同义参数维护多套替换规则。
+
+Round 174 新增 `--platform` 语义门禁：`nextAction` 中的平台值只能是 `ios` 或 `harmony`，并与 capability family 保持一致（`harmony-*` 只能给 `harmony`，`ios-*` 与 `observe-ios` 只能给 `ios`）。这样 agent 不需要在跨平台路由时再做反向推断或异常兜底映射。

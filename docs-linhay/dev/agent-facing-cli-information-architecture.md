@@ -597,3 +597,4 @@ triton replay <file.tritonplan> --json
 105. Round 171：新增 capability group 维度的 nextAction 机器可读输出门禁；除 `serve` 外，所有 nextAction 都必须显式携带 `--json` / `--jsonl` / `--format json` / `--metadata` 之一，且 `observe` 组 `screenshot` 必须同时保留 `<path.png> + --metadata`，防止恢复路径静默退回人读输出。
 106. Round 172：新增 `nextAction --output` 参数契约门禁；所有带 `--output` 的 capability 必须显式声明 artifact-typed 占位符并进入白名单（如 `<file.tritonplan>`、`<path.mov>`、`<path.ndjson>`、`<dir.tritonevidence>`、`<path.png>`），避免输出路径退化为硬编码值或语义不明占位符。
 107. Round 173：新增目标选择类参数占位符门禁；`nextAction` 中 `--device/--simulator/--bundle-id` 必须使用 canonical token（`smoke` 的 `--device=<device>`，其他命令 `--device=<selector>`，`--simulator=<udid|booted>`，`--bundle-id=<bundle-id>`），避免同类参数在不同能力中漂移成不可预测文本。
+108. Round 174：新增 `nextAction --platform` 参数规范化门禁；`--platform` 只能取 `ios|harmony`，并与 capability family 对齐（`harmony-* -> harmony`，`ios-* / observe-ios -> ios`），防止跨平台恢复命令出现 family 与平台语义错配。

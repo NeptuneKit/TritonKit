@@ -1786,6 +1786,52 @@ struct SchemaFactSourceTests {
         #expect(bundleIDPlaceholderMismatches == [])
     }
 
+    @Test("capability next-action platform flags stay canonical and family-aligned")
+    func capabilityNextActionPlatformFlagsStayCanonicalAndFamilyAligned() {
+        let fixtures = capabilityStateFixtures()
+
+        var unsupportedPlatformValues: [String] = []
+        var harmonyFamilyPlatformMismatches: [String] = []
+        var iosFamilyPlatformMismatches: [String] = []
+
+        for fixture in fixtures {
+            for capability in fixture.capabilities {
+                guard let nextAction = capability.nextAction else {
+                    continue
+                }
+                let args = nextAction.args
+                let context = "\(fixture.name):\(capability.name):command=\(nextAction.command):args=\(args)"
+
+                let platformValues = args.enumerated().compactMap { index, arg -> String? in
+                    guard arg == "--platform", args.indices.contains(index + 1) else {
+                        return nil
+                    }
+                    return args[index + 1]
+                }
+
+                for value in platformValues where !Set(["ios", "harmony"]).contains(value) {
+                    unsupportedPlatformValues.append("\(context):platform=\(value)")
+                }
+
+                if capability.name.hasPrefix("harmony-") {
+                    if !platformValues.isEmpty && !platformValues.allSatisfy({ $0 == "harmony" }) {
+                        harmonyFamilyPlatformMismatches.append("\(context):platforms=\(platformValues)")
+                    }
+                }
+
+                if capability.name.hasPrefix("ios-") || capability.name == "observe-ios" {
+                    if !platformValues.isEmpty && !platformValues.allSatisfy({ $0 == "ios" }) {
+                        iosFamilyPlatformMismatches.append("\(context):platforms=\(platformValues)")
+                    }
+                }
+            }
+        }
+
+        #expect(unsupportedPlatformValues == [])
+        #expect(harmonyFamilyPlatformMismatches == [])
+        #expect(iosFamilyPlatformMismatches == [])
+    }
+
     @Test("capability names remain unique for agent indexing")
     func capabilityNamesRemainUniqueForAgentIndexing() {
         var duplicateSchemaCapabilities: [String] = []
