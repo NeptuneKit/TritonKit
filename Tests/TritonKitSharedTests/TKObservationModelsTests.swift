@@ -210,6 +210,70 @@ struct TKObservationModelsTests {
         #expect(decoded.sources.last?.available == false)
     }
 
+    @Test("WebView list response exposes provider as primary source")
+    func webViewListPrimarySourcePrefersProvider() throws {
+        let descriptor = webViewCandidate(id: "ios-provider:1", confidence: 0.98, area: 100)
+        let response = TKWebViewListResponse(
+            ok: true,
+            action: "webview.list",
+            platform: "ios",
+            capturedAt: "2026-05-31T00:00:00Z",
+            target: "triton:ios-simulator:demo",
+            current: descriptor,
+            candidates: [descriptor],
+            sources: [
+                TKWebViewSource(name: "runtime-tree", available: true, sourceCommands: ["triton runtimeSnapshot request"]),
+                TKWebViewSource(name: "webview-provider", available: true, sourceCommands: ["triton webview list --json"]),
+                TKWebViewSource(name: "host-layout", available: false, reason: "unsupported"),
+            ],
+            sourceCommands: ["triton webview list --json"],
+            note: "provider-backed"
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKWebViewListResponse.self, from: data)
+
+        #expect(response.primarySource?.name == "webview-provider")
+        #expect(decoded.primarySource?.name == "webview-provider")
+        #expect(decoded.primarySource?.sourceCommands == ["triton webview list --json"])
+    }
+
+    @Test("WebView current response backfills primary source from legacy payload")
+    func webViewCurrentBackfillsPrimarySourceFromLegacyPayload() throws {
+        let payload = """
+        {
+          "ok": true,
+          "action": "webview.current",
+          "platform": "harmony",
+          "capturedAt": "2026-05-31T00:00:00Z",
+          "target": "127.0.0.1:10100",
+          "webView": {
+            "webViewID": "harmony:host:1",
+            "platform": "harmony",
+            "source": "host-layout",
+            "candidateOnly": true,
+            "confidence": 0.91,
+            "providerStatus": "unavailable",
+            "bridgeStatus": "unavailable",
+            "capabilities": ["visible"],
+            "missingCapabilities": ["webview.url"]
+          },
+          "sources": [
+            { "name": "runtime-tree", "available": false, "reason": "runtime-base-url not provided", "sourceCommands": [] },
+            { "name": "host-layout", "available": true, "sourceCommands": ["hdc dumpLayout"] },
+            { "name": "webview-provider", "available": false, "reason": "provider not registered", "sourceCommands": [] }
+          ],
+          "sourceCommands": ["hdc dumpLayout"],
+          "note": "legacy payload"
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(TKWebViewCurrentResponse.self, from: payload)
+
+        #expect(decoded.primarySource?.name == "host-layout")
+        #expect(decoded.primarySource?.sourceCommands == ["hdc dumpLayout"])
+    }
+
     @Test("WebView current selection returns stable error codes")
     func webViewCurrentSelectionErrors() throws {
         #expect(throws: TKWebViewSelectionError.self) {

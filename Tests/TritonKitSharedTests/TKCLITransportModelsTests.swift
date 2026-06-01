@@ -233,6 +233,7 @@ struct TKCLITransportModelsTests {
         let decoded = try JSONDecoder().decode(TKCLIStatusEnvelope.self, from: data)
 
         #expect(decoded.ok)
+        #expect(decoded.surface == "status")
         #expect(decoded.serverReachable)
         #expect(decoded.runtime == "embedded")
         #expect(decoded.targetCount == 1)
@@ -258,6 +259,7 @@ struct TKCLITransportModelsTests {
         let data = try JSONEncoder().encode(response)
         let decoded = try JSONDecoder().decode(TKCLIStatusEnvelope.self, from: data)
 
+        #expect(decoded.surface == "status")
         #expect(decoded.latestHierarchyAvailable)
         #expect(decoded.activeHierarchyAvailable == false)
         #expect(decoded.hierarchyCacheState == "stale")
@@ -336,8 +338,21 @@ struct TKCLITransportModelsTests {
             targetCount: 1,
             runtime: "embedded",
             capabilities: [
-                TKRuntimeCapability(name: "tap", supported: true),
-                TKRuntimeCapability(name: "press", supported: false, reason: "Host-side HID unavailable"),
+                TKRuntimeCapability(
+                    name: "tap",
+                    supported: true,
+                    group: "action",
+                    requiredBy: ["assert", "evidence"],
+                    nextAction: TKCLINextAction(command: "tap", args: ["<query>", "--json"]),
+                    evidence: ["input.result"]
+                ),
+                TKRuntimeCapability(
+                    name: "press",
+                    supported: false,
+                    reason: "Host-side HID unavailable",
+                    group: "action",
+                    evidence: ["schema:press"]
+                ),
             ]
         )
 
@@ -345,12 +360,65 @@ struct TKCLITransportModelsTests {
         let decoded = try JSONDecoder().decode(TKCapabilitiesResponse.self, from: data)
 
         #expect(decoded.ok)
+        #expect(decoded.surface == "capabilities")
         #expect(decoded.runtime == "embedded")
         #expect(decoded.activeHierarchyAvailable == true)
         #expect(decoded.hierarchyCacheState == "active")
         #expect(decoded.targetConnectionState == "connected")
+        #expect(decoded.primaryCapability == "tap")
+        #expect(decoded.primaryWorkflowCategory == "assert")
+        #expect(decoded.primaryEvidence == "input.result")
+        #expect(decoded.primaryNextAction?.command == "tap")
+        #expect(decoded.primaryNextActionSource == "actionable-capability")
         #expect(decoded.capabilities.first(where: { $0.name == "tap" })?.supported == true)
+        #expect(decoded.capabilities.first(where: { $0.name == "tap" })?.group == "action")
+        #expect(decoded.capabilities.first(where: { $0.name == "tap" })?.requiredBy == ["assert", "evidence"])
+        #expect(decoded.capabilities.first(where: { $0.name == "tap" })?.nextAction?.command == "tap")
+        #expect(decoded.capabilities.first(where: { $0.name == "tap" })?.evidence == ["input.result"])
         #expect(decoded.capabilities.first(where: { $0.name == "press" })?.supported == false)
+    }
+
+    @Test("doctor response carries ordered recovery checks")
+    func doctorResponseShape() throws {
+        let response = TKDoctorResponse(
+            ok: false,
+            serverReachable: false,
+            connected: false,
+            runtime: "unknown",
+            nextStep: "start-server",
+            nextWorkflows: ["target", "runtime"],
+            checks: [
+                TKDoctorCheck(
+                    id: "start-server",
+                    status: "fail",
+                    code: "server_unavailable",
+                    message: "Local server is not reachable",
+                    hint: "Start server",
+                    nextAction: TKCLINextAction(command: "serve", args: ["--host", "127.0.0.1", "--port", "19421"], requiresLongRunningProcess: true),
+                    relatedCapabilities: ["status", "runtime-manifest"],
+                    workflowCategories: ["runtime", "app"]
+                ),
+            ],
+            error: TKCLIErrorDetail(code: "server_unavailable", message: "No server")
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKDoctorResponse.self, from: data)
+
+        #expect(!decoded.ok)
+        #expect(decoded.surface == "doctor")
+        #expect(decoded.nextStep == "start-server")
+        #expect(decoded.nextWorkflows == ["target", "runtime"])
+        #expect(decoded.primaryCapability == "status")
+        #expect(decoded.primaryWorkflowCategory == "app")
+        #expect(decoded.primaryNextAction?.command == "serve")
+        #expect(decoded.primaryNextActionSource == "next-step-check")
+        #expect(decoded.checks.first?.id == "start-server")
+        #expect(decoded.checks.first?.status == "fail")
+        #expect(decoded.checks.first?.nextAction?.command == "serve")
+        #expect(decoded.checks.first?.relatedCapabilities == ["status", "runtime-manifest"])
+        #expect(decoded.checks.first?.workflowCategories == ["runtime", "app"])
+        #expect(decoded.error?.code == "server_unavailable")
     }
 
     @Test("version and input summary responses are machine readable")
@@ -544,6 +612,8 @@ struct TKCLITransportModelsTests {
             serverReachable: false,
             connected: false,
             runtime: "unknown",
+            mode: "bootstrap",
+            goal: "general",
             nextStep: "start-server",
             steps: [
                 TKWorkflowPlanStep(
@@ -571,9 +641,73 @@ struct TKCLITransportModelsTests {
         let decoded = try JSONDecoder().decode(TKWorkflowPlanResponse.self, from: data)
 
         #expect(!decoded.ok)
+        #expect(decoded.surface == "plan")
+        #expect(decoded.mode == "bootstrap")
+        #expect(decoded.goal == "general")
         #expect(decoded.nextStep == "start-server")
+        #expect(decoded.nextWorkflows.contains("app"))
+        #expect(decoded.nextWorkflows.contains("observe"))
+        #expect(decoded.primaryWorkflowCategory == "app")
+        #expect(decoded.primaryExpectedArtifact == "stdout-json")
+        #expect(decoded.primaryNextAction?.command == "serve")
+        #expect(decoded.primaryNextAction?.args == ["--host", "127.0.0.1", "--port", "19421"])
+        #expect(decoded.primaryNextActionSource == "next-step-step")
         #expect(decoded.steps.first?.command.contains("triton serve") == true)
+        #expect(decoded.steps.first?.argv == ["triton", "serve", "--host", "127.0.0.1", "--port", "19421"])
+        #expect(decoded.steps.first?.workflowCategories.contains("app") == true)
+        #expect(decoded.steps.first?.workflowCategories.contains("evidence") == true)
+        #expect(decoded.steps.first?.requires == ["cli.available"])
+        #expect(decoded.steps.first?.expectedArtifacts.contains("stdout-json") == true)
+        #expect(decoded.steps.first?.stopConditions.contains("command.failed") == true)
         #expect(decoded.error?.code == "server_unavailable")
         #expect(decoded.error?.nextAction?.args.contains("19421") == true)
+    }
+
+    @Test("workflow plan infers mode when decoding older payloads")
+    func workflowPlanInfersModeForOlderPayloads() throws {
+        let bootstrapData = Data(
+            """
+            {
+              "ok": false,
+              "serverReachable": false,
+              "connected": false,
+              "runtime": "unknown",
+              "goal": "general",
+              "nextStep": "start-server",
+              "steps": []
+            }
+            """.utf8
+        )
+        let taskData = Data(
+            """
+            {
+              "ok": true,
+              "serverReachable": true,
+              "connected": true,
+              "runtime": "embedded",
+              "goal": "ios-smoke",
+              "nextStep": "target-list",
+              "steps": []
+            }
+            """.utf8
+        )
+
+        let bootstrapPlan = try JSONDecoder().decode(TKWorkflowPlanResponse.self, from: bootstrapData)
+        let taskPlan = try JSONDecoder().decode(TKWorkflowPlanResponse.self, from: taskData)
+
+        #expect(bootstrapPlan.surface == "plan")
+        #expect(taskPlan.surface == "plan")
+        #expect(bootstrapPlan.mode == "bootstrap")
+        #expect(taskPlan.mode == "task")
+        #expect(bootstrapPlan.nextWorkflows.contains("app"))
+        #expect(bootstrapPlan.primaryWorkflowCategory == "app")
+        #expect(bootstrapPlan.primaryExpectedArtifact == "stdout-json")
+        #expect(bootstrapPlan.primaryNextAction?.command == "serve")
+        #expect(bootstrapPlan.primaryNextActionSource == "default-next-step")
+        #expect(taskPlan.primaryWorkflowCategory == "app")
+        #expect(taskPlan.primaryExpectedArtifact == "stdout-json")
+        #expect(taskPlan.primaryNextAction?.command == "target")
+        #expect(taskPlan.primaryNextActionSource == "default-next-step")
+        #expect(taskPlan.nextWorkflows.contains("smoke"))
     }
 }

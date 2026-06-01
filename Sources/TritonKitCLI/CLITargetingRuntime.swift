@@ -370,7 +370,9 @@ func tapRequest(
     duration: Double?,
     activationStrategy: TKTapActivationStrategy = .exact
 ) -> TKInputRequest {
-    if activationStrategy != .exact, let matchedOID = node.viewOID ?? node.targetOID {
+    let resolvedMatchedOID = node.viewOID ?? node.targetOID
+
+    if activationStrategy != .exact, let matchedOID = resolvedMatchedOID {
         return TKInputRequest.tap(
             targetOID: matchedOID,
             width: width,
@@ -388,14 +390,20 @@ func tapRequest(
             y: node.frame.centerY,
             width: width,
             height: height,
-            duration: duration
+            duration: duration,
+            matchedOID: resolvedMatchedOID,
+            matchedClassName: node.className,
+            activationStrategy: .exact
         )
     }
     return TKInputRequest.tap(
         targetOID: node.targetOID ?? node.viewOID,
         width: width,
         height: height,
-        duration: duration
+        duration: duration,
+        matchedOID: resolvedMatchedOID,
+        matchedClassName: node.className,
+        activationStrategy: .exact
     )
 }
 

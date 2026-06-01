@@ -1299,7 +1299,7 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         detail = TKCLIErrorDetail(
             code: "parameter_conflict",
             message: "\(error)",
-            hint: "Use --device as the unified selector, or keep the legacy --simulator / --target path, but do not combine them."
+            hint: "Use --device as the unified selector, or choose one explicit selector path (--simulator or --target), but do not combine them."
         )
     case HostCommandRunError.deviceNotReady:
         detail = TKCLIErrorDetail(

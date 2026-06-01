@@ -412,3 +412,11 @@ Round 172 新增 `nextAction --output` 参数契约门禁：凡是能力恢复�
 Round 173 新增目标选择参数占位符门禁：`nextAction` 的 `--device`、`--simulator`、`--bundle-id` 统一使用 canonical token（`smoke` 使用 `<device>`，其余 `--device` 使用 `<selector>`，`--simulator` 使用 `<udid|booted>`，`--bundle-id` 使用 `<bundle-id>`）。这样 agent 在 target/simulator/bundle 相关恢复路径不需要为同义参数维护多套替换规则。
 
 Round 174 新增 `--platform` 语义门禁：`nextAction` 中的平台值只能是 `ios` 或 `harmony`，并与 capability family 保持一致（`harmony-*` 只能给 `harmony`，`ios-*` 与 `observe-ios` 只能给 `ios`）。这样 agent 不需要在跨平台路由时再做反向推断或异常兜底映射。
+
+Round 175 新增文本参数占位符门禁：`nextAction` 的 `--text`、`--wait-text` 以及 `assert text-exists` 的 operand 统一固定为 `<text>`。该门禁避免同一文本语义在 wait/assert/smoke/webview 路径中出现不一致 token，减少 agent 参数填充分叉。
+
+按当前执行要求，模拟器测试门禁统一走 `docs-linhay/scripts/verify-simulator-gate.sh`：默认 `quick` 跑 simulator domain 核心单测 + selector/platform/text 三条 schema 门禁 + iOS runtime observe smoke；`full` 额外跑 iOS WebView harness。后续轮询提交前按此门禁主动执行。
+
+模拟器测试门禁现已固定入口为 `docs-linhay/scripts/verify-simulator-gate.sh`：`quick` 模式默认执行 simulator 相关单测 + selector/platform/text 三条 schema 门禁 + iOS runtime observe smoke；`full` 模式在此基础上增加 iOS WebView harness 回归。后续轮询提交前按该门禁主动校验。
+
+Round 175 新增文本参数占位符门禁：`nextAction` 中 `--text`、`--wait-text` 和 `assert text-exists` 的文本 operand 统一固定为 `<text>`。这让 agent 在 wait/assert/smoke/webview/node-resolve 等文本驱动路径上复用同一变量绑定，不再维护别名映射。

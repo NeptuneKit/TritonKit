@@ -1,0 +1,177 @@
+import Foundation
+import TritonKitShared
+
+func bootstrapCommandSchemas() -> [TKCommandSchema] {
+    let hostPort = schemaHostPortOptions
+    let jsonText = schemaTextJSONFormats
+    let jsonAlias = schemaJSONAliasOption
+    let languageOption = schemaLanguageOption
+
+    return [
+        TKCommandSchema(
+            name: "version",
+            summary: "Print Triton CLI version and bootstrap defaults",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 0,
+            outputFormats: jsonText,
+            options: [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
+            examples: ["triton version --format json"],
+            successShape: "{ ok, version, schemaVersion, defaultHost, defaultPort, language, supportedLanguages }",
+            failureShape: nil
+        ),
+        TKCommandSchema(
+            name: "serve",
+            summary: "Start the local WebSocket and HTTP control server",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli-long-running",
+            exitCodeOnFailure: 1,
+            outputFormats: ["logs"],
+            options: [
+                TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "0.0.0.0", description: "Host to bind to"),
+                TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Port to listen on"),
+            ],
+            examples: ["triton serve --host 127.0.0.1 --port 19421"],
+            successShape: "Long-running process; exposes /status, /targets, /request, /input, /hierarchy/latest and WebSocket /",
+            failureShape: "Startup failures use process stderr/logs with stable CLI failure codes for invalid bind options or server startup failure",
+            nextCommands: [
+                "triton status --json",
+                "triton doctor --format json",
+                "triton capabilities --format json",
+            ],
+            failureCodes: ["validation_failed", "server_start_failed"]
+        ),
+        TKCommandSchema(
+            name: "status",
+            summary: "Read local TritonKit server status",
+            requiresServer: true,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            outputFormats: jsonText,
+            options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
+            examples: ["triton status --format json"],
+            successShape: "{ ok, serverReachable, connected, latestHierarchyAvailable, activeHierarchyAvailable, hierarchyCacheState, targetConnectionState, targetCount, runtime }",
+            failureShape: "{ ok: false, error: { code: server_unavailable|request_failed, message, endpoint, hint, nextAction? } }",
+            outputSemantics: "Use status for a direct server/runtime liveness read. If it fails with server_unavailable, start `triton serve` before retrying.",
+            nextCommands: [
+                "triton serve --host 127.0.0.1 --port 19421",
+                "triton doctor --format json",
+                "triton list --json",
+            ],
+            outputContracts: [statusOutputContract()],
+            failureCodes: ["server_unavailable", "request_failed"]
+        ),
+        TKCommandSchema(
+            name: "doctor",
+            summary: "Diagnose server, target, and runtime capabilities",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 0,
+            outputFormats: jsonText,
+            options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
+            examples: ["triton doctor --format json"],
+            successShape: "{ ok, serverReachable, connected, runtime, nextStep, checks[], error? }",
+            outputSemantics: "Use doctor before planning or after a failed command to get ordered diagnostic checks, stable codes, hints, nextAction, and related capabilities.",
+            nextCommands: [
+                "triton capabilities --format json",
+                "triton plan --format json",
+                "triton serve --host 127.0.0.1 --port 19421",
+                "triton list --json",
+            ],
+            outputContracts: [doctorOutputContract()],
+            failureCodes: ["server_unavailable", "target_unavailable", "request_failed"]
+        ),
+        TKCommandSchema(
+            name: "plan",
+            summary: "Print recommended next CLI steps or inspect a replay plan",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 0,
+            outputFormats: jsonText,
+            options: hostPort + [
+                TKCommandSchemaOption(name: "inspect <path>", type: "Subcommand", description: "Read a .tritonplan summary without connecting to runtime"),
+                TKCommandSchemaOption(name: "ios-smoke", type: "Task", description: "Plan target selection, iOS smoke execution, and evidence summary"),
+                TKCommandSchemaOption(name: "open-url", type: "Task", description: "Plan host app open-url, runtime readiness, wait/assert, and evidence capture"),
+                TKCommandSchemaOption(name: "webview-check", type: "Task", description: "Plan WebView metadata, route assertion, wait, and evidence capture"),
+                TKCommandSchemaOption(name: "--device", type: "String", description: "Target selector used by task plans"),
+                TKCommandSchemaOption(name: "--bundle-id", type: "String", description: "Bundle identifier used by iOS smoke task plans"),
+                TKCommandSchemaOption(name: "--url", type: "String", description: "URL or deep link used by open-url and smoke task plans"),
+                TKCommandSchemaOption(name: "--text", type: "String", description: "Text used by wait/assert task plan steps"),
+                TKCommandSchemaOption(name: "--expected-url", type: "String", description: "Expected WebView URL used by webview-check task plans"),
+                TKCommandSchemaOption(name: "--evidence", type: "String", description: "Evidence bundle path used by task plans"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: [
+                "triton plan --format json",
+                "triton plan ios-smoke --device iphone15 --bundle-id com.example.app --url myapp://smoke --text Home --evidence /tmp/smoke.tritonevidence --json",
+                "triton plan open-url --device iphone15 --url myapp://detail --text Ready --json",
+                "triton plan webview-check --expected-url https://example.com --text Loaded --json",
+                "triton plan inspect login-flow.tritonplan --json",
+            ],
+            successShape: "{ ok, serverReachable, connected, runtime, goal?, nextStep, steps[], error? } or { ok, path, schemaVersion, name, variables, stepCount, actions, target?, steps[] }",
+            failureShape: "{ ok: false, error: { code: server_unavailable|target_unavailable|request_failed|validation_failed, message, endpoint, hint, nextAction? } }",
+            outputSemantics: "Use plan for recommended command sequences. It does not execute actions; agents must run the returned commands explicitly.",
+            nextCommands: [
+                "triton doctor --format json",
+                "triton capabilities --format json",
+                "triton schema --json",
+                "triton schema --command <command> --json",
+            ],
+            outputContracts: [planNextStepsOutputContract(), planInspectOutputContract()],
+            failureCodes: ["server_unavailable", "target_unavailable", "request_failed", "validation_failed"],
+            providedCapabilities: ["plan", "plan-inspect"]
+        ),
+        TKCommandSchema(
+            name: "capabilities",
+            summary: "Print runtime capability matrix",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 0,
+            outputFormats: jsonText,
+            options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"), jsonAlias, languageOption],
+            examples: ["triton capabilities --format json"],
+            successShape: "{ ok, serverReachable, connected, runtime, capabilities[] }",
+            outputSemantics: "Use capabilities to decide which runtime, host, evidence, replay, and action commands are currently usable.",
+            nextCommands: [
+                "triton schema --json",
+                "triton plan --format json",
+                "triton doctor --format json",
+                "triton serve --host 127.0.0.1 --port 19421",
+            ],
+            outputContracts: [capabilitiesOutputContract()],
+            failureCodes: ["server_unavailable", "target_unavailable", "request_failed"]
+        ),
+        TKCommandSchema(
+            name: "schema",
+            summary: "Print machine-readable command schemas and examples",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli",
+            exitCodeOnFailure: 1,
+            outputFormats: jsonText,
+            options: [
+                TKCommandSchemaOption(name: "--command", type: "String", description: "Optional command name to filter"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: ["triton schema --json", "triton schema --command input --json"],
+            successShape: "{ schemaVersion, commands[] }",
+            outputSemantics: "Use schema as the command contract fact source before executing or planning a Triton command.",
+            nextCommands: [
+                "triton schema --command <command> --json",
+                "triton capabilities --format json",
+                "triton plan --format json",
+            ],
+            outputContracts: [schemaCommandsOutputContract()],
+            failureCodes: ["unknown_command_schema"]
+        ),
+    ]
+}

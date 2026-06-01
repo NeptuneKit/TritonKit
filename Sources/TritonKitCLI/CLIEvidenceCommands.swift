@@ -344,6 +344,28 @@ struct Replay: AsyncParsableCommand {
                 if let failedStepIndex = result.failedStepIndex {
                     print("failedStepIndex: \(failedStepIndex)")
                 }
+                if let failureCode = result.failureCode {
+                    print("failureCode: \(failureCode)")
+                }
+                if let error = result.failureError {
+                    print("failureError: \(error.code) \(error.message)")
+                }
+                if !result.failureWorkflowCategories.isEmpty {
+                    print("failureWorkflowCategories: \(result.failureWorkflowCategories.joined(separator: ", "))")
+                }
+                if !result.failureRecoveryCategories.isEmpty {
+                    print("failureRecoveryCategories: \(result.failureRecoveryCategories.joined(separator: ", "))")
+                }
+                if !result.failurePrimaryArtifacts.isEmpty {
+                    print("failurePrimaryArtifacts: \(result.failurePrimaryArtifacts.map(\.kind).joined(separator: ", "))")
+                }
+                if !result.recoveryCommands.isEmpty {
+                    let commands = result.recoveryCommands.map { "\($0.category): \($0.command)" }
+                    print("recoveryCommands: \(commands.joined(separator: " | "))")
+                }
+                if !result.suggestedCommands.isEmpty {
+                    print("suggestedCommands: \(result.suggestedCommands.joined(separator: " | "))")
+                }
                 for step in result.steps {
                     print("[\(step.index)] \(step.action) ok=\(step.ok) \(step.command.joined(separator: " "))")
                 }

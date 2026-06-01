@@ -26,3 +26,7 @@ GitHub issue #20 反馈：真实 UIKit 页面中，`triton tap "<text>"` 经常�
 - UIKit 单元测试覆盖 UIControl、table cell、collection cell 与 gesture-backed parent。
 - UIControl 测试断言业务 action 被同步触发；cell activation 尊重 selection 开关与 delegate selection 门禁。
 - 相关 Swift 测试通过。
+
+## 实现记录
+
+- 2026-05-26：补齐 exact / low-level selector 的 matched、activation 和 strategy 透传，并让 CLI text 输出显式展示这些字段。

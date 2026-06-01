@@ -5,7 +5,7 @@ struct WebView: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "webview",
         abstract: "Inspect current WebView candidates without claiming DOM or bridge access",
-        subcommands: [WebViewList.self, WebViewCurrent.self, WebViewCurrentURL.self, WebViewSnapshot.self, WebViewCall.self, WebViewEvents.self]
+        subcommands: [WebViewList.self, WebViewCurrent.self, WebViewCurrentURL.self, WebViewSnapshot.self, WebViewCall.self, WebViewEvents.self, WebViewWait.self]
     )
 }
 
@@ -37,6 +37,44 @@ struct WebViewEvents: AsyncParsableCommand {
             port: port,
             runtimeBaseURL: runtimeBaseURL,
             limit: limit,
+            format: format,
+            json: json
+        )
+    }
+}
+
+struct WebViewWait: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "wait", abstract: "Wait for WebView text, selector, or page event using the embedded runtime")
+
+    @Option(help: "Exact visible text line to wait for") var text: String?
+    @Option(help: "Simple #id selector to wait for") var selector: String?
+    @Option(help: "Exact page event name to wait for") var event: String?
+    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform = .ios
+    @Option(help: "Target id from `triton list` or Harmony hdc target") var target: String = TKLocalTargetID
+    @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
+    @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
+    @Option(help: "Select a candidate id from `triton webview list`") var webviewID: String?
+    @Option(help: "Expected page session id from `triton webview current`") var pageSessionID: String?
+    @Option(help: "Timeout in seconds") var timeout: Double = 10
+    @Option(help: "Polling interval in seconds") var interval: Double = 0.5
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        try await runWebViewWait(
+            text: text,
+            selector: selector,
+            event: event,
+            platform: platform,
+            target: target,
+            host: host,
+            port: port,
+            runtimeBaseURL: runtimeBaseURL,
+            webViewID: webviewID,
+            pageSessionID: pageSessionID,
+            timeoutSeconds: timeout,
+            intervalSeconds: interval,
             format: format,
             json: json
         )

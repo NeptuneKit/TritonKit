@@ -35,22 +35,38 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
     }
 
     if let textView = nearestSuperview(of: view, matching: UITextView.self) {
+        let matched = tapMatchedContext(request, fallback: view)
+        let activationOID = oid(for: textView)
+        let activationClassName = NSStringFromClass(type(of: textView))
         textView.becomeFirstResponder()
         return TKInputResult.success(
             action: action,
             message: "Focused text view",
-            targetOID: oid(for: textView),
-            targetClassName: NSStringFromClass(type(of: textView))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: request.activationStrategy?.rawValue
         )
     }
 
     if let responder = nearestTextInputResponder(from: view) {
+        let matched = tapMatchedContext(request, fallback: view)
+        let activationOID = oid(for: responder)
+        let activationClassName = NSStringFromClass(type(of: responder))
         responder.becomeFirstResponder()
         return TKInputResult.success(
             action: action,
             message: "Focused text input responder",
-            targetOID: oid(for: responder),
-            targetClassName: NSStringFromClass(type(of: responder))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: request.activationStrategy?.rawValue
         )
     }
 
@@ -60,15 +76,29 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
     }
 
     guard let control = nearestSuperview(of: view, matching: UIControl.self) else {
+        let matched = tapMatchedContext(request, fallback: view)
+        let activationOID = oid(for: view)
+        let activationClassName = NSStringFromClass(type(of: view))
         return TKInputResult.failure(
             action: action,
             message: "Hit view does not expose a public UIControl tap action",
-            targetOID: oid(for: view),
-            targetClassName: NSStringFromClass(type(of: view))
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: request.activationStrategy?.rawValue
         )
     }
 
-    return performControlTap(control, request: request, action: action, matchedView: nil, strategy: nil)
+    return performControlTap(
+        control,
+        request: request,
+        action: action,
+        matchedView: nil,
+        strategy: request.activationStrategy?.rawValue
+    )
 }
 
 @MainActor

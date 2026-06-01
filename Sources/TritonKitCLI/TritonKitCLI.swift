@@ -32,6 +32,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             Doctor.self,
             Capabilities.self,
             Schema.self,
+            Target.self,
             Xcode.self,
             Xcresult.self,
             Xctrace.self,

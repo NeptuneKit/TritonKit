@@ -568,7 +568,7 @@ struct TypeText: AsyncParsableCommand {
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
-    @Option(help: "Text to insert; kept for compatibility with older scripts") var text: String?
+    @Option(help: "Alternate flag form for the text value; use either positional <text> or --text") var text: String?
     @Option(help: "Optional responder oid from `triton nodes`") var oid: UInt?
     @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
     @Flag(name: .customLong("exact"), help: "Use direct UIKeyInput insertion without keyboard autocorrect") var exact = false
@@ -767,7 +767,7 @@ struct Press: AsyncParsableCommand {
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
-    @Option(help: "Button name, for example home, lock, power, volume-up; kept for compatibility") var button: String?
+    @Option(help: "Alternate flag form for the button value; use either positional <button> or --button") var button: String?
     @Option(help: "Hold duration in seconds") var duration: Double?
 
     func run() async throws {
@@ -1015,7 +1015,7 @@ struct Screenshot: AsyncParsableCommand {
 
     @Option(help: "Host platform adapter: ios or harmony") var platform: HostDevicePlatform?
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Target id from `triton list` or compatibility host target") var target: String = TKLocalTargetID
+    @Option(help: "Runtime target id from `triton list`; when used with --platform/--device, this may also be a raw host target id") var target: String = TKLocalTargetID
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?

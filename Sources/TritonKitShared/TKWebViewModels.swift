@@ -8,6 +8,8 @@ public enum TKWebViewErrorCode: String, Codable, Equatable {
     case webViewNavigationChanged = "webview_navigation_changed"
     case webViewBridgeUnavailable = "webview_bridge_unavailable"
     case webViewMethodNotAllowed = "webview_method_not_allowed"
+    case webViewWaitTimeout = "webview_wait_timeout"
+    case webViewWaitUnsupported = "webview_wait_unsupported"
     case javascriptTimeout = "javascript_timeout"
     case javascriptError = "javascript_error"
     case unsafeEvalDisabled = "unsafe_eval_disabled"
@@ -106,6 +108,7 @@ public struct TKWebViewListResponse: Codable, Equatable {
     public let platform: String
     public let capturedAt: String
     public let target: String
+    public let primarySource: TKWebViewSource?
     public let current: TKWebViewDescriptor?
     public let candidates: [TKWebViewDescriptor]
     public let sources: [TKWebViewSource]
@@ -118,6 +121,7 @@ public struct TKWebViewListResponse: Codable, Equatable {
         platform: String,
         capturedAt: String,
         target: String,
+        primarySource: TKWebViewSource? = nil,
         current: TKWebViewDescriptor?,
         candidates: [TKWebViewDescriptor],
         sources: [TKWebViewSource],
@@ -129,11 +133,51 @@ public struct TKWebViewListResponse: Codable, Equatable {
         self.platform = platform
         self.capturedAt = capturedAt
         self.target = target
+        self.primarySource = primarySource ?? Self.defaultPrimarySource(from: sources)
         self.current = current
         self.candidates = candidates
         self.sources = sources
         self.sourceCommands = sourceCommands
         self.note = note
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case ok
+        case action
+        case platform
+        case capturedAt
+        case target
+        case primarySource
+        case current
+        case candidates
+        case sources
+        case sourceCommands
+        case note
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let sources = try container.decode([TKWebViewSource].self, forKey: .sources)
+        self.ok = try container.decode(Bool.self, forKey: .ok)
+        self.action = try container.decode(String.self, forKey: .action)
+        self.platform = try container.decode(String.self, forKey: .platform)
+        self.capturedAt = try container.decode(String.self, forKey: .capturedAt)
+        self.target = try container.decode(String.self, forKey: .target)
+        self.primarySource = try container.decodeIfPresent(TKWebViewSource.self, forKey: .primarySource) ?? Self.defaultPrimarySource(from: sources)
+        self.current = try container.decodeIfPresent(TKWebViewDescriptor.self, forKey: .current)
+        self.candidates = try container.decode([TKWebViewDescriptor].self, forKey: .candidates)
+        self.sources = sources
+        self.sourceCommands = try container.decode([String].self, forKey: .sourceCommands)
+        self.note = try container.decode(String.self, forKey: .note)
+    }
+
+    static func defaultPrimarySource(from sources: [TKWebViewSource]) -> TKWebViewSource? {
+        for name in ["webview-provider", "runtime-tree", "host-layout"] {
+            if let source = sources.first(where: { $0.name == name && $0.available }) {
+                return source
+            }
+        }
+        return sources.first(where: { $0.available }) ?? sources.first
     }
 }
 
@@ -143,6 +187,7 @@ public struct TKWebViewCurrentResponse: Codable, Equatable {
     public let platform: String
     public let capturedAt: String
     public let target: String
+    public let primarySource: TKWebViewSource?
     public let webView: TKWebViewDescriptor
     public let sources: [TKWebViewSource]
     public let sourceCommands: [String]
@@ -154,6 +199,7 @@ public struct TKWebViewCurrentResponse: Codable, Equatable {
         platform: String,
         capturedAt: String,
         target: String,
+        primarySource: TKWebViewSource? = nil,
         webView: TKWebViewDescriptor,
         sources: [TKWebViewSource],
         sourceCommands: [String],
@@ -164,10 +210,39 @@ public struct TKWebViewCurrentResponse: Codable, Equatable {
         self.platform = platform
         self.capturedAt = capturedAt
         self.target = target
+        self.primarySource = primarySource ?? TKWebViewListResponse.defaultPrimarySource(from: sources)
         self.webView = webView
         self.sources = sources
         self.sourceCommands = sourceCommands
         self.note = note
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case ok
+        case action
+        case platform
+        case capturedAt
+        case target
+        case primarySource
+        case webView
+        case sources
+        case sourceCommands
+        case note
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let sources = try container.decode([TKWebViewSource].self, forKey: .sources)
+        self.ok = try container.decode(Bool.self, forKey: .ok)
+        self.action = try container.decode(String.self, forKey: .action)
+        self.platform = try container.decode(String.self, forKey: .platform)
+        self.capturedAt = try container.decode(String.self, forKey: .capturedAt)
+        self.target = try container.decode(String.self, forKey: .target)
+        self.primarySource = try container.decodeIfPresent(TKWebViewSource.self, forKey: .primarySource) ?? TKWebViewListResponse.defaultPrimarySource(from: sources)
+        self.webView = try container.decode(TKWebViewDescriptor.self, forKey: .webView)
+        self.sources = sources
+        self.sourceCommands = try container.decode([String].self, forKey: .sourceCommands)
+        self.note = try container.decode(String.self, forKey: .note)
     }
 }
 
@@ -457,6 +532,163 @@ public struct TKWebViewEventsResponse: Codable, Equatable {
     }
 }
 
+public enum TKWebViewWaitCondition: String, Codable, CaseIterable {
+    case text
+    case selector
+    case event
+}
+
+public struct TKWebViewWaitRequest: Codable, Equatable {
+    public let webViewID: String?
+    public let pageSessionID: String?
+    public let condition: TKWebViewWaitCondition
+    public let query: String
+    public let timeoutSeconds: Double
+    public let intervalSeconds: Double
+    public let sourceCommand: String?
+
+    public init(
+        webViewID: String? = nil,
+        pageSessionID: String? = nil,
+        condition: TKWebViewWaitCondition,
+        query: String,
+        timeoutSeconds: Double = 10,
+        intervalSeconds: Double = 0.5,
+        sourceCommand: String? = nil
+    ) {
+        self.webViewID = webViewID
+        self.pageSessionID = pageSessionID
+        self.condition = condition
+        self.query = query
+        self.timeoutSeconds = timeoutSeconds
+        self.intervalSeconds = intervalSeconds
+        self.sourceCommand = sourceCommand
+    }
+}
+
+public struct TKWebViewWaitMatch: Codable, Equatable {
+    public let text: String?
+    public let selector: String?
+    public let event: String?
+    public let nodeID: String?
+    public let frame: TKRect?
+    public let source: String
+
+    public init(
+        text: String? = nil,
+        selector: String? = nil,
+        event: String? = nil,
+        nodeID: String? = nil,
+        frame: TKRect? = nil,
+        source: String
+    ) {
+        self.text = text
+        self.selector = selector
+        self.event = event
+        self.nodeID = nodeID
+        self.frame = frame
+        self.source = source
+    }
+}
+
+public struct TKWebViewWaitResponse: Codable, Equatable {
+    public let ok: Bool
+    public let action: String
+    public let capturedAt: String
+    public let platform: String
+    public let target: String
+    public let webView: TKWebViewDescriptor?
+    public let candidates: [TKWebViewDescriptor]?
+    public let condition: String
+    public let query: String
+    public let matched: Bool
+    public let timedOut: Bool
+    public let elapsedMs: Int
+    public let pollCount: Int
+    public let timeoutSeconds: Double
+    public let intervalSeconds: Double
+    public let pageSessionID: String?
+    public let lastObservedTextSample: [String]
+    public let lastObservedNodeIDs: [String]
+    public let lastObservedEventNames: [String]
+    public let match: TKWebViewWaitMatch?
+    public let error: TKWebViewError?
+    public let redaction: TKWebViewRedaction
+
+    public init(
+        ok: Bool = true,
+        action: String = "webview.wait",
+        capturedAt: String,
+        platform: String,
+        target: String,
+        webView: TKWebViewDescriptor? = nil,
+        candidates: [TKWebViewDescriptor]? = nil,
+        condition: String,
+        query: String,
+        matched: Bool,
+        timedOut: Bool,
+        elapsedMs: Int,
+        pollCount: Int,
+        timeoutSeconds: Double,
+        intervalSeconds: Double,
+        pageSessionID: String? = nil,
+        lastObservedTextSample: [String] = [],
+        lastObservedNodeIDs: [String] = [],
+        lastObservedEventNames: [String] = [],
+        match: TKWebViewWaitMatch? = nil,
+        error: TKWebViewError? = nil,
+        redaction: TKWebViewRedaction = TKWebViewRedaction(secureText: "length-only")
+    ) {
+        self.ok = ok
+        self.action = action
+        self.capturedAt = capturedAt
+        self.platform = platform
+        self.target = target
+        self.webView = webView
+        self.candidates = candidates
+        self.condition = condition
+        self.query = query
+        self.matched = matched
+        self.timedOut = timedOut
+        self.elapsedMs = elapsedMs
+        self.pollCount = pollCount
+        self.timeoutSeconds = timeoutSeconds
+        self.intervalSeconds = intervalSeconds
+        self.pageSessionID = pageSessionID
+        self.lastObservedTextSample = lastObservedTextSample
+        self.lastObservedNodeIDs = lastObservedNodeIDs
+        self.lastObservedEventNames = lastObservedEventNames
+        self.match = match
+        self.error = error
+        self.redaction = redaction
+    }
+}
+
+public struct TKWebViewWaitEvaluation: Codable, Equatable {
+    public let hit: Bool
+    public let match: TKWebViewWaitMatch?
+    public let lastObservedTextSample: [String]
+    public let lastObservedNodeIDs: [String]
+    public let lastObservedEventNames: [String]
+    public let error: TKWebViewError?
+
+    public init(
+        hit: Bool,
+        match: TKWebViewWaitMatch? = nil,
+        lastObservedTextSample: [String] = [],
+        lastObservedNodeIDs: [String] = [],
+        lastObservedEventNames: [String] = [],
+        error: TKWebViewError? = nil
+    ) {
+        self.hit = hit
+        self.match = match
+        self.lastObservedTextSample = lastObservedTextSample
+        self.lastObservedNodeIDs = lastObservedNodeIDs
+        self.lastObservedEventNames = lastObservedEventNames
+        self.error = error
+    }
+}
+
 public struct TKWebViewError: Codable, Equatable {
     public let code: TKWebViewErrorCode
     public let message: String
@@ -559,4 +791,212 @@ public func TKWebViewDescriptorSort(_ lhs: TKWebViewDescriptor, _ rhs: TKWebView
     let leftArea = (lhs.frame?.width ?? 0) * (lhs.frame?.height ?? 0)
     let rightArea = (rhs.frame?.width ?? 0) * (rhs.frame?.height ?? 0)
     return leftArea > rightArea
+}
+
+public func TKEvaluateWebViewWait(
+    request: TKWebViewWaitRequest,
+    snapshot: TKWebViewSnapshotResponse,
+    events: TKWebViewEventsResponse? = nil
+) -> TKWebViewWaitEvaluation {
+    let textSample = TKWebViewWaitObservedTextSample(from: snapshot)
+    let nodeIDs = TKWebViewWaitObservedNodeIDs(from: snapshot)
+    let effectivePageSessionID = request.pageSessionID ?? snapshot.webView.pageSessionID
+    let eventNames = TKWebViewWaitObservedEventNames(from: events, pageSessionID: effectivePageSessionID)
+
+    if request.query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        return TKWebViewWaitEvaluation(
+            hit: false,
+            lastObservedTextSample: textSample,
+            lastObservedNodeIDs: nodeIDs,
+            lastObservedEventNames: eventNames,
+            error: TKWebViewError(
+                code: .webViewWaitUnsupported,
+                message: "WebView wait requires a non-empty query.",
+                hint: "Pass a non-empty --text, --selector, or --event value."
+            )
+        )
+    }
+
+    if let requestedSession = request.pageSessionID,
+       let currentSession = snapshot.webView.pageSessionID,
+       requestedSession != currentSession {
+        return TKWebViewWaitEvaluation(
+            hit: false,
+            lastObservedTextSample: textSample,
+            lastObservedNodeIDs: nodeIDs,
+            lastObservedEventNames: eventNames,
+            error: TKWebViewError(
+                code: .webViewNavigationChanged,
+                message: "WebView page session changed.",
+                hint: "Run `triton webview current --json` and retry against the new pageSessionID.",
+                webViewID: snapshot.webView.webViewID
+            )
+        )
+    }
+
+    switch request.condition {
+    case .text:
+        if snapshot.text.contains(where: { TKWebViewWaitExactTextMatches($0, query: request.query) }) {
+            return TKWebViewWaitEvaluation(
+                hit: true,
+                match: TKWebViewWaitMatch(text: request.query, source: "text[]"),
+                lastObservedTextSample: textSample,
+                lastObservedNodeIDs: nodeIDs,
+                lastObservedEventNames: eventNames
+            )
+        }
+        if let domMatch = snapshot.dom.first(where: { TKWebViewWaitExactTextMatches($0.text, query: request.query) }) {
+            return TKWebViewWaitEvaluation(
+                hit: true,
+                match: TKWebViewWaitMatch(
+                    text: request.query,
+                    nodeID: domMatch.nodeID,
+                    frame: domMatch.frame,
+                    source: "dom[].text"
+                ),
+                lastObservedTextSample: textSample,
+                lastObservedNodeIDs: nodeIDs,
+                lastObservedEventNames: eventNames
+            )
+        }
+        return TKWebViewWaitEvaluation(
+            hit: false,
+            lastObservedTextSample: textSample,
+            lastObservedNodeIDs: nodeIDs,
+            lastObservedEventNames: eventNames
+        )
+
+    case .selector:
+        let selector = request.query.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard TKWebViewWaitIsSimpleIDSelector(selector) else {
+            return TKWebViewWaitEvaluation(
+                hit: false,
+                lastObservedTextSample: textSample,
+                lastObservedNodeIDs: nodeIDs,
+                lastObservedEventNames: eventNames,
+                error: TKWebViewError(
+                    code: .webViewWaitUnsupported,
+                    message: "Only simple #id selectors are supported by webview wait.",
+                    hint: "Pass --selector #submit or use --text/--event."
+                )
+            )
+        }
+        let selectorID = String(selector.dropFirst())
+        if selectorID == snapshot.webView.webViewID {
+            return TKWebViewWaitEvaluation(
+                hit: true,
+                match: TKWebViewWaitMatch(
+                    selector: selector,
+                    nodeID: snapshot.webView.webViewID,
+                    frame: snapshot.webView.frame,
+                    source: "webView.webViewID"
+                ),
+                lastObservedTextSample: textSample,
+                lastObservedNodeIDs: nodeIDs,
+                lastObservedEventNames: eventNames
+            )
+        }
+        if let domMatch = snapshot.dom.first(where: { $0.nodeID == selectorID }) {
+            return TKWebViewWaitEvaluation(
+                hit: true,
+                match: TKWebViewWaitMatch(
+                    selector: selector,
+                    nodeID: domMatch.nodeID,
+                    frame: domMatch.frame,
+                    source: "dom[].nodeID"
+                ),
+                lastObservedTextSample: textSample,
+                lastObservedNodeIDs: nodeIDs,
+                lastObservedEventNames: eventNames
+            )
+        }
+        return TKWebViewWaitEvaluation(
+            hit: false,
+            lastObservedTextSample: textSample,
+            lastObservedNodeIDs: nodeIDs,
+            lastObservedEventNames: eventNames
+        )
+
+    case .event:
+        let matchingEvent = events?.events.first { event in
+            if let pageSessionID = effectivePageSessionID {
+                guard event.pageSessionID == pageSessionID else { return false }
+            }
+            return event.name == request.query
+        }
+        if let matchingEvent {
+            return TKWebViewWaitEvaluation(
+                hit: true,
+                match: TKWebViewWaitMatch(
+                    event: matchingEvent.name,
+                    source: "events[].name"
+                ),
+                lastObservedTextSample: textSample,
+                lastObservedNodeIDs: nodeIDs,
+                lastObservedEventNames: eventNames
+            )
+        }
+        return TKWebViewWaitEvaluation(
+            hit: false,
+            lastObservedTextSample: textSample,
+            lastObservedNodeIDs: nodeIDs,
+            lastObservedEventNames: eventNames
+        )
+    }
+}
+
+private func TKWebViewWaitObservedTextSample(from snapshot: TKWebViewSnapshotResponse, limit: Int = 20) -> [String] {
+    var sample: [String] = []
+    var seen = Set<String>()
+    for text in snapshot.text + snapshot.dom.compactMap(\.text) {
+        let cleaned = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !cleaned.isEmpty, !seen.contains(cleaned) else { continue }
+        seen.insert(cleaned)
+        sample.append(cleaned)
+        if sample.count >= limit { break }
+    }
+    return sample
+}
+
+private func TKWebViewWaitObservedNodeIDs(from snapshot: TKWebViewSnapshotResponse, limit: Int = 20) -> [String] {
+    var sample = [snapshot.webView.webViewID]
+    for nodeID in snapshot.dom.compactMap(\.nodeID) where !sample.contains(nodeID) {
+        sample.append(nodeID)
+        if sample.count >= limit { break }
+    }
+    return sample
+}
+
+private func TKWebViewWaitObservedEventNames(
+    from response: TKWebViewEventsResponse?,
+    pageSessionID: String?,
+    limit: Int = 20
+) -> [String] {
+    guard let response else { return [] }
+    var sample: [String] = []
+    var seen = Set<String>()
+    for event in response.events {
+        if let pageSessionID, event.pageSessionID != pageSessionID {
+            continue
+        }
+        guard !seen.contains(event.name) else { continue }
+        seen.insert(event.name)
+        sample.append(event.name)
+        if sample.count >= limit { break }
+    }
+    return sample
+}
+
+private func TKWebViewWaitExactTextMatches(_ value: String?, query: String) -> Bool {
+    guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines), !value.isEmpty else {
+        return false
+    }
+    return value == query.trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+private func TKWebViewWaitIsSimpleIDSelector(_ selector: String) -> Bool {
+    guard selector.first == "#", selector.count > 1 else { return false }
+    let body = selector.dropFirst()
+    guard !body.contains(where: { $0.isWhitespace }) else { return false }
+    return !body.contains(where: { " >+~[],()*".contains($0) })
 }

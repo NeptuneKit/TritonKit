@@ -189,7 +189,19 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             return webViewErrorMessage(id: msg.id, type: .webViewEvents, action: "webview.events", code: .webViewBridgeUnavailable, message: "WebView events are not available.", hint: "Use an iOS DEBUG runtime with WebKit support or register a Harmony WebView event provider.")
             #endif
 
-        case .webViewBridgePost, .webViewWait, .webViewLedger:
+        case .webViewWait:
+            guard let data = msg.payload,
+                  let request = try? JSONDecoder().decode(TKWebViewWaitRequest.self, from: data) else {
+                return webViewErrorMessage(id: msg.id, type: .webViewWait, action: "webview.wait", code: .webViewWaitUnsupported, message: "Missing or invalid WebView wait payload.", hint: "Pass one wait condition and query.")
+            }
+            #if canImport(UIKit) && canImport(WebKit)
+            let result = await currentWebViewWaitResponse(request)
+            return TKMessage(id: msg.id, type: .webViewWait, payload: try? JSONEncoder().encode(result))
+            #else
+            return webViewErrorMessage(id: msg.id, type: .webViewWait, action: "webview.wait", code: .webViewWaitUnsupported, message: "WebView wait is not available in this runtime.", hint: "Use an iOS DEBUG runtime with WebKit support or register a Harmony WebView wait provider.")
+            #endif
+
+        case .webViewBridgePost, .webViewLedger:
             return webViewErrorMessage(id: msg.id, type: msg.type, action: msg.type.rawValue, code: .webViewBridgeUnavailable, message: "WebView bridge is not available.", hint: "Expose an opt-in page bridge allowlist before calling methods, posting events, waiting on events, or reading event buffers.")
 
         case .semanticAction:

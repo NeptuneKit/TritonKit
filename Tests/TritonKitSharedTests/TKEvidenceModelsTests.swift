@@ -74,6 +74,9 @@ struct TKEvidenceModelsTests {
         #expect(decoded.formatVersion == 1)
         #expect(decoded.name == "login-success")
         #expect(decoded.artifacts.map(\.kind) == ["run.events", "run.meta", "screenshot", "status", "harmony.layout"])
+        #expect(decoded.primaryArtifact?.kind == "screenshot")
+        #expect(decoded.primaryArtifact?.path == "run/step-001.png")
+        #expect(decoded.primaryArtifacts.map(\.kind) == ["screenshot", "run.events", "run.meta", "status", "harmony.layout"])
         #expect(decoded.artifacts.first { $0.kind == "screenshot" }?.freshness?.source == "runtime")
         #expect(decoded.artifacts.last?.platform == "harmony")
         #expect(decoded.artifacts.last?.riskLevel == "evidence")
@@ -109,5 +112,80 @@ struct TKEvidenceModelsTests {
 
         #expect(decoded.run == nil)
         #expect(decoded.artifacts.isEmpty)
+        #expect(decoded.primaryArtifact == nil)
+        #expect(decoded.primaryArtifacts.isEmpty)
+    }
+
+    @Test("evidence summary and redaction decode primary artifact from primary artifacts")
+    func summaryAndRedactionBackfillPrimaryArtifact() throws {
+        let summaryData = Data("""
+        {
+          "ok": true,
+          "action": "evidence.summary",
+          "input": "/tmp/case.tritonevidence",
+          "profile": "default",
+          "createdAt": "2026-05-31T00:00:00Z",
+          "output": "/tmp/case.tritonevidence",
+          "artifactCount": 2,
+          "sensitiveArtifactCount": 1,
+          "skippedCount": 0,
+          "cli": { "version": "0.1.0-dev", "schemaVersion": 1 },
+          "artifacts": [
+            { "kind": "screenshot", "path": "run/step-001.png", "contentType": "image/png" },
+            { "kind": "status", "path": "status.json", "contentType": "application/json" }
+          ],
+          "primaryArtifacts": [
+            { "kind": "screenshot", "path": "run/step-001.png", "contentType": "image/png" }
+          ],
+          "skipped": [],
+          "suggestedCommands": []
+        }
+        """.utf8)
+        let summary = try JSONDecoder().decode(TKEvidenceSummaryResponse.self, from: summaryData)
+        #expect(summary.primaryArtifact?.kind == "screenshot")
+        #expect(summary.primaryArtifact?.path == "run/step-001.png")
+
+        let redactionData = Data("""
+        {
+          "ok": true,
+          "action": "evidence.redact",
+          "input": "/tmp/case.tritonevidence",
+          "output": "/tmp/case-safe.tritonevidence",
+          "profile": "default",
+          "createdAt": "2026-05-31T00:00:00Z",
+          "artifactCount": 2,
+          "redactedArtifactCount": 1,
+          "keptArtifactCount": 1,
+          "manifest": {
+            "ok": true,
+            "formatVersion": 1,
+            "createdAt": "2026-05-31T00:00:00Z",
+            "output": "/tmp/case-safe.tritonevidence",
+            "artifacts": [
+              { "kind": "screenshot", "path": "run/step-001.png", "contentType": "image/png" },
+              { "kind": "status", "path": "status.json", "contentType": "application/json" }
+            ],
+            "primaryArtifacts": [
+              { "kind": "screenshot", "path": "run/step-001.png", "contentType": "image/png" }
+            ],
+            "skipped": [],
+            "cli": { "version": "0.1.0-dev", "schemaVersion": 1 }
+          },
+          "redactedArtifacts": [
+            { "kind": "screenshot", "path": "run/step-001.png", "contentType": "image/png" }
+          ],
+          "keptArtifacts": [
+            { "kind": "status", "path": "status.json", "contentType": "application/json" }
+          ],
+          "primaryArtifacts": [
+            { "kind": "screenshot", "path": "run/step-001.png", "contentType": "image/png" }
+          ],
+          "summaryPath": "summary.json",
+          "suggestedCommands": []
+        }
+        """.utf8)
+        let redaction = try JSONDecoder().decode(TKEvidenceRedactionResponse.self, from: redactionData)
+        #expect(redaction.primaryArtifact?.kind == "screenshot")
+        #expect(redaction.primaryArtifact?.path == "run/step-001.png")
     }
 }

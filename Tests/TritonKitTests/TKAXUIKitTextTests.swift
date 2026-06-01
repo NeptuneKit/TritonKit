@@ -289,6 +289,40 @@ struct TKAXUIKitTextTests {
         #expect(result.message?.contains("tap gesture") == true)
     }
 
+    @Test("exact tap preserves matched metadata and exact strategy")
+    func exactTapPreservesMatchedMetadataAndExactStrategy() async throws {
+        let window = makeVisibleTestWindow()
+        defer {
+            window.isHidden = true
+        }
+
+        let control = UIControl(frame: CGRect(x: 24, y: 100, width: 240, height: 56))
+        let label = UILabel(frame: CGRect(x: 12, y: 14, width: 160, height: 24))
+        label.text = "查看不合适原因"
+        control.addSubview(label)
+        window.addSubview(control)
+        let recorder = TapRecorder()
+        control.addTarget(recorder, action: #selector(TapRecorder.didTap(_:)), for: .touchUpInside)
+
+        let labelOID = TKObjectRegistry.shared.register(label)
+        let controlOID = TKObjectRegistry.shared.register(control)
+        let request = TKInputRequest.tap(
+            targetOID: labelOID,
+            matchedOID: labelOID,
+            matchedClassName: NSStringFromClass(UILabel.self),
+            activationStrategy: .exact
+        )
+        let result = try await performInputRequest(request)
+
+        #expect(result.ok)
+        #expect(result.matchedOID == labelOID)
+        #expect(result.matchedClassName == NSStringFromClass(UILabel.self))
+        #expect(result.activationOID == controlOID)
+        #expect(result.targetOID == controlOID)
+        #expect(result.strategy == "exact")
+        #expect(recorder.tapCount == 1)
+    }
+
     private func performInputRequest(_ request: TKInputRequest) async throws -> TKInputResult {
         let message = TKMessage(id: 1, type: .input, payload: try JSONEncoder().encode(request))
         let response = await TritonKitRequestHandler().tritonKit(TritonKit.shared, didReceiveMessage: message)

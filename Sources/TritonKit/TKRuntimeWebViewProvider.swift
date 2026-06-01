@@ -260,6 +260,171 @@ func currentWebViewSnapshotResponse(_ request: TKWebViewSnapshotRequest) async t
 }
 
 @MainActor
+func currentWebViewWaitResponse(_ request: TKWebViewWaitRequest) async -> TKWebViewWaitResponse {
+    let startedAt = Date()
+    guard request.timeoutSeconds > 0, request.intervalSeconds > 0 else {
+        return webViewWaitResponse(
+            request: request,
+            startedAt: startedAt,
+            pollCount: 0,
+            matched: false,
+            timedOut: false,
+            pageSessionID: request.pageSessionID,
+            error: TKWebViewError(
+                code: .webViewWaitUnsupported,
+                message: "WebView wait timeout and interval must be greater than 0 seconds.",
+                hint: "Pass positive --timeout and --interval values."
+            )
+        )
+    }
+
+    let pairs = currentWKWebViewsWithDescriptors()
+    do {
+        let selected = try TKSelectCurrentWebView(from: pairs.map(\.descriptor), webViewID: request.webViewID)
+        guard let pair = pairs.first(where: { $0.descriptor.webViewID == selected.webViewID }) else {
+            throw TKWebViewSelectionError(detail: TKWebViewError(
+                code: .webviewNotFound,
+                message: "Selected WebView is no longer available.",
+                hint: "Run `triton webview current --json` again and retry."
+            ))
+        }
+
+        if request.condition == .event {
+            installWebViewScriptBridgeIfNeeded(in: pair.webView, descriptor: selected)
+        }
+
+        let stablePageSessionID = request.pageSessionID ?? selected.pageSessionID
+        let effectiveRequest = TKWebViewWaitRequest(
+            webViewID: selected.webViewID,
+            pageSessionID: stablePageSessionID,
+            condition: request.condition,
+            query: request.query,
+            timeoutSeconds: request.timeoutSeconds,
+            intervalSeconds: request.intervalSeconds,
+            sourceCommand: request.sourceCommand
+        )
+        let deadline = startedAt.addingTimeInterval(request.timeoutSeconds)
+        var pollCount = 0
+        var lastEvaluation = TKWebViewWaitEvaluation(hit: false)
+
+        while true {
+            pollCount += 1
+            do {
+                let snapshot = try await currentWebViewSnapshotResponse(TKWebViewSnapshotRequest(
+                    webViewID: selected.webViewID,
+                    pageSessionID: stablePageSessionID,
+                    include: ["metadata", "dom", "text"]
+                ))
+                let events = request.condition == .event ? currentWebViewEventsResponse(limit: 100) : nil
+                let evaluation = TKEvaluateWebViewWait(
+                    request: effectiveRequest,
+                    snapshot: snapshot,
+                    events: events
+                )
+                lastEvaluation = evaluation
+
+                if let error = evaluation.error {
+                    return webViewWaitResponse(
+                        request: request,
+                        startedAt: startedAt,
+                        webView: snapshot.webView,
+                        pollCount: pollCount,
+                        matched: false,
+                        timedOut: false,
+                        pageSessionID: stablePageSessionID,
+                        evaluation: evaluation,
+                        error: error
+                    )
+                }
+                if evaluation.hit {
+                    return webViewWaitResponse(
+                        request: request,
+                        startedAt: startedAt,
+                        webView: snapshot.webView,
+                        pollCount: pollCount,
+                        matched: true,
+                        timedOut: false,
+                        pageSessionID: stablePageSessionID,
+                        evaluation: evaluation
+                    )
+                }
+            } catch let error as TKWebViewSelectionError {
+                return webViewWaitResponse(
+                    request: request,
+                    startedAt: startedAt,
+                    webView: selected,
+                    candidates: error.detail.candidates,
+                    pollCount: pollCount,
+                    matched: false,
+                    timedOut: false,
+                    pageSessionID: stablePageSessionID,
+                    evaluation: lastEvaluation,
+                    error: error.detail
+                )
+            } catch {
+                return webViewWaitResponse(
+                    request: request,
+                    startedAt: startedAt,
+                    webView: selected,
+                    pollCount: pollCount,
+                    matched: false,
+                    timedOut: false,
+                    pageSessionID: stablePageSessionID,
+                    evaluation: lastEvaluation,
+                    error: TKWebViewError(code: .javascriptError, message: "\(error)")
+                )
+            }
+
+            let now = Date()
+            if now >= deadline {
+                return webViewWaitResponse(
+                    request: request,
+                    startedAt: startedAt,
+                    webView: selected,
+                    pollCount: pollCount,
+                    matched: false,
+                    timedOut: true,
+                    pageSessionID: stablePageSessionID,
+                    evaluation: lastEvaluation,
+                    error: TKWebViewError(
+                        code: .webViewWaitTimeout,
+                        message: "Timed out waiting for WebView \(request.condition.rawValue) match.",
+                        hint: "Inspect `lastObservedTextSample`, `lastObservedNodeIDs`, or `lastObservedEventNames` in the JSON response."
+                    )
+                )
+            }
+
+            let remaining = max(0, deadline.timeIntervalSince(now))
+            let sleepSeconds = min(request.intervalSeconds, remaining)
+            if sleepSeconds > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
+            }
+        }
+    } catch let error as TKWebViewSelectionError {
+        return webViewWaitResponse(
+            request: request,
+            startedAt: startedAt,
+            candidates: error.detail.candidates,
+            pollCount: 0,
+            matched: false,
+            timedOut: false,
+            pageSessionID: request.pageSessionID,
+            error: error.detail
+        )
+    } catch {
+        return webViewWaitResponse(
+            request: request,
+            startedAt: startedAt,
+            pollCount: 0,
+            matched: false,
+            timedOut: false,
+            pageSessionID: request.pageSessionID,
+            error: TKWebViewError(code: .webViewProviderUnavailable, message: "\(error)")
+        )
+    }
+}
+
+@MainActor
 func performWebViewBridgeCall(_ request: TKWebViewBridgeCallRequest) async -> TKWebViewBridgeCallResponse {
     let startedAt = Date()
     let pairs = currentWKWebViewsWithDescriptors()
@@ -330,11 +495,51 @@ func currentWebViewEventsResponse(limit: Int = 50) -> TKWebViewEventsResponse {
     )
 }
 
+private func webViewWaitResponse(
+    request: TKWebViewWaitRequest,
+    startedAt: Date,
+    webView: TKWebViewDescriptor? = nil,
+    candidates: [TKWebViewDescriptor]? = nil,
+    pollCount: Int,
+    matched: Bool,
+    timedOut: Bool,
+    pageSessionID: String?,
+    evaluation: TKWebViewWaitEvaluation = TKWebViewWaitEvaluation(hit: false),
+    error: TKWebViewError? = nil
+) -> TKWebViewWaitResponse {
+    TKWebViewWaitResponse(
+        ok: matched && error == nil,
+        capturedAt: currentStateTimestamp(),
+        platform: "ios",
+        target: "embedded-runtime",
+        webView: webView,
+        candidates: candidates,
+        condition: request.condition.rawValue,
+        query: request.query,
+        matched: matched,
+        timedOut: timedOut,
+        elapsedMs: elapsedMilliseconds(since: startedAt),
+        pollCount: pollCount,
+        timeoutSeconds: request.timeoutSeconds,
+        intervalSeconds: request.intervalSeconds,
+        pageSessionID: pageSessionID,
+        lastObservedTextSample: evaluation.lastObservedTextSample,
+        lastObservedNodeIDs: evaluation.lastObservedNodeIDs,
+        lastObservedEventNames: evaluation.lastObservedEventNames,
+        match: evaluation.match,
+        error: error,
+        redaction: TKWebViewRedaction(secureText: "length-only")
+    )
+}
+
 func currentRuntimeManifestWithWebViewProvider(sdkVersion: String) -> TKRuntimeManifestResponse {
     let capabilities = TKRuntimeManifestResponse.defaultDebugCapabilities.map { capability in
         switch capability.name {
         case TKRuntimeCapabilityName.webViewList.rawValue,
-             TKRuntimeCapabilityName.webViewCurrent.rawValue:
+             TKRuntimeCapabilityName.webViewCurrent.rawValue,
+             TKRuntimeCapabilityName.webViewSnapshot.rawValue,
+             TKRuntimeCapabilityName.webViewWait.rawValue,
+             TKRuntimeCapabilityName.webViewEvents.rawValue:
             return TKRuntimeCapabilityDetail(
                 name: capability.name,
                 supported: true,
@@ -387,8 +592,8 @@ private func webViewDescriptor(for webView: WKWebView) -> TKWebViewDescriptor {
         canGoForward: webView.canGoForward,
         providerStatus: "available",
         bridgeStatus: "unavailable",
-        capabilities: ["visible", "webview.current", "webview.list", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links"],
-        missingCapabilities: ["webview.bridge-call", "webview.events", "webview.tap", "webview.type"]
+        capabilities: ["visible", "webview.current", "webview.list", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.wait", "webview.events"],
+        missingCapabilities: ["webview.bridge-call", "webview.tap", "webview.type"]
     )
 }
 

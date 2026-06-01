@@ -55,7 +55,7 @@ struct ObserveCurrent: AsyncParsableCommand {
 
     @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform?
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Target id from `triton list` or Harmony hdc target; compatibility path") var target: String = TKLocalTargetID
+    @Option(help: "Runtime target id from `triton list`; when --platform harmony, pass the raw HDC target id") var target: String = TKLocalTargetID
     @Option(help: "Path to hdc executable for --platform harmony") var hdc: String = "hdc"
     @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
     @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
@@ -88,7 +88,7 @@ struct ObserveTree: AsyncParsableCommand {
 
     @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform?
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Target id from `triton list` or Harmony hdc target; compatibility path") var target: String = TKLocalTargetID
+    @Option(help: "Runtime target id from `triton list`; when --platform harmony, pass the raw HDC target id") var target: String = TKLocalTargetID
     @Option(help: "Path to hdc executable for --platform harmony") var hdc: String = "hdc"
     @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
     @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
@@ -122,7 +122,7 @@ struct NodeResolve: AsyncParsableCommand {
     @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform?
     @Option(name: .customLong("text"), help: "Visible text, label, identifier, title, value, key, or accessibility id") var text: String?
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Target id from `triton list` or Harmony hdc target; compatibility path") var target: String = TKLocalTargetID
+    @Option(help: "Runtime target id from `triton list`; when --platform harmony, pass the raw HDC target id") var target: String = TKLocalTargetID
     @Option(help: "Path to hdc executable for --platform harmony") var hdc: String = "hdc"
     @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
     @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421

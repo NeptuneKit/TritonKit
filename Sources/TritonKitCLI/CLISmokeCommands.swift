@@ -14,7 +14,7 @@ struct SmokeIOS: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "ios", abstract: "Run one-command iOS smoke evidence flow")
 
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
@@ -84,7 +84,7 @@ struct SmokeHarmony: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "harmony", abstract: "Run one-command Harmony host-side smoke evidence flow")
 
     @Option(help: "Unified host device selector: alias, harmony:<target>, raw id, or current") var device: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Device name filter when available") var name: String?
     @Option(help: "Runtime filter when available") var runtime: String?
     @Option(help: "Target state filter, for example connected") var state: String?

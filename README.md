@@ -189,9 +189,9 @@ If your app blocks cleartext development traffic through App Transport Security,
 
 ### 5. WebView Observation
 
-Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current/current-url --platform ios --json` can read visible `WKWebView` provider metadata such as URL, title, page session, loading state, progress, and frame. Use `triton route assert-current-url '<url>' --platform ios --json` for smoke cases that only need to prove the native flow opened the expected H5 link. Page interaction remains opt-in: `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
+Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current --platform ios --json` can discover visible `WKWebView` candidates from the runtime tree; `triton webview current-url --platform ios --json` and `triton route assert-current-url '<url>' --platform ios --json` require provider URL metadata and are the smoke path for proving the native flow opened the expected H5 link. Page interaction remains opt-in: `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
 
-Harmony host-side layout can identify visible Web candidates without source changes, but it must not be treated as DOM or bridge access. Register a Harmony embedded WebView provider before claiming URL, DOM, JS, or page bridge capability.
+Harmony host-side layout can identify visible Web candidates without source changes, but it must not be treated as DOM, URL, JS, or bridge access. Register a Harmony embedded WebView provider before claiming provider-level capabilities. `triton capabilities --json` mirrors this split: `webview-list/current` are candidate discovery capabilities, while `webview-current-url/snapshot/bridge-call/events/wait` and `route-current-url-assert` are provider-level capabilities with separate `nextAction` and `evidence`.
 
 ## CLI Integration Guide
 
@@ -294,11 +294,15 @@ triton hierarchy --json
 triton ax --json
 ```
 
-When multiple iOS Simulator apps are connected to the same `triton serve`, `triton list --json` exposes stable embedded runtime targets shaped as `triton:ios-simulator:<SIMULATOR_UDID>`. Pass either the full target id or the simulator UDID through `--target`; commands that still rely on the default `triton:local` return `error.code=ambiguous_target` instead of choosing a connection implicitly.
+Use `triton target list|use|current|resolve|wait-ready` as the preferred target-selection entry. When multiple iOS Simulator apps are connected to the same `triton serve`, it exposes stable embedded runtime targets shaped as `triton:ios-simulator:<SIMULATOR_UDID>`. Pass either the full target id or the simulator UDID through `--target`; commands that still rely on the default `triton:local` return `error.code=ambiguous_target` instead of choosing a connection implicitly.
 
 When validating a standalone embedded runtime HTTP endpoint before it is connected through `triton serve`, bypass the local control server with `--runtime-base-url`:
 
 ```bash
+triton target list --platform ios --json
+triton target use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --platform ios --json
+triton target resolve booted --platform ios --json
+triton target wait-ready booted --platform ios --json
 triton device alias set harmony-a --platform harmony --target 127.0.0.1:10100 --json
 triton device runtime-url --device harmony-a --probe-manifest --json
 triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
@@ -308,7 +312,7 @@ triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
 triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
 ```
 
-`triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json` remains available as a compatibility path.
+If you already have the raw HDC target id, you can call `triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json` directly.
 
 For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` remains the device-to-host gateway fallback port used by the demo UI.
 
@@ -402,23 +406,25 @@ triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json 
 
 `xctrace record` and `coverage report` are artifact commands. They return paths, source commands, and byte summaries; they do not inline large `.trace` or coverage payloads and do not prove app business readiness by themselves. Stdout-backed artifact writes reject existing files and symbolic links by default to avoid accidental overwrite during agent runs.
 
-Common host device discovery, selection, readiness, and screenshots are exposed through `triton device --platform ios|harmony`. Keep `triton sim` for iOS-only advanced maintenance such as runtime, privacy, location, status bar, pasteboard, push, logs, and diagnostics.
+Common host target discovery, selection, and readiness are exposed through `triton target`. Keep `triton device` for host-side tool probing, aliasing, runtime-url, screenshot, and Harmony stop orchestration, and keep `triton sim` for iOS-only advanced maintenance such as runtime, privacy, location, status bar, pasteboard, push, logs, and diagnostics.
 
 ```bash
+triton target list --platform ios --json
+triton target use 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --platform ios --json
+triton target wait-ready 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --platform ios --json
 triton device doctor --platform ios --json
 triton device list --platform ios --json
-triton device use --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
-triton device wait-ready --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
 triton device screenshot --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --output /tmp/sim.png --json
 ```
 
 HarmonyOS NEXT / DevEco Emulator host-side discovery does not require a running TritonKit embedded runtime:
 
 ```bash
+triton target list --platform harmony --json
+triton target use 127.0.0.1:10100 --platform harmony --json
+triton target wait-ready 127.0.0.1:10100 --platform harmony --json
 triton device doctor --platform harmony --json
 triton device list --platform harmony --json
-triton device use --platform harmony --target 127.0.0.1:10100 --json
-triton device wait-ready --device 127.0.0.1:10100 --json
 triton device screenshot --device 127.0.0.1:10100 --output /tmp/smoke.jpeg --json
 triton device stop --platform harmony --hvd "Codex Test Phone" --path ~/.Huawei/Emulator/deployed --confirm --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
@@ -480,6 +486,14 @@ triton evidence inspect /tmp/login-success.tritonevidence --json
 
 The first evidence bundle format is a directory package. It contains `manifest.json` plus artifacts such as `status.json`, `targets.json`, `version.json`, `hierarchy.json`, `ax.json`, `geometry.json`, `archive.json`, `screenshot.png`, and `screenshot.json`. `--include host,xcode` adds small read-only host/Xcode artifacts under `artifacts/host/` and `artifacts/xcode/`, including repo-local defaults, simulator list, Xcode process status, and shallow discovery when available. When an Xcode build/test/run summary was already written explicitly, pass `--xcode-summary /path/to/summary.json` to import that `TKXcodeActionSummary` as `artifacts/xcode/action-summary.json`; TritonKit does not copy stdout/stderr logs, `.xcresult`, or `.trace` files from the summary. These artifacts are marked sensitive for redaction. Unsupported requested artifacts, such as `logs` in the current embedded runtime, are recorded in `manifest.skipped` with reasons. `capture` is the regression-oriented one-shot wrapper; `evidence` remains the lower-level capture/inspect command.
 
+When an agent needs the next command sequence before executing a workflow, ask `plan` for a task-specific recommendation. The plan is only a recommendation; run the returned steps explicitly and use `wait`, `assert`, and `evidence` as proof.
+
+```bash
+triton plan ios-smoke --device iphone15 --bundle-id com.example.app --url myapp://smoke --text Home --evidence /tmp/smoke.tritonevidence --json
+triton plan open-url --device iphone15 --url myapp://detail --text Ready --json
+triton plan webview-check --expected-url https://example.com --text Loaded --json
+```
+
 For repeatable short smoke flows, store the command sequence in a `.tritonplan` and replay it:
 
 ```bash
@@ -489,7 +503,7 @@ triton replay /tmp/login-flow.tritonplan --dry-run --var username=alice --var pa
 triton replay /tmp/login-flow.tritonplan --var username=alice --var password-env=TRITON_PASSWORD --json
 ```
 
-`record` currently writes an editable starter template; it does not capture live terminal history or global input events yet. `replay` supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence` steps, `${variable}` substitution, `--var key=value`, `--var key-env=ENV_NAME`, and secure value redaction in step summaries.
+`record` currently writes an editable starter template; it does not capture live terminal history or global input events yet. `replay` supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence` steps, `${variable}` substitution, `--var key=value`, `--var key-env=ENV_NAME`, and secure value redaction in step summaries. `triton capabilities --json` exposes `plan-inspect` separately from `replay-dry-run`, so agents can discover offline plan inspection before choosing dry-run or real replay.
 
 ## Harmony App Integration Guide
 
@@ -526,7 +540,7 @@ triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
 triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
 ```
 
-`triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json` remains available as a compatibility path.
+If you already have the raw HDC target id, you can call `triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json` directly.
 
 For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` remains the device-to-host gateway fallback port used by the demo UI.
 

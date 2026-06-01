@@ -989,7 +989,7 @@ struct HostAppList: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "list", abstract: "List installed simulator apps")
 
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
@@ -1044,7 +1044,7 @@ struct HostAppInfo: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "info", abstract: "Show installed simulator app information")
 
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
@@ -1122,14 +1122,14 @@ struct HostAppInstall: AsyncParsableCommand {
 
     @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform?
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
     @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to .app bundle") var app: String?
     @Option(help: "Path to Harmony .hap package") var hap: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -1199,7 +1199,7 @@ struct HostAppUninstall: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "uninstall", abstract: "Uninstall an app from a simulator")
 
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
@@ -1251,7 +1251,7 @@ struct HostAppLaunch: AsyncParsableCommand {
 
     @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform?
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
@@ -1259,7 +1259,7 @@ struct HostAppLaunch: AsyncParsableCommand {
     @Option(help: "iOS app bundle identifier") var bundleID: String?
     @Option(help: "Harmony bundle name") var bundle: String?
     @Option(help: "Harmony ability name") var ability: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -1329,14 +1329,14 @@ struct HostAppTerminate: AsyncParsableCommand {
 
     @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform?
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
     @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "iOS app bundle identifier") var bundleID: String?
     @Option(help: "Harmony bundle name") var bundle: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -1406,14 +1406,14 @@ struct HostAppOpenURL: AsyncParsableCommand {
     @Argument(help: "URL to open") var url: String
     @Option(help: "Platform adapter: ios or harmony") var platform: HostAppPlatform?
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
     @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Harmony bundle name") var bundle: String?
     @Option(help: "Harmony ability name") var ability: String?
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(name: .customLong("runtime-target"), help: "iOS embedded runtime target id from `triton list`") var runtimeTarget: String = TKLocalTargetID
     @Flag(name: .customLong("wait-ready"), help: "After opening the URL, wait until the embedded runtime is connected and has an active hierarchy") var waitReady = false
@@ -1517,7 +1517,7 @@ struct HostAppContainer: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "container", abstract: "Print a simulator app container path")
 
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
@@ -1576,7 +1576,7 @@ struct HostAppPrefsDump: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "dump", abstract: "Dump app preferences")
 
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
@@ -1612,7 +1612,7 @@ struct HostAppPrefsGet: AsyncParsableCommand {
 
     @Argument(help: "Preference key") var key: String
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
@@ -1649,7 +1649,7 @@ struct HostAppPrefsSet: AsyncParsableCommand {
     @Argument(help: "Preference key") var key: String
     @Argument(help: "JSON value to write") var value: String
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
-    @Option(help: "Simulator UDID or booted; compatibility path") var simulator: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
@@ -1788,7 +1788,7 @@ struct DeviceUse: AsyncParsableCommand {
 
     @Argument(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
     @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
-    @Option(help: "Target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
@@ -1980,7 +1980,7 @@ struct DeviceWaitReady: AsyncParsableCommand {
 
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
     @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
-    @Option(help: "Target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
@@ -2025,7 +2025,7 @@ struct DeviceScreenshot: AsyncParsableCommand {
 
     @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
     @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
-    @Option(help: "Target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
@@ -2063,7 +2063,7 @@ struct DeviceRuntimeURL: AsyncParsableCommand {
 
     @Option(help: "Platform adapter: harmony") var platform: HostDevicePlatform = .harmony
     @Option(help: "Unified host device selector: alias, harmony:<target>, raw id, or current") var device: String?
-    @Option(help: "Target id, for example 127.0.0.1:10100; compatibility path") var target: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Device name filter when available") var name: String?
     @Option(help: "Runtime filter when available") var runtime: String?
     @Option(help: "Target state filter, for example connected") var state: String?

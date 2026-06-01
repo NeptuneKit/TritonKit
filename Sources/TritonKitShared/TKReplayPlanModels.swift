@@ -215,6 +215,7 @@ public struct TKReplayPlanSummary: Codable, Equatable {
     public let stepCount: Int
     public let actions: [String]
     public let target: TKReplayPlanTarget?
+    public let steps: [TKReplayPlanStepSummary]
 
     public init(ok: Bool, path: String, plan: TKReplayPlan) {
         self.ok = ok
@@ -225,6 +226,550 @@ public struct TKReplayPlanSummary: Codable, Equatable {
         self.stepCount = plan.steps.count
         self.actions = plan.steps.map(\.action.rawValue)
         self.target = plan.target
+        self.steps = plan.steps.enumerated().map { offset, step in
+            TKReplayPlanStepSummary(index: offset + 1, planName: plan.name, step: step)
+        }
+    }
+}
+
+public struct TKReplayPlanStepSummary: Codable, Equatable {
+    public let index: Int
+    public let id: String?
+    public let name: String?
+    public let action: String
+    public let command: String
+    public let argv: [String]
+    public let category: String
+    public let workflowCategories: [String]
+    public let requires: [String]
+    public let expectedArtifacts: [String]
+    public let stopConditions: [String]
+    public let validationErrors: [TKReplayPlanStepValidationError]
+
+    enum CodingKeys: String, CodingKey {
+        case index
+        case id
+        case name
+        case action
+        case command
+        case argv
+        case category
+        case workflowCategories
+        case requires
+        case expectedArtifacts
+        case stopConditions
+        case validationErrors
+    }
+
+    public init(index: Int, planName: String?, step: TKReplayPlanStep) {
+        let descriptor = TKReplayStepExecution.inspectDescriptor(for: step, planName: planName, index: index)
+
+        self.index = index
+        self.id = step.id
+        self.name = step.name
+        self.action = step.action.rawValue
+        self.command = descriptor.command
+        self.argv = descriptor.argv
+        self.category = descriptor.category
+        self.workflowCategories = descriptor.workflowCategories
+        self.requires = descriptor.requires
+        self.expectedArtifacts = descriptor.expectedArtifacts
+        self.stopConditions = descriptor.stopConditions
+        self.validationErrors = TKReplayStepExecution.validationErrors(for: step)
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.index = try container.decode(Int.self, forKey: .index)
+        self.id = try container.decodeIfPresent(String.self, forKey: .id)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name)
+        self.action = try container.decode(String.self, forKey: .action)
+        self.command = try container.decode(String.self, forKey: .command)
+        self.argv = try container.decode([String].self, forKey: .argv)
+        self.category = try container.decode(String.self, forKey: .category)
+        self.workflowCategories = try container.decodeIfPresent([String].self, forKey: .workflowCategories)
+            ?? TKReplayStepExecution.metadata(argv: argv, action: action).workflowCategories
+        self.requires = try container.decode([String].self, forKey: .requires)
+        self.expectedArtifacts = try container.decode([String].self, forKey: .expectedArtifacts)
+        self.stopConditions = try container.decode([String].self, forKey: .stopConditions)
+        self.validationErrors = try container.decodeIfPresent(
+            [TKReplayPlanStepValidationError].self,
+            forKey: .validationErrors
+        ) ?? []
+    }
+}
+
+public struct TKReplayPlanStepValidationError: Codable, Equatable {
+    public let code: String
+    public let message: String
+    public let field: String?
+    public let severity: String
+
+    public init(
+        code: String,
+        message: String,
+        field: String? = nil,
+        severity: String = "error"
+    ) {
+        self.code = code
+        self.message = message
+        self.field = field
+        self.severity = severity
+    }
+}
+
+public struct TKReplayStepExecutionDescriptor: Codable, Equatable {
+    public let command: String
+    public let argv: [String]
+    public let category: String
+    public let workflowCategories: [String]
+    public let requires: [String]
+    public let expectedArtifacts: [String]
+    public let stopConditions: [String]
+}
+
+public struct TKReplayStepExecutionMetadata: Codable, Equatable {
+    public let category: String
+    public let workflowCategories: [String]
+    public let requires: [String]
+    public let expectedArtifacts: [String]
+    public let stopConditions: [String]
+}
+
+public enum TKReplayStepExecutionError: Error, Equatable, CustomStringConvertible {
+    case missingTapSelector
+    case ambiguousTapSelector
+    case missingText(action: String)
+    case missingWaitCondition
+    case ambiguousWaitCondition
+    case incompleteCoordinate(action: String)
+
+    public var description: String {
+        switch self {
+        case .missingTapSelector:
+            return "Replay tap step requires a target selector"
+        case .ambiguousTapSelector:
+            return "Replay tap step requires exactly one selector: text, oid, x/y, axOID, or axLabel"
+        case let .missingText(action):
+            return "Replay \(action) step requires value or text"
+        case .missingWaitCondition:
+            return "Replay wait step requires one condition: text, gone, exists, idle, hierarchyChange, or predicate"
+        case .ambiguousWaitCondition:
+            return "Replay wait step requires exactly one condition: text, gone, exists, idle, hierarchyChange, or predicate"
+        case let .incompleteCoordinate(action):
+            return "Replay \(action) step requires x and y together"
+        }
+    }
+}
+
+public enum TKReplayStepExecution {
+    public static func inspectDescriptor(
+        for step: TKReplayPlanStep,
+        planName: String?,
+        index: Int
+    ) -> TKReplayStepExecutionDescriptor {
+        let argv = inspectArgv(for: step, planName: planName, index: index)
+        let metadata = metadata(argv: argv, action: step.action.rawValue)
+        return TKReplayStepExecutionDescriptor(
+            command: commandString(argv),
+            argv: argv,
+            category: metadata.category,
+            workflowCategories: metadata.workflowCategories,
+            requires: metadata.requires,
+            expectedArtifacts: metadata.expectedArtifacts,
+            stopConditions: metadata.stopConditions
+        )
+    }
+
+    public static func argv(
+        for step: TKReplayPlanStep,
+        planName: String?,
+        index: Int,
+        variables: [String: String]
+    ) throws -> [String] {
+        try argv(for: step, planName: planName, index: index, variables: variables, strict: true)
+    }
+
+    public static func metadata(argv: [String], action: String) -> TKReplayStepExecutionMetadata {
+        let root = rootCommand(argv: argv, action: action)
+        return TKReplayStepExecutionMetadata(
+            category: TKCommandRecoveryCommand.category(forRootCommand: root) ?? "replay",
+            workflowCategories: workflowCategories(rootCommand: root),
+            requires: requires(),
+            expectedArtifacts: expectedArtifacts(rootCommand: root),
+            stopConditions: stopConditions(rootCommand: root)
+        )
+    }
+
+    public static func validationErrors(for step: TKReplayPlanStep) -> [TKReplayPlanStepValidationError] {
+        var errors: [TKReplayPlanStepValidationError] = []
+        switch step.action {
+        case .tap:
+            let selectorCount = tapSelectorCount(step)
+            if selectorCount == 0 {
+                errors.append(validationError(.missingTapSelector, field: "selector"))
+            } else if selectorCount > 1 {
+                errors.append(validationError(.ambiguousTapSelector, field: "selector"))
+            }
+            appendCoordinateValidationError(for: step, to: &errors)
+        case .paste, .type:
+            appendCoordinateValidationError(for: step, to: &errors)
+            if step.value == nil, step.text == nil {
+                errors.append(validationError(.missingText(action: step.action.rawValue), field: "value"))
+            }
+        case .clear:
+            appendCoordinateValidationError(for: step, to: &errors)
+        case .wait:
+            let conditionCount = waitConditionCount(step)
+            if conditionCount == 0 {
+                errors.append(validationError(.missingWaitCondition, field: "condition"))
+            } else if conditionCount > 1 {
+                errors.append(validationError(.ambiguousWaitCondition, field: "condition"))
+            }
+        case .screenshot, .evidence:
+            break
+        }
+        return errors
+    }
+
+    public static func artifactName(planName: String?, step: TKReplayPlanStep, index: Int) -> String {
+        sanitizedPathComponent(step.name ?? step.id ?? planName ?? "triton-replay-step-\(index)")
+    }
+
+    public static func commandString(_ argv: [String]) -> String {
+        argv.map(shellEscaped).joined(separator: " ")
+    }
+
+    private static func inspectArgv(for step: TKReplayPlanStep, planName: String?, index: Int) -> [String] {
+        (try? argv(for: step, planName: planName, index: index, variables: [:], strict: false)) ?? ["triton", step.action.rawValue, "--json"]
+    }
+
+    private static func argv(
+        for step: TKReplayPlanStep,
+        planName: String?,
+        index: Int,
+        variables: [String: String],
+        strict: Bool
+    ) throws -> [String] {
+        switch step.action {
+        case .tap:
+            return try tapArgv(for: step, variables: variables, strict: strict)
+        case .paste:
+            return try pasteArgv(for: step, variables: variables, strict: strict)
+        case .type:
+            return try typeArgv(for: step, variables: variables, strict: strict)
+        case .clear:
+            return try clearArgv(for: step, strict: strict)
+        case .wait:
+            return try waitArgv(for: step, variables: variables, strict: strict)
+        case .screenshot:
+            let output = try substituted(
+                step.output ?? "/tmp/\(artifactName(planName: planName, step: step, index: index)).png",
+                variables: variables,
+                strict: strict
+            )
+            return ["triton", "screenshot", "--output", output, "--json"]
+        case .evidence:
+            let output = try substituted(
+                step.output ?? "/tmp/\(artifactName(planName: planName, step: step, index: index)).tritonevidence",
+                variables: variables,
+                strict: strict
+            )
+            var argv = ["triton", "evidence", "--output", output, "--include", step.include ?? "status,list,version,hierarchy,ax,screenshot"]
+            if let name = step.name ?? planName {
+                argv += ["--name", name]
+            }
+            if let note = step.note {
+                argv += ["--note", note]
+            }
+            return argv + ["--json"]
+        }
+    }
+
+    private static func tapArgv(for step: TKReplayPlanStep, variables: [String: String], strict: Bool) throws -> [String] {
+        if strict {
+            let selectorCount = tapSelectorCount(step)
+            if selectorCount == 0 {
+                throw TKReplayStepExecutionError.missingTapSelector
+            }
+            if selectorCount > 1 {
+                throw TKReplayStepExecutionError.ambiguousTapSelector
+            }
+            try validateCoordinatePair(step, strict: strict)
+        }
+
+        var argv = ["triton", "tap"]
+        if let text = step.text {
+            argv.append(try substituted(text, variables: variables, strict: strict))
+        } else if let x = step.x, let y = step.y {
+            argv += ["--x", number(x), "--y", number(y)]
+        } else if let oid = step.oid {
+            argv += ["--oid", "\(oid)"]
+        } else if let axOID = step.axOID {
+            argv += ["--ax-oid", "\(axOID)"]
+        } else if let axLabel = step.axLabel {
+            argv += ["--ax-label", try substituted(axLabel, variables: variables, strict: strict)]
+        } else if strict {
+            throw TKReplayStepExecutionError.missingTapSelector
+        } else {
+            argv.append("<selector>")
+        }
+        return argv + ["--json"]
+    }
+
+    private static func pasteArgv(for step: TKReplayPlanStep, variables: [String: String], strict: Bool) throws -> [String] {
+        try validateCoordinatePair(step, strict: strict)
+        guard let rawValue = step.value ?? step.text else {
+            if strict {
+                throw TKReplayStepExecutionError.missingText(action: step.action.rawValue)
+            }
+            var argv = ["triton", "paste", "<text>"]
+            try appendFocusArgs(step, to: &argv, strict: strict)
+            return argv + ["--json"]
+        }
+        let value = try substituted(rawValue, variables: variables, strict: strict)
+        var argv = ["triton", "paste"]
+        if step.secure == true {
+            argv += ["--secure", step.redactedValue(substitutedValue: value)]
+        } else {
+            argv.append(value)
+        }
+        try appendFocusArgs(step, to: &argv, strict: strict)
+        return argv + ["--json"]
+    }
+
+    private static func typeArgv(for step: TKReplayPlanStep, variables: [String: String], strict: Bool) throws -> [String] {
+        try validateCoordinatePair(step, strict: strict)
+        guard let rawValue = step.value ?? step.text else {
+            if strict {
+                throw TKReplayStepExecutionError.missingText(action: step.action.rawValue)
+            }
+            return ["triton", "type", "--text", "<text>", "--json"]
+        }
+        let value = try substituted(rawValue, variables: variables, strict: strict)
+        var argv = ["triton", "type", "--text", step.redactedValue(substitutedValue: value)]
+        if step.secure == true {
+            argv.append("--secure")
+        }
+        if let oid = step.oid {
+            argv += ["--oid", "\(oid)"]
+        }
+        return argv + ["--json"]
+    }
+
+    private static func clearArgv(for step: TKReplayPlanStep, strict: Bool) throws -> [String] {
+        try validateCoordinatePair(step, strict: strict)
+        var argv = ["triton", "clear"]
+        try appendFocusArgs(step, to: &argv, strict: strict)
+        return argv + ["--json"]
+    }
+
+    private static func waitArgv(for step: TKReplayPlanStep, variables: [String: String], strict: Bool) throws -> [String] {
+        if strict {
+            let conditionCount = waitConditionCount(step)
+            if conditionCount == 0 {
+                throw TKReplayStepExecutionError.missingWaitCondition
+            }
+            if conditionCount > 1 {
+                throw TKReplayStepExecutionError.ambiguousWaitCondition
+            }
+        }
+
+        var argv = ["triton", "wait"]
+        switch step.waitCondition {
+        case .text:
+            argv += ["--text", try substituted(step.text ?? "", variables: variables, strict: strict)]
+        case .gone:
+            argv += ["--gone", try substituted(step.gone ?? "", variables: variables, strict: strict)]
+        case .exists:
+            argv += ["--exists", try substituted(step.exists ?? "", variables: variables, strict: strict)]
+        case .idle:
+            argv.append("--idle")
+        case .hierarchyChange:
+            argv.append("--hierarchy-change")
+        case .predicate:
+            argv += ["--predicate", try substituted(step.predicate ?? "", variables: variables, strict: strict)]
+        case nil:
+            if strict {
+                throw TKReplayStepExecutionError.missingWaitCondition
+            }
+            argv.append("<condition>")
+        }
+        if let role = step.role {
+            argv += ["--role", try substituted(role, variables: variables, strict: strict)]
+        }
+        return argv + [
+            "--timeout", number(step.timeout ?? 10),
+            "--interval", number(step.interval ?? 0.5),
+            "--json",
+        ]
+    }
+
+    private static func appendFocusArgs(_ step: TKReplayPlanStep, to argv: inout [String], strict: Bool) throws {
+        if let x = step.x, let y = step.y {
+            argv += ["--x", number(x), "--y", number(y)]
+        } else if step.x != nil || step.y != nil, !strict {
+            argv += ["--x", step.x.map(number) ?? "<x>", "--y", step.y.map(number) ?? "<y>"]
+        }
+        if let oid = step.oid {
+            argv += ["--oid", "\(oid)"]
+        }
+    }
+
+    private static func validateCoordinatePair(_ step: TKReplayPlanStep, strict: Bool) throws {
+        if strict, (step.x == nil) != (step.y == nil) {
+            throw TKReplayStepExecutionError.incompleteCoordinate(action: step.action.rawValue)
+        }
+    }
+
+    private static func appendCoordinateValidationError(
+        for step: TKReplayPlanStep,
+        to errors: inout [TKReplayPlanStepValidationError]
+    ) {
+        if (step.x == nil) != (step.y == nil) {
+            errors.append(validationError(.incompleteCoordinate(action: step.action.rawValue), field: "x/y"))
+        }
+    }
+
+    private static func tapSelectorCount(_ step: TKReplayPlanStep) -> Int {
+        [
+            step.text != nil,
+            step.oid != nil,
+            step.x != nil || step.y != nil,
+            step.axOID != nil,
+            step.axLabel != nil,
+        ].filter { $0 }.count
+    }
+
+    private static func waitConditionCount(_ step: TKReplayPlanStep) -> Int {
+        [
+            step.text != nil,
+            step.gone != nil,
+            step.exists != nil,
+            step.idle == true,
+            step.hierarchyChange == true,
+            step.predicate != nil,
+        ].filter { $0 }.count
+    }
+
+    private static func validationError(
+        _ error: TKReplayStepExecutionError,
+        field: String
+    ) -> TKReplayPlanStepValidationError {
+        TKReplayPlanStepValidationError(
+            code: validationErrorCode(for: error),
+            message: error.description,
+            field: field
+        )
+    }
+
+    private static func validationErrorCode(for error: TKReplayStepExecutionError) -> String {
+        switch error {
+        case .missingTapSelector:
+            return "missing_tap_selector"
+        case .ambiguousTapSelector:
+            return "ambiguous_tap_selector"
+        case .missingText:
+            return "missing_text"
+        case .missingWaitCondition:
+            return "missing_wait_condition"
+        case .ambiguousWaitCondition:
+            return "ambiguous_wait_condition"
+        case .incompleteCoordinate:
+            return "incomplete_coordinate"
+        }
+    }
+
+    private static func substituted(_ value: String, variables: [String: String], strict: Bool) throws -> String {
+        strict ? try TKReplaySubstituteVariables(value, variables: variables) : value
+    }
+
+    private static func requires() -> [String] {
+        ["cli.available", "server.reachable", "target.ready", "runtime.connected"]
+    }
+
+    private static func expectedArtifacts(rootCommand: String) -> [String] {
+        switch rootCommand {
+        case "tap", "paste", "type", "clear", "input":
+            return ["stdout-json", "input-result"]
+        case "wait":
+            return ["stdout-json", "wait-result"]
+        case "screenshot":
+            return ["stdout-json", "screenshot"]
+        case "evidence", "capture":
+            return ["stdout-json", "evidence-bundle"]
+        default:
+            return ["stdout-json"]
+        }
+    }
+
+    private static func workflowCategories(rootCommand: String) -> [String] {
+        let taxonomy = [
+            "action", "app", "assert", "evidence", "observe", "project",
+            "replay", "route", "runtime", "smoke", "target", "webview-check", "xcode",
+        ]
+        let values: Set<String>
+
+        switch rootCommand {
+        case "tap", "paste", "type", "clear", "input":
+            values = ["action", "assert", "evidence"]
+        case "wait":
+            values = ["observe", "assert", "evidence"]
+        case "screenshot":
+            values = ["observe", "evidence"]
+        case "evidence", "capture":
+            values = ["evidence", "replay"]
+        default:
+            values = ["replay"]
+        }
+
+        return taxonomy.filter { values.contains($0) }
+    }
+
+    private static func stopConditions(rootCommand: String) -> [String] {
+        var values = ["command.failed", "server.unavailable", "target.unavailable"]
+        switch rootCommand {
+        case "wait":
+            values.append("timeout")
+        case "screenshot", "evidence", "capture":
+            values.append("artifact.write-failed")
+        case "replay", "smoke":
+            values.append("step.failed")
+        default:
+            break
+        }
+        return values
+    }
+
+    private static func rootCommand(argv: [String], action: String) -> String {
+        guard argv.first == "triton", argv.count > 1 else {
+            return action
+        }
+        return argv[1]
+    }
+
+    private static func sanitizedPathComponent(_ value: String) -> String {
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
+        let scalars = value.unicodeScalars.map { scalar -> Character in
+            allowed.contains(scalar) ? Character(scalar) : "-"
+        }
+        let collapsed = String(scalars).split(separator: "-").joined(separator: "-")
+        return collapsed.isEmpty ? "triton-replay" : collapsed
+    }
+
+    private static func number(_ value: Double) -> String {
+        if value.rounded() == value {
+            return String(Int(value))
+        }
+        return String(value)
+    }
+
+    private static func shellEscaped(_ value: String) -> String {
+        guard !value.isEmpty else { return "''" }
+        if value.rangeOfCharacter(from: CharacterSet.whitespacesAndNewlines.union(.init(charactersIn: #"'\"$`<>|&;()"#))) == nil {
+            return value
+        }
+        return "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
     }
 }
 
@@ -248,12 +793,44 @@ public struct TKReplayStepResult: Codable, Equatable {
     public let dryRun: Bool
     public let elapsedMs: Int
     public let command: [String]
+    public let argv: [String]
+    public let category: String
+    public let workflowCategories: [String]
+    public let requires: [String]
+    public let expectedArtifacts: [String]
+    public let stopConditions: [String]
+    public let failureCode: String?
+    public let error: TKCLIErrorDetail?
     public let message: String?
     public let redactedValue: String?
     public let input: TKInputResult?
     public let wait: TKWaitResult?
     public let file: TKReplayFileArtifact?
     public let evidence: TKEvidenceManifest?
+
+    enum CodingKeys: String, CodingKey {
+        case index
+        case action
+        case name
+        case ok
+        case dryRun
+        case elapsedMs
+        case command
+        case argv
+        case category
+        case workflowCategories
+        case requires
+        case expectedArtifacts
+        case stopConditions
+        case failureCode
+        case error
+        case message
+        case redactedValue
+        case input
+        case wait
+        case file
+        case evidence
+    }
 
     public init(
         index: Int,
@@ -263,6 +840,14 @@ public struct TKReplayStepResult: Codable, Equatable {
         dryRun: Bool,
         elapsedMs: Int,
         command: [String],
+        argv: [String]? = nil,
+        category: String? = nil,
+        workflowCategories: [String]? = nil,
+        requires: [String]? = nil,
+        expectedArtifacts: [String]? = nil,
+        stopConditions: [String]? = nil,
+        failureCode: String? = nil,
+        error: TKCLIErrorDetail? = nil,
         message: String? = nil,
         redactedValue: String? = nil,
         input: TKInputResult? = nil,
@@ -277,12 +862,109 @@ public struct TKReplayStepResult: Codable, Equatable {
         self.dryRun = dryRun
         self.elapsedMs = elapsedMs
         self.command = command
+        self.argv = argv ?? command
+        let metadata = TKReplayStepExecution.metadata(argv: self.argv, action: action)
+        self.category = category ?? metadata.category
+        self.workflowCategories = workflowCategories ?? metadata.workflowCategories
+        self.requires = requires ?? metadata.requires
+        self.expectedArtifacts = expectedArtifacts ?? metadata.expectedArtifacts
+        self.stopConditions = stopConditions ?? metadata.stopConditions
+        self.error = error
+        self.failureCode = failureCode ?? error?.code ?? Self.defaultFailureCode(
+            ok: ok,
+            action: action,
+            input: input,
+            wait: wait,
+            file: file,
+            evidence: evidence
+        )
         self.message = message
         self.redactedValue = redactedValue
         self.input = input
         self.wait = wait
         self.file = file
         self.evidence = evidence
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let action = try container.decode(String.self, forKey: .action)
+        let decodedCommand = try container.decodeIfPresent([String].self, forKey: .command)
+        let decodedArgv = try container.decodeIfPresent([String].self, forKey: .argv)
+        let command: [String]
+        if let decodedCommand {
+            command = decodedCommand
+        } else if let decodedArgv {
+            command = decodedArgv
+        } else {
+            throw DecodingError.keyNotFound(
+                CodingKeys.command,
+                DecodingError.Context(codingPath: container.codingPath, debugDescription: "Expected command or argv")
+            )
+        }
+        let argv = decodedArgv ?? command
+
+        self.index = try container.decode(Int.self, forKey: .index)
+        self.action = action
+        self.name = try container.decodeIfPresent(String.self, forKey: .name)
+        self.ok = try container.decode(Bool.self, forKey: .ok)
+        self.dryRun = try container.decode(Bool.self, forKey: .dryRun)
+        self.elapsedMs = try container.decode(Int.self, forKey: .elapsedMs)
+        self.command = command
+        self.argv = argv
+        let metadata = TKReplayStepExecution.metadata(argv: argv, action: action)
+        self.category = try container.decodeIfPresent(String.self, forKey: .category) ?? metadata.category
+        self.workflowCategories = try container.decodeIfPresent([String].self, forKey: .workflowCategories)
+            ?? metadata.workflowCategories
+        self.requires = try container.decodeIfPresent([String].self, forKey: .requires) ?? metadata.requires
+        self.expectedArtifacts = try container.decodeIfPresent([String].self, forKey: .expectedArtifacts) ?? metadata.expectedArtifacts
+        self.stopConditions = try container.decodeIfPresent([String].self, forKey: .stopConditions) ?? metadata.stopConditions
+        let decodedError = try container.decodeIfPresent(TKCLIErrorDetail.self, forKey: .error)
+        let decodedInput = try container.decodeIfPresent(TKInputResult.self, forKey: .input)
+        let decodedWait = try container.decodeIfPresent(TKWaitResult.self, forKey: .wait)
+        let decodedFile = try container.decodeIfPresent(TKReplayFileArtifact.self, forKey: .file)
+        let decodedEvidence = try container.decodeIfPresent(TKEvidenceManifest.self, forKey: .evidence)
+        self.error = decodedError
+        self.failureCode = try container.decodeIfPresent(String.self, forKey: .failureCode)
+            ?? decodedError?.code
+            ?? Self.defaultFailureCode(
+                ok: self.ok,
+                action: action,
+                input: decodedInput,
+                wait: decodedWait,
+                file: decodedFile,
+                evidence: decodedEvidence
+            )
+        self.message = try container.decodeIfPresent(String.self, forKey: .message)
+        self.redactedValue = try container.decodeIfPresent(String.self, forKey: .redactedValue)
+        self.input = decodedInput
+        self.wait = decodedWait
+        self.file = decodedFile
+        self.evidence = decodedEvidence
+    }
+
+    private static func defaultFailureCode(
+        ok: Bool,
+        action: String,
+        input: TKInputResult?,
+        wait: TKWaitResult?,
+        file: TKReplayFileArtifact?,
+        evidence: TKEvidenceManifest?
+    ) -> String? {
+        guard !ok else { return nil }
+        if let wait, wait.timedOut {
+            return "timeout"
+        }
+        if input != nil {
+            return "action_failed"
+        }
+        if action == "screenshot", file == nil {
+            return "artifact_write_failed"
+        }
+        if let evidence, !evidence.ok {
+            return "request_failed"
+        }
+        return "step_failed"
     }
 }
 
@@ -293,8 +975,49 @@ public struct TKReplayResult: Codable, Equatable {
     public let stepCount: Int
     public let executedCount: Int
     public let failedStepIndex: Int?
+    public let failureCode: String?
+    public let failureError: TKCLIErrorDetail?
+    public let failurePrimaryWorkflowCategory: String?
+    public let failureWorkflowCategories: [String]
+    public let failurePrimaryRecoveryCategory: String?
+    public let failureRecoveryCategories: [String]
+    public let failurePrimaryHint: String?
+    public let failurePrimaryEndpoint: String?
+    public let failurePrimaryNextAction: TKCLINextAction?
+    public let failurePrimaryArtifact: TKEvidenceArtifactSummary?
+    public let failurePrimaryArtifacts: [TKEvidenceArtifactSummary]
     public let elapsedMs: Int
     public let steps: [TKReplayStepResult]
+    public let failurePrimarySuggestedCommand: String?
+    public let suggestedCommands: [String]
+    public let failurePrimaryRecoveryCommand: TKCommandRecoveryCommand?
+    public let recoveryCommands: [TKCommandRecoveryCommand]
+
+    enum CodingKeys: String, CodingKey {
+        case ok
+        case dryRun
+        case planName
+        case stepCount
+        case executedCount
+        case failedStepIndex
+        case failureCode
+        case failureError
+        case failurePrimaryWorkflowCategory
+        case failureWorkflowCategories
+        case failurePrimaryRecoveryCategory
+        case failureRecoveryCategories
+        case failurePrimaryHint
+        case failurePrimaryEndpoint
+        case failurePrimaryNextAction
+        case failurePrimaryArtifact
+        case failurePrimaryArtifacts
+        case elapsedMs
+        case steps
+        case failurePrimarySuggestedCommand
+        case suggestedCommands
+        case failurePrimaryRecoveryCommand
+        case recoveryCommands
+    }
 
     public init(
         ok: Bool,
@@ -303,8 +1026,23 @@ public struct TKReplayResult: Codable, Equatable {
         stepCount: Int,
         executedCount: Int,
         failedStepIndex: Int?,
+        failureCode: String? = nil,
+        failureError: TKCLIErrorDetail? = nil,
+        failurePrimaryWorkflowCategory: String? = nil,
+        failureWorkflowCategories: [String]? = nil,
+        failurePrimaryRecoveryCategory: String? = nil,
+        failureRecoveryCategories: [String]? = nil,
+        failurePrimaryHint: String? = nil,
+        failurePrimaryEndpoint: String? = nil,
+        failurePrimaryNextAction: TKCLINextAction? = nil,
+        failurePrimaryArtifact: TKEvidenceArtifactSummary? = nil,
+        failurePrimaryArtifacts: [TKEvidenceArtifactSummary]? = nil,
         elapsedMs: Int,
-        steps: [TKReplayStepResult]
+        steps: [TKReplayStepResult],
+        failurePrimarySuggestedCommand: String? = nil,
+        suggestedCommands: [String] = [],
+        failurePrimaryRecoveryCommand: TKCommandRecoveryCommand? = nil,
+        recoveryCommands: [TKCommandRecoveryCommand]? = nil
     ) {
         self.ok = ok
         self.dryRun = dryRun
@@ -312,8 +1050,260 @@ public struct TKReplayResult: Codable, Equatable {
         self.stepCount = stepCount
         self.executedCount = executedCount
         self.failedStepIndex = failedStepIndex
+        self.failureCode = failureCode ?? Self.defaultFailureCode(steps: steps, failedStepIndex: failedStepIndex)
+        self.failureError = failureError ?? Self.defaultFailureError(steps: steps, failedStepIndex: failedStepIndex)
+        self.failureWorkflowCategories = failureWorkflowCategories ?? Self.defaultFailureWorkflowCategories(
+            steps: steps,
+            failedStepIndex: failedStepIndex
+        )
+        self.failurePrimaryWorkflowCategory = failurePrimaryWorkflowCategory ?? self.failureWorkflowCategories.first
+        self.failurePrimaryHint = failurePrimaryHint ?? self.failureError?.hint
+        self.failurePrimaryEndpoint = failurePrimaryEndpoint ?? self.failureError?.endpoint
+        self.failurePrimaryNextAction = failurePrimaryNextAction ?? self.failureError?.nextAction
+        self.failurePrimaryArtifacts = failurePrimaryArtifacts ?? Self.defaultFailurePrimaryArtifacts(
+            steps: steps,
+            failedStepIndex: failedStepIndex
+        )
         self.elapsedMs = elapsedMs
         self.steps = steps
+        self.suggestedCommands = Self.normalizedSuggestedCommands(
+            suggestedCommands,
+            failureError: self.failureError
+        )
+        self.failurePrimarySuggestedCommand = failurePrimarySuggestedCommand ?? self.suggestedCommands.first
+        self.recoveryCommands = Self.normalizedRecoveryCommands(
+            recoveryCommands,
+            suggestedCommands: self.suggestedCommands,
+            failureError: self.failureError
+        )
+        self.failurePrimaryRecoveryCommand = failurePrimaryRecoveryCommand ?? self.recoveryCommands.first
+        self.failureRecoveryCategories = Self.normalizedFailureRecoveryCategories(
+            failureRecoveryCategories,
+            failureCode: self.failureCode,
+            failureError: self.failureError,
+            recoveryCommands: self.recoveryCommands
+        )
+        self.failurePrimaryRecoveryCategory = failurePrimaryRecoveryCategory ?? self.failureRecoveryCategories.first
+        self.failurePrimaryArtifact = failurePrimaryArtifact ?? self.failurePrimaryArtifacts.first
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let steps = try container.decode([TKReplayStepResult].self, forKey: .steps)
+        let failedStepIndex = try container.decodeIfPresent(Int.self, forKey: .failedStepIndex)
+        self.ok = try container.decode(Bool.self, forKey: .ok)
+        self.dryRun = try container.decode(Bool.self, forKey: .dryRun)
+        self.planName = try container.decodeIfPresent(String.self, forKey: .planName)
+        self.stepCount = try container.decode(Int.self, forKey: .stepCount)
+        self.executedCount = try container.decode(Int.self, forKey: .executedCount)
+        self.failedStepIndex = failedStepIndex
+        self.failureCode = try container.decodeIfPresent(String.self, forKey: .failureCode)
+            ?? Self.defaultFailureCode(steps: steps, failedStepIndex: failedStepIndex)
+        self.failureError = try container.decodeIfPresent(TKCLIErrorDetail.self, forKey: .failureError)
+            ?? Self.defaultFailureError(steps: steps, failedStepIndex: failedStepIndex)
+        self.failureWorkflowCategories = try container.decodeIfPresent([String].self, forKey: .failureWorkflowCategories)
+            ?? Self.defaultFailureWorkflowCategories(steps: steps, failedStepIndex: failedStepIndex)
+        self.failurePrimaryWorkflowCategory = try container.decodeIfPresent(String.self, forKey: .failurePrimaryWorkflowCategory)
+            ?? self.failureWorkflowCategories.first
+        self.failurePrimaryHint = try container.decodeIfPresent(String.self, forKey: .failurePrimaryHint)
+            ?? self.failureError?.hint
+        self.failurePrimaryEndpoint = try container.decodeIfPresent(String.self, forKey: .failurePrimaryEndpoint)
+            ?? self.failureError?.endpoint
+        self.failurePrimaryNextAction = try container.decodeIfPresent(TKCLINextAction.self, forKey: .failurePrimaryNextAction)
+            ?? self.failureError?.nextAction
+        self.failurePrimaryArtifacts = try container.decodeIfPresent([TKEvidenceArtifactSummary].self, forKey: .failurePrimaryArtifacts)
+            ?? Self.defaultFailurePrimaryArtifacts(steps: steps, failedStepIndex: failedStepIndex)
+        self.elapsedMs = try container.decode(Int.self, forKey: .elapsedMs)
+        self.steps = steps
+        self.suggestedCommands = Self.normalizedSuggestedCommands(
+            try container.decodeIfPresent([String].self, forKey: .suggestedCommands) ?? [],
+            failureError: self.failureError
+        )
+        self.failurePrimarySuggestedCommand = try container.decodeIfPresent(String.self, forKey: .failurePrimarySuggestedCommand)
+            ?? self.suggestedCommands.first
+        self.recoveryCommands = Self.normalizedRecoveryCommands(
+            try container.decodeIfPresent([TKCommandRecoveryCommand].self, forKey: .recoveryCommands),
+            suggestedCommands: self.suggestedCommands,
+            failureError: self.failureError
+        )
+        self.failurePrimaryRecoveryCommand = try container.decodeIfPresent(TKCommandRecoveryCommand.self, forKey: .failurePrimaryRecoveryCommand)
+            ?? self.recoveryCommands.first
+        self.failureRecoveryCategories = Self.normalizedFailureRecoveryCategories(
+            try container.decodeIfPresent([String].self, forKey: .failureRecoveryCategories),
+            failureCode: self.failureCode,
+            failureError: self.failureError,
+            recoveryCommands: self.recoveryCommands
+        )
+        self.failurePrimaryRecoveryCategory = try container.decodeIfPresent(String.self, forKey: .failurePrimaryRecoveryCategory)
+            ?? self.failureRecoveryCategories.first
+        self.failurePrimaryArtifact = try container.decodeIfPresent(TKEvidenceArtifactSummary.self, forKey: .failurePrimaryArtifact)
+            ?? self.failurePrimaryArtifacts.first
+    }
+
+    private static func defaultFailureWorkflowCategories(
+        steps: [TKReplayStepResult],
+        failedStepIndex: Int?
+    ) -> [String] {
+        guard let failedStep = failedStep(steps: steps, failedStepIndex: failedStepIndex) else {
+            return []
+        }
+        return failedStep.workflowCategories
+    }
+
+    private static func defaultFailureCode(
+        steps: [TKReplayStepResult],
+        failedStepIndex: Int?
+    ) -> String? {
+        failedStep(steps: steps, failedStepIndex: failedStepIndex)?.failureCode
+    }
+
+    private static func defaultFailureError(
+        steps: [TKReplayStepResult],
+        failedStepIndex: Int?
+    ) -> TKCLIErrorDetail? {
+        failedStep(steps: steps, failedStepIndex: failedStepIndex)?.error
+    }
+
+    private static func defaultFailurePrimaryArtifacts(
+        steps: [TKReplayStepResult],
+        failedStepIndex: Int?
+    ) -> [TKEvidenceArtifactSummary] {
+        guard failedStepIndex != nil else { return [] }
+        var artifacts: [TKEvidenceArtifactSummary] = []
+        var seen = Set<String>()
+
+        for step in steps.reversed() {
+            if let evidence = step.evidence {
+                for artifact in evidence.primaryArtifacts {
+                    let key = "\(artifact.kind)|\(artifact.path)"
+                    guard !seen.contains(key) else { continue }
+                    seen.insert(key)
+                    artifacts.append(artifact)
+                    if artifacts.count >= 5 { return artifacts }
+                }
+            } else if let file = step.file {
+                let artifact = file.artifactSummary
+                let key = "\(artifact.kind)|\(artifact.path)"
+                guard !seen.contains(key) else { continue }
+                seen.insert(key)
+                artifacts.append(artifact)
+                if artifacts.count >= 5 { return artifacts }
+            }
+        }
+
+        return artifacts
+    }
+
+    private static func normalizedFailureRecoveryCategories(
+        _ categories: [String]?,
+        failureCode: String?,
+        failureError: TKCLIErrorDetail?,
+        recoveryCommands: [TKCommandRecoveryCommand]
+    ) -> [String] {
+        let familyCategories = categories ?? (failureCode.map(TKCommandRecoveryCommand.recoveryCategories(forFailureCode:)) ?? [])
+        let recoveryCategories = uniqueOrderedCategories(from: recoveryCommands.map(\.category))
+        let nextActionCategory = failureError?.nextAction?.category
+
+        if nextActionCategory == nil {
+            return familyCategories
+        }
+
+        var normalized: [String] = []
+        var seen = Set<String>()
+
+        func append(_ category: String?) {
+            guard let category, !seen.contains(category) else { return }
+            seen.insert(category)
+            normalized.append(category)
+        }
+
+        append(nextActionCategory)
+        for category in recoveryCategories {
+            append(category)
+        }
+        for category in familyCategories {
+            append(category)
+        }
+        return normalized
+    }
+
+    private static func normalizedSuggestedCommands(
+        _ commands: [String],
+        failureError: TKCLIErrorDetail?
+    ) -> [String] {
+        var normalized = commands
+        if let nextActionCommand = nextActionCommandString(from: failureError) {
+            normalized.insert(nextActionCommand, at: 0)
+        }
+
+        var unique: [String] = []
+        var seen = Set<String>()
+        for command in normalized where !seen.contains(command) {
+            seen.insert(command)
+            unique.append(command)
+        }
+        return unique
+    }
+
+    private static func normalizedRecoveryCommands(
+        _ recoveryCommands: [TKCommandRecoveryCommand]?,
+        suggestedCommands: [String],
+        failureError: TKCLIErrorDetail?
+    ) -> [TKCommandRecoveryCommand] {
+        var normalized = recoveryCommands ?? suggestedCommands.compactMap(TKCommandRecoveryCommand.init(commandString:))
+        if let nextActionCommand = nextActionCommandString(from: failureError),
+           let nextActionRecoveryCommand = TKCommandRecoveryCommand(commandString: nextActionCommand) {
+            normalized.removeAll { $0.command == nextActionRecoveryCommand.command }
+            normalized.insert(nextActionRecoveryCommand, at: 0)
+        }
+
+        var unique: [TKCommandRecoveryCommand] = []
+        var seen = Set<String>()
+        for recoveryCommand in normalized where !seen.contains(recoveryCommand.command) {
+            seen.insert(recoveryCommand.command)
+            unique.append(recoveryCommand)
+        }
+        return unique
+    }
+
+    private static func nextActionCommandString(from failureError: TKCLIErrorDetail?) -> String? {
+        guard let nextAction = failureError?.nextAction else { return nil }
+        return (["triton", nextAction.command] + nextAction.args).joined(separator: " ")
+    }
+
+    private static func uniqueOrderedCategories(from categories: [String]) -> [String] {
+        var unique: [String] = []
+        var seen = Set<String>()
+        for category in categories where !seen.contains(category) {
+            seen.insert(category)
+            unique.append(category)
+        }
+        return unique
+    }
+
+    private static func failedStep(
+        steps: [TKReplayStepResult],
+        failedStepIndex: Int?
+    ) -> TKReplayStepResult? {
+        guard let failedStepIndex else { return nil }
+        return steps.first { $0.index == failedStepIndex }
+    }
+}
+
+private extension TKReplayFileArtifact {
+    var artifactSummary: TKEvidenceArtifactSummary {
+        let kind: String
+        if contentType?.hasPrefix("image/") == true {
+            kind = "screenshot"
+        } else {
+            kind = "file"
+        }
+        return TKEvidenceArtifactSummary(
+            kind: kind,
+            path: path,
+            contentType: contentType,
+            bytes: bytes
+        )
     }
 }
 

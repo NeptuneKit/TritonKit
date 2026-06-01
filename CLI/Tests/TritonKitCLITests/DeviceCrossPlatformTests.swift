@@ -9,21 +9,22 @@ struct DeviceCrossPlatformTests {
     func deviceSchemaExposesCrossPlatformSurface() throws {
         let device = try #require(commandSchemas().first { $0.name == "device" })
         let optionNames = device.options.map(\.name)
+        let usageForms = device.usageForms.map(\.form)
 
-        #expect(optionNames.contains("doctor --platform ios|harmony"))
-        #expect(optionNames.contains("list --platform ios|harmony"))
-        #expect(optionNames.contains("alias set <name> --platform ios|harmony --target <id>"))
-        #expect(optionNames.contains("use <selector>"))
-        #expect(optionNames.contains("current"))
-        #expect(optionNames.contains("resolve <selector>"))
-        #expect(optionNames.contains("wait-ready --device <selector>"))
-        #expect(optionNames.contains("screenshot --device <selector> --output <path>"))
-        #expect(optionNames.contains("runtime-url --device <selector>"))
-        #expect(optionNames.contains("stop --platform harmony --hvd <name> --path <deployed-path> --confirm"))
+        #expect(usageForms.contains("doctor --platform ios|harmony"))
+        #expect(usageForms.contains("list --platform ios|harmony"))
+        #expect(usageForms.contains("alias set <name> --platform ios|harmony --target <id>"))
+        #expect(usageForms.contains("use <selector>"))
+        #expect(usageForms.contains("current"))
+        #expect(usageForms.contains("resolve <selector>"))
+        #expect(usageForms.contains("wait-ready --device <selector>"))
+        #expect(usageForms.contains("screenshot --device <selector> --output <path>"))
+        #expect(usageForms.contains("runtime-url --device <selector>"))
+        #expect(usageForms.contains("stop --platform harmony --hvd <name> --path <deployed-path> --confirm"))
         #expect(optionNames.contains("--device"))
         #expect(optionNames.contains("--name"))
         #expect(optionNames.contains("--runtime"))
-        #expect(optionNames.contains("runtime-url --platform harmony --target <target>"))
+        #expect(usageForms.contains("runtime-url --platform harmony --target <target>"))
         #expect(device.examples.contains("triton device runtime-url --device harmony-a --probe-manifest --json"))
         #expect(device.examples.contains("triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --confirm --json"))
         #expect(device.providedCapabilities.contains("host-device"))
@@ -75,7 +76,7 @@ struct DeviceCrossPlatformTests {
         }
     }
 
-    @Test("app and smoke schemas expose unified device selector with compatibility paths")
+    @Test("app and smoke schemas expose unified device selector with explicit selector forms")
     func appAndSmokeSchemasExposeUnifiedDeviceSelector() throws {
         let app = try #require(commandSchemas().first { $0.name == "app" })
         let smoke = try #require(commandSchemas().first { $0.name == "smoke" })
@@ -100,7 +101,7 @@ struct DeviceCrossPlatformTests {
         #expect(smoke.examples.contains("triton smoke harmony --device harmony-a --bundle com.example.app --ability EntryAbility --open-url example://home --wait-text Ready --screenshot /tmp/smoke.jpeg --evidence /tmp/harmony.tritonevidence --json"))
     }
 
-    @Test("unified device selector rejects legacy selector conflicts")
+    @Test("unified device selector rejects mixed selector conflicts")
     func unifiedDeviceSelectorRejectsLegacySelectorConflicts() {
         #expect(throws: HostDeviceSelectionError.self) {
             try ensureHostDeviceSelectorCompatibility(device: "iphone15", simulator: "booted", target: nil)

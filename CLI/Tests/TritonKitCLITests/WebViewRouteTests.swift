@@ -104,6 +104,233 @@ struct WebViewRouteTests {
             #expect(response.error.code == "webview_navigation_changed")
         }
     }
+
+    @Test("wait request defaults use seconds")
+    func waitRequestDefaultsUseSeconds() {
+        let request = TKWebViewWaitRequest(condition: .text, query: "Ready")
+
+        #expect(request.timeoutSeconds == 10)
+        #expect(request.intervalSeconds == 0.5)
+    }
+
+    @Test("CLI wait request requires exactly one condition")
+    func cliWaitRequestRequiresExactlyOneCondition() throws {
+        let request = try makeWebViewWaitRequest(
+            text: "Ready",
+            selector: nil,
+            event: nil,
+            webViewID: "webview-1",
+            pageSessionID: "page-1",
+            timeoutSeconds: 3,
+            intervalSeconds: 0.25
+        )
+
+        #expect(request.condition == .text)
+        #expect(request.query == "Ready")
+        #expect(request.webViewID == "webview-1")
+        #expect(request.pageSessionID == "page-1")
+        #expect(request.timeoutSeconds == 3)
+        #expect(request.intervalSeconds == 0.25)
+
+        #expect(throws: RuntimeError.self) {
+            _ = try makeWebViewWaitRequest(
+                text: "Ready",
+                selector: "#submit",
+                event: nil,
+                webViewID: nil,
+                pageSessionID: nil,
+                timeoutSeconds: 10,
+                intervalSeconds: 0.5
+            )
+        }
+
+        #expect(throws: RuntimeError.self) {
+            _ = try makeWebViewWaitRequest(
+                text: nil,
+                selector: nil,
+                event: nil,
+                webViewID: nil,
+                pageSessionID: nil,
+                timeoutSeconds: 10,
+                intervalSeconds: 0.5
+            )
+        }
+    }
+
+    @Test("wait decoder preserves WebView wait and error envelopes")
+    func waitDecoderPreservesWaitAndErrorEnvelopes() throws {
+        let waitData = try JSONEncoder().encode(TKWebViewWaitResponse(
+            capturedAt: "2026-05-26T00:00:00Z",
+            platform: "ios",
+            target: "embedded-runtime",
+            webView: webView(url: "https://example.invalid"),
+            condition: "text",
+            query: "Ready",
+            matched: true,
+            timedOut: false,
+            elapsedMs: 50,
+            pollCount: 1,
+            timeoutSeconds: 10,
+            intervalSeconds: 0.5,
+            pageSessionID: "page-1",
+            match: TKWebViewWaitMatch(text: "Ready", source: "text[]")
+        ))
+
+        switch try decodeWebViewWaitRuntimeResult(waitData) {
+        case .wait(let response):
+            #expect(response.ok)
+            #expect(response.match?.text == "Ready")
+        case .error:
+            Issue.record("Expected wait response")
+        }
+
+        let errorData = try JSONEncoder().encode(TKWebViewErrorResponse(
+            action: "webview.wait",
+            platform: "ios",
+            target: "embedded-runtime",
+            error: TKCLIErrorDetail(
+                code: "webview_wait_unsupported",
+                message: "Only simple #id selectors are supported."
+            )
+        ))
+
+        switch try decodeWebViewWaitRuntimeResult(errorData) {
+        case .wait:
+            Issue.record("Expected WebView error envelope")
+        case .error(let response):
+            #expect(response.error.code == "webview_wait_unsupported")
+        }
+    }
+
+    @Test("schema exposes WebView wait contract")
+    func schemaExposesWebViewWaitContract() throws {
+        let schema = try #require(commandSchemas().first { $0.name == "webview" })
+        let optionNames = Set(schema.options.map(\.name))
+        let usageForms = Set(schema.usageForms.map(\.form))
+
+        #expect(usageForms.contains("wait"))
+        #expect(optionNames.contains("--text"))
+        #expect(optionNames.contains("--selector"))
+        #expect(optionNames.contains("--event"))
+        #expect(optionNames.contains("--timeout"))
+        #expect(optionNames.contains("--interval"))
+        #expect(schema.providedCapabilities.contains("webview-wait"))
+        #expect(schema.successShape?.contains("action:webview.wait") == true)
+        #expect(schema.failureShape?.contains("webview_wait_unsupported") == true)
+        #expect(schema.examples.contains("triton webview wait --text Ready --json"))
+    }
+
+    @Test("wait text matches exact visible text lines only")
+    func waitTextMatchesExactVisibleTextLinesOnly() {
+        let snapshot = webViewSnapshot(
+            text: ["Ready", "Submit Order"],
+            dom: [TKWebViewDOMNodeSummary(nodeID: "submit", role: "button", tagName: "button", text: "Submit Order")]
+        )
+
+        let textHit = TKEvaluateWebViewWait(
+            request: TKWebViewWaitRequest(condition: .text, query: "Ready"),
+            snapshot: snapshot
+        )
+        let containsMiss = TKEvaluateWebViewWait(
+            request: TKWebViewWaitRequest(condition: .text, query: "Submit"),
+            snapshot: snapshot
+        )
+
+        #expect(textHit.hit)
+        #expect(textHit.match?.source == "text[]")
+        #expect(containsMiss.hit == false)
+        #expect(containsMiss.match == nil)
+        #expect(containsMiss.lastObservedTextSample == ["Ready", "Submit Order"])
+    }
+
+    @Test("wait text can match DOM node text exactly")
+    func waitTextCanMatchDOMNodeTextExactly() {
+        let snapshot = webViewSnapshot(
+            text: [],
+            dom: [TKWebViewDOMNodeSummary(nodeID: "welcome", role: "heading", tagName: "h1", text: "Welcome")]
+        )
+
+        let result = TKEvaluateWebViewWait(
+            request: TKWebViewWaitRequest(condition: .text, query: "Welcome"),
+            snapshot: snapshot
+        )
+
+        #expect(result.hit)
+        #expect(result.match?.source == "dom[].text")
+        #expect(result.match?.nodeID == "welcome")
+    }
+
+    @Test("wait selector supports only simple id selectors")
+    func waitSelectorSupportsOnlySimpleIDSelectors() {
+        let snapshot = webViewSnapshot(
+            dom: [TKWebViewDOMNodeSummary(nodeID: "submit", role: "button", tagName: "button", text: "Submit")]
+        )
+
+        let hit = TKEvaluateWebViewWait(
+            request: TKWebViewWaitRequest(condition: .selector, query: "#submit"),
+            snapshot: snapshot
+        )
+        let unsupported = TKEvaluateWebViewWait(
+            request: TKWebViewWaitRequest(condition: .selector, query: "button#submit"),
+            snapshot: snapshot
+        )
+
+        #expect(hit.hit)
+        #expect(hit.match?.source == "dom[].nodeID")
+        #expect(hit.match?.nodeID == "submit")
+        #expect(unsupported.hit == false)
+        #expect(unsupported.error?.code == .webViewWaitUnsupported)
+    }
+
+    @Test("wait event matches event names exactly")
+    func waitEventMatchesEventNamesExactly() {
+        let snapshot = webViewSnapshot()
+        let events = TKWebViewEventsResponse(
+            capturedAt: "2026-05-26T00:00:00Z",
+            platform: "ios",
+            target: "embedded-runtime",
+            events: [
+                TKWebViewEvent(
+                    id: "event-1",
+                    timestamp: "2026-05-26T00:00:00Z",
+                    webViewID: "webview-1",
+                    pageSessionID: "page-1",
+                    name: "checkout.ready",
+                    source: "page-bridge"
+                )
+            ],
+            limit: 50
+        )
+
+        let hit = TKEvaluateWebViewWait(
+            request: TKWebViewWaitRequest(condition: .event, query: "checkout.ready"),
+            snapshot: snapshot,
+            events: events
+        )
+        let miss = TKEvaluateWebViewWait(
+            request: TKWebViewWaitRequest(condition: .event, query: "checkout"),
+            snapshot: snapshot,
+            events: events
+        )
+
+        #expect(hit.hit)
+        #expect(hit.match?.source == "events[].name")
+        #expect(hit.lastObservedEventNames == ["checkout.ready"])
+        #expect(miss.hit == false)
+    }
+
+    @Test("wait detects page session changes")
+    func waitDetectsPageSessionChanges() {
+        let snapshot = webViewSnapshot(pageSessionID: "page-2")
+
+        let result = TKEvaluateWebViewWait(
+            request: TKWebViewWaitRequest(pageSessionID: "page-1", condition: .text, query: "Ready"),
+            snapshot: snapshot
+        )
+
+        #expect(result.hit == false)
+        #expect(result.error?.code == .webViewNavigationChanged)
+    }
 }
 
 private func webViewList(candidates: [TKWebViewDescriptor]) -> TKWebViewListResponse {
@@ -140,5 +367,35 @@ private func webView(
         bridgeStatus: "available",
         capabilities: ["webview.url"],
         missingCapabilities: []
+    )
+}
+
+private func webViewSnapshot(
+    pageSessionID: String = "page-1",
+    text: [String] = [],
+    dom: [TKWebViewDOMNodeSummary] = []
+) -> TKWebViewSnapshotResponse {
+    TKWebViewSnapshotResponse(
+        capturedAt: "2026-05-26T00:00:00Z",
+        platform: "ios",
+        target: "embedded-runtime",
+        webView: TKWebViewDescriptor(
+            webViewID: "webview-1",
+            platform: "ios",
+            source: "webview-provider",
+            nodeID: "webview-1",
+            role: "webview",
+            frame: TKRect(x: 0, y: 0, width: 390, height: 844),
+            candidateOnly: false,
+            confidence: 1,
+            pageSessionID: pageSessionID,
+            providerStatus: "available",
+            bridgeStatus: "available",
+            capabilities: ["webview.snapshot"],
+            missingCapabilities: []
+        ),
+        include: ["metadata", "dom", "text"],
+        text: text,
+        dom: dom
     )
 }

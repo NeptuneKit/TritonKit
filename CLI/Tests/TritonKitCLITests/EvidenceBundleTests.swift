@@ -88,6 +88,13 @@ struct EvidenceBundleTests {
             "xcode.status",
             "xcode.discovery",
         ])
+        #expect(manifest.primaryArtifacts.map(\.kind) == [
+            "host.defaults",
+            "host.simulators",
+            "xcode.status",
+            "xcode.discovery",
+            "xcode.defaults",
+        ])
         #expect(manifest.artifacts.allSatisfy { !$0.path.hasPrefix("/") && !$0.path.contains("..") })
         #expect(manifest.artifacts.allSatisfy { $0.riskLevel == "readonly" })
         #expect(manifest.artifacts.allSatisfy { $0.policy == "read-only-small-artifact" })
@@ -100,6 +107,7 @@ struct EvidenceBundleTests {
 
         let summary = try summarizeEvidenceBundle(input: root.path)
         #expect(summary.sensitiveArtifactCount == 5)
+        #expect(summary.primaryArtifacts.map(\.kind) == manifest.primaryArtifacts.map(\.kind))
     }
 
     @Test("evidence capture records skipped host and xcode sources when unavailable")
@@ -198,6 +206,7 @@ struct EvidenceBundleTests {
         #expect(artifact.redactionStatus == "sensitive")
         #expect(artifact.sourceCommand == "read --xcode-summary")
         #expect(manifest.artifacts.count == 1)
+        #expect(manifest.primaryArtifacts.map(\.kind) == ["xcode.action-summary"])
         #expect(manifest.skipped.map { $0.kind } == ["xcode.defaults", "xcode.status", "xcode.discovery"])
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/xcode/action-summary.json").path))
         #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/xcode/stdout.log").path))
@@ -267,6 +276,8 @@ struct EvidenceBundleTests {
         #expect(summary.artifactCount == 2)
         #expect(summary.sensitiveArtifactCount == 1)
         #expect(summary.artifacts.map(\.kind) == ["status", "screenshot"])
+        #expect(summary.primaryArtifacts.map(\.kind) == ["screenshot", "status"])
+        #expect(summary.suggestedCommands.count == 1)
 
         let output = try redactEvidenceBundle(input: root.path, output: redacted.path, profile: "ios-private")
 
@@ -277,6 +288,8 @@ struct EvidenceBundleTests {
         #expect(output.manifest.artifacts.first { $0.kind == "screenshot" }?.redactionStatus == "redacted")
         #expect(output.manifest.artifacts.first { $0.kind == "screenshot" }?.sourceCommand == nil)
         #expect(output.manifest.artifacts.first { $0.kind == "screenshot" }?.path.hasPrefix("redacted/") == true)
+        #expect(output.primaryArtifacts.map(\.kind) == ["screenshot", "status"])
+        #expect(output.suggestedCommands.contains("triton evidence inspect '\(redacted.path)' --json"))
         #expect(output.manifest.run?.eventsPath == "run/events.jsonl")
         #expect(output.manifest.run?.metaPath == "run/meta.json")
         #expect(output.manifest.run?.summary?.verdict == .success)

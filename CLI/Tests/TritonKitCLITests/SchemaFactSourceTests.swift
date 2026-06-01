@@ -1832,6 +1832,60 @@ struct SchemaFactSourceTests {
         #expect(iosFamilyPlatformMismatches == [])
     }
 
+    @Test("capability next-action text placeholders stay canonical")
+    func capabilityNextActionTextPlaceholdersStayCanonical() {
+        let fixtures = capabilityStateFixtures()
+
+        var textFlagPlaceholderMismatches: [String] = []
+        var waitTextFlagPlaceholderMismatches: [String] = []
+        var assertTextExistsPlaceholderMismatches: [String] = []
+
+        for fixture in fixtures {
+            for capability in fixture.capabilities {
+                guard let nextAction = capability.nextAction else {
+                    continue
+                }
+                let args = nextAction.args
+                let context = "\(fixture.name):\(capability.name):command=\(nextAction.command):args=\(args)"
+
+                for (index, arg) in args.enumerated() where arg == "--text" {
+                    guard args.indices.contains(index + 1) else {
+                        textFlagPlaceholderMismatches.append("\(context):missing-text-value")
+                        continue
+                    }
+                    if args[index + 1] != "<text>" {
+                        textFlagPlaceholderMismatches.append("\(context):expected=<text>:actual=\(args[index + 1])")
+                    }
+                }
+
+                for (index, arg) in args.enumerated() where arg == "--wait-text" {
+                    guard args.indices.contains(index + 1) else {
+                        waitTextFlagPlaceholderMismatches.append("\(context):missing-wait-text-value")
+                        continue
+                    }
+                    if args[index + 1] != "<text>" {
+                        waitTextFlagPlaceholderMismatches.append("\(context):expected=<text>:actual=\(args[index + 1])")
+                    }
+                }
+
+                if nextAction.command == "assert",
+                   let textExistsIndex = args.firstIndex(of: "text-exists") {
+                    guard args.indices.contains(textExistsIndex + 1) else {
+                        assertTextExistsPlaceholderMismatches.append("\(context):missing-assert-text")
+                        continue
+                    }
+                    if args[textExistsIndex + 1] != "<text>" {
+                        assertTextExistsPlaceholderMismatches.append("\(context):expected=<text>:actual=\(args[textExistsIndex + 1])")
+                    }
+                }
+            }
+        }
+
+        #expect(textFlagPlaceholderMismatches == [])
+        #expect(waitTextFlagPlaceholderMismatches == [])
+        #expect(assertTextExistsPlaceholderMismatches == [])
+    }
+
     @Test("capability names remain unique for agent indexing")
     func capabilityNamesRemainUniqueForAgentIndexing() {
         var duplicateSchemaCapabilities: [String] = []

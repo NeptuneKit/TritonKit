@@ -99,8 +99,8 @@ struct Doctor: AsyncParsableCommand {
     @OptionGroup var localization: LocalizationOptions
 
     func run() async throws {
-        let response = await buildCapabilities(host: host, port: port)
-        try printCapabilities(response, format: effectiveFormat(format, json: json), language: effectiveLanguage(localization.language))
+        let response = await buildDoctor(host: host, port: port)
+        try printDoctor(response, format: effectiveFormat(format, json: json), language: effectiveLanguage(localization.language))
     }
 }
 
@@ -119,6 +119,37 @@ struct Capabilities: AsyncParsableCommand {
     }
 }
 
+struct SchemaCommandLookupError: Error, CustomStringConvertible {
+    let command: String
+
+    var description: String {
+        "Unknown command schema: \(command)"
+    }
+}
+
+func buildSchemaResponse(command: String?) throws -> TKCLISchemaResponse {
+    let commands = commandSchemas()
+    let filtered: [TKCommandSchema]
+    if let command {
+        filtered = commands.filter { $0.name == command }
+        guard !filtered.isEmpty else {
+            throw SchemaCommandLookupError(command: command)
+        }
+    } else {
+        filtered = commands
+    }
+    return TKCLISchemaResponse(commands: filtered)
+}
+
+func schemaUnknownCommandErrorResponse(_ error: SchemaCommandLookupError) -> TKCLIErrorResponse {
+    TKCLIErrorResponse(error: TKCLIErrorDetail(
+        code: "unknown_command_schema",
+        message: "Unknown command schema: \(error.command)",
+        hint: "Run `triton schema --json` to inspect available command schemas.",
+        nextAction: TKCLINextAction(command: "schema", args: ["--json"])
+    ))
+}
+
 struct Schema: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Print machine-readable command schemas and examples")
 
@@ -128,22 +159,23 @@ struct Schema: AsyncParsableCommand {
     @OptionGroup var localization: LocalizationOptions
 
     func run() async throws {
-        let commands = commandSchemas()
-        let filtered: [TKCommandSchema]
-        if let command {
-            filtered = commands.filter { $0.name == command }
-            guard !filtered.isEmpty else {
-                throw RuntimeError("Unknown command schema: \(command)")
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let response = try buildSchemaResponse(command: command)
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print(renderSchema(response, language: effectiveLanguage(localization.language)))
             }
-        } else {
-            filtered = commands
-        }
-        let response = TKCLISchemaResponse(commands: filtered)
-        switch effectiveFormat(format, json: json) {
-        case .json:
-            print(try encodeJSON(response))
-        case .text:
-            print(renderSchema(response, language: effectiveLanguage(localization.language)))
+        } catch let error as SchemaCommandLookupError {
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(schemaUnknownCommandErrorResponse(error)))
+            case .text:
+                print(error.description)
+            }
+            throw ExitCode.failure
         }
     }
 }

@@ -8,6 +8,8 @@ public struct TKEvidenceManifest: Codable, Equatable {
     public let createdAt: String
     public let output: String
     public let artifacts: [TKEvidenceArtifact]
+    public let primaryArtifact: TKEvidenceArtifactSummary?
+    public let primaryArtifacts: [TKEvidenceArtifactSummary]
     public let skipped: [TKEvidenceSkippedArtifact]
     public let target: TKEvidenceTarget?
     public let cli: TKEvidenceCLI
@@ -21,6 +23,8 @@ public struct TKEvidenceManifest: Codable, Equatable {
         createdAt: String,
         output: String,
         artifacts: [TKEvidenceArtifact],
+        primaryArtifact: TKEvidenceArtifactSummary? = nil,
+        primaryArtifacts: [TKEvidenceArtifactSummary]? = nil,
         skipped: [TKEvidenceSkippedArtifact] = [],
         target: TKEvidenceTarget? = nil,
         cli: TKEvidenceCLI,
@@ -33,10 +37,48 @@ public struct TKEvidenceManifest: Codable, Equatable {
         self.createdAt = createdAt
         self.output = output
         self.artifacts = artifacts
+        self.primaryArtifacts = primaryArtifacts ?? TKEvidenceArtifactSummary.defaultPrimaryArtifacts(from: artifacts.map(TKEvidenceArtifactSummary.init))
+        self.primaryArtifact = primaryArtifact ?? self.primaryArtifacts.first
         self.skipped = skipped
         self.target = target
         self.cli = cli
         self.run = run
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case ok
+        case formatVersion
+        case name
+        case note
+        case createdAt
+        case output
+        case artifacts
+        case primaryArtifact
+        case primaryArtifacts
+        case skipped
+        case target
+        case cli
+        case run
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let artifacts = try container.decode([TKEvidenceArtifact].self, forKey: .artifacts)
+        self.ok = try container.decode(Bool.self, forKey: .ok)
+        self.formatVersion = try container.decode(Int.self, forKey: .formatVersion)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name)
+        self.note = try container.decodeIfPresent(String.self, forKey: .note)
+        self.createdAt = try container.decode(String.self, forKey: .createdAt)
+        self.output = try container.decode(String.self, forKey: .output)
+        self.artifacts = artifacts
+        self.primaryArtifacts = try container.decodeIfPresent([TKEvidenceArtifactSummary].self, forKey: .primaryArtifacts)
+            ?? TKEvidenceArtifactSummary.defaultPrimaryArtifacts(from: artifacts.map(TKEvidenceArtifactSummary.init))
+        self.primaryArtifact = try container.decodeIfPresent(TKEvidenceArtifactSummary.self, forKey: .primaryArtifact)
+            ?? self.primaryArtifacts.first
+        self.skipped = try container.decodeIfPresent([TKEvidenceSkippedArtifact].self, forKey: .skipped) ?? []
+        self.target = try container.decodeIfPresent(TKEvidenceTarget.self, forKey: .target)
+        self.cli = try container.decode(TKEvidenceCLI.self, forKey: .cli)
+        self.run = try container.decodeIfPresent(TKEvidenceRunManifest.self, forKey: .run)
     }
 }
 
@@ -213,6 +255,53 @@ public struct TKEvidenceArtifactSummary: Codable, Equatable {
         self.redactionStatus = redactionStatus
         self.target = target
     }
+
+    public init(_ artifact: TKEvidenceArtifact) {
+        self.init(
+            kind: artifact.kind,
+            path: artifact.path,
+            contentType: artifact.contentType,
+            bytes: artifact.bytes,
+            platform: artifact.platform,
+            riskLevel: artifact.riskLevel,
+            policy: artifact.policy,
+            redactionStatus: artifact.redactionStatus,
+            target: artifact.target
+        )
+    }
+
+    static func defaultPrimaryArtifacts(from artifacts: [TKEvidenceArtifactSummary], limit: Int = 5) -> [TKEvidenceArtifactSummary] {
+        let priorities: [String: Int] = [
+            "xcode.action-summary": 0,
+            "screenshot": 1,
+            "archive": 2,
+            "geometry": 3,
+            "ax": 4,
+            "hierarchy": 5,
+            "run.events": 6,
+            "run.meta": 7,
+            "status": 8,
+            "list": 9,
+            "version": 10,
+            "host.defaults": 11,
+            "host.simulators": 12,
+            "xcode.status": 13,
+            "xcode.discovery": 14,
+            "xcode.defaults": 15,
+        ]
+
+        return artifacts.enumerated()
+            .sorted { lhs, rhs in
+                let lhsPriority = priorities[lhs.element.kind] ?? 100
+                let rhsPriority = priorities[rhs.element.kind] ?? 100
+                if lhsPriority == rhsPriority {
+                    return lhs.offset < rhs.offset
+                }
+                return lhsPriority < rhsPriority
+            }
+            .prefix(limit)
+            .map(\.element)
+    }
 }
 
 public struct TKEvidenceSummaryResponse: Codable, Equatable {
@@ -230,6 +319,8 @@ public struct TKEvidenceSummaryResponse: Codable, Equatable {
     public let target: TKEvidenceTarget?
     public let cli: TKEvidenceCLI
     public let artifacts: [TKEvidenceArtifactSummary]
+    public let primaryArtifact: TKEvidenceArtifactSummary?
+    public let primaryArtifacts: [TKEvidenceArtifactSummary]
     public let skipped: [TKEvidenceSkippedArtifact]
     public let suggestedCommands: [String]
 
@@ -248,6 +339,8 @@ public struct TKEvidenceSummaryResponse: Codable, Equatable {
         target: TKEvidenceTarget? = nil,
         cli: TKEvidenceCLI,
         artifacts: [TKEvidenceArtifactSummary],
+        primaryArtifact: TKEvidenceArtifactSummary? = nil,
+        primaryArtifacts: [TKEvidenceArtifactSummary]? = nil,
         skipped: [TKEvidenceSkippedArtifact],
         suggestedCommands: [String]
     ) {
@@ -265,8 +358,56 @@ public struct TKEvidenceSummaryResponse: Codable, Equatable {
         self.target = target
         self.cli = cli
         self.artifacts = artifacts
+        self.primaryArtifacts = primaryArtifacts ?? TKEvidenceArtifactSummary.defaultPrimaryArtifacts(from: artifacts)
+        self.primaryArtifact = primaryArtifact ?? self.primaryArtifacts.first
         self.skipped = skipped
         self.suggestedCommands = suggestedCommands
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case ok
+        case action
+        case input
+        case profile
+        case createdAt
+        case name
+        case note
+        case output
+        case artifactCount
+        case sensitiveArtifactCount
+        case skippedCount
+        case target
+        case cli
+        case artifacts
+        case primaryArtifact
+        case primaryArtifacts
+        case skipped
+        case suggestedCommands
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let artifacts = try container.decode([TKEvidenceArtifactSummary].self, forKey: .artifacts)
+        self.ok = try container.decode(Bool.self, forKey: .ok)
+        self.action = try container.decode(String.self, forKey: .action)
+        self.input = try container.decode(String.self, forKey: .input)
+        self.profile = try container.decode(String.self, forKey: .profile)
+        self.createdAt = try container.decode(String.self, forKey: .createdAt)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name)
+        self.note = try container.decodeIfPresent(String.self, forKey: .note)
+        self.output = try container.decode(String.self, forKey: .output)
+        self.artifactCount = try container.decode(Int.self, forKey: .artifactCount)
+        self.sensitiveArtifactCount = try container.decode(Int.self, forKey: .sensitiveArtifactCount)
+        self.skippedCount = try container.decode(Int.self, forKey: .skippedCount)
+        self.target = try container.decodeIfPresent(TKEvidenceTarget.self, forKey: .target)
+        self.cli = try container.decode(TKEvidenceCLI.self, forKey: .cli)
+        self.artifacts = artifacts
+        self.primaryArtifacts = try container.decodeIfPresent([TKEvidenceArtifactSummary].self, forKey: .primaryArtifacts)
+            ?? TKEvidenceArtifactSummary.defaultPrimaryArtifacts(from: artifacts)
+        self.primaryArtifact = try container.decodeIfPresent(TKEvidenceArtifactSummary.self, forKey: .primaryArtifact)
+            ?? self.primaryArtifacts.first
+        self.skipped = try container.decode([TKEvidenceSkippedArtifact].self, forKey: .skipped)
+        self.suggestedCommands = try container.decodeIfPresent([String].self, forKey: .suggestedCommands) ?? []
     }
 }
 
@@ -283,7 +424,10 @@ public struct TKEvidenceRedactionResponse: Codable, Equatable {
     public let manifest: TKEvidenceManifest
     public let redactedArtifacts: [TKEvidenceArtifactSummary]
     public let keptArtifacts: [TKEvidenceArtifactSummary]
+    public let primaryArtifact: TKEvidenceArtifactSummary?
+    public let primaryArtifacts: [TKEvidenceArtifactSummary]
     public let summaryPath: String
+    public let suggestedCommands: [String]
 
     public init(
         ok: Bool = true,
@@ -298,7 +442,10 @@ public struct TKEvidenceRedactionResponse: Codable, Equatable {
         manifest: TKEvidenceManifest,
         redactedArtifacts: [TKEvidenceArtifactSummary],
         keptArtifacts: [TKEvidenceArtifactSummary],
-        summaryPath: String
+        primaryArtifact: TKEvidenceArtifactSummary? = nil,
+        primaryArtifacts: [TKEvidenceArtifactSummary]? = nil,
+        summaryPath: String,
+        suggestedCommands: [String] = []
     ) {
         self.ok = ok
         self.action = action
@@ -312,6 +459,51 @@ public struct TKEvidenceRedactionResponse: Codable, Equatable {
         self.manifest = manifest
         self.redactedArtifacts = redactedArtifacts
         self.keptArtifacts = keptArtifacts
+        self.primaryArtifacts = primaryArtifacts ?? manifest.primaryArtifacts
+        self.primaryArtifact = primaryArtifact ?? self.primaryArtifacts.first
         self.summaryPath = summaryPath
+        self.suggestedCommands = suggestedCommands
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case ok
+        case action
+        case input
+        case output
+        case profile
+        case createdAt
+        case artifactCount
+        case redactedArtifactCount
+        case keptArtifactCount
+        case manifest
+        case redactedArtifacts
+        case keptArtifacts
+        case primaryArtifact
+        case primaryArtifacts
+        case summaryPath
+        case suggestedCommands
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let manifest = try container.decode(TKEvidenceManifest.self, forKey: .manifest)
+        self.ok = try container.decode(Bool.self, forKey: .ok)
+        self.action = try container.decode(String.self, forKey: .action)
+        self.input = try container.decode(String.self, forKey: .input)
+        self.output = try container.decode(String.self, forKey: .output)
+        self.profile = try container.decode(String.self, forKey: .profile)
+        self.createdAt = try container.decode(String.self, forKey: .createdAt)
+        self.artifactCount = try container.decode(Int.self, forKey: .artifactCount)
+        self.redactedArtifactCount = try container.decode(Int.self, forKey: .redactedArtifactCount)
+        self.keptArtifactCount = try container.decode(Int.self, forKey: .keptArtifactCount)
+        self.manifest = manifest
+        self.redactedArtifacts = try container.decode([TKEvidenceArtifactSummary].self, forKey: .redactedArtifacts)
+        self.keptArtifacts = try container.decode([TKEvidenceArtifactSummary].self, forKey: .keptArtifacts)
+        self.primaryArtifacts = try container.decodeIfPresent([TKEvidenceArtifactSummary].self, forKey: .primaryArtifacts)
+            ?? manifest.primaryArtifacts
+        self.primaryArtifact = try container.decodeIfPresent(TKEvidenceArtifactSummary.self, forKey: .primaryArtifact)
+            ?? self.primaryArtifacts.first
+        self.summaryPath = try container.decode(String.self, forKey: .summaryPath)
+        self.suggestedCommands = try container.decodeIfPresent([String].self, forKey: .suggestedCommands) ?? []
     }
 }

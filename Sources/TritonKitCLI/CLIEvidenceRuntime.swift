@@ -160,6 +160,7 @@ func summarizeEvidenceBundle(input: String, profile: String = "ios-private") thr
         target: manifest.target,
         cli: manifest.cli,
         artifacts: artifacts,
+        primaryArtifacts: manifest.primaryArtifacts,
         skipped: manifest.skipped,
         suggestedCommands: [
             "triton evidence redact \(shellQuotedEvidencePath(input)) --profile \(profile) --output \(shellQuotedEvidencePath(evidenceBundleRoot(from: input).appendingPathComponent("redacted").path)) --json",
@@ -295,8 +296,11 @@ func redactEvidenceBundle(input: String, output: String, profile: String) throws
         target: manifest.target,
         cli: manifest.cli,
         artifacts: outputSummaries,
+        primaryArtifacts: redactedManifest.primaryArtifacts,
         skipped: manifest.skipped,
-        suggestedCommands: []
+        suggestedCommands: [
+            "triton evidence summary \(shellQuotedEvidencePath(outputURL.path)) --profile \(profile) --json",
+        ]
     )
     try prettyEncodedData(redactedManifest).write(to: outputURL.appendingPathComponent("manifest.json"), options: .atomic)
     try prettyEncodedData(summary).write(to: URL(fileURLWithPath: summaryPath), options: .atomic)
@@ -312,7 +316,12 @@ func redactEvidenceBundle(input: String, output: String, profile: String) throws
         manifest: redactedManifest,
         redactedArtifacts: redactedSummaries,
         keptArtifacts: keptSummaries,
-        summaryPath: summaryPath
+        primaryArtifacts: redactedManifest.primaryArtifacts,
+        summaryPath: summaryPath,
+        suggestedCommands: [
+            "triton evidence summary \(shellQuotedEvidencePath(outputURL.path)) --profile \(profile) --json",
+            "triton evidence inspect \(shellQuotedEvidencePath(outputURL.path)) --json",
+        ]
     )
 }
 
@@ -518,15 +527,14 @@ func runReplayPlan(
             }
         } catch {
             failedStepIndex = index
-            steps.append(TKReplayStepResult(
+            steps.append(replayFailureStepResult(
+                step: step,
                 index: index,
-                action: step.action.rawValue,
-                name: step.name ?? step.id,
-                ok: false,
-                dryRun: false,
-                elapsedMs: elapsedMilliseconds(since: stepStart),
                 command: command,
-                message: "\(error)"
+                error: error,
+                startedAt: stepStart,
+                host: host,
+                port: port
             ))
             break
         }
@@ -539,9 +547,236 @@ func runReplayPlan(
         stepCount: plan.steps.count,
         executedCount: steps.count,
         failedStepIndex: failedStepIndex,
+        failureCode: replayFailureCode(steps: steps, failedStepIndex: failedStepIndex),
+        failureError: replayFailureError(steps: steps, failedStepIndex: failedStepIndex),
+        failureWorkflowCategories: replayFailureWorkflowCategories(steps: steps, failedStepIndex: failedStepIndex),
+        failureRecoveryCategories: replayFailureRecoveryCategories(steps: steps, failedStepIndex: failedStepIndex),
+        failurePrimaryArtifacts: replayFailurePrimaryArtifacts(steps: steps, failedStepIndex: failedStepIndex),
         elapsedMs: elapsedMilliseconds(since: start),
-        steps: steps
+        steps: steps,
+        suggestedCommands: replaySuggestedCommands(
+            steps: steps,
+            failedStepIndex: failedStepIndex
+        ),
+        recoveryCommands: replayRecoveryCommands(
+            steps: steps,
+            failedStepIndex: failedStepIndex
+        )
     )
+}
+
+func replayFailureWorkflowCategories(
+    steps: [TKReplayStepResult],
+    failedStepIndex: Int?
+) -> [String] {
+    guard let failedStepIndex else { return [] }
+    return steps.first { $0.index == failedStepIndex }?.workflowCategories ?? []
+}
+
+func replayFailureCode(
+    steps: [TKReplayStepResult],
+    failedStepIndex: Int?
+) -> String? {
+    guard let failedStepIndex else { return nil }
+    return steps.first { $0.index == failedStepIndex }?.failureCode
+}
+
+func replayFailureError(
+    steps: [TKReplayStepResult],
+    failedStepIndex: Int?
+) -> TKCLIErrorDetail? {
+    guard let failedStepIndex else { return nil }
+    return steps.first { $0.index == failedStepIndex }?.error
+}
+
+func replayFailureRecoveryCategories(
+    steps: [TKReplayStepResult],
+    failedStepIndex: Int?
+) -> [String] {
+    guard let failureCode = replayFailureCode(steps: steps, failedStepIndex: failedStepIndex) else { return [] }
+    let familyCategories = TKCommandRecoveryCommand.recoveryCategories(forFailureCode: failureCode)
+    let recoveryCategories = replayRecoveryCommands(steps: steps, failedStepIndex: failedStepIndex).map(\.category)
+    let nextActionCategory = replayFailureError(steps: steps, failedStepIndex: failedStepIndex)?.nextAction?.category
+
+    if nextActionCategory == nil {
+        return familyCategories
+    }
+
+    var categories: [String] = []
+    var seen = Set<String>()
+
+    func append(_ category: String?) {
+        guard let category, !seen.contains(category) else { return }
+        seen.insert(category)
+        categories.append(category)
+    }
+
+    append(nextActionCategory)
+    for category in recoveryCategories {
+        append(category)
+    }
+    for category in familyCategories {
+        append(category)
+    }
+    return categories
+}
+
+func replayFailurePrimaryArtifacts(
+    steps: [TKReplayStepResult],
+    failedStepIndex: Int?
+) -> [TKEvidenceArtifactSummary] {
+    TKReplayResult(
+        ok: failedStepIndex == nil,
+        dryRun: false,
+        planName: nil,
+        stepCount: steps.count,
+        executedCount: steps.count,
+        failedStepIndex: failedStepIndex,
+        elapsedMs: 0,
+        steps: steps
+    ).failurePrimaryArtifacts
+}
+
+func replaySuggestedCommands(
+    steps: [TKReplayStepResult],
+    failedStepIndex: Int?
+) -> [String] {
+    guard let failedStepIndex,
+          let failedStep = steps.first(where: { $0.index == failedStepIndex }) else { return [] }
+
+    var commands: [String] = []
+
+    if let nextActionCommand = replayFailureNextActionCommandString(steps: steps, failedStepIndex: failedStepIndex) {
+        commands.append(nextActionCommand)
+    }
+
+    if let query = failedStep.wait?.query, !query.isEmpty {
+        commands.append("triton find \(shellQuotedEvidencePath(query)) --all --json")
+    }
+    if failedStep.wait != nil {
+        commands.append("triton snapshot --json")
+    }
+    if failedStep.input != nil {
+        commands.append("triton snapshot --json")
+        commands.append("triton screenshot --json")
+    }
+    if let evidence = failedStep.evidence {
+        commands.append("triton evidence summary \(shellQuotedEvidencePath(evidence.output)) --json")
+        commands.append("triton evidence inspect \(shellQuotedEvidencePath(evidence.output)) --json")
+        commands.append("triton evidence redact \(shellQuotedEvidencePath(evidence.output)) --output \(shellQuotedEvidencePath(evidence.output + "-redacted")) --json")
+    }
+    if failedStep.evidence == nil,
+       let recentEvidence = steps.reversed().compactMap(\.evidence).first {
+        commands.append("triton evidence summary \(shellQuotedEvidencePath(recentEvidence.output)) --json")
+        commands.append("triton evidence inspect \(shellQuotedEvidencePath(recentEvidence.output)) --json")
+    }
+
+    var unique: [String] = []
+    var seen = Set<String>()
+    for command in commands where !seen.contains(command) {
+        seen.insert(command)
+        unique.append(command)
+    }
+    return Array(unique.prefix(5))
+}
+
+func replayRecoveryCommands(
+    steps: [TKReplayStepResult],
+    failedStepIndex: Int?
+) -> [TKCommandRecoveryCommand] {
+    replaySuggestedCommands(steps: steps, failedStepIndex: failedStepIndex)
+        .compactMap(TKCommandRecoveryCommand.init(commandString:))
+}
+
+func replayFailureNextActionCommandString(
+    steps: [TKReplayStepResult],
+    failedStepIndex: Int?
+) -> String? {
+    guard let nextAction = replayFailureError(steps: steps, failedStepIndex: failedStepIndex)?.nextAction else {
+        return nil
+    }
+    return (["triton", nextAction.command] + nextAction.args).joined(separator: " ")
+}
+
+func replayFailureStepResult(
+    step: TKReplayPlanStep,
+    index: Int,
+    command: [String],
+    error: Error,
+    startedAt: Date,
+    host: String,
+    port: Int
+) -> TKReplayStepResult {
+    let detail = replayFailureDetail(for: step, error: error, host: host, port: port)
+    return TKReplayStepResult(
+        index: index,
+        action: step.action.rawValue,
+        name: step.name ?? step.id,
+        ok: false,
+        dryRun: false,
+        elapsedMs: elapsedMilliseconds(since: startedAt),
+        command: command,
+        failureCode: detail.code,
+        error: detail,
+        message: detail.message
+    )
+}
+
+func replayFailureDetail(
+    for step: TKReplayPlanStep,
+    error: Error,
+    host: String,
+    port: Int
+) -> TKCLIErrorDetail {
+    if let httpError = error as? CLIHTTPError,
+       let response = httpError.response {
+        return response.error
+    }
+    if let timeoutError = error as? RuntimeRequestTimeoutError {
+        return TKCLIErrorDetail(
+            code: "timeout",
+            message: timeoutError.description,
+            endpoint: endpointURL(replayEndpoint(for: step.action), host: host, port: port),
+            hint: "Run `triton snapshot --json` or retry the replay step after the runtime responds again."
+        )
+    }
+    if isReplayArtifactWriteFailure(step: step, error: error) {
+        return TKCLIErrorDetail(
+            code: "artifact_write_failed",
+            message: "\(error)",
+            hint: "Check the replay output path, parent directory existence, and write permissions."
+        )
+    }
+    return cliErrorDetail(
+        for: error,
+        endpoint: replayEndpoint(for: step.action),
+        host: host,
+        port: port
+    )
+}
+
+func replayEndpoint(for action: TKReplayAction) -> String {
+    switch action {
+    case .tap, .paste, .type, .clear:
+        return "/runtime/input"
+    case .wait:
+        return "/runtime/wait"
+    case .screenshot:
+        return "/runtime/screenshot"
+    case .evidence:
+        return "/evidence/capture"
+    }
+}
+
+func isReplayArtifactWriteFailure(step: TKReplayPlanStep, error: Error) -> Bool {
+    guard step.action == .screenshot || step.action == .evidence else { return false }
+    guard let cocoaError = error as? CocoaError else { return false }
+    switch cocoaError.code {
+    case .fileNoSuchFile, .fileWriteNoPermission, .fileWriteInvalidFileName, .fileWriteFileExists, .fileWriteOutOfSpace:
+        return true
+    default:
+        return false
+    }
 }
 
 func executeReplayStep(
@@ -568,6 +803,7 @@ func executeReplayStep(
             dryRun: false,
             elapsedMs: elapsedMilliseconds(since: startedAt),
             command: command,
+            error: replayStepError(for: step, input: input, host: host, port: port),
             message: input.message,
             input: input
         )
@@ -582,6 +818,7 @@ func executeReplayStep(
             dryRun: false,
             elapsedMs: elapsedMilliseconds(since: startedAt),
             command: command,
+            error: replayStepError(for: step, input: input, host: host, port: port),
             message: input.message,
             redactedValue: redactedValue,
             input: input
@@ -596,6 +833,7 @@ func executeReplayStep(
             dryRun: false,
             elapsedMs: elapsedMilliseconds(since: startedAt),
             command: command,
+            error: replayStepError(for: step, wait: wait, host: host, port: port),
             message: wait.ok ? "matched" : "timed out",
             wait: wait
         )
@@ -650,10 +888,55 @@ func executeReplayStep(
             dryRun: false,
             elapsedMs: elapsedMilliseconds(since: startedAt),
             command: command,
+            error: replayStepError(for: step, evidence: manifest, host: host, port: port),
             message: "evidence captured",
             evidence: manifest
         )
     }
+}
+
+func replayStepError(
+    for step: TKReplayPlanStep,
+    input: TKInputResult? = nil,
+    wait: TKWaitResult? = nil,
+    evidence: TKEvidenceManifest? = nil,
+    host: String,
+    port: Int
+) -> TKCLIErrorDetail? {
+    if let input, !input.ok {
+        return TKCLIErrorDetail(
+            code: "action_failed",
+            message: input.message ?? "Replay input step failed",
+            endpoint: endpointURL(replayEndpoint(for: step.action), host: host, port: port),
+            hint: "Run `triton input --json --summary --strict` or inspect the current UI with `triton snapshot --json`."
+        )
+    }
+    if let wait, !wait.ok {
+        let message: String
+        if wait.timedOut {
+            if let query = wait.query, !query.isEmpty {
+                message = "Timed out waiting for \(wait.condition) '\(query)'"
+            } else {
+                message = "Timed out waiting for \(wait.condition)"
+            }
+        } else {
+            message = "Replay wait step failed"
+        }
+        return TKCLIErrorDetail(
+            code: wait.timedOut ? "timeout" : "request_failed",
+            message: message,
+            endpoint: endpointURL(replayEndpoint(for: step.action), host: host, port: port),
+            hint: "Run `triton wait --format json` with a narrower condition or inspect the current UI with `triton snapshot --json`."
+        )
+    }
+    if let evidence, !evidence.ok {
+        return TKCLIErrorDetail(
+            code: "request_failed",
+            message: "Replay evidence step reported ok=false for \(evidence.output)",
+            hint: "Inspect the evidence output path and rerun `triton evidence summary \(shellQuotedEvidencePath(evidence.output)) --json` if artifacts were partially written."
+        )
+    }
+    return nil
 }
 
 func replayTapRequest(
@@ -801,112 +1084,7 @@ func replayCommand(
     index: Int,
     variables: [String: String]
 ) throws -> [String] {
-    switch step.action {
-    case .tap:
-        var command = ["triton", "tap"]
-        if let text = step.text {
-            command.append(try TKReplaySubstituteVariables(text, variables: variables))
-        } else if let x = step.x, let y = step.y {
-            command += ["--x", replayNumber(x), "--y", replayNumber(y)]
-        } else if let oid = step.oid {
-            command += ["--oid", "\(oid)"]
-        } else if let axOID = step.axOID {
-            command += ["--ax-oid", "\(axOID)"]
-        } else if let axLabel = step.axLabel {
-            command += ["--ax-label", try TKReplaySubstituteVariables(axLabel, variables: variables)]
-        } else {
-            throw RuntimeError("Replay tap step requires a target selector")
-        }
-        return command + ["--json"]
-    case .paste:
-        try validateReplayXYPair(step)
-        let rawValue = step.value ?? step.text
-        guard let rawValue else {
-            throw RuntimeError("Replay paste step requires value or text")
-        }
-        let value = try TKReplaySubstituteVariables(rawValue, variables: variables)
-        var command = ["triton", "paste"]
-        if step.secure == true {
-            command += ["--secure", step.redactedValue(substitutedValue: value)]
-        } else {
-            command.append(value)
-        }
-        if let x = step.x, let y = step.y {
-            command += ["--x", replayNumber(x), "--y", replayNumber(y)]
-        }
-        if let oid = step.oid {
-            command += ["--oid", "\(oid)"]
-        }
-        return command + ["--json"]
-    case .type:
-        try validateReplayXYPair(step)
-        let rawValue = step.value ?? step.text
-        guard let rawValue else {
-            throw RuntimeError("Replay type step requires value or text")
-        }
-        let value = try TKReplaySubstituteVariables(rawValue, variables: variables)
-        var command = ["triton", "type", "--text", step.redactedValue(substitutedValue: value)]
-        if step.secure == true {
-            command.append("--secure")
-        }
-        if let oid = step.oid {
-            command += ["--oid", "\(oid)"]
-        }
-        return command + ["--json"]
-    case .clear:
-        try validateReplayXYPair(step)
-        var command = ["triton", "clear"]
-        if let x = step.x, let y = step.y {
-            command += ["--x", replayNumber(x), "--y", replayNumber(y)]
-        }
-        if let oid = step.oid {
-            command += ["--oid", "\(oid)"]
-        }
-        return command + ["--json"]
-    case .wait:
-        var command = ["triton", "wait"]
-        let request = try replayWaitRequest(step, variables: variables)
-        switch TKWaitCondition(rawValue: request.condition.rawValue) ?? request.condition {
-        case .text:
-            command += ["--text", request.query ?? ""]
-        case .gone:
-            command += ["--gone", request.query ?? ""]
-        case .exists:
-            command += ["--exists", request.query ?? ""]
-        case .idle:
-            command.append("--idle")
-        case .hierarchyChange:
-            command.append("--hierarchy-change")
-        case .predicate:
-            command += ["--predicate", request.predicate ?? ""]
-        }
-        if let role = request.role {
-            command += ["--role", role]
-        }
-        command += ["--timeout", replayNumber(request.timeout), "--interval", replayNumber(request.interval), "--json"]
-        return command
-    case .screenshot:
-        let output = try replayOutputPath(
-            step.output,
-            fallback: "/tmp/\(replayArtifactName(plan: plan, step: step, index: index)).png",
-            variables: variables
-        )
-        return ["triton", "screenshot", "--output", output, "--json"]
-    case .evidence:
-        let output = try replayOutputPath(
-            step.output,
-            fallback: "/tmp/\(replayArtifactName(plan: plan, step: step, index: index)).tritonevidence",
-            variables: variables
-        )
-        var command = ["triton", "evidence", "--output", output, "--include", step.include ?? "status,list,version,hierarchy,ax,screenshot"]
-        if let name = step.name ?? plan.name {
-            command += ["--name", name]
-        }
-        if let note = step.note {
-            command += ["--note", note]
-        }
-        return command + ["--json"]
-    }
+    try TKReplayStepExecution.argv(for: step, planName: plan.name, index: index, variables: variables)
 }
 
 func validateReplayXYPair(_ step: TKReplayPlanStep) throws {
@@ -920,7 +1098,7 @@ func replayOutputPath(_ raw: String?, fallback: String, variables: [String: Stri
 }
 
 func replayArtifactName(plan: TKReplayPlan, step: TKReplayPlanStep, index: Int) -> String {
-    sanitizedPathComponent(step.name ?? step.id ?? plan.name ?? "triton-replay-step-\(index)")
+    TKReplayStepExecution.artifactName(planName: plan.name, step: step, index: index)
 }
 
 func sanitizedPathComponent(_ value: String) -> String {
@@ -930,13 +1108,6 @@ func sanitizedPathComponent(_ value: String) -> String {
     }
     let collapsed = String(scalars).split(separator: "-").joined(separator: "-")
     return collapsed.isEmpty ? "triton-replay" : collapsed
-}
-
-func replayNumber(_ value: Double) -> String {
-    if value.rounded() == value {
-        return String(Int(value))
-    }
-    return String(value)
 }
 
 func failReplayValidation(_ message: String, outputFormat: ClientOutputFormat) throws -> Never {
@@ -1569,6 +1740,21 @@ func printInputResult(_ result: TKInputResult, format: ClientOutputFormat) throw
         }
         if let targetClassName = result.targetClassName {
             print("targetClassName: \(targetClassName)")
+        }
+        if let matchedOID = result.matchedOID {
+            print("matchedOID: \(matchedOID)")
+        }
+        if let matchedClassName = result.matchedClassName {
+            print("matchedClassName: \(matchedClassName)")
+        }
+        if let activationOID = result.activationOID {
+            print("activationOID: \(activationOID)")
+        }
+        if let activationClassName = result.activationClassName {
+            print("activationClassName: \(activationClassName)")
+        }
+        if let strategy = result.strategy {
+            print("strategy: \(strategy)")
         }
         if let secure = result.secure {
             print("secure: \(secure)")

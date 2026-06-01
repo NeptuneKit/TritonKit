@@ -37,11 +37,52 @@ struct ObserveOutput: Encodable {
     let capturedAt: String
     let partial: Bool
     let target: String
+    let primarySource: ObserveSourceOutput?
     let sources: [ObserveSourceOutput]
     let nodes: [ObserveNodeOutput]
     let artifacts: [String]
     let sourceCommands: [String]
     let note: String
+
+    init(
+        ok: Bool,
+        action: String,
+        platform: String,
+        capturedAt: String,
+        partial: Bool,
+        target: String,
+        primarySource: ObserveSourceOutput? = nil,
+        sources: [ObserveSourceOutput],
+        nodes: [ObserveNodeOutput],
+        artifacts: [String],
+        sourceCommands: [String],
+        note: String
+    ) {
+        self.ok = ok
+        self.action = action
+        self.platform = platform
+        self.capturedAt = capturedAt
+        self.partial = partial
+        self.target = target
+        self.sources = sources
+        self.primarySource = primarySource ?? Self.defaultPrimarySource(from: sources)
+        self.nodes = nodes
+        self.artifacts = artifacts
+        self.sourceCommands = sourceCommands
+        self.note = note
+    }
+
+    private static func defaultPrimarySource(from sources: [ObserveSourceOutput]) -> ObserveSourceOutput? {
+        let available = sources.filter(\.available)
+        let priority = ["runtime-tree", "host-layout", "webview-provider"]
+
+        for name in priority {
+            if let source = available.first(where: { $0.name == name }) {
+                return source
+            }
+        }
+        return available.first ?? sources.first
+    }
 }
 
 struct NodeResolveOutput: Encodable {

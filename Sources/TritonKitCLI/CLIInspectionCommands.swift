@@ -11,20 +11,23 @@ import TritonKitShared
 struct Plan: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Print recommended next CLI steps or inspect a replay plan")
 
-    @Argument(help: "Optional action. Use `inspect` to summarize a .tritonplan without connecting to runtime.") var action: String?
+    @Argument(help: "Optional action. Use `inspect` to summarize a .tritonplan, or a task such as ios-smoke, open-url, or webview-check.") var action: String?
     @Argument(help: "Replay plan path for `inspect`.") var input: String?
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Host target selector for task planning") var device: String?
+    @Option(help: "App bundle identifier for task planning") var bundleID: String?
+    @Option(help: "URL or deep link for task planning") var url: String?
+    @Option(help: "Text to wait for or assert during task planning") var text: String?
+    @Option(help: "Expected WebView URL for webview-check planning") var expectedURL: String?
+    @Option(help: "Evidence bundle output path for task planning") var evidence: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @OptionGroup var localization: LocalizationOptions
 
     func run() async throws {
-        if let action {
+        if let action, action == "inspect" {
             let outputFormat = effectiveFormat(format, json: json)
-            guard action == "inspect" else {
-                try failReplayValidation("Unsupported plan action: \(action)", outputFormat: outputFormat)
-            }
             guard let input else {
                 try failReplayValidation("`triton plan inspect` requires a .tritonplan path", outputFormat: outputFormat)
             }
@@ -48,11 +51,27 @@ struct Plan: AsyncParsableCommand {
             }
             return
         }
+        if let action, !["ios-smoke", "open-url", "webview-check"].contains(action) {
+            try failReplayValidation("Unsupported plan action: \(action)", outputFormat: effectiveFormat(format, json: json))
+        }
         guard input == nil else {
             try failReplayValidation("Unexpected plan argument: \(input ?? "")", outputFormat: effectiveFormat(format, json: json))
         }
         let capabilities = await buildCapabilities(host: host, port: port)
-        let plan = buildWorkflowPlan(capabilities: capabilities, host: host, port: port)
+        let plan = buildWorkflowPlan(
+            capabilities: capabilities,
+            host: host,
+            port: port,
+            request: WorkflowPlanRequest(
+                goal: action ?? "general",
+                device: device,
+                bundleID: bundleID,
+                url: url,
+                text: text,
+                expectedURL: expectedURL,
+                evidence: evidence
+            )
+        )
         switch effectiveFormat(format, json: json) {
         case .json:
             print(try encodeJSON(plan))

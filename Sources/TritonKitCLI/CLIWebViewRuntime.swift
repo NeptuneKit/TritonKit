@@ -331,6 +331,143 @@ func makeWebViewSnapshotRequest(
     )
 }
 
+func makeWebViewWaitRequest(
+    text: String?,
+    selector: String?,
+    event: String?,
+    webViewID: String?,
+    pageSessionID: String?,
+    timeoutSeconds: Double,
+    intervalSeconds: Double
+) throws -> TKWebViewWaitRequest {
+    let candidates: [(TKWebViewWaitCondition, String)] = [
+        (.text, text ?? ""),
+        (.selector, selector ?? ""),
+        (.event, event ?? ""),
+    ].compactMap { condition, value in
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : (condition, trimmed)
+    }
+
+    guard candidates.count == 1, let selected = candidates.first else {
+        throw RuntimeError("Pass exactly one of --text, --selector, or --event.")
+    }
+    guard timeoutSeconds > 0 else {
+        throw RuntimeError("--timeout must be greater than 0 seconds.")
+    }
+    guard intervalSeconds > 0 else {
+        throw RuntimeError("--interval must be greater than 0 seconds.")
+    }
+
+    return TKWebViewWaitRequest(
+        webViewID: webViewID,
+        pageSessionID: pageSessionID,
+        condition: selected.0,
+        query: selected.1,
+        timeoutSeconds: timeoutSeconds,
+        intervalSeconds: intervalSeconds,
+        sourceCommand: "triton webview wait --\(selected.0.rawValue) \(selected.1)"
+    )
+}
+
+func runWebViewWait(
+    text: String?,
+    selector: String?,
+    event: String?,
+    platform: ObservationPlatform,
+    target: String,
+    host: String,
+    port: Int,
+    runtimeBaseURL: String?,
+    webViewID: String?,
+    pageSessionID: String?,
+    timeoutSeconds: Double,
+    intervalSeconds: Double,
+    format: ClientOutputFormat,
+    json: Bool
+) async throws {
+    let outputFormat = effectiveFormat(format, json: json)
+    do {
+        let request = try makeWebViewWaitRequest(
+            text: text,
+            selector: selector,
+            event: event,
+            webViewID: webViewID,
+            pageSessionID: pageSessionID,
+            timeoutSeconds: timeoutSeconds,
+            intervalSeconds: intervalSeconds
+        )
+        let payload = try JSONEncoder().encode(request)
+        let data: Data
+        switch platform {
+        case .ios:
+            if let runtimeBaseURL {
+                data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewWait, body: payload)
+            } else {
+                let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                data = try await client.request(type: "webViewWait", payload: payload)
+            }
+        case .harmony:
+            guard let runtimeBaseURL else {
+                throw RuntimeError("Harmony WebView wait requires --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
+            }
+            data = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.webViewWait, body: payload)
+        }
+
+        switch try decodeWebViewWaitRuntimeResult(data) {
+        case .wait(let response):
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("matched: \(response.matched)")
+                print("condition: \(response.condition)")
+                print("query: \(response.query)")
+                print("polls: \(response.pollCount)")
+                if let match = response.match {
+                    print("match: \(renderWebViewWaitMatch(match))")
+                }
+                if let error = response.error {
+                    print("\(error.code.rawValue): \(error.message)")
+                }
+            }
+            if !response.ok {
+                throw ExitCode.failure
+            }
+        case .error(let response):
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("\(response.error.code): \(response.error.message)")
+            }
+            throw ExitCode.failure
+        }
+    } catch {
+        if error is ExitCode { throw error }
+        if platform == .harmony, runtimeBaseURL == nil {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+        try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+    }
+}
+
+enum WebViewWaitRuntimeResult {
+    case wait(TKWebViewWaitResponse)
+    case error(TKWebViewErrorResponse)
+}
+
+func decodeWebViewWaitRuntimeResult(_ data: Data) throws -> WebViewWaitRuntimeResult {
+    let decoder = JSONDecoder()
+    if let response = try? decoder.decode(TKWebViewWaitResponse.self, from: data) {
+        return .wait(response)
+    }
+    if let response = try? decoder.decode(TKWebViewErrorResponse.self, from: data) {
+        return .error(response)
+    }
+    return .wait(try decoder.decode(TKWebViewWaitResponse.self, from: data))
+}
+
 func runWebViewCall(
     method: String,
     args: [String],
@@ -643,6 +780,20 @@ private func renderWebViewCandidate(_ candidate: TKWebViewDescriptor) -> String 
     let identifier = candidate.identifier.map { " identifier=\($0)" } ?? ""
     let text = candidate.text.map { " text=\"\($0)\"" } ?? ""
     return "\(candidate.webViewID) source=\(candidate.source) candidateOnly=\(candidate.candidateOnly) confidence=\(candidate.confidence)\(identifier)\(text)\(frame)"
+}
+
+private func renderWebViewWaitMatch(_ match: TKWebViewWaitMatch) -> String {
+    if let text = match.text {
+        return "text=\"\(text)\" source=\(match.source)"
+    }
+    if let selector = match.selector {
+        let node = match.nodeID.map { " nodeID=\($0)" } ?? ""
+        return "selector=\(selector)\(node) source=\(match.source)"
+    }
+    if let event = match.event {
+        return "event=\(event) source=\(match.source)"
+    }
+    return "source=\(match.source)"
 }
 
 private func failWebViewCommand(
