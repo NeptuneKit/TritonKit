@@ -1,5 +1,7 @@
 # AI CLI Readable Control
 
+> Agent-facing CLI 的长期信息架构以 `docs-linhay/dev/agent-facing-cli-information-architecture.md` 为准；本文保留当前 CLI / HTTP / runtime 已实现契约与阶段性取舍。
+
 ## 决策
 
 TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 CLI 进程暴露的机器可读 HTTP 契约，以及 serve 进程的 stdin 快捷命令。
@@ -37,17 +39,20 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton serve`：启动本地控制服务。
 - `triton --version` / `triton version --format json`：读取 CLI 版本、schema version 与默认 host/port。
 - `triton status --format json`：读取本地控制服务状态；成功态也返回 `ok/serverReachable/runtime/connected/latestHierarchyAvailable/activeHierarchyAvailable/hierarchyCacheState/targetConnectionState/targetCount` envelope，用于区分当前连接状态与 stale hierarchy cache。
-- `triton doctor --format json`：诊断 server、target、runtime 与能力状态；即使 server 不可达也输出机器可读诊断并以 0 退出。
-- `triton capabilities --format json`：输出当前 runtime 能力矩阵，说明哪些命令可用、哪些需要连接 target、哪些因 embedded runtime 边界 unsupported。
+- `triton doctor --format json`：诊断 server、target、runtime 与能力状态；即使 server 不可达也输出机器可读诊断并以 0 退出。输出模型为 `TKDoctorResponse`，顶层固定 `surface=doctor`，核心字段是 `nextStep`、`nextWorkflows[]` 与有序 `checks[]`；每个 check 含 `id/status/code/message/hint/nextAction/relatedCapabilities/workflowCategories`。其中 `workflowCategories[]` 与 `nextWorkflows[]` 由 `relatedCapabilities + capabilities[].requiredBy` 派生，agent 不需要自己再把 doctor 与 capabilities 做一轮 join 才知道当前受影响的 workflow 分类。
+- `triton capabilities --format json`：输出当前环境能力矩阵。顶层 `surface=capabilities`，每个 `capabilities[]` 条目包含 `name/supported/reason/group/requiredBy/nextAction/evidence`，让 agent 能按 `target/runtime/xcode/observe/action/assert/evidence` 等分组判断当前可做什么、缺什么、下一条命令是什么，以及哪些 artifact 可证明能力已执行。
 - `triton schema --format json`：输出机器可读 CLI 契约，包括命令参数、默认值、依赖条件、runtime scope、退出码语义、示例、成功/失败 shape；`--command input` 可读取 NDJSON action 字段级 schema。
+- `triton target list|use|current|resolve|wait-ready --format json`：agent-facing 目标选择入口。`target` 负责列出 iOS Simulator / Harmony HDC target、解析 selector、保存 current target 和等待 ready；`app`、`runtime`、`observe`、`action`、`assert`、`evidence` 后续优先消费这个当前目标或显式 selector。
 - `triton runtime manifest --format json`：通过 CLI 读取 embedded SDK runtime manifest、platform、transport、DEBUG/Release enabled 状态、SDK version、capabilities、payload limits 与 redaction policy。默认经由本机 `triton serve` 和已连接 target；验证独立 embedded HTTP runtime（例如 Harmony SDK demo server）时可用 `--runtime-base-url http://127.0.0.1:<port>` 直连。
 - `triton state app|scene|route|responder --format json`：读取 App identity/environment、UIWindowScene/window、UIViewController route/container、first responder/text input traits，或在 Harmony provider 已注册时读取 App 主动上报的 scene/route/responder 语义。iOS 默认只使用公开 UIKit/Foundation API；SwiftUI 私有 tree、系统窗口、剪贴板和文本内容默认不采集。独立 embedded HTTP runtime 可用 `--runtime-base-url` 直连。
 - `triton snapshot --include app,scene,route,ax,geometry --format json`：通过 embedded runtime 返回一次聚合 App 内快照，包含 include 列表、app/scene/route/responder/geometry/ax/screenshot metadata、artifacts、skipped 与 truncation。它是 agent 决策输入，不替代写文件的 `capture/evidence`；独立 embedded HTTP runtime 可用 `--runtime-base-url` 直连。
-- `triton webview list|current|current-url|call|events --format json`：读取当前 WebView provider 元数据、解析当前 URL、执行页面显式 allowlist bridge、或读取页面事件 buffer。iOS 端的 `webview list/current/current-url` 直接读取当前可见 `WKWebView` metadata；`call` 只能调用页面或 App 显式注册的 allowlist 方法，不能退化成任意 JavaScript eval；`events` 只读页面主动上报的结构化事件。Harmony 未注册 WebView provider 时只保留 host-side layout/candidate 边界，不能声明 DOM、JS 或 bridge 可用。
+- `triton observe current|tree --format json`：host/runtime 聚合观察面除了完整 `sources[]` 外，还会直接给 `primarySource`。该字段只表达 agent 当前应优先信任的单个事实源，不替代完整 source 列表；当前 observe 语义优先 `runtime-tree`，其次 `host-layout`，最后 `webview-provider`，避免 agent 把 source 数组顺序误当成优先级。
+- `triton webview list|current|current-url|snapshot|call|events|wait --format json`：读取当前 WebView 候选、provider URL、bounded snapshot、页面显式 allowlist bridge、页面事件 buffer 或页面 readiness。`webview list/current` 除了完整 `sources[]` 外，也会直接给 `primarySource`；该字段按 WebView 语义优先 `webview-provider`，其次 `runtime-tree`，再次 `host-layout`，让 agent 能先判断候选来源是否已经是 provider 级事实。iOS 端的 `webview list/current` 可从 runtime tree 发现当前可见 `WKWebView` 候选；`current-url/snapshot/call/events/wait` 需要 WebView provider 或 `--runtime-base-url`，不能把候选容器伪装成 URL、DOM、JS 或 bridge 可用；`call` 只能调用页面或 App 显式注册的 allowlist 方法，不能退化成任意 JavaScript eval。Harmony 未注册 WebView provider 时只保留 host-side layout/candidate 边界。
+- `triton schema --command webview --format json`：WebView 命令必须为 `list/current/current-url/snapshot/call/events/wait` 暴露可解析 output contract。`current-url` 使用 `webview-provider-url` kind，`call` 使用 `webview-bridge-call` kind，`events` 使用 `webview-events` kind；agent 不应只依赖 `successShape` prose 来解析 provider URL、bridge result 或 page events。
 - `triton route assert-current-url <expected-url> --format json`：断言当前 WebView provider URL，支持 `--ignore-query`。匹配返回 `status=pass`；不匹配返回 `status=fail`、expected/actual、hint 并以非 0 退出；没有 WebView provider URL 时返回 `webview_provider_unavailable`，不把 AX/WebKit 容器伪装成 URL 可用。
 - `triton focus <selector> --format json`、`triton set-text <selector> <text> --secure --format json`、`triton select-segment <selector> <title|index> --format json`、`triton set-switch <selector> on|off|toggle --format json`：语义动作入口，默认先复用 `find/tap` 的 selector 解析与 `--index/--within/--at` 消歧，再向 embedded runtime 发送 `semanticAction`。使用 `--runtime-base-url` 时直接把 selector 和动作参数交给 App provider，适合 Harmony 等由业务侧实现语义动作的 runtime。返回 `strategy/targetOID/targetClassName/elapsedMs/redaction`，让 agent 不必用脆弱的坐标链表达表单操作。
 - `triton ledger --limit 50 --jsonl`：读取 embedded runtime 最近 request/action/error ring buffer。每行是 `TKRuntimeLedgerEntry`，包含 request type、action、ok、elapsedMs、errorCode、message 与 redaction；secure input 不写入明文。独立 embedded HTTP runtime 可用 `--runtime-base-url` 直连。
-- `triton plan --format json`：根据当前 server/target 状态输出下一步计划；server 不可达时返回 `nextStep=start-server` 与 `error.nextAction`，连接态返回观察、动作和 archive 导出的推荐序列。
+- `triton plan --format json`：根据当前 server/target 状态输出下一步计划；顶层 `surface=plan`。server 不可达时返回 `mode=bootstrap`、`nextStep=start-server`、`nextWorkflows[]` 与 `error.nextAction`，连接态返回观察、动作和 archive 导出的推荐序列。任务型入口当前覆盖 `triton plan ios-smoke --device <selector> --bundle-id <id> --url <url> --text <text> --evidence <dir.tritonevidence> --json`、`triton plan open-url --device <selector> --url <url> --text <text> --json` 和 `triton plan webview-check --expected-url <url> --text <text> --json`；这些响应返回 `mode=task`，并用 `nextWorkflows[]` 直接声明当前推荐链路属于 `smoke`、`app`、`route`、`assert`、`evidence` 等哪组 workflow，而不要求 agent 只靠 `goal` 或 step 命令词猜测。
 - `triton sim list --format json`：通过 host-side `xcrun simctl list devices available --json` 列出 simulator，输出 `sim:<udid>` target、runtime、platform、state、isBooted 与 source。
 - `triton sim use <udid> --format json`：将 workspace 默认 simulator 写入 `.triton/host-defaults.json`，后续可作为 session defaults 的本地状态来源。
 - `triton sim boot <udid> --format json`、`triton sim boot <udid> --wait --jsonl`、`triton sim shutdown <udid|booted> --format json`：首批 simulator lifecycle 入口，`--wait --jsonl` 输出 boot 轮询进度，失败时返回稳定 Triton error envelope。
@@ -83,7 +88,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton xctrace record --template <name> --device <udid> --time-limit <duration> --output <path.trace> --format json`：通过 `xcrun xctrace record` 采集 Instruments `.trace` artifact，默认未指定 attach/launch 时记录 all-processes，并使用 `--no-prompt` 避免阻塞；trace 是性能证据，不证明业务成功。
 - `triton xcresult summary --path <path.xcresult> --format json` / `triton xcresult failures --path <path.xcresult> --format json`：通过 `xcrun xcresulttool get test-results summary/tests --path ... --compact` 读取测试汇总和结构化失败列表；summary 返回测试计数、环境描述、结果状态和失败摘要，failures 返回 suite / test / message / location / attachment 候选，错误码统一收敛为 `result_bundle_not_found`、`xcresulttool_failed`、`xcresult_parse_failed` 或 `xcresult_output_too_large`。默认对 JSON 与 text 输出中的私有路径、邮箱、Bearer/token/password/API-key 片段和长 token-like 字符串脱敏，包含 `path` 与 `sourceCommand/sourceCommands`；仅本机私有调试时使用 `--include-sensitive`。
 - `triton coverage report --xcresult <path.xcresult> --output <path.json> --format json`：通过 `xcrun xccov view --report --json` 导出 coverage JSON artifact；可用 `--only-targets`、`--target <name>`、`--file <path>` 收窄报告，CLI envelope 只返回 artifact path、bytes/truncation 与 source command，不内嵌完整 coverage；stdout-backed artifact 输出默认拒绝覆盖已有文件或跟随符号链接，错误码为 `artifact_output_rejected`。
-- `triton schema --command xcode|xcresult|xctrace|coverage --format json`：除保留 `successShape/failureShape` 外，Xcode 相关 schema 已提供结构化辅助字段：`requiredOptions`、`inheritsDefaultsFrom`、`jsonlEvents`、`finalEventKind`、`artifacts`、`retryable`、`nextCommands`、`outputContracts`、`failureCodes` 与 `subcommands[]`。`subcommands[]` 用 `requiredOptions`、`oneOfRequiredOptions`、`optionalOptions`、`defaultProviders`、`outputSelectors` 和 subcommand 级 failure codes 表达 agent 规划契约，避免解析 `summary/failures:--path` 或 `workspace defaults or ...` 这类人读字符串；这些字段不替代具体命令的 runtime validation。
+- `triton schema --command xcode|xcresult|xctrace|coverage --format json`：除保留 `successShape/failureShape` 外，Xcode 相关 schema 已提供结构化辅助字段：`inheritsDefaultsFrom`、`jsonlEvents`、`finalEventKind`、`artifacts`、`retryable`、`nextCommands`、`outputContracts`、`failureCodes` 与 `subcommands[]`。`subcommands[]` 用 `requiredOptions`、`oneOfRequiredOptions`、`optionalOptions`、`defaultProviders`、`outputSelectors` 和 subcommand 级 failure codes 表达 agent 规划契约，避免解析 `summary/failures:--path` 或 `workspace defaults or ...` 这类人读字符串；命令级 `requiredOptions[]` 只用于没有子命令的直接调用参数要求。这些字段不替代具体命令的 runtime validation。
 - `triton smoke ios --device <selector> --bundle-id <bundle-id> --open-url <url> --wait-text <text> --assert-text <text> --screenshot <png> --evidence <dir.tritonevidence> --format json`：一命令 iOS real-project smoke 编排入口，顺序提交 host open-url、等待 embedded runtime ready/text、执行断言、采集 simulator screenshot 并写 evidence。host action ack 只算 step 提交成功，整体 pass 必须由 wait/assert/evidence 证明；`--simulator booted|<udid>` 作为兼容路径保留。
 - `triton device doctor --platform ios|harmony --format json`：只读探测 host device 工具链。iOS 探测 `xcrun simctl` / `xcodebuild`，Harmony 探测 HDC/Emulator 工具路径、版本摘要和 P0 能力；doctor 不保存真实 UI、layout、日志正文或设备文件。
 - `triton device list --platform ios|harmony --format json`：统一列出 host-side 设备/模拟器 target。iOS 通过 `xcrun simctl list devices available --json` 输出 `sim:<udid>`、`target/state/name/runtime/ready/source`；Harmony 通过 `hdc list targets -v` 输出 `harmony:<target>`、`target/state/transport/ready/source`。多候选时只在唯一 ready target 存在时给出 `defaultTarget`。
@@ -98,8 +103,12 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton app open-url --device <selector> --bundle <bundle> --ability <ability> <url> --format json`：通过 HDC `aa start -a <ability> -b <bundle> -U <url>` 提交 Harmony deep link；仍需后续 `wait/ax/screenshot` 验证业务完成。
 - `triton app terminate --device <selector> --bundle <bundle> --format json`：通过 HDC `aa force-stop` 停止 Harmony App。
 - `triton ax --platform harmony --output <path> --format json`：执行 `uitest dumpLayout`，解析 `DumpLayout saved to:<remote>` 并 `file recv` 到本地 layout artifact；JSON 只返回 artifact 路径与 source commands，不内联真实 UI 内容。
+- `triton schema --command ax --format json` 与 `triton schema --command screenshot --format json`：Harmony host artifact 输出使用 `host.harmony-artifact` contract（`HostHarmonyArtifactOutput`），不要复用 `host.artifact` 的 device-level target/selection 解析器。
 - `triton wait --platform harmony --text <text> --timeout <seconds> --format json`：轮询 Harmony layout 中的 `attributes.text`；支持 `--text/--exists/--gone`，成功或超时都输出机器可读结果。
 - `triton tap <text> --platform harmony --format json`：读取 Harmony layout，按 `attributes.text` 找到第一个节点，解析 `[x1,y1][x2,y2]` bounds 后用中心点执行 `uitest uiInput click x y`；也支持 `--x/--y` 或 `--at x,y` 直接坐标点击。
+- `triton tap/swipe/type/paste --platform harmony --format json`：这些 host-side action 不返回 embedded `TKInputResult`，而是分别返回 `HostHarmonyTapOutput`、`HostHarmonySwipeOutput` 或 `HostHarmonyTextInputOutput`。`triton schema --command tap|swipe|type|paste --format json` 必须同时暴露 embedded `input.result` 与对应 `host.harmony-*` output contract，避免 agent 只靠 `successShape` 文本解析 HDC 结果。
+- `triton press --platform harmony --format json`：按 `HostActionOutput` 返回 keyEvent 执行 envelope；`triton schema --command press --format json` 的 host selector 为 `host.harmony-key-action`，不要复用旧的 `host.key-action` 解析入口。
+- `triton wait --platform harmony --format json`：host-side wait 不返回 embedded `TKWaitResult`，而是返回 `HostHarmonyWaitOutput`；`triton schema --command wait --format json` 必须同时暴露 embedded `wait.result` 与 `host.harmony-wait` output contract，避免 agent 复用 embedded wait parser 误读 host 字段。
 - `triton screenshot --platform harmony --output <path.jpeg> --format json`：通过 HDC `snapshot_display -f /data/local/tmp/<name>.jpeg` 截图再 `file recv` 到本地；artifact 可能包含真实 UI 数据，公开前必须检查和脱敏。
 - `triton smoke harmony --device <selector> --bundle <bundle> --ability <ability> --open-url <url> --wait-text <text> --tap-text <text> --post-tap-wait-text <text> --screenshot <jpeg> --evidence <dir.tritonevidence> --format json`：一命令 Harmony host-side smoke 编排入口，顺序执行 device wait-ready、app inspect、ability/deep-link launch、layout text wait、可选 text tap、post-tap wait、layout/screenshot artifact 和 evidence manifest。真实 HDC target 不可用时返回 `target_offline` 或 `device_not_ready`，不能用 fake smoke 代替真实业务 pass；`--target <hdc-target>` 作为兼容路径保留。
 - Harmony DEBUG-only 内置采集器当前只固化共享 JSON 契约，不是已实现 CLI 入口。契约包含 `TKHarmonyCollectorManifest`、`TKHarmonyCollectorConfiguration`、`TKHarmonyCollectorSnapshot`、App/Page 状态、redaction status 和 screenshot metadata；Release 配置必须 `enabled=false` 且 capabilities 为空。
@@ -113,12 +122,12 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton object --target triton:local --oid <oid> --format text|json`：实时读取对象 class chain 与地址。
 - `triton export --target triton:local --output <path>`：导出 hierarchy JSON；当 `--format archive` 或输出扩展名为 `.triton`、`.tritonkit`、`.archive`、`.lookinside` 时，导出自描述 archive。
 - `triton evidence --output <dir.tritonevidence> --format json`：导出 agent 回归证据包目录，固定写入 `manifest.json`，并按 `--include` 采集 `status/list/version/hierarchy/ax/screenshot/geometry/archive` 等 artifact；`host` / `xcode` 首期只采集 repo-local defaults、只读 simulator list、Xcode process status 和浅层 discovery，写入 `artifacts/host/` 与 `artifacts/xcode/`，并标记为 sensitive；若 build/test/run 已显式保存 `TKXcodeActionSummary`，可用 `--xcode-summary <summary.json>` 导入为 `artifacts/xcode/action-summary.json`，不读取或复制 summary 中引用的 stdout/stderr log、`.xcresult` 或 `.trace`；当前未接入的 `logs` 或不可用来源会进入 `manifest.skipped`，不静默忽略。`triton evidence inspect <dir.tritonevidence> --format json` 只读取 manifest，不重新连接 runtime。
-- `triton evidence summary <dir.tritonevidence> --format json`：离线读取 evidence manifest 并输出 artifact count、sensitive count、skipped count、target、CLI version、artifact metadata 和建议的 redaction 命令，不内联截图、完整日志或私有 UI 内容。
+- `triton evidence summary <dir.tritonevidence> --format json`：离线读取 evidence manifest 并输出 artifact count、sensitive count、skipped count、target、CLI version、artifact metadata、`primaryArtifact`、`primaryArtifacts[]` 和建议的 redaction 命令，不内联截图、完整日志或私有 UI 内容。`primaryArtifact` 给 agent 一跳首看对象，`primaryArtifacts[]` 则保留完整高信号排序，优先把 `xcode.action-summary`、`screenshot`、`archive/geometry/ax/hierarchy`、`run.events/meta` 等产物直接排前，避免 agent 自己再扫描全量 `artifacts[]` 猜顺序。
 - `triton evidence redact <dir.tritonevidence> --profile ios-private --output <redacted.tritonevidence> --format json`：写出可公开转交的 redacted evidence。非敏感 artifact 会复制并标记 `included`；截图、AX、hierarchy、geometry、archive、logs、host.*、xcode.* 等敏感 artifact 写成 `redacted/<kind>.json` 占位并标记 `redacted`。
 - `triton capture --case <case> --output <dir.tritonevidence> --format json`：一站式回归证据包入口，默认采集 `status/list/version/hierarchy/ax/screenshot/geometry/archive`。
 - `triton assert text-exists|text-not-exists <text> --format json`：执行 UI 文本断言；支持 `--role`、`--count`、`--min-count`、`--max-count`、`--within x,y,width,height`，返回 matches、sample、target/cache freshness 和失败原因。失败时会返回 nearestText 与 suggestedCommands，帮助 agent 先 `find --all` 或采集 snapshot 再继续排查。
 - `triton record --output <file.tritonplan> --format json`：生成可编辑 replay plan 模板；首期不是交互式真实录制，不捕获终端历史或全局输入事件。
-- `triton plan inspect <file.tritonplan> --format json`：离线读取 `.tritonplan` 摘要，返回 schema version、变量、step count、actions 和 target metadata。
+- `triton plan inspect <file.tritonplan> --format json`：离线读取 `.tritonplan` 摘要，返回 schema version、变量、step count、actions、target metadata，以及每个 replay step 的 `command/argv/category/workflowCategories/requires/expectedArtifacts/stopConditions/validationErrors`。
 - `triton replay <file.tritonplan> --format json`：按 `.tritonplan` 复跑短 smoke 流程；支持 `--dry-run`、`--var key=value`、`--var key-env=ENV_NAME`，步骤覆盖 `tap/paste/type/clear/wait/screenshot/evidence`，secure 步骤只回显 `<redacted:length>`。
 - `triton find "HTTP"`：按用户意图解析可见文本、AX label、identifier、value 或 segmented option title，只返回目标来源、策略、oid、layer、frame 与将执行的 input request；默认 JSON，`--format text` 可切换为人读输出。同文案多目标时使用 `triton find "hello" --all` 获取 `candidates[].index/frame/targetOID`；已知目标点位时可用 `triton find "hello" --at x,y` 只保留包含该点的候选。
 - `triton wait --text "我的" --timeout 15 --format json`：等待异步 UI 条件，支持 `--text`、`--gone`、`--exists --role`、`--idle`、`--hierarchy-change --since latest` 和安全谓词 `--predicate 'text.exists("console") && !text.exists("登录")'`；成功或超时都返回 `TKWaitResult`，包含 `elapsedMs/pollCount/timedOut/lastObservedTextSample/match`，超时以非 0 退出。
@@ -140,7 +149,9 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 
 CLI/HTTP 是 AI 自动化控制入口；Web/Wails 不参与首期闭环。后续如果需要 UI，也应只消费只读 DTO，不能先于 CLI/HTTP 定义业务控制能力。
 
-WebView 是 CLI 的一部分，但仍必须遵循 provider 边界：iOS 侧优先拿 metadata，再通过 allowlist bridge 读事件或执行业务动作；Harmony 侧没有 provider 时只能退回 host layout，不能把 Web 容器误报成可执行 DOM/JS 页面。
+WebView 是 CLI 的一部分，但仍必须遵循 provider 边界：iOS 侧先通过 `webview list/current` 发现候选，再通过 provider 级 `current-url/snapshot/call/events/wait` 读取 URL、快照、事件或执行业务动作；Harmony 侧没有 provider 时只能退回 host layout，不能把 Web 容器误报成可执行 DOM/JS 页面。
+
+`schema` 与 `capabilities` 必须暴露同一组 WebView / route 能力名。`triton schema --command webview --json` 的 `providedCapabilities` 必须能在 `triton capabilities --json` 中找到；`route-current-url-assert` 依赖 provider URL，不等同于 native `state route` 或 AX/layout 上的任意 URL 文本。
 
 ## 已知取舍
 
@@ -148,21 +159,169 @@ WebView 是 CLI 的一部分，但仍必须遵循 provider 边界：iOS 侧优�
 
 `attrs` 与 `object` 通过 `/request` 复用 WebSocket 请求/响应 id，属于实时读取；`nodes` 与 `node` 基于最新 hierarchy snapshot，适合 AI 先定位 oid。`export` 支持两类产物：`.json` 保持纯 hierarchy snapshot；archive 是单文件 JSON，包含 `schemaVersion`、`exportedAt`、`target`、`hierarchy`、`geometry`、`accessibility` 与内联 base64 screenshot。archive 不是 LookInside 原生归档格式；`.lookinside` 扩展名当前只作为便携 archive 自动推断入口，后续如需与 LookInside App 原生兼容，需要单独定义转换层。`evidence` 则面向测试报告和 GitHub issue 附件，首期采用目录包而不是 zip：`manifest.json` 记录 `formatVersion`、`artifacts[]`、`skipped[]`、target identity、connection/cache state、CLI version 和每个 artifact 的 freshness，artifact 路径均相对证据包目录。
 
-`doctor`、`capabilities` 与 `runtime manifest` 是 AI 的首选探测入口。无服务时 `doctor/capabilities` 返回 `ok=false`、`serverReachable=false`、`error.code=server_unavailable`、启动 hint 和 `error.nextAction`，但进程退出码保持 0，方便上层读取诊断。`runtime manifest` 需要已连接 embedded target；失败时返回稳定 error envelope，成功时返回 SDK manifest、capabilities、limits 与 redaction policy。`capabilities` 还暴露 host-side `host-device`、`harmony-device-doctor`、`harmony-device-list`、`harmony-device-wait-ready`、`harmony-app-install`、`harmony-app-open-url`、`harmony-ax`、`harmony-wait-text`、`harmony-tap-text` 和 `harmony-screenshot`，这些能力不依赖 embedded runtime。普通动作命令如 `status --format json` 与 `list --format json` 在连接失败时返回同一 `{ok:false,error:{code,message,endpoint,hint,nextAction?}}` envelope，并以非 0 退出，方便 shell 流水线阻断。
+`doctor`、`capabilities` 与 `runtime manifest` 是 AI 的首选探测入口。无服务时 `doctor/capabilities` 返回 `ok=false`、`serverReachable=false`、`error.code=server_unavailable`、启动 hint 和恢复动作，但进程退出码保持 0，方便上层读取诊断。bootstrap 四个入口现在都带顶层 `surface`：`status`、`doctor`、`capabilities`、`plan`，agent 可以直接按响应字段判断当前拿到的是状态事实、诊断排序、能力矩阵还是规划入口，而不必依赖调用上下文。`doctor` 负责诊断排序：`checks[]` 将 server、target、runtime、action surface 和 plan readiness 收敛为 `pass/warn/fail`、稳定诊断码、hint、`nextAction` 与 `relatedCapabilities`；`capabilities` 负责能力矩阵。`runtime manifest` 需要已连接 embedded target；失败时返回稳定 error envelope，成功时返回 SDK manifest、capabilities、limits 与 redaction policy。`capabilities` 不是平铺能力名清单，而是环境能力矩阵：`group` 用于归类 agent 操作面，`requiredBy` 标明能力会影响哪些 workflow，`nextAction` 给出恢复或执行建议，`evidence` 标明可审计输出面。它同时暴露 host-side `host-device`、`harmony-device-doctor`、`harmony-device-list`、`harmony-device-wait-ready`、`harmony-app-install`、`harmony-app-open-url`、`harmony-ax`、`harmony-wait-text`、`harmony-tap-text` 和 `harmony-screenshot`，这些能力不依赖 embedded runtime。WebView 能力在矩阵中拆成候选发现和 provider 操作：`webview-list/current` 只证明可见 Web 候选，`webview-current-url/snapshot/bridge-call/events/wait` 与 `route-current-url-assert` 才是 provider 级 URL、snapshot、bridge、events、wait 和 route 断言能力。普通动作命令如 `status --format json` 与 `list --format json` 在连接失败时返回同一 `{ok:false,error:{code,message,endpoint,hint,nextAction?}}` envelope，并以非 0 退出，方便 shell 流水线阻断。凡是 output contract 中声明了 `TKCLINextAction?`，schema 都必须同步展开 `command/args/category/requiresLongRunningProcess` 四个稳定子字段，避免 agent 拿到 nextAction 之后还要回到 DTO 定义猜结构。bootstrap 首选入口也继续收口到了顶层：`doctor.primaryCapability` / `doctor.primaryNextAction` 现在会一起指向当前最该先看的 recovery capability 和命令；`capabilities.primaryCapability` / `capabilities.primaryNextAction` 直接给出本次能力快照最值得先看的能力项和命令；`plan.primaryNextAction` 则把 `nextStep` 对应的首条可执行 Triton 命令提升到顶层，减少 agent 为了“下一条先跑什么”再去扫数组。为了避免还要反推这些顶层字段是怎么选出来的，bootstrap 事实源现在也补了 machine-readable provenance：`doctor.primaryNextActionSource` / `plan.primaryNextActionSource` 说明首选命令来自当前 step、fallback step、默认 nextStep 还是 error，`capabilities.primaryNextActionSource` 说明它来自 unsupported capability、plan capability、error 还是普通 actionable capability，同时 `capabilities.primaryWorkflowCategory` 直接给出首选能力项关联的顶层 workflow lane。`capabilities` 还继续补了 `primaryEvidence`，让 agent 不再需要拿到 `primaryCapability` 后再回扫对应 `evidence[]` 才知道“先看哪类 artifact taxonomy”；这个字段当前只表达首选 artifact 类型，不表达真实文件路径。`plan` 也开始补单值首选 lane：`plan.primaryWorkflowCategory` 现在会从 `nextStep` 对应 step 的 `workflowCategories[]` 里按固定 canonical 优先级挑出一条顶层 lane，避免 agent 还要从 `nextWorkflows[]` 或 step 级 workflow 列表自己决定“先按哪条 workflow 理解这张计划”。同时 `plan.primaryExpectedArtifact` 也已补齐，让 agent 不再需要从 `nextStep` 对应 step 的 `expectedArtifacts[]` 自己判断“首看哪类计划产物 taxonomy”；它只表达首选 artifact 类型，不表达真实文件路径。对于 `doctor`，`primaryCapability` 默认取当前 `nextStep` check 的首个 `relatedCapabilities[]`；若落入 fail/warn fallback 或 error.nextAction 回填，也沿同一路径保守派生，减少 agent 还要再扫 `checks[].relatedCapabilities[]`。`doctor.primaryWorkflowCategory` 则不再直接镜像 `nextWorkflows[0]` 或原始 `workflowCategories[0]`，而是从当前 primary check 的 workflow lane 集合里按固定优先级选出一个 canonical lane，避免 capability 并集顺序变化把顶层首选 lane 变成噪声。
+
+所有 output contract 里如果声明 `error: TKCLIErrorDetail?`，schema 现在都会自动展开同一组稳定子字段：`endpoint`、`hint`、`nearestCandidates`、`suggestedCommands`、`candidateCount` 和完整 `nextAction` 子字段。agent 不需要从 DTO 实现倒推错误 envelope 的可读子字段。
 
 `schema` 是 AI 的首选规划入口，不依赖 server。`schema --format json` 返回全部已实现命令的命令级 schema；`schema --command input --format json` 返回 NDJSON action schema，包含 `tap`、`swipe`、`type`、`button` 的 required/optional 字段、字段类型、enum、`oneOfRequired`、`coordinateSpace` 与 example；`schema --command device --format json` 返回 host device selector、doctor/list/use/wait-ready/screenshot 参数，`schema --command app|webview|route|ax|wait|tap|screenshot --format json` 返回 simulator、WebView URL/assert 和 Harmony host adapter 的 host-side 参数、成功 shape 和失败 shape，`schema --command smoke --format json` 返回 `smoke ios|harmony` 的 one-command summary / failure shape，并暴露 `--device` 作为 host target 推荐入口。坐标统一为 window points，与 `geometry`、`ax`、`hit` 返回的 frame 坐标一致；Harmony host-side 坐标来自 `uitest dumpLayout` 的 bounds。
+
+`schema --command <name> --format json` 必须覆盖完整命令 inventory。新增命令时，除了进入 `commandSchemas()` 顺序表，也要能被单命令过滤命中，输出中只包含该命令且不附带 HTTP 管理 API 噪声。
+
+Schema 内的 `nextCommands[]` 是恢复建议事实源，不是自由文本。新增或修改 `nextCommands` 时，命令名、子命令和 `--flag` 必须能被 `commandSchemas()` 解释；否则 agent 可能在失败恢复路径里拿到不可执行建议。
+
+子命令内的 `nextCommands[]` 遵循同一规则。`subcommands[]` 可以声明更具体的恢复建议，但这些建议仍必须是 schema-backed `triton ...` 命令，不能引用父 schema 未暴露的参数或临时实现细节。
+
+命令级与子命令级 `nextCommands[]` 都必须是单条 `triton ...` invocation。恢复建议不能包含 shell 管道、重定向、命令替换或多命令拼接；需要 stdin、文件输入或额外上下文时，通过契约字段或说明表达，不让 agent 解析 shell。
+
+命令级与子命令级 `nextCommands[]` 列表不能包含空字符串或同层重复命令。agent 可以把该列表当成有序候选恢复动作读取，不需要再做去重或过滤空项。
+
+命令级与子命令级 `nextCommands[]` 的根命令必须属于固定 recovery command taxonomy。恢复建议可以覆盖诊断、发现、目标选择、工程/Xcode、观察、动作、断言、证据、replay 和 smoke 等入口，但不能临时引用未定义恢复角色的 root command。
+
+每个 recovery root command 必须有稳定 category：`diagnose`、`discover`、`prepare-target`、`project`、`observe`、`act`、`verify`、`archive`、`replay`、`smoke` 或 `plan`。agent 可以用 category 先决定恢复阶段，再选择具体命令。
+
+Schema JSON 同步暴露 `recoveryCommands[]`，由 `nextCommands[]` 自动派生，元素为 `{command, category}`。agent 需要阶段化恢复时应优先读 `recoveryCommands[]`；只需要旧字符串建议时仍可读 `nextCommands[]`。
+
+`failureCodes[]` 可按命名族映射到 recovery category family。agent 可以先根据 `error.code` 选择诊断、目标准备、工程/Xcode、观察、动作、验证、归档、replay、smoke 或 plan 等恢复阶段，再结合当前命令的 `recoveryCommands[]` 选择具体下一步。当前契约只要求每个 failure code 可分类且分类值属于固定 taxonomy；命令级 `recoveryCommands[]` 是否完全覆盖对应 failure family 的所有候选阶段，会在后续更小切片中继续收紧。对 replay 来说，这条规则现在也下沉到了 shared `TKReplayResult`：只要 `failureError.nextAction` 存在，即使结果是离线解码旧 JSON 或手工构造，`suggestedCommands[]`、`recoveryCommands[]` 与 `failureRecoveryCategories[]` 也会自动补齐对应的 `triton ...` 命令和 category。并且 `nextAction` 现在不只是“出现在集合里”，而是 replay recovery surface 的首选路径：`suggestedCommands[0]`、`recoveryCommands[0]` 与 `failureRecoveryCategories[0]` 都优先对齐它，减少 agent 在失败后自行重排恢复顺序。更进一步，只有在 `nextAction` 存在时，replay 顶层才会把当前 `recoveryCommands[]` 真正覆盖到的阶段提前到 `failureRecoveryCategories[]` 前部，再把 `failureCode` family 的剩余阶段保留在后面；没有 `nextAction` 的失败仍保持 family-first 语义，避免 `wait/find/snapshot/evidence` 这类 follow-up 命令反客为主。
+
+Artifact / output 失败族必须能导向 `archive` 类恢复。`artifact_output_rejected`、`artifact_write_failed`、`file_write_failed`、`overwrite_refused`、`xcresult_output_too_large` 不应只给 target、plan 或 retry 建议；schema 需要提供 evidence / capture / export / screenshot / xcresult 等归档入口，方便 agent 保留失败现场或换安全输出位置。
+
+Assertion / route / text-not-found 失败族必须能导向 `verify` 类恢复。`assertion_failed`、`route_mismatch`、`text_not_found` 不应只给 evidence、screenshot、find 或 ledger 建议；schema 需要提供 wait/assert/route 等验证入口，让 agent 能重新确认目标条件是否满足。
+
+Runtime transport 失败族必须能导向 `diagnose` 类恢复。`server_unavailable`、`request_failed`、`request_timeout`、`runtime_unavailable`、`runtime_not_connected` 不应只给 observe、archive、act 或 verify 建议；schema 需要提供 status/doctor/capabilities 等诊断入口，让 agent 先确认 server、target、runtime 和 hierarchy/cache 状态。
+
+Target 失败族必须能导向 `prepare-target` 类恢复。`ambiguous_target`、`device_not_ready`、`simulator_not_found`、`target_not_found`、`target_offline`、`target_unavailable` 不应只给 diagnose、observe、verify 或 archive 建议；schema fact source 会为声明这些失败码的命令自动补 `triton target resolve <selector> --json`，让 agent 先消歧、选择或等待目标。
+
+Project / Xcode 失败族必须能导向 `project` 类恢复。`ambiguous_workspace`、`invalid_workspace_path`、`scheme_not_found`、`workspace_not_found`、`xcode_not_idle` 不应只给 diagnose、archive、verify 或 target 建议；schema fact source 会为声明这些失败码的命令自动补 `triton xcode discover --path . --json`，让 agent 先重新发现 workspace/project/scheme 或确认 Xcode 占用状态。
+
+Action / step 失败族必须能导向 `act` 类恢复。`action_failed`、`step_failed` 不应只给 diagnose、archive、plan 或 verify 建议；schema fact source 会为声明这些失败码的命令自动补 `triton input --json --summary --strict`，让 agent 回到可执行动作批处理入口，并用 summary / strict 形成明确完成门禁。
+
+Destructive / confirmation 失败族必须能导向 `plan` 类恢复。`confirmation_required`、`destructive_action_requires_policy` 不应只给 target、archive、smoke、diagnose 或 action 建议；schema fact source 会为声明这些失败码的命令自动补 `triton plan --format json`，让 agent 在破坏性动作前回到计划与策略确认入口。
+
+Unsupported 失败族必须能导向 `plan` 类恢复。`action_not_supported`、`unsupported_capability`、`unsupported_runtime_scope`、`webview_method_not_allowed`、`webview_wait_unsupported` 不应只给 diagnose、observe、verify 或 action 建议；schema fact source 会为声明这些失败码的命令自动补 `triton plan --format json`，让 agent 回到能力边界与替代路径规划入口，而不是反复重试当前 unsupported 命令。
+
+声明 `providedCapabilities[]` 的命令必须同步 `outputContracts[]`。这覆盖 `ax` 与低层动作命令：即使命令也可能返回 host-side Harmony envelope，schema 仍要给出 agent 可以稳定解析的主要输出模型。每个 output contract 还必须提供非空 `selector`、`model` 和字段清单，字段需包含非重复 `name`、`type` 与 `description`，否则 agent 只能知道“有输出”，无法可靠生成解析器或验收判断。
+
+字段 `type` 必须保持机器可读：支持 `String`、`Bool`、`Int`、`Double`、DTO 名称、optional `?`、数组 `[Type]`、字典 `[Key:Value]` 和 union `TypeA|TypeB`。不能写成“JSON object with ...”这类自然语言，否则 agent 无法稳定生成解析器。
+
+`outputContracts[].model` 使用同一套机器可读语法。model 字段必须是稳定 DTO/模型名、数组或 union，而不是自然语言描述或 Swift 泛型片段；例如截图元数据使用 `ScreenshotMetadataOutput`，节点 map 使用 `HierarchyNodeSummaryMap`。
+
+`outputContracts[].selector` 是 agent 查找输出模型的 key，必须使用点分层级 key；`kind` 是语义分类 key，必须使用小写 kebab。不能在 selector/kind 中使用空格、驼峰、下划线或临时人读短语。
+
+`outputContracts[].format` 只允许 `json`、`jsonl`、`archive`。`json` 表示单个结构化响应，`jsonl` 表示流式事件或逐行 ledger，`archive` 表示可审计归档产物；新增格式必须先说明 agent 消费方式与 artifact 边界，不能临时写入自由字符串。
+
+`outputContracts[].kind` 是输出模型语义分类，也必须在 schema 测试中的固定 taxonomy 内。新增响应模型、事件模型或 artifact envelope 时，先定义 kind 的 agent 消费语义，再同步文档、skills 和测试，避免 agent 解析器看到未登记的临时 kind。
+
+同一 command 内的 `outputContracts[].selector` 必须唯一。selector 是 agent 查找输出模型的键，重复 selector 会让自动解析器和回归断言无法确定应该消费哪个 contract。
+
+子命令的 `outputSelectors[]` 必须能回到父命令 `outputContracts[]` 中的 selector。这样 agent 读取 `triton schema --command xcode --json` 时，可以从 `subcommands[].outputSelectors` 确定 `build/test/run` 等子命令的输出模型，再用父命令 `outputContracts[]` 取得字段契约。
+
+命令只要声明失败退出或 `failureShape`，就必须同步稳定 `failureCodes[]`。无失败面的 bootstrap 命令应显式取消默认 failure shape；有失败面的长进程或多 transport 命令，例如 `serve`、`ax`，即使主要失败信息来自 stderr、host tool 或 runtime envelope，也必须给 agent 可分类的错误码集合。
+
+`failureCodes[]` 必须是稳定 lower_snake_case，且同一 command / subcommand 内不能重复。agent 应直接用 `error.code` 查恢复分支，而不是对大小写、短横线、空格或重复码做临时归一化。
+
+子命令 failure codes 必须被父命令 failure codes 覆盖。这样 agent 可以先用父命令 schema 建立错误恢复全集，再根据子命令 schema 收窄处理，不会出现父命令恢复表遗漏子命令错误码的情况。
+
+Schema 参数和子命令不能是低信号占位。`options[]` 必须提供非空 `name`、`type`、`description`，并且同一命令内不能重复；`subcommands[]` 必须提供非空 `name`、`summary`，并且同一命令内不能重复。
+
+Command name 与 subcommand name 是 agent 路由 key，必须使用 lower-kebab；`options[].name` 中以 `--` 开头的长 flag 或 slash alias 组也必须使用 lower-kebab。
+
+命令形态说明进入 `usageForms[]`，不再混在 `options[]`。例如 `inspect <path>`、`alias set <name> ...`、`ios-smoke` 这类 Subcommand / Task synopsis 会以 `{form, kind, description}` 暴露给 agent。
+
+位置参数进入 `argumentForms[]`，不再混在 `options[]`。例如 `<query>`、`<path>`、`<text>`、`<selector>` 这类 positional argument 会以 `{name, type, required, description}` 暴露给 agent。拆分后 `options[]` 只表示可传的 `--long-flag` 或 slash alias 组，agent 可以直接把 `options[]` 当 flag schema 使用。
+
+子命令参数引用必须由父命令 schema 覆盖。`subcommands[].requiredOptions[]`、`optionalOptions[]` 与 `oneOfRequiredOptions[]` 只能引用父命令 `options[]` 中的 flag，或 `argumentForms[]` 中的位置参数；如果某个子命令声明 `--path`、`--output`、`<text>` 等要求，父命令 schema 必须先暴露该参数，避免 agent 只能从 summary 或实现细节里猜调用方式。
+
+命令级 `requiredOptions[]` 不再承载子命令摘要。有 `subcommands[]` 的命令必须把参数要求写到对应子命令结构里；父命令级 `requiredOptions[]` 保留给无子命令命令的直接调用参数，避免 agent 解析 `record:--template`、`summary/failures:--path` 或自然语言组合条件。
+
+`defaultProviders[]` 与 `inheritsDefaultsFrom[]` 中的值必须是可执行的 `triton ...` 命令引用，例如 `triton xcode use` 或 `triton sim use`。agent 可以用同一套 schema-backed command 校验逻辑确认默认值来源是否可执行，不需要把字段解释成自然语言说明。
+
+`artifacts[]` 也是 agent-facing taxonomy 字段。命令级和子命令级 artifact 名称必须来自固定集合，例如 `stdout-log`、`stderr-log`、`result-bundle`、`trace`、`coverage-json`、`evidence-bundle`、`runtime-snapshot`、`screenshot`、`harmony-layout` 等；新增产物名必须说明它代表可审计文件、运行时快照、host 工具输出还是 evidence bundle 组成部分。
+
+`jsonlEvents[]` 与 `finalEventKind` 描述长任务 JSONL 事件面。事件 key 使用点分 lower-kebab；父命令可以用 `<action>` 做完整 token 占位，子命令必须写具体 action。`finalEventKind` 必须是同层 `jsonlEvents[]` 的成员，避免 agent 等待一个 schema 未声明的最终事件。
+
+`retryable=true` 必须配套 `nextCommands[]`。agent 看到一个可重试命令时，应能同时看到下一条建议命令，例如重新发现/设置 Xcode defaults、等待 idle、继续 build/run，或把 trace/coverage 纳入 evidence；不能只依赖“重跑当前命令”的隐含策略。
+
+`failureCodes[]` 也必须配套恢复路径。命令级 failure codes 要求命令级 `nextCommands[]` 非空；子命令级 failure codes 可以使用子命令自己的 `nextCommands[]`，也可以继承父命令级恢复建议。`serve`、`ax`、`swipe`、`type`、`paste`、`clear`、`press` 这类非 retryable 但有失败面的命令也要告诉 agent 下一步诊断或归档命令，避免 error code 只能分类、不能执行恢复。
+
+`examples[]` 是 agent 可复用的 argv 样本，不是自然语言说明。每个 command 都必须有非空 `outputFormats[]` 和至少一个 example；example 中出现的 `triton` 命令、子命令和 `--flag` 必须能被 schema 解释。包含 shell pipeline 的示例仍应能抽取其中的 `triton` 调用进行校验。
+
+命令级 `outputFormats[]` 只允许 `text`、`json`、`jsonl`、`logs`、`tree`、`auto`、`archive`、`file`、`json-metadata`，且同一命令内不能重复。它表示命令可选输出模式，不等同于 `outputContracts[].format` 的解析模型；新增输出模式必须先定义 agent 如何选择和消费。
+
+每条 schema example 必须恰好包含一个可抽取的 `triton` invocation。example 可以用 `printf`、管道或 stdin 准备上下文，但不能包含多个 `triton` 调用让 agent 误判为单条可执行命令；多步流程应进入 `plan.steps[]` 或文档流程，而不是塞进单个 schema example。
 
 Host-side adapter 使用 `riskLevel`、`requiredConfig` 和 execution policy 做审计与客观运行配置校验，不再使用交互式 `requiresConfirmation` gate。缺少 target、artifactDir、redaction policy、timeout 或 audit record 这类客观配置时应返回 machine-readable blocked/error；风险等级本身不打断长自动化。
 
 Harmony 有两条明确分层：host-side adapter 使用 HDC/DevEco 工具完成设备、App、UI、截图和日志自动化；未来 embedded collector 只在业务 App DEBUG 包内提供 App 内快照增强。两者的 `platform` 都是 `harmony`，但 transport 分别是 `hdc` 与 `embedded-websocket`，不能把 collector manifest 当成设备级能力。
 
-`plan` 是 AI 的状态恢复入口，不依赖 server 存活。它会把当前能力诊断收敛为 `nextStep` 和有序 `steps[]`：无 server 时第一步是可直接执行的 `triton serve --host 127.0.0.1 --port 19421`；server 与 target 已就绪时第一步是 `observe`，推荐 `geometry`、`ax`、`wait`、`hit`、`input --summary --strict`、`screenshot` 与 `export --format archive`。`error.nextAction` 的 `command` 不带 `triton` 前缀，调用方可用 `["triton", command] + args` 直接组装进程参数。
+`plan` 是 AI 的状态恢复与任务规划入口，不依赖 server 存活。它会把当前能力诊断收敛为 `goal`、`nextStep` 和有序 `steps[]`：无 server 时第一步是可直接执行的 `triton serve --host 127.0.0.1 --port 19421`；server 与 target 已就绪时第一步是 `observe`，推荐 `geometry`、`ax`、`wait`、`hit`、`input --summary --strict`、`screenshot` 与 `export --format archive`。任务型 `ios-smoke/open-url/webview-check` 只生成命令序列，仍要求 agent 显式逐条执行并用 wait/assert/evidence 判断结果。`primaryNextAction` 现在作为 `nextStep` 的顶层快捷入口直接给出首条结构化命令；新 payload 优先从 `steps[]` 回填，旧 payload 缺字段时再按 `nextStep` 做保守兼容推断。`primaryNextActionSource` 同时标明它来自 `next-step-step`、`first-step`、`default-next-step`、`error` 还是显式覆盖，避免 agent 只拿到命令却不知道它是正常路径还是兼容回填。`error.nextAction` 的 `command` 不带 `triton` 前缀，调用方可用 `["triton", command] + args` 直接组装进程参数。
 
-`record/replay` 是 AI 的可复跑 smoke artifact 入口。`.tritonplan` 首期 schema version 为 1，核心字段为 `name`、`variables`、`target` 和 `steps[]`；步骤中的字符串支持 `${name}` 占位。`replay --dry-run` 不连接 runtime，只检查变量并输出每一步将执行的命令摘要；真实 `replay` 默认在首个失败步骤停止，整体结果返回 `{ ok, dryRun, planName, stepCount, executedCount, failedStepIndex?, elapsedMs, steps[] }`。`record` 当前只生成模板，不能宣称已录制真实用户操作。
+`error.nextAction` 与 capabilities / doctor / plan 使用同一套 category vocabulary。schema 的 `failureShape` 只要出现 `nextAction?`，就必须展开为包含 `command`、`args`、`category` 和 `requiresLongRunningProcess?` 的结构；output contract 只要声明 `error: TKCLIErrorDetail?`，就必须同步声明 `error.nextAction` 与 `error.nextAction.category`。
+
+通用 `plan` 也必须返回可执行 command，不返回自然语言动作。server 可达但 runtime 未连接时，`connect-target` step 使用 `triton xcode run --json` 作为首选 Triton 入口；如果当前工作区没有 Xcode project，agent 再根据该命令的 schema / failure code 决定是否改走 `app launch`、`smoke ios` 或外部构建流程。
+
+`plan.nextStep` 必须能在同一响应的 `steps[].id` 中找到。已连接 runtime 的通用 plan 现在以 `nextStep=geometry` 指向首个观察步骤，避免顶层指针停留在抽象的 `observe` 分类。
+
+`plan.nextWorkflows[]` 必须直接暴露当前推荐 planning lane 所属的 workflow taxonomy，并与 `capabilities[].requiredBy` / `doctor.nextWorkflows[]` 使用同一组值：`action`、`app`、`assert`、`evidence`、`observe`、`project`、`replay`、`route`、`runtime`、`smoke`、`target`、`webview-check`、`xcode`。agent 可以先按 workflow lane 判断这是在恢复 `app/runtime`、进入 `smoke`，还是执行 `webview-check`，再决定是否下钻到具体 step。
+
+`plan.steps[]` 也必须直接暴露 `workflowCategories[]`。该字段与 `doctor.nextWorkflows[]`、`doctor.checks[].workflowCategories[]`、`capabilities[].requiredBy[]` 使用同一套 workflow taxonomy：`action`、`app`、`assert`、`evidence`、`observe`、`project`、`replay`、`route`、`runtime`、`smoke`、`target`、`webview-check`、`xcode`。agent 进入具体 step 时，应直接读取它影响的 workflow lane，而不是再从 root command 或顶层 plan 反推。
+
+`plan.steps[]` 必须直接暴露 `category`。该字段按步骤 `command` 的 Triton root command 自动派生，取值与 schema `recoveryCommands[].category` 使用同一 taxonomy：`diagnose`、`discover`、`prepare-target`、`project`、`observe`、`act`、`verify`、`archive`、`replay`、`smoke`、`plan`。agent 可以先按 category 规划阶段，再执行 `command`，不需要自行解析 root command。
+
+`plan.steps[]` 还必须暴露结构化执行元数据：`requires[]` 表达 `cli.available`、`server.reachable`、`target.ready`、`runtime.connected` 等前置条件；`expectedArtifacts[]` 表达 stdout JSON、target resolution、wait/assert result、screenshot、evidence bundle、smoke summary、Xcode log 等可审计产物；`stopConditions[]` 表达 `command.failed`、`server.unavailable`、`target.unavailable`、`timeout`、`assertion.failed`、`artifact.write-failed` 或 `step.failed` 等应停止或重规划的条件。agent 应优先读取这些字段，而不是从 `when/expected` 人读文本推断。
+
+`triton plan inspect` 与 `triton replay --dry-run/--json` 的 `steps[]` 也必须带 `workflowCategories[]`。Replay 侧不应只暴露 `category`、`requires[]`、`expectedArtifacts[]` 和 `stopConditions[]`，还要保持与 `doctor`、task `plan`、`capabilities` 同口径的 workflow taxonomy，这样 agent 比较 inspect 与 dry-run 时不需要自己重建 action/observe/assert/evidence/replay lane。
+
+`plan.mode` 用来区分规划职责边界：`bootstrap` 表示环境恢复 / 发现计划，`task` 表示目标型 workflow 计划。agent 应先看 `mode` 再决定是恢复环境、选择 target，还是进入 smoke / open-url / webview-check 这类任务链路，而不是通过 `goal == general` 等约定值猜测。
+
+`plan.steps[].argv` 是首选可执行形态，也是 agent 主执行事实源。`command` 仍保留为人读日志和复制入口，但 agent 执行时应直接使用 `argv[]`，避免解析 shell quoting、空格、占位符或用户输入。旧 JSON 缺少 `argv` 时，wire model 会从 `command` 做保守 tokenization 以保持可读；旧 JSON 缺少 `mode` 时，decoder 会把 `general` / 空 goal 视为 `bootstrap`，其他 goal 视为 `task`。
+
+`triton plan inspect <file.tritonplan> --json` 的输出也使用同一套执行元数据词汇。`TKReplayPlanSummary.steps[]` 会为每个 replay step 暴露 `index/id/name/action/command/argv/category/requires/expectedArtifacts/stopConditions/validationErrors`；`argv[]` 保留 `${variable}` 占位，secure 步骤只输出 `<redacted:length>`。agent 可先离线检查 prerequisites、预期 artifact、停止条件和静态 step 形状诊断，再决定是否执行 `replay --dry-run` 或真实 `replay`。`validationErrors[]` 不求值变量占位，合法的 `${name}` 模板应保持空诊断。
+
+任务型 `plan` 的命令字符串必须能回到 schema 解释：根命令、子命令和所有 `--flag` 都要存在于对应 `TKCommandSchema`。如果 plan 推荐了 schema 未声明的参数，应优先补 schema 或修正 plan，而不是让 agent 依赖 README 或实现细节。
+
+`record/replay` 是 AI 的可复跑 smoke artifact 入口。`.tritonplan` 首期 schema version 为 1，核心字段为 `name`、`variables`、`target` 和 `steps[]`；步骤中的字符串支持 `${name}` 占位。`replay --dry-run` 不连接 runtime，只检查变量并输出每一步将执行的命令摘要；真实 `replay` 默认在首个失败步骤停止，整体结果返回 `{ ok, dryRun, planName, stepCount, executedCount, failedStepIndex?, failureCode?, failureError?, failurePrimaryWorkflowCategory?, failureWorkflowCategories[], failurePrimaryRecoveryCategory?, failureRecoveryCategories[], failurePrimaryHint?, failurePrimaryEndpoint?, failurePrimaryNextAction?, failurePrimaryArtifact?, failurePrimaryArtifacts[], failurePrimarySuggestedCommand?, failurePrimaryRecoveryCommand?, recoveryCommands[]:{command,category}, elapsedMs, steps[], suggestedCommands[] }`。`TKReplayResult.steps[]` 中每个 step 同步暴露 `command/argv/category/requires/expectedArtifacts/stopConditions/failureCode/error`；`argv[]` 是变量替换后的主执行字段，`command` 保留为历史 argv alias / 日志字段。顶层 `failureCode` 直接把本次 replay 失败映射回 schema 失败码体系，`failureError` 则把失败 step 的结构化 `TKCLIErrorDetail` 直接提升为顶层可读事实，减少 agent 先通过 `failedStepIndex` 再关联 `steps[].error` 的负担。`failureWorkflowCategories[]` 继续表示失败步骤所在 workflow lane，而 `failurePrimaryWorkflowCategory` 则给出无需扫描数组的首选 failure lane。`failureRecoveryCategories[]` 继续表示恢复阶段集合，`failurePrimaryRecoveryCategory` 则给出 agent 首先应进入的恢复阶段，`failurePrimaryHint` 则给出可直接展示或纳入重规划的首选诊断提示，`failurePrimaryEndpoint` 则给出首选 transport/runtime endpoint，`failurePrimaryNextAction` 则给出无需解包 `failureError` 的首选结构化恢复动作。`failurePrimaryArtifacts[]` 继续给出优先查看的高信号 artifact，而 `failurePrimaryArtifact` 则给出首个应检查的证据对象。`suggestedCommands[]` 继续保留兼容字符串入口，而 `failurePrimarySuggestedCommand` 则给出单值首选建议字符串；`recoveryCommands[]` 继续给出完整 follow-up 命令集合，而 `failurePrimaryRecoveryCommand` 则给出单值首选命令。agent 应优先消费 `failureCode`、`failureError`、`failurePrimaryWorkflowCategory`、`failurePrimaryRecoveryCategory`、`failurePrimaryHint`、`failurePrimaryEndpoint`、`failurePrimaryNextAction`、`failurePrimaryArtifact`、`failurePrimarySuggestedCommand`、`failurePrimaryRecoveryCommand`，再决定是否下钻到具体 step 或扫描完整数组。schema output contract 现在也把 `failureError.*` 与 `steps[].error.*` 展开到 `code/message/endpoint/hint/nearestCandidates/suggestedCommands/candidateCount/nextAction.command/args/category/requiresLongRunningProcess`，让 agent 不需要把 `TKCLIErrorDetail` 当黑盒。若 `failureError.nextAction` 存在，replay 不仅要把它折进 `suggestedCommands[]` / `recoveryCommands[]`，还要把它的 category 并入 `failureRecoveryCategories[]`，避免错误详情和恢复建议给出两套互不相干的恢复阶段。真实 replay 在 catch 路径里也必须尽量保留底层 `TKCLIErrorDetail.code`：runtime / target / transport failure 优先沿用原始 `error.code`，请求超时映射为 `timeout`，本地 screenshot/evidence 写盘失败映射为 `artifact_write_failed`，只有无法识别的异常才回落到 `step_failed`。对于没有抛错但 `ok=false` 的 replay 步骤，当前至少 `input`、`wait`、`evidence` 三类也必须补出 step 级 `error`，避免 agent 只拿到 `action_failed` / `timeout` / `request_failed` 却丢掉 `hint` 和 `endpoint`；如果错误本身还带 selector/text 候选或内联 follow-up，schema 也必须显式声明这些子字段。`plan inspect` 与 replay result 的 argv / metadata 派生必须走 `TKReplayStepExecution` 共享 helper，避免 inspect、dry-run 和真实 replay 各自维护不同映射。`record` 当前只生成模板，不能宣称已录制真实用户操作。
+
+`replay --dry-run` 必须在不连接 runtime 的前提下提前拒绝明显不可执行的 `.tritonplan` step：`tap` 不能同时声明多个 selector，`wait` 不能同时声明多个 condition，`paste/type` 必须提供 `value` 或 `text`，`wait` 必须提供一个 condition。agent 遇到 dry-run 通过但真实 replay 因这些静态问题失败时，应视为 replay validation bug。
+
+当 `replay --dry-run --json` 因静态 validation 失败退出时，CLI 必须只输出一个合法 JSON 错误 envelope，退出码非 0，`error.code=validation_failed`，不能先打印局部错误再由外层 catch 二次包装。agent 可以直接消费该 envelope 的 `error.message` 和 `error.nextAction`，不需要从 stdout/stderr 中拆多个 JSON 对象。
 
 `assert` 是 agent 回归判断入口，适合把“截图里看起来没有 stale 文本”改成机器可读结论。重复文本场景优先用 `--role`、`--count` 或 `--within` 收敛范围；例如右侧二级列表区域可以用 `triton assert text-not-exists "Qinghai" --within 180,120,190,500 --json` 验证 stale 子项不存在。`assert` 使用当前 runtime AX tree，不能处理系统弹窗或跨 App 内容。
 
+Evidence、smoke 和 replay 的 schema / capabilities 必须保持同一事实口径：`evidence`、`evidence-summary`、`evidence-redact`、`capture`、`smoke-ios`、`smoke-harmony`、`record`、`plan-inspect`、`replay` 和 `replay-dry-run` 都必须能在 `triton capabilities --json` 中发现。`plan-inspect` 是离线 `.tritonplan` 摘要和执行元数据检查能力，`replay-dry-run` 是离线校验能力，二者都不证明真实步骤已执行；`smoke-*` 是编排能力，不替代每一步 wait/assert/evidence 的验收。
+
+CLI schema 的 `providedCapabilities[]` 是 capabilities matrix 的输入边界，不允许成为只在 schema 中存在的孤儿能力，也不允许缺少规划元数据。新增或调整 `providedCapabilities` 时，必须同步 `runtimeCapabilities` 的能力项、非 `misc` 分组、恢复/执行 `nextAction` 和 evidence，并保持 `SchemaFactSourceTests` 的全量对齐测试通过。
+
+能力名必须唯一。agent 会把 `providedCapabilities[]` 与 `capabilities[].name` 当成索引 key；重复能力名会让 requiredBy、nextAction 和 evidence 的合并结果不可预测。
+
+`capabilities[].requiredBy` 与 `capabilities[].evidence` 必须是非空、去重后的数组值。空字符串或重复项会让 agent 的 workflow 分类和证据选择产生噪声。
+
+`capabilities[].group` 必须落在固定 agent taxonomy：`action`、`assert`、`bootstrap`、`evidence`、`host`、`observe`、`replay`、`route`、`runtime`、`smoke`、`target`、`webview`、`xcode`。新增能力不能随手使用近义分类或 `misc`，否则 agent 的能力路由会不可预测。
+
+`capabilities[].requiredBy` 必须落在固定 workflow taxonomy：`action`、`app`、`assert`、`evidence`、`observe`、`project`、`replay`、`route`、`runtime`、`smoke`、`target`、`webview-check`、`xcode`。这组值用于 agent 把能力反查到可执行工作流；新增分类必须先写清规划含义。
+
+`capabilities[].evidence` 必须落在固定 artifact taxonomy。证据名用于 agent 选择 stdout JSON、schema、status、host artifact、runtime snapshot、WebView provider、route assertion、input result、evidence bundle、smoke summary、tritonplan、xcresult、trace、coverage 等验收材料；新增名称必须对应真实可审计输出。
+
+每个 capability 都必须至少有一个 evidence source。`list/inspect/hierarchy/nodes/attrs/object/export-json/export-archive/geometry/hit` 这类 observe 细分能力不能只给 agent 一个能力名，也要暴露可用于验收的 status JSON、runtime manifest、surface tree、runtime AX、host artifact、screenshot metadata、target resolution 或 snapshot JSON。
+
+`capabilities[].nextAction` 也是机器可执行契约，不是人读提示。它推荐的命令、子命令和 `--flag` 必须全部存在于 schema；如果 nextAction 需要表达 Harmony install，应使用真实可执行的 `app install --platform harmony --hap <path.hap>`，不能沿用 iOS 的 `--app` 参数。
+
+`capabilities[].nextAction.category` 必须直接暴露恢复阶段。该字段按 `nextAction.command` 自动派生，并使用与 `schema.recoveryCommands[]`、`plan.steps[]` 相同的 recovery category taxonomy。agent 可以先按 category 判断下一步是诊断、准备 target、工程发现、观察、动作、验证、归档、replay、smoke 还是 plan，再组装 `["triton", command] + args` 执行。
+
+`doctor.checks[].nextAction.category` 使用同一套 category。doctor 是有序诊断入口，agent 可以直接按 check status 和 nextAction category 判断下一步是启动 server、查 schema、读 status、准备 target、检查 runtime manifest、读 capabilities 还是回到 plan。
+
+`nextAction.requiresLongRunningProcess` 只用于需要 agent 启动并保持或等待的动作。当前能力矩阵中只有 server 不可达时的 `triton serve --host 127.0.0.1 --port 19421` 使用该标记，避免 agent 把普通一次性恢复命令误当后台进程管理。
+
+`nextAction.args` 里的占位符必须是完整 argv token，例如 `<selector>`、`<text>`、`<dir.tritonevidence>`、`<x,y>`、`<udid|booted>`。agent 可以把这类 token 作为待填槽位处理，不需要解析半截字符串拼接。
+
+`schema.nextCommands[]`、`schema.examples[]` 与 `plan.steps[].argv` 也遵循同一占位符规则。任务 plan 只输出 Triton argv，不输出 shell 重定向；例如 `input` 步骤通过 `triton input ... --summary --strict` 表达命令本体，stdin NDJSON 要求放在 `expected` 中说明。
+
+`plan.steps[].command` 必须是单条 `triton ...` human-readable invocation，不包含 `|`、`&&`、`;`、`<`、`>`、命令替换或反引号。agent 真正执行时应直接使用同一步的 `argv[]`；涉及 stdin 或外部输入的要求放入 step metadata。
+
 `input --json` 输出真正的 JSONL：每个 action 结果是一行 compact JSON，`--summary` 的最终汇总也是一行 compact JSON。AI 自动化推荐显式使用 `--summary --strict --fail-fast`。这样既能继续消费每个 action 的细粒度 ack，又能用 summary 和退出码判断整批动作是否可靠完成；`--fail-fast` 还能避免前一步 tap 失败后，后续 `type` 继续写入旧 first responder。
+
+Action 层的 `schema`、`capabilities` 与 `doctor` 必须保持同一事实口径：`capabilities[].nextAction` 只能给出当前 CLI schema 可执行的参数形态，例如 `swipe --start-x/--start-y/--end-x/--end-y`、`clear --at x,y`、`input --json --summary --strict`。embedded runtime 的 `press` 当前是 unsupported，capabilities 只指向 `schema --command press --json`，不把 host-side Harmony keyEvent 或未来 HID 能力伪装成 embedded 可用能力。Harmony 的 `clear` 当前也必须显式标记为 unsupported：capabilities 通过 `harmony-clear-text` 声明 `supported=false`，并把 nextAction 固定为 `clear --platform harmony --json`，让 agent 直接读取 machine-readable unsupported envelope，而不是重试通用 `clear`；该 nextAction 不应被 server 不可达状态劫持成 `serve`，因为这个边界本身是 host-side 不支持语义。此外 action schema contract 的测试会持续禁止 legacy selector（`host.tap`、`host.swipe`、`host.text-input`、`host.wait`）回流，确保 host-harmony 输出面稳定。
+
+Harmony host action capabilities（`harmony-tap-text`、`harmony-wait-text`、`harmony-swipe`、`harmony-type-text`、`harmony-paste-text`、`harmony-press-key`）在 capabilities matrix 中也应归入 `action` 分组，并使用 `requiredBy=action/assert/evidence`。它们虽然由 host adapter 执行，但语义是动作执行，不应混入 `target/app` 设备准备流程。
 
 所有会先解析 target 的主要 runtime 命令在 JSON 模式下都会把 `/targets` 解析失败收敛为同一 `{ok:false,error:{code,message,endpoint,hint,nextAction?}}` envelope；这覆盖 `inspect/hierarchy/nodes/node/attrs/object/export/wait/tap/swipe/type/press/geometry/ax/hit/screenshot/input` 等入口。运行时 HTTP 非 2xx 响应若本身已经是 Triton error envelope，CLI 在 `--json` 下会原样输出该 envelope 并退出非 0，避免把 `runtime_ui_interrupted` 等机器错误码揉进 ArgumentParser 文本错误。
 
@@ -211,3 +370,43 @@ Overloaded 真实 App 的可复跑 smoke 脚本是 `docs-linhay/scripts/verify-o
 设备控制参考 Baguette 的动作模型，但当前 TritonKit 运行在被测 App 进程内，不具备 host-side SimulatorKit / HID 权限。第一阶段只承诺公开 UIKit API 可验证的 in-app 控制；系统按钮、全局键盘、跨 App home/app-switcher 等能力需要后续新增 macOS host-side adapter。
 
 观察能力也遵循 embedded runtime 边界：`ax` 基于当前 App 内 UIKit view tree 生成安全控件索引树，只为 `UIControl`、`UILabel`、`UITextField`、`UITextView`、`UIScrollView`、`UIImageView` 等可读/可操作类型生成节点，避免递归读取 SwiftUI/UIKit 私有视图导致 App 断连；它不是 SpringBoard 或跨 App 的系统级 AX tree。`UICollectionView` / `UITableView` 这类 scroll 容器会继续展开可见子树，并把 cell 内可读文本挂到容器 `children` 下；无 label、无 identifier、无子节点的空 `UIImageView` / 空 label 不进入 AX 输出，避免复杂页面提前耗尽节点预算。`screenshot` 是当前 App window 截图，不是 host-side framebuffer。
+
+Round 154 收敛 route capability 恢复语义：`route-current-url-assert` 在 server-unreachable/disconnected 状态下不再回退到 `serve` 或 `status`，而是保持 `triton route assert-current-url <expected-url> --json` 作为 nextAction。该变更与 `route` schema 的 `requiresServer=false` 保持一致，减少 agent 在 WebView route 断言场景下被误导到长进程恢复路径。
+
+Round 155 将同一策略扩展到 WebView provider 能力：`webview-current-url`、`webview-snapshot`、`webview-bridge-call`、`webview-events`、`webview-wait` 在 server-unreachable/runtime-disconnected 状态下也保持命令级 nextAction（不再退化为 `serve/status`）。这让 agent 能直接进入 `webview ... --json` 或补 `--runtime-base-url` 的执行分支，而不是先被迫走 server 恢复。
+
+Round 156 把同一恢复语义扩展到 `observe-ios`：在 server-unreachable/runtime-disconnected 状态下，capability nextAction 仍保持 `triton observe current --platform ios --json`，不再统一回退到 `serve/status`。这样 agent 可以直接进入 observe 路径并按需补 `--runtime-base-url`，而不是先被诊断 fallback 打断。
+
+Round 157 在测试层补 discovery 批量防回退：`observe-ios`、`webview-list`、`webview-current`、`node-resolve` 在 `runtime-disconnected/server-unreachable` 下都必须保持命令级 nextAction 且 `requiresLongRunningProcess != true`。该门禁用于防止后续把 server-independent 能力重新吸回 `serve/status`。
+
+Round 158 在同一批 discovery 能力上补 metadata 门禁：`observe-ios`、`observe-harmony`、`webview-list`、`webview-current`、`node-resolve` 在 `runtime-disconnected/server-unreachable` 下除了 nextAction，还要保持 `group/requiredBy/evidence` 固定，避免 agent 规划 lane 或证据选择因 taxonomy 漂移失真。
+
+Round 159 继续把 `observe`/`node` 的 schema 入口与 capability 事实源强绑定：`providedCapabilities` 必须与 capabilities matrix 对齐，并在 connected/disconnected 两态保持 `group/requiredBy/evidence/supported/nextAction` 一致。该门禁同时固定 `node`（disconnected 回退 `status --json`）与 `node-resolve`（保持命令级 resolve）的恢复边界。
+
+Round 160 对 capability cross-check 测试做结构化去重：`SchemaFactSourceTests` 提取 `capabilityMap(state:)`、`disconnectedCapabilityMap()`、`unavailableServerCapabilityMap()` 与 `assertCapability(...)`，并迁移 `webview provider`、`discovery`、`observe/node schema-capability` 三组门禁到共享 helper。该轮不改 runtime 或 schema 行为，只降低测试维护与扩展成本。
+
+Round 161 把同类 cross-check 扩展到 `webview` 与 `route`：新增测试固定 `webview.providedCapabilities` / `route.providedCapabilities`，并对对应能力在 connected/disconnected 两态做 `group/requiredBy/evidence/supported/nextAction` 一致性校验。这样新增 WebView 子能力时，若只改 schema 或只改 capability matrix，会被门禁直接拦截。
+
+Round 162 把 `schema.providedCapabilities` 的门禁从“连通态存在性”升级为“三态元数据一致性”：对所有 schema capability 在 connected/disconnected/server-unreachable 三态同时校验 `group/requiredBy/evidence`。该门禁用于拦截只在 fallback 分支漂移 taxonomy 或证据映射的回归。
+
+Round 163 在 Round 162 基础上继续把三态门禁扩展到 nextAction 可执行性：所有 schema capability 在 connected/disconnected/server-unreachable 三态都必须保留非空 `group/evidence/nextAction`，且 `nextAction.command/args` 必须能通过 schema-backed argv 校验。该门禁用于拦截 fallback 分支中“字段齐全但 nextAction 脱离 schema”或“只在异常态丢失可执行入口”的回归。
+
+Round 164 继续补 capability 状态机约束：在 connected/disconnected/server-unreachable 三态上统一校验 `supported/reason` 关系（`supported=true -> reason=nil`，`supported=false -> reason!=nil`），并将 unsupported reason 限定在固定词汇表。同时锁定 `press` 与 `harmony-clear-text` 的恒定 unsupported 边界，确保 fallback 分支不会引入新的 reason 语义漂移。
+
+Round 165 进一步把 `reason` 与 `nextAction` 的状态转移耦合起来：对 runtime-reason 能力，若 disconnected 走 `status`，则 server-unreachable 必须升级到 `serve`（long-running）；若 disconnected 已是命令级恢复，则 connected/disconnected/server-unreachable 必须保持同一命令级入口。对 webview-provider-reason 能力，disconnected 与 server-unreachable 均不得退回 `serve/status`，并且两态都要与 connected 保持同一命令级 nextAction。该门禁用于避免“reason 正确但恢复动作错位”的回归。
+
+Round 166 再补 reason 语义与 capability family 的双向约束：不仅要限制“某个 reason 只能出现在哪些 capability”，还要反向保证“某个 capability family 在三态必须使用固定 reason 语义”。这样 reason 文本变更、family 漂移或边界能力误映射都会被直接拦截。
+
+Round 167 继续把 reason family 与 taxonomy 绑定到 `group/requiredBy/evidence`：runtime-reason family 不能混入 `webview-check` workflow 或 webview-provider 证据键；webview-provider family 必须绑定 `webview|route` 分组且证据中必须含 `webview-provider`；`press`/`harmony-clear-text` 继续锁定为 `action` 分组与 `unsupported-envelope + command-schema` 证据集合。该门禁用于防止 reason 映射正确但规划 lane 或证据语义漂移。
+
+Round 168 进一步把 `requiredBy` lane 与 `nextAction.category` 绑定为门禁：`webview-check` lane 只能产出 `observe|verify` 分类，`xcode/project` lane 只能产出 `project|archive`，`smoke-*` capability 固定 `smoke` 分类，`route` lane 只能产出 `observe|verify`。该门禁用于防止 lane 语义与恢复分类出现“看起来都对、组合后不对”的漂移。
+
+Round 169 再把 `group` 与 `nextAction.command` 根命令绑定为门禁：每个 capability group 只允许落在对应根命令集合内（如 `target->target`、`webview->webview`、`route->route`、`xcode->xcode|xcresult|xctrace|coverage` 等），并显式保留 `harmony-ax` 这类 host-side 特例（`group=host` + `root=ax`）。该门禁用于防止 capability 分类与执行入口错位。
+
+Round 170 新增 `requiredBy` lane 与 `nextAction.args` 占位符语义门禁：`route` 与 `smoke-*` 继续保持强模板约束（例如 `route` 必须带 `<expected-url>`，`smoke-ios/smoke-harmony` 必须带各自关键占位符），`webview-check` 则改为 capability 级精确约束（`route-current-url-assert`/`webview-wait` 需要 URL/text 占位符，`webview-bridge-call` 需要 `<method>`，`webview-current-url`/`webview-snapshot`/`webview-events` 不强制 URL/text）。该门禁用于避免 lane 规则过度泛化导致观测型命令误报。
+
+Round 171 新增 capability group 维度的 nextAction 输出模式门禁：除 `serve` 外，所有 capability 恢复命令都必须显式带机器可读出口（`--json`、`--jsonl`、`--format json` 或 `--metadata`），避免 agent 在恢复路径中落回人读文本。对 `observe` 组 `screenshot` 额外锁定 `--metadata + <path.png>`，确保截图步骤始终伴随结构化元数据而非仅文件落盘。
+
+Round 172 新增 `nextAction --output` 参数契约门禁：凡是能力恢复命令包含 `--output`，后继值必须是 `<...>` 占位符，并且 capability 必须落入显式白名单，绑定固定 artifact 类型（例如 `<file.tritonplan>`、`<path.mov>`、`<path.ndjson>`、`<dir.tritonevidence>`、`<path.png>`）。这保证 agent 在 evidence/record/screenshot/sim 相关恢复路径上拿到稳定可推断的输出形状。
+
+Round 173 新增目标选择参数占位符门禁：`nextAction` 的 `--device`、`--simulator`、`--bundle-id` 统一使用 canonical token（`smoke` 使用 `<device>`，其余 `--device` 使用 `<selector>`，`--simulator` 使用 `<udid|booted>`，`--bundle-id` 使用 `<bundle-id>`）。这样 agent 在 target/simulator/bundle 相关恢复路径不需要为同义参数维护多套替换规则。
