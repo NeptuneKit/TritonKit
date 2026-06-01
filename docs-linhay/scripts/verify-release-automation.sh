@@ -53,6 +53,9 @@ grep -q 'swift build --package-path CLI --scratch-path [.]build/cli -c release -
   || fail "ci workflow must build the CLI from CLI/Package.swift"
 grep -q 'skip Homebrew formula rendering for non-tag release asset validation' "${ci_workflow}" \
   || fail "ci workflow must skip Homebrew formula rendering for non-tag release asset validation"
+if grep -q '| rg '\''\^  version: '\''' "${ci_workflow}"; then
+  fail "ci workflow must not require rg when validating skill versions in release jobs"
+fi
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"
 grep -q '[.]agents/tritonkit-skills/public' "${ci_workflow}" || fail "ci workflow must package public skills from .agents/tritonkit-skills/public"
 if grep -q '[.]agents/skills/[$][{]skill_name[}]' "${ci_workflow}"; then

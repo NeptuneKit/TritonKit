@@ -425,7 +425,7 @@ jobs:
             tritonkit-real-project-regression; do
             skill_version_line="$(
               tar -xOf dist/tritonkit-skills.tar.gz "${skill_name}/SKILL.md" \
-                | rg '^  version: '
+                | sed -n 's/^  version: .*/&/p'
             )"
             [[ "${skill_version_line}" == "${expected_skill_version_line}" ]]
           done
