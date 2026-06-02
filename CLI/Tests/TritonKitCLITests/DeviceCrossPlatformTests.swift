@@ -91,6 +91,8 @@ struct DeviceCrossPlatformTests {
         #expect(appOptionNames.contains("--runtime"))
         #expect(app.examples.contains("triton app list --device iphone15 --user-only --json"))
         #expect(app.examples.contains("triton app install --device harmony-a --hap /tmp/Demo.hap --json"))
+        #expect(app.examples.contains(#"triton app go "example://debug""#))
+        #expect(app.examples.contains(#"triton app go "example://debug" --device iphone15"#))
         #expect(app.examples.contains("triton app prefs get DEBUG-mock --device iphone15 --bundle-id com.example.app --json"))
 
         #expect(smokeOptionNames.contains("--device"))

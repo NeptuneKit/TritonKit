@@ -561,9 +561,9 @@ func runtimeCapabilityNextAction(
     case "host-app":
         return TKCLINextAction(command: "app", args: ["list", "--device", "<selector>", "--json"])
     case "host-app-open-url-ready":
-        return TKCLINextAction(command: "app", args: ["open-url", "<url>", "--device", "<selector>", "--wait-ready", "--json"])
+        return TKCLINextAction(command: "app", args: ["go", "<url>", "--device", "<selector>"])
     case "host-app-open-url-snapshot":
-        return TKCLINextAction(command: "app", args: ["open-url", "<url>", "--device", "<selector>", "--wait-ready", "--snapshot", "--json"])
+        return TKCLINextAction(command: "app", args: ["go", "<url>", "--device", "<selector>"])
     case "host-preferences":
         return TKCLINextAction(command: "app", args: ["prefs", "get", "<key>", "--device", "<selector>", "--bundle-id", "<bundle-id>", "--json"])
     case "xcode-discovery", "xcode-build", "xcode-test", "xcode-run":
@@ -1289,12 +1289,9 @@ func buildTaskWorkflowPlan(
                     id: "app-open-url",
                     title: "Open app URL and capture runtime readiness",
                     command: [
-                        "triton", "app", "open-url",
+                        "triton", "app", "go",
                         planValue(request.url, "<url>"),
                         "--device", planValue(request.device, "<device>"),
-                        "--wait-ready",
-                        "--snapshot",
-                        "--json",
                     ].map(shellEscaped).joined(separator: " "),
                     requiresServer: true,
                     requiresTarget: true,

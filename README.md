@@ -363,8 +363,9 @@ triton app install --device booted --app /tmp/Demo.app --json
 triton app uninstall --device booted --bundle-id com.example.app --confirm --json
 triton app launch --device booted --bundle-id com.example.app --json
 triton app terminate --device booted --bundle-id com.example.app --json
+triton app go "example://debug"
+triton app go "example://debug" --device booted
 triton app open-url "example://debug" --device booted --json
-triton app open-url "example://debug" --device booted --wait-ready --snapshot --json
 triton webview current-url --platform ios --json
 triton route assert-current-url "https://example.invalid/path" --platform ios --json
 triton app container --device booted --bundle-id com.example.app --kind data --json
@@ -375,8 +376,8 @@ triton app prefs dump --device booted --bundle-id com.example.app --json
 
 Destructive commands require `--confirm` by default, and `runtime delete` supports `--dry-run` first so agents can inspect the selected runtimes before deleting anything.
 
-`app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
-When an embedded runtime is expected to be connected, add `--wait-ready --snapshot` to make the one-shot result include runtime readiness and an app/route/AX snapshot summary.
+`app go <url>` is the short iOS deep-link smoke entry: it opens the URL, waits for embedded runtime readiness, returns an app/route/AX snapshot summary, and defaults to JSON output. Use `--device <selector>` only when the current/default target is ambiguous.
+`app open-url` is the lower-level host action and only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
 
 Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts:
 

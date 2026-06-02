@@ -709,7 +709,9 @@ struct SchemaFactSourceTests {
         #expect(openURL.primaryNextActionSource == "next-step-step")
         #expect(openURL.steps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence"])
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.workflowCategories == ["app", "assert", "evidence", "target"])
-        #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--wait-ready") == true)
+        #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("triton app go") == true)
+        #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--wait-ready") == false)
+        #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--json") == false)
 
         let webview = buildWorkflowPlan(
             capabilities: capabilities,
@@ -1631,6 +1633,7 @@ struct SchemaFactSourceTests {
     @Test("capability groups keep machine-readable next-action output flags")
     func capabilityGroupsKeepMachineReadableNextActionOutputFlags() {
         let fixtures = capabilityStateFixtures()
+        let schemas = commandSchemaMap()
 
         var missingMachineReadableFlags: [String] = []
         var screenshotObserveMismatches: [String] = []
@@ -1651,7 +1654,10 @@ struct SchemaFactSourceTests {
                 let hasJSONFlag = argSet.contains("--json") || argSet.contains("--jsonl")
                 let hasPlanFormatJSON = args.contains("--format") && args.contains("json")
                 let hasScreenshotMetadata = argSet.contains("--metadata")
-                if !(hasJSONFlag || hasPlanFormatJSON || hasScreenshotMetadata) {
+                let defaultsToJSON = schemas[nextAction.command]?.options.contains {
+                    $0.name == "--format" && $0.defaultValue == "json"
+                } == true
+                if !(hasJSONFlag || hasPlanFormatJSON || hasScreenshotMetadata || defaultsToJSON) {
                     missingMachineReadableFlags.append(context)
                 }
 
@@ -1884,6 +1890,75 @@ struct SchemaFactSourceTests {
         #expect(textFlagPlaceholderMismatches == [])
         #expect(waitTextFlagPlaceholderMismatches == [])
         #expect(assertTextExistsPlaceholderMismatches == [])
+    }
+
+    @Test("capability next-action url placeholders stay canonical")
+    func capabilityNextActionURLPlaceholdersStayCanonical() {
+        let fixtures = capabilityStateFixtures()
+
+        var urlFlagPlaceholderMismatches: [String] = []
+        var openURLFlagPlaceholderMismatches: [String] = []
+        var appOpenURLArgumentMismatches: [String] = []
+        var routeAssertCurrentURLArgumentMismatches: [String] = []
+
+        for fixture in fixtures {
+            for capability in fixture.capabilities {
+                guard let nextAction = capability.nextAction else {
+                    continue
+                }
+                let args = nextAction.args
+                let context = "\(fixture.name):\(capability.name):command=\(nextAction.command):args=\(args)"
+
+                for (index, arg) in args.enumerated() where arg == "--url" {
+                    guard args.indices.contains(index + 1) else {
+                        urlFlagPlaceholderMismatches.append("\(context):missing-url-value")
+                        continue
+                    }
+                    if args[index + 1] != "<url>" {
+                        urlFlagPlaceholderMismatches.append("\(context):expected=<url>:actual=\(args[index + 1])")
+                    }
+                }
+
+                for (index, arg) in args.enumerated() where arg == "--open-url" {
+                    guard args.indices.contains(index + 1) else {
+                        openURLFlagPlaceholderMismatches.append("\(context):missing-open-url-value")
+                        continue
+                    }
+                    if args[index + 1] != "<url>" {
+                        openURLFlagPlaceholderMismatches.append("\(context):expected=<url>:actual=\(args[index + 1])")
+                    }
+                }
+
+                if nextAction.command == "app",
+                   args.first == "open-url" || args.first == "go" {
+                    guard args.indices.contains(1) else {
+                        appOpenURLArgumentMismatches.append("\(context):missing-open-url-argument")
+                        continue
+                    }
+                    if args[1] != "<url>" {
+                        appOpenURLArgumentMismatches.append("\(context):expected=<url>:actual=\(args[1])")
+                    }
+                }
+
+                if nextAction.command == "route",
+                   args.first == "assert-current-url" {
+                    guard args.indices.contains(1) else {
+                        routeAssertCurrentURLArgumentMismatches.append("\(context):missing-expected-url-argument")
+                        continue
+                    }
+                    if args[1] != "<expected-url>" {
+                        routeAssertCurrentURLArgumentMismatches.append(
+                            "\(context):expected=<expected-url>:actual=\(args[1])"
+                        )
+                    }
+                }
+            }
+        }
+
+        #expect(urlFlagPlaceholderMismatches == [])
+        #expect(openURLFlagPlaceholderMismatches == [])
+        #expect(appOpenURLArgumentMismatches == [])
+        #expect(routeAssertCurrentURLArgumentMismatches == [])
     }
 
     @Test("capability names remain unique for agent indexing")
@@ -3742,7 +3817,7 @@ struct SchemaFactSourceTests {
 
         #expect(app.failureCodes.contains("app_launch_failed"))
         #expect(app.failureCodes.contains("host_open_url_failed"))
-        #expect(app.nextCommands.contains("triton app open-url <url> --wait-ready --snapshot --json"))
+        #expect(app.nextCommands.contains("triton app go <url>"))
         expectContract(app, selector: "host.app-action", fields: [
             "ok", "action", "runtimeScope", "target", "selection", "tool", "exitCode",
             "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "note",
