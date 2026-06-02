@@ -10,6 +10,7 @@
 - 新增短入口：`triton app go <url>`。
 - `app go` 默认执行 iOS `open-url + wait-ready + snapshot`，并保持 JSON 为默认输出。
 - `app go` 的 target 选择顺序：显式 `--device/--simulator`、当前 target、唯一 ready iOS target。
+- iOS simulator selector 支持裸 UDID 与 `sim:<udid>`；`sim:` 只是平台消歧前缀，不是必填。
 - `triton plan open-url` 和 capability `nextAction` 首选 `triton app go <url>`，不再推荐长 `open-url --wait-ready --snapshot --json`。
 - `--json` 可省略：schema 默认 `--format=json` 被纳入机器可读门禁，不再强制对默认 JSON 命令追加显式 `--json`。
 
@@ -24,6 +25,12 @@ triton app go "dxy-jobmd://nativejump/test/talentMoreFilter"
 
 ```bash
 triton app go "dxy-jobmd://nativejump/test/talentMoreFilter" --device sim:60667794-96F8-40E6-8664-85538EC4663E
+```
+
+也可以省略 `sim:`：
+
+```bash
+triton app go "dxy-jobmd://nativejump/test/talentMoreFilter" --device 60667794-96F8-40E6-8664-85538EC4663E
 ```
 
 ## 验证

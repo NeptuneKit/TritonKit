@@ -77,6 +77,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton app info --device <selector> --bundle-id <id> --format json`：读取单个已安装 App 元数据；当 `simctl appinfo` 对缺失 bundle 只回显 `CFBundleIdentifier` 时，归一为 `app_info_not_available`。
 - `triton app install --device <selector> --app <path.app> --format json`、`triton app uninstall --device <selector> --bundle-id <id> --confirm --format json`、`triton app launch --device <selector> --bundle-id <id> --format json`、`triton app terminate --device <selector> --bundle-id <id> --format json`：App 生命周期首批入口，返回 host action envelope；`uninstall` 必须显式 `--confirm`，业务就绪仍需继续用 `status/wait/find/assert/prefs` 验证。
 - `triton app go <url> [--device <selector>]`：iOS deep-link smoke 的短入口；默认提交 URL、等待 embedded runtime ready、返回 app/route/AX snapshot summary，并默认 JSON 输出。若当前/default target 唯一，可省略 `--device`。
+- iOS simulator 的 `--device` selector 支持裸 UDID、`sim:<udid>`、`booted`、`current` 与 alias；`sim:` 只是平台消歧前缀，不是必填。
 - `triton app open-url <url> --device <selector> --format json`：低层 host action，只证明 deep link 或 URL 已提交到 simulator；业务完成需继续用 `wait/find/assert`、preferences、route 或 `app go` 验证。
 - `triton app container --device <selector> --bundle-id <id> --kind data --format json`：读取 simulator App container path。
 - `triton app prefs get <key> --device <selector> --bundle-id <id> --format json`、`triton app prefs dump --device <selector> --bundle-id <id> --format json`：读取 App preferences plist，避免 agent 解析 `plutil -p` 人读文本。
