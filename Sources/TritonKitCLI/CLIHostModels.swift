@@ -459,6 +459,17 @@ struct HostSimulatorReadyEvent: Encodable {
     let sourceCommand: String?
 }
 
+struct HostSimulatorScreenshotMetadata: Encodable, Equatable {
+    let path: String
+    let contentType: String
+    let pixelWidth: Int?
+    let pixelHeight: Int?
+    let orientationSemantics: String
+    let normalizationApplied: Bool
+    let normalizationStrategy: String
+    let note: String
+}
+
 struct HostActionOutput: Encodable {
     let ok: Bool
     let action: String
@@ -474,6 +485,7 @@ struct HostActionOutput: Encodable {
     let stdout: String?
     let stderr: String?
     let artifacts: [String]
+    let screenshot: HostSimulatorScreenshotMetadata?
     let note: String?
 
     init(
@@ -491,6 +503,7 @@ struct HostActionOutput: Encodable {
         stdout: String?,
         stderr: String?,
         artifacts: [String],
+        screenshot: HostSimulatorScreenshotMetadata? = nil,
         note: String?
     ) {
         self.ok = ok
@@ -507,6 +520,7 @@ struct HostActionOutput: Encodable {
         self.stdout = stdout
         self.stderr = stderr
         self.artifacts = artifacts
+        self.screenshot = screenshot
         self.note = note
     }
 }
