@@ -175,9 +175,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim runtime delete <runtime-id> --dry-run --json",
                 "triton sim personalization scan-and-personalize --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], screenshot?, note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
@@ -189,6 +189,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             outputContracts: [
                 hostSimulatorListOutputContract(),
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorReadyEvent"),
+                hostSimulatorScreenshotMetadataOutputContract(),
             ],
             failureCodes: [
                 "simulator_not_found",

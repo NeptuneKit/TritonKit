@@ -698,7 +698,27 @@ func hostActionOutputContract(selector: String, model: String) -> TKCommandOutpu
             ("stdout", "String?", false, "Bounded stdout sample"),
             ("stderr", "String?", false, "Bounded stderr sample"),
             ("artifacts", "[String]", true, "Written artifact paths"),
+            ("screenshot", "HostSimulatorScreenshotMetadata?", false, "Simulator screenshot orientation and pixel metadata"),
             ("note", "String?", false, "Boundary or follow-up note"),
+        ])
+    )
+}
+
+func hostSimulatorScreenshotMetadataOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-screenshot-metadata",
+        format: "json",
+        kind: "host-simulator-screenshot-metadata",
+        model: "HostSimulatorScreenshotMetadata",
+        fields: schemaContractFields([
+            ("path", "String", true, "Screenshot artifact path"),
+            ("contentType", "String", true, "Screenshot content type"),
+            ("pixelWidth", "Int?", false, "PNG pixel width when readable"),
+            ("pixelHeight", "Int?", false, "PNG pixel height when readable"),
+            ("orientationSemantics", "String", true, "Screenshot orientation coordinate-space semantics"),
+            ("normalizationApplied", "Bool", true, "Whether TritonKit rotated or otherwise normalized the image"),
+            ("normalizationStrategy", "String", true, "Normalization strategy used for this artifact"),
+            ("note", "String", true, "Human-readable caveat for agents and evidence consumers"),
         ])
     )
 }
