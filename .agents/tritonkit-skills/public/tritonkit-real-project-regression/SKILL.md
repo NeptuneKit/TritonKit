@@ -278,22 +278,44 @@ target 'YourApp' do
 end
 ```
 
-Create a dedicated Debug bootstrap file:
+Create a dedicated Debug bootstrap file. For team apps, prefer an opt-in Debug bootstrap so ordinary Debug builds do not expose the runtime unless the developer explicitly enables it:
 
 ```swift
 // TritonKitDebugBootstrap.swift
 #if DEBUG
+import Foundation
 import TritonKit
 
 enum TritonKitDebugBootstrap {
-    static func start() {
-        TritonKit.shared.start()
+    static func startIfEnabled() {
+        let arguments = ProcessInfo.processInfo.arguments
+        let environment = ProcessInfo.processInfo.environment
+        let isEnabled = arguments.contains("--triton-enabled")
+            || environment["TRITON_ENABLED"] == "1"
+            || UserDefaults.standard.bool(forKey: "TRITON_ENABLED")
+
+        guard isEnabled else { return }
+
+        TritonKit.shared.start { config in
+            config.endpoint = .environment()
+            config.autoReconnect = true
+            config.features = [.hierarchy, .accessibility, .input]
+            config.redaction.secureText = .lengthOnly
+            config.redaction.collectClipboard = false
+            config.redaction.collectNetwork = false
+            config.redaction.collectLogs = false
+            config.appIdentity = .init(name: "YourApp", tags: ["debug", "opt-in"])
+        }
+    }
+
+    static func stop() {
+        TritonKit.shared.stop()
     }
 }
 #endif
 ```
 
-`start()` reads `TRITON_HOST` / `TRITON_PORT` and falls back to `127.0.0.1:19421`. Use `TritonKit.shared.start(.device("192.168.1.20", port: 19421))` when a physical device needs to connect to a Mac LAN address.
+Enable it from Xcode with launch argument `--triton-enabled`, environment variable `TRITON_ENABLED=1`, or Debug-only user default `TRITON_ENABLED=true`. `config.endpoint = .environment()` reads `TRITON_HOST` / `TRITON_PORT` and falls back to `127.0.0.1:19421`. Use `TritonKit.shared.start { config in config.endpoint = .device("192.168.1.20", port: 19421) }` when a physical device needs to connect to a Mac LAN address.
 
 Preferred facade APIs:
 
@@ -348,7 +370,7 @@ Call the bootstrap only from a guarded app entry point:
 
 ```swift
 #if DEBUG
-TritonKitDebugBootstrap.start()
+TritonKitDebugBootstrap.startIfEnabled()
 #endif
 ```
 

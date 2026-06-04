@@ -135,6 +135,7 @@ xcode_simulator_build_if_available() {
 case "$mode" in
   --local)
     run_step "SwiftPM dependency boundary" "$root/docs-linhay/scripts/verify-spm-dependency-boundary.sh"
+    run_step "iOS DEBUG isolation" "$root/docs-linhay/scripts/verify-ios-debug-isolation.sh"
     run_step "Swift tests" swift test
     run_step "Release CLI build" swift build --package-path "$root/CLI" --scratch-path "$root/.build/cli" -c release --product triton
     run_step "Release CLI smoke" release_cli_smoke
@@ -149,6 +150,7 @@ case "$mode" in
   --ci-validate)
     run_step "Validate CI scope classifier" "$root/docs-linhay/scripts/verify-ci-validate-mode.sh"
     run_step "SwiftPM dependency boundary" "$root/docs-linhay/scripts/verify-spm-dependency-boundary.sh"
+    run_step "iOS DEBUG isolation" "$root/docs-linhay/scripts/verify-ios-debug-isolation.sh"
     run_step "Swift tests" swift test
     run_step "Release CLI build" swift build --package-path "$root/CLI" --scratch-path "$root/.build/cli" -c release --product triton
     run_step "Install CocoaPods if needed" ensure_cocoapods

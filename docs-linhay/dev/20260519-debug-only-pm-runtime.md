@@ -28,7 +28,15 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - Then 这些符号必须放在独立 Debug bootstrap 文件中，并由文件级 `#if DEBUG` 包住
 - And AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点
 
-### 场景 4：SwiftPM 接入口径不伪造配置级依赖开关
+### 场景 4：团队 Debug 包默认不暴露 runtime
+
+- Given README、public skill 或真实项目回归指南提供推荐 iOS 接入模板
+- When 业务 App 使用普通 Debug 构建启动
+- Then 模板默认应提供 `startIfEnabled()` 或等价显式开关
+- And 只有 launch argument `--triton-enabled`、环境变量 `TRITON_ENABLED=1` 或 Debug-only user default 命中时才启动 runtime
+- And 开关逻辑仍必须位于文件级 `#if DEBUG` bootstrap 内
+
+### 场景 5：SwiftPM 接入口径不伪造配置级依赖开关
 
 - Given README 或 public skill 提供 SwiftPM 接入说明
 - When 用户要求 Debug-only 接入
@@ -43,7 +51,8 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 3. Release 下 runtime 行为采用 no-op 或明确错误：`connect` / `send` / reconnect / ping no-op，hierarchy 返回空数组，data upload 抛出 `TritonKitRuntimeError.disabledOutsideDebug`，request handler 返回 disabled 错误。
 4. `canImport(UIKit)` 仍只用于保护 UIKit 符号可编译性，不用于决定 runtime 是否启用。
 5. 业务 App 示例必须推荐独立 `TritonKitDebugBootstrap.swift`，整个文件用 `#if DEBUG` 包住，并优先调用 `TritonKit.shared.start()` / `start { config in ... }` facade；CocoaPods 示例必须使用 `:configurations => ['Debug']`。
-6. SwiftPM 示例必须明确不能提供配置级 dependency gating；若需要 Release 不链接 TritonKit，使用独立 Debug-only app target / scheme。
+6. 面向团队 App 的默认模板优先提供 `startIfEnabled()`：通过 `--triton-enabled`、`TRITON_ENABLED=1` 或 Debug-only user default 显式启用，避免普通 Debug 包默认暴露 runtime。
+7. SwiftPM 示例必须明确不能提供配置级 dependency gating；若需要 Release 不链接 TritonKit，使用独立 Debug-only app target / scheme。
 
 ## 验证
 
@@ -51,4 +60,5 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - `swift test -c release` 覆盖 Release 分支，确认 `TritonKit.isRuntimeEnabled == false`。
 - `swift build -c release --target TritonKit` 确认 Package Manager 的 Release library target 可编译。
 - `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` 确认 CLI release 产物不受影响。
-- 文档、skill 与 `Examples/TritonKitDemo` 自检确认所有 app-side 接入示例都采用文件级 `#if DEBUG`、CocoaPods Debug-only 配置，并明确 SwiftPM 的 Debug-only target / source-level fallback 策略。
+- `docs-linhay/scripts/verify-ios-debug-isolation.sh` 校验 `Examples/TritonKitDemo` 的 app-side 接入示例采用文件级 `#if DEBUG`，并确认 runtime 内部 Release no-op 防线存在。
+- 文档、skill 与 `Examples/TritonKitDemo` 自检确认所有 app-side 接入示例都采用文件级 `#if DEBUG`、CocoaPods Debug-only 配置、推荐显式 opt-in 开关，并明确 SwiftPM 的 Debug-only target / source-level fallback 策略。
