@@ -933,6 +933,59 @@ private func hostDeviceSelectionRequest(
     )
 }
 
+private func resolveDefaultIOSHostDeviceSelection(
+    device: String?,
+    simulator: String?,
+    name: String?,
+    runtime: String?,
+    state: String?,
+    ready: Bool
+) throws -> HostDeviceSelectionResult {
+    let explicitDevice = device ?? simulator
+    if explicitDevice != nil {
+        return try resolveHostDeviceSelection(
+            request: hostDeviceSelectionRequest(
+                device: explicitDevice,
+                platform: .ios,
+                defaultPlatform: .ios,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready
+            ),
+            hdc: "hdc"
+        )
+    }
+
+    do {
+        return try resolveHostDeviceSelection(
+            request: hostDeviceSelectionRequest(
+                device: "current",
+                platform: .ios,
+                defaultPlatform: .ios,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready
+            ),
+            hdc: "hdc"
+        )
+    } catch HostDeviceSelectionError.targetNotFound(let target) where target == "current" {
+        return try resolveHostDeviceSelection(
+            request: hostDeviceSelectionRequest(
+                device: nil,
+                platform: .ios,
+                defaultPlatform: .ios,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready
+            ),
+            hdc: "hdc"
+        )
+    }
+}
+
 func ensureHostDeviceSelectorCompatibility(device: String?, simulator: String?, target: String?) throws {
     if device != nil && (simulator != nil || target != nil) {
         throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --simulator or Harmony --target.")
@@ -978,6 +1031,7 @@ struct HostApp: AsyncParsableCommand {
             HostAppUninstall.self,
             HostAppLaunch.self,
             HostAppTerminate.self,
+            HostAppGo.self,
             HostAppOpenURL.self,
             HostAppContainer.self,
             HostAppPrefs.self,
@@ -1396,6 +1450,71 @@ struct HostAppTerminate: AsyncParsableCommand {
             }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct HostAppGo: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "go", abstract: "Open a URL and return runtime readiness plus snapshot")
+
+    @Argument(help: "URL to open") var url: String
+    @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
+    @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
+    @Option(help: "Device name filter, for example iPhone 15") var name: String?
+    @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
+    @Option(help: "Target state filter, for example booted") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
+    @Option(name: .customLong("runtime-target"), help: "iOS embedded runtime target id from `triton list`") var runtimeTarget: String = TKLocalTargetID
+    @Option(name: .customLong("snapshot-include"), help: "Comma-separated snapshot sections") var snapshotInclude: String = "app,scene,route,ax,geometry"
+    @Option(name: .customLong("max-ax-nodes"), help: "Maximum AX nodes in the runtime snapshot") var maxAXNodes: Int?
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Runtime wait timeout in seconds") var timeout: Double = 20
+    @Option(help: "Runtime wait polling interval in seconds") var interval: Double = 0.5
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            try ensureHostDeviceSelectorCompatibility(device: device, simulator: simulator, target: nil)
+            let selection = try resolveDefaultIOSHostDeviceSelection(
+                device: device,
+                simulator: simulator,
+                name: name,
+                runtime: runtime,
+                state: state,
+                ready: ready
+            )
+            let include = snapshotInclude.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+            let summary = try await runIOSAppOpenURLFlow(options: IOSAppOpenURLFlowOptions(
+                simulator: selection.target.target,
+                runtimeTarget: runtimeTarget,
+                url: url,
+                waitReady: true,
+                snapshot: true,
+                snapshotInclude: include,
+                maxAXNodes: maxAXNodes,
+                host: host,
+                port: port,
+                timeout: timeout,
+                interval: interval
+            ))
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(summary))
+            case .text:
+                print("status: \(summary.status.rawValue)")
+                print("source: \(summary.hostAction.sourceCommand)")
+                if let ready = summary.ready {
+                    print("runtime: connected=\(ready.connected) hierarchy=\(ready.hierarchyCacheState ?? "-")")
+                }
+                if let snapshot = summary.snapshot {
+                    print("snapshot: app=\(snapshot.appName ?? "-") axNodes=\(snapshot.axNodeCount ?? 0)")
+                }
+            }
+        } catch {
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
     }
 }

@@ -15,6 +15,35 @@ Before filing a public issue, redact private project and personal information. D
 | Build, test, run, and diagnose an unknown Apple repo | [CLI Integration Guide](#cli-integration-guide) | Use `triton xcode`, `triton xcresult`, and artifact commands before raw `xcodebuild`. |
 | Prepare a HarmonyOS / DevEco Emulator | [Harmony App Integration Guide](#harmony-app-integration-guide) | Host-side HDC adapter works without embedded runtime. |
 | Validate a Harmony embedded runtime | [Harmony App Integration Guide](#harmony-app-integration-guide) | Use package id / import path `tritonkit` and `--runtime-base-url` direct checks while the SDK is standalone. |
+| Add optional Codex / agent workflows | [Optional Agent Skills](#optional-agent-skills) | Install only the public skills; internal skills are for TritonKit repository maintenance. |
+
+## Optional Agent Skills
+
+TritonKit ships optional Codex / agent skills for AI-assisted adoption, feedback, and local emulator regression work. They are not required to use the iOS runtime, Harmony runtime notes, or macOS `triton` CLI.
+
+External users and adopting projects should install only the public skills from `.agents/tritonkit-skills/public/` or from the release asset `tritonkit-skills.tar.gz`. Current public skills are:
+
+- `tritonkit-dev-feedback`: collect adoption feedback, missing capabilities, confusing behavior, and documentation gaps as actionable TritonKit issues.
+- `tritonkit-emulator-cli-takeover`: guide local CLI takeover of iOS Simulator, Android Emulator, and HarmonyOS / DevEco Emulator workflows.
+- `tritonkit-real-project-regression`: validate TritonKit against real app projects while isolating external repo changes and preserving machine-readable evidence.
+
+Do not install `.agents/tritonkit-skills/internal/` into adopting projects by default. Internal skills are repo-maintenance, governance, planning, supervision, and implementation workflows for TritonKit maintainers, and release packaging excludes them.
+
+If you install from a source checkout, copy only the public skill directories into your Codex / agent skills directory:
+
+```sh
+# Replace AGENT_SKILLS_DIR with your Codex / agent's configured skills directory.
+mkdir -p "$AGENT_SKILLS_DIR"
+cp -R .agents/tritonkit-skills/public/* "$AGENT_SKILLS_DIR"/
+```
+
+If you install from a release asset, extract the public skill bundle into that same configured skills directory:
+
+```sh
+tar -xzf tritonkit-skills.tar.gz -C "$AGENT_SKILLS_DIR"
+```
+
+Restart the Codex / agent session after installation so the new skills are discovered.
 
 ## iOS Embedded Runtime Integration Guide
 
@@ -363,8 +392,9 @@ triton app install --device booted --app /tmp/Demo.app --json
 triton app uninstall --device booted --bundle-id com.example.app --confirm --json
 triton app launch --device booted --bundle-id com.example.app --json
 triton app terminate --device booted --bundle-id com.example.app --json
+triton app go "example://debug"
+triton app go "example://debug" --device booted
 triton app open-url "example://debug" --device booted --json
-triton app open-url "example://debug" --device booted --wait-ready --snapshot --json
 triton webview current-url --platform ios --json
 triton route assert-current-url "https://example.invalid/path" --platform ios --json
 triton app container --device booted --bundle-id com.example.app --kind data --json
@@ -375,8 +405,9 @@ triton app prefs dump --device booted --bundle-id com.example.app --json
 
 Destructive commands require `--confirm` by default, and `runtime delete` supports `--dry-run` first so agents can inspect the selected runtimes before deleting anything.
 
-`app open-url` only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
-When an embedded runtime is expected to be connected, add `--wait-ready --snapshot` to make the one-shot result include runtime readiness and an app/route/AX snapshot summary.
+`app go <url>` is the short iOS deep-link smoke entry: it opens the URL, waits for embedded runtime readiness, returns an app/route/AX snapshot summary, and defaults to JSON output. Use `--device <selector>` only when the current/default target is ambiguous.
+For iOS simulator selectors, `sim:` is optional. `--device 60667794-96F8-40E6-8664-85538EC4663E` and `--device sim:60667794-96F8-40E6-8664-85538EC4663E` both resolve to the same simulator; keep `sim:` only when you want explicit platform disambiguation.
+`app open-url` is the lower-level host action and only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
 
 Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts:
 
