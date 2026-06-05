@@ -8,6 +8,8 @@
 4. fake adb 测试先红后绿，真实 emulator smoke 至少覆盖 list、wait-ready、screenshot、install、open-url、evidence。
 5. 不新增 Web/Wails UI，不支持真机或远端 agent。
 
+逐步执行清单见 [20260605-android-emulator-execution-breakdown-v01.md](20260605-android-emulator-execution-breakdown-v01.md)。本文件保留里程碑视角，执行时以 breakdown 中的 Step 0-17 作为 checklist。
+
 ## M0. 契约设计和红灯测试
 
 - 定义 `HostDevicePlatform.android`、`android:<serial>` target id、Android 附加字段和统一 error code。

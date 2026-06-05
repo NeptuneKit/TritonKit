@@ -98,6 +98,8 @@ Android 首期只接本机 Android Emulator，底层工具是 Android SDK / plat
 
 详细实施计划见 [20260605-android-emulator-support-plan-v01.md](plans/20260605-android-emulator-support-plan-v01.md)。
 
+逐步执行拆解见 [20260605-android-emulator-execution-breakdown-v01.md](plans/20260605-android-emulator-execution-breakdown-v01.md)。
+
 ## 交付物
 
 1. Android host adapter runtime / model / command 分层。
