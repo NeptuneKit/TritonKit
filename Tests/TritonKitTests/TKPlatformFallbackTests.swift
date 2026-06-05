@@ -7,9 +7,9 @@ import Darwin
 
 @Suite
 struct TKPlatformFallbackTests {
-    @Test("runtime is enabled only in DEBUG builds")
+    @Test("runtime is enabled only when the package debug flag is defined")
     func runtimeEnabledFlagMatchesBuildConfiguration() {
-        #if DEBUG
+        #if TRITONKIT_RUNTIME_ENABLED
         #expect(TritonKit.isRuntimeEnabled)
         #else
         #expect(!TritonKit.isRuntimeEnabled)
@@ -126,8 +126,12 @@ struct TKPlatformFallbackTests {
             config.autoReconnect = false
         })
 
+        #if TRITONKIT_RUNTIME_ENABLED
         #expect(started)
         try await Task.sleep(nanoseconds: 500_000_000)
+        #else
+        #expect(!started)
+        #endif
         #expect(kit.state == .disconnected)
         #expect(observedErrors.isEmpty)
     }

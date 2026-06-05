@@ -238,20 +238,16 @@ SwiftPM:
 https://github.com/NeptuneKit/TritonKit.git
 ```
 
-Add the `TritonKit` product to the iOS app target. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the library's Release no-op behavior.
+Add only the `TritonKit` product to the iOS app target. `TritonKitShared` is an internal shared-contract target pulled in transitively; app integrations should not select or import it directly. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the package runtime guard.
 
-SwiftPM / Xcode package product dependencies do not have a CocoaPods-style `:configurations => ['Debug']` switch. The supported SwiftPM path is source-level Debug isolation with the dedicated bootstrap file below, plus TritonKit's Release no-op runtime. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
+SwiftPM supports configuration-scoped build settings, so TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps the embedded runtime no-op in Release. SwiftPM / Xcode package product dependencies still do not have a CocoaPods-style `:configurations => ['Debug']` switch: the package product may remain attached to the target even though the runtime is disabled. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
 
-CocoaPods during development, restricted to Debug configurations:
+CocoaPods during development, restricted to Debug configurations. Do not add `TritonKitShared` explicitly; `TritonKit` resolves it transitively.
 
 ```ruby
 target 'YourApp' do
   use_frameworks!
 
-  pod 'TritonKitShared',
-      :git => 'https://github.com/NeptuneKit/TritonKit.git',
-      :branch => 'main',
-      :configurations => ['Debug']
   pod 'TritonKit',
       :git => 'https://github.com/NeptuneKit/TritonKit.git',
       :branch => 'main',
@@ -476,7 +472,7 @@ If more than one iOS Simulator app connects to the same `triton serve`, use `tri
 
 - For physical devices or local-network testing, add `NSLocalNetworkUsageDescription` to the app target if iOS prompts for local network access.
 - If App Transport Security blocks cleartext local development traffic, use a debug-only ATS exception. Do not ship broad ATS exceptions in production.
-- Release builds should compile, but `TritonKit.isRuntimeEnabled` is false and the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
+- Release package builds should compile, but `TritonKit.isRuntimeEnabled` is false because `TRITONKIT_RUNTIME_ENABLED` is not defined; the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
 ## Harmony App Integration Guide
 

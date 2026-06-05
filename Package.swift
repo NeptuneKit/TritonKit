@@ -17,7 +17,10 @@ let package = Package(
         .target(
             name: "TritonKit",
             dependencies: ["TritonKitShared"],
-            path: "Sources/TritonKit"
+            path: "Sources/TritonKit",
+            swiftSettings: [
+                .define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))
+            ]
         ),
         .testTarget(
             name: "TritonKitSharedTests",
@@ -27,7 +30,10 @@ let package = Package(
         .testTarget(
             name: "TritonKitTests",
             dependencies: ["TritonKit"],
-            path: "Tests/TritonKitTests"
+            path: "Tests/TritonKitTests",
+            swiftSettings: [
+                .define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))
+            ]
         ),
     ]
 )

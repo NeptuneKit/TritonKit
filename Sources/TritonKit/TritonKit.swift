@@ -167,7 +167,7 @@ public class TritonKit {
     }
 
     public static var isRuntimeEnabled: Bool {
-        #if DEBUG
+        #if TRITONKIT_RUNTIME_ENABLED
         true
         #else
         false

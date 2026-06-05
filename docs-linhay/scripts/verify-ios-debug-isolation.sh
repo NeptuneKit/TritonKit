@@ -11,12 +11,14 @@ fail() {
 bootstrap="$root/Examples/TritonKitDemo/TritonKitDemo/TritonKitDebugBootstrap.swift"
 app_entry="$root/Examples/TritonKitDemo/TritonKitDemo/App.swift"
 runtime="$root/Sources/TritonKit/TritonKit.swift"
+package_manifest="$root/Package.swift"
 
 test -f "$bootstrap" || fail "missing Demo app debug bootstrap file"
 test -f "$app_entry" || fail "missing Demo app entry file"
 test -f "$runtime" || fail "missing TritonKit runtime source"
+test -f "$package_manifest" || fail "missing Package.swift"
 
-python3 - "$bootstrap" "$app_entry" "$runtime" <<'PY'
+python3 - "$bootstrap" "$app_entry" "$runtime" "$package_manifest" <<'PY'
 import pathlib
 import re
 import sys
@@ -24,6 +26,7 @@ import sys
 bootstrap = pathlib.Path(sys.argv[1])
 app_entry = pathlib.Path(sys.argv[2])
 runtime = pathlib.Path(sys.argv[3])
+package_manifest = pathlib.Path(sys.argv[4])
 root = runtime.parents[2]
 
 failures: list[str] = []
@@ -83,8 +86,9 @@ for needle in ("import TritonKit", "TritonKit.shared", "TritonKitDebugBootstrap"
             rel = path.relative_to(root)
             fail(f"{rel} references {needle!r} outside #if DEBUG at lines {bad_lines}")
 
-# Library-level Release no-op remains the second safety net; it does not replace app-side isolation.
+# Package-level Release no-op remains the second safety net; it does not replace app-side isolation.
 runtime_text = runtime.read_text()
+package_text = package_manifest.read_text()
 readme = root / "README.md"
 public_skills = [
     root / ".agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md",
@@ -92,14 +96,23 @@ public_skills = [
 ]
 for doc in [readme, *public_skills]:
     text = doc.read_text()
-    for needle in ("startIfEnabled", "--triton-enabled", "TRITON_ENABLED", "#if DEBUG"):
+    for needle in ("TRITONKIT_RUNTIME_ENABLED", "startIfEnabled", "--triton-enabled", "TRITON_ENABLED", "#if DEBUG"):
         if needle not in text:
             fail(f"{doc.relative_to(root)} must document recommended opt-in DEBUG bootstrap with {needle}")
+    if "pod 'TritonKitShared'" in text or 'pod "TritonKitShared"' in text:
+        fail(f"{doc.relative_to(root)} must not ask users to add TritonKitShared explicitly")
+    if "pod 'TritonKit'" not in text and 'pod "TritonKit"' not in text:
+        fail(f"{doc.relative_to(root)} must show user-facing CocoaPods integration with TritonKit")
+
+if 'define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))' not in package_text:
+    fail("Package.swift must define TRITONKIT_RUNTIME_ENABLED for the TritonKit target in Debug configuration")
 
 if "public static var isRuntimeEnabled" not in runtime_text:
     fail("Sources/TritonKit/TritonKit.swift must expose isRuntimeEnabled")
-if not re.search(r"public static var isRuntimeEnabled:\s*Bool\s*\{\s*#if DEBUG\s*true\s*#else\s*false\s*#endif\s*\}", runtime_text, re.S):
-    fail("TritonKit.isRuntimeEnabled must be controlled directly by #if DEBUG/#else")
+if not re.search(r"public static var isRuntimeEnabled:\s*Bool\s*\{\s*#if TRITONKIT_RUNTIME_ENABLED\s*true\s*#else\s*false\s*#endif\s*\}", runtime_text, re.S):
+    fail("TritonKit.isRuntimeEnabled must be controlled by #if TRITONKIT_RUNTIME_ENABLED/#else")
+if re.search(r"public static var isRuntimeEnabled:\s*Bool\s*\{\s*#if DEBUG", runtime_text, re.S):
+    fail("TritonKit.isRuntimeEnabled must not bind directly to bare #if DEBUG")
 if "guard Self.isRuntimeEnabled else" not in runtime_text:
     fail("runtime start/connect/send paths must guard Self.isRuntimeEnabled")
 

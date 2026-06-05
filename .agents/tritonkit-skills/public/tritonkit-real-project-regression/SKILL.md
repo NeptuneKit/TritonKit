@@ -27,7 +27,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - If the task needs iOS embedded runtime access, use the iOS package path below.
    - If the task needs Harmony embedded runtime access, use the Harmony package/source path below and keep provider semantics opt-in.
    - SwiftPM or CocoaPods as requested; CocoaPods examples must use `:configurations => ['Debug']`.
-   - For SwiftPM, do not claim configuration-scoped package dependencies exist. Use source-level `#if DEBUG` isolation, or create a separate Debug-only app target/scheme if Release must not link TritonKit at all.
+   - For SwiftPM, distinguish build settings from product dependencies: TritonKit uses the package `TRITONKIT_RUNTIME_ENABLED` Debug compile flag, but SwiftPM still does not provide CocoaPods-style configuration-scoped product dependencies. Keep source-level `#if DEBUG` isolation, or create a separate Debug-only app target/scheme if Release must not link TritonKit at all.
    - Put all app-side TritonKit code in a dedicated iOS file such as `TritonKitDebugBootstrap.swift`.
    - Wrap the entire file in `#if DEBUG`, including `import TritonKit` and `TritonKit.shared.start(...)`.
    - Call the bootstrap only from a `#if DEBUG` branch in AppDelegate, SceneDelegate, or SwiftUI `onAppear`.
@@ -257,20 +257,16 @@ SwiftPM:
 https://github.com/NeptuneKit/TritonKit.git
 ```
 
-Add the `TritonKit` product to the iOS app target. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the library's Release no-op behavior.
+Add only the `TritonKit` product to the iOS app target. `TritonKitShared` is an internal shared-contract target pulled in transitively; app integrations should not select or import it directly. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the package runtime guard.
 
-SwiftPM / Xcode package product dependencies do not have a CocoaPods-style `:configurations => ['Debug']` switch. The supported SwiftPM path is source-level Debug isolation with the dedicated bootstrap file below, plus TritonKit's Release no-op runtime. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
+SwiftPM supports configuration-scoped build settings, so TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps the embedded runtime no-op in Release. SwiftPM / Xcode package product dependencies still do not have a CocoaPods-style `:configurations => ['Debug']` switch: the package product may remain attached to the target even though the runtime is disabled. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
 
-CocoaPods during development:
+CocoaPods during development. Do not add `TritonKitShared` explicitly; `TritonKit` resolves it transitively:
 
 ```ruby
 target 'YourApp' do
   use_frameworks!
 
-  pod 'TritonKitShared',
-      :git => 'https://github.com/NeptuneKit/TritonKit.git',
-      :branch => 'main',
-      :configurations => ['Debug']
   pod 'TritonKit',
       :git => 'https://github.com/NeptuneKit/TritonKit.git',
       :branch => 'main',

@@ -29,7 +29,7 @@
 
 对外接入文档默认推荐 facade API：`TritonKit.shared.start()`、`.local(port:)`、`.environment()`、`.device(_:port:)`、`start { config in ... }`、`stop()`、`onStateChange`、`onError`。业务 App 侧仍必须把 `import TritonKit` 与启动代码放在独立 Debug bootstrap 文件的文件级 `#if DEBUG` 内。
 
-SwiftPM 没有 CocoaPods-style Debug-only dependency switch；默认策略是源码级 `#if DEBUG` 隔离 + Release no-op runtime。若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
+SwiftPM 支持 configuration-scoped build settings / compile conditions，TritonKit 通过 package `TRITONKIT_RUNTIME_ENABLED` Debug compile flag 控制 runtime 启用；但 SwiftPM 仍没有 CocoaPods-style Debug-only product dependency switch。默认策略是 package Debug compile flag + 源码级 `#if DEBUG` 隔离 + Release no-op runtime。若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
 
 复用入口：
 
