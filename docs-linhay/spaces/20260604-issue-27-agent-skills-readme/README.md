@@ -7,7 +7,7 @@ GitHub Issue #27 指出：根 README 已覆盖 iOS embedded runtime、macOS CLI 
 ## 目标
 
 - 在根 README 的集成/安装说明中增加简短的 Optional Agent Skills 说明。
-- 明确外部用户只安装 `TritonKit.skills/` 下的 public skills。
+- 明确外部用户安装整个 `TritonKit.skills/` bundle，而不是三个独立 public skill 目录。
 - 明确 `.agents/skills/` 仅用于 TritonKit 仓库维护，不应作为外部项目默认安装内容。
 - 提醒安装后重启 Codex / agent session 以重新发现 skills。
 

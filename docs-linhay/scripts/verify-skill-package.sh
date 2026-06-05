@@ -17,11 +17,12 @@ metadata="${tmp_dir}/package.json"
 
 test -f "${package}"
 tar -tzf "${package}" | sort > "${tmp_dir}/contents.txt"
-grep -q '^BUILD_INFO[.]json$' "${tmp_dir}/contents.txt"
+grep -q '^TritonKit[.]skills/BUILD_INFO[.]json$' "${tmp_dir}/contents.txt"
+grep -q '^TritonKit[.]skills/README[.]md$' "${tmp_dir}/contents.txt"
 
 for skill_name in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonkit-real-project-regression; do
-  grep -q "^${skill_name}/SKILL[.]md$" "${tmp_dir}/contents.txt"
-  tar -xOf "${package}" "${skill_name}/SKILL.md" > "${tmp_dir}/${skill_name}.skill.md"
+  grep -q "^TritonKit[.]skills/${skill_name}/SKILL[.]md$" "${tmp_dir}/contents.txt"
+  tar -xOf "${package}" "TritonKit.skills/${skill_name}/SKILL.md" > "${tmp_dir}/${skill_name}.skill.md"
   grep -q '^  version: 9.8.7-dev+abcdef0$' "${tmp_dir}/${skill_name}.skill.md"
 done
 
@@ -30,7 +31,7 @@ if grep -q '[.]DS_Store' "${tmp_dir}/contents.txt"; then
   exit 1
 fi
 
-tar -xOf "${package}" BUILD_INFO.json > "${tmp_dir}/BUILD_INFO.json"
+tar -xOf "${package}" TritonKit.skills/BUILD_INFO.json > "${tmp_dir}/BUILD_INFO.json"
 python3 - "${tmp_dir}/BUILD_INFO.json" "${metadata}" <<'PY'
 import json
 import pathlib
@@ -46,11 +47,30 @@ expected = [
 ]
 
 assert build_info["name"] == "tritonkit-skills"
+assert build_info["bundlePath"] == "TritonKit.skills/"
 assert build_info["version"] == "9.8.7-dev+abcdef0"
 assert build_info["releaseTag"] == "v9.8.7"
 assert [skill["name"] for skill in build_info["skills"]] == expected
 assert all(skill["version"] == "9.8.7-dev+abcdef0" for skill in build_info["skills"])
 assert build_info == payload["buildInfo"]
 PY
+
+install_dir="${tmp_dir}/agent-skills"
+mkdir -p "${install_dir}/tritonkit-dev-feedback" \
+  "${install_dir}/tritonkit-emulator-cli-takeover" \
+  "${install_dir}/tritonkit-real-project-regression"
+"${root}/docs-linhay/scripts/install-public-skills.sh" "${install_dir}" --from-tar "${package}" >/tmp/tritonkit-install-skills.log
+test -d "${install_dir}/TritonKit.skills"
+test -f "${install_dir}/TritonKit.skills/tritonkit-dev-feedback/SKILL.md"
+test ! -e "${install_dir}/tritonkit-dev-feedback"
+test ! -e "${install_dir}/tritonkit-emulator-cli-takeover"
+test ! -e "${install_dir}/tritonkit-real-project-regression"
+
+source_install_dir="${tmp_dir}/agent-skills-source"
+mkdir -p "${source_install_dir}/tritonkit-dev-feedback"
+"${root}/docs-linhay/scripts/install-public-skills.sh" "${source_install_dir}" >/tmp/tritonkit-install-source-skills.log
+test -d "${source_install_dir}/TritonKit.skills"
+test -f "${source_install_dir}/TritonKit.skills/tritonkit-real-project-regression/SKILL.md"
+test ! -e "${source_install_dir}/tritonkit-dev-feedback"
 
 echo "skill package verification passed"

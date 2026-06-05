@@ -7,6 +7,7 @@ ci_workflow="${root}/.github/workflows/ci.yml"
 tap_workflow="${root}/.github/workflows/update-homebrew-tap.yml"
 package_skill_script="${root}/docs-linhay/scripts/package-public-skills.py"
 verify_skill_package_script="${root}/docs-linhay/scripts/verify-skill-package.sh"
+install_skill_script="${root}/docs-linhay/scripts/install-public-skills.sh"
 public_skill_root="${root}/TritonKit.skills"
 internal_skill_root="${root}/.agents/skills"
 
@@ -18,6 +19,7 @@ fail() {
 test -x "${release_script}" || fail "missing executable docs-linhay/scripts/release.sh"
 test -x "${package_skill_script}" || fail "missing executable docs-linhay/scripts/package-public-skills.py"
 test -x "${verify_skill_package_script}" || fail "missing executable docs-linhay/scripts/verify-skill-package.sh"
+test -x "${install_skill_script}" || fail "missing executable docs-linhay/scripts/install-public-skills.sh"
 
 grep -q 'TAP_GITHUB_TOKEN' "${release_script}" || fail "release script must check TAP_GITHUB_TOKEN"
 grep -q 'NeptuneKit/homebrew-tap' "${release_script}" || fail "release script must check the default tap repo"
@@ -62,7 +64,7 @@ if grep -q '| rg '\''\^  version: '\''' "${ci_workflow}"; then
 fi
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"
 grep -q 'package-public-skills[.]py' "${ci_workflow}" || fail "ci workflow must package skills through package-public-skills.py"
-grep -q 'BUILD_INFO[.]json' "${ci_workflow}" || fail "ci workflow must validate packaged skill BUILD_INFO.json"
+grep -q 'TritonKit[.]skills/BUILD_INFO[.]json' "${ci_workflow}" || fail "ci workflow must validate packaged skill bundle BUILD_INFO.json"
 grep -q 'TritonKit[.]skills' "${package_skill_script}" || fail "package script must package public skills from TritonKit.skills"
 if grep -q '[.]agents/skills/[$][{]skill_name[}]' "${ci_workflow}" \
   || grep -q '[.]agents/tritonkit-skills' "${ci_workflow}"; then
@@ -81,6 +83,7 @@ for internal_skill in tritonkit-autonomous-cruise tritonkit-host-simulator-takeo
   fi
 done
 grep -q 'tritonkit-skills[.]tar[.]gz' "${ci_workflow}" || fail "ci workflow must publish a combined tritonkit-skills.tar.gz"
+grep -q 'TritonKit[.]skills/[$][{]skill_name[}]/SKILL[.]md' "${ci_workflow}" || fail "ci workflow must validate skills under the TritonKit.skills bundle directory"
 grep -q 'build-cli-arm64:' "${ci_workflow}" || fail "ci workflow must build arm64 CLI as an independent release gate"
 grep -q 'needs: build-cli-arm64' "${ci_workflow}" || fail "release asset packaging must depend on arm64 only"
 grep -q 'publish-x86-release-asset:' "${ci_workflow}" || fail "ci workflow must backfill the x86_64 release asset"

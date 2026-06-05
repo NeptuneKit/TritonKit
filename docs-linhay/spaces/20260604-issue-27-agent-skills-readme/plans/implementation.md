@@ -5,8 +5,8 @@
 - Given 外部采用者阅读根 README
 - When 查找 TritonKit 可选 Codex / agent skills 安装说明
 - Then README 展示 `Optional Agent Skills` 章节
-- And 明确 public skill 源路径 `TritonKit.skills/` 与 release asset `tritonkit-skills.tar.gz`
-- And 列出当前 public skills：`tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression`
+- And 明确 public skill 源路径与安装单元是整个 `TritonKit.skills/` bundle，并说明 release asset `tritonkit-skills.tar.gz` 解压后生成该目录
+- And 列出 bundle 内当前 public skills：`tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression`
 - And 说明 `.agents/skills/` 仅用于 TritonKit repo maintenance，不默认安装到 adopting projects
 - And 提醒安装后重启 Codex / agent session
 

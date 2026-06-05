@@ -74,13 +74,14 @@ def build_info(repo_root: Path, work_dir: Path, version: str, release_tag: str |
         skills.append(
             {
                 "name": skill_name,
-                "path": f"{skill_name}/",
+                "path": f"TritonKit.skills/{skill_name}/",
                 "version": read_skill_version(skill_file),
             }
         )
 
     return {
         "name": "tritonkit-skills",
+        "bundlePath": "TritonKit.skills/",
         "version": version,
         "releaseTag": release_tag,
         "git": git_info(repo_root),
@@ -101,7 +102,11 @@ def package_public_skills(
         output.unlink()
 
     with tempfile.TemporaryDirectory(prefix="tritonkit-skills.") as tmp:
-        work_dir = Path(tmp)
+        work_dir = Path(tmp) / "TritonKit.skills"
+        work_dir.mkdir()
+        readme = skill_root / "README.md"
+        if readme.is_file():
+            shutil.copy2(readme, work_dir / "README.md")
         for skill_name in PUBLIC_SKILLS:
             source = skill_root / skill_name
             if not (source / "SKILL.md").is_file():
@@ -114,9 +119,7 @@ def package_public_skills(
         (work_dir / "BUILD_INFO.json").write_text(json.dumps(info, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
         with tarfile.open(output, "w:gz") as archive:
-            archive.add(work_dir / "BUILD_INFO.json", arcname="BUILD_INFO.json")
-            for skill_name in PUBLIC_SKILLS:
-                archive.add(work_dir / skill_name, arcname=skill_name)
+            archive.add(work_dir, arcname="TritonKit.skills")
 
     return {"output": str(output), "buildInfo": info}
 

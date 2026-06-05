@@ -21,7 +21,7 @@ Before filing a public issue, redact private project and personal information. D
 
 TritonKit ships optional Codex / agent skills for AI-assisted adoption, feedback, and local emulator regression work. They are not required to use the iOS runtime, Harmony runtime notes, or macOS `triton` CLI.
 
-External users and adopting projects should install only the public skills from `TritonKit.skills/` or from the release asset `tritonkit-skills.tar.gz`. Current public skills are:
+External users and adopting projects should install the public skill bundle as one directory named `TritonKit.skills/` inside the configured Codex / agent skills directory. Do not copy the three public skills as separate top-level directories. Current public skills inside the bundle are:
 
 - `tritonkit-dev-feedback`: collect adoption feedback, missing capabilities, confusing behavior, and documentation gaps as actionable TritonKit issues.
 - `tritonkit-emulator-cli-takeover`: guide local CLI takeover of iOS Simulator, Android Emulator, and HarmonyOS / DevEco Emulator workflows.
@@ -29,18 +29,34 @@ External users and adopting projects should install only the public skills from 
 
 Do not install `.agents/skills/` into adopting projects by default. Those skills are repo-maintenance, governance, planning, supervision, and implementation workflows for TritonKit maintainers, and release packaging excludes them.
 
-If you install from a source checkout, copy only the public skill directories into your Codex / agent skills directory:
+If you previously installed the three public skills as separate top-level directories, remove them before installing this bundle:
 
 ```sh
 # Replace AGENT_SKILLS_DIR with your Codex / agent's configured skills directory.
-mkdir -p "$AGENT_SKILLS_DIR"
-cp -R TritonKit.skills/* "$AGENT_SKILLS_DIR"/
+rm -rf "$AGENT_SKILLS_DIR"/tritonkit-dev-feedback \
+       "$AGENT_SKILLS_DIR"/tritonkit-emulator-cli-takeover \
+       "$AGENT_SKILLS_DIR"/tritonkit-real-project-regression
 ```
 
-If you install from a release asset, extract the public skill bundle into that same configured skills directory:
+If you install from a source checkout, copy the whole bundle directory:
+
+```sh
+mkdir -p "$AGENT_SKILLS_DIR"
+rm -rf "$AGENT_SKILLS_DIR"/TritonKit.skills
+cp -R TritonKit.skills "$AGENT_SKILLS_DIR"/TritonKit.skills
+```
+
+If you install from a release asset, extract the bundle into that same configured skills directory:
 
 ```sh
 tar -xzf tritonkit-skills.tar.gz -C "$AGENT_SKILLS_DIR"
+```
+
+You can also use the repository installer, which removes the old separate-skill layout and installs the bundle:
+
+```sh
+docs-linhay/scripts/install-public-skills.sh "$AGENT_SKILLS_DIR"
+docs-linhay/scripts/install-public-skills.sh "$AGENT_SKILLS_DIR" --from-tar tritonkit-skills.tar.gz
 ```
 
 Restart the Codex / agent session after installation so the new skills are discovered.
@@ -609,7 +625,7 @@ CI writes the release version into both the CLI and packaged skills:
 
 - `triton version --json` reports the CI-resolved version.
 - Packaged `SKILL.md` files include `metadata.version` in front matter.
-- Packaged skills also include `BUILD_INFO.json` with the release version, optional tag, source commit, dirty flag, build time, and included skill list.
+- Packaged skills are rooted at `TritonKit.skills/` and include `TritonKit.skills/BUILD_INFO.json` with the release version, optional tag, source commit, dirty flag, build time, and included skill list.
 - Tag builds use the tag without the leading `v`, for example `v1.2.3` becomes `1.2.3`.
 - Non-tag builds use a development version with the current short commit SHA.
 

@@ -9,7 +9,7 @@ TritonKit-owned skills were previously split under `.agents/tritonkit-skills/pub
 - Move public, externally distributed skills to `TritonKit.skills/`.
 - Move TritonKit repository development skills to real directories under `.agents/skills/`.
 - Remove `.agents/tritonkit-skills/` as the canonical source directory.
-- Keep release packaging limited to public skills and keep internal skills out of `tritonkit-skills.tar.gz`.
+- Keep release packaging limited to the public `TritonKit.skills/` bundle and keep internal skills out of `tritonkit-skills.tar.gz`.
 - Reference `harmony-next.skills` for a script-driven skill package flow with package build metadata, while preserving TritonKit's combined tar.gz release asset.
 
 ## Non-goals
@@ -25,6 +25,7 @@ TritonKit-owned skills were previously split under `.agents/tritonkit-skills/pub
 Given the release workflow packages `tritonkit-skills.tar.gz`
 When it copies public skill sources
 Then it reads from `TritonKit.skills/<skill-name>/`
+And the package extracts to a top-level `TritonKit.skills/` directory
 And it includes `tritonkit-dev-feedback`, `tritonkit-emulator-cli-takeover`, and `tritonkit-real-project-regression`.
 
 ### Scenario 2: repository development skills are local agent skills
@@ -46,8 +47,15 @@ And README, AGENTS, CI classification, and release automation docs point to the 
 Given CI packages public TritonKit skills
 When it creates `tritonkit-skills.tar.gz`
 Then packaging is performed by `docs-linhay/scripts/package-public-skills.py`
-And the package contains `BUILD_INFO.json`
+And the package contains `TritonKit.skills/BUILD_INFO.json`
 And the package remains a combined tar.gz rather than `.skill.zip` or per-skill tarballs.
+
+### Scenario 5: upgrade removes old separate public skills
+
+Given a user previously installed the three public skills as top-level directories
+When they upgrade to the `TritonKit.skills/` bundle
+Then docs explain that `tritonkit-dev-feedback`, `tritonkit-emulator-cli-takeover`, and `tritonkit-real-project-regression` should be removed first
+And `docs-linhay/scripts/install-public-skills.sh` performs that cleanup before installing the bundle.
 
 ## Acceptance
 

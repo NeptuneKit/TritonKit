@@ -60,6 +60,7 @@ docs-linhay/scripts/verify-release-automation.sh|\
 docs-linhay/scripts/verify-homebrew-formula.sh|\
 docs-linhay/scripts/verify-version-stamping.sh|\
 docs-linhay/scripts/package-public-skills.py|\
+docs-linhay/scripts/install-public-skills.sh|\
 docs-linhay/scripts/verify-skill-package.sh|\
 docs-linhay/scripts/render-homebrew-formula.sh|\
 docs-linhay/scripts/resolve-ci-version.sh|\

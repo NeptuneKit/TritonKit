@@ -1,8 +1,22 @@
 # TritonKit Public Skills
 
-This directory is the canonical source for TritonKit skills distributed to external users and adopting projects.
+This directory is the canonical source and install bundle for TritonKit skills distributed to external users and adopting projects.
 
-Release automation packages these directories into `tritonkit-skills.tar.gz`:
+Install this directory itself into the configured Codex / agent skills directory:
+
+```sh
+cp -R TritonKit.skills "$AGENT_SKILLS_DIR"/TritonKit.skills
+```
+
+If upgrading from the old layout, delete these old top-level directories from the agent skills directory before installing `TritonKit.skills/`:
+
+- `tritonkit-dev-feedback`
+- `tritonkit-emulator-cli-takeover`
+- `tritonkit-real-project-regression`
+
+Release automation packages this directory into `tritonkit-skills.tar.gz`; extracting that asset into the agent skills directory creates `TritonKit.skills/`.
+
+The bundle contains:
 
 - `tritonkit-dev-feedback`
 - `tritonkit-emulator-cli-takeover`

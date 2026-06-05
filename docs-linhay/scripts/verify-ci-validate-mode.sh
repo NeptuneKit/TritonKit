@@ -36,6 +36,7 @@ expect_mode contracts .github/workflows/ci.yml
 expect_mode contracts docs-linhay/scripts/ci-validate-mode.sh
 expect_mode contracts docs-linhay/scripts/verify-release-automation.sh README.md
 expect_mode contracts docs-linhay/scripts/package-public-skills.py
+expect_mode contracts docs-linhay/scripts/install-public-skills.sh
 expect_mode contracts docs-linhay/scripts/verify-skill-package.sh
 
 expect_mode podkit Sources/TritonKit/TritonKit.swift
