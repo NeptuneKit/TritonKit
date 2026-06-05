@@ -87,8 +87,8 @@
 - `TritonKit.podspec`
 - `TritonKitShared.podspec`
 - `README.md`
-- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
+- `TritonKit.skills/tritonkit-dev-feedback/SKILL.md`
+- `TritonKit.skills/tritonkit-real-project-regression/SKILL.md`
 - `docs-linhay/dev/20260519-debug-only-pm-runtime.md`
 - `docs-linhay/dev/20260519-cocoapods-support.md`
 - `docs-linhay/dev/20260519-ios-integration-guide.md`

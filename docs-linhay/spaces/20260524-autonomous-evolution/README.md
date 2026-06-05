@@ -36,7 +36,7 @@
 4. 证据优先落 filesystem portable artifact：JSON / JSONL / manifest / screenshot / logs。
 5. 大文件和长任务输出只返回 path、bytes、truncation、summary，不内嵌到 CLI JSON。
 6. 每次有关键决策、里程碑或风险结论，写入 `docs-linhay/memory/YYYY-MM-DD.md` 并执行 qmd 同步。
-7. 若发现可复用流程，优先更新 `.agents/tritonkit-skills/`；只有 repo-wide 稳定规则才更新 `AGENTS.md`。
+7. 若发现可复用流程，按边界优先更新 `TritonKit.skills/` 或 `.agents/skills/`；只有 repo-wide 稳定规则才更新 `AGENTS.md`。
 
 ## 停止条件
 

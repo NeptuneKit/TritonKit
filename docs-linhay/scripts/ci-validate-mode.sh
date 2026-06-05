@@ -10,7 +10,7 @@ is_docs_only_path() {
     README.md|AGENTS.md|MEMORY.md)
       return 0
       ;;
-    .agents/tritonkit-skills/*|.agents/skills/*)
+    TritonKit.skills/*|.agents/skills/*)
       return 0
       ;;
     docs-linhay/scripts/*)
@@ -59,6 +59,8 @@ docs-linhay/scripts/verify-ci-validate-mode.sh|\
 docs-linhay/scripts/verify-release-automation.sh|\
 docs-linhay/scripts/verify-homebrew-formula.sh|\
 docs-linhay/scripts/verify-version-stamping.sh|\
+docs-linhay/scripts/package-public-skills.py|\
+docs-linhay/scripts/verify-skill-package.sh|\
 docs-linhay/scripts/render-homebrew-formula.sh|\
 docs-linhay/scripts/resolve-ci-version.sh|\
 docs-linhay/scripts/write-cli-version.sh|\

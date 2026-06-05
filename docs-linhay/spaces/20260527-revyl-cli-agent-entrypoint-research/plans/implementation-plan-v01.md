@@ -50,7 +50,7 @@
 目标：
 
 - 新增 `triton skill list/show/export/install`。
-- skill catalog 从 `.agents/tritonkit-skills/public/` 建模，不依赖手写散落逻辑。
+- skill catalog 从 `TritonKit.skills/` 建模，不依赖手写散落逻辑。
 - 支持 Codex / Claude Code / Cursor 项目级安装。
 
 建议 TDD：
@@ -82,7 +82,7 @@ swift test --package-path CLI --scratch-path .build/cli --filter Skill
 文档同步：
 
 - README：安装/刷新 public skills。
-- `.agents/tritonkit-skills/public/*/SKILL.md`：必要时补最新命令示例。
+- `TritonKit.skills/*/SKILL.md`：必要时补最新命令示例。
 - `docs-linhay/dev/agent-entrypoint-engineering.md`：记录 skill catalog 契约。
 
 ### M2. Schema workflows 与错误码

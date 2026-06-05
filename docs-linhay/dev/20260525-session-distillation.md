@@ -28,7 +28,7 @@
 - `Sources/TritonKitCLI/CLISchemaRuntime.swift`
 - `CLI/Tests/TritonKitCLITests/DeviceCrossPlatformTests.swift`
 - `docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`
-- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
+- `TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
 
 ### release 收尾分层
 
@@ -54,7 +54,7 @@ x86_64 CLI 资产由 Intel runner 后补上传并再次刷新 checksum / tap。�
 
 - `docs-linhay/scripts/release.sh`
 - `docs-linhay/scripts/gh-run-summary.sh`
-- `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
+- `.agents/skills/tritonkit-ops-governance/SKILL.md`
 - `docs-linhay/memory/YYYY-MM-DD.md`
 
 ## 本轮不纳入的内容

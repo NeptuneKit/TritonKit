@@ -373,28 +373,17 @@ jobs:
         run: |
           set -euo pipefail
 
-          skills=(
-            "tritonkit-dev-feedback"
-            "tritonkit-emulator-cli-takeover"
-            "tritonkit-real-project-regression"
-          )
-
           mkdir -p dist
-          skills_work_dir="$(mktemp -d)"
-
-          for skill_name in "${skills[@]}"; do
-            skill_dir=".agents/tritonkit-skills/public/${skill_name}"
-            test -f "${skill_dir}/SKILL.md"
-            cp -R "${skill_dir}" "${skills_work_dir}/${skill_name}"
-            docs-linhay/scripts/stamp-skill-version.sh \
-              "${{ steps.version.outputs.version }}" \
-              "${skills_work_dir}/${skill_name}/SKILL.md"
-          done
-
-          (
-            cd "${skills_work_dir}"
-            tar -czf "${GITHUB_WORKSPACE}/dist/tritonkit-skills.tar.gz" "${skills[@]}"
+          package_args=(
+            docs-linhay/scripts/package-public-skills.py
+            --version "${{ steps.version.outputs.version }}"
+            --output dist/tritonkit-skills.tar.gz
+            --json
           )
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
+            package_args+=(--release-tag "${GITHUB_REF_NAME}")
+          fi
+          "${package_args[@]}"
 
       - name: Generate checksums
         shell: bash
@@ -429,6 +418,23 @@ jobs:
             )"
             [[ "${skill_version_line}" == "${expected_skill_version_line}" ]]
           done
+          tar -xOf dist/tritonkit-skills.tar.gz BUILD_INFO.json > /tmp/tritonkit-skills-build-info.json
+          python3 - <<'PY'
+          import json
+
+          with open("/tmp/tritonkit-skills-build-info.json", encoding="utf-8") as handle:
+              build_info = json.load(handle)
+
+          expected_skills = [
+              "tritonkit-dev-feedback",
+              "tritonkit-emulator-cli-takeover",
+              "tritonkit-real-project-regression",
+          ]
+          assert build_info["name"] == "tritonkit-skills"
+          assert build_info["version"] == "${{ steps.version.outputs.version }}"
+          assert [skill["name"] for skill in build_info["skills"]] == expected_skills
+          assert all(skill["version"] == "${{ steps.version.outputs.version }}" for skill in build_info["skills"])
+          PY
 
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
             formula_tag="${GITHUB_REF_NAME}"

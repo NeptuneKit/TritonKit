@@ -21,20 +21,20 @@ Before filing a public issue, redact private project and personal information. D
 
 TritonKit ships optional Codex / agent skills for AI-assisted adoption, feedback, and local emulator regression work. They are not required to use the iOS runtime, Harmony runtime notes, or macOS `triton` CLI.
 
-External users and adopting projects should install only the public skills from `.agents/tritonkit-skills/public/` or from the release asset `tritonkit-skills.tar.gz`. Current public skills are:
+External users and adopting projects should install only the public skills from `TritonKit.skills/` or from the release asset `tritonkit-skills.tar.gz`. Current public skills are:
 
 - `tritonkit-dev-feedback`: collect adoption feedback, missing capabilities, confusing behavior, and documentation gaps as actionable TritonKit issues.
 - `tritonkit-emulator-cli-takeover`: guide local CLI takeover of iOS Simulator, Android Emulator, and HarmonyOS / DevEco Emulator workflows.
 - `tritonkit-real-project-regression`: validate TritonKit against real app projects while isolating external repo changes and preserving machine-readable evidence.
 
-Do not install `.agents/tritonkit-skills/internal/` into adopting projects by default. Internal skills are repo-maintenance, governance, planning, supervision, and implementation workflows for TritonKit maintainers, and release packaging excludes them.
+Do not install `.agents/skills/` into adopting projects by default. Those skills are repo-maintenance, governance, planning, supervision, and implementation workflows for TritonKit maintainers, and release packaging excludes them.
 
 If you install from a source checkout, copy only the public skill directories into your Codex / agent skills directory:
 
 ```sh
 # Replace AGENT_SKILLS_DIR with your Codex / agent's configured skills directory.
 mkdir -p "$AGENT_SKILLS_DIR"
-cp -R .agents/tritonkit-skills/public/* "$AGENT_SKILLS_DIR"/
+cp -R TritonKit.skills/* "$AGENT_SKILLS_DIR"/
 ```
 
 If you install from a release asset, extract the public skill bundle into that same configured skills directory:
@@ -609,6 +609,7 @@ CI writes the release version into both the CLI and packaged skills:
 
 - `triton version --json` reports the CI-resolved version.
 - Packaged `SKILL.md` files include `metadata.version` in front matter.
+- Packaged skills also include `BUILD_INFO.json` with the release version, optional tag, source commit, dirty flag, build time, and included skill list.
 - Tag builds use the tag without the leading `v`, for example `v1.2.3` becomes `1.2.3`.
 - Non-tag builds use a development version with the current short commit SHA.
 

@@ -8,10 +8,10 @@
 
 复用入口：
 
-- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
-- `.agents/tritonkit-skills/internal/tritonkit-host-simulator-takeover/SKILL.md`
-- `.agents/tritonkit-skills/internal/tritonkit-xcode-workflow-takeover/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
+- `TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
+- `.agents/skills/tritonkit-host-simulator-takeover/SKILL.md`
+- `.agents/skills/tritonkit-xcode-workflow-takeover/SKILL.md`
+- `TritonKit.skills/tritonkit-real-project-regression/SKILL.md`
 
 ### Xcode workflow P0
 
@@ -23,7 +23,7 @@
 
 - `docs-linhay/spaces/20260520-xcode-workflow-takeover/README.md`
 - `docs-linhay/spaces/20260520-xcode-workflow-takeover/technical-design.md`
-- `.agents/tritonkit-skills/internal/tritonkit-xcode-workflow-takeover/SKILL.md`
+- `.agents/skills/tritonkit-xcode-workflow-takeover/SKILL.md`
 
 ### iOS 接入 API 与 DEBUG 边界
 
@@ -35,8 +35,8 @@ SwiftPM 支持 configuration-scoped build settings / compile conditions，Triton
 
 - `README.md`
 - `docs-linhay/dev/20260519-ios-integration-guide.md`
-- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
+- `TritonKit.skills/tritonkit-dev-feedback/SKILL.md`
+- `TritonKit.skills/tritonkit-real-project-regression/SKILL.md`
 
 ### SwiftPM iOS / CLI 依赖边界
 
@@ -53,7 +53,7 @@ SwiftPM 的 external dependencies 是 package-level 入口，不能只靠 target
 - `docs-linhay/dev/20260521-spm-ios-cli-dependency-boundary.md`
 - `docs-linhay/scripts/verify-spm-dependency-boundary.sh`
 - `AGENTS.md`
-- `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
+- `.agents/skills/tritonkit-ops-governance/SKILL.md`
 
 ### iOS / Harmony / CLI 接入指南分流
 
@@ -68,9 +68,9 @@ SwiftPM 的 external dependencies 是 package-level 入口，不能只靠 target
 
 - `README.md`
 - `docs-linhay/dev/20260521-ios-harmony-cli-integration-guides.md`
-- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
+- `TritonKit.skills/tritonkit-dev-feedback/SKILL.md`
+- `TritonKit.skills/tritonkit-real-project-regression/SKILL.md`
+- `TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
 
 ### CI validate 优化
 
@@ -111,7 +111,7 @@ Triton CLI 侧补充 `--runtime-base-url`，用于在 standalone embedded HTTP r
 
 - `docs-linhay/spaces/20260521-harmony-tritonkit-sdk-alignment/README.md`
 - `docs-linhay/dev/20260520-harmony-collector-contract.md`
-- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
+- `TritonKit.skills/tritonkit-dev-feedback/SKILL.md`
 
 ### Harmony direct runtime smoke 分层
 
@@ -129,7 +129,7 @@ Triton CLI 侧补充 `--runtime-base-url`，用于在 standalone embedded HTTP r
 
 - `docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`
 - `docs-linhay/scripts/verify-harmony-runtime-emulator-smoke.sh`
-- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
+- `TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
 
 ### 会话收尾隔离
 
@@ -137,8 +137,8 @@ Triton CLI 侧补充 `--runtime-base-url`，用于在 standalone embedded HTTP r
 
 复用入口：
 
-- `.agents/tritonkit-skills/internal/tritonkit-session-skill-distill/SKILL.md`
-- `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
+- `.agents/skills/tritonkit-session-skill-distill/SKILL.md`
+- `.agents/skills/tritonkit-ops-governance/SKILL.md`
 
 ## 本轮不纳入的内容
 

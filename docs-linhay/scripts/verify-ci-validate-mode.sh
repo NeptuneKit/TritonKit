@@ -21,8 +21,8 @@ expect_mode docs \
   AGENTS.md \
   docs-linhay/memory/2026-05-21.md \
   docs-linhay/dev/ai-cli-readable-control.md \
-  .agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md \
-  .agents/skills/tritonkit-dev-feedback
+  TritonKit.skills/tritonkit-dev-feedback/SKILL.md \
+  .agents/skills/tritonkit-ops-governance/SKILL.md
 
 expect_mode swift Sources/TritonKitCLI/TritonKitCLI.swift
 expect_mode swift Tests/TritonKitSharedTests/TKCLITransportModelsTests.swift
@@ -35,6 +35,8 @@ expect_mode swift Sources/TritonKitCLI/TritonKitCLI.swift .github/workflows/ci.y
 expect_mode contracts .github/workflows/ci.yml
 expect_mode contracts docs-linhay/scripts/ci-validate-mode.sh
 expect_mode contracts docs-linhay/scripts/verify-release-automation.sh README.md
+expect_mode contracts docs-linhay/scripts/package-public-skills.py
+expect_mode contracts docs-linhay/scripts/verify-skill-package.sh
 
 expect_mode podkit Sources/TritonKit/TritonKit.swift
 expect_mode podkit TritonKit.podspec

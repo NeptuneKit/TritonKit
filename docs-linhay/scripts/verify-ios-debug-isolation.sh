@@ -91,8 +91,8 @@ runtime_text = runtime.read_text()
 package_text = package_manifest.read_text()
 readme = root / "README.md"
 public_skills = [
-    root / ".agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md",
-    root / ".agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md",
+    root / "TritonKit.skills/tritonkit-dev-feedback/SKILL.md",
+    root / "TritonKit.skills/tritonkit-real-project-regression/SKILL.md",
 ]
 for doc in [readme, *public_skills]:
     text = doc.read_text()

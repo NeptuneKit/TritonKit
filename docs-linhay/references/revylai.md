@@ -36,7 +36,7 @@ RevylAI 公开材料把 CLI 放在产品入口中心：`doctor`、`init`、`buil
 TritonKit 已坚持 CLI/JSON/JSONL-first，这一方向应继续保持。可吸收的是 CLI onboarding 的完整性：
 
 - `triton doctor` 不只检查 server/runtime，也检查 Xcode、simulator、HDC、Homebrew 安装、版本和常见权限。
-- `triton schema` 与 public skills 之外，后续可考虑 `triton skill list/install/export`，让外部 agent 不需要手动复制 `.agents/tritonkit-skills/public/`。
+- `triton schema` 与 public skills 之外，后续可考虑 `triton skill list/install/export`，让外部 agent 不需要手动复制 `TritonKit.skills/`。
 - `triton workflow` / `.tritonplan` 需要保持可读、可验证、可复跑，而不是只做一次性命令拼接。
 
 ### 2. Agent skill 是产品能力的一部分

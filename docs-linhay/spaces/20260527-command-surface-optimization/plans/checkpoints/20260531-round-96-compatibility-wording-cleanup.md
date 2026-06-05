@@ -24,7 +24,7 @@
 
 - `swift test --package-path CLI --filter DeviceCrossPlatformTests`：通过，16 个 Swift Testing 用例通过。
 - `swift test --package-path CLI --filter SchemaFactSourceTests`：通过，77 个 Swift Testing 用例通过。
-- `rg -n 'compatibility path|kept for compatibility|legacy/logging alias|compatibility with older scripts|legacy selector' README.md Sources CLI .agents/tritonkit-skills/public docs-linhay/spaces/20260527-command-surface-optimization -g '!**/.build/**'`：无命中。
+- `rg -n 'compatibility path|kept for compatibility|legacy/logging alias|compatibility with older scripts|legacy selector' README.md Sources CLI TritonKit.skills docs-linhay/spaces/20260527-command-surface-optimization -g '!**/.build/**'`：无命中。
 
 ## 风险
 

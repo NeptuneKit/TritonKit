@@ -56,7 +56,7 @@
 15. 当用户明确说“整理”且语境指向刚完成的一轮工作会话时，默认触发一次会话沉淀流程：先按 `tritonkit-session-skill-distill` 提炼可复用模式，再按是否 repo-wide 决定是否同步更新 `AGENTS.md`、`docs-linhay/dev/`、`docs-linhay/memory/`。
 16. 多份独立需求稿并行推进时，默认按“一个需求单元一个 `space`，必要时再配一个同 key 的 branch 与 `worktree`”组织，不按个人姓名或临时阶段单独命名工作目录。
 17. 当用户明确要求“由 subagent 去做、主控 agent 负责监督”时，主控 agent 必须承担需求边界、任务拆分、集成、验收、文档与最终完成判断，不得在“代码已改完”但截图、实机验证、文档写回等验收环节仍未完成时提前停止。
-18. GitHub CI / Release 产物最终必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和对外项目级 skill 包，至少覆盖 `.agents/tritonkit-skills/public/tritonkit-dev-feedback`、`.agents/tritonkit-skills/public/tritonkit-real-project-regression` 与 `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流、真实项目回归流程和本机模拟器 CLI 接管流程。
+18. GitHub CI / Release 产物最终必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和对外项目级 skill 包，至少覆盖 `TritonKit.skills/tritonkit-dev-feedback`、`TritonKit.skills/tritonkit-real-project-regression` 与 `TritonKit.skills/tritonkit-emulator-cli-takeover`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流、真实项目回归流程和本机模拟器 CLI 接管流程。对外 skill 包必须通过 `docs-linhay/scripts/package-public-skills.py` 生成，并包含 `BUILD_INFO.json`。
 19. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后先以 arm64 CLI 包、skill 包和 checksum manifest 创建 GitHub Release 并更新 tap formula，x86_64 包由 Intel runner 后补上传并再次刷新 checksum / tap，避免 x86 runner 阻塞 Apple Silicon 发布。
 20. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 由 package 内部 Debug compile flag `TRITONKIT_RUNTIME_ENABLED` 控制；Debug package build 启用，Release package build 必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
 21. 业务 App 侧 iOS 接入文件必须使用独立 Debug bootstrap 文件，并用文件级 `#if DEBUG` 包住 `import TritonKit` 与 `TritonKit.shared.start()` / `start { config in ... }` facade；AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点，不能只依赖 package 内部 Release no-op。只有需要自定义 delegate 或消息路由时才使用低层 `delegate` / `connect(host:port:)`。
@@ -133,7 +133,7 @@ Git `worktree` 治理：
 
 项目级 skills：
 
-1. TritonKit-owned skill 源码统一放在 `.agents/tritonkit-skills/`：`public/` 只放对外发布并进入 `tritonkit-skills.tar.gz` 的 skill，`internal/` 只放 repo 治理、实现、监督和规划用 skill；`.agents/skills/` 只保留 symlink 作为本地 agent 发现入口，不作为 release packaging 源。
+1. 对外发布的 TritonKit skills 源码统一放在 `TritonKit.skills/`，并进入 `tritonkit-skills.tar.gz`；项目开发、repo 治理、实现、监督和规划用 skill 统一放在 `.agents/skills/`，作为本地 agent 发现入口，且不作为 release packaging 源。
 2. 涉及 CLI、HTTP 服务分层、Wails Web、桌面壳、路由、中间件、配置或接口测试时，优先使用 `tritonkit-http-service-engineering`，并确认业务控制能力优先落在 CLI/HTTP，而不是 Web/Wails。
 3. 当前没有活跃 Wails/Web UI 或默认设计语言；涉及恢复前端页面、设计稿或交互验收时，先使用 `tritonkit-design-system` 确认空白基线与重新建 space 的边界。
 4. 涉及 `space` 创建、命名、README 模板或截图归档时，优先使用 `tritonkit-ops-governance`。

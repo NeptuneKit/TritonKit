@@ -6,7 +6,7 @@
 
 ## 沉淀结果
 
-- 新增内部 skill：`.agents/tritonkit-skills/internal/tritonkit-autonomous-cruise/SKILL.md`。
+- 新增内部 skill：`.agents/skills/tritonkit-autonomous-cruise/SKILL.md`。
 - 本地发现入口：`.agents/skills/tritonkit-autonomous-cruise`。
 - 触发语义：长期计划、自动巡航、巡航进化、提前巡航、无人值守推进、离开一段时间让 agent 自主进化、巡航收尾。
 

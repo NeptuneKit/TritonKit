@@ -67,7 +67,7 @@ TritonKit 的差异化边界保持不变：
 
 ## Skill catalog 契约
 
-`triton skill` 应从 `.agents/tritonkit-skills/public/` 建立 catalog。
+`triton skill` 应从 `TritonKit.skills/` 建立 catalog。
 
 建议字段：
 

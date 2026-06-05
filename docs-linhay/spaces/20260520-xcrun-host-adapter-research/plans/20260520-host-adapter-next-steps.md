@@ -21,5 +21,5 @@
 ## 文档写回
 
 - 新增命令后同步 README、`docs-linhay/dev/ai-cli-readable-control.md`。
-- 更新 `.agents/tritonkit-skills/public/tritonkit-real-project-regression`，把真实项目回归中的裸 `xcrun simctl openurl/get_app_container` 替换成 `triton app ...`。
+- 更新 `TritonKit.skills/tritonkit-real-project-regression`，把真实项目回归中的裸 `xcrun simctl openurl/get_app_container` 替换成 `triton app ...`。
 - 若引入 `SKProcessRunner`，新增 dev 文档说明依赖边界：只用于 CLI/macOS host adapter，不进入 embedded runtime。

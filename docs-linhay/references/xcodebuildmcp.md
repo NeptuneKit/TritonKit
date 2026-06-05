@@ -99,6 +99,6 @@ XcodeBuildMCP 是 Sentry 维护的 Model Context Protocol server 和 CLI，用�
 - Space：`docs-linhay/spaces/20260520-xcode-workflow-takeover/README.md`
 - 技术设计：`docs-linhay/spaces/20260520-xcode-workflow-takeover/technical-design.md`
 - 深度技术调研：`docs-linhay/spaces/20260520-xcode-workflow-takeover/deep-technical-research-20260520.md`
-- 内部项目 skill：`.agents/tritonkit-skills/internal/tritonkit-xcode-workflow-takeover/SKILL.md`
+- 内部项目 skill：`.agents/skills/tritonkit-xcode-workflow-takeover/SKILL.md`
 
 采纳结论：能进入真实开发/回归闭环的能力尽量吃进 `triton`，包括 discovery、session defaults、build/test/run、xcresult、coverage、logs、SwiftPM、device/macOS workflow、LLDB 和必要 host UI；不适合作为 TritonKit 产品契约的部分不吃，包括 XcodeBuildMCP tool name、Node runtime 必依赖、MCP workflow gating、Xcode IDE Bridge 作为首期依赖，以及会替代 embedded runtime 语义的 UI 自动化。

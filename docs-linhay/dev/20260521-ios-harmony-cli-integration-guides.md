@@ -54,8 +54,8 @@
 ## 变更位置
 
 - `README.md`
-- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
-- `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
+- `TritonKit.skills/tritonkit-dev-feedback/SKILL.md`
+- `TritonKit.skills/tritonkit-real-project-regression/SKILL.md`
+- `TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
+- `.agents/skills/tritonkit-ops-governance/SKILL.md`
 - `docs-linhay/memory/2026-05-21.md`

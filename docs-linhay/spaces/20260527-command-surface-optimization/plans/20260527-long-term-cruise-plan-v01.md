@@ -276,7 +276,7 @@ README、public skills、真实项目回归指南和 dev 文档全部改成新�
 ## 下一轮建议
 ```
 
-checkpoint 只记录稳定事实，不记录临时猜测；如果发现可复用流程，优先更新 `.agents/tritonkit-skills/`，只有 repo-wide 规则才进入 `AGENTS.md`。
+checkpoint 只记录稳定事实，不记录临时猜测；如果发现可复用流程，按边界优先更新 `TritonKit.skills/` 或 `.agents/skills/`，只有 repo-wide 规则才进入 `AGENTS.md`。
 
 ## 优先级规则
 

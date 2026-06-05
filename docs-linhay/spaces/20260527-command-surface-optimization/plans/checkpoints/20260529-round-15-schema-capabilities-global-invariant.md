@@ -22,7 +22,7 @@
 - `CLI/Tests/TritonKitCLITests/SchemaFactSourceTests.swift`
 - `docs-linhay/dev/agent-facing-cli-information-architecture.md`
 - `docs-linhay/dev/ai-cli-readable-control.md`
-- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
+- `TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
 
 ## 验证
 

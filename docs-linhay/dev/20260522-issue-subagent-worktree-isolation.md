@@ -39,8 +39,8 @@
 
 ## 复用入口
 
-- `.agents/tritonkit-skills/internal/tritonkit-subagent-supervision/SKILL.md`
-- `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
+- `.agents/skills/tritonkit-subagent-supervision/SKILL.md`
+- `.agents/skills/tritonkit-ops-governance/SKILL.md`
 - `docs-linhay/scripts/check-docs.sh`
 - `docs-linhay/scripts/qmd-sync.sh`
 

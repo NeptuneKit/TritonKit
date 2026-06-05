@@ -8,7 +8,7 @@
 
 新增项目级 skill：
 
-- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
+- `TritonKit.skills/tritonkit-real-project-regression/SKILL.md`
 
 触发场景：
 

@@ -5,8 +5,10 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 release_script="${root}/docs-linhay/scripts/release.sh"
 ci_workflow="${root}/.github/workflows/ci.yml"
 tap_workflow="${root}/.github/workflows/update-homebrew-tap.yml"
-public_skill_root="${root}/.agents/tritonkit-skills/public"
-internal_skill_root="${root}/.agents/tritonkit-skills/internal"
+package_skill_script="${root}/docs-linhay/scripts/package-public-skills.py"
+verify_skill_package_script="${root}/docs-linhay/scripts/verify-skill-package.sh"
+public_skill_root="${root}/TritonKit.skills"
+internal_skill_root="${root}/.agents/skills"
 
 fail() {
   echo "release automation verification failed: $*" >&2
@@ -14,6 +16,8 @@ fail() {
 }
 
 test -x "${release_script}" || fail "missing executable docs-linhay/scripts/release.sh"
+test -x "${package_skill_script}" || fail "missing executable docs-linhay/scripts/package-public-skills.py"
+test -x "${verify_skill_package_script}" || fail "missing executable docs-linhay/scripts/verify-skill-package.sh"
 
 grep -q 'TAP_GITHUB_TOKEN' "${release_script}" || fail "release script must check TAP_GITHUB_TOKEN"
 grep -q 'NeptuneKit/homebrew-tap' "${release_script}" || fail "release script must check the default tap repo"
@@ -57,17 +61,21 @@ if grep -q '| rg '\''\^  version: '\''' "${ci_workflow}"; then
   fail "ci workflow must not require rg when validating skill versions in release jobs"
 fi
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"
-grep -q '[.]agents/tritonkit-skills/public' "${ci_workflow}" || fail "ci workflow must package public skills from .agents/tritonkit-skills/public"
-if grep -q '[.]agents/skills/[$][{]skill_name[}]' "${ci_workflow}"; then
-  fail "ci workflow must not package release skills from .agents/skills discovery shims"
+grep -q 'package-public-skills[.]py' "${ci_workflow}" || fail "ci workflow must package skills through package-public-skills.py"
+grep -q 'BUILD_INFO[.]json' "${ci_workflow}" || fail "ci workflow must validate packaged skill BUILD_INFO.json"
+grep -q 'TritonKit[.]skills' "${package_skill_script}" || fail "package script must package public skills from TritonKit.skills"
+if grep -q '[.]agents/skills/[$][{]skill_name[}]' "${ci_workflow}" \
+  || grep -q '[.]agents/tritonkit-skills' "${ci_workflow}"; then
+  fail "ci workflow must not package release skills from internal skills or retired roots"
 fi
 for public_skill in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonkit-real-project-regression; do
   test -f "${public_skill_root}/${public_skill}/SKILL.md" || fail "missing public skill source: ${public_skill}"
-  test -L "${root}/.agents/skills/${public_skill}" || fail "missing discovery symlink for public skill: ${public_skill}"
+  test ! -e "${root}/.agents/skills/${public_skill}" || fail "public skill must not live in .agents/skills: ${public_skill}"
 done
-for internal_skill in tritonkit-host-simulator-takeover tritonkit-ops-governance tritonkit-session-skill-distill tritonkit-subagent-supervision tritonkit-xcode-workflow-takeover; do
+for internal_skill in tritonkit-autonomous-cruise tritonkit-host-simulator-takeover tritonkit-ops-governance tritonkit-session-skill-distill tritonkit-subagent-supervision tritonkit-xcode-workflow-takeover; do
   test -f "${internal_skill_root}/${internal_skill}/SKILL.md" || fail "missing internal skill source: ${internal_skill}"
-  test -L "${root}/.agents/skills/${internal_skill}" || fail "missing discovery symlink for internal skill: ${internal_skill}"
+  test -d "${root}/.agents/skills/${internal_skill}" || fail "internal skill must live in .agents/skills: ${internal_skill}"
+  test ! -L "${root}/.agents/skills/${internal_skill}" || fail "internal skill must not be a symlink: ${internal_skill}"
   if grep -q "${internal_skill}" "${ci_workflow}"; then
     fail "ci workflow must not package internal skill: ${internal_skill}"
   fi

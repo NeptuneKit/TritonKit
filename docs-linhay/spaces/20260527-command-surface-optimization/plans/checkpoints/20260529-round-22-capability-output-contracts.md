@@ -21,7 +21,7 @@
 - `Sources/TritonKitCLI/CLISchemaContracts.swift`
 - `docs-linhay/dev/agent-facing-cli-information-architecture.md`
 - `docs-linhay/dev/ai-cli-readable-control.md`
-- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
+- `TritonKit.skills/tritonkit-dev-feedback/SKILL.md`
 
 ## 验证
 

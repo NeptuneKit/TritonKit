@@ -68,7 +68,7 @@ TritonKit 当前产品边界仍是本机 CLI + 本机模拟器/仿真器 + embed
 ### In Scope
 
 1. 设计并实现 `triton skill list/show/export/install`。
-2. 将 `.agents/tritonkit-skills/public/` 的 skill catalog 显式建模，包含 name、description、version、visibility、source path、install targets。
+2. 将 `TritonKit.skills/` 的 skill catalog 显式建模，包含 name、description、version、visibility、source path、install targets。
 3. 支持安装到 Codex、Claude Code、Cursor 的项目级目录；user-level/global 安装可作为后续增强。
 4. 强化 `triton schema` 的 agent-facing 输出：命令树、flags、examples、common workflows、错误码和 public skill hints。
 5. 新增或强化 `triton evidence summary --json`，把 `.tritonevidence` manifest、steps、assertions、artifacts 投影成稳定 summary。

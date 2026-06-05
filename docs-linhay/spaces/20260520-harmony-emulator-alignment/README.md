@@ -14,7 +14,7 @@ ai-phone 作为补充参考提供三端设备池视角：Harmony 不应只作为
 - `.agents/skills/harmony-next/references/ideGuides/DevEco模拟器私有接口与AI自动化.md`
 - `docs-linhay/spaces/20260520-simulator-takeover/README.md`
 - `docs-linhay/spaces/20260520-harmony-emulator-alignment/plans/20260520-technical-implementation-assessment.md`
-- `.agents/tritonkit-skills/internal/tritonkit-ops-governance/SKILL.md`
+- `.agents/skills/tritonkit-ops-governance/SKILL.md`
 - ai-phone 参考：`docs-linhay/references/ai-phone.md`
 - ai-phone emulator CLI：`docs-linhay/spaces/20260521-ai-phone-emulator-cli/README.md`
 - Harmony upstream issue: `https://github.com/linhay/harmony-next.skills/issues/10`

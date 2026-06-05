@@ -369,9 +369,9 @@ TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-host-smoke
 - `docs-linhay/spaces/20260520-harmony-emulator-alignment/README.md`
 - `docs-linhay/spaces/20260520-xcode-workflow-takeover/README.md`
 - `docs-linhay/spaces/20260521-harness-ux-run-evidence/README.md`
-- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
-- `.agents/tritonkit-skills/internal/tritonkit-xcode-workflow-takeover/SKILL.md`
+- `TritonKit.skills/tritonkit-real-project-regression/SKILL.md`
+- `TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
+- `.agents/skills/tritonkit-xcode-workflow-takeover/SKILL.md`
 - `docs-linhay/memory/YYYY-MM-DD.md`
 
 只有 smoke / evidence / xcode diagnostics 形成稳定长期规则后，才更新 `AGENTS.md`。

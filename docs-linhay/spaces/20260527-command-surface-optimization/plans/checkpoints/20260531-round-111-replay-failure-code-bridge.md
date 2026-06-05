@@ -36,9 +36,9 @@
 - `CLI/Tests/TritonKitCLITests/SchemaFactSourceTests.swift`
 - `docs-linhay/dev/ai-cli-readable-control.md`
 - `docs-linhay/dev/agent-facing-cli-information-architecture.md`
-- `.agents/tritonkit-skills/public/tritonkit-dev-feedback/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-real-project-regression/SKILL.md`
-- `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
+- `TritonKit.skills/tritonkit-dev-feedback/SKILL.md`
+- `TritonKit.skills/tritonkit-real-project-regression/SKILL.md`
+- `TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
 - `docs-linhay/memory/2026-05-31.md`
 
 ## 验证

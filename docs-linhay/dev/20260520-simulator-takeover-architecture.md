@@ -31,8 +31,8 @@ Harmony P0 已落地为 `triton device doctor/list/use/wait-ready --platform har
 
 ## 后续落地入口
 
-- 跨平台对外项目 skill：`.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover/SKILL.md`
-- Apple Simulator 内部实现 skill：`.agents/tritonkit-skills/internal/tritonkit-host-simulator-takeover/SKILL.md`
+- 跨平台对外项目 skill：`TritonKit.skills/tritonkit-emulator-cli-takeover/SKILL.md`
+- Apple Simulator 内部实现 skill：`.agents/skills/tritonkit-host-simulator-takeover/SKILL.md`
 - 需求规格：`docs-linhay/spaces/20260520-simulator-takeover/README.md`
 - 技术设计：`docs-linhay/spaces/20260520-simulator-takeover/technical-design.md`
 - 前置调研：`docs-linhay/spaces/20260520-xcrun-host-adapter-research/README.md`

@@ -24,9 +24,10 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 9. 按架构打包 CLI，发布顺序为 arm64 先发、x86_64 后补：
    - `triton-macos-arm64.tar.gz`
    - `triton-macos-x86_64.tar.gz`
-10. CI 写入版本号：
+10. CI 写入版本号与 build metadata：
    - CLI：更新 `Sources/TritonKitCLI/CLIBuildInfo.swift` 中的 `TritonKitBuildInfo.cliVersion`，`triton version --json` 输出该版本。
    - skill：打包前向 `SKILL.md` front matter 写入 `metadata.version`。
+   - skill 包：根目录写入 `BUILD_INFO.json`，记录包名、版本、release tag、git commit / dirty flag、构建时间与包含的 skill 列表。
    - tag `v1.2.3` 解析为 `1.2.3`；非 tag 构建解析为 `0.1.0-dev+<short-sha>`。
 11. 生成 checksum manifest：
    - `tritonkit_checksums.txt`
@@ -35,7 +36,9 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 13. 所有包先作为 workflow artifact 上传；tag 发布时 arm64 包与 skill 包先作为 GitHub Release asset 上传，x86_64 包成功后再补传。
 14. arm64 发布完成后触发 Homebrew tap 更新 workflow；x86_64 后补完成后再次触发 tap 更新，让 Intel formula 分支拿到 checksum。
 
-Skill 源码分层约束：release packaging 只能读取 `.agents/tritonkit-skills/public/`。`.agents/tritonkit-skills/internal/` 只存放 repo 维护、治理、实现和监督用 skill，不进入 `tritonkit-skills.tar.gz`；`.agents/skills/` 只作为本地 agent discovery symlink，不作为打包源。
+Skill 源码分层约束：release packaging 只能读取 `TritonKit.skills/`。`.agents/skills/` 只存放 repo 维护、治理、实现和监督用 skill，不进入 `tritonkit-skills.tar.gz`，也不作为 release packaging 源。
+
+Skill 打包流程参考 `harmony-next.skills` 的独立脚本式产物生成：TritonKit 使用 `docs-linhay/scripts/package-public-skills.py` 统一完成 public skill 复制、版本 stamp、`BUILD_INFO.json` 写入和 `tritonkit-skills.tar.gz` 生成。与 `harmony-next.skills` 不同，TritonKit 保持既有 release 契约：只发布合并后的 tar.gz，不发布 `.skill.zip` 或单个 skill tarball。
 
 补充约束：`workflow_dispatch` 的非 tag 构建只验证 release asset 集合并上传 workflow artifact，不渲染 Homebrew formula。原因是非 tag 版本形如 `0.1.0-dev+<short-sha>`，不是可发布的 Homebrew release tag；只有真实 `v*` tag 构建才使用 `GITHUB_REF_NAME` 渲染 formula 并做 Ruby 语法检查。
 
@@ -46,7 +49,7 @@ GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免
 发布产物必须至少包含：
 
 1. `triton` CLI 可执行文件包，最终必须同时覆盖 macOS arm64 与 x86_64；arm64 是首发门槛，x86_64 是后补资产。
-2. 面向外部使用者的项目级 skill 合并包 `tritonkit-skills.tar.gz`，当前至少包括 `.agents/tritonkit-skills/public/tritonkit-dev-feedback`、`.agents/tritonkit-skills/public/tritonkit-real-project-regression` 与 `.agents/tritonkit-skills/public/tritonkit-emulator-cli-takeover`。
+2. 面向外部使用者的项目级 skill 合并包 `tritonkit-skills.tar.gz`，当前至少包括 `TritonKit.skills/tritonkit-dev-feedback`、`TritonKit.skills/tritonkit-real-project-regression` 与 `TritonKit.skills/tritonkit-emulator-cli-takeover`。
 3. `tritonkit_checksums.txt`，用于 Homebrew formula 渲染和用户校验。
 4. CLI 与 skill 包必须携带同一个 CI 解析出的版本号；skill 使用 `metadata.version`，保持 skill front matter 兼容。
 
@@ -79,13 +82,14 @@ brew upgrade triton
 - 本地运行 `swift test` 通过。
 - 本地运行 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` 通过。
 - 本地运行 `docs-linhay/scripts/verify.sh --local` 覆盖项目级默认门禁。
-- CI docs/skill-only fast path 使用 `docs-linhay/scripts/verify.sh --ci-docs`；只允许 README、AGENTS、docs/memory/references/screenshots 与 `.agents/tritonkit-skills/` / `.agents/skills/` 进入 fast path，`Sources/`、`Tests/`、podspec、workflow、`docs-linhay/scripts/` 和 fixtures 默认触发 full validate。
+- CI docs/skill-only fast path 使用 `docs-linhay/scripts/verify.sh --ci-docs`；只允许 README、AGENTS、docs/memory/references/screenshots、`TritonKit.skills/` 与 `.agents/skills/` 进入 fast path，`Sources/`、`Tests/`、podspec、workflow、`docs-linhay/scripts/` 和 fixtures 默认触发 full validate。
 - 本地运行 `docs-linhay/scripts/verify-ci-validate-mode.sh` 验证 fast/full 分类边界。
 - Swift-only fast path 会跳过 CocoaPods lint，只允许 CLI target、tests 和 SwiftPM manifest/lockfile；iOS runtime 与 Shared model 改动仍触发 full validate。
 - Contract-only fast path 会跳过 macOS Swift 和 CocoaPods job，只验证 CI/release/Homebrew 脚本契约；podkit-only 会跳过 `TritonKitShared.podspec` lint，只保留 `TritonKit.podspec` lint。
 - Docs-only 与 contract-only fast path 不再单独启动 `Validate Docs` / `Validate Contracts` job；它们复用分类 job 的 checkout 与 runner，聚合 `Validate` 只负责检查 `Classify Validate Scope` 成功。
 - Full validate 在 CI 中并行运行 Swift tests、两个 podspec lint 与 release/homebrew 契约检查；本地仍可用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。
+- 运行 `docs-linhay/scripts/verify-skill-package.sh`，验证 `package-public-skills.py` 生成的 `tritonkit-skills.tar.gz` 包含三个 public skills、版本 stamp 和 `BUILD_INFO.json`。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
 - 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。
 - 用 Python YAML parser 校验 `.github/workflows/ci.yml` 语法可解析。
