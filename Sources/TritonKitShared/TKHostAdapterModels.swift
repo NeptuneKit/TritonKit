@@ -324,9 +324,14 @@ public enum TKSimctlCommand {
         command(["simctl", "upgrade", device, runtimeIdentifier], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
-    public static func screenshot(udid: String, output: String) -> TKHostCommand {
-        command(
-            ["simctl", "io", udid, "screenshot", output],
+    public static func screenshot(udid: String, output: String, display: String? = nil) -> TKHostCommand {
+        var arguments = ["simctl", "io", udid, "screenshot"]
+        if let display {
+            arguments.append("--display=\(display)")
+        }
+        arguments.append(output)
+        return command(
+            arguments,
             riskLevel: .evidence,
             requiredConfig: [.artifactDir, .redactionPolicy, .timeout, .auditRecord],
             capturesArtifacts: true,

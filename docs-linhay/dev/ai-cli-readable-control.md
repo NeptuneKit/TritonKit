@@ -56,7 +56,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton sim list --format json`：通过 host-side `xcrun simctl list devices available --json` 列出 simulator，输出 `sim:<udid>` target、runtime、platform、state、isBooted 与 source。
 - `triton sim use <udid> --format json`：将 workspace 默认 simulator 写入 `.triton/host-defaults.json`，后续可作为 session defaults 的本地状态来源。
 - `triton sim boot <udid> --format json`、`triton sim boot <udid> --wait --jsonl`、`triton sim shutdown <udid|booted> --format json`：首批 simulator lifecycle 入口，`--wait --jsonl` 输出 boot 轮询进度，失败时返回稳定 Triton error envelope。
-- `triton sim screenshot --simulator <udid|booted> --output <path> --format json`：采集 host-side simulator framebuffer 截图，不依赖 embedded runtime。
+- `triton sim screenshot --simulator <udid|booted> --output <path> [--display internal|external|<screen-id>|<display-uuid>] --format json`：采集 host-side CoreSimulator framebuffer 截图，不依赖 embedded runtime。JSON 输出包含 `pixelWidth/pixelHeight/display/orientationPolicy/orientationNote`；当前 `orientationPolicy=raw-framebuffer`，Triton 暂不旋转 iPad framebuffer 截图，agent 或 evidence viewer 必须把该 metadata 作为方向边界处理。
 - `triton sim record --simulator <udid|booted> --output <path.mov> --duration <seconds> --format json`：录制 host-side simulator framebuffer video，内部用 `simctl io recordVideo` 并在 duration 到点后发起 interrupt，输出 path、source command 和执行结果。
 - `triton sim logs --simulator <udid|booted> --output <path.ndjson> --duration <seconds> --format json`：通过 `simctl spawn <udid> log stream` 采集有边界的 OSLog，默认 `ndjson`，输出 artifact path、bytes 与 truncation 摘要，不把完整日志塞进 JSON。
 - `triton sim diagnose --output <path> --format json`：收集 simulator diagnostics archive / logs；输出 path 与 source command，适合排查本机模拟器问题。

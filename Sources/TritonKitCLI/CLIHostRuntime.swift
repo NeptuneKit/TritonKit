@@ -1,6 +1,7 @@
 import ArgumentParser
 import Darwin
 import Foundation
+import ImageIO
 import TritonKitShared
 
 func runSimpleHostCommand(
@@ -87,6 +88,87 @@ func runHostCommandCapturingStdoutArtifact(
     } catch {
         try failHostCommand(error, outputFormat: outputFormat)
     }
+}
+
+func runHostSimulatorScreenshotCommand(
+    simulator: String,
+    command: TKHostCommand,
+    outputPath: String,
+    outputFormat: ClientOutputFormat
+) throws {
+    do {
+        let result = try runHostCommand(command)
+        let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+        let size = imagePixelSize(path: outputPath)
+        let output = HostSimulatorScreenshotOutput(
+            ok: true,
+            action: "sim.screenshot",
+            runtimeScope: "host-simulator",
+            target: "sim:\(simulator)",
+            tool: command.executable,
+            exitCode: result.exitCode,
+            riskLevel: command.riskLevel.rawValue,
+            sourceCommand: result.sourceCommand,
+            stdoutTruncated: result.stdoutTruncated,
+            stderrTruncated: result.stderrTruncated,
+            stderr: stderr.isEmpty ? nil : stderr,
+            artifact: outputPath,
+            pixelWidth: size?.width,
+            pixelHeight: size?.height,
+            display: parseSimctlScreenshotDisplayMetadata(stderr: result.stderr),
+            orientationPolicy: "raw-framebuffer",
+            orientationNote: "simctl io screenshot writes the simulator display framebuffer as provided by CoreSimulator. Triton reports this as raw framebuffer orientation and does not rotate iPad screenshots yet.",
+            note: "Host-side simulator screenshot was written with raw framebuffer orientation metadata."
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            print(outputPath)
+            print(output.orientationNote)
+        }
+    } catch {
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+}
+
+func parseSimctlScreenshotDisplayMetadata(stderr: String) -> HostSimulatorScreenshotDisplayMetadata {
+    let line = stderr
+        .split(whereSeparator: \.isNewline)
+        .map(String.init)
+        .first { $0.contains("Defaulting to display:") || $0.contains("display:") }
+    guard let line else {
+        return HostSimulatorScreenshotDisplayMetadata(rawLine: nil, displayID: nil, screenID: nil, name: nil)
+    }
+
+    let displayID = value(after: "display:", before: "(", in: line)
+    let screenID = value(after: "screenID:", before: ",", in: line)
+    let name = value(after: "name:", before: ")", in: line)
+    return HostSimulatorScreenshotDisplayMetadata(
+        rawLine: line,
+        displayID: displayID,
+        screenID: screenID,
+        name: name
+    )
+}
+
+func imagePixelSize(path: String) -> (width: Int, height: Int)? {
+    guard let source = CGImageSourceCreateWithURL(URL(fileURLWithPath: path) as CFURL, nil),
+          let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+          let width = properties[kCGImagePropertyPixelWidth] as? Int,
+          let height = properties[kCGImagePropertyPixelHeight] as? Int
+    else {
+        return nil
+    }
+    return (width, height)
+}
+
+private func value(after marker: String, before terminator: String, in line: String) -> String? {
+    guard let markerRange = line.range(of: marker) else { return nil }
+    let tail = line[markerRange.upperBound...]
+    let end = tail.range(of: terminator)?.lowerBound ?? tail.endIndex
+    let value = tail[..<end].trimmingCharacters(in: .whitespacesAndNewlines)
+    return value.isEmpty ? nil : value
 }
 
 private struct HostPipeDrainResult {

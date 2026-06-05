@@ -3810,6 +3810,12 @@ struct SchemaFactSourceTests {
         expectContract(sim, selector: "host.simulator-list", fields: [
             "ok", "simulators",
         ])
+        expectContract(sim, selector: "host.simulator-screenshot", fields: [
+            "ok", "action", "runtimeScope", "target", "tool", "exitCode", "riskLevel",
+            "sourceCommand", "stdoutTruncated", "stderrTruncated", "stderr", "artifact",
+            "pixelWidth", "pixelHeight", "display", "display.rawLine", "display.displayID",
+            "display.screenID", "display.name", "orientationPolicy", "orientationNote", "note",
+        ])
         expectContract(sim, selector: "host.simulator-action", fields: [
             "ok", "action", "runtimeScope", "target", "tool", "exitCode", "riskLevel",
             "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "note",
@@ -4056,6 +4062,7 @@ private func outputContractKindTaxonomy() -> Set<String> {
         "runtime-ledger",
         "runtime-ledger-entry",
         "runtime-manifest",
+        "simulator-screenshot",
         "runtime-snapshot",
         "runtime-state",
         "screenshot-metadata",

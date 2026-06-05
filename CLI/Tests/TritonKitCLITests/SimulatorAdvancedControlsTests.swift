@@ -154,6 +154,7 @@ struct SimulatorAdvancedControlsTests {
     func simSchemaExposesAdvancedCommands() throws {
         let sim = try #require(commandSchemas().first { $0.name == "sim" })
         let usageForms = sim.usageForms.map(\.form)
+        let optionNames = sim.options.map(\.name)
 
         #expect(usageForms.contains(where: { $0.hasPrefix("status-bar") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("privacy") }))
@@ -172,6 +173,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(usageForms.contains(where: { $0.hasPrefix("erase ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("upgrade ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("personalization ") }))
+        #expect(optionNames.contains("--display"))
         #expect(sim.providedCapabilities.contains("host-simulator"))
         #expect(sim.providedCapabilities.contains("sim-video"))
         #expect(sim.providedCapabilities.contains("sim-logs"))
@@ -181,6 +183,40 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.providedCapabilities.contains("sim-runtime-maintenance"))
         #expect(sim.providedCapabilities.contains("sim-personalization"))
         #expect(sim.providedCapabilities.contains("sim-push"))
+    }
+
+    @Test("sim screenshot metadata parser preserves CoreSimulator display details")
+    func simScreenshotMetadataParserPreservesCoreSimulatorDisplayDetails() throws {
+        let stderr = """
+        Detected file type from extension: PNG
+        Note: No display specified. Defaulting to display: 70A4519E-10D6-4D54-A93A-381327FA385A (screenID: 1, name: LCD)
+        Wrote screenshot to: /tmp/jobmd-ipad-mini-current.png
+        """
+
+        let metadata = parseSimctlScreenshotDisplayMetadata(stderr: stderr)
+
+        #expect(metadata.rawLine?.contains("Defaulting to display") == true)
+        #expect(metadata.displayID == "70A4519E-10D6-4D54-A93A-381327FA385A")
+        #expect(metadata.screenID == "1")
+        #expect(metadata.name == "LCD")
+    }
+
+    @Test("sim screenshot schema exposes raw framebuffer orientation metadata")
+    func simScreenshotSchemaExposesRawFramebufferOrientationMetadata() throws {
+        let sim = try #require(commandSchemas().first { $0.name == "sim" })
+        let contract = try #require(sim.outputContracts.first { $0.selector == "host.simulator-screenshot" })
+        let fields = Set(contract.fields.map(\.name))
+
+        #expect(contract.model == "HostSimulatorScreenshotOutput")
+        #expect(fields.contains("pixelWidth"))
+        #expect(fields.contains("pixelHeight"))
+        #expect(fields.contains("display"))
+        #expect(fields.contains("display.displayID"))
+        #expect(fields.contains("display.screenID"))
+        #expect(fields.contains("display.name"))
+        #expect(fields.contains("orientationPolicy"))
+        #expect(fields.contains("orientationNote"))
+        #expect(sim.successShape?.contains("orientationPolicy") == true)
     }
 
     @Test("schema exposes xctrace and coverage artifact commands")

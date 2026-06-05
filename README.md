@@ -392,6 +392,8 @@ triton app prefs set DEBUG-mock true --device booted --bundle-id com.example.app
 triton app prefs dump --device booted --bundle-id com.example.app --json
 ```
 
+`sim screenshot` captures the CoreSimulator framebuffer. Its JSON output includes `pixelWidth`, `pixelHeight`, `display.*`, `orientationPolicy=raw-framebuffer`, and `orientationNote`; use `--display internal|external|<screen-id>|<display-uuid>` when the default display selected by `simctl` is not the one you want. Triton does not rotate iPad framebuffer screenshots yet, so downstream evidence viewers should treat the orientation metadata as authoritative.
+
 Destructive commands require `--confirm` by default, and `runtime delete` supports `--dry-run` first so agents can inspect the selected runtimes before deleting anything.
 
 `app go <url>` is the short iOS deep-link smoke entry: it opens the URL, waits for embedded runtime readiness, returns an app/route/AX snapshot summary, and defaults to JSON output. Use `--device <selector>` only when the current/default target is ambiguous.

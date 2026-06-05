@@ -295,17 +295,16 @@ struct SimScreenshot: AsyncParsableCommand {
 
     @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
     @Option(help: "Output PNG path") var output: String
+    @Option(help: "CoreSimulator display selector, for example internal, external, screen id, or display UUID") var display: String?
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
-        try runSimpleHostCommand(
-            action: "sim.screenshot",
-            target: "sim:\(simulator)",
-            command: TKSimctlCommand.screenshot(udid: simulator, output: output),
-            outputFormat: effectiveFormat(format, json: json),
-            artifacts: [output],
-            note: "Host-side simulator screenshot was written."
+        try runHostSimulatorScreenshotCommand(
+            simulator: simulator,
+            command: TKSimctlCommand.screenshot(udid: simulator, output: output, display: display),
+            outputPath: output,
+            outputFormat: effectiveFormat(format, json: json)
         )
     }
 }

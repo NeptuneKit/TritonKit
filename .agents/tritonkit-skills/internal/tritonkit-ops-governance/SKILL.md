@@ -24,10 +24,10 @@ metadata:
 - 设备控制参考 Baguette 时，先区分 embedded TritonKit runtime 与 macOS host-side adapter：embedded runtime 只能承诺公开 UIKit API 可验证的 in-app 控制；SimulatorKit / HID / Home / App Switcher 等设备级动作必须等 host-side adapter，当前要返回明确 unsupported。
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。
 - 当前前端为空白 Wails 静态入口；任何恢复 UI 的工作必须先新建或更新 `space` 与 BDD 场景。
-- Package Manager 集成时，embedded TritonKit runtime 只在 `DEBUG` 编译配置下生效；Release 下 API 保持可编译但 runtime 必须 no-op，不按端类型或 UIKit 可导入性决定是否启用。
-- 业务 App 侧 iOS 接入示例必须把所有 TritonKit 符号放进独立 Debug bootstrap 文件，并用文件级 `#if DEBUG` 包住 `import TritonKit` 与 `TritonKit.shared.start()` / `start { config in ... }` facade；AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点，不能只依赖库内部 Release no-op。只有需要自定义 delegate 或消息路由时才使用低层 `delegate` / `connect(host:port:)`。
-- SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only 配置开关；对外接入指南必须明确：默认走源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
-- Package Manager 分发同时覆盖 SwiftPM 与 CocoaPods；CocoaPods 规格必须保留 `TritonKitShared` / `TritonKit` 两个 Swift module，避免 `TritonKit` 中的 `import TritonKitShared` 在 pod 集成时失效。
+- Package Manager 集成时，embedded TritonKit runtime 由 package 内部 Debug compile flag `TRITONKIT_RUNTIME_ENABLED` 控制；Debug package build 启用，Release package build API 保持可编译但 runtime 必须 no-op，不按端类型或 UIKit 可导入性决定是否启用。
+- 业务 App 侧 iOS 接入示例必须把所有 TritonKit 符号放进独立 Debug bootstrap 文件，并用文件级 `#if DEBUG` 包住 `import TritonKit` 与 `TritonKit.shared.start()` / `start { config in ... }` facade；AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点，不能只依赖 package 内部 Release no-op。只有需要自定义 delegate 或消息路由时才使用低层 `delegate` / `connect(host:port:)`。
+- SwiftPM 支持 configuration-scoped build settings / compile conditions，但 SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only product dependency 开关；对外接入指南必须明确：默认走 package Debug compile flag + 源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
+- Package Manager 分发同时覆盖 SwiftPM 与 CocoaPods；用户接入面只显式选择 / 添加 `TritonKit`，不得要求业务 App 手写 `TritonKitShared`；内部仍保留 `TritonKitShared` / `TritonKit` 两个 Swift module 边界，CocoaPods 通过 `TritonKit.podspec` 传递解析 `TritonKitShared`，CI 需校验两个 podspec 可 lint。
 - SwiftPM 根 `Package.swift` 只描述业务 App 可依赖的 embedded SDK product，不声明 `triton` CLI executable、不声明 Hummingbird / ArgumentParser 等 CLI-only package dependencies；macOS CLI 统一由 `CLI/Package.swift` 构建，命令为 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，避免 iOS App 解析 SwiftPM 时拉入 CLI 依赖。
 - Swift 源文件超过 1500 行即进入治理范围；新增或扩展 CLI 能力时，默认按 `*Commands.swift`、`*Runtime.swift` / `*Service.swift`、`*Models.swift` 拆分。`*Models.swift` 只放 Codable/Encodable/Argument enum 等 wire contract，`*Commands.swift` 只放 ArgumentParser 参数和 glue，执行逻辑进入 runtime/service 文件。
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。

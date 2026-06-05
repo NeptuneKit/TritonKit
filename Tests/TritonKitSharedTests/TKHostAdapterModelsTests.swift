@@ -20,6 +20,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKSimctlCommand.boot(udid: "U").argv == ["simctl", "boot", "U"])
         #expect(TKSimctlCommand.shutdown(udid: "U").argv == ["simctl", "shutdown", "U"])
         #expect(TKSimctlCommand.screenshot(udid: "U", output: "/tmp/shot.png").argv == ["simctl", "io", "U", "screenshot", "/tmp/shot.png"])
+        #expect(TKSimctlCommand.screenshot(udid: "U", output: "/tmp/shot.png", display: "internal").argv == ["simctl", "io", "U", "screenshot", "--display=internal", "/tmp/shot.png"])
         #expect(TKSimctlCommand.listApps(udid: "U").argv == ["simctl", "listapps", "U"])
         #expect(TKSimctlCommand.appInfo(udid: "U", bundleID: "com.example.app").argv == ["simctl", "appinfo", "U", "com.example.app"])
         #expect(TKSimctlCommand.installApp(udid: "U", appPath: "/tmp/Demo.app").argv == ["simctl", "install", "U", "/tmp/Demo.app"])

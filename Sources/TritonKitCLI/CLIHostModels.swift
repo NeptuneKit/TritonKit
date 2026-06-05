@@ -22,6 +22,34 @@ struct HostToolProbeOutput: Encodable {
     let sourceCommand: String
 }
 
+struct HostSimulatorScreenshotDisplayMetadata: Encodable, Equatable {
+    let rawLine: String?
+    let displayID: String?
+    let screenID: String?
+    let name: String?
+}
+
+struct HostSimulatorScreenshotOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let stderr: String?
+    let artifact: String
+    let pixelWidth: Int?
+    let pixelHeight: Int?
+    let display: HostSimulatorScreenshotDisplayMetadata
+    let orientationPolicy: String
+    let orientationNote: String
+    let note: String
+}
+
 struct HostDeviceTarget: Encodable, Equatable {
     let platform: String
     let id: String

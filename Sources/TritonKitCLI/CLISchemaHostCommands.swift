@@ -148,6 +148,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "pasteboard sync <source> <destination>", type: "Subcommand", description: "Sync pasteboard content between host and simulator"),
                 TKCommandSchemaOption(name: "push --bundle-id <id> --payload <path|->", type: "Subcommand", description: "Send a simulated push notification"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted target selector"),
+                TKCommandSchemaOption(name: "--display", type: "String", description: "CoreSimulator display selector for screenshot or video, for example internal, external, screen id, or display UUID"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Artifact output path for screenshot, record, logs, or diagnose"),
                 TKCommandSchemaOption(name: "--duration", type: "Double", description: "Bounded record or log capture duration in seconds"),
                 TKCommandSchemaOption(name: "--style", type: "String", description: "Log output style, for example compact or ndjson"),
@@ -175,7 +176,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim runtime delete <runtime-id> --dry-run --json",
                 "triton sim personalization scan-and-personalize --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
             outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-diagnostics"],
@@ -188,6 +189,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             outputContracts: [
                 hostSimulatorListOutputContract(),
+                hostSimulatorScreenshotOutputContract(),
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorReadyEvent"),
             ],
             failureCodes: [

@@ -677,6 +677,39 @@ func hostSimulatorListOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostSimulatorScreenshotOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-screenshot",
+        format: "json",
+        kind: "simulator-screenshot",
+        model: "HostSimulatorScreenshotOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether simulator screenshot capture succeeded"),
+            ("action", "String", true, "sim.screenshot"),
+            ("runtimeScope", "String", true, "host-simulator"),
+            ("target", "String", true, "Simulator target selector"),
+            ("tool", "String", true, "Host executable"),
+            ("exitCode", "Int32", true, "Host process exit code"),
+            ("riskLevel", "String", true, "Host command risk level"),
+            ("sourceCommand", "String", true, "Underlying xcrun simctl command"),
+            ("stdoutTruncated", "Bool", true, "Whether stdout sample was truncated"),
+            ("stderrTruncated", "Bool", true, "Whether stderr sample was truncated"),
+            ("stderr", "String?", false, "Bounded stderr sample from simctl"),
+            ("artifact", "String", true, "Written screenshot path"),
+            ("pixelWidth", "Int?", false, "Captured image pixel width when readable"),
+            ("pixelHeight", "Int?", false, "Captured image pixel height when readable"),
+            ("display", "HostSimulatorScreenshotDisplayMetadata", true, "CoreSimulator display metadata parsed from simctl stderr"),
+            ("display.rawLine", "String?", false, "Raw simctl display metadata line"),
+            ("display.displayID", "String?", false, "CoreSimulator display identifier when reported"),
+            ("display.screenID", "String?", false, "CoreSimulator screen id when reported"),
+            ("display.name", "String?", false, "CoreSimulator display name when reported"),
+            ("orientationPolicy", "String", true, "raw-framebuffer until Triton normalizes screenshots"),
+            ("orientationNote", "String", true, "Human-readable orientation boundary"),
+            ("note", "String", true, "Boundary or follow-up note"),
+        ])
+    )
+}
+
 func hostActionOutputContract(selector: String, model: String) -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: selector,
