@@ -56,14 +56,15 @@
 15. 当用户明确说“整理”且语境指向刚完成的一轮工作会话时，默认触发一次会话沉淀流程：先按 `tritonkit-session-skill-distill` 提炼可复用模式，再按是否 repo-wide 决定是否同步更新 `AGENTS.md`、`docs-linhay/dev/`、`docs-linhay/memory/`。
 16. 多份独立需求稿并行推进时，默认按“一个需求单元一个 `space`，必要时再配一个同 key 的 branch 与 `worktree`”组织，不按个人姓名或临时阶段单独命名工作目录。
 17. 当用户明确要求“由 subagent 去做、主控 agent 负责监督”时，主控 agent 必须承担需求边界、任务拆分、集成、验收、文档与最终完成判断，不得在“代码已改完”但截图、实机验证、文档写回等验收环节仍未完成时提前停止。
-18. GitHub CI / Release 产物最终必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和对外项目级 skill 包，至少覆盖 `TritonKit.skills/tritonkit-dev-feedback`、`TritonKit.skills/tritonkit-real-project-regression` 与 `TritonKit.skills/tritonkit-emulator-cli-takeover`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流、真实项目回归流程和本机模拟器 CLI 接管流程。对外 skill 包必须通过 `docs-linhay/scripts/package-public-skills.py` 生成，解压后以整个 `TritonKit.skills/` 文件夹作为安装单元，并包含 `TritonKit.skills/BUILD_INFO.json`。
-19. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后先以 arm64 CLI 包、skill 包和 checksum manifest 创建 GitHub Release 并更新 tap formula，x86_64 包由 Intel runner 后补上传并再次刷新 checksum / tap，避免 x86 runner 阻塞 Apple Silicon 发布。
-20. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 由 package 内部 Debug compile flag `TRITONKIT_RUNTIME_ENABLED` 控制；Debug package build 启用，Release package build 必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
-21. 业务 App 侧 iOS 接入文件必须使用独立 Debug bootstrap 文件，并用文件级 `#if DEBUG` 包住 `import TritonKit` 与 `TritonKit.shared.start()` / `start { config in ... }` facade；AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点，不能只依赖 package 内部 Release no-op。只有需要自定义 delegate 或消息路由时才使用低层 `delegate` / `connect(host:port:)`。
-22. SwiftPM 支持 configuration-scoped build settings / compile conditions，但 SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only product dependency 开关；对外接入指南必须明确：默认走 package Debug compile flag + 源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
-23. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；用户接入面只显式选择 / 添加 `TritonKit`，不得要求业务 App 手写 `TritonKitShared`；内部仍保留 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CocoaPods 通过 `TritonKit.podspec` 传递解析 `TritonKitShared`，CI 需校验两个 podspec 可 lint。
-24. SwiftPM 根 `Package.swift` 只描述业务 App 可依赖的 embedded SDK product，不声明 `triton` CLI executable、不声明 Hummingbird / ArgumentParser 等 CLI-only package dependencies；macOS CLI 统一由 `CLI/Package.swift` 构建，命令为 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，避免 iOS App 解析 SwiftPM 时拉入 CLI 依赖。
-25. Swift 源文件超过 1500 行即进入治理范围；新增或扩展 CLI 能力时，默认按 `*Commands.swift`、`*Runtime.swift` / `*Service.swift`、`*Models.swift` 拆分，入口文件只保留 root command 注册与少量共享 glue，禁止继续把新子命令和 wire model 堆回巨型文件。
+18. 当用户明确授权主控 agent 作为 leader 自主管理 subagents 队伍时，后续同一需求执行中默认不再逐项请求用户介入；主控 agent 可以自行创建、分批调度、改派、停止或续跑 subagent，以快速推进为优先，并只在需求边界变化、破坏性操作、权限/环境 blocker 或需要用户决策时打断用户。
+19. GitHub CI / Release 产物最终必须包含 macOS arm64 / x86_64 `triton` CLI 包、checksum manifest 和对外项目级 skill 包，至少覆盖 `TritonKit.skills/tritonkit-dev-feedback`、`TritonKit.skills/tritonkit-real-project-regression` 与 `TritonKit.skills/tritonkit-emulator-cli-takeover`，确保使用者能同时拿到命令行工具、开发阶段反馈工作流、真实项目回归流程和本机模拟器 CLI 接管流程。对外 skill 包必须通过 `docs-linhay/scripts/package-public-skills.py` 生成，解压后以整个 `TritonKit.skills/` 文件夹作为安装单元，并包含 `TritonKit.skills/BUILD_INFO.json`。
+20. `triton` CLI 必须支持 Homebrew 二进制安装与更新；tag release 后先以 arm64 CLI 包、skill 包和 checksum manifest 创建 GitHub Release 并更新 tap formula，x86_64 包由 Intel runner 后补上传并再次刷新 checksum / tap，避免 x86 runner 阻塞 Apple Silicon 发布。
+21. 作为 Package Manager 依赖提供给业务 App 时，embedded TritonKit runtime 由 package 内部 Debug compile flag `TRITONKIT_RUNTIME_ENABLED` 控制；Debug package build 启用，Release package build 必须保持可编译但不连接、不采集、不上传、不响应控制，不按 iOS/macOS 或 UIKit 可导入性作为启停边界。
+22. 业务 App 侧 iOS 接入文件必须使用独立 Debug bootstrap 文件，并用文件级 `#if DEBUG` 包住 `import TritonKit` 与 `TritonKit.shared.start()` / `start { config in ... }` facade；AppDelegate、SceneDelegate 或 SwiftUI 入口只保留 `#if DEBUG` 调用点，不能只依赖 package 内部 Release no-op。只有需要自定义 delegate 或消息路由时才使用低层 `delegate` / `connect(host:port:)`。
+23. SwiftPM 支持 configuration-scoped build settings / compile conditions，但 SwiftPM / Xcode package product dependency 没有 CocoaPods-style Debug-only product dependency 开关；对外接入指南必须明确：默认走 package Debug compile flag + 源码级 `#if DEBUG` bootstrap + Release no-op runtime，若生产 Release target 必须完全不链接 TritonKit，则使用独立 Debug-only app target / scheme。
+24. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；用户接入面只显式选择 / 添加 `TritonKit`，不得要求业务 App 手写 `TritonKitShared`；内部仍保留 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CocoaPods 通过 `TritonKit.podspec` 传递解析 `TritonKitShared`，CI 需校验两个 podspec 可 lint。
+25. SwiftPM 根 `Package.swift` 只描述业务 App 可依赖的 embedded SDK product，不声明 `triton` CLI executable、不声明 Hummingbird / ArgumentParser 等 CLI-only package dependencies；macOS CLI 统一由 `CLI/Package.swift` 构建，命令为 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，避免 iOS App 解析 SwiftPM 时拉入 CLI 依赖。
+26. Swift 源文件超过 1500 行即进入治理范围；新增或扩展 CLI 能力时，默认按 `*Commands.swift`、`*Runtime.swift` / `*Service.swift`、`*Models.swift` 拆分，入口文件只保留 root command 注册与少量共享 glue，禁止继续把新子命令和 wire model 堆回巨型文件。
 
 ## 2. 标准工作流（必须）
 
@@ -76,6 +77,7 @@
 7. 若用户以“整理”作为收尾指令，且本轮存在稳定可复用模式，不需要额外追问是否沉淀，直接进入 `skills` / `AGENTS` / docs / memory 的整理流程。
 8. 若某个需求将进入并行开发、多日实现或与其他需求同时切换，先补齐对应 `space`，再创建同 key 的 branch / `worktree`。
 9. 若需求采用 `subagent` 交付，标准完成顺序必须覆盖：需求边界确认、subagent 分工、主控集成、自动化验证、Wails/桌面验收（如适用）、HTTP/CLI 验收（如适用）、截图或其他验收产物、文档与记忆写回；未跑完这一整链，不得宣称需求完成。
+10. 若用户已授权主控 agent 自主管理 subagents，主控 agent 默认按既有 `space`、计划、项目级 `.codex/agents/` 与 orchestration skill 直接推进；除非遇到边界变化、破坏性动作、权限/环境 blocker 或需用户取舍，不需要为每次 subagent 调度、续跑、重分配或收尾验证单独请求用户确认。
 
 ## 3. 测试门禁（必须）
 

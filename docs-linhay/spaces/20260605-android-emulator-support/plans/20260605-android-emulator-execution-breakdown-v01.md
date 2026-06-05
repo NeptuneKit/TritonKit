@@ -17,6 +17,8 @@
 
 若只做短期规划或单个小补丁，可以在主工作区短分支完成；若进入多日实现，必须使用上表 worktree。
 
+项目级 Codex subagent 配置位于 `.codex/agents/`，编排 skill 为 `.agents/skills/tritonkit-android-subagent-orchestration/SKILL.md`。真正开始执行时，主控 agent 应先使用该 skill 再分批调用 subagents。
+
 ## 全局验收
 
 | 验收项 | 完成条件 |
@@ -419,6 +421,20 @@ triton smoke android --device android-a --bundle <package> --open-url "example:/
 | PR 5 | Step 13-15 | 真实 emulator smoke、docs、public skill、memory、完整 local gate |
 
 每个 PR 都必须独立可回归，不能把前一 PR 的失败留给后一 PR 修。
+
+## Step 16A. Subagent 编排
+
+| Agent | Codex config | 负责步骤 | 并行批次 |
+| --- | --- | --- | --- |
+| Contract | `.codex/agents/tritonkit_android_contract_agent.toml` | Step 1, Step 13 | Batch 1 |
+| Fake ADB | `.codex/agents/tritonkit_android_fake_adb_agent.toml` | Step 2 | Batch 1 |
+| Device | `.codex/agents/tritonkit_android_device_agent.toml` | Step 3-7 | Batch 2 |
+| App | `.codex/agents/tritonkit_android_app_agent.toml` | Step 8 | Batch 2 |
+| Observe Smoke | `.codex/agents/tritonkit_android_observe_smoke_agent.toml` | Step 9-12, Step 14 | Batch 3 |
+
+主控 agent 保留 Step 0、Step 15、Step 16、Step 17，并负责合并结果、跑门禁、真实 emulator 验收、docs/memory/qmd 收口和最终完成判断。
+
+启动 subagents 前先使用 `tritonkit-android-subagent-orchestration`，避免职责漂移或多个 subagent 同时写同一批文件。
 
 ## Step 17. 最终门禁
 

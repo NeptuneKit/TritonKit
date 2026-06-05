@@ -11,6 +11,7 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
 
 1. subagent 负责边界清晰的实现任务。
 2. 主控 agent 负责需求边界、任务拆分、集成、验证、文档、memory 和最终完成判断。
+3. 当用户授权主控 agent 作为 leader 自主管理 subagents 时，主控 agent 应主动创建、调度、改派、停止或续跑 subagent，目标是快速推进完整闭环，而不是等待用户逐步指挥。
 
 ## 执行顺序
 
@@ -25,6 +26,18 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
    - `qmd update`
    - `qmd embed`
 5. 如果仍有未完成项，继续推进；如果卡住，明确写出 blocker 和剩余工作。
+
+## Leader 自主管理
+
+用户明确授权后，同一需求后续执行默认不再逐项请求用户介入。主控 agent 可以自行：
+
+1. 按 `space`、计划和 `.codex/agents/` 配置选择 subagent。
+2. 分批启动互不冲突的 subagent。
+3. 根据结果改派、停止、续跑或补开验证 agent。
+4. 合并结果并跑门禁。
+5. 只在需求边界变化、破坏性操作、权限/环境 blocker 或必须用户取舍时打断用户。
+
+主控 agent 仍必须保留最终完成判断；subagent 的“完成”只能作为输入，不能替代 DoD。
 
 ## GitHub Issue 并行处理
 
