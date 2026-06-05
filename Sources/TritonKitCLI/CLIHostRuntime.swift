@@ -34,6 +34,7 @@ func runSimpleHostCommand(
             stdout: stdout.isEmpty ? nil : stdout,
             stderr: stderr.isEmpty ? nil : stderr,
             artifacts: artifacts,
+            screenshot: action == "sim.screenshot" && artifacts.count == 1 ? (try? makeSimulatorScreenshotMetadata(outputPath: artifacts[0])) : nil,
             note: note
         )
         switch outputFormat {
@@ -1626,4 +1627,36 @@ func failHostValidation(code: String, message: String, hint: String, outputForma
         print("hint: \(hint)")
     }
     throw ExitCode.failure
+}
+
+func makeSimulatorScreenshotMetadata(outputPath: String) throws -> HostSimulatorScreenshotMetadata {
+    let dimensions = try? readPNGDimensions(path: outputPath)
+    return HostSimulatorScreenshotMetadata(
+        path: outputPath,
+        contentType: "image/png",
+        pixelWidth: dimensions?.width,
+        pixelHeight: dimensions?.height,
+        orientationSemantics: "raw-simctl-framebuffer",
+        normalizationApplied: false,
+        normalizationStrategy: "metadata-only",
+        note: "TritonKit preserves the raw framebuffer orientation emitted by `xcrun simctl io screenshot`; compare pixelWidth/pixelHeight and simulator display state before treating this artifact as a display-normalized screenshot."
+    )
+}
+
+private func readPNGDimensions(path: String) throws -> (width: Int, height: Int) {
+    let url = URL(fileURLWithPath: path)
+    let data = try Data(contentsOf: url, options: [.mappedIfSafe])
+    guard data.count >= 24 else {
+        throw RuntimeError("Screenshot metadata could not be read: PNG file is too short.")
+    }
+    let signature: [UInt8] = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A]
+    guard Array(data.prefix(8)) == signature else {
+        throw RuntimeError("Screenshot metadata could not be read: output is not a PNG file.")
+    }
+    guard String(data: data[12..<16], encoding: .ascii) == "IHDR" else {
+        throw RuntimeError("Screenshot metadata could not be read: PNG IHDR chunk is missing.")
+    }
+    let width = data[16..<20].reduce(UInt32(0)) { ($0 << 8) | UInt32($1) }
+    let height = data[20..<24].reduce(UInt32(0)) { ($0 << 8) | UInt32($1) }
+    return (Int(width), Int(height))
 }

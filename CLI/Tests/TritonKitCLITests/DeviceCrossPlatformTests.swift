@@ -76,6 +76,26 @@ struct DeviceCrossPlatformTests {
         }
     }
 
+    @Test("sim screenshot metadata documents raw framebuffer orientation semantics")
+    func simulatorScreenshotMetadataDocumentsRawFramebufferOrientationSemantics() throws {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-sim-screenshot-metadata-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        let path = temp.appendingPathComponent("shot.png")
+        try writeMinimalPNG(width: 768, height: 1024, to: path)
+
+        let metadata = try makeSimulatorScreenshotMetadata(outputPath: path.path)
+
+        #expect(metadata.path == path.path)
+        #expect(metadata.contentType == "image/png")
+        #expect(metadata.pixelWidth == 768)
+        #expect(metadata.pixelHeight == 1024)
+        #expect(metadata.orientationSemantics == "raw-simctl-framebuffer")
+        #expect(metadata.normalizationApplied == false)
+        #expect(metadata.normalizationStrategy == "metadata-only")
+        #expect(metadata.note.contains("raw framebuffer"))
+    }
+
     @Test("app and smoke schemas expose unified device selector with explicit selector forms")
     func appAndSmokeSchemasExposeUnifiedDeviceSelector() throws {
         let app = try #require(commandSchemas().first { $0.name == "app" })
@@ -357,4 +377,21 @@ private func iosTarget(
         runtime: runtime,
         transport: nil
     )
+}
+
+private func writeMinimalPNG(width: UInt32, height: UInt32, to url: URL) throws {
+    var data = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A])
+    data.append(contentsOf: [0x00, 0x00, 0x00, 0x0D])
+    data.append(contentsOf: [0x49, 0x48, 0x44, 0x52])
+    data.append(UInt8((width >> 24) & 0xff))
+    data.append(UInt8((width >> 16) & 0xff))
+    data.append(UInt8((width >> 8) & 0xff))
+    data.append(UInt8(width & 0xff))
+    data.append(UInt8((height >> 24) & 0xff))
+    data.append(UInt8((height >> 16) & 0xff))
+    data.append(UInt8((height >> 8) & 0xff))
+    data.append(UInt8(height & 0xff))
+    data.append(contentsOf: [8, 6, 0, 0, 0])
+    data.append(contentsOf: [0, 0, 0, 0])
+    try data.write(to: url, options: .atomic)
 }

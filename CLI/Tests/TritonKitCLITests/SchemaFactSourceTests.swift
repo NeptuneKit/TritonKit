@@ -3818,7 +3818,7 @@ struct SchemaFactSourceTests {
         ])
         expectContract(sim, selector: "host.simulator-action", fields: [
             "ok", "action", "runtimeScope", "target", "tool", "exitCode", "riskLevel",
-            "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "note",
+            "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "screenshot", "note",
         ])
 
         #expect(app.failureCodes.contains("app_launch_failed"))
@@ -4047,6 +4047,7 @@ private func outputContractKindTaxonomy() -> Set<String> {
         "host-device-ready",
         "host-device-selection",
         "host-simulator-list",
+        "host-simulator-screenshot-metadata",
         "input-batch-summary",
         "input-result",
         "node-attributes",
