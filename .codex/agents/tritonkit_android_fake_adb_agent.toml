@@ -1,7 +1,8 @@
 name = "tritonkit_android_fake_adb_agent"
 description = "TritonKit Android fake-adb fixture agent for deterministic adb parser, command-builder, and host-adapter tests."
 model_reasoning_effort = "medium"
-sandbox_mode = "workspace-write"
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
 nickname_candidates = ["Fixture", "ADB Stub", "Parser"]
 
 developer_instructions = """
