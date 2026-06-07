@@ -364,7 +364,7 @@ TRITON_BIN=.build/cli-scratch/debug/triton docs-linhay/scripts/verify-harmony-ru
 
 Use `--no-forward` when the HDC fport already exists, because repeating `hdc fport tcp:28767 tcp:28767` can fail with a host listen conflict even though the existing forwarded endpoint is healthy. Keep mock contract smoke separate from real emulator smoke: the mock script should use an isolated test port while asserting the schema/default output remains `28767`.
 
-Android Emulator is an accepted product direction but should be added as a later adapter slice. Keep DTOs and command ledger schemas platform-neutral now, but do not claim Android commands are implemented until `schema --command app --json` exposes them.
+Android Emulator host-side support is now part of the implemented local CLI takeover surface. Treat `adb`-backed device discovery, readiness, screenshot, app lifecycle, UIAutomator observe/wait/tap, and `smoke android` as schema-backed Triton commands; continue to keep DTOs, evidence, and command-ledger schemas platform-neutral across iOS, Android, and Harmony.
 
 ## Safety Rules
 

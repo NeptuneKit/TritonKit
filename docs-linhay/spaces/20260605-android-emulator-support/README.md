@@ -100,6 +100,60 @@ Android 首期只接本机 Android Emulator，底层工具是 Android SDK / plat
 
 逐步执行拆解见 [20260605-android-emulator-execution-breakdown-v01.md](plans/20260605-android-emulator-execution-breakdown-v01.md)。
 
+## 当前进度
+
+截至 2026-06-07，本 space 的 Android host-side P0/P1/P1.5 主链路已经接通，并完成一轮真实 emulator smoke 验收。
+
+- 自动化测试：
+  - `swift test --package-path CLI --scratch-path .build/cli`
+  - `swift test`
+  - Android 定向测试与 schema/fact source 回归已通过；CLI test bundle 在本机偶发命中 macOS system policy 拒载时，需要先执行 `codesign -s - .build/cli/arm64-apple-macosx/debug/TritonKitCLIPackageTests.xctest/Contents/MacOS/TritonKitCLIPackageTests` 再重跑。
+- 真实 Android Emulator 环境：
+  - AVD: `Neptune_API_34`
+  - adb serial: `emulator-5554`
+  - alias: `android-a`
+- 真实命令验收已通过：
+  - `triton device doctor --platform android --json`
+  - `triton device list --platform android --json`
+  - `triton device wait-ready --platform android --target emulator-5554 --timeout 60 --interval 1 --json`
+  - `triton device alias set android-a --platform android --target emulator-5554 --json`
+  - `triton app list --platform android --device android-a --json`
+  - `triton app launch --platform android --device android-a --package-name com.android.settings --json`
+  - `triton observe tree --platform android --target emulator-5554 --json`
+  - `triton tap --platform android --target emulator-5554 'Network & internet' --json`
+  - `triton device screenshot --device android-a --output <path> --json`
+  - `triton smoke android --device android-a --package com.android.settings --wait-text 'Settings' --tap-text 'Network & internet' --post-tap-wait-text 'Internet' --screenshot <path> --evidence <path> --json`
+
+## 本轮真实修复
+
+1. Android app launch 默认路径不再依赖不稳定的 `adb shell monkey -p <package> 1`。
+   - 现改为先执行 `adb shell cmd package resolve-activity --brief <package>`，再执行 `adb shell am start -n <resolved-component>`。
+   - 真实验证中 `com.android.settings` 已稳定落到 `adb -s emulator-5554 shell am start -n com.android.settings/.Settings`。
+2. Android host observe / wait / tap / smoke 不再把 `uiautomator dump` 的 stdout 误当作 XML。
+   - 现改为 `uiautomator dump /sdcard/window_dump.xml` 后，再执行 `adb shell cat /sdcard/window_dump.xml` 读取真实 XML。
+   - 真实验证中 `wait`、`tap`、`smoke android` 已可稳定解析 UIAutomator tree。
+3. Android host `tap` 的文本未命中错误映射已修正。
+   - 之前会错误返回 Harmony 专属 `harmony_layout_text_not_found`。
+   - 现统一返回 `text_not_found`，并给出 Android host observe 的恢复 hint。
+
+## 真实证据
+
+- 2026-06-06:
+  - `screenshots/20260606/android/20260606-android-device-home-after-v01.png`
+  - `screenshots/20260606/android/20260606-android-settings-after-v01.png`
+  - `screenshots/20260606/android/20260606-android-network-after-v01.png`
+  - `screenshots/20260606/android/20260606-android-observe-settings-after-v01.xml`
+  - `screenshots/20260606/android/20260606-android-network-after-v01.xml`
+- 2026-06-07:
+  - `screenshots/20260607/android/20260607-android-network-after-v01.png`
+  - `screenshots/20260607/android/20260607-android-smoke-network-after-v01.png`
+  - evidence bundle: `/tmp/20260607-android-settings-smoke.tritonevidence`
+
+## 验收备注
+
+- Android host-side `wait`、`tap`、`observe tree` 都会依赖 `uiautomator dump` + `adb shell cat`。
+- 同一台 emulator 上不要并发执行多条依赖 UIAutomator dump/read-back 的 host observe 命令；并发压测时曾出现 `Host command exited 137`，串行执行后 `wait -> tap -> post-wait -> screenshot -> smoke` 链路稳定通过。
+
 ## 交付物
 
 1. Android host adapter runtime / model / command 分层。

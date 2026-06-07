@@ -484,6 +484,26 @@ triton device list --platform ios --json
 triton device screenshot --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --output /tmp/sim.png --json
 ```
 
+Android Emulator host-side discovery and smoke do not require an embedded TritonKit runtime:
+
+```bash
+triton target list --platform android --json
+triton target use emulator-5554 --platform android --json
+triton target wait-ready emulator-5554 --platform android --json
+triton device doctor --platform android --json
+triton device list --platform android --json
+triton device alias set android-a --platform android --target emulator-5554 --json
+triton device screenshot --device android-a --output /tmp/android-before.png --json
+triton app list --platform android --device android-a --json
+triton app launch --platform android --device android-a --package-name com.android.settings --json
+triton observe tree --platform android --target emulator-5554 --json
+triton wait --platform android --target emulator-5554 --text "Settings" --timeout 10 --json
+triton tap --platform android --target emulator-5554 "Network & internet" --json
+triton smoke android --device android-a --package com.android.settings --wait-text "Settings" --tap-text "Network & internet" --post-tap-wait-text "Internet" --screenshot /tmp/android-smoke.png --evidence /tmp/android-smoke.tritonevidence --json
+```
+
+Android host-side `observe tree` / `wait` / `tap` currently rely on `adb shell uiautomator dump` followed by `adb shell cat` of the dumped XML. Keep those UIAutomator-backed commands serialized per emulator target during smoke or evidence capture; concurrent dump/read-back flows on the same emulator have previously produced host command exits before the XML was fully available.
+
 HarmonyOS NEXT / DevEco Emulator host-side discovery does not require a running TritonKit embedded runtime:
 
 ```bash
