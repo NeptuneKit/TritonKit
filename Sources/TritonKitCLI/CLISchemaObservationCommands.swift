@@ -65,26 +65,27 @@ func observationCommandSchemas() -> [TKCommandSchema] {
         ),
         TKCommandSchema(
             name: "observe",
-            summary: "Read the current app surface using iOS runtime or Harmony host layout sources",
+            summary: "Read the current app surface using iOS runtime or Android/Harmony host layout sources",
             requiresServer: false,
             requiresTarget: true,
-            runtimeScope: "embedded|host-harmony",
+            runtimeScope: "embedded|host-android|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
                 TKCommandSchemaOption(name: "current", type: "Subcommand", description: "Read current visible app snapshot"),
                 TKCommandSchemaOption(name: "tree", type: "Subcommand", description: "Read current visible node tree"),
                 target,
                 runtimeBaseURLOption,
-                TKCommandSchemaOption(name: "--platform", type: "ios|harmony", description: "Observation platform or host device platform filter"),
-                TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Observation platform or host device platform filter"),
+                TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable for --platform harmony"),
                 TKCommandSchemaOption(name: "--max-nodes", type: "Int", description: "Maximum nodes to return"),
-                TKCommandSchemaOption(name: "--output", type: "Path", description: "Harmony host layout artifact path"),
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Android or Harmony host layout artifact path"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
             ],
             examples: [
                 "triton observe current --platform ios --json",
+                "triton observe tree --platform android --device android-a --json",
                 "triton observe tree --device harmony-a --json",
                 "triton observe tree --platform harmony --target 127.0.0.1:10100 --json",
             ],
@@ -112,14 +113,14 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "harmony_artifact_recv_failed",
                 "validation_failed",
             ],
-            providedCapabilities: ["observe", "observe-ios", "observe-harmony"]
+            providedCapabilities: ["observe", "observe-ios", "observe-android", "observe-harmony"]
         ),
         TKCommandSchema(
             name: "webview",
             summary: "List or resolve current WebView candidates while preserving provider boundaries",
             requiresServer: false,
             requiresTarget: true,
-            runtimeScope: "embedded|host-harmony",
+            runtimeScope: "embedded|host-android|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
                 TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List visible WebView candidates"),
@@ -206,7 +207,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             summary: "Assert current route and WebView navigation state",
             requiresServer: false,
             requiresTarget: true,
-            runtimeScope: "embedded|host-harmony",
+            runtimeScope: "embedded|host-android|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
                 TKCommandSchemaOption(name: "assert-current-url <expected-url>", type: "Subcommand", description: "Assert the current WebView provider URL"),
@@ -313,7 +314,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 target,
                 TKCommandSchemaOption(name: "resolve --text <text>", type: "Subcommand", description: "Resolve current visible node on iOS runtime or Harmony host layout"),
                 runtimeBaseURLOption,
-                TKCommandSchemaOption(name: "--platform", type: "ios|harmony", defaultValue: "ios", description: "Platform for `node resolve`"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", defaultValue: "ios", description: "Platform for `node resolve`"),
+                TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable for `node resolve --platform harmony`"),
                 TKCommandSchemaOption(name: "--oid", type: "UInt", description: "View or layer oid from `triton nodes`"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "Text/id/key/accessibility id for `node resolve`"),
@@ -328,6 +330,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton node --target triton:local --oid 1 --format json",
                 #"triton node resolve --platform ios --text "登录" --json"#,
+                #"triton node resolve --platform android --device android-a --text "Login" --all --json"#,
                 #"triton node resolve --platform harmony --target 127.0.0.1:10100 --text "登录" --all --json"#,
             ],
             successShape: "{ oid, viewOid, layerOid, className, depth, frame, hidden, alpha } or { ok, action, platform, query, matchIndex, matchCount, node, candidates?, sourceCommands[] }",
@@ -521,6 +524,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: [
                 TKCommandSchemaOption(name: "ios", type: "Subcommand", description: "Run one-command iOS smoke evidence flow"),
+                TKCommandSchemaOption(name: "android", type: "Subcommand", description: "Run one-command Android host-side smoke evidence flow"),
                 TKCommandSchemaOption(name: "harmony", type: "Subcommand", description: "Run one-command Harmony host-side smoke evidence flow"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Compatibility iOS simulator selector; cannot be combined with --device"),
@@ -529,15 +533,18 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--runtime", type: "String", description: "Host target runtime filter"),
                 TKCommandSchemaOption(name: "--state", type: "String", description: "Host target state filter"),
                 TKCommandSchemaOption(name: "--ready", type: "Bool", defaultValue: "false", description: "Only match ready host targets"),
+                TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path for Android smoke"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for Harmony smoke"),
                 TKCommandSchemaOption(name: "--bundle-id", type: "String", description: "iOS bundle identifier"),
+                TKCommandSchemaOption(name: "--package", type: "String", description: "Android package name"),
+                TKCommandSchemaOption(name: "--activity", type: "String", description: "Optional Android activity name"),
                 TKCommandSchemaOption(name: "--bundle", type: "String", description: "Harmony bundle name"),
                 TKCommandSchemaOption(name: "--ability", type: "String", description: "Harmony ability name"),
                 TKCommandSchemaOption(name: "--open-url", type: "URL", description: "Deep link URL to open"),
                 TKCommandSchemaOption(name: "--wait-text", type: "String", description: "Visible text to wait for"),
                 TKCommandSchemaOption(name: "--assert-text", type: "String", description: "Visible text to assert after iOS wait succeeds; defaults to --wait-text"),
-                TKCommandSchemaOption(name: "--tap-text", type: "String", description: "Harmony text to tap after first wait passes"),
-                TKCommandSchemaOption(name: "--post-tap-wait-text", type: "String", description: "Harmony text to wait for after tap"),
+                TKCommandSchemaOption(name: "--tap-text", type: "String", description: "Android or Harmony text to tap after first wait passes"),
+                TKCommandSchemaOption(name: "--post-tap-wait-text", type: "String", description: "Android or Harmony text to wait for after tap"),
                 TKCommandSchemaOption(name: "--screenshot", type: "Path", description: "Host screenshot output path"),
                 TKCommandSchemaOption(name: "--evidence", type: "Path", description: "Evidence bundle output directory"),
                 TKCommandSchemaOption(name: "--evidence-name", type: "String", description: "Name stored in evidence manifest"),
@@ -552,6 +559,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton smoke ios --device iphone15 --bundle-id com.example.app --open-url myapp://home --wait-text Ready --json",
                 "triton smoke ios --simulator booted --bundle-id com.example.app --open-url myapp://home --wait-text Ready --json",
+                "triton smoke android --device android:emulator-5554 --package com.example.app --activity .MainActivity --wait-text Ready --screenshot /tmp/smoke.png --evidence /tmp/android.tritonevidence --json",
                 "triton smoke harmony --device harmony-a --bundle com.example.app --ability EntryAbility --open-url example://home --wait-text Ready --screenshot /tmp/smoke.jpeg --evidence /tmp/harmony.tritonevidence --json",
                 "triton smoke harmony --target 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --open-url example://home --wait-text Ready --screenshot /tmp/smoke.jpeg --evidence /tmp/harmony.tritonevidence --json",
             ],
@@ -584,7 +592,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "evidence_capture_failed",
                 "validation_failed",
             ],
-            providedCapabilities: ["smoke-ios", "smoke-harmony"]
+            providedCapabilities: ["smoke-ios", "smoke-android", "smoke-harmony"]
         ),
         TKCommandSchema(
             name: "assert",
@@ -728,7 +736,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText,
             options: hostPort + [
                 target,
-                TKCommandSchemaOption(name: "--platform", type: "harmony", description: "Use Harmony host-side layout polling instead of embedded runtime"),
+                TKCommandSchemaOption(name: "--platform", type: "android|harmony", description: "Use Android or Harmony host-side layout polling instead of embedded runtime"),
+                TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path for --platform android"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "Wait for visible text, AX label, identifier, title, or value"),
                 TKCommandSchemaOption(name: "--gone", type: "String", description: "Wait for visible text, AX label, identifier, title, or value to disappear"),
@@ -752,7 +761,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton wait --hierarchy-change --since latest --timeout 10 --json",
                 #"triton wait --predicate "text.exists(\"console\") && !text.exists(\"点我登录\")" --timeout 15 --json"#,
             ],
-            successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? } or HostHarmonyWaitOutput",
+            successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? } or HostAndroidWaitOutput or HostHarmonyWaitOutput",
             failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, lastObservedTextSample }; validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
             outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error.",
             nextCommands: [
@@ -761,9 +770,9 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton evidence --output <dir.tritonevidence> --json",
                 "triton find <text> --all --json",
             ],
-            outputContracts: [waitResultOutputContract(), hostHarmonyWaitOutputContract()],
+            outputContracts: [waitResultOutputContract(), hostAndroidWaitOutputContract(), hostHarmonyWaitOutputContract()],
             failureCodes: ["timeout", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"],
-            providedCapabilities: ["wait", "harmony-wait-text"]
+            providedCapabilities: ["wait", "android-wait-text", "harmony-wait-text"]
         ),
         TKCommandSchema(
             name: "ax",

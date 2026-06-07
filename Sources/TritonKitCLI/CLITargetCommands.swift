@@ -12,7 +12,7 @@ struct Target: AsyncParsableCommand {
 struct TargetList: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "list", abstract: "List platform targets")
 
-    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform = .harmony
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform = .harmony
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -36,6 +36,8 @@ struct TargetList: AsyncParsableCommand {
                     switch platform {
                     case .ios:
                         print("\(target.target)\t\(target.state)\t\(target.runtime ?? "-")\t\(target.name ?? "-")")
+                    case .android:
+                        print("\(target.target)\t\(target.state)\t\(target.name ?? "-")")
                     case .harmony:
                         print("\(target.target)\t\(target.state)\t\(target.transport ?? "-")")
                     }
@@ -51,7 +53,7 @@ struct TargetUse: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "use", abstract: "Resolve a target selector and save it as the current agent target")
 
     @Argument(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
-    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
@@ -113,7 +115,7 @@ struct TargetResolve: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "resolve", abstract: "Resolve one target selector without executing an action")
 
     @Argument(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
-    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
@@ -145,7 +147,7 @@ struct TargetWaitReady: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "wait-ready", abstract: "Wait until a platform target is ready")
 
     @Option(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
-    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?

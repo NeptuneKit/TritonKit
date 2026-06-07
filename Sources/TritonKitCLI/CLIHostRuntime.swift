@@ -369,7 +369,7 @@ func resolveHarmonyTarget(target: String, hdc: String) throws -> TKHarmonyTarget
     try resolveHarmonyTarget(target: target == TKLocalTargetID ? nil : target, hdc: hdc)
 }
 
-func hostDeviceTargets(platform: HostDevicePlatform, hdc: String) throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
+func hostDeviceTargets(platform: HostDevicePlatform, hdc: String, adb: String = "adb") throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
     switch platform {
     case .ios:
         let result = try runHostCommand(TKSimctlCommand.listAvailableDevices())
@@ -379,16 +379,20 @@ func hostDeviceTargets(platform: HostDevicePlatform, hdc: String) throws -> (tar
         let result = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))
         let targets = TKHdcTargetListParser.parse(result.stdout).map(hostDeviceTarget(from:))
         return (targets, result.sourceCommand)
+    case .android:
+        let result = try runHostCommand(TKAndroidADBCommand.listDevices(executable: adb))
+        let targets = TKAdbDeviceListParser.parse(result.stdout).map(hostDeviceTarget(from:))
+        return (targets, result.sourceCommand)
     }
 }
 
-func hostDeviceTargetsByPlatform(platform: HostDevicePlatform?, hdc: String) throws -> [HostDevicePlatform: [HostDeviceTarget]] {
+func hostDeviceTargetsByPlatform(platform: HostDevicePlatform?, hdc: String, adb: String = "adb") throws -> [HostDevicePlatform: [HostDeviceTarget]] {
     if let platform {
-        return [platform: try hostDeviceTargets(platform: platform, hdc: hdc).targets]
+        return [platform: try hostDeviceTargets(platform: platform, hdc: hdc, adb: adb).targets]
     }
     var targets: [HostDevicePlatform: [HostDeviceTarget]] = [:]
-    for platform in [HostDevicePlatform.ios, .harmony] {
-        targets[platform] = (try? hostDeviceTargets(platform: platform, hdc: hdc).targets) ?? []
+    for platform in [HostDevicePlatform.ios, .android, .harmony] {
+        targets[platform] = (try? hostDeviceTargets(platform: platform, hdc: hdc, adb: adb).targets) ?? []
     }
     return targets
 }
@@ -416,7 +420,14 @@ private func hostDeviceSelectionError(platform: HostDevicePlatform, target: Stri
         return .targetNotFound(target)
     }
     if candidates.isEmpty {
-        return .targetNotFound(platform == .ios ? "booted simulator" : "connected target")
+        switch platform {
+        case .ios:
+            return .targetNotFound("booted simulator")
+        case .android:
+            return .targetNotFound("connected Android emulator")
+        case .harmony:
+            return .targetNotFound("connected target")
+        }
     }
     return .ambiguousTargets(candidates)
 }
@@ -559,9 +570,9 @@ func resolveHostDeviceSelection(
     )
 }
 
-func resolveHostDeviceSelection(request: HostDeviceSelectionRequest, hdc: String) throws -> HostDeviceSelectionResult {
+func resolveHostDeviceSelection(request: HostDeviceSelectionRequest, hdc: String, adb: String = "adb") throws -> HostDeviceSelectionResult {
     let aliases = try loadHostTargetAliasStore()
-    let candidates = try hostDeviceTargetsByPlatform(platform: request.platform, hdc: hdc)
+    let candidates = try hostDeviceTargetsByPlatform(platform: request.platform, hdc: hdc, adb: adb)
     return try resolveHostDeviceSelection(request: request, candidates: candidates, aliases: aliases)
 }
 
@@ -590,6 +601,12 @@ func resolveHostDeviceTarget(platform: HostDevicePlatform, target: String?, hdc:
     case .harmony:
         let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
         return hostDeviceTarget(from: selected)
+    case .android:
+        let candidates = try hostDeviceTargets(platform: platform, hdc: hdc).targets
+        guard let selected = selectHostDeviceTarget(target: target, candidates: candidates) else {
+            throw hostDeviceSelectionError(platform: platform, target: target, candidates: candidates)
+        }
+        return selected
     }
 }
 
@@ -618,6 +635,20 @@ func hostDeviceTarget(from target: TKHarmonyTarget) -> HostDeviceTarget {
         name: nil,
         runtime: nil,
         transport: target.transport
+    )
+}
+
+func hostDeviceTarget(from target: TKAndroidTarget) -> HostDeviceTarget {
+    HostDeviceTarget(
+        platform: "android",
+        id: target.id,
+        target: target.serial,
+        state: target.state,
+        ready: target.isReady,
+        source: target.source,
+        name: target.model,
+        runtime: target.product,
+        transport: target.transportID
     )
 }
 
@@ -800,6 +831,20 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             sourceCommands: capture.sourceCommands,
             note: "Host-side Harmony screenshot was captured through snapshot_display using remote artifact \(capture.remotePath)."
         )
+    case .android:
+        try prepareHostArtifactOutputPath(output)
+        let command = TKHostCommand(executable: "adb", arguments: ["-s", target.target, "exec-out", "screencap", "-p"], riskLevel: .readonly)
+        let result = try runHostCommandWritingStdoutArtifact(command, outputPath: output)
+        return HostDeviceArtifactOutput(
+            ok: true,
+            action: "screenshot",
+            platform: platform.rawValue,
+            target: target,
+            selection: selection,
+            artifact: output,
+            sourceCommands: [result.sourceCommand],
+            note: "Host-side Android emulator screenshot was captured through adb screencap."
+        )
     }
 }
 
@@ -840,6 +885,22 @@ func waitForHostDeviceReady(
             let command = TKHarmonyHDCCommand.bootCompleted(target: harmonyTarget.target, executable: hdc)
             let result = try runHostCommand(command)
             let ready = TKHarmonyBootCompletedParser.isReady(result.stdout)
+            let event = HostDeviceReadyEvent(
+                ok: ready,
+                platform: platform.rawValue,
+                target: selected,
+                ready: ready,
+                attempt: attempt,
+                sourceCommand: result.sourceCommand,
+                error: nil
+            )
+            if ready {
+                return event
+            }
+        case .android:
+            let command = TKHostCommand(executable: "adb", arguments: ["-s", selected.target, "shell", "getprop", "sys.boot_completed"], riskLevel: .readonly)
+            let result = try runHostCommand(command)
+            let ready = TKAndroidBootCompletedParser.isReady(result.stdout)
             let event = HostDeviceReadyEvent(
                 ok: ready,
                 platform: platform.rawValue,
@@ -1627,6 +1688,15 @@ func failHostValidation(code: String, message: String, hint: String, outputForma
         print("hint: \(hint)")
     }
     throw ExitCode.failure
+}
+
+func failAndroidTextNotFound(_ text: String, outputFormat: ClientOutputFormat) throws -> Never {
+    try failHostValidation(
+        code: "text_not_found",
+        message: "Android layout text was not found: \(text)",
+        hint: "Run `triton observe tree --platform android --output <path.xml> --json` and inspect the dumped text, content-desc, and resource-id values.",
+        outputFormat: outputFormat
+    )
 }
 
 func makeSimulatorScreenshotMetadata(outputPath: String) throws -> HostSimulatorScreenshotMetadata {

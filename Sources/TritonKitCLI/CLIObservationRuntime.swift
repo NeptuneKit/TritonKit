@@ -2,6 +2,8 @@ import ArgumentParser
 import Foundation
 import TritonKitShared
 
+typealias AndroidObserveHostRunner = (TKHostCommand) throws -> HostProcessResult
+
 func runObserve(
     action: String,
     platform: ObservationPlatform,
@@ -28,6 +30,16 @@ func runObserve(
                 maxNodes: maxNodes,
                 output: output
             )
+        case .android:
+            let selected = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(device: target, platform: .android, ready: runtimeBaseURL == nil),
+                hdc: hdc
+            )
+            response = try observeAndroid(
+                action: action,
+                selected: selected.target,
+                output: output
+            )
         case .ios:
             response = try await observeIOS(
                 action: action,
@@ -52,7 +64,7 @@ func runObserve(
         }
     } catch {
         if error is ExitCode { throw error }
-        if platform == .harmony {
+        if platform == .harmony || platform == .android {
             try failHostCommand(error, outputFormat: outputFormat)
         }
         try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
@@ -133,6 +145,75 @@ func observeHarmony(
         artifacts: [layout.localPath],
         sourceCommands: layout.sourceCommands,
         note: "Host layout proves visible text, bounds, and coordinate actions only; DOM, JavaScript, and WebView bridge remain unavailable without a provider."
+    )
+}
+
+func observeAndroid(
+    action: String,
+    selected: HostDeviceTarget,
+    output: String?,
+    runner: AndroidObserveHostRunner = { command in try runHostCommand(command) }
+) throws -> ObserveOutput {
+    let remotePath = "/sdcard/window_dump.xml"
+    let dumpCommand = TKAndroidADBCommand.uiautomatorDump(serial: selected.target, remotePath: remotePath)
+    let dumpResult = try runner(dumpCommand)
+    guard dumpResult.exitCode == 0 else {
+        throw HostCommandRunError.nonZeroExit(command: dumpCommand, result: dumpResult)
+    }
+
+    let readCommand = TKAndroidADBCommand.readFile(serial: selected.target, remotePath: remotePath)
+    let readResult = try runner(readCommand)
+    guard readResult.exitCode == 0 else {
+        throw HostCommandRunError.nonZeroExit(command: readCommand, result: readResult)
+    }
+
+    let artifactPath = output ?? defaultAndroidObserveArtifactPath(serial: selected.target)
+    try FileManager.default.createDirectory(
+        at: URL(fileURLWithPath: artifactPath).deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    try readResult.stdoutData.write(to: URL(fileURLWithPath: artifactPath), options: .atomic)
+
+    let nodes = try TKAndroidUIAutomatorXMLParser.nodeSummaries(in: readResult.stdoutData)
+        .enumerated()
+        .map { offset, node in observeNode(fromAndroid: node, index: offset) }
+
+    let sourceCommands = [dumpResult.sourceCommand, readResult.sourceCommand]
+    let source = ObserveSourceOutput(
+        name: "host-layout",
+        available: true,
+        reason: nil,
+        artifact: artifactPath,
+        sourceCommands: sourceCommands
+    )
+    return ObserveOutput(
+        ok: true,
+        action: action,
+        platform: "android",
+        capturedAt: ISO8601DateFormatter().string(from: Date()),
+        partial: true,
+        target: selected.id,
+        sources: [
+            source,
+            ObserveSourceOutput(
+                name: "runtime-tree",
+                available: false,
+                reason: "Android embedded runtime fusion is not available in P0",
+                artifact: nil,
+                sourceCommands: []
+            ),
+            ObserveSourceOutput(
+                name: "webview-provider",
+                available: false,
+                reason: "provider not registered",
+                artifact: nil,
+                sourceCommands: []
+            ),
+        ],
+        nodes: nodes,
+        artifacts: [artifactPath],
+        sourceCommands: sourceCommands,
+        note: "Android P0 observe uses host-side UIAutomator XML. WebView DOM, JavaScript, and embedded runtime fusion remain unavailable."
     )
 }
 
@@ -257,6 +338,43 @@ func observeNode(fromHarmony node: TKHarmonyLayoutNodeSummary) -> ObserveNodeOut
     )
 }
 
+func observeNode(fromAndroid node: TKAndroidUIAutomatorNodeSummary, index: Int) -> ObserveNodeOutput {
+    let role = node.className
+    let text = node.text ?? node.contentDescription
+    let identifier = node.resourceID
+    let webCandidate = isWebCandidate(
+        role: role,
+        className: node.className,
+        identifier: identifier,
+        text: text
+    )
+    var capabilities: [String] = []
+    if node.enabled {
+        capabilities.append("visible")
+    }
+    if node.clickable, node.bounds != nil {
+        capabilities.append("tap")
+    }
+    let missing = webCandidate
+        ? ["webview.url", "webview.dom", "webview.bridge-call", "semantic-action"]
+        : ["semantic-action"]
+    return ObserveNodeOutput(
+        nodeID: "android:host:\(index)",
+        source: "host-layout",
+        role: role,
+        text: text,
+        identifier: identifier,
+        frame: node.bounds,
+        enabled: node.enabled,
+        focused: nil,
+        hidden: nil,
+        candidateOnly: webCandidate,
+        confidence: webCandidate ? 0.7 : 0.83,
+        capabilities: capabilities,
+        missingCapabilities: missing
+    )
+}
+
 func isWebCandidate(role: String?, className: String?, identifier: String? = nil, text: String? = nil) -> Bool {
     webViewCandidateScore(role: role, className: className, identifier: identifier, text: text) != nil
 }
@@ -306,6 +424,14 @@ func runNodeResolve(
                 at: point,
                 includeCandidates: all
             )
+        case .android:
+            response = try resolveAndroidNode(
+                query: text,
+                target: target,
+                index: index,
+                within: bounds,
+                at: point
+            )
         case .ios:
             response = try await resolveIOSNode(
                 query: text,
@@ -336,11 +462,52 @@ func runNodeResolve(
         }
     } catch {
         if error is ExitCode { throw error }
-        if platform == .harmony {
+        if platform == .harmony || platform == .android {
             try failHostCommand(error, outputFormat: outputFormat)
         }
         try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
     }
+}
+
+func resolveAndroidNode(
+    query: String,
+    target: String,
+    index: Int?,
+    within: TKRect?,
+    at: (x: Double, y: Double)?,
+    includeCandidates: Bool = false
+) throws -> NodeResolveOutput {
+    let selection = try resolveHostDeviceSelection(
+        request: HostDeviceSelectionRequest(device: target, platform: .android, ready: true),
+        hdc: "hdc"
+    )
+    let output = try observeAndroid(action: "observe.tree", selected: selection.target, output: nil)
+    let candidates = output.nodes
+        .filter { observeNode($0, matches: query) }
+        .filter { node in
+            guard let within else { return true }
+            guard let frame = node.frame else { return false }
+            return TKRectIntersects(frame, within)
+        }
+        .filter { node in
+            guard let at else { return true }
+            guard let frame = node.frame else { return false }
+            return frame.contains(x: at.x, y: at.y)
+        }
+    return try selectedNodeResolveOutput(
+        platform: "android",
+        query: query,
+        candidates: candidates,
+        index: index,
+        includeCandidates: includeCandidates,
+        sourceCommands: output.sourceCommands
+    )
+}
+
+private func defaultAndroidObserveArtifactPath(serial: String) -> String {
+    FileManager.default.temporaryDirectory
+        .appendingPathComponent("triton-android-\(serial)-window.xml")
+        .path
 }
 
 func resolveHarmonyNode(

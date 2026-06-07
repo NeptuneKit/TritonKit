@@ -5,6 +5,8 @@ private func observationPlatform(from platform: HostDevicePlatform) -> Observati
     switch platform {
     case .ios:
         return .ios
+    case .android:
+        return .android
     case .harmony:
         return .harmony
     }
@@ -14,6 +16,8 @@ private func hostDevicePlatform(from platform: ObservationPlatform) -> HostDevic
     switch platform {
     case .ios:
         return .ios
+    case .android:
+        return .android
     case .harmony:
         return .harmony
     }
@@ -53,15 +57,15 @@ struct Observe: AsyncParsableCommand {
 struct ObserveCurrent: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "current", abstract: "Read the current visible app snapshot")
 
-    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform?
-    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Runtime target id from `triton list`; when --platform harmony, pass the raw HDC target id") var target: String = TKLocalTargetID
-    @Option(help: "Path to hdc executable for --platform harmony") var hdc: String = "hdc"
+    @Option(help: "Observation platform: ios, android, or harmony") var platform: ObservationPlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Runtime target id from `triton list`; when --platform android or harmony, pass the raw host target id") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable for --platform harmony host selection") var hdc: String = "hdc"
     @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
     @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
     @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
     @Option(help: "Maximum nodes to return") var maxNodes: Int?
-    @Option(help: "Write host layout artifact to a file for Harmony") var output: String?
+    @Option(help: "Write host layout artifact to a file for Android or Harmony") var output: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
@@ -86,15 +90,15 @@ struct ObserveCurrent: AsyncParsableCommand {
 struct ObserveTree: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "tree", abstract: "Read the current visible node tree")
 
-    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform?
-    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Runtime target id from `triton list`; when --platform harmony, pass the raw HDC target id") var target: String = TKLocalTargetID
-    @Option(help: "Path to hdc executable for --platform harmony") var hdc: String = "hdc"
+    @Option(help: "Observation platform: ios, android, or harmony") var platform: ObservationPlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Runtime target id from `triton list`; when --platform android or harmony, pass the raw host target id") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable for --platform harmony host selection") var hdc: String = "hdc"
     @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
     @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
     @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
     @Option(help: "Maximum nodes to return") var maxNodes: Int?
-    @Option(help: "Write host layout artifact to a file for Harmony") var output: String?
+    @Option(help: "Write host layout artifact to a file for Android or Harmony") var output: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
@@ -119,11 +123,11 @@ struct ObserveTree: AsyncParsableCommand {
 struct NodeResolve: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "resolve", abstract: "Resolve a current UI node by text, id, key, accessibility id, or point")
 
-    @Option(help: "Observation platform: ios or harmony") var platform: ObservationPlatform?
+    @Option(help: "Observation platform: ios, android, or harmony") var platform: ObservationPlatform?
     @Option(name: .customLong("text"), help: "Visible text, label, identifier, title, value, key, or accessibility id") var text: String?
-    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
-    @Option(help: "Runtime target id from `triton list`; when --platform harmony, pass the raw HDC target id") var target: String = TKLocalTargetID
-    @Option(help: "Path to hdc executable for --platform harmony") var hdc: String = "hdc"
+    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Runtime target id from `triton list`; when --platform android or harmony, pass the raw host target id") var target: String = TKLocalTargetID
+    @Option(help: "Path to hdc executable for --platform harmony host selection") var hdc: String = "hdc"
     @Option(help: "Server host for iOS embedded runtime") var host: String = "127.0.0.1"
     @Option(help: "Server port for iOS embedded runtime") var port: Int = 19421
     @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?

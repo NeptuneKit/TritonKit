@@ -3,6 +3,7 @@ import TritonKitShared
 
 enum SmokePlatform: String, Codable {
     case ios
+    case android
     case harmony
 }
 

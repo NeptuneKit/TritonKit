@@ -202,6 +202,56 @@ struct TKHostAdapterModelsTests {
         #expect(TKHarmonyHDCCommand.screenshot(target: "127.0.0.1:10100", remotePath: "/data/local/tmp/smoke.jpeg").argv == ["-t", "127.0.0.1:10100", "shell", "snapshot_display", "-f", "/data/local/tmp/smoke.jpeg"])
     }
 
+    @Test("Android ADB command builder emits argv without shell string concatenation")
+    func androidADBCommandBuilderArgv() {
+        #expect(TKAndroidADBCommand.version(executable: "/tmp/adb").executable == "/tmp/adb")
+        #expect(TKAndroidADBCommand.version().argv == ["version"])
+        #expect(TKAndroidADBCommand.listDevices().argv == ["devices", "-l"])
+        #expect(TKAndroidADBCommand.bootCompleted(serial: "emulator-5554").argv == ["-s", "emulator-5554", "shell", "getprop", "sys.boot_completed"])
+        #expect(TKAndroidADBCommand.screenshot(serial: "emulator-5554").argv == ["-s", "emulator-5554", "exec-out", "screencap", "-p"])
+        #expect(TKAndroidADBCommand.installAPK(serial: "emulator-5554", apkPath: "/tmp/Demo.apk").argv == ["-s", "emulator-5554", "install", "-r", "/tmp/Demo.apk"])
+        #expect(TKAndroidADBCommand.uninstall(serial: "emulator-5554", packageName: "com.example.demo").argv == ["-s", "emulator-5554", "uninstall", "com.example.demo"])
+        #expect(TKAndroidADBCommand.resolveActivity(serial: "emulator-5554", packageName: "com.example.demo").argv == ["-s", "emulator-5554", "shell", "cmd", "package", "resolve-activity", "--brief", "com.example.demo"])
+        #expect(TKAndroidADBCommand.launch(serial: "emulator-5554", packageName: "com.example.demo", activity: ".MainActivity").argv == ["-s", "emulator-5554", "shell", "am", "start", "-n", "com.example.demo/.MainActivity"])
+        #expect(TKAndroidADBCommand.readFile(serial: "emulator-5554", remotePath: "/sdcard/window_dump.xml").argv == ["-s", "emulator-5554", "shell", "cat", "/sdcard/window_dump.xml"])
+        #expect(TKAndroidADBCommand.forceStop(serial: "emulator-5554", packageName: "com.example.demo").argv == ["-s", "emulator-5554", "shell", "am", "force-stop", "com.example.demo"])
+        #expect(TKAndroidADBCommand.openURL(serial: "emulator-5554", url: "demo://home").argv == ["-s", "emulator-5554", "shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", "demo://home"])
+        #expect(TKAndroidADBCommand.openURL(serial: "emulator-5554", url: "demo://home", packageName: "com.example.demo").argv == ["-s", "emulator-5554", "shell", "am", "start", "-a", "android.intent.action.VIEW", "-d", "demo://home", "-p", "com.example.demo"])
+        #expect(TKAndroidADBCommand.listPackages(serial: "emulator-5554", userOnly: true).argv == ["-s", "emulator-5554", "shell", "pm", "list", "packages", "-3"])
+        #expect(TKAndroidADBCommand.dumpsysPackage(serial: "emulator-5554", packageName: "com.example.demo").argv == ["-s", "emulator-5554", "shell", "dumpsys", "package", "com.example.demo"])
+        #expect(TKAndroidADBCommand.tapCoordinate(serial: "emulator-5554", x: 10, y: 20).argv == ["-s", "emulator-5554", "shell", "input", "tap", "10", "20"])
+        #expect(TKAndroidADBCommand.swipeCoordinate(serial: "emulator-5554", startX: 10, startY: 20, endX: 100, endY: 200).argv == ["-s", "emulator-5554", "shell", "input", "swipe", "10", "20", "100", "200"])
+        #expect(TKAndroidADBCommand.swipeCoordinate(serial: "emulator-5554", startX: 10, startY: 20, endX: 100, endY: 200, durationMs: 350).argv == ["-s", "emulator-5554", "shell", "input", "swipe", "10", "20", "100", "200", "350"])
+        #expect(TKAndroidADBCommand.inputText(serial: "emulator-5554", text: "hello%sworld").argv == ["-s", "emulator-5554", "shell", "input", "text", "hello%sworld"])
+        #expect(TKAndroidADBCommand.keyEvent(serial: "emulator-5554", keyCode: "KEYCODE_BACK").argv == ["-s", "emulator-5554", "shell", "input", "keyevent", "KEYCODE_BACK"])
+    }
+
+    @Test("Android package parsers map adb output into installed app summaries")
+    func androidPackageParsers() {
+        let listOutput = """
+        package:com.android.settings
+        package:com.example.demo
+        """
+
+        let apps = TKAndroidPackageListParser.parse(listOutput)
+        #expect(apps.map(\.bundleID) == ["com.android.settings", "com.example.demo"])
+        #expect(apps[0].applicationType == "Android")
+
+        let infoOutput = """
+        Package [com.example.demo] (abc):
+          codePath=/data/app/~~hash/com.example.demo-base
+          resourcePath=/data/app/~~hash/com.example.demo-base/base.apk
+          versionName=1.2.3
+          dataDir=/data/user/0/com.example.demo
+        """
+        let app = TKAndroidPackageInfoParser.parse(infoOutput, packageName: "com.example.demo")
+        #expect(app.bundleID == "com.example.demo")
+        #expect(app.version == "1.2.3")
+        #expect(app.path == "/data/app/~~hash/com.example.demo-base")
+        #expect(app.bundleURL == "/data/app/~~hash/com.example.demo-base/base.apk")
+        #expect(app.dataContainerURL == "/data/user/0/com.example.demo")
+    }
+
     @Test("Harmony dumpLayout parser extracts remote file path")
     func harmonyDumpLayoutRemotePathParser() throws {
         let output = """
@@ -347,6 +397,36 @@ struct TKHostAdapterModelsTests {
         #expect(!TKHarmonyBootCompletedParser.isReady("false\n"))
         #expect(!TKHarmonyBootCompletedParser.isReady("1\n"))
         #expect(!TKHarmonyBootCompletedParser.isReady(""))
+    }
+
+    @Test("ADB device parser preserves emulator states and metadata")
+    func adbDeviceParser() throws {
+        let output = """
+        List of devices attached
+        emulator-5554          device product:sdk_gphone64_arm64 model:Pixel_8 device:emu64a transport_id:1
+        emulator-5556          offline transport_id:2
+        emulator-5558          unauthorized transport_id:3
+        """
+
+        let targets = TKAdbDeviceListParser.parse(output)
+
+        #expect(targets.map(\.id) == ["android:emulator-5554", "android:emulator-5556", "android:emulator-5558"])
+        #expect(targets.map(\.serial) == ["emulator-5554", "emulator-5556", "emulator-5558"])
+        #expect(targets.map(\.state) == ["device", "offline", "unauthorized"])
+        #expect(targets.filter(\.isReady).map(\.serial) == ["emulator-5554"])
+        #expect(targets.first?.product == "sdk_gphone64_arm64")
+        #expect(targets.first?.model == "Pixel_8")
+        #expect(targets.first?.device == "emu64a")
+        #expect(targets.first?.transportID == "1")
+        #expect(TKAdbDeviceListParser.defaultTarget(from: targets)?.serial == "emulator-5554")
+    }
+
+    @Test("Android boot parser only treats one as ready")
+    func androidBootCompletedParser() {
+        #expect(TKAndroidBootCompletedParser.isReady("1\n"))
+        #expect(!TKAndroidBootCompletedParser.isReady("0\n"))
+        #expect(!TKAndroidBootCompletedParser.isReady("true\n"))
+        #expect(!TKAndroidBootCompletedParser.isReady(""))
     }
 
     @Test("embedded runtime HTTP routes map request model to Harmony SDK endpoints")

@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite
@@ -82,5 +83,60 @@ struct ObservationOutputTests {
 
         #expect(output.primarySource?.name == "webview-provider")
         #expect(output.primarySource?.sourceCommands == ["triton webview current --json"])
+    }
+
+    @Test("android observe tree decodes UIAutomator XML into host layout nodes")
+    func androidObserveTreeDecodesUIAutomatorXML() async throws {
+        let target = HostDeviceTarget(
+            platform: "android",
+            id: "android:emulator-5554",
+            target: "emulator-5554",
+            state: "device",
+            ready: true,
+            source: "adb",
+            name: "Pixel_8",
+            runtime: "sdk_gphone64_arm64",
+            transport: "1"
+        )
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("android-observe-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+        let artifactPath = temp.appendingPathComponent("window.xml").path
+
+        let output = try observeAndroid(
+            action: "observe.tree",
+            selected: target,
+            output: artifactPath,
+            runner: { command in
+                let fixture = try TKAndroidADBFakeRunner(fixtures: [
+                    .uiautomatorDump(serial: "emulator-5554", remotePath: "/sdcard/window_dump.xml"),
+                    .readFileXML(serial: "emulator-5554", remotePath: "/sdcard/window_dump.xml")
+                ]).run(command)
+                return HostProcessResult(
+                    stdoutData: fixture.stdout,
+                    stderrData: fixture.stderr,
+                    exitCode: fixture.exitCode,
+                    sourceCommand: hostSourceCommand(command),
+                    stdoutTruncated: false,
+                    stderrTruncated: false,
+                    stdoutLogPath: nil,
+                    stderrLogPath: nil,
+                    stdoutBytes: fixture.stdout.count,
+                    stderrBytes: fixture.stderr.count
+                )
+            }
+        )
+
+        #expect(output.ok)
+        #expect(output.platform == "android")
+        #expect(output.primarySource?.name == "host-layout")
+        #expect(output.sources.first?.artifact == artifactPath)
+        #expect(output.artifacts == [artifactPath])
+        #expect(output.nodes.count == 2)
+        #expect(output.nodes[1].text == "Login")
+        #expect(output.nodes[1].identifier == "com.example.demo:id/login")
+        #expect(output.nodes[1].role == "android.widget.Button")
+        #expect(output.nodes[1].capabilities.contains("tap"))
+        #expect(FileManager.default.fileExists(atPath: artifactPath))
     }
 }

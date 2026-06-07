@@ -93,7 +93,7 @@ struct Wait: AsyncParsableCommand {
         abstract: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate"
     )
 
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
     @Option(name: .customLong("text"), help: "Visible text, AX label, identifier, title, or value to wait for") var text: String?
     @Option(name: .customLong("gone"), help: "Visible text, AX label, identifier, title, or value to wait to disappear") var gone: String?
     @Option(name: .customLong("exists"), help: "Alias for --text; can be combined with --role") var exists: String?
@@ -103,6 +103,7 @@ struct Wait: AsyncParsableCommand {
     @Option(name: .customLong("predicate"), help: "Safe predicate using text.exists/gone with &&, ||, !") var predicate: String?
     @Option(name: .customLong("role"), help: "Optional AX role filter for --text or --exists") var role: String?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -149,6 +150,80 @@ struct Wait: AsyncParsableCommand {
                     throw ExitCode.failure
                 }
                 throw RuntimeError("--since currently supports only latest")
+            }
+
+            if platform == .android {
+                guard text != nil || gone != nil || exists != nil else {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Android host wait currently supports --text, --exists, or --gone.",
+                        hint: "Use `triton observe tree --platform android --json` for raw host layout evidence.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let query = text ?? gone ?? exists ?? ""
+                let selected = try resolveAndroidActionSelection(target: target, adb: adb)
+                let startedAt = Date()
+                let deadline = startedAt.addingTimeInterval(timeout)
+                var pollCount = 0
+                var lastMatch: HostAndroidTapMatch?
+                var sourceCommands: [String] = []
+                while true {
+                    pollCount += 1
+                    let (match, commands) = try observeAndroidTextMatch(selected: selected, query: query, adb: adb)
+                    sourceCommands.append(contentsOf: commands)
+                    lastMatch = match
+                    let matched = gone != nil ? lastMatch == nil : lastMatch != nil
+                    if matched {
+                        let response = HostAndroidWaitOutput(
+                            ok: true,
+                            action: "wait",
+                            platform: "android",
+                            target: selected,
+                            condition: gone != nil ? "gone" : "text",
+                            query: query,
+                            matched: true,
+                            timedOut: false,
+                            elapsedMs: elapsedMilliseconds(since: startedAt),
+                            pollCount: pollCount,
+                            match: lastMatch,
+                            sourceCommands: sourceCommands
+                        )
+                        switch outputFormat {
+                        case .json:
+                            print(try encodeJSON(response))
+                        case .text:
+                            print("matched \(query)")
+                        }
+                        return
+                    }
+                    if Date() >= deadline {
+                        let response = HostAndroidWaitOutput(
+                            ok: false,
+                            action: "wait",
+                            platform: "android",
+                            target: selected,
+                            condition: gone != nil ? "gone" : "text",
+                            query: query,
+                            matched: false,
+                            timedOut: true,
+                            elapsedMs: elapsedMilliseconds(since: startedAt),
+                            pollCount: pollCount,
+                            match: lastMatch,
+                            sourceCommands: sourceCommands
+                        )
+                        switch outputFormat {
+                        case .json:
+                            print(try encodeJSON(response))
+                        case .text:
+                            print("timed out waiting for \(query)")
+                        }
+                        throw ExitCode.failure
+                    }
+                    let remaining = deadline.timeIntervalSinceNow
+                    let sleepSeconds = max(0.01, min(interval, remaining))
+                    try await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
+                }
             }
 
             if platform == .harmony {
@@ -259,8 +334,9 @@ struct Tap: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Tap a UI target by text, coordinate, oid, or AX node")
 
     @Argument(help: "Text, label, identifier, or visible option title to tap") var query: String?
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -330,6 +406,72 @@ struct Tap: AsyncParsableCommand {
                 throw ExitCode.failure
             }
             throw RuntimeError("--strategy can only be used with <query>, --ax-oid, or --ax-label")
+        }
+
+        if platform == .android {
+            do {
+                if oid != nil || axOID != nil || axLabel != nil || within != nil || index != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Android host tap currently supports <query>, --x/--y, or --at.",
+                        hint: "Use `triton observe tree --platform android --json` to inspect visible text and bounds.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveAndroidActionSelection(target: target, adb: adb)
+                let sourceCommands: [String]
+                let match: HostAndroidTapMatch?
+                let tapX: Int
+                let tapY: Int
+                if let query {
+                    let resolved = try resolveAndroidTapQuery(selected: selected, query: query, adb: adb)
+                    let tapResult = try runHostCommand(TKAndroidADBCommand.tapCoordinate(serial: selected.target, x: resolved.x, y: resolved.y, executable: adb))
+                    sourceCommands = resolved.sourceCommands + [tapResult.sourceCommand]
+                    match = resolved.match
+                    tapX = resolved.x
+                    tapY = resolved.y
+                } else {
+                    let point = try at.map(parsePoint)
+                    guard let tapPointX = point?.x ?? x, let tapPointY = point?.y ?? y else {
+                        try failHostValidation(
+                            code: "validation_failed",
+                            message: "Android host tap requires <query>, --x/--y, or --at.",
+                            hint: "Pass visible text or explicit coordinates.",
+                            outputFormat: outputFormat
+                        )
+                    }
+                    tapX = Int(tapPointX.rounded())
+                    tapY = Int(tapPointY.rounded())
+                    let tapResult = try runHostCommand(TKAndroidADBCommand.tapCoordinate(serial: selected.target, x: tapX, y: tapY, executable: adb))
+                    sourceCommands = [tapResult.sourceCommand]
+                    match = nil
+                }
+                let response = HostAndroidTapOutput(
+                    ok: true,
+                    action: "tap",
+                    platform: "android",
+                    target: selected,
+                    query: query,
+                    x: tapX,
+                    y: tapY,
+                    match: match,
+                    sourceCommands: sourceCommands,
+                    note: "Android tap was submitted through adb input; verify business state with wait, observe, or screenshot."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print("\(tapX),\(tapY)")
+                }
+            } catch {
+                if error is ExitCode { throw error }
+                if case HostCommandRunError.layoutTextNotFound(let query) = error {
+                    try failAndroidTextNotFound(query, outputFormat: outputFormat)
+                }
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
         }
 
         if platform == .harmony {
@@ -461,8 +603,9 @@ struct Tap: AsyncParsableCommand {
 struct Swipe: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Swipe inside the app using window-point coordinates")
 
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -478,6 +621,62 @@ struct Swipe: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
+        if platform == .android {
+            do {
+                if width != nil || height != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Android host swipe uses absolute screen coordinates and does not support --width or --height normalization.",
+                        hint: "Use coordinates from `triton observe tree --platform android --json` or screenshot pixels.",
+                        outputFormat: outputFormat
+                    )
+                }
+                if let duration, duration <= 0 {
+                    try failHostValidation(
+                        code: "validation_failed",
+                        message: "--duration must be greater than 0.",
+                        hint: "Omit --duration to use the Android input default duration.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveAndroidActionSelection(target: target, adb: adb)
+                let durationMs = duration.map { Int(($0 * 1000).rounded()) }
+                let command = TKAndroidADBCommand.swipeCoordinate(
+                    serial: selected.target,
+                    startX: Int(startX.rounded()),
+                    startY: Int(startY.rounded()),
+                    endX: Int(endX.rounded()),
+                    endY: Int(endY.rounded()),
+                    durationMs: durationMs,
+                    executable: adb
+                )
+                let result = try runHostCommand(command)
+                let response = HostAndroidSwipeOutput(
+                    ok: true,
+                    action: "swipe",
+                    platform: "android",
+                    target: selected,
+                    startX: Int(startX.rounded()),
+                    startY: Int(startY.rounded()),
+                    endX: Int(endX.rounded()),
+                    endY: Int(endY.rounded()),
+                    durationMs: durationMs,
+                    sourceCommands: [result.sourceCommand],
+                    note: "Android swipe was submitted through adb input; verify business state with wait, observe, or screenshot."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print("\(response.startX),\(response.startY) -> \(response.endX),\(response.endY)")
+                }
+            } catch {
+                if error is ExitCode { throw error }
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
+        }
+
         if platform == .harmony {
             do {
                 if width != nil || height != nil {
@@ -561,8 +760,9 @@ struct TypeText: AsyncParsableCommand {
     )
 
     @Argument(help: "Text to insert") var textArgument: String?
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -585,6 +785,34 @@ struct TypeText: AsyncParsableCommand {
                 throw RuntimeError("Provide exactly one text value: <text> or --text")
             }
             let value = textArgument ?? text ?? ""
+            if platform == .android {
+                if oid != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Android host type currently targets the focused field only and does not support --oid.",
+                        hint: "Focus the field with `triton tap --platform android` first, then run `triton type --platform android <text>`.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveAndroidActionSelection(target: target, adb: adb)
+                let command = TKAndroidADBCommand.inputText(serial: selected.target, text: value, executable: adb)
+                _ = try runHostCommand(command)
+                let response = HostAndroidTextInputOutput(
+                    ok: true,
+                    action: "type",
+                    platform: "android",
+                    target: selected,
+                    x: nil,
+                    y: nil,
+                    secure: secure,
+                    redacted: secure,
+                    insertedLength: value.count,
+                    sourceCommands: [androidTextSourceCommand(command, text: value, secure: secure)],
+                    note: "Android text input was submitted to the focused field through adb input; verify field state with wait, observe, or screenshot."
+                )
+                try printAndroidTextInput(response, format: outputFormat)
+                return
+            }
             if platform == .harmony {
                 if oid != nil {
                     try failHostValidation(
@@ -636,8 +864,9 @@ struct PasteText: AsyncParsableCommand {
     )
 
     @Argument(help: "Text to paste") var text: String
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -653,6 +882,43 @@ struct PasteText: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             let point = try inputFocusPoint(at: at, x: x, y: y, outputFormat: outputFormat)
+            if platform == .android {
+                if oid != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Android host paste currently supports focused input or coordinate focus, not --oid.",
+                        hint: "Use `--at x,y` or tap the field before pasting.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveAndroidActionSelection(target: target, adb: adb)
+                var sourceCommands: [String] = []
+                let focusX = point?.x ?? x
+                let focusY = point?.y ?? y
+                if let focusX, let focusY {
+                    let tapCommand = TKAndroidADBCommand.tapCoordinate(serial: selected.target, x: Int(focusX.rounded()), y: Int(focusY.rounded()), executable: adb)
+                    let tapResult = try runHostCommand(tapCommand)
+                    sourceCommands.append(tapResult.sourceCommand)
+                }
+                let inputCommand = TKAndroidADBCommand.inputText(serial: selected.target, text: text, executable: adb)
+                _ = try runHostCommand(inputCommand)
+                sourceCommands.append(androidTextSourceCommand(inputCommand, text: text, secure: secure))
+                let response = HostAndroidTextInputOutput(
+                    ok: true,
+                    action: "paste",
+                    platform: "android",
+                    target: selected,
+                    x: focusX.map { Int($0.rounded()) },
+                    y: focusY.map { Int($0.rounded()) },
+                    secure: secure,
+                    redacted: secure,
+                    insertedLength: text.count,
+                    sourceCommands: sourceCommands,
+                    note: "Android paste is implemented as adb text insertion into the focused field; verify final field state with wait, observe, or screenshot."
+                )
+                try printAndroidTextInput(response, format: outputFormat)
+                return
+            }
             if platform == .harmony {
                 if oid != nil {
                     try failHostValidation(
@@ -716,8 +982,9 @@ struct ClearText: AsyncParsableCommand {
         abstract: "Clear a focused, coordinate-targeted, or oid-targeted input"
     )
 
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -731,6 +998,15 @@ struct ClearText: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            if platform == .android {
+                _ = try resolveAndroidActionSelection(target: target, adb: adb)
+                try failHostValidation(
+                    code: "unsupported_capability",
+                    message: "Android host clear is not implemented because adb input does not expose a stable clear-current-field primitive.",
+                    hint: "Use focused replace flows such as `triton paste --platform android` or app-level semantic actions when available.",
+                    outputFormat: outputFormat
+                )
+            }
             if platform == .harmony {
                 _ = try resolveHarmonyTarget(target: target, hdc: hdc)
                 try failHostValidation(
@@ -760,8 +1036,9 @@ struct Press: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Press a device button when supported by the active runtime")
 
     @Argument(help: "Button name, for example home, lock, power, volume-up") var buttonArgument: String?
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -782,6 +1059,28 @@ struct Press: AsyncParsableCommand {
                 throw RuntimeError("Provide exactly one button value: <button> or --button")
             }
             let value = buttonArgument ?? button ?? ""
+            if platform == .android {
+                if duration != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "Android host press does not support hold duration through adb keyevent.",
+                        hint: "Omit --duration, or use a platform-specific provider when long press semantics are required.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let selected = try resolveAndroidActionSelection(target: target, adb: adb)
+                let keyCode = androidKeyEventName(for: value)
+                let command = TKAndroidADBCommand.keyEvent(serial: selected.target, keyCode: keyCode, executable: adb)
+                try runSimpleHostCommand(
+                    action: "press",
+                    runtimeScope: "host-android",
+                    target: "android:\(selected.target)",
+                    command: command,
+                    outputFormat: outputFormat,
+                    note: "Android keyevent \(keyCode) was submitted through adb input; verify business state with wait, observe, or screenshot."
+                )
+                return
+            }
             if platform == .harmony {
                 if duration != nil {
                     try failHostValidation(

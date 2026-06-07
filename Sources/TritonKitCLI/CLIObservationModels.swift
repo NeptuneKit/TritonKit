@@ -3,6 +3,7 @@ import TritonKitShared
 
 enum ObservationPlatform: String, ExpressibleByArgument {
     case ios
+    case android
     case harmony
 }
 

@@ -11,9 +11,9 @@ struct DeviceCrossPlatformTests {
         let optionNames = device.options.map(\.name)
         let usageForms = device.usageForms.map(\.form)
 
-        #expect(usageForms.contains("doctor --platform ios|harmony"))
-        #expect(usageForms.contains("list --platform ios|harmony"))
-        #expect(usageForms.contains("alias set <name> --platform ios|harmony --target <id>"))
+        #expect(usageForms.contains("doctor --platform ios|android|harmony"))
+        #expect(usageForms.contains("list --platform ios|android|harmony"))
+        #expect(usageForms.contains("alias set <name> --platform ios|android|harmony --target <id>"))
         #expect(usageForms.contains("use <selector>"))
         #expect(usageForms.contains("current"))
         #expect(usageForms.contains("resolve <selector>"))
@@ -34,6 +34,10 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("device-use"))
         #expect(device.providedCapabilities.contains("device-wait-ready"))
         #expect(device.providedCapabilities.contains("device-screenshot"))
+        #expect(device.providedCapabilities.contains("android-device"))
+        #expect(device.providedCapabilities.contains("android-device-list"))
+        #expect(device.providedCapabilities.contains("android-device-wait-ready"))
+        #expect(device.providedCapabilities.contains("android-device-screenshot"))
         #expect(device.providedCapabilities.contains("harmony-device-stop"))
     }
 
@@ -109,11 +113,22 @@ struct DeviceCrossPlatformTests {
         #expect(appOptionNames.contains("--target"))
         #expect(appOptionNames.contains("--name"))
         #expect(appOptionNames.contains("--runtime"))
+        #expect(appOptionNames.contains("--package-name"))
+        #expect(appOptionNames.contains("--activity"))
+        #expect(appOptionNames.contains("--apk"))
         #expect(app.examples.contains("triton app list --device iphone15 --user-only --json"))
+        #expect(app.examples.contains("triton app install --device android-a --platform android --apk /tmp/Demo.apk --json"))
+        #expect(app.examples.contains("triton app launch --device android-a --platform android --package-name com.example.app --json"))
+        #expect(app.examples.contains("triton app open-url example://debug --device android-a --platform android --package-name com.example.app --json"))
         #expect(app.examples.contains("triton app install --device harmony-a --hap /tmp/Demo.hap --json"))
         #expect(app.examples.contains(#"triton app go "example://debug""#))
         #expect(app.examples.contains(#"triton app go "example://debug" --device iphone15"#))
         #expect(app.examples.contains("triton app prefs get DEBUG-mock --device iphone15 --bundle-id com.example.app --json"))
+        #expect(app.providedCapabilities.contains("android-app"))
+        #expect(app.providedCapabilities.contains("android-app-install"))
+        #expect(app.providedCapabilities.contains("android-app-launch"))
+        #expect(app.providedCapabilities.contains("android-app-terminate"))
+        #expect(app.providedCapabilities.contains("android-app-open-url"))
 
         #expect(smokeOptionNames.contains("--device"))
         #expect(smokeOptionNames.contains("--simulator"))
@@ -146,9 +161,11 @@ struct DeviceCrossPlatformTests {
             source: "simctl"
         )
         let harmonyTarget = TKHarmonyTarget(target: "127.0.0.1:10100", state: "Connected", transport: "TCP", source: "hdc")
+        let androidTarget = TKAndroidTarget(serial: "emulator-5554", state: "device", product: "sdk_gphone64_arm64", model: "Pixel_8", device: "emu64a", transportID: "1")
 
         let ios = hostDeviceTarget(from: iosSimulator)
         let harmony = hostDeviceTarget(from: harmonyTarget)
+        let android = hostDeviceTarget(from: androidTarget)
 
         #expect(ios.platform == "ios")
         #expect(ios.id == "sim:SIM-1")
@@ -161,6 +178,13 @@ struct DeviceCrossPlatformTests {
         #expect(harmony.target == "127.0.0.1:10100")
         #expect(harmony.ready)
         #expect(harmony.transport == "TCP")
+        #expect(android.platform == "android")
+        #expect(android.id == "android:emulator-5554")
+        #expect(android.target == "emulator-5554")
+        #expect(android.ready)
+        #expect(android.name == "Pixel_8")
+        #expect(android.runtime == "sdk_gphone64_arm64")
+        #expect(android.transport == "1")
     }
 
     @Test("host device target can round-trip into Harmony runtime target")
@@ -346,6 +370,7 @@ struct DeviceCrossPlatformTests {
             current: "iphone15",
             aliases: [
                 "iphone15": HostTargetAlias(platform: .ios, target: "SIM-1"),
+                "android-a": HostTargetAlias(platform: .android, target: "emulator-5554"),
                 "harmony-a": HostTargetAlias(platform: .harmony, target: "127.0.0.1:10100"),
             ]
         )
@@ -355,6 +380,7 @@ struct DeviceCrossPlatformTests {
         #expect(decoded.schemaVersion == 1)
         #expect(decoded.current == "iphone15")
         #expect(decoded.aliases["iphone15"]?.platform == .ios)
+        #expect(decoded.aliases["android-a"]?.platform == .android)
         #expect(decoded.aliases["harmony-a"]?.target == "127.0.0.1:10100")
     }
 }

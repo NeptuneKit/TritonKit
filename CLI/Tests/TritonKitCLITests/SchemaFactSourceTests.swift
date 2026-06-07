@@ -498,6 +498,7 @@ struct SchemaFactSourceTests {
             args: [String]
         )] = [
             ("observe-ios", false, "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], "observe", ["current", "--platform", "ios", "--json"]),
+            ("observe-android", true, "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"]),
             ("observe-harmony", true, "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"]),
             ("webview-list", true, "webview", ["observe", "route", "assert", "evidence"], ["webview-candidates", "host-layout", "runtime-ax"], "webview", ["list", "--json"]),
             ("webview-current", true, "webview", ["observe", "route", "assert", "evidence"], ["webview-candidates", "host-layout", "runtime-ax"], "webview", ["current", "--json"]),
@@ -535,7 +536,7 @@ struct SchemaFactSourceTests {
         let schemas = commandSchemaMap()
         let observeSchema = try #require(schemas["observe"])
         let nodeSchema = try #require(schemas["node"])
-        #expect(observeSchema.providedCapabilities == ["observe", "observe-ios", "observe-harmony"])
+        #expect(observeSchema.providedCapabilities == ["observe", "observe-ios", "observe-android", "observe-harmony"])
         #expect(nodeSchema.providedCapabilities == ["node", "node-resolve"])
 
         let connected = connectedCapabilityMap()
@@ -555,6 +556,7 @@ struct SchemaFactSourceTests {
         )] = [
             ("observe", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["current", "--json"], "observe", ["current", "--json"]),
             ("observe-ios", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, false, "observe", ["current", "--platform", "ios", "--json"], "observe", ["current", "--platform", "ios", "--json"]),
+            ("observe-android", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"]),
             ("observe-harmony", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"]),
             ("node", "observe", ["action", "assert", "evidence"], ["hierarchy-node", "surface-tree"], true, false, "node", ["--oid", "<oid>", "--json"], "status", ["--json"]),
             ("node-resolve", "observe", ["action", "assert", "evidence"], ["target.resolution", "surface-tree"], true, true, "node", ["resolve", "--text", "<text>", "--json"], "node", ["resolve", "--text", "<text>", "--json"]),
@@ -1683,6 +1685,7 @@ struct SchemaFactSourceTests {
             "host-device-screenshot": ["<path>"],
             "ios-screenshot": ["<path>"],
             "ios-device-screenshot": ["<path>"],
+            "android-device-screenshot": ["<path>"],
             "harmony-screenshot": ["<path>"],
             "harmony-device-screenshot": ["<path>"],
             "sim-video": ["<path.mov>"],
@@ -1799,6 +1802,7 @@ struct SchemaFactSourceTests {
         var unsupportedPlatformValues: [String] = []
         var harmonyFamilyPlatformMismatches: [String] = []
         var iosFamilyPlatformMismatches: [String] = []
+        var androidFamilyPlatformMismatches: [String] = []
 
         for fixture in fixtures {
             for capability in fixture.capabilities {
@@ -1815,7 +1819,7 @@ struct SchemaFactSourceTests {
                     return args[index + 1]
                 }
 
-                for value in platformValues where !Set(["ios", "harmony"]).contains(value) {
+                for value in platformValues where !Set(["ios", "android", "harmony"]).contains(value) {
                     unsupportedPlatformValues.append("\(context):platform=\(value)")
                 }
 
@@ -1830,12 +1834,19 @@ struct SchemaFactSourceTests {
                         iosFamilyPlatformMismatches.append("\(context):platforms=\(platformValues)")
                     }
                 }
+
+                if capability.name.hasPrefix("android-") {
+                    if !platformValues.isEmpty && !platformValues.allSatisfy({ $0 == "android" }) {
+                        androidFamilyPlatformMismatches.append("\(context):platforms=\(platformValues)")
+                    }
+                }
             }
         }
 
         #expect(unsupportedPlatformValues == [])
         #expect(harmonyFamilyPlatformMismatches == [])
         #expect(iosFamilyPlatformMismatches == [])
+        #expect(androidFamilyPlatformMismatches == [])
     }
 
     @Test("capability next-action text placeholders stay canonical")
@@ -4522,7 +4533,7 @@ private func requiredRecoveryCategories(forUnsupportedFailureCode failureCode: S
 
 private func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
     switch failureCode {
-    case "ambiguous_target", "device_not_ready", "simulator_not_found", "target_not_found", "target_unavailable":
+    case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_found", "target_not_found", "target_unavailable":
         return ["discover", "prepare-target", "diagnose"]
     case "ambiguous_workspace", "invalid_workspace_path", "scheme_not_found", "workspace_not_found", "xcode_not_idle":
         return ["project", "diagnose"]

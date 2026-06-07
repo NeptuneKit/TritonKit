@@ -777,6 +777,27 @@ func hostHarmonyTapOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostAndroidTapOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.android-tap",
+        format: "json",
+        kind: "host-action",
+        model: "HostAndroidTapOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the Android host tap command succeeded"),
+            ("action", "String", true, "Host action name"),
+            ("platform", "String", true, "android"),
+            ("target", "HostDeviceTarget", true, "Resolved Android target"),
+            ("query", "String?", false, "Text query used for target resolution"),
+            ("x", "Int", true, "Screen x coordinate used for tap"),
+            ("y", "Int", true, "Screen y coordinate used for tap"),
+            ("match", "HostAndroidTapMatch?", false, "Matched Android host layout node"),
+            ("sourceCommands", "[String]", true, "Underlying host commands"),
+            ("note", "String", true, "Boundary or follow-up note"),
+        ])
+    )
+}
+
 func hostHarmonySwipeOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.harmony-swipe",
@@ -799,6 +820,28 @@ func hostHarmonySwipeOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostAndroidSwipeOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.android-swipe",
+        format: "json",
+        kind: "host-action",
+        model: "HostAndroidSwipeOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the Android host swipe command succeeded"),
+            ("action", "String", true, "Host action name"),
+            ("platform", "String", true, "android"),
+            ("target", "HostDeviceTarget", true, "Resolved Android target"),
+            ("startX", "Int", true, "Swipe start x coordinate"),
+            ("startY", "Int", true, "Swipe start y coordinate"),
+            ("endX", "Int", true, "Swipe end x coordinate"),
+            ("endY", "Int", true, "Swipe end y coordinate"),
+            ("durationMs", "Int?", false, "Swipe duration in milliseconds when supplied"),
+            ("sourceCommands", "[String]", true, "Underlying host commands"),
+            ("note", "String", true, "Boundary or follow-up note"),
+        ])
+    )
+}
+
 func hostHarmonyTextInputOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.harmony-text-input",
@@ -810,6 +853,28 @@ func hostHarmonyTextInputOutputContract() -> TKCommandOutputContract {
             ("action", "String", true, "Host action name"),
             ("platform", "String", true, "harmony"),
             ("target", "TKHarmonyTarget", true, "Resolved Harmony target"),
+            ("x", "Int?", false, "Focused screen x coordinate when supplied"),
+            ("y", "Int?", false, "Focused screen y coordinate when supplied"),
+            ("secure", "Bool", true, "Whether input was treated as secure"),
+            ("redacted", "Bool", true, "Whether output text details were redacted"),
+            ("insertedLength", "Int", true, "Inserted text length"),
+            ("sourceCommands", "[String]", true, "Underlying host commands"),
+            ("note", "String", true, "Boundary or follow-up note"),
+        ])
+    )
+}
+
+func hostAndroidTextInputOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.android-text-input",
+        format: "json",
+        kind: "host-action",
+        model: "HostAndroidTextInputOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the Android host text input command succeeded"),
+            ("action", "String", true, "Host action name"),
+            ("platform", "String", true, "android"),
+            ("target", "HostDeviceTarget", true, "Resolved Android target"),
             ("x", "Int?", false, "Focused screen x coordinate when supplied"),
             ("y", "Int?", false, "Focused screen y coordinate when supplied"),
             ("secure", "Bool", true, "Whether input was treated as secure"),
@@ -839,6 +904,29 @@ func hostHarmonyWaitOutputContract() -> TKCommandOutputContract {
             ("elapsedMs", "Int", true, "Elapsed milliseconds"),
             ("pollCount", "Int", true, "Number of layout polling attempts"),
             ("match", "TKHarmonyLayoutTextMatch?", false, "Last matched host layout text node"),
+            ("sourceCommands", "[String]", true, "Underlying host commands"),
+        ])
+    )
+}
+
+func hostAndroidWaitOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.android-wait",
+        format: "json",
+        kind: "host-action",
+        model: "HostAndroidWaitOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the Android host wait matched before timeout"),
+            ("action", "String", true, "Host action name"),
+            ("platform", "String", true, "android"),
+            ("target", "HostDeviceTarget", true, "Resolved Android target"),
+            ("condition", "String", true, "text or gone"),
+            ("query", "String", true, "Text query used for host layout polling"),
+            ("matched", "Bool", true, "Whether the condition matched"),
+            ("timedOut", "Bool", true, "Whether the host wait timed out"),
+            ("elapsedMs", "Int", true, "Elapsed milliseconds"),
+            ("pollCount", "Int", true, "Number of layout polling attempts"),
+            ("match", "HostAndroidTapMatch?", false, "Last matched Android host layout node"),
             ("sourceCommands", "[String]", true, "Underlying host commands"),
         ])
     )

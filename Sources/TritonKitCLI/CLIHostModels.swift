@@ -4,12 +4,14 @@ import TritonKitShared
 
 enum HostDevicePlatform: String, ExpressibleByArgument {
     case ios
+    case android
     case harmony
 }
 
 extension HostDevicePlatform: Codable {}
 
 enum HostPlatform: String, ExpressibleByArgument {
+    case android
     case harmony
 }
 
@@ -343,6 +345,80 @@ struct HostHarmonyWaitOutput: Encodable {
     let elapsedMs: Int
     let pollCount: Int
     let match: TKHarmonyLayoutTextMatch?
+    let sourceCommands: [String]
+}
+
+struct HostAndroidTapMatch: Encodable, Equatable {
+    let text: String?
+    let identifier: String?
+    let label: String?
+    let role: String?
+    let bounds: TKRect?
+}
+
+struct HostAndroidArtifactOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: HostDeviceTarget
+    let artifact: String
+    let sourceCommands: [String]
+    let note: String
+}
+
+struct HostAndroidTapOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: HostDeviceTarget
+    let query: String?
+    let x: Int
+    let y: Int
+    let match: HostAndroidTapMatch?
+    let sourceCommands: [String]
+    let note: String
+}
+
+struct HostAndroidSwipeOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: HostDeviceTarget
+    let startX: Int
+    let startY: Int
+    let endX: Int
+    let endY: Int
+    let durationMs: Int?
+    let sourceCommands: [String]
+    let note: String
+}
+
+struct HostAndroidTextInputOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: HostDeviceTarget
+    let x: Int?
+    let y: Int?
+    let secure: Bool
+    let redacted: Bool
+    let insertedLength: Int
+    let sourceCommands: [String]
+    let note: String
+}
+
+struct HostAndroidWaitOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: HostDeviceTarget
+    let condition: String
+    let query: String
+    let matched: Bool
+    let timedOut: Bool
+    let elapsedMs: Int
+    let pollCount: Int
+    let match: HostAndroidTapMatch?
     let sourceCommands: [String]
 }
 

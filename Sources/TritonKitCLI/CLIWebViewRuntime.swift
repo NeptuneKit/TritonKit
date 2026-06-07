@@ -253,6 +253,13 @@ func runWebViewSnapshot(
                 let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
                 data = try await client.request(type: "webViewSnapshot", payload: payload)
             }
+        case .android:
+            try failHostValidation(
+                code: "unsupported_capability",
+                message: "Android WebView snapshot is not implemented yet.",
+                hint: "Use Android host observe/screenshot evidence first; add a WebView provider before requesting DOM or bridge data.",
+                outputFormat: outputFormat
+            )
         case .harmony:
             guard let runtimeBaseURL else {
                 throw RuntimeError("Harmony WebView snapshot requires --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
@@ -407,6 +414,13 @@ func runWebViewWait(
                 let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
                 data = try await client.request(type: "webViewWait", payload: payload)
             }
+        case .android:
+            try failHostValidation(
+                code: "unsupported_capability",
+                message: "Android WebView wait is not implemented yet.",
+                hint: "Use Android host wait/observe once UIAutomator observe is available, or add a WebView provider before DOM waits.",
+                outputFormat: outputFormat
+            )
         case .harmony:
             guard let runtimeBaseURL else {
                 throw RuntimeError("Harmony WebView wait requires --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
@@ -502,6 +516,13 @@ func runWebViewCall(
                 let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
                 data = try await client.request(type: "webViewBridgeCall", payload: payload)
             }
+        case .android:
+            try failHostValidation(
+                code: "unsupported_capability",
+                message: "Android WebView bridge calls are not implemented yet.",
+                hint: "Add an Android WebView provider before requesting DOM bridge calls.",
+                outputFormat: outputFormat
+            )
         case .harmony:
             guard let runtimeBaseURL else {
                 throw RuntimeError("Harmony WebView bridge calls require --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
@@ -556,6 +577,13 @@ func runWebViewEvents(
                 let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
                 data = try await client.request(type: "webViewEvents", payload: payload)
             }
+        case .android:
+            try failHostValidation(
+                code: "unsupported_capability",
+                message: "Android WebView events are not implemented yet.",
+                hint: "Add an Android WebView provider before requesting WebView event history.",
+                outputFormat: outputFormat
+            )
         case .harmony:
             guard let runtimeBaseURL else {
                 throw RuntimeError("Harmony WebView events require --runtime-base-url from `triton device runtime-url --platform harmony --probe-manifest --json`.")
@@ -597,6 +625,8 @@ private func webViewCandidates(
     switch platform {
     case .ios:
         return try await iOSWebViewCandidates(action: action, target: target, host: host, port: port, runtimeBaseURL: runtimeBaseURL)
+    case .android:
+        throw RuntimeError("Android WebView candidates are not implemented yet.")
     case .harmony:
         return try harmonyWebViewCandidates(action: action, target: target, hdc: hdc, runtimeBaseURL: runtimeBaseURL, output: output)
     }
