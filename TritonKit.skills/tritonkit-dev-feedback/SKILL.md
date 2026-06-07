@@ -44,12 +44,14 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton plan ios-smoke|open-url|webview-check --json` when feedback depends on a multi-step agent workflow; task plans are recommendations and must not be reported as execution proof.
    - `triton runtime manifest --json`
    - `triton snapshot --include app,scene,route,ax,geometry --json`
+   - `triton snapshot --include media,ax,screenshot-metadata --json` for iOS AVPlayer / AVPlayerViewController playback feedback; preserve `media.surfaces[]`, `media.controls[]`, `automationConfidence`, `fallbackAdvice[]`, and `evidenceCommands[]` so reports distinguish rendered video from controllable playback.
    - `triton ledger --limit 50 --jsonl`
    - Treat `triton doctor --json` as ordered diagnostics: preserve top-level `nextWorkflows`, plus each check's `id`, `status`, `code`, `hint`, `nextAction`, `relatedCapabilities`, and `workflowCategories` when reporting a recovery path.
    - Treat `triton capabilities --json` as an environment capability matrix: preserve `capabilities[].group`, `requiredBy`, `nextAction`, and `evidence` when reporting why an agent could or could not run a workflow; schema-provided capabilities should never be reported as complete if they are missing any of those planning fields.
    - Treat missing or invalid top-level bootstrap `surface` fields as contract bugs. `status`, `doctor`, `capabilities`, and `plan` responses should identify their own entry surface directly in JSON, not only via command context.
    - Treat duplicate capability names in either schema `providedCapabilities[]` or `triton capabilities --json` as indexing bugs.
    - Treat empty or duplicate values in `capabilities[].requiredBy` or `capabilities[].evidence` as capability metadata quality bugs.
+   - Treat `media-playback` as an observe capability backed by embedded runtime snapshots; if `automationConfidence` is `surface-only`, report that system media controls were not accessible enough and recommend app-owned DEBUG overlay controls with stable accessibility identifiers instead of claiming pause/resume/seek proof from rendered video alone.
    - Treat unknown `capabilities[].group` values as taxonomy bugs. Valid groups are `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`.
    - Treat unknown `capabilities[].requiredBy` values as workflow taxonomy bugs. Valid workflow categories are `action`, `app`, `assert`, `evidence`, `observe`, `project`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview-check`, and `xcode`.
    - Treat unknown `capabilities[].evidence` values as artifact taxonomy bugs. Evidence names must map to real stdout JSON, schema/status output, host artifacts, runtime snapshots, WebView provider output, route assertions, input results, evidence bundles, smoke summaries, tritonplans, Xcode artifacts, or unsupported envelopes.

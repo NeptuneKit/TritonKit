@@ -7,6 +7,7 @@ public enum TKRuntimeCapabilityName: String, Codable, CaseIterable {
     case stateRoute = "state.route"
     case stateResponder = "state.responder"
     case snapshot
+    case mediaPlayback = "media.playback"
     case webViewList = "webview.list"
     case webViewCurrent = "webview.current"
     case webViewSnapshot = "webview.snapshot"
@@ -203,6 +204,7 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
         TKRuntimeCapabilityDetail(name: .stateRoute, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .stateResponder, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .snapshot, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .mediaPlayback, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(
             name: .webViewList,
             supported: false,

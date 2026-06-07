@@ -85,6 +85,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: [
                 "triton observe current --platform ios --json",
+                "triton snapshot --include media,ax,screenshot-metadata --json",
                 "triton observe tree --platform android --device android-a --json",
                 "triton observe tree --device harmony-a --json",
                 "triton observe tree --platform harmony --target 127.0.0.1:10100 --json",
@@ -113,7 +114,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "harmony_artifact_recv_failed",
                 "validation_failed",
             ],
-            providedCapabilities: ["observe", "observe-ios", "observe-android", "observe-harmony"]
+            providedCapabilities: ["observe", "observe-ios", "media-playback", "observe-android", "observe-harmony"]
         ),
         TKCommandSchema(
             name: "webview",

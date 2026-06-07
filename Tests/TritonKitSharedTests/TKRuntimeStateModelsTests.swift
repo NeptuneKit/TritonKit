@@ -126,4 +126,93 @@ struct TKRuntimeStateModelsTests {
         #expect(decoded.redaction.secureText == "length-only")
         #expect(decoded.redaction.textContent == "not-collected")
     }
+
+    @Test("media snapshot summarizes surfaces controls confidence and fallback guidance")
+    func mediaStateShape() throws {
+        let controls = TKRuntimeMediaControlCandidates(from: [
+            TKAXNode(
+                role: "button",
+                label: "Pause",
+                value: nil,
+                identifier: "media.pause",
+                title: nil,
+                frame: TKRect(x: 120, y: 700, width: 44, height: 44),
+                enabled: true,
+                focused: false,
+                hidden: false,
+                targetOID: 10,
+                className: "UIButton",
+                children: []
+            ),
+            TKAXNode(
+                role: "slider",
+                label: "Playback progress",
+                value: "42%",
+                identifier: "media.progress",
+                title: nil,
+                frame: TKRect(x: 20, y: 750, width: 350, height: 32),
+                enabled: true,
+                focused: false,
+                hidden: false,
+                targetOID: 11,
+                className: "UISlider",
+                children: []
+            ),
+        ])
+        let response = TKRuntimeMediaStateResponse(
+            capturedAt: "2026-06-08T12:00:00Z",
+            surfaces: [
+                TKRuntimeMediaSurface(
+                    id: "media-surface-1",
+                    kind: "avplayer-layer",
+                    className: "AVPlayerLayer",
+                    frame: TKRect(x: 0, y: 100, width: 390, height: 220),
+                    visible: true,
+                    playerStatus: "readyToPlay",
+                    playbackState: "playing",
+                    rate: 1,
+                    elapsedTimeSeconds: 12,
+                    durationSeconds: 60,
+                    progress: 0.2,
+                    controllerClassName: "AVPlayerViewController"
+                ),
+            ],
+            controls: controls
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKRuntimeMediaStateResponse.self, from: data)
+
+        #expect(decoded.ok)
+        #expect(decoded.surfaceCount == 1)
+        #expect(decoded.controlCount == 2)
+        #expect(decoded.automationConfidence == "actionable-controls")
+        #expect(decoded.surfaces.first?.playbackState == "playing")
+        #expect(decoded.surfaces.first?.progress == 0.2)
+        #expect(decoded.controls.map(\.action).contains("pause"))
+        #expect(decoded.controls.map(\.action).contains("progress"))
+        #expect(decoded.fallbackAdvice.contains { $0.contains("app-owned") })
+        #expect(decoded.evidenceCommands.contains("triton snapshot --include media,ax,screenshot-metadata --json"))
+    }
+
+    @Test("media snapshot marks visible playback without controls as surface-only")
+    func mediaStateSurfaceOnlyGuidance() throws {
+        let response = TKRuntimeMediaStateResponse(
+            capturedAt: "2026-06-08T12:00:00Z",
+            surfaces: [
+                TKRuntimeMediaSurface(
+                    id: "media-surface-1",
+                    kind: "avplayer-layer",
+                    className: "AVPlayerLayer",
+                    frame: TKRect(x: 0, y: 100, width: 390, height: 220),
+                    visible: true
+                ),
+            ],
+            controls: []
+        )
+
+        #expect(response.automationConfidence == "surface-only")
+        #expect(response.fallbackAdvice.contains { $0.contains("play/pause/seek/progress") })
+        #expect(response.evidenceCommands.contains("triton screenshot --json"))
+    }
 }

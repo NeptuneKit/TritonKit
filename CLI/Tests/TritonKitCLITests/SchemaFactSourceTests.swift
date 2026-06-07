@@ -275,6 +275,15 @@ struct SchemaFactSourceTests {
         #expect(connectedObserveIOS.nextAction?.args == ["current", "--platform", "ios", "--json"])
         #expect(connectedObserveIOS.evidence == ["surface-tree", "runtime-ax", "host-layout"])
 
+        let mediaPlayback = try #require(connected["media-playback"])
+        #expect(mediaPlayback.supported)
+        #expect(mediaPlayback.group == "observe")
+        #expect(mediaPlayback.requiredBy.contains("assert"))
+        #expect(mediaPlayback.requiredBy.contains("evidence"))
+        #expect(mediaPlayback.nextAction?.command == "snapshot")
+        #expect(mediaPlayback.nextAction?.args == ["--include", "media,ax,screenshot-metadata", "--json"])
+        #expect(mediaPlayback.evidence == ["runtime-media", "runtime-ax", "screenshot-metadata"])
+
         let webViewList = try #require(disconnected["webview-list"])
         #expect(webViewList.supported)
         #expect(webViewList.group == "webview")
@@ -536,7 +545,7 @@ struct SchemaFactSourceTests {
         let schemas = commandSchemaMap()
         let observeSchema = try #require(schemas["observe"])
         let nodeSchema = try #require(schemas["node"])
-        #expect(observeSchema.providedCapabilities == ["observe", "observe-ios", "observe-android", "observe-harmony"])
+        #expect(observeSchema.providedCapabilities == ["observe", "observe-ios", "media-playback", "observe-android", "observe-harmony"])
         #expect(nodeSchema.providedCapabilities == ["node", "node-resolve"])
 
         let connected = connectedCapabilityMap()
@@ -556,6 +565,7 @@ struct SchemaFactSourceTests {
         )] = [
             ("observe", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["current", "--json"], "observe", ["current", "--json"]),
             ("observe-ios", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, false, "observe", ["current", "--platform", "ios", "--json"], "observe", ["current", "--platform", "ios", "--json"]),
+            ("media-playback", "observe", ["assert", "evidence", "observe"], ["runtime-media", "runtime-ax", "screenshot-metadata"], true, false, "snapshot", ["--include", "media,ax,screenshot-metadata", "--json"], "status", ["--json"]),
             ("observe-android", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"]),
             ("observe-harmony", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"]),
             ("node", "observe", ["action", "assert", "evidence"], ["hierarchy-node", "surface-tree"], true, false, "node", ["--oid", "<oid>", "--json"], "status", ["--json"]),
@@ -1273,7 +1283,7 @@ struct SchemaFactSourceTests {
 
         let runtimeReasonCapabilities = Set([
             "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder",
-            "snapshot", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger",
+            "snapshot", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger",
             "observe-ios",
             "inspect", "hierarchy", "nodes", "node", "attrs", "object",
             "export-json", "export-archive", "geometry", "ax", "hit", "screenshot",
@@ -1529,7 +1539,7 @@ struct SchemaFactSourceTests {
             "target": ["target"],
             "runtime": ["runtime", "state", "snapshot", "focus", "set-text", "select-segment", "set-switch", "ledger", "schema", "status", "serve"],
             "host": ["device", "sim", "app", "ax"],
-            "observe": ["observe", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export", "geometry", "ax", "screenshot", "hit", "wait", "status", "serve"],
+            "observe": ["observe", "snapshot", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export", "geometry", "ax", "screenshot", "hit", "wait", "status", "serve"],
             "webview": ["webview"],
             "route": ["route"],
             "evidence": ["evidence", "status", "serve"],
@@ -3713,7 +3723,7 @@ struct SchemaFactSourceTests {
         #expect(snapshot.nextCommands.contains("triton assert text-exists <text> --json"))
         expectContract(snapshot, selector: "runtime.snapshot", fields: [
             "ok", "capturedAt", "runtime", "targetConnectionState", "include", "app", "scene",
-            "route", "responder", "geometry", "ax", "screenshot", "artifacts", "skipped", "truncation",
+            "route", "responder", "media", "geometry", "ax", "screenshot", "artifacts", "skipped", "truncation",
         ])
 
         #expect(observe.failureCodes.contains("target_not_found"))
@@ -4023,7 +4033,7 @@ private func capabilityEvidenceTaxonomy() -> Set<String> {
         "host-layout", "host-targets.json", "hierarchy-node", "input.result",
         "page-events", "provider-url", "route-assertion", "runtime-ax",
         "runtime-ledger", "runtime-manifest", "runtime-provider",
-        "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
+        "runtime-media", "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
         "smoke-summary", "snapshot-json", "status-json", "stdout-json",
         "surface-tree", "target.resolution", "trace", "tritonplan",
         "unsupported-envelope", "wait.result", "wait-samples", "webview-candidates",
