@@ -179,6 +179,7 @@ public class TritonKit {
     public weak var delegate: TritonKitDelegate?
     public private(set) var state: ConnectionState = .disconnected {
         didSet {
+            guard oldValue != state else { return }
             delegate?.tritonKit(self, didChangeState: state)
             notifyStateObservers(state)
         }
@@ -193,6 +194,7 @@ public class TritonKit {
     private var pingTimer: Timer?
     private var defaultRequestHandler: TritonKitRequestHandler?
     private var isStarted = false
+    private let observerLock = NSLock()
     private var stateObservers: [UUID: (ConnectionState) -> Void] = [:]
     private var errorObservers: [UUID: (Error) -> Void] = [:]
     internal var endpointReadinessTimeout: TimeInterval = 0.25
@@ -256,19 +258,30 @@ public class TritonKit {
     @discardableResult
     public func onStateChange(_ handler: @escaping (ConnectionState) -> Void) -> ObservationToken {
         let id = UUID()
+        observerLock.lock()
         stateObservers[id] = handler
-        handler(state)
+        let currentState = state
+        observerLock.unlock()
+        handler(currentState)
         return ObservationToken { [weak self] in
-            self?.stateObservers.removeValue(forKey: id)
+            guard let self else { return }
+            self.observerLock.lock()
+            self.stateObservers.removeValue(forKey: id)
+            self.observerLock.unlock()
         }
     }
 
     @discardableResult
     public func onError(_ handler: @escaping (Error) -> Void) -> ObservationToken {
         let id = UUID()
+        observerLock.lock()
         errorObservers[id] = handler
+        observerLock.unlock()
         return ObservationToken { [weak self] in
-            self?.errorObservers.removeValue(forKey: id)
+            guard let self else { return }
+            self.observerLock.lock()
+            self.errorObservers.removeValue(forKey: id)
+            self.observerLock.unlock()
         }
     }
 
@@ -441,14 +454,20 @@ public class TritonKit {
     }
 
     private func notifyStateObservers(_ state: ConnectionState) {
-        for observer in Array(stateObservers.values) {
+        observerLock.lock()
+        let observers = Array(stateObservers.values)
+        observerLock.unlock()
+        for observer in observers {
             observer(state)
         }
     }
 
     private func notifyError(_ error: Error) {
         delegate?.tritonKit(self, didReceiveError: error)
-        for observer in Array(errorObservers.values) {
+        observerLock.lock()
+        let observers = Array(errorObservers.values)
+        observerLock.unlock()
+        for observer in observers {
             observer(error)
         }
     }

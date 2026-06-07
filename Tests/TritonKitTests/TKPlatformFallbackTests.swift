@@ -104,6 +104,8 @@ struct TKPlatformFallbackTests {
         }
 
         #expect(observed == [TritonKit.shared.state])
+        TritonKit.shared.stop()
+        #expect(observed == [TritonKit.shared.state])
         token.cancel()
     }
 
