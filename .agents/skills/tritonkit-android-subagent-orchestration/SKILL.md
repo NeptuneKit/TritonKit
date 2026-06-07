@@ -23,6 +23,14 @@ Read these first:
 
 Project-scoped Codex agents live in `.codex/agents/`.
 
+Android subagent configs must run with full local access because this track
+uses host adb/emulator commands, sibling worktrees, and external artifacts:
+
+```toml
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
+```
+
 ## Agent Split
 
 | Agent | Config | Execution steps | Primary write surface |
@@ -92,7 +100,8 @@ Before spawning:
 1. Check `git status --short --branch`.
 2. If multi-day execution starts, create `../TritonKit-worktrees/20260605-android-emulator-support/` from `feat/20260605-android-emulator-support`.
 3. Confirm no uncommitted user work will be overwritten.
-4. Assign each subagent a narrow step range and explicit non-goals.
+4. Confirm every `.codex/agents/tritonkit_android_*_agent.toml` uses `sandbox_mode = "danger-full-access"` and `approval_policy = "never"`.
+5. Assign each subagent a narrow step range and explicit non-goals.
 
 During integration:
 
