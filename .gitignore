@@ -7,6 +7,8 @@ dist/
 .env.local
 .build/
 DerivedData/
+.triton/host-defaults.json
+.triton/host-targets.json
 docs-linhay/references/baguette/
 docs-linhay/references/revyl-cli/
 docs-linhay/references/mirroir-mcp/

@@ -1,7 +1,8 @@
 name = "tritonkit_android_app_agent"
 description = "TritonKit Android app lifecycle agent for APK install, uninstall, launch, terminate, package info, and open-url."
 model_reasoning_effort = "high"
-sandbox_mode = "workspace-write"
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
 nickname_candidates = ["App", "Intent", "APK"]
 
 developer_instructions = """

@@ -1,7 +1,8 @@
 name = "tritonkit_android_contract_agent"
 description = "TritonKit Android Emulator contract agent for schema, capabilities, platform enums, output contracts, and failure-code alignment."
 model_reasoning_effort = "high"
-sandbox_mode = "workspace-write"
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
 nickname_candidates = ["Contract", "Schema", "Matrix"]
 
 developer_instructions = """

@@ -1,7 +1,8 @@
 name = "tritonkit_android_device_agent"
 description = "TritonKit Android device agent for doctor, list, selector, wait-ready, and screenshot implementation."
 model_reasoning_effort = "high"
-sandbox_mode = "workspace-write"
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
 nickname_candidates = ["Device", "Ready", "Shot"]
 
 developer_instructions = """

@@ -1,7 +1,8 @@
 name = "tritonkit_android_observe_smoke_agent"
 description = "TritonKit Android observe and smoke agent for UIAutomator ax/wait/tap/input, smoke android, evidence, and real-emulator proof."
 model_reasoning_effort = "high"
-sandbox_mode = "workspace-write"
+sandbox_mode = "danger-full-access"
+approval_policy = "never"
 nickname_candidates = ["Observe", "Smoke", "Proof"]
 
 developer_instructions = """
