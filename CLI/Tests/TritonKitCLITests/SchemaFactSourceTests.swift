@@ -64,6 +64,9 @@ struct SchemaFactSourceTests {
             "primaryNextAction.command", "primaryNextAction.args", "primaryNextAction.category", "primaryNextAction.requiresLongRunningProcess", "steps", "error",
             "steps[].id", "steps[].command", "steps[].argv", "steps[].category", "steps[].workflowCategories", "steps[].requires",
             "steps[].expectedArtifacts", "steps[].stopConditions",
+            "afterRecoverySteps", "afterRecoverySteps[].id", "afterRecoverySteps[].command", "afterRecoverySteps[].argv",
+            "afterRecoverySteps[].category", "afterRecoverySteps[].workflowCategories", "afterRecoverySteps[].requires",
+            "afterRecoverySteps[].expectedArtifacts", "afterRecoverySteps[].stopConditions",
         ])
         expectContract(plan, selector: "plan.inspect", fields: [
             "ok", "path", "schemaVersion", "name", "variables", "stepCount", "actions", "target", "steps",
@@ -719,11 +722,12 @@ struct SchemaFactSourceTests {
         #expect(openURL.primaryExpectedArtifact == "stdout-json")
         #expect(openURL.primaryNextAction?.command == "target")
         #expect(openURL.primaryNextActionSource == "next-step-step")
-        #expect(openURL.steps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence"])
+        #expect(openURL.steps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence", "evidence-summary"])
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.workflowCategories == ["app", "assert", "evidence", "target"])
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("triton app go") == true)
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--wait-ready") == false)
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--json") == false)
+        #expect(openURL.steps.first(where: { $0.id == "evidence-summary" })?.requiresServer == false)
 
         let webview = buildWorkflowPlan(
             capabilities: capabilities,
@@ -750,6 +754,91 @@ struct SchemaFactSourceTests {
         #expect(webview.steps.map(\.id) == ["webview-current", "route-assert-current-url", "webview-wait", "evidence"])
         #expect(webview.steps.first(where: { $0.id == "webview-current" })?.workflowCategories == ["assert", "evidence", "observe", "route", "webview-check"])
         #expect(webview.steps.first(where: { $0.id == "route-assert-current-url" })?.command.contains("https://example.com") == true)
+    }
+
+    @Test("open-url bootstrap plan preserves deferred task workflow")
+    func openURLBootstrapPlanPreservesDeferredTaskWorkflow() throws {
+        let capabilities = TKCapabilitiesResponse(
+            ok: false,
+            serverReachable: false,
+            connected: false,
+            latestHierarchyAvailable: false,
+            targetCount: 0,
+            runtime: "unknown",
+            capabilities: [],
+            error: TKCLIErrorDetail(code: "server_unavailable", message: "No server")
+        )
+
+        let plan = buildWorkflowPlan(
+            capabilities: capabilities,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "open-url",
+                device: "iphone15",
+                bundleID: nil,
+                url: "myapp://detail",
+                text: "Ready",
+                expectedURL: nil,
+                evidence: "/tmp/open-url.tritonevidence"
+            )
+        )
+
+        #expect(plan.mode == "bootstrap")
+        #expect(plan.nextStep == "start-server")
+        #expect(plan.steps.first?.id == "start-server")
+        #expect(plan.afterRecoverySteps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence", "evidence-summary"])
+        #expect(plan.afterRecoverySteps.first(where: { $0.id == "app-open-url" })?.argv == ["triton", "app", "go", "myapp://detail", "--device", "iphone15"])
+        #expect(plan.afterRecoverySteps.first(where: { $0.id == "wait-text" })?.expectedArtifacts.contains("wait-result") == true)
+        #expect(plan.afterRecoverySteps.first(where: { $0.id == "evidence-summary" })?.requiresServer == false)
+    }
+
+    @Test("open-url plan supports Harmony inputs with schema-backed steps")
+    func openURLPlanSupportsHarmonyInputsWithSchemaBackedSteps() throws {
+        let capabilities = TKCapabilitiesResponse(
+            ok: true,
+            serverReachable: true,
+            connected: true,
+            latestHierarchyAvailable: true,
+            targetCount: 1,
+            runtime: "host-harmony",
+            capabilities: []
+        )
+        let schemas = commandSchemaMap()
+        var issues = SchemaBackedCommandIssues()
+
+        let plan = buildWorkflowPlan(
+            capabilities: capabilities,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "open-url",
+                platform: "harmony",
+                device: "harmony-a",
+                bundleID: nil,
+                bundle: "com.example.app",
+                ability: "EntryAbility",
+                hap: "/tmp/Demo.hap",
+                url: "example://home",
+                text: "Ready",
+                expectedURL: nil,
+                evidence: "/tmp/harmony.tritonevidence"
+            )
+        )
+
+        #expect(plan.mode == "task")
+        #expect(plan.goal == "open-url")
+        #expect(plan.steps.map(\.id) == ["target-resolve", "install-app", "app-open-url", "wait-text", "capture-screenshot", "evidence-summary"])
+        #expect(plan.steps.first(where: { $0.id == "install-app" })?.argv == ["triton", "app", "install", "--device", "harmony-a", "--platform", "harmony", "--hap", "/tmp/Demo.hap", "--json"])
+        #expect(plan.steps.first(where: { $0.id == "app-open-url" })?.argv == ["triton", "app", "open-url", "example://home", "--device", "harmony-a", "--platform", "harmony", "--bundle", "com.example.app", "--ability", "EntryAbility", "--json"])
+        #expect(plan.steps.first(where: { $0.id == "wait-text" })?.argv == ["triton", "wait", "--platform", "harmony", "--target", "harmony-a", "--text", "Ready", "--timeout", "15", "--json"])
+        #expect(plan.steps.first(where: { $0.id == "capture-screenshot" })?.argv == ["triton", "screenshot", "--device", "harmony-a", "--platform", "harmony", "--output", "/tmp/harmony.png", "--json"])
+        #expect(plan.steps.first(where: { $0.id == "evidence-summary" })?.argv == ["triton", "evidence", "summary", "/tmp/harmony.tritonevidence", "--json"])
+
+        for step in plan.steps {
+            validateSchemaBackedArgv(step.argv, context: "open-url:\(step.id)", schemas: schemas, issues: &issues)
+        }
+        expectNoSchemaBackedCommandIssues(issues)
     }
 
     @Test("workflow plan mode separates bootstrap recovery from task workflows")
@@ -4931,7 +5020,7 @@ private func schemaExampleCommandFixtures() -> [CommandStringFixture] {
 
 private func workflowPlanCommandFixtures(includeTaskInputs: Bool) -> [CommandStringFixture] {
     workflowPlanFixtures(includeTaskInputs: includeTaskInputs).flatMap { plan in
-        plan.steps.map {
+        (plan.steps + plan.afterRecoverySteps).map {
             CommandStringFixture(
                 context: "\(plan.goal ?? "general"):\($0.id)",
                 command: $0.command,

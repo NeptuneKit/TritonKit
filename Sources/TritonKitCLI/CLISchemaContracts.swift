@@ -201,6 +201,15 @@ func planNextStepsOutputContract() -> TKCommandOutputContract {
             ("steps[].requires", "[String]", true, "Machine-readable prerequisites such as cli.available, server.reachable, target.ready, or runtime.connected"),
             ("steps[].expectedArtifacts", "[String]", true, "Expected evidence surfaces produced or consumed by the step"),
             ("steps[].stopConditions", "[String]", true, "Machine-readable conditions that should stop or re-plan the workflow"),
+            ("afterRecoverySteps", "[TKCLIPlanStep]", true, "Goal-specific task workflow to run after bootstrap recovery steps complete"),
+            ("afterRecoverySteps[].id", "String", true, "Stable deferred step identifier"),
+            ("afterRecoverySteps[].command", "String", true, "Human-readable Triton invocation for the deferred task step"),
+            ("afterRecoverySteps[].argv", "[String]", true, "Primary executable argv tokens for the deferred task step"),
+            ("afterRecoverySteps[].category", "String", true, "Recovery category derived from the deferred step command root"),
+            ("afterRecoverySteps[].workflowCategories", "[String]", true, "Workflow taxonomy values directly associated with the deferred step"),
+            ("afterRecoverySteps[].requires", "[String]", true, "Machine-readable prerequisites for the deferred task step"),
+            ("afterRecoverySteps[].expectedArtifacts", "[String]", true, "Expected evidence surfaces produced or consumed by the deferred step"),
+            ("afterRecoverySteps[].stopConditions", "[String]", true, "Machine-readable stop or re-plan conditions for the deferred step"),
             ("error", "TKCLIErrorDetail?", false, "Recoverable server or target diagnostic"),
         ])
     )
