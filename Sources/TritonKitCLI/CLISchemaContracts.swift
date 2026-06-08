@@ -315,6 +315,7 @@ func runtimeSnapshotOutputContract() -> TKCommandOutputContract {
             ("scene", "TKRuntimeSceneStateResponse?", false, "Scene state when included"),
             ("route", "TKRuntimeRouteStateResponse?", false, "Route state when included"),
             ("responder", "TKRuntimeResponderStateResponse?", false, "Responder state when included"),
+            ("media", "TKRuntimeMediaStateResponse?", false, "Media playback surfaces, AX control candidates, confidence, fallback guidance, and evidence commands when included"),
             ("geometry", "TKGeometryResponse?", false, "Window geometry when included"),
             ("ax", "[TKAXNode]?", false, "Accessibility tree when included"),
             ("screenshot", "TKRuntimeScreenshotMetadata?", false, "Screenshot metadata when included"),

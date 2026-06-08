@@ -563,6 +563,16 @@ triton ledger --limit 50 --jsonl
 
 `set-text --secure` redacts the text value in command output and runtime ledger while preserving inserted length. `ledger --jsonl` is the recent embedded request/action replay stream for debugging selector resolution, runtime errors, elapsed time, and redaction state.
 
+For iOS video regression with `AVPlayer` or `AVPlayerViewController`, include the media snapshot section before asserting playback behavior:
+
+```bash
+triton snapshot --include media,ax,screenshot-metadata --json
+triton screenshot --json
+triton evidence --output /tmp/video-regression.tritonevidence --json
+```
+
+The `media` section reports visible AVPlayer-backed surfaces, player status/rate/time metadata when public APIs expose it, AX playback-control candidates, automation confidence, fallback advice, and evidence commands. System `AVPlayerViewController` controls are not guaranteed to expose stable actionable AX nodes in every route; when the snapshot is `surface-only`, add app-owned DEBUG overlay controls with stable accessibility identifiers for play, pause, seek, progress, elapsed time, and duration, then assert those controls with `wait`, `find`, `tap`, and `assert`.
+
 When a pass/fail decision needs attachable evidence, export a bundle with a machine-readable manifest:
 
 ```bash

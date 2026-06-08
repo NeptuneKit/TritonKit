@@ -290,6 +290,206 @@ public struct TKRuntimeResponderState: Codable, Equatable {
     }
 }
 
+public struct TKRuntimeMediaStateResponse: Codable, Equatable {
+    public let ok: Bool
+    public let capturedAt: String
+    public let runtime: String
+    public let targetConnectionState: String?
+    public let surfaces: [TKRuntimeMediaSurface]
+    public let controls: [TKRuntimeMediaControlCandidate]
+    public let surfaceCount: Int
+    public let controlCount: Int
+    public let automationConfidence: String
+    public let fallbackAdvice: [String]
+    public let evidenceCommands: [String]
+    public let warnings: [String]
+    public let unsupported: [TKRuntimeUnsupportedState]
+
+    public init(
+        ok: Bool = true,
+        capturedAt: String,
+        runtime: String = "embedded",
+        targetConnectionState: String? = "connected",
+        surfaces: [TKRuntimeMediaSurface],
+        controls: [TKRuntimeMediaControlCandidate],
+        fallbackAdvice: [String] = TKRuntimeMediaDefaultFallbackAdvice,
+        evidenceCommands: [String] = TKRuntimeMediaDefaultEvidenceCommands,
+        warnings: [String] = [],
+        unsupported: [TKRuntimeUnsupportedState] = []
+    ) {
+        self.ok = ok
+        self.capturedAt = capturedAt
+        self.runtime = runtime
+        self.targetConnectionState = targetConnectionState
+        self.surfaces = surfaces
+        self.controls = controls
+        self.surfaceCount = surfaces.count
+        self.controlCount = controls.count
+        self.automationConfidence = TKRuntimeMediaAutomationConfidence(surfaces: surfaces, controls: controls)
+        self.fallbackAdvice = fallbackAdvice
+        self.evidenceCommands = evidenceCommands
+        self.warnings = warnings
+        self.unsupported = unsupported
+    }
+}
+
+public struct TKRuntimeMediaSurface: Codable, Equatable {
+    public let id: String
+    public let kind: String
+    public let className: String
+    public let frame: TKRect?
+    public let visible: Bool
+    public let playerStatus: String?
+    public let playbackState: String?
+    public let rate: Double?
+    public let elapsedTimeSeconds: Double?
+    public let durationSeconds: Double?
+    public let progress: Double?
+    public let controllerClassName: String?
+
+    public init(
+        id: String,
+        kind: String,
+        className: String,
+        frame: TKRect? = nil,
+        visible: Bool,
+        playerStatus: String? = nil,
+        playbackState: String? = nil,
+        rate: Double? = nil,
+        elapsedTimeSeconds: Double? = nil,
+        durationSeconds: Double? = nil,
+        progress: Double? = nil,
+        controllerClassName: String? = nil
+    ) {
+        self.id = id
+        self.kind = kind
+        self.className = className
+        self.frame = frame
+        self.visible = visible
+        self.playerStatus = playerStatus
+        self.playbackState = playbackState
+        self.rate = rate
+        self.elapsedTimeSeconds = elapsedTimeSeconds
+        self.durationSeconds = durationSeconds
+        self.progress = progress
+        self.controllerClassName = controllerClassName
+    }
+}
+
+public struct TKRuntimeMediaControlCandidate: Codable, Equatable {
+    public let action: String
+    public let role: String
+    public let label: String?
+    public let value: String?
+    public let identifier: String?
+    public let frame: TKRect?
+    public let enabled: Bool
+    public let source: String
+
+    public init(
+        action: String,
+        role: String,
+        label: String? = nil,
+        value: String? = nil,
+        identifier: String? = nil,
+        frame: TKRect? = nil,
+        enabled: Bool,
+        source: String = "runtime-ax"
+    ) {
+        self.action = action
+        self.role = role
+        self.label = label
+        self.value = value
+        self.identifier = identifier
+        self.frame = frame
+        self.enabled = enabled
+        self.source = source
+    }
+}
+
+public let TKRuntimeMediaDefaultFallbackAdvice: [String] = [
+    "System AVPlayerViewController controls are not guaranteed to expose stable actionable AX nodes in every playback route.",
+    "For repeatable automation, add app-owned DEBUG overlay controls with stable accessibility identifiers for play/pause/seek/progress/elapsed/duration.",
+    "After media actions, verify route cleanup and playback state with app-owned state, visible controls, screenshot, and evidence bundle artifacts.",
+]
+
+public let TKRuntimeMediaDefaultEvidenceCommands: [String] = [
+    "triton snapshot --include media,ax,screenshot-metadata --json",
+    "triton screenshot --json",
+    "triton evidence --output <dir.tritonevidence> --json",
+]
+
+public func TKRuntimeMediaAutomationConfidence(
+    surfaces: [TKRuntimeMediaSurface],
+    controls: [TKRuntimeMediaControlCandidate]
+) -> String {
+    if surfaces.isEmpty {
+        return "no-media-surface"
+    }
+    let actions = Set(controls.map(\.action))
+    if actions.contains("play") || actions.contains("pause") || actions.contains("seek-forward") || actions.contains("seek-backward") || actions.contains("progress") {
+        return "actionable-controls"
+    }
+    if !controls.isEmpty {
+        return "observable-controls"
+    }
+    return "surface-only"
+}
+
+public func TKRuntimeMediaControlCandidates(from nodes: [TKAXNode]) -> [TKRuntimeMediaControlCandidate] {
+    TKRuntimeFlattenAXNodes(nodes).compactMap { node in
+        guard let action = TKRuntimeMediaControlAction(for: node) else { return nil }
+        return TKRuntimeMediaControlCandidate(
+            action: action,
+            role: node.role,
+            label: node.label,
+            value: node.value,
+            identifier: node.identifier,
+            frame: node.frame,
+            enabled: node.enabled
+        )
+    }
+}
+
+private func TKRuntimeFlattenAXNodes(_ nodes: [TKAXNode]) -> [TKAXNode] {
+    nodes.flatMap { [$0] + TKRuntimeFlattenAXNodes($0.children) }
+}
+
+private func TKRuntimeMediaControlAction(for node: TKAXNode) -> String? {
+    let haystack = [
+        node.identifier,
+        node.label,
+        node.title,
+        node.value,
+        node.role,
+    ]
+    .compactMap { $0?.lowercased() }
+    .joined(separator: " ")
+
+    if haystack.contains("progress") || haystack.contains("scrubber") || node.role.lowercased() == "slider" {
+        return "progress"
+    }
+    if haystack.contains("seek") && (haystack.contains("back") || haystack.contains("rewind") || haystack.contains("previous")) {
+        return "seek-backward"
+    }
+    if haystack.contains("seek") || haystack.contains("forward") || haystack.contains("next") {
+        return haystack.contains("media") || haystack.contains("playback") ? "seek-forward" : nil
+    }
+    if haystack.contains("pause") {
+        return "pause"
+    }
+    if haystack.contains("play") || haystack.contains("resume") {
+        return "play"
+    }
+    if haystack.contains("elapsed") || haystack.contains("current time") {
+        return "elapsed-time"
+    }
+    if haystack.contains("duration") || haystack.contains("remaining") {
+        return "duration"
+    }
+    return nil
+}
+
 public struct TKRuntimeStateRedaction: Codable, Equatable {
     public let secureText: String
     public let textContent: String

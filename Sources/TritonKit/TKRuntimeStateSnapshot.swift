@@ -209,13 +209,16 @@ func currentRuntimeSnapshot(_ request: TKRuntimeSnapshotRequest) -> TKRuntimeSna
     }
 
     let ax: [TKAXNode]?
-    if includes("ax") || includes("accessibility") {
+    let axForMedia: [TKAXNode]?
+    let shouldBuildAX = includes("ax") || includes("accessibility") || includes("media")
+    if shouldBuildAX {
         let maxNodes = max(1, request.maxAXNodes ?? 800)
         var context = AXBuildContext(maxNodes: maxNodes)
         let nodes = keyWindows().map { window in
             buildAXWindowNode(for: window, context: &context)
         }
-        ax = nodes
+        axForMedia = nodes
+        ax = (includes("ax") || includes("accessibility")) ? nodes : nil
         if context.remaining == 0 {
             truncation = TKRuntimeSnapshotTruncation(
                 truncated: true,
@@ -224,10 +227,22 @@ func currentRuntimeSnapshot(_ request: TKRuntimeSnapshotRequest) -> TKRuntimeSna
                 returnedCount: maxNodes
             )
         }
-        artifact("ax")
+        if includes("ax") || includes("accessibility") {
+            artifact("ax")
+        }
     } else {
         ax = nil
+        axForMedia = nil
         skipped.append(TKRuntimeSnapshotSkipped(name: "ax", reason: "not requested"))
+    }
+
+    let media: TKRuntimeMediaStateResponse?
+    if includes("media") {
+        media = currentMediaState(axNodes: axForMedia)
+        artifact("media")
+    } else {
+        media = nil
+        skipped.append(TKRuntimeSnapshotSkipped(name: "media", reason: "not requested"))
     }
 
     let screenshot: TKRuntimeScreenshotMetadata?
@@ -255,6 +270,7 @@ func currentRuntimeSnapshot(_ request: TKRuntimeSnapshotRequest) -> TKRuntimeSna
         scene: scene,
         route: route,
         responder: responder,
+        media: media,
         geometry: geometry,
         ax: ax,
         screenshot: screenshot,

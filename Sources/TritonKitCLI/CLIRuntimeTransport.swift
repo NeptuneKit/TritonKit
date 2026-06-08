@@ -262,6 +262,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "state-route", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "state-responder", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "snapshot", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "media-playback", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "focus", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "set-text", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "select-segment", supported: connected, reason: requiresRuntime),
@@ -428,7 +429,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "xcode"
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
         return "host"
-    case "observe", "observe-ios", "observe-android", "observe-harmony", "node-resolve", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait":
+    case "media-playback", "observe", "observe-ios", "observe-android", "observe-harmony", "node-resolve", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait":
         return "observe"
     case "webview-list", "webview-current", "webview-current-url", "webview-snapshot", "webview-bridge-call", "webview-events", "webview-wait":
         return "webview"
@@ -461,6 +462,8 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["target", "app", "smoke", "evidence"]
     case "observe", "observe-ios", "observe-android", "observe-harmony", "node-resolve", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait":
         return ["action", "assert", "evidence"]
+    case "media-playback":
+        return ["assert", "evidence", "observe"]
     case "webview-list", "webview-current":
         return ["observe", "route", "assert", "evidence"]
     case "webview-current-url", "webview-snapshot", "webview-bridge-call", "webview-events", "webview-wait":
@@ -490,7 +493,7 @@ func runtimeCapabilityNextAction(
     if !serverReachable, runtimeCapabilityRequiresServer(name) {
         return TKCLINextAction(command: "serve", args: ["--host", host, "--port", String(port)], requiresLongRunningProcess: true)
     }
-    if !connected, ["runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "focus", "set-text", "select-segment", "set-switch", "ledger", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait", "capture", "assert", "replay", "tap", "swipe", "type", "paste", "clear", "input"].contains(name) {
+    if !connected, ["runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "media-playback", "focus", "set-text", "select-segment", "set-switch", "ledger", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait", "capture", "assert", "replay", "tap", "swipe", "type", "paste", "clear", "input"].contains(name) {
         return TKCLINextAction(command: "status", args: ["--json"])
     }
     switch name {
@@ -642,6 +645,8 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "state", args: ["responder", "--json"])
     case "snapshot":
         return TKCLINextAction(command: "snapshot", args: ["--json"])
+    case "media-playback":
+        return TKCLINextAction(command: "snapshot", args: ["--include", "media,ax,screenshot-metadata", "--json"])
     case "focus":
         return TKCLINextAction(command: "focus", args: ["<selector>", "--json"])
     case "set-text":
@@ -746,6 +751,7 @@ func runtimeCapabilityRequiresServer(_ name: String) -> Bool {
         "state-route",
         "state-responder",
         "snapshot",
+        "media-playback",
         "focus",
         "set-text",
         "select-segment",
@@ -787,6 +793,8 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["host-targets.json", "status-json"]
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot":
         return ["runtime-manifest", "snapshot-json"]
+    case "media-playback":
+        return ["runtime-media", "runtime-ax", "screenshot-metadata"]
     case "focus", "set-text", "select-segment", "set-switch", "semantic-action":
         return ["runtime-provider", "action-result", "runtime-ledger"]
     case "ledger":
