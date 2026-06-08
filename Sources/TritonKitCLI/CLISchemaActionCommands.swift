@@ -3,7 +3,7 @@ import TritonKitShared
 
 func actionCommandSchemas() -> [TKCommandSchema] {
     let hostPort = schemaHostPortOptions
-    let target = schemaTargetOption
+    let target = schemaTargetDeviceAliasOption
     let jsonText = schemaTextJSONFormats
     let formatJSONText = schemaFormatJSONTextOption
     let jsonAlias = schemaJSONAliasOption
@@ -37,6 +37,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: [
                 #"triton tap "HTTP""#,
+                #"triton tap "HTTP" --device booted --json"#,
                 #"triton tap "我的" --platform harmony --json"#,
                 #"triton tap "hello" --index 2"#,
                 #"triton tap "hello" --at 240,580"#,
