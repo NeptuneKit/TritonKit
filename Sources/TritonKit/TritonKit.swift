@@ -73,6 +73,7 @@ public class TritonKit {
         case geometry
         case screenshot
         case input
+        case semantic
     }
 
     public struct RedactionPolicy: Equatable {
@@ -117,6 +118,7 @@ public class TritonKit {
             .geometry,
             .screenshot,
             .input,
+            .semantic,
         ]
 
         public var endpoint: Endpoint
@@ -197,6 +199,8 @@ public class TritonKit {
     private let observerLock = NSLock()
     private var stateObservers: [UUID: (ConnectionState) -> Void] = [:]
     private var errorObservers: [UUID: (Error) -> Void] = [:]
+    private let semanticProviderLock = NSLock()
+    private var semanticProviders: [String: SemanticProviderRegistration] = [:]
     internal var endpointReadinessTimeout: TimeInterval = 0.25
     internal var endpointReadinessProbe: (String, UInt16, TimeInterval) -> Bool = TritonKit.probeEndpointReadiness
 
@@ -212,6 +216,19 @@ public class TritonKit {
             if let url = newValue { uploader = TritonKitDataUploader(baseURL: url) }
             else { uploader = nil }
         }
+    }
+
+    private struct SemanticProviderRegistration {
+        let id: UUID
+        let domain: String
+        let displayName: String?
+        let source: String
+        let confidence: String
+        let schema: [TKRuntimeSemanticStateField]
+        let actions: [TKRuntimeSemanticActionDescriptor]
+        let redaction: TKRuntimeSemanticRedaction
+        let evidenceCommands: [String]
+        let state: () -> [String: TKJSONValue]
     }
 
     private init() {
@@ -253,6 +270,99 @@ public class TritonKit {
     public func stop() {
         isStarted = false
         closeConnection()
+    }
+
+    @discardableResult
+    public func registerSemanticStateProvider(
+        domain: String,
+        displayName: String? = nil,
+        source: String = "runtime-provider",
+        confidence: String = "provider-backed",
+        schema: [TKRuntimeSemanticStateField] = [],
+        actions: [TKRuntimeSemanticActionDescriptor] = [],
+        redaction: TKRuntimeSemanticRedaction = TKRuntimeSemanticRedaction(),
+        evidenceCommands: [String] = TKRuntimeSemanticDefaultEvidenceCommands,
+        state: @escaping () -> [String: TKJSONValue]
+    ) -> ObservationToken {
+        let normalizedDomain = domain.trimmingCharacters(in: .whitespacesAndNewlines)
+        let registration = SemanticProviderRegistration(
+            id: UUID(),
+            domain: normalizedDomain.isEmpty ? "app" : normalizedDomain,
+            displayName: displayName,
+            source: source,
+            confidence: confidence,
+            schema: schema,
+            actions: actions,
+            redaction: redaction,
+            evidenceCommands: evidenceCommands,
+            state: state
+        )
+        semanticProviderLock.lock()
+        semanticProviders[registration.domain] = registration
+        semanticProviderLock.unlock()
+
+        return ObservationToken { [weak self] in
+            guard let self else { return }
+            self.semanticProviderLock.lock()
+            if self.semanticProviders[registration.domain]?.id == registration.id {
+                self.semanticProviders.removeValue(forKey: registration.domain)
+            }
+            self.semanticProviderLock.unlock()
+        }
+    }
+
+    public func clearSemanticStateProvider(domain: String) {
+        let normalizedDomain = domain.trimmingCharacters(in: .whitespacesAndNewlines)
+        semanticProviderLock.lock()
+        semanticProviders.removeValue(forKey: normalizedDomain.isEmpty ? "app" : normalizedDomain)
+        semanticProviderLock.unlock()
+    }
+
+    internal var hasSemanticStateProviders: Bool {
+        semanticProviderLock.lock()
+        let hasProviders = !semanticProviders.isEmpty
+        semanticProviderLock.unlock()
+        return hasProviders
+    }
+
+    internal var semanticDomainManifests: [TKRuntimeSemanticDomainManifest] {
+        semanticProviderLock.lock()
+        let registrations = semanticProviders.values.sorted { $0.domain < $1.domain }
+        semanticProviderLock.unlock()
+
+        return registrations.map { registration in
+            TKRuntimeSemanticDomainManifest(
+                domain: registration.domain,
+                displayName: registration.displayName,
+                source: registration.source,
+                confidence: registration.confidence,
+                schema: registration.schema,
+                actions: registration.actions,
+                redaction: registration.redaction,
+                evidenceCommands: registration.evidenceCommands
+            )
+        }
+    }
+
+    internal func currentSemanticState(capturedAt: String) -> TKRuntimeSemanticStateResponse {
+        semanticProviderLock.lock()
+        let registrations = semanticProviders.values.sorted { $0.domain < $1.domain }
+        semanticProviderLock.unlock()
+
+        let domains = registrations.map { registration in
+            TKRuntimeSemanticDomainState(
+                domain: registration.domain,
+                displayName: registration.displayName,
+                source: registration.source,
+                confidence: registration.confidence,
+                state: registration.state(),
+                schema: registration.schema,
+                actions: registration.actions,
+                redaction: registration.redaction,
+                evidenceCommands: registration.evidenceCommands
+            )
+        }
+        return TKRuntimeSemanticStateResponse(capturedAt: capturedAt, domains: domains)
     }
 
     @discardableResult

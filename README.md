@@ -235,7 +235,63 @@ struct YourApp: App {
 }
 ```
 
-### 3. iOS Network Notes
+### 3. App Semantic Providers
+
+Use semantic providers when the strongest proof is app-domain state rather than AX text, layout, or pixels. Providers are opt-in, Debug-only hooks owned by the app. They can expose typed business facts and an action catalog to agents without adding domain-specific commands to TritonKit core.
+
+Register providers from the same guarded Debug bootstrap path:
+
+```swift
+#if DEBUG
+enum TritonKitSemanticProviders {
+    private static var mediaToken: TritonKit.ObservationToken?
+
+    static func register() {
+        mediaToken = TritonKit.shared.registerSemanticStateProvider(
+            domain: "media-playback",
+            displayName: "Media Playback",
+            schema: [
+                TKRuntimeSemanticStateField(path: "isReady", type: "Bool"),
+                TKRuntimeSemanticStateField(path: "isPlaying", type: "Bool"),
+                TKRuntimeSemanticStateField(path: "elapsed", type: "Double"),
+                TKRuntimeSemanticStateField(path: "routeActiveCount", type: "Int"),
+            ],
+            actions: [
+                TKRuntimeSemanticActionDescriptor(name: "pause"),
+                TKRuntimeSemanticActionDescriptor(
+                    name: "seek",
+                    arguments: [
+                        TKRuntimeSemanticActionArgument(name: "seconds", type: "Double", required: true)
+                    ]
+                ),
+            ],
+            redaction: TKRuntimeSemanticRedaction(redactedPaths: ["currentURL"])
+        ) {
+            [
+                "isReady": .bool(true),
+                "isPlaying": .bool(true),
+                "elapsed": .double(12.3),
+                "routeActiveCount": .int(1),
+            ]
+        }
+    }
+}
+#endif
+```
+
+Agents should read provider-backed semantics through snapshot:
+
+```bash
+triton snapshot --include semantic,app,scene --json
+triton runtime manifest --json
+triton capabilities --json
+```
+
+The `semantic` section reports registered domains, provider source, confidence, typed state, schema fields, redaction metadata, evidence commands, and provider-declared action descriptors. In this slice, `app-semantic-action` means the action catalog is discoverable through snapshot; generic provider action execution is a future command slice. If no provider is registered, TritonKit returns an empty semantic domain list with a warning, and agents must not infer business readiness from visible UI alone.
+
+`triton runtime manifest --json` also advertises `semanticDomains[]` with domain, source, confidence, schema, action catalog, redaction policy, and evidence commands. The manifest intentionally does not include state values; use `snapshot --include semantic` for current facts.
+
+### 4. iOS Network Notes
 
 For physical devices or local-network testing, add development-only network privacy text to the app target as needed:
 
@@ -246,11 +302,11 @@ For physical devices or local-network testing, add development-only network priv
 
 If your app blocks cleartext development traffic through App Transport Security, add a debug-only ATS exception for your local workflow. Do not ship broad ATS exceptions in production.
 
-### 4. iOS Runtime Boundary
+### 5. iOS Runtime Boundary
 
 `TritonKit.isRuntimeEnabled` is `true` only when the package build defines `TRITONKIT_RUNTIME_ENABLED` (the default Debug package configuration). In Release package builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
-### 5. WebView Observation
+### 6. WebView Observation
 
 Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current --platform ios --json` can discover visible `WKWebView` candidates from the runtime tree; `triton webview current-url --platform ios --json` and `triton route assert-current-url '<url>' --platform ios --json` require provider URL metadata and are the smoke path for proving the native flow opened the expected H5 link. Page interaction remains opt-in: `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
 
@@ -572,6 +628,17 @@ triton evidence --output /tmp/video-regression.tritonevidence --json
 ```
 
 The `media` section reports visible AVPlayer-backed surfaces, player status/rate/time metadata when public APIs expose it, AX playback-control candidates, automation confidence, fallback advice, and evidence commands. System `AVPlayerViewController` controls are not guaranteed to expose stable actionable AX nodes in every route; when the snapshot is `surface-only`, add app-owned DEBUG overlay controls with stable accessibility identifiers for play, pause, seek, progress, elapsed time, and duration, then assert those controls with `wait`, `find`, `tap`, and `assert`.
+
+For app-domain readiness that cannot be proven from generic UI, prefer a registered semantic provider and include the semantic snapshot section:
+
+```bash
+triton snapshot --include semantic,app,scene --json
+triton runtime manifest --json
+triton capabilities --json
+```
+
+`semantic.domains[]` contains provider-backed state and an action descriptor catalog. Treat those descriptors as discoverability metadata in this release; generic `state query/assert/action perform` commands are not implemented yet.
+`runtime manifest` exposes the lighter `semanticDomains[]` catalog so agents can discover domains and provider source before querying the snapshot.
 
 When a pass/fail decision needs attachable evidence, export a bundle with a machine-readable manifest:
 

@@ -3,8 +3,16 @@ import TritonKitShared
 
 // These types are re-exported from TritonKitShared for convenience
 @_exported import enum TritonKitShared.TKRequestType
+@_exported import enum TritonKitShared.TKJSONValue
 @_exported import struct TritonKitShared.TKMessage
 @_exported import struct TritonKitShared.TKErrorPayload
+@_exported import struct TritonKitShared.TKRuntimeSemanticActionArgument
+@_exported import struct TritonKitShared.TKRuntimeSemanticActionDescriptor
+@_exported import struct TritonKitShared.TKRuntimeSemanticDomainManifest
+@_exported import struct TritonKitShared.TKRuntimeSemanticDomainState
+@_exported import struct TritonKitShared.TKRuntimeSemanticRedaction
+@_exported import struct TritonKitShared.TKRuntimeSemanticStateField
+@_exported import struct TritonKitShared.TKRuntimeSemanticStateResponse
 
 // MARK: - iOS-specific Enums
 
