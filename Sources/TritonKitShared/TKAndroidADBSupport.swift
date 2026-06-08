@@ -33,6 +33,14 @@ public enum TKAndroidADBCommand {
         command(["-s", serial, "shell", "getprop", "sys.boot_completed"], executable: executable, requiredConfig: [.target, .timeout])
     }
 
+    public static func getState(serial: String, executable: String = "adb") -> TKHostCommand {
+        command(["-s", serial, "get-state"], executable: executable, requiredConfig: [.target, .timeout])
+    }
+
+    public static func packageManagerPath(serial: String, executable: String = "adb") -> TKHostCommand {
+        command(["-s", serial, "shell", "pm", "path", "android"], executable: executable, requiredConfig: [.target, .timeout])
+    }
+
     public static func screenshot(serial: String, executable: String = "adb") -> TKHostCommand {
         command(["-s", serial, "exec-out", "screencap", "-p"], executable: executable, riskLevel: .evidence, requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord], capturesArtifacts: true, sensitiveOutput: true)
     }
@@ -81,16 +89,25 @@ public enum TKAndroidADBCommand {
     }
 }
 
+public enum TKAndroidDeviceScope: String, Codable, Equatable {
+    case emulator
+    case real
+}
+
 public struct TKAndroidTarget: Codable, Equatable {
     public let id: String
     public let serial: String
     public let state: String
     public let isReady: Bool
     public let source: String
+    public let scope: TKAndroidDeviceScope
+    public let kind: String
+    public let blockedReasons: [String]
     public let product: String?
     public let model: String?
     public let device: String?
     public let transportID: String?
+    public let transport: String?
 
     public init(
         serial: String,
@@ -101,15 +118,57 @@ public struct TKAndroidTarget: Codable, Equatable {
         device: String? = nil,
         transportID: String? = nil
     ) {
-        self.id = "android:\(serial)"
+        let scope = TKAndroidTarget.inferredScope(serial: serial)
+        self.id = TKAndroidTarget.targetID(serial: serial, scope: scope)
         self.serial = serial
         self.state = state
-        self.isReady = state.lowercased() == "device"
+        self.scope = scope
+        self.kind = scope == .real ? "real-device" : "emulator"
+        self.blockedReasons = TKAndroidTarget.blockedReasons(state: state)
+        self.isReady = state.lowercased() == "device" && self.blockedReasons.isEmpty
         self.source = source
         self.product = product
         self.model = model
         self.device = device
         self.transportID = transportID
+        self.transport = scope == .real ? (serial.contains(":") ? "tcp" : "usb") : "emulator"
+    }
+
+    private static func inferredScope(serial: String) -> TKAndroidDeviceScope {
+        serial.lowercased().hasPrefix("emulator-") ? .emulator : .real
+    }
+
+    private static func targetID(serial: String, scope: TKAndroidDeviceScope) -> String {
+        switch scope {
+        case .emulator:
+            return "android:\(serial)"
+        case .real:
+            return "android-real:\(stableRedactedSerialHash(serial))"
+        }
+    }
+
+    private static func blockedReasons(state: String) -> [String] {
+        switch state.lowercased() {
+        case "device":
+            return []
+        case "unauthorized":
+            return ["unauthorized"]
+        case "offline":
+            return ["offline"]
+        case "no", "no permissions", "nopermissions":
+            return ["debugging-disabled"]
+        default:
+            return state.isEmpty ? ["offline"] : [state]
+        }
+    }
+
+    private static func stableRedactedSerialHash(_ serial: String) -> String {
+        var hash: UInt64 = 0xcbf29ce484222325
+        for byte in serial.utf8 {
+            hash ^= UInt64(byte)
+            hash &*= 0x100000001b3
+        }
+        return String(format: "%016llx", hash)
     }
 }
 
@@ -137,6 +196,11 @@ public enum TKAdbDeviceListParser {
         return ready.count == 1 ? ready[0] : nil
     }
 
+    public static func targets(_ targets: [TKAndroidTarget], matching scope: TKAndroidDeviceScope?) -> [TKAndroidTarget] {
+        guard let scope else { return targets }
+        return targets.filter { $0.scope == scope }
+    }
+
     private static func parseMetadata(_ value: String) -> (String, String)? {
         guard let separator = value.firstIndex(of: ":") else { return nil }
         let key = String(value[..<separator])
@@ -149,6 +213,78 @@ public enum TKAdbDeviceListParser {
 public enum TKAndroidBootCompletedParser {
     public static func isReady(_ text: String) -> Bool {
         text.trimmingCharacters(in: .whitespacesAndNewlines) == "1"
+    }
+}
+
+public enum TKAndroidADBStateStatus: Equatable {
+    case device
+    case unauthorized
+    case offline
+    case debuggingDisabled
+    case unknown(String)
+    case failed(String)
+
+    public var blockedReason: String? {
+        switch self {
+        case .device:
+            return nil
+        case .unauthorized:
+            return "unauthorized"
+        case .offline:
+            return "offline"
+        case .debuggingDisabled:
+            return "debugging-disabled"
+        case .unknown(let state):
+            return state
+        case .failed:
+            return "offline"
+        }
+    }
+}
+
+public enum TKAndroidADBStateParser {
+    public static func parse(_ stdout: String, stderr: String, exitCode: Int32) -> TKAndroidADBStateStatus {
+        guard exitCode == 0 else {
+            let message = trimmedError(stderr.isEmpty ? stdout : stderr)
+            if message.localizedCaseInsensitiveContains("unauthorized") {
+                return .unauthorized
+            }
+            if message.localizedCaseInsensitiveContains("no permissions") {
+                return .debuggingDisabled
+            }
+            if message.localizedCaseInsensitiveContains("offline") {
+                return .offline
+            }
+            return .failed(message)
+        }
+        let state = stdout.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        switch state {
+        case "device":
+            return .device
+        case "unauthorized":
+            return .unauthorized
+        case "offline":
+            return .offline
+        case "no permissions", "nopermissions":
+            return .debuggingDisabled
+        default:
+            return state.isEmpty ? .offline : .unknown(state)
+        }
+    }
+}
+
+public enum TKAndroidPackageManagerProbeStatus: Equatable {
+    case available
+    case unavailable(String)
+}
+
+public enum TKAndroidPackageManagerProbeParser {
+    public static func parse(_ stdout: String, stderr: String, exitCode: Int32) -> TKAndroidPackageManagerProbeStatus {
+        let trimmedStdout = stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        if exitCode == 0 && trimmedStdout.split(whereSeparator: \.isNewline).contains(where: { $0.hasPrefix("package:") }) {
+            return .available
+        }
+        return .unavailable(trimmedError(stderr.isEmpty ? stdout : stderr))
     }
 }
 
@@ -213,11 +349,22 @@ public enum TKAndroidADBFakeFixture: Equatable {
     case version
     case devicesEmpty
     case devicesSingleReady
+    case devicesSingleRealReady
     case devicesMultipleReady
+    case devicesMultipleRealReady
     case devicesMixedStates
+    case devicesMixedEmulatorAndReal
+    case devicesRealUnauthorized
+    case devicesRealOffline
     case bootCompletedFalse(serial: String)
     case bootCompletedTrue(serial: String)
     case bootCompletedError(serial: String)
+    case getStateDevice(serial: String)
+    case getStateUnauthorized(serial: String)
+    case getStateOffline(serial: String)
+    case getStateDebuggingDisabled(serial: String)
+    case packageManagerReady(serial: String)
+    case packageManagerUnavailable(serial: String)
     case screenshotPNG(serial: String)
     case screenshotFailure(serial: String)
     case installSuccess(serial: String, apkPath: String)
@@ -231,11 +378,22 @@ public enum TKAndroidADBFakeFixture: Equatable {
         case .version: return "adb-version"
         case .devicesEmpty: return "android-adb-devices-empty"
         case .devicesSingleReady: return "android-adb-devices-single-ready"
+        case .devicesSingleRealReady: return "android-adb-devices-single-real-ready"
         case .devicesMultipleReady: return "android-adb-devices-multiple-ready"
+        case .devicesMultipleRealReady: return "android-adb-devices-multiple-real-ready"
         case .devicesMixedStates: return "android-adb-devices-mixed-states"
+        case .devicesMixedEmulatorAndReal: return "android-adb-devices-mixed-emulator-real"
+        case .devicesRealUnauthorized: return "android-adb-devices-real-unauthorized"
+        case .devicesRealOffline: return "android-adb-devices-real-offline"
         case .bootCompletedFalse: return "android-boot-completed-false"
         case .bootCompletedTrue: return "android-boot-completed-true"
         case .bootCompletedError: return "android-boot-completed-error"
+        case .getStateDevice: return "android-get-state-device"
+        case .getStateUnauthorized: return "android-get-state-unauthorized"
+        case .getStateOffline: return "android-get-state-offline"
+        case .getStateDebuggingDisabled: return "android-get-state-debugging-disabled"
+        case .packageManagerReady: return "android-package-manager-ready"
+        case .packageManagerUnavailable: return "android-package-manager-unavailable"
         case .screenshotPNG: return "android-screencap-success"
         case .screenshotFailure: return "android-screencap-failure"
         case .installSuccess: return "android-install-success"
@@ -250,10 +408,14 @@ public enum TKAndroidADBFakeFixture: Equatable {
         switch self {
         case .version:
             return ["version"]
-        case .devicesEmpty, .devicesSingleReady, .devicesMultipleReady, .devicesMixedStates:
+        case .devicesEmpty, .devicesSingleReady, .devicesSingleRealReady, .devicesMultipleReady, .devicesMultipleRealReady, .devicesMixedStates, .devicesMixedEmulatorAndReal, .devicesRealUnauthorized, .devicesRealOffline:
             return ["devices", "-l"]
         case .bootCompletedFalse(let serial), .bootCompletedTrue(let serial), .bootCompletedError(let serial):
             return ["-s", serial, "shell", "getprop", "sys.boot_completed"]
+        case .getStateDevice(let serial), .getStateUnauthorized(let serial), .getStateOffline(let serial), .getStateDebuggingDisabled(let serial):
+            return ["-s", serial, "get-state"]
+        case .packageManagerReady(let serial), .packageManagerUnavailable(let serial):
+            return ["-s", serial, "shell", "pm", "path", "android"]
         case .screenshotPNG(let serial), .screenshotFailure(let serial):
             return ["-s", serial, "exec-out", "screencap", "-p"]
         case .installSuccess(let serial, let apkPath):
@@ -284,11 +446,22 @@ public enum TKAndroidADBFakeFixture: Equatable {
             List of devices attached
             emulator-5554          device product:sdk_gphone64_arm64 model:Pixel_8 device:emu64a transport_id:1
             """)
+        case .devicesSingleRealReady:
+            return makeResult("""
+            List of devices attached
+            R58M1234ABC            device product:oriole model:Pixel_6 device:oriole transport_id:4
+            """)
         case .devicesMultipleReady:
             return makeResult("""
             List of devices attached
             emulator-5554          device product:sdk_gphone64_arm64 model:Pixel_8 device:emu64a transport_id:1
             emulator-5556          device product:sdk_gphone64_x86_64 model:Pixel_7 device:emu64x transport_id:2
+            """)
+        case .devicesMultipleRealReady:
+            return makeResult("""
+            List of devices attached
+            R58M1234ABC            device product:oriole model:Pixel_6 device:oriole transport_id:4
+            ZY22H7Q9KM             device product:panther model:Pixel_7 device:panther transport_id:5
             """)
         case .devicesMixedStates:
             return makeResult("""
@@ -297,12 +470,41 @@ public enum TKAndroidADBFakeFixture: Equatable {
             emulator-5556          offline transport_id:2
             emulator-5558          unauthorized transport_id:3
             """)
+        case .devicesMixedEmulatorAndReal:
+            return makeResult("""
+            List of devices attached
+            emulator-5554          device product:sdk_gphone64_arm64 model:Pixel_8 device:emu64a transport_id:1
+            R58M1234ABC            device product:oriole model:Pixel_6 device:oriole transport_id:4
+            ZY22H7Q9KM             unauthorized product:panther model:Pixel_7 device:panther transport_id:5
+            """)
+        case .devicesRealUnauthorized:
+            return makeResult("""
+            List of devices attached
+            R58M1234ABC            unauthorized transport_id:4
+            """)
+        case .devicesRealOffline:
+            return makeResult("""
+            List of devices attached
+            R58M1234ABC            offline transport_id:4
+            """)
         case .bootCompletedFalse:
             return makeResult("0\n")
         case .bootCompletedTrue:
             return makeResult("1\n")
         case .bootCompletedError:
             return makeResult("", stderr: "device offline\n", exitCode: 1)
+        case .getStateDevice:
+            return makeResult("device\n")
+        case .getStateUnauthorized:
+            return makeResult("unauthorized\n")
+        case .getStateOffline:
+            return makeResult("offline\n")
+        case .getStateDebuggingDisabled:
+            return makeResult("", stderr: "error: no permissions (user in plugdev group; are your udev rules wrong?)\n", exitCode: 1)
+        case .packageManagerReady:
+            return makeResult("package:/system/framework/framework-res.apk\n")
+        case .packageManagerUnavailable:
+            return makeResult("", stderr: "cmd: Can't find service: package\n", exitCode: 20)
         case .screenshotPNG:
             return TKAndroidADBFakeResult(
                 fixtureName: name,

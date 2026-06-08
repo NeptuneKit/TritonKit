@@ -34,6 +34,62 @@ struct TKAndroidADBFixturesTests {
         #expect(targets.filter(\.isReady).map(\.serial) == ["emulator-5554"])
     }
 
+    @Test("fake adb runner replays real-device list matrix without exposing raw serial in id")
+    func fakeADBRealDeviceListFixtures() throws {
+        let singleReal = try TKAndroidADBFakeRunner(fixtures: [.devicesSingleRealReady]).run(TKAndroidADBCommand.listDevices())
+        let realTarget = try #require(TKAdbDeviceListParser.parse(singleReal.stdoutString).first)
+        #expect(realTarget.serial == "R58M1234ABC")
+        #expect(realTarget.scope == .real)
+        #expect(realTarget.kind == "real-device")
+        #expect(realTarget.transport == "usb")
+        #expect(realTarget.id.hasPrefix("android-real:"))
+        #expect(!realTarget.id.contains("R58M1234ABC"))
+        #expect(realTarget.blockedReasons.isEmpty)
+
+        let mixed = try TKAndroidADBFakeRunner(fixtures: [.devicesMixedEmulatorAndReal]).run(TKAndroidADBCommand.listDevices())
+        let targets = TKAdbDeviceListParser.parse(mixed.stdoutString)
+        #expect(TKAdbDeviceListParser.targets(targets, matching: .emulator).map(\.serial) == ["emulator-5554"])
+        #expect(TKAdbDeviceListParser.targets(targets, matching: .real).map(\.serial) == ["R58M1234ABC", "ZY22H7Q9KM"])
+        #expect(TKAdbDeviceListParser.targets(targets, matching: .real).map(\.kind) == ["real-device", "real-device"])
+        #expect(TKAdbDeviceListParser.targets(targets, matching: .real).last?.blockedReasons == ["unauthorized"])
+
+        let unauthorized = try TKAndroidADBFakeRunner(fixtures: [.devicesRealUnauthorized]).run(TKAndroidADBCommand.listDevices())
+        #expect(TKAdbDeviceListParser.parse(unauthorized.stdoutString).first?.blockedReasons == ["unauthorized"])
+
+        let offline = try TKAndroidADBFakeRunner(fixtures: [.devicesRealOffline]).run(TKAndroidADBCommand.listDevices())
+        #expect(TKAdbDeviceListParser.parse(offline.stdoutString).first?.blockedReasons == ["offline"])
+    }
+
+    @Test("fake adb runner replays real-device state and package manager readiness probes")
+    func fakeADBRealDeviceReadinessFixtures() throws {
+        let runner = TKAndroidADBFakeRunner(fixtures: [
+            .getStateDevice(serial: "R58M1234ABC"),
+            .getStateUnauthorized(serial: "R58M0000BAD"),
+            .getStateOffline(serial: "R58M0000OFF"),
+            .getStateDebuggingDisabled(serial: "R58M0000NOPERM"),
+            .packageManagerReady(serial: "R58M1234ABC"),
+            .packageManagerUnavailable(serial: "R58M0000BOOT"),
+        ])
+
+        let state = try runner.run(TKAndroidADBCommand.getState(serial: "R58M1234ABC"))
+        #expect(TKAndroidADBStateParser.parse(state.stdoutString, stderr: state.stderrString, exitCode: state.exitCode) == .device)
+
+        let unauthorized = try runner.run(TKAndroidADBCommand.getState(serial: "R58M0000BAD"))
+        #expect(TKAndroidADBStateParser.parse(unauthorized.stdoutString, stderr: unauthorized.stderrString, exitCode: unauthorized.exitCode).blockedReason == "unauthorized")
+
+        let offline = try runner.run(TKAndroidADBCommand.getState(serial: "R58M0000OFF"))
+        #expect(TKAndroidADBStateParser.parse(offline.stdoutString, stderr: offline.stderrString, exitCode: offline.exitCode).blockedReason == "offline")
+
+        let debuggingDisabled = try runner.run(TKAndroidADBCommand.getState(serial: "R58M0000NOPERM"))
+        #expect(TKAndroidADBStateParser.parse(debuggingDisabled.stdoutString, stderr: debuggingDisabled.stderrString, exitCode: debuggingDisabled.exitCode).blockedReason == "debugging-disabled")
+
+        let packageManager = try runner.run(TKAndroidADBCommand.packageManagerPath(serial: "R58M1234ABC"))
+        #expect(TKAndroidPackageManagerProbeParser.parse(packageManager.stdoutString, stderr: packageManager.stderrString, exitCode: packageManager.exitCode) == .available)
+
+        let packageManagerUnavailable = try runner.run(TKAndroidADBCommand.packageManagerPath(serial: "R58M0000BOOT"))
+        #expect(TKAndroidPackageManagerProbeParser.parse(packageManagerUnavailable.stdoutString, stderr: packageManagerUnavailable.stderrString, exitCode: packageManagerUnavailable.exitCode) == .unavailable("cmd: Can't find service: package"))
+    }
+
     @Test("fake adb runner replays boot completed ready false true and error")
     func fakeADBBootCompletedFixtures() throws {
         let falseResult = try TKAndroidADBFakeRunner(fixtures: [.bootCompletedFalse(serial: "emulator-5554")])

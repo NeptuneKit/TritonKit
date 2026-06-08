@@ -117,6 +117,14 @@ struct FailureDiagnosticsTests {
         #expect(response.error.hint?.contains("triton observe tree --platform android") == true)
     }
 
+    @Test("host validation errors stay validation_failed")
+    func hostValidationErrorsStayValidationFailed() throws {
+        let detail = hostValidationErrorDetail(ValidationError("Harmony app install requires --hap."))
+
+        #expect(detail.code == "validation_failed")
+        #expect(detail.message == "Harmony app install requires --hap.")
+    }
+
     @Test("host-facing schemas cover failHostCommand error codes")
     func hostFacingSchemasCoverFailHostCommandErrorCodes() throws {
         let schemas = Dictionary(uniqueKeysWithValues: commandSchemas().map { ($0.name, $0) })
@@ -154,6 +162,31 @@ struct FailureDiagnosticsTests {
             "xcresulttool_failed",
             "coverage_report_failed",
             "host_action_failed",
+            "unsupported_host_action",
+            "debug_runtime_disabled",
+            "runtime_not_connected",
+            "devicectl_not_found",
+            "devicectl_json_missing",
+            "devicectl_json_parse_failed",
+            "device_not_trusted",
+            "developer_mode_required",
+            "ddi_missing",
+            "xcode_signing_failed",
+            "provisioning_profile_missing",
+            "android_adb_not_found",
+            "android_target_unauthorized",
+            "android_target_offline",
+            "android_debugging_disabled",
+            "android_package_manager_unavailable",
+            "android_app_install_failed",
+            "android_activity_resolve_failed",
+            "harmony_hdc_not_found",
+            "harmony_target_unauthorized",
+            "harmony_target_offline",
+            "harmony_debugging_disabled",
+            "harmony_shell_unavailable",
+            "harmony_app_install_failed",
+            "harmony_ability_launch_failed",
             "status_bar_operation_failed",
             "sim_diagnose_failed",
             "sim_logverbose_failed",

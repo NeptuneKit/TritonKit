@@ -18,6 +18,7 @@ struct SmokeIOS: AsyncParsableCommand {
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
+    @Option(help: "Device scope: simulator, real, or all") var scope: HostDeviceScope?
     @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Runtime target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "App bundle identifier") var bundleID: String
@@ -43,6 +44,7 @@ struct SmokeIOS: AsyncParsableCommand {
                 request: HostDeviceSelectionRequest(
                     device: device ?? simulator ?? "booted",
                     platform: .ios,
+                    scope: scope,
                     name: name,
                     runtime: runtime,
                     state: state,
@@ -52,6 +54,7 @@ struct SmokeIOS: AsyncParsableCommand {
             )
             let summary = try await runIOSSmoke(options: IOSSmokeOptions(
                 simulator: selection.target.target,
+                hostTarget: selection.target,
                 target: target,
                 bundleID: bundleID,
                 openURL: openURL,
@@ -87,6 +90,7 @@ struct SmokeAndroid: AsyncParsableCommand {
     @Option(help: "Device name filter when available") var name: String?
     @Option(help: "Runtime filter when available") var runtime: String?
     @Option(help: "Target state filter, for example device") var state: String?
+    @Option(help: "Device scope: emulator, real, or all") var scope: HostDeviceScope?
     @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Android package name") var package: String
@@ -111,6 +115,7 @@ struct SmokeAndroid: AsyncParsableCommand {
                 request: HostDeviceSelectionRequest(
                     device: device,
                     platform: .android,
+                    scope: scope,
                     name: name,
                     runtime: runtime,
                     state: state,
@@ -157,6 +162,7 @@ struct SmokeHarmony: AsyncParsableCommand {
     @Option(help: "Device name filter when available") var name: String?
     @Option(help: "Runtime filter when available") var runtime: String?
     @Option(help: "Target state filter, for example connected") var state: String?
+    @Option(help: "Device scope: emulator, real, or all") var scope: HostDeviceScope?
     @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Harmony bundle name") var bundle: String
@@ -182,6 +188,7 @@ struct SmokeHarmony: AsyncParsableCommand {
                 request: HostDeviceSelectionRequest(
                     device: device ?? target,
                     platform: .harmony,
+                    scope: scope,
                     name: name,
                     runtime: runtime,
                     state: state,
@@ -190,7 +197,7 @@ struct SmokeHarmony: AsyncParsableCommand {
                 hdc: hdc
             )
             let summary = try await runHarmonySmoke(options: HarmonySmokeOptions(
-                target: selection.target.target,
+                target: selection.target.rawTarget,
                 hdc: hdc,
                 bundle: bundle,
                 ability: ability,

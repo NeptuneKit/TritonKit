@@ -13,6 +13,7 @@ struct DeviceCrossPlatformTests {
 
         #expect(usageForms.contains("doctor --platform ios|android|harmony"))
         #expect(usageForms.contains("list --platform ios|android|harmony"))
+        #expect(usageForms.contains("list --platform ios|android|harmony --scope real"))
         #expect(usageForms.contains("alias set <name> --platform ios|android|harmony --target <id>"))
         #expect(usageForms.contains("use <selector>"))
         #expect(usageForms.contains("current"))
@@ -22,8 +23,11 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("runtime-url --device <selector>"))
         #expect(usageForms.contains("stop --platform harmony --hvd <name> --path <deployed-path> --confirm"))
         #expect(optionNames.contains("--device"))
+        #expect(optionNames.contains("--scope"))
         #expect(optionNames.contains("--name"))
         #expect(optionNames.contains("--runtime"))
+        #expect(device.examples.contains("triton device list --platform android --scope real --json"))
+        #expect(device.examples.contains("triton device wait-ready --platform android --scope real --device <android-real-target> --json"))
         #expect(usageForms.contains("runtime-url --platform harmony --target <target>"))
         #expect(device.examples.contains("triton device runtime-url --device harmony-a --probe-manifest --json"))
         #expect(device.examples.contains("triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --confirm --json"))
@@ -38,6 +42,8 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("android-device-list"))
         #expect(device.providedCapabilities.contains("android-device-wait-ready"))
         #expect(device.providedCapabilities.contains("android-device-screenshot"))
+        #expect(device.failureCodes.contains("android_debugging_disabled"))
+        #expect(device.failureCodes.contains("android_package_manager_unavailable"))
         #expect(device.providedCapabilities.contains("harmony-device-stop"))
     }
 
@@ -121,14 +127,19 @@ struct DeviceCrossPlatformTests {
         #expect(app.examples.contains("triton app launch --device android-a --platform android --package-name com.example.app --json"))
         #expect(app.examples.contains("triton app open-url example://debug --device android-a --platform android --package-name com.example.app --json"))
         #expect(app.examples.contains("triton app install --device harmony-a --hap /tmp/Demo.hap --json"))
+        #expect(app.examples.contains("triton app info --device <ios-real-target> --platform ios --scope real --bundle-id com.example.app --json"))
+        #expect(app.examples.contains("triton app list --device <android-real-target> --platform android --scope real --user-only --json"))
+        #expect(app.examples.contains("triton app terminate --device <harmony-real-target> --platform harmony --scope real --bundle com.example.app --json"))
         #expect(app.examples.contains(#"triton app go "example://debug""#))
         #expect(app.examples.contains(#"triton app go "example://debug" --device iphone15"#))
         #expect(app.examples.contains("triton app prefs get DEBUG-mock --device iphone15 --bundle-id com.example.app --json"))
+        #expect(app.providedCapabilities.contains("ios-real-app"))
         #expect(app.providedCapabilities.contains("android-app"))
         #expect(app.providedCapabilities.contains("android-app-install"))
         #expect(app.providedCapabilities.contains("android-app-launch"))
         #expect(app.providedCapabilities.contains("android-app-terminate"))
         #expect(app.providedCapabilities.contains("android-app-open-url"))
+        #expect(app.providedCapabilities.contains("harmony-app-info"))
 
         #expect(smokeOptionNames.contains("--device"))
         #expect(smokeOptionNames.contains("--simulator"))
@@ -185,6 +196,139 @@ struct DeviceCrossPlatformTests {
         #expect(android.name == "Pixel_8")
         #expect(android.runtime == "sdk_gphone64_arm64")
         #expect(android.transport == "1")
+        #expect(android.scope == "emulator")
+        #expect(android.kind == "emulator")
+        #expect(android.blockedReasons.isEmpty)
+    }
+
+    @Test("host device target mapping redacts Android real device serials")
+    func hostDeviceTargetMappingRedactsAndroidRealDeviceSerials() {
+        let androidTarget = TKAndroidTarget(
+            serial: "R58M1234ABC",
+            state: "device",
+            product: "oriole",
+            model: "Pixel_6",
+            device: "oriole",
+            transportID: "4"
+        )
+
+        let target = hostDeviceTarget(from: androidTarget)
+
+        #expect(target.platform == "android")
+        #expect(target.scope == "real")
+        #expect(target.kind == "real-device")
+        #expect(target.id.hasPrefix("android-real:"))
+        #expect(target.target == target.id)
+        #expect(target.rawTarget == "R58M1234ABC")
+        #expect(target.sensitive)
+        #expect(!target.id.contains("R58M1234ABC"))
+        #expect(!target.target.contains("R58M1234ABC"))
+        #expect(target.blockedReasons.isEmpty)
+        #expect(target.transport == "4")
+    }
+
+    @Test("host device selector filters Android real devices away from emulators")
+    func hostDeviceSelectorFiltersAndroidRealDevicesAwayFromEmulators() throws {
+        let emulator = hostDeviceTarget(from: TKAndroidTarget(serial: "emulator-5554", state: "device", model: "Pixel_8"))
+        let real = hostDeviceTarget(from: TKAndroidTarget(serial: "R58M1234ABC", state: "device", model: "Pixel_6"))
+
+        let resolved = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(platform: .android, scope: .real),
+            candidates: [.android: [emulator, real]],
+            aliases: .empty
+        )
+
+        #expect(resolved.target == real)
+        #expect(resolved.target.scope == "real")
+        #expect(resolved.target.kind == "real-device")
+        #expect(resolved.source == .platformFilter)
+    }
+
+    @Test("host device selector filters Harmony real devices away from DevEco emulators")
+    func hostDeviceSelectorFiltersHarmonyRealDevicesAwayFromDevEcoEmulators() throws {
+        let emulator = hostDeviceTarget(from: TKHarmonyTarget(target: "127.0.0.1:10100", state: "Connected", transport: "TCP"))
+        let real = hostDeviceTarget(from: TKHarmonyTarget(target: "HDCREAL001", state: "Connected", transport: "USB"))
+
+        #expect(real.platform == "harmony")
+        #expect(real.scope == "real")
+        #expect(real.kind == "real-device")
+        #expect(real.id.hasPrefix("harmony-real:"))
+        #expect(real.target == real.id)
+        #expect(real.rawTarget == "HDCREAL001")
+        #expect(real.sensitive)
+        #expect(!real.id.contains("HDCREAL001"))
+        #expect(!real.target.contains("HDCREAL001"))
+
+        let resolved = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(platform: .harmony, scope: .real),
+            candidates: [.harmony: [emulator, real]],
+            aliases: .empty
+        )
+
+        #expect(resolved.target == real)
+        #expect(resolved.target.scope == "real")
+        #expect(resolved.target.kind == "real-device")
+        #expect(harmonyTarget(from: resolved.target).target == "HDCREAL001")
+        #expect(resolved.source == .platformFilter)
+    }
+
+    @Test("iOS real device target mapping uses redacted stable identity")
+    func iosRealDeviceTargetMappingUsesRedactedStableIdentity() {
+        let real = TKDevicectlDeviceTarget(
+            identifier: "00008110-001C195E0A10801E",
+            name: "Lin iPhone",
+            runtime: "iOS 26.5",
+            state: "connected",
+            ready: true,
+            transport: "usb",
+            blockedReasons: []
+        )
+
+        let target = hostDeviceTarget(from: real)
+
+        #expect(target.platform == "ios")
+        #expect(target.scope == "real")
+        #expect(target.kind == "real-device")
+        #expect(target.source == "devicectl")
+        #expect(target.id == real.id)
+        #expect(target.target == real.redactedTarget)
+        #expect(target.ready)
+        #expect(target.blockedReasons == [])
+        #expect(target.name == "Lin iPhone")
+        #expect(target.runtime == "iOS 26.5")
+        #expect(target.transport == "usb")
+        #expect(target.id.contains("00008110") == false)
+        #expect(target.target.contains("00008110") == false)
+    }
+
+    @Test("host device selector resolves iOS real devices by stable id")
+    func hostDeviceSelectorResolvesIOSRealDevicesByStableID() throws {
+        let ready = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:abc123",
+            target: "ios-real:abc123",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "Lin iPhone",
+            runtime: "iOS 26.5",
+            transport: "usb",
+            scope: "real",
+            kind: "real-device",
+            blockedReasons: []
+        )
+
+        let resolved = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(device: "ios-real:abc123", platform: .ios, ready: true),
+            candidates: [.ios: [ready]],
+            aliases: .empty
+        )
+
+        #expect(resolved.platform == .ios)
+        #expect(resolved.target == ready)
+        #expect(resolved.target.scope == "real")
+        #expect(resolved.target.kind == "real-device")
+        #expect(resolved.source == .explicit)
     }
 
     @Test("host device target can round-trip into Harmony runtime target")
@@ -377,11 +521,50 @@ struct DeviceCrossPlatformTests {
 
         let decoded = try JSONDecoder().decode(HostTargetAliasStore.self, from: JSONEncoder().encode(store))
 
-        #expect(decoded.schemaVersion == 1)
+        #expect(decoded.schemaVersion == 2)
         #expect(decoded.current == "iphone15")
         #expect(decoded.aliases["iphone15"]?.platform == .ios)
         #expect(decoded.aliases["android-a"]?.platform == .android)
         #expect(decoded.aliases["harmony-a"]?.target == "127.0.0.1:10100")
+    }
+
+    @Test("host target alias store reads v1 and writes v2 real-device bindings")
+    func hostTargetAliasStoreReadsV1AndWritesV2RealDeviceBindings() throws {
+        let v1 = Data(#"""
+        {
+          "current": "android-phone",
+          "aliases": {
+            "android-phone": {
+              "platform": "android",
+              "target": "android:emulator-5554"
+            }
+          }
+        }
+        """#.utf8)
+        let oldStore = try JSONDecoder().decode(HostTargetAliasStore.self, from: v1)
+
+        #expect(oldStore.schemaVersion == 1)
+        #expect(oldStore.aliases["android-phone"]?.scope == nil)
+        #expect(oldStore.aliases["android-phone"]?.kind == nil)
+
+        let realStore = HostTargetAliasStore(
+            current: "android-phone",
+            aliases: [
+                "android-phone": HostTargetAlias(
+                    platform: .android,
+                    target: "android-real:abc123",
+                    scope: .real,
+                    kind: "real-device",
+                    sensitiveRef: ".triton/devices/android-real-abc123.json"
+                )
+            ]
+        )
+        let decoded = try JSONDecoder().decode(HostTargetAliasStore.self, from: JSONEncoder().encode(realStore))
+
+        #expect(decoded.schemaVersion == 2)
+        #expect(decoded.aliases["android-phone"]?.scope == .real)
+        #expect(decoded.aliases["android-phone"]?.kind == "real-device")
+        #expect(decoded.aliases["android-phone"]?.sensitiveRef == ".triton/devices/android-real-abc123.json")
     }
 }
 

@@ -40,6 +40,45 @@ struct SmokeRuntimeTests {
         #expect(summary.evidence == nil)
     }
 
+    @Test("smoke ios real-device open-url success is not business pass without runtime")
+    func realDeviceOpenURLSuccessDoesNotPassWithoutRuntime() async throws {
+        let temp = try makeSmokeWorkspace(prefix: "real-runtime-missing")
+        defer { try? FileManager.default.removeItem(at: temp.root) }
+        let realTarget = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:abc123",
+            target: "ios-real:abc123",
+            state: "available",
+            ready: true,
+            source: "devicectl",
+            name: "iPhone",
+            runtime: "iOS 26.0",
+            transport: "usb",
+            scope: "real",
+            kind: "real-device",
+            sensitive: true,
+            rawTarget: "00008110-0012345678901234"
+        )
+
+        let summary = try await runIOSSmoke(
+            options: makeOptions(
+                temp: temp,
+                hostTarget: realTarget,
+                waitText: "Ready"
+            ),
+            dependencies: makeDisconnectedRuntimeDependencies(temp: temp)
+        )
+
+        #expect(summary.ok == false)
+        #expect(summary.status == .fail)
+        #expect(summary.failure?.step == "runtime.connect")
+        #expect(summary.failure?.code == "runtime_not_connected")
+        #expect(summary.steps.map(\.name) == ["app.open-url"])
+        #expect(summary.steps[0].proofSource == .hostAction)
+        #expect(summary.steps[0].businessReady == false)
+        #expect(summary.steps[0].target == "ios-real:abc123/app:com.example.app")
+    }
+
     @Test("smoke ios reports assertion failure after wait succeeds")
     func reportsAssertionFailureAfterWait() async throws {
         let runtime = FakeSmokeRuntimeClient(
@@ -155,6 +194,7 @@ private func makeSmokeWorkspace(prefix: String) throws -> SmokeWorkspace {
 
 private func makeOptions(
     temp: SmokeWorkspace,
+    hostTarget: HostDeviceTarget? = nil,
     waitText: String,
     assertText: String? = nil,
     screenshot: String? = nil,
@@ -162,6 +202,7 @@ private func makeOptions(
 ) -> IOSSmokeOptions {
     IOSSmokeOptions(
         simulator: "SIM-1",
+        hostTarget: hostTarget,
         target: "triton:local",
         bundleID: "com.example.app",
         openURL: "myapp://home",
@@ -181,9 +222,24 @@ private func makeOptions(
 private func makeDependencies(runtime: FakeSmokeRuntimeClient, temp: SmokeWorkspace) -> IOSSmokeDependencies {
     IOSSmokeDependencies(
         makeRuntimeClient: { _, _, _ in runtime },
-        openURL: { simulator, url in
-            try writeMarker(at: temp.root.appendingPathComponent("open-url.txt"), contents: "\(simulator) \(url)")
-            return "simctl openurl \(simulator) \(url)"
+        openURL: { selected, bundleID, url in
+            try writeMarker(at: temp.root.appendingPathComponent("open-url.txt"), contents: "\(selected.id) \(bundleID) \(url)")
+            return HostActionOutput(
+                ok: true,
+                action: "app.open-url",
+                runtimeScope: selected.scope == "real" ? "host-ios-real" : "host-ios-simulator",
+                target: selected.scope == "real" ? "\(selected.id)/app:\(bundleID)" : "sim:\(selected.target)/app:\(bundleID)",
+                tool: selected.scope == "real" ? "devicectl" : "simctl",
+                exitCode: 0,
+                riskLevel: "automation",
+                sourceCommand: selected.scope == "real" ? "devicectl launch --payload-url" : "simctl openurl \(selected.target) \(url)",
+                stdoutTruncated: false,
+                stderrTruncated: false,
+                stdout: nil,
+                stderr: nil,
+                artifacts: [],
+                note: "submitted"
+            )
         },
         screenshot: { simulator, output in
             let url = URL(fileURLWithPath: output)
@@ -219,6 +275,39 @@ private func makeDependencies(runtime: FakeSmokeRuntimeClient, temp: SmokeWorksp
             let manifestURL = outputURL.appendingPathComponent("manifest.json")
             try JSONEncoder().encode(manifest).write(to: manifestURL, options: .atomic)
             return manifest
+        }
+    )
+}
+
+private func makeDisconnectedRuntimeDependencies(temp: SmokeWorkspace) -> IOSSmokeDependencies {
+    IOSSmokeDependencies(
+        makeRuntimeClient: { _, _, _ in
+            throw RuntimeError("runtime not connected")
+        },
+        openURL: { selected, bundleID, url in
+            try writeMarker(at: temp.root.appendingPathComponent("open-url.txt"), contents: "\(selected.id) \(bundleID) \(url)")
+            return HostActionOutput(
+                ok: true,
+                action: "app.open-url",
+                runtimeScope: "host-ios-real",
+                target: "\(selected.id)/app:\(bundleID)",
+                tool: "devicectl",
+                exitCode: 0,
+                riskLevel: "automation",
+                sourceCommand: "devicectl device process launch --payload-url",
+                stdoutTruncated: false,
+                stderrTruncated: false,
+                stdout: nil,
+                stderr: nil,
+                artifacts: [],
+                note: "submitted"
+            )
+        },
+        screenshot: { _, _ in
+            throw RuntimeError("unexpected screenshot")
+        },
+        captureEvidence: { _, _, _, _, _, _, _, _ in
+            throw RuntimeError("unexpected evidence")
         }
     )
 }

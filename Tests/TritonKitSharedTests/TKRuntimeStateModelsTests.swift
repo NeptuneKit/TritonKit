@@ -126,4 +126,5 @@ struct TKRuntimeStateModelsTests {
         #expect(decoded.redaction.secureText == "length-only")
         #expect(decoded.redaction.textContent == "not-collected")
     }
+
 }

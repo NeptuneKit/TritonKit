@@ -5,6 +5,118 @@ import TritonKitShared
 
 @Suite
 struct AppOpenURLFlowTests {
+    @Test("real-device app lifecycle planner uses raw host ids but public targets stay redacted")
+    func realDeviceAppLifecyclePlannerUsesRawHostIDsAndRedactedTargets() throws {
+        let ios = HostDeviceSelectionResult(
+            platform: .ios,
+            target: HostDeviceTarget(
+                platform: "ios",
+                id: "ios-real:abc123",
+                target: "ios-real:abc123",
+                state: "connected",
+                ready: true,
+                source: "devicectl",
+                name: "Lin iPhone",
+                runtime: "iOS 26.5",
+                transport: "usb",
+                scope: "real",
+                kind: "real-device",
+                rawTarget: "00008110-001C195E0A10801E"
+            ),
+            selector: "ios-real:abc123",
+            source: .explicit,
+            filters: HostDeviceSelectionFilters(request: HostDeviceSelectionRequest(device: "ios-real:abc123", platform: .ios, scope: .real))
+        )
+
+        let iosLaunch = try planHostAppLaunch(selection: ios, bundleID: "com.example.demo", packageName: nil, activity: nil, bundle: nil, ability: nil, payloadURL: nil, adb: "adb", hdc: "hdc", devicectlArtifacts: ("/tmp/launch.json", "/tmp/launch.log"))
+        #expect(iosLaunch.command.argv.contains("00008110-001C195E0A10801E"))
+        #expect(iosLaunch.command.argv.contains("ios-real:abc123") == false)
+        #expect(iosLaunch.target == "ios-real:abc123/app:com.example.demo")
+        #expect(iosLaunch.runtimeScope == "host-ios-real-device")
+        #expect(iosLaunch.note.contains("Host action was submitted"))
+
+        let iosOpenURL = try planHostAppOpenURL(selection: ios, url: "demo://ready", bundleID: "com.example.demo", packageName: nil, bundle: nil, ability: nil, adb: "adb", hdc: "hdc", devicectlArtifacts: ("/tmp/open.json", "/tmp/open.log"))
+        #expect(iosOpenURL.command.argv.contains("--payload-url"))
+        #expect(iosOpenURL.command.argv.contains("demo://ready"))
+        #expect(iosOpenURL.command.argv.contains("00008110-001C195E0A10801E"))
+
+        let android = HostDeviceSelectionResult(
+            platform: .android,
+            target: HostDeviceTarget(
+                platform: "android",
+                id: "android-real:def456",
+                target: "android-real:def456",
+                state: "device",
+                ready: true,
+                source: "adb",
+                name: "Pixel",
+                runtime: "Android",
+                transport: "usb",
+                scope: "real",
+                kind: "real-device",
+                sensitive: true,
+                rawTarget: "R58M1234ABC"
+            ),
+            selector: "android-real:def456",
+            source: .explicit,
+            filters: HostDeviceSelectionFilters(request: HostDeviceSelectionRequest(device: "android-real:def456", platform: .android, scope: .real))
+        )
+        let androidInstall = try planHostAppInstall(selection: android, app: nil, apk: "/tmp/Demo.apk", hap: nil, adb: "adb", hdc: "hdc", devicectlArtifacts: nil)
+        #expect(androidInstall.command.argv == ["-s", "R58M1234ABC", "install", "-r", "/tmp/Demo.apk"])
+        #expect(androidInstall.target == "android-real:def456")
+
+        let harmony = HostDeviceSelectionResult(
+            platform: .harmony,
+            target: HostDeviceTarget(
+                platform: "harmony",
+                id: "harmony-real:fed789",
+                target: "harmony-real:fed789",
+                state: "Connected",
+                ready: true,
+                source: "hdc",
+                name: nil,
+                runtime: nil,
+                transport: "USB",
+                scope: "real",
+                kind: "real-device",
+                sensitive: true,
+                rawTarget: "HDCREAL001"
+            ),
+            selector: "harmony-real:fed789",
+            source: .explicit,
+            filters: HostDeviceSelectionFilters(request: HostDeviceSelectionRequest(device: "harmony-real:fed789", platform: .harmony, scope: .real))
+        )
+        let harmonyInfo = try planHostAppInfo(selection: harmony, bundleID: "com.example.demo", adb: "adb", hdc: "hdc", devicectlArtifacts: nil)
+        #expect(harmonyInfo.command.argv == ["-t", "HDCREAL001", "shell", "bm", "dump", "-n", "com.example.demo"])
+        #expect(harmonyInfo.target == "harmony-real:fed789/app:com.example.demo")
+    }
+
+    @Test("host app action output marks submission as non-business-ready evidence")
+    func hostAppActionOutputMarksSubmissionEvidence() throws {
+        let output = HostActionOutput(
+            ok: true,
+            action: "app.launch",
+            runtimeScope: "host-android",
+            target: "android-real:def456/app:com.example.demo",
+            tool: "adb",
+            exitCode: 0,
+            riskLevel: "automation",
+            sourceCommand: "adb -s '<redacted>' shell am start -n com.example.demo/.MainActivity",
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdout: nil,
+            stderr: nil,
+            artifacts: [],
+            note: "submitted"
+        )
+
+        #expect(output.hostAction.ok)
+        #expect(output.hostAction.proofSource == "host-action")
+        #expect(output.hostAction.businessReady == false)
+        #expect(output.hostAction.nextAction.command == "smoke")
+        #expect(output.hostAction.nextAction.args.contains("--json"))
+    }
+
     @Test("app open-url enhanced flow records runtime ready and snapshot summary")
     func enhancedOpenURLFlowRecordsReadyAndSnapshot() async throws {
         let snapshot = TKRuntimeSnapshotResponse(

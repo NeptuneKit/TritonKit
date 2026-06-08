@@ -1,0 +1,563 @@
+import Foundation
+import TritonKitShared
+
+struct WorkflowPlanRequest {
+    let goal: String
+    let device: String?
+    let bundleID: String?
+    let url: String?
+    let text: String?
+    let expectedURL: String?
+    let evidence: String?
+
+    static let general = WorkflowPlanRequest(
+        goal: "general",
+        device: nil,
+        bundleID: nil,
+        url: nil,
+        text: nil,
+        expectedURL: nil,
+        evidence: nil
+    )
+}
+
+func buildWorkflowPlan(
+    capabilities: TKCapabilitiesResponse,
+    host: String,
+    port: Int,
+    request: WorkflowPlanRequest = .general
+) -> TKWorkflowPlanResponse {
+    if !capabilities.serverReachable {
+        return TKWorkflowPlanResponse(
+            ok: false,
+            serverReachable: false,
+            connected: false,
+            runtime: capabilities.runtime,
+            mode: "bootstrap",
+            goal: request.goal,
+            nextStep: "start-server",
+            steps: [
+                TKWorkflowPlanStep(
+                    id: "start-server",
+                    title: "Start Triton server",
+                    command: "triton serve --host \(host) --port \(port)",
+                    requiresServer: false,
+                    requiresTarget: false,
+                    when: "serverReachable == false",
+                    expected: "Server listens on \(host):\(port)"
+                ),
+                TKWorkflowPlanStep(
+                    id: "connect-target",
+                    title: "Launch an app with embedded TritonKit runtime",
+                    command: "triton xcode run --json",
+                    requiresServer: true,
+                    requiresTarget: false,
+                    when: "serverReachable == true && connected == false",
+                    expected: "App launches with embedded TritonKit runtime and triton status reports connected: true"
+                ),
+                TKWorkflowPlanStep(
+                    id: "diagnose",
+                    title: "Re-check machine-readable runtime state",
+                    command: "triton doctor --host \(host) --port \(port) --format json",
+                    requiresServer: true,
+                    requiresTarget: false,
+                    when: "after starting server and target",
+                    expected: "ok=true, serverReachable=true, connected=true"
+                ),
+            ],
+            error: capabilities.error
+        )
+    }
+
+    if request.goal != "general" {
+        return buildTaskWorkflowPlan(
+            capabilities: capabilities,
+            host: host,
+            port: port,
+            request: request
+        )
+    }
+
+    if !capabilities.connected {
+        return TKWorkflowPlanResponse(
+            ok: false,
+            serverReachable: true,
+            connected: false,
+            runtime: capabilities.runtime,
+            mode: "bootstrap",
+            goal: request.goal,
+            nextStep: "connect-target",
+            steps: [
+                TKWorkflowPlanStep(
+                    id: "connect-target",
+                    title: "Launch an app with embedded TritonKit runtime",
+                    command: "triton xcode run --json",
+                    requiresServer: true,
+                    requiresTarget: false,
+                    when: "serverReachable == true && connected == false",
+                    expected: "App launches and WebSocket target connects to ws://\(host):\(port)/"
+                ),
+                TKWorkflowPlanStep(
+                    id: "list-targets",
+                    title: "List connected targets",
+                    command: "triton list --host \(host) --port \(port) --format json",
+                    requiresServer: true,
+                    requiresTarget: false,
+                    when: "after target launch",
+                    expected: "targets contains triton:local"
+                ),
+                TKWorkflowPlanStep(
+                    id: "diagnose",
+                    title: "Confirm capability matrix",
+                    command: "triton doctor --host \(host) --port \(port) --format json",
+                    requiresServer: true,
+                    requiresTarget: false,
+                    when: "after target connects",
+                    expected: "embedded runtime capabilities become supported"
+                ),
+            ],
+            error: TKCLIErrorDetail(
+                code: "target_unavailable",
+                message: "Triton server is reachable but no embedded runtime is connected",
+                endpoint: endpointURL("/status", host: host, port: port),
+                hint: "Launch an app that embeds TritonKit, then run `triton doctor --format json`"
+            )
+        )
+    }
+
+    return TKWorkflowPlanResponse(
+        ok: true,
+        serverReachable: true,
+        connected: true,
+        runtime: capabilities.runtime,
+        mode: "bootstrap",
+        goal: request.goal,
+        nextStep: "geometry",
+        steps: [
+            TKWorkflowPlanStep(
+                id: "geometry",
+                title: "Read screen and window geometry",
+                command: "triton geometry --host \(host) --port \(port) --format json",
+                requiresServer: true,
+                requiresTarget: true,
+                when: "connected == true",
+                expected: "JSON geometry response"
+            ),
+            TKWorkflowPlanStep(
+                id: "ax",
+                title: "Build actionable accessibility index",
+                command: "triton ax --host \(host) --port \(port) --format json --output /tmp/triton-ax.json",
+                requiresServer: true,
+                requiresTarget: true,
+                when: "connected == true",
+                expected: "Safe machine-readable controls"
+            ),
+            TKWorkflowPlanStep(
+                id: "wait",
+                title: "Wait for asynchronous UI state",
+                command: "triton wait --host \(host) --port \(port) --text <text> --timeout 10 --format json",
+                requiresServer: true,
+                requiresTarget: true,
+                when: "after taps, submissions, and navigation",
+                expected: "Machine-readable wait result with elapsedMs and timeout state"
+            ),
+            TKWorkflowPlanStep(
+                id: "hit",
+                title: "Resolve a coordinate before acting",
+                command: "triton hit --host \(host) --port \(port) --x <x> --y <y> --format json",
+                requiresServer: true,
+                requiresTarget: true,
+                when: "before coordinate input",
+                expected: "Hit-test node or empty result"
+            ),
+                TKWorkflowPlanStep(
+                    id: "input",
+                    title: "Execute NDJSON input actions",
+                    command: "triton input --host \(host) --port \(port) --format json --summary --strict",
+                    requiresServer: true,
+                    requiresTarget: true,
+                    when: "after selecting safe actions",
+                    expected: "Read NDJSON actions from stdin; emit input results plus a final summary; non-zero exit when any action fails"
+                ),
+            TKWorkflowPlanStep(
+                id: "screenshot",
+                title: "Capture visual evidence",
+                command: "triton screenshot --host \(host) --port \(port) --output /tmp/triton.png --metadata",
+                requiresServer: true,
+                requiresTarget: true,
+                when: "after state changes",
+                expected: "PNG plus metadata JSON"
+            ),
+            TKWorkflowPlanStep(
+                id: "export",
+                title: "Export replayable inspection archive",
+                command: "triton export --host \(host) --port \(port) --format archive --output /tmp/triton.triton",
+                requiresServer: true,
+                requiresTarget: true,
+                when: "when handing off context",
+                expected: "Self-contained .triton archive"
+            ),
+        ]
+    )
+}
+
+func buildTaskWorkflowPlan(
+    capabilities: TKCapabilitiesResponse,
+    host: String,
+    port: Int,
+    request: WorkflowPlanRequest
+) -> TKWorkflowPlanResponse {
+    switch request.goal {
+    case "ios-smoke":
+        return taskWorkflowPlan(
+            capabilities: capabilities,
+            goal: request.goal,
+            nextStep: "target-list",
+            steps: [
+                targetListPlanStep(host: host, port: port),
+                targetResolvePlanStep(device: request.device, host: host, port: port),
+                targetUsePlanStep(device: request.device, host: host, port: port),
+                targetWaitReadyPlanStep(device: request.device, host: host, port: port),
+                TKWorkflowPlanStep(
+                    id: "ios-smoke",
+                    title: "Run iOS smoke workflow",
+                    command: [
+                        "triton", "smoke", "ios",
+                        "--device", planValue(request.device, "<device>"),
+                        "--bundle-id", planValue(request.bundleID, "<bundle-id>"),
+                        "--open-url", planValue(request.url, "<url>"),
+                        "--wait-text", planValue(request.text, "<text>"),
+                        "--assert-text", planValue(request.text, "<text>"),
+                        "--evidence", planValue(request.evidence, "<dir.tritonevidence>"),
+                        "--json",
+                    ].map(shellEscaped).joined(separator: " "),
+                    requiresServer: true,
+                    requiresTarget: true,
+                    when: "target is resolved and host app can be launched",
+                    expected: "Smoke summary proves host action, runtime readiness, assertion, screenshot, and evidence"
+                ),
+                evidenceSummaryPlanStep(evidence: request.evidence),
+            ]
+        )
+    case "open-url":
+        return taskWorkflowPlan(
+            capabilities: capabilities,
+            goal: request.goal,
+            nextStep: "target-resolve",
+            steps: [
+                targetResolvePlanStep(device: request.device, host: host, port: port),
+                TKWorkflowPlanStep(
+                    id: "app-open-url",
+                    title: "Open app URL and capture runtime readiness",
+                    command: [
+                        "triton", "app", "go",
+                        planValue(request.url, "<url>"),
+                        "--device", planValue(request.device, "<device>"),
+                    ].map(shellEscaped).joined(separator: " "),
+                    requiresServer: true,
+                    requiresTarget: true,
+                    when: "target is ready and URL/deep link is known",
+                    expected: "Host action succeeds and optional runtime snapshot summarizes app state"
+                ),
+                waitTextPlanStep(text: request.text, host: host, port: port),
+                assertTextPlanStep(text: request.text, host: host, port: port),
+                evidenceCapturePlanStep(evidence: request.evidence),
+            ]
+        )
+    case "webview-check":
+        return taskWorkflowPlan(
+            capabilities: capabilities,
+            goal: request.goal,
+            nextStep: "webview-current",
+            steps: [
+                TKWorkflowPlanStep(
+                    id: "webview-current",
+                    title: "Read current WebView metadata",
+                    command: "triton webview current --host \(shellEscaped(host)) --port \(port) --json",
+                    requiresServer: true,
+                    requiresTarget: true,
+                    when: "hybrid page may be visible",
+                    expected: "Provider metadata includes WebView id, title, URL, and page session when available"
+                ),
+                TKWorkflowPlanStep(
+                    id: "route-assert-current-url",
+                    title: "Assert current WebView URL",
+                    command: [
+                        "triton", "route", "assert-current-url",
+                        planValue(request.expectedURL ?? request.url, "<expected-url>"),
+                        "--host", host,
+                        "--port", String(port),
+                        "--json",
+                    ].map(shellEscaped).joined(separator: " "),
+                    requiresServer: true,
+                    requiresTarget: true,
+                    when: "expected URL is known",
+                    expected: "Route assertion returns status=pass or a machine-readable mismatch"
+                ),
+                TKWorkflowPlanStep(
+                    id: "webview-wait",
+                    title: "Wait for WebView text",
+                    command: [
+                        "triton", "webview", "wait",
+                        "--text", planValue(request.text, "<text>"),
+                        "--host", host,
+                        "--port", String(port),
+                        "--json",
+                    ].map(shellEscaped).joined(separator: " "),
+                    requiresServer: true,
+                    requiresTarget: true,
+                    when: "page text or event is the readiness signal",
+                    expected: "WebView wait result includes match, timeout state, and last observed sample"
+                ),
+                evidenceCapturePlanStep(evidence: request.evidence),
+            ]
+        )
+    default:
+        return TKWorkflowPlanResponse(
+            ok: false,
+            serverReachable: capabilities.serverReachable,
+            connected: capabilities.connected,
+            runtime: capabilities.runtime,
+            mode: "task",
+            goal: request.goal,
+            nextStep: "inspect-schema",
+            steps: [
+                TKWorkflowPlanStep(
+                    id: "inspect-schema",
+                    title: "Inspect plan command schema",
+                    command: "triton schema --command plan --json",
+                    requiresServer: false,
+                    requiresTarget: false,
+                    when: "plan goal is unknown",
+                    expected: "Schema lists supported task goals"
+                ),
+            ],
+            error: TKCLIErrorDetail(
+                code: "validation_failed",
+                message: "Unsupported plan goal: \(request.goal)",
+                hint: "Use one of: ios-smoke, open-url, webview-check, inspect"
+            )
+        )
+    }
+}
+
+private func taskWorkflowPlan(
+    capabilities: TKCapabilitiesResponse,
+    goal: String,
+    nextStep: String,
+    steps: [TKWorkflowPlanStep]
+) -> TKWorkflowPlanResponse {
+    TKWorkflowPlanResponse(
+        ok: capabilities.serverReachable,
+        serverReachable: capabilities.serverReachable,
+        connected: capabilities.connected,
+        runtime: capabilities.runtime,
+        mode: "task",
+        goal: goal,
+        nextStep: nextStep,
+        steps: steps,
+        error: capabilities.error
+    )
+}
+
+private func planValue(_ value: String?, _ placeholder: String) -> String {
+    guard let value, !value.isEmpty else { return placeholder }
+    return value
+}
+
+private func targetListPlanStep(host: String, port: Int) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "target-list",
+        title: "List available host targets",
+        command: "triton target list --host \(shellEscaped(host)) --port \(port) --json",
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before selecting a device or emulator",
+        expected: "Targets include platform, readiness, and default candidate"
+    )
+}
+
+private func targetResolvePlanStep(device: String?, host: String, port: Int) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "target-resolve",
+        title: "Resolve target selector",
+        command: [
+            "triton", "target", "resolve",
+            planValue(device, "<device>"),
+            "--host", host,
+            "--port", String(port),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after target list returns candidates",
+        expected: "A single target is selected or ambiguity is explained"
+    )
+}
+
+private func targetUsePlanStep(device: String?, host: String, port: Int) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "target-use",
+        title: "Persist current target",
+        command: [
+            "triton", "target", "use",
+            planValue(device, "<device>"),
+            "--host", host,
+            "--port", String(port),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: false,
+        requiresTarget: false,
+        when: "the resolved target will be reused by later commands",
+        expected: "Workspace defaults contain the selected target"
+    )
+}
+
+private func targetWaitReadyPlanStep(device: String?, host: String, port: Int) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "target-wait-ready",
+        title: "Wait for target readiness",
+        command: [
+            "triton", "target", "wait-ready",
+            planValue(device, "<device>"),
+            "--host", host,
+            "--port", String(port),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before launching or opening app URLs",
+        expected: "Target reports ready or returns device_not_ready with source command"
+    )
+}
+
+private func waitTextPlanStep(text: String?, host: String, port: Int) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "wait-text",
+        title: "Wait for expected text",
+        command: [
+            "triton", "wait",
+            "--text", planValue(text, "<text>"),
+            "--host", host,
+            "--port", String(port),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: true,
+        requiresTarget: true,
+        when: "after navigation or async loading",
+        expected: "Wait result proves readiness or returns timeout diagnostics"
+    )
+}
+
+private func assertTextPlanStep(text: String?, host: String, port: Int) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "assert-text",
+        title: "Assert expected text",
+        command: [
+            "triton", "assert", "text-exists",
+            planValue(text, "<text>"),
+            "--host", host,
+            "--port", String(port),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: true,
+        requiresTarget: true,
+        when: "after wait succeeds",
+        expected: "Assertion result is the pass/fail gate"
+    )
+}
+
+private func evidenceCapturePlanStep(evidence: String?) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "evidence",
+        title: "Capture evidence bundle",
+        command: [
+            "triton", "evidence",
+            "--output", planValue(evidence, "<dir.tritonevidence>"),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: true,
+        requiresTarget: true,
+        when: "after the workflow reaches a pass/fail state",
+        expected: "Evidence manifest lists artifacts, skipped sources, target, CLI, and run metadata"
+    )
+}
+
+private func evidenceSummaryPlanStep(evidence: String?) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "evidence-summary",
+        title: "Summarize evidence bundle",
+        command: [
+            "triton", "evidence", "summary",
+            planValue(evidence, "<dir.tritonevidence>"),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before handoff or issue filing",
+        expected: "Summary identifies the key artifacts and redaction state"
+    )
+}
+
+func renderWorkflowPlan(_ plan: TKWorkflowPlanResponse, language: CLILanguage = effectiveLanguage(nil)) -> String {
+    if language == .zh {
+        return renderWorkflowPlanZH(plan)
+    }
+    var lines = [
+        "ok: \(plan.ok)",
+        "serverReachable: \(plan.serverReachable)",
+        "connected: \(plan.connected)",
+        "runtime: \(plan.runtime)",
+        "nextStep: \(plan.nextStep)",
+        "nextWorkflows: \(plan.nextWorkflows.joined(separator: ","))",
+    ]
+    if let error = plan.error {
+        lines.append("error: \(error.code) \(error.message)")
+        if let hint = error.hint {
+            lines.append("hint: \(hint)")
+        }
+        if let nextAction = error.nextAction {
+            let command = ([nextAction.command] + nextAction.args).joined(separator: " ")
+            lines.append("nextAction: triton \(command)")
+            lines.append("requiresLongRunningProcess: \(nextAction.requiresLongRunningProcess)")
+        }
+    }
+    lines.append("steps:")
+    for step in plan.steps {
+        lines.append("  \(step.id): \(step.title)")
+        lines.append("    command: \(step.command)")
+        lines.append("    when: \(step.when)")
+        lines.append("    expected: \(step.expected)")
+    }
+    return lines.joined(separator: "\n")
+}
+
+func renderWorkflowPlanZH(_ plan: TKWorkflowPlanResponse) -> String {
+    var lines = [
+        "正常: \(plan.ok)",
+        "服务可达: \(plan.serverReachable)",
+        "已连接: \(plan.connected)",
+        "运行时: \(plan.runtime)",
+        "下一步: \(plan.nextStep)",
+        "下一步工作流: \(plan.nextWorkflows.joined(separator: ","))",
+    ]
+    if let error = plan.error {
+        lines.append("错误: \(localizedErrorMessage(error, language: .zh))")
+        if let hint = error.hint {
+            lines.append("提示: \(localizedHint(error, fallback: hint, language: .zh))")
+        }
+        if let nextAction = error.nextAction {
+            let command = ([nextAction.command] + nextAction.args).joined(separator: " ")
+            lines.append("下一步命令: triton \(command)")
+            lines.append("需要长驻进程: \(nextAction.requiresLongRunningProcess)")
+        }
+    }
+    lines.append("步骤:")
+    for step in plan.steps {
+        lines.append("  \(step.id): \(step.title)")
+        lines.append("    命令: \(step.command)")
+        lines.append("    条件: \(step.when)")
+        lines.append("    预期: \(step.expected)")
+    }
+    return lines.joined(separator: "\n")
+}

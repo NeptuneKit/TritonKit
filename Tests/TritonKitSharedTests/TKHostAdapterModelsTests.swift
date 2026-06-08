@@ -31,6 +31,114 @@ struct TKHostAdapterModelsTests {
         #expect(TKSimctlCommand.appContainer(udid: "U", bundleID: "com.example.app", kind: .data).argv == ["simctl", "get_app_container", "U", "com.example.app", "data"])
     }
 
+    @Test("devicectl command builder always writes JSON and log artifacts")
+    func devicectlCommandBuilderArgv() {
+        #expect(TKDevicectlCommand.listDevices(jsonOutput: "/tmp/list.json", logOutput: "/tmp/list.log").argv == ["devicectl", "list", "devices", "--json-output", "/tmp/list.json", "--log-output", "/tmp/list.log"])
+        #expect(TKDevicectlCommand.deviceInfoDetails(identifier: "00008110", jsonOutput: "/tmp/details.json", logOutput: "/tmp/details.log").argv == ["devicectl", "device", "info", "details", "--device", "00008110", "--json-output", "/tmp/details.json", "--log-output", "/tmp/details.log"])
+        #expect(TKDevicectlCommand.deviceInfoApps(identifier: "00008110", jsonOutput: "/tmp/apps.json", logOutput: "/tmp/apps.log").argv == ["devicectl", "device", "info", "apps", "--device", "00008110", "--json-output", "/tmp/apps.json", "--log-output", "/tmp/apps.log"])
+        #expect(TKDevicectlCommand.installApp(identifier: "00008110", appPath: "/tmp/Demo.app", jsonOutput: "/tmp/install.json", logOutput: "/tmp/install.log").argv == ["devicectl", "device", "install", "app", "--device", "00008110", "/tmp/Demo.app", "--json-output", "/tmp/install.json", "--log-output", "/tmp/install.log"])
+        #expect(TKDevicectlCommand.launchApp(identifier: "00008110", bundleID: "com.example.demo", payloadURL: "demo://ready", terminateExisting: true, jsonOutput: "/tmp/launch.json", logOutput: "/tmp/launch.log").argv == ["devicectl", "device", "process", "launch", "--device", "00008110", "--terminate-existing", "--payload-url", "demo://ready", "com.example.demo", "--json-output", "/tmp/launch.json", "--log-output", "/tmp/launch.log"])
+        #expect(TKDevicectlCommand.terminateApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/terminate.json", logOutput: "/tmp/terminate.log").argv == ["devicectl", "device", "process", "terminate", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/terminate.json", "--log-output", "/tmp/terminate.log"])
+        #expect(TKDevicectlCommand.uninstallApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/uninstall.json", logOutput: "/tmp/uninstall.log").argv == ["devicectl", "device", "uninstall", "app", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/uninstall.json", "--log-output", "/tmp/uninstall.log"])
+    }
+
+    @Test("devicectl parser maps ready real device without leaking sensitive identifiers")
+    func devicectlParserReadyDevice() throws {
+        let devices = try TKDevicectlDeviceListParser.parse(Data(devicectlListJSON(device: """
+        {
+          "identifier": "00008110-001C195E0A10801E",
+          "deviceProperties": {
+            "name": "Lin iPhone",
+            "osVersionNumber": "26.5",
+            "developerModeStatus": "enabled",
+            "ddiServicesAvailable": true,
+            "lockState": "unlocked"
+          },
+          "hardwareProperties": {
+            "serialNumber": "F2LPRIVATE",
+            "ecid": "1234567890"
+          },
+          "connectionProperties": {
+            "transportType": "usb",
+            "pairingState": "paired",
+            "tunnelState": "connected"
+          },
+          "visibilityClass": "default"
+        }
+        """).utf8))
+        let device = try #require(devices.first)
+
+        #expect(device.platform == "ios")
+        #expect(device.scope == "real")
+        #expect(device.kind == "real-device")
+        #expect(device.source == "devicectl")
+        #expect(device.identifier == "00008110-001C195E0A10801E")
+        #expect(device.id.hasPrefix("ios-real:"))
+        #expect(device.redactedTarget == device.id)
+        #expect(device.ready)
+        #expect(device.blockedReasons == [])
+        #expect(device.name == "Lin iPhone")
+        #expect(device.runtime == "iOS 26.5")
+        #expect(device.transport == "usb")
+        #expect(device.id.contains("00008110") == false)
+    }
+
+    @Test("devicectl parser maps blocked real-device fixtures")
+    func devicectlParserBlockedDevices() throws {
+        let devices = try TKDevicectlDeviceListParser.parse(Data("""
+        {
+          "info": { "outcome": "success" },
+          "result": {
+            "devices": [
+              {
+                "identifier": "OFFLINE-DEVICE",
+                "deviceProperties": { "name": "Offline iPhone", "osVersionNumber": "26.5", "developerModeStatus": "enabled", "ddiServicesAvailable": true, "lockState": "unlocked" },
+                "connectionProperties": { "transportType": "usb", "pairingState": "paired", "tunnelState": "disconnected" },
+                "visibilityClass": "offline"
+              },
+              {
+                "identifier": "UNTRUSTED-DEVICE",
+                "deviceProperties": { "name": "Trust Prompt", "osVersionNumber": "26.5", "developerModeStatus": "enabled", "ddiServicesAvailable": true, "lockState": "unlocked" },
+                "connectionProperties": { "transportType": "usb", "pairingState": "untrusted", "tunnelState": "connected" },
+                "visibilityClass": "default"
+              },
+              {
+                "identifier": "DEV-MODE-DEVICE",
+                "deviceProperties": { "name": "Developer Mode", "osVersionNumber": "26.5", "developerModeStatus": "disabled", "ddiServicesAvailable": true, "lockState": "unlocked" },
+                "connectionProperties": { "transportType": "usb", "pairingState": "paired", "tunnelState": "connected" },
+                "visibilityClass": "default"
+              },
+              {
+                "identifier": "LOCKED-DEVICE",
+                "deviceProperties": { "name": "Locked", "osVersionNumber": "26.5", "developerModeStatus": "enabled", "ddiServicesAvailable": true, "lockState": "locked" },
+                "connectionProperties": { "transportType": "usb", "pairingState": "paired", "tunnelState": "connected" },
+                "visibilityClass": "default"
+              },
+              {
+                "identifier": "DDI-DEVICE",
+                "deviceProperties": { "name": "Missing DDI", "osVersionNumber": "26.5", "developerModeStatus": "enabled", "ddiServicesAvailable": false, "lockState": "unlocked" },
+                "connectionProperties": { "transportType": "usb", "pairingState": "paired", "tunnelState": "connected" },
+                "visibilityClass": "default"
+              }
+            ]
+          }
+        }
+        """.utf8))
+
+        #expect(devices.map(\.blockedReasons) == [["offline"], ["not-trusted"], ["developer-mode-required"], ["locked"], ["ddi-missing"]])
+        #expect(devices.allSatisfy { !$0.ready })
+    }
+
+    @Test("devicectl parser rejects malformed JSON and missing device arrays")
+    func devicectlParserRejectsMalformedFixtures() throws {
+        #expect(throws: TKDevicectlParserError.self) {
+            _ = try TKDevicectlDeviceListParser.parse(Data("{".utf8))
+        }
+        #expect(throws: TKDevicectlParserError.missingDevices) {
+            _ = try TKDevicectlDeviceListParser.parse(Data(#"{ "info": { "outcome": "success" }, "result": {} }"#.utf8))
+        }
+    }
+
     @Test("simctl command builder emits advanced simulator maintenance argv")
     func simctlCommandBuilderAdvancedArgv() {
         #expect(TKSimctlCommand.diagnose(output: "/tmp/sim-diagnostics", timeout: 15, noArchive: true, allLogs: true, dataContainers: true, udids: ["U1", "U2"]).argv == ["simctl", "diagnose", "--timeout", "15.0", "--output", "/tmp/sim-diagnostics", "--no-archive", "--all-logs", "--data-containers", "--udid", "U1", "--udid", "U2"])
@@ -184,6 +292,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKHarmonyHDCCommand.version().argv == ["-v"])
         #expect(TKHarmonyHDCCommand.listTargets().argv == ["list", "targets", "-v"])
         #expect(TKHarmonyHDCCommand.bootCompleted(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "param", "get", "bootevent.boot.completed"])
+        #expect(TKHarmonyHDCCommand.shellProbe(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "echo", "triton-shell-ready"])
         #expect(TKHarmonyHDCCommand.appInspect(target: "127.0.0.1:10100", bundleName: "com.example.demo").argv == ["-t", "127.0.0.1:10100", "shell", "bm", "dump", "-n", "com.example.demo"])
         #expect(TKHarmonyHDCCommand.appLaunch(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-b", "com.example.demo", "-a", "EntryAbility"])
         #expect(TKHarmonyHDCCommand.forwardPort(target: "127.0.0.1:10100", localPort: 18765, remotePort: 18765).argv == ["-t", "127.0.0.1:10100", "fport", "tcp:18765", "tcp:18765"])
@@ -369,8 +478,14 @@ struct TKHostAdapterModelsTests {
 
         let targets = TKHdcTargetListParser.parse(output)
 
-        #expect(targets.map(\.id) == ["harmony:127.0.0.1:10100", "harmony:127.0.0.1:10200", "harmony:FMR0224C03001399"])
+        #expect(targets[0].id == "harmony:127.0.0.1:10100")
+        #expect(targets[1].id == "harmony:127.0.0.1:10200")
+        #expect(targets[2].id.hasPrefix("harmony-real:"))
+        #expect(targets[2].id.contains("FMR0224C03001399") == false)
         #expect(targets.map(\.state) == ["Connected", "Offline", "Connected"])
+        #expect(targets.map(\.scope) == [.emulator, .emulator, .real])
+        #expect(targets.map(\.kind) == ["emulator", "emulator", "real-device"])
+        #expect(targets.map(\.blockedReasons) == [[], ["offline"], []])
         #expect(targets.filter(\.isConnected).map(\.target) == ["127.0.0.1:10100", "FMR0224C03001399"])
         #expect(TKHdcTargetListParser.defaultTarget(from: targets) == nil)
     }
@@ -389,6 +504,50 @@ struct TKHostAdapterModelsTests {
         #expect(targets.map(\.state) == ["Connected", "Offline"])
         #expect(targets.filter(\.isConnected).map(\.target) == ["127.0.0.1:10100"])
         #expect(TKHdcTargetListParser.defaultTarget(from: targets)?.target == "127.0.0.1:10100")
+    }
+
+    @Test("HDC target parser separates DevEco emulator and real devices")
+    func hdcParserSeparatesEmulatorAndRealTargets() throws {
+        let fixture = TKHarmonyHDCFakeFixture.targetsMixedEmulatorAndReal.result
+        let targets = TKHdcTargetListParser.parse(fixture.stdoutString)
+
+        #expect(TKHdcTargetListParser.targets(targets, matching: .emulator).map(\.target) == ["127.0.0.1:10100"])
+        #expect(TKHdcTargetListParser.targets(targets, matching: .real).map(\.target) == ["HDCREAL001", "HDCREAL002"])
+        #expect(TKHdcTargetListParser.targets(targets, matching: .real).map(\.kind) == ["real-device", "real-device"])
+        #expect(TKHdcTargetListParser.targets(targets, matching: .real).map(\.blockedReasons) == [[], ["unauthorized"]])
+        #expect(targets.first { $0.target == "HDCREAL001" }?.id.hasPrefix("harmony-real:") == true)
+        #expect(targets.first { $0.target == "HDCREAL001" }?.id.contains("HDCREAL001") == false)
+    }
+
+    @Test("fake HDC runner replays real-device readiness probes")
+    func fakeHDCRunnerReplaysRealDeviceReadinessProbes() throws {
+        let target = "HDCREAL001"
+        let runner = TKHarmonyHDCFakeRunner(fixtures: [
+            .targetsRealConnected(target: target),
+            .bootCompletedTrue(target: target),
+            .shellAvailable(target: target),
+        ])
+
+        let list = try runner.run(TKHarmonyHDCCommand.listTargets())
+        let boot = try runner.run(TKHarmonyHDCCommand.bootCompleted(target: target))
+        let shell = try runner.run(TKHarmonyHDCCommand.shellProbe(target: target))
+
+        #expect(TKHdcTargetListParser.parse(list.stdoutString).first?.scope == .real)
+        #expect(TKHarmonyBootCompletedParser.isReady(boot.stdoutString))
+        #expect(TKHarmonyShellProbeParser.isAvailable(stdout: shell.stdoutString, stderr: shell.stderrString, exitCode: shell.exitCode))
+
+        let blockedRunner = TKHarmonyHDCFakeRunner(fixtures: [
+            .targetsRealUnauthorized,
+            .bootCompletedFalse(target: target),
+            .shellUnavailable(target: target),
+        ])
+        let unauthorized = try blockedRunner.run(TKHarmonyHDCCommand.listTargets())
+        let booting = try blockedRunner.run(TKHarmonyHDCCommand.bootCompleted(target: target))
+        let unavailable = try blockedRunner.run(TKHarmonyHDCCommand.shellProbe(target: target))
+
+        #expect(TKHdcTargetListParser.parse(unauthorized.stdoutString).first?.blockedReasons == ["unauthorized"])
+        #expect(!TKHarmonyBootCompletedParser.isReady(booting.stdoutString))
+        #expect(!TKHarmonyShellProbeParser.isAvailable(stdout: unavailable.stdoutString, stderr: unavailable.stderrString, exitCode: unavailable.exitCode))
     }
 
     @Test("Harmony boot parser only treats true as ready")
@@ -582,4 +741,17 @@ struct TKHostAdapterModelsTests {
 
         #expect(path == "/tmp/AppData/Library/Preferences/com.example.app.plist")
     }
+}
+
+private func devicectlListJSON(device: String) -> String {
+    """
+    {
+      "info": { "jsonVersion": "2", "version": "1", "outcome": "success" },
+      "result": {
+        "devices": [
+          \(device)
+        ]
+      }
+    }
+    """
 }

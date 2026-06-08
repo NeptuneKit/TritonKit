@@ -10,6 +10,13 @@ enum HostDevicePlatform: String, ExpressibleByArgument {
 
 extension HostDevicePlatform: Codable {}
 
+enum HostDeviceScope: String, ExpressibleByArgument, Codable {
+    case simulator
+    case emulator
+    case real
+    case all
+}
+
 enum HostPlatform: String, ExpressibleByArgument {
     case android
     case harmony
@@ -62,11 +69,81 @@ struct HostDeviceTarget: Encodable, Equatable {
     let name: String?
     let runtime: String?
     let transport: String?
+    let scope: String?
+    let kind: String?
+    let blockedReasons: [String]
+    let sensitive: Bool
+    let rawTarget: String
+
+    init(
+        platform: String,
+        id: String,
+        target: String,
+        state: String,
+        ready: Bool,
+        source: String,
+        name: String?,
+        runtime: String?,
+        transport: String?,
+        scope: String? = nil,
+        kind: String? = nil,
+        blockedReasons: [String] = [],
+        sensitive: Bool = false,
+        rawTarget: String? = nil
+    ) {
+        self.platform = platform
+        self.id = id
+        self.target = target
+        self.state = state
+        self.ready = ready
+        self.source = source
+        self.name = name
+        self.runtime = runtime
+        self.transport = transport
+        self.scope = scope
+        self.kind = kind
+        self.blockedReasons = blockedReasons
+        self.sensitive = sensitive
+        self.rawTarget = rawTarget ?? target
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case platform
+        case id
+        case target
+        case state
+        case ready
+        case source
+        case name
+        case runtime
+        case transport
+        case scope
+        case kind
+        case blockedReasons
+        case sensitive
+    }
 }
 
 struct HostTargetAlias: Codable, Equatable {
     let platform: HostDevicePlatform
+    let scope: HostDeviceScope?
+    let kind: String?
     let target: String
+    let sensitiveRef: String?
+
+    init(
+        platform: HostDevicePlatform,
+        target: String,
+        scope: HostDeviceScope? = nil,
+        kind: String? = nil,
+        sensitiveRef: String? = nil
+    ) {
+        self.platform = platform
+        self.scope = scope
+        self.kind = kind
+        self.target = target
+        self.sensitiveRef = sensitiveRef
+    }
 }
 
 struct HostTargetAliasStore: Codable, Equatable {
@@ -74,10 +151,23 @@ struct HostTargetAliasStore: Codable, Equatable {
     var current: String?
     var aliases: [String: HostTargetAlias]
 
-    init(schemaVersion: Int = 1, current: String? = nil, aliases: [String: HostTargetAlias] = [:]) {
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case current
+        case aliases
+    }
+
+    init(schemaVersion: Int = 2, current: String? = nil, aliases: [String: HostTargetAlias] = [:]) {
         self.schemaVersion = schemaVersion
         self.current = current
         self.aliases = aliases
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.schemaVersion = try container.decodeIfPresent(Int.self, forKey: .schemaVersion) ?? 1
+        self.current = try container.decodeIfPresent(String.self, forKey: .current)
+        self.aliases = try container.decodeIfPresent([String: HostTargetAlias].self, forKey: .aliases) ?? [:]
     }
 
     static let empty = HostTargetAliasStore()
@@ -101,6 +191,7 @@ enum HostDeviceSelectorSource: String, Codable {
 struct HostDeviceSelectionRequest: Equatable {
     var device: String?
     var platform: HostDevicePlatform?
+    var scope: HostDeviceScope?
     var name: String?
     var runtime: String?
     var state: String?
@@ -109,6 +200,7 @@ struct HostDeviceSelectionRequest: Equatable {
     init(
         device: String? = nil,
         platform: HostDevicePlatform? = nil,
+        scope: HostDeviceScope? = nil,
         name: String? = nil,
         runtime: String? = nil,
         state: String? = nil,
@@ -116,6 +208,7 @@ struct HostDeviceSelectionRequest: Equatable {
     ) {
         self.device = device
         self.platform = platform
+        self.scope = scope
         self.name = name
         self.runtime = runtime
         self.state = state
@@ -133,6 +226,7 @@ struct HostDeviceSelectionResult: Encodable, Equatable {
 
 struct HostDeviceSelectionFilters: Encodable, Equatable {
     let platform: String?
+    let scope: String?
     let name: String?
     let runtime: String?
     let state: String?
@@ -140,6 +234,7 @@ struct HostDeviceSelectionFilters: Encodable, Equatable {
 
     init(request: HostDeviceSelectionRequest) {
         self.platform = request.platform?.rawValue
+        self.scope = request.scope?.rawValue
         self.name = request.name
         self.runtime = request.runtime
         self.state = request.state
@@ -161,6 +256,23 @@ struct HostDeviceListOutput: Encodable {
     let targets: [HostDeviceTarget]
     let defaultTarget: HostDeviceTarget?
     let sourceCommand: String
+    let sourceCommands: [String]
+
+    init(
+        ok: Bool,
+        platform: String,
+        targets: [HostDeviceTarget],
+        defaultTarget: HostDeviceTarget?,
+        sourceCommand: String,
+        sourceCommands: [String]? = nil
+    ) {
+        self.ok = ok
+        self.platform = platform
+        self.targets = targets
+        self.defaultTarget = defaultTarget
+        self.sourceCommand = sourceCommand
+        self.sourceCommands = sourceCommands ?? [sourceCommand]
+    }
 }
 
 struct HostDeviceUseOutput: Encodable {
@@ -211,7 +323,28 @@ struct HostDeviceReadyEvent: Encodable {
     let ready: Bool
     let attempt: Int
     let sourceCommand: String
+    let sourceCommands: [String]
     let error: TKCLIErrorDetail?
+
+    init(
+        ok: Bool,
+        platform: String,
+        target: HostDeviceTarget,
+        ready: Bool,
+        attempt: Int,
+        sourceCommand: String,
+        sourceCommands: [String]? = nil,
+        error: TKCLIErrorDetail?
+    ) {
+        self.ok = ok
+        self.platform = platform
+        self.target = target
+        self.ready = ready
+        self.attempt = attempt
+        self.sourceCommand = sourceCommand
+        self.sourceCommands = sourceCommands ?? [sourceCommand]
+        self.error = error
+    }
 }
 
 struct HostDeviceArtifactOutput: Encodable {
@@ -450,6 +583,52 @@ enum HostDeviceRunError: Error, CustomStringConvertible {
     }
 }
 
+enum AndroidDeviceReadinessError: Error, CustomStringConvertible {
+    case unauthorized(String)
+    case offline(String)
+    case debuggingDisabled(String)
+    case packageManagerUnavailable(String, String)
+
+    var description: String {
+        switch self {
+        case .unauthorized(let target):
+            "Android target is unauthorized: \(target)"
+        case .offline(let target):
+            "Android target is offline: \(target)"
+        case .debuggingDisabled(let target):
+            "Android debugging is disabled or host permissions are missing for target: \(target)"
+        case .packageManagerUnavailable(let target, let detail):
+            "Android package manager is unavailable on target \(target): \(detail)"
+        }
+    }
+
+    var code: String {
+        switch self {
+        case .unauthorized:
+            "android_target_unauthorized"
+        case .offline:
+            "android_target_offline"
+        case .debuggingDisabled:
+            "android_debugging_disabled"
+        case .packageManagerUnavailable:
+            "android_package_manager_unavailable"
+        }
+    }
+
+    var hint: String {
+        switch self {
+        case .unauthorized:
+            "Authorize USB debugging on the Android device, then rerun `triton device wait-ready --platform android --scope real --json`."
+        case .offline:
+            "Reconnect the Android device or restart adb, then verify it appears as state=device in `adb devices -l`."
+        case .debuggingDisabled:
+            "Enable Developer options and USB debugging, and verify host USB permissions allow adb access."
+        case .packageManagerUnavailable:
+            "Wait for Android boot/package services to finish, unlock if needed, or increase --timeout."
+        }
+    }
+}
+
 struct HostProcessResult {
     let stdoutData: Data
     let stderrData: Data
@@ -574,12 +753,20 @@ struct HostSimulatorScreenshotMetadata: Encodable, Equatable {
     let note: String
 }
 
+struct HostActionSubmissionEvidence: Encodable, Equatable {
+    let ok: Bool
+    let proofSource: String
+    let businessReady: Bool
+    let nextAction: TKCLINextAction
+}
+
 struct HostActionOutput: Encodable {
     let ok: Bool
     let action: String
     let runtimeScope: String
     let target: String
     let selection: HostDeviceSelectionResult?
+    let hostAction: HostActionSubmissionEvidence
     let tool: String
     let exitCode: Int32
     let riskLevel: String
@@ -598,6 +785,7 @@ struct HostActionOutput: Encodable {
         runtimeScope: String,
         target: String,
         selection: HostDeviceSelectionResult? = nil,
+        hostAction: HostActionSubmissionEvidence? = nil,
         tool: String,
         exitCode: Int32,
         riskLevel: String,
@@ -615,6 +803,12 @@ struct HostActionOutput: Encodable {
         self.runtimeScope = runtimeScope
         self.target = target
         self.selection = selection
+        self.hostAction = hostAction ?? HostActionSubmissionEvidence(
+            ok: ok,
+            proofSource: "host-action",
+            businessReady: false,
+            nextAction: TKCLINextAction(command: "smoke", args: ["<platform>", "--device", "<selector>", "--json"])
+        )
         self.tool = tool
         self.exitCode = exitCode
         self.riskLevel = riskLevel

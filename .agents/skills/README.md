@@ -9,3 +9,4 @@ Public skills for external users live in `TritonKit.skills/` and are packaged in
 Current internal orchestration entries include:
 
 - `tritonkit-android-subagent-orchestration`: coordinates the five Codex subagents for Android Emulator support.
+- `tritonkit-real-device-subagent-orchestration`: coordinates cross-platform iOS / Android / Harmony real-device subagents.

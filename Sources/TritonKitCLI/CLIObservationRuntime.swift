@@ -155,19 +155,19 @@ func observeAndroid(
     runner: AndroidObserveHostRunner = { command in try runHostCommand(command) }
 ) throws -> ObserveOutput {
     let remotePath = "/sdcard/window_dump.xml"
-    let dumpCommand = TKAndroidADBCommand.uiautomatorDump(serial: selected.target, remotePath: remotePath)
+    let dumpCommand = TKAndroidADBCommand.uiautomatorDump(serial: selected.rawTarget, remotePath: remotePath)
     let dumpResult = try runner(dumpCommand)
     guard dumpResult.exitCode == 0 else {
         throw HostCommandRunError.nonZeroExit(command: dumpCommand, result: dumpResult)
     }
 
-    let readCommand = TKAndroidADBCommand.readFile(serial: selected.target, remotePath: remotePath)
+    let readCommand = TKAndroidADBCommand.readFile(serial: selected.rawTarget, remotePath: remotePath)
     let readResult = try runner(readCommand)
     guard readResult.exitCode == 0 else {
         throw HostCommandRunError.nonZeroExit(command: readCommand, result: readResult)
     }
 
-    let artifactPath = output ?? defaultAndroidObserveArtifactPath(serial: selected.target)
+    let artifactPath = output ?? defaultAndroidObserveArtifactPath(serial: selected.id)
     try FileManager.default.createDirectory(
         at: URL(fileURLWithPath: artifactPath).deletingLastPathComponent(),
         withIntermediateDirectories: true

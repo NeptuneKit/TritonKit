@@ -12,6 +12,7 @@ func commandSchemas() -> [TKCommandSchema] {
     let schemas = bootstrapCommandSchemas()
         + targetCommandSchemas()
         + xcodeCommandSchemas()
+        + buildCommandSchemas()
         + runtimeCommandSchemas()
         + hostCommandSchemas()
         + observationCommandSchemas()
@@ -53,6 +54,7 @@ private let destructivePolicyFailureCodesRequiringRecovery: Set<String> = [
 
 private let unsupportedFailureCodesRequiringRecovery: Set<String> = [
     "action_not_supported",
+    "unsupported_host_action",
     "unsupported_capability",
     "unsupported_runtime_scope",
     "webview_method_not_allowed",

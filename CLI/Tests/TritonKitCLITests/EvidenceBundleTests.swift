@@ -15,6 +15,35 @@ struct EvidenceBundleTests {
         #expect(evidence.examples.contains { $0.contains("--xcode-summary") })
     }
 
+    @Test("schema exposes real-device evidence taxonomy")
+    func schemaExposesRealDeviceEvidenceTaxonomy() throws {
+        let evidence = try #require(commandSchemas().first { $0.name == "evidence" })
+        let smoke = try #require(commandSchemas().first { $0.name == "smoke" })
+
+        for kind in ["real-device.diagnostics", "host.app-action", "runtime.snapshot", "host.layout", "build.summary"] {
+            #expect(evidence.artifacts.contains(kind))
+        }
+        #expect(evidence.options.first { $0.name == "--include" }?.description.contains("real-device.diagnostics") == true)
+        #expect(evidence.examples.contains { $0.contains("real-device.diagnostics,host.app-action,runtime.snapshot,host.layout,logs,build.summary") })
+
+        #expect(smoke.options.map(\.name).contains("--scope"))
+        #expect(smoke.outputSemantics?.contains("Host install/launch/open-url steps only prove action submission") == true)
+        #expect(smoke.outputSemantics?.contains("proofSource=runtime") == true)
+    }
+
+    @Test("evidence include parser accepts real-device taxonomy")
+    func evidenceIncludeParserAcceptsRealDeviceTaxonomy() throws {
+        #expect(try parseEvidenceIncludes("real-device.diagnostics,host.app-action,runtime.snapshot,host.layout,screenshot,logs,build.summary") == [
+            "real-device.diagnostics",
+            "host.app-action",
+            "runtime.snapshot",
+            "host.layout",
+            "screenshot",
+            "logs",
+            "build.summary",
+        ])
+    }
+
     @Test("evidence capture writes host and xcode read-only artifacts without runtime")
     func captureWritesHostAndXcodeReadOnlyArtifactsWithoutRuntime() async throws {
         let root = FileManager.default.temporaryDirectory.appendingPathComponent("evidence-host-xcode-\(UUID().uuidString)", isDirectory: true)
