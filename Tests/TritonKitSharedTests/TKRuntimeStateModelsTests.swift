@@ -215,4 +215,70 @@ struct TKRuntimeStateModelsTests {
         #expect(response.fallbackAdvice.contains { $0.contains("play/pause/seek/progress") })
         #expect(response.evidenceCommands.contains("triton screenshot --json"))
     }
+
+    @Test("semantic snapshot carries provider-backed domain state and action catalog")
+    func semanticProviderStateShape() throws {
+        let domain = TKRuntimeSemanticDomainState(
+            domain: "media-playback",
+            displayName: "Media Playback",
+            source: "runtime-provider",
+            confidence: "provider-backed",
+            state: [
+                "isReady": .bool(true),
+                "elapsed": .double(12.3),
+                "routeActiveCount": .int(1),
+            ],
+            schema: [
+                TKRuntimeSemanticStateField(path: "isReady", type: "Bool", description: "Playback item is ready"),
+                TKRuntimeSemanticStateField(path: "elapsed", type: "Double", description: "Elapsed playback seconds"),
+                TKRuntimeSemanticStateField(path: "routeActiveCount", type: "Int", description: "Active route count"),
+            ],
+            actions: [
+                TKRuntimeSemanticActionDescriptor(
+                    name: "pause",
+                    description: "Pause playback",
+                    arguments: []
+                ),
+                TKRuntimeSemanticActionDescriptor(
+                    name: "seek",
+                    description: "Seek to an absolute time",
+                    arguments: [
+                        TKRuntimeSemanticActionArgument(name: "seconds", type: "Double", required: true, description: "Target time")
+                    ]
+                ),
+            ],
+            redaction: TKRuntimeSemanticRedaction(policy: "provider-declared", redactedPaths: ["currentURL"]),
+            evidenceCommands: ["triton snapshot --include semantic,app,scene --json"]
+        )
+        let response = TKRuntimeSemanticStateResponse(
+            capturedAt: "2026-06-08T12:00:00Z",
+            domains: [domain]
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKRuntimeSemanticStateResponse.self, from: data)
+
+        #expect(decoded.ok)
+        #expect(decoded.domainCount == 1)
+        #expect(decoded.domains.first?.capability == "app.semantic_state")
+        #expect(decoded.domains.first?.source == "runtime-provider")
+        #expect(decoded.domains.first?.confidence == "provider-backed")
+        #expect(decoded.domains.first?.state["isReady"] == TKJSONValue.bool(true))
+        #expect(decoded.domains.first?.schema.map(\.path).contains("elapsed") == true)
+        #expect(decoded.domains.first?.actions.map(\.name) ?? [] == ["pause", "seek"])
+        #expect(decoded.domains.first?.redaction.redactedPaths == ["currentURL"])
+        #expect(decoded.evidenceCommands.contains("triton snapshot --include semantic,app,scene --json"))
+    }
+
+    @Test("semantic snapshot keeps empty provider state explicit")
+    func semanticProviderEmptyShape() throws {
+        let response = TKRuntimeSemanticStateResponse(
+            capturedAt: "2026-06-08T12:00:00Z",
+            domains: []
+        )
+
+        #expect(response.domainCount == 0)
+        #expect(response.warnings.contains { $0.contains("No semantic providers") })
+        #expect(response.evidenceCommands.contains("triton runtime manifest --json"))
+    }
 }

@@ -42,9 +42,10 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton schema --command <name> --json` for the exact command being reported; every command in the schema inventory must be individually discoverable.
    - `triton plan --json`
    - `triton plan ios-smoke|open-url|webview-check --json` when feedback depends on a multi-step agent workflow; task plans are recommendations and must not be reported as execution proof.
-   - `triton runtime manifest --json`
+   - `triton runtime manifest --json`; preserve `semanticDomains[]` when present so reports can show provider-backed domain/source/schema/action catalog discovery without leaking current state values.
    - `triton snapshot --include app,scene,route,ax,geometry --json`
    - `triton snapshot --include media,ax,screenshot-metadata --json` for iOS AVPlayer / AVPlayerViewController playback feedback; preserve `media.surfaces[]`, `media.controls[]`, `automationConfidence`, `fallbackAdvice[]`, and `evidenceCommands[]` so reports distinguish rendered video from controllable playback.
+   - `triton snapshot --include semantic,app,scene --json` when app-domain readiness or business state matters; preserve `semantic.domains[]`, provider `source`, `confidence`, `state`, `schema`, `actions`, `redaction`, and `evidenceCommands[]` so reports distinguish provider-backed facts from AX/layout/screenshot inference.
    - `triton ledger --limit 50 --jsonl`
    - Treat `triton doctor --json` as ordered diagnostics: preserve top-level `nextWorkflows`, plus each check's `id`, `status`, `code`, `hint`, `nextAction`, `relatedCapabilities`, and `workflowCategories` when reporting a recovery path.
    - Treat `triton capabilities --json` as an environment capability matrix: preserve `capabilities[].group`, `requiredBy`, `nextAction`, and `evidence` when reporting why an agent could or could not run a workflow; schema-provided capabilities should never be reported as complete if they are missing any of those planning fields.
@@ -52,7 +53,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - Treat duplicate capability names in either schema `providedCapabilities[]` or `triton capabilities --json` as indexing bugs.
    - Treat empty or duplicate values in `capabilities[].requiredBy` or `capabilities[].evidence` as capability metadata quality bugs.
    - Treat `media-playback` as an observe capability backed by embedded runtime snapshots; if `automationConfidence` is `surface-only`, report that system media controls were not accessible enough and recommend app-owned DEBUG overlay controls with stable accessibility identifiers instead of claiming pause/resume/seek proof from rendered video alone.
-   - Treat unknown `capabilities[].group` values as taxonomy bugs. Valid groups are `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`.
+   - Treat `app-semantic-state` as provider-backed business state and `app-semantic-action` as provider action-catalog discoverability. Do not report generic provider action execution as implemented until a dedicated command contract exists.
+   - Treat unknown `capabilities[].group` values as taxonomy bugs. Valid groups are `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `semantic`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`.
    - Treat unknown `capabilities[].requiredBy` values as workflow taxonomy bugs. Valid workflow categories are `action`, `app`, `assert`, `evidence`, `observe`, `project`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview-check`, and `xcode`.
    - Treat unknown `capabilities[].evidence` values as artifact taxonomy bugs. Evidence names must map to real stdout JSON, schema/status output, host artifacts, runtime snapshots, WebView provider output, route assertions, input results, evidence bundles, smoke summaries, tritonplans, Xcode artifacts, or unsupported envelopes.
    - Treat an empty `capabilities[].evidence` array as a capability contract bug. Even diagnostics, unsupported capabilities, and low-level observe commands must expose at least one evidence source.

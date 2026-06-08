@@ -90,7 +90,7 @@ func runtimeCommandSchemas() -> [TKCommandSchema] {
             options: hostPort + [
                 target,
                 runtimeBaseURLOption,
-                TKCommandSchemaOption(name: "--include", type: "CSV", defaultValue: "app,scene,route,ax,geometry", description: "Sections: app,scene,route,responder,media,ax,geometry,screenshot-metadata"),
+                TKCommandSchemaOption(name: "--include", type: "CSV", defaultValue: "app,scene,route,ax,geometry", description: "Sections: app,scene,route,responder,media,semantic,ax,geometry,screenshot-metadata"),
                 TKCommandSchemaOption(name: "--max-ax-nodes", type: "Int", description: "Maximum AX nodes to return before truncation"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
@@ -99,21 +99,23 @@ func runtimeCommandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton snapshot --include app,scene,route,ax,geometry --json",
                 "triton snapshot --include media,ax,screenshot-metadata --json",
+                "triton snapshot --include semantic,app,scene --json",
             ],
-            successShape: "{ ok, capturedAt, include, app?, scene?, route?, responder?, media?, geometry?, ax?, screenshot?, artifacts[], skipped[], truncation }",
+            successShape: "{ ok, capturedAt, include, app?, scene?, route?, responder?, media?, semantic?, geometry?, ax?, screenshot?, artifacts[], skipped[], truncation }",
             failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|request_failed|runtime_unavailable|validation_failed, message, endpoint, hint, nextAction? } }",
             outputSemantics: "Use snapshot as the primary aggregated runtime observation before assertions or recovery decisions; sections may be skipped or truncated but stay machine-readable.",
             artifacts: ["runtime-snapshot"],
             nextCommands: [
                 "triton status --json",
                 "triton snapshot --include media,ax,screenshot-metadata --json",
+                "triton snapshot --include semantic,app,scene --json",
                 "triton assert text-exists <text> --json",
                 "triton wait --text <text> --json",
                 "triton evidence --output <dir.tritonevidence> --json",
             ],
             outputContracts: [runtimeSnapshotOutputContract()],
             failureCodes: runtimeTargetFailureCodes,
-            providedCapabilities: ["snapshot"]
+            providedCapabilities: ["snapshot", "app-semantic-state", "app-semantic-action"]
         ),
         TKCommandSchema(
             name: "focus",

@@ -68,11 +68,44 @@ struct TKRuntimeManifestModelsTests {
         let names = Set(TKRuntimeManifestResponse.defaultDebugCapabilities.map(\.name))
 
         #expect(names.contains(TKRuntimeCapabilityName.snapshot.rawValue))
+        #expect(names.contains(TKRuntimeCapabilityName.semanticState.rawValue))
+        #expect(names.contains(TKRuntimeCapabilityName.semanticActionProvider.rawValue))
         #expect(names.contains(TKRuntimeCapabilityName.semanticFocus.rawValue))
         #expect(names.contains(TKRuntimeCapabilityName.semanticSetText.rawValue))
         #expect(names.contains(TKRuntimeCapabilityName.semanticSelectSegment.rawValue))
         #expect(names.contains(TKRuntimeCapabilityName.semanticSetSwitch.rawValue))
         #expect(names.contains(TKRuntimeCapabilityName.ledger.rawValue))
+    }
+
+    @Test("manifest advertises semantic domains without state values")
+    func semanticDomainManifestShape() throws {
+        let manifest = TKRuntimeManifestResponse.debugDefault(
+            sdkVersion: "0.1.1",
+            semanticDomains: [
+                TKRuntimeSemanticDomainManifest(
+                    domain: "media-playback",
+                    displayName: "Media Playback",
+                    source: "runtime-provider",
+                    confidence: "provider-backed",
+                    schema: [TKRuntimeSemanticStateField(path: "isReady", type: "Bool")],
+                    actions: [TKRuntimeSemanticActionDescriptor(name: "pause")],
+                    redaction: TKRuntimeSemanticRedaction(redactedPaths: ["currentURL"])
+                )
+            ]
+        )
+
+        let data = try JSONEncoder().encode(manifest)
+        let decoded = try JSONDecoder().decode(TKRuntimeManifestResponse.self, from: data)
+
+        #expect(decoded.semanticDomains.count == 1)
+        #expect(decoded.semanticDomains.first?.capability == "app.semantic_state")
+        #expect(decoded.semanticDomains.first?.actionCapability == "app.semantic_action")
+        #expect(decoded.semanticDomains.first?.domain == "media-playback")
+        #expect(decoded.semanticDomains.first?.source == "runtime-provider")
+        #expect(decoded.semanticDomains.first?.confidence == "provider-backed")
+        #expect(decoded.semanticDomains.first?.schema.map(\.path) == ["isReady"])
+        #expect(decoded.semanticDomains.first?.actions.map(\.name) == ["pause"])
+        #expect(decoded.semanticDomains.first?.redaction.redactedPaths == ["currentURL"])
     }
 
     @Test("release runtime manifest is disabled no-op surface")
@@ -88,6 +121,7 @@ struct TKRuntimeManifestModelsTests {
         #expect(decoded.enabled == false)
         #expect(decoded.buildConfiguration == "release")
         #expect(decoded.capabilities.isEmpty)
+        #expect(decoded.semanticDomains.isEmpty)
         #expect(decoded.redaction.policy == "disabled-runtime")
         #expect(decoded.redaction.network == "not-collected")
         #expect(decoded.redaction.logs == "not-collected")

@@ -263,6 +263,8 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "state-responder", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "snapshot", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "media-playback", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "app-semantic-state", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "app-semantic-action", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "focus", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "set-text", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "select-segment", supported: connected, reason: requiresRuntime),
@@ -427,6 +429,8 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "target"
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
         return "runtime"
+    case "app-semantic-state", "app-semantic-action":
+        return "semantic"
     case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return "xcode"
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
@@ -458,6 +462,10 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["app", "runtime", "observe", "action", "assert", "evidence", "smoke"]
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
         return ["app", "observe", "action", "assert", "evidence"]
+    case "app-semantic-state":
+        return ["observe", "assert", "evidence"]
+    case "app-semantic-action":
+        return ["action", "assert", "evidence"]
     case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return ["project", "xcode", "evidence"]
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
@@ -495,7 +503,7 @@ func runtimeCapabilityNextAction(
     if !serverReachable, runtimeCapabilityRequiresServer(name) {
         return TKCLINextAction(command: "serve", args: ["--host", host, "--port", String(port)], requiresLongRunningProcess: true)
     }
-    if !connected, ["runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "media-playback", "focus", "set-text", "select-segment", "set-switch", "ledger", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait", "capture", "assert", "replay", "tap", "swipe", "type", "paste", "clear", "input"].contains(name) {
+    if !connected, ["runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "media-playback", "app-semantic-state", "app-semantic-action", "focus", "set-text", "select-segment", "set-switch", "ledger", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait", "capture", "assert", "replay", "tap", "swipe", "type", "paste", "clear", "input"].contains(name) {
         return TKCLINextAction(command: "status", args: ["--json"])
     }
     switch name {
@@ -653,6 +661,10 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "snapshot", args: ["--json"])
     case "media-playback":
         return TKCLINextAction(command: "snapshot", args: ["--include", "media,ax,screenshot-metadata", "--json"])
+    case "app-semantic-state":
+        return TKCLINextAction(command: "snapshot", args: ["--include", "semantic,app,scene", "--json"])
+    case "app-semantic-action":
+        return TKCLINextAction(command: "snapshot", args: ["--include", "semantic", "--json"])
     case "focus":
         return TKCLINextAction(command: "focus", args: ["<selector>", "--json"])
     case "set-text":
@@ -758,6 +770,8 @@ func runtimeCapabilityRequiresServer(_ name: String) -> Bool {
         "state-responder",
         "snapshot",
         "media-playback",
+        "app-semantic-state",
+        "app-semantic-action",
         "focus",
         "set-text",
         "select-segment",
@@ -801,6 +815,10 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["runtime-manifest", "snapshot-json"]
     case "media-playback":
         return ["runtime-media", "runtime-ax", "screenshot-metadata"]
+    case "app-semantic-state":
+        return ["runtime-semantic", "provider-state"]
+    case "app-semantic-action":
+        return ["runtime-semantic", "provider-action-catalog"]
     case "focus", "set-text", "select-segment", "set-switch", "semantic-action":
         return ["runtime-provider", "action-result", "runtime-ledger"]
     case "ledger":
