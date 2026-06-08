@@ -137,6 +137,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - locate containers: `triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json`;
    - verify App preferences: `triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json`;
    - set simulator App preferences from property-list compatible JSON values: `triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json`;
+   - seed Swift `UserDefaults.data(forKey:)` values explicitly with plist Data: `triton app prefs set <key> --type data --base64 <base64> --device iphone15 --bundle-id <bundle-id> --json` or `--type data --hex <hex>`;
    - capture host-side framebuffer: `triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json`;
    - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`.
 8. Prepare Xcode build/test/run through Triton before falling back to XcodeBuildMCP or raw `xcodebuild`:

@@ -158,6 +158,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json`
      - `triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json`
      - `triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json`
+     - `triton app prefs set <key> --type data --base64 <base64> --device iphone15 --bundle-id <bundle-id> --json`
+     - `triton app prefs set <key> --type data --hex <hex> --device iphone15 --bundle-id <bundle-id> --json`
      - `triton sim pair <watch-udid> <phone-udid> --json`
      - `triton sim unpair <pair-uuid> --json`
      - `triton sim clone <udid> "Clone for Smoke" --json`
