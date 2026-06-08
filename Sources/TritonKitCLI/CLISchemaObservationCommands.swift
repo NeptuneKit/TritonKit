@@ -4,6 +4,7 @@ import TritonKitShared
 func observationCommandSchemas() -> [TKCommandSchema] {
     let hostPort = schemaHostPortOptions
     let target = schemaTargetOption
+    let targetDeviceAlias = schemaTargetDeviceAliasOption
     let jsonText = schemaTextJSONFormats
     let formatTextJSON = schemaFormatTextJSONOption
     let formatJSONText = schemaFormatJSONTextOption
@@ -355,7 +356,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "--oid", type: "UInt", required: true, description: "Layer oid from `triton nodes`"),
                 formatTextJSON,
                 jsonAlias,
@@ -603,7 +604,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "<condition>", type: "text-exists|text-not-exists", required: true, description: "Assertion condition"),
                 TKCommandSchemaOption(name: "<text>", type: "String", required: true, description: "Visible text, label, identifier, title, or value"),
                 TKCommandSchemaOption(name: "--role", type: "String", description: "Optional AX role filter"),
@@ -702,7 +703,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "<query>", type: "String", required: true, description: "Visible text, AX label, identifier, value, or option title to resolve"),
                 TKCommandSchemaOption(name: "--all", type: "Bool", defaultValue: "false", description: "Include all candidates with stable 1-based indexes"),
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one candidate by 1-based index"),
@@ -713,6 +714,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: [
                 #"triton find "HTTP""#,
+                #"triton find "HTTP" --device booted --json"#,
                 #"triton find "hello" --all"#,
                 #"triton find "hello" --at 240,580"#,
             ],
@@ -736,7 +738,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "--platform", type: "android|harmony", description: "Use Android or Harmony host-side layout polling instead of embedded runtime"),
                 TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path for --platform android"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
@@ -826,7 +828,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             requiresTarget: true,
             runtimeScope: "embedded",
             outputFormats: jsonText,
-            options: hostPort + [target, formatTextJSON, jsonAlias],
+            options: hostPort + [targetDeviceAlias, formatTextJSON, jsonAlias],
             examples: ["triton geometry --format json"],
             successShape: "{ bounds, safeArea, scale, orientation }",
             failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|runtime_unavailable|request_failed, message, endpoint, hint, nextAction? } }",
@@ -848,7 +850,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "--at", type: "x,y", description: "Window point in points"),
                 TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate in points; provide together with --y"),
                 TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate in points; provide together with --x"),

@@ -196,7 +196,7 @@ struct UIAssert: AsyncParsableCommand {
 
     @Argument(help: "Assertion condition: text-exists or text-not-exists") var condition: String
     @Argument(help: "Visible text, AX label, identifier, title, or value to assert") var query: String
-    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(name: [.long, .customLong("device")], help: "Target id from `triton list`; --device is an alias") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Optional AX role filter") var role: String?
