@@ -434,6 +434,7 @@ triton route assert-current-url "https://example.invalid/path" --platform ios --
 triton app container --device booted --bundle-id com.example.app --kind data --json
 triton app prefs get DEBUG-mock --device booted --bundle-id com.example.app --json
 triton app prefs set DEBUG-mock true --device booted --bundle-id com.example.app --json
+triton app prefs set SeedState --type data --base64 W3t9XQ== --device booted --bundle-id com.example.app --json
 triton app prefs dump --device booted --bundle-id com.example.app --json
 ```
 

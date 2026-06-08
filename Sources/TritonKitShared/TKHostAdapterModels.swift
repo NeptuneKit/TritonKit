@@ -1218,6 +1218,8 @@ public enum TKHostPreferenceValue: Codable, Equatable {
             self = .double(value)
         } else if let value = try? container.decode(String.self) {
             self = .string(value)
+        } else if let envelope = try? container.decode(TKHostPreferenceDataEnvelope.self), envelope.plistType == "data" {
+            self = .data(envelope.base64)
         } else if let value = try? container.decode([TKHostPreferenceValue].self) {
             self = .array(value)
         } else if let value = try? container.decode([String: TKHostPreferenceValue].self) {
@@ -1243,9 +1245,16 @@ public enum TKHostPreferenceValue: Codable, Equatable {
         case .dictionary(let values):
             try container.encode(values)
         case .data(let value):
-            try container.encode(["data": value])
+            let length = Data(base64Encoded: value)?.count ?? 0
+            try container.encode(TKHostPreferenceDataEnvelope(plistType: "data", base64: value, length: length))
         }
     }
+}
+
+private struct TKHostPreferenceDataEnvelope: Codable, Equatable {
+    let plistType: String
+    let base64: String
+    let length: Int
 }
 
 public struct TKHostPreferencesSnapshot: Codable, Equatable {

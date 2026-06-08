@@ -681,7 +681,9 @@ struct HostPreferencesOutput: Encodable {
     let plistPath: String
     let key: String?
     let value: TKHostPreferenceValue?
+    let valuePlistType: String?
     let preferences: [String: TKHostPreferenceValue]?
+    let preferencesPlistTypes: [String: String]?
 }
 
 struct HostPreferencesSetOutput: Encodable {
@@ -693,6 +695,8 @@ struct HostPreferencesSetOutput: Encodable {
     let key: String
     let previousValue: TKHostPreferenceValue?
     let newValue: TKHostPreferenceValue
+    let previousPlistType: String?
+    let newPlistType: String
     let restartAdvice: String
 }
 

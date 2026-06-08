@@ -563,6 +563,7 @@ struct TKHostAdapterModelsTests {
             "Name": "Demo",
             "Nested": ["enabled": true],
             "List": ["a", "b"],
+            "SeedState": Data([0x5B, 0x7B, 0x7D, 0x5D]),
         ]
         let data = try PropertyListSerialization.data(fromPropertyList: plist, format: .binary, options: 0)
 
@@ -574,6 +575,7 @@ struct TKHostAdapterModelsTests {
         #expect(snapshot.value(forKey: "Missing") == nil)
         #expect(snapshot.preferences["Nested"]?.kind == "dictionary")
         #expect(snapshot.preferences["List"]?.kind == "array")
+        #expect(snapshot.preferences["SeedState"] == .data(Data([0x5B, 0x7B, 0x7D, 0x5D]).base64EncodedString()))
     }
 
     @Test("preference plist path is derived from data container and bundle id")

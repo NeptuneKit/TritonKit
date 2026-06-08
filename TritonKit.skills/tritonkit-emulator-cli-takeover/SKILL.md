@@ -287,6 +287,8 @@ triton app container --device iphone15 --bundle-id <bundle-id> --kind data --jso
 triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json
 triton app prefs dump --device iphone15 --bundle-id <bundle-id> --json
 triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json
+triton app prefs set <key> --type data --base64 <base64> --device iphone15 --bundle-id <bundle-id> --json
+triton app prefs set <key> --type data --hex <hex> --device iphone15 --bundle-id <bundle-id> --json
 triton smoke ios --device iphone15 --bundle-id <bundle-id> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.png --evidence /tmp/<case>.tritonevidence --json
 ```
 
