@@ -57,6 +57,10 @@ Do not add Web / Wails UI, remote orchestration, real-device flows, or central s
 
 `triton plan ios-smoke|open-url|webview-check --json` is the first task planning layer. It should return ordered command recommendations for local emulator work, but it must not execute those commands or replace explicit wait/assert/evidence proof.
 
+When `triton plan open-url ... --json` returns `mode=bootstrap` because the local server or runtime needs recovery, keep the bootstrap commands in `steps[]` and preserve the goal-specific workflow in `afterRecoverySteps[]`. Execute `steps[]` first, then execute `afterRecoverySteps[].argv` after recovery; do not discard the open-url/wait/screenshot/evidence workflow just because bootstrap is needed.
+
+Harmony open-url planning should be schema-backed: `triton plan open-url --platform harmony --device <selector> --bundle <bundle> --ability <ability> --hap <path.hap> --url <url> --text <text> --evidence <dir.tritonevidence> --json` should produce install/open-url/wait/screenshot/evidence-summary steps when `--hap` is present.
+
 `triton plan --json` should also expose `mode`, with `bootstrap` for environment recovery/discovery planning and `task` for goal-specific workflow planning. Emulator agents should use `mode` to decide whether to recover local simulator state first or proceed into a smoke/open-url/webview workflow.
 
 `triton plan --json` should also expose top-level `nextWorkflows`. Emulator agents should be able to align plan routing with `doctor.nextWorkflows` and `capabilities[].requiredBy` directly, instead of inferring the lane only from `goal` or the first step command.

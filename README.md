@@ -588,8 +588,11 @@ When an agent needs the next command sequence before executing a workflow, ask `
 ```bash
 triton plan ios-smoke --device iphone15 --bundle-id com.example.app --url myapp://smoke --text Home --evidence /tmp/smoke.tritonevidence --json
 triton plan open-url --device iphone15 --url myapp://detail --text Ready --json
+triton plan open-url --platform harmony --device harmony-a --bundle com.example.app --ability EntryAbility --hap /tmp/Demo.hap --url example://home --text Ready --evidence /tmp/harmony.tritonevidence --json
 triton plan webview-check --expected-url https://example.com --text Loaded --json
 ```
+
+When `plan open-url` is requested while the local server is unavailable, the JSON response keeps bootstrap recovery in `steps[]` and preserves the goal-specific workflow in `afterRecoverySteps[]`. Agents should start with `steps[]`, then execute `afterRecoverySteps[].argv` after recovery instead of re-planning from memory.
 
 For repeatable short smoke flows, store the command sequence in a `.tritonplan` and replay it:
 

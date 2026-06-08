@@ -103,6 +103,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton app install --device <selector> --hap <path.hap> --format json`：通过 HDC `install -r` 安装 debug-signed HAP；返回 host action envelope，结果只代表安装命令成功。
 - `triton app launch --device <selector> --bundle <bundle> --ability <ability> --format json`：通过 HDC `aa start` 启动 Harmony Ability，结果只代表启动命令已提交，仍需截图、AX 或日志验证业务状态。
 - `triton app open-url --device <selector> --bundle <bundle> --ability <ability> <url> --format json`：通过 HDC `aa start -a <ability> -b <bundle> -U <url>` 提交 Harmony deep link；仍需后续 `wait/ax/screenshot` 验证业务完成。
+- `triton plan open-url --platform harmony --device <selector> --bundle <bundle> --ability <ability> --hap <path.hap> --url <url> --text <text> --evidence <dir.tritonevidence> --format json`：规划 Harmony deep link 验证，不执行真实动作。若提供 `--hap`，计划会包含 HAP install；随后给出 open-url、host-side wait、screenshot、evidence summary 等 schema-backed `argv[]` 步骤。
 - `triton app terminate --device <selector> --bundle <bundle> --format json`：通过 HDC `aa force-stop` 停止 Harmony App。
 - `triton ax --platform harmony --output <path> --format json`：执行 `uitest dumpLayout`，解析 `DumpLayout saved to:<remote>` 并 `file recv` 到本地 layout artifact；JSON 只返回 artifact 路径与 source commands，不内联真实 UI 内容。
 - `triton schema --command ax --format json` 与 `triton schema --command screenshot --format json`：Harmony host artifact 输出使用 `host.harmony-artifact` contract（`HostHarmonyArtifactOutput`），不要复用 `host.artifact` 的 device-level target/selection 解析器。

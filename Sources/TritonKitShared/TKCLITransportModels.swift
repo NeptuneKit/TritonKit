@@ -1826,6 +1826,7 @@ public struct TKWorkflowPlanResponse: Codable, Equatable {
     public let primaryNextAction: TKCLINextAction?
     public let primaryNextActionSource: String?
     public let steps: [TKWorkflowPlanStep]
+    public let afterRecoverySteps: [TKWorkflowPlanStep]
     public let error: TKCLIErrorDetail?
 
     enum CodingKeys: String, CodingKey {
@@ -1843,6 +1844,7 @@ public struct TKWorkflowPlanResponse: Codable, Equatable {
         case primaryNextAction
         case primaryNextActionSource
         case steps
+        case afterRecoverySteps
         case error
     }
 
@@ -1861,6 +1863,7 @@ public struct TKWorkflowPlanResponse: Codable, Equatable {
         primaryNextAction: TKCLINextAction? = nil,
         primaryNextActionSource: String? = nil,
         steps: [TKWorkflowPlanStep],
+        afterRecoverySteps: [TKWorkflowPlanStep] = [],
         error: TKCLIErrorDetail? = nil
     ) {
         self.ok = ok
@@ -1887,6 +1890,7 @@ public struct TKWorkflowPlanResponse: Codable, Equatable {
         self.primaryNextAction = primarySelection.nextAction
         self.primaryNextActionSource = primarySelection.source
         self.steps = steps
+        self.afterRecoverySteps = afterRecoverySteps
         self.error = error
     }
 
@@ -1905,6 +1909,7 @@ public struct TKWorkflowPlanResponse: Codable, Equatable {
             ?? Self.defaultNextWorkflows(for: goal, nextStep: decodedNextStep)
         let decodedSteps = try container.decode([TKWorkflowPlanStep].self, forKey: .steps)
         self.steps = decodedSteps
+        self.afterRecoverySteps = try container.decodeIfPresent([TKWorkflowPlanStep].self, forKey: .afterRecoverySteps) ?? []
         let decodedError = try container.decodeIfPresent(TKCLIErrorDetail.self, forKey: .error)
         let primarySelection = Self.defaultPrimarySelection(
             goal: self.goal,
