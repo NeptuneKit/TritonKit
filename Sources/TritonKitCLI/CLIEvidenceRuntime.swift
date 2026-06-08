@@ -1283,7 +1283,10 @@ func captureEvidenceBundle(
                 let data = try await client.getData("/targets")
                 let targets = try JSONDecoder().decode(TKTargetsResponse.self, from: data)
                 if targetSummary == nil {
-                    targetSummary = try? TKResolveTargetSummary(target, in: targets.targets)
+                    if let resolvedTarget = try? TKResolveTargetSummary(target, in: targets.targets) {
+                        targetSummary = resolvedTarget
+                        client = TritonKitHTTPClient(host: host, port: port, target: resolvedTarget.id)
+                    }
                 }
                 try appendEvidenceArtifact(
                     kind: "list",
