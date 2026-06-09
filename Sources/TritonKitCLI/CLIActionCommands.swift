@@ -1193,8 +1193,10 @@ struct AccessibilityTree: AsyncParsableCommand {
         abstract: "Read current in-app safe actionable control index"
     )
 
-    @Option(help: "Host platform adapter: harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
+    @Option(help: "Unified host device selector: alias, android:<serial>, harmony:<target>, raw id, or current") var device: String?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -1206,9 +1208,41 @@ struct AccessibilityTree: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
+        if platform == .android {
+            do {
+                if device != nil && target != TKLocalTargetID {
+                    throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --target.")
+                }
+                let selection = try resolveHostDeviceSelection(
+                    request: HostDeviceSelectionRequest(
+                        device: device ?? (target == TKLocalTargetID ? nil : target),
+                        platform: .android,
+                        ready: true
+                    ),
+                    hdc: hdc,
+                    adb: adb
+                )
+                let outputPath = output ?? FileManager.default.temporaryDirectory
+                    .appendingPathComponent("triton-android-\(selection.target.target)-window.xml")
+                    .path
+                let response = try hostCaptureAndroidLayout(selected: selection.target, adb: adb, output: outputPath)
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print(response.artifact)
+                }
+            } catch {
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
+        }
         if platform == .harmony {
             do {
-                let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
+                if device != nil && target != TKLocalTargetID {
+                    throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --target.")
+                }
+                let selected = try resolveHarmonyTarget(target: device ?? target, hdc: hdc)
                 let result = try dumpHarmonyLayout(selected: selected, hdc: hdc, output: output)
                 let response = HostHarmonyArtifactOutput(
                     ok: true,

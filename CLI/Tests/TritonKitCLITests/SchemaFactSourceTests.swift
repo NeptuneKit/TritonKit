@@ -1696,6 +1696,7 @@ struct SchemaFactSourceTests {
             "ios-screenshot": ["<path>"],
             "ios-device-screenshot": ["<path>"],
             "android-device-screenshot": ["<path>"],
+            "android-ax": ["<path.xml>"],
             "harmony-screenshot": ["<path>"],
             "harmony-device-screenshot": ["<path>"],
             "sim-video": ["<path.mov>"],
@@ -3557,6 +3558,10 @@ struct SchemaFactSourceTests {
             "ok", "action", "platform", "target", "condition", "query", "matched",
             "timedOut", "elapsedMs", "pollCount", "match", "sourceCommands",
         ])
+        expectContract(wait, selector: "host.android-wait", fields: [
+            "ok", "action", "platform", "target", "condition", "query", "matched",
+            "timedOut", "elapsedMs", "pollCount", "match", "sourceCommands",
+        ])
         #expect(!wait.outputContracts.map(\.selector).contains("host.wait"))
 
         #expect(tap.failureCodes.contains("text_not_found"))
@@ -3567,6 +3572,10 @@ struct SchemaFactSourceTests {
             "ok", "action", "message", "targetOID", "targetClassName", "matchedOID", "activationOID", "strategy",
         ])
         expectContract(tap, selector: "host.harmony-tap", fields: [
+            "ok", "action", "platform", "target", "query", "x", "y", "match",
+            "sourceCommands", "note",
+        ])
+        expectContract(tap, selector: "host.android-tap", fields: [
             "ok", "action", "platform", "target", "query", "x", "y", "match",
             "sourceCommands", "note",
         ])
@@ -3605,6 +3614,11 @@ struct SchemaFactSourceTests {
         #expect(clear.providedCapabilities.contains("harmony-clear-text"))
         #expect(clear.outputContracts.map(\.selector) == ["input.result"])
         expectContract(press, selector: "host.harmony-key-action", fields: [
+            "ok", "action", "runtimeScope", "target", "selection", "tool", "exitCode",
+            "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated",
+            "stdout", "stderr", "artifacts", "note",
+        ])
+        expectContract(press, selector: "host.android-key-action", fields: [
             "ok", "action", "runtimeScope", "target", "selection", "tool", "exitCode",
             "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated",
             "stdout", "stderr", "artifacts", "note",
@@ -3787,6 +3801,9 @@ struct SchemaFactSourceTests {
         expectContract(ax, selector: "host.harmony-artifact", fields: [
             "ok", "action", "platform", "target", "artifact", "sourceCommands", "note",
         ])
+        expectContract(ax, selector: "host.android-ax", fields: [
+            "ok", "action", "platform", "target", "artifact", "sourceCommands", "note",
+        ])
         #expect(!ax.outputContracts.map(\.selector).contains("host.artifact"))
 
         #expect(screenshot.failureCodes.contains("server_unavailable"))
@@ -3799,6 +3816,10 @@ struct SchemaFactSourceTests {
         expectContract(screenshot, selector: "host.harmony-artifact", fields: [
             "ok", "action", "platform", "target", "artifact", "sourceCommands", "note",
         ])
+        expectContract(screenshot, selector: "host.android-screenshot", fields: [
+            "ok", "action", "platform", "target", "artifact", "sourceCommands", "note",
+        ])
+        #expect(screenshot.providedCapabilities.contains("android-device-screenshot"))
         #expect(!screenshot.outputContracts.map(\.selector).contains("host.artifact"))
     }
 
@@ -3823,6 +3844,9 @@ struct SchemaFactSourceTests {
         expectContract(device, selector: "host.device-ready", fields: [
             "ok", "platform", "target", "ready", "attempt", "sourceCommand", "error",
         ])
+        expectContract(device, selector: "host.android-device", fields: [
+            "ok", "platform", "targets", "defaultTarget", "sourceCommand",
+        ])
 
         #expect(sim.failureCodes.contains("simulator_not_found"))
         #expect(sim.failureCodes.contains("host_command_failed"))
@@ -3846,6 +3870,17 @@ struct SchemaFactSourceTests {
         #expect(app.failureCodes.contains("host_open_url_failed"))
         #expect(app.nextCommands.contains("triton app go <url>"))
         expectContract(app, selector: "host.app-action", fields: [
+            "ok", "action", "runtimeScope", "target", "selection", "tool", "exitCode",
+            "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "note",
+        ])
+        expectContract(app, selector: "host.android-app-inspect", fields: [
+            "ok", "action", "simulatorUDID", "bundleID", "app",
+        ])
+        expectContract(app, selector: "host.android-app-install", fields: [
+            "ok", "action", "runtimeScope", "target", "selection", "tool", "exitCode",
+            "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "note",
+        ])
+        expectContract(app, selector: "host.android-app-launch", fields: [
             "ok", "action", "runtimeScope", "target", "selection", "tool", "exitCode",
             "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "note",
         ])

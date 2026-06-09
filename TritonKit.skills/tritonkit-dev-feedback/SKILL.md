@@ -195,6 +195,24 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - when multiple HDC targets are `Connected`, expect `error.code=ambiguous_target` and pass `--device <alias-or-id>` or an explicit `--target`.
      - host-side layout and screenshot artifacts may contain private UI data; inspect or summarize instead of attaching raw files when redaction is uncertain.
      - when a disposable HarmonyOS NEXT smoke app is needed, use the local `harmony-next` skill's `references/quickStart/ets/minimal-project-scaffold.md` and copy `references/templates/empty-ability-app/` instead of hand-rolling `oh-package.json5` / `module.json5` / `hvigorfile.ts`.
+   - host-side Android checks that do not require embedded runtime:
+     - `triton device doctor --platform android --json`
+     - `triton device list --platform android --json`
+     - `triton device alias set android-a --platform android --target <adb-serial> --json`
+     - `triton device wait-ready --device android-a --json`
+     - `triton app inspect --platform android --device android-a --bundle <package> --json`
+     - `triton app install --platform android --device android-a --apk <debug.apk> --json`
+     - `triton app launch --platform android --device android-a --package-name <package> --json`
+     - `triton app open-url --platform android --device android-a --package-name <package> '<url>' --json`
+     - `triton ax --platform android --device android-a --output /tmp/<case>-window.xml --json`
+     - `triton wait --platform android --device android-a --text '<text>' --timeout 15 --json`
+     - `triton tap '<text>' --platform android --device android-a --json`
+     - `triton screenshot --device android-a --output /tmp/<case>.png --json`
+     - `triton smoke android --device android-a --package <package> --wait-text <text> --screenshot /tmp/<case>.png --evidence /tmp/<case>.tritonevidence --json`
+     - for `app inspect --platform android`, parse `host.android-app-inspect` instead of assuming iOS simulator `host.app-action`;
+     - for `ax/screenshot --platform android`, parse `host.android-ax` or `host.android-screenshot` instead of legacy `host.artifact`;
+     - for `tap/wait/press --platform android`, parse `host.android-tap`, `host.android-wait`, or `host.android-key-action`;
+     - keep UIAutomator-backed `ax/observe/wait/tap` flows serialized per emulator target; concurrent dump/read-back flows can race on the same remote XML path.
    - Harmony embedded SDK feedback should distinguish generic HAR capability from app-provided semantics:
      - run `triton device runtime-url --device harmony-a --probe-manifest --json` first when the runtime is on a Harmony emulator/device and the host needs an HDC fport base URL; if you already have the raw HDC target id, `--platform harmony --target <hdc-target>` is the direct explicit form;
      - Harmony demo host-access embedded runtime defaults to `http://127.0.0.1:28767`; `18765` is the demo device-to-host gateway fallback port and should not be treated as the host direct runtime default;

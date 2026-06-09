@@ -86,6 +86,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             outputContracts: [
                 hostDeviceListOutputContract(),
+                hostDeviceListOutputContract(selector: "host.android-device"),
                 hostDeviceSelectionOutputContract(),
                 hostDeviceReadyOutputContract(),
                 hostArtifactOutputContract(),
@@ -254,6 +255,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             options: [
                 TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List installed simulator apps"),
                 TKCommandSchemaOption(name: "info --bundle-id <id>", type: "Subcommand", description: "Show installed app metadata"),
+                TKCommandSchemaOption(name: "inspect --platform android --bundle <bundle-id>", type: "Subcommand", description: "Compatibility alias for Android package metadata inspection through adb dumpsys package"),
                 TKCommandSchemaOption(name: "inspect --platform harmony --bundle <bundle>", type: "Subcommand", description: "Inspect a Harmony app with bm dump"),
                 TKCommandSchemaOption(name: "install --app <path.app>", type: "Subcommand", description: "Install an .app bundle into the simulator"),
                 TKCommandSchemaOption(name: "install --platform android --apk <path.apk>", type: "Subcommand", description: "Install an Android APK through adb install -r"),
@@ -310,6 +312,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton app list --device iphone15 --user-only --json",
                 "triton app info --device iphone15 --bundle-id com.example.app --json",
+                "triton app inspect --platform android --device android-a --bundle com.example.app --json",
                 "triton app inspect --platform harmony --bundle com.example.app --json",
                 "triton app install --device iphone15 --app /tmp/Demo.app --json",
                 "triton app install --device android-a --platform android --apk /tmp/Demo.apk --json",
@@ -346,6 +349,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             outputContracts: [
                 hostActionOutputContract(selector: "host.app-action", model: "HostActionOutput|HostAppContainerOutput|HostAppPreferenceOutput"),
+                hostAppInfoOutputContract(selector: "host.android-app-inspect"),
+                hostActionOutputContract(selector: "host.android-app-install", model: "HostActionOutput"),
+                hostActionOutputContract(selector: "host.android-app-launch", model: "HostActionOutput"),
                 hostAppOpenURLOutputContract(),
             ],
             failureCodes: [
@@ -369,7 +375,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "destructive_action_requires_policy",
                 "validation_failed",
             ],
-            providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url"]
+            providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url"]
         ),
     ]
 }

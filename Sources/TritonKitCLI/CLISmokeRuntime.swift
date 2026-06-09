@@ -952,7 +952,7 @@ func hostTapAndroid(selected: HostDeviceTarget, adb: String, text: String) throw
 }
 
 func hostCaptureAndroidLayout(selected: HostDeviceTarget, adb: String, output: String) throws -> HostAndroidArtifactOutput {
-    let result = try observeAndroid(action: "observe.tree", selected: selected, output: output)
+    let result = try observeAndroid(action: "observe.tree", selected: selected, adb: adb, output: output)
     return HostAndroidArtifactOutput(ok: true, action: "ax", platform: "android", target: selected, artifact: result.artifacts.first ?? output, sourceCommands: result.sourceCommands, note: "Android UIAutomator layout was written locally.")
 }
 
