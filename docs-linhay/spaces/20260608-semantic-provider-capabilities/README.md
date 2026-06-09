@@ -47,3 +47,28 @@ Out of scope for this slice:
 - `docs-linhay/scripts/verify.sh --local`
 
 Local note: on macOS 26.4 / Xcode 17F42, some root-package SwiftPM test runs can hang after `Build complete!` while `swiftpm-xctest-helper` is still loading the `.xctest` bundle in dyld `fcntl`, before any test case starts. Use a clean temp copy named `TritonKit` for CLI package checks when the feature worktree basename causes SwiftPM package identity drift.
+
+## Session Notes
+
+### 2026-06-09 CLI Package Identity Follow-up
+
+The CLI package is a nested SwiftPM package that depends on the repository root package by local path. When the worktree directory name does not match the root package identity, SwiftPM can fail to resolve the local dependency from `CLI/Package.swift` unless the dependency is explicitly named.
+
+Fix applied in commit `564d124`:
+
+- changed `CLI/Package.swift` from `.package(path: "..")` to `.package(name: "tritonkit", path: "..")`;
+- kept the root `Package.swift` boundary unchanged so iOS app consumers still avoid CLI-only dependencies;
+- confirmed no lockfile or generated file changes were required.
+
+Verification sequence:
+
+- `swift test --package-path CLI --filter SchemaFactSourceTests` passed with 105 tests;
+- `swift test --package-path CLI` passed with 194 tests;
+- `swift test` from the repository root passed with 164 tests.
+
+Reusable workflow:
+
+1. If a nested SwiftPM package fails on a local path dependency in a dated worktree, inspect the depended package's declared `name` before changing product or target references.
+2. Prefer an explicit `.package(name:path:)` dependency identity for local package dependencies that cross worktree/package boundaries.
+3. Re-run the focused schema/contract suite first, then the nested package test suite, then the root package test suite.
+4. Check `git status --short` and `git diff --stat` after SwiftPM resolution to ensure `.resolved` files or generated artifacts were not unintentionally changed.
