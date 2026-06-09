@@ -21,6 +21,19 @@ description: TritonKit 会话沉淀入口：处理“整理”及可复用模式
 3. 同步写入对应 docs 与 memory。
 4. 执行 `qmd update` 与 `qmd embed`。
 
+## SwiftPM / CLI 修复沉淀
+
+当会话处理的是嵌套 SwiftPM package、CLI manifest、package identity 或 worktree basename 导致的构建/测试问题时，整理时保留可复用排障顺序：
+
+1. 记录症状对应的 SwiftPM 边界：根 `Package.swift`、`CLI/Package.swift`、local path dependency、product/target identity。
+2. 若修复是本地 path dependency identity，优先沉淀为显式 `.package(name:path:)` 规则，不把它误写成 product rename、target rename 或锁文件更新。
+3. 验证顺序写清楚：
+   - 先跑最小失败面，例如 `swift test --package-path CLI --filter <Suite>`;
+   - 再跑完整 nested package，例如 `swift test --package-path CLI`;
+   - 最后跑根 package，例如 `swift test`。
+4. 整理结论必须说明是否有 `Package.resolved`、生成文件或 build artifact 变化；没有变化时明确写“无需提交锁文件/生成文件”。
+5. 这类流程优先写入对应 `docs-linhay/spaces/<space>/README.md` 的 session note；只有跨多个 space 重复出现时再升级到 ops governance 或 AGENTS。
+
 ## 收尾隔离规则
 
 当“整理”发生在一轮已经包含代码提交、CI 观察、外部仓验证或多 space 切换的会话末尾时，先做隔离，再写回：
