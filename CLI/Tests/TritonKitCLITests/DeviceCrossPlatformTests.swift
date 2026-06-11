@@ -308,23 +308,26 @@ struct DeviceCrossPlatformTests {
             ]
         ))
 
-        let output = try await captureStandardOutputAsync {
-            let command = try DeviceProxyProbe.parse([
-                "--platform", "harmony",
-                "--device", "current",
-                "--plan-only",
-                "--json",
-            ])
-            try await command.run()
-        }
-        let envelope = try #require(JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
-        let target = try #require(envelope["target"] as? [String: Any])
-        let sourceCommands = try #require(envelope["sourceCommands"] as? [String])
-        let limitations = try #require(envelope["limitations"] as? [String])
+        let command = try DeviceProxyProbe.parse([
+            "--platform", "harmony",
+            "--device", "current",
+            "--plan-only",
+            "--json",
+        ])
+        let session = try makeNetworkProxyProbePlanSession(
+            platform: command.platform,
+            target: try makeNetworkProxyPlanTarget(platform: command.platform, device: command.device),
+            hdc: command.hdc,
+            adb: command.adb
+        )
+        let target = try #require(session.target)
+        let sourceCommands = session.sourceCommands
+        let limitations = session.limitations
 
-        #expect(envelope["ok"] as? Bool == true)
-        #expect(envelope["action"] as? String == "proxy.probe")
-        #expect(target["target"] as? String == "127.0.0.1:5555")
+        #expect(command.planOnly)
+        #expect(session.ok)
+        #expect(session.action == "proxy.probe")
+        #expect(target.target == "127.0.0.1:5555")
         #expect(sourceCommands.contains("hdc -t 127.0.0.1:5555 shell param ls -r proxy"))
         #expect(sourceCommands.contains("hdc -t 127.0.0.1:5555 shell param ls -r http"))
         #expect(!sourceCommands.contains { $0.contains("current") || $0.contains("harmony-a") })
@@ -520,24 +523,27 @@ struct DeviceCrossPlatformTests {
         ]
 
         for testCase in cases {
-            let output = try await captureStandardOutputAsync {
-                let command = try DeviceProxyStart.parse([
-                    "--platform", testCase.platform,
-                    "--device", testCase.device,
-                    "--mode", "record",
-                    "--proxy", "127.0.0.1:19431",
-                    "--plan-only",
-                    "--json",
-                ])
-                try await command.run()
-            }
-            let envelope = try #require(JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
-            let target = try #require(envelope["target"] as? [String: Any])
-            let sourceCommands = try #require(envelope["sourceCommands"] as? [String])
+            let command = try DeviceProxyStart.parse([
+                "--platform", testCase.platform,
+                "--device", testCase.device,
+                "--mode", "record",
+                "--proxy", "127.0.0.1:19431",
+                "--plan-only",
+                "--json",
+            ])
+            let session = try makeNetworkProxyStartPlanSession(
+                platform: command.platform,
+                target: try makeNetworkProxyPlanTarget(platform: command.platform, device: command.device),
+                captureMode: command.mode,
+                endpoint: try NetworkProxyEndpoint(command.proxy)
+            )
+            let target = try #require(session.target)
+            let sourceCommands = session.sourceCommands
 
-            #expect(envelope["ok"] as? Bool == true)
-            #expect(envelope["configured"] as? Bool == false)
-            #expect(target["target"] as? String == testCase.expectedTarget)
+            #expect(command.planOnly)
+            #expect(session.ok)
+            #expect(session.configured == false)
+            #expect(target.target == testCase.expectedTarget)
             if let expectedCommandFragment = testCase.expectedCommandFragment {
                 #expect(sourceCommands.contains { $0.contains(expectedCommandFragment) })
             }
@@ -573,39 +579,40 @@ struct DeviceCrossPlatformTests {
             ]
         ))
 
-        let aliasOutput = try await captureStandardOutputAsync {
-            let command = try DeviceProxyStatus.parse([
-                "--platform", "android",
-                "--device", "android-a",
-                "--json",
-            ])
-            try await command.run()
-        }
-        let aliasEnvelope = try #require(JSONSerialization.jsonObject(with: Data(aliasOutput.utf8)) as? [String: Any])
-        let aliasTarget = try #require(aliasEnvelope["target"] as? [String: Any])
+        let aliasCommand = try DeviceProxyStatus.parse([
+            "--platform", "android",
+            "--device", "android-a",
+            "--json",
+        ])
+        let aliasStatusTarget = try makeNetworkProxyPlanTarget(platform: aliasCommand.platform, device: aliasCommand.device)
+        let aliasSession = makeNetworkProxyStatusSession(
+            platform: aliasCommand.platform,
+            target: aliasStatusTarget
+        )
+        let aliasTarget = try #require(aliasSession.target)
 
-        #expect(aliasEnvelope["ok"] as? Bool == true)
-        #expect(aliasTarget["target"] as? String == "emulator-5554")
-        #expect(aliasEnvelope["configured"] as? Bool == false)
+        #expect(aliasSession.ok)
+        #expect(aliasTarget.target == "emulator-5554")
+        #expect(aliasSession.configured == false)
 
-        let realResult = try await captureStandardOutputAllowingFailureAsync {
-            let command = try DeviceProxyStatus.parse([
-                "--platform", "android",
-                "--device", "android-phone",
-                "--json",
-            ])
-            try await command.run()
-        }
-        #expect((realResult.error as? ExitCode)?.rawValue == ExitCode.failure.rawValue)
-        let realEnvelope = try #require(JSONSerialization.jsonObject(with: Data(realResult.output.utf8)) as? [String: Any])
-        let realTarget = try #require(realEnvelope["target"] as? [String: Any])
-        let realError = try #require(realEnvelope["error"] as? [String: Any])
-        let sourceCommands = try #require(realEnvelope["sourceCommands"] as? [String])
+        let realCommand = try DeviceProxyStatus.parse([
+            "--platform", "android",
+            "--device", "android-phone",
+            "--json",
+        ])
+        let realStatusTarget = try makeNetworkProxyPlanTarget(platform: realCommand.platform, device: realCommand.device)
+        let realSession = makeNetworkProxyStatusSession(
+            platform: realCommand.platform,
+            target: realStatusTarget
+        )
+        let realTarget = try #require(realSession.target)
+        let realError = try #require(realSession.error)
+        let sourceCommands = realSession.sourceCommands
 
-        #expect(realEnvelope["ok"] as? Bool == false)
-        #expect(realTarget["target"] as? String == "android-real:redacted")
-        #expect(realTarget["scope"] as? String == "real")
-        #expect(realError["code"] as? String == "proxy_real_device_not_supported")
+        #expect(realSession.ok == false)
+        #expect(realTarget.target == "android-real:redacted")
+        #expect(realTarget.scope == "real")
+        #expect(realError.code == "proxy_real_device_not_supported")
         #expect(sourceCommands.isEmpty)
     }
 
@@ -637,71 +644,77 @@ struct DeviceCrossPlatformTests {
             ]
         ))
 
-        let outputs = try await [
-            captureStandardOutputAsync {
-                let command = try SimProxyStart.parse([
-                    "--simulator", "iphone15",
-                    "--mode", "record",
-                    "--proxy", "127.0.0.1:19431",
-                    "--plan-only",
-                    "--json",
-                ])
-                try await command.run()
-            },
-            captureStandardOutputAsync {
-                let command = try SimProxyStatus.parse([
-                    "--simulator", "current",
-                    "--json",
-                ])
-                try await command.run()
-            },
-            captureStandardOutputAsync {
-                let command = try SimProxyExport.parse([
-                    "--simulator", "iphone15",
-                    "--output", "/tmp/ios-network.har",
-                    "--plan-only",
-                    "--json",
-                ])
-                try await command.run()
-            },
-            captureStandardOutputAsync {
-                let command = try SimProxyStop.parse([
-                    "--simulator", "current",
-                    "--restore",
-                    "--plan-only",
-                    "--json",
-                ])
-                try await command.run()
-            },
+        let startCommand = try SimProxyStart.parse([
+            "--simulator", "iphone15",
+            "--mode", "record",
+            "--proxy", "127.0.0.1:19431",
+            "--plan-only",
+            "--json",
+        ])
+        let statusCommand = try SimProxyStatus.parse([
+            "--simulator", "current",
+            "--json",
+        ])
+        let exportCommand = try SimProxyExport.parse([
+            "--simulator", "iphone15",
+            "--output", "/tmp/ios-network.har",
+            "--plan-only",
+            "--json",
+        ])
+        let stopCommand = try SimProxyStop.parse([
+            "--simulator", "current",
+            "--restore",
+            "--plan-only",
+            "--json",
+        ])
+        let sessions = try [
+            makeNetworkProxyStartPlanSession(
+                platform: .ios,
+                target: makeNetworkProxyPlanTarget(platform: .ios, device: startCommand.simulator),
+                captureMode: startCommand.mode,
+                endpoint: NetworkProxyEndpoint(startCommand.proxy)
+            ),
+            makeNetworkProxyStatusSession(
+                platform: .ios,
+                target: makeNetworkProxyPlanTarget(platform: .ios, device: statusCommand.simulator)
+            ),
+            makeNetworkProxyExportPlanSession(
+                platform: .ios,
+                target: makeNetworkProxyPlanTarget(platform: .ios, device: exportCommand.simulator),
+                outputPath: makeNetworkProxyExportPlanOutputPath(exportCommand.output)
+            ),
+            makeNetworkProxyStopPlanSession(
+                platform: .ios,
+                target: makeNetworkProxyPlanTarget(platform: .ios, device: stopCommand.simulator),
+                restore: stopCommand.restore
+            ),
         ]
 
-        for output in outputs {
-            let envelope = try #require(JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
-            let target = try #require(envelope["target"] as? [String: Any])
-            let sourceCommands = try #require(envelope["sourceCommands"] as? [String])
+        for session in sessions {
+            let target = try #require(session.target)
+            let sourceCommands = session.sourceCommands
 
-            #expect(envelope["platform"] as? String == "ios")
-            #expect(target["target"] as? String == "SIM-1")
+            #expect(session.platform == "ios")
+            #expect(target.target == "SIM-1")
             #expect(!sourceCommands.contains { $0.contains("iphone15") || $0.contains("current") })
         }
 
-        let realResult = try await captureStandardOutputAllowingFailureAsync {
-            let command = try SimProxyStatus.parse([
-                "--simulator", "iphone-real",
-                "--json",
-            ])
-            try await command.run()
-        }
-        #expect((realResult.error as? ExitCode)?.rawValue == ExitCode.failure.rawValue)
-        let realEnvelope = try #require(JSONSerialization.jsonObject(with: Data(realResult.output.utf8)) as? [String: Any])
-        let realTarget = try #require(realEnvelope["target"] as? [String: Any])
-        let realError = try #require(realEnvelope["error"] as? [String: Any])
-        let realSourceCommands = try #require(realEnvelope["sourceCommands"] as? [String])
+        let realCommand = try SimProxyStatus.parse([
+            "--simulator", "iphone-real",
+            "--json",
+        ])
+        let realSession = try makeNetworkProxyStatusSession(
+            platform: .ios,
+            target: makeNetworkProxyPlanTarget(platform: .ios, device: realCommand.simulator)
+        )
+        let realTarget = try #require(realSession.target)
+        let realError = try #require(realSession.error)
+        let realSourceCommands = realSession.sourceCommands
 
-        #expect(realEnvelope["ok"] as? Bool == false)
-        #expect(realTarget["target"] as? String == "ios-real:redacted")
-        #expect(realTarget["scope"] as? String == "real")
-        #expect(realError["code"] as? String == "proxy_real_device_not_supported")
+        #expect(realSession.ok == false)
+        #expect(realTarget.target == "ios-real:redacted")
+        #expect(realTarget.scope == "real")
+        #expect(realError.code == "proxy_real_device_not_supported")
         #expect(realSourceCommands.isEmpty)
     }
 
@@ -1738,27 +1751,29 @@ struct DeviceCrossPlatformTests {
         )
         try Data((try encodeCompactJSON(event) + "\n").utf8).write(to: URL(fileURLWithPath: capturePath))
 
-        let output = try await captureStandardOutputAsync {
-            let command = try DeviceProxyExport.parse([
-                "--platform", "android",
-                "--device", "emulator-5554",
-                "--session", directory.path,
-                "--output", exportPath.path,
-                "--json",
-            ])
-            try await command.run()
-        }
-        let envelope = try JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any]
-        let artifacts = try #require(envelope?["artifacts"] as? [[String: Any]])
+        let command = try DeviceProxyExport.parse([
+            "--platform", "android",
+            "--device", "emulator-5554",
+            "--session", directory.path,
+            "--output", exportPath.path,
+            "--json",
+        ])
+        let exported = try makeNetworkProxyExportSession(
+            platform: command.platform,
+            target: makeNetworkProxyPlanTarget(platform: command.platform, device: command.device),
+            sessionDirectory: command.session,
+            outputPath: command.output
+        )
+        let artifact = try #require(exported.artifacts.first)
         let har = try jsonDictionary(at: exportPath.path)
         let log = try #require(har["log"] as? [String: Any])
         let entries = try #require(log["entries"] as? [[String: Any]])
 
-        #expect(envelope?["ok"] as? Bool == true)
-        #expect(artifacts.first?["path"] as? String == exportPath.path)
-        #expect(envelope?["requestCount"] as? Int == 1)
-        #expect(envelope?["redaction"] as? String == "headers-names-only")
-        #expect(envelope?["truncation"] as? String == "none")
+        #expect(exported.ok)
+        #expect(artifact.path == exportPath.path)
+        #expect(exported.requestCount == 1)
+        #expect(exported.redaction == "headers-names-only")
+        #expect(exported.truncation == "none")
         #expect(entries.count == 1)
     }
 
@@ -1847,6 +1862,58 @@ struct DeviceCrossPlatformTests {
         #expect(stop.restore?.restored == false)
         #expect(stop.error?.code == "proxy_restore_failed")
         #expect(stop.sourceCommands == networkProxyStopPlanCommands(platform: .ios, target: iosTarget, restore: true).map(hostSourceCommand))
+
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-proxy-restore-failure-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let restoreCommands = [
+            TKHostCommand(
+                executable: "networksetup",
+                arguments: ["-setwebproxystate", "Wi-Fi", "off"],
+                riskLevel: .breakGlass,
+                requiredConfig: [.target, .timeout, .auditRecord]
+            ),
+        ]
+        let writtenSnapshotPath = try writeNetworkProxyRestoreSnapshot(
+            platform: .ios,
+            target: iosTarget,
+            endpoint: endpoint,
+            auditRecord: "ticket-fail",
+            startCommands: networkProxyStartPlanCommands(platform: .ios, target: iosTarget, endpoint: endpoint),
+            restoreCommands: restoreCommands,
+            outputDirectory: directory.path
+        )
+        let snapshotPath = try #require(writtenSnapshotPath)
+
+        let failedSnapshotRestore = try makeNetworkProxyStopExecutedSession(
+            platform: .ios,
+            target: iosTarget,
+            restore: false,
+            auditRecord: "ticket-fail",
+            runner: runner,
+            restoreSnapshotPath: snapshotPath
+        )
+        let restoreArtifact = try #require(failedSnapshotRestore.artifacts.first { $0.kind == "proxy-restore" })
+        #expect(failedSnapshotRestore.ok == false)
+        #expect(failedSnapshotRestore.restore?.snapshotPath == snapshotPath)
+        #expect(failedSnapshotRestore.restore?.restored == false)
+        #expect(failedSnapshotRestore.limitations.contains("proxy_restore_failure_artifact_written"))
+        #expect(restoreArtifact.path.hasSuffix("restore-failure.json"))
+        #expect((restoreArtifact.bytes ?? 0) > 0)
+        #expect(FileManager.default.fileExists(atPath: restoreArtifact.path))
+
+        let payloadData = try Data(contentsOf: URL(fileURLWithPath: restoreArtifact.path))
+        let payload = try JSONDecoder().decode(NetworkProxyRestoreFailurePayload.self, from: payloadData)
+        #expect(payload.schemaVersion == "triton.proxy.restore-failure.v1")
+        #expect(payload.platform == "ios")
+        #expect(payload.target == "SIM-FAIL")
+        #expect(payload.action == "proxy.stop")
+        #expect(payload.auditRecord == "ticket-fail")
+        #expect(payload.restoreSnapshotPath == snapshotPath)
+        #expect(payload.restoreSourceCommands == restoreCommands.map(hostSourceCommand))
+        #expect(payload.errorCode == "proxy_restore_failed")
+        #expect(payload.errorSummary == "denied")
+        #expect(payload.capturedAt.isEmpty == false)
     }
 
     @Test("Harmony proxy execution remains blocked until platform mutation command is verified")

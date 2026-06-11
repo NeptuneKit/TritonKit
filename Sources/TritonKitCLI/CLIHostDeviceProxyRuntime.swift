@@ -211,6 +211,19 @@ struct NetworkProxySessionStatePayload: Codable, Equatable {
     let sourceCommands: [String]
 }
 
+struct NetworkProxyRestoreFailurePayload: Codable, Equatable {
+    let schemaVersion: String
+    let platform: String
+    let target: String
+    let action: String
+    let auditRecord: String
+    let restoreSnapshotPath: String
+    let restoreSourceCommands: [String]
+    let errorCode: String
+    let errorSummary: String
+    let capturedAt: String
+}
+
 private struct NetworkProxyCapturePayload: Encodable {
     let schemaVersion: String
     let platform: String
@@ -1138,6 +1151,16 @@ func makeNetworkProxyStopExecutedSession(
             error: nil
         )
     } catch {
+        let failureArtifact = writeNetworkProxyRestoreFailureArtifact(
+            platform: platform,
+            target: target,
+            action: .stop,
+            auditRecord: auditRecord,
+            restoreSnapshotPath: restoreSnapshotPath,
+            sourceCommands: sourceCommands,
+            errorCode: "proxy_restore_failed",
+            error: error
+        )
         return makeNetworkProxyExecutionFailedSession(
             action: .stop,
             platform: platform,
@@ -1146,6 +1169,7 @@ func makeNetworkProxyStopExecutedSession(
             auditRecord: auditRecord,
             sourceCommands: sourceCommands,
             restoreSnapshotPath: restoreSnapshotPath,
+            artifacts: Array(failureArtifact.map { [$0] } ?? []),
             errorCode: "proxy_restore_failed",
             error: error
         )
@@ -1169,6 +1193,7 @@ private func makeNetworkProxyExecutionFailedSession(
     auditRecord: String,
     sourceCommands: [String],
     restoreSnapshotPath: String? = nil,
+    artifacts: [NetworkProxyArtifact] = [],
     errorCode: String,
     error: Error
 ) -> NetworkProxySession {
@@ -1187,8 +1212,8 @@ private func makeNetworkProxyExecutionFailedSession(
         limitations: networkProxyDoctorLimitations(platform: platform) + [
             "proxy_execution_policy_accepted:auditRecord=\(auditRecord)",
             "\(errorCode):\(networkProxyErrorSummary(error))",
-        ],
-        artifacts: [],
+        ] + (artifacts.isEmpty ? [] : ["proxy_restore_failure_artifact_written"]),
+        artifacts: artifacts,
         restore: NetworkProxyRestore(available: action == .stop || restoreSnapshotPath != nil, snapshotPath: restoreSnapshotPath, restored: action == .stop ? false : nil),
         sourceCommands: sourceCommands,
         error: TKCLIErrorDetail(
@@ -1198,6 +1223,44 @@ private func makeNetworkProxyExecutionFailedSession(
             nextAction: TKCLINextAction(command: "device", args: ["proxy", "doctor", "--platform", platform.rawValue, "--json"], category: "diagnose")
         )
     )
+}
+
+private func writeNetworkProxyRestoreFailureArtifact(
+    platform: HostDevicePlatform,
+    target: HostDeviceTarget,
+    action: NetworkProxyAction,
+    auditRecord: String,
+    restoreSnapshotPath: String?,
+    sourceCommands: [String],
+    errorCode: String,
+    error: Error
+) -> NetworkProxyArtifact? {
+    guard let restoreSnapshotPath, !restoreSnapshotPath.isEmpty else {
+        return nil
+    }
+    let snapshotURL = URL(fileURLWithPath: restoreSnapshotPath)
+    let outputURL = snapshotURL.deletingLastPathComponent().appendingPathComponent("restore-failure.json")
+    let payload = NetworkProxyRestoreFailurePayload(
+        schemaVersion: "triton.proxy.restore-failure.v1",
+        platform: platform.rawValue,
+        target: target.target,
+        action: action.rawValue,
+        auditRecord: auditRecord,
+        restoreSnapshotPath: restoreSnapshotPath,
+        restoreSourceCommands: sourceCommands,
+        errorCode: errorCode,
+        errorSummary: networkProxyErrorSummary(error),
+        capturedAt: ISO8601DateFormatter().string(from: Date())
+    )
+    do {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        try encoder.encode(payload).write(to: outputURL)
+        let bytes = (try? FileManager.default.attributesOfItem(atPath: outputURL.path)[.size] as? NSNumber)?.intValue
+        return NetworkProxyArtifact(kind: "proxy-restore", path: outputURL.path, bytes: bytes)
+    } catch {
+        return nil
+    }
 }
 
 func writeNetworkProxyRestoreSnapshot(
