@@ -1,8 +1,0 @@
-{
-  "error" : {
-    "code" : "host_command_timeout",
-    "hint" : "Retry with a smaller target set or a command-specific timeout when supported.",
-    "message" : "Host command timed out after 30.0s: hdc -t 127.0.0.1:10100 shell uitest dumpLayout"
-  },
-  "ok" : false
-}
