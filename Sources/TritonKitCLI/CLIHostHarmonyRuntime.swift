@@ -158,8 +158,10 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
         )
     case .android:
         try prepareHostArtifactOutputPath(output)
-        let command = TKAndroidADBCommand.screenshot(serial: target.rawTarget, executable: adb)
-        let result = try runHostCommandWritingStdoutArtifact(command, outputPath: output)
+        let remotePath = "/sdcard/triton-screenshot-\(UUID().uuidString).png"
+        let screenshotResult = try runHostCommand(TKAndroidADBCommand.screenshotToFile(serial: target.rawTarget, remotePath: remotePath, executable: adb))
+        let pullResult = try runHostCommand(TKAndroidADBCommand.pullFile(serial: target.rawTarget, remotePath: remotePath, localPath: output, executable: adb))
+        _ = try? runHostCommand(TKAndroidADBCommand.removeFile(serial: target.rawTarget, remotePath: remotePath, executable: adb))
         return HostDeviceArtifactOutput(
             ok: true,
             action: "screenshot",
@@ -167,8 +169,8 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             target: target,
             selection: selection,
             artifact: output,
-            sourceCommands: [result.sourceCommand],
-            note: "Host-side Android screenshot was captured through adb screencap."
+            sourceCommands: [screenshotResult.sourceCommand, pullResult.sourceCommand],
+            note: "Host-side Android screenshot was captured through adb screencap and pulled from the emulator."
         )
     }
 }

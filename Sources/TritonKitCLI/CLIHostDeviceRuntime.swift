@@ -1,9 +1,10 @@
 import Foundation
 import TritonKitShared
 
+typealias HostDeviceCommandRunner = (TKHostCommand) throws -> HostProcessResult
+
 func resolveHarmonyTarget(target: String?, hdc: String) throws -> TKHarmonyTarget {
-    let result = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))
-    let targets = TKHdcTargetListParser.parse(result.stdout)
+    let targets = try harmonyTargets(hdc: hdc).targets
     if let target {
         guard let selected = targets.first(where: { $0.target == target || $0.id == target }) else {
             throw HostDeviceRunError.targetNotFound(target)
@@ -28,10 +29,7 @@ func hostDeviceTargets(platform: HostDevicePlatform, scope: HostDeviceScope? = n
     case .ios:
         return try iosHostDeviceTargets(scope: scope)
     case .harmony:
-        let result = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))
-        let targets = TKHdcTargetListParser.parse(result.stdout).map(hostDeviceTarget(from:))
-        let filtered = filterHostDeviceTargets(targets, scope: scope)
-        return (filtered, result.sourceCommand)
+        return try harmonyHostDeviceTargets(scope: scope, hdc: hdc)
     case .android:
         let result = try runHostCommand(TKAndroidADBCommand.listDevices(executable: adb))
         let parsed = TKAdbDeviceListParser.parse(result.stdout)
@@ -39,6 +37,38 @@ func hostDeviceTargets(platform: HostDevicePlatform, scope: HostDeviceScope? = n
         let targets = TKAdbDeviceListParser.targets(parsed, matching: androidScope).map(hostDeviceTarget(from:))
         return (targets, result.sourceCommand)
     }
+}
+
+func harmonyHostDeviceTargets(
+    scope: HostDeviceScope? = nil,
+    hdc: String,
+    runner: HostDeviceCommandRunner = { command in try runHostCommand(command) }
+) throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
+    let result = try harmonyTargets(hdc: hdc, runner: runner)
+    let targets = result.targets.map(hostDeviceTarget(from:))
+    return (filterHostDeviceTargets(targets, scope: scope), result.sourceCommand)
+}
+
+func harmonyTargets(
+    hdc: String,
+    runner: HostDeviceCommandRunner = { command in try runHostCommand(command) }
+) throws -> (targets: [TKHarmonyTarget], sourceCommand: String) {
+    let verboseResult = try runner(TKHarmonyHDCCommand.listTargets(executable: hdc))
+    let verboseTargets = parseHarmonyTargets(from: verboseResult)
+    guard verboseTargets.isEmpty else {
+        return (verboseTargets, verboseResult.sourceCommand)
+    }
+    do {
+        let plainResult = try runner(TKHarmonyHDCCommand.listTargetsPlain(executable: hdc))
+        let plainTargets = parseHarmonyTargets(from: plainResult)
+        return (plainTargets, [verboseResult.sourceCommand, plainResult.sourceCommand].joined(separator: "\n"))
+    } catch {
+        return (verboseTargets, verboseResult.sourceCommand)
+    }
+}
+
+private func parseHarmonyTargets(from result: HostProcessResult) -> [TKHarmonyTarget] {
+    TKHdcTargetListParser.parse([result.stdout, result.stderr].joined(separator: "\n"))
 }
 
 private func iosHostDeviceTargets(scope: HostDeviceScope?) throws -> (targets: [HostDeviceTarget], sourceCommand: String) {

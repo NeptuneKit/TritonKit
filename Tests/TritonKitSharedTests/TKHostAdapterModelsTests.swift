@@ -291,6 +291,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKHarmonyHDCCommand.listTargets(executable: "/tmp/hdc").executable == "/tmp/hdc")
         #expect(TKHarmonyHDCCommand.version().argv == ["-v"])
         #expect(TKHarmonyHDCCommand.listTargets().argv == ["list", "targets", "-v"])
+        #expect(TKHarmonyHDCCommand.listTargetsPlain().argv == ["list", "targets"])
         #expect(TKHarmonyHDCCommand.bootCompleted(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "param", "get", "bootevent.boot.completed"])
         #expect(TKHarmonyHDCCommand.shellProbe(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "echo", "triton-shell-ready"])
         #expect(TKHarmonyHDCCommand.appInspect(target: "127.0.0.1:10100", bundleName: "com.example.demo").argv == ["-t", "127.0.0.1:10100", "shell", "bm", "dump", "-n", "com.example.demo"])
@@ -318,6 +319,9 @@ struct TKHostAdapterModelsTests {
         #expect(TKAndroidADBCommand.listDevices().argv == ["devices", "-l"])
         #expect(TKAndroidADBCommand.bootCompleted(serial: "emulator-5554").argv == ["-s", "emulator-5554", "shell", "getprop", "sys.boot_completed"])
         #expect(TKAndroidADBCommand.screenshot(serial: "emulator-5554").argv == ["-s", "emulator-5554", "exec-out", "screencap", "-p"])
+        #expect(TKAndroidADBCommand.screenshotToFile(serial: "emulator-5554", remotePath: "/sdcard/triton.png").argv == ["-s", "emulator-5554", "shell", "screencap", "-p", "/sdcard/triton.png"])
+        #expect(TKAndroidADBCommand.pullFile(serial: "emulator-5554", remotePath: "/sdcard/triton.png", localPath: "/tmp/triton.png").argv == ["-s", "emulator-5554", "pull", "/sdcard/triton.png", "/tmp/triton.png"])
+        #expect(TKAndroidADBCommand.removeFile(serial: "emulator-5554", remotePath: "/sdcard/triton.png").argv == ["-s", "emulator-5554", "shell", "rm", "-f", "/sdcard/triton.png"])
         #expect(TKAndroidADBCommand.installAPK(serial: "emulator-5554", apkPath: "/tmp/Demo.apk").argv == ["-s", "emulator-5554", "install", "-r", "/tmp/Demo.apk"])
         #expect(TKAndroidADBCommand.uninstall(serial: "emulator-5554", packageName: "com.example.demo").argv == ["-s", "emulator-5554", "uninstall", "com.example.demo"])
         #expect(TKAndroidADBCommand.resolveActivity(serial: "emulator-5554", packageName: "com.example.demo").argv == ["-s", "emulator-5554", "shell", "cmd", "package", "resolve-activity", "--brief", "com.example.demo"])
@@ -333,6 +337,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKAndroidADBCommand.swipeCoordinate(serial: "emulator-5554", startX: 10, startY: 20, endX: 100, endY: 200, durationMs: 350).argv == ["-s", "emulator-5554", "shell", "input", "swipe", "10", "20", "100", "200", "350"])
         #expect(TKAndroidADBCommand.inputText(serial: "emulator-5554", text: "hello%sworld").argv == ["-s", "emulator-5554", "shell", "input", "text", "hello%sworld"])
         #expect(TKAndroidADBCommand.keyEvent(serial: "emulator-5554", keyCode: "KEYCODE_BACK").argv == ["-s", "emulator-5554", "shell", "input", "keyevent", "KEYCODE_BACK"])
+        #expect(TKAndroidADBCommand.wmSize(serial: "emulator-5554").argv == ["-s", "emulator-5554", "shell", "wm", "size"])
     }
 
     @Test("Android package parsers map adb output into installed app summaries")
@@ -504,6 +509,23 @@ struct TKHostAdapterModelsTests {
         #expect(targets.map(\.state) == ["Connected", "Offline"])
         #expect(targets.filter(\.isConnected).map(\.target) == ["127.0.0.1:10100"])
         #expect(TKHdcTargetListParser.defaultTarget(from: targets)?.target == "127.0.0.1:10100")
+    }
+
+    @Test("HDC target parser handles plain single-column output and ignores prose errors")
+    func hdcPlainTargetParser() throws {
+        let output = """
+        Connect server failed
+        127.0.0.1:5555
+        """
+
+        let targets = TKHdcTargetListParser.parse(output)
+
+        #expect(targets.map(\.target) == ["127.0.0.1:5555"])
+        #expect(targets.map(\.state) == ["Connected"])
+        #expect(targets.map(\.scope) == [.emulator])
+        #expect(targets.map(\.kind) == ["emulator"])
+        #expect(targets.map(\.blockedReasons) == [[]])
+        #expect(TKHdcTargetListParser.defaultTarget(from: targets)?.target == "127.0.0.1:5555")
     }
 
     @Test("HDC target parser separates DevEco emulator and real devices")
