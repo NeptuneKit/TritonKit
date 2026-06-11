@@ -97,7 +97,7 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "ios-smoke", type: "Task", description: "Plan target selection, iOS smoke execution, and evidence summary"),
                 TKCommandSchemaOption(name: "open-url", type: "Task", description: "Plan host app open-url, runtime readiness, wait/assert, and evidence capture"),
                 TKCommandSchemaOption(name: "webview-check", type: "Task", description: "Plan WebView metadata, route assertion, wait, and evidence capture"),
-                TKCommandSchemaOption(name: "network-proxy", type: "Task", description: "Plan host-side proxy serve, platform proxy ledger, export, evidence, and restore across iOS, Android, and Harmony emulators"),
+                TKCommandSchemaOption(name: "network-proxy", type: "Task", description: "Plan host-side proxy probe, proxy serve, platform proxy ledger, export, evidence, and restore across iOS, Android, and Harmony emulators"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Target selector used by task plans"),
                 TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Platform adapter used by network-proxy task plans"),
                 TKCommandSchemaOption(name: "--bundle-id", type: "String", description: "Bundle identifier used by iOS smoke task plans"),

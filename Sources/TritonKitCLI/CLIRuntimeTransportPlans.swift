@@ -299,11 +299,12 @@ func buildTaskWorkflowPlan(
         return taskWorkflowPlan(
             capabilities: capabilities,
             goal: request.goal,
-            nextStep: "proxy-serve",
+            nextStep: "proxy-probe-plan",
             ok: true,
             steps: [
                 targetResolvePlanStep(device: request.device, host: host, port: port),
                 networkProxyDoctorPlanStep(platform: platform),
+                networkProxyProbePlanStep(platform: platform, device: device),
                 networkProxyServePlanStep(proxy: proxy, mode: mode, output: output),
                 networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
                 networkProxyExportPlanStep(platform: platform, device: device, output: captureOutput),
@@ -586,6 +587,28 @@ private func networkProxyDoctorPlanStep(platform: String) -> TKWorkflowPlanStep 
         requiresTarget: false,
         when: "before planning proxy mutation for a simulator or emulator",
         expected: "Proxy doctor returns lane=host-proxy, conservative certificate state, and limitations",
+        requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "host-device-proxy"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func networkProxyProbePlanStep(platform: String, device: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-probe-plan",
+        title: "Inspect readonly platform proxy capability evidence",
+        command: [
+            "triton", "device", "proxy", "probe",
+            "--platform", platform,
+            "--device", device,
+            "--plan-only",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after proxy doctor and before starting the local proxy endpoint",
+        expected: "Plan-only response declares readonly probe sourceCommands and configured=false",
         requires: ["cli.available"],
         expectedArtifacts: ["stdout-json", "host-device-proxy"],
         stopConditions: ["command.failed"]
