@@ -75,6 +75,7 @@ func evidenceArtifactIsSensitive(_ artifact: TKEvidenceArtifact) -> Bool {
         "build.summary",
         "network.proxy-session",
         "network-capture",
+        "proxy-restore",
     ]
     return sensitiveKinds.contains(artifact.kind)
         || artifact.kind.hasPrefix("host.")
@@ -337,38 +338,102 @@ func appendNetworkProxySessionEvidenceArtifacts(
             target: state.target.isEmpty ? nil : state.target
         )
 
-        guard let capture = state.artifacts.first(where: { $0.kind == "network-capture" }) else {
+        if let capture = state.artifacts.first(where: { $0.kind == "network-capture" }) {
+            let captureURL = networkProxyArtifactURL(path: capture.path, sessionURL: sessionURL)
+            do {
+                let captureData = try Data(contentsOf: captureURL)
+                try appendEvidenceArtifact(
+                    kind: "network-capture",
+                    relativePath: "artifacts/network/requests.ndjson",
+                    data: captureData,
+                    contentType: "application/x-ndjson",
+                    directory: directory,
+                    freshness: evidenceFreshness(source: "host-proxy", status: nil),
+                    artifacts: &artifacts,
+                    platform: state.platform,
+                    riskLevel: "readonly",
+                    policy: "host-proxy-metadata-capture",
+                    redactionStatus: "sensitive",
+                    sourceCommand: "read --proxy-session",
+                    target: state.target.isEmpty ? nil : state.target
+                )
+            } catch {
+                skipped.append(TKEvidenceSkippedArtifact(kind: "network-capture", reason: evidenceSkipReason(error)))
+            }
+        } else {
             skipped.append(TKEvidenceSkippedArtifact(kind: "network-capture", reason: "proxy session did not declare a network-capture artifact"))
-            return
         }
 
-        let captureURL = networkProxyCaptureArtifactURL(path: capture.path, sessionURL: sessionURL)
-        do {
-            let captureData = try Data(contentsOf: captureURL)
-            try appendEvidenceArtifact(
-                kind: "network-capture",
-                relativePath: "artifacts/network/requests.ndjson",
-                data: captureData,
-                contentType: "application/x-ndjson",
-                directory: directory,
-                freshness: evidenceFreshness(source: "host-proxy", status: nil),
-                artifacts: &artifacts,
-                platform: state.platform,
-                riskLevel: "readonly",
-                policy: "host-proxy-metadata-capture",
-                redactionStatus: "sensitive",
-                sourceCommand: "read --proxy-session",
-                target: state.target.isEmpty ? nil : state.target
-            )
-        } catch {
-            skipped.append(TKEvidenceSkippedArtifact(kind: "network-capture", reason: evidenceSkipReason(error)))
-        }
+        appendNetworkProxyRestoreFailureEvidenceArtifact(
+            state: state,
+            sessionURL: sessionURL,
+            directory: directory,
+            artifacts: &artifacts,
+            skipped: &skipped
+        )
     } catch {
         skipped.append(TKEvidenceSkippedArtifact(kind: "network.proxy-session", reason: evidenceSkipReason(error)))
     }
 }
 
-private func networkProxyCaptureArtifactURL(path: String, sessionURL: URL) -> URL {
+private func appendNetworkProxyRestoreFailureEvidenceArtifact(
+    state: NetworkProxySessionStatePayload,
+    sessionURL: URL,
+    directory: URL,
+    artifacts: inout [TKEvidenceArtifact],
+    skipped: inout [TKEvidenceSkippedArtifact]
+) {
+    guard let restoreURL = networkProxyRestoreFailureArtifactURL(state: state, sessionURL: sessionURL) else {
+        return
+    }
+    do {
+        let data = try Data(contentsOf: restoreURL)
+        let payload = try? JSONDecoder().decode(NetworkProxyRestoreFailurePayload.self, from: data)
+        let platform = payload?.platform ?? state.platform
+        let target = payload?.target ?? state.target
+        try appendEvidenceArtifact(
+            kind: "proxy-restore",
+            relativePath: "artifacts/network/restore-failure.json",
+            data: data,
+            contentType: "application/json",
+            directory: directory,
+            freshness: evidenceFreshness(source: "host-proxy", status: nil),
+            artifacts: &artifacts,
+            platform: platform.isEmpty ? nil : platform,
+            riskLevel: "readonly",
+            policy: "proxy-restore-failure-recovery",
+            redactionStatus: "sensitive",
+            sourceCommand: "read --proxy-session",
+            target: target.isEmpty ? nil : target
+        )
+    } catch {
+        skipped.append(TKEvidenceSkippedArtifact(kind: "proxy-restore", reason: evidenceSkipReason(error)))
+    }
+}
+
+private func networkProxyRestoreFailureArtifactURL(
+    state: NetworkProxySessionStatePayload,
+    sessionURL: URL
+) -> URL? {
+    var candidates: [URL] = []
+    for artifact in state.artifacts where artifact.kind == "proxy-restore" {
+        candidates.append(networkProxyArtifactURL(path: artifact.path, sessionURL: sessionURL))
+    }
+    if let restoreSnapshotPath = state.restoreSnapshotPath, !restoreSnapshotPath.isEmpty {
+        candidates.append(URL(fileURLWithPath: restoreSnapshotPath).deletingLastPathComponent().appendingPathComponent("restore-failure.json"))
+    }
+    candidates.append(sessionURL.appendingPathComponent("restore-failure.json"))
+
+    var seen = Set<String>()
+    for candidate in candidates where seen.insert(candidate.path).inserted {
+        if FileManager.default.fileExists(atPath: candidate.path) {
+            return candidate
+        }
+    }
+    return nil
+}
+
+private func networkProxyArtifactURL(path: String, sessionURL: URL) -> URL {
     if path.hasPrefix("/") {
         return URL(fileURLWithPath: path)
     }

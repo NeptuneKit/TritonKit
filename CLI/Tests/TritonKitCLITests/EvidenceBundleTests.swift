@@ -15,6 +15,8 @@ struct EvidenceBundleTests {
         #expect(capture.options.map { $0.name }.contains("--xcode-summary"))
         #expect(evidence.options.map { $0.name }.contains("--proxy-session"))
         #expect(capture.options.map { $0.name }.contains("--proxy-session"))
+        #expect(evidence.artifacts.contains("proxy-restore"))
+        #expect(capture.artifacts.contains("proxy-restore"))
         #expect(evidence.examples.contains { $0.contains("--xcode-summary") })
         #expect(evidence.examples.contains { $0.contains("--proxy-session") })
     }
@@ -292,6 +294,81 @@ struct EvidenceBundleTests {
         #expect(manifest.primaryArtifacts.map(\.kind) == ["network.proxy-session"])
         #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/session-state.json").path))
         #expect(!FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/requests.ndjson").path))
+    }
+
+    @Test("evidence proxy session import archives restore failure even when capture is missing")
+    func proxySessionImportArchivesRestoreFailureWhenCaptureIsMissing() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("evidence-network-restore-\(UUID().uuidString)", isDirectory: true)
+        let session = FileManager.default.temporaryDirectory.appendingPathComponent("proxy-session-restore-\(UUID().uuidString)", isDirectory: true)
+        defer {
+            try? FileManager.default.removeItem(at: root)
+            try? FileManager.default.removeItem(at: session)
+        }
+        try FileManager.default.createDirectory(at: session, withIntermediateDirectories: true)
+
+        let restoreSnapshotURL = session.appendingPathComponent("restore-state.json")
+        try Data(#"{"schemaVersion":"triton.proxy.restore.v1"}"#.utf8).write(to: restoreSnapshotURL, options: .atomic)
+        let restoreFailure = NetworkProxyRestoreFailurePayload(
+            schemaVersion: "triton.proxy.restore-failure.v1",
+            platform: "android",
+            target: "emulator-5554",
+            action: "proxy.stop",
+            auditRecord: "audit-restore-1",
+            restoreSnapshotPath: restoreSnapshotURL.path,
+            restoreSourceCommands: ["adb -s emulator-5554 shell settings delete global http_proxy"],
+            errorCode: "proxy_restore_failed",
+            errorSummary: "denied",
+            capturedAt: "2026-06-11T00:00:00Z"
+        )
+        try prettyEncodedData(restoreFailure).write(to: session.appendingPathComponent("restore-failure.json"), options: .atomic)
+
+        let state = NetworkProxySessionStatePayload(
+            schemaVersion: "triton.proxy.session.v1",
+            platform: "android",
+            target: "emulator-5554",
+            captureMode: "record",
+            proxyEndpoint: "127.0.0.1:19431",
+            configured: true,
+            visibility: .partial,
+            limitations: ["proxy_visibility_limited", "proxy_restore_failure_artifact_written"],
+            artifacts: [NetworkProxyArtifact(kind: "network-capture", path: "requests.ndjson", bytes: nil)],
+            restoreSnapshotPath: restoreSnapshotURL.path,
+            sourceCommands: ["adb -s emulator-5554 shell settings put global http_proxy 10.0.2.2:19431"]
+        )
+        try prettyEncodedData(state).write(to: session.appendingPathComponent("session-state.json"), options: .atomic)
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["network.proxy-session"],
+            name: "network-restore-failure",
+            note: nil,
+            target: "triton:local",
+            host: "127.0.0.1",
+            port: 1,
+            refresh: false,
+            proxySessionPath: session.path
+        )
+
+        #expect(manifest.artifacts.map(\.kind) == ["network.proxy-session", "proxy-restore"])
+        #expect(manifest.skipped.map(\.kind) == ["network-capture"])
+        #expect(manifest.primaryArtifacts.map(\.kind).first == "proxy-restore")
+
+        let restoreArtifact = try #require(manifest.artifacts.first { $0.kind == "proxy-restore" })
+        #expect(restoreArtifact.path == "artifacts/network/restore-failure.json")
+        #expect(restoreArtifact.contentType == "application/json")
+        #expect(restoreArtifact.platform == "android")
+        #expect(restoreArtifact.target == "emulator-5554")
+        #expect(restoreArtifact.policy == "proxy-restore-failure-recovery")
+        #expect(restoreArtifact.redactionStatus == "sensitive")
+        #expect(restoreArtifact.sourceCommand == "read --proxy-session")
+
+        let copiedPayload = try JSONDecoder().decode(
+            NetworkProxyRestoreFailurePayload.self,
+            from: Data(contentsOf: root.appendingPathComponent("artifacts/network/restore-failure.json"))
+        )
+        #expect(copiedPayload.errorCode == "proxy_restore_failed")
+        #expect(copiedPayload.errorSummary == "denied")
+        #expect(try summarizeEvidenceBundle(input: root.path).sensitiveArtifactCount == 2)
     }
 
     @Test("evidence capture writes host and xcode read-only artifacts without runtime")

@@ -467,7 +467,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             successShape: "TKEvidenceManifest, TKEvidenceSummaryResponse, or TKEvidenceRedactionResponse",
             failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
             outputSemantics: "Use evidence after a failed or completed run to capture auditable artifacts. Summaries and redaction are offline and do not require a runtime connection.",
-            artifacts: ["evidence-bundle", "manifest", "screenshots", "logs", "host-artifacts", "xcode-artifacts", "real-device.diagnostics", "host.app-action", "runtime.snapshot", "host.layout", "build.summary", "network-capture"],
+            artifacts: ["evidence-bundle", "manifest", "screenshots", "logs", "host-artifacts", "xcode-artifacts", "real-device.diagnostics", "host.app-action", "runtime.snapshot", "host.layout", "build.summary", "network-capture", "proxy-restore"],
             nextCommands: [
                 "triton status --json",
                 "triton assert text-exists <text> --json",
@@ -509,7 +509,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             successShape: "TKEvidenceManifest with freshness metadata for captured artifacts",
             failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
             outputSemantics: "Use capture as the short evidence entrypoint for runtime-backed regression evidence bundles.",
-            artifacts: ["evidence-bundle", "manifest", "screenshots", "hierarchy", "ax", "geometry", "logs", "host-artifacts", "xcode-artifacts", "network-capture"],
+            artifacts: ["evidence-bundle", "manifest", "screenshots", "hierarchy", "ax", "geometry", "logs", "host-artifacts", "xcode-artifacts", "network-capture", "proxy-restore"],
             nextCommands: [
                 "triton status --json",
                 "triton evidence summary <dir.tritonevidence> --json",

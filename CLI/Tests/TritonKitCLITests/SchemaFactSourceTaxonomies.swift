@@ -368,6 +368,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "manifest",
         "network-capture",
         "none-inline-summary",
+        "proxy-restore",
         "result-bundle",
         "real-device.diagnostics",
         "runtime-ledger",

@@ -167,8 +167,8 @@ triton device proxy doctor --platform harmony --json
 ### 测试
 
 - fake `xcrun` / proxy runner 覆盖 start/status/stop。
-- restore 失败时输出 evidence artifact：已完成 `restore-failure.json` + `proxy-restore` artifact；后续可继续把该 artifact 纳入更完整 `.tritonevidence` 自动归档策略。
-- session-state 支持跨 CLI 调用 status/export；`device proxy serve` 已能写 metadata-only NDJSON，`export --session --output <path.har>` 已能生成 metadata-only HAR skeleton；证书 trust / TLS 解密与更完整 redaction 作为后续切片。
+- restore 失败时输出 evidence artifact：已完成 `restore-failure.json` + `proxy-restore` artifact，并已纳入 `network.proxy-session` 的 `.tritonevidence` 自动归档路径；即使 `network-capture` 缺失，manifest 仍会保留 `network.proxy-session` 与 `proxy-restore`，只把缺失的 capture 写入 `skipped[]`。
+- session-state 支持跨 CLI 调用 status/export；`device proxy serve` 已能写 metadata-only NDJSON，`export --session --output <path.har>` 已能生成 metadata-only HAR skeleton；证书 trust / TLS 解密与真实 smoke 证据作为后续切片。
 
 ### 真实 smoke
 
