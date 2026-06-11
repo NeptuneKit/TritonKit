@@ -294,6 +294,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKHarmonyHDCCommand.listTargetsPlain().argv == ["list", "targets"])
         #expect(TKHarmonyHDCCommand.bootCompleted(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "param", "get", "bootevent.boot.completed"])
         #expect(TKHarmonyHDCCommand.shellProbe(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "echo", "triton-shell-ready"])
+        #expect(TKHarmonyHDCCommand.paramListRecursive(target: "127.0.0.1:10100", name: "proxy").argv == ["-t", "127.0.0.1:10100", "shell", "param", "ls", "-r", "proxy"])
         #expect(TKHarmonyHDCCommand.appInspect(target: "127.0.0.1:10100", bundleName: "com.example.demo").argv == ["-t", "127.0.0.1:10100", "shell", "bm", "dump", "-n", "com.example.demo"])
         #expect(TKHarmonyHDCCommand.appLaunch(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-b", "com.example.demo", "-a", "EntryAbility"])
         #expect(TKHarmonyHDCCommand.forwardPort(target: "127.0.0.1:10100", localPort: 18765, remotePort: 18765).argv == ["-t", "127.0.0.1:10100", "fport", "tcp:18765", "tcp:18765"])

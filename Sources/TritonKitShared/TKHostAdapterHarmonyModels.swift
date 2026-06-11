@@ -21,6 +21,10 @@ public enum TKHarmonyHDCCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "echo", "triton-shell-ready"], riskLevel: .readonly, requiredConfig: [.target, .timeout])
     }
 
+    public static func paramListRecursive(target: String, name: String, executable: String = "hdc") -> TKHostCommand {
+        TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "param", "ls", "-r", name], riskLevel: .readonly, requiredConfig: [.target, .timeout])
+    }
+
     public static func appInspect(target: String, bundleName: String, executable: String = "hdc") -> TKHostCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "bm", "dump", "-n", bundleName], riskLevel: .readonly, requiredConfig: [.target, .timeout])
     }
