@@ -224,6 +224,7 @@ struct TKReplayPlanModelsTests {
         #expect(summary.steps[3].expectedArtifacts.contains("network-capture"))
         #expect(summary.steps[4].argv.contains("--restore"))
         #expect(summary.steps.allSatisfy { $0.workflowCategories.contains("target") })
+        #expect(summary.steps.allSatisfy { $0.validationErrors.isEmpty })
 
         let startArgv = try TKReplayStepExecution.argv(
             for: plan.steps[2],
@@ -241,6 +242,58 @@ struct TKReplayPlanModelsTests {
             "--plan-only",
             "--json",
         ])
+    }
+
+    @Test("network proxy lifecycle steps expose static validation errors")
+    func networkProxyLifecycleStepsExposeStaticValidationErrors() throws {
+        let plan = TKReplayPlan(
+            name: "invalid-network-proxy-flow",
+            steps: [
+                TKReplayPlanStep(
+                    action: .proxyExport,
+                    output: "/tmp/android-proxy/requests.ndjson",
+                    platform: "android",
+                    device: "emulator-5554"
+                ),
+                TKReplayPlanStep(
+                    action: .proxyProbe,
+                    device: "emulator-5554"
+                ),
+                TKReplayPlanStep(
+                    action: .proxyServe,
+                    proxy: "127.0.0.1:19431"
+                ),
+                TKReplayPlanStep(
+                    action: .proxyStart,
+                    platform: "android"
+                ),
+                TKReplayPlanStep(
+                    action: .proxyStop,
+                    platform: "android",
+                    device: "emulator-5554",
+                    restore: false
+                ),
+            ]
+        )
+
+        let summary = TKReplayPlanSummary(ok: true, path: "/tmp/invalid-network-proxy-flow.tritonplan", plan: plan)
+
+        #expect(summary.steps[0].validationErrors.map { $0.code } == ["proxy_export_before_start"])
+        #expect(summary.steps[1].validationErrors.map { $0.code } == ["missing_proxy_platform"])
+        #expect(summary.steps[2].validationErrors.map { $0.code } == ["missing_proxy_output"])
+        #expect(summary.steps[3].validationErrors.map { $0.code } == [
+            "missing_proxy_device",
+            "missing_proxy_endpoint",
+            "missing_proxy_output",
+        ])
+        #expect(summary.steps[4].validationErrors == [
+            TKReplayPlanStepValidationError(
+                code: "proxy_stop_restore_required",
+                message: "Replay proxy-stop step requires restore=true so dry-run emits an explicit restore policy",
+                field: "restore"
+            ),
+        ])
+        #expect(summary.steps[4].argv.contains("--restore") == false)
     }
 
     @Test("plan inspect summary exposes step validation errors")

@@ -249,8 +249,14 @@ public struct TKReplayPlanSummary: Codable, Equatable {
         self.stepCount = plan.steps.count
         self.actions = plan.steps.map(\.action.rawValue)
         self.target = plan.target
+        let planValidationErrors = TKReplayStepExecution.planValidationErrors(for: plan.steps)
         self.steps = plan.steps.enumerated().map { offset, step in
-            TKReplayPlanStepSummary(index: offset + 1, planName: plan.name, step: step)
+            TKReplayPlanStepSummary(
+                index: offset + 1,
+                planName: plan.name,
+                step: step,
+                extraValidationErrors: planValidationErrors[offset] ?? []
+            )
         }
     }
 }
@@ -284,7 +290,12 @@ public struct TKReplayPlanStepSummary: Codable, Equatable {
         case validationErrors
     }
 
-    public init(index: Int, planName: String?, step: TKReplayPlanStep) {
+    public init(
+        index: Int,
+        planName: String?,
+        step: TKReplayPlanStep,
+        extraValidationErrors: [TKReplayPlanStepValidationError] = []
+    ) {
         let descriptor = TKReplayStepExecution.inspectDescriptor(for: step, planName: planName, index: index)
 
         self.index = index
@@ -298,7 +309,7 @@ public struct TKReplayPlanStepSummary: Codable, Equatable {
         self.requires = descriptor.requires
         self.expectedArtifacts = descriptor.expectedArtifacts
         self.stopConditions = descriptor.stopConditions
-        self.validationErrors = TKReplayStepExecution.validationErrors(for: step)
+        self.validationErrors = TKReplayStepExecution.validationErrors(for: step) + extraValidationErrors
     }
 
     public init(from decoder: Decoder) throws {
@@ -453,6 +464,34 @@ public enum TKReplayStepExecution {
             break
         }
         return errors
+    }
+
+    public static func planValidationErrors(for steps: [TKReplayPlanStep]) -> [Int: [TKReplayPlanStepValidationError]] {
+        var errorsByOffset: [Int: [TKReplayPlanStepValidationError]] = [:]
+        var hasProxyStart = false
+
+        for (offset, step) in steps.enumerated() {
+            var errors = proxyLifecycleValidationErrors(for: step)
+            switch step.action {
+            case .proxyExport:
+                if !hasProxyStart {
+                    errors.append(TKReplayPlanStepValidationError(
+                        code: "proxy_export_before_start",
+                        message: "Replay proxy-export step requires an earlier proxy-start step in the same plan",
+                        field: "action"
+                    ))
+                }
+            case .proxyStart:
+                hasProxyStart = true
+            default:
+                break
+            }
+            if !errors.isEmpty {
+                errorsByOffset[offset] = errors
+            }
+        }
+
+        return errorsByOffset
     }
 
     public static func artifactName(planName: String?, step: TKReplayPlanStep, index: Int) -> String {
@@ -782,6 +821,77 @@ public enum TKReplayStepExecution {
             message: error.description,
             field: field
         )
+    }
+
+    private static func proxyLifecycleValidationErrors(for step: TKReplayPlanStep) -> [TKReplayPlanStepValidationError] {
+        switch step.action {
+        case .proxyProbe:
+            return requiredProxyTargetErrors(step)
+        case .proxyServe:
+            return requiredProxyEndpointError(step) + requiredProxyOutputError(step)
+        case .proxyStart:
+            return requiredProxyTargetErrors(step) + requiredProxyEndpointError(step) + requiredProxyOutputError(step)
+        case .proxyExport:
+            return requiredProxyTargetErrors(step) + requiredProxyOutputError(step)
+        case .proxyStop:
+            var errors = requiredProxyTargetErrors(step)
+            if step.restore != true {
+                errors.append(TKReplayPlanStepValidationError(
+                    code: "proxy_stop_restore_required",
+                    message: "Replay proxy-stop step requires restore=true so dry-run emits an explicit restore policy",
+                    field: "restore"
+                ))
+            }
+            return errors
+        case .tap, .paste, .type, .clear, .wait, .screenshot, .evidence:
+            return []
+        }
+    }
+
+    private static func requiredProxyTargetErrors(_ step: TKReplayPlanStep) -> [TKReplayPlanStepValidationError] {
+        var errors: [TKReplayPlanStepValidationError] = []
+        if isBlank(step.platform) {
+            errors.append(TKReplayPlanStepValidationError(
+                code: "missing_proxy_platform",
+                message: "Replay \(step.action.rawValue) step requires platform",
+                field: "platform"
+            ))
+        }
+        if isBlank(step.device) {
+            errors.append(TKReplayPlanStepValidationError(
+                code: "missing_proxy_device",
+                message: "Replay \(step.action.rawValue) step requires device selector",
+                field: "device"
+            ))
+        }
+        return errors
+    }
+
+    private static func requiredProxyEndpointError(_ step: TKReplayPlanStep) -> [TKReplayPlanStepValidationError] {
+        if isBlank(step.proxy) {
+            return [TKReplayPlanStepValidationError(
+                code: "missing_proxy_endpoint",
+                message: "Replay \(step.action.rawValue) step requires proxy endpoint",
+                field: "proxy"
+            )]
+        }
+        return []
+    }
+
+    private static func requiredProxyOutputError(_ step: TKReplayPlanStep) -> [TKReplayPlanStepValidationError] {
+        if isBlank(step.output) {
+            return [TKReplayPlanStepValidationError(
+                code: "missing_proxy_output",
+                message: "Replay \(step.action.rawValue) step requires output path",
+                field: "output"
+            )]
+        }
+        return []
+    }
+
+    private static func isBlank(_ value: String?) -> Bool {
+        guard let value else { return true }
+        return value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
     }
 
     private static func validationErrorCode(for error: TKReplayStepExecutionError) -> String {
