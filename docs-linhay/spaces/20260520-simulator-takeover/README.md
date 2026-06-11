@@ -21,6 +21,7 @@ TritonKit 目前已经具备 embedded runtime 的 App 内观察和控制能力�
 - `xcrun simctl privacy/location/ui/status_bar`：准备系统环境。
 - `xcrun simctl io screenshot/recordVideo`：采集 framebuffer 证据。
 - `xcrun simctl spawn ... log stream`：读取 simulator 日志。
+- 宿主机 HTTP/HTTPS proxy：黑盒观察、记录、mock 或阻断 iOS Simulator 网络请求。
 - `xcodebuild` / `xcresulttool`：构建、测试和结果汇总。
 
 这会让 agent 在 `triton` JSON 契约和裸 Apple CLI 之间来回切换，结果不可发现、不可审计，也难以写入 `.tritonplan`。
@@ -46,6 +47,7 @@ TritonKit 目前已经具备 embedded runtime 的 App 内观察和控制能力�
 4. **可审计**：每个 host action 记录底层工具、参数摘要、target、耗时、退出码和 artifact。
 5. **可降级**：能力不可用时返回明确 unsupported，并给出 fallback，不伪装成功。
 6. **边界清晰**：embedded runtime 继续只处理 App 内 DEBUG-only 能力；host adapter 只运行在 macOS CLI / `triton serve`。
+7. **网络代理接管**：iOS 网络接管走 host-side Simulator proxy，不要求业务 App 集成 URLProtocol、SDK interceptor、network breadcrumbs provider 或其他 App 内网络 hook。
 
 补充参考 ai-phone 后，本 space 的 host-side action 还需要预留 `command ledger`、device readiness、lock 和 remote host agent 字段。即使 P0 只跑本机 simulator，也不要把 schema 写死为单机、单 target、无调度证据。
 
@@ -57,6 +59,8 @@ TritonKit 目前已经具备 embedded runtime 的 App 内观察和控制能力�
 4. 不用 Web/Wails 先定义业务控制能力。
 5. 不把系统弹窗点击伪装成 in-app tap。
 6. 不把 runtime 磁盘删除、personalization、dyld cache 等维护命令放入默认回归路径。
+7. 不通过 App 内 runtime 接管网络请求；不默认注入 `URLProtocol`、method swizzling、SDK network interceptor 或业务 provider。
+8. 不承诺绕过证书 pinning、私有加密协议、自定义 socket、QUIC 或不走系统代理的网络栈；这些必须在 capability / doctor / evidence 中返回明确 unsupported 或 limited。
 
 ## Target 模型
 
@@ -168,6 +172,19 @@ TritonKit 需要从单一 `triton:local` 扩展为可绑定的多层 target：
 - When 执行 `triton logs stream --bundle-id <id> --jsonl`
 - Then 输出结构化日志行，并可通过 SIGINT 收敛为 summary
 
+### 场景九点五：通过 Simulator proxy 接管网络请求
+
+- Given iOS Simulator 已 boot，且 TritonKit 可启动或连接一个宿主机 proxy
+- When 执行 `triton sim proxy start --simulator <udid> --mode record --output <dir> --json`
+- Then 返回 proxy endpoint、证书状态、simulator 配置状态、capture artifact 路径和 `runtimeScope=host-simulator-proxy`
+- And agent 不需要 App 内 SDK 或 runtime 网络 provider 才能观察经由系统代理的请求
+- When 执行 `triton sim proxy status --simulator <udid> --json`
+- Then 返回 `enabled/captureMode/certInstalled/certTrusted/requestCount/limitations`
+- When App 使用证书 pinning、不走系统代理、自定义 socket 或代理证书未被信任
+- Then 返回 `proxy_visibility_limited`、`proxy_cert_untrusted` 或 `proxy_unsupported_transport` 等稳定错误/警告，并在 evidence 中记录限制原因
+- When 执行 `triton sim proxy stop --simulator <udid> --restore --json`
+- Then 恢复 simulator 网络代理设置，并写入审计结果
+
 ### 场景十：完整 evidence 与 replay
 
 - Given simulator、App 和 runtime 已绑定
@@ -191,6 +208,7 @@ TritonKit 需要从单一 `triton:local` 扩展为可绑定的多层 target：
 - `sim privacy/location/ui/status-bar/push`
 - `sim media add`
 - `sim keychain add-root-cert/add-cert/reset`
+- `sim proxy start/status/stop/export`
 - `sim pasteboard copy/sync`
 - `sim icloud sync`
 - `app data install`

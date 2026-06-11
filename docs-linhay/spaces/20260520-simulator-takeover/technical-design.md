@@ -31,6 +31,7 @@ Command Router
   |
   +-- Host Adapter Service
   |     +-- SimctlAdapter
+  |     +-- SimulatorProxyAdapter
   |     +-- XcodebuildAdapter
   |     +-- DevicectlAdapter
   |     +-- XctraceAdapter
@@ -53,6 +54,7 @@ Command Router
 - Runtime Service 不调用 Host Adapter。
 - Plan / Evidence 可以编排两者，但不持有底层工具逻辑。
 - Host UI 是独立 adapter，不能复用 embedded `tap/type/press` 的语义。
+- SimulatorProxyAdapter 是 host-side adapter，只配置 simulator 代理、证书、请求采集和 mock/阻断规则；不要求 App 内 runtime 配合，也不注入 App 内网络 hook。
 
 ## Target Resolver
 
@@ -160,6 +162,32 @@ triton:ios-simulator:<udid>
 }
 ```
 
+### SimulatorProxySession
+
+```json
+{
+  "ok": true,
+  "action": "sim.proxy.start",
+  "runtimeScope": "host-simulator-proxy",
+  "target": "sim:0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+  "proxyEndpoint": "127.0.0.1:19431",
+  "mode": "record",
+  "certInstalled": true,
+  "certTrusted": true,
+  "simulatorProxyConfigured": true,
+  "requestCount": 0,
+  "artifacts": [
+    {
+      "kind": "network-capture",
+      "path": "network/requests.ndjson"
+    }
+  ],
+  "limitations": [
+    "Requests that bypass the system proxy, use certificate pinning, custom sockets, private encryption, or unsupported QUIC paths may not be visible."
+  ]
+}
+```
+
 ## CLI Surface
 
 ### P0 Simulator
@@ -200,6 +228,10 @@ triton sim media add <path>... --json
 triton sim keychain add-root-cert <path> --json
 triton sim keychain add-cert <path> --json
 triton sim keychain reset --confirm --json
+triton sim proxy start --simulator <udid> --mode record|mock|block --output <dir> --json
+triton sim proxy status --simulator <udid> --json
+triton sim proxy stop --simulator <udid> --restore --json
+triton sim proxy export --simulator <udid> --output <path.har|path.ndjson> --json
 triton sim pasteboard copy <text> --json
 triton sim pasteboard sync host|<udid> host|<udid> --json
 triton sim icloud sync --json
