@@ -115,7 +115,8 @@ extension SchemaFactSourceTests {
                 evidence: "/tmp/proxy.tritonevidence",
                 proxy: "127.0.0.1:19431",
                 mode: "mock",
-                output: "/tmp/proxy-session"
+                output: "/tmp/proxy-session",
+                certificate: "/tmp/triton-proxy-ca.cer"
             )
         )
         #expect(networkProxy.mode == "task")
@@ -127,9 +128,12 @@ extension SchemaFactSourceTests {
         #expect(networkProxy.primaryExpectedArtifact == "stdout-json")
         #expect(networkProxy.primaryNextAction?.command == "device")
         #expect(networkProxy.primaryNextAction?.args.prefix(2) == ["proxy", "probe"])
-        #expect(networkProxy.steps.map(\.id) == ["target-resolve", "proxy-doctor", "proxy-probe-plan", "proxy-serve", "proxy-start-plan", "proxy-export-plan", "proxy-evidence", "proxy-stop-plan"])
+        #expect(networkProxy.steps.map(\.id) == ["target-resolve", "proxy-doctor", "proxy-probe-plan", "proxy-cert-plan", "proxy-serve", "proxy-start-plan", "proxy-export-plan", "proxy-evidence", "proxy-stop-plan"])
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-probe-plan" })?.command.contains("--platform android") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-probe-plan" })?.command.contains("--plan-only") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-cert-plan" })?.command.contains("proxy cert plan") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-cert-plan" })?.command.contains("--certificate /tmp/triton-proxy-ca.cer") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-cert-plan" })?.expectedArtifacts.contains("proxy-certificate") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--platform android") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--plan-only") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-evidence" })?.command.contains("--include network.proxy-session") == true)
@@ -203,7 +207,8 @@ extension SchemaFactSourceTests {
                 evidence: "/tmp/proxy.tritonevidence",
                 proxy: "127.0.0.1:19431",
                 mode: "record",
-                output: "/tmp/proxy-session"
+                output: "/tmp/proxy-session",
+                certificate: "/tmp/triton-proxy-ca.cer"
             )
         )
         #expect(hostOnlyProxyPlan.ok)

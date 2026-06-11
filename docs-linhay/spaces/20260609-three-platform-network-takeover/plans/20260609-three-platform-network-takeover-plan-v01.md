@@ -152,6 +152,10 @@ triton device proxy doctor --platform harmony --json
   - iOS ledger 声明 `xcrun simctl keychain <target> add-root-cert <path.cer>`；Android ledger 声明 `adb push` 与 `android.credentials.INSTALL` 用户安装 intent；Harmony 继续 `proxy_cert_harmony_probe_only`，不编造未验证证书安装命令。
   - capabilities / schema 同步新增 `network-certificate-plan`、`--certificate`、`proxy cert doctor/plan` usage 和 `proxy_cert_untrusted` recovery 分类。
   - 验证通过：`swift test --package-path CLI --scratch-path /tmp/triton-cli-proxy-cert-20260611 --filter DeviceCrossPlatformTests` 通过 56 tests；`--filter SchemaFactSource` 通过 107 tests；完整 `swift test --package-path CLI --scratch-path /tmp/triton-cli-proxy-cert-20260611` 通过 274 tests。
+- 三端 `network-proxy` 任务计划已接入证书准备审计步骤：
+  - `triton plan network-proxy ... --certificate <path.cer> --json` 会在 `proxy-probe-plan` 后、`proxy-serve` / `proxy-start-plan` 前插入 `proxy-cert-plan`。
+  - `proxy-cert-plan` 的 argv 为 `triton device proxy cert plan --platform <platform> --device <selector> --certificate <path.cer> --json`，expected artifact 为 `proxy-certificate`。
+  - 该步骤仍是 plan-only，不安装 CA、不配置 trust、不声明 TLS decrypted visibility；Harmony 仍只表达 `proxy_cert_harmony_probe_only`。
 - 三端网络接管的 target 范围已固化为 simulator/emulator-only：
   - 若 `HostDeviceTarget.scope=real` 或 `kind=real-device`，`start/stop/status/export/cert plan` 与 break-glass executed helper 统一返回 `proxy_real_device_not_supported`。
   - 该拒绝路径返回 `configured=false`、空 `sourceCommands[]` / `artifacts[]`，不会生成 `networksetup`、ADB 或 HDC 代理 mutation ledger，也不会调用 runner。

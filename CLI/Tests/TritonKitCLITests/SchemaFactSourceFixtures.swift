@@ -145,7 +145,8 @@ func workflowPlanFixtures(includeTaskInputs: Bool) -> [TKWorkflowPlanResponse] {
                 evidence: includeTaskInputs ? "/tmp/proxy.tritonevidence" : nil,
                 proxy: includeTaskInputs ? "127.0.0.1:19431" : nil,
                 mode: includeTaskInputs ? "record" : nil,
-                output: includeTaskInputs ? "/tmp/proxy-session" : nil
+                output: includeTaskInputs ? "/tmp/proxy-session" : nil,
+                certificate: includeTaskInputs ? "/tmp/triton-proxy-ca.cer" : nil
             )
         ),
     ]

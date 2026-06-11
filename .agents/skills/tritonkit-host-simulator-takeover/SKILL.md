@@ -90,7 +90,7 @@ Current P1 implementation has a fake iOS proxy adapter, pure `networksetup` comm
 
 Use `triton device proxy probe --platform ios --device <udid-or-booted> --json` when an iOS Simulator workflow needs readonly proxy capability evidence before runner review. The response should keep `action=proxy.probe`, `configured=false`, `probeResults[]`, and `proxy_probe_readonly:not_mutated`; it may inspect `networksetup` snapshot state but must not modify host proxy settings.
 
-`triton plan network-proxy --platform ios ... --json` should surface `device proxy probe --plan-only` as the first proxy-specific next step before `device proxy serve --jsonl` or `start --plan-only`, so an agent reviews readonly Simulator proxy state before planning break-glass runner execution.
+`triton plan network-proxy --platform ios ... --certificate <path.cer> --json` should surface `device proxy probe --plan-only` as the first proxy-specific next step, then `device proxy cert plan --platform ios --device <udid-or-booted> --certificate <path.cer> --json`, before `device proxy serve --jsonl` or `start --plan-only`, so an agent reviews readonly Simulator proxy state and certificate preparation before planning break-glass runner execution.
 
 The iOS proxy lane is Simulator-only. Any `HostDeviceTarget` with `scope=real` or `kind=real-device` must return `proxy_real_device_not_supported`, keep `configured=false`, and leave `sourceCommands[]` / `artifacts[]` empty. The proxy planner must preserve `ios-real:` selector prefixes as real-device targets so they hit this rejection envelope instead of being coerced into Simulator ids; do not route real iPhones through the Simulator `networksetup` runner or alias.
 

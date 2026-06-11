@@ -13,6 +13,7 @@ struct WorkflowPlanRequest {
     let proxy: String?
     let mode: String?
     let output: String?
+    let certificate: String?
 
     init(
         goal: String,
@@ -25,7 +26,8 @@ struct WorkflowPlanRequest {
         evidence: String? = nil,
         proxy: String? = nil,
         mode: String? = nil,
-        output: String? = nil
+        output: String? = nil,
+        certificate: String? = nil
     ) {
         self.goal = goal
         self.device = device
@@ -38,6 +40,7 @@ struct WorkflowPlanRequest {
         self.proxy = proxy
         self.mode = mode
         self.output = output
+        self.certificate = certificate
     }
 
     static let general = WorkflowPlanRequest(
@@ -51,7 +54,8 @@ struct WorkflowPlanRequest {
         evidence: nil,
         proxy: nil,
         mode: nil,
-        output: nil
+        output: nil,
+        certificate: nil
     )
 }
 
@@ -288,6 +292,7 @@ func buildTaskWorkflowPlan(
         let proxy = planValue(request.proxy, "127.0.0.1:19431")
         let mode = planValue(request.mode, "record")
         let output = planValue(request.output, "<proxy-session-dir>")
+        let certificate = planValue(request.certificate, "<path.cer>")
         let captureOutput: String
         if let requestedOutput = request.output, !requestedOutput.isEmpty {
             captureOutput = requestedOutput.hasSuffix(".ndjson") || requestedOutput.hasSuffix(".har")
@@ -305,6 +310,7 @@ func buildTaskWorkflowPlan(
                 targetResolvePlanStep(device: request.device, host: host, port: port),
                 networkProxyDoctorPlanStep(platform: platform),
                 networkProxyProbePlanStep(platform: platform, device: device),
+                networkProxyCertificatePlanStep(platform: platform, device: device, certificate: certificate),
                 networkProxyServePlanStep(proxy: proxy, mode: mode, output: output),
                 networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
                 networkProxyExportPlanStep(platform: platform, device: device, output: captureOutput),
@@ -611,6 +617,28 @@ private func networkProxyProbePlanStep(platform: String, device: String) -> TKWo
         expected: "Plan-only response declares readonly probe sourceCommands and configured=false",
         requires: ["cli.available"],
         expectedArtifacts: ["stdout-json", "host-device-proxy"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func networkProxyCertificatePlanStep(platform: String, device: String, certificate: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-cert-plan",
+        title: "Generate proxy certificate trust preparation ledger",
+        command: [
+            "triton", "device", "proxy", "cert", "plan",
+            "--platform", platform,
+            "--device", device,
+            "--certificate", certificate,
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after readonly probe and before relying on HTTPS visibility",
+        expected: "Plan-only response declares certificate trust commands or probe-only limitations without installing trust",
+        requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "proxy-certificate"],
         stopConditions: ["command.failed"]
     )
 }
