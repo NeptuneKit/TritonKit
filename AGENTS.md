@@ -50,7 +50,7 @@
 9. AI agent 首期不需要 Web 端；能通过 CLI/HTTP 机器可读契约完成读取和控制的需求，不新增 Web/SSE 渲染入口。
 10. 当前 emulator 接管产品边界是本机 CLI + 本机模拟器/仿真器：iOS Simulator、Android Emulator、HarmonyOS / DevEco Emulator；默认不做真机、远端 agent、设备云、Web/Wails UI、对外 HTTP 产品面、Postgres/Kafka/Webhook、多租户或内置 VLM loop，除非单独新建 `space` 重新定义边界。
 11. TritonKit 必须使用独立端口组：HTTP 管理 API `127.0.0.1:19421`、Wails dev server `localhost:34126`、Vite dev server `127.0.0.1:34127`、Vite preview server `127.0.0.1:34128`；前端 dev/preview 必须启用 `strictPort`，禁止默认落到 `5173`、`5174`、`4173` 等常见端口。
-12. 当前没有活跃 Web / 前端页面；任何恢复前端体验的工作必须先重新建立 `space`、需求边界、BDD 场景、技术栈和验收方式，不预设执行方或历史设计方向。
+12. 当前已有 `Web/` React / Vite mock 工程，但它只是可运行设计原型，不是业务控制入口或 Wails 复活；任何恢复正式 Web/Wails 产品体验的工作仍必须先重新建立或更新 `space`、需求边界、BDD 场景、技术栈和验收方式，不预设执行方或历史设计方向。
 13. 前端改动若影响后端接口、领域模型或关键交互闭环，必须先明确 CLI/HTTP 契约、状态流转、测试门禁和回归验收，避免由 UI 先行定义业务控制能力；确需人类展示时，Web/Wails 默认只消费只读 DTO，不承载 create/update/delete/execute/approve/deny 等业务控制闭环。
 14. 当一次会话中出现“有用且重复出现”的行为模式、排障路径或交付动作时，必须先识别复用边界，再优先新增或更新项目级 `skills`；只有当规则已经上升为 repo-wide、长期稳定的约束时，才同步更新 `AGENTS.md`。
 15. 当用户明确说“整理”且语境指向刚完成的一轮工作会话时，默认触发一次会话沉淀流程：先按 `tritonkit-session-skill-distill` 提炼可复用模式，再按是否 repo-wide 决定是否同步更新 `AGENTS.md`、`docs-linhay/dev/`、`docs-linhay/memory/`。
@@ -137,7 +137,7 @@ Git `worktree` 治理：
 
 1. 对外发布的 TritonKit skills 源码统一放在 `TritonKit.skills/`，并进入 `tritonkit-skills.tar.gz`；项目开发、repo 治理、实现、监督和规划用 skill 统一放在 `.agents/skills/`，作为本地 agent 发现入口，且不作为 release packaging 源。
 2. 涉及 CLI、HTTP 服务分层、Wails Web、桌面壳、路由、中间件、配置或接口测试时，优先使用 `tritonkit-http-service-engineering`，并确认业务控制能力优先落在 CLI/HTTP，而不是 Web/Wails。
-3. 当前没有活跃 Wails/Web UI 或默认设计语言；涉及恢复前端页面、设计稿或交互验收时，先使用 `tritonkit-design-system` 确认空白基线与重新建 space 的边界。
+3. 当前 `Web/` 仅是 React / Vite mock 原型，不是活跃产品 UI；涉及 Web mock、设计稿或浏览器交互验收时，优先使用 `tritonkit-web-mock-ui`，涉及正式 Wails/Web 产品恢复时再用 `tritonkit-design-system` 确认边界。
 4. 涉及 `space` 创建、命名、README 模板或截图归档时，优先使用 `tritonkit-ops-governance`。
 5. 涉及文档写回、memory 写回同步时，优先使用 `tritonkit-ops-governance`。
 6. 涉及 AGENTS 级长期治理规则时，优先使用 `tritonkit-ops-governance`；若用户明确说“整理”，同时使用 `tritonkit-session-skill-distill`。
