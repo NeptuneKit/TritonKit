@@ -44,6 +44,7 @@ struct TKCLITransportModelsTests {
 
         #expect(target.id == TKLocalTargetID)
         #expect(target.transport == "local-websocket")
+        #expect(target.platform == "ios")
         #expect(target.connected)
         #expect(target.latestHierarchyAvailable)
         #expect(target.activeHierarchyAvailable == true)
@@ -69,8 +70,62 @@ struct TKCLITransportModelsTests {
         let decoded = try JSONDecoder().decode(TKTargetSummary.self, from: data)
 
         #expect(decoded.id == "triton:ios-simulator:SIM-UDID-2")
+        #expect(decoded.platform == "ios")
         #expect(decoded.simulatorUDID == "SIM-UDID-2")
         #expect(try TKResolveTargetSummary("SIM-UDID-2", in: [decoded]) == decoded)
+    }
+
+    @Test("target summary preserves explicit cross-platform runtime identity")
+    func targetSummaryPreservesCrossPlatformRuntimeIdentity() throws {
+        let android = TKTargetSummary(
+            id: "triton:android-emulator:emulator-5554",
+            transport: "local-websocket",
+            connected: true,
+            latestHierarchyAvailable: true,
+            appName: "Android Demo",
+            bundleIdentifier: "com.example.android",
+            deviceDescription: "Pixel Emulator",
+            osDescription: "Android 16",
+            platform: "android"
+        )
+        let harmony = TKTargetSummary(
+            id: "triton:harmony-emulator:127.0.0.1:10100",
+            transport: "local-websocket",
+            connected: true,
+            latestHierarchyAvailable: true,
+            appName: "Harmony Demo",
+            bundleIdentifier: "com.example.harmony",
+            deviceDescription: "DevEco Emulator",
+            osDescription: "HarmonyOS NEXT",
+            platform: "harmony"
+        )
+
+        let data = try JSONEncoder().encode(TKTargetsResponse(targets: [android, harmony]))
+        let decoded = try JSONDecoder().decode(TKTargetsResponse.self, from: data)
+
+        #expect(decoded.targets.map(\.platform) == ["android", "harmony"])
+    }
+
+    @Test("target summary decodes legacy payloads without platform")
+    func targetSummaryDecodesLegacyPayloadWithoutPlatform() throws {
+        let data = Data(#"""
+        {
+          "id": "triton:android-emulator:emulator-5554",
+          "transport": "local-websocket",
+          "connected": true,
+          "latestHierarchyAvailable": true,
+          "appName": "Legacy Android",
+          "bundleIdentifier": "com.example.legacy",
+          "deviceDescription": "Pixel",
+          "osDescription": "Android 16"
+        }
+        """#.utf8)
+
+        let decoded = try JSONDecoder().decode(TKTargetSummary.self, from: data)
+
+        #expect(decoded.platform == "android")
+        #expect(decoded.hierarchyCacheState == "active")
+        #expect(decoded.identityState == "current")
     }
 
     @Test("command request preserves explicit target during JSON roundtrip")

@@ -316,6 +316,7 @@ func targetSummaryOutputContract() -> TKCommandOutputContract {
         fields: schemaContractFields([
             ("id", "String", true, "Triton target id"),
             ("transport", "String", true, "Transport name"),
+            ("platform", "String", true, "Target platform: ios, android, harmony, or another runtime-provided value"),
             ("connected", "Bool", true, "Whether the target is connected"),
             ("latestHierarchyAvailable", "Bool", true, "Whether the target has a latest hierarchy"),
             ("appName", "String?", false, "Runtime app display name"),

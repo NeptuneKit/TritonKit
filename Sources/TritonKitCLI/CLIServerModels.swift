@@ -76,13 +76,19 @@ final class ConnectionState: @unchecked Sendable {
         if normalized == TKLocalTargetID, connections.count == 1 {
             return connections.values.first
         }
-        for connection in connections.values {
-            let summary = connection.summary()
-            if summary?.id == normalized || summary?.simulatorUDID == requested {
-                return connection
+        let matches: [(connection: TargetConnection, summary: TKTargetSummary)] = connections.values.compactMap { connection in
+            guard let summary = connection.summary(),
+                  summary.id == normalized || summary.simulatorUDID == requested else {
+                return nil
             }
+            return (connection, summary)
         }
-        return nil
+        if matches.count <= 1 {
+            return matches.first?.connection
+        }
+        return matches.first { match in
+            match.summary.activeHierarchyAvailable == true || match.summary.hierarchyCacheState == "active"
+        }?.connection ?? matches.first?.connection
     }
 
 }
@@ -111,6 +117,7 @@ final class MessageCounter: @unchecked Sendable {
 struct TargetMetadata: Sendable {
     var appName: String?
     var bundleIdentifier: String?
+    var platform: String?
     var deviceDescription: String?
     var osDescription: String?
     var simulatorUDID: String?
@@ -176,7 +183,8 @@ final class TargetState: @unchecked Sendable {
                 activeHierarchyAvailable: activeHierarchyAvailable,
                 cachedHierarchyAvailable: _latestHierarchy != nil,
                 hierarchyCacheState: hierarchyCacheState(connected: true),
-                identityState: metadata == nil ? "unknown" : "current"
+                identityState: metadata == nil ? "unknown" : "current",
+                platform: metadata?.platform
             )
         }
     }
@@ -225,6 +233,7 @@ final class TargetState: @unchecked Sendable {
         TargetMetadata(
             appName: appInfo["appName"] as? String,
             bundleIdentifier: appInfo["appBundleIdentifier"] as? String,
+            platform: appInfo["platform"] as? String,
             deviceDescription: appInfo["deviceDescription"] as? String,
             osDescription: appInfo["osDescription"] as? String,
             simulatorUDID: appInfo["simulatorUDID"] as? String

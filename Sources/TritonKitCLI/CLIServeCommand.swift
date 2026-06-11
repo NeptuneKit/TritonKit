@@ -19,8 +19,10 @@ struct Serve: AsyncParsableCommand {
         let state = ConnectionState()
         let encoder = JSONEncoder()
         let counter = MessageCounter()
+        let webHostTargetCache = WebHostDeviceTargetCache()
 
         let router = Router(context: BasicWebSocketRequestContext.self)
+        let webSocketRouter = Router(context: BasicWebSocketRequestContext.self)
 
         // ---- HTTP Data Endpoints ----
 
@@ -49,6 +51,23 @@ struct Serve: AsyncParsableCommand {
         }
 
         router.get("/health") { _, _ -> HTTPResponse.Status in .ok }
+
+        router.get("/") { _, _ -> Response in
+            singleDeviceWebPageResponse()
+        }
+
+        router.get("/web/device") { _, _ -> Response in
+            singleDeviceWebPageResponse()
+        }
+
+        router.get("/simulators/:id") { request, _ -> Response in
+            let target = request.uri.path
+                .split(separator: "/", omittingEmptySubsequences: true)
+                .last
+                .map(String.init)?
+                .removingPercentEncoding
+            return singleDeviceWebPageResponse(initialTarget: target)
+        }
 
         router.get("/hierarchy/latest") { request, _ -> Response in
             let connection: TargetConnection
@@ -86,13 +105,62 @@ struct Serve: AsyncParsableCommand {
             return jsonResponse(TKTargetsResponse(targets: state.summaries()))
         }
 
-        router.get("/geometry") { _, _ -> Response in
+        router.get("/web/targets") { _, _ -> Response in
+            let runtimeTargets = state.summaries()
+            webHostTargetCache.refreshIfNeeded()
+            let hostTargets = webHostTargetCache.cachedTargets()
+            return jsonResponse(WebDeviceTargetsResponse(targets: webDeviceTargets(runtimeTargets: runtimeTargets, hostTargets: hostTargets)))
+        }
+
+        router.get("/web/geometry") { request, _ -> Response in
+            if let target = queryTarget(from: request), parseWebHostTargetID(target) != nil {
+                do {
+                    return jsonResponse(try webHostDeviceGeometry(id: target))
+                } catch {
+                    return jsonError(
+                        code: "host_geometry_failed",
+                        message: "\(error)",
+                        endpoint: "/web/geometry",
+                        hint: "Boot the selected simulator/emulator, then retry the Web preview refresh.",
+                        status: .conflict
+                    )
+                }
+            }
             do {
                 let payload = try await requestPayload(
                     type: .geometry,
                     state: state,
                     counter: counter,
-                    encoder: encoder
+                    encoder: encoder,
+                    target: queryTarget(from: request)
+                )
+                return Response(status: .ok, headers: [.contentType: "application/json"],
+                                body: .init(byteBuffer: ByteBuffer(data: payload)))
+            } catch {
+                if let timeout = error as? RuntimeRequestTimeoutError {
+                    return jsonError(
+                        detail: TKCLIRuntimeTimeoutErrorDetail(requestType: timeout.requestType, endpoint: "/web/geometry"),
+                        status: .requestTimeout
+                    )
+                }
+                return jsonError(
+                    code: "target_unavailable",
+                    message: "\(error)",
+                    endpoint: "/web/geometry",
+                    hint: "Connect an embedded runtime target or select a host emulator target",
+                    status: .conflict
+                )
+            }
+        }
+
+        router.get("/geometry") { request, _ -> Response in
+            do {
+                let payload = try await requestPayload(
+                    type: .geometry,
+                    state: state,
+                    counter: counter,
+                    encoder: encoder,
+                    target: queryTarget(from: request)
                 )
                 return Response(status: .ok, headers: [.contentType: "application/json"],
                                 body: .init(byteBuffer: ByteBuffer(data: payload)))
@@ -113,13 +181,14 @@ struct Serve: AsyncParsableCommand {
             }
         }
 
-        router.get("/accessibility") { _, _ -> Response in
+        router.get("/accessibility") { request, _ -> Response in
             do {
                 let payload = try await requestPayload(
                     type: .accessibility,
                     state: state,
                     counter: counter,
-                    encoder: encoder
+                    encoder: encoder,
+                    target: queryTarget(from: request)
                 )
                 return Response(status: .ok, headers: [.contentType: "application/json"],
                                 body: .init(byteBuffer: ByteBuffer(data: payload)))
@@ -161,7 +230,8 @@ struct Serve: AsyncParsableCommand {
                     payload: hitPayload,
                     state: state,
                     counter: counter,
-                    encoder: encoder
+                    encoder: encoder,
+                    target: queryTarget(from: request)
                 )
                 return Response(status: .ok, headers: [.contentType: "application/json"],
                                 body: .init(byteBuffer: ByteBuffer(data: payload)))
@@ -182,13 +252,14 @@ struct Serve: AsyncParsableCommand {
             }
         }
 
-        router.get("/screenshot") { _, _ -> Response in
+        router.get("/screenshot") { request, _ -> Response in
             do {
                 let payload = try await requestPayload(
                     type: .screenshot,
                     state: state,
                     counter: counter,
-                    encoder: encoder
+                    encoder: encoder,
+                    target: queryTarget(from: request)
                 )
                 guard let screenshot = try? JSONDecoder().decode(TKScreenshotResponse.self, from: payload),
                       let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)) else {
@@ -214,6 +285,60 @@ struct Serve: AsyncParsableCommand {
                     message: "\(error)",
                     endpoint: "/screenshot",
                     hint: "Connect an app that embeds TritonKit before requesting screenshot",
+                    status: .conflict
+                )
+            }
+        }
+
+        router.get("/web/screenshot") { request, _ -> Response in
+            let requestedTarget = queryTarget(from: request)
+            if let target = requestedTarget, parseWebHostTargetID(target) != nil {
+                do {
+                    let screenshot = try captureWebHostDeviceScreenshotPayload(id: target)
+                    return Response(status: .ok, headers: [.contentType: screenshot.contentType],
+                                    body: .init(byteBuffer: ByteBuffer(data: screenshot.data)))
+                } catch {
+                    return jsonError(
+                        code: "host_screenshot_failed",
+                        message: "\(error)",
+                        endpoint: "/web/screenshot",
+                        hint: "Boot the selected simulator/emulator, then retry the Web preview refresh.",
+                        status: .conflict
+                    )
+                }
+            }
+            do {
+                let payload = try await requestPayload(
+                    type: .screenshot,
+                    state: state,
+                    counter: counter,
+                    encoder: encoder,
+                    target: requestedTarget
+                )
+                guard let screenshot = try? JSONDecoder().decode(TKScreenshotResponse.self, from: payload),
+                      let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)) else {
+                    return jsonError(
+                        code: "invalid_payload",
+                        message: "Invalid screenshot payload",
+                        endpoint: "/web/screenshot",
+                        hint: "Retry after the connected runtime responds to screenshot",
+                        status: .internalServerError
+                    )
+                }
+                return Response(status: .ok, headers: [.contentType: "image/png"],
+                                body: .init(byteBuffer: ByteBuffer(data: imageData)))
+            } catch {
+                if let timeout = error as? RuntimeRequestTimeoutError {
+                    return jsonError(
+                        detail: TKCLIRuntimeTimeoutErrorDetail(requestType: timeout.requestType, endpoint: "/web/screenshot"),
+                        status: .requestTimeout
+                    )
+                }
+                return jsonError(
+                    code: "target_unavailable",
+                    message: "\(error)",
+                    endpoint: "/web/screenshot",
+                    hint: "Connect an app that embeds TritonKit or select a host emulator target before requesting screenshot",
                     status: .conflict
                 )
             }
@@ -293,7 +418,7 @@ struct Serve: AsyncParsableCommand {
         router.post("/input") { request, _ -> Response in
             let connection: TargetConnection
             do {
-                connection = try state.resolve(nil)
+                connection = try state.resolve(queryTarget(from: request))
             } catch {
                 return jsonError(detail: cliErrorDetail(for: error, endpoint: "/input", host: host, port: port), status: .conflict)
             }
@@ -327,9 +452,81 @@ struct Serve: AsyncParsableCommand {
                             body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
         }
 
+        router.post("/web/input") { request, _ -> Response in
+            var bodyData = Data()
+            for try await chunk in request.body {
+                bodyData.append(Data(buffer: chunk))
+            }
+
+            guard let input = try? JSONDecoder().decode(TKInputRequest.self, from: bodyData),
+                  let payload = try? JSONEncoder().encode(input) else {
+                return jsonError(
+                    code: "invalid_payload",
+                    message: "Unsupported input payload",
+                    endpoint: "/web/input",
+                    hint: "Send one TKInputRequest JSON object such as {\"type\":\"tap\",\"x\":1,\"y\":1}",
+                    status: .badRequest
+                )
+            }
+
+            let requestedTarget = queryTarget(from: request)
+            if let target = requestedTarget, parseWebHostTargetID(target) != nil {
+                if let runtimeTarget = webRuntimeInputFallbackTargetID(forHostID: target, runtimeTargets: state.summaries()) {
+                    let connection: TargetConnection
+                    do {
+                        connection = try state.resolve(runtimeTarget)
+                    } catch {
+                        return jsonError(detail: cliErrorDetail(for: error, endpoint: "/web/input", host: host, port: port), status: .conflict)
+                    }
+
+                    let id = counter.next()
+                    log("[tritonkit] -> input [id:\(id)] via \(runtimeTarget)")
+                    try await connection.outbound.send(TKMessage(id: id, type: .input, payload: payload), encoder: encoder)
+                    guard let responsePayload = await connection.state.waitForResponse(id: id) else {
+                        return jsonError(
+                            detail: TKCLIRuntimeTimeoutErrorDetail(requestType: "input", endpoint: "/web/input"),
+                            status: .requestTimeout
+                        )
+                    }
+                    return Response(status: .ok, headers: [.contentType: "application/json"],
+                                    body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
+                }
+                do {
+                    return jsonResponse(try runWebHostDeviceInput(id: target, input: input))
+                } catch {
+                    return jsonError(
+                        code: "host_input_failed",
+                        message: "\(error)",
+                        endpoint: "/web/input",
+                        hint: "Verify the selected host emulator is ready, then retry the input action.",
+                        status: .conflict
+                    )
+                }
+            }
+
+            let connection: TargetConnection
+            do {
+                connection = try state.resolve(requestedTarget)
+            } catch {
+                return jsonError(detail: cliErrorDetail(for: error, endpoint: "/web/input", host: host, port: port), status: .conflict)
+            }
+
+            let id = counter.next()
+            log("[tritonkit] -> input [id:\(id)]")
+            try await connection.outbound.send(TKMessage(id: id, type: .input, payload: payload), encoder: encoder)
+            guard let responsePayload = await connection.state.waitForResponse(id: id) else {
+                return jsonError(
+                    detail: TKCLIRuntimeTimeoutErrorDetail(requestType: "input", endpoint: "/web/input"),
+                    status: .requestTimeout
+                )
+            }
+            return Response(status: .ok, headers: [.contentType: "application/json"],
+                            body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
+        }
+
         // ---- WebSocket Control Channel ----
 
-        router.ws("/") { inbound, outbound, _ in
+        webSocketRouter.ws("/") { inbound, outbound, _ in
             log("[tritonkit] iOS device connected (ws)")
             let connection = state.connect(outbound)
             let connectionID = connection.connectionID
@@ -375,7 +572,7 @@ struct Serve: AsyncParsableCommand {
         let app = Application(
             router: router,
             server: .http1WebSocketUpgrade(
-                webSocketRouter: router,
+                webSocketRouter: webSocketRouter,
                 configuration: .init(maxFrameSize: tritonWebSocketMaxFrameSize, extensions: [])
             ),
             configuration: .init(address: .hostname(host, port: port))
@@ -384,8 +581,10 @@ struct Serve: AsyncParsableCommand {
         log("[tritonkit] Control: ws://\(host):\(port)/")
         log("[tritonkit] Data:   http://\(host):\(port)/data")
         log("[tritonkit] Status: http://\(host):\(port)/status")
+        log("[tritonkit] Web:    http://\(host):\(port)\(singleDeviceWebRoutePath)")
         log("[tritonkit] Command: POST http://\(host):\(port)/command")
         log("[tritonkit] Commands: h[ierarchy] | a[ppinfo] | p[ing] | q[uit]")
+        webHostTargetCache.refreshIfNeeded()
 
         // Stdin
         Task {

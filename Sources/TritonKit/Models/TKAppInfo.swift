@@ -13,6 +13,7 @@ public struct TKAppInfo: Codable {
     public let appIcon: Data?
     public let appName: String
     public let appBundleIdentifier: String
+    public let platform: String
     public let deviceDescription: String
     public let osDescription: String
     public let simulatorUDID: String?
@@ -40,6 +41,7 @@ public struct TKAppInfo: Codable {
             ?? ""
         self.appBundleIdentifier = Bundle.main.bundleIdentifier ?? ""
         #if canImport(UIKit)
+        self.platform = "ios"
         let device = UIDevice.current
         self.deviceDescription = device.model
         self.osDescription = device.systemVersion
@@ -61,6 +63,7 @@ public struct TKAppInfo: Codable {
         self.screenHeight = screen.bounds.height
         self.screenScale = screen.scale
         #else
+        self.platform = "macos"
         let osVersion = ProcessInfo.processInfo.operatingSystemVersion
         self.deviceDescription = Host.current().localizedName ?? "Mac"
         self.osDescription = "\(osVersion.majorVersion).\(osVersion.minorVersion).\(osVersion.patchVersion)"

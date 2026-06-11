@@ -113,6 +113,7 @@ public struct TKCLIStatusEnvelope: Codable, Equatable {
 public struct TKTargetSummary: Codable, Equatable {
     public let id: String
     public let transport: String
+    public let platform: String
     public let connected: Bool
     public let latestHierarchyAvailable: Bool
     public let appName: String?
@@ -138,10 +139,19 @@ public struct TKTargetSummary: Codable, Equatable {
         activeHierarchyAvailable: Bool? = nil,
         cachedHierarchyAvailable: Bool? = nil,
         hierarchyCacheState: String? = nil,
-        identityState: String? = nil
+        identityState: String? = nil,
+        platform: String? = nil
     ) {
         self.id = id
         self.transport = transport
+        self.platform = TKInferTargetPlatform(
+            platform: platform,
+            id: id,
+            transport: transport,
+            simulatorUDID: simulatorUDID,
+            deviceDescription: deviceDescription,
+            osDescription: osDescription
+        )
         self.connected = connected
         self.latestHierarchyAvailable = latestHierarchyAvailable
         self.appName = appName
@@ -158,6 +168,74 @@ public struct TKTargetSummary: Codable, Equatable {
         }()
         self.identityState = identityState ?? ((appName != nil || bundleIdentifier != nil) ? "current" : "unknown")
     }
+
+    enum CodingKeys: String, CodingKey {
+        case id
+        case transport
+        case platform
+        case connected
+        case latestHierarchyAvailable
+        case appName
+        case bundleIdentifier
+        case deviceDescription
+        case osDescription
+        case simulatorUDID
+        case activeHierarchyAvailable
+        case cachedHierarchyAvailable
+        case hierarchyCacheState
+        case identityState
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let id = try container.decodeIfPresent(String.self, forKey: .id) ?? TKLocalTargetID
+        let transport = try container.decodeIfPresent(String.self, forKey: .transport) ?? "local-websocket"
+        let simulatorUDID = try container.decodeIfPresent(String.self, forKey: .simulatorUDID)
+        let deviceDescription = try container.decodeIfPresent(String.self, forKey: .deviceDescription)
+        let osDescription = try container.decodeIfPresent(String.self, forKey: .osDescription)
+        let platform = try container.decodeIfPresent(String.self, forKey: .platform)
+
+        self.init(
+            id: id,
+            transport: transport,
+            connected: try container.decode(Bool.self, forKey: .connected),
+            latestHierarchyAvailable: try container.decode(Bool.self, forKey: .latestHierarchyAvailable),
+            appName: try container.decodeIfPresent(String.self, forKey: .appName),
+            bundleIdentifier: try container.decodeIfPresent(String.self, forKey: .bundleIdentifier),
+            deviceDescription: deviceDescription,
+            osDescription: osDescription,
+            simulatorUDID: simulatorUDID,
+            activeHierarchyAvailable: try container.decodeIfPresent(Bool.self, forKey: .activeHierarchyAvailable),
+            cachedHierarchyAvailable: try container.decodeIfPresent(Bool.self, forKey: .cachedHierarchyAvailable),
+            hierarchyCacheState: try container.decodeIfPresent(String.self, forKey: .hierarchyCacheState),
+            identityState: try container.decodeIfPresent(String.self, forKey: .identityState),
+            platform: platform
+        )
+    }
+}
+
+public func TKInferTargetPlatform(
+    platform: String?,
+    id: String,
+    transport: String,
+    simulatorUDID: String?,
+    deviceDescription: String?,
+    osDescription: String?
+) -> String {
+    if let normalized = platform?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased(),
+       !normalized.isEmpty {
+        return normalized
+    }
+    let haystack = [id, transport, simulatorUDID, deviceDescription, osDescription]
+        .compactMap { $0?.lowercased() }
+        .joined(separator: " ")
+    if haystack.contains("harmony") || haystack.contains("openharmony") || haystack.contains("deveco") {
+        return "harmony"
+    }
+    if haystack.contains("android") || haystack.contains("adb") || haystack.contains("emulator-") {
+        return "android"
+    }
+    return "ios"
 }
 
 public struct TKTargetsResponse: Codable, Equatable {
