@@ -340,11 +340,15 @@ func replayEndpoint(for action: TKReplayAction) -> String {
         return "/runtime/screenshot"
     case .evidence:
         return "/evidence/capture"
+    case .proxyServe, .proxyStart, .proxyExport, .proxyStop:
+        return "/device/proxy"
     }
 }
 
 func isReplayArtifactWriteFailure(step: TKReplayPlanStep, error: Error) -> Bool {
-    guard step.action == .screenshot || step.action == .evidence else { return false }
+    guard step.action == .screenshot || step.action == .evidence || step.action == .proxyServe || step.action == .proxyExport else {
+        return false
+    }
     guard let cocoaError = error as? CocoaError else { return false }
     switch cocoaError.code {
     case .fileNoSuchFile, .fileWriteNoPermission, .fileWriteInvalidFileName, .fileWriteFileExists, .fileWriteOutOfSpace:
@@ -444,6 +448,9 @@ func executeReplayStep(
             fallback: "/tmp/\(replayArtifactName(plan: plan, step: step, index: index)).tritonevidence",
             variables: variables
         )
+        let proxySessionPath = try step.proxySession.map {
+            try TKReplaySubstituteVariables($0, variables: variables)
+        }
         let includes = try parseEvidenceIncludes(step.include ?? "status,list,version,hierarchy,ax,screenshot")
         let manifest = try await captureEvidenceBundle(
             output: output,
@@ -453,7 +460,8 @@ func executeReplayStep(
             target: target,
             host: host,
             port: port,
-            refresh: step.refresh ?? true
+            refresh: step.refresh ?? true,
+            proxySessionPath: proxySessionPath
         )
         return TKReplayStepResult(
             index: index,
@@ -466,6 +474,30 @@ func executeReplayStep(
             error: replayStepError(for: step, evidence: manifest, host: host, port: port),
             message: "evidence captured",
             evidence: manifest
+        )
+    case .proxyServe, .proxyStart, .proxyExport, .proxyStop:
+        let detail = TKCLIErrorDetail(
+            code: "unsupported_capability",
+            message: "Replay \(step.action.rawValue) is dry-run only; execute the emitted `triton device proxy` command explicitly after policy review.",
+            endpoint: "/device/proxy",
+            hint: "Run `triton replay <file.tritonplan> --dry-run --json`, inspect argv, then execute the individual proxy command only when the proxy change is intentional.",
+            nextAction: TKCLINextAction(
+                command: "replay",
+                args: ["<file.tritonplan>", "--dry-run", "--json"],
+                category: "replay"
+            )
+        )
+        return TKReplayStepResult(
+            index: index,
+            action: step.action.rawValue,
+            name: step.name ?? step.id,
+            ok: false,
+            dryRun: false,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            command: command,
+            failureCode: detail.code,
+            error: detail,
+            message: detail.message
         )
     }
 }

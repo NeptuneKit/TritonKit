@@ -38,6 +38,103 @@ struct ReplayCommandTests {
         #expect(response.error.message.contains("Replay tap step requires exactly one selector"))
     }
 
+    @Test("dry-run replay preserves network proxy session evidence argv")
+    func dryRunReplayPreservesNetworkProxySessionEvidenceArgv() throws {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-replay-proxy-session-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        let planURL = temp.appendingPathComponent("network.tritonplan")
+        try """
+        {
+          "schemaVersion": 1,
+          "name": "network-flow",
+          "variables": ["platform"],
+          "steps": [
+            {
+              "action": "evidence",
+              "name": "network-capture",
+              "output": "\(temp.path)/network.tritonevidence",
+              "include": "network.proxy-session",
+              "proxySession": "\(temp.path)/${platform}-proxy"
+            }
+          ]
+        }
+        """.write(to: planURL, atomically: true, encoding: .utf8)
+
+        let result = try runTriton(["replay", planURL.path, "--dry-run", "--var", "platform=android", "--json"])
+        let response = try JSONDecoder().decode(TKReplayResult.self, from: Data(result.stdout.utf8))
+        let step = try #require(response.steps.first)
+
+        #expect(result.exitCode == 0)
+        #expect(step.argv.contains("--proxy-session"))
+        #expect(step.argv.contains("\(temp.path)/android-proxy"))
+        #expect(step.expectedArtifacts.contains("network.proxy-session"))
+        #expect(step.expectedArtifacts.contains("network-capture"))
+    }
+
+    @Test("dry-run replay preserves network proxy lifecycle argv")
+    func dryRunReplayPreservesNetworkProxyLifecycleArgv() throws {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-replay-proxy-lifecycle-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        let planURL = temp.appendingPathComponent("network-lifecycle.tritonplan")
+        try """
+        {
+          "schemaVersion": 1,
+          "name": "network-lifecycle",
+          "variables": ["platform", "device"],
+          "steps": [
+            {
+              "action": "proxy-serve",
+              "proxy": "127.0.0.1:19431",
+              "mode": "block",
+              "output": "\(temp.path)/${platform}-proxy"
+            },
+            {
+              "action": "proxy-start",
+              "platform": "${platform}",
+              "device": "${device}",
+              "proxy": "127.0.0.1:19431",
+              "mode": "block",
+              "output": "\(temp.path)/${platform}-proxy"
+            },
+            {
+              "action": "proxy-stop",
+              "platform": "${platform}",
+              "device": "${device}",
+              "restore": true
+            }
+          ]
+        }
+        """.write(to: planURL, atomically: true, encoding: .utf8)
+
+        let result = try runTriton([
+            "replay", planURL.path,
+            "--dry-run",
+            "--var", "platform=android",
+            "--var", "device=emulator-5554",
+            "--json",
+        ])
+        let response = try JSONDecoder().decode(TKReplayResult.self, from: Data(result.stdout.utf8))
+
+        #expect(result.exitCode == 0)
+        #expect(response.steps.map(\.action) == ["proxy-serve", "proxy-start", "proxy-stop"])
+        #expect(response.steps[0].argv == [
+            "triton", "device", "proxy", "serve",
+            "--listen", "127.0.0.1:19431",
+            "--output", "\(temp.path)/android-proxy",
+            "--mode", "block",
+            "--jsonl",
+        ])
+        #expect(response.steps[1].argv.contains("--plan-only"))
+        #expect(response.steps[1].argv.contains("emulator-5554"))
+        #expect(response.steps[2].argv.contains("--restore"))
+    }
+
     @Test("replay suggested commands route failed waits to find snapshot and evidence summary")
     func replaySuggestedCommandsRouteWaitFailures() {
         let priorEvidence = TKEvidenceManifest(

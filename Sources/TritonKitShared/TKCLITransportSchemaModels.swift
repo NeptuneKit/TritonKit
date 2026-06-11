@@ -158,7 +158,10 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if actionFailureCodesRequiringRecovery.contains(failureCode) {
             categories.append("act")
         }
-        if destructivePolicyFailureCodesRequiringRecovery.contains(failureCode) || unsupportedFailureCodesRequiringRecovery.contains(failureCode) {
+        if failureCode == "proxy_real_device_not_supported" {
+            categories.append("diagnose")
+        }
+        if destructivePolicyFailureCodesRequiringRecovery.contains(failureCode) || unsupportedFailureCodesRequiringRecovery.contains(failureCode) || failureCode == "proxy_cert_untrusted" {
             categories.append("plan")
         }
         if failureCode == "timeout" {
@@ -235,6 +238,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "target_not_found",
         "target_offline",
         "target_unavailable",
+        "proxy_real_device_not_supported",
     ]
 
     private static let projectFailureCodesRequiringRecovery: Set<String> = [
@@ -260,6 +264,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "unsupported_host_action",
         "unsupported_capability",
         "unsupported_runtime_scope",
+        "proxy_real_device_not_supported",
         "webview_method_not_allowed",
         "webview_wait_unsupported",
     ]

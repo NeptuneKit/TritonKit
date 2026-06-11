@@ -8,6 +8,10 @@ public enum TKReplayAction: String, Codable, CaseIterable {
     case wait
     case screenshot
     case evidence
+    case proxyServe = "proxy-serve"
+    case proxyStart = "proxy-start"
+    case proxyExport = "proxy-export"
+    case proxyStop = "proxy-stop"
 }
 
 public enum TKReplayWaitCondition: String, Codable, Equatable {
@@ -106,6 +110,12 @@ public struct TKReplayPlanStep: Codable, Equatable {
     public let interval: Double?
     public let output: String?
     public let include: String?
+    public let proxySession: String?
+    public let platform: String?
+    public let device: String?
+    public let proxy: String?
+    public let mode: String?
+    public let restore: Bool?
     public let note: String?
     public let refresh: Bool?
 
@@ -134,6 +144,12 @@ public struct TKReplayPlanStep: Codable, Equatable {
         interval: Double? = nil,
         output: String? = nil,
         include: String? = nil,
+        proxySession: String? = nil,
+        platform: String? = nil,
+        device: String? = nil,
+        proxy: String? = nil,
+        mode: String? = nil,
+        restore: Bool? = nil,
         note: String? = nil,
         refresh: Bool? = nil
     ) {
@@ -161,6 +177,12 @@ public struct TKReplayPlanStep: Codable, Equatable {
         self.interval = interval
         self.output = output
         self.include = include
+        self.proxySession = proxySession
+        self.platform = platform
+        self.device = device
+        self.proxy = proxy
+        self.mode = mode
+        self.restore = restore
         self.note = note
         self.refresh = refresh
     }
@@ -393,11 +415,11 @@ public enum TKReplayStepExecution {
     public static func metadata(argv: [String], action: String) -> TKReplayStepExecutionMetadata {
         let root = rootCommand(argv: argv, action: action)
         return TKReplayStepExecutionMetadata(
-            category: TKCommandRecoveryCommand.category(forRootCommand: root) ?? "replay",
-            workflowCategories: workflowCategories(rootCommand: root),
-            requires: requires(),
-            expectedArtifacts: expectedArtifacts(rootCommand: root),
-            stopConditions: stopConditions(rootCommand: root)
+            category: category(rootCommand: root, argv: argv),
+            workflowCategories: workflowCategories(rootCommand: root, argv: argv),
+            requires: requires(argv: argv),
+            expectedArtifacts: expectedArtifacts(rootCommand: root, argv: argv),
+            stopConditions: stopConditions(rootCommand: root, argv: argv)
         )
     }
 
@@ -426,7 +448,7 @@ public enum TKReplayStepExecution {
             } else if conditionCount > 1 {
                 errors.append(validationError(.ambiguousWaitCondition, field: "condition"))
             }
-        case .screenshot, .evidence:
+        case .screenshot, .evidence, .proxyServe, .proxyStart, .proxyExport, .proxyStop:
             break
         }
         return errors
@@ -476,6 +498,12 @@ public enum TKReplayStepExecution {
                 strict: strict
             )
             var argv = ["triton", "evidence", "--output", output, "--include", step.include ?? "status,list,version,hierarchy,ax,screenshot"]
+            if let proxySession = step.proxySession {
+                argv += [
+                    "--proxy-session",
+                    try substituted(proxySession, variables: variables, strict: strict),
+                ]
+            }
             if let name = step.name ?? planName {
                 argv += ["--name", name]
             }
@@ -483,7 +511,83 @@ public enum TKReplayStepExecution {
                 argv += ["--note", note]
             }
             return argv + ["--json"]
+        case .proxyServe:
+            return try proxyServeArgv(for: step, variables: variables, strict: strict)
+        case .proxyStart:
+            return try proxyStartArgv(for: step, variables: variables, strict: strict)
+        case .proxyExport:
+            return try proxyExportArgv(for: step, variables: variables, strict: strict)
+        case .proxyStop:
+            return try proxyStopArgv(for: step, variables: variables, strict: strict)
         }
+    }
+
+    private static func proxyServeArgv(
+        for step: TKReplayPlanStep,
+        variables: [String: String],
+        strict: Bool
+    ) throws -> [String] {
+        let listen = try substituted(step.proxy ?? "<host:port>", variables: variables, strict: strict)
+        let output = try substituted(step.output ?? "<proxy-session-dir>", variables: variables, strict: strict)
+        let mode = try substituted(step.mode ?? "record", variables: variables, strict: strict)
+        return [
+            "triton", "device", "proxy", "serve",
+            "--listen", listen,
+            "--output", output,
+            "--mode", mode,
+            "--jsonl",
+        ]
+    }
+
+    private static func proxyStartArgv(
+        for step: TKReplayPlanStep,
+        variables: [String: String],
+        strict: Bool
+    ) throws -> [String] {
+        [
+            "triton", "device", "proxy", "start",
+            "--platform", try substituted(step.platform ?? "<platform>", variables: variables, strict: strict),
+            "--device", try substituted(step.device ?? "<selector>", variables: variables, strict: strict),
+            "--proxy", try substituted(step.proxy ?? "<host:port>", variables: variables, strict: strict),
+            "--mode", try substituted(step.mode ?? "record", variables: variables, strict: strict),
+            "--output", try substituted(step.output ?? "<proxy-session-dir>", variables: variables, strict: strict),
+            "--plan-only",
+            "--json",
+        ]
+    }
+
+    private static func proxyExportArgv(
+        for step: TKReplayPlanStep,
+        variables: [String: String],
+        strict: Bool
+    ) throws -> [String] {
+        [
+            "triton", "device", "proxy", "export",
+            "--platform", try substituted(step.platform ?? "<platform>", variables: variables, strict: strict),
+            "--device", try substituted(step.device ?? "<selector>", variables: variables, strict: strict),
+            "--output", try substituted(step.output ?? "<network-capture.ndjson>", variables: variables, strict: strict),
+            "--plan-only",
+            "--json",
+        ]
+    }
+
+    private static func proxyStopArgv(
+        for step: TKReplayPlanStep,
+        variables: [String: String],
+        strict: Bool
+    ) throws -> [String] {
+        var argv = [
+            "triton", "device", "proxy", "stop",
+            "--platform", try substituted(step.platform ?? "<platform>", variables: variables, strict: strict),
+            "--device", try substituted(step.device ?? "<selector>", variables: variables, strict: strict),
+        ]
+        if step.restore != false {
+            argv.append("--restore")
+        }
+        return argv + [
+            "--plan-only",
+            "--json",
+        ]
     }
 
     private static func tapArgv(for step: TKReplayPlanStep, variables: [String: String], strict: Bool) throws -> [String] {
@@ -684,33 +788,66 @@ public enum TKReplayStepExecution {
         strict ? try TKReplaySubstituteVariables(value, variables: variables) : value
     }
 
-    private static func requires() -> [String] {
-        ["cli.available", "server.reachable", "target.ready", "runtime.connected"]
-    }
-
-    private static func expectedArtifacts(rootCommand: String) -> [String] {
-        switch rootCommand {
-        case "tap", "paste", "type", "clear", "input":
-            return ["stdout-json", "input-result"]
-        case "wait":
-            return ["stdout-json", "wait-result"]
-        case "screenshot":
-            return ["stdout-json", "screenshot"]
-        case "evidence", "capture":
-            return ["stdout-json", "evidence-bundle"]
-        default:
-            return ["stdout-json"]
+    private static func category(rootCommand: String, argv: [String]) -> String {
+        if isDeviceProxyServe(argv) || isDeviceProxyExport(argv) {
+            return "archive"
         }
+        if isDeviceProxyCommand(argv) {
+            return "prepare-target"
+        }
+        return TKCommandRecoveryCommand.category(forRootCommand: rootCommand) ?? "replay"
     }
 
-    private static func workflowCategories(rootCommand: String) -> [String] {
+    private static func requires(argv: [String]) -> [String] {
+        if isDeviceProxyServe(argv) {
+            return ["cli.available"]
+        }
+        if isDeviceProxyCommand(argv) {
+            return ["cli.available", "target.ready"]
+        }
+        return ["cli.available", "server.reachable", "target.ready", "runtime.connected"]
+    }
+
+    private static func expectedArtifacts(rootCommand: String, argv: [String]) -> [String] {
+        var values: [String]
+        if isDeviceProxyServe(argv) || isDeviceProxyExport(argv) {
+            values = ["stdout-json", "network-capture"]
+        } else if isDeviceProxyStart(argv) || isDeviceProxyDoctor(argv) {
+            values = ["stdout-json", "host-device-proxy"]
+        } else if isDeviceProxyStop(argv) {
+            values = ["stdout-json", "proxy-restore"]
+        } else {
+            switch rootCommand {
+        case "tap", "paste", "type", "clear", "input":
+            values = ["stdout-json", "input-result"]
+        case "wait":
+            values = ["stdout-json", "wait-result"]
+        case "screenshot":
+            values = ["stdout-json", "screenshot"]
+        case "evidence", "capture":
+            values = ["stdout-json", "evidence-bundle"]
+        default:
+            values = ["stdout-json"]
+            }
+        }
+        if includesNetworkProxySession(argv) {
+            values.append("network.proxy-session")
+            values.append("network-capture")
+        }
+        return unique(values)
+    }
+
+    private static func workflowCategories(rootCommand: String, argv: [String]) -> [String] {
         let taxonomy = [
             "action", "app", "assert", "evidence", "observe", "project",
             "replay", "route", "runtime", "smoke", "target", "webview-check", "xcode",
         ]
         let values: Set<String>
 
-        switch rootCommand {
+        if isDeviceProxyCommand(argv) {
+            values = ["evidence", "target"]
+        } else {
+            switch rootCommand {
         case "tap", "paste", "type", "clear", "input":
             values = ["action", "assert", "evidence"]
         case "wait":
@@ -721,13 +858,18 @@ public enum TKReplayStepExecution {
             values = ["evidence", "replay"]
         default:
             values = ["replay"]
+            }
         }
 
         return taxonomy.filter { values.contains($0) }
     }
 
-    private static func stopConditions(rootCommand: String) -> [String] {
+    private static func stopConditions(rootCommand: String, argv: [String]) -> [String] {
         var values = ["command.failed", "server.unavailable", "target.unavailable"]
+        if isDeviceProxyCommand(argv) {
+            values.append("artifact.write-failed")
+            return unique(values)
+        }
         switch rootCommand {
         case "wait":
             values.append("timeout")
@@ -739,6 +881,50 @@ public enum TKReplayStepExecution {
             break
         }
         return values
+    }
+
+    private static func isDeviceProxyCommand(_ argv: [String]) -> Bool {
+        argv.count >= 4 && argv[0] == "triton" && argv[1] == "device" && argv[2] == "proxy"
+    }
+
+    private static func isDeviceProxyDoctor(_ argv: [String]) -> Bool {
+        isDeviceProxyCommand(argv) && argv[3] == "doctor"
+    }
+
+    private static func isDeviceProxyServe(_ argv: [String]) -> Bool {
+        isDeviceProxyCommand(argv) && argv[3] == "serve"
+    }
+
+    private static func isDeviceProxyStart(_ argv: [String]) -> Bool {
+        isDeviceProxyCommand(argv) && argv[3] == "start"
+    }
+
+    private static func isDeviceProxyExport(_ argv: [String]) -> Bool {
+        isDeviceProxyCommand(argv) && argv[3] == "export"
+    }
+
+    private static func isDeviceProxyStop(_ argv: [String]) -> Bool {
+        isDeviceProxyCommand(argv) && argv[3] == "stop"
+    }
+
+    private static func includesNetworkProxySession(_ argv: [String]) -> Bool {
+        for (index, token) in argv.enumerated() {
+            if token == "--include",
+               argv.indices.contains(index + 1),
+               argv[index + 1].split(separator: ",").map(String.init).contains("network.proxy-session") {
+                return true
+            }
+            if token.hasPrefix("--include="),
+               token.dropFirst("--include=".count).split(separator: ",").map(String.init).contains("network.proxy-session") {
+                return true
+            }
+        }
+        return false
+    }
+
+    private static func unique(_ values: [String]) -> [String] {
+        var seen: Set<String> = []
+        return values.filter { seen.insert($0).inserted }
     }
 
     private static func rootCommand(argv: [String], action: String) -> String {

@@ -45,6 +45,18 @@ public enum TKAndroidADBCommand {
         command(["-s", serial, "exec-out", "screencap", "-p"], executable: executable, riskLevel: .evidence, requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord], capturesArtifacts: true, sensitiveOutput: true)
     }
 
+    public static func screenshotToFile(serial: String, remotePath: String, executable: String = "adb") -> TKHostCommand {
+        command(["-s", serial, "shell", "screencap", "-p", remotePath], executable: executable, riskLevel: .evidence, requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord], capturesArtifacts: true, sensitiveOutput: true)
+    }
+
+    public static func pullFile(serial: String, remotePath: String, localPath: String, executable: String = "adb") -> TKHostCommand {
+        command(["-s", serial, "pull", remotePath, localPath], executable: executable, riskLevel: .evidence, requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord], capturesArtifacts: true, sensitiveOutput: true)
+    }
+
+    public static func removeFile(serial: String, remotePath: String, executable: String = "adb") -> TKHostCommand {
+        command(["-s", serial, "shell", "rm", "-f", remotePath], executable: executable, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
     public static func installAPK(serial: String, apkPath: String, executable: String = "adb") -> TKHostCommand {
         command(["-s", serial, "install", "-r", apkPath], executable: executable, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord], defaultTimeoutSeconds: 120)
     }
@@ -760,6 +772,45 @@ public extension TKAndroidADBCommand {
             riskLevel: .automation,
             requiredConfig: [.target, .timeout, .auditRecord]
         )
+    }
+
+    static func wmSize(serial: String, executable: String = "adb") -> TKHostCommand {
+        TKHostCommand(
+            executable: executable,
+            arguments: ["-s", serial, "shell", "wm", "size"],
+            riskLevel: .readonly,
+            requiredConfig: [.target, .timeout]
+        )
+    }
+}
+
+public enum TKAndroidWMSizeParser {
+    public static func parse(_ stdout: String) -> (width: Int, height: Int)? {
+        for line in stdout.split(whereSeparator: \.isNewline) {
+            let rawLine = String(line)
+            guard let size = parseSize(in: rawLine) else { continue }
+            return size
+        }
+        return nil
+    }
+
+    private static func parseSize(in line: String) -> (width: Int, height: Int)? {
+        let pattern = #"(\d+)\s*x\s*(\d+)"#
+        guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+        let range = NSRange(line.startIndex..<line.endIndex, in: line)
+        guard let match = expression.firstMatch(in: line, range: range),
+              match.numberOfRanges == 3,
+              let widthRange = Range(match.range(at: 1), in: line),
+              let heightRange = Range(match.range(at: 2), in: line),
+              let width = Int(line[widthRange]),
+              let height = Int(line[heightRange]),
+              width > 0,
+              height > 0 else {
+            return nil
+        }
+        return (width, height)
     }
 }
 

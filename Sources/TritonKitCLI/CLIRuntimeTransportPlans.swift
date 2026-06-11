@@ -4,20 +4,54 @@ import TritonKitShared
 struct WorkflowPlanRequest {
     let goal: String
     let device: String?
+    let platform: String?
     let bundleID: String?
     let url: String?
     let text: String?
     let expectedURL: String?
     let evidence: String?
+    let proxy: String?
+    let mode: String?
+    let output: String?
+
+    init(
+        goal: String,
+        device: String? = nil,
+        platform: String? = nil,
+        bundleID: String? = nil,
+        url: String? = nil,
+        text: String? = nil,
+        expectedURL: String? = nil,
+        evidence: String? = nil,
+        proxy: String? = nil,
+        mode: String? = nil,
+        output: String? = nil
+    ) {
+        self.goal = goal
+        self.device = device
+        self.platform = platform
+        self.bundleID = bundleID
+        self.url = url
+        self.text = text
+        self.expectedURL = expectedURL
+        self.evidence = evidence
+        self.proxy = proxy
+        self.mode = mode
+        self.output = output
+    }
 
     static let general = WorkflowPlanRequest(
         goal: "general",
         device: nil,
+        platform: nil,
         bundleID: nil,
         url: nil,
         text: nil,
         expectedURL: nil,
-        evidence: nil
+        evidence: nil,
+        proxy: nil,
+        mode: nil,
+        output: nil
     )
 }
 
@@ -27,6 +61,15 @@ func buildWorkflowPlan(
     port: Int,
     request: WorkflowPlanRequest = .general
 ) -> TKWorkflowPlanResponse {
+    if request.goal == "network-proxy" {
+        return buildTaskWorkflowPlan(
+            capabilities: capabilities,
+            host: host,
+            port: port,
+            request: request
+        )
+    }
+
     if !capabilities.serverReachable {
         return TKWorkflowPlanResponse(
             ok: false,
@@ -239,6 +282,35 @@ func buildTaskWorkflowPlan(
                 evidenceSummaryPlanStep(evidence: request.evidence),
             ]
         )
+    case "network-proxy":
+        let platform = planValue(request.platform, "<platform>")
+        let device = planValue(request.device, "<device>")
+        let proxy = planValue(request.proxy, "127.0.0.1:19431")
+        let mode = planValue(request.mode, "record")
+        let output = planValue(request.output, "<proxy-session-dir>")
+        let captureOutput: String
+        if let requestedOutput = request.output, !requestedOutput.isEmpty {
+            captureOutput = requestedOutput.hasSuffix(".ndjson") || requestedOutput.hasSuffix(".har")
+                ? requestedOutput
+                : "\(requestedOutput)/requests.ndjson"
+        } else {
+            captureOutput = "<network-capture.ndjson>"
+        }
+        return taskWorkflowPlan(
+            capabilities: capabilities,
+            goal: request.goal,
+            nextStep: "proxy-serve",
+            ok: true,
+            steps: [
+                targetResolvePlanStep(device: request.device, host: host, port: port),
+                networkProxyDoctorPlanStep(platform: platform),
+                networkProxyServePlanStep(proxy: proxy, mode: mode, output: output),
+                networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
+                networkProxyExportPlanStep(platform: platform, device: device, output: captureOutput),
+                networkProxyEvidencePlanStep(proxySession: output, evidence: request.evidence),
+                networkProxyStopPlanStep(platform: platform, device: device),
+            ]
+        )
     case "open-url":
         return taskWorkflowPlan(
             capabilities: capabilities,
@@ -335,7 +407,7 @@ func buildTaskWorkflowPlan(
             error: TKCLIErrorDetail(
                 code: "validation_failed",
                 message: "Unsupported plan goal: \(request.goal)",
-                hint: "Use one of: ios-smoke, open-url, webview-check, inspect"
+                hint: "Use one of: ios-smoke, open-url, webview-check, network-proxy, inspect"
             )
         )
     }
@@ -345,10 +417,11 @@ private func taskWorkflowPlan(
     capabilities: TKCapabilitiesResponse,
     goal: String,
     nextStep: String,
+    ok: Bool? = nil,
     steps: [TKWorkflowPlanStep]
 ) -> TKWorkflowPlanResponse {
     TKWorkflowPlanResponse(
-        ok: capabilities.serverReachable,
+        ok: ok ?? capabilities.serverReachable,
         serverReachable: capabilities.serverReachable,
         connected: capabilities.connected,
         runtime: capabilities.runtime,
@@ -496,6 +569,142 @@ private func evidenceSummaryPlanStep(evidence: String?) -> TKWorkflowPlanStep {
         requiresTarget: false,
         when: "before handoff or issue filing",
         expected: "Summary identifies the key artifacts and redaction state"
+    )
+}
+
+private func networkProxyDoctorPlanStep(platform: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-doctor",
+        title: "Inspect platform proxy prerequisites",
+        command: [
+            "triton", "device", "proxy", "doctor",
+            "--platform", platform,
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before planning proxy mutation for a simulator or emulator",
+        expected: "Proxy doctor returns lane=host-proxy, conservative certificate state, and limitations",
+        requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "host-device-proxy"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func networkProxyServePlanStep(proxy: String, mode: String, output: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-serve",
+        title: "Start local host-side proxy endpoint",
+        command: [
+            "triton", "device", "proxy", "serve",
+            "--listen", proxy,
+            "--output", output,
+            "--mode", mode,
+            "--jsonl",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before platform proxy settings point the simulator or emulator at the host proxy",
+        expected: "JSONL emits proxy.serve.ready and writes metadata-only requests.ndjson",
+        requires: ["cli.available"],
+        expectedArtifacts: ["network-capture", "stdout-json"],
+        stopConditions: ["command.failed", "artifact.write-failed"]
+    )
+}
+
+private func networkProxyStartPlanStep(platform: String, device: String, proxy: String, mode: String, output: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-start-plan",
+        title: "Generate platform proxy start ledger",
+        command: [
+            "triton", "device", "proxy", "start",
+            "--platform", platform,
+            "--device", device,
+            "--proxy", proxy,
+            "--mode", mode,
+            "--output", output,
+            "--plan-only",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after proxy endpoint is known and before any break-glass mutation",
+        expected: "Plan-only response contains sourceCommands and configured=false",
+        requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "host-device-proxy"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func networkProxyExportPlanStep(platform: String, device: String, output: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-export-plan",
+        title: "Generate network capture export artifact plan",
+        command: [
+            "triton", "device", "proxy", "export",
+            "--platform", platform,
+            "--device", device,
+            "--output", output,
+            "--plan-only",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["evidence", "target"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before archiving or converting network capture artifacts",
+        expected: "Plan-only response declares the network-capture artifact path without writing files",
+        requires: ["cli.available"],
+        expectedArtifacts: ["network-capture", "stdout-json"],
+        stopConditions: ["command.failed", "artifact.write-failed"]
+    )
+}
+
+private func networkProxyEvidencePlanStep(proxySession: String, evidence: String?) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-evidence",
+        title: "Archive proxy session into evidence",
+        command: [
+            "triton", "evidence",
+            "--include", "network.proxy-session",
+            "--proxy-session", proxySession,
+            "--output", planValue(evidence, "<dir.tritonevidence>"),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        category: "archive",
+        workflowCategories: ["evidence", "target"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after a proxy session directory contains session-state.json",
+        expected: "Evidence manifest includes network.proxy-session and network-capture artifacts when present",
+        requires: ["cli.available"],
+        expectedArtifacts: ["evidence-bundle", "network-capture"],
+        stopConditions: ["command.failed", "artifact.write-failed"]
+    )
+}
+
+private func networkProxyStopPlanStep(platform: String, device: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-stop-plan",
+        title: "Generate platform proxy restore ledger",
+        command: [
+            "triton", "device", "proxy", "stop",
+            "--platform", platform,
+            "--device", device,
+            "--restore",
+            "--plan-only",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before stop/restore break-glass execution or after a dry-run review",
+        expected: "Plan-only response contains restore sourceCommands and configured=false",
+        requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "proxy-restore"],
+        stopConditions: ["command.failed"]
     )
 }
 

@@ -485,6 +485,8 @@ public struct TKWorkflowPlanResponse: Codable, Equatable {
             values = ["target", "app", "assert", "evidence"]
         case "webview-check":
             values = ["observe", "route", "assert", "evidence", "webview-check"]
+        case "network-proxy":
+            values = ["target", "evidence"]
         default:
             values = []
         }

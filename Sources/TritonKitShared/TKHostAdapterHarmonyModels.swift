@@ -9,6 +9,10 @@ public enum TKHarmonyHDCCommand {
         TKHostCommand(executable: executable, arguments: ["list", "targets", "-v"])
     }
 
+    public static func listTargetsPlain(executable: String = "hdc") -> TKHostCommand {
+        TKHostCommand(executable: executable, arguments: ["list", "targets"])
+    }
+
     public static func bootCompleted(target: String, executable: String = "hdc") -> TKHostCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "param", "get", "bootevent.boot.completed"], riskLevel: .readonly, requiredConfig: [.target, .timeout])
     }
@@ -346,12 +350,18 @@ public enum TKHdcTargetListParser {
         text.split(whereSeparator: \.isNewline)
             .compactMap { line -> TKHarmonyTarget? in
                 let parts = line.split(whereSeparator: \.isWhitespace).map(String.init)
-                guard parts.count >= 2 else { return nil }
+                guard let target = parts.first, isLikelyTargetIdentifier(target) else { return nil }
                 guard parts[0].lowercased() != "connectkey" else { return nil }
                 if parts.count >= 3, isKnownTransport(parts[1]), isKnownState(parts[2]) {
                     return TKHarmonyTarget(target: parts[0], state: parts[2], transport: parts[1])
                 }
-                return TKHarmonyTarget(target: parts[0], state: parts[1])
+                if parts.count >= 2, isKnownState(parts[1]) {
+                    return TKHarmonyTarget(target: parts[0], state: parts[1])
+                }
+                if parts.count == 1 {
+                    return TKHarmonyTarget(target: parts[0], state: "Connected")
+                }
+                return nil
             }
     }
 
@@ -381,6 +391,14 @@ public enum TKHdcTargetListParser {
         default:
             return false
         }
+    }
+
+    private static func isLikelyTargetIdentifier(_ value: String) -> Bool {
+        let lowered = value.lowercased()
+        if ["connectkey", "connect", "list", "target", "targets", "empty", "error"].contains(lowered) {
+            return false
+        }
+        return value.rangeOfCharacter(from: .alphanumerics) != nil
     }
 }
 

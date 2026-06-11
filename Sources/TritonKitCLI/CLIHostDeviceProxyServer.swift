@@ -1,0 +1,776 @@
+import Darwin
+import Foundation
+
+struct NetworkProxyServeConfig {
+    let listen: NetworkProxyEndpoint
+    let outputDirectory: String
+    let maxConnections: Int?
+    let mode: String
+
+    init(listen: NetworkProxyEndpoint, outputDirectory: String, maxConnections: Int? = nil, mode: String = "record") {
+        self.listen = listen
+        self.outputDirectory = outputDirectory
+        self.maxConnections = maxConnections
+        self.mode = mode
+    }
+}
+
+struct NetworkProxyServeEvent: Codable, Equatable {
+    let ok: Bool
+    let surface: String
+    let event: String
+    let schemaVersion: String
+    let listen: String
+    let capturePath: String
+    let captureMode: String?
+    let policyAction: String?
+    let connectionIndex: Int?
+    let method: String?
+    let url: String?
+    let host: String?
+    let port: Int?
+    let path: String?
+    let tunnel: Bool?
+    let headerNames: [String]
+    let responseStatus: Int?
+    let responseStatusText: String?
+    let redaction: String
+    let error: String?
+}
+
+struct NetworkProxyServeSummary: Encodable, Equatable {
+    let ok: Bool
+    let surface: String
+    let event: String
+    let schemaVersion: String
+    let action: String
+    let listen: String
+    let capturePath: String
+    let captureMode: String
+    let requestCount: Int
+    let limitations: [String]
+}
+
+private struct NetworkProxyHAREnvelope: Encodable {
+    let log: NetworkProxyHARLog
+}
+
+private struct NetworkProxyHARLog: Encodable {
+    let version: String
+    let creator: NetworkProxyHARCreator
+    let entries: [NetworkProxyHAREntry]
+}
+
+private struct NetworkProxyHARCreator: Encodable {
+    let name: String
+    let version: String
+}
+
+private struct NetworkProxyHAREntry: Encodable {
+    let startedDateTime: String
+    let time: Int
+    let request: NetworkProxyHARRequest
+    let response: NetworkProxyHARResponse
+    let cache: [String: String]
+    let timings: NetworkProxyHARTimings
+    let comment: String
+}
+
+private struct NetworkProxyHARRequest: Encodable {
+    let method: String
+    let url: String
+    let httpVersion: String
+    let cookies: [String]
+    let headers: [NetworkProxyHARNameValue]
+    let queryString: [NetworkProxyHARNameValue]
+    let headersSize: Int
+    let bodySize: Int
+}
+
+private struct NetworkProxyHARResponse: Encodable {
+    let status: Int
+    let statusText: String
+    let httpVersion: String
+    let cookies: [String]
+    let headers: [NetworkProxyHARNameValue]
+    let content: NetworkProxyHARContent
+    let redirectURL: String
+    let headersSize: Int
+    let bodySize: Int
+}
+
+private struct NetworkProxyHARContent: Encodable {
+    let size: Int
+    let mimeType: String
+}
+
+private struct NetworkProxyHARTimings: Encodable {
+    let send: Int
+    let wait: Int
+    let receive: Int
+}
+
+private struct NetworkProxyHARNameValue: Encodable {
+    let name: String
+    let value: String
+}
+
+private struct ParsedProxyRequest {
+    let event: NetworkProxyServeEvent
+    let upstreamHost: String
+    let upstreamPort: Int
+    let upstreamRequest: Data?
+    let isTunnel: Bool
+}
+
+func runNetworkProxyCaptureServer(
+    config: NetworkProxyServeConfig,
+    eventWriter: ((NetworkProxyServeEvent) -> Void)? = nil
+) throws -> NetworkProxyServeSummary {
+    signal(SIGPIPE, SIG_IGN)
+    let mode = try normalizeNetworkProxyServeMode(config.mode)
+    let captureURL = try networkProxyServeCaptureURL(outputDirectory: config.outputDirectory)
+    let listenFD = try makeNetworkProxyListenSocket(endpoint: config.listen)
+    defer { close(listenFD) }
+
+    let listen = "\(config.listen.host):\(config.listen.port)"
+    eventWriter?(NetworkProxyServeEvent(
+        ok: true,
+        surface: "host.device-proxy-serve",
+        event: "proxy.serve.ready",
+        schemaVersion: "triton.proxy.capture.v1",
+        listen: listen,
+        capturePath: captureURL.path,
+        captureMode: mode,
+        policyAction: nil,
+        connectionIndex: nil,
+        method: nil,
+        url: nil,
+        host: nil,
+        port: nil,
+        path: nil,
+        tunnel: nil,
+        headerNames: [],
+        responseStatus: nil,
+        responseStatusText: nil,
+        redaction: "headers-names-only",
+        error: nil
+    ))
+
+    var requestCount = 0
+    var accepted = 0
+    while config.maxConnections == nil || accepted < (config.maxConnections ?? 0) {
+        let clientFD = accept(listenFD, nil, nil)
+        if clientFD < 0 {
+            if errno == EINTR { continue }
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        accepted += 1
+        defer { close(clientFD) }
+        do {
+            let event = try handleNetworkProxyClient(clientFD: clientFD, captureURL: captureURL, listen: listen, connectionIndex: accepted, mode: mode)
+            requestCount += 1
+            eventWriter?(event)
+        } catch {
+            let event = NetworkProxyServeEvent(
+                ok: false,
+                surface: "host.device-proxy-serve",
+                event: "proxy.serve.connection-failed",
+                schemaVersion: "triton.proxy.capture.v1",
+                listen: listen,
+                capturePath: captureURL.path,
+                captureMode: mode,
+                policyAction: nil,
+                connectionIndex: accepted,
+                method: nil,
+                url: nil,
+                host: nil,
+                port: nil,
+                path: nil,
+                tunnel: nil,
+                headerNames: [],
+                responseStatus: nil,
+                responseStatusText: nil,
+                redaction: "headers-names-only",
+                error: String(describing: error)
+            )
+            try appendNetworkProxyCaptureEvent(event, captureURL: captureURL)
+            eventWriter?(event)
+        }
+    }
+
+    return NetworkProxyServeSummary(
+        ok: true,
+        surface: "host.device-proxy-serve",
+        event: "proxy.serve.summary",
+        schemaVersion: "triton.proxy.capture.v1",
+        action: "proxy.serve",
+        listen: listen,
+        capturePath: captureURL.path,
+        captureMode: mode,
+        requestCount: requestCount,
+        limitations: [
+            "proxy_capture_metadata_only:no_tls_decryption",
+            "proxy_capture_redaction:headers_names_only",
+            "proxy_capture_mode:\(mode)",
+        ]
+    )
+}
+
+private func normalizeNetworkProxyServeMode(_ mode: String) throws -> String {
+    let normalized = mode.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    guard ["record", "mock", "block", "throttle"].contains(normalized) else {
+        throw RuntimeError("device proxy serve --mode currently supports record, mock, block, or throttle.")
+    }
+    return normalized
+}
+
+func networkProxyServeCapturePath(outputDirectory: String) -> String {
+    URL(fileURLWithPath: outputDirectory, isDirectory: true).appendingPathComponent("requests.ndjson").path
+}
+
+func exportNetworkProxyCaptureArtifact(sourceURL: URL, outputURL: URL) throws -> Int {
+    try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    if outputURL.pathExtension.lowercased() == "har" {
+        let har = try makeNetworkProxyHAR(sourceURL: sourceURL)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        let data = try encoder.encode(har)
+        try data.write(to: outputURL)
+        return data.count
+    }
+    let data = try Data(contentsOf: sourceURL)
+    try data.write(to: outputURL)
+    return data.count
+}
+
+func summarizeNetworkProxyCaptureArtifact(sourceURL: URL) throws -> NetworkProxyCaptureExportSummary {
+    let data = try Data(contentsOf: sourceURL)
+    let lines = String(data: data, encoding: .utf8)?
+        .split(whereSeparator: \.isNewline)
+        .map(String.init) ?? []
+    let decoder = JSONDecoder()
+    var requestCount = 0
+    var redactions: Set<String> = []
+
+    for line in lines {
+        guard let lineData = line.data(using: .utf8) else { continue }
+        if let event = try? decoder.decode(NetworkProxyServeEvent.self, from: lineData) {
+            redactions.insert(event.redaction)
+            if event.ok, event.event == "proxy.serve.request" {
+                requestCount += 1
+            }
+            continue
+        }
+        if let payload = try? JSONSerialization.jsonObject(with: lineData) as? [String: Any],
+           let redaction = payload["redaction"] as? String,
+           !redaction.isEmpty {
+            redactions.insert(redaction)
+        }
+    }
+
+    let redaction = redactions.sorted().joined(separator: ",")
+    return NetworkProxyCaptureExportSummary(
+        requestCount: requestCount,
+        redaction: redaction.isEmpty ? "unknown" : redaction,
+        truncation: "none"
+    )
+}
+
+private func makeNetworkProxyHAR(sourceURL: URL) throws -> NetworkProxyHAREnvelope {
+    let data = try Data(contentsOf: sourceURL)
+    let lines = String(data: data, encoding: .utf8)?
+        .split(whereSeparator: \.isNewline)
+        .map(String.init) ?? []
+    let decoder = JSONDecoder()
+    let entries = lines.compactMap { line -> NetworkProxyHAREntry? in
+        guard let lineData = line.data(using: .utf8),
+              let event = try? decoder.decode(NetworkProxyServeEvent.self, from: lineData),
+              event.ok,
+              event.event == "proxy.serve.request",
+              let method = event.method else {
+            return nil
+        }
+        return networkProxyHAREntry(from: event, method: method)
+    }
+    return NetworkProxyHAREnvelope(log: NetworkProxyHARLog(
+        version: "1.2",
+        creator: NetworkProxyHARCreator(name: "TritonKit device proxy serve", version: "0.1"),
+        entries: entries
+    ))
+}
+
+private func networkProxyHAREntry(from event: NetworkProxyServeEvent, method: String) -> NetworkProxyHAREntry {
+    let url = networkProxyHARURL(from: event)
+    let response = networkProxyHARResponse(for: event)
+    return NetworkProxyHAREntry(
+        startedDateTime: "1970-01-01T00:00:00Z",
+        time: 0,
+        request: NetworkProxyHARRequest(
+            method: method,
+            url: url,
+            httpVersion: "HTTP/1.1",
+            cookies: [],
+            headers: event.headerNames.map { NetworkProxyHARNameValue(name: $0, value: "<redacted>") },
+            queryString: networkProxyHARQueryItems(url: url),
+            headersSize: -1,
+            bodySize: 0
+        ),
+        response: response,
+        cache: [:],
+        timings: NetworkProxyHARTimings(send: 0, wait: 0, receive: 0),
+        comment: "metadata-only capture; header values, bodies, TLS contents, and response payloads are not stored"
+    )
+}
+
+private func networkProxyHARResponse(for event: NetworkProxyServeEvent) -> NetworkProxyHARResponse {
+    let status: Int
+    let statusText: String
+    let mimeType: String
+    switch event.policyAction {
+    case "mocked":
+        status = 200
+        statusText = "TritonKit Proxy Mock"
+        mimeType = "application/json"
+    case "blocked":
+        status = 502
+        statusText = "TritonKit Proxy Blocked"
+        mimeType = "text/plain"
+    case "throttled":
+        status = 429
+        statusText = "TritonKit Proxy Throttled"
+        mimeType = "text/plain"
+    default:
+        status = 0
+        statusText = "not captured"
+        mimeType = "x-unknown"
+    }
+    return NetworkProxyHARResponse(
+        status: status,
+        statusText: statusText,
+        httpVersion: "HTTP/1.1",
+        cookies: [],
+        headers: [],
+        content: NetworkProxyHARContent(size: 0, mimeType: mimeType),
+        redirectURL: "",
+        headersSize: -1,
+        bodySize: -1
+    )
+}
+
+private func networkProxyHARURL(from event: NetworkProxyServeEvent) -> String {
+    if let url = event.url, url.contains("://") {
+        return url
+    }
+    if event.tunnel == true, let host = event.host {
+        return "https://\(host):\(event.port ?? 443)/"
+    }
+    if let host = event.host {
+        return "http://\(host)\(event.path ?? "/")"
+    }
+    return event.url ?? ""
+}
+
+private func networkProxyHARQueryItems(url: String) -> [NetworkProxyHARNameValue] {
+    guard let components = URLComponents(string: url) else { return [] }
+    return (components.queryItems ?? []).map {
+        NetworkProxyHARNameValue(name: $0.name, value: $0.value ?? "")
+    }
+}
+
+func parseNetworkProxyHTTPHeader(
+    _ data: Data,
+    listen: String,
+    capturePath: String,
+    connectionIndex: Int,
+    captureMode: String = "record",
+    policyAction: String = "forwarded"
+) throws -> NetworkProxyServeEvent {
+    try parseNetworkProxyRequest(
+        data: data,
+        listen: listen,
+        capturePath: capturePath,
+        connectionIndex: connectionIndex,
+        captureMode: captureMode,
+        policyAction: policyAction
+    ).event
+}
+
+private func handleNetworkProxyClient(clientFD: Int32, captureURL: URL, listen: String, connectionIndex: Int, mode: String) throws -> NetworkProxyServeEvent {
+    let requestData = try readNetworkProxyRequestHeader(clientFD: clientFD)
+    let parsed = try parseNetworkProxyRequest(
+        data: requestData,
+        listen: listen,
+        capturePath: captureURL.path,
+        connectionIndex: connectionIndex,
+        captureMode: mode,
+        policyAction: networkProxyPolicyAction(for: mode)
+    )
+    try appendNetworkProxyCaptureEvent(parsed.event, captureURL: captureURL)
+
+    if mode == "block" {
+        writeNetworkProxyBlockedResponse(clientFD: clientFD)
+        return parsed.event
+    }
+    if mode == "mock" {
+        writeNetworkProxyMockResponse(clientFD: clientFD)
+        return parsed.event
+    }
+    if mode == "throttle" {
+        writeNetworkProxyThrottledResponse(clientFD: clientFD)
+        return parsed.event
+    }
+
+    let upstreamFD = try connectNetworkProxyUpstream(host: parsed.upstreamHost, port: parsed.upstreamPort)
+    defer { close(upstreamFD) }
+
+    if parsed.isTunnel {
+        _ = writeAll(fd: clientFD, data: Data("HTTP/1.1 200 Connection Established\r\n\r\n".utf8))
+        relayNetworkProxyTunnel(clientFD: clientFD, upstreamFD: upstreamFD)
+    } else if let upstreamRequest = parsed.upstreamRequest {
+        _ = writeAll(fd: upstreamFD, data: upstreamRequest)
+        relayNetworkProxyResponse(upstreamFD: upstreamFD, clientFD: clientFD)
+    }
+    return parsed.event
+}
+
+private func networkProxyPolicyAction(for mode: String) -> String {
+    switch mode {
+    case "block":
+        return "blocked"
+    case "mock":
+        return "mocked"
+    case "throttle":
+        return "throttled"
+    default:
+        return "forwarded"
+    }
+}
+
+private func networkProxyPolicyResponse(for action: String) -> (status: Int?, statusText: String?) {
+    switch action {
+    case "mocked":
+        return (200, "TritonKit Proxy Mock")
+    case "blocked":
+        return (502, "TritonKit Proxy Blocked")
+    case "throttled":
+        return (429, "TritonKit Proxy Throttled")
+    default:
+        return (nil, nil)
+    }
+}
+
+private func parseNetworkProxyRequest(
+    data: Data,
+    listen: String,
+    capturePath: String,
+    connectionIndex: Int,
+    captureMode: String,
+    policyAction: String
+) throws -> ParsedProxyRequest {
+    guard let header = String(data: data, encoding: .utf8) else {
+        throw RuntimeError("Proxy request header is not UTF-8.")
+    }
+    let lines = header.components(separatedBy: "\r\n")
+    guard let requestLine = lines.first, !requestLine.isEmpty else {
+        throw RuntimeError("Proxy request is missing request line.")
+    }
+    let parts = requestLine.split(separator: " ", maxSplits: 2).map(String.init)
+    guard parts.count >= 2 else {
+        throw RuntimeError("Proxy request line is invalid: \(requestLine)")
+    }
+    let method = parts[0]
+    let rawURL = parts[1]
+    let headers = parseProxyHeaderLines(Array(lines.dropFirst()))
+    let headerNames = headers.map(\.name).sorted()
+
+    let target: (host: String, port: Int, path: String, tunnel: Bool)
+    if method.uppercased() == "CONNECT" {
+        target = try parseConnectTarget(rawURL)
+    } else {
+        target = try parseHTTPProxyTarget(rawURL: rawURL, headers: headers)
+    }
+
+    let policyResponse = networkProxyPolicyResponse(for: policyAction)
+    let event = NetworkProxyServeEvent(
+        ok: true,
+        surface: "host.device-proxy-serve",
+        event: "proxy.serve.request",
+        schemaVersion: "triton.proxy.capture.v1",
+        listen: listen,
+        capturePath: capturePath,
+        captureMode: captureMode,
+        policyAction: policyAction,
+        connectionIndex: connectionIndex,
+        method: method,
+        url: rawURL,
+        host: target.host,
+        port: target.port,
+        path: target.path,
+        tunnel: target.tunnel,
+        headerNames: headerNames,
+        responseStatus: policyResponse.status,
+        responseStatusText: policyResponse.statusText,
+        redaction: "headers-names-only",
+        error: nil
+    )
+
+    return ParsedProxyRequest(
+        event: event,
+        upstreamHost: target.host,
+        upstreamPort: target.port,
+        upstreamRequest: target.tunnel ? nil : rewriteHTTPProxyRequest(data: data, path: target.path, requestLine: requestLine),
+        isTunnel: target.tunnel
+    )
+}
+
+private func writeNetworkProxyBlockedResponse(clientFD: Int32) {
+    let body = "TritonKit proxy block mode denied this request.\n"
+    let response = (
+        "HTTP/1.1 502 TritonKit Proxy Blocked\r\n" +
+        "Content-Type: text/plain; charset=utf-8\r\n" +
+        "Content-Length: \(body.utf8.count)\r\n" +
+        "Connection: close\r\n" +
+        "\r\n" +
+        body
+    )
+    _ = writeAll(fd: clientFD, data: Data(response.utf8))
+}
+
+private func writeNetworkProxyMockResponse(clientFD: Int32) {
+    let body = #"{"ok":true,"mocked":true,"source":"triton.device.proxy.serve"}"# + "\n"
+    let response = (
+        "HTTP/1.1 200 TritonKit Proxy Mock\r\n" +
+        "Content-Type: application/json; charset=utf-8\r\n" +
+        "Content-Length: \(body.utf8.count)\r\n" +
+        "Connection: close\r\n" +
+        "\r\n" +
+        body
+    )
+    _ = writeAll(fd: clientFD, data: Data(response.utf8))
+}
+
+private func writeNetworkProxyThrottledResponse(clientFD: Int32) {
+    let body = "TritonKit proxy throttle mode rate-limited this request.\n"
+    let response = (
+        "HTTP/1.1 429 TritonKit Proxy Throttled\r\n" +
+        "Content-Type: text/plain; charset=utf-8\r\n" +
+        "Content-Length: \(body.utf8.count)\r\n" +
+        "Retry-After: 1\r\n" +
+        "Connection: close\r\n" +
+        "\r\n" +
+        body
+    )
+    _ = writeAll(fd: clientFD, data: Data(response.utf8))
+}
+
+private func parseProxyHeaderLines(_ lines: [String]) -> [(name: String, value: String)] {
+    lines.compactMap { line in
+        guard !line.isEmpty else { return nil }
+        let parts = line.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false)
+        guard parts.count == 2 else { return nil }
+        return (
+            parts[0].trimmingCharacters(in: .whitespacesAndNewlines),
+            parts[1].trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+    }
+}
+
+private func parseConnectTarget(_ rawTarget: String) throws -> (host: String, port: Int, path: String, tunnel: Bool) {
+    let parts = rawTarget.split(separator: ":", maxSplits: 1).map(String.init)
+    guard parts.count == 2, let port = Int(parts[1]), !parts[0].isEmpty else {
+        throw RuntimeError("CONNECT target must be host:port.")
+    }
+    return (parts[0], port, rawTarget, true)
+}
+
+private func parseHTTPProxyTarget(rawURL: String, headers: [(name: String, value: String)]) throws -> (host: String, port: Int, path: String, tunnel: Bool) {
+    if let components = URLComponents(string: rawURL), let host = components.host {
+        let scheme = components.scheme?.lowercased()
+        let port = components.port ?? (scheme == "https" ? 443 : 80)
+        var path = components.percentEncodedPath.isEmpty ? "/" : components.percentEncodedPath
+        if let query = components.percentEncodedQuery, !query.isEmpty {
+            path += "?\(query)"
+        }
+        return (host, port, path, false)
+    }
+    guard let hostHeader = headers.first(where: { $0.name.lowercased() == "host" })?.value else {
+        throw RuntimeError("HTTP proxy request is missing Host header.")
+    }
+    let hostParts = hostHeader.split(separator: ":", maxSplits: 1).map(String.init)
+    let host = hostParts[0]
+    let port = hostParts.count == 2 ? (Int(hostParts[1]) ?? 80) : 80
+    return (host, port, rawURL.isEmpty ? "/" : rawURL, false)
+}
+
+private func rewriteHTTPProxyRequest(data: Data, path: String, requestLine: String) -> Data {
+    guard let header = String(data: data, encoding: .utf8),
+          let firstLineRange = header.range(of: requestLine) else {
+        return data
+    }
+    let method = requestLine.split(separator: " ", maxSplits: 2).first.map(String.init) ?? "GET"
+    let version = requestLine.split(separator: " ").last.map(String.init) ?? "HTTP/1.1"
+    var rewritten = header
+    rewritten.replaceSubrange(firstLineRange, with: "\(method) \(path) \(version)")
+    rewritten = rewritten
+        .components(separatedBy: "\r\n")
+        .filter { !$0.lowercased().hasPrefix("proxy-connection:") }
+        .joined(separator: "\r\n")
+    return Data(rewritten.utf8)
+}
+
+private func readNetworkProxyRequestHeader(clientFD: Int32) throws -> Data {
+    var data = Data()
+    var buffer = [UInt8](repeating: 0, count: 4096)
+    while data.count < 65_536 {
+        let readCount = read(clientFD, &buffer, buffer.count)
+        if readCount < 0 {
+            if errno == EINTR { continue }
+            throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO)
+        }
+        if readCount == 0 { break }
+        data.append(buffer, count: readCount)
+        if data.range(of: Data("\r\n\r\n".utf8)) != nil { return data }
+    }
+    throw RuntimeError("Proxy request header exceeded 64 KiB or ended before headers completed.")
+}
+
+private func appendNetworkProxyCaptureEvent(_ event: NetworkProxyServeEvent, captureURL: URL) throws {
+    try FileManager.default.createDirectory(at: captureURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+    let line = try encodeCompactJSON(event) + "\n"
+    if FileManager.default.fileExists(atPath: captureURL.path) {
+        let handle = try FileHandle(forWritingTo: captureURL)
+        defer { try? handle.close() }
+        try handle.seekToEnd()
+        try handle.write(contentsOf: Data(line.utf8))
+    } else {
+        try Data(line.utf8).write(to: captureURL)
+    }
+}
+
+private func networkProxyServeCaptureURL(outputDirectory: String) throws -> URL {
+    guard !outputDirectory.isEmpty else {
+        throw RuntimeError("device proxy serve requires --output <dir>.")
+    }
+    let outputURL = URL(fileURLWithPath: outputDirectory, isDirectory: true)
+    try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
+    return outputURL.appendingPathComponent("requests.ndjson")
+}
+
+private func makeNetworkProxyListenSocket(endpoint: NetworkProxyEndpoint) throws -> Int32 {
+    var hints = addrinfo(
+        ai_flags: AI_PASSIVE,
+        ai_family: AF_UNSPEC,
+        ai_socktype: SOCK_STREAM,
+        ai_protocol: IPPROTO_TCP,
+        ai_addrlen: 0,
+        ai_canonname: nil,
+        ai_addr: nil,
+        ai_next: nil
+    )
+    var result: UnsafeMutablePointer<addrinfo>?
+    let status = getaddrinfo(endpoint.host, String(endpoint.port), &hints, &result)
+    guard status == 0, let result else {
+        throw RuntimeError("Unable to resolve proxy listen endpoint \(endpoint.host):\(endpoint.port).")
+    }
+    defer { freeaddrinfo(result) }
+
+    var cursor: UnsafeMutablePointer<addrinfo>? = result
+    while let current = cursor {
+        let fd = socket(current.pointee.ai_family, current.pointee.ai_socktype, current.pointee.ai_protocol)
+        if fd >= 0 {
+            var yes: Int32 = 1
+            setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &yes, socklen_t(MemoryLayout<Int32>.size))
+            if bind(fd, current.pointee.ai_addr, current.pointee.ai_addrlen) == 0, listen(fd, SOMAXCONN) == 0 {
+                return fd
+            }
+            close(fd)
+        }
+        cursor = current.pointee.ai_next
+    }
+    throw RuntimeError("Unable to bind proxy listener \(endpoint.host):\(endpoint.port).")
+}
+
+private func connectNetworkProxyUpstream(host: String, port: Int) throws -> Int32 {
+    var hints = addrinfo(
+        ai_flags: 0,
+        ai_family: AF_UNSPEC,
+        ai_socktype: SOCK_STREAM,
+        ai_protocol: IPPROTO_TCP,
+        ai_addrlen: 0,
+        ai_canonname: nil,
+        ai_addr: nil,
+        ai_next: nil
+    )
+    var result: UnsafeMutablePointer<addrinfo>?
+    let status = getaddrinfo(host, String(port), &hints, &result)
+    guard status == 0, let result else {
+        throw RuntimeError("Unable to resolve upstream \(host):\(port).")
+    }
+    defer { freeaddrinfo(result) }
+
+    var cursor: UnsafeMutablePointer<addrinfo>? = result
+    while let current = cursor {
+        let fd = socket(current.pointee.ai_family, current.pointee.ai_socktype, current.pointee.ai_protocol)
+        if fd >= 0 {
+            if connect(fd, current.pointee.ai_addr, current.pointee.ai_addrlen) == 0 {
+                return fd
+            }
+            close(fd)
+        }
+        cursor = current.pointee.ai_next
+    }
+    throw RuntimeError("Unable to connect upstream \(host):\(port).")
+}
+
+private func relayNetworkProxyResponse(upstreamFD: Int32, clientFD: Int32) {
+    var buffer = [UInt8](repeating: 0, count: 16_384)
+    while true {
+        let readCount = read(upstreamFD, &buffer, buffer.count)
+        if readCount <= 0 { return }
+        if writeAll(fd: clientFD, data: Data(buffer[0..<readCount])) == false { return }
+    }
+}
+
+private func relayNetworkProxyTunnel(clientFD: Int32, upstreamFD: Int32) {
+    let group = DispatchGroup()
+    group.enter()
+    DispatchQueue.global().async {
+        copySocketData(from: clientFD, to: upstreamFD)
+        shutdown(upstreamFD, SHUT_WR)
+        group.leave()
+    }
+    group.enter()
+    DispatchQueue.global().async {
+        copySocketData(from: upstreamFD, to: clientFD)
+        shutdown(clientFD, SHUT_WR)
+        group.leave()
+    }
+    group.wait()
+}
+
+private func copySocketData(from sourceFD: Int32, to destinationFD: Int32) {
+    var buffer = [UInt8](repeating: 0, count: 16_384)
+    while true {
+        let readCount = read(sourceFD, &buffer, buffer.count)
+        if readCount <= 0 { return }
+        if writeAll(fd: destinationFD, data: Data(buffer[0..<readCount])) == false { return }
+    }
+}
+
+@discardableResult
+private func writeAll(fd: Int32, data: Data) -> Bool {
+    data.withUnsafeBytes { rawBuffer in
+        guard let base = rawBuffer.baseAddress else { return true }
+        var sent = 0
+        while sent < data.count {
+            let written = write(fd, base.advanced(by: sent), data.count - sent)
+            if written <= 0 {
+                if errno == EINTR { continue }
+                return false
+            }
+            sent += written
+        }
+        return true
+    }
+}

@@ -166,6 +166,15 @@ struct SimulatorAdvancedControlsTests {
         #expect(usageForms.contains(where: { $0.hasPrefix("logs") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("diagnose") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("logverbose") }))
+        #expect(usageForms.contains("proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir>"))
+        #expect(usageForms.contains("proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir> --plan-only"))
+        #expect(usageForms.contains("proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir> --confirm --audit-record <id> --execute-runner"))
+        #expect(usageForms.contains("proxy status --simulator <udid|booted>"))
+        #expect(usageForms.contains("proxy export --simulator <udid|booted> --output <path.har|path.ndjson>"))
+        #expect(usageForms.contains("proxy export --simulator <udid|booted> --output <path.har|path.ndjson> --plan-only"))
+        #expect(usageForms.contains("proxy stop --simulator <udid|booted> --restore"))
+        #expect(usageForms.contains("proxy stop --simulator <udid|booted> --restore --plan-only"))
+        #expect(usageForms.contains("proxy stop --simulator <udid|booted> --restore --confirm --audit-record <id> --execute-runner"))
         #expect(usageForms.contains(where: { $0.hasPrefix("runtime ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("pair ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("unpair ") }))
@@ -183,6 +192,136 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.providedCapabilities.contains("sim-runtime-maintenance"))
         #expect(sim.providedCapabilities.contains("sim-personalization"))
         #expect(sim.providedCapabilities.contains("sim-push"))
+        #expect(sim.providedCapabilities.contains("device-proxy-ios"))
+        #expect(sim.providedCapabilities.contains("network-capture-export"))
+        #expect(sim.failureCodes.contains("proxy_platform_not_supported"))
+        #expect(sim.outputContracts.contains { $0.selector == "host.device-proxy" })
+        #expect(sim.examples.contains("triton sim proxy start --simulator booted --mode record --output /tmp/ios-network --plan-only --json"))
+        #expect(sim.examples.contains("triton sim proxy start --simulator booted --mode record --output /tmp/ios-network --confirm --audit-record ticket-123 --execute-runner --json"))
+        #expect(sim.examples.contains("triton sim proxy stop --simulator booted --restore --plan-only --json"))
+    }
+
+    @Test("sim proxy alias reuses the host device proxy output contract")
+    func simProxyAliasReusesHostDeviceProxyContract() throws {
+        let status = makeNetworkProxyStatusSession(platform: .ios, target: makeSimulatorProxyTarget(simulator: "booted"))
+        let start = try makeNetworkProxyStartPlanSession(
+            platform: .ios,
+            target: makeSimulatorProxyTarget(simulator: "SIM-1"),
+            captureMode: "record",
+            endpoint: try NetworkProxyEndpoint("127.0.0.1:19431")
+        )
+
+        #expect(status.ok)
+        #expect(status.surface == "host.device-proxy")
+        #expect(status.platform == "ios")
+        #expect(status.target?.id == "sim:booted")
+        #expect(status.target?.kind == "simulator")
+        #expect(status.limitations.contains("proxy_session_not_running"))
+
+        #expect(start.ok)
+        #expect(start.platform == "ios")
+        #expect(start.target?.target == "SIM-1")
+        #expect(start.sourceCommands.contains("/usr/sbin/networksetup -setwebproxy Wi-Fi 127.0.0.1 19431"))
+        #expect(start.limitations.contains("proxy_plan_only:not_executed"))
+    }
+
+    @Test("iOS proxy override command plan sets HTTP and HTTPS then disables SOCKS")
+    func iOSProxyOverrideCommandPlanSetsHTTPAndHTTPS() throws {
+        let endpoint = try NetworkProxyEndpoint("127.0.0.1:19431")
+        let commands = networkSetupProxyOverrideCommands(service: "Wi-Fi", endpoint: endpoint)
+
+        #expect(commands.map(hostSourceCommand) == [
+            "/usr/sbin/networksetup -setwebproxy Wi-Fi 127.0.0.1 19431",
+            "/usr/sbin/networksetup -setwebproxystate Wi-Fi on",
+            "/usr/sbin/networksetup -setsecurewebproxy Wi-Fi 127.0.0.1 19431",
+            "/usr/sbin/networksetup -setsecurewebproxystate Wi-Fi on",
+            "/usr/sbin/networksetup -setsocksfirewallproxystate Wi-Fi off",
+        ])
+        #expect(commands.allSatisfy { $0.riskLevel == .breakGlass })
+    }
+
+    @Test("iOS proxy restore command plan restores original HTTP HTTPS and SOCKS state")
+    func iOSProxyRestoreCommandPlanRestoresOriginalState() {
+        let snapshot = HostNetworkProxyServiceSnapshot(
+            service: "Wi-Fi",
+            httpEnabled: true,
+            httpHost: "corp-proxy.local",
+            httpPort: 8_080,
+            httpsEnabled: true,
+            httpsHost: "corp-secure.local",
+            httpsPort: 8_443,
+            socksEnabled: true,
+            socksHost: "corp-socks.local",
+            socksPort: 1_080,
+            bypassDomains: ["localhost", "*.corp.internal"]
+        )
+
+        let commands = networkSetupProxyRestoreCommands(snapshot: snapshot)
+
+        #expect(commands.map(hostSourceCommand) == [
+            "/usr/sbin/networksetup -setwebproxystate Wi-Fi off",
+            "/usr/sbin/networksetup -setsecurewebproxystate Wi-Fi off",
+            "/usr/sbin/networksetup -setsocksfirewallproxystate Wi-Fi off",
+            "/usr/sbin/networksetup -setwebproxy Wi-Fi corp-proxy.local 8080",
+            "/usr/sbin/networksetup -setwebproxystate Wi-Fi on",
+            "/usr/sbin/networksetup -setsecurewebproxy Wi-Fi corp-secure.local 8443",
+            "/usr/sbin/networksetup -setsecurewebproxystate Wi-Fi on",
+            "/usr/sbin/networksetup -setsocksfirewallproxy Wi-Fi corp-socks.local 1080",
+            "/usr/sbin/networksetup -setsocksfirewallproxystate Wi-Fi on",
+            "/usr/sbin/networksetup -setproxybypassdomains Wi-Fi localhost *.corp.internal",
+        ])
+        #expect(commands.allSatisfy { $0.riskLevel == .breakGlass })
+    }
+
+    @Test("iOS proxy snapshot parser captures networksetup original service state")
+    func iOSProxySnapshotParserCapturesNetworkSetupState() throws {
+        let commands = networkSetupProxySnapshotCommands(service: "Wi-Fi")
+
+        #expect(commands.map(hostSourceCommand) == [
+            "/usr/sbin/networksetup -getwebproxy Wi-Fi",
+            "/usr/sbin/networksetup -getsecurewebproxy Wi-Fi",
+            "/usr/sbin/networksetup -getsocksfirewallproxy Wi-Fi",
+            "/usr/sbin/networksetup -getproxybypassdomains Wi-Fi",
+        ])
+        #expect(commands.allSatisfy { $0.riskLevel == .readonly })
+
+        let snapshot = try parseNetworkSetupServiceSnapshot(
+            service: "Wi-Fi",
+            httpOutput: """
+            Enabled: Yes
+            Server: corp-proxy.local
+            Port: 8080
+            Authenticated Proxy Enabled: 0
+            """,
+            httpsOutput: """
+            Enabled: No
+            Server:
+            Port: 0
+            Authenticated Proxy Enabled: 0
+            """,
+            socksOutput: """
+            Enabled: Yes
+            Server: socks.corp.local
+            Port: 1080
+            Authenticated Proxy Enabled: 0
+            """,
+            bypassOutput: """
+            localhost
+            *.corp.internal
+            """
+        )
+
+        #expect(snapshot.service == "Wi-Fi")
+        #expect(snapshot.httpEnabled)
+        #expect(snapshot.httpHost == "corp-proxy.local")
+        #expect(snapshot.httpPort == 8_080)
+        #expect(snapshot.httpsEnabled == false)
+        #expect(snapshot.httpsHost == "")
+        #expect(snapshot.httpsPort == 0)
+        #expect(snapshot.socksEnabled)
+        #expect(snapshot.socksHost == "socks.corp.local")
+        #expect(snapshot.socksPort == 1_080)
+        #expect(snapshot.bypassDomains == ["localhost", "*.corp.internal"])
     }
 
     @Test("sim screenshot metadata parser preserves CoreSimulator display details")

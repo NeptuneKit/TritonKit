@@ -63,7 +63,19 @@ func evidenceArtifactSummary(_ artifact: TKEvidenceArtifact) -> TKEvidenceArtifa
 }
 
 func evidenceArtifactIsSensitive(_ artifact: TKEvidenceArtifact) -> Bool {
-    let sensitiveKinds: Set<String> = ["screenshot", "ax", "hierarchy", "geometry", "archive", "logs", "real-device.diagnostics", "runtime.snapshot", "build.summary"]
+    let sensitiveKinds: Set<String> = [
+        "screenshot",
+        "ax",
+        "hierarchy",
+        "geometry",
+        "archive",
+        "logs",
+        "real-device.diagnostics",
+        "runtime.snapshot",
+        "build.summary",
+        "network.proxy-session",
+        "network-capture",
+    ]
     return sensitiveKinds.contains(artifact.kind)
         || artifact.kind.hasPrefix("host.")
         || artifact.kind.hasPrefix("xcode.")
@@ -293,6 +305,74 @@ func appendXcodeActionSummaryArtifact(
         let reason = TKXcresultRedaction.redact(evidenceSkipReason(error))
         skipped.append(TKEvidenceSkippedArtifact(kind: "xcode.action-summary", reason: reason))
     }
+}
+
+func appendNetworkProxySessionEvidenceArtifacts(
+    sessionPath: String?,
+    directory: URL,
+    artifacts: inout [TKEvidenceArtifact],
+    skipped: inout [TKEvidenceSkippedArtifact]
+) {
+    guard let sessionPath, !sessionPath.isEmpty else {
+        skipped.append(TKEvidenceSkippedArtifact(kind: "network.proxy-session", reason: "no proxy session directory was provided"))
+        return
+    }
+
+    do {
+        let sessionURL = URL(fileURLWithPath: sessionPath, isDirectory: true)
+        let state = try loadNetworkProxySessionState(directory: sessionPath)
+        try appendEvidenceArtifact(
+            kind: "network.proxy-session",
+            relativePath: "artifacts/network/session-state.json",
+            data: try prettyEncodedData(state),
+            contentType: "application/json",
+            directory: directory,
+            freshness: evidenceFreshness(source: "host-proxy", status: nil),
+            artifacts: &artifacts,
+            platform: state.platform,
+            riskLevel: "readonly",
+            policy: "explicit-proxy-session",
+            redactionStatus: "sensitive",
+            sourceCommand: "read --proxy-session",
+            target: state.target.isEmpty ? nil : state.target
+        )
+
+        guard let capture = state.artifacts.first(where: { $0.kind == "network-capture" }) else {
+            skipped.append(TKEvidenceSkippedArtifact(kind: "network-capture", reason: "proxy session did not declare a network-capture artifact"))
+            return
+        }
+
+        let captureURL = networkProxyCaptureArtifactURL(path: capture.path, sessionURL: sessionURL)
+        do {
+            let captureData = try Data(contentsOf: captureURL)
+            try appendEvidenceArtifact(
+                kind: "network-capture",
+                relativePath: "artifacts/network/requests.ndjson",
+                data: captureData,
+                contentType: "application/x-ndjson",
+                directory: directory,
+                freshness: evidenceFreshness(source: "host-proxy", status: nil),
+                artifacts: &artifacts,
+                platform: state.platform,
+                riskLevel: "readonly",
+                policy: "host-proxy-metadata-capture",
+                redactionStatus: "sensitive",
+                sourceCommand: "read --proxy-session",
+                target: state.target.isEmpty ? nil : state.target
+            )
+        } catch {
+            skipped.append(TKEvidenceSkippedArtifact(kind: "network-capture", reason: evidenceSkipReason(error)))
+        }
+    } catch {
+        skipped.append(TKEvidenceSkippedArtifact(kind: "network.proxy-session", reason: evidenceSkipReason(error)))
+    }
+}
+
+private func networkProxyCaptureArtifactURL(path: String, sessionURL: URL) -> URL {
+    if path.hasPrefix("/") {
+        return URL(fileURLWithPath: path)
+    }
+    return sessionURL.appendingPathComponent(path)
 }
 
 func evidenceFreshness(source: String, status: TKStatusResponse?) -> TKEvidenceFreshness {

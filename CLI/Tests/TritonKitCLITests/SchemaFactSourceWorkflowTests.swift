@@ -99,6 +99,39 @@ extension SchemaFactSourceTests {
         #expect(webview.steps.map(\.id) == ["webview-current", "route-assert-current-url", "webview-wait", "evidence"])
         #expect(webview.steps.first(where: { $0.id == "webview-current" })?.workflowCategories == ["assert", "evidence", "observe", "route", "webview-check"])
         #expect(webview.steps.first(where: { $0.id == "route-assert-current-url" })?.command.contains("https://example.com") == true)
+
+        let networkProxy = buildWorkflowPlan(
+            capabilities: capabilities,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "network-proxy",
+                device: "emulator-5554",
+                platform: "android",
+                bundleID: nil,
+                url: nil,
+                text: nil,
+                expectedURL: nil,
+                evidence: "/tmp/proxy.tritonevidence",
+                proxy: "127.0.0.1:19431",
+                mode: "mock",
+                output: "/tmp/proxy-session"
+            )
+        )
+        #expect(networkProxy.mode == "task")
+        #expect(networkProxy.surface == "plan")
+        #expect(networkProxy.goal == "network-proxy")
+        #expect(networkProxy.nextStep == "proxy-serve")
+        #expect(networkProxy.nextWorkflows == ["evidence", "target"])
+        #expect(networkProxy.primaryWorkflowCategory == "target")
+        #expect(networkProxy.primaryExpectedArtifact == "network-capture")
+        #expect(networkProxy.primaryNextAction?.command == "device")
+        #expect(networkProxy.primaryNextAction?.args.prefix(2) == ["proxy", "serve"])
+        #expect(networkProxy.steps.map(\.id) == ["target-resolve", "proxy-doctor", "proxy-serve", "proxy-start-plan", "proxy-export-plan", "proxy-evidence", "proxy-stop-plan"])
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--platform android") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--plan-only") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-evidence" })?.command.contains("--include network.proxy-session") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-plan" })?.command.contains("--restore") == true)
     }
 
     @Test("workflow plan mode separates bootstrap recovery from task workflows")
@@ -156,6 +189,27 @@ extension SchemaFactSourceTests {
         #expect(taskPlan.primaryNextAction?.command == "target")
         #expect(taskPlan.primaryNextActionSource == "next-step-step")
         #expect(taskPlan.nextWorkflows.contains("smoke"))
+
+        let hostOnlyProxyPlan = buildWorkflowPlan(
+            capabilities: disconnected,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "network-proxy",
+                device: "booted",
+                platform: "ios",
+                evidence: "/tmp/proxy.tritonevidence",
+                proxy: "127.0.0.1:19431",
+                mode: "record",
+                output: "/tmp/proxy-session"
+            )
+        )
+        #expect(hostOnlyProxyPlan.ok)
+        #expect(hostOnlyProxyPlan.serverReachable == false)
+        #expect(hostOnlyProxyPlan.mode == "task")
+        #expect(hostOnlyProxyPlan.nextStep == "proxy-serve")
+        #expect(hostOnlyProxyPlan.primaryNextAction?.command == "device")
+        #expect(hostOnlyProxyPlan.steps.map(\.id).contains("start-server") == false)
     }
 
     @Test("task workflow plan argv stay aligned with command schemas")

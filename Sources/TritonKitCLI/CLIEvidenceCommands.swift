@@ -62,12 +62,14 @@ struct Evidence: AsyncParsableCommand {
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Evidence bundle directory path") var output: String?
-    @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs,host,xcode")
+    @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs,host,xcode,network.proxy-session")
     var include: String = "status,list,version,hierarchy,ax,screenshot"
     @Option(help: "Scenario name stored in manifest") var name: String?
     @Option(help: "Human note stored in manifest") var note: String?
     @Option(name: .customLong("xcode-summary"), help: "Explicit TKXcodeActionSummary JSON file to import when --include contains xcode")
     var xcodeSummary: String?
+    @Option(name: .customLong("proxy-session"), help: "Explicit device proxy session directory to import when --include contains network.proxy-session")
+    var proxySession: String?
     @Option(help: "Redaction profile for existing evidence bundles") var profile: String = "ios-private"
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -130,7 +132,8 @@ struct Evidence: AsyncParsableCommand {
                 host: host,
                 port: port,
                 refresh: refresh,
-                xcodeSummaryPath: xcodeSummary
+                xcodeSummaryPath: xcodeSummary,
+                proxySessionPath: proxySession
             )
             try printEvidenceManifest(manifest, format: outputFormat)
         } catch {
@@ -150,11 +153,13 @@ struct Capture: AsyncParsableCommand {
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
-    @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs,host,xcode")
+    @Option(help: "Comma-separated artifacts: screenshot,ax,hierarchy,status,list,version,geometry,archive,logs,host,xcode,network.proxy-session")
     var include: String = "status,list,version,hierarchy,ax,screenshot,geometry,archive"
     @Option(help: "Human note stored in manifest") var note: String?
     @Option(name: .customLong("xcode-summary"), help: "Explicit TKXcodeActionSummary JSON file to import when --include contains xcode")
     var xcodeSummary: String?
+    @Option(name: .customLong("proxy-session"), help: "Explicit device proxy session directory to import when --include contains network.proxy-session")
+    var proxySession: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Flag(inversion: .prefixedNo, help: "Request a fresh hierarchy before capturing hierarchy/archive")
@@ -178,7 +183,8 @@ struct Capture: AsyncParsableCommand {
                 host: host,
                 port: port,
                 refresh: refresh,
-                xcodeSummaryPath: xcodeSummary
+                xcodeSummaryPath: xcodeSummary,
+                proxySessionPath: proxySession
             )
             try printEvidenceManifest(manifest, format: outputFormat)
         } catch {

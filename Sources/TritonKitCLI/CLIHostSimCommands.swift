@@ -126,6 +126,7 @@ struct Sim: AsyncParsableCommand {
             SimLogs.self,
             SimDiagnose.self,
             SimLogVerbose.self,
+            SimProxy.self,
             SimRuntime.self,
             SimStatusBar.self,
             SimPrivacy.self,
@@ -136,6 +137,145 @@ struct Sim: AsyncParsableCommand {
             SimPersonalization.self,
         ]
     )
+}
+
+struct SimProxy: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "proxy",
+        abstract: "Alias iOS Simulator network proxy takeover to device proxy",
+        subcommands: [SimProxyDoctor.self, SimProxyStart.self, SimProxyStatus.self, SimProxyExport.self, SimProxyStop.self]
+    )
+}
+
+struct SimProxyDoctor: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "doctor", abstract: "Probe iOS Simulator proxy takeover prerequisites")
+
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printNetworkProxySession(makeNetworkProxyDoctorSession(platform: .ios), outputFormat: effectiveFormat(format, json: json))
+    }
+}
+
+struct SimProxyStart: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "start", abstract: "Start an iOS Simulator host-side proxy takeover session when supported")
+
+    @Option(help: "Simulator UDID or booted target selector") var simulator: String = "booted"
+    @Option(help: "Capture mode: record|mock|block|throttle") var mode: String = "record"
+    @Option(help: "Capture output directory") var output: String?
+    @Option(help: "Local proxy endpoint host:port") var proxy: String = "127.0.0.1:19431"
+    @Flag(help: "Return iOS Simulator proxy command plan without changing host settings") var planOnly = false
+    @Flag(help: "Confirm break-glass proxy mutation after inspecting --plan-only output") var confirm = false
+    @Option(help: "Audit record id required for break-glass proxy mutation") var auditRecord: String?
+    @Flag(help: "Execute the break-glass proxy command runner after plan review, confirmation, and audit metadata") var executeRunner = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        let endpoint = try NetworkProxyEndpoint(proxy)
+        let target = try makeNetworkProxyPlanTarget(platform: .ios, device: simulator)
+        if planOnly {
+            try printNetworkProxySession(
+                try makeNetworkProxyStartPlanSession(platform: .ios, target: target, captureMode: mode, endpoint: endpoint),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        guard confirm, let auditRecord, !auditRecord.isEmpty, executeRunner else {
+            try printNetworkProxySession(
+                try makeNetworkProxyExecutionPolicyRequiredSession(action: .start, platform: .ios, target: target, captureMode: mode, confirm: confirm, auditRecord: auditRecord, executeRunner: executeRunner),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        try printNetworkProxySession(
+            try makeNetworkProxyStartExecutedSession(platform: .ios, target: target, captureMode: mode, endpoint: endpoint, auditRecord: auditRecord, runner: { command in try runHostCommand(command) }, outputDirectory: output),
+            outputFormat: outputFormat
+        )
+    }
+}
+
+struct SimProxyStatus: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "status", abstract: "Inspect iOS Simulator host-side proxy takeover state")
+
+    @Option(help: "Simulator UDID or booted target selector") var simulator: String = "booted"
+    @Option(help: "Proxy session directory produced by proxy start --output") var session: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let target = try makeNetworkProxyPlanTarget(platform: .ios, device: simulator)
+        try printNetworkProxySession(
+            try makeNetworkProxyStatusSession(platform: .ios, target: target, sessionDirectory: session),
+            outputFormat: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct SimProxyExport: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "export", abstract: "Export an iOS Simulator proxy capture when a session exists")
+
+    @Option(help: "Simulator UDID or booted target selector") var simulator: String = "booted"
+    @Option(help: "HAR or NDJSON output path") var output: String?
+    @Option(help: "Proxy session directory produced by proxy start --output") var session: String?
+    @Flag(help: "Return network capture artifact plan without writing files") var planOnly = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let target = try makeNetworkProxyPlanTarget(platform: .ios, device: simulator)
+        if planOnly {
+            let outputPath = try makeNetworkProxyExportPlanOutputPath(output)
+            try printNetworkProxySession(
+                try makeNetworkProxyExportPlanSession(platform: .ios, target: target, outputPath: outputPath),
+                outputFormat: effectiveFormat(format, json: json)
+            )
+            return
+        }
+        try printNetworkProxySession(
+            try makeNetworkProxyExportSession(platform: .ios, target: target, sessionDirectory: session, outputPath: output),
+            outputFormat: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct SimProxyStop: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "stop", abstract: "Stop an iOS Simulator host-side proxy takeover session and restore settings")
+
+    @Option(help: "Simulator UDID or booted target selector") var simulator: String = "booted"
+    @Flag(help: "Restore simulator proxy settings") var restore = false
+    @Flag(help: "Return iOS Simulator restore command plan without changing host settings") var planOnly = false
+    @Flag(help: "Confirm break-glass proxy restore after inspecting --plan-only output") var confirm = false
+    @Option(help: "Audit record id required for break-glass proxy restore") var auditRecord: String?
+    @Flag(help: "Execute the break-glass proxy restore runner after plan review, confirmation, and audit metadata") var executeRunner = false
+    @Option(help: "Restore snapshot path produced by proxy start") var restoreSnapshot: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        let target = try makeNetworkProxyPlanTarget(platform: .ios, device: simulator)
+        if planOnly {
+            try printNetworkProxySession(
+                try makeNetworkProxyStopPlanSession(platform: .ios, target: target, restore: restore),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        guard confirm, let auditRecord, !auditRecord.isEmpty, executeRunner else {
+            try printNetworkProxySession(
+                try makeNetworkProxyExecutionPolicyRequiredSession(action: .stop, platform: .ios, target: target, captureMode: nil, confirm: confirm, auditRecord: auditRecord, executeRunner: executeRunner),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        try printNetworkProxySession(
+            try makeNetworkProxyStopExecutedSession(platform: .ios, target: target, restore: restore, auditRecord: auditRecord, runner: { command in try runHostCommand(command) }, restoreSnapshotPath: restoreSnapshot),
+            outputFormat: outputFormat
+        )
+    }
 }
 
 struct SimList: AsyncParsableCommand {

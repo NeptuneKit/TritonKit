@@ -8,8 +8,282 @@ struct Device: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "device",
         abstract: "Discover and inspect host-side devices and emulators",
-        subcommands: [DeviceDoctor.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStop.self]
+        subcommands: [DeviceDoctor.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStop.self]
     )
+}
+
+struct DeviceProxy: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "proxy",
+        abstract: "Inspect host-side simulator and emulator proxy takeover",
+        subcommands: [DeviceProxyDoctor.self, DeviceProxyCert.self, DeviceProxyServe.self, DeviceProxyStart.self, DeviceProxyStatus.self, DeviceProxyExport.self, DeviceProxyStop.self]
+    )
+}
+
+struct DeviceProxyCert: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "cert",
+        abstract: "Plan host-side proxy certificate trust setup without executing platform mutations",
+        subcommands: [DeviceProxyCertDoctor.self, DeviceProxyCertPlan.self]
+    )
+}
+
+struct DeviceProxyCertDoctor: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "doctor", abstract: "Inspect certificate trust boundaries for host-side proxy visibility")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printNetworkProxySession(makeNetworkProxyCertificateDoctorSession(platform: platform), outputFormat: effectiveFormat(format, json: json))
+    }
+}
+
+struct DeviceProxyCertPlan: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "plan", abstract: "Return a certificate trust setup ledger without installing or trusting the certificate")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Option(help: "Unified host device selector") var device: String
+    @Option(help: "Root certificate path, for example /tmp/triton-proxy-ca.cer") var certificate: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+        try printNetworkProxySession(
+            try makeNetworkProxyCertificatePlanSession(platform: platform, target: target, certificatePath: certificate),
+            outputFormat: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct DeviceProxyServe: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "serve", abstract: "Run a local host-side capture proxy for simulator and emulator traffic")
+
+    @Option(help: "Local proxy listen endpoint host:port") var listen: String = "127.0.0.1:19431"
+    @Option(help: "Capture output directory") var output: String
+    @Option(help: "Capture policy mode: record|mock|block|throttle") var mode: String = "record"
+    @Option(help: .hidden) var maxConnections: Int?
+    @Flag(help: "Emit compact JSON Lines for ready/request/final events") var jsonl = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let endpoint = try NetworkProxyEndpoint(listen)
+        let summary = try runNetworkProxyCaptureServer(
+            config: NetworkProxyServeConfig(listen: endpoint, outputDirectory: output, maxConnections: maxConnections, mode: mode),
+            eventWriter: jsonl ? { event in
+                if let line = try? encodeCompactJSON(event) {
+                    writeJSONLLine(line)
+                }
+            } : nil
+        )
+        if jsonl {
+            writeJSONLLine(try encodeCompactJSON(summary))
+            return
+        }
+        switch effectiveFormat(format, json: json) {
+        case .json:
+            print(try encodeJSON(summary))
+        case .text:
+            print("\(summary.listen)\trequests=\(summary.requestCount)\tcapture=\(summary.capturePath)")
+        }
+    }
+}
+
+struct DeviceProxyDoctor: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "doctor", abstract: "Probe host-side proxy takeover prerequisites")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printNetworkProxySession(makeNetworkProxyDoctorSession(platform: platform), outputFormat: effectiveFormat(format, json: json))
+    }
+}
+
+struct DeviceProxyStart: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "start", abstract: "Start a host-side proxy takeover session when supported")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Option(help: "Unified host device selector") var device: String?
+    @Option(help: "Capture mode: record|mock|block|throttle") var mode: String = "record"
+    @Option(help: "Capture output directory") var output: String?
+    @Option(help: "Local proxy endpoint host:port") var proxy: String = "127.0.0.1:19431"
+    @Flag(help: "Return platform host-command plan without changing proxy settings") var planOnly = false
+    @Flag(help: "Confirm break-glass proxy mutation after inspecting --plan-only output") var confirm = false
+    @Option(help: "Audit record id required for break-glass proxy mutation") var auditRecord: String?
+    @Flag(help: "Execute the break-glass proxy command runner after plan review, confirmation, and audit metadata") var executeRunner = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        if planOnly {
+            let endpoint = try NetworkProxyEndpoint(proxy)
+            let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+            try printNetworkProxySession(
+                try makeNetworkProxyStartPlanSession(platform: platform, target: target, captureMode: mode, endpoint: endpoint),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        let endpoint = try NetworkProxyEndpoint(proxy)
+        let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+        guard confirm, let auditRecord, !auditRecord.isEmpty, executeRunner else {
+            try printNetworkProxySession(
+                try makeNetworkProxyExecutionPolicyRequiredSession(action: .start, platform: platform, target: target, captureMode: mode, confirm: confirm, auditRecord: auditRecord, executeRunner: executeRunner),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        if platform == .harmony {
+            try printNetworkProxySession(
+                try makeNetworkProxyUnverifiedPlatformSession(action: .start, platform: platform, target: target, captureMode: mode, auditRecord: auditRecord),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        try printNetworkProxySession(
+            try makeNetworkProxyStartExecutedSession(
+                platform: platform,
+                target: target,
+                captureMode: mode,
+                endpoint: endpoint,
+                auditRecord: auditRecord,
+                runner: { command in try runHostCommand(command) },
+                outputDirectory: output
+            ),
+            outputFormat: outputFormat
+        )
+    }
+}
+
+struct DeviceProxyStatus: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "status", abstract: "Inspect host-side proxy takeover state")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Option(help: "Unified host device selector") var device: String?
+    @Option(help: "Proxy session directory produced by proxy start --output") var session: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        if let session, !session.isEmpty {
+            let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+            try printNetworkProxySession(
+                try makeNetworkProxyStatusSession(platform: platform, target: target, sessionDirectory: session),
+                outputFormat: effectiveFormat(format, json: json)
+            )
+            return
+        }
+        let target: HostDeviceTarget?
+        if let device, !device.isEmpty {
+            target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+        } else {
+            target = nil
+        }
+        try printNetworkProxySession(makeNetworkProxyStatusSession(platform: platform, target: target), outputFormat: effectiveFormat(format, json: json))
+    }
+}
+
+struct DeviceProxyExport: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "export", abstract: "Export a host-side proxy capture when a session exists")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Option(help: "Unified host device selector") var device: String?
+    @Option(help: "HAR or NDJSON output path") var output: String?
+    @Option(help: "Proxy session directory produced by proxy start --output") var session: String?
+    @Flag(help: "Return network capture artifact plan without writing files") var planOnly = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        if planOnly {
+            let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+            let outputPath = try makeNetworkProxyExportPlanOutputPath(output)
+            try printNetworkProxySession(
+                try makeNetworkProxyExportPlanSession(platform: platform, target: target, outputPath: outputPath),
+                outputFormat: effectiveFormat(format, json: json)
+            )
+            return
+        }
+        let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+        try printNetworkProxySession(
+            try makeNetworkProxyExportSession(platform: platform, target: target, sessionDirectory: session, outputPath: output),
+            outputFormat: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct DeviceProxyStop: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "stop", abstract: "Stop a host-side proxy takeover session and restore settings")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Option(help: "Unified host device selector") var device: String?
+    @Flag(help: "Restore platform proxy settings") var restore = false
+    @Flag(help: "Return platform restore command plan without changing proxy settings") var planOnly = false
+    @Flag(help: "Confirm break-glass proxy restore after inspecting --plan-only output") var confirm = false
+    @Option(help: "Audit record id required for break-glass proxy restore") var auditRecord: String?
+    @Flag(help: "Execute the break-glass proxy restore runner after plan review, confirmation, and audit metadata") var executeRunner = false
+    @Option(help: "Restore snapshot path produced by proxy start") var restoreSnapshot: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        if planOnly {
+            let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+            try printNetworkProxySession(
+                try makeNetworkProxyStopPlanSession(platform: platform, target: target, restore: restore),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+        guard confirm, let auditRecord, !auditRecord.isEmpty, executeRunner else {
+            try printNetworkProxySession(
+                try makeNetworkProxyExecutionPolicyRequiredSession(action: .stop, platform: platform, target: target, captureMode: nil, confirm: confirm, auditRecord: auditRecord, executeRunner: executeRunner),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        if platform == .harmony {
+            try printNetworkProxySession(
+                try makeNetworkProxyUnverifiedPlatformSession(action: .stop, platform: platform, target: target, captureMode: nil, auditRecord: auditRecord),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        try printNetworkProxySession(
+            try makeNetworkProxyStopExecutedSession(
+                platform: platform,
+                target: target,
+                restore: restore,
+                auditRecord: auditRecord,
+                runner: { command in try runHostCommand(command) },
+                restoreSnapshotPath: restoreSnapshot
+            ),
+            outputFormat: outputFormat
+        )
+    }
+}
+
+func printNetworkProxySession(_ session: NetworkProxySession, outputFormat: ClientOutputFormat) throws {
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(session))
+    case .text:
+        print("\(session.platform)\t\(session.action)\tconfigured=\(session.configured)\tvisibility=\(session.visibility.rawValue)")
+        for limitation in session.limitations {
+            print("limitation\t\(limitation)")
+        }
+    }
+    if !session.ok {
+        throw ExitCode.failure
+    }
 }
 
 struct DeviceDoctor: AsyncParsableCommand {

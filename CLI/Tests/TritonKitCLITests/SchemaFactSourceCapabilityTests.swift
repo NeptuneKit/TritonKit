@@ -375,7 +375,7 @@ extension SchemaFactSourceTests {
             "observe": ["observe", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export", "geometry", "ax", "screenshot", "hit", "wait", "status", "serve"],
             "webview": ["webview"],
             "route": ["route"],
-            "evidence": ["evidence", "status", "serve"],
+            "evidence": ["evidence", "device", "status", "serve"],
             "assert": ["assert", "status", "serve"],
             "replay": ["plan", "status", "serve"],
             "smoke": ["smoke"],
@@ -537,6 +537,7 @@ extension SchemaFactSourceTests {
             "capture": ["<dir.tritonevidence>"],
             "evidence": ["<dir.tritonevidence>"],
             "evidence-redact": ["<safe.tritonevidence>"],
+            "network-capture-export": ["<path.har|path.ndjson>"],
             "screenshot": ["<path.png>"],
         ]
 
@@ -663,6 +664,9 @@ extension SchemaFactSourceTests {
                 }
 
                 for value in platformValues where !Set(["ios", "android", "harmony"]).contains(value) {
+                    if ["network-capture-export", "network-certificate-plan"].contains(capability.name), value == "<platform>" {
+                        continue
+                    }
                     unsupportedPlatformValues.append("\(context):platform=\(value)")
                 }
 

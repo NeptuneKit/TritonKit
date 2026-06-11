@@ -22,6 +22,7 @@ func captureEvidenceBundle(
     port: Int,
     refresh: Bool,
     xcodeSummaryPath: String? = nil,
+    proxySessionPath: String? = nil,
     hostXcodeProviders: EvidenceHostXcodeArtifactProviders = .live
 ) async throws -> TKEvidenceManifest {
     let outputURL = URL(fileURLWithPath: output)
@@ -130,6 +131,13 @@ func captureEvidenceBundle(
                 directory: outputURL,
                 providers: hostXcodeProviders,
                 xcodeSummaryPath: xcodeSummaryPath,
+                artifacts: &artifacts,
+                skipped: &skipped
+            )
+        case "network.proxy-session":
+            appendNetworkProxySessionEvidenceArtifacts(
+                sessionPath: proxySessionPath,
+                directory: outputURL,
                 artifacts: &artifacts,
                 skipped: &skipped
             )

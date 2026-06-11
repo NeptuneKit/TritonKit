@@ -24,7 +24,7 @@ func capabilityEvidenceTaxonomy() -> Set<String> {
         "page-events", "provider-url", "route-assertion", "runtime-ax",
         "runtime-ledger", "runtime-manifest", "runtime-provider",
         "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
-        "smoke-summary", "snapshot-json", "status-json", "stdout-json",
+        "network-capture", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
         "surface-tree", "target.resolution", "trace", "tritonplan",
         "unsupported-envelope", "wait.result", "wait-samples", "webview-candidates",
         "webview-provider", "webview-snapshot", "xcodebuild-json", "xcresult",
@@ -57,6 +57,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "host-device-list",
         "host-device-ready",
         "host-device-selection",
+        "host-device-proxy",
         "host-simulator-list",
         "host-simulator-screenshot-metadata",
         "input-batch-summary",
@@ -268,6 +269,14 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "project"]
     case "validation_failed", "unknown_command_schema":
         return ["diagnose", "plan", "discover", "observe", "archive"]
+    case "proxy_visibility_limited":
+        return ["diagnose", "plan", "observe", "archive"]
+    case "proxy_cert_untrusted", "proxy_runner_not_configured", "proxy_unverified_platform_proxy":
+        return ["diagnose", "plan"]
+    case "proxy_real_device_not_supported":
+        return ["diagnose", "prepare-target", "plan"]
+    case "proxy_endpoint_unreachable", "proxy_start_failed", "proxy_restore_failed":
+        return ["diagnose", "plan", "archive"]
     default:
         if failureCode.hasPrefix("ambiguous_") {
             return ["discover", "observe", "prepare-target", "diagnose"]
@@ -357,6 +366,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "host-artifacts",
         "logs",
         "manifest",
+        "network-capture",
         "none-inline-summary",
         "result-bundle",
         "real-device.diagnostics",

@@ -373,6 +373,66 @@ func hostDeviceReadyOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostDeviceProxyOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.device-proxy",
+        format: "json",
+        kind: "host-device-proxy",
+        model: "NetworkProxySession",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the host-side proxy request succeeded"),
+            ("surface", "String", true, "Stable response surface, host.device-proxy"),
+            ("action", "String", true, "Proxy action: doctor, start, status, export, or stop"),
+            ("platform", "String", true, "ios, android, or harmony"),
+            ("target", "HostDeviceTarget?", false, "Resolved simulator or emulator target"),
+            ("lane", "String", true, "Proxy lane, host-side by default or app-runtime when explicitly enabled"),
+            ("captureMode", "String?", false, "Proxy mode: record, mock, block, or throttle"),
+            ("proxyEndpoint", "String?", false, "Local proxy host and port when a session is configured"),
+            ("configured", "Bool", true, "Whether platform network settings are currently configured"),
+            ("cert", "NetworkProxyCertificate?", false, "Certificate trust or installation state for HTTPS visibility"),
+            ("visibility", "NetworkProxyVisibility", true, "Observed traffic visibility and HTTPS inspection boundaries"),
+            ("limitations", "[String]", true, "Known platform or app-scoped visibility limitations"),
+            ("artifacts", "[HostArtifact]", true, "Capture/export artifacts such as HAR or NDJSON"),
+            ("restore", "NetworkProxyRestore?", false, "Restore plan or result for platform proxy settings"),
+            ("sourceCommands", "[String]", true, "Underlying host commands or plan-only command ledger"),
+            ("error", "TKCLIErrorDetail?", false, "Structured proxy failure detail"),
+            ("redaction", "String?", false, "Capture export redaction policy summary, such as headers-names-only"),
+            ("requestCount", "Int?", false, "Number of proxy.serve.request events exported from the capture artifact"),
+            ("truncation", "String?", false, "Capture export truncation status; currently none for metadata-only exports"),
+        ])
+    )
+}
+
+func hostDeviceProxyServeOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.device-proxy-serve",
+        format: "jsonl",
+        kind: "host-device-proxy",
+        model: "NetworkProxyServeEvent|NetworkProxyServeSummary",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the serve event or summary succeeded"),
+            ("surface", "String", true, "Stable response surface, host.device-proxy-serve"),
+            ("event", "String", true, "JSONL event name such as proxy.serve.ready, proxy.serve.request, proxy.serve.connection-failed, or proxy.serve.summary"),
+            ("schemaVersion", "String", true, "Network capture event schema version, triton.proxy.capture.v1"),
+            ("action", "String?", false, "Final summary action, proxy.serve"),
+            ("listen", "String", true, "Local proxy listen endpoint"),
+            ("capturePath", "String", true, "NDJSON capture artifact path"),
+            ("captureMode", "String?", false, "Capture policy mode such as record, mock, block, or throttle"),
+            ("policyAction", "String?", false, "Per-request proxy policy action such as forwarded, mocked, blocked, or throttled"),
+            ("responseStatus", "Int?", false, "Synthetic response status for local proxy policy actions; absent for forwarded requests"),
+            ("responseStatusText", "String?", false, "Synthetic response reason phrase for mock, block, or throttle policy actions"),
+            ("requestCount", "Int?", false, "Final captured request count"),
+            ("method", "String?", false, "Captured HTTP method for request events"),
+            ("host", "String?", false, "Captured upstream host for request events"),
+            ("port", "Int?", false, "Captured upstream port for request events"),
+            ("path", "String?", false, "Captured request path for request events"),
+            ("tunnel", "Bool?", false, "Whether the request used CONNECT tunneling"),
+            ("headerNames", "[String]?", false, "Header names only; values are redacted"),
+            ("limitations", "[String]?", false, "Capture visibility and redaction limitations"),
+        ])
+    )
+}
+
 func hostSimulatorListOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.simulator-list",

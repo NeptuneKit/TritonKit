@@ -31,6 +31,7 @@ func parseEvidenceIncludes(_ raw: String) throws -> [String] {
         "runtime.snapshot",
         "host.layout",
         "build.summary",
+        "network.proxy-session",
     ]
     var result: [String] = []
     var seen = Set<String>()

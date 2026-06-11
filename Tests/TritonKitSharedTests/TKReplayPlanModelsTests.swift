@@ -108,6 +108,128 @@ struct TKReplayPlanModelsTests {
         #expect(summary.steps[3].stopConditions.contains("artifact.write-failed"))
     }
 
+    @Test("network proxy evidence step keeps explicit session in replay plan metadata")
+    func networkProxyEvidenceStepKeepsExplicitSessionInReplayPlanMetadata() throws {
+        let json = """
+        {
+          "schemaVersion": 1,
+          "name": "network-flow",
+          "variables": ["platform"],
+          "steps": [
+            {
+              "action": "evidence",
+              "name": "network-capture",
+              "output": "/tmp/network.tritonevidence",
+              "include": "network.proxy-session",
+              "proxySession": "/tmp/${platform}-network"
+            }
+          ]
+        }
+        """
+
+        let plan = try JSONDecoder().decode(TKReplayPlan.self, from: Data(json.utf8))
+        let step = try #require(plan.steps.first)
+        #expect(step.proxySession == "/tmp/${platform}-network")
+
+        let summary = TKReplayPlanSummary(ok: true, path: "/tmp/network-flow.tritonplan", plan: plan)
+        let inspectedStep = try #require(summary.steps.first)
+        #expect(inspectedStep.argv == [
+            "triton", "evidence",
+            "--output", "/tmp/network.tritonevidence",
+            "--include", "network.proxy-session",
+            "--proxy-session", "/tmp/${platform}-network",
+            "--name", "network-capture",
+            "--json",
+        ])
+        #expect(inspectedStep.expectedArtifacts == [
+            "stdout-json",
+            "evidence-bundle",
+            "network.proxy-session",
+            "network-capture",
+        ])
+        #expect(inspectedStep.stopConditions.contains("artifact.write-failed"))
+
+        let replayArgv = try TKReplayStepExecution.argv(
+            for: step,
+            planName: plan.name,
+            index: 1,
+            variables: ["platform": "ios"]
+        )
+        #expect(replayArgv.contains("/tmp/ios-network"))
+    }
+
+    @Test("network proxy lifecycle steps expose replay dry-run argv")
+    func networkProxyLifecycleStepsExposeReplayDryRunArgv() throws {
+        let json = """
+        {
+          "schemaVersion": 1,
+          "name": "network-proxy-flow",
+          "variables": ["platform", "device"],
+          "steps": [
+            {
+              "action": "proxy-serve",
+              "proxy": "127.0.0.1:19431",
+              "mode": "mock",
+              "output": "/tmp/${platform}-proxy"
+            },
+            {
+              "action": "proxy-start",
+              "platform": "${platform}",
+              "device": "${device}",
+              "proxy": "127.0.0.1:19431",
+              "mode": "mock",
+              "output": "/tmp/${platform}-proxy"
+            },
+            {
+              "action": "proxy-export",
+              "platform": "${platform}",
+              "device": "${device}",
+              "output": "/tmp/${platform}-proxy/requests.ndjson"
+            },
+            {
+              "action": "proxy-stop",
+              "platform": "${platform}",
+              "device": "${device}",
+              "restore": true
+            }
+          ]
+        }
+        """
+
+        let plan = try JSONDecoder().decode(TKReplayPlan.self, from: Data(json.utf8))
+        let summary = TKReplayPlanSummary(ok: true, path: "/tmp/network-proxy-flow.tritonplan", plan: plan)
+
+        #expect(summary.actions == ["proxy-serve", "proxy-start", "proxy-export", "proxy-stop"])
+        #expect(summary.steps[0].argv == [
+            "triton", "device", "proxy", "serve",
+            "--listen", "127.0.0.1:19431",
+            "--output", "/tmp/${platform}-proxy",
+            "--mode", "mock",
+            "--jsonl",
+        ])
+        #expect(summary.steps[1].argv.contains("--plan-only"))
+        #expect(summary.steps[2].expectedArtifacts.contains("network-capture"))
+        #expect(summary.steps[3].argv.contains("--restore"))
+        #expect(summary.steps.allSatisfy { $0.workflowCategories.contains("target") })
+
+        let startArgv = try TKReplayStepExecution.argv(
+            for: plan.steps[1],
+            planName: plan.name,
+            index: 2,
+            variables: ["platform": "android", "device": "emulator-5554"]
+        )
+        #expect(startArgv == [
+            "triton", "device", "proxy", "start",
+            "--platform", "android",
+            "--device", "emulator-5554",
+            "--proxy", "127.0.0.1:19431",
+            "--mode", "mock",
+            "--output", "/tmp/android-proxy",
+            "--plan-only",
+            "--json",
+        ])
+    }
+
     @Test("plan inspect summary exposes step validation errors")
     func planInspectSummaryExposesStepValidationErrors() throws {
         let plan = TKReplayPlan(

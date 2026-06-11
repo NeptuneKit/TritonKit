@@ -130,6 +130,24 @@ func workflowPlanFixtures(includeTaskInputs: Bool) -> [TKWorkflowPlanResponse] {
                 evidence: includeTaskInputs ? "/tmp/webview.tritonevidence" : nil
             )
         ),
+        buildWorkflowPlan(
+            capabilities: connected,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "network-proxy",
+                device: includeTaskInputs ? "booted" : nil,
+                platform: includeTaskInputs ? "ios" : nil,
+                bundleID: nil,
+                url: nil,
+                text: nil,
+                expectedURL: nil,
+                evidence: includeTaskInputs ? "/tmp/proxy.tritonevidence" : nil,
+                proxy: includeTaskInputs ? "127.0.0.1:19431" : nil,
+                mode: includeTaskInputs ? "record" : nil,
+                output: includeTaskInputs ? "/tmp/proxy-session" : nil
+            )
+        ),
     ]
 }
 
