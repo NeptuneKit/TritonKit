@@ -1559,12 +1559,34 @@ struct DeviceCrossPlatformTests {
         #expect(started.artifacts.contains { $0.kind == "network-capture" && $0.path.hasSuffix("requests.ndjson") })
         #expect(FileManager.default.fileExists(atPath: networkProxySessionStateURL(directory: directory.path).path))
 
+        let restoreSnapshotPath = try #require(started.restore?.snapshotPath)
+        let restoreFailure = NetworkProxyRestoreFailurePayload(
+            schemaVersion: "triton.proxy.restore-failure.v1",
+            platform: "android",
+            target: "emulator-5554",
+            action: "proxy.stop",
+            auditRecord: "ticket-session",
+            restoreSnapshotPath: restoreSnapshotPath,
+            restoreSourceCommands: ["adb -s emulator-5554 shell settings delete global http_proxy"],
+            errorCode: "proxy_restore_failed",
+            errorSummary: "denied",
+            capturedAt: "2026-06-11T00:00:00Z"
+        )
+        let restoreFailureURL = URL(fileURLWithPath: restoreSnapshotPath)
+            .deletingLastPathComponent()
+            .appendingPathComponent("restore-failure.json")
+        try prettyEncodedData(restoreFailure).write(to: restoreFailureURL, options: .atomic)
+
         let status = try makeNetworkProxyStatusSession(platform: .android, target: target, sessionDirectory: directory.path)
         #expect(status.ok)
         #expect(status.action == "proxy.status")
         #expect(status.configured)
         #expect(status.proxyEndpoint == "127.0.0.1:19431")
         #expect(status.restore?.snapshotPath?.hasSuffix("restore-state.json") == true)
+        let statusRestoreArtifact = try #require(status.artifacts.first { $0.kind == "proxy-restore" })
+        #expect(statusRestoreArtifact.path.hasSuffix("restore-failure.json"))
+        let restoreFailureByteCount = try Data(contentsOf: restoreFailureURL).count
+        #expect(statusRestoreArtifact.bytes == restoreFailureByteCount)
 
         let exported = try makeNetworkProxyExportSession(platform: .android, target: target, sessionDirectory: directory.path, outputPath: exportPath.path)
         #expect(exported.ok)

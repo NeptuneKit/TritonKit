@@ -1701,6 +1701,10 @@ func makeNetworkProxyStatusSession(
     }
     let state = try loadNetworkProxySessionState(directory: sessionDirectory)
     try validateNetworkProxySessionState(state, platform: platform, target: target)
+    let artifacts = networkProxySessionArtifactsIncludingRestoreFailure(
+        state: state,
+        sessionDirectory: sessionDirectory
+    )
     return NetworkProxySession(
         ok: true,
         surface: "host.device-proxy",
@@ -1714,11 +1718,56 @@ func makeNetworkProxyStatusSession(
         cert: NetworkProxyCertificate(installed: false, trusted: false, scope: networkProxyCertificateScope(platform: platform)),
         visibility: state.visibility,
         limitations: state.limitations,
-        artifacts: state.artifacts,
+        artifacts: artifacts,
         restore: NetworkProxyRestore(available: state.restoreSnapshotPath != nil, snapshotPath: state.restoreSnapshotPath, restored: nil),
         sourceCommands: state.sourceCommands,
         error: nil
     )
+}
+
+private func networkProxySessionArtifactsIncludingRestoreFailure(
+    state: NetworkProxySessionStatePayload,
+    sessionDirectory: String
+) -> [NetworkProxyArtifact] {
+    if state.artifacts.contains(where: { $0.kind == "proxy-restore" }) {
+        return state.artifacts
+    }
+    guard let restoreFailureURL = networkProxyRestoreFailureURL(
+        state: state,
+        sessionDirectory: sessionDirectory
+    ) else {
+        return state.artifacts
+    }
+    var artifacts = state.artifacts
+    artifacts.append(NetworkProxyArtifact(
+        kind: "proxy-restore",
+        path: restoreFailureURL.path,
+        bytes: networkProxyFileByteCount(restoreFailureURL)
+    ))
+    return artifacts
+}
+
+private func networkProxyRestoreFailureURL(
+    state: NetworkProxySessionStatePayload,
+    sessionDirectory: String
+) -> URL? {
+    var candidates: [URL] = []
+    if let restoreSnapshotPath = state.restoreSnapshotPath, !restoreSnapshotPath.isEmpty {
+        candidates.append(URL(fileURLWithPath: restoreSnapshotPath).deletingLastPathComponent().appendingPathComponent("restore-failure.json"))
+    }
+    candidates.append(URL(fileURLWithPath: sessionDirectory, isDirectory: true).appendingPathComponent("restore-failure.json"))
+
+    var seen = Set<String>()
+    for candidate in candidates where seen.insert(candidate.path).inserted {
+        if FileManager.default.fileExists(atPath: candidate.path) {
+            return candidate
+        }
+    }
+    return nil
+}
+
+private func networkProxyFileByteCount(_ url: URL) -> Int? {
+    (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?.intValue
 }
 
 func makeNetworkProxyExportSession(
