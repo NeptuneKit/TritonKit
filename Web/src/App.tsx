@@ -1,36 +1,47 @@
 import { useMemo, useState } from "react";
 import {
   Activity,
-  ArrowDown,
-  ArrowUp,
-  Bolt,
   Braces,
+  ChevronDown,
   CircleDot,
   Clock3,
-  Command,
   Crosshair,
   DatabaseZap,
+  FileText,
   Gauge,
+  Grid3X3,
   Home,
+  Info,
   Keyboard,
+  Maximize2,
+  MoreHorizontal,
   MousePointer2,
   Network,
-  PanelRight,
-  Pause,
-  Play,
-  RadioTower,
-  RefreshCw,
+  PanelLeft,
+  Plus,
+  RotateCw,
+  ScanLine,
   Search,
-  ShieldCheck,
+  Settings2,
+  SlidersHorizontal,
   TerminalSquare,
+  ZoomIn,
+  ZoomOut,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { logs, networkEvents, targets } from "./data/mockData";
-import type { DeviceTarget, NetworkEvent } from "./types";
+import type { DeviceTarget, LogEntry, NetworkEvent } from "./types";
 
 const platformLabel = {
-  ios: "iOS Simulator",
-  android: "Android Emulator",
-  harmony: "Harmony / DevEco",
+  ios: "iOS",
+  android: "Android",
+  harmony: "Harmony",
+};
+
+const platformDetail = {
+  ios: "Simulator",
+  android: "Emulator",
+  harmony: "DevEco Emulator",
 };
 
 const modeLabel = {
@@ -40,9 +51,14 @@ const modeLabel = {
   off: "Off",
 };
 
+const extraDevices = [
+  { name: "Apple TV 4K", kind: "Simulator", version: "18.5" },
+  { name: "Apple Watch Ultra", kind: "Simulator", version: "11.5" },
+  { name: "iPad Pro 13-inch", kind: "Simulator", version: "18.5" },
+];
+
 export function App() {
   const [selectedId, setSelectedId] = useState(targets[0].id);
-  const [streaming, setStreaming] = useState(true);
   const selected = useMemo(
     () => targets.find((target) => target.id === selectedId) ?? targets[0],
     [selectedId]
@@ -51,136 +67,165 @@ export function App() {
   const selectedLogs = logs[selected.id] ?? [];
 
   return (
-    <main className="app-shell">
-      <aside className="sidebar" aria-label="Device targets">
-        <div className="brand-lockup">
-          <div className="brand-mark">
-            <Command size={18} />
-          </div>
-          <div>
-            <strong>TritonKit</strong>
-            <span>Local Control</span>
-          </div>
-        </div>
-
-        <label className="search-box">
-          <Search size={16} />
-          <input placeholder="Filter target, app, bundle" />
-        </label>
-
-        <div className="target-list">
-          {targets.map((target) => (
-            <button
-              className={`target-row ${target.id === selected.id ? "is-active" : ""}`}
-              key={target.id}
-              onClick={() => setSelectedId(target.id)}
-              type="button"
-            >
-              <span className="target-icon" style={{ color: target.accent }}>
-                <target.Icon size={20} />
-              </span>
-              <span className="target-copy">
-                <strong>{target.name}</strong>
-                <span>{platformLabel[target.platform]}</span>
-              </span>
-              <StatusDot target={target} />
-            </button>
-          ))}
-        </div>
-
-        <div className="sidebar-footer">
-          <span>HTTP API</span>
-          <strong>127.0.0.1:19421</strong>
-        </div>
-      </aside>
-
-      <section className="workspace">
-        <header className="topbar">
-          <div>
-            <p className="eyebrow">Web Console Mock</p>
-            <h1>本机三端模拟器控制台</h1>
-          </div>
-          <div className="topbar-actions">
-            <button className="icon-button" aria-label="Refresh mock data" type="button">
-              <RefreshCw size={18} />
-            </button>
-            <button
-              className={`stream-toggle ${streaming ? "is-live" : ""}`}
-              onClick={() => setStreaming((value) => !value)}
-              type="button"
-            >
-              {streaming ? <Pause size={16} /> : <Play size={16} />}
-              {streaming ? "Live" : "Paused"}
-            </button>
-          </div>
-        </header>
-
-        <section className="hero-grid" aria-label="Selected target overview">
-          <DeviceMirror target={selected} streaming={streaming} />
-          <TargetInspector target={selected} events={selectedEvents} />
+    <main className="device-hub-shell">
+      <section className="device-hub-window" aria-label="TritonKit Device Hub mock">
+        <DeviceHubToolbar target={selected} />
+        <section className="hub-body">
+          <TargetNavigator selected={selected} onSelect={setSelectedId} />
+          <DeviceCanvas target={selected} />
+          <Inspector target={selected} events={selectedEvents} />
         </section>
-
-        <section className="lower-grid">
-          <ActionDeck target={selected} />
-          <NetworkPanel events={selectedEvents} />
-          <LogPanel logs={selectedLogs} />
+        <section className="hub-bottom" aria-label="Device controls and evidence">
+          <DeviceControls target={selected} />
+          <NetworkStrip events={selectedEvents} />
+          <LogStrip entries={selectedLogs} />
         </section>
       </section>
     </main>
   );
 }
 
-function StatusDot({ target }: { target: DeviceTarget }) {
+function DeviceHubToolbar({ target }: { target: DeviceTarget }) {
   return (
-    <span className={`status-dot status-${target.status}`} aria-label={target.statusLabel}>
-      <CircleDot size={14} />
-    </span>
-  );
-}
+    <header className="hub-toolbar">
+      <div className="traffic-lights" aria-hidden="true">
+        <span className="traffic-red" />
+        <span className="traffic-yellow" />
+        <span className="traffic-green" />
+      </div>
 
-function DeviceMirror({ target, streaming }: { target: DeviceTarget; streaming: boolean }) {
-  return (
-    <section className="mirror-panel" aria-label="Device mirror">
-      <div className="mirror-toolbar">
-        <div className="target-title">
-          <span className="target-platform" style={{ color: target.accent }}>
-            {platformLabel[target.platform]}
-          </span>
-          <h2>{target.appName}</h2>
-          <p>{target.bundleId}</p>
+      <div className="toolbar-cluster" aria-label="Add simulators and devices">
+        <IconTool label="Add target" icon={Plus} />
+        <IconTool label="Filter and sort devices" icon={SlidersHorizontal} />
+      </div>
+
+      <IconTool label="Toggle sidebar" icon={PanelLeft} variant="solo" />
+
+      <div className="toolbar-title">
+        <strong>{target.name}</strong>
+        <span>{target.os}</span>
+      </div>
+
+      <div className="toolbar-center">
+        <div className="toolbar-cluster" aria-label="Device interactions">
+          <IconTool label="Keyboard" icon={Keyboard} />
+          <IconTool label="Screen layout" icon={ScanLine} />
         </div>
-        <div className="codec-control" aria-label="Display codec mode">
-          <button className="is-selected" type="button">H.264</button>
-          <button type="button">MJPEG</button>
+        <div className="toolbar-cluster" aria-label="Canvas controls">
+          <IconTool label="Zoom out" icon={ZoomOut} />
+          <IconTool label="Actual size" icon={Search} />
+          <IconTool label="Zoom in" icon={ZoomIn} />
+        </div>
+        <div className="toolbar-cluster" aria-label="Compress or expand window">
+          <IconTool label="Expand" icon={Maximize2} />
+          <IconTool label="More" icon={MoreHorizontal} />
         </div>
       </div>
 
-      <div className="phone-stage">
-        <div className="side-button side-button-top" />
-        <div className="side-button side-button-bottom" />
-        <div className={`phone-frame ${target.screenshotTone}`}>
-          <div className="phone-statusbar">
-            <span>9:41</span>
-            <span>{streaming ? "Live" : "Paused"}</span>
+      <div className="toolbar-cluster inspector-tools" aria-label="Inspector tools">
+        <IconTool label="Adjust" icon={Settings2} />
+        <IconTool label="Document" icon={FileText} />
+        <IconTool label="Info" icon={Info} />
+      </div>
+    </header>
+  );
+}
+
+function IconTool({
+  label,
+  icon: Icon,
+  variant,
+}: {
+  label: string;
+  icon: LucideIcon;
+  variant?: "solo";
+}) {
+  return (
+    <button className={`icon-tool ${variant === "solo" ? "is-solo" : ""}`} type="button" aria-label={label} title={label}>
+      <Icon size={17} strokeWidth={2.2} />
+    </button>
+  );
+}
+
+function TargetNavigator({
+  selected,
+  onSelect,
+}: {
+  selected: DeviceTarget;
+  onSelect: (id: string) => void;
+}) {
+  return (
+    <aside className="hub-sidebar" aria-label="Devices">
+      <label className="sidebar-search">
+        <Search size={16} />
+        <input placeholder="Search" />
+      </label>
+
+      <div className="sidebar-section-title">Available</div>
+      <div className="device-list">
+        {targets.map((target) => (
+          <button
+            className={`device-row ${target.id === selected.id ? "is-selected" : ""}`}
+            key={target.id}
+            onClick={() => onSelect(target.id)}
+            type="button"
+          >
+            <span className="device-row-icon" style={{ color: target.accent }}>
+              <target.Icon size={21} />
+            </span>
+            <span className="device-row-copy">
+              <strong>{target.name}</strong>
+              <span>{platformDetail[target.platform]}</span>
+            </span>
+            <span className="device-version">{target.os.replace(/^[A-Za-z ]+/, "")}</span>
+          </button>
+        ))}
+
+        {extraDevices.map((device) => (
+          <div className="device-row is-muted" key={device.name}>
+            <span className="device-row-icon">
+              <CircleDot size={18} />
+            </span>
+            <span className="device-row-copy">
+              <strong>{device.name}</strong>
+              <span>{device.kind}</span>
+            </span>
+            <span className="device-version">{device.version}</span>
           </div>
-          <div className="mock-screen-content">
-            <div className="app-header">
-              <span>{target.appName}</span>
-              <Activity size={16} />
+        ))}
+      </div>
+    </aside>
+  );
+}
+
+function DeviceCanvas({ target }: { target: DeviceTarget }) {
+  return (
+    <section className="hub-canvas" aria-label="Device canvas">
+      <div className="canvas-label">
+        <span>{target.appName}</span>
+        <strong>{target.bundleId}</strong>
+      </div>
+
+      <div className="landscape-device">
+        <div className="device-side left" />
+        <div className="device-side top" />
+        <div className="device-side bottom" />
+        <div className={`landscape-screen ${target.screenshotTone}`}>
+          <div className="screen-island" />
+          <div className="screen-hero">
+            <span>Featured Target</span>
+            <strong>{target.appName}</strong>
+            <button type="button">Inspect</button>
+          </div>
+          <div className="screen-content">
+            <div>
+              <h2>{platformDetail[target.platform]}</h2>
+              <p>{target.device}</p>
             </div>
-            <div className="screen-card primary">
-              <span>{target.device}</span>
-              <strong>{target.screenSize}</strong>
-            </div>
-            <div className="screen-list">
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className="screen-nav">
-              <span />
-              <span />
-              <span />
+            <div className="screen-card-row">
+              <ScreenMini label="Frame" value={target.screenSize} />
+              <ScreenMini label="Proxy" value={target.proxyLabel} />
+              <ScreenMini label="Transport" value={target.transport} />
             </div>
           </div>
         </div>
@@ -189,31 +234,48 @@ function DeviceMirror({ target, streaming }: { target: DeviceTarget; streaming: 
   );
 }
 
-function TargetInspector({ target, events }: { target: DeviceTarget; events: NetworkEvent[] }) {
+function ScreenMini({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="screen-mini">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function Inspector({ target, events }: { target: DeviceTarget; events: NetworkEvent[] }) {
   const errorCount = events.filter((event) => event.status >= 400).length;
 
   return (
-    <aside className="inspector" aria-label="Target inspector">
-      <div className="section-heading">
-        <PanelRight size={18} />
-        <h2>Target Inspector</h2>
+    <aside className="hub-inspector" aria-label="Inspector">
+      <div className="inspector-tabs" role="tablist" aria-label="Inspector sections">
+        <button className="is-active" type="button">Info</button>
+        <button type="button">Apps</button>
+        <button type="button">Profiles</button>
       </div>
 
-      <div className="metric-grid">
+      <section className="app-tile" aria-label="Selected app">
+        <div className="app-icon">
+          <Activity size={18} />
+        </div>
+        <div>
+          <strong>{target.appName}</strong>
+          <span>{target.bundleId}</span>
+        </div>
+        <em>{target.statusLabel}</em>
+      </section>
+
+      <div className="metric-stack">
         <Metric icon={Gauge} label="FPS" value={target.fps.toString()} />
         <Metric icon={Clock3} label="Latency" value={`${target.latencyMs} ms`} />
         <Metric icon={Braces} label="AX Nodes" value={target.hierarchyNodes.toString()} />
         <Metric icon={DatabaseZap} label="HTTP Errors" value={errorCount.toString()} />
       </div>
 
-      <dl className="detail-list">
+      <dl className="inspector-details">
         <div>
           <dt>Device</dt>
           <dd>{target.device}</dd>
-        </div>
-        <div>
-          <dt>OS</dt>
-          <dd>{target.os}</dd>
         </div>
         <div>
           <dt>Transport</dt>
@@ -225,9 +287,11 @@ function TargetInspector({ target, events }: { target: DeviceTarget; events: Net
         </div>
       </dl>
 
-      <div className="contract-strip">
-        <ShieldCheck size={18} />
-        <span>Web consumes mock DTOs; CLI / HTTP remain the control contract.</span>
+      <div className="inspector-footer">
+        <Search size={15} />
+        <span>Filter</span>
+        <strong>Developer</strong>
+        <ChevronDown size={14} />
       </div>
     </aside>
   );
@@ -238,68 +302,60 @@ function Metric({
   label,
   value,
 }: {
-  icon: typeof Gauge;
+  icon: LucideIcon;
   label: string;
   value: string;
 }) {
   return (
     <div className="metric">
-      <Icon size={17} />
+      <Icon size={16} />
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
   );
 }
 
-function ActionDeck({ target }: { target: DeviceTarget }) {
+function DeviceControls({ target }: { target: DeviceTarget }) {
   const actions = [
-    { label: "Tap", Icon: MousePointer2 },
-    { label: "Swipe Up", Icon: ArrowUp },
-    { label: "Swipe Down", Icon: ArrowDown },
-    { label: "Type", Icon: Keyboard },
-    { label: "Home", Icon: Home },
+    { label: "Apps", Icon: Grid3X3 },
+    { label: "Point", Icon: MousePointer2 },
     { label: "Probe", Icon: Crosshair },
+    { label: "Home", Icon: Home },
+    { label: "Rotate", Icon: RotateCw },
   ];
 
   return (
-    <section className="panel action-panel" aria-label="Device actions">
-      <div className="section-heading">
-        <Bolt size={18} />
-        <h2>Actions</h2>
-      </div>
-      <div className="action-grid">
+    <section className="device-controls" aria-label="Device controls">
+      <div className="control-pill">
         {actions.map(({ label, Icon }) => (
-          <button key={label} type="button">
-            <Icon size={18} />
-            <span>{label}</span>
+          <button key={label} type="button" aria-label={label} title={label}>
+            <Icon size={17} />
           </button>
         ))}
       </div>
-      <div className={`action-result result-${target.actionResult}`}>
-        <strong>Last result</strong>
+      <div className={`last-action result-${target.actionResult}`}>
+        <strong>Last</strong>
         <span>{target.lastAction}</span>
       </div>
     </section>
   );
 }
 
-function NetworkPanel({ events }: { events: NetworkEvent[] }) {
+function NetworkStrip({ events }: { events: NetworkEvent[] }) {
   return (
-    <section className="panel network-panel" aria-label="Network events">
-      <div className="section-heading">
-        <Network size={18} />
-        <h2>Network</h2>
+    <section className="evidence-strip" aria-label="Network evidence">
+      <div className="strip-heading">
+        <Network size={16} />
+        <strong>Network</strong>
       </div>
-      <div className="network-table">
+      <div className="network-rows">
         {events.map((event) => (
           <div className="network-row" key={event.id}>
             <span className="method">{event.method}</span>
             <span className="path">{event.path}</span>
-            <span className={event.status >= 400 ? "status-code is-error" : "status-code"}>
-              {event.status}
-            </span>
-            <span className="latency">{event.latencyMs} ms</span>
-            <span className="mode">{modeLabel[event.mode]}</span>
+            <span className={event.status >= 400 ? "code is-error" : "code"}>{event.status}</span>
+            <span>{event.latencyMs} ms</span>
+            <span>{modeLabel[event.mode]}</span>
           </div>
         ))}
       </div>
@@ -307,25 +363,21 @@ function NetworkPanel({ events }: { events: NetworkEvent[] }) {
   );
 }
 
-function LogPanel({ logs: entries }: { logs: { id: string; time: string; level: string; message: string }[] }) {
+function LogStrip({ entries }: { entries: LogEntry[] }) {
   return (
-    <section className="panel log-panel" aria-label="Runtime logs">
-      <div className="section-heading">
-        <TerminalSquare size={18} />
-        <h2>Logs</h2>
+    <section className="evidence-strip log-strip" aria-label="Runtime logs">
+      <div className="strip-heading">
+        <TerminalSquare size={16} />
+        <strong>Logs</strong>
       </div>
-      <div className="log-list">
+      <div className="log-rows">
         {entries.map((entry) => (
-          <div className={`log-line log-${entry.level}`} key={entry.id}>
+          <div className={`log-row log-${entry.level}`} key={entry.id}>
             <span>{entry.time}</span>
             <strong>{entry.level}</strong>
             <p>{entry.message}</p>
           </div>
         ))}
-      </div>
-      <div className="radio-strip">
-        <RadioTower size={17} />
-        <span>Local only</span>
       </div>
     </section>
   );
