@@ -148,6 +148,77 @@ struct ReplayCommandTests {
         #expect(response.steps[3].argv.contains("--restore"))
     }
 
+    @Test("replay archives proxy session evidence after a failed step")
+    func replayArchivesProxySessionEvidenceAfterFailedStep() async throws {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-replay-proxy-failure-archive-\(UUID().uuidString)", isDirectory: true)
+        let session = temp.appendingPathComponent("android-proxy", isDirectory: true)
+        let output = temp.appendingPathComponent("failure-network.tritonevidence", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+        try FileManager.default.createDirectory(at: session, withIntermediateDirectories: true)
+
+        let captureURL = session.appendingPathComponent("requests.ndjson")
+        try Data(#"{"event":"proxy.serve.request","method":"GET","url":"https://example.test/failure","redaction":"headers-names-only"}"#.utf8)
+            .write(to: captureURL, options: .atomic)
+        let state = NetworkProxySessionStatePayload(
+            schemaVersion: "triton.proxy.session.v1",
+            platform: "android",
+            target: "emulator-5554",
+            captureMode: "block",
+            proxyEndpoint: "127.0.0.1:19431",
+            configured: true,
+            visibility: .partial,
+            limitations: ["proxy_visibility_limited"],
+            artifacts: [NetworkProxyArtifact(kind: "network-capture", path: captureURL.path, bytes: nil)],
+            restoreSnapshotPath: nil,
+            sourceCommands: ["adb -s emulator-5554 shell settings put global http_proxy 10.0.2.2:19431"]
+        )
+        try prettyEncodedData(state).write(to: session.appendingPathComponent("session-state.json"), options: .atomic)
+
+        let plan = TKReplayPlan(
+            name: "android-network-failure",
+            steps: [
+                TKReplayPlanStep(action: .wait, text: "Home", timeout: 1),
+                TKReplayPlanStep(action: .tap, text: "Retry"),
+                TKReplayPlanStep(
+                    action: .evidence,
+                    name: "network-after-failure",
+                    output: output.path,
+                    include: "status,network.proxy-session,screenshot",
+                    proxySession: session.path
+                ),
+            ]
+        )
+
+        let archive = try #require(await replayProxyStateArchiveAfterFailure(
+            plan: plan,
+            variables: [:],
+            failedStepIndex: 1,
+            target: "triton:local",
+            host: "127.0.0.1",
+            port: 1
+        ))
+
+        #expect(archive.index == 3)
+        #expect(archive.action == "evidence")
+        #expect(archive.ok)
+        #expect(archive.argv == [
+            "triton", "evidence",
+            "--output", output.path,
+            "--include", "network.proxy-session",
+            "--proxy-session", session.path,
+            "--name", "network-after-failure",
+            "--note", "Replay failed; archived existing proxy session state only.",
+            "--json",
+        ])
+
+        let manifest = try #require(archive.evidence)
+        #expect(manifest.artifacts.map(\.kind) == ["network.proxy-session", "network-capture"])
+        #expect(manifest.primaryArtifacts.map(\.kind).first == "network-capture")
+        #expect(FileManager.default.fileExists(atPath: output.appendingPathComponent("artifacts/network/session-state.json").path))
+        #expect(FileManager.default.fileExists(atPath: output.appendingPathComponent("artifacts/network/requests.ndjson").path))
+    }
+
     @Test("replay suggested commands route failed waits to find snapshot and evidence summary")
     func replaySuggestedCommandsRouteWaitFailures() {
         let priorEvidence = TKEvidenceManifest(

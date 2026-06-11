@@ -115,6 +115,20 @@ func runReplayPlan(
         }
     }
 
+    if !dryRun {
+        let proxyArchive = await replayProxyStateArchiveAfterFailure(
+            plan: plan,
+            variables: variables,
+            failedStepIndex: failedStepIndex,
+            target: target,
+            host: host,
+            port: port
+        )
+        if let proxyArchive {
+            steps.append(proxyArchive)
+        }
+    }
+
     return TKReplayResult(
         ok: failedStepIndex == nil,
         dryRun: dryRun,
@@ -138,6 +152,88 @@ func runReplayPlan(
             failedStepIndex: failedStepIndex
         )
     )
+}
+
+func replayProxyStateArchiveAfterFailure(
+    plan: TKReplayPlan,
+    variables: [String: String],
+    failedStepIndex: Int?,
+    target: String,
+    host: String,
+    port: Int
+) async -> TKReplayStepResult? {
+    guard let failedStepIndex,
+          let candidate = replayProxyStateArchiveCandidate(
+            plan: plan,
+            failedStepIndex: failedStepIndex
+          ) else {
+        return nil
+    }
+
+    let archiveStep = TKReplayPlanStep(
+        action: .evidence,
+        id: candidate.step.id,
+        name: candidate.step.name ?? "proxy-state-after-failure",
+        output: candidate.step.output,
+        include: "network.proxy-session",
+        proxySession: candidate.step.proxySession,
+        note: candidate.step.note ?? "Replay failed; archived existing proxy session state only.",
+        refresh: false
+    )
+    let startedAt = Date()
+    var command = ["triton", "evidence", "--include", "network.proxy-session", "--json"]
+
+    do {
+        command = try replayCommand(
+            for: archiveStep,
+            plan: plan,
+            index: candidate.index,
+            variables: variables
+        )
+        return try await executeReplayStep(
+            archiveStep,
+            plan: plan,
+            index: candidate.index,
+            variables: variables,
+            target: target,
+            host: host,
+            port: port,
+            client: TritonKitHTTPClient(host: host, port: port),
+            command: command,
+            startedAt: startedAt
+        )
+    } catch {
+        return replayFailureStepResult(
+            step: archiveStep,
+            index: candidate.index,
+            command: command,
+            error: error,
+            startedAt: startedAt,
+            host: host,
+            port: port
+        )
+    }
+}
+
+func replayProxyStateArchiveCandidate(
+    plan: TKReplayPlan,
+    failedStepIndex: Int
+) -> (index: Int, step: TKReplayPlanStep)? {
+    for (offset, step) in plan.steps.enumerated() {
+        let index = offset + 1
+        guard index > failedStepIndex,
+              step.action == .evidence,
+              let proxySession = step.proxySession?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !proxySession.isEmpty else {
+            continue
+        }
+        guard let includes = try? parseEvidenceIncludes(step.include ?? ""),
+              includes.contains("network.proxy-session") else {
+            continue
+        }
+        return (index, step)
+    }
+    return nil
 }
 
 func replayFailureWorkflowCategories(
