@@ -75,7 +75,7 @@ struct ReplayCommandTests {
     }
 
     @Test("dry-run replay preserves network proxy lifecycle argv")
-    func dryRunReplayPreservesNetworkProxyLifecycleArgv() throws {
+    func dryRunReplayPreservesNetworkProxyLifecycleArgv() async throws {
         let temp = FileManager.default.temporaryDirectory
             .appendingPathComponent("triton-replay-proxy-lifecycle-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
@@ -88,6 +88,11 @@ struct ReplayCommandTests {
           "name": "network-lifecycle",
           "variables": ["platform", "device"],
           "steps": [
+            {
+              "action": "proxy-probe",
+              "platform": "${platform}",
+              "device": "${device}"
+            },
             {
               "action": "proxy-serve",
               "proxy": "127.0.0.1:19431",
@@ -112,27 +117,35 @@ struct ReplayCommandTests {
         }
         """.write(to: planURL, atomically: true, encoding: .utf8)
 
-        let result = try runTriton([
-            "replay", planURL.path,
-            "--dry-run",
-            "--var", "platform=android",
-            "--var", "device=emulator-5554",
+        let plan = try readReplayPlan(from: planURL.path)
+        let response = try await runReplayPlan(
+            plan,
+            variables: ["platform": "android", "device": "emulator-5554"],
+            dryRun: true,
+            target: "triton:local",
+            host: "127.0.0.1",
+            port: 19421
+        )
+
+        #expect(response.steps.map(\.action) == ["proxy-probe", "proxy-serve", "proxy-start", "proxy-stop"])
+        #expect(response.steps[0].argv == [
+            "triton", "device", "proxy", "probe",
+            "--platform", "android",
+            "--device", "emulator-5554",
+            "--plan-only",
             "--json",
         ])
-        let response = try JSONDecoder().decode(TKReplayResult.self, from: Data(result.stdout.utf8))
-
-        #expect(result.exitCode == 0)
-        #expect(response.steps.map(\.action) == ["proxy-serve", "proxy-start", "proxy-stop"])
-        #expect(response.steps[0].argv == [
+        #expect(response.steps[0].expectedArtifacts.contains("host-device-proxy"))
+        #expect(response.steps[1].argv == [
             "triton", "device", "proxy", "serve",
             "--listen", "127.0.0.1:19431",
             "--output", "\(temp.path)/android-proxy",
             "--mode", "block",
             "--jsonl",
         ])
-        #expect(response.steps[1].argv.contains("--plan-only"))
-        #expect(response.steps[1].argv.contains("emulator-5554"))
-        #expect(response.steps[2].argv.contains("--restore"))
+        #expect(response.steps[2].argv.contains("--plan-only"))
+        #expect(response.steps[2].argv.contains("emulator-5554"))
+        #expect(response.steps[3].argv.contains("--restore"))
     }
 
     @Test("replay suggested commands route failed waits to find snapshot and evidence summary")
@@ -527,17 +540,17 @@ struct ReplayCommandTests {
 
     private func tritonExecutableURL() throws -> URL {
         let fileManager = FileManager.default
-        if let override = ProcessInfo.processInfo.environment["TRITON_CLI_PATH"], fileManager.isExecutableFile(atPath: override) {
-            return URL(fileURLWithPath: override)
-        }
-
-        var searchURL = try #require(Bundle.main.executableURL?.deletingLastPathComponent())
+        var searchURL = Bundle.main.bundleURL.deletingLastPathComponent()
         while searchURL.path != "/" {
             let candidate = searchURL.appendingPathComponent("triton")
             if fileManager.isExecutableFile(atPath: candidate.path) {
                 return candidate
             }
             searchURL.deleteLastPathComponent()
+        }
+
+        if let override = ProcessInfo.processInfo.environment["TRITON_CLI_PATH"], fileManager.isExecutableFile(atPath: override) {
+            return URL(fileURLWithPath: override)
         }
 
         let packageRoot = URL(fileURLWithPath: #filePath)

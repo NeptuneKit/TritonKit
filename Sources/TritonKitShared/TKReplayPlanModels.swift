@@ -8,6 +8,7 @@ public enum TKReplayAction: String, Codable, CaseIterable {
     case wait
     case screenshot
     case evidence
+    case proxyProbe = "proxy-probe"
     case proxyServe = "proxy-serve"
     case proxyStart = "proxy-start"
     case proxyExport = "proxy-export"
@@ -448,7 +449,7 @@ public enum TKReplayStepExecution {
             } else if conditionCount > 1 {
                 errors.append(validationError(.ambiguousWaitCondition, field: "condition"))
             }
-        case .screenshot, .evidence, .proxyServe, .proxyStart, .proxyExport, .proxyStop:
+        case .screenshot, .evidence, .proxyProbe, .proxyServe, .proxyStart, .proxyExport, .proxyStop:
             break
         }
         return errors
@@ -511,6 +512,8 @@ public enum TKReplayStepExecution {
                 argv += ["--note", note]
             }
             return argv + ["--json"]
+        case .proxyProbe:
+            return try proxyProbeArgv(for: step, variables: variables, strict: strict)
         case .proxyServe:
             return try proxyServeArgv(for: step, variables: variables, strict: strict)
         case .proxyStart:
@@ -520,6 +523,20 @@ public enum TKReplayStepExecution {
         case .proxyStop:
             return try proxyStopArgv(for: step, variables: variables, strict: strict)
         }
+    }
+
+    private static func proxyProbeArgv(
+        for step: TKReplayPlanStep,
+        variables: [String: String],
+        strict: Bool
+    ) throws -> [String] {
+        [
+            "triton", "device", "proxy", "probe",
+            "--platform", try substituted(step.platform ?? "<platform>", variables: variables, strict: strict),
+            "--device", try substituted(step.device ?? "<selector>", variables: variables, strict: strict),
+            "--plan-only",
+            "--json",
+        ]
     }
 
     private static func proxyServeArgv(
@@ -812,7 +829,7 @@ public enum TKReplayStepExecution {
         var values: [String]
         if isDeviceProxyServe(argv) || isDeviceProxyExport(argv) {
             values = ["stdout-json", "network-capture"]
-        } else if isDeviceProxyStart(argv) || isDeviceProxyDoctor(argv) {
+        } else if isDeviceProxyStart(argv) || isDeviceProxyDoctor(argv) || isDeviceProxyProbe(argv) {
             values = ["stdout-json", "host-device-proxy"]
         } else if isDeviceProxyStop(argv) {
             values = ["stdout-json", "proxy-restore"]
@@ -889,6 +906,10 @@ public enum TKReplayStepExecution {
 
     private static func isDeviceProxyDoctor(_ argv: [String]) -> Bool {
         isDeviceProxyCommand(argv) && argv[3] == "doctor"
+    }
+
+    private static func isDeviceProxyProbe(_ argv: [String]) -> Bool {
+        isDeviceProxyCommand(argv) && argv[3] == "probe"
     }
 
     private static func isDeviceProxyServe(_ argv: [String]) -> Bool {

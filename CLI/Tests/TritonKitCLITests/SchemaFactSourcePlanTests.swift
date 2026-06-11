@@ -182,6 +182,7 @@ extension SchemaFactSourceTests {
                 TKReplayPlanStep(action: .paste, value: "${username}"),
                 TKReplayPlanStep(action: .wait, gone: "登录", timeout: 15),
                 TKReplayPlanStep(action: .evidence, name: "login-success"),
+                TKReplayPlanStep(action: .proxyProbe, platform: "android", device: "emulator-5554"),
             ]
         )
         let summary = TKReplayPlanSummary(ok: true, path: "/tmp/inspect-flow.tritonplan", plan: plan)
@@ -209,6 +210,7 @@ extension SchemaFactSourceTests {
                 TKReplayPlanStep(action: .paste, value: "${username}"),
                 TKReplayPlanStep(action: .wait, gone: "登录", timeout: 15),
                 TKReplayPlanStep(action: .evidence, name: "login-success"),
+                TKReplayPlanStep(action: .proxyProbe, platform: "android", device: "emulator-5554"),
             ]
         )
         let summary = TKReplayPlanSummary(ok: true, path: "/tmp/inspect-flow.tritonplan", plan: plan)
@@ -217,6 +219,8 @@ extension SchemaFactSourceTests {
         #expect(summary.steps[1].workflowCategories == ["action", "assert", "evidence"])
         #expect(summary.steps[2].workflowCategories == ["assert", "evidence", "observe"])
         #expect(summary.steps[3].workflowCategories == ["evidence", "replay"])
+        #expect(summary.steps[4].workflowCategories == ["evidence", "target"])
+        #expect(summary.steps[4].expectedArtifacts.contains("host-device-proxy"))
     }
 
     @Test("replay step results expose schema-backed argv")

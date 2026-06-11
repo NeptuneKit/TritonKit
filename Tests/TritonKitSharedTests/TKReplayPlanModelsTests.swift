@@ -167,6 +167,11 @@ struct TKReplayPlanModelsTests {
           "variables": ["platform", "device"],
           "steps": [
             {
+              "action": "proxy-probe",
+              "platform": "${platform}",
+              "device": "${device}"
+            },
+            {
               "action": "proxy-serve",
               "proxy": "127.0.0.1:19431",
               "mode": "mock",
@@ -199,23 +204,31 @@ struct TKReplayPlanModelsTests {
         let plan = try JSONDecoder().decode(TKReplayPlan.self, from: Data(json.utf8))
         let summary = TKReplayPlanSummary(ok: true, path: "/tmp/network-proxy-flow.tritonplan", plan: plan)
 
-        #expect(summary.actions == ["proxy-serve", "proxy-start", "proxy-export", "proxy-stop"])
+        #expect(summary.actions == ["proxy-probe", "proxy-serve", "proxy-start", "proxy-export", "proxy-stop"])
         #expect(summary.steps[0].argv == [
+            "triton", "device", "proxy", "probe",
+            "--platform", "${platform}",
+            "--device", "${device}",
+            "--plan-only",
+            "--json",
+        ])
+        #expect(summary.steps[0].expectedArtifacts.contains("host-device-proxy"))
+        #expect(summary.steps[1].argv == [
             "triton", "device", "proxy", "serve",
             "--listen", "127.0.0.1:19431",
             "--output", "/tmp/${platform}-proxy",
             "--mode", "mock",
             "--jsonl",
         ])
-        #expect(summary.steps[1].argv.contains("--plan-only"))
-        #expect(summary.steps[2].expectedArtifacts.contains("network-capture"))
-        #expect(summary.steps[3].argv.contains("--restore"))
+        #expect(summary.steps[2].argv.contains("--plan-only"))
+        #expect(summary.steps[3].expectedArtifacts.contains("network-capture"))
+        #expect(summary.steps[4].argv.contains("--restore"))
         #expect(summary.steps.allSatisfy { $0.workflowCategories.contains("target") })
 
         let startArgv = try TKReplayStepExecution.argv(
-            for: plan.steps[1],
+            for: plan.steps[2],
             planName: plan.name,
-            index: 2,
+            index: 3,
             variables: ["platform": "android", "device": "emulator-5554"]
         )
         #expect(startArgv == [
