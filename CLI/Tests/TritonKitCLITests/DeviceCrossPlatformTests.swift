@@ -20,6 +20,8 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("proxy doctor --platform ios|android|harmony"))
         #expect(usageForms.contains("proxy cert doctor --platform ios|android|harmony"))
         #expect(usageForms.contains("proxy cert plan --platform ios|android|harmony --device <selector> --certificate <path.cer>"))
+        #expect(usageForms.contains("proxy probe --platform ios|android|harmony --device <selector>"))
+        #expect(usageForms.contains("proxy probe --platform ios|android|harmony --device <selector> --plan-only"))
         #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode record|mock|block|throttle --jsonl"))
         #expect(usageForms.contains("proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir>"))
         #expect(usageForms.contains("proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir> --plan-only"))
@@ -59,6 +61,8 @@ struct DeviceCrossPlatformTests {
         #expect(device.examples.contains("triton device proxy doctor --platform ios --json"))
         #expect(device.examples.contains("triton device proxy cert doctor --platform ios --json"))
         #expect(device.examples.contains("triton device proxy cert plan --platform android --device emulator-5554 --certificate /tmp/triton-proxy-ca.cer --json"))
+        #expect(device.examples.contains("triton device proxy probe --platform harmony --device harmony-a --json"))
+        #expect(device.examples.contains("triton device proxy probe --platform harmony --device harmony-a --plan-only --json"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network --mode record --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-mock --mode mock --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-block --mode block --jsonl"))
@@ -101,6 +105,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.failureCodes.contains("proxy_unverified_platform_proxy"))
         #expect(device.failureCodes.contains("destructive_action_requires_policy"))
         #expect(device.failureCodes.contains("proxy_endpoint_unreachable"))
+        #expect(device.failureCodes.contains("proxy_probe_failed"))
         #expect(device.failureCodes.contains("proxy_start_failed"))
         #expect(device.failureCodes.contains("proxy_restore_failed"))
         #expect(device.failureCodes.contains("proxy_artifact_write_failed"))
@@ -109,6 +114,7 @@ struct DeviceCrossPlatformTests {
         #expect(proxyFields.contains("redaction"))
         #expect(proxyFields.contains("requestCount"))
         #expect(proxyFields.contains("truncation"))
+        #expect(proxyFields.contains("probeResults"))
         #expect(proxyServeFields.contains("responseStatus"))
         #expect(proxyServeFields.contains("responseStatusText"))
     }
@@ -238,6 +244,91 @@ struct DeviceCrossPlatformTests {
                 #expect(session.limitations.contains { $0.contains("proxy_cert_harmony_probe_only") })
             }
         }
+    }
+
+    @Test("device proxy probe exposes readonly Harmony HDC capability evidence")
+    func deviceProxyProbeExposesReadonlyHarmonyHDCCapabilityEvidence() throws {
+        let target = try makeNetworkProxyPlanTarget(platform: .harmony, device: "127.0.0.1:5555")
+        let session = try makeNetworkProxyProbeSession(
+            platform: .harmony,
+            target: target,
+            runner: { command in
+                let commandLine = hostSourceCommand(command)
+                if commandLine.contains("bootevent.boot.completed") {
+                    return successfulHostProcessResult(command, stdout: "true\n")
+                }
+                if commandLine.contains("echo triton-shell-ready") {
+                    return successfulHostProcessResult(command, stdout: "triton-shell-ready\n")
+                }
+                if commandLine.contains("param ls -r proxy") {
+                    return successfulHostProcessResult(command, stdout: "persist.net.proxy.host=\npersist.net.proxy.port=\n")
+                }
+                if commandLine.contains("param ls -r http") {
+                    throw HostCommandRunError.nonZeroExit(command: command, result: failedHostProcessResult(command, stderr: "no matching parameter\n"))
+                }
+                return successfulHostProcessResult(command)
+            }
+        )
+
+        #expect(session.ok)
+        #expect(session.action == "proxy.probe")
+        #expect(session.platform == "harmony")
+        #expect(session.configured == false)
+        #expect(session.sourceCommands.contains("hdc -t 127.0.0.1:5555 shell param ls -r proxy"))
+        #expect(session.sourceCommands.contains("hdc -t 127.0.0.1:5555 shell param ls -r http"))
+        #expect(session.limitations.contains("proxy_probe_readonly:not_mutated"))
+        #expect(session.limitations.contains("proxy_harmony_probe_only:no_verified_proxy_mutation"))
+        #expect(session.limitations.contains("proxy_harmony_candidate_parameters_found:manual_verification_required"))
+        let probeResults = try #require(session.probeResults)
+        #expect(probeResults.count == 4)
+        #expect(probeResults.first { $0.name == "harmony.param.proxy" }?.ok == true)
+        #expect(probeResults.first { $0.name == "harmony.param.proxy" }?.stdoutPreview?.contains("persist.net.proxy.host") == true)
+        #expect(probeResults.first { $0.name == "harmony.param.http" }?.ok == false)
+        #expect((probeResults.first { $0.name == "harmony.param.http" }?.exitCode ?? 0) != 0)
+    }
+
+    @Test("device proxy probe CLI plan-only resolves Harmony aliases without running HDC")
+    func deviceProxyProbeCLIPlanOnlyResolvesHarmonyAliasesWithoutRunningHDC() async throws {
+        let fileManager = FileManager.default
+        let originalDirectory = fileManager.currentDirectoryPath
+        let tempDirectory = fileManager.temporaryDirectory
+            .appendingPathComponent("triton-proxy-probe-alias-\(UUID().uuidString)")
+            .path
+        try fileManager.createDirectory(atPath: tempDirectory, withIntermediateDirectories: true)
+        defer {
+            _ = fileManager.changeCurrentDirectoryPath(originalDirectory)
+            try? fileManager.removeItem(atPath: tempDirectory)
+        }
+        #expect(fileManager.changeCurrentDirectoryPath(tempDirectory))
+
+        _ = try saveHostTargetAliasStore(HostTargetAliasStore(
+            current: "harmony-a",
+            aliases: [
+                "harmony-a": HostTargetAlias(platform: .harmony, target: "harmony:127.0.0.1:5555"),
+            ]
+        ))
+
+        let output = try await captureStandardOutputAsync {
+            let command = try DeviceProxyProbe.parse([
+                "--platform", "harmony",
+                "--device", "current",
+                "--plan-only",
+                "--json",
+            ])
+            try await command.run()
+        }
+        let envelope = try #require(JSONSerialization.jsonObject(with: Data(output.utf8)) as? [String: Any])
+        let target = try #require(envelope["target"] as? [String: Any])
+        let sourceCommands = try #require(envelope["sourceCommands"] as? [String])
+        let limitations = try #require(envelope["limitations"] as? [String])
+
+        #expect(envelope["ok"] as? Bool == true)
+        #expect(envelope["action"] as? String == "proxy.probe")
+        #expect(target["target"] as? String == "127.0.0.1:5555")
+        #expect(sourceCommands.contains("hdc -t 127.0.0.1:5555 shell param ls -r proxy"))
+        #expect(sourceCommands.contains("hdc -t 127.0.0.1:5555 shell param ls -r http"))
+        #expect(!sourceCommands.contains { $0.contains("current") || $0.contains("harmony-a") })
+        #expect(limitations.contains("proxy_plan_only:not_executed"))
     }
 
     @Test("device proxy rejects real-device targets because takeover is emulator scoped")

@@ -399,6 +399,7 @@ func hostDeviceProxyOutputContract() -> TKCommandOutputContract {
             ("redaction", "String?", false, "Capture export redaction policy summary, such as headers-names-only"),
             ("requestCount", "Int?", false, "Number of proxy.serve.request events exported from the capture artifact"),
             ("truncation", "String?", false, "Capture export truncation status; currently none for metadata-only exports"),
+            ("probeResults", "[NetworkProxyProbeResult]?", false, "Readonly proxy capability probe results with command, exitCode, stdout/stderr previews, and error summary"),
         ])
     )
 }

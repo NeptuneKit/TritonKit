@@ -16,7 +16,7 @@ struct DeviceProxy: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "proxy",
         abstract: "Inspect host-side simulator and emulator proxy takeover",
-        subcommands: [DeviceProxyDoctor.self, DeviceProxyCert.self, DeviceProxyServe.self, DeviceProxyStart.self, DeviceProxyStatus.self, DeviceProxyExport.self, DeviceProxyStop.self]
+        subcommands: [DeviceProxyDoctor.self, DeviceProxyCert.self, DeviceProxyProbe.self, DeviceProxyServe.self, DeviceProxyStart.self, DeviceProxyStatus.self, DeviceProxyExport.self, DeviceProxyStop.self]
     )
 }
 
@@ -101,6 +101,40 @@ struct DeviceProxyDoctor: AsyncParsableCommand {
 
     func run() async throws {
         try printNetworkProxySession(makeNetworkProxyDoctorSession(platform: platform), outputFormat: effectiveFormat(format, json: json))
+    }
+}
+
+struct DeviceProxyProbe: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "probe", abstract: "Run readonly platform proxy capability probes")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Option(help: "Unified host device selector") var device: String
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Path to adb executable") var adb: String = "adb"
+    @Flag(help: "Return readonly probe command ledger without running host tools") var planOnly = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+        if planOnly {
+            try printNetworkProxySession(
+                try makeNetworkProxyProbePlanSession(platform: platform, target: target, hdc: hdc, adb: adb),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        try printNetworkProxySession(
+            try makeNetworkProxyProbeSession(
+                platform: platform,
+                target: target,
+                hdc: hdc,
+                adb: adb,
+                runner: { command in try runHostCommand(command) }
+            ),
+            outputFormat: outputFormat
+        )
     }
 }
 

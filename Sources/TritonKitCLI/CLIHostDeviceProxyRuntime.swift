@@ -6,6 +6,7 @@ enum NetworkProxyAction: String {
     case doctor = "proxy.doctor"
     case certDoctor = "proxy.cert.doctor"
     case certPlan = "proxy.cert.plan"
+    case probe = "proxy.probe"
     case start = "proxy.start"
     case status = "proxy.status"
     case export = "proxy.export"
@@ -42,6 +43,18 @@ struct NetworkProxyArtifact: Codable, Equatable {
     let bytes: Int?
 }
 
+struct NetworkProxyProbeResult: Encodable, Equatable {
+    let name: String
+    let command: String
+    let ok: Bool
+    let exitCode: Int?
+    let stdoutPreview: String?
+    let stderrPreview: String?
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let error: String?
+}
+
 struct NetworkProxySession: Encodable, Equatable {
     let ok: Bool
     let surface: String
@@ -62,6 +75,7 @@ struct NetworkProxySession: Encodable, Equatable {
     let redaction: String?
     let requestCount: Int?
     let truncation: String?
+    let probeResults: [NetworkProxyProbeResult]?
 
     init(
         ok: Bool,
@@ -82,7 +96,8 @@ struct NetworkProxySession: Encodable, Equatable {
         error: TKCLIErrorDetail?,
         redaction: String? = nil,
         requestCount: Int? = nil,
-        truncation: String? = nil
+        truncation: String? = nil,
+        probeResults: [NetworkProxyProbeResult]? = nil
     ) {
         self.ok = ok
         self.surface = surface
@@ -103,6 +118,7 @@ struct NetworkProxySession: Encodable, Equatable {
         self.redaction = redaction
         self.requestCount = requestCount
         self.truncation = truncation
+        self.probeResults = probeResults
     }
 }
 
@@ -1242,7 +1258,7 @@ private func networkProxyCertificateScope(platform: HostDevicePlatform) -> Strin
     }
 }
 
-private func networkProxyConservativeCertificate(platform: HostDevicePlatform) -> NetworkProxyCertificate {
+func networkProxyConservativeCertificate(platform: HostDevicePlatform) -> NetworkProxyCertificate {
     NetworkProxyCertificate(installed: false, trusted: false, scope: networkProxyCertificateScope(platform: platform))
 }
 
@@ -1360,6 +1376,8 @@ private func networkProxyPolicyNextActionArgs(action: NetworkProxyAction, platfo
         return ["proxy", "cert", "doctor", "--platform", platform.rawValue, "--json"]
     case .certPlan:
         return ["proxy", "cert", "plan", "--platform", platform.rawValue, "--device", target, "--certificate", "<path.cer>", "--json"]
+    case .probe:
+        return ["proxy", "probe", "--platform", platform.rawValue, "--device", target, "--json"]
     case .start:
         return ["proxy", "start", "--platform", platform.rawValue, "--device", target, "--mode", captureMode ?? "record", "--confirm", "--audit-record", "<id>", "--execute-runner", "--json"]
     case .stop:
@@ -1746,7 +1764,7 @@ private func validateNetworkProxySessionState(
     }
 }
 
-private func makeNetworkProxyRealDeviceNotSupportedSession(
+func makeNetworkProxyRealDeviceNotSupportedSession(
     action: NetworkProxyAction,
     platform: HostDevicePlatform,
     target: HostDeviceTarget,
@@ -1864,7 +1882,7 @@ func makeSimulatorProxyTarget(simulator: String) -> HostDeviceTarget {
     )
 }
 
-private func networkProxyDoctorLimitations(platform: HostDevicePlatform) -> [String] {
+func networkProxyDoctorLimitations(platform: HostDevicePlatform) -> [String] {
     switch platform {
     case .ios:
         return [
