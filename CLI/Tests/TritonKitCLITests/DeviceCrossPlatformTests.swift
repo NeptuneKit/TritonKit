@@ -25,6 +25,7 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("proxy probe --platform ios|android|harmony --device <selector> --plan-only"))
         #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode record|mock|block|throttle --jsonl"))
         #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode mock --mock-rules <path.json> --jsonl"))
+        #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode throttle --throttle-ms <ms> --jsonl"))
         #expect(usageForms.contains("proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir>"))
         #expect(usageForms.contains("proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir> --plan-only"))
         #expect(usageForms.contains("proxy start --platform ios|android --device <selector> --mode record|mock|block|throttle --output <dir> --confirm --audit-record <id> --execute-runner"))
@@ -53,6 +54,7 @@ struct DeviceCrossPlatformTests {
         #expect(optionNames.contains("--session"))
         #expect(optionNames.contains("--certificate"))
         #expect(optionNames.contains("--jsonl"))
+        #expect(optionNames.contains("--throttle-ms"))
         #expect(optionNames.contains("--scope"))
         #expect(optionNames.contains("--name"))
         #expect(optionNames.contains("--runtime"))
@@ -73,6 +75,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-mock --mode mock --mock-rules /tmp/triton-mock-rules.json --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-block --mode block --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-throttle --mode throttle --jsonl"))
+        #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-throttle --mode throttle --throttle-ms 250 --jsonl"))
         #expect(device.examples.contains("triton device proxy start --platform android --device android-a --mode record --output /tmp/android-network --json"))
         #expect(device.examples.contains("triton device proxy status --platform harmony --device harmony-a --json"))
         #expect(device.examples.contains("triton device proxy export --platform ios --device iphone15 --output /tmp/network.har --json"))
@@ -125,6 +128,7 @@ struct DeviceCrossPlatformTests {
         #expect(proxyFields.contains("probeResults"))
         #expect(proxyServeFields.contains("responseStatus"))
         #expect(proxyServeFields.contains("responseStatusText"))
+        #expect(proxyServeFields.contains("throttleDelayMs"))
     }
 
     @Test("device proxy capabilities expose three-platform network takeover metadata")
@@ -1166,8 +1170,8 @@ struct DeviceCrossPlatformTests {
         #expect(!capture.contains("session=secret"))
     }
 
-    @Test("device proxy serve throttle mode records metadata and returns a stable rate limit response")
-    func deviceProxyServeThrottleModeRecordsMetadataAndReturnsStableRateLimitResponse() throws {
+    @Test("device proxy serve throttle mode records metadata and optional synthetic delay")
+    func deviceProxyServeThrottleModeRecordsMetadataAndOptionalSyntheticDelay() throws {
         let port = try reserveLocalPortForTest()
         let directory = FileManager.default.temporaryDirectory
             .appendingPathComponent("triton-proxy-throttle-\(UUID().uuidString)", isDirectory: true)
@@ -1180,7 +1184,7 @@ struct DeviceCrossPlatformTests {
         DispatchQueue.global().async {
             do {
                 summary = try runNetworkProxyCaptureServer(
-                    config: NetworkProxyServeConfig(listen: endpoint, outputDirectory: directory.path, maxConnections: 2, mode: "throttle")
+                    config: NetworkProxyServeConfig(listen: endpoint, outputDirectory: directory.path, maxConnections: 2, mode: "throttle", throttleDelayMs: 50)
                 )
             } catch {
                 serverError = error
@@ -1189,7 +1193,9 @@ struct DeviceCrossPlatformTests {
         }
 
         try waitUntilPortAcceptsConnections(port: port)
+        let startedAt = Date()
         let response = try sendProxyServeTestRequestAndReadResponse(port: port)
+        let elapsedMs = Date().timeIntervalSince(startedAt) * 1000
         #expect(finished.wait(timeout: .now() + 3) == .success)
         if let serverError {
             throw serverError
@@ -1198,6 +1204,8 @@ struct DeviceCrossPlatformTests {
         let capture = try String(contentsOfFile: networkProxyServeCapturePath(outputDirectory: directory.path), encoding: .utf8)
         #expect(summary?.requestCount == 1)
         #expect(summary?.captureMode == "throttle")
+        #expect(summary?.limitations.contains("proxy_throttle_delay_ms:50") == true)
+        #expect(elapsedMs >= 40)
         #expect(response.contains("HTTP/1.1 429 TritonKit Proxy Throttled"))
         #expect(response.contains("Retry-After: 1"))
         #expect(capture.contains("\"event\":\"proxy.serve.request\""))
@@ -1205,6 +1213,7 @@ struct DeviceCrossPlatformTests {
         #expect(capture.contains("\"policyAction\":\"throttled\""))
         #expect(capture.contains("\"responseStatus\":429"))
         #expect(capture.contains("\"responseStatusText\":\"TritonKit Proxy Throttled\""))
+        #expect(capture.contains("\"throttleDelayMs\":50"))
         #expect(!capture.contains("session=secret"))
     }
 
@@ -1249,7 +1258,8 @@ struct DeviceCrossPlatformTests {
             capturePath: sourceURL.path,
             connectionIndex: 5,
             captureMode: "throttle",
-            policyAction: "throttled"
+            policyAction: "throttled",
+            throttleDelayMs: 250
         )
         let customMock = NetworkProxyServeEvent(
             ok: true,
@@ -1271,6 +1281,7 @@ struct DeviceCrossPlatformTests {
             headerNames: ["Content-Type"],
             responseStatus: 201,
             responseStatusText: "Created",
+            throttleDelayMs: nil,
             redaction: "headers-names-only",
             error: nil
         )
@@ -1295,6 +1306,7 @@ struct DeviceCrossPlatformTests {
         let mockResponse = try #require(entries.dropFirst(2).first?["response"] as? [String: Any])
         let blockResponse = try #require(entries.dropFirst(3).first?["response"] as? [String: Any])
         let throttleResponse = try #require(entries.dropFirst(4).first?["response"] as? [String: Any])
+        let throttleTimings = try #require(entries.dropFirst(4).first?["timings"] as? [String: Any])
         let customMockResponse = try #require(entries.dropFirst(5).first?["response"] as? [String: Any])
         let firstHeaders = try #require(firstRequest["headers"] as? [[String: Any]])
 
@@ -1313,6 +1325,8 @@ struct DeviceCrossPlatformTests {
         #expect(blockResponse["statusText"] as? String == "TritonKit Proxy Blocked")
         #expect(throttleResponse["status"] as? Int == 429)
         #expect(throttleResponse["statusText"] as? String == "TritonKit Proxy Throttled")
+        #expect(entries.dropFirst(4).first?["time"] as? Int == 250)
+        #expect(throttleTimings["wait"] as? Int == 250)
         #expect(customMockResponse["status"] as? Int == 201)
         #expect(customMockResponse["statusText"] as? String == "Created")
     }

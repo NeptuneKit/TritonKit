@@ -7,13 +7,15 @@ struct NetworkProxyServeConfig {
     let maxConnections: Int?
     let mode: String
     let mockRulesPath: String?
+    let throttleDelayMs: Int?
 
-    init(listen: NetworkProxyEndpoint, outputDirectory: String, maxConnections: Int? = nil, mode: String = "record", mockRulesPath: String? = nil) {
+    init(listen: NetworkProxyEndpoint, outputDirectory: String, maxConnections: Int? = nil, mode: String = "record", mockRulesPath: String? = nil, throttleDelayMs: Int? = nil) {
         self.listen = listen
         self.outputDirectory = outputDirectory
         self.maxConnections = maxConnections
         self.mode = mode
         self.mockRulesPath = mockRulesPath
+        self.throttleDelayMs = throttleDelayMs
     }
 }
 
@@ -37,6 +39,7 @@ struct NetworkProxyServeEvent: Codable, Equatable {
     let headerNames: [String]
     let responseStatus: Int?
     let responseStatusText: String?
+    let throttleDelayMs: Int?
     let redaction: String
     let error: String?
 }
@@ -158,6 +161,7 @@ func runNetworkProxyCaptureServer(
 ) throws -> NetworkProxyServeSummary {
     signal(SIGPIPE, SIG_IGN)
     let mode = try normalizeNetworkProxyServeMode(config.mode)
+    let throttleDelayMs = try normalizeNetworkProxyThrottleDelayMs(config.throttleDelayMs, mode: mode)
     let mockRules = try config.mockRulesPath.flatMap(loadNetworkProxyMockRules)
     let captureURL = try networkProxyServeCaptureURL(outputDirectory: config.outputDirectory)
     let listenFD = try makeNetworkProxyListenSocket(endpoint: config.listen)
@@ -184,6 +188,7 @@ func runNetworkProxyCaptureServer(
         headerNames: [],
         responseStatus: nil,
         responseStatusText: nil,
+        throttleDelayMs: nil,
         redaction: "headers-names-only",
         error: nil
     ))
@@ -199,7 +204,7 @@ func runNetworkProxyCaptureServer(
         accepted += 1
         defer { close(clientFD) }
         do {
-            let event = try handleNetworkProxyClient(clientFD: clientFD, captureURL: captureURL, listen: listen, connectionIndex: accepted, mode: mode, mockRules: mockRules)
+            let event = try handleNetworkProxyClient(clientFD: clientFD, captureURL: captureURL, listen: listen, connectionIndex: accepted, mode: mode, mockRules: mockRules, throttleDelayMs: throttleDelayMs)
             requestCount += 1
             eventWriter?(event)
         } catch {
@@ -223,6 +228,7 @@ func runNetworkProxyCaptureServer(
                 headerNames: [],
                 responseStatus: nil,
                 responseStatusText: nil,
+                throttleDelayMs: nil,
                 redaction: "headers-names-only",
                 error: String(describing: error)
             )
@@ -245,8 +251,9 @@ func runNetworkProxyCaptureServer(
             "proxy_capture_metadata_only:no_tls_decryption",
             "proxy_capture_redaction:headers_names_only",
             "proxy_capture_mode:\(mode)",
+            throttleDelayMs.map { "proxy_throttle_delay_ms:\($0)" },
             mockRules == nil ? "proxy_mock_rules:none" : "proxy_mock_rules:loaded",
-        ]
+        ].compactMap { $0 }
     )
 }
 
@@ -256,6 +263,17 @@ private func normalizeNetworkProxyServeMode(_ mode: String) throws -> String {
         throw RuntimeError("device proxy serve --mode currently supports record, mock, block, or throttle.")
     }
     return normalized
+}
+
+private func normalizeNetworkProxyThrottleDelayMs(_ delayMs: Int?, mode: String) throws -> Int? {
+    guard let delayMs else { return nil }
+    guard mode == "throttle" else {
+        throw RuntimeError("device proxy serve --throttle-ms can only be used with --mode throttle.")
+    }
+    guard (0...60_000).contains(delayMs) else {
+        throw RuntimeError("device proxy serve --throttle-ms must be between 0 and 60000.")
+    }
+    return delayMs
 }
 
 func networkProxyServeCapturePath(outputDirectory: String) -> String {
@@ -336,9 +354,10 @@ private func makeNetworkProxyHAR(sourceURL: URL) throws -> NetworkProxyHAREnvelo
 private func networkProxyHAREntry(from event: NetworkProxyServeEvent, method: String) -> NetworkProxyHAREntry {
     let url = networkProxyHARURL(from: event)
     let response = networkProxyHARResponse(for: event)
+    let waitMs = event.throttleDelayMs ?? 0
     return NetworkProxyHAREntry(
         startedDateTime: "1970-01-01T00:00:00Z",
-        time: 0,
+        time: waitMs,
         request: NetworkProxyHARRequest(
             method: method,
             url: url,
@@ -351,7 +370,7 @@ private func networkProxyHAREntry(from event: NetworkProxyServeEvent, method: St
         ),
         response: response,
         cache: [:],
-        timings: NetworkProxyHARTimings(send: 0, wait: 0, receive: 0),
+        timings: NetworkProxyHARTimings(send: 0, wait: waitMs, receive: 0),
         comment: "metadata-only capture; header values, bodies, TLS contents, and response payloads are not stored"
     )
 }
@@ -417,7 +436,8 @@ func parseNetworkProxyHTTPHeader(
     capturePath: String,
     connectionIndex: Int,
     captureMode: String = "record",
-    policyAction: String = "forwarded"
+    policyAction: String = "forwarded",
+    throttleDelayMs: Int? = nil
 ) throws -> NetworkProxyServeEvent {
     try parseNetworkProxyRequest(
         data: data,
@@ -426,11 +446,12 @@ func parseNetworkProxyHTTPHeader(
         connectionIndex: connectionIndex,
         captureMode: captureMode,
         policyAction: policyAction,
-        mockRules: nil
+        mockRules: nil,
+        throttleDelayMs: throttleDelayMs
     ).event
 }
 
-private func handleNetworkProxyClient(clientFD: Int32, captureURL: URL, listen: String, connectionIndex: Int, mode: String, mockRules: [NetworkProxyMockRule]?) throws -> NetworkProxyServeEvent {
+private func handleNetworkProxyClient(clientFD: Int32, captureURL: URL, listen: String, connectionIndex: Int, mode: String, mockRules: [NetworkProxyMockRule]?, throttleDelayMs: Int?) throws -> NetworkProxyServeEvent {
     let requestData = try readNetworkProxyRequestHeader(clientFD: clientFD)
     let parsed = try parseNetworkProxyRequest(
         data: requestData,
@@ -439,7 +460,8 @@ private func handleNetworkProxyClient(clientFD: Int32, captureURL: URL, listen: 
         connectionIndex: connectionIndex,
         captureMode: mode,
         policyAction: networkProxyPolicyAction(for: mode),
-        mockRules: mockRules
+        mockRules: mockRules,
+        throttleDelayMs: mode == "throttle" ? throttleDelayMs : nil
     )
     try appendNetworkProxyCaptureEvent(parsed.event, captureURL: captureURL)
 
@@ -452,7 +474,7 @@ private func handleNetworkProxyClient(clientFD: Int32, captureURL: URL, listen: 
         return parsed.event
     }
     if mode == "throttle" {
-        writeNetworkProxyThrottledResponse(clientFD: clientFD)
+        writeNetworkProxyThrottledResponse(clientFD: clientFD, delayMs: throttleDelayMs)
         return parsed.event
     }
 
@@ -502,7 +524,8 @@ private func parseNetworkProxyRequest(
     connectionIndex: Int,
     captureMode: String,
     policyAction: String,
-    mockRules: [NetworkProxyMockRule]?
+    mockRules: [NetworkProxyMockRule]?,
+    throttleDelayMs: Int?
 ) throws -> ParsedProxyRequest {
     guard let header = String(data: data, encoding: .utf8) else {
         throw RuntimeError("Proxy request header is not UTF-8.")
@@ -549,6 +572,7 @@ private func parseNetworkProxyRequest(
         headerNames: headerNames,
         responseStatus: policyResponse.status,
         responseStatusText: policyResponse.statusText,
+        throttleDelayMs: throttleDelayMs,
         redaction: "headers-names-only",
         error: nil
     )
@@ -654,7 +678,10 @@ private func networkProxyMockRule(_ rule: NetworkProxyMockRule, matchesMethod me
     return true
 }
 
-private func writeNetworkProxyThrottledResponse(clientFD: Int32) {
+private func writeNetworkProxyThrottledResponse(clientFD: Int32, delayMs: Int?) {
+    if let delayMs, delayMs > 0 {
+        usleep(useconds_t(delayMs * 1000))
+    }
     let body = "TritonKit proxy throttle mode rate-limited this request.\n"
     let response = (
         "HTTP/1.1 429 TritonKit Proxy Throttled\r\n" +

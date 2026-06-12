@@ -423,6 +423,7 @@ func hostDeviceProxyServeOutputContract() -> TKCommandOutputContract {
             ("mockRuleId", "String?", false, "Matched mock rule id for proxy serve --mode mock when --mock-rules is provided"),
             ("responseStatus", "Int?", false, "Synthetic response status for local proxy policy actions; absent for forwarded requests"),
             ("responseStatusText", "String?", false, "Synthetic response reason phrase for mock, block, or throttle policy actions"),
+            ("throttleDelayMs", "Int?", false, "Synthetic response delay in milliseconds for proxy serve --mode throttle"),
             ("requestCount", "Int?", false, "Final captured request count"),
             ("method", "String?", false, "Captured HTTP method for request events"),
             ("host", "String?", false, "Captured upstream host for request events"),
