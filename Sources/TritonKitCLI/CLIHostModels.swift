@@ -52,6 +52,27 @@ struct HostSimulatorScreenshotOutput: Encodable {
     let note: String
 }
 
+struct HostSimulatorInputOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let adapter: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let stdout: String?
+    let stderr: String?
+    let x: Int?
+    let y: Int?
+    let insertedLength: Int?
+    let textEncoding: String?
+    let note: String
+}
+
 struct HostDeviceTarget: Encodable, Equatable {
     let platform: String
     let id: String
@@ -62,6 +83,40 @@ struct HostDeviceTarget: Encodable, Equatable {
     let name: String?
     let runtime: String?
     let transport: String?
+    let appName: String?
+    let bundleIdentifier: String?
+    let identityState: String?
+    let current: Bool?
+
+    init(
+        platform: String,
+        id: String,
+        target: String,
+        state: String,
+        ready: Bool,
+        source: String,
+        name: String?,
+        runtime: String?,
+        transport: String?,
+        appName: String? = nil,
+        bundleIdentifier: String? = nil,
+        identityState: String? = nil,
+        current: Bool? = nil
+    ) {
+        self.platform = platform
+        self.id = id
+        self.target = target
+        self.state = state
+        self.ready = ready
+        self.source = source
+        self.name = name
+        self.runtime = runtime
+        self.transport = transport
+        self.appName = appName
+        self.bundleIdentifier = bundleIdentifier
+        self.identityState = identityState
+        self.current = current
+    }
 }
 
 struct HostTargetAlias: Codable, Equatable {
@@ -681,7 +736,9 @@ struct HostPreferencesOutput: Encodable {
     let plistPath: String
     let key: String?
     let value: TKHostPreferenceValue?
+    let valuePlistType: String?
     let preferences: [String: TKHostPreferenceValue]?
+    let preferencesPlistTypes: [String: String]?
 }
 
 struct HostPreferencesSetOutput: Encodable {
@@ -693,6 +750,8 @@ struct HostPreferencesSetOutput: Encodable {
     let key: String
     let previousValue: TKHostPreferenceValue?
     let newValue: TKHostPreferenceValue
+    let previousPlistType: String?
+    let newPlistType: String
     let restartAdvice: String
 }
 

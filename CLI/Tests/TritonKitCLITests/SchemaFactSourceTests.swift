@@ -56,6 +56,8 @@ struct SchemaFactSourceTests {
         #expect(plan.nextCommands.contains("triton schema --json"))
         #expect(plan.providedCapabilities.contains("plan"))
         #expect(plan.providedCapabilities.contains("plan-inspect"))
+        #expect(plan.outputSemantics?.contains("Triton-first fallback gate") == true)
+        #expect(plan.outputSemantics?.contains("missing-schema evidence") == true)
         #expect(plan.usageForms.contains(where: { $0.form == "ios-smoke" }))
         #expect(plan.usageForms.contains(where: { $0.form == "open-url" }))
         #expect(plan.usageForms.contains(where: { $0.form == "webview-check" }))
@@ -64,6 +66,9 @@ struct SchemaFactSourceTests {
             "primaryNextAction.command", "primaryNextAction.args", "primaryNextAction.category", "primaryNextAction.requiresLongRunningProcess", "steps", "error",
             "steps[].id", "steps[].command", "steps[].argv", "steps[].category", "steps[].workflowCategories", "steps[].requires",
             "steps[].expectedArtifacts", "steps[].stopConditions",
+            "afterRecoverySteps", "afterRecoverySteps[].id", "afterRecoverySteps[].command", "afterRecoverySteps[].argv",
+            "afterRecoverySteps[].category", "afterRecoverySteps[].workflowCategories", "afterRecoverySteps[].requires",
+            "afterRecoverySteps[].expectedArtifacts", "afterRecoverySteps[].stopConditions",
         ])
         expectContract(plan, selector: "plan.inspect", fields: [
             "ok", "path", "schemaVersion", "name", "variables", "stepCount", "actions", "target", "steps",
@@ -150,7 +155,9 @@ struct SchemaFactSourceTests {
         #expect(target.nextCommands.contains("triton target use <selector> --json"))
         #expect(target.nextCommands.contains("triton target wait-ready <selector> --json"))
         expectContract(target, selector: "host.device-list", fields: [
-            "ok", "platform", "targets", "defaultTarget", "sourceCommand",
+            "ok", "platform", "targets",
+            "targets[].appName", "targets[].bundleIdentifier", "targets[].identityState", "targets[].current",
+            "defaultTarget", "sourceCommand",
         ])
         expectContract(target, selector: "host.device-selection", fields: [
             "ok", "platform", "current", "target", "defaultsPath", "selection", "path",
@@ -284,6 +291,27 @@ struct SchemaFactSourceTests {
         #expect(mediaPlayback.nextAction?.args == ["--include", "media,ax,screenshot-metadata", "--json"])
         #expect(mediaPlayback.evidence == ["runtime-media", "runtime-ax", "screenshot-metadata"])
 
+        let semanticState = try #require(connected["app-semantic-state"])
+        #expect(semanticState.supported)
+        #expect(semanticState.group == "semantic")
+        #expect(semanticState.requiredBy.contains("assert"))
+        #expect(semanticState.requiredBy.contains("evidence"))
+        #expect(semanticState.nextAction?.command == "snapshot")
+        #expect(semanticState.nextAction?.args == ["--include", "semantic,app,scene", "--json"])
+        #expect(semanticState.evidence == ["runtime-semantic", "provider-state"])
+
+        let disconnectedSemanticState = try #require(disconnected["app-semantic-state"])
+        #expect(!disconnectedSemanticState.supported)
+        #expect(disconnectedSemanticState.nextAction?.command == "status")
+
+        let semanticAction = try #require(connected["app-semantic-action"])
+        #expect(semanticAction.supported)
+        #expect(semanticAction.group == "semantic")
+        #expect(semanticAction.reason == nil)
+        #expect(semanticAction.nextAction?.command == "snapshot")
+        #expect(semanticAction.nextAction?.args == ["--include", "semantic", "--json"])
+        #expect(semanticAction.evidence == ["runtime-semantic", "provider-action-catalog"])
+
         let webViewList = try #require(disconnected["webview-list"])
         #expect(webViewList.supported)
         #expect(webViewList.group == "webview")
@@ -360,6 +388,26 @@ struct SchemaFactSourceTests {
         #expect(harmonyTap.nextAction?.command == "tap")
         #expect(harmonyTap.nextAction?.args == ["<text>", "--platform", "harmony", "--json"])
         #expect(harmonyTap.evidence == ["host-command-json", "host-artifact"])
+
+        let iosHostTap = try #require(connected["ios-simulator-host-tap"])
+        #expect(!iosHostTap.supported)
+        #expect(iosHostTap.reason == "Host-side iOS Simulator input is not available in the current adapter")
+        #expect(iosHostTap.group == "host")
+        #expect(iosHostTap.requiredBy.contains("action"))
+        #expect(iosHostTap.requiredBy.contains("smoke"))
+        #expect(iosHostTap.nextAction?.command == "sim")
+        #expect(iosHostTap.nextAction?.args == ["tap", "--simulator", "<udid|booted>", "--x", "<x>", "--y", "<y>", "--json"])
+        #expect(iosHostTap.evidence == ["unsupported-envelope", "command-schema"])
+
+        let iosHostType = try #require(connected["ios-simulator-host-type"])
+        #expect(!iosHostType.supported)
+        #expect(iosHostType.reason == "Host-side iOS Simulator input is not available in the current adapter")
+        #expect(iosHostType.group == "host")
+        #expect(iosHostType.requiredBy.contains("action"))
+        #expect(iosHostType.requiredBy.contains("smoke"))
+        #expect(iosHostType.nextAction?.command == "sim")
+        #expect(iosHostType.nextAction?.args == ["type", "--simulator", "<udid|booted>", "--text", "<text>", "--json"])
+        #expect(iosHostType.evidence == ["unsupported-envelope", "command-schema"])
 
         let harmonyWait = try #require(connected["harmony-wait-text"])
         #expect(harmonyWait.group == "action")
@@ -545,7 +593,11 @@ struct SchemaFactSourceTests {
         let schemas = commandSchemaMap()
         let observeSchema = try #require(schemas["observe"])
         let nodeSchema = try #require(schemas["node"])
+        let snapshotSchema = try #require(schemas["snapshot"])
         #expect(observeSchema.providedCapabilities == ["observe", "observe-ios", "media-playback", "observe-android", "observe-harmony"])
+        #expect(snapshotSchema.providedCapabilities.contains("app-semantic-state"))
+        #expect(snapshotSchema.providedCapabilities.contains("app-semantic-action"))
+        expectContract(snapshotSchema, selector: "runtime.snapshot", fields: ["semantic", "semantic.domains[]", "semantic.domains[].state", "semantic.domains[].actions"])
         #expect(nodeSchema.providedCapabilities == ["node", "node-resolve"])
 
         let connected = connectedCapabilityMap()
@@ -692,7 +744,10 @@ struct SchemaFactSourceTests {
         #expect(iosSmoke.primaryNextActionSource == "next-step-step")
         #expect(iosSmoke.steps.map(\.id).contains("target-resolve"))
         #expect(iosSmoke.steps.map(\.id).contains("ios-smoke"))
+        #expect(iosSmoke.steps.map(\.id).contains("ios-host-input-unsupported"))
         #expect(iosSmoke.steps.first(where: { $0.id == "target-list" })?.workflowCategories == ["action", "app", "assert", "evidence", "observe", "runtime", "smoke", "target"])
+        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-input-unsupported" })?.category == "diagnose")
+        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-input-unsupported" })?.argv == ["triton", "schema", "--command", "sim", "--json"])
         #expect(iosSmoke.steps.first(where: { $0.id == "ios-smoke" })?.workflowCategories == ["app", "assert", "evidence", "smoke", "target"])
         #expect(iosSmoke.steps.first(where: { $0.id == "ios-smoke" })?.command.contains("triton smoke ios") == true)
         #expect(iosSmoke.steps.first(where: { $0.id == "evidence-summary" })?.requiresServer == false)
@@ -719,11 +774,12 @@ struct SchemaFactSourceTests {
         #expect(openURL.primaryExpectedArtifact == "stdout-json")
         #expect(openURL.primaryNextAction?.command == "target")
         #expect(openURL.primaryNextActionSource == "next-step-step")
-        #expect(openURL.steps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence"])
+        #expect(openURL.steps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence", "evidence-summary"])
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.workflowCategories == ["app", "assert", "evidence", "target"])
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("triton app go") == true)
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--wait-ready") == false)
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--json") == false)
+        #expect(openURL.steps.first(where: { $0.id == "evidence-summary" })?.requiresServer == false)
 
         let webview = buildWorkflowPlan(
             capabilities: capabilities,
@@ -750,6 +806,91 @@ struct SchemaFactSourceTests {
         #expect(webview.steps.map(\.id) == ["webview-current", "route-assert-current-url", "webview-wait", "evidence"])
         #expect(webview.steps.first(where: { $0.id == "webview-current" })?.workflowCategories == ["assert", "evidence", "observe", "route", "webview-check"])
         #expect(webview.steps.first(where: { $0.id == "route-assert-current-url" })?.command.contains("https://example.com") == true)
+    }
+
+    @Test("open-url bootstrap plan preserves deferred task workflow")
+    func openURLBootstrapPlanPreservesDeferredTaskWorkflow() throws {
+        let capabilities = TKCapabilitiesResponse(
+            ok: false,
+            serverReachable: false,
+            connected: false,
+            latestHierarchyAvailable: false,
+            targetCount: 0,
+            runtime: "unknown",
+            capabilities: [],
+            error: TKCLIErrorDetail(code: "server_unavailable", message: "No server")
+        )
+
+        let plan = buildWorkflowPlan(
+            capabilities: capabilities,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "open-url",
+                device: "iphone15",
+                bundleID: nil,
+                url: "myapp://detail",
+                text: "Ready",
+                expectedURL: nil,
+                evidence: "/tmp/open-url.tritonevidence"
+            )
+        )
+
+        #expect(plan.mode == "bootstrap")
+        #expect(plan.nextStep == "start-server")
+        #expect(plan.steps.first?.id == "start-server")
+        #expect(plan.afterRecoverySteps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence", "evidence-summary"])
+        #expect(plan.afterRecoverySteps.first(where: { $0.id == "app-open-url" })?.argv == ["triton", "app", "go", "myapp://detail", "--device", "iphone15"])
+        #expect(plan.afterRecoverySteps.first(where: { $0.id == "wait-text" })?.expectedArtifacts.contains("wait-result") == true)
+        #expect(plan.afterRecoverySteps.first(where: { $0.id == "evidence-summary" })?.requiresServer == false)
+    }
+
+    @Test("open-url plan supports Harmony inputs with schema-backed steps")
+    func openURLPlanSupportsHarmonyInputsWithSchemaBackedSteps() throws {
+        let capabilities = TKCapabilitiesResponse(
+            ok: true,
+            serverReachable: true,
+            connected: true,
+            latestHierarchyAvailable: true,
+            targetCount: 1,
+            runtime: "host-harmony",
+            capabilities: []
+        )
+        let schemas = commandSchemaMap()
+        var issues = SchemaBackedCommandIssues()
+
+        let plan = buildWorkflowPlan(
+            capabilities: capabilities,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "open-url",
+                platform: "harmony",
+                device: "harmony-a",
+                bundleID: nil,
+                bundle: "com.example.app",
+                ability: "EntryAbility",
+                hap: "/tmp/Demo.hap",
+                url: "example://home",
+                text: "Ready",
+                expectedURL: nil,
+                evidence: "/tmp/harmony.tritonevidence"
+            )
+        )
+
+        #expect(plan.mode == "task")
+        #expect(plan.goal == "open-url")
+        #expect(plan.steps.map(\.id) == ["target-resolve", "install-app", "app-open-url", "wait-text", "capture-screenshot", "evidence-summary"])
+        #expect(plan.steps.first(where: { $0.id == "install-app" })?.argv == ["triton", "app", "install", "--device", "harmony-a", "--platform", "harmony", "--hap", "/tmp/Demo.hap", "--json"])
+        #expect(plan.steps.first(where: { $0.id == "app-open-url" })?.argv == ["triton", "app", "open-url", "example://home", "--device", "harmony-a", "--platform", "harmony", "--bundle", "com.example.app", "--ability", "EntryAbility", "--json"])
+        #expect(plan.steps.first(where: { $0.id == "wait-text" })?.argv == ["triton", "wait", "--platform", "harmony", "--target", "harmony-a", "--text", "Ready", "--timeout", "15", "--json"])
+        #expect(plan.steps.first(where: { $0.id == "capture-screenshot" })?.argv == ["triton", "screenshot", "--device", "harmony-a", "--platform", "harmony", "--output", "/tmp/harmony.png", "--json"])
+        #expect(plan.steps.first(where: { $0.id == "evidence-summary" })?.argv == ["triton", "evidence", "summary", "/tmp/harmony.tritonevidence", "--json"])
+
+        for step in plan.steps {
+            validateSchemaBackedArgv(step.argv, context: "open-url:\(step.id)", schemas: schemas, issues: &issues)
+        }
+        expectNoSchemaBackedCommandIssues(issues)
     }
 
     @Test("workflow plan mode separates bootstrap recovery from task workflows")
@@ -1081,11 +1222,13 @@ struct SchemaFactSourceTests {
         let requiresRuntime = "Requires connected embedded TritonKit runtime"
         let requiresWebViewProvider = "Requires WebView provider metadata from embedded runtime or --runtime-base-url"
         let harmonyClearBoundary = "Host-side Harmony clear is not available in the current adapter"
+        let iosHostInputBoundary = "Host-side iOS Simulator input is not available in the current adapter"
         let pressBoundary = "Host-side HID is not available in the embedded runtime"
         let knownUnsupportedReasons = Set([
             requiresRuntime,
             requiresWebViewProvider,
             harmonyClearBoundary,
+            iosHostInputBoundary,
             pressBoundary,
         ])
 
@@ -1115,11 +1258,13 @@ struct SchemaFactSourceTests {
                 }
 
                 if fixture.name == "runtime-connected" {
-                    if !["press", "harmony-clear-text"].contains(capability.name) {
+                    if !["press", "harmony-clear-text", "ios-simulator-host-tap", "ios-simulator-host-type"].contains(capability.name) {
                         connectedUnexpectedUnsupported.append("\(capability.name):\(reason)")
                     } else if capability.name == "press", reason != pressBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     } else if capability.name == "harmony-clear-text", reason != harmonyClearBoundary {
+                        connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
+                    } else if ["ios-simulator-host-tap", "ios-simulator-host-type"].contains(capability.name), reason != iosHostInputBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     }
                 }
@@ -1283,7 +1428,7 @@ struct SchemaFactSourceTests {
 
         let runtimeReasonCapabilities = Set([
             "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder",
-            "snapshot", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger",
+            "snapshot", "media-playback", "app-semantic-state", "app-semantic-action", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger",
             "observe-ios",
             "inspect", "hierarchy", "nodes", "node", "attrs", "object",
             "export-json", "export-archive", "geometry", "ax", "hit", "screenshot",
@@ -1392,9 +1537,10 @@ struct SchemaFactSourceTests {
         let requiresRuntime = "Requires connected embedded TritonKit runtime"
         let requiresWebViewProvider = "Requires WebView provider metadata from embedded runtime or --runtime-base-url"
         let harmonyClearBoundary = "Host-side Harmony clear is not available in the current adapter"
+        let iosHostInputBoundary = "Host-side iOS Simulator input is not available in the current adapter"
         let pressBoundary = "Host-side HID is not available in the embedded runtime"
 
-        let runtimeReasonGroups = Set(["runtime", "observe", "assert", "evidence", "replay", "action"])
+        let runtimeReasonGroups = Set(["runtime", "semantic", "observe", "assert", "evidence", "replay", "action"])
         let webviewReasonGroups = Set(["webview", "route"])
         let webviewEvidenceKeys = Set([
             "webview-provider", "provider-url", "webview-snapshot",
@@ -1458,6 +1604,14 @@ struct SchemaFactSourceTests {
                         !capability.requiredBy.contains("action") ||
                         !capability.requiredBy.contains("assert") ||
                         !capability.requiredBy.contains("evidence") ||
+                        Set(capability.evidence) != Set(["unsupported-envelope", "command-schema"]) {
+                        boundaryReasonTaxonomyMismatches.append("\(fixture.name):\(capability.name):group=\(capability.group ?? "nil"):requiredBy=\(capability.requiredBy):evidence=\(capability.evidence)")
+                    }
+
+                case iosHostInputBoundary:
+                    if capability.group != "host" ||
+                        !capability.requiredBy.contains("action") ||
+                        !capability.requiredBy.contains("smoke") ||
                         Set(capability.evidence) != Set(["unsupported-envelope", "command-schema"]) {
                         boundaryReasonTaxonomyMismatches.append("\(fixture.name):\(capability.name):group=\(capability.group ?? "nil"):requiredBy=\(capability.requiredBy):evidence=\(capability.evidence)")
                     }
@@ -1538,6 +1692,7 @@ struct SchemaFactSourceTests {
             "bootstrap": ["status", "doctor", "capabilities", "schema", "plan", "record", "replay", "serve"],
             "target": ["target"],
             "runtime": ["runtime", "state", "snapshot", "focus", "set-text", "select-segment", "set-switch", "ledger", "schema", "status", "serve"],
+            "semantic": ["snapshot", "status", "serve"],
             "host": ["device", "sim", "app", "ax"],
             "observe": ["observe", "snapshot", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export", "geometry", "ax", "screenshot", "hit", "wait", "status", "serve"],
             "webview": ["webview"],
@@ -3721,7 +3876,9 @@ struct SchemaFactSourceTests {
         #expect(runtime.nextCommands.contains("triton capabilities --format json"))
         expectContract(runtime, selector: "runtime.manifest", fields: [
             "ok", "platform", "runtime", "transport", "enabled", "sdkVersion", "buildConfiguration",
-            "capabilities", "limits", "redaction",
+            "capabilities", "semanticDomains", "semanticDomains[].domain", "semanticDomains[].source",
+            "semanticDomains[].confidence", "semanticDomains[].schema", "semanticDomains[].actions",
+            "semanticDomains[].redaction", "limits", "redaction",
         ])
 
         #expect(state.failureCodes.contains("server_unavailable"))
@@ -3836,7 +3993,9 @@ struct SchemaFactSourceTests {
         #expect(device.failureCodes.contains("device_not_ready"))
         #expect(device.nextCommands.contains("triton device resolve --device <selector> --json"))
         expectContract(device, selector: "host.device-list", fields: [
-            "ok", "platform", "targets", "defaultTarget", "sourceCommand",
+            "ok", "platform", "targets",
+            "targets[].appName", "targets[].bundleIdentifier", "targets[].identityState", "targets[].current",
+            "defaultTarget", "sourceCommand",
         ])
         expectContract(device, selector: "host.device-selection", fields: [
             "ok", "platform", "target", "defaultsPath", "selection",
@@ -3850,8 +4009,23 @@ struct SchemaFactSourceTests {
 
         #expect(sim.failureCodes.contains("simulator_not_found"))
         #expect(sim.failureCodes.contains("host_command_failed"))
+        #expect(sim.failureCodes.contains("unsupported_host_input"))
+        #expect(sim.failureCodes.contains("unsupported_text_input"))
         #expect(sim.artifacts.contains("simulator-screenshot"))
         #expect(sim.nextCommands.contains("triton sim use <udid> --json"))
+        #expect(sim.providedCapabilities.contains("ios-simulator-host-tap"))
+        #expect(sim.providedCapabilities.contains("ios-simulator-host-type"))
+        let simTap = try #require(sim.subcommands.first(where: { $0.name == "tap" }))
+        #expect(simTap.requiredOptions == ["--x", "--y"])
+        #expect(simTap.optionalOptions.contains("--simulator"))
+        #expect(simTap.outputSelectors == ["host.simulator-input"])
+        #expect(simTap.failureCodes.contains("unsupported_host_input"))
+        let simType = try #require(sim.subcommands.first(where: { $0.name == "type" }))
+        #expect(simType.requiredOptions == ["--text"])
+        #expect(simType.optionalOptions.contains("--simulator"))
+        #expect(simType.outputSelectors == ["host.simulator-input"])
+        #expect(simType.failureCodes.contains("unsupported_host_input"))
+        #expect(simType.failureCodes.contains("unsupported_text_input"))
         expectContract(sim, selector: "host.simulator-list", fields: [
             "ok", "simulators",
         ])
@@ -3864,6 +4038,10 @@ struct SchemaFactSourceTests {
         expectContract(sim, selector: "host.simulator-action", fields: [
             "ok", "action", "runtimeScope", "target", "tool", "exitCode", "riskLevel",
             "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "screenshot", "note",
+        ])
+        expectContract(sim, selector: "host.simulator-input", fields: [
+            "ok", "action", "runtimeScope", "target", "adapter", "tool", "exitCode",
+            "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated", "textEncoding", "note",
         ])
 
         #expect(app.failureCodes.contains("app_launch_failed"))
@@ -4049,7 +4227,7 @@ private func commandSchemaMap() -> [String: TKCommandSchema] {
 
 private func capabilityGroupTaxonomy() -> Set<String> {
     [
-        "action", "assert", "bootstrap", "evidence", "host", "observe",
+        "action", "assert", "bootstrap", "evidence", "host", "observe", "semantic",
         "replay", "route", "runtime", "smoke", "target", "webview", "xcode",
     ]
 }
@@ -4068,7 +4246,8 @@ private func capabilityEvidenceTaxonomy() -> Set<String> {
         "host-layout", "host-targets.json", "hierarchy-node", "input.result",
         "page-events", "provider-url", "route-assertion", "runtime-ax",
         "runtime-ledger", "runtime-manifest", "runtime-provider",
-        "runtime-media", "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
+        "provider-action-catalog", "provider-state", "runtime-media", "runtime-samples",
+        "runtime-semantic", "runtime-snapshot", "screenshot", "screenshot-metadata",
         "smoke-summary", "snapshot-json", "status-json", "stdout-json",
         "surface-tree", "target.resolution", "trace", "tritonplan",
         "unsupported-envelope", "wait.result", "wait-samples", "webview-candidates",
@@ -4931,7 +5110,7 @@ private func schemaExampleCommandFixtures() -> [CommandStringFixture] {
 
 private func workflowPlanCommandFixtures(includeTaskInputs: Bool) -> [CommandStringFixture] {
     workflowPlanFixtures(includeTaskInputs: includeTaskInputs).flatMap { plan in
-        plan.steps.map {
+        (plan.steps + plan.afterRecoverySteps).map {
             CommandStringFixture(
                 context: "\(plan.goal ?? "general"):\($0.id)",
                 command: $0.command,

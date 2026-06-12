@@ -245,6 +245,15 @@ func currentRuntimeSnapshot(_ request: TKRuntimeSnapshotRequest) -> TKRuntimeSna
         skipped.append(TKRuntimeSnapshotSkipped(name: "media", reason: "not requested"))
     }
 
+    let semantic: TKRuntimeSemanticStateResponse?
+    if includes("semantic") {
+        semantic = TritonKit.shared.currentSemanticState(capturedAt: capturedAt)
+        artifact("semantic")
+    } else {
+        semantic = nil
+        skipped.append(TKRuntimeSnapshotSkipped(name: "semantic", reason: "not requested"))
+    }
+
     let screenshot: TKRuntimeScreenshotMetadata?
     if includes("screenshot-metadata") || includes("screenshot") {
         if let window = keyWindows().first {
@@ -271,6 +280,7 @@ func currentRuntimeSnapshot(_ request: TKRuntimeSnapshotRequest) -> TKRuntimeSna
         route: route,
         responder: responder,
         media: media,
+        semantic: semantic,
         geometry: geometry,
         ax: ax,
         screenshot: screenshot,

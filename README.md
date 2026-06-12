@@ -235,7 +235,63 @@ struct YourApp: App {
 }
 ```
 
-### 3. iOS Network Notes
+### 3. App Semantic Providers
+
+Use semantic providers when the strongest proof is app-domain state rather than AX text, layout, or pixels. Providers are opt-in, Debug-only hooks owned by the app. They can expose typed business facts and an action catalog to agents without adding domain-specific commands to TritonKit core.
+
+Register providers from the same guarded Debug bootstrap path:
+
+```swift
+#if DEBUG
+enum TritonKitSemanticProviders {
+    private static var mediaToken: TritonKit.ObservationToken?
+
+    static func register() {
+        mediaToken = TritonKit.shared.registerSemanticStateProvider(
+            domain: "media-playback",
+            displayName: "Media Playback",
+            schema: [
+                TKRuntimeSemanticStateField(path: "isReady", type: "Bool"),
+                TKRuntimeSemanticStateField(path: "isPlaying", type: "Bool"),
+                TKRuntimeSemanticStateField(path: "elapsed", type: "Double"),
+                TKRuntimeSemanticStateField(path: "routeActiveCount", type: "Int"),
+            ],
+            actions: [
+                TKRuntimeSemanticActionDescriptor(name: "pause"),
+                TKRuntimeSemanticActionDescriptor(
+                    name: "seek",
+                    arguments: [
+                        TKRuntimeSemanticActionArgument(name: "seconds", type: "Double", required: true)
+                    ]
+                ),
+            ],
+            redaction: TKRuntimeSemanticRedaction(redactedPaths: ["currentURL"])
+        ) {
+            [
+                "isReady": .bool(true),
+                "isPlaying": .bool(true),
+                "elapsed": .double(12.3),
+                "routeActiveCount": .int(1),
+            ]
+        }
+    }
+}
+#endif
+```
+
+Agents should read provider-backed semantics through snapshot:
+
+```bash
+triton snapshot --include semantic,app,scene --json
+triton runtime manifest --json
+triton capabilities --json
+```
+
+The `semantic` section reports registered domains, provider source, confidence, typed state, schema fields, redaction metadata, evidence commands, and provider-declared action descriptors. In this slice, `app-semantic-action` means the action catalog is discoverable through snapshot; generic provider action execution is a future command slice. If no provider is registered, TritonKit returns an empty semantic domain list with a warning, and agents must not infer business readiness from visible UI alone.
+
+`triton runtime manifest --json` also advertises `semanticDomains[]` with domain, source, confidence, schema, action catalog, redaction policy, and evidence commands. The manifest intentionally does not include state values; use `snapshot --include semantic` for current facts.
+
+### 4. iOS Network Notes
 
 For physical devices or local-network testing, add development-only network privacy text to the app target as needed:
 
@@ -246,11 +302,11 @@ For physical devices or local-network testing, add development-only network priv
 
 If your app blocks cleartext development traffic through App Transport Security, add a debug-only ATS exception for your local workflow. Do not ship broad ATS exceptions in production.
 
-### 4. iOS Runtime Boundary
+### 5. iOS Runtime Boundary
 
 `TritonKit.isRuntimeEnabled` is `true` only when the package build defines `TRITONKIT_RUNTIME_ENABLED` (the default Debug package configuration). In Release package builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
-### 5. WebView Observation
+### 6. WebView Observation
 
 Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current --platform ios --json` can discover visible `WKWebView` candidates from the runtime tree; `triton webview current-url --platform ios --json` and `triton route assert-current-url '<url>' --platform ios --json` require provider URL metadata and are the smoke path for proving the native flow opened the expected H5 link. Page interaction remains opt-in: `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
 
@@ -259,6 +315,8 @@ Harmony host-side layout can identify visible Web candidates without source chan
 ## CLI Integration Guide
 
 Use the CLI guide independently when an agent only needs host-side simulator or Harmony / DevEco Emulator control. Use it together with the iOS or Harmony embedded runtime guides when the app process exposes TritonKit runtime endpoints.
+
+Host-side iOS Simulator setup should still prefer Triton commands before external fallback tools. `triton sim tap --simulator booted --x 200 --y 400 --json` and `triton sim type --simulator booted --text ascii --json` are reserved agent-facing entries for this lane, but the current public `xcrun simctl io` contract exposes screenshot/video/screen configuration primitives only, not stable tap or keyboard type primitives. TritonKit therefore returns `unsupported_host_input` for those commands instead of pretending host input succeeded; non-ASCII text is rejected earlier with `unsupported_text_input`. Use embedded runtime semantic input, app-owned debug hooks, pasteboard flows, screenshots, app preferences, or evidence capture to prove business state until a stable host input adapter is selected.
 
 ### 1. Install The CLI
 
@@ -434,6 +492,7 @@ triton route assert-current-url "https://example.invalid/path" --platform ios --
 triton app container --device booted --bundle-id com.example.app --kind data --json
 triton app prefs get DEBUG-mock --device booted --bundle-id com.example.app --json
 triton app prefs set DEBUG-mock true --device booted --bundle-id com.example.app --json
+triton app prefs set SeedState --type data --base64 W3t9XQ== --device booted --bundle-id com.example.app --json
 triton app prefs dump --device booted --bundle-id com.example.app --json
 ```
 
@@ -441,11 +500,13 @@ triton app prefs dump --device booted --bundle-id com.example.app --json
 
 Destructive commands require `--confirm` by default, and `runtime delete` supports `--dry-run` first so agents can inspect the selected runtimes before deleting anything.
 
+For local emulator or simulator actions, use Triton as the first control surface before fallback tools. Before running `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild`, run and preserve a machine-readable Triton check such as `triton status --json`, `triton doctor --json`, `triton capabilities --json`, `triton schema --command <command> --json`, or a task-specific `triton plan ... --json`. Fallback is allowed only when that Triton output proves `server_unavailable`, `unsupported_capability`, a missing schema / capability, or a task plan that does not cover the required action. Issue reports and regression notes should include the Triton command, stable error code or unsupported evidence, and the fallback command that was used.
+
 `app go <url>` is the short iOS deep-link smoke entry: it opens the URL, waits for embedded runtime readiness, returns an app/route/AX snapshot summary, and defaults to JSON output. Use `--device <selector>` only when the current/default target is ambiguous.
 For iOS simulator selectors, `sim:` is optional. `--device 60667794-96F8-40E6-8664-85538EC4663E` and `--device sim:60667794-96F8-40E6-8664-85538EC4663E` both resolve to the same simulator; keep `sim:` only when you want explicit platform disambiguation.
 `app open-url` is the lower-level host action and only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
 
-Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts:
+Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts; if fallback is still required, keep the `triton schema --command xcode --json` or `triton xcode ...` failure / unsupported evidence with the fallback log:
 
 ```bash
 triton xcode discover --path . --json
@@ -528,6 +589,8 @@ triton screenshot --platform harmony --target 127.0.0.1:10100 --output /tmp/smok
 
 When multiple HDC targets are `Connected`, Triton returns `error.code=ambiguous_target` and requires an explicit `--target`. The adapter records `sourceCommand`; risk/policy metadata is for audit and configuration validation, not an interactive confirmation gate.
 
+Harmony `device list --platform harmony --json` also attempts a read-only foreground app identity probe for connected targets. When HDC exposes a stable foreground mission, targets may include optional `appName`, `bundleIdentifier`, `identityState=current`, and `current=true`. If HDC does not expose a stable identity, Triton keeps `appName` / `bundleIdentifier` empty and reports `identityState=unknown`; if the host command itself cannot run, it reports `identityState=unsupported`. Do not treat the emulator target id or device label as an app identity.
+
 When Triton starts a Harmony HVD through its `triton-harmony-emulator` launchd keepalive job, close it with `triton device stop --platform harmony ... --confirm --json` instead of raw `Emulator -stop`. The Triton command unloads `gui/<uid>/triton-harmony-emulator` before calling DevEco `Emulator -stop`, so launchd does not restart the emulator after a successful stop.
 
 Harmony host-side `ax/wait/tap/screenshot` wrap `uitest dumpLayout`, `uitest uiInput click`, and `snapshot_display` with JSON envelopes. Layout and screenshot outputs can contain private UI data; inspect or redact artifacts before attaching them to public issues.
@@ -575,6 +638,17 @@ triton evidence --output /tmp/video-regression.tritonevidence --json
 
 The `media` section reports visible AVPlayer-backed surfaces, player status/rate/time metadata when public APIs expose it, AX playback-control candidates, automation confidence, fallback advice, and evidence commands. System `AVPlayerViewController` controls are not guaranteed to expose stable actionable AX nodes in every route; when the snapshot is `surface-only`, add app-owned DEBUG overlay controls with stable accessibility identifiers for play, pause, seek, progress, elapsed time, and duration, then assert those controls with `wait`, `find`, `tap`, and `assert`.
 
+For app-domain readiness that cannot be proven from generic UI, prefer a registered semantic provider and include the semantic snapshot section:
+
+```bash
+triton snapshot --include semantic,app,scene --json
+triton runtime manifest --json
+triton capabilities --json
+```
+
+`semantic.domains[]` contains provider-backed state and an action descriptor catalog. Treat those descriptors as discoverability metadata in this release; generic `state query/assert/action perform` commands are not implemented yet.
+`runtime manifest` exposes the lighter `semanticDomains[]` catalog so agents can discover domains and provider source before querying the snapshot.
+
 When a pass/fail decision needs attachable evidence, export a bundle with a machine-readable manifest:
 
 ```bash
@@ -590,8 +664,11 @@ When an agent needs the next command sequence before executing a workflow, ask `
 ```bash
 triton plan ios-smoke --device iphone15 --bundle-id com.example.app --url myapp://smoke --text Home --evidence /tmp/smoke.tritonevidence --json
 triton plan open-url --device iphone15 --url myapp://detail --text Ready --json
+triton plan open-url --platform harmony --device harmony-a --bundle com.example.app --ability EntryAbility --hap /tmp/Demo.hap --url example://home --text Ready --evidence /tmp/harmony.tritonevidence --json
 triton plan webview-check --expected-url https://example.com --text Loaded --json
 ```
+
+When `plan open-url` is requested while the local server is unavailable, the JSON response keeps bootstrap recovery in `steps[]` and preserves the goal-specific workflow in `afterRecoverySteps[]`. Agents should start with `steps[]`, then execute `afterRecoverySteps[].argv` after recovery instead of re-planning from memory.
 
 For repeatable short smoke flows, store the command sequence in a `.tritonplan` and replay it:
 

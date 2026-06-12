@@ -24,6 +24,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - Harmony embedded SDK: package id/import path `tritonkit`, Debug-only runtime, provider-based app semantics, and `--runtime-base-url` checks while standalone.
    - CLI-only use: Homebrew release install by default, local source build only for unreleased validation.
 3. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
+   - before using `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild` for a local emulator / simulator action, first capture Triton evidence through `status`, `doctor`, `capabilities`, `schema`, or `plan`; fallback reports must include the Triton command plus failure / unsupported / missing-schema evidence.
    - `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`
    - `triton evidence inspect /tmp/<case>.tritonevidence --json`
    - `triton evidence summary /tmp/<case>.tritonevidence --json`
@@ -42,9 +43,12 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton schema --command <name> --json` for the exact command being reported; every command in the schema inventory must be individually discoverable.
    - `triton plan --json`
    - `triton plan ios-smoke|open-url|webview-check --json` when feedback depends on a multi-step agent workflow; task plans are recommendations and must not be reported as execution proof.
-   - `triton runtime manifest --json`
+   - `triton runtime manifest --json`; preserve `semanticDomains[]` when present so reports can show provider-backed domain/source/schema/action catalog discovery without leaking current state values.
+   - Treat a direct fallback to raw emulator tools without prior Triton failure / unsupported / missing-schema evidence as a TritonKit workflow documentation bug; the expected behavior is Triton-first, fallback-with-proof.
+   - `triton runtime manifest --json`; preserve `semanticDomains[]` when present so reports can show provider-backed domain/source/schema/action catalog discovery without leaking current state values.
    - `triton snapshot --include app,scene,route,ax,geometry --json`
    - `triton snapshot --include media,ax,screenshot-metadata --json` for iOS AVPlayer / AVPlayerViewController playback feedback; preserve `media.surfaces[]`, `media.controls[]`, `automationConfidence`, `fallbackAdvice[]`, and `evidenceCommands[]` so reports distinguish rendered video from controllable playback.
+   - `triton snapshot --include semantic,app,scene --json` when app-domain readiness or business state matters; preserve `semantic.domains[]`, provider `source`, `confidence`, `state`, `schema`, `actions`, `redaction`, and `evidenceCommands[]` so reports distinguish provider-backed facts from AX/layout/screenshot inference.
    - `triton ledger --limit 50 --jsonl`
    - Treat `triton doctor --json` as ordered diagnostics: preserve top-level `nextWorkflows`, plus each check's `id`, `status`, `code`, `hint`, `nextAction`, `relatedCapabilities`, and `workflowCategories` when reporting a recovery path.
    - Treat `triton capabilities --json` as an environment capability matrix: preserve `capabilities[].group`, `requiredBy`, `nextAction`, and `evidence` when reporting why an agent could or could not run a workflow; schema-provided capabilities should never be reported as complete if they are missing any of those planning fields.
@@ -52,7 +56,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - Treat duplicate capability names in either schema `providedCapabilities[]` or `triton capabilities --json` as indexing bugs.
    - Treat empty or duplicate values in `capabilities[].requiredBy` or `capabilities[].evidence` as capability metadata quality bugs.
    - Treat `media-playback` as an observe capability backed by embedded runtime snapshots; if `automationConfidence` is `surface-only`, report that system media controls were not accessible enough and recommend app-owned DEBUG overlay controls with stable accessibility identifiers instead of claiming pause/resume/seek proof from rendered video alone.
-   - Treat unknown `capabilities[].group` values as taxonomy bugs. Valid groups are `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`.
+   - Treat `app-semantic-state` as provider-backed business state and `app-semantic-action` as provider action-catalog discoverability. Do not report generic provider action execution as implemented until a dedicated command contract exists.
+   - Treat unknown `capabilities[].group` values as taxonomy bugs. Valid groups are `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `semantic`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`.
    - Treat unknown `capabilities[].requiredBy` values as workflow taxonomy bugs. Valid workflow categories are `action`, `app`, `assert`, `evidence`, `observe`, `project`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview-check`, and `xcode`.
    - Treat unknown `capabilities[].evidence` values as artifact taxonomy bugs. Evidence names must map to real stdout JSON, schema/status output, host artifacts, runtime snapshots, WebView provider output, route assertions, input results, evidence bundles, smoke summaries, tritonplans, Xcode artifacts, or unsupported envelopes.
    - Treat an empty `capabilities[].evidence` array as a capability contract bug. Even diagnostics, unsupported capabilities, and low-level observe commands must expose at least one evidence source.
@@ -71,6 +76,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - Treat malformed placeholders in `schema.nextCommands[]`, `schema.examples[]`, or `plan.steps[].argv` as contract bugs. Plans should emit Triton argv, not shell redirection or partial placeholder strings.
    - Treat shell control operators in `plan.steps[].command` as plan contract bugs. A plan step command should be a single `triton ...` invocation; stdin/file requirements belong in metadata.
    - Treat `triton plan ... --json` as schema-backed recommendations: if a returned command uses an undocumented root command, subcommand, or `--flag`, report it as a schema/plan contract bug with the exact plan step and `triton schema --json` excerpt.
+   - For `triton plan open-url ... --json`, treat missing `afterRecoverySteps[]` in bootstrap mode as a planning bug when a concrete open-url goal was requested. The recovery plan may need `steps[]` for server/runtime bootstrap, but it must preserve the deferred goal workflow for after recovery.
+   - For Harmony deep links, `triton plan open-url --platform harmony --device <selector> --bundle <bundle> --ability <ability> --hap <path.hap> --url <url> --text <text> --evidence <dir.tritonevidence> --json` should produce schema-backed install/open-url/wait/screenshot/evidence-summary steps. Missing `--bundle`, `--ability`, or `--hap` planning support is feedback-worthy.
    - Treat missing or invalid `plan.mode` as a plan contract bug. `bootstrap` should mean environment recovery/discovery planning, and `task` should mean goal-specific workflow planning.
    - Treat natural-language plan commands as plan contract bugs. `steps[].argv` should describe an executable Triton invocation, and `steps[].command` should remain a matching human-readable/logging form with non-empty `id`, `title`, `when`, and `expected`.
    - Prefer `plan.steps[].argv` over parsing `plan.steps[].command`; treat missing or empty `argv` as a plan execution contract bug.
@@ -158,6 +165,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
      - `triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json`
      - `triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json`
      - `triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json`
+     - `triton app prefs set <key> --type data --base64 <base64> --device iphone15 --bundle-id <bundle-id> --json`
+     - `triton app prefs set <key> --type data --hex <hex> --device iphone15 --bundle-id <bundle-id> --json`
      - `triton sim pair <watch-udid> <phone-udid> --json`
      - `triton sim unpair <pair-uuid> --json`
      - `triton sim clone <udid> "Clone for Smoke" --json`
@@ -174,6 +183,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - host-side Harmony checks that do not require embedded runtime:
      - `triton device doctor --platform harmony --json`
      - `triton device list --platform harmony --json`
+     - when `device list` reports `identityState=unknown` or `identityState=unsupported`, preserve that boundary in feedback and do not replace it with the emulator target id or alias as an app identity;
      - `triton device alias set harmony-a --platform harmony --target <hdc-target> --json` for repeated multi-emulator validation;
      - `triton device wait-ready --device harmony-a --json`
      - `triton device stop --platform harmony --hvd <hvd-name> --path <deployed-path> --confirm --json` when Triton's `triton-harmony-emulator` launchd keepalive job started the HVD;
@@ -514,6 +524,8 @@ triton device wait-ready --device 127.0.0.1:10100 --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
 triton app launch --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
 ```
+
+`triton device list --platform harmony --json` may include optional `targets[].appName`, `targets[].bundleIdentifier`, `targets[].identityState`, and `targets[].current`. File feedback when a stable foreground app is available but missing, but do not report `unknown` or `unsupported` as an app mismatch by itself; those states mean the CLI refused to fabricate identity from target labels.
 
 If multiple HDC targets are `Connected`, pass `--device <alias-or-id>` or an explicit `--target`; `ambiguous_target` is the expected machine-readable failure.
 

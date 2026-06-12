@@ -185,6 +185,7 @@ struct TKHostAdapterModelsTests {
         #expect(TKHarmonyHDCCommand.listTargets().argv == ["list", "targets", "-v"])
         #expect(TKHarmonyHDCCommand.bootCompleted(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "param", "get", "bootevent.boot.completed"])
         #expect(TKHarmonyHDCCommand.appInspect(target: "127.0.0.1:10100", bundleName: "com.example.demo").argv == ["-t", "127.0.0.1:10100", "shell", "bm", "dump", "-n", "com.example.demo"])
+        #expect(TKHarmonyHDCCommand.foregroundApp(target: "127.0.0.1:10100").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "dump", "-l"])
         #expect(TKHarmonyHDCCommand.appLaunch(target: "127.0.0.1:10100", bundleName: "com.example.demo", abilityName: "EntryAbility").argv == ["-t", "127.0.0.1:10100", "shell", "aa", "start", "-b", "com.example.demo", "-a", "EntryAbility"])
         #expect(TKHarmonyHDCCommand.forwardPort(target: "127.0.0.1:10100", localPort: 18765, remotePort: 18765).argv == ["-t", "127.0.0.1:10100", "fport", "tcp:18765", "tcp:18765"])
         #expect(TKHarmonyHDCCommand.inputText(target: "127.0.0.1:10100", text: "hello world").argv == ["-t", "127.0.0.1:10100", "shell", "uitest", "uiInput", "text", "hello world"])
@@ -391,6 +392,70 @@ struct TKHostAdapterModelsTests {
         #expect(TKHdcTargetListParser.defaultTarget(from: targets)?.target == "127.0.0.1:10100")
     }
 
+    @Test("Harmony foreground app parser extracts foreground bundle and app label")
+    func harmonyForegroundAppParserCurrent() throws {
+        let output = """
+        User ID #100
+          current mission lists:{
+            Mission ID #139  mission name #[#com.example.demo:entry:EntryAbility]  lockedState #0
+              AbilityRecord ID #55
+                app name [Demo App]
+                main name [EntryAbility]
+                bundle name [com.example.demo]
+                ability type [PAGE]
+                state #FOREGROUND  start time [152523]
+                app state #FOREGROUND
+                ready #1  window attached #1  launcher #0
+          }
+        """
+
+        let identity = TKHarmonyForegroundAppParser.parse(output)
+
+        #expect(identity.appName == "Demo App")
+        #expect(identity.bundleIdentifier == "com.example.demo")
+        #expect(identity.identityState == "current")
+        #expect(identity.current == true)
+    }
+
+    @Test("Harmony foreground app parser chooses the foreground mission identity")
+    func harmonyForegroundAppParserChoosesForegroundMission() throws {
+        let output = """
+        Mission ID #11  mission name #[#com.example.background:entry:EntryAbility]
+          AbilityRecord ID #21
+            app name [Background App]
+            bundle name [com.example.background]
+            state #BACKGROUND
+        Mission ID #12  mission name #[#com.example.foreground:entry:EntryAbility]
+          AbilityRecord ID #22
+            app name [Foreground App]
+            bundle name [com.example.foreground]
+            state #FOREGROUND
+        """
+
+        let identity = TKHarmonyForegroundAppParser.parse(output)
+
+        #expect(identity.appName == "Foreground App")
+        #expect(identity.bundleIdentifier == "com.example.foreground")
+        #expect(identity.identityState == "current")
+        #expect(identity.current == true)
+    }
+
+    @Test("Harmony foreground app parser reports unknown without fabricating identity")
+    func harmonyForegroundAppParserUnknown() throws {
+        let output = """
+        User ID #100
+          current mission lists:{
+          }
+        """
+
+        let identity = TKHarmonyForegroundAppParser.parse(output)
+
+        #expect(identity.appName == nil)
+        #expect(identity.bundleIdentifier == nil)
+        #expect(identity.identityState == "unknown")
+        #expect(identity.current == false)
+    }
+
     @Test("Harmony boot parser only treats true as ready")
     func harmonyBootCompletedParser() {
         #expect(TKHarmonyBootCompletedParser.isReady("true\n"))
@@ -563,6 +628,7 @@ struct TKHostAdapterModelsTests {
             "Name": "Demo",
             "Nested": ["enabled": true],
             "List": ["a", "b"],
+            "SeedState": Data([0x5B, 0x7B, 0x7D, 0x5D]),
         ]
         let data = try PropertyListSerialization.data(fromPropertyList: plist, format: .binary, options: 0)
 
@@ -574,6 +640,7 @@ struct TKHostAdapterModelsTests {
         #expect(snapshot.value(forKey: "Missing") == nil)
         #expect(snapshot.preferences["Nested"]?.kind == "dictionary")
         #expect(snapshot.preferences["List"]?.kind == "array")
+        #expect(snapshot.preferences["SeedState"] == .data(Data([0x5B, 0x7B, 0x7D, 0x5D]).base64EncodedString()))
     }
 
     @Test("preference plist path is derived from data container and bundle id")

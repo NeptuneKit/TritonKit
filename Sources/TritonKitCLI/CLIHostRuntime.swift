@@ -133,6 +133,51 @@ func runHostSimulatorScreenshotCommand(
     }
 }
 
+func runHostSimulatorInputCommand(
+    action: String,
+    simulator: String,
+    command: TKHostCommand,
+    outputFormat: ClientOutputFormat,
+    x: Int? = nil,
+    y: Int? = nil,
+    insertedLength: Int? = nil,
+    textEncoding: String? = nil
+) throws {
+    do {
+        let result = try runHostCommand(command)
+        let stdout = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = HostSimulatorInputOutput(
+            ok: true,
+            action: action,
+            runtimeScope: "host-simulator",
+            target: "sim:\(simulator)",
+            adapter: "xcrun-simctl",
+            tool: command.executable,
+            exitCode: result.exitCode,
+            riskLevel: command.riskLevel.rawValue,
+            sourceCommand: result.sourceCommand,
+            stdoutTruncated: result.stdoutTruncated,
+            stderrTruncated: result.stderrTruncated,
+            stdout: stdout.isEmpty ? nil : stdout,
+            stderr: stderr.isEmpty ? nil : stderr,
+            x: x,
+            y: y,
+            insertedLength: insertedLength,
+            textEncoding: textEncoding,
+            note: "Host-side simulator input was submitted through simctl; verify business completion with wait, assert, screenshot, app prefs, or evidence."
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            print(output.note)
+        }
+    } catch {
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+}
+
 func parseSimctlScreenshotDisplayMetadata(stderr: String) -> HostSimulatorScreenshotDisplayMetadata {
     let line = stderr
         .split(whereSeparator: \.isNewline)
@@ -377,7 +422,8 @@ func hostDeviceTargets(platform: HostDevicePlatform, hdc: String, adb: String = 
         return (targets, result.sourceCommand)
     case .harmony:
         let result = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))
-        let targets = TKHdcTargetListParser.parse(result.stdout).map(hostDeviceTarget(from:))
+        let harmonyTargets = TKHdcTargetListParser.parse(result.stdout)
+        let targets = enrichHarmonyTargetsWithForegroundApp(harmonyTargets, hdc: hdc).map(hostDeviceTarget(from:))
         return (targets, result.sourceCommand)
     case .android:
         let result = try runHostCommand(TKAndroidADBCommand.listDevices(executable: adb))
@@ -634,7 +680,11 @@ func hostDeviceTarget(from target: TKHarmonyTarget) -> HostDeviceTarget {
         source: target.source,
         name: nil,
         runtime: nil,
-        transport: target.transport
+        transport: target.transport,
+        appName: target.foregroundApp.appName,
+        bundleIdentifier: target.foregroundApp.bundleIdentifier,
+        identityState: target.foregroundApp.identityState,
+        current: target.foregroundApp.current
     )
 }
 
@@ -657,8 +707,41 @@ func harmonyTarget(from target: HostDeviceTarget) -> TKHarmonyTarget {
         target: target.target,
         state: target.state,
         transport: target.transport ?? "hdc",
-        source: target.source
+        source: target.source,
+        foregroundApp: TKHarmonyForegroundAppIdentity(
+            appName: target.appName,
+            bundleIdentifier: target.bundleIdentifier,
+            identityState: target.identityState ?? "unknown",
+            current: target.current ?? false
+        )
     )
+}
+
+func enrichHarmonyTargetsWithForegroundApp(_ targets: [TKHarmonyTarget], hdc: String) -> [TKHarmonyTarget] {
+    targets.map { target in
+        guard target.isConnected else {
+            return target
+        }
+        do {
+            let result = try runHostCommand(TKHarmonyHDCCommand.foregroundApp(target: target.target, executable: hdc))
+            let identity = TKHarmonyForegroundAppParser.parse(result.stdout)
+            return TKHarmonyTarget(
+                target: target.target,
+                state: target.state,
+                transport: target.transport,
+                source: target.source,
+                foregroundApp: identity
+            )
+        } catch {
+            return TKHarmonyTarget(
+                target: target.target,
+                state: target.state,
+                transport: target.transport,
+                source: target.source,
+                foregroundApp: .unsupported
+            )
+        }
+    }
 }
 
 func defaultLaunchdDomain() -> String {
@@ -954,7 +1037,9 @@ func printPreferences(
             plistPath: plistPath,
             key: key,
             value: value,
-            preferences: key == nil ? snapshot.preferences : nil
+            valuePlistType: value?.kind,
+            preferences: key == nil ? snapshot.preferences : nil,
+            preferencesPlistTypes: key == nil ? snapshot.preferences.mapValues(\.kind) : nil
         )
         switch outputFormat {
         case .json:
@@ -977,11 +1062,14 @@ func setPreference(
     simulator: String,
     bundleID: String,
     key: String,
-    value: String,
+    value: String?,
+    type: HostPreferenceSetType = .json,
+    base64: String? = nil,
+    hex: String? = nil,
     outputFormat: ClientOutputFormat
 ) throws {
     do {
-        let newValue = try parseHostPreferenceJSONValue(value)
+        let newValue = try parseHostPreferenceSetValue(type: type, value: value, base64: base64, hex: hex)
         let containerResult = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: .data))
         let container = containerResult.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         let plistPath = TKHostPreferencesSnapshot.plistPath(dataContainer: container, bundleID: bundleID)
@@ -1004,6 +1092,8 @@ func setPreference(
             key: key,
             previousValue: update.previousValue,
             newValue: update.newValue,
+            previousPlistType: update.previousValue?.kind,
+            newPlistType: update.newValue.kind,
             restartAdvice: "Terminate and relaunch the app if it reads this preference only at startup."
         )
         switch outputFormat {
@@ -1021,6 +1111,40 @@ func parseHostPreferenceJSONValue(_ value: String) throws -> TKHostPreferenceVal
     let data = Data(value.utf8)
     let object = try JSONSerialization.jsonObject(with: data, options: [.fragmentsAllowed])
     return try hostPreferenceValue(fromJSONObject: object)
+}
+
+func parseHostPreferenceSetValue(
+    type: HostPreferenceSetType,
+    value: String?,
+    base64: String?,
+    hex: String?
+) throws -> TKHostPreferenceValue {
+    switch type {
+    case .json:
+        guard base64 == nil, hex == nil else {
+            throw RuntimeError("--base64 and --hex require --type data.")
+        }
+        guard let value else {
+            throw RuntimeError("prefs set requires a JSON value unless --type data is used.")
+        }
+        return try parseHostPreferenceJSONValue(value)
+    case .data:
+        guard value == nil else {
+            throw RuntimeError("--type data does not accept a positional JSON value; use --base64 or --hex.")
+        }
+        let payloads = [base64, hex].compactMap { $0 }
+        guard payloads.count == 1 else {
+            throw RuntimeError("--type data requires exactly one of --base64 or --hex.")
+        }
+        if let base64 {
+            guard let data = Data(base64Encoded: base64) else {
+                throw RuntimeError("Invalid base64 data preference value.")
+            }
+            return .data(data.base64EncodedString())
+        }
+        let data = try parseHexData(hex ?? "")
+        return .data(data.base64EncodedString())
+    }
 }
 
 func updatingPreferencePlistData(
@@ -1048,6 +1172,30 @@ func updatingPreferencePlistData(
     updated[key] = try propertyListObject(fromPreferenceValue: newValue)
     let data = try PropertyListSerialization.data(fromPropertyList: updated, format: .binary, options: 0)
     return HostPreferencePlistUpdateResult(data: data, previousValue: previousValue, newValue: newValue)
+}
+
+private func parseHexData(_ value: String) throws -> Data {
+    var hex = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    if hex.hasPrefix("0x") || hex.hasPrefix("0X") {
+        hex.removeFirst(2)
+    }
+    hex.removeAll { $0.isWhitespace }
+    guard !hex.isEmpty, hex.count.isMultiple(of: 2) else {
+        throw RuntimeError("Invalid hex data preference value.")
+    }
+
+    var bytes = Data()
+    var index = hex.startIndex
+    while index < hex.endIndex {
+        let next = hex.index(index, offsetBy: 2)
+        let pair = String(hex[index..<next])
+        guard let byte = UInt8(pair, radix: 16) else {
+            throw RuntimeError("Invalid hex data preference value.")
+        }
+        bytes.append(byte)
+        index = next
+    }
+    return bytes
 }
 
 private func hostPreferenceValue(fromJSONObject object: Any) throws -> TKHostPreferenceValue {
@@ -1548,6 +1696,9 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         } else if command.arguments.contains("recordVideo") {
             code = "sim_record_failed"
             hint = "Verify the simulator is booted, the output path is writable, and the requested codec, display, and mask options are supported."
+        } else if command.arguments.contains("io") && (command.arguments.contains("tap") || command.arguments.contains("keyboard")) {
+            code = "host_command_failed"
+            hint = "Verify the simulator is booted, focused as expected, and this Xcode simctl supports the requested host input primitive."
         } else if command.arguments.contains("stream") && command.arguments.contains("log") {
             code = "sim_logs_failed"
             hint = "Verify the simulator is booted, the output path is writable, and the requested predicate, level, style, and type options are supported."

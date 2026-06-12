@@ -263,6 +263,8 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "state-responder", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "snapshot", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "media-playback", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "app-semantic-state", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "app-semantic-action", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "focus", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "set-text", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "select-segment", supported: connected, reason: requiresRuntime),
@@ -293,6 +295,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "harmony-device", supported: true),
         TKRuntimeCapability(name: "harmony-device-doctor", supported: true),
         TKRuntimeCapability(name: "harmony-device-list", supported: true),
+        TKRuntimeCapability(name: "harmony-foreground-app-identity", supported: true),
         TKRuntimeCapability(name: "harmony-device-use", supported: true),
         TKRuntimeCapability(name: "harmony-device-wait-ready", supported: true),
         TKRuntimeCapability(name: "harmony-device-screenshot", supported: true),
@@ -323,6 +326,8 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "sim-ui", supported: true),
         TKRuntimeCapability(name: "sim-pasteboard", supported: true),
         TKRuntimeCapability(name: "sim-push", supported: true),
+        TKRuntimeCapability(name: "ios-simulator-host-tap", supported: false, reason: "Host-side iOS Simulator input is not available in the current adapter"),
+        TKRuntimeCapability(name: "ios-simulator-host-type", supported: false, reason: "Host-side iOS Simulator input is not available in the current adapter"),
         TKRuntimeCapability(name: "host-app", supported: true),
         TKRuntimeCapability(name: "host-app-open-url-ready", supported: true),
         TKRuntimeCapability(name: "host-app-open-url-snapshot", supported: true),
@@ -427,9 +432,13 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "target"
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
         return "runtime"
+    case "app-semantic-state", "app-semantic-action":
+        return "semantic"
     case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return "xcode"
-    case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
+    case "ios-simulator-host-tap", "ios-simulator-host-type":
+        return "host"
+    case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-foreground-app-identity", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
         return "host"
     case "media-playback", "observe", "observe-ios", "observe-android", "observe-harmony", "android-ax", "node-resolve", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait":
         return "observe"
@@ -458,9 +467,13 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["app", "runtime", "observe", "action", "assert", "evidence", "smoke"]
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
         return ["app", "observe", "action", "assert", "evidence"]
+    case "app-semantic-state":
+        return ["observe", "assert", "evidence"]
+    case "app-semantic-action":
+        return ["action", "assert", "evidence"]
     case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return ["project", "xcode", "evidence"]
-    case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
+    case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-foreground-app-identity", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
         return ["target", "app", "smoke", "evidence"]
     case "observe", "observe-ios", "observe-android", "observe-harmony", "android-ax", "node-resolve", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait":
         return ["action", "assert", "evidence"]
@@ -478,6 +491,8 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["replay"]
     case "smoke-ios", "smoke-android", "smoke-harmony":
         return ["smoke", "evidence", "replay"]
+    case "ios-simulator-host-tap", "ios-simulator-host-type":
+        return ["action", "assert", "evidence", "smoke"]
     case "tap", "swipe", "type", "paste", "clear", "input", "press", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
         return ["action", "assert", "evidence"]
     default:
@@ -495,7 +510,7 @@ func runtimeCapabilityNextAction(
     if !serverReachable, runtimeCapabilityRequiresServer(name) {
         return TKCLINextAction(command: "serve", args: ["--host", host, "--port", String(port)], requiresLongRunningProcess: true)
     }
-    if !connected, ["runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "media-playback", "focus", "set-text", "select-segment", "set-switch", "ledger", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait", "capture", "assert", "replay", "tap", "swipe", "type", "paste", "clear", "input"].contains(name) {
+    if !connected, ["runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "media-playback", "app-semantic-state", "app-semantic-action", "focus", "set-text", "select-segment", "set-switch", "ledger", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait", "capture", "assert", "replay", "tap", "swipe", "type", "paste", "clear", "input"].contains(name) {
         return TKCLINextAction(command: "status", args: ["--json"])
     }
     switch name {
@@ -535,6 +550,10 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "device", args: ["wait-ready", "<selector>", "--platform", "ios", "--json"])
     case "ios-device-screenshot":
         return TKCLINextAction(command: "device", args: ["screenshot", "--platform", "ios", "--device", "<selector>", "--output", "<path>", "--json"])
+    case "ios-simulator-host-tap":
+        return TKCLINextAction(command: "sim", args: ["tap", "--simulator", "<udid|booted>", "--x", "<x>", "--y", "<y>", "--json"])
+    case "ios-simulator-host-type":
+        return TKCLINextAction(command: "sim", args: ["type", "--simulator", "<udid|booted>", "--text", "<text>", "--json"])
     case "android-device", "android-device-list":
         return TKCLINextAction(command: "device", args: ["list", "--platform", "android", "--json"])
     case "android-device-doctor":
@@ -543,7 +562,7 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "device", args: ["wait-ready", "<selector>", "--platform", "android", "--json"])
     case "android-device-screenshot":
         return TKCLINextAction(command: "device", args: ["screenshot", "--platform", "android", "--device", "<selector>", "--output", "<path>", "--json"])
-    case "harmony-device", "harmony-device-list":
+    case "harmony-device", "harmony-device-list", "harmony-foreground-app-identity":
         return TKCLINextAction(command: "device", args: ["list", "--platform", "harmony", "--json"])
     case "harmony-device-doctor":
         return TKCLINextAction(command: "device", args: ["doctor", "--platform", "harmony", "--json"])
@@ -653,6 +672,10 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "snapshot", args: ["--json"])
     case "media-playback":
         return TKCLINextAction(command: "snapshot", args: ["--include", "media,ax,screenshot-metadata", "--json"])
+    case "app-semantic-state":
+        return TKCLINextAction(command: "snapshot", args: ["--include", "semantic,app,scene", "--json"])
+    case "app-semantic-action":
+        return TKCLINextAction(command: "snapshot", args: ["--include", "semantic", "--json"])
     case "focus":
         return TKCLINextAction(command: "focus", args: ["<selector>", "--json"])
     case "set-text":
@@ -758,6 +781,8 @@ func runtimeCapabilityRequiresServer(_ name: String) -> Bool {
         "state-responder",
         "snapshot",
         "media-playback",
+        "app-semantic-state",
+        "app-semantic-action",
         "focus",
         "set-text",
         "select-segment",
@@ -801,11 +826,17 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["runtime-manifest", "snapshot-json"]
     case "media-playback":
         return ["runtime-media", "runtime-ax", "screenshot-metadata"]
+    case "app-semantic-state":
+        return ["runtime-semantic", "provider-state"]
+    case "app-semantic-action":
+        return ["runtime-semantic", "provider-action-catalog"]
     case "focus", "set-text", "select-segment", "set-switch", "semantic-action":
         return ["runtime-provider", "action-result", "runtime-ledger"]
     case "ledger":
         return ["runtime-ledger"]
-    case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
+    case "ios-simulator-host-tap", "ios-simulator-host-type":
+        return ["unsupported-envelope", "command-schema"]
+    case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-foreground-app-identity", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
         return ["host-command-json", "host-artifact"]
     case "observe", "observe-ios", "observe-android", "observe-harmony", "android-ax":
         return ["surface-tree", "runtime-ax", "host-layout"]
@@ -1106,21 +1137,45 @@ func printDoctor(_ response: TKDoctorResponse, format: ClientOutputFormat, langu
 
 struct WorkflowPlanRequest {
     let goal: String
+    let platform: String?
     let device: String?
     let bundleID: String?
+    let bundle: String?
+    let ability: String?
+    let hap: String?
     let url: String?
     let text: String?
     let expectedURL: String?
     let evidence: String?
 
+    init(
+        goal: String,
+        platform: String? = nil,
+        device: String? = nil,
+        bundleID: String? = nil,
+        bundle: String? = nil,
+        ability: String? = nil,
+        hap: String? = nil,
+        url: String? = nil,
+        text: String? = nil,
+        expectedURL: String? = nil,
+        evidence: String? = nil
+    ) {
+        self.goal = goal
+        self.platform = platform
+        self.device = device
+        self.bundleID = bundleID
+        self.bundle = bundle
+        self.ability = ability
+        self.hap = hap
+        self.url = url
+        self.text = text
+        self.expectedURL = expectedURL
+        self.evidence = evidence
+    }
+
     static let general = WorkflowPlanRequest(
-        goal: "general",
-        device: nil,
-        bundleID: nil,
-        url: nil,
-        text: nil,
-        expectedURL: nil,
-        evidence: nil
+        goal: "general"
     )
 }
 
@@ -1168,6 +1223,7 @@ func buildWorkflowPlan(
                     expected: "ok=true, serverReachable=true, connected=true"
                 ),
             ],
+            afterRecoverySteps: taskWorkflowSteps(for: request, host: host, port: port),
             error: capabilities.error
         )
     }
@@ -1316,56 +1372,14 @@ func buildTaskWorkflowPlan(
             capabilities: capabilities,
             goal: request.goal,
             nextStep: "target-list",
-            steps: [
-                targetListPlanStep(host: host, port: port),
-                targetResolvePlanStep(device: request.device, host: host, port: port),
-                targetUsePlanStep(device: request.device, host: host, port: port),
-                targetWaitReadyPlanStep(device: request.device, host: host, port: port),
-                TKWorkflowPlanStep(
-                    id: "ios-smoke",
-                    title: "Run iOS smoke workflow",
-                    command: [
-                        "triton", "smoke", "ios",
-                        "--device", planValue(request.device, "<device>"),
-                        "--bundle-id", planValue(request.bundleID, "<bundle-id>"),
-                        "--open-url", planValue(request.url, "<url>"),
-                        "--wait-text", planValue(request.text, "<text>"),
-                        "--assert-text", planValue(request.text, "<text>"),
-                        "--evidence", planValue(request.evidence, "<dir.tritonevidence>"),
-                        "--json",
-                    ].map(shellEscaped).joined(separator: " "),
-                    requiresServer: true,
-                    requiresTarget: true,
-                    when: "target is resolved and host app can be launched",
-                    expected: "Smoke summary proves host action, runtime readiness, assertion, screenshot, and evidence"
-                ),
-                evidenceSummaryPlanStep(evidence: request.evidence),
-            ]
+            steps: iosSmokePlanSteps(request: request, host: host, port: port)
         )
     case "open-url":
         return taskWorkflowPlan(
             capabilities: capabilities,
             goal: request.goal,
             nextStep: "target-resolve",
-            steps: [
-                targetResolvePlanStep(device: request.device, host: host, port: port),
-                TKWorkflowPlanStep(
-                    id: "app-open-url",
-                    title: "Open app URL and capture runtime readiness",
-                    command: [
-                        "triton", "app", "go",
-                        planValue(request.url, "<url>"),
-                        "--device", planValue(request.device, "<device>"),
-                    ].map(shellEscaped).joined(separator: " "),
-                    requiresServer: true,
-                    requiresTarget: true,
-                    when: "target is ready and URL/deep link is known",
-                    expected: "Host action succeeds and optional runtime snapshot summarizes app state"
-                ),
-                waitTextPlanStep(text: request.text, host: host, port: port),
-                assertTextPlanStep(text: request.text, host: host, port: port),
-                evidenceCapturePlanStep(evidence: request.evidence),
-            ]
+            steps: openURLPlanSteps(request: request, host: host, port: port)
         )
     case "webview-check":
         return taskWorkflowPlan(
@@ -1442,6 +1456,146 @@ func buildTaskWorkflowPlan(
             )
         )
     }
+}
+
+private func taskWorkflowSteps(for request: WorkflowPlanRequest, host: String, port: Int) -> [TKWorkflowPlanStep] {
+    switch request.goal {
+    case "ios-smoke":
+        return iosSmokePlanSteps(request: request, host: host, port: port)
+    case "open-url":
+        return openURLPlanSteps(request: request, host: host, port: port)
+    case "webview-check":
+        return webviewCheckPlanSteps(request: request, host: host, port: port)
+    default:
+        return []
+    }
+}
+
+private func iosSmokePlanSteps(request: WorkflowPlanRequest, host: String, port: Int) -> [TKWorkflowPlanStep] {
+    [
+        targetListPlanStep(host: host, port: port),
+        targetResolvePlanStep(device: request.device, host: host, port: port),
+        targetUsePlanStep(device: request.device, host: host, port: port),
+        targetWaitReadyPlanStep(device: request.device, host: host, port: port),
+        TKWorkflowPlanStep(
+            id: "ios-host-input-unsupported",
+            title: "Check host-side simulator input blocker",
+            command: [
+                "triton", "schema",
+                "--command", "sim",
+                "--json",
+            ].map(shellEscaped).joined(separator: " "),
+            category: "diagnose",
+            workflowCategories: ["action", "assert", "evidence", "smoke", "target"],
+            requiresServer: false,
+            requiresTarget: false,
+            when: "embedded runtime action is unavailable and host-side iOS Simulator input would be the fallback",
+            expected: "Schema and capabilities report ios-simulator-host-tap/type as unsupported until a stable public simctl primitive is available"
+        ),
+        TKWorkflowPlanStep(
+            id: "ios-smoke",
+            title: "Run iOS smoke workflow",
+            command: [
+                "triton", "smoke", "ios",
+                "--device", planValue(request.device, "<device>"),
+                "--bundle-id", planValue(request.bundleID, "<bundle-id>"),
+                "--open-url", planValue(request.url, "<url>"),
+                "--wait-text", planValue(request.text, "<text>"),
+                "--assert-text", planValue(request.text, "<text>"),
+                "--evidence", planValue(request.evidence, "<dir.tritonevidence>"),
+                "--json",
+            ].map(shellEscaped).joined(separator: " "),
+            requiresServer: true,
+            requiresTarget: true,
+            when: "target is resolved and host app can be launched",
+            expected: "Smoke summary proves host action, runtime readiness, assertion, screenshot, and evidence"
+        ),
+        evidenceSummaryPlanStep(evidence: request.evidence),
+    ]
+}
+
+private func openURLPlanSteps(request: WorkflowPlanRequest, host: String, port: Int) -> [TKWorkflowPlanStep] {
+    if request.platform == "harmony" {
+        return harmonyOpenURLPlanSteps(request: request, host: host, port: port)
+    }
+
+    return [
+        targetResolvePlanStep(device: request.device, host: host, port: port),
+        TKWorkflowPlanStep(
+            id: "app-open-url",
+            title: "Open app URL and capture runtime readiness",
+            command: [
+                "triton", "app", "go",
+                planValue(request.url, "<url>"),
+                "--device", planValue(request.device, "<device>"),
+            ].map(shellEscaped).joined(separator: " "),
+            requiresServer: true,
+            requiresTarget: true,
+            when: "target is ready and URL/deep link is known",
+            expected: "Host action succeeds and optional runtime snapshot summarizes app state"
+        ),
+        waitTextPlanStep(text: request.text, host: host, port: port),
+        assertTextPlanStep(text: request.text, host: host, port: port),
+        evidenceCapturePlanStep(evidence: request.evidence),
+        evidenceSummaryPlanStep(evidence: request.evidence),
+    ]
+}
+
+private func harmonyOpenURLPlanSteps(request: WorkflowPlanRequest, host: String, port: Int) -> [TKWorkflowPlanStep] {
+    var steps = [targetResolvePlanStep(device: request.device, host: host, port: port)]
+    if let hap = request.hap, !hap.isEmpty {
+        steps.append(harmonyInstallPlanStep(device: request.device, hap: hap))
+    }
+    steps.append(harmonyOpenURLPlanStep(request: request))
+    steps.append(harmonyWaitTextPlanStep(device: request.device, text: request.text))
+    steps.append(harmonyScreenshotPlanStep(device: request.device, evidence: request.evidence))
+    steps.append(evidenceSummaryPlanStep(evidence: request.evidence))
+    return steps
+}
+
+private func webviewCheckPlanSteps(request: WorkflowPlanRequest, host: String, port: Int) -> [TKWorkflowPlanStep] {
+    [
+        TKWorkflowPlanStep(
+            id: "webview-current",
+            title: "Read current WebView metadata",
+            command: "triton webview current --host \(shellEscaped(host)) --port \(port) --json",
+            requiresServer: true,
+            requiresTarget: true,
+            when: "hybrid page may be visible",
+            expected: "Provider metadata includes WebView id, title, URL, and page session when available"
+        ),
+        TKWorkflowPlanStep(
+            id: "route-assert-current-url",
+            title: "Assert current WebView URL",
+            command: [
+                "triton", "route", "assert-current-url",
+                planValue(request.expectedURL ?? request.url, "<expected-url>"),
+                "--host", host,
+                "--port", String(port),
+                "--json",
+            ].map(shellEscaped).joined(separator: " "),
+            requiresServer: true,
+            requiresTarget: true,
+            when: "expected URL is known",
+            expected: "Route assertion returns status=pass or a machine-readable mismatch"
+        ),
+        TKWorkflowPlanStep(
+            id: "webview-wait",
+            title: "Wait for WebView text",
+            command: [
+                "triton", "webview", "wait",
+                "--text", planValue(request.text, "<text>"),
+                "--host", host,
+                "--port", String(port),
+                "--json",
+            ].map(shellEscaped).joined(separator: " "),
+            requiresServer: true,
+            requiresTarget: true,
+            when: "page text or event is the readiness signal",
+            expected: "WebView wait result includes match, timeout state, and last observed sample"
+        ),
+        evidenceCapturePlanStep(evidence: request.evidence),
+    ]
 }
 
 private func taskWorkflowPlan(
@@ -1534,6 +1688,81 @@ private func targetWaitReadyPlanStep(device: String?, host: String, port: Int) -
     )
 }
 
+private func harmonyInstallPlanStep(device: String?, hap: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "install-app",
+        title: "Install Harmony HAP",
+        command: [
+            "triton", "app", "install",
+            "--device", planValue(device, "<device>"),
+            "--platform", "harmony",
+            "--hap", hap,
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before opening a Harmony URL when a HAP path is provided",
+        expected: "Harmony HAP install command returns host action JSON"
+    )
+}
+
+private func harmonyOpenURLPlanStep(request: WorkflowPlanRequest) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "app-open-url",
+        title: "Open Harmony app URL",
+        command: [
+            "triton", "app", "open-url",
+            planValue(request.url, "<url>"),
+            "--device", planValue(request.device, "<device>"),
+            "--platform", "harmony",
+            "--bundle", planValue(request.bundle, "<bundle>"),
+            "--ability", planValue(request.ability, "<ability>"),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: false,
+        requiresTarget: false,
+        when: "target is ready and Harmony bundle, ability, and deep link are known",
+        expected: "HDC aa start -U host action submits the URL; business completion still requires wait/assert/evidence"
+    )
+}
+
+private func harmonyWaitTextPlanStep(device: String?, text: String?) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "wait-text",
+        title: "Wait for Harmony text",
+        command: [
+            "triton", "wait",
+            "--platform", "harmony",
+            "--target", planValue(device, "<device>"),
+            "--text", planValue(text, "<text>"),
+            "--timeout", "15",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after Harmony URL submission",
+        expected: "Host-side Harmony wait result proves readiness or returns timeout diagnostics"
+    )
+}
+
+private func harmonyScreenshotPlanStep(device: String?, evidence: String?) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "capture-screenshot",
+        title: "Capture Harmony screenshot",
+        command: [
+            "triton", "screenshot",
+            "--device", planValue(device, "<device>"),
+            "--platform", "harmony",
+            "--output", harmonyScreenshotPath(evidence: evidence),
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after wait/assert or when preserving failure evidence",
+        expected: "Screenshot metadata and image path are available for evidence review"
+    )
+}
+
 private func waitTextPlanStep(text: String?, host: String, port: Int) -> TKWorkflowPlanStep {
     TKWorkflowPlanStep(
         id: "wait-text",
@@ -1600,6 +1829,16 @@ private func evidenceSummaryPlanStep(evidence: String?) -> TKWorkflowPlanStep {
         when: "before handoff or issue filing",
         expected: "Summary identifies the key artifacts and redaction state"
     )
+}
+
+private func harmonyScreenshotPath(evidence: String?) -> String {
+    guard let evidence, !evidence.isEmpty, evidence != "<dir.tritonevidence>" else {
+        return "<path.png>"
+    }
+    if evidence.hasSuffix(".tritonevidence") {
+        return String(evidence.dropLast(".tritonevidence".count)) + ".png"
+    }
+    return evidence + ".png"
 }
 
 func renderWorkflowPlan(_ plan: TKWorkflowPlanResponse, language: CLILanguage = effectiveLanguage(nil)) -> String {

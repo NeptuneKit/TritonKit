@@ -7,6 +7,7 @@ let schemaHostPortOptions = [
 ]
 
 let schemaTargetOption = TKCommandSchemaOption(name: "--target", type: "String", defaultValue: TKLocalTargetID, description: "Target id from `triton list`, or simulator UDID for iOS simulator runtime targets; commands auto-select the only connected target when omitted")
+let schemaTargetDeviceAliasOption = TKCommandSchemaOption(name: "--target/--device", type: "String", defaultValue: TKLocalTargetID, description: "Runtime target selector; --device is an alias for --target and accepts target ids, iOS simulator UDIDs, booted, or the only connected target when omitted")
 let schemaTextJSONFormats = ["text", "json"]
 let schemaFormatTextJSONOption = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format")
 let schemaFormatJSONTextOption = TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format")

@@ -65,6 +65,7 @@
 24. Package Manager 分发入口同时覆盖 SwiftPM 与 CocoaPods；用户接入面只显式选择 / 添加 `TritonKit`，不得要求业务 App 手写 `TritonKitShared`；内部仍保留 `TritonKitShared` 与 `TritonKit` 两个 module 边界，CocoaPods 通过 `TritonKit.podspec` 传递解析 `TritonKitShared`，CI 需校验两个 podspec 可 lint。
 25. SwiftPM 根 `Package.swift` 只描述业务 App 可依赖的 embedded SDK product，不声明 `triton` CLI executable、不声明 Hummingbird / ArgumentParser 等 CLI-only package dependencies；macOS CLI 统一由 `CLI/Package.swift` 构建，命令为 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，避免 iOS App 解析 SwiftPM 时拉入 CLI 依赖。
 26. Swift 源文件超过 1500 行即进入治理范围；新增或扩展 CLI 能力时，默认按 `*Commands.swift`、`*Runtime.swift` / `*Service.swift`、`*Models.swift` 拆分，入口文件只保留 root command 注册与少量共享 glue，禁止继续把新子命令和 wire model 堆回巨型文件。
+27. 本机 emulator / simulator action 必须 Triton-first：agent 在调用 `baguette`、裸 `xcrun` / `simctl`、`hdc`、`adb`、DevEco Emulator CLI、XcodeBuildMCP 或裸 `xcodebuild` 前，必须先运行并保存 `triton status/doctor/capabilities/schema/plan` 的机器可读事实；只有 Triton 输出证明失败、unsupported 或 schema / capability 未覆盖所需动作时才允许 fallback，且交付说明必须保留 Triton 命令、错误码或 unsupported 证据和 fallback 命令。
 
 ## 2. 标准工作流（必须）
 
@@ -148,6 +149,7 @@ Git `worktree` 治理：
 11. 涉及设计、实现、扩展或验证 host-side Apple Simulator 接管能力（`triton sim`、`triton app`、`xcrun simctl` 封装、workspace simulator defaults、boot wait JSONL、App metadata/container/preferences、host artifacts、plan/evidence 集成）时，优先使用 `tritonkit-host-simulator-takeover`，并确认 agent 面对的是 Triton CLI/HTTP schema，而不是裸 `xcrun`。
 12. 涉及设计、实现、扩展或验证 Xcode workflow takeover 能力（project/workspace discovery、scheme/build settings、`xcodebuild` build/test/run、`.xcresult`、coverage、logs、SwiftPM、真机/macOS workflow、LLDB、host UI 集成，或评估 XcodeBuildMCP 能力取舍）时，优先使用 `tritonkit-xcode-workflow-takeover`，并坚持“吃能力，不吃 XcodeBuildMCP 对外 API”。
 13. 涉及 Xcode project/workspace 发现、scheme 列表、build settings、`xcodebuild build/test` 或 build-install-launch 时，默认优先使用 `triton xcode`；只有 `triton schema --command xcode --json` 未暴露所需能力或当前实现明确不足时，才临时回退 XcodeBuildMCP 或裸 `xcodebuild`，且回退原因必须写入交付说明。
+14. 涉及本机 iOS Simulator、Android Emulator、HarmonyOS / DevEco Emulator 的 target、app lifecycle、观察、动作、截图、smoke 或 Xcode run 时，默认先使用 `triton status --json`、`triton doctor --json`、`triton capabilities --json`、`triton schema --command <command> --json` 或 `triton plan ... --json` 作为事实源；fallback 到 `baguette`、`xcrun`、`hdc`、`adb`、XcodeBuildMCP 等工具前必须保存 Triton 失败 / unsupported / missing-schema 证据。
 
 ## 5. 文档工具（推荐）
 

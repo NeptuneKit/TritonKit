@@ -18,6 +18,8 @@ The product boundary is:
 
 The `triton` CLI is the stable interface for AI agents. Platform tools such as `xcrun simctl`, `adb`, `emu`, `hdc`, `aa`, `bm`, `uitest`, and `hilog` are implementation details behind JSON / JSONL contracts.
 
+Before using fallback tools for any local emulator or simulator action, run and preserve a Triton machine-readable fact source first: `triton status --json`, `triton doctor --json`, `triton capabilities --json`, `triton schema --json`, `triton schema --command <command> --json`, or a task-specific `triton plan ... --json`. Fallback to `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild` is allowed only when the Triton result proves failure, unsupported scope/capability, or a missing schema/capability for the needed action. Preserve the Triton command, error code or unsupported evidence, and fallback command in the report.
+
 ## Reference Docs
 
 Start from the current space and technical design:
@@ -56,6 +58,12 @@ Do not add Web / Wails UI, remote orchestration, real-device flows, or central s
 `triton doctor --json` is the ordered recovery view over that matrix. It should expose top-level `nextWorkflows`, plus `checks[].id`, `status`, `code`, `hint`, `nextAction`, `relatedCapabilities`, and `workflowCategories` so an agent can distinguish missing server, missing target/runtime, limited action surface, and available planning commands without re-joining doctor and capabilities by hand.
 
 `triton plan ios-smoke|open-url|webview-check --json` is the first task planning layer. It should return ordered command recommendations for local emulator work, but it must not execute those commands or replace explicit wait/assert/evidence proof.
+
+When `triton plan open-url ... --json` returns `mode=bootstrap` because the local server or runtime needs recovery, keep the bootstrap commands in `steps[]` and preserve the goal-specific workflow in `afterRecoverySteps[]`. Execute `steps[]` first, then execute `afterRecoverySteps[].argv` after recovery; do not discard the open-url/wait/screenshot/evidence workflow just because bootstrap is needed.
+
+Harmony open-url planning should be schema-backed: `triton plan open-url --platform harmony --device <selector> --bundle <bundle> --ability <ability> --hap <path.hap> --url <url> --text <text> --evidence <dir.tritonevidence> --json` should produce install/open-url/wait/screenshot/evidence-summary steps when `--hap` is present.
+
+Treat `triton plan ... --json` as the preferred fallback gate for goal-specific emulator workflows. If the plan cannot express the needed action, keep that plan output together with `triton schema --command <command> --json` or `triton capabilities --json` before calling a fallback tool.
 
 `triton plan --json` should also expose `mode`, with `bootstrap` for environment recovery/discovery planning and `task` for goal-specific workflow planning. Emulator agents should use `mode` to decide whether to recover local simulator state first or proceed into a smoke/open-url/webview workflow.
 
@@ -231,6 +239,8 @@ triton device stop --platform harmony --hvd "Codex Test Phone" --path ~/.Huawei/
 
 Use `--device <selector>` as the default agent-facing target selector for common host-side commands. Selectors can be aliases, full ids such as `sim:<udid>` / `harmony:<target>`, raw platform ids, `booted`, or `current`. `--platform`, `--name`, `--runtime`, `--state`, and `--ready` are filters; they may auto-select only when the filtered candidate set is unique. Keep `sim` for iOS-only advanced maintenance; `device runtime-url --device <selector>` is the Harmony embedded runtime port-forward setup path, and `--platform harmony --target <target>` remains the direct raw-target form.
 
+For Harmony host discovery, parse optional foreground app identity from `triton device list --platform harmony --json` when present. Treat `identityState=current` with `current=true` as the only current foreground identity. Treat `identityState=unknown` or `identityState=unsupported` as an explicit no-identity boundary; do not substitute the HDC target id, emulator name, or selected alias as `appName` / `bundleIdentifier`.
+
 When a Harmony HVD was started through Triton's `triton-harmony-emulator` launchd keepalive job, stop it through `triton device stop --platform harmony ... --confirm --json`. The command checks and unloads `gui/<uid>/triton-harmony-emulator` before running DevEco `Emulator -stop`, which prevents launchd from immediately restarting the emulator.
 
 iOS Simulator:
@@ -287,6 +297,8 @@ triton app container --device iphone15 --bundle-id <bundle-id> --kind data --jso
 triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json
 triton app prefs dump --device iphone15 --bundle-id <bundle-id> --json
 triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json
+triton app prefs set <key> --type data --base64 <base64> --device iphone15 --bundle-id <bundle-id> --json
+triton app prefs set <key> --type data --hex <hex> --device iphone15 --bundle-id <bundle-id> --json
 triton smoke ios --device iphone15 --bundle-id <bundle-id> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.png --evidence /tmp/<case>.tritonevidence --json
 ```
 
@@ -309,6 +321,8 @@ triton swipe --platform harmony --device harmony-a --start-x 350 --start-y 900 -
 triton type "hello" --platform harmony --device harmony-a --json
 triton paste "hello" --platform harmony --device harmony-a --json
 ```
+
+`device list --platform harmony` may include `targets[].appName`, `targets[].bundleIdentifier`, `targets[].identityState`, and `targets[].current`. These fields are optional host facts, not app lifecycle proof; continue to verify business state with `app inspect/launch`, `observe`, `wait`, `assert`, screenshot, or evidence commands.
 
 For Harmony host actions, schema exposes host-side output selectors alongside embedded runtime contracts. Parse `tap --platform harmony` as `host.harmony-tap`, `swipe --platform harmony` as `host.harmony-swipe`, and `type` / `paste --platform harmony` as `host.harmony-text-input`; do not reuse the embedded `input.result` parser for those host outputs. Parse `wait --platform harmony` as `host.harmony-wait`; do not reuse the embedded `wait.result` parser. Parse `ax/screenshot --platform harmony` as `host.harmony-artifact`; do not reuse `host.artifact`. Parse `press --platform harmony` as `host.harmony-key-action`; do not reuse `host.key-action`. Treat `clear --platform harmony` as an explicit unsupported boundary (`harmony-clear-text`) until a stable host clear primitive exists, and treat any reappearance of legacy selectors (`host.tap`, `host.swipe`, `host.text-input`, `host.wait`) as schema regression.
 

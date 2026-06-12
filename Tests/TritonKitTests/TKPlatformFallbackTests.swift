@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 @testable import TritonKit
+import TritonKitShared
 #if canImport(Darwin)
 import Darwin
 #endif
@@ -90,10 +91,53 @@ struct TKPlatformFallbackTests {
         #expect(configuration.features.contains(.hierarchy))
         #expect(configuration.features.contains(.accessibility))
         #expect(configuration.features.contains(.input))
+        #expect(configuration.features.contains(.semantic))
         #expect(configuration.redaction.secureText == .lengthOnly)
         #expect(configuration.redaction.collectClipboard == false)
         #expect(configuration.redaction.collectNetwork == false)
         #expect(configuration.redaction.collectLogs == false)
+    }
+
+    @Test("semantic provider registry exposes provider-backed domain state")
+    func semanticProviderRegistry() {
+        let kit = TritonKit.shared
+        kit.clearSemanticStateProvider(domain: "media-playback")
+        let token = kit.registerSemanticStateProvider(
+            domain: "media-playback",
+            displayName: "Media Playback",
+            schema: [TKRuntimeSemanticStateField(path: "isReady", type: "Bool")],
+            actions: [TKRuntimeSemanticActionDescriptor(name: "pause")]
+        ) {
+            ["isReady": .bool(true)]
+        }
+        defer {
+            token.cancel()
+            kit.clearSemanticStateProvider(domain: "media-playback")
+        }
+
+        let response = kit.currentSemanticState(capturedAt: "2026-06-08T12:00:00Z")
+
+        #expect(response.domainCount == 1)
+        #expect(response.domains.first?.domain == "media-playback")
+        #expect(response.domains.first?.state["isReady"] == .bool(true))
+        #expect(response.domains.first?.actions.map(\.name) == ["pause"])
+
+        let manifest = currentRuntimeManifestWithWebViewProvider(sdkVersion: "0.1.1")
+        let semanticStateCapability = manifest.capabilities.first { $0.name == TKRuntimeCapabilityName.semanticState.rawValue }
+        let semanticActionCapability = manifest.capabilities.first { $0.name == TKRuntimeCapabilityName.semanticActionProvider.rawValue }
+        #expect(semanticStateCapability?.supported == true)
+        #expect(semanticActionCapability?.supported == true)
+        #expect(manifest.semanticDomains.first?.domain == "media-playback")
+        #expect(manifest.semanticDomains.first?.source == "runtime-provider")
+        #expect(manifest.semanticDomains.first?.schema.map(\.path) == ["isReady"])
+        #expect(manifest.semanticDomains.first?.actions.map(\.name) == ["pause"])
+
+        token.cancel()
+        let empty = kit.currentSemanticState(capturedAt: "2026-06-08T12:00:01Z")
+        let emptyManifest = currentRuntimeManifestWithWebViewProvider(sdkVersion: "0.1.1")
+        #expect(empty.domainCount == 0)
+        #expect(empty.warnings.contains { $0.contains("No semantic providers") })
+        #expect(emptyManifest.semanticDomains.isEmpty)
     }
 
     @Test("state observer token receives current state and can be cancelled")

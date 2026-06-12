@@ -39,7 +39,22 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("android-device-list"))
         #expect(device.providedCapabilities.contains("android-device-wait-ready"))
         #expect(device.providedCapabilities.contains("android-device-screenshot"))
+        #expect(device.providedCapabilities.contains("harmony-device-list"))
+        #expect(device.providedCapabilities.contains("harmony-foreground-app-identity"))
         #expect(device.providedCapabilities.contains("harmony-device-stop"))
+    }
+
+    @Test("device schema documents optional host foreground app identity")
+    func deviceSchemaDocumentsOptionalHostForegroundAppIdentity() throws {
+        let device = try #require(commandSchemas().first { $0.name == "device" })
+        let contract = try #require(device.outputContracts.first { $0.selector == "host.device-list" })
+        let fieldTypes = Dictionary(uniqueKeysWithValues: contract.fields.map { ($0.name, $0.type) })
+
+        #expect(fieldTypes["targets"] == "[HostDeviceTarget]")
+        #expect(fieldTypes["targets[].appName"] == "String?")
+        #expect(fieldTypes["targets[].bundleIdentifier"] == "String?")
+        #expect(fieldTypes["targets[].identityState"] == "String?")
+        #expect(fieldTypes["targets[].current"] == "Bool?")
     }
 
     @Test("Harmony emulator stop plans launchd bootout before DevEco stop")
@@ -247,6 +262,10 @@ struct DeviceCrossPlatformTests {
         #expect(harmony.target == "127.0.0.1:10100")
         #expect(harmony.ready)
         #expect(harmony.transport == "TCP")
+        #expect(harmony.appName == nil)
+        #expect(harmony.bundleIdentifier == nil)
+        #expect(harmony.identityState == "unknown")
+        #expect(harmony.current == false)
         #expect(android.platform == "android")
         #expect(android.id == "android:emulator-5554")
         #expect(android.target == "emulator-5554")
@@ -254,6 +273,29 @@ struct DeviceCrossPlatformTests {
         #expect(android.name == "Pixel_8")
         #expect(android.runtime == "sdk_gphone64_arm64")
         #expect(android.transport == "1")
+    }
+
+    @Test("host device target mapping carries Harmony foreground app identity")
+    func hostDeviceTargetMappingCarriesHarmonyForegroundAppIdentity() {
+        let target = TKHarmonyTarget(
+            target: "127.0.0.1:10100",
+            state: "Connected",
+            transport: "TCP",
+            source: "hdc",
+            foregroundApp: TKHarmonyForegroundAppIdentity(
+                appName: "Demo App",
+                bundleIdentifier: "com.example.demo",
+                identityState: "current",
+                current: true
+            )
+        )
+
+        let hostTarget = hostDeviceTarget(from: target)
+
+        #expect(hostTarget.appName == "Demo App")
+        #expect(hostTarget.bundleIdentifier == "com.example.demo")
+        #expect(hostTarget.identityState == "current")
+        #expect(hostTarget.current == true)
     }
 
     @Test("host device target can round-trip into Harmony runtime target")
@@ -267,7 +309,11 @@ struct DeviceCrossPlatformTests {
             source: "hdc",
             name: nil,
             runtime: nil,
-            transport: "TCP"
+            transport: "TCP",
+            appName: nil,
+            bundleIdentifier: nil,
+            identityState: "unknown",
+            current: false
         )
 
         let harmony = harmonyTarget(from: target)
@@ -470,7 +516,11 @@ private func iosTarget(
         source: "simctl",
         name: name,
         runtime: runtime,
-        transport: nil
+        transport: nil,
+        appName: nil,
+        bundleIdentifier: nil,
+        identityState: "unknown",
+        current: false
     )
 }
 

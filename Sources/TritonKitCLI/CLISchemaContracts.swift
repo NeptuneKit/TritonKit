@@ -201,6 +201,15 @@ func planNextStepsOutputContract() -> TKCommandOutputContract {
             ("steps[].requires", "[String]", true, "Machine-readable prerequisites such as cli.available, server.reachable, target.ready, or runtime.connected"),
             ("steps[].expectedArtifacts", "[String]", true, "Expected evidence surfaces produced or consumed by the step"),
             ("steps[].stopConditions", "[String]", true, "Machine-readable conditions that should stop or re-plan the workflow"),
+            ("afterRecoverySteps", "[TKCLIPlanStep]", true, "Goal-specific task workflow to run after bootstrap recovery steps complete"),
+            ("afterRecoverySteps[].id", "String", true, "Stable deferred step identifier"),
+            ("afterRecoverySteps[].command", "String", true, "Human-readable Triton invocation for the deferred task step"),
+            ("afterRecoverySteps[].argv", "[String]", true, "Primary executable argv tokens for the deferred task step"),
+            ("afterRecoverySteps[].category", "String", true, "Recovery category derived from the deferred step command root"),
+            ("afterRecoverySteps[].workflowCategories", "[String]", true, "Workflow taxonomy values directly associated with the deferred step"),
+            ("afterRecoverySteps[].requires", "[String]", true, "Machine-readable prerequisites for the deferred task step"),
+            ("afterRecoverySteps[].expectedArtifacts", "[String]", true, "Expected evidence surfaces produced or consumed by the deferred step"),
+            ("afterRecoverySteps[].stopConditions", "[String]", true, "Machine-readable stop or re-plan conditions for the deferred step"),
             ("error", "TKCLIErrorDetail?", false, "Recoverable server or target diagnostic"),
         ])
     )
@@ -266,6 +275,13 @@ func runtimeManifestOutputContract() -> TKCommandOutputContract {
             ("sdkVersion", "String", true, "Embedded SDK version"),
             ("buildConfiguration", "String", true, "debug or release"),
             ("capabilities", "[TKRuntimeCapabilityDetail]", true, "Runtime capability details"),
+            ("semanticDomains", "[TKRuntimeSemanticDomainManifest]", true, "Registered app semantic domains advertised by opt-in providers; state values are read through snapshot"),
+            ("semanticDomains[].domain", "String", true, "Provider-owned semantic domain identifier"),
+            ("semanticDomains[].source", "String", true, "Provider source such as runtime-provider"),
+            ("semanticDomains[].confidence", "String", true, "Provider confidence such as provider-backed"),
+            ("semanticDomains[].schema", "[TKRuntimeSemanticStateField]", true, "Typed state field catalog for query/assert planning"),
+            ("semanticDomains[].actions", "[TKRuntimeSemanticActionDescriptor]", true, "Provider-declared action catalog for action discovery"),
+            ("semanticDomains[].redaction", "TKRuntimeSemanticRedaction", true, "Provider-declared redaction policy"),
             ("limits", "TKRuntimeLimits", true, "Runtime collection limits"),
             ("redaction", "TKRuntimeRedactionPolicy", true, "Runtime redaction policy"),
         ])
@@ -316,6 +332,14 @@ func runtimeSnapshotOutputContract() -> TKCommandOutputContract {
             ("route", "TKRuntimeRouteStateResponse?", false, "Route state when included"),
             ("responder", "TKRuntimeResponderStateResponse?", false, "Responder state when included"),
             ("media", "TKRuntimeMediaStateResponse?", false, "Media playback surfaces, AX control candidates, confidence, fallback guidance, and evidence commands when included"),
+            ("semantic", "TKRuntimeSemanticStateResponse?", false, "Provider-backed app semantic domains, typed state, action descriptors, redaction metadata, and evidence commands when included"),
+            ("semantic.domains[]", "TKRuntimeSemanticDomainState", false, "Registered semantic domain state entries"),
+            ("semantic.domains[].source", "String", true, "Provider source; runtime-provider is app-owned state, unlike ax-tree or host-layout inference"),
+            ("semantic.domains[].confidence", "String", true, "Provider confidence label for business fact trust decisions"),
+            ("semantic.domains[].schema", "[TKRuntimeSemanticStateField]", false, "Typed state field catalog for query/assert planning"),
+            ("semantic.domains[].state", "[String:TKJSONValue]", false, "Provider-owned typed business state values"),
+            ("semantic.domains[].actions", "[TKRuntimeSemanticActionDescriptor]", false, "Provider-declared semantic action catalog; execution is a future provider command slice"),
+            ("semantic.domains[].redaction", "TKRuntimeSemanticRedaction", false, "Provider-declared redaction metadata for state and action fields"),
             ("geometry", "TKGeometryResponse?", false, "Window geometry when included"),
             ("ax", "[TKAXNode]?", false, "Accessibility tree when included"),
             ("screenshot", "TKRuntimeScreenshotMetadata?", false, "Screenshot metadata when included"),
@@ -641,6 +665,10 @@ func hostDeviceListOutputContract(selector: String = "host.device-list") -> TKCo
             ("ok", "Bool", true, "Whether host device listing succeeded"),
             ("platform", "String", true, "ios, android, or harmony"),
             ("targets", "[HostDeviceTarget]", true, "Discovered host targets"),
+            ("targets[].appName", "String?", false, "Foreground app display name when host discovery can determine it"),
+            ("targets[].bundleIdentifier", "String?", false, "Foreground app bundle identifier when host discovery can determine it"),
+            ("targets[].identityState", "String?", false, "Foreground identity state: current, unknown, or unsupported"),
+            ("targets[].current", "Bool?", false, "Whether the target identity describes the current foreground app"),
             ("defaultTarget", "HostDeviceTarget?", false, "Default selected target if one exists"),
             ("sourceCommand", "String", true, "Underlying host command"),
         ])
@@ -768,6 +796,35 @@ func hostActionOutputContract(selector: String, model: String) -> TKCommandOutpu
             ("artifacts", "[String]", true, "Written artifact paths"),
             ("screenshot", "HostSimulatorScreenshotMetadata?", false, "Simulator screenshot orientation and pixel metadata"),
             ("note", "String?", false, "Boundary or follow-up note"),
+        ])
+    )
+}
+
+func hostSimulatorInputOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-input",
+        format: "json",
+        kind: "host-action",
+        model: "HostSimulatorInputOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the host simulator input command completed"),
+            ("action", "String", true, "sim.tap or sim.type"),
+            ("runtimeScope", "String", true, "host-simulator"),
+            ("target", "String", true, "Simulator target selector"),
+            ("adapter", "String", true, "Host adapter name, currently xcrun-simctl"),
+            ("tool", "String", true, "Host executable"),
+            ("exitCode", "Int32", true, "Host process exit code"),
+            ("riskLevel", "String", true, "Host command risk level"),
+            ("sourceCommand", "String", true, "Underlying xcrun simctl input command"),
+            ("stdoutTruncated", "Bool", true, "Whether stdout sample was truncated"),
+            ("stderrTruncated", "Bool", true, "Whether stderr sample was truncated"),
+            ("stdout", "String?", false, "Bounded stdout sample"),
+            ("stderr", "String?", false, "Bounded stderr sample"),
+            ("x", "Int?", false, "Tap x coordinate when action is sim.tap"),
+            ("y", "Int?", false, "Tap y coordinate when action is sim.tap"),
+            ("insertedLength", "Int?", false, "Typed text length when action is sim.type"),
+            ("textEncoding", "String?", false, "Text encoding boundary, currently ascii for sim.type"),
+            ("note", "String", true, "Boundary or follow-up verification note"),
         ])
     )
 }

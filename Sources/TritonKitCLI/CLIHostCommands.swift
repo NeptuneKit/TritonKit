@@ -150,6 +150,8 @@ struct Sim: AsyncParsableCommand {
             SimErase.self,
             SimUpgrade.self,
             SimScreenshot.self,
+            SimTap.self,
+            SimType.self,
             SimRecord.self,
             SimLogs.self,
             SimDiagnose.self,
@@ -2008,11 +2010,19 @@ struct HostAppPrefsGet: AsyncParsableCommand {
     }
 }
 
+enum HostPreferenceSetType: String, ExpressibleByArgument {
+    case json
+    case data
+}
+
 struct HostAppPrefsSet: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "set", abstract: "Set one simulator app preference value from JSON")
+    static let configuration = CommandConfiguration(commandName: "set", abstract: "Set one simulator app preference value")
 
     @Argument(help: "Preference key") var key: String
-    @Argument(help: "JSON value to write") var value: String
+    @Argument(help: "JSON value to write when --type json is used") var value: String?
+    @Option(help: "Preference value type: json or data") var type: HostPreferenceSetType = .json
+    @Option(help: "Base64 payload when --type data is used") var base64: String?
+    @Option(help: "Hex payload when --type data is used") var hex: String?
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
     @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
@@ -2043,6 +2053,9 @@ struct HostAppPrefsSet: AsyncParsableCommand {
                 bundleID: bundleID,
                 key: key,
                 value: value,
+                type: type,
+                base64: base64,
+                hex: hex,
                 outputFormat: outputFormat
             )
         } catch {
