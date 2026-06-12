@@ -18,6 +18,8 @@ The product boundary is:
 
 The `triton` CLI is the stable interface for AI agents. Platform tools such as `xcrun simctl`, `adb`, `emu`, `hdc`, `aa`, `bm`, `uitest`, and `hilog` are implementation details behind JSON / JSONL contracts.
 
+Before using fallback tools for any local emulator or simulator action, run and preserve a Triton machine-readable fact source first: `triton status --json`, `triton doctor --json`, `triton capabilities --json`, `triton schema --json`, `triton schema --command <command> --json`, or a task-specific `triton plan ... --json`. Fallback to `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild` is allowed only when the Triton result proves failure, unsupported scope/capability, or a missing schema/capability for the needed action. Preserve the Triton command, error code or unsupported evidence, and fallback command in the report.
+
 ## Reference Docs
 
 Start from the current space and technical design:
@@ -60,6 +62,8 @@ Do not add Web / Wails UI, remote orchestration, real-device flows, or central s
 When `triton plan open-url ... --json` returns `mode=bootstrap` because the local server or runtime needs recovery, keep the bootstrap commands in `steps[]` and preserve the goal-specific workflow in `afterRecoverySteps[]`. Execute `steps[]` first, then execute `afterRecoverySteps[].argv` after recovery; do not discard the open-url/wait/screenshot/evidence workflow just because bootstrap is needed.
 
 Harmony open-url planning should be schema-backed: `triton plan open-url --platform harmony --device <selector> --bundle <bundle> --ability <ability> --hap <path.hap> --url <url> --text <text> --evidence <dir.tritonevidence> --json` should produce install/open-url/wait/screenshot/evidence-summary steps when `--hap` is present.
+
+Treat `triton plan ... --json` as the preferred fallback gate for goal-specific emulator workflows. If the plan cannot express the needed action, keep that plan output together with `triton schema --command <command> --json` or `triton capabilities --json` before calling a fallback tool.
 
 `triton plan --json` should also expose `mode`, with `bootstrap` for environment recovery/discovery planning and `task` for goal-specific workflow planning. Emulator agents should use `mode` to decide whether to recover local simulator state first or proceed into a smoke/open-url/webview workflow.
 

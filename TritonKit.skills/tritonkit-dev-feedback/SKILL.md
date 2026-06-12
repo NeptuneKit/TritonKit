@@ -24,6 +24,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - Harmony embedded SDK: package id/import path `tritonkit`, Debug-only runtime, provider-based app semantics, and `--runtime-base-url` checks while standalone.
    - CLI-only use: Homebrew release install by default, local source build only for unreleased validation.
 3. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
+   - before using `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild` for a local emulator / simulator action, first capture Triton evidence through `status`, `doctor`, `capabilities`, `schema`, or `plan`; fallback reports must include the Triton command plus failure / unsupported / missing-schema evidence.
    - `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`
    - `triton evidence inspect /tmp/<case>.tritonevidence --json`
    - `triton evidence summary /tmp/<case>.tritonevidence --json`
@@ -42,6 +43,8 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton schema --command <name> --json` for the exact command being reported; every command in the schema inventory must be individually discoverable.
    - `triton plan --json`
    - `triton plan ios-smoke|open-url|webview-check --json` when feedback depends on a multi-step agent workflow; task plans are recommendations and must not be reported as execution proof.
+   - `triton runtime manifest --json`; preserve `semanticDomains[]` when present so reports can show provider-backed domain/source/schema/action catalog discovery without leaking current state values.
+   - Treat a direct fallback to raw emulator tools without prior Triton failure / unsupported / missing-schema evidence as a TritonKit workflow documentation bug; the expected behavior is Triton-first, fallback-with-proof.
    - `triton runtime manifest --json`; preserve `semanticDomains[]` when present so reports can show provider-backed domain/source/schema/action catalog discovery without leaking current state values.
    - `triton snapshot --include app,scene,route,ax,geometry --json`
    - `triton snapshot --include media,ax,screenshot-metadata --json` for iOS AVPlayer / AVPlayerViewController playback feedback; preserve `media.surfaces[]`, `media.controls[]`, `automationConfidence`, `fallbackAdvice[]`, and `evidenceCommands[]` so reports distinguish rendered video from controllable playback.

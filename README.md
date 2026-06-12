@@ -498,11 +498,13 @@ triton app prefs dump --device booted --bundle-id com.example.app --json
 
 Destructive commands require `--confirm` by default, and `runtime delete` supports `--dry-run` first so agents can inspect the selected runtimes before deleting anything.
 
+For local emulator or simulator actions, use Triton as the first control surface before fallback tools. Before running `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild`, run and preserve a machine-readable Triton check such as `triton status --json`, `triton doctor --json`, `triton capabilities --json`, `triton schema --command <command> --json`, or a task-specific `triton plan ... --json`. Fallback is allowed only when that Triton output proves `server_unavailable`, `unsupported_capability`, a missing schema / capability, or a task plan that does not cover the required action. Issue reports and regression notes should include the Triton command, stable error code or unsupported evidence, and the fallback command that was used.
+
 `app go <url>` is the short iOS deep-link smoke entry: it opens the URL, waits for embedded runtime readiness, returns an app/route/AX snapshot summary, and defaults to JSON output. Use `--device <selector>` only when the current/default target is ambiguous.
 For iOS simulator selectors, `sim:` is optional. `--device 60667794-96F8-40E6-8664-85538EC4663E` and `--device sim:60667794-96F8-40E6-8664-85538EC4663E` both resolve to the same simulator; keep `sim:` only when you want explicit platform disambiguation.
 `app open-url` is the lower-level host action and only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton find`, `triton assert`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
 
-Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts:
+Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts; if fallback is still required, keep the `triton schema --command xcode --json` or `triton xcode ...` failure / unsupported evidence with the fallback log:
 
 ```bash
 triton xcode discover --path . --json

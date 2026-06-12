@@ -36,6 +36,12 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 
 不满足这些条件、且更偏后台调度、数据库、消息队列、权限、多租户或大盘展示的能力，不进入 CLI 首期。CLI 可以提供 `status/list/submit/cancel/fetch/test` 这类 agent 入口，但后台状态机归 `triton serve` 或部署配置负责。
 
+### Triton-first fallback gate
+
+本机 emulator / simulator 动作必须先经过 TritonKit 的机器可读控制面。Agent 在调用 `baguette`、裸 `xcrun` / `simctl`、`hdc`、`adb`、DevEco Emulator CLI、XcodeBuildMCP 或裸 `xcodebuild` 前，必须先运行并保存至少一个 Triton 事实源：`triton status --json`、`triton doctor --json`、`triton capabilities --json`、`triton schema --json`、`triton schema --command <command> --json` 或 task-specific `triton plan ... --json`。只有当该输出明确证明 `server_unavailable`、`unsupported_capability` / `unsupported_runtime_scope`、schema / capability 未暴露所需动作，或 plan 步骤无法覆盖目标工作流时，才允许 fallback。
+
+Fallback 记录必须同时包含 Triton 命令、稳定错误码或 unsupported / missing schema 证据、fallback 工具命令和后续验证方式。不能只写“改用 hdc / xcrun / baguette / XcodeBuildMCP”；这类记录无法让 agent 判断是 TritonKit 缺能力、环境未准备好，还是调用者绕过了既有契约。
+
 - `triton serve`：启动本地控制服务。
 - `triton --version` / `triton version --format json`：读取 CLI 版本、schema version 与默认 host/port。
 - `triton status --format json`：读取本地控制服务状态；成功态也返回 `ok/serverReachable/runtime/connected/latestHierarchyAvailable/activeHierarchyAvailable/hierarchyCacheState/targetConnectionState/targetCount` envelope，用于区分当前连接状态与 stale hierarchy cache。
@@ -53,7 +59,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 - `triton route assert-current-url <expected-url> --format json`：断言当前 WebView provider URL，支持 `--ignore-query`。匹配返回 `status=pass`；不匹配返回 `status=fail`、expected/actual、hint 并以非 0 退出；没有 WebView provider URL 时返回 `webview_provider_unavailable`，不把 AX/WebKit 容器伪装成 URL 可用。
 - `triton focus <selector> --format json`、`triton set-text <selector> <text> --secure --format json`、`triton select-segment <selector> <title|index> --format json`、`triton set-switch <selector> on|off|toggle --format json`：语义动作入口，默认先复用 `find/tap` 的 selector 解析与 `--index/--within/--at` 消歧，再向 embedded runtime 发送 `semanticAction`。使用 `--runtime-base-url` 时直接把 selector 和动作参数交给 App provider，适合 Harmony 等由业务侧实现语义动作的 runtime。返回 `strategy/targetOID/targetClassName/elapsedMs/redaction`，让 agent 不必用脆弱的坐标链表达表单操作。
 - `triton ledger --limit 50 --jsonl`：读取 embedded runtime 最近 request/action/error ring buffer。每行是 `TKRuntimeLedgerEntry`，包含 request type、action、ok、elapsedMs、errorCode、message 与 redaction；secure input 不写入明文。独立 embedded HTTP runtime 可用 `--runtime-base-url` 直连。
-- `triton plan --format json`：根据当前 server/target 状态输出下一步计划；顶层 `surface=plan`。server 不可达时返回 `mode=bootstrap`、`nextStep=start-server`、`nextWorkflows[]` 与 `error.nextAction`，连接态返回观察、动作和 archive 导出的推荐序列。任务型入口当前覆盖 `triton plan ios-smoke --device <selector> --bundle-id <id> --url <url> --text <text> --evidence <dir.tritonevidence> --json`、`triton plan open-url --device <selector> --url <url> --text <text> --json` 和 `triton plan webview-check --expected-url <url> --text <text> --json`；这些响应返回 `mode=task`，并用 `nextWorkflows[]` 直接声明当前推荐链路属于 `smoke`、`app`、`route`、`assert`、`evidence` 等哪组 workflow，而不要求 agent 只靠 `goal` 或 step 命令词猜测。
+- `triton plan --format json`：根据当前 server/target 状态输出下一步计划；顶层 `surface=plan`。server 不可达时返回 `mode=bootstrap`、`nextStep=start-server`、`nextWorkflows[]` 与 `error.nextAction`，连接态返回观察、动作和 archive 导出的推荐序列。任务型入口当前覆盖 `triton plan ios-smoke --device <selector> --bundle-id <id> --url <url> --text <text> --evidence <dir.tritonevidence> --json`、`triton plan open-url --device <selector> --url <url> --text <text> --json` 和 `triton plan webview-check --expected-url <url> --text <text> --json`；这些响应返回 `mode=task`，并用 `nextWorkflows[]` 直接声明当前推荐链路属于 `smoke`、`app`、`route`、`assert`、`evidence` 等哪组 workflow，而不要求 agent 只靠 `goal` 或 step 命令词猜测。`plan` 也是 fallback gate：如果 agent 准备改用 raw emulator / simulator tool，必须先保存 plan、schema、capabilities 或 doctor 的失败 / unsupported / missing-schema 证据。
 - `triton sim list --format json`：通过 host-side `xcrun simctl list devices available --json` 列出 simulator，输出 `sim:<udid>` target、runtime、platform、state、isBooted 与 source。
 - `triton sim use <udid> --format json`：将 workspace 默认 simulator 写入 `.triton/host-defaults.json`，后续可作为 session defaults 的本地状态来源。
 - `triton sim boot <udid> --format json`、`triton sim boot <udid> --wait --jsonl`、`triton sim shutdown <udid|booted> --format json`：首批 simulator lifecycle 入口，`--wait --jsonl` 输出 boot 轮询进度，失败时返回稳定 Triton error envelope。

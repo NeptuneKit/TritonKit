@@ -56,6 +56,8 @@ struct SchemaFactSourceTests {
         #expect(plan.nextCommands.contains("triton schema --json"))
         #expect(plan.providedCapabilities.contains("plan"))
         #expect(plan.providedCapabilities.contains("plan-inspect"))
+        #expect(plan.outputSemantics?.contains("Triton-first fallback gate") == true)
+        #expect(plan.outputSemantics?.contains("missing-schema evidence") == true)
         #expect(plan.usageForms.contains(where: { $0.form == "ios-smoke" }))
         #expect(plan.usageForms.contains(where: { $0.form == "open-url" }))
         #expect(plan.usageForms.contains(where: { $0.form == "webview-check" }))
