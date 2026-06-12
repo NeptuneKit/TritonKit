@@ -1,8 +1,8 @@
-# Issue 39 - capture/evidence explicit target propagation
+# Issues 39 and 44 - capture/evidence explicit target propagation
 
 ## 背景
 
-GitHub Issue #39 报告：多 iOS Simulator target 同时连接时，`triton capture --target <id>` 与 `triton evidence --target <id>` 的顶层 target 能正确解析，但嵌套采集 hierarchy、AX、screenshot、geometry、archive 时仍以 `triton:local` 或空 target 请求 runtime，最终被 server 判定为 `ambiguous_target` 并跳过 artifact。
+GitHub Issue #39 与 #44 报告同根问题：多 iOS Simulator target 同时连接时，`triton capture --target <id>` 与 `triton evidence --target <id>` 的顶层 target 能正确解析，但嵌套采集 hierarchy、AX、screenshot、geometry、archive 时仍以 `triton:local` 或空 target 请求 runtime，最终被 server 判定为 `ambiguous_target` 并跳过 artifact。
 
 ## 目标
 
@@ -14,6 +14,7 @@ GitHub Issue #39 报告：多 iOS Simulator target 同时连接时，`triton cap
 - 覆盖 `triton capture --target <id>` 默认 include 中额外的 `geometry`、`archive`。
 - 使用 fake server / fixture 做 CLI 单元测试，不依赖真实 Simulator。
 - 不新增 Web/Wails UI，不改变 host/xcode read-only artifact 采集语义。
+- #44 不单独拆 space；它与 #39 共享修复、测试和验收。
 
 ## BDD 场景
 
@@ -41,3 +42,9 @@ And manifest 中 `target.id` 等于 `triton:ios-simulator:SIM-2`
 2. `captureEvidenceBundle` 在 `list` include 先解析出 target 后，同步使用 target-scoped `TritonKitHTTPClient`。
 3. hierarchy、AX、screenshot、geometry、archive 全部复用同一个 resolved target，不回退到 `triton:local`。
 4. 至少运行相关 Swift 测试；若未跑全量门禁，交付说明中明确原因与风险。
+
+## 2026-06-12 核验
+
+- #39 与 #44 均由 `captureEvidenceBundle` 的 nested runtime artifact client 未继承 resolved target 引起。
+- 已有本地 commit `6bc275c` 覆盖运行时修复、fake 多 target 测试、space 与 memory。
+- `CLI/Package.swift` 当前未提交修改是 SwiftPM path dependency identity 的 worktree 测试支撑项：worktree 目录名不是 `TritonKit` 时，显式 `.package(name: "tritonkit", path: "..")` 才能让 `swift test --package-path CLI` 直接解析既有 `.product(..., package: "tritonkit")` 依赖。
