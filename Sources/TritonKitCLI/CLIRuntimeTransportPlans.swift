@@ -722,7 +722,10 @@ private func networkProxyServePlanStep(proxy: String, mode: String, output: Stri
         requires: ["cli.available"],
         expectedArtifacts: ["network-capture", "stdout-json"],
         stopConditions: ["command.failed", "artifact.write-failed"],
-        requiresLongRunningProcess: true
+        requiresLongRunningProcess: true,
+        readyEvents: ["proxy.serve.ready"],
+        finalEvents: ["proxy.serve.summary"],
+        terminationSignals: ["sigint", "sigterm"]
     )
 }
 

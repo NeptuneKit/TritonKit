@@ -31,6 +31,9 @@ func planNextStepsOutputContract() -> TKCommandOutputContract {
             ("steps[].expectedArtifacts", "[String]", true, "Expected evidence surfaces produced or consumed by the step"),
             ("steps[].stopConditions", "[String]", true, "Machine-readable conditions that should stop or re-plan the workflow"),
             ("steps[].requiresLongRunningProcess", "Bool", true, "Whether agents must keep this step running while later steps execute"),
+            ("steps[].readyEvents", "[String]", true, "JSONL events that prove a long-running step is ready for dependent steps"),
+            ("steps[].finalEvents", "[String]", true, "JSONL events expected when a long-running step exits cleanly"),
+            ("steps[].terminationSignals", "[String]", true, "Preferred signals for agents to stop a long-running process after dependent steps finish"),
             ("error", "TKCLIErrorDetail?", false, "Recoverable server or target diagnostic"),
         ])
     )

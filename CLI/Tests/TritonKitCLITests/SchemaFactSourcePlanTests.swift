@@ -104,6 +104,9 @@ extension SchemaFactSourceTests {
         var invalidRequires: [String] = []
         var invalidArtifacts: [String] = []
         var invalidStopConditions: [String] = []
+        var invalidReadyEvents: [String] = []
+        var invalidFinalEvents: [String] = []
+        var invalidTerminationSignals: [String] = []
 
         for fixture in workflowPlanFixtures(includeTaskInputs: true) {
             for step in fixture.steps {
@@ -126,6 +129,15 @@ extension SchemaFactSourceTests {
                 for condition in step.stopConditions where !isPlanMetadataKey(condition) {
                     invalidStopConditions.append("\(context):\(condition)")
                 }
+                for event in step.readyEvents where !isAgentEventKey(event, allowingPlaceholders: false) {
+                    invalidReadyEvents.append("\(context):\(event)")
+                }
+                for event in step.finalEvents where !isAgentEventKey(event, allowingPlaceholders: false) {
+                    invalidFinalEvents.append("\(context):\(event)")
+                }
+                for signal in step.terminationSignals where !isPlanMetadataKey(signal) {
+                    invalidTerminationSignals.append("\(context):\(signal)")
+                }
             }
         }
 
@@ -135,12 +147,19 @@ extension SchemaFactSourceTests {
         #expect(invalidRequires == [])
         #expect(invalidArtifacts == [])
         #expect(invalidStopConditions == [])
+        #expect(invalidReadyEvents == [])
+        #expect(invalidFinalEvents == [])
+        #expect(invalidTerminationSignals == [])
     }
 
     @Test("workflow plan long running steps are explicit")
     func workflowPlanLongRunningStepsAreExplicit() {
         var missingLongRunningSteps: [String] = []
+        var missingLongRunningTermination: [String] = []
+        var missingProxyServeReadyEvents: [String] = []
+        var missingProxyServeFinalEvents: [String] = []
         var unexpectedLongRunningSteps: [String] = []
+        var unexpectedOneShotLifecycle: [String] = []
 
         for fixture in workflowPlanFixtures(includeTaskInputs: true) {
             for step in fixture.steps {
@@ -151,14 +170,30 @@ extension SchemaFactSourceTests {
                 if shouldBeLongRunning, step.requiresLongRunningProcess == false {
                     missingLongRunningSteps.append(context)
                 }
+                if shouldBeLongRunning, step.terminationSignals.isEmpty {
+                    missingLongRunningTermination.append(context)
+                }
+                if isProxyServe, step.readyEvents != ["proxy.serve.ready"] {
+                    missingProxyServeReadyEvents.append("\(context):\(step.readyEvents)")
+                }
+                if isProxyServe, step.finalEvents != ["proxy.serve.summary"] {
+                    missingProxyServeFinalEvents.append("\(context):\(step.finalEvents)")
+                }
                 if !shouldBeLongRunning, step.requiresLongRunningProcess {
                     unexpectedLongRunningSteps.append("\(context):\(step.argv.joined(separator: " "))")
+                }
+                if !shouldBeLongRunning, !step.readyEvents.isEmpty || !step.finalEvents.isEmpty || !step.terminationSignals.isEmpty {
+                    unexpectedOneShotLifecycle.append("\(context):ready=\(step.readyEvents):final=\(step.finalEvents):signals=\(step.terminationSignals)")
                 }
             }
         }
 
         #expect(missingLongRunningSteps == [])
+        #expect(missingLongRunningTermination == [])
+        #expect(missingProxyServeReadyEvents == [])
+        #expect(missingProxyServeFinalEvents == [])
         #expect(unexpectedLongRunningSteps == [])
+        #expect(unexpectedOneShotLifecycle == [])
     }
 
     @Test("workflow plan steps expose workflow taxonomy")

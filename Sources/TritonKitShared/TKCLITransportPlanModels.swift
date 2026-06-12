@@ -66,6 +66,9 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
     public let expectedArtifacts: [String]
     public let stopConditions: [String]
     public let requiresLongRunningProcess: Bool
+    public let readyEvents: [String]
+    public let finalEvents: [String]
+    public let terminationSignals: [String]
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -82,6 +85,9 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
         case expectedArtifacts
         case stopConditions
         case requiresLongRunningProcess
+        case readyEvents
+        case finalEvents
+        case terminationSignals
     }
 
     public init(
@@ -98,7 +104,10 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
         requires: [String]? = nil,
         expectedArtifacts: [String]? = nil,
         stopConditions: [String]? = nil,
-        requiresLongRunningProcess: Bool? = nil
+        requiresLongRunningProcess: Bool? = nil,
+        readyEvents: [String]? = nil,
+        finalEvents: [String]? = nil,
+        terminationSignals: [String]? = nil
     ) {
         self.id = id
         self.title = title
@@ -119,6 +128,9 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
             requiresTarget: requiresTarget
         )
         self.requiresLongRunningProcess = requiresLongRunningProcess ?? Self.defaultRequiresLongRunningProcess(for: resolvedArgv)
+        self.readyEvents = readyEvents ?? Self.defaultReadyEvents(for: resolvedArgv)
+        self.finalEvents = finalEvents ?? Self.defaultFinalEvents(for: resolvedArgv)
+        self.terminationSignals = terminationSignals ?? Self.defaultTerminationSignals(for: resolvedArgv)
     }
 
     public init(from decoder: Decoder) throws {
@@ -148,11 +160,35 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
             Self.defaultStopConditions(for: command, requiresServer: requiresServer, requiresTarget: requiresTarget)
         self.requiresLongRunningProcess = try container.decodeIfPresent(Bool.self, forKey: .requiresLongRunningProcess) ??
             Self.defaultRequiresLongRunningProcess(for: resolvedArgv)
+        self.readyEvents = try container.decodeIfPresent([String].self, forKey: .readyEvents) ??
+            Self.defaultReadyEvents(for: resolvedArgv)
+        self.finalEvents = try container.decodeIfPresent([String].self, forKey: .finalEvents) ??
+            Self.defaultFinalEvents(for: resolvedArgv)
+        self.terminationSignals = try container.decodeIfPresent([String].self, forKey: .terminationSignals) ??
+            Self.defaultTerminationSignals(for: resolvedArgv)
     }
 
     private static func defaultRequiresLongRunningProcess(for argv: [String]) -> Bool {
         Array(argv.prefix(2)) == ["triton", "serve"] ||
             Array(argv.prefix(4)) == ["triton", "device", "proxy", "serve"]
+    }
+
+    private static func defaultReadyEvents(for argv: [String]) -> [String] {
+        if Array(argv.prefix(4)) == ["triton", "device", "proxy", "serve"] {
+            return ["proxy.serve.ready"]
+        }
+        return []
+    }
+
+    private static func defaultFinalEvents(for argv: [String]) -> [String] {
+        if Array(argv.prefix(4)) == ["triton", "device", "proxy", "serve"] {
+            return ["proxy.serve.summary"]
+        }
+        return []
+    }
+
+    private static func defaultTerminationSignals(for argv: [String]) -> [String] {
+        defaultRequiresLongRunningProcess(for: argv) ? ["sigint", "sigterm"] : []
     }
 
     private static func category(for command: String) -> String {

@@ -715,12 +715,15 @@ struct TKCLITransportModelsTests {
         #expect(decoded.steps.first?.expectedArtifacts.contains("stdout-json") == true)
         #expect(decoded.steps.first?.stopConditions.contains("command.failed") == true)
         #expect(decoded.steps.first?.requiresLongRunningProcess == true)
+        #expect(decoded.steps.first?.readyEvents == [])
+        #expect(decoded.steps.first?.finalEvents == [])
+        #expect(decoded.steps.first?.terminationSignals == ["sigint", "sigterm"])
         #expect(decoded.error?.code == "server_unavailable")
         #expect(decoded.error?.nextAction?.args.contains("19421") == true)
     }
 
-    @Test("workflow plan step decodes long running defaults for older payloads")
-    func workflowPlanStepDecodesLongRunningDefaultsForOlderPayloads() throws {
+    @Test("workflow plan step decodes long running lifecycle defaults for older payloads")
+    func workflowPlanStepDecodesLongRunningLifecycleDefaultsForOlderPayloads() throws {
         let data = Data(
             """
             {
@@ -739,6 +742,9 @@ struct TKCLITransportModelsTests {
 
         #expect(Array(step.argv.prefix(4)) == ["triton", "device", "proxy", "serve"])
         #expect(step.requiresLongRunningProcess == true)
+        #expect(step.readyEvents == ["proxy.serve.ready"])
+        #expect(step.finalEvents == ["proxy.serve.summary"])
+        #expect(step.terminationSignals == ["sigint", "sigterm"])
     }
 
     @Test("workflow plan infers mode when decoding older payloads")
