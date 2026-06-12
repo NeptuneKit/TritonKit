@@ -131,6 +131,8 @@ struct DeviceCrossPlatformTests {
         #expect(proxyServeFields.contains("responseStatus"))
         #expect(proxyServeFields.contains("responseStatusText"))
         #expect(proxyServeFields.contains("throttleDelayMs"))
+        #expect(proxyServeFields.contains("eventCount"))
+        #expect(proxyServeFields.contains("failureCount"))
     }
 
     @Test("device proxy capabilities expose three-platform network takeover metadata")
@@ -1070,6 +1072,9 @@ struct DeviceCrossPlatformTests {
         #expect(summary?.event == "proxy.serve.summary")
         #expect(summary?.schemaVersion == "triton.proxy.capture.v1")
         #expect(summary?.capturePath == capturePath)
+        #expect(summary?.requestCount == 1)
+        #expect(summary?.eventCount == 4)
+        #expect(summary?.failureCount == 2)
         #expect(capture.contains("\"event\":\"proxy.serve.request\""))
         #expect(capture.contains("\"event\":\"proxy.serve.connection-failed\""))
         #expect(capture.contains("\"host\":\"127.0.0.1\""))
@@ -1131,6 +1136,8 @@ struct DeviceCrossPlatformTests {
         #expect(summary["schemaVersion"] as? String == "triton.proxy.capture.v1")
         #expect(summary["captureMode"] as? String == "mock")
         #expect(summary["requestCount"] as? Int == 1)
+        #expect(summary["eventCount"] as? Int == 3)
+        #expect(summary["failureCount"] as? Int == 1)
         #expect(capture.contains("\"event\":\"proxy.serve.connection-failed\""))
         #expect(capture.contains("\"event\":\"proxy.serve.request\""))
         #expect(!capture.contains("\"event\":\"proxy.serve.summary\""))
@@ -1167,6 +1174,8 @@ struct DeviceCrossPlatformTests {
 
         let capture = try String(contentsOfFile: networkProxyServeCapturePath(outputDirectory: directory.path), encoding: .utf8)
         #expect(summary?.requestCount == 1)
+        #expect(summary?.eventCount == 3)
+        #expect(summary?.failureCount == 1)
         #expect(summary?.captureMode == "block")
         #expect(response.contains("HTTP/1.1 502 TritonKit Proxy Blocked"))
         #expect(capture.contains("\"event\":\"proxy.serve.request\""))
@@ -1208,6 +1217,8 @@ struct DeviceCrossPlatformTests {
 
         let capture = try String(contentsOfFile: networkProxyServeCapturePath(outputDirectory: directory.path), encoding: .utf8)
         #expect(summary?.requestCount == 1)
+        #expect(summary?.eventCount == 3)
+        #expect(summary?.failureCount == 1)
         #expect(summary?.captureMode == "mock")
         #expect(response.contains("HTTP/1.1 200 TritonKit Proxy Mock"))
         #expect(response.contains(#""mocked":true"#))
@@ -1279,6 +1290,8 @@ struct DeviceCrossPlatformTests {
 
         let capture = try String(contentsOfFile: networkProxyServeCapturePath(outputDirectory: directory.path), encoding: .utf8)
         #expect(summary?.requestCount == 1)
+        #expect(summary?.eventCount == 3)
+        #expect(summary?.failureCount == 1)
         #expect(summary?.limitations.contains("proxy_mock_rules:loaded") == true)
         #expect(response.contains("HTTP/1.1 201 Created"))
         #expect(response.contains("X-Triton-Mock: capture-fixture"))
@@ -1323,6 +1336,8 @@ struct DeviceCrossPlatformTests {
 
         let capture = try String(contentsOfFile: networkProxyServeCapturePath(outputDirectory: directory.path), encoding: .utf8)
         #expect(summary?.requestCount == 1)
+        #expect(summary?.eventCount == 3)
+        #expect(summary?.failureCount == 1)
         #expect(summary?.captureMode == "throttle")
         #expect(summary?.limitations.contains("proxy_throttle_delay_ms:50") == true)
         #expect(elapsedMs >= 40)

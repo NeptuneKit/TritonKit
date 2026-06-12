@@ -54,6 +54,8 @@ struct NetworkProxyServeSummary: Encodable, Equatable {
     let capturePath: String
     let captureMode: String
     let requestCount: Int
+    let eventCount: Int
+    let failureCount: Int
     let limitations: [String]
 }
 
@@ -168,7 +170,7 @@ func runNetworkProxyCaptureServer(
     defer { close(listenFD) }
 
     let listen = "\(config.listen.host):\(config.listen.port)"
-    eventWriter?(NetworkProxyServeEvent(
+    let readyEvent = NetworkProxyServeEvent(
         ok: true,
         surface: "host.device-proxy-serve",
         event: "proxy.serve.ready",
@@ -191,9 +193,9 @@ func runNetworkProxyCaptureServer(
         throttleDelayMs: nil,
         redaction: "headers-names-only",
         error: nil
-    ))
+    )
+    eventWriter?(readyEvent)
 
-    var requestCount = 0
     var accepted = 0
     while config.maxConnections == nil || accepted < (config.maxConnections ?? 0) {
         let clientFD = accept(listenFD, nil, nil)
@@ -204,9 +206,16 @@ func runNetworkProxyCaptureServer(
         accepted += 1
         defer { close(clientFD) }
         do {
-            let event = try handleNetworkProxyClient(clientFD: clientFD, captureURL: captureURL, listen: listen, connectionIndex: accepted, mode: mode, mockRules: mockRules, throttleDelayMs: throttleDelayMs)
-            requestCount += 1
-            eventWriter?(event)
+            _ = try handleNetworkProxyClient(
+                clientFD: clientFD,
+                captureURL: captureURL,
+                listen: listen,
+                connectionIndex: accepted,
+                mode: mode,
+                mockRules: mockRules,
+                throttleDelayMs: throttleDelayMs,
+                eventWriter: eventWriter
+            )
         } catch {
             let event = NetworkProxyServeEvent(
                 ok: false,
@@ -237,6 +246,7 @@ func runNetworkProxyCaptureServer(
         }
     }
 
+    let captureSummary = summarizeNetworkProxyCaptureArtifactIfPresent(captureURL: captureURL)
     return NetworkProxyServeSummary(
         ok: true,
         surface: "host.device-proxy-serve",
@@ -246,7 +256,9 @@ func runNetworkProxyCaptureServer(
         listen: listen,
         capturePath: captureURL.path,
         captureMode: mode,
-        requestCount: requestCount,
+        requestCount: captureSummary.requestCount,
+        eventCount: 1 + captureSummary.eventCount,
+        failureCount: captureSummary.failureCount,
         limitations: [
             "proxy_capture_metadata_only:no_tls_decryption",
             "proxy_capture_redaction:headers_names_only",
@@ -255,6 +267,20 @@ func runNetworkProxyCaptureServer(
             mockRules == nil ? "proxy_mock_rules:none" : "proxy_mock_rules:loaded",
         ].compactMap { $0 }
     )
+}
+
+private func summarizeNetworkProxyCaptureArtifactIfPresent(captureURL: URL) -> NetworkProxyCaptureExportSummary {
+    guard FileManager.default.fileExists(atPath: captureURL.path),
+          let summary = try? summarizeNetworkProxyCaptureArtifact(sourceURL: captureURL) else {
+        return NetworkProxyCaptureExportSummary(
+            requestCount: 0,
+            eventCount: 0,
+            failureCount: 0,
+            redaction: "unknown",
+            truncation: "none"
+        )
+    }
+    return summary
 }
 
 private func normalizeNetworkProxyServeMode(_ mode: String) throws -> String {
@@ -484,7 +510,16 @@ func parseNetworkProxyHTTPHeader(
     ).event
 }
 
-private func handleNetworkProxyClient(clientFD: Int32, captureURL: URL, listen: String, connectionIndex: Int, mode: String, mockRules: [NetworkProxyMockRule]?, throttleDelayMs: Int?) throws -> NetworkProxyServeEvent {
+private func handleNetworkProxyClient(
+    clientFD: Int32,
+    captureURL: URL,
+    listen: String,
+    connectionIndex: Int,
+    mode: String,
+    mockRules: [NetworkProxyMockRule]?,
+    throttleDelayMs: Int?,
+    eventWriter: ((NetworkProxyServeEvent) -> Void)?
+) throws -> NetworkProxyServeEvent {
     let requestData = try readNetworkProxyRequestHeader(clientFD: clientFD)
     let parsed = try parseNetworkProxyRequest(
         data: requestData,
@@ -497,6 +532,7 @@ private func handleNetworkProxyClient(clientFD: Int32, captureURL: URL, listen: 
         throttleDelayMs: mode == "throttle" ? throttleDelayMs : nil
     )
     try appendNetworkProxyCaptureEvent(parsed.event, captureURL: captureURL)
+    eventWriter?(parsed.event)
 
     if mode == "block" {
         writeNetworkProxyBlockedResponse(clientFD: clientFD)

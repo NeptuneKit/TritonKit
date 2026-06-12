@@ -428,6 +428,8 @@ func hostDeviceProxyServeOutputContract() -> TKCommandOutputContract {
             ("responseStatusText", "String?", false, "Synthetic response reason phrase for mock, block, or throttle policy actions"),
             ("throttleDelayMs", "Int?", false, "Synthetic response delay in milliseconds for proxy serve --mode throttle"),
             ("requestCount", "Int?", false, "Final captured request count"),
+            ("eventCount", "Int?", false, "Final non-summary serve event count, including ready, request, and connection-failed events"),
+            ("failureCount", "Int?", false, "Final failed serve event count, including proxy.serve.connection-failed events"),
             ("method", "String?", false, "Captured HTTP method for request events"),
             ("host", "String?", false, "Captured upstream host for request events"),
             ("port", "Int?", false, "Captured upstream port for request events"),

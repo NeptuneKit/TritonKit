@@ -132,7 +132,7 @@ struct DeviceProxyServe: AsyncParsableCommand {
         case .json:
             print(try encodeJSON(summary))
         case .text:
-            print("\(summary.listen)\trequests=\(summary.requestCount)\tcapture=\(summary.capturePath)")
+            print("\(summary.listen)\trequests=\(summary.requestCount)\tevents=\(summary.eventCount)\tfailures=\(summary.failureCount)\tcapture=\(summary.capturePath)")
         }
     }
 }
