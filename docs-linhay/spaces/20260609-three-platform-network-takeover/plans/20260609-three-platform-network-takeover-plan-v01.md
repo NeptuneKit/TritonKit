@@ -152,6 +152,11 @@ triton device proxy doctor --platform harmony --json
   - iOS ledger 声明 `xcrun simctl keychain <target> add-root-cert <path.cer>`；Android ledger 声明 `adb push` 与 `android.credentials.INSTALL` 用户安装 intent；Harmony 继续 `proxy_cert_harmony_probe_only`，不编造未验证证书安装命令。
   - capabilities / schema 同步新增 `network-certificate-plan`、`--certificate`、`proxy cert doctor/plan` usage 和 `proxy_cert_untrusted` recovery 分类。
   - 验证通过：`swift test --package-path CLI --scratch-path /tmp/triton-cli-proxy-cert-20260611 --filter DeviceCrossPlatformTests` 通过 56 tests；`--filter SchemaFactSource` 通过 107 tests；完整 `swift test --package-path CLI --scratch-path /tmp/triton-cli-proxy-cert-20260611` 通过 274 tests。
+- 三端证书信任执行入口已补为 break-glass runner：
+  - `device proxy cert install --platform ios|android --device <selector> --certificate <path.cer> --confirm --audit-record <id> --execute-runner --json` 只有在策略三件套齐备时执行已审阅 ledger；缺任一项仍返回 `destructive_action_requires_policy`。
+  - iOS fake runner 覆盖 `simctl keychain add-root-cert` 成功 envelope，并标记 `cert.installed=true` / `cert.trusted=true`；Android fake runner 覆盖 `adb push` + install intent，仅标记用户安装提示已打开，仍保持 `cert.trusted=false`。
+  - Harmony 即使显式执行仍返回 `proxy_unverified_platform_proxy` 与 `proxy_cert_harmony_probe_only`，不伪造 DevEco / Harmony 证书信任命令。
+  - 失败 envelope 稳定为 `proxy_cert_install_failed`，保留 `sourceCommands[]` 与 `proxy-certificate` artifact，便于 agent 诊断和归档。
 - 三端 `network-proxy` 任务计划已接入证书准备审计步骤：
   - `triton plan network-proxy ... --certificate <path.cer> --json` 会在 `proxy-probe-plan` 后、`proxy-serve` / `proxy-start-plan` 前插入 `proxy-cert-plan`。
   - `proxy-cert-plan` 的 argv 为 `triton device proxy cert plan --platform <platform> --device <selector> --certificate <path.cer> --json`，expected artifact 为 `proxy-certificate`。

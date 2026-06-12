@@ -20,6 +20,7 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("proxy doctor --platform ios|android|harmony"))
         #expect(usageForms.contains("proxy cert doctor --platform ios|android|harmony"))
         #expect(usageForms.contains("proxy cert plan --platform ios|android|harmony --device <selector> --certificate <path.cer>"))
+        #expect(usageForms.contains("proxy cert install --platform ios|android --device <selector> --certificate <path.cer> --confirm --audit-record <id> --execute-runner"))
         #expect(usageForms.contains("proxy probe --platform ios|android|harmony --device <selector>"))
         #expect(usageForms.contains("proxy probe --platform ios|android|harmony --device <selector> --plan-only"))
         #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode record|mock|block|throttle --jsonl"))
@@ -62,6 +63,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.examples.contains("triton device proxy doctor --platform ios --json"))
         #expect(device.examples.contains("triton device proxy cert doctor --platform ios --json"))
         #expect(device.examples.contains("triton device proxy cert plan --platform android --device emulator-5554 --certificate /tmp/triton-proxy-ca.cer --json"))
+        #expect(device.examples.contains("triton device proxy cert install --platform ios --device booted --certificate /tmp/triton-proxy-ca.cer --confirm --audit-record ticket-123 --execute-runner --json"))
         #expect(device.examples.contains("triton device proxy probe --platform harmony --device harmony-a --json"))
         #expect(device.examples.contains("triton device proxy probe --platform harmony --device harmony-a --plan-only --json"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network --mode record --jsonl"))
@@ -107,6 +109,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.failureCodes.contains("destructive_action_requires_policy"))
         #expect(device.failureCodes.contains("proxy_endpoint_unreachable"))
         #expect(device.failureCodes.contains("proxy_probe_failed"))
+        #expect(device.failureCodes.contains("proxy_cert_install_failed"))
         #expect(device.failureCodes.contains("proxy_start_failed"))
         #expect(device.failureCodes.contains("proxy_restore_failed"))
         #expect(device.failureCodes.contains("proxy_artifact_write_failed"))
@@ -247,6 +250,117 @@ struct DeviceCrossPlatformTests {
         }
     }
 
+    @Test("device proxy cert install executes reviewed iOS and Android ledgers with a fake runner")
+    func deviceProxyCertInstallExecutesReviewedIOSAndAndroidLedgersWithFakeRunner() throws {
+        let cases: [(HostDevicePlatform, HostDeviceTarget, NetworkProxyCertificate, String)] = [
+            (
+                .ios,
+                makeSimulatorProxyTarget(simulator: "booted"),
+                NetworkProxyCertificate(installed: true, trusted: true, scope: "simulator"),
+                "proxy_cert_installed:simulator_root_trusted"
+            ),
+            (
+                .android,
+                try makeNetworkProxyPlanTarget(platform: .android, device: "emulator-5554"),
+                NetworkProxyCertificate(installed: false, trusted: false, scope: "emulator"),
+                "proxy_cert_install_prompt_opened:manual_user_trust_required"
+            ),
+        ]
+
+        for (platform, target, expectedCert, expectedLimitation) in cases {
+            var executed: [String] = []
+            let session = try makeNetworkProxyCertificateInstallExecutedSession(
+                platform: platform,
+                target: target,
+                certificatePath: "/tmp/triton-proxy-ca.cer",
+                auditRecord: "ticket-cert",
+                runner: { command in
+                    executed.append(hostSourceCommand(command))
+                    return successfulHostProcessResult(command)
+                }
+            )
+
+            #expect(session.ok)
+            #expect(session.surface == "host.device-proxy")
+            #expect(session.action == "proxy.cert.install")
+            #expect(session.platform == platform.rawValue)
+            #expect(session.target == target)
+            #expect(session.configured == false)
+            #expect(session.cert == expectedCert)
+            #expect(session.visibility == .partial)
+            #expect(session.sourceCommands == networkProxyCertificatePlanCommands(platform: platform, target: target, certificatePath: "/tmp/triton-proxy-ca.cer").map(hostSourceCommand))
+            #expect(executed == session.sourceCommands)
+            #expect(session.limitations.contains("proxy_execution_policy_accepted:auditRecord=ticket-cert"))
+            #expect(session.limitations.contains("proxy_cert_runner_executed:break_glass"))
+            #expect(session.limitations.contains(expectedLimitation))
+            #expect(session.artifacts == [
+                NetworkProxyArtifact(kind: "proxy-certificate", path: "/tmp/triton-proxy-ca.cer", bytes: nil)
+            ])
+            #expect(session.error == nil)
+        }
+    }
+
+    @Test("device proxy cert install keeps Harmony probe-only until certificate trust command is verified")
+    func deviceProxyCertInstallKeepsHarmonyProbeOnlyUntilCertificateTrustCommandIsVerified() throws {
+        let target = try makeNetworkProxyPlanTarget(platform: .harmony, device: "127.0.0.1:5555")
+        var executed: [String] = []
+        let session = try makeNetworkProxyCertificateInstallExecutedSession(
+            platform: .harmony,
+            target: target,
+            certificatePath: "/tmp/triton-proxy-ca.cer",
+            auditRecord: "ticket-cert",
+            runner: { command in
+                executed.append(hostSourceCommand(command))
+                return successfulHostProcessResult(command)
+            }
+        )
+
+        #expect(session.ok == false)
+        #expect(session.action == "proxy.cert.install")
+        #expect(session.error?.code == "proxy_unverified_platform_proxy")
+        #expect(session.error?.nextAction?.args == ["proxy", "cert", "doctor", "--platform", "harmony", "--json"])
+        #expect(session.cert == NetworkProxyCertificate(installed: false, trusted: false, scope: "emulator"))
+        #expect(session.limitations.contains("proxy_cert_harmony_probe_only:no_verified_harmony_certificate_install_or_trust_mutation"))
+        #expect(session.limitations.contains("proxy_execution_policy_accepted:auditRecord=ticket-cert"))
+        #expect(session.sourceCommands == [
+            "hdc -t 127.0.0.1:5555 shell param get bootevent.boot.completed",
+            "hdc -t 127.0.0.1:5555 shell echo triton-shell-ready",
+        ])
+        #expect(executed.isEmpty)
+    }
+
+    @Test("device proxy cert install returns a stable failure envelope")
+    func deviceProxyCertInstallReturnsStableFailureEnvelope() throws {
+        let target = try makeNetworkProxyPlanTarget(platform: .android, device: "emulator-5554")
+        var invocation = 0
+        let session = try makeNetworkProxyCertificateInstallExecutedSession(
+            platform: .android,
+            target: target,
+            certificatePath: "/tmp/triton-proxy-ca.cer",
+            auditRecord: "ticket-cert",
+            runner: { command in
+                invocation += 1
+                if invocation == 2 {
+                    throw HostCommandRunError.nonZeroExit(command: command, result: failedHostProcessResult(command, stderr: "intent denied"))
+                }
+                return successfulHostProcessResult(command)
+            }
+        )
+
+        #expect(session.ok == false)
+        #expect(session.action == "proxy.cert.install")
+        #expect(session.configured == false)
+        #expect(session.error?.code == "proxy_cert_install_failed")
+        #expect(session.error?.nextAction?.args == ["proxy", "cert", "doctor", "--platform", "android", "--json"])
+        #expect(session.cert == NetworkProxyCertificate(installed: false, trusted: false, scope: "emulator"))
+        #expect(session.sourceCommands == networkProxyCertificatePlanCommands(platform: .android, target: target, certificatePath: "/tmp/triton-proxy-ca.cer").map(hostSourceCommand))
+        #expect(session.artifacts == [
+            NetworkProxyArtifact(kind: "proxy-certificate", path: "/tmp/triton-proxy-ca.cer", bytes: nil)
+        ])
+        #expect(session.limitations.contains("proxy_execution_policy_accepted:auditRecord=ticket-cert"))
+        #expect(session.limitations.contains { $0.hasPrefix("proxy_cert_install_failed:") })
+    }
+
     @Test("device proxy probe exposes readonly Harmony HDC capability evidence")
     func deviceProxyProbeExposesReadonlyHarmonyHDCCapabilityEvidence() throws {
         let target = try makeNetworkProxyPlanTarget(platform: .harmony, device: "127.0.0.1:5555")
@@ -384,6 +498,16 @@ struct DeviceCrossPlatformTests {
                     return successfulHostProcessResult(command)
                 }
             )
+            let executedCert = try makeNetworkProxyCertificateInstallExecutedSession(
+                platform: fixture.platform,
+                target: fixture.target,
+                certificatePath: "/tmp/triton-proxy-ca.cer",
+                auditRecord: "real-device-rejected",
+                runner: { command in
+                    executedCommands.append(command)
+                    return successfulHostProcessResult(command)
+                }
+            )
             let status = try makeNetworkProxyStatusSession(
                 platform: fixture.platform,
                 target: fixture.target,
@@ -397,7 +521,7 @@ struct DeviceCrossPlatformTests {
             )
 
             #expect(executedCommands.isEmpty)
-            for session in [start, stop, export, cert, executedStart, executedStop, status, sessionExport] {
+            for session in [start, stop, export, cert, executedStart, executedStop, executedCert, status, sessionExport] {
                 #expect(session.ok == false)
                 #expect(session.configured == false)
                 #expect(session.platform == fixture.platform.rawValue)

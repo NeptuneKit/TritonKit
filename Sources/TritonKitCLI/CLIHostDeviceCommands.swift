@@ -23,8 +23,8 @@ struct DeviceProxy: AsyncParsableCommand {
 struct DeviceProxyCert: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "cert",
-        abstract: "Plan host-side proxy certificate trust setup without executing platform mutations",
-        subcommands: [DeviceProxyCertDoctor.self, DeviceProxyCertPlan.self]
+        abstract: "Inspect, plan, or explicitly execute host-side proxy certificate trust setup",
+        subcommands: [DeviceProxyCertDoctor.self, DeviceProxyCertPlan.self, DeviceProxyCertInstall.self]
     )
 }
 
@@ -54,6 +54,49 @@ struct DeviceProxyCertPlan: AsyncParsableCommand {
         try printNetworkProxySession(
             try makeNetworkProxyCertificatePlanSession(platform: platform, target: target, certificatePath: certificate),
             outputFormat: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct DeviceProxyCertInstall: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "install", abstract: "Execute reviewed proxy certificate trust setup after break-glass confirmation")
+
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
+    @Option(help: "Unified host device selector") var device: String
+    @Option(help: "Root certificate path, for example /tmp/triton-proxy-ca.cer") var certificate: String
+    @Flag(help: "Confirm break-glass certificate trust mutation after inspecting cert plan output") var confirm = false
+    @Option(help: "Audit record id for the break-glass certificate mutation") var auditRecord: String?
+    @Flag(help: "Actually execute the platform command runner") var executeRunner = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+        guard confirm, let auditRecord, !auditRecord.isEmpty, executeRunner else {
+            try printNetworkProxySession(
+                try makeNetworkProxyExecutionPolicyRequiredSession(
+                    action: .certInstall,
+                    platform: platform,
+                    target: target,
+                    captureMode: nil,
+                    confirm: confirm,
+                    auditRecord: auditRecord,
+                    executeRunner: executeRunner
+                ),
+                outputFormat: outputFormat
+            )
+            return
+        }
+        try printNetworkProxySession(
+            try makeNetworkProxyCertificateInstallExecutedSession(
+                platform: platform,
+                target: target,
+                certificatePath: certificate,
+                auditRecord: auditRecord,
+                runner: { command in try runHostCommand(command) }
+            ),
+            outputFormat: outputFormat
         )
     }
 }

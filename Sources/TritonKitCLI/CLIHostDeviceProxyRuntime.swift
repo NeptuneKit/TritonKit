@@ -6,6 +6,7 @@ enum NetworkProxyAction: String {
     case doctor = "proxy.doctor"
     case certDoctor = "proxy.cert.doctor"
     case certPlan = "proxy.cert.plan"
+    case certInstall = "proxy.cert.install"
     case probe = "proxy.probe"
     case start = "proxy.start"
     case status = "proxy.status"
@@ -1351,7 +1352,7 @@ func networkProxyCertificatePlanCommands(platform: HostDevicePlatform, target: H
             TKHostCommand(
                 executable: "adb",
                 arguments: ["-s", target.target, "push", certificatePath, remotePath],
-                riskLevel: .automation,
+                riskLevel: .breakGlass,
                 requiredConfig: [.target, .timeout, .auditRecord],
                 capturesArtifacts: true
             ),
@@ -1364,7 +1365,7 @@ func networkProxyCertificatePlanCommands(platform: HostDevicePlatform, target: H
                     "-t", "application/x-x509-ca-cert",
                     "-d", "file://\(remotePath)",
                 ],
-                riskLevel: .automation,
+                riskLevel: .breakGlass,
                 requiredConfig: [.target, .timeout, .auditRecord]
             ),
         ]
@@ -1391,6 +1392,27 @@ private func networkProxyCertificateLimitations(platform: HostDevicePlatform) ->
             "proxy_cert_harmony_probe_only:no_verified_harmony_certificate_install_or_trust_mutation",
             "proxy_tls_visibility_limited:host_proxy_records_metadata_until_certificate_trust_is_explicitly_installed",
         ]
+    }
+}
+
+private func networkProxyCertificateInstallLimitations(platform: HostDevicePlatform, auditRecord: String) -> [String] {
+    let shared = [
+        "proxy_execution_policy_accepted:auditRecord=\(auditRecord)",
+        "proxy_cert_runner_executed:break_glass",
+    ]
+    switch platform {
+    case .ios:
+        return shared + [
+            "proxy_cert_installed:simulator_root_trusted",
+            "proxy_tls_visibility_limited:certificate_pinning_custom_transport_still_may_bypass_proxy",
+        ]
+    case .android:
+        return shared + [
+            "proxy_cert_install_prompt_opened:manual_user_trust_required",
+            "proxy_tls_visibility_limited:android_user_ca_and_network_security_config_may_limit_https_visibility",
+        ]
+    case .harmony:
+        return shared + networkProxyCertificateLimitations(platform: platform)
     }
 }
 
@@ -1442,12 +1464,47 @@ func makeNetworkProxyUnverifiedPlatformSession(
     )
 }
 
+func makeNetworkProxyUnverifiedCertificatePlatformSession(
+    platform: HostDevicePlatform,
+    target: HostDeviceTarget,
+    auditRecord: String
+) throws -> NetworkProxySession {
+    let sourceCommands = harmonyProxyProbeCommands(target: target.rawTarget).map(hostSourceCommand)
+    return NetworkProxySession(
+        ok: false,
+        surface: "host.device-proxy",
+        action: NetworkProxyAction.certInstall.rawValue,
+        platform: platform.rawValue,
+        target: target,
+        lane: .hostProxy,
+        captureMode: nil,
+        proxyEndpoint: nil,
+        configured: false,
+        cert: networkProxyConservativeCertificate(platform: platform),
+        visibility: .none,
+        limitations: networkProxyCertificateLimitations(platform: platform) + [
+            "proxy_execution_policy_accepted:auditRecord=\(auditRecord)",
+        ],
+        artifacts: [],
+        restore: NetworkProxyRestore(available: false, snapshotPath: nil, restored: nil),
+        sourceCommands: sourceCommands,
+        error: TKCLIErrorDetail(
+            code: "proxy_unverified_platform_proxy",
+            message: "Harmony / DevEco Emulator certificate trust mutation is not verified yet, so TritonKit will not execute inferred certificate install commands.",
+            hint: "Run proxy cert doctor/plan and keep Harmony on the probe-only path until a real DevEco certificate trust command is verified.",
+            nextAction: TKCLINextAction(command: "device", args: ["proxy", "cert", "doctor", "--platform", "harmony", "--json"], category: "diagnose")
+        )
+    )
+}
+
 private func networkProxyPolicyNextActionArgs(action: NetworkProxyAction, platform: HostDevicePlatform, target: String, captureMode: String?) -> [String] {
     switch action {
     case .certDoctor:
         return ["proxy", "cert", "doctor", "--platform", platform.rawValue, "--json"]
     case .certPlan:
         return ["proxy", "cert", "plan", "--platform", platform.rawValue, "--device", target, "--certificate", "<path.cer>", "--json"]
+    case .certInstall:
+        return ["proxy", "cert", "install", "--platform", platform.rawValue, "--device", target, "--certificate", "<path.cer>", "--confirm", "--audit-record", "<id>", "--execute-runner", "--json"]
     case .probe:
         return ["proxy", "probe", "--platform", platform.rawValue, "--device", target, "--json"]
     case .start:
@@ -1671,6 +1728,80 @@ func makeNetworkProxyCertificatePlanSession(
         sourceCommands: commands.map(hostSourceCommand),
         error: nil
     )
+}
+
+func makeNetworkProxyCertificateInstallExecutedSession(
+    platform: HostDevicePlatform,
+    target: HostDeviceTarget,
+    certificatePath: String,
+    auditRecord: String,
+    runner: NetworkProxyCommandRunner
+) throws -> NetworkProxySession {
+    if let rejected = makeNetworkProxyRealDeviceNotSupportedSession(action: .certInstall, platform: platform, target: target, captureMode: nil) {
+        return rejected
+    }
+    if platform == .harmony {
+        return try makeNetworkProxyUnverifiedCertificatePlatformSession(
+            platform: platform,
+            target: target,
+            auditRecord: auditRecord
+        )
+    }
+
+    let commands = networkProxyCertificatePlanCommands(platform: platform, target: target, certificatePath: certificatePath)
+    let sourceCommands = commands.map(hostSourceCommand)
+    let certificateURL = URL(fileURLWithPath: certificatePath)
+    let artifact = NetworkProxyArtifact(kind: "proxy-certificate", path: certificatePath, bytes: networkProxyFileByteCount(certificateURL))
+    do {
+        try runNetworkProxyCommands(commands, runner: runner)
+        return NetworkProxySession(
+            ok: true,
+            surface: "host.device-proxy",
+            action: NetworkProxyAction.certInstall.rawValue,
+            platform: platform.rawValue,
+            target: target,
+            lane: .hostProxy,
+            captureMode: nil,
+            proxyEndpoint: nil,
+            configured: false,
+            cert: platform == .ios
+                ? NetworkProxyCertificate(installed: true, trusted: true, scope: networkProxyCertificateScope(platform: platform))
+                : networkProxyConservativeCertificate(platform: platform),
+            visibility: .partial,
+            limitations: networkProxyCertificateInstallLimitations(platform: platform, auditRecord: auditRecord),
+            artifacts: [artifact],
+            restore: NetworkProxyRestore(available: false, snapshotPath: nil, restored: nil),
+            sourceCommands: sourceCommands,
+            error: nil
+        )
+    } catch {
+        return NetworkProxySession(
+            ok: false,
+            surface: "host.device-proxy",
+            action: NetworkProxyAction.certInstall.rawValue,
+            platform: platform.rawValue,
+            target: target,
+            lane: .hostProxy,
+            captureMode: nil,
+            proxyEndpoint: nil,
+            configured: false,
+            cert: networkProxyConservativeCertificate(platform: platform),
+            visibility: .none,
+            limitations: networkProxyCertificateLimitations(platform: platform) + [
+                "proxy_execution_policy_accepted:auditRecord=\(auditRecord)",
+                "proxy_cert_install_failed:\(networkProxyErrorSummary(error))",
+            ],
+            artifacts: [artifact],
+            restore: NetworkProxyRestore(available: false, snapshotPath: nil, restored: nil),
+            sourceCommands: sourceCommands,
+            error: TKCLIErrorDetail(
+                code: "proxy_cert_install_failed",
+                message: "Host-side proxy certificate install failed for \(platform.rawValue) target \(target.target).",
+                hint: "Inspect sourceCommands and platform certificate doctor output before retrying the break-glass certificate action.",
+                nextAction: TKCLINextAction(command: "device", args: ["proxy", "cert", "doctor", "--platform", platform.rawValue, "--json"], category: "diagnose")
+            )
+        )
+    }
 }
 
 func makeNetworkProxyStatusSession(platform: HostDevicePlatform, target: HostDeviceTarget?) -> NetworkProxySession {

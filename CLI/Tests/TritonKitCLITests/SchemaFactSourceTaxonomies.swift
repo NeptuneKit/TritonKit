@@ -275,7 +275,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan"]
     case "proxy_real_device_not_supported":
         return ["diagnose", "prepare-target", "plan"]
-    case "proxy_endpoint_unreachable", "proxy_start_failed", "proxy_restore_failed":
+    case "proxy_endpoint_unreachable", "proxy_cert_install_failed", "proxy_start_failed", "proxy_restore_failed":
         return ["diagnose", "plan", "archive"]
     default:
         if failureCode.hasPrefix("ambiguous_") {
