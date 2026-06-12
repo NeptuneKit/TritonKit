@@ -21,6 +21,8 @@ struct TKHostAdapterModelsTests {
         #expect(TKSimctlCommand.shutdown(udid: "U").argv == ["simctl", "shutdown", "U"])
         #expect(TKSimctlCommand.screenshot(udid: "U", output: "/tmp/shot.png").argv == ["simctl", "io", "U", "screenshot", "/tmp/shot.png"])
         #expect(TKSimctlCommand.screenshot(udid: "U", output: "/tmp/shot.png", display: "internal").argv == ["simctl", "io", "U", "screenshot", "--display=internal", "/tmp/shot.png"])
+        #expect(TKSimctlCommand.tap(udid: "U", x: 200, y: 400).argv == ["simctl", "io", "U", "tap", "200", "400"])
+        #expect(TKSimctlCommand.typeText(udid: "U", text: "http://127.0.0.1:8000").argv == ["simctl", "io", "U", "keyboard", "type", "http://127.0.0.1:8000"])
         #expect(TKSimctlCommand.listApps(udid: "U").argv == ["simctl", "listapps", "U"])
         #expect(TKSimctlCommand.appInfo(udid: "U", bundleID: "com.example.app").argv == ["simctl", "appinfo", "U", "com.example.app"])
         #expect(TKSimctlCommand.installApp(udid: "U", appPath: "/tmp/Demo.app").argv == ["simctl", "install", "U", "/tmp/Demo.app"])

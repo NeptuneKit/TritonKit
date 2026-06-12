@@ -133,6 +133,51 @@ func runHostSimulatorScreenshotCommand(
     }
 }
 
+func runHostSimulatorInputCommand(
+    action: String,
+    simulator: String,
+    command: TKHostCommand,
+    outputFormat: ClientOutputFormat,
+    x: Int? = nil,
+    y: Int? = nil,
+    insertedLength: Int? = nil,
+    textEncoding: String? = nil
+) throws {
+    do {
+        let result = try runHostCommand(command)
+        let stdout = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+        let output = HostSimulatorInputOutput(
+            ok: true,
+            action: action,
+            runtimeScope: "host-simulator",
+            target: "sim:\(simulator)",
+            adapter: "xcrun-simctl",
+            tool: command.executable,
+            exitCode: result.exitCode,
+            riskLevel: command.riskLevel.rawValue,
+            sourceCommand: result.sourceCommand,
+            stdoutTruncated: result.stdoutTruncated,
+            stderrTruncated: result.stderrTruncated,
+            stdout: stdout.isEmpty ? nil : stdout,
+            stderr: stderr.isEmpty ? nil : stderr,
+            x: x,
+            y: y,
+            insertedLength: insertedLength,
+            textEncoding: textEncoding,
+            note: "Host-side simulator input was submitted through simctl; verify business completion with wait, assert, screenshot, app prefs, or evidence."
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(output))
+        case .text:
+            print(output.note)
+        }
+    } catch {
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+}
+
 func parseSimctlScreenshotDisplayMetadata(stderr: String) -> HostSimulatorScreenshotDisplayMetadata {
     let line = stderr
         .split(whereSeparator: \.isNewline)
@@ -1613,6 +1658,9 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         } else if command.arguments.contains("recordVideo") {
             code = "sim_record_failed"
             hint = "Verify the simulator is booted, the output path is writable, and the requested codec, display, and mask options are supported."
+        } else if command.arguments.contains("io") && (command.arguments.contains("tap") || command.arguments.contains("keyboard")) {
+            code = "host_command_failed"
+            hint = "Verify the simulator is booted, focused as expected, and this Xcode simctl supports the requested host input primitive."
         } else if command.arguments.contains("stream") && command.arguments.contains("log") {
             code = "sim_logs_failed"
             hint = "Verify the simulator is booted, the output path is writable, and the requested predicate, level, style, and type options are supported."

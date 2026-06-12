@@ -387,6 +387,24 @@ struct SchemaFactSourceTests {
         #expect(harmonyTap.nextAction?.args == ["<text>", "--platform", "harmony", "--json"])
         #expect(harmonyTap.evidence == ["host-command-json", "host-artifact"])
 
+        let iosHostTap = try #require(connected["ios-simulator-host-tap"])
+        #expect(iosHostTap.supported)
+        #expect(iosHostTap.group == "host")
+        #expect(iosHostTap.requiredBy.contains("action"))
+        #expect(iosHostTap.requiredBy.contains("smoke"))
+        #expect(iosHostTap.nextAction?.command == "sim")
+        #expect(iosHostTap.nextAction?.args == ["tap", "--simulator", "<udid|booted>", "--x", "<x>", "--y", "<y>", "--json"])
+        #expect(iosHostTap.evidence == ["host-command-json", "input.result"])
+
+        let iosHostType = try #require(connected["ios-simulator-host-type"])
+        #expect(iosHostType.supported)
+        #expect(iosHostType.group == "host")
+        #expect(iosHostType.requiredBy.contains("action"))
+        #expect(iosHostType.requiredBy.contains("smoke"))
+        #expect(iosHostType.nextAction?.command == "sim")
+        #expect(iosHostType.nextAction?.args == ["type", "--simulator", "<udid|booted>", "--text", "<text>", "--json"])
+        #expect(iosHostType.evidence == ["host-command-json", "input.result"])
+
         let harmonyWait = try #require(connected["harmony-wait-text"])
         #expect(harmonyWait.group == "action")
         #expect(harmonyWait.requiredBy.contains("action"))
@@ -722,7 +740,11 @@ struct SchemaFactSourceTests {
         #expect(iosSmoke.primaryNextActionSource == "next-step-step")
         #expect(iosSmoke.steps.map(\.id).contains("target-resolve"))
         #expect(iosSmoke.steps.map(\.id).contains("ios-smoke"))
+        #expect(iosSmoke.steps.map(\.id).contains("ios-host-input-fallback"))
         #expect(iosSmoke.steps.first(where: { $0.id == "target-list" })?.workflowCategories == ["action", "app", "assert", "evidence", "observe", "runtime", "smoke", "target"])
+        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-input-fallback" })?.category == "prepare-target")
+        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-input-fallback" })?.argv == ["triton", "sim", "tap", "--simulator", "iphone15", "--x", "<x>", "--y", "<y>", "--json"])
+        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-type-fallback" })?.argv == ["triton", "sim", "type", "--simulator", "iphone15", "--text", "Home", "--json"])
         #expect(iosSmoke.steps.first(where: { $0.id == "ios-smoke" })?.workflowCategories == ["app", "assert", "evidence", "smoke", "target"])
         #expect(iosSmoke.steps.first(where: { $0.id == "ios-smoke" })?.command.contains("triton smoke ios") == true)
         #expect(iosSmoke.steps.first(where: { $0.id == "evidence-summary" })?.requiresServer == false)
@@ -3969,8 +3991,21 @@ struct SchemaFactSourceTests {
 
         #expect(sim.failureCodes.contains("simulator_not_found"))
         #expect(sim.failureCodes.contains("host_command_failed"))
+        #expect(sim.failureCodes.contains("unsupported_text_input"))
         #expect(sim.artifacts.contains("simulator-screenshot"))
         #expect(sim.nextCommands.contains("triton sim use <udid> --json"))
+        #expect(sim.providedCapabilities.contains("ios-simulator-host-tap"))
+        #expect(sim.providedCapabilities.contains("ios-simulator-host-type"))
+        let simTap = try #require(sim.subcommands.first(where: { $0.name == "tap" }))
+        #expect(simTap.requiredOptions == ["--x", "--y"])
+        #expect(simTap.optionalOptions.contains("--simulator"))
+        #expect(simTap.outputSelectors == ["host.simulator-input"])
+        #expect(simTap.failureCodes.contains("host_command_failed"))
+        let simType = try #require(sim.subcommands.first(where: { $0.name == "type" }))
+        #expect(simType.requiredOptions == ["--text"])
+        #expect(simType.optionalOptions.contains("--simulator"))
+        #expect(simType.outputSelectors == ["host.simulator-input"])
+        #expect(simType.failureCodes.contains("unsupported_text_input"))
         expectContract(sim, selector: "host.simulator-list", fields: [
             "ok", "simulators",
         ])
@@ -3983,6 +4018,10 @@ struct SchemaFactSourceTests {
         expectContract(sim, selector: "host.simulator-action", fields: [
             "ok", "action", "runtimeScope", "target", "tool", "exitCode", "riskLevel",
             "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "screenshot", "note",
+        ])
+        expectContract(sim, selector: "host.simulator-input", fields: [
+            "ok", "action", "runtimeScope", "target", "adapter", "tool", "exitCode",
+            "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated", "textEncoding", "note",
         ])
 
         #expect(app.failureCodes.contains("app_launch_failed"))

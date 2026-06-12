@@ -126,6 +126,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress with --wait"),
                 TKCommandSchemaOption(name: "shutdown <udid|booted>", type: "Subcommand", description: "Shutdown a simulator"),
                 TKCommandSchemaOption(name: "screenshot --output <path>", type: "Subcommand", description: "Capture simulator framebuffer screenshot"),
+                TKCommandSchemaOption(name: "tap --x <x> --y <y>", type: "Subcommand", description: "Tap host-side simulator coordinates through xcrun simctl io"),
+                TKCommandSchemaOption(name: "type --text <ascii-text>", type: "Subcommand", description: "Type ASCII text into the focused simulator field through xcrun simctl io"),
                 TKCommandSchemaOption(name: "record --output <path.mov> --duration <seconds>", type: "Subcommand", description: "Record a simulator video"),
                 TKCommandSchemaOption(name: "logs --output <path.log> --duration <seconds>", type: "Subcommand", description: "Capture bounded simulator OSLog stream output"),
                 TKCommandSchemaOption(name: "diagnose [--output <path>]", type: "Subcommand", description: "Collect simulator diagnostics and logs"),
@@ -158,6 +160,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "pasteboard sync <source> <destination>", type: "Subcommand", description: "Sync pasteboard content between host and simulator"),
                 TKCommandSchemaOption(name: "push --bundle-id <id> --payload <path|->", type: "Subcommand", description: "Send a simulated push notification"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted target selector"),
+                TKCommandSchemaOption(name: "--x", type: "Int", description: "Simulator x coordinate for host-side tap"),
+                TKCommandSchemaOption(name: "--y", type: "Int", description: "Simulator y coordinate for host-side tap"),
+                TKCommandSchemaOption(name: "--text", type: "String", description: "ASCII text for host-side simulator type"),
                 TKCommandSchemaOption(name: "--display", type: "String", description: "CoreSimulator display selector for screenshot or video, for example internal, external, screen id, or display UUID"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Artifact output path for screenshot, record, logs, or diagnose"),
                 TKCommandSchemaOption(name: "--duration", type: "Double", description: "Bounded record or log capture duration in seconds"),
@@ -175,6 +180,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
                 "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl",
                 "triton sim screenshot --simulator booted --output /tmp/sim.png --json",
+                "triton sim tap --simulator booted --x 200 --y 400 --json",
+                "triton sim type --simulator booted --text http://127.0.0.1:8000 --json",
                 "triton sim record --simulator booted --output /tmp/sim.mov --duration 10 --json",
                 "triton sim logs --simulator booted --output /tmp/sim.ndjson --duration 5 --style ndjson --json",
                 "triton sim diagnose --output /tmp/sim-diagnostics --json",
@@ -186,13 +193,15 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim runtime delete <runtime-id> --dry-run --json",
                 "triton sim personalization scan-and-personalize --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.tap|sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap/type are host-side input primitives for setup when embedded runtime is unavailable; verify business completion with wait, assert, screenshot, app prefs, or evidence.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
                 "triton device use <sim-target-id> --json",
+                "triton sim tap --simulator <udid|booted> --x <x> --y <y> --json",
+                "triton sim type --simulator <udid|booted> --text <text> --json",
                 "triton evidence --output <dir.tritonevidence> --json",
                 "triton app launch --device <selector> --bundle-id <id> --json",
                 "triton smoke ios --device <selector> --bundle-id <id> --open-url <url> --wait-text <text> --json",
@@ -200,6 +209,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             outputContracts: [
                 hostSimulatorListOutputContract(),
                 hostSimulatorScreenshotOutputContract(),
+                hostSimulatorInputOutputContract(),
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorReadyEvent"),
                 hostSimulatorScreenshotMetadataOutputContract(),
             ],
@@ -207,6 +217,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "simulator_not_found",
                 "host_command_failed",
                 "host_command_timeout",
+                "unsupported_text_input",
                 "artifact_output_rejected",
                 "sim_device_maintenance_failed",
                 "status_bar_operation_failed",
@@ -242,7 +253,171 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "runtime_match_selector_required",
                 "validation_failed",
             ],
-            providedCapabilities: ["host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push"]
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "list",
+                    summary: "List available simulators",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-list"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "use",
+                    summary: "Set workspace default simulator",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "boot",
+                    summary: "Boot a simulator",
+                    optionalOptions: ["--wait", "--jsonl", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "shutdown",
+                    summary: "Shutdown a simulator",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "screenshot",
+                    summary: "Capture simulator framebuffer screenshot",
+                    requiredOptions: ["--output"],
+                    optionalOptions: ["--simulator", "--display", "--format", "--json"],
+                    nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+                    outputSelectors: ["host.simulator-screenshot"],
+                    failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "artifact_output_rejected", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "tap",
+                    summary: "Tap host-side simulator coordinates through xcrun simctl io",
+                    requiredOptions: ["--x", "--y"],
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    nextCommands: [
+                        "triton sim screenshot --simulator <udid|booted> --output <path> --json",
+                        "triton wait --text <text> --json",
+                    ],
+                    outputSelectors: ["host.simulator-input"],
+                    failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "type",
+                    summary: "Type ASCII text into the focused simulator field through xcrun simctl io",
+                    requiredOptions: ["--text"],
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    nextCommands: [
+                        "triton sim screenshot --simulator <udid|booted> --output <path> --json",
+                        "triton assert text-exists <text> --json",
+                    ],
+                    outputSelectors: ["host.simulator-input"],
+                    failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "unsupported_text_input", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "record",
+                    summary: "Record a bounded simulator video",
+                    requiredOptions: ["--output"],
+                    optionalOptions: ["--simulator", "--duration", "--display", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "logs",
+                    summary: "Capture bounded simulator OSLog stream output",
+                    requiredOptions: ["--output"],
+                    optionalOptions: ["--simulator", "--duration", "--style", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "diagnose",
+                    summary: "Collect simulator diagnostics and logs",
+                    optionalOptions: ["--output", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "logverbose",
+                    summary: "Enable or disable verbose simulator logging",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "pair",
+                    summary: "Create a watch and phone simulator pair",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "unpair",
+                    summary: "Unpair a watch and phone simulator pair",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "clone",
+                    summary: "Clone an existing simulator device",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "erase",
+                    summary: "Erase simulator contents and settings",
+                    optionalOptions: ["--confirm", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "upgrade",
+                    summary: "Upgrade a simulator to a newer runtime",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "runtime",
+                    summary: "Inspect and maintain installed simulator runtimes",
+                    optionalOptions: ["--dry-run", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "personalization",
+                    summary: "Manage simulator runtime personalization manifests",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "status-bar",
+                    summary: "Read or override the simulator status bar",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "privacy",
+                    summary: "Grant, revoke, or reset simulator privacy permissions",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "location",
+                    summary: "Control simulated location",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "ui",
+                    summary: "Read or set simulator UI appearance and accessibility settings",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "pasteboard",
+                    summary: "Read, write, or sync simulator pasteboard content",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "push",
+                    summary: "Send a simulated push notification",
+                    requiredOptions: ["--bundle-id", "--payload"],
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+            ],
+            providedCapabilities: ["host-simulator", "ios-simulator-host-tap", "ios-simulator-host-type", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push"]
         ),
         TKCommandSchema(
             name: "app",
