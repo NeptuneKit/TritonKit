@@ -137,6 +137,30 @@ extension SchemaFactSourceTests {
         #expect(invalidStopConditions == [])
     }
 
+    @Test("workflow plan long running steps are explicit")
+    func workflowPlanLongRunningStepsAreExplicit() {
+        var missingLongRunningSteps: [String] = []
+        var unexpectedLongRunningSteps: [String] = []
+
+        for fixture in workflowPlanFixtures(includeTaskInputs: true) {
+            for step in fixture.steps {
+                let context = "\(fixture.goal ?? "general"):\(step.id)"
+                let isServerServe = Array(step.argv.prefix(2)) == ["triton", "serve"]
+                let isProxyServe = Array(step.argv.prefix(4)) == ["triton", "device", "proxy", "serve"]
+                let shouldBeLongRunning = isServerServe || isProxyServe
+                if shouldBeLongRunning, step.requiresLongRunningProcess == false {
+                    missingLongRunningSteps.append(context)
+                }
+                if !shouldBeLongRunning, step.requiresLongRunningProcess {
+                    unexpectedLongRunningSteps.append("\(context):\(step.argv.joined(separator: " "))")
+                }
+            }
+        }
+
+        #expect(missingLongRunningSteps == [])
+        #expect(unexpectedLongRunningSteps == [])
+    }
+
     @Test("workflow plan steps expose workflow taxonomy")
     func workflowPlanStepsExposeWorkflowTaxonomy() {
         var missingWorkflows: [String] = []

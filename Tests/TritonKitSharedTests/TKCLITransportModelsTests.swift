@@ -714,8 +714,31 @@ struct TKCLITransportModelsTests {
         #expect(decoded.steps.first?.requires == ["cli.available"])
         #expect(decoded.steps.first?.expectedArtifacts.contains("stdout-json") == true)
         #expect(decoded.steps.first?.stopConditions.contains("command.failed") == true)
+        #expect(decoded.steps.first?.requiresLongRunningProcess == true)
         #expect(decoded.error?.code == "server_unavailable")
         #expect(decoded.error?.nextAction?.args.contains("19421") == true)
+    }
+
+    @Test("workflow plan step decodes long running defaults for older payloads")
+    func workflowPlanStepDecodesLongRunningDefaultsForOlderPayloads() throws {
+        let data = Data(
+            """
+            {
+              "id": "proxy-serve",
+              "title": "Start proxy",
+              "command": "triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/proxy --mode record --jsonl",
+              "requiresServer": false,
+              "requiresTarget": false,
+              "when": "before proxy start",
+              "expected": "proxy.serve.ready"
+            }
+            """.utf8
+        )
+
+        let step = try JSONDecoder().decode(TKWorkflowPlanStep.self, from: data)
+
+        #expect(Array(step.argv.prefix(4)) == ["triton", "device", "proxy", "serve"])
+        #expect(step.requiresLongRunningProcess == true)
     }
 
     @Test("workflow plan infers mode when decoding older payloads")

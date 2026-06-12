@@ -297,6 +297,8 @@ Harmony 有两条明确分层：host-side adapter 使用 HDC/DevEco 工具完成
 
 `plan.steps[]` 还必须暴露结构化执行元数据：`requires[]` 表达 `cli.available`、`server.reachable`、`target.ready`、`runtime.connected` 等前置条件；`expectedArtifacts[]` 表达 stdout JSON、target resolution、wait/assert result、screenshot、evidence bundle、smoke summary、Xcode log 等可审计产物；`stopConditions[]` 表达 `command.failed`、`server.unavailable`、`target.unavailable`、`timeout`、`assertion.failed`、`artifact.write-failed` 或 `step.failed` 等应停止或重规划的条件。agent 应优先读取这些字段，而不是从 `when/expected` 人读文本推断。
 
+`plan.steps[].requiresLongRunningProcess` 必须直接标明该步骤是否需要 agent 启动并保持进程存活。当前 `triton serve ...` 与三端 `network-proxy` plan 的 `triton device proxy serve ... --jsonl` 会标记为 `true`；平台代理 start/status/export/stop、证书 install 审计和 evidence 归档仍是一次性命令，必须保持 `false`。agent 执行三端 proxy plan 时，应先让 `proxy-serve` listener 常驻到 `proxy.serve.ready`，再审阅或执行 iOS / Android break-glass runner；Harmony 仍只能把该 listener 作为后续 verified adapter 或人工验证目标，不能因此推断平台 mutation 已支持。
+
 `triton plan inspect` 与 `triton replay --dry-run/--json` 的 `steps[]` 也必须带 `workflowCategories[]`。Replay 侧不应只暴露 `category`、`requires[]`、`expectedArtifacts[]` 和 `stopConditions[]`，还要保持与 `doctor`、task `plan`、`capabilities` 同口径的 workflow taxonomy，这样 agent 比较 inspect 与 dry-run 时不需要自己重建 action/observe/assert/evidence/replay lane。
 
 `plan.mode` 用来区分规划职责边界：`bootstrap` 表示环境恢复 / 发现计划，`task` 表示目标型 workflow 计划。agent 应先看 `mode` 再决定是恢复环境、选择 target，还是进入 smoke / open-url / webview-check 这类任务链路，而不是通过 `goal == general` 等约定值猜测。
@@ -337,7 +339,7 @@ CLI schema 的 `providedCapabilities[]` 是 capabilities matrix 的输入边界�
 
 `doctor.checks[].nextAction.category` 使用同一套 category。doctor 是有序诊断入口，agent 可以直接按 check status 和 nextAction category 判断下一步是启动 server、查 schema、读 status、准备 target、检查 runtime manifest、读 capabilities 还是回到 plan。
 
-`nextAction.requiresLongRunningProcess` 只用于需要 agent 启动并保持或等待的动作。当前能力矩阵中只有 server 不可达时的 `triton serve --host 127.0.0.1 --port 19421` 使用该标记，避免 agent 把普通一次性恢复命令误当后台进程管理。
+`nextAction.requiresLongRunningProcess` 只用于需要 agent 启动并保持或等待的动作。当前能力矩阵中只有 server 不可达时的 `triton serve --host 127.0.0.1 --port 19421` 使用该标记；任务级 plan 还会在 `steps[].requiresLongRunningProcess` 标出 `device proxy serve --jsonl` 这类长驻 listener，避免 agent 把普通一次性恢复命令误当后台进程管理。
 
 `nextAction.args` 里的占位符必须是完整 argv token，例如 `<selector>`、`<text>`、`<dir.tritonevidence>`、`<x,y>`、`<udid|booted>`。agent 可以把这类 token 作为待填槽位处理，不需要解析半截字符串拼接。
 

@@ -65,6 +65,7 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
     public let requires: [String]
     public let expectedArtifacts: [String]
     public let stopConditions: [String]
+    public let requiresLongRunningProcess: Bool
 
     enum CodingKeys: String, CodingKey {
         case id
@@ -80,6 +81,7 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
         case requires
         case expectedArtifacts
         case stopConditions
+        case requiresLongRunningProcess
     }
 
     public init(
@@ -95,12 +97,14 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
         expected: String,
         requires: [String]? = nil,
         expectedArtifacts: [String]? = nil,
-        stopConditions: [String]? = nil
+        stopConditions: [String]? = nil,
+        requiresLongRunningProcess: Bool? = nil
     ) {
         self.id = id
         self.title = title
         self.command = command
-        self.argv = argv ?? Self.defaultArgv(for: command)
+        let resolvedArgv = argv ?? Self.defaultArgv(for: command)
+        self.argv = resolvedArgv
         self.category = category ?? Self.category(for: command)
         self.workflowCategories = workflowCategories ?? Self.defaultWorkflowCategories(for: command)
         self.requiresServer = requiresServer
@@ -114,6 +118,7 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
             requiresServer: requiresServer,
             requiresTarget: requiresTarget
         )
+        self.requiresLongRunningProcess = requiresLongRunningProcess ?? Self.defaultRequiresLongRunningProcess(for: resolvedArgv)
     }
 
     public init(from decoder: Decoder) throws {
@@ -126,7 +131,8 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
         self.id = id
         self.title = title
         self.command = command
-        self.argv = try container.decodeIfPresent([String].self, forKey: .argv) ?? Self.defaultArgv(for: command)
+        let resolvedArgv = try container.decodeIfPresent([String].self, forKey: .argv) ?? Self.defaultArgv(for: command)
+        self.argv = resolvedArgv
         self.category = try container.decodeIfPresent(String.self, forKey: .category) ?? Self.category(for: command)
         self.workflowCategories = try container.decodeIfPresent([String].self, forKey: .workflowCategories)
             ?? Self.defaultWorkflowCategories(for: command)
@@ -140,6 +146,13 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
             Self.defaultExpectedArtifacts(for: command)
         self.stopConditions = try container.decodeIfPresent([String].self, forKey: .stopConditions) ??
             Self.defaultStopConditions(for: command, requiresServer: requiresServer, requiresTarget: requiresTarget)
+        self.requiresLongRunningProcess = try container.decodeIfPresent(Bool.self, forKey: .requiresLongRunningProcess) ??
+            Self.defaultRequiresLongRunningProcess(for: resolvedArgv)
+    }
+
+    private static func defaultRequiresLongRunningProcess(for argv: [String]) -> Bool {
+        Array(argv.prefix(2)) == ["triton", "serve"] ||
+            Array(argv.prefix(4)) == ["triton", "device", "proxy", "serve"]
     }
 
     private static func category(for command: String) -> String {

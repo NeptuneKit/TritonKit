@@ -721,7 +721,8 @@ private func networkProxyServePlanStep(proxy: String, mode: String, output: Stri
         expected: "JSONL emits proxy.serve.ready and writes metadata-only requests.ndjson",
         requires: ["cli.available"],
         expectedArtifacts: ["network-capture", "stdout-json"],
-        stopConditions: ["command.failed", "artifact.write-failed"]
+        stopConditions: ["command.failed", "artifact.write-failed"],
+        requiresLongRunningProcess: true
     )
 }
 

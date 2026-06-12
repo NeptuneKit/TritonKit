@@ -144,12 +144,15 @@ extension SchemaFactSourceTests {
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-cert-install" })?.expectedArtifacts.contains("proxy-certificate") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-serve" })?.command.contains("--mock-rules /tmp/triton-mock-rules.json") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-serve" })?.command.contains("--policy-rules /tmp/triton-policy-rules.json") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-serve" })?.requiresLongRunningProcess == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--platform android") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--plan-only") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.requiresLongRunningProcess == false)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-execute" })?.command.contains("--proxy 127.0.0.1:19431") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-execute" })?.command.contains("--audit-record ticket-123") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-execute" })?.command.contains("--execute-runner") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-execute" })?.requires.contains("proxy.endpoint.ready") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-execute" })?.requiresLongRunningProcess == false)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-status-readonly" })?.command.contains("proxy status") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-status-readonly" })?.command.contains("--platform android") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-status-readonly" })?.command.contains("--device emulator-5554") == true)
@@ -161,6 +164,7 @@ extension SchemaFactSourceTests {
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-execute" })?.command.contains("--audit-record ticket-123") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-execute" })?.command.contains("--execute-runner") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-execute" })?.requires.contains("restore-snapshot") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-execute" })?.requiresLongRunningProcess == false)
 
         let throttleProxy = buildWorkflowPlan(
             capabilities: capabilities,

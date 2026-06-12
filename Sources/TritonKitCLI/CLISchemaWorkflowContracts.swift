@@ -30,6 +30,7 @@ func planNextStepsOutputContract() -> TKCommandOutputContract {
             ("steps[].requires", "[String]", true, "Machine-readable prerequisites such as cli.available, server.reachable, target.ready, or runtime.connected"),
             ("steps[].expectedArtifacts", "[String]", true, "Expected evidence surfaces produced or consumed by the step"),
             ("steps[].stopConditions", "[String]", true, "Machine-readable conditions that should stop or re-plan the workflow"),
+            ("steps[].requiresLongRunningProcess", "Bool", true, "Whether agents must keep this step running while later steps execute"),
             ("error", "TKCLIErrorDetail?", false, "Recoverable server or target diagnostic"),
         ])
     )
