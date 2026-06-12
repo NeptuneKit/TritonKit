@@ -14,6 +14,7 @@ struct WorkflowPlanRequest {
     let mode: String?
     let output: String?
     let certificate: String?
+    let auditRecord: String?
 
     init(
         goal: String,
@@ -27,7 +28,8 @@ struct WorkflowPlanRequest {
         proxy: String? = nil,
         mode: String? = nil,
         output: String? = nil,
-        certificate: String? = nil
+        certificate: String? = nil,
+        auditRecord: String? = nil
     ) {
         self.goal = goal
         self.device = device
@@ -41,6 +43,7 @@ struct WorkflowPlanRequest {
         self.mode = mode
         self.output = output
         self.certificate = certificate
+        self.auditRecord = auditRecord
     }
 
     static let general = WorkflowPlanRequest(
@@ -293,6 +296,7 @@ func buildTaskWorkflowPlan(
         let mode = planValue(request.mode, "record")
         let output = planValue(request.output, "<proxy-session-dir>")
         let certificate = planValue(request.certificate, "<path.cer>")
+        let auditRecord = planValue(request.auditRecord, "<id>")
         let restoreSnapshot = (request.output?.isEmpty == false)
             ? "\(output)/restore-state.json"
             : "<restore-state-json>"
@@ -314,6 +318,7 @@ func buildTaskWorkflowPlan(
                 networkProxyDoctorPlanStep(platform: platform),
                 networkProxyProbePlanStep(platform: platform, device: device),
                 networkProxyCertificatePlanStep(platform: platform, device: device, certificate: certificate),
+                networkProxyCertificateInstallPlanStep(platform: platform, device: device, certificate: certificate, auditRecord: auditRecord),
                 networkProxyServePlanStep(proxy: proxy, mode: mode, output: output),
                 networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
                 networkProxyExportPlanStep(platform: platform, device: device, output: captureOutput),
@@ -641,6 +646,36 @@ private func networkProxyCertificatePlanStep(platform: String, device: String, c
         when: "after readonly probe and before relying on HTTPS visibility",
         expected: "Plan-only response declares certificate trust commands or probe-only limitations without installing trust",
         requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "proxy-certificate"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func networkProxyCertificateInstallPlanStep(
+    platform: String,
+    device: String,
+    certificate: String,
+    auditRecord: String
+) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-cert-install",
+        title: "Review proxy certificate install break-glass command",
+        command: [
+            "triton", "device", "proxy", "cert", "install",
+            "--platform", platform,
+            "--device", device,
+            "--certificate", certificate,
+            "--confirm",
+            "--audit-record", auditRecord,
+            "--execute-runner",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "only after proxy-cert-plan has been reviewed and explicit operator approval exists",
+        expected: "Break-glass response records certificate state; Harmony remains probe-only until a verified trust command exists",
+        requires: ["cli.available", "operator.approval", "audit-record"],
         expectedArtifacts: ["stdout-json", "proxy-certificate"],
         stopConditions: ["command.failed"]
     )

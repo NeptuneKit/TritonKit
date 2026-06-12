@@ -26,6 +26,7 @@ struct Plan: AsyncParsableCommand {
     @Option(help: "Proxy capture mode for network-proxy task planning: record|mock|block|throttle") var mode: String?
     @Option(help: "Proxy session or capture output directory for network-proxy task planning") var output: String?
     @Option(help: "Proxy root certificate path for network-proxy certificate planning") var certificate: String?
+    @Option(help: "Audit record id used by network-proxy break-glass plan steps") var auditRecord: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @OptionGroup var localization: LocalizationOptions
@@ -79,7 +80,8 @@ struct Plan: AsyncParsableCommand {
                 proxy: proxy,
                 mode: mode,
                 output: output,
-                certificate: certificate
+                certificate: certificate,
+                auditRecord: auditRecord
             )
         )
         switch effectiveFormat(format, json: json) {
