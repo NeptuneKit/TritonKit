@@ -119,6 +119,9 @@ public struct TKReplayPlanStep: Codable, Equatable {
     public let device: String?
     public let proxy: String?
     public let mode: String?
+    public let mockRules: String?
+    public let policyRules: String?
+    public let throttleMs: Int?
     public let certificate: String?
     public let auditRecord: String?
     public let restore: Bool?
@@ -155,6 +158,9 @@ public struct TKReplayPlanStep: Codable, Equatable {
         device: String? = nil,
         proxy: String? = nil,
         mode: String? = nil,
+        mockRules: String? = nil,
+        policyRules: String? = nil,
+        throttleMs: Int? = nil,
         certificate: String? = nil,
         auditRecord: String? = nil,
         restore: Bool? = nil,
@@ -190,6 +196,9 @@ public struct TKReplayPlanStep: Codable, Equatable {
         self.device = device
         self.proxy = proxy
         self.mode = mode
+        self.mockRules = mockRules
+        self.policyRules = policyRules
+        self.throttleMs = throttleMs
         self.certificate = certificate
         self.auditRecord = auditRecord
         self.restore = restore
@@ -601,13 +610,22 @@ public enum TKReplayStepExecution {
         let listen = try substituted(step.proxy ?? "<host:port>", variables: variables, strict: strict)
         let output = try substituted(step.output ?? "<proxy-session-dir>", variables: variables, strict: strict)
         let mode = try substituted(step.mode ?? "record", variables: variables, strict: strict)
-        return [
+        var argv = [
             "triton", "device", "proxy", "serve",
             "--listen", listen,
             "--output", output,
             "--mode", mode,
-            "--jsonl",
         ]
+        if mode == "mock", let mockRules = step.mockRules, !mockRules.isEmpty {
+            argv += ["--mock-rules", try substituted(mockRules, variables: variables, strict: strict)]
+        }
+        if let policyRules = step.policyRules, !policyRules.isEmpty {
+            argv += ["--policy-rules", try substituted(policyRules, variables: variables, strict: strict)]
+        }
+        if mode == "throttle", let throttleMs = step.throttleMs {
+            argv += ["--throttle-ms", "\(throttleMs)"]
+        }
+        return argv + ["--jsonl"]
     }
 
     private static func proxyCertPlanArgv(

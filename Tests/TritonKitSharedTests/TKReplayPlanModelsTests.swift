@@ -188,7 +188,9 @@ struct TKReplayPlanModelsTests {
               "action": "proxy-serve",
               "proxy": "127.0.0.1:19431",
               "mode": "mock",
-              "output": "/tmp/${platform}-proxy"
+              "output": "/tmp/${platform}-proxy",
+              "mockRules": "/tmp/${platform}-mock-rules.json",
+              "policyRules": "/tmp/${platform}-policy-rules.json"
             },
             {
               "action": "proxy-start",
@@ -197,6 +199,13 @@ struct TKReplayPlanModelsTests {
               "proxy": "127.0.0.1:19431",
               "mode": "mock",
               "output": "/tmp/${platform}-proxy"
+            },
+            {
+              "action": "proxy-serve",
+              "proxy": "127.0.0.1:19432",
+              "mode": "throttle",
+              "output": "/tmp/${platform}-throttle-proxy",
+              "throttleMs": 250
             },
             {
               "action": "proxy-export",
@@ -223,6 +232,7 @@ struct TKReplayPlanModelsTests {
             "proxy-cert-install",
             "proxy-serve",
             "proxy-start",
+            "proxy-serve",
             "proxy-export",
             "proxy-stop",
         ])
@@ -258,11 +268,24 @@ struct TKReplayPlanModelsTests {
             "--listen", "127.0.0.1:19431",
             "--output", "/tmp/${platform}-proxy",
             "--mode", "mock",
+            "--mock-rules", "/tmp/${platform}-mock-rules.json",
+            "--policy-rules", "/tmp/${platform}-policy-rules.json",
             "--jsonl",
         ])
         #expect(summary.steps[4].argv.contains("--plan-only"))
-        #expect(summary.steps[5].expectedArtifacts.contains("network-capture"))
-        #expect(summary.steps[6].argv.contains("--restore"))
+        #expect(summary.steps[4].argv.contains("--mock-rules") == false)
+        #expect(summary.steps[4].argv.contains("--policy-rules") == false)
+        #expect(summary.steps[4].argv.contains("--throttle-ms") == false)
+        #expect(summary.steps[5].argv == [
+            "triton", "device", "proxy", "serve",
+            "--listen", "127.0.0.1:19432",
+            "--output", "/tmp/${platform}-throttle-proxy",
+            "--mode", "throttle",
+            "--throttle-ms", "250",
+            "--jsonl",
+        ])
+        #expect(summary.steps[6].expectedArtifacts.contains("network-capture"))
+        #expect(summary.steps[7].argv.contains("--restore"))
         #expect(summary.steps.allSatisfy { $0.workflowCategories.contains("target") })
         #expect(summary.steps.allSatisfy { $0.validationErrors.isEmpty })
 
@@ -281,6 +304,24 @@ struct TKReplayPlanModelsTests {
             "--output", "/tmp/android-proxy",
             "--plan-only",
             "--json",
+        ])
+        #expect(startArgv.contains("--mock-rules") == false)
+        #expect(startArgv.contains("--policy-rules") == false)
+        #expect(startArgv.contains("--throttle-ms") == false)
+
+        let throttleServeArgv = try TKReplayStepExecution.argv(
+            for: plan.steps[5],
+            planName: plan.name,
+            index: 6,
+            variables: ["platform": "android", "device": "emulator-5554"]
+        )
+        #expect(throttleServeArgv == [
+            "triton", "device", "proxy", "serve",
+            "--listen", "127.0.0.1:19432",
+            "--output", "/tmp/android-throttle-proxy",
+            "--mode", "throttle",
+            "--throttle-ms", "250",
+            "--jsonl",
         ])
 
         let certInstallArgv = try TKReplayStepExecution.argv(

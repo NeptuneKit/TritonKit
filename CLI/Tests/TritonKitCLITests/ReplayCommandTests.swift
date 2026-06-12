@@ -109,16 +109,25 @@ struct ReplayCommandTests {
             {
               "action": "proxy-serve",
               "proxy": "127.0.0.1:19431",
-              "mode": "block",
-              "output": "\(temp.path)/${platform}-proxy"
+              "mode": "mock",
+              "output": "\(temp.path)/${platform}-proxy",
+              "mockRules": "\(temp.path)/${platform}-mock-rules.json",
+              "policyRules": "\(temp.path)/${platform}-policy-rules.json"
             },
             {
               "action": "proxy-start",
               "platform": "${platform}",
               "device": "${device}",
               "proxy": "127.0.0.1:19431",
-              "mode": "block",
+              "mode": "mock",
               "output": "\(temp.path)/${platform}-proxy"
+            },
+            {
+              "action": "proxy-serve",
+              "proxy": "127.0.0.1:19432",
+              "mode": "throttle",
+              "output": "\(temp.path)/${platform}-throttle-proxy",
+              "throttleMs": 250
             },
             {
               "action": "proxy-status",
@@ -156,6 +165,7 @@ struct ReplayCommandTests {
             "proxy-cert-install",
             "proxy-serve",
             "proxy-start",
+            "proxy-serve",
             "proxy-status",
             "proxy-stop",
         ])
@@ -190,20 +200,32 @@ struct ReplayCommandTests {
             "triton", "device", "proxy", "serve",
             "--listen", "127.0.0.1:19431",
             "--output", "\(temp.path)/android-proxy",
-            "--mode", "block",
+            "--mode", "mock",
+            "--mock-rules", "\(temp.path)/android-mock-rules.json",
+            "--policy-rules", "\(temp.path)/android-policy-rules.json",
             "--jsonl",
         ])
         #expect(response.steps[4].argv.contains("--plan-only"))
         #expect(response.steps[4].argv.contains("emulator-5554"))
+        #expect(response.steps[4].argv.contains("--mock-rules") == false)
+        #expect(response.steps[4].argv.contains("--policy-rules") == false)
         #expect(response.steps[5].argv == [
+            "triton", "device", "proxy", "serve",
+            "--listen", "127.0.0.1:19432",
+            "--output", "\(temp.path)/android-throttle-proxy",
+            "--mode", "throttle",
+            "--throttle-ms", "250",
+            "--jsonl",
+        ])
+        #expect(response.steps[6].argv == [
             "triton", "device", "proxy", "status",
             "--platform", "android",
             "--device", "emulator-5554",
             "--json",
         ])
-        #expect(response.steps[5].expectedArtifacts.contains("host-device-proxy"))
-        #expect(response.steps[5].argv.contains("--plan-only") == false)
-        #expect(response.steps[6].argv.contains("--restore"))
+        #expect(response.steps[6].expectedArtifacts.contains("host-device-proxy"))
+        #expect(response.steps[6].argv.contains("--plan-only") == false)
+        #expect(response.steps[7].argv.contains("--restore"))
     }
 
     @Test("replay archives proxy session evidence after a failed step")

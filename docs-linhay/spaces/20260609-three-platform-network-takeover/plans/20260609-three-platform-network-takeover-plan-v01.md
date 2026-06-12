@@ -353,6 +353,7 @@ triton device proxy doctor --platform harmony --json
 - `proxy-export` 若出现在同一 plan 的首个 `proxy-start` 之前，会标记 `proxy_export_before_start`，让 agent 在执行 dry-run 或真实 replay 前就能修正计划顺序。
 - 真实 replay 在失败步骤停止后，会查找后续显式声明 `include: "network.proxy-session"` 与 `proxySession` 的 evidence step，并只执行 proxy-only archive：归档已有 `session-state.json` / `requests.ndjson`，跳过夹在中间的业务 action / assertion，不启动 proxy listener，也不执行平台代理 mutation。
 - 这些能力只影响 inspect / dry-run 审计元数据和失败后的 proxy-only evidence archive，不启动 proxy listener，不执行 iOS / Android / Harmony 代理 mutation。
+- `.tritonplan` 的 `proxy-serve` step 已支持 `mockRules`、`policyRules` 与 `throttleMs`，inspect / dry-run 只把它们透传到 `device proxy serve --jsonl` argv；`proxy-start` / `proxy-stop` 不继承这些 listener-only 策略参数，保持平台代理 mutation 与 restore 审计边界清晰。
 
 ## 风险
 
