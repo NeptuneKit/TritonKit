@@ -155,7 +155,9 @@ struct SchemaFactSourceTests {
         #expect(target.nextCommands.contains("triton target use <selector> --json"))
         #expect(target.nextCommands.contains("triton target wait-ready <selector> --json"))
         expectContract(target, selector: "host.device-list", fields: [
-            "ok", "platform", "targets", "defaultTarget", "sourceCommand",
+            "ok", "platform", "targets",
+            "targets[].appName", "targets[].bundleIdentifier", "targets[].identityState", "targets[].current",
+            "defaultTarget", "sourceCommand",
         ])
         expectContract(target, selector: "host.device-selection", fields: [
             "ok", "platform", "current", "target", "defaultsPath", "selection", "path",
@@ -3991,7 +3993,9 @@ struct SchemaFactSourceTests {
         #expect(device.failureCodes.contains("device_not_ready"))
         #expect(device.nextCommands.contains("triton device resolve --device <selector> --json"))
         expectContract(device, selector: "host.device-list", fields: [
-            "ok", "platform", "targets", "defaultTarget", "sourceCommand",
+            "ok", "platform", "targets",
+            "targets[].appName", "targets[].bundleIdentifier", "targets[].identityState", "targets[].current",
+            "defaultTarget", "sourceCommand",
         ])
         expectContract(device, selector: "host.device-selection", fields: [
             "ok", "platform", "target", "defaultsPath", "selection",

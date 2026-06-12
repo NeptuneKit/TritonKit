@@ -239,6 +239,8 @@ triton device stop --platform harmony --hvd "Codex Test Phone" --path ~/.Huawei/
 
 Use `--device <selector>` as the default agent-facing target selector for common host-side commands. Selectors can be aliases, full ids such as `sim:<udid>` / `harmony:<target>`, raw platform ids, `booted`, or `current`. `--platform`, `--name`, `--runtime`, `--state`, and `--ready` are filters; they may auto-select only when the filtered candidate set is unique. Keep `sim` for iOS-only advanced maintenance; `device runtime-url --device <selector>` is the Harmony embedded runtime port-forward setup path, and `--platform harmony --target <target>` remains the direct raw-target form.
 
+For Harmony host discovery, parse optional foreground app identity from `triton device list --platform harmony --json` when present. Treat `identityState=current` with `current=true` as the only current foreground identity. Treat `identityState=unknown` or `identityState=unsupported` as an explicit no-identity boundary; do not substitute the HDC target id, emulator name, or selected alias as `appName` / `bundleIdentifier`.
+
 When a Harmony HVD was started through Triton's `triton-harmony-emulator` launchd keepalive job, stop it through `triton device stop --platform harmony ... --confirm --json`. The command checks and unloads `gui/<uid>/triton-harmony-emulator` before running DevEco `Emulator -stop`, which prevents launchd from immediately restarting the emulator.
 
 iOS Simulator:
@@ -319,6 +321,8 @@ triton swipe --platform harmony --device harmony-a --start-x 350 --start-y 900 -
 triton type "hello" --platform harmony --device harmony-a --json
 triton paste "hello" --platform harmony --device harmony-a --json
 ```
+
+`device list --platform harmony` may include `targets[].appName`, `targets[].bundleIdentifier`, `targets[].identityState`, and `targets[].current`. These fields are optional host facts, not app lifecycle proof; continue to verify business state with `app inspect/launch`, `observe`, `wait`, `assert`, screenshot, or evidence commands.
 
 For Harmony host actions, schema exposes host-side output selectors alongside embedded runtime contracts. Parse `tap --platform harmony` as `host.harmony-tap`, `swipe --platform harmony` as `host.harmony-swipe`, and `type` / `paste --platform harmony` as `host.harmony-text-input`; do not reuse the embedded `input.result` parser for those host outputs. Parse `wait --platform harmony` as `host.harmony-wait`; do not reuse the embedded `wait.result` parser. Parse `ax/screenshot --platform harmony` as `host.harmony-artifact`; do not reuse `host.artifact`. Parse `press --platform harmony` as `host.harmony-key-action`; do not reuse `host.key-action`. Treat `clear --platform harmony` as an explicit unsupported boundary (`harmony-clear-text`) until a stable host clear primitive exists, and treat any reappearance of legacy selectors (`host.tap`, `host.swipe`, `host.text-input`, `host.wait`) as schema regression.
 

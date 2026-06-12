@@ -665,6 +665,10 @@ func hostDeviceListOutputContract(selector: String = "host.device-list") -> TKCo
             ("ok", "Bool", true, "Whether host device listing succeeded"),
             ("platform", "String", true, "ios, android, or harmony"),
             ("targets", "[HostDeviceTarget]", true, "Discovered host targets"),
+            ("targets[].appName", "String?", false, "Foreground app display name when host discovery can determine it"),
+            ("targets[].bundleIdentifier", "String?", false, "Foreground app bundle identifier when host discovery can determine it"),
+            ("targets[].identityState", "String?", false, "Foreground identity state: current, unknown, or unsupported"),
+            ("targets[].current", "Bool?", false, "Whether the target identity describes the current foreground app"),
             ("defaultTarget", "HostDeviceTarget?", false, "Default selected target if one exists"),
             ("sourceCommand", "String", true, "Underlying host command"),
         ])

@@ -183,6 +183,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - host-side Harmony checks that do not require embedded runtime:
      - `triton device doctor --platform harmony --json`
      - `triton device list --platform harmony --json`
+     - when `device list` reports `identityState=unknown` or `identityState=unsupported`, preserve that boundary in feedback and do not replace it with the emulator target id or alias as an app identity;
      - `triton device alias set harmony-a --platform harmony --target <hdc-target> --json` for repeated multi-emulator validation;
      - `triton device wait-ready --device harmony-a --json`
      - `triton device stop --platform harmony --hvd <hvd-name> --path <deployed-path> --confirm --json` when Triton's `triton-harmony-emulator` launchd keepalive job started the HVD;
@@ -523,6 +524,8 @@ triton device wait-ready --device 127.0.0.1:10100 --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
 triton app launch --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
 ```
+
+`triton device list --platform harmony --json` may include optional `targets[].appName`, `targets[].bundleIdentifier`, `targets[].identityState`, and `targets[].current`. File feedback when a stable foreground app is available but missing, but do not report `unknown` or `unsupported` as an app mismatch by itself; those states mean the CLI refused to fabricate identity from target labels.
 
 If multiple HDC targets are `Connected`, pass `--device <alias-or-id>` or an explicit `--target`; `ambiguous_target` is the expected machine-readable failure.
 
