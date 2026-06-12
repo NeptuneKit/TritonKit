@@ -194,7 +194,8 @@ func runNetworkProxyCaptureServer(
     signal(SIGPIPE, SIG_IGN)
     let mode = try normalizeNetworkProxyServeMode(config.mode)
     let throttleDelayMs = try normalizeNetworkProxyThrottleDelayMs(config.throttleDelayMs, mode: mode)
-    let mockRules = try config.mockRulesPath.flatMap(loadNetworkProxyMockRules)
+    let mockRulesPath = try normalizeNetworkProxyMockRulesPath(config.mockRulesPath, mode: mode)
+    let mockRules = try mockRulesPath.flatMap(loadNetworkProxyMockRules)
     let policyRules = try config.policyRulesPath.flatMap(loadNetworkProxyPolicyRules)
     let captureURL = try networkProxyServeCaptureURL(outputDirectory: config.outputDirectory)
     let listenFD = try makeNetworkProxyListenSocket(endpoint: config.listen)
@@ -335,6 +336,14 @@ private func normalizeNetworkProxyThrottleDelayMs(_ delayMs: Int?, mode: String)
         throw RuntimeError("device proxy serve --throttle-ms must be between 0 and 60000.")
     }
     return delayMs
+}
+
+private func normalizeNetworkProxyMockRulesPath(_ path: String?, mode: String) throws -> String? {
+    guard let path, !path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+    guard mode == "mock" else {
+        throw RuntimeError("device proxy serve --mock-rules can only be used with --mode mock.")
+    }
+    return path
 }
 
 func networkProxyServeCapturePath(outputDirectory: String) -> String {

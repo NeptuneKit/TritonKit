@@ -56,7 +56,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--scope", type: "simulator|emulator|real|all", defaultValue: "all", description: "Device scope filter; Android real excludes emulator-* adb serials"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Unified target selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current"),
                 TKCommandSchemaOption(name: "--mode", type: "record|mock|block|throttle", description: "Host-side proxy takeover mode for network capture or policy enforcement; proxy serve currently supports record|mock|block|throttle"),
-                TKCommandSchemaOption(name: "--mock-rules", type: "Path", description: "Optional JSON response rules for proxy serve --mode mock; matching emits mockRuleId without storing response bodies in capture artifacts"),
+                TKCommandSchemaOption(name: "--mock-rules", type: "Path", description: "Optional JSON response rules for proxy serve --mode mock only; other modes reject this flag instead of ignoring it"),
                 TKCommandSchemaOption(name: "--policy-rules", type: "Path", description: "Optional JSON per-request policy rules for proxy serve; matching emits policyRuleId and can forward, mock, block, or throttle without app integration"),
                 TKCommandSchemaOption(name: "--throttle-ms", type: "Int", description: "Optional synthetic response delay in milliseconds for proxy serve --mode throttle; must be between 0 and 60000"),
                 TKCommandSchemaOption(name: "--plan-only", type: "Bool", defaultValue: "false", description: "Return host command ledger for proxy takeover without changing host or emulator settings"),

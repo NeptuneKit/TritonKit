@@ -110,7 +110,7 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--output", type: "String", description: "Proxy session or capture output directory used by network-proxy task plans"),
                 TKCommandSchemaOption(name: "--certificate", type: "Path", description: "Root certificate path used by network-proxy certificate plan steps"),
                 TKCommandSchemaOption(name: "--audit-record", type: "String", description: "Audit record id used by network-proxy break-glass review steps"),
-                TKCommandSchemaOption(name: "--mock-rules", type: "Path", description: "Optional JSON mock rules file passed to proxy serve when network-proxy mode is mock"),
+                TKCommandSchemaOption(name: "--mock-rules", type: "Path", description: "Optional JSON mock rules file passed to proxy serve only when network-proxy mode is mock"),
                 TKCommandSchemaOption(name: "--policy-rules", type: "Path", description: "Optional JSON per-request policy rules file passed to proxy serve"),
                 TKCommandSchemaOption(name: "--throttle-ms", type: "Int", description: "Optional synthetic delay passed to proxy serve when network-proxy mode is throttle"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),

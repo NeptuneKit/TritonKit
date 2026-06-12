@@ -1307,6 +1307,31 @@ struct DeviceCrossPlatformTests {
         #expect(!capture.contains("session=secret"))
     }
 
+    @Test("device proxy serve rejects mock rules outside mock mode")
+    func deviceProxyServeRejectsMockRulesOutsideMockMode() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-proxy-mock-rules-mode-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let endpoint = try NetworkProxyEndpoint("127.0.0.1:1")
+
+        do {
+            _ = try runNetworkProxyCaptureServer(
+                config: NetworkProxyServeConfig(
+                    listen: endpoint,
+                    outputDirectory: directory.path,
+                    maxConnections: 0,
+                    mode: "record",
+                    mockRulesPath: directory.appendingPathComponent("rules.json").path
+                )
+            )
+            #expect(Bool(false), "Expected --mock-rules outside mock mode to throw.")
+        } catch let error as RuntimeError {
+            #expect(error.description == "device proxy serve --mock-rules can only be used with --mode mock.")
+        } catch {
+            throw error
+        }
+    }
+
     @Test("device proxy serve policy rules choose per-request host-side actions")
     func deviceProxyServePolicyRulesChoosePerRequestHostSideActions() throws {
         let port = try reserveLocalPortForTest()
