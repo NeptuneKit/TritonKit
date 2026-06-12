@@ -89,7 +89,7 @@ type ViewTreeNode = {
 
 const canvasZoomLevels = [0.75, 0.9, 1, 1.15, 1.3, 1.5] as const;
 
-const viewTreeNodes: ViewTreeNode[] = [
+const iosViewTreeNodes: ViewTreeNode[] = [
   {
     id: "scene",
     type: "UIWindowScene",
@@ -151,6 +151,108 @@ const viewTreeNodes: ViewTreeNode[] = [
   },
 ];
 
+const harmonyViewTreeNodes: ViewTreeNode[] = [
+  {
+    id: "ability-window",
+    type: "UIAbilityWindow",
+    name: "EntryAbility",
+    children: [
+      {
+        id: "arkui-root",
+        type: "ArkUIRoot",
+        name: "Index",
+        children: [
+          {
+            id: "navigation",
+            type: "Navigation",
+            name: "developerSettings",
+            children: [
+              { id: "back-image", type: "Image", name: "back" },
+              { id: "title-text", type: "Text", name: "开发者设置" },
+            ],
+          },
+          {
+            id: "scroll",
+            type: "Scroll",
+            name: "settingsScroll",
+            children: [
+              {
+                id: "content-column",
+                type: "Column",
+                name: "settingsContent",
+                children: [
+                  {
+                    id: "server-row",
+                    type: "Row",
+                    name: "服务器环境",
+                    children: [
+                      { id: "env-dev", type: "Button", name: "dev" },
+                      { id: "env-test", type: "Button", name: "test" },
+                      { id: "env-uat", type: "Button", name: "uat" },
+                      { id: "env-prd", type: "Button", name: "prd" },
+                    ],
+                  },
+                  { id: "switch-proxy", type: "Toggle", name: "代理配置" },
+                  { id: "debug-link", type: "TextInput", name: "调试链接" },
+                  {
+                    id: "codepush-row",
+                    type: "Row",
+                    name: "CodePush",
+                    children: [
+                      { id: "update-button", type: "Button", name: "更新" },
+                      { id: "custom-button", type: "Button", name: "自定义" },
+                      { id: "clear-button", type: "Button", name: "清除" },
+                    ],
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+const androidViewTreeNodes: ViewTreeNode[] = [
+  {
+    id: "decor-view",
+    type: "DecorView",
+    name: "MainActivity",
+    children: [
+      {
+        id: "content",
+        type: "FrameLayout",
+        name: "android.R.id.content",
+        children: [
+          {
+            id: "compose-root",
+            type: "AndroidComposeView",
+            name: "root",
+            children: [
+              { id: "top-app-bar", type: "Toolbar", name: "deviceToolbar" },
+              { id: "lazy-column", type: "RecyclerView", name: "settingsList" },
+              { id: "bottom-nav", type: "BottomNavigationView", name: "navigationBar" },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+];
+
+function viewTreeNodesForTarget(target: DeviceTarget): ViewTreeNode[] {
+  if (target.platform === "harmony") return harmonyViewTreeNodes;
+  if (target.platform === "android") return androidViewTreeNodes;
+  return iosViewTreeNodes;
+}
+
+function defaultViewTreeSelection(target: DeviceTarget): string {
+  if (target.platform === "harmony") return "content-column";
+  if (target.platform === "android") return "lazy-column";
+  return "stack";
+}
+
 export function App() {
   const [selectedId, setSelectedId] = useState(targets[0].id);
   const [hostTargets, setHostTargets] = useState<DeviceTarget[]>([]);
@@ -193,6 +295,7 @@ export function App() {
   );
   const selectedLivePreview = livePreviewById[selected.id];
   const selectedEvents = networkEvents[selected.id] ?? [];
+  const isDiscoveringHostTargets = bridge.loading && hostTargets.length === 0;
   const selectedLogs = useMemo(
     () => [...interactionLogs, ...commandOutputsToLogs(bridgeOutputs), ...(logs[selected.id] ?? [])].slice(0, 8),
     [bridgeOutputs, interactionLogs, selected.id]
@@ -403,6 +506,17 @@ export function App() {
   const canvasZoomIndex = canvasZoomLevels.findIndex((level) => level === canvasZoom);
   const canZoomOut = canvasZoomIndex > 0;
   const canZoomIn = canvasZoomIndex >= 0 && canvasZoomIndex < canvasZoomLevels.length - 1;
+  const handleZoomOut = () => {
+    if (canZoomOut) {
+      setCanvasZoom(canvasZoomLevels[canvasZoomIndex - 1]);
+    }
+  };
+  const handleResetZoom = () => setCanvasZoom(1);
+  const handleZoomIn = () => {
+    if (canZoomIn) {
+      setCanvasZoom(canvasZoomLevels[canvasZoomIndex + 1]);
+    }
+  };
 
   return (
     <main className="device-hub-shell">
@@ -415,22 +529,8 @@ export function App() {
           bridge={bridge}
           isSidebarVisible={isSidebarVisible}
           isRefreshing={isRefreshingAll}
-          zoomLevel={canvasZoom}
-          canZoomOut={canZoomOut}
-          canZoomIn={canZoomIn}
           onToggleSidebar={() => setIsSidebarVisible((current) => !current)}
           onRefresh={handleRefreshAll}
-          onZoomOut={() => {
-            if (canZoomOut) {
-              setCanvasZoom(canvasZoomLevels[canvasZoomIndex - 1]);
-            }
-          }}
-          onResetZoom={() => setCanvasZoom(1)}
-          onZoomIn={() => {
-            if (canZoomIn) {
-              setCanvasZoom(canvasZoomLevels[canvasZoomIndex + 1]);
-            }
-          }}
         />
         <section className={`hub-body ${isSidebarVisible ? "" : "is-sidebar-hidden"}`}>
           {isSidebarVisible ? (
@@ -448,7 +548,13 @@ export function App() {
             livePreview={selectedLivePreview}
             isLogsVisible={isLogsVisible}
             zoomLevel={canvasZoom}
+            isDiscoveringHostTargets={isDiscoveringHostTargets}
+            canZoomOut={canZoomOut}
+            canZoomIn={canZoomIn}
             onToggleLogs={() => setIsLogsVisible((current) => !current)}
+            onZoomOut={handleZoomOut}
+            onResetZoom={handleResetZoom}
+            onZoomIn={handleZoomIn}
             onInput={handleInput}
           />
           <Inspector target={selectedWithScreenshot} events={selectedEvents} bridge={bridge} />
@@ -546,30 +652,16 @@ function DeviceHubToolbar({
   bridge,
   isSidebarVisible,
   isRefreshing,
-  zoomLevel,
-  canZoomOut,
-  canZoomIn,
   onToggleSidebar,
   onRefresh,
-  onZoomOut,
-  onResetZoom,
-  onZoomIn,
 }: {
   target: DeviceTarget;
   bridge: BridgeState;
   isSidebarVisible: boolean;
   isRefreshing: boolean;
-  zoomLevel: number;
-  canZoomOut: boolean;
-  canZoomIn: boolean;
   onToggleSidebar: () => void;
   onRefresh: () => void;
-  onZoomOut: () => void;
-  onResetZoom: () => void;
-  onZoomIn: () => void;
 }) {
-  const zoomPercent = Math.round(zoomLevel * 100);
-
   return (
     <header className="hub-toolbar">
       <div className="traffic-lights" aria-hidden="true">
@@ -600,11 +692,6 @@ function DeviceHubToolbar({
         <div className="toolbar-cluster" aria-label="设备交互">
           <IconTool label="键盘" icon={Keyboard} />
           <IconTool label="屏幕布局" icon={ScanLine} />
-        </div>
-        <div className="toolbar-cluster" aria-label="画布控制">
-          <IconTool label={`缩小 (${zoomPercent}%)`} icon={ZoomOut} disabled={!canZoomOut} onClick={onZoomOut} />
-          <IconTool label="实际大小 (100%)" icon={Search} disabled={zoomLevel === 1} onClick={onResetZoom} />
-          <IconTool label={`放大 (${zoomPercent}%)`} icon={ZoomIn} disabled={!canZoomIn} onClick={onZoomIn} />
         </div>
         <div className="toolbar-cluster" aria-label="压缩或展开窗口">
           <IconTool label="展开" icon={Maximize2} />
@@ -745,7 +832,13 @@ function DeviceListPanel({
 }
 
 function ViewTreePanel({ target }: { target: DeviceTarget }) {
-  const [selectedNode, setSelectedNode] = useState("stack");
+  const treeNodes = useMemo(() => viewTreeNodesForTarget(target), [target]);
+  const defaultSelection = defaultViewTreeSelection(target);
+  const [selectedNode, setSelectedNode] = useState(defaultSelection);
+
+  useEffect(() => {
+    setSelectedNode(defaultSelection);
+  }, [defaultSelection, target.id]);
 
   return (
     <section className="sidebar-panel view-tree-panel" aria-label="视图层级面板">
@@ -754,7 +847,7 @@ function ViewTreePanel({ target }: { target: DeviceTarget }) {
         <strong>{target.appName}</strong>
       </div>
       <div className="view-tree-list" role="tree" aria-label={`${target.appName} 视图层级`}>
-        {viewTreeNodes.map((node) => (
+        {treeNodes.map((node) => (
           <ViewTreeRow key={node.id} node={node} depth={0} selectedNode={selectedNode} onSelect={setSelectedNode} />
         ))}
       </div>
@@ -803,7 +896,13 @@ function DeviceCanvas({
   livePreview,
   isLogsVisible,
   zoomLevel,
+  isDiscoveringHostTargets,
+  canZoomOut,
+  canZoomIn,
   onToggleLogs,
+  onZoomOut,
+  onResetZoom,
+  onZoomIn,
   onInput,
 }: {
   target: DeviceTarget;
@@ -811,7 +910,13 @@ function DeviceCanvas({
   livePreview?: LivePreviewState;
   isLogsVisible: boolean;
   zoomLevel: number;
+  isDiscoveringHostTargets: boolean;
+  canZoomOut: boolean;
+  canZoomIn: boolean;
   onToggleLogs: () => void;
+  onZoomOut: () => void;
+  onResetZoom: () => void;
+  onZoomIn: () => void;
   onInput: (input: HostInputRequest) => void;
 }) {
   const screenRef = useRef<HTMLDivElement | null>(null);
@@ -837,6 +942,7 @@ function DeviceCanvas({
         ? `${orientation} placeholder`
         : orientation;
   const canSendInput = Boolean(target.screenshotDataUrl && target.targetSelector && target.screenshotPixelWidth && target.screenshotPixelHeight);
+  const isWaitingForRealScreenshot = Boolean(target.realSource && !target.screenshotDataUrl);
 
   const mapPointer = (event: PointerEvent<HTMLDivElement>) => {
     const screen = screenRef.current;
@@ -886,6 +992,18 @@ function DeviceCanvas({
     });
   };
 
+  if (isDiscoveringHostTargets) {
+    return (
+      <section className="hub-canvas" aria-label="设备画布">
+        <div className="device-discovery-pending" role="status" aria-live="polite">
+          <span />
+          <strong>正在发现本机设备</strong>
+          <em>triton sim list · triton device list</em>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="hub-canvas" aria-label="设备画布">
       {target.screenshotDataUrl ? (
@@ -912,6 +1030,12 @@ function DeviceCanvas({
           >
             {target.screenshotDataUrl ? (
               <img className="real-screenshot" src={target.screenshotDataUrl} alt={`${target.name} 截图`} />
+            ) : isWaitingForRealScreenshot ? (
+              <div className="real-screenshot-pending" role="status" aria-live="polite">
+                <span />
+                <strong>正在获取实时画面</strong>
+                <em>{target.transport}</em>
+              </div>
             ) : (
               <>
                 <div className="screen-island" />
@@ -937,6 +1061,14 @@ function DeviceCanvas({
         </div>
       </div>
       <DeviceControls target={target} isLogsVisible={isLogsVisible} onToggleLogs={onToggleLogs} />
+      <CanvasZoomControls
+        zoomLevel={zoomLevel}
+        canZoomOut={canZoomOut}
+        canZoomIn={canZoomIn}
+        onZoomOut={onZoomOut}
+        onResetZoom={onResetZoom}
+        onZoomIn={onZoomIn}
+      />
       {screenshotError ? <p className="canvas-error">{screenshotError}</p> : null}
     </section>
   );
@@ -1034,6 +1166,40 @@ function Metric({
       <span>{label}</span>
       <strong>{value}</strong>
     </div>
+  );
+}
+
+function CanvasZoomControls({
+  zoomLevel,
+  canZoomOut,
+  canZoomIn,
+  onZoomOut,
+  onResetZoom,
+  onZoomIn,
+}: {
+  zoomLevel: number;
+  canZoomOut: boolean;
+  canZoomIn: boolean;
+  onZoomOut: () => void;
+  onResetZoom: () => void;
+  onZoomIn: () => void;
+}) {
+  const zoomPercent = Math.round(zoomLevel * 100);
+
+  return (
+    <section className="canvas-zoom-controls" aria-label="画布缩放控制">
+      <div className="control-pill">
+        <button type="button" aria-label={`缩小 (${zoomPercent}%)`} title={`缩小 (${zoomPercent}%)`} disabled={!canZoomOut} onClick={onZoomOut}>
+          <ZoomOut size={17} />
+        </button>
+        <button type="button" aria-label="实际大小 (100%)" title="实际大小 (100%)" disabled={zoomLevel === 1} onClick={onResetZoom}>
+          <Search size={17} />
+        </button>
+        <button type="button" aria-label={`放大 (${zoomPercent}%)`} title={`放大 (${zoomPercent}%)`} disabled={!canZoomIn} onClick={onZoomIn}>
+          <ZoomIn size={17} />
+        </button>
+      </div>
+    </section>
   );
 }
 

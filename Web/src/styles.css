@@ -73,6 +73,7 @@ button {
 .toolbar-cluster,
 .toolbar-center,
 .device-controls,
+.canvas-zoom-controls,
 .strip-heading,
 .control-pill,
 .contract-note {
@@ -520,6 +521,44 @@ button {
   padding: 18px 18px 54px;
 }
 
+.device-discovery-pending {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 32px;
+  color: #efefef;
+  text-align: center;
+}
+
+.device-discovery-pending span {
+  width: 30px;
+  height: 30px;
+  border: 3px solid rgba(255, 255, 255, 0.18);
+  border-top-color: #ffffff;
+  border-radius: 999px;
+  animation: pending-spin 0.9s linear infinite;
+}
+
+.device-discovery-pending strong {
+  font-size: 14px;
+  line-height: 1.2;
+}
+
+.device-discovery-pending em {
+  max-width: min(100%, 360px);
+  overflow: hidden;
+  color: #a8a8a8;
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .device-frame {
   position: relative;
   display: grid;
@@ -678,6 +717,57 @@ button {
   object-fit: contain;
   background: transparent;
   pointer-events: none;
+}
+
+.real-screenshot-pending {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 28px;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
+    #161616;
+  color: #f2f2f2;
+  text-align: center;
+}
+
+.real-screenshot-pending span {
+  width: 28px;
+  height: 28px;
+  border: 3px solid rgba(255, 255, 255, 0.22);
+  border-top-color: #ffffff;
+  border-radius: 999px;
+  animation: pending-spin 0.9s linear infinite;
+}
+
+.real-screenshot-pending strong {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 14px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.real-screenshot-pending em {
+  max-width: min(100%, 260px);
+  overflow: hidden;
+  color: #a9a9a9;
+  font-size: 11px;
+  font-style: normal;
+  line-height: 1.35;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes pending-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .has-real-frame.orientation-portrait {
@@ -1085,6 +1175,15 @@ button {
   backdrop-filter: none;
 }
 
+.canvas-zoom-controls {
+  position: absolute;
+  right: 18px;
+  bottom: 14px;
+  z-index: 8;
+  min-width: 0;
+  min-height: 0;
+}
+
 .control-pill {
   flex: 0 0 auto;
   height: 38px;
@@ -1106,6 +1205,15 @@ button {
 
 .control-pill button:hover {
   background: rgba(255, 255, 255, 0.12);
+}
+
+.control-pill button:disabled {
+  cursor: default;
+  opacity: 0.5;
+}
+
+.control-pill button:disabled:hover {
+  background: transparent;
 }
 
 .control-pill button.is-active {
@@ -1268,6 +1376,10 @@ button {
     max-width: min(430px, calc(100% - 32px));
   }
 
+  .canvas-zoom-controls {
+    right: 16px;
+  }
+
   .evidence-strip {
     min-height: 0;
   }
@@ -1344,6 +1456,11 @@ button {
     left: 12px;
     max-width: none;
     padding: 0;
+  }
+
+  .canvas-zoom-controls {
+    right: 12px;
+    bottom: 58px;
   }
 
   .device-frame {
