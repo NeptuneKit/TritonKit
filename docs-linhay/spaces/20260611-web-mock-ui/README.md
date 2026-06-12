@@ -130,6 +130,8 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - When 用户在 screenshot 区域点击
 - Then Web 将浏览器坐标换算为 framebuffer 坐标
 - And 通过 `/web/host-input` 调用 `triton tap ... --json`
+- And screenshot 上短暂显示 tap 触点反馈
+- And 输入执行期间显示 dispatching / refreshing 状态徽标
 - And Logs 显示命令、exit code、stdout / stderr 摘要
 - And iOS runtime input 会继续按 embedded runtime 的 `screenWidth/screenHeight` 从 framebuffer pixel 坐标转换为 UIKit point 坐标
 - And 执行后刷新 screenshot 时保留旧截图，直到新截图成功返回，不能中途露出 mock 占位图
@@ -137,6 +139,7 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - Given 用户在 screenshot 区域拖动
 - When pointer up 结束拖动
 - Then Web 将起止点换算为 framebuffer 坐标
+- And screenshot 上短暂显示 swipe 轨迹、起点与终点反馈
 - And 通过 `/web/host-input` 调用 `triton swipe ... --json`
 - And 执行后刷新当前目标 screenshot
 
@@ -182,6 +185,7 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 底部 Logs 输出增多时只在面板内部滚动，不把窗口或底部工具区继续撑高。
 - Logs 支持隐藏和恢复，隐藏后不保留空白日志区域。
 - 右上工具区提供全局刷新按钮，可刷新 targets、bridge command outputs 和当前 screenshot。
+- 有真实 screenshot 的设备画布在 tap / swipe 时显示触点或轨迹反馈，并在 Triton CLI input 执行与 screenshot 刷新期间显示非阻塞状态徽标。
 
 ## 实现记录
 
@@ -408,3 +412,13 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - `npm run test` 通过 4 tests。
 - `npm run build` 通过。
 - 验收截图：`docs-linhay/spaces/20260611-web-mock-ui/screenshots/20260612/20260612-web-shell-localized-after-v01.png`。
+
+### 2026-06-12 Device canvas gesture feedback
+
+- 真实 screenshot 画布新增 tap / swipe overlay：tap 显示触点，drag 显示起点、终点和轨迹，用于人工确认浏览器坐标到 framebuffer 坐标的映射。
+- 输入执行期间新增 per-target activity badge：先显示 dispatching，再在 Triton CLI 返回后进入 refreshing，并触发即时刷新与短延迟二次刷新。
+- 自动化验证使用合成 pointerdown / pointermove / pointercancel，只验证 overlay DOM 与清理行为，不触发 pointerup，因此不发送真实 `triton tap` / `triton swipe`。
+- 浏览器验证：页面 title 为 `TritonKit 设备中心原型`；`.gesture-touch=true`、`.gesture-swipe=true`；等待清理后 `.gesture-touch,.gesture-swipe=false`；Console error 为 0；当前 863px 视口横向溢出为 0。
+- `npm run build` 通过。
+- `git diff --check` 通过。
+- 验收截图：`docs-linhay/spaces/20260611-web-mock-ui/screenshots/20260612/20260612-web-device-canvas-gesture-swipe-after-v02.png`。

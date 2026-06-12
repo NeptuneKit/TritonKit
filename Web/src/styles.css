@@ -722,6 +722,113 @@ button {
   pointer-events: none;
 }
 
+.gesture-touch {
+  position: absolute;
+  left: var(--gesture-x);
+  top: var(--gesture-y);
+  z-index: 4;
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.96);
+  border-radius: 999px;
+  background: rgba(64, 139, 255, 0.78);
+  box-shadow:
+    0 0 0 6px rgba(64, 139, 255, 0.18),
+    0 6px 18px rgba(0, 0, 0, 0.22);
+  pointer-events: none;
+  transform: translate(-50%, -50%) scale(1);
+  animation: gesture-pop 0.5s ease-out both;
+}
+
+.gesture-touch.is-start {
+  width: 14px;
+  height: 14px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 0 0 0 5px rgba(64, 139, 255, 0.15);
+}
+
+.gesture-touch.is-end {
+  width: 22px;
+  height: 22px;
+}
+
+.gesture-swipe {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.gesture-trail {
+  position: absolute;
+  left: var(--gesture-x);
+  top: var(--gesture-y);
+  width: var(--gesture-length);
+  height: 4px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), rgba(64, 139, 255, 0.95));
+  box-shadow: 0 0 16px rgba(64, 139, 255, 0.3);
+  transform: translateY(-50%) rotate(var(--gesture-angle));
+  transform-origin: left center;
+}
+
+.input-activity-badge {
+  position: absolute;
+  left: 50%;
+  bottom: 12px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  max-width: calc(100% - 32px);
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: rgba(20, 20, 20, 0.68);
+  color: #ffffff;
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
+  backdrop-filter: blur(12px);
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.input-activity-badge span {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: #66d476;
+  box-shadow: 0 0 0 4px rgba(102, 212, 118, 0.16);
+}
+
+.input-activity-badge.is-dispatching span {
+  background: #7eb1ff;
+  box-shadow: 0 0 0 4px rgba(126, 177, 255, 0.18);
+}
+
+.input-activity-badge strong {
+  overflow: hidden;
+  font-size: 11px;
+  line-height: 1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@keyframes gesture-pop {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.76);
+  }
+
+  18% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
 .real-screenshot-pending {
   position: absolute;
   inset: 0;

@@ -78,6 +78,33 @@ type LivePreviewState = {
   status: "live" | "error";
 };
 
+type InputActivity = {
+  status: "dispatching" | "refreshing";
+  label: string;
+};
+
+type GesturePoint = {
+  x: number;
+  y: number;
+  xPercent: number;
+  yPercent: number;
+};
+
+type GesturePreview =
+  | {
+      kind: "tap";
+      xPercent: number;
+      yPercent: number;
+    }
+  | {
+      kind: "swipe";
+      startXPercent: number;
+      startYPercent: number;
+      endXPercent: number;
+      endYPercent: number;
+      distance: number;
+    };
+
 type SidebarPanel = "devices" | "view-tree";
 
 type ViewTreeNode = {
@@ -271,6 +298,7 @@ export function App() {
     Record<string, { dataUrl: string; pixelWidth: number | null; pixelHeight: number | null }>
   >({});
   const [livePreviewById, setLivePreviewById] = useState<Record<string, LivePreviewState>>({});
+  const [inputActivityById, setInputActivityById] = useState<Record<string, InputActivity | undefined>>({});
   const [screenshotError, setScreenshotError] = useState<string | undefined>();
   const pageTargets = useMemo(() => {
     return hostTargets.length > 0 ? hostTargets : targets.filter((target) => target.status === "ready");
@@ -294,6 +322,7 @@ export function App() {
     [lastActionById, livePreviewById, screenshotById, selected]
   );
   const selectedLivePreview = livePreviewById[selected.id];
+  const selectedInputActivity = inputActivityById[selected.id];
   const selectedEvents = networkEvents[selected.id] ?? [];
   const isDiscoveringHostTargets = bridge.loading && hostTargets.length === 0;
   const selectedLogs = useMemo(
@@ -463,9 +492,21 @@ export function App() {
   };
 
   const handleInput = async (input: HostInputRequest) => {
+    const actionLabel =
+      input.action === "tap"
+        ? "正在点按"
+        : "正在滑动";
+    const activityTargetId = selected.id;
+    setInputActivityById((current) => ({
+      ...current,
+      [activityTargetId]: {
+        status: "dispatching",
+        label: actionLabel,
+      },
+    }));
     setLastActionById((current) => ({
       ...current,
-      [selected.id]: {
+      [activityTargetId]: {
         lastAction: `${input.action} ${input.platform}:${Math.round(input.action === "tap" ? input.x : input.startX)},${Math.round(input.action === "tap" ? input.y : input.startY)}`,
         actionResult: "warning",
       },
@@ -473,9 +514,16 @@ export function App() {
     setInteractionLogs((current) => [makeLog("info", `dispatch ${input.action} ${input.platform}:${input.target}`), ...current]);
     try {
       const result = await sendHostInput(input);
+      setInputActivityById((current) => ({
+        ...current,
+        [activityTargetId]: {
+          status: "refreshing",
+          label: result.ok ? "正在同步画面" : "操作失败",
+        },
+      }));
       setLastActionById((current) => ({
         ...current,
-        [selected.id]: {
+        [activityTargetId]: {
           lastAction: `${result.command} exit=${result.exitCode ?? "?"}`,
           actionResult: result.ok ? "ok" : "failed",
         },
@@ -487,11 +535,14 @@ export function App() {
         ),
         ...current,
       ]);
-      await refreshScreenshot(selected);
+      await refreshScreenshot(selected, { live: true });
+      window.setTimeout(() => {
+        void refreshScreenshot(selected, { live: true });
+      }, 180);
     } catch (error) {
       setLastActionById((current) => ({
         ...current,
-        [selected.id]: {
+        [activityTargetId]: {
           lastAction: error instanceof Error ? error.message : String(error),
           actionResult: "failed",
         },
@@ -500,6 +551,13 @@ export function App() {
         makeLog("error", error instanceof Error ? error.message : String(error)),
         ...current,
       ]);
+    } finally {
+      window.setTimeout(() => {
+        setInputActivityById((current) => ({
+          ...current,
+          [activityTargetId]: undefined,
+        }));
+      }, 900);
     }
   };
 
@@ -546,6 +604,7 @@ export function App() {
             target={selectedWithScreenshot}
             screenshotError={screenshotError}
             livePreview={selectedLivePreview}
+            inputActivity={selectedInputActivity}
             isLogsVisible={isLogsVisible}
             zoomLevel={canvasZoom}
             isDiscoveringHostTargets={isDiscoveringHostTargets}
@@ -894,6 +953,7 @@ function DeviceCanvas({
   target,
   screenshotError,
   livePreview,
+  inputActivity,
   isLogsVisible,
   zoomLevel,
   isDiscoveringHostTargets,
@@ -908,6 +968,7 @@ function DeviceCanvas({
   target: DeviceTarget;
   screenshotError?: string;
   livePreview?: LivePreviewState;
+  inputActivity?: InputActivity;
   isLogsVisible: boolean;
   zoomLevel: number;
   isDiscoveringHostTargets: boolean;
@@ -917,10 +978,12 @@ function DeviceCanvas({
   onZoomOut: () => void;
   onResetZoom: () => void;
   onZoomIn: () => void;
-  onInput: (input: HostInputRequest) => void;
+  onInput: (input: HostInputRequest) => Promise<void>;
 }) {
   const screenRef = useRef<HTMLDivElement | null>(null);
-  const gestureStart = useRef<{ x: number; y: number } | null>(null);
+  const gestureStart = useRef<GesturePoint | null>(null);
+  const gestureClearTimer = useRef<number | undefined>(undefined);
+  const [gesturePreview, setGesturePreview] = useState<GesturePreview | null>(null);
   const orientation = target.frameOrientation ?? "landscape";
   const aspectRatio =
     target.screenshotPixelWidth && target.screenshotPixelHeight
@@ -944,19 +1007,82 @@ function DeviceCanvas({
   const canSendInput = Boolean(target.screenshotDataUrl && target.targetSelector && target.screenshotPixelWidth && target.screenshotPixelHeight);
   const isWaitingForRealScreenshot = Boolean(target.realSource && !target.screenshotDataUrl);
 
+  useEffect(() => {
+    return () => {
+      if (gestureClearTimer.current) {
+        window.clearTimeout(gestureClearTimer.current);
+      }
+    };
+  }, []);
+
+  const clearGesturePreviewSoon = () => {
+    if (gestureClearTimer.current) {
+      window.clearTimeout(gestureClearTimer.current);
+    }
+    gestureClearTimer.current = window.setTimeout(() => {
+      setGesturePreview(null);
+    }, 620);
+  };
+
   const mapPointer = (event: PointerEvent<HTMLDivElement>) => {
     const screen = screenRef.current;
     if (!screen || !target.screenshotPixelWidth || !target.screenshotPixelHeight) return null;
     const rect = screen.getBoundingClientRect();
     const x = Math.max(0, Math.min(target.screenshotPixelWidth, ((event.clientX - rect.left) / rect.width) * target.screenshotPixelWidth));
     const y = Math.max(0, Math.min(target.screenshotPixelHeight, ((event.clientY - rect.top) / rect.height) * target.screenshotPixelHeight));
-    return { x, y };
+    const xPercent = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
+    const yPercent = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
+    return { x, y, xPercent, yPercent };
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (!canSendInput) return;
-    gestureStart.current = mapPointer(event);
-    event.currentTarget.setPointerCapture(event.pointerId);
+    const start = mapPointer(event);
+    gestureStart.current = start;
+    if (start) {
+      if (gestureClearTimer.current) {
+        window.clearTimeout(gestureClearTimer.current);
+      }
+      setGesturePreview({
+        kind: "tap",
+        xPercent: start.xPercent,
+        yPercent: start.yPercent,
+      });
+    }
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Synthetic pointer events used by browser smoke tests may not have an active pointer.
+    }
+  };
+
+  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (!canSendInput) return;
+    const start = gestureStart.current;
+    const current = mapPointer(event);
+    if (!start || !current) return;
+    const distance = Math.hypot(current.x - start.x, current.y - start.y);
+    if (distance < 10) {
+      setGesturePreview({
+        kind: "tap",
+        xPercent: current.xPercent,
+        yPercent: current.yPercent,
+      });
+      return;
+    }
+    setGesturePreview({
+      kind: "swipe",
+      startXPercent: start.xPercent,
+      startYPercent: start.yPercent,
+      endXPercent: current.xPercent,
+      endYPercent: current.yPercent,
+      distance,
+    });
+  };
+
+  const handlePointerCancel = () => {
+    gestureStart.current = null;
+    clearGesturePreviewSoon();
   };
 
   const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
@@ -967,6 +1093,12 @@ function DeviceCanvas({
     if (!start || !end) return;
     const distance = Math.hypot(end.x - start.x, end.y - start.y);
     if (distance < 18) {
+      setGesturePreview({
+        kind: "tap",
+        xPercent: start.xPercent,
+        yPercent: start.yPercent,
+      });
+      clearGesturePreviewSoon();
       onInput({
         action: "tap",
         platform: target.platform,
@@ -978,6 +1110,15 @@ function DeviceCanvas({
       });
       return;
     }
+    setGesturePreview({
+      kind: "swipe",
+      startXPercent: start.xPercent,
+      startYPercent: start.yPercent,
+      endXPercent: end.xPercent,
+      endYPercent: end.yPercent,
+      distance,
+    });
+    clearGesturePreviewSoon();
     onInput({
       action: "swipe",
       platform: target.platform,
@@ -1025,7 +1166,9 @@ function DeviceCanvas({
           <div
             className={`device-screen orientation-${orientation} ${target.screenshotTone} ${canSendInput ? "is-interactive" : ""}`}
             onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
             ref={screenRef}
           >
             {target.screenshotDataUrl ? (
@@ -1057,6 +1200,8 @@ function DeviceCanvas({
                 </div>
               </>
             )}
+            {gesturePreview ? <GestureOverlay gesture={gesturePreview} /> : null}
+            {inputActivity ? <InputActivityBadge activity={inputActivity} /> : null}
           </div>
         </div>
       </div>
@@ -1079,6 +1224,62 @@ function ScreenMini({ label, value }: { label: string; value: string }) {
     <div className="screen-mini">
       <span>{label}</span>
       <strong>{value}</strong>
+    </div>
+  );
+}
+
+function GestureOverlay({ gesture }: { gesture: GesturePreview }) {
+  if (gesture.kind === "tap") {
+    return (
+      <div
+        className="gesture-touch is-tap"
+        style={{
+          "--gesture-x": `${gesture.xPercent}%`,
+          "--gesture-y": `${gesture.yPercent}%`,
+        } as CSSProperties}
+      />
+    );
+  }
+
+  const deltaX = gesture.endXPercent - gesture.startXPercent;
+  const deltaY = gesture.endYPercent - gesture.startYPercent;
+  const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
+  const length = Math.max(16, Math.hypot(deltaX, deltaY));
+
+  return (
+    <div className="gesture-swipe" aria-hidden="true">
+      <div
+        className="gesture-trail"
+        style={{
+          "--gesture-x": `${gesture.startXPercent}%`,
+          "--gesture-y": `${gesture.startYPercent}%`,
+          "--gesture-angle": `${angle}deg`,
+          "--gesture-length": `${length}%`,
+        } as CSSProperties}
+      />
+      <div
+        className="gesture-touch is-start"
+        style={{
+          "--gesture-x": `${gesture.startXPercent}%`,
+          "--gesture-y": `${gesture.startYPercent}%`,
+        } as CSSProperties}
+      />
+      <div
+        className="gesture-touch is-end"
+        style={{
+          "--gesture-x": `${gesture.endXPercent}%`,
+          "--gesture-y": `${gesture.endYPercent}%`,
+        } as CSSProperties}
+      />
+    </div>
+  );
+}
+
+function InputActivityBadge({ activity }: { activity: InputActivity }) {
+  return (
+    <div className={`input-activity-badge is-${activity.status}`} role="status" aria-live="polite">
+      <span />
+      <strong>{activity.label}</strong>
     </div>
   );
 }
