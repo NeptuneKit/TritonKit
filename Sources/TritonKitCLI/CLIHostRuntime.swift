@@ -335,7 +335,9 @@ func printPreferences(
             plistPath: plistPath,
             key: key,
             value: value,
-            preferences: key == nil ? snapshot.preferences : nil
+            valuePlistType: value?.kind,
+            preferences: key == nil ? snapshot.preferences : nil,
+            preferencesPlistTypes: key == nil ? snapshot.preferences.mapValues(\.kind) : nil
         )
         switch outputFormat {
         case .json:
@@ -358,11 +360,14 @@ func setPreference(
     simulator: String,
     bundleID: String,
     key: String,
-    value: String,
+    value: String?,
+    type: HostPreferenceSetType = .json,
+    base64: String? = nil,
+    hex: String? = nil,
     outputFormat: ClientOutputFormat
 ) throws {
     do {
-        let newValue = try parseHostPreferenceJSONValue(value)
+        let newValue = try parseHostPreferenceSetValue(type: type, value: value, base64: base64, hex: hex)
         let containerResult = try runHostCommand(TKSimctlCommand.appContainer(udid: simulator, bundleID: bundleID, kind: .data))
         let container = containerResult.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
         let plistPath = TKHostPreferencesSnapshot.plistPath(dataContainer: container, bundleID: bundleID)
@@ -385,6 +390,8 @@ func setPreference(
             key: key,
             previousValue: update.previousValue,
             newValue: update.newValue,
+            previousPlistType: update.previousPlistType,
+            newPlistType: update.newPlistType,
             restartAdvice: "Terminate and relaunch the app if it reads this preference only at startup."
         )
         switch outputFormat {
@@ -395,6 +402,40 @@ func setPreference(
         }
     } catch {
         try failHostCommand(error, outputFormat: outputFormat)
+    }
+}
+
+func parseHostPreferenceSetValue(
+    type: HostPreferenceSetType,
+    value: String?,
+    base64: String?,
+    hex: String?
+) throws -> TKHostPreferenceValue {
+    switch type {
+    case .json:
+        guard base64 == nil, hex == nil else {
+            throw RuntimeError("--base64 and --hex require --type data.")
+        }
+        guard let value else {
+            throw RuntimeError("prefs set requires a JSON value unless --type data is used.")
+        }
+        return try parseHostPreferenceJSONValue(value)
+    case .data:
+        guard value == nil else {
+            throw RuntimeError("--type data does not accept a positional JSON value; use --base64 or --hex.")
+        }
+        let payloads = [base64, hex].compactMap { $0 }
+        guard payloads.count == 1 else {
+            throw RuntimeError("--type data requires exactly one of --base64 or --hex.")
+        }
+        if let base64 {
+            guard let data = Data(base64Encoded: base64) else {
+                throw RuntimeError("Invalid base64 data preference value.")
+            }
+            return .data(data.base64EncodedString())
+        }
+        let data = try parseHexData(hex ?? "")
+        return .data(data.base64EncodedString())
     }
 }
 
@@ -428,7 +469,37 @@ func updatingPreferencePlistData(
     var updated = dictionary
     updated[key] = try propertyListObject(fromPreferenceValue: newValue)
     let data = try PropertyListSerialization.data(fromPropertyList: updated, format: .binary, options: 0)
-    return HostPreferencePlistUpdateResult(data: data, previousValue: previousValue, newValue: newValue)
+    return HostPreferencePlistUpdateResult(
+        data: data,
+        previousValue: previousValue,
+        newValue: newValue,
+        previousPlistType: previousValue?.kind,
+        newPlistType: newValue.kind
+    )
+}
+
+private func parseHexData(_ value: String) throws -> Data {
+    var hex = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    if hex.hasPrefix("0x") || hex.hasPrefix("0X") {
+        hex.removeFirst(2)
+    }
+    hex.removeAll { $0.isWhitespace }
+    guard !hex.isEmpty, hex.count.isMultiple(of: 2) else {
+        throw RuntimeError("Invalid hex data preference value.")
+    }
+
+    var bytes = Data()
+    var index = hex.startIndex
+    while index < hex.endIndex {
+        let next = hex.index(index, offsetBy: 2)
+        let pair = String(hex[index..<next])
+        guard let byte = UInt8(pair, radix: 16) else {
+            throw RuntimeError("Invalid hex data preference value.")
+        }
+        bytes.append(byte)
+        index = next
+    }
+    return bytes
 }
 
 private func hostPreferenceValue(fromJSONObject object: Any) throws -> TKHostPreferenceValue {

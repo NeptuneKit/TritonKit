@@ -617,25 +617,54 @@ struct HostAppInfo: AsyncParsableCommand {
 struct HostAppInspect: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "inspect", abstract: "Inspect a platform app with host tools")
 
-    @Option(help: "Platform adapter: harmony") var platform: HostPlatform = .harmony
-    @Option(help: "Harmony bundle name") var bundle: String
-    @Option(help: "Harmony target id, for example 127.0.0.1:10100") var target: String?
+    @Option(help: "Platform adapter: android or harmony") var platform: HostPlatform = .harmony
+    @Option(help: "Android package name or Harmony bundle name") var bundle: String
+    @Option(help: "Unified host device selector: alias, android:<serial>, harmony:<target>, raw id, or current") var device: String?
+    @Option(help: "Device name filter, for example Pixel 8") var name: String?
+    @Option(help: "Runtime filter, for example sdk_gphone64_arm64") var runtime: String?
+    @Option(help: "Target state filter, for example device or connected") var state: String?
+    @Flag(help: "Only match ready targets") var ready = false
+    @Option(help: "Compatibility target id, for example an adb serial or 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
-            try runSimpleHostCommand(
-                action: "app.inspect",
-                runtimeScope: "host-harmony",
-                target: "harmony:\(selected.target)/app:\(bundle)",
-                command: TKHarmonyHDCCommand.appInspect(target: selected.target, bundleName: bundle, executable: hdc),
-                outputFormat: outputFormat,
-                note: "Harmony app metadata was inspected with bm dump."
-            )
+            switch platform {
+            case .android:
+                let selection = try resolveHostDeviceSelection(
+                    request: HostDeviceSelectionRequest(
+                        device: device ?? target,
+                        platform: .android,
+                        name: name,
+                        runtime: runtime,
+                        state: state,
+                        ready: ready
+                    ),
+                    hdc: hdc,
+                    adb: adb
+                )
+                let response = try inspectAndroidApp(selected: selection.target, bundle: bundle, adb: adb)
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print("\(response.app.bundleID)\t\(response.app.applicationType ?? "-")\t\(response.app.displayName ?? response.app.name ?? "-")\t\(response.app.path ?? "-")")
+                }
+            case .harmony:
+                let selected = try resolveHarmonyTarget(target: target ?? device, hdc: hdc)
+                try runSimpleHostCommand(
+                    action: "app.inspect",
+                    runtimeScope: "host-harmony",
+                    target: "harmony:\(selected.target)/app:\(bundle)",
+                    command: TKHarmonyHDCCommand.appInspect(target: selected.target, bundleName: bundle, executable: hdc),
+                    outputFormat: outputFormat,
+                    note: "Harmony app metadata was inspected with bm dump."
+                )
+            }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
         }
@@ -1289,11 +1318,46 @@ struct HostAppPrefsGet: AsyncParsableCommand {
     }
 }
 
+typealias AndroidAppInspectHostRunner = (TKHostCommand) throws -> HostProcessResult
+
+func inspectAndroidApp(
+    selected: HostDeviceTarget,
+    bundle: String,
+    adb: String = "adb",
+    runner: AndroidAppInspectHostRunner = { command in try runHostCommand(command) }
+) throws -> HostAppInfoOutput {
+    let command = TKAndroidADBCommand.dumpsysPackage(
+        serial: selected.rawTarget,
+        packageName: bundle,
+        executable: adb
+    )
+    let result = try runner(command)
+    guard result.exitCode == 0 else {
+        throw HostCommandRunError.nonZeroExit(command: command, result: result)
+    }
+    let app = TKAndroidPackageInfoParser.parse(result.stdout, packageName: bundle)
+    return HostAppInfoOutput(
+        ok: true,
+        action: "app.inspect",
+        simulatorUDID: selected.target,
+        bundleID: bundle,
+        app: app
+    )
+}
+
+enum HostPreferenceSetType: String, ExpressibleByArgument {
+    case json
+    case data
+}
+
 struct HostAppPrefsSet: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "set", abstract: "Set one simulator app preference value from JSON")
+    static let configuration = CommandConfiguration(commandName: "set", abstract: "Set one simulator app preference value")
 
     @Argument(help: "Preference key") var key: String
-    @Argument(help: "JSON value to write") var value: String
+    @Argument(help: "JSON value to write when --type json is used") var value: String?
+    @Option(help: "Preference value type: json or data") var type: HostPreferenceSetType = .json
+    @Option(help: "Base64 payload when --type data is used") var base64: String?
+    @Option(help: "Hex payload when --type data is used") var hex: String?
     @Option(help: "Unified host device selector: alias, sim:<udid>, raw id, booted, or current") var device: String?
     @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
@@ -1325,6 +1389,9 @@ struct HostAppPrefsSet: AsyncParsableCommand {
                 bundleID: bundleID,
                 key: key,
                 value: value,
+                type: type,
+                base64: base64,
+                hex: hex,
                 outputFormat: outputFormat
             )
         } catch {

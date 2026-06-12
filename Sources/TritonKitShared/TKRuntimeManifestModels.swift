@@ -7,6 +7,9 @@ public enum TKRuntimeCapabilityName: String, Codable, CaseIterable {
     case stateRoute = "state.route"
     case stateResponder = "state.responder"
     case snapshot
+    case mediaPlayback = "media.playback"
+    case semanticState = "app.semantic_state"
+    case semanticActionProvider = "app.semantic_action"
     case webViewList = "webview.list"
     case webViewCurrent = "webview.current"
     case webViewSnapshot = "webview.snapshot"
@@ -146,6 +149,7 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
     public let sdkVersion: String
     public let buildConfiguration: String
     public let capabilities: [TKRuntimeCapabilityDetail]
+    public let semanticDomains: [TKRuntimeSemanticDomainManifest]
     public let limits: TKRuntimeLimits
     public let redaction: TKRuntimeRedactionPolicy
 
@@ -158,6 +162,7 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
         sdkVersion: String,
         buildConfiguration: String,
         capabilities: [TKRuntimeCapabilityDetail],
+        semanticDomains: [TKRuntimeSemanticDomainManifest] = [],
         limits: TKRuntimeLimits = TKRuntimeLimits(),
         redaction: TKRuntimeRedactionPolicy = TKRuntimeRedactionPolicy()
     ) {
@@ -169,19 +174,22 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
         self.sdkVersion = sdkVersion
         self.buildConfiguration = buildConfiguration
         self.capabilities = capabilities
+        self.semanticDomains = semanticDomains
         self.limits = limits
         self.redaction = redaction
     }
 
     public static func debugDefault(
         sdkVersion: String,
-        capabilities: [TKRuntimeCapabilityDetail] = TKRuntimeManifestResponse.defaultDebugCapabilities
+        capabilities: [TKRuntimeCapabilityDetail] = TKRuntimeManifestResponse.defaultDebugCapabilities,
+        semanticDomains: [TKRuntimeSemanticDomainManifest] = []
     ) -> TKRuntimeManifestResponse {
         TKRuntimeManifestResponse(
             enabled: true,
             sdkVersion: sdkVersion,
             buildConfiguration: "debug",
-            capabilities: capabilities
+            capabilities: capabilities,
+            semanticDomains: semanticDomains
         )
     }
 
@@ -203,6 +211,23 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
         TKRuntimeCapabilityDetail(name: .stateRoute, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .stateResponder, supported: true, scope: .embedded, boundary: .appProcess),
         TKRuntimeCapabilityDetail(name: .snapshot, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(name: .mediaPlayback, supported: true, scope: .embedded, boundary: .appProcess),
+        TKRuntimeCapabilityDetail(
+            name: .semanticState,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "Semantic state requires an app-registered runtime provider",
+            nextAction: TKCLINextAction(command: "snapshot", args: ["--include", "semantic,app,scene", "--json"])
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .semanticActionProvider,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "Action descriptors require an app-registered semantic provider; generic provider action execution is not implemented yet",
+            nextAction: TKCLINextAction(command: "snapshot", args: ["--include", "semantic", "--json"])
+        ),
         TKRuntimeCapabilityDetail(
             name: .webViewList,
             supported: false,

@@ -163,6 +163,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             outputContracts: [
                 hostDeviceListOutputContract(),
+                hostDeviceListOutputContract(selector: "host.android-device"),
                 hostDeviceSelectionOutputContract(),
                 hostDeviceReadyOutputContract(),
                 hostDeviceProxyOutputContract(),
@@ -223,7 +224,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "harmony_screenshot_failed",
                 "validation_failed",
             ],
-            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
+            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-list", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
         ),
         TKCommandSchema(
             name: "sim",
@@ -241,10 +242,13 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress with --wait"),
                 TKCommandSchemaOption(name: "shutdown <udid|booted>", type: "Subcommand", description: "Shutdown a simulator"),
                 TKCommandSchemaOption(name: "screenshot --output <path>", type: "Subcommand", description: "Capture simulator framebuffer screenshot"),
+                TKCommandSchemaOption(name: "tap --x <x> --y <y>", type: "Subcommand", description: "Reserved host-side simulator coordinate tap entry; currently returns unsupported_host_input"),
+                TKCommandSchemaOption(name: "type --text <ascii-text>", type: "Subcommand", description: "Reserved host-side simulator text entry; currently returns unsupported_host_input after ASCII validation"),
                 TKCommandSchemaOption(name: "record --output <path.mov> --duration <seconds>", type: "Subcommand", description: "Record a simulator video"),
                 TKCommandSchemaOption(name: "logs --output <path.log> --duration <seconds>", type: "Subcommand", description: "Capture bounded simulator OSLog stream output"),
                 TKCommandSchemaOption(name: "diagnose [--output <path>]", type: "Subcommand", description: "Collect simulator diagnostics and logs"),
                 TKCommandSchemaOption(name: "logverbose [--simulator <udid>] enable|disable", type: "Subcommand", description: "Enable or disable verbose simulator logging"),
+                TKCommandSchemaOption(name: "proxy", type: "Subcommand", description: "iOS Simulator host-side proxy takeover commands"),
                 TKCommandSchemaOption(name: "proxy doctor", type: "Subcommand", description: "Probe iOS Simulator host-side proxy takeover prerequisites"),
                 TKCommandSchemaOption(name: "proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir>", type: "Subcommand", description: "Alias to device proxy start --platform ios for host-side Simulator network takeover"),
                 TKCommandSchemaOption(name: "proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir> --plan-only", type: "Subcommand", description: "Return iOS Simulator host-command proxy takeover plan without changing host settings"),
@@ -287,6 +291,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "pasteboard sync <source> <destination>", type: "Subcommand", description: "Sync pasteboard content between host and simulator"),
                 TKCommandSchemaOption(name: "push --bundle-id <id> --payload <path|->", type: "Subcommand", description: "Send a simulated push notification"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted target selector"),
+                TKCommandSchemaOption(name: "--x", type: "Int", description: "Simulator x coordinate for host-side tap"),
+                TKCommandSchemaOption(name: "--y", type: "Int", description: "Simulator y coordinate for host-side tap"),
+                TKCommandSchemaOption(name: "--text", type: "String", description: "ASCII text for host-side simulator type"),
                 TKCommandSchemaOption(name: "--display", type: "String", description: "CoreSimulator display selector for screenshot or video, for example internal, external, screen id, or display UUID"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Artifact output path for screenshot, record, logs, or diagnose"),
                 TKCommandSchemaOption(name: "--duration", type: "Double", description: "Bounded record or log capture duration in seconds"),
@@ -312,6 +319,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
                 "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl",
                 "triton sim screenshot --simulator booted --output /tmp/sim.png --json",
+                "triton sim tap --simulator booted --x 200 --y 400 --json",
+                "triton sim type --simulator booted --text http://127.0.0.1:8000 --json",
                 "triton sim record --simulator booted --output /tmp/sim.mov --duration 10 --json",
                 "triton sim logs --simulator booted --output /tmp/sim.ndjson --duration 5 --style ndjson --json",
                 "triton sim diagnose --output /tmp/sim-diagnostics --json",
@@ -329,13 +338,16 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim runtime delete <runtime-id> --dry-run --json",
                 "triton sim personalization scan-and-personalize --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.tap|sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap/type are reserved host input entries, but the current public simctl io contract exposes no stable tap or keyboard type primitive, so they return unsupported_host_input rather than pretending host input succeeded.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
                 "triton device use <sim-target-id> --json",
+                "triton plan --json",
+                "triton sim tap --simulator <udid|booted> --x <x> --y <y> --json",
+                "triton sim type --simulator <udid|booted> --text <text> --json",
                 "triton evidence --output <dir.tritonevidence> --json",
                 "triton app launch --device <selector> --bundle-id <id> --json",
                 "triton smoke ios --device <selector> --bundle-id <id> --open-url <url> --wait-text <text> --json",
@@ -343,6 +355,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             outputContracts: [
                 hostSimulatorListOutputContract(),
                 hostSimulatorScreenshotOutputContract(),
+                hostSimulatorInputOutputContract(),
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorReadyEvent"),
                 hostSimulatorScreenshotMetadataOutputContract(),
                 hostDeviceProxyOutputContract(),
@@ -351,6 +364,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "simulator_not_found",
                 "host_command_failed",
                 "host_command_timeout",
+                "unsupported_host_input",
+                "unsupported_text_input",
                 "artifact_output_rejected",
                 "sim_device_maintenance_failed",
                 "status_bar_operation_failed",
@@ -391,7 +406,180 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "runtime_match_selector_required",
                 "validation_failed",
             ],
-            providedCapabilities: ["host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "device-proxy-ios", "network-capture-export"]
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "list",
+                    summary: "List available simulators",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-list"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "use",
+                    summary: "Set workspace default simulator",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "boot",
+                    summary: "Boot a simulator",
+                    optionalOptions: ["--wait", "--jsonl", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "shutdown",
+                    summary: "Shutdown a simulator",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "screenshot",
+                    summary: "Capture simulator framebuffer screenshot",
+                    requiredOptions: ["--output"],
+                    optionalOptions: ["--simulator", "--display", "--format", "--json"],
+                    nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+                    outputSelectors: ["host.simulator-screenshot"],
+                    failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "artifact_output_rejected", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "tap",
+                    summary: "Reserved host-side simulator coordinate tap entry; currently unsupported by public simctl io",
+                    requiredOptions: ["--x", "--y"],
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    nextCommands: [
+                        "triton plan --json",
+                        "triton sim screenshot --simulator <udid|booted> --output <path> --json",
+                        "triton wait --text <text> --json",
+                    ],
+                    outputSelectors: ["host.simulator-input"],
+                    failureCodes: ["unsupported_host_input", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "type",
+                    summary: "Reserved host-side simulator text entry; currently unsupported by public simctl io after ASCII validation",
+                    requiredOptions: ["--text"],
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    nextCommands: [
+                        "triton plan --json",
+                        "triton sim screenshot --simulator <udid|booted> --output <path> --json",
+                        "triton assert text-exists <text> --json",
+                    ],
+                    outputSelectors: ["host.simulator-input"],
+                    failureCodes: ["unsupported_host_input", "unsupported_text_input", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "record",
+                    summary: "Record a bounded simulator video",
+                    requiredOptions: ["--output"],
+                    optionalOptions: ["--simulator", "--duration", "--display", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "logs",
+                    summary: "Capture bounded simulator OSLog stream output",
+                    requiredOptions: ["--output"],
+                    optionalOptions: ["--simulator", "--duration", "--style", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "diagnose",
+                    summary: "Collect simulator diagnostics and logs",
+                    optionalOptions: ["--output", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "logverbose",
+                    summary: "Enable or disable verbose simulator logging",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "proxy",
+                    summary: "Run iOS Simulator host-side proxy takeover aliases",
+                    optionalOptions: ["--simulator", "--mode", "--output", "--proxy", "--session", "--restore", "--restore-snapshot", "--plan-only", "--confirm", "--audit-record", "--execute-runner", "--format", "--json"],
+                    outputSelectors: ["host.device-proxy"],
+                    failureCodes: ["proxy_visibility_limited", "proxy_platform_not_supported", "proxy_endpoint_unreachable", "proxy_start_failed", "proxy_restore_failed", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "pair",
+                    summary: "Create a watch and phone simulator pair",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "unpair",
+                    summary: "Unpair a watch and phone simulator pair",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "clone",
+                    summary: "Clone an existing simulator device",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "erase",
+                    summary: "Erase simulator contents and settings",
+                    optionalOptions: ["--confirm", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "upgrade",
+                    summary: "Upgrade a simulator to a newer runtime",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "runtime",
+                    summary: "Inspect and maintain installed simulator runtimes",
+                    optionalOptions: ["--dry-run", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "personalization",
+                    summary: "Manage simulator runtime personalization manifests",
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "status-bar",
+                    summary: "Read or override the simulator status bar",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "privacy",
+                    summary: "Grant, revoke, or reset simulator privacy permissions",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "location",
+                    summary: "Control simulated location",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "ui",
+                    summary: "Read or set simulator UI appearance and accessibility settings",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "pasteboard",
+                    summary: "Read, write, or sync simulator pasteboard content",
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "push",
+                    summary: "Send a simulated push notification",
+                    requiredOptions: ["--bundle-id", "--payload"],
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-action"]
+                ),
+            ],
+            providedCapabilities: ["host-simulator", "ios-simulator-host-tap", "ios-simulator-host-type", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "device-proxy-ios", "network-capture-export"]
         ),
         TKCommandSchema(
             name: "app",
@@ -404,6 +592,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             options: [
                 TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List installed simulator apps"),
                 TKCommandSchemaOption(name: "info --bundle-id <id>", type: "Subcommand", description: "Show installed app metadata"),
+                TKCommandSchemaOption(name: "inspect --platform android --bundle <bundle-id>", type: "Subcommand", description: "Compatibility alias for Android package metadata inspection through adb dumpsys package"),
                 TKCommandSchemaOption(name: "inspect --platform harmony --bundle <bundle>", type: "Subcommand", description: "Inspect a Harmony app with bm dump"),
                 TKCommandSchemaOption(name: "install --app <path.app>", type: "Subcommand", description: "Install an .app bundle into the simulator"),
                 TKCommandSchemaOption(name: "install --platform android --apk <path.apk>", type: "Subcommand", description: "Install an Android APK through adb install -r"),
@@ -428,6 +617,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "prefs dump --bundle-id <id>", type: "Subcommand", description: "Dump app preferences plist as JSON"),
                 TKCommandSchemaOption(name: "prefs get <key> --bundle-id <id>", type: "Subcommand", description: "Read one app preference"),
                 TKCommandSchemaOption(name: "prefs set <key> <json-value> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference from a property-list compatible JSON value"),
+                TKCommandSchemaOption(name: "prefs set <key> --type data --base64 <base64> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference as plist Data from base64"),
+                TKCommandSchemaOption(name: "prefs set <key> --type data --hex <hex> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference as plist Data from defaults-style hex bytes"),
                 TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Host app platform filter; when omitted, install/launch/terminate/open-url infer the platform from the provided app identifiers"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current"),
                 TKCommandSchemaOption(name: "--scope", type: "simulator|emulator|real|all", description: "Device scope filter for resolving host app targets"),
@@ -442,6 +633,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--user-only", type: "Bool", defaultValue: "false", description: "List only user-installed simulator apps"),
                 TKCommandSchemaOption(name: "--confirm", type: "Bool", defaultValue: "false", description: "Required for destructive app operations such as uninstall"),
                 TKCommandSchemaOption(name: "--kind", type: "String", defaultValue: "data", description: "Container kind to resolve, for example app, data, groups, or all"),
+                TKCommandSchemaOption(name: "--type", type: "json|data", defaultValue: "json", description: "Preference set value type; data requires exactly one of --base64 or --hex"),
+                TKCommandSchemaOption(name: "--base64", type: "String", description: "Base64 payload for prefs set --type data"),
+                TKCommandSchemaOption(name: "--hex", type: "String", description: "Hex payload for prefs set --type data; optional 0x prefix and whitespace are accepted"),
                 TKCommandSchemaOption(name: "--name", type: "String", description: "Device name filter, for example iPhone 15"),
                 TKCommandSchemaOption(name: "--runtime", type: "String", description: "Runtime filter, for example iOS 26.5"),
                 TKCommandSchemaOption(name: "--state", type: "String", description: "Target state filter, for example booted or connected"),
@@ -464,6 +658,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton app list --device iphone15 --user-only --json",
                 "triton app info --device iphone15 --bundle-id com.example.app --json",
+                "triton app inspect --platform android --device android-a --bundle com.example.app --json",
                 "triton app inspect --platform harmony --bundle com.example.app --json",
                 "triton app install --device iphone15 --app /tmp/Demo.app --json",
                 "triton app install --device android-a --platform android --apk /tmp/Demo.apk --json",
@@ -493,8 +688,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton app container --device iphone15 --bundle-id com.example.app --kind data --json",
                 "triton app prefs get DEBUG-mock --device iphone15 --bundle-id com.example.app --json",
                 #"triton app prefs set DEBUG-mock true --device iphone15 --bundle-id com.example.app --json"#,
+                #"triton app prefs set SeedState --type data --base64 W3t9XQ== --device iphone15 --bundle-id com.example.app --json"#,
             ],
-            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } or { ok, action, plistPath, value?, preferences? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, newValue, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
+            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } or { ok, action, plistPath, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
             outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, and preferences across iOS Simulator, Android Emulator, and Harmony Emulator. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence.",
             artifacts: ["app-container", "app-preferences", "runtime-snapshot"],
@@ -506,6 +702,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             outputContracts: [
                 hostActionOutputContract(selector: "host.app-action", model: "HostActionOutput|HostAppContainerOutput|HostAppPreferenceOutput"),
+                hostAppInfoOutputContract(selector: "host.android-app-inspect"),
+                hostActionOutputContract(selector: "host.android-app-install", model: "HostActionOutput"),
+                hostActionOutputContract(selector: "host.android-app-launch", model: "HostActionOutput"),
                 hostAppOpenURLOutputContract(),
             ],
             failureCodes: [
@@ -554,7 +753,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "destructive_action_requires_policy",
                 "validation_failed",
             ],
-            providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "android-app", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]
+            providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]
         ),
     ]
 }

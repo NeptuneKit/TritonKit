@@ -103,6 +103,8 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("android-device-screenshot"))
         #expect(device.failureCodes.contains("android_debugging_disabled"))
         #expect(device.failureCodes.contains("android_package_manager_unavailable"))
+        #expect(device.providedCapabilities.contains("harmony-device-list"))
+        #expect(device.providedCapabilities.contains("harmony-foreground-app-identity"))
         #expect(device.providedCapabilities.contains("harmony-device-stop"))
         #expect(device.providedCapabilities.contains("device-proxy-ios"))
         #expect(device.providedCapabilities.contains("device-proxy-android"))
@@ -2645,6 +2647,19 @@ struct DeviceCrossPlatformTests {
         #expect(blocked.limitations.contains("proxy_harmony_probe_only:no_verified_proxy_mutation"))
     }
 
+    @Test("device schema documents optional host foreground app identity")
+    func deviceSchemaDocumentsOptionalHostForegroundAppIdentity() throws {
+        let device = try #require(commandSchemas().first { $0.name == "device" })
+        let contract = try #require(device.outputContracts.first { $0.selector == "host.device-list" })
+        let fieldTypes = Dictionary(uniqueKeysWithValues: contract.fields.map { ($0.name, $0.type) })
+
+        #expect(fieldTypes["targets"] == "[HostDeviceTarget]")
+        #expect(fieldTypes["targets[].appName"] == "String?")
+        #expect(fieldTypes["targets[].bundleIdentifier"] == "String?")
+        #expect(fieldTypes["targets[].identityState"] == "String?")
+        #expect(fieldTypes["targets[].current"] == "Bool?")
+    }
+
     @Test("Harmony emulator stop plans launchd bootout before DevEco stop")
     func harmonyEmulatorStopPlansLaunchdBootoutBeforeDevEcoStop() throws {
         let plan = try harmonyEmulatorStopPlan(
@@ -2721,6 +2736,8 @@ struct DeviceCrossPlatformTests {
         #expect(appOptionNames.contains("--activity"))
         #expect(appOptionNames.contains("--apk"))
         #expect(app.examples.contains("triton app list --device iphone15 --user-only --json"))
+        #expect(app.usageForms.map(\.form).contains("inspect --platform android --bundle <bundle-id>"))
+        #expect(app.examples.contains("triton app inspect --platform android --device android-a --bundle com.example.app --json"))
         #expect(app.examples.contains("triton app install --device android-a --platform android --apk /tmp/Demo.apk --json"))
         #expect(app.examples.contains("triton app launch --device android-a --platform android --package-name com.example.app --json"))
         #expect(app.examples.contains("triton app open-url example://debug --device android-a --platform android --package-name com.example.app --json"))
@@ -2733,6 +2750,7 @@ struct DeviceCrossPlatformTests {
         #expect(app.examples.contains("triton app prefs get DEBUG-mock --device iphone15 --bundle-id com.example.app --json"))
         #expect(app.providedCapabilities.contains("ios-real-app"))
         #expect(app.providedCapabilities.contains("android-app"))
+        #expect(app.providedCapabilities.contains("android-app-inspect"))
         #expect(app.providedCapabilities.contains("android-app-install"))
         #expect(app.providedCapabilities.contains("android-app-launch"))
         #expect(app.providedCapabilities.contains("android-app-terminate"))
@@ -2745,6 +2763,71 @@ struct DeviceCrossPlatformTests {
         #expect(smokeOptionNames.contains("--ready"))
         #expect(smoke.examples.contains("triton smoke ios --device iphone15 --bundle-id com.example.app --open-url myapp://home --wait-text Ready --json"))
         #expect(smoke.examples.contains("triton smoke harmony --device harmony-a --bundle com.example.app --ability EntryAbility --open-url example://home --wait-text Ready --screenshot /tmp/smoke.jpeg --evidence /tmp/harmony.tritonevidence --json"))
+    }
+
+    @Test("issue 30 Android literal app inspect and ax entrypoints parse")
+    func issue30AndroidLiteralEntrypointsParse() throws {
+        _ = try TritonKitCLI.parseAsRoot([
+            "app", "inspect",
+            "--platform", "android",
+            "--device", "android-a",
+            "--bundle", "com.example.app",
+            "--json",
+        ])
+        _ = try TritonKitCLI.parseAsRoot([
+            "ax",
+            "--platform", "android",
+            "--device", "android-a",
+            "--json",
+        ])
+    }
+
+    @Test("issue 30 Android app inspect uses fake adb dumpsys package")
+    func issue30AndroidAppInspectUsesFakeADBDumpsysPackage() throws {
+        let target = HostDeviceTarget(
+            platform: "android",
+            id: "android:emulator-5554",
+            target: "emulator-5554",
+            state: "device",
+            ready: true,
+            source: "adb",
+            name: "Pixel_8",
+            runtime: "sdk_gphone64_arm64",
+            transport: "1"
+        )
+        let runner = TKAndroidADBFakeRunner(fixtures: [
+            .dumpsysPackageSuccess(serial: "emulator-5554", packageName: "com.example.demo"),
+        ])
+
+        let output = try inspectAndroidApp(
+            selected: target,
+            bundle: "com.example.demo",
+            adb: "adb-fixture",
+            runner: { command in
+                #expect(command.executable == "adb-fixture")
+                let fixture = try runner.run(command)
+                return HostProcessResult(
+                    stdoutData: fixture.stdout,
+                    stderrData: fixture.stderr,
+                    exitCode: fixture.exitCode,
+                    sourceCommand: hostSourceCommand(command),
+                    stdoutTruncated: false,
+                    stderrTruncated: false,
+                    stdoutLogPath: nil,
+                    stderrLogPath: nil,
+                    stdoutBytes: fixture.stdout.count,
+                    stderrBytes: fixture.stderr.count
+                )
+            }
+        )
+
+        #expect(output.ok)
+        #expect(output.action == "app.inspect")
+        #expect(output.simulatorUDID == "emulator-5554")
+        #expect(output.bundleID == "com.example.demo")
+        #expect(output.app.applicationType == "Android")
+        #expect(output.app.version == "1.2.3")
+        #expect(output.app.path == "/data/app/~~hash/com.example.demo-base")
     }
 
     @Test("unified device selector rejects mixed selector conflicts")
@@ -2787,6 +2870,10 @@ struct DeviceCrossPlatformTests {
         #expect(harmony.target == "127.0.0.1:10100")
         #expect(harmony.ready)
         #expect(harmony.transport == "TCP")
+        #expect(harmony.appName == nil)
+        #expect(harmony.bundleIdentifier == nil)
+        #expect(harmony.identityState == "unknown")
+        #expect(harmony.current == false)
         #expect(android.platform == "android")
         #expect(android.id == "android:emulator-5554")
         #expect(android.target == "emulator-5554")
@@ -2929,6 +3016,29 @@ struct DeviceCrossPlatformTests {
         #expect(resolved.source == .explicit)
     }
 
+    @Test("host device target mapping carries Harmony foreground app identity")
+    func hostDeviceTargetMappingCarriesHarmonyForegroundAppIdentity() {
+        let target = TKHarmonyTarget(
+            target: "127.0.0.1:10100",
+            state: "Connected",
+            transport: "TCP",
+            source: "hdc",
+            foregroundApp: TKHarmonyForegroundAppIdentity(
+                appName: "Demo App",
+                bundleIdentifier: "com.example.demo",
+                identityState: "current",
+                current: true
+            )
+        )
+
+        let hostTarget = hostDeviceTarget(from: target)
+
+        #expect(hostTarget.appName == "Demo App")
+        #expect(hostTarget.bundleIdentifier == "com.example.demo")
+        #expect(hostTarget.identityState == "current")
+        #expect(hostTarget.current == true)
+    }
+
     @Test("host device target can round-trip into Harmony runtime target")
     func hostDeviceTargetCanRoundTripIntoHarmonyRuntimeTarget() {
         let target = HostDeviceTarget(
@@ -2940,7 +3050,11 @@ struct DeviceCrossPlatformTests {
             source: "hdc",
             name: nil,
             runtime: nil,
-            transport: "TCP"
+            transport: "TCP",
+            appName: nil,
+            bundleIdentifier: nil,
+            identityState: "unknown",
+            current: false
         )
 
         let harmony = harmonyTarget(from: target)
@@ -3460,7 +3574,11 @@ private func iosTarget(
         source: "simctl",
         name: name,
         runtime: runtime,
-        transport: nil
+        transport: nil,
+        appName: nil,
+        bundleIdentifier: nil,
+        identityState: "unknown",
+        current: false
     )
 }
 

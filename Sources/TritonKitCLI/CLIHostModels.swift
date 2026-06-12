@@ -59,6 +59,27 @@ struct HostSimulatorScreenshotOutput: Encodable {
     let note: String
 }
 
+struct HostSimulatorInputOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let adapter: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let stdout: String?
+    let stderr: String?
+    let x: Int?
+    let y: Int?
+    let insertedLength: Int?
+    let textEncoding: String?
+    let note: String
+}
+
 struct HostDeviceTarget: Encodable, Equatable {
     let platform: String
     let id: String
@@ -71,6 +92,10 @@ struct HostDeviceTarget: Encodable, Equatable {
     let transport: String?
     let scope: String?
     let kind: String?
+    let appName: String?
+    let bundleIdentifier: String?
+    let identityState: String?
+    let current: Bool?
     let blockedReasons: [String]
     let sensitive: Bool
     let rawTarget: String
@@ -87,6 +112,10 @@ struct HostDeviceTarget: Encodable, Equatable {
         transport: String?,
         scope: String? = nil,
         kind: String? = nil,
+        appName: String? = nil,
+        bundleIdentifier: String? = nil,
+        identityState: String? = nil,
+        current: Bool? = nil,
         blockedReasons: [String] = [],
         sensitive: Bool = false,
         rawTarget: String? = nil
@@ -102,6 +131,10 @@ struct HostDeviceTarget: Encodable, Equatable {
         self.transport = transport
         self.scope = scope
         self.kind = kind
+        self.appName = appName
+        self.bundleIdentifier = bundleIdentifier
+        self.identityState = identityState
+        self.current = current
         self.blockedReasons = blockedReasons
         self.sensitive = sensitive
         self.rawTarget = rawTarget ?? target
@@ -119,6 +152,10 @@ struct HostDeviceTarget: Encodable, Equatable {
         case transport
         case scope
         case kind
+        case appName
+        case bundleIdentifier
+        case identityState
+        case current
         case blockedReasons
         case sensitive
     }
@@ -875,7 +912,9 @@ struct HostPreferencesOutput: Encodable {
     let plistPath: String
     let key: String?
     let value: TKHostPreferenceValue?
+    let valuePlistType: String?
     let preferences: [String: TKHostPreferenceValue]?
+    let preferencesPlistTypes: [String: String]?
 }
 
 struct HostPreferencesSetOutput: Encodable {
@@ -887,6 +926,8 @@ struct HostPreferencesSetOutput: Encodable {
     let key: String
     let previousValue: TKHostPreferenceValue?
     let newValue: TKHostPreferenceValue
+    let previousPlistType: String?
+    let newPlistType: String
     let restartAdvice: String
 }
 
@@ -894,4 +935,6 @@ struct HostPreferencePlistUpdateResult {
     let data: Data
     let previousValue: TKHostPreferenceValue?
     let newValue: TKHostPreferenceValue
+    let previousPlistType: String?
+    let newPlistType: String
 }

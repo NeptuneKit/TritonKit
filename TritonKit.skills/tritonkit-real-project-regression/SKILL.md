@@ -37,12 +37,17 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton doctor --json`
    - `triton status --json`
    - `triton capabilities --json`
+   - before using `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild`, preserve Triton-first fallback gate evidence from `status`, `doctor`, `capabilities`, `schema`, or `plan`; fallback is allowed only after Triton reports failure, unsupported capability/scope, or missing schema/capability for the required local emulator action;
    - use `doctor.checks[]` first for ordered recovery, and preserve `doctor.nextWorkflows` plus each check's `workflowCategories` so the regression report keeps the affected workflow taxonomy without re-deriving it from capabilities;
    - `triton list --json`
    - use `capabilities[].group`, `requiredBy`, `nextAction`, and `evidence` to decide whether the next step is target selection, runtime connection, Xcode preparation, action execution, assertion, or evidence capture; if a schema-provided capability lacks those planning fields, treat that as a TritonKit contract bug before relying on it;
    - treat duplicate capability names in schema or capabilities output as TritonKit indexing bugs before deriving a reusable regression plan;
    - treat empty or duplicate `requiredBy` / `evidence` entries as TritonKit metadata bugs; reusable regressions need clean workflow and artifact categories;
-   - treat unknown `capabilities[].group` values as TritonKit taxonomy bugs; reusable regressions should only depend on the fixed groups `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`;
+   - for iOS `AVPlayer` / `AVPlayerViewController` flows, run `triton snapshot --include media,ax,screenshot-metadata --json` before asserting playback; preserve `media.surfaces[]`, `media.controls[]`, `automationConfidence`, `fallbackAdvice[]`, and `evidenceCommands[]`;
+   - if media `automationConfidence` is `surface-only`, treat rendered video as observation evidence only; require app-owned DEBUG overlay controls with stable accessibility identifiers before claiming pause, resume, seek, elapsed, duration, progress, or route-release control assertions;
+   - for app-domain readiness that cannot be proven from generic UI, inspect `triton runtime manifest --json` `semanticDomains[]` first, then run `triton snapshot --include semantic,app,scene --json`; preserve `semantic.domains[]`, provider `source`, `confidence`, `state`, `schema`, `actions`, `redaction`, and `evidenceCommands[]`;
+   - treat `app-semantic-state` as provider-backed business state and `app-semantic-action` as provider action-catalog discoverability. Do not build reusable regressions around generic provider action execution until a dedicated command contract exists;
+   - treat unknown `capabilities[].group` values as TritonKit taxonomy bugs; reusable regressions should only depend on the fixed groups `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `semantic`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`;
    - treat unknown `capabilities[].requiredBy` values as TritonKit workflow taxonomy bugs; reusable regressions should only depend on `action`, `app`, `assert`, `evidence`, `observe`, `project`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview-check`, and `xcode`;
    - treat unknown `capabilities[].evidence` values as TritonKit artifact taxonomy bugs; reusable regressions should rely on real stdout JSON, schema/status output, host artifacts, runtime snapshots, WebView provider output, route assertions, input results, evidence bundles, smoke summaries, tritonplans, Xcode artifacts, or unsupported envelopes;
    - treat empty `capabilities[].evidence` arrays as TritonKit contract bugs before building a reusable regression; every capability needs at least one machine-readable proof source;
@@ -135,8 +140,9 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - locate containers: `triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json`;
    - verify App preferences: `triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json`;
    - set simulator App preferences from property-list compatible JSON values: `triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json`;
+   - seed Swift `UserDefaults.data(forKey:)` values explicitly with plist Data: `triton app prefs set <key> --type data --base64 <base64> --device iphone15 --bundle-id <bundle-id> --json` or `--type data --hex <hex>`;
    - capture host-side framebuffer: `triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json`;
-   - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`.
+   - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`, and include that schema gap or Triton error envelope in the regression report.
 8. Prepare Xcode build/test/run through Triton before falling back to XcodeBuildMCP or raw `xcodebuild`:
    - discover project containers: `triton xcode discover --path <repo> --json`;
    - set reusable defaults: `triton xcode use --workspace <workspace>|--project <project> --scheme <scheme> --configuration Debug --simulator <udid> --json`;
@@ -149,7 +155,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - build/install/launch: `triton xcode run --jsonl`;
    - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
    - `xcode settings/build/test/run --jsonl` includes stdout/stderr log paths and byte counts; inspect those artifacts before waiting longer or falling back.
-   - use XcodeBuildMCP only as a temporary fallback when `triton schema --command xcode --json` does not expose the needed capability.
+   - use XcodeBuildMCP only as a temporary fallback when `triton schema --command xcode --json` or `triton xcode ... --jsonl` evidence shows the needed capability is missing, unsupported, or failed with a stable error code.
 9. For HarmonyOS NEXT / DevEco Emulator validation, use Triton host-side device discovery before raw `hdc`:
    - probe tools: `triton device doctor --platform harmony --json`;
    - list HDC targets: `triton device list --platform harmony --json`;
@@ -186,7 +192,8 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton screenshot --json --output <path>`
    - `triton export --format archive --output <path>`
 11. Execute the smallest user-flow regression with machine-readable commands:
-   - when the next command sequence is not obvious, ask Triton for a task plan first: `triton plan ios-smoke --device <selector> --bundle-id <bundle-id> --url <url> --text <text> --evidence /tmp/<case>.tritonevidence --json`, `triton plan open-url --device <selector> --url <url> --text <text> --json`, or `triton plan webview-check --expected-url <url> --text <text> --json`;
+   - when the next command sequence is not obvious, ask Triton for a task plan first: `triton plan ios-smoke --device <selector> --bundle-id <bundle-id> --url <url> --text <text> --evidence /tmp/<case>.tritonevidence --json`, `triton plan open-url --device <selector> --url <url> --text <text> --json`, `triton plan open-url --platform harmony --device <selector> --bundle <bundle> --ability <ability> --hap <path.hap> --url <url> --text <text> --evidence /tmp/<case>.tritonevidence --json`, or `triton plan webview-check --expected-url <url> --text <text> --json`;
+   - if `triton plan open-url ... --json` returns `mode=bootstrap`, execute `steps[]` to recover the environment, then continue with `afterRecoverySteps[].argv`; do not drop the original open-url verification workflow during server/runtime recovery;
    - treat task plans as command recommendations only; execute the returned steps explicitly and keep wait/assert/evidence as the pass/fail proof;
    - treat any plan step whose `command` is prose instead of a `triton ...` command as a TritonKit plan contract bug; for a missing iOS runtime target, expect `triton xcode run --json` or another schema-backed Triton command;
    - verify `plan.nextStep` points to one returned `steps[].id`; if not, report a TritonKit plan contract bug before embedding the plan into a regression script;

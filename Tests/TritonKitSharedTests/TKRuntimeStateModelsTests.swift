@@ -127,4 +127,158 @@ struct TKRuntimeStateModelsTests {
         #expect(decoded.redaction.textContent == "not-collected")
     }
 
+    @Test("media snapshot summarizes surfaces controls confidence and fallback guidance")
+    func mediaStateShape() throws {
+        let controls = TKRuntimeMediaControlCandidates(from: [
+            TKAXNode(
+                role: "button",
+                label: "Pause",
+                value: nil,
+                identifier: "media.pause",
+                title: nil,
+                frame: TKRect(x: 120, y: 700, width: 44, height: 44),
+                enabled: true,
+                focused: false,
+                hidden: false,
+                targetOID: 10,
+                className: "UIButton",
+                children: []
+            ),
+            TKAXNode(
+                role: "slider",
+                label: "Playback progress",
+                value: "42%",
+                identifier: "media.progress",
+                title: nil,
+                frame: TKRect(x: 20, y: 750, width: 350, height: 32),
+                enabled: true,
+                focused: false,
+                hidden: false,
+                targetOID: 11,
+                className: "UISlider",
+                children: []
+            ),
+        ])
+        let response = TKRuntimeMediaStateResponse(
+            capturedAt: "2026-06-08T12:00:00Z",
+            surfaces: [
+                TKRuntimeMediaSurface(
+                    id: "media-surface-1",
+                    kind: "avplayer-layer",
+                    className: "AVPlayerLayer",
+                    frame: TKRect(x: 0, y: 100, width: 390, height: 220),
+                    visible: true,
+                    playerStatus: "readyToPlay",
+                    playbackState: "playing",
+                    rate: 1,
+                    elapsedTimeSeconds: 12,
+                    durationSeconds: 60,
+                    progress: 0.2,
+                    controllerClassName: "AVPlayerViewController"
+                ),
+            ],
+            controls: controls
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKRuntimeMediaStateResponse.self, from: data)
+
+        #expect(decoded.ok)
+        #expect(decoded.surfaceCount == 1)
+        #expect(decoded.controlCount == 2)
+        #expect(decoded.automationConfidence == "actionable-controls")
+        #expect(decoded.surfaces.first?.playbackState == "playing")
+        #expect(decoded.surfaces.first?.progress == 0.2)
+        #expect(decoded.controls.map(\.action).contains("pause"))
+        #expect(decoded.controls.map(\.action).contains("progress"))
+        #expect(decoded.fallbackAdvice.contains { $0.contains("app-owned") })
+        #expect(decoded.evidenceCommands.contains("triton snapshot --include media,ax,screenshot-metadata --json"))
+    }
+
+    @Test("media snapshot marks visible playback without controls as surface-only")
+    func mediaStateSurfaceOnlyGuidance() throws {
+        let response = TKRuntimeMediaStateResponse(
+            capturedAt: "2026-06-08T12:00:00Z",
+            surfaces: [
+                TKRuntimeMediaSurface(
+                    id: "media-surface-1",
+                    kind: "avplayer-layer",
+                    className: "AVPlayerLayer",
+                    frame: TKRect(x: 0, y: 100, width: 390, height: 220),
+                    visible: true
+                ),
+            ],
+            controls: []
+        )
+
+        #expect(response.automationConfidence == "surface-only")
+        #expect(response.fallbackAdvice.contains { $0.contains("play/pause/seek/progress") })
+        #expect(response.evidenceCommands.contains("triton screenshot --json"))
+    }
+
+    @Test("semantic snapshot carries provider-backed domain state and action catalog")
+    func semanticProviderStateShape() throws {
+        let domain = TKRuntimeSemanticDomainState(
+            domain: "media-playback",
+            displayName: "Media Playback",
+            source: "runtime-provider",
+            confidence: "provider-backed",
+            state: [
+                "isReady": .bool(true),
+                "elapsed": .double(12.3),
+                "routeActiveCount": .int(1),
+            ],
+            schema: [
+                TKRuntimeSemanticStateField(path: "isReady", type: "Bool", description: "Playback item is ready"),
+                TKRuntimeSemanticStateField(path: "elapsed", type: "Double", description: "Elapsed playback seconds"),
+                TKRuntimeSemanticStateField(path: "routeActiveCount", type: "Int", description: "Active route count"),
+            ],
+            actions: [
+                TKRuntimeSemanticActionDescriptor(
+                    name: "pause",
+                    description: "Pause playback",
+                    arguments: []
+                ),
+                TKRuntimeSemanticActionDescriptor(
+                    name: "seek",
+                    description: "Seek to an absolute time",
+                    arguments: [
+                        TKRuntimeSemanticActionArgument(name: "seconds", type: "Double", required: true, description: "Target time")
+                    ]
+                ),
+            ],
+            redaction: TKRuntimeSemanticRedaction(policy: "provider-declared", redactedPaths: ["currentURL"]),
+            evidenceCommands: ["triton snapshot --include semantic,app,scene --json"]
+        )
+        let response = TKRuntimeSemanticStateResponse(
+            capturedAt: "2026-06-08T12:00:00Z",
+            domains: [domain]
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKRuntimeSemanticStateResponse.self, from: data)
+
+        #expect(decoded.ok)
+        #expect(decoded.domainCount == 1)
+        #expect(decoded.domains.first?.capability == "app.semantic_state")
+        #expect(decoded.domains.first?.source == "runtime-provider")
+        #expect(decoded.domains.first?.confidence == "provider-backed")
+        #expect(decoded.domains.first?.state["isReady"] == TKJSONValue.bool(true))
+        #expect(decoded.domains.first?.schema.map(\.path).contains("elapsed") == true)
+        #expect(decoded.domains.first?.actions.map(\.name) ?? [] == ["pause", "seek"])
+        #expect(decoded.domains.first?.redaction.redactedPaths == ["currentURL"])
+        #expect(decoded.evidenceCommands.contains("triton snapshot --include semantic,app,scene --json"))
+    }
+
+    @Test("semantic snapshot keeps empty provider state explicit")
+    func semanticProviderEmptyShape() throws {
+        let response = TKRuntimeSemanticStateResponse(
+            capturedAt: "2026-06-08T12:00:00Z",
+            domains: []
+        )
+
+        #expect(response.domainCount == 0)
+        #expect(response.warnings.contains { $0.contains("No semantic providers") })
+        #expect(response.evidenceCommands.contains("triton runtime manifest --json"))
+    }
 }

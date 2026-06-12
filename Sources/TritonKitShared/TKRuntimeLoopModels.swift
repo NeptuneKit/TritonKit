@@ -20,6 +20,8 @@ public struct TKRuntimeSnapshotResponse: Codable, Equatable {
     public let scene: TKRuntimeSceneStateResponse?
     public let route: TKRuntimeRouteStateResponse?
     public let responder: TKRuntimeResponderStateResponse?
+    public let media: TKRuntimeMediaStateResponse?
+    public let semantic: TKRuntimeSemanticStateResponse?
     public let geometry: TKGeometryResponse?
     public let ax: [TKAXNode]?
     public let screenshot: TKRuntimeScreenshotMetadata?
@@ -37,6 +39,8 @@ public struct TKRuntimeSnapshotResponse: Codable, Equatable {
         scene: TKRuntimeSceneStateResponse? = nil,
         route: TKRuntimeRouteStateResponse? = nil,
         responder: TKRuntimeResponderStateResponse? = nil,
+        media: TKRuntimeMediaStateResponse? = nil,
+        semantic: TKRuntimeSemanticStateResponse? = nil,
         geometry: TKGeometryResponse? = nil,
         ax: [TKAXNode]? = nil,
         screenshot: TKRuntimeScreenshotMetadata? = nil,
@@ -53,6 +57,8 @@ public struct TKRuntimeSnapshotResponse: Codable, Equatable {
         self.scene = scene
         self.route = route
         self.responder = responder
+        self.media = media
+        self.semantic = semantic
         self.geometry = geometry
         self.ax = ax
         self.screenshot = screenshot

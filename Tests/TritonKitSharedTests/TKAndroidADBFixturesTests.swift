@@ -123,6 +123,7 @@ struct TKAndroidADBFixturesTests {
     func fakeADBAppAndLayoutFixtures() throws {
         let runner = TKAndroidADBFakeRunner(fixtures: [
             .installSuccess(serial: "emulator-5554", apkPath: "/tmp/Demo.apk"),
+            .dumpsysPackageSuccess(serial: "emulator-5554", packageName: "com.example.demo"),
             .resolveActivitySuccess(serial: "emulator-5554", packageName: "com.example.demo", component: "com.example.demo/.MainActivity"),
             .amStartSuccess(serial: "emulator-5554", component: "com.example.demo/.MainActivity"),
             .uiautomatorDump(serial: "emulator-5554", remotePath: "/sdcard/window_dump.xml"),
@@ -131,6 +132,11 @@ struct TKAndroidADBFixturesTests {
 
         let install = try runner.run(TKAndroidADBCommand.installAPK(serial: "emulator-5554", apkPath: "/tmp/Demo.apk"))
         #expect(TKAndroidInstallParser.parse(install.stdoutString, stderr: install.stderrString, exitCode: install.exitCode).ok)
+
+        let package = try runner.run(TKAndroidADBCommand.dumpsysPackage(serial: "emulator-5554", packageName: "com.example.demo"))
+        let app = TKAndroidPackageInfoParser.parse(package.stdoutString, packageName: "com.example.demo")
+        #expect(app.version == "1.2.3")
+        #expect(app.path == "/data/app/~~hash/com.example.demo-base")
 
         let resolve = try runner.run(TKAndroidADBCommand.resolveActivity(serial: "emulator-5554", packageName: "com.example.demo"))
         let resolved = TKAndroidResolveActivityParser.parse(resolve.stdoutString, stderr: resolve.stderrString, exitCode: resolve.exitCode)
@@ -150,5 +156,24 @@ struct TKAndroidADBFixturesTests {
         #expect(nodes.count == 2)
         #expect(nodes[1].text == "Login")
         #expect(nodes[1].bounds == TKRect(x: 24, y: 120, width: 192, height: 72))
+    }
+
+    @Test("android package info parser supports app inspect compatibility")
+    func androidPackageInfoParserSupportsAppInspectCompatibility() throws {
+        let stdout = """
+        Package [com.example.demo] (123abc):
+          codePath=/data/app/~~hash/com.example.demo-base
+          resourcePath=/data/app/~~hash/com.example.demo-base/base.apk
+          versionName=1.2.3
+          dataDir=/data/user/0/com.example.demo
+        """
+        let app = TKAndroidPackageInfoParser.parse(stdout, packageName: "com.example.demo")
+
+        #expect(app.bundleID == "com.example.demo")
+        #expect(app.applicationType == "Android")
+        #expect(app.version == "1.2.3")
+        #expect(app.path == "/data/app/~~hash/com.example.demo-base")
+        #expect(app.bundleURL == "/data/app/~~hash/com.example.demo-base/base.apk")
+        #expect(app.dataContainerURL == "/data/user/0/com.example.demo")
     }
 }

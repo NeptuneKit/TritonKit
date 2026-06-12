@@ -122,6 +122,8 @@ struct Sim: AsyncParsableCommand {
             SimErase.self,
             SimUpgrade.self,
             SimScreenshot.self,
+            SimTap.self,
+            SimType.self,
             SimRecord.self,
             SimLogs.self,
             SimDiagnose.self,

@@ -16,7 +16,7 @@ Keep the boundary explicit:
 - Embedded runtime handles DEBUG-only in-app observation and control.
 - Host simulator adapter runs only in macOS CLI / `triton serve`.
 - CLI/HTTP schema, JSON/JSONL output, stable error codes, and evidence/plan integration are the user-facing contract.
-- Raw `xcrun simctl` is a fallback only when `triton schema --command sim --json` or `triton schema --command app --json` does not expose the required capability.
+- Raw `xcrun simctl`, XcodeBuildMCP, or raw `xcodebuild` are fallback paths only after a Triton-first check. Preserve `triton status --json`, `triton doctor --json`, `triton capabilities --json`, `triton schema --command sim|app|xcode --json`, or `triton plan ... --json` output showing failure, unsupported scope/capability, or a missing schema/capability before using those tools.
 
 ## Current P0 Contract
 

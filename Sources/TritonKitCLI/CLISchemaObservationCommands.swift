@@ -4,6 +4,7 @@ import TritonKitShared
 func observationCommandSchemas() -> [TKCommandSchema] {
     let hostPort = schemaHostPortOptions
     let target = schemaTargetOption
+    let targetDeviceAlias = schemaTargetDeviceAliasOption
     let jsonText = schemaTextJSONFormats
     let formatTextJSON = schemaFormatTextJSONOption
     let formatJSONText = schemaFormatJSONTextOption
@@ -85,6 +86,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: [
                 "triton observe current --platform ios --json",
+                "triton snapshot --include media,ax,screenshot-metadata --json",
                 "triton observe tree --platform android --device android-a --json",
                 "triton observe tree --device harmony-a --json",
                 "triton observe tree --platform harmony --target 127.0.0.1:10100 --json",
@@ -354,7 +356,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "--oid", type: "UInt", required: true, description: "Layer oid from `triton nodes`"),
                 formatTextJSON,
                 jsonAlias,
@@ -618,7 +620,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "<condition>", type: "text-exists|text-not-exists", required: true, description: "Assertion condition"),
                 TKCommandSchemaOption(name: "<text>", type: "String", required: true, description: "Visible text, label, identifier, title, or value"),
                 TKCommandSchemaOption(name: "--role", type: "String", description: "Optional AX role filter"),
@@ -717,7 +719,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "<query>", type: "String", required: true, description: "Visible text, AX label, identifier, value, or option title to resolve"),
                 TKCommandSchemaOption(name: "--all", type: "Bool", defaultValue: "false", description: "Include all candidates with stable 1-based indexes"),
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one candidate by 1-based index"),
@@ -728,6 +730,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: [
                 #"triton find "HTTP""#,
+                #"triton find "HTTP" --device booted --json"#,
                 #"triton find "hello" --all"#,
                 #"triton find "hello" --at 240,580"#,
             ],
@@ -751,7 +754,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "--platform", type: "android|harmony", description: "Use Android or Harmony host-side layout polling instead of embedded runtime"),
                 TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path for --platform android"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
@@ -795,11 +798,13 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             summary: "Read safe actionable control index",
             requiresServer: true,
             requiresTarget: true,
-            runtimeScope: "embedded|host-harmony",
+            runtimeScope: "embedded|host-android|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
                 target,
-                TKCommandSchemaOption(name: "--platform", type: "harmony", description: "Dump Harmony host-side layout through hdc uitest"),
+                TKCommandSchemaOption(name: "--platform", type: "android|harmony", description: "Dump Android UIAutomator XML or Harmony host-side layout"),
+                TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, android:<serial>, harmony:<target>, raw id, or current"),
+                TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path for --platform android"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"),
                 jsonAlias,
@@ -809,10 +814,11 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: [
                 "triton ax --format json --output /tmp/ax.json",
+                "triton ax --platform android --device android-a --output /tmp/android-window.xml --json",
                 "triton ax --platform harmony --output /tmp/harmony-layout.json --json",
                 "triton ax --with-hierarchy --json",
             ],
-            successShape: "[TKAXNode] by default; TKAXHierarchyMapResponse when --with-hierarchy is used; HostHarmonyArtifactOutput for --platform harmony",
+            successShape: "[TKAXNode] by default; TKAXHierarchyMapResponse when --with-hierarchy is used; HostAndroidArtifactOutput for --platform android; HostHarmonyArtifactOutput for --platform harmony",
             failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|ambiguous_target|runtime_unavailable|request_failed|host_command_failed|artifact_write_failed|validation_failed, message, hint, nextAction? } }",
             nextCommands: [
                 "triton status --json",
@@ -820,7 +826,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton screenshot --output <path> --metadata",
                 "triton evidence --output <dir.tritonevidence> --json",
             ],
-            outputContracts: [axOutputContract(), hostHarmonyArtifactOutputContract()],
+            outputContracts: [axOutputContract(), hostAndroidArtifactOutputContract(selector: "host.android-ax"), hostHarmonyArtifactOutputContract()],
             failureCodes: [
                 "server_unavailable",
                 "target_unavailable",
@@ -832,7 +838,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "artifact_write_failed",
                 "validation_failed",
             ],
-            providedCapabilities: ["ax", "harmony-ax"]
+            providedCapabilities: ["ax", "android-ax", "harmony-ax"]
         ),
         TKCommandSchema(
             name: "geometry",
@@ -841,7 +847,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             requiresTarget: true,
             runtimeScope: "embedded",
             outputFormats: jsonText,
-            options: hostPort + [target, formatTextJSON, jsonAlias],
+            options: hostPort + [targetDeviceAlias, formatTextJSON, jsonAlias],
             examples: ["triton geometry --format json"],
             successShape: "{ bounds, safeArea, scale, orientation }",
             failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|runtime_unavailable|request_failed, message, endpoint, hint, nextAction? } }",
@@ -863,7 +869,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "embedded",
             outputFormats: jsonText,
             options: hostPort + [
-                target,
+                targetDeviceAlias,
                 TKCommandSchemaOption(name: "--at", type: "x,y", description: "Window point in points"),
                 TKCommandSchemaOption(name: "--x", type: "Double", description: "Window x coordinate in points; provide together with --y"),
                 TKCommandSchemaOption(name: "--y", type: "Double", description: "Window y coordinate in points; provide together with --x"),
@@ -892,7 +898,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             outputFormats: ["file", "json-metadata"],
             options: hostPort + [
                 target,
-                TKCommandSchemaOption(name: "--platform", type: "ios|harmony", description: "Capture host-side screenshot through iOS simctl or Harmony hdc"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Capture host-side screenshot through iOS simctl, Android adb, or Harmony hdc"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current"),
                 TKCommandSchemaOption(name: "--name", type: "String", description: "Device name filter, for example iPhone 15"),
                 TKCommandSchemaOption(name: "--runtime", type: "String", description: "Runtime filter, for example iOS 26.5"),
@@ -914,9 +920,9 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton observe current --json",
                 "triton assert text-exists <text> --json",
             ],
-            outputContracts: [screenshotMetadataOutputContract(), hostHarmonyArtifactOutputContract()],
+            outputContracts: [screenshotMetadataOutputContract(), hostAndroidArtifactOutputContract(selector: "host.android-screenshot"), hostHarmonyArtifactOutputContract()],
             failureCodes: ["server_unavailable", "target_unavailable", "target_not_found", "ambiguous_target", "artifact_write_failed", "host_command_failed", "validation_failed"],
-            providedCapabilities: ["screenshot", "host-device-screenshot", "ios-screenshot", "harmony-screenshot"]
+            providedCapabilities: ["screenshot", "host-device-screenshot", "ios-screenshot", "android-device-screenshot", "harmony-screenshot"]
         ),
     ]
 }

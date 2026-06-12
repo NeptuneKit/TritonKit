@@ -29,6 +29,10 @@ public enum TKHarmonyHDCCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "bm", "dump", "-n", bundleName], riskLevel: .readonly, requiredConfig: [.target, .timeout])
     }
 
+    public static func foregroundApp(target: String, executable: String = "hdc") -> TKHostCommand {
+        TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "aa", "dump", "-l"], riskLevel: .readonly, requiredConfig: [.target, .timeout], sensitiveOutput: true)
+    }
+
     public static func appLaunch(target: String, bundleName: String, abilityName: String, executable: String = "hdc") -> TKHostCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "aa", "start", "-b", bundleName, "-a", abilityName], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
@@ -281,8 +285,15 @@ public struct TKHarmonyTarget: Codable, Equatable {
     public let kind: String
     public let blockedReasons: [String]
     public let source: String
+    public let foregroundApp: TKHarmonyForegroundAppIdentity
 
-    public init(target: String, state: String, transport: String = "hdc", source: String = "hdc") {
+    public init(
+        target: String,
+        state: String,
+        transport: String = "hdc",
+        source: String = "hdc",
+        foregroundApp: TKHarmonyForegroundAppIdentity = .unknown
+    ) {
         let scope = TKHarmonyTarget.inferredScope(target: target, transport: transport)
         self.id = TKHarmonyTarget.targetID(target: target, scope: scope)
         self.target = target
@@ -293,6 +304,7 @@ public struct TKHarmonyTarget: Codable, Equatable {
         self.kind = scope == .real ? "real-device" : "emulator"
         self.blockedReasons = TKHarmonyTarget.blockedReasons(state: state)
         self.source = source
+        self.foregroundApp = foregroundApp
     }
 
     public var isReady: Bool {
@@ -346,6 +358,108 @@ public struct TKHarmonyTarget: Codable, Equatable {
             hash &*= 0x100000001b3
         }
         return String(format: "%016llx", hash)
+    }
+}
+
+public struct TKHarmonyForegroundAppIdentity: Codable, Equatable {
+    public let appName: String?
+    public let bundleIdentifier: String?
+    public let identityState: String
+    public let current: Bool
+
+    public init(
+        appName: String? = nil,
+        bundleIdentifier: String? = nil,
+        identityState: String,
+        current: Bool
+    ) {
+        self.appName = appName
+        self.bundleIdentifier = bundleIdentifier
+        self.identityState = identityState
+        self.current = current
+    }
+
+    public static let unknown = TKHarmonyForegroundAppIdentity(identityState: "unknown", current: false)
+    public static let unsupported = TKHarmonyForegroundAppIdentity(identityState: "unsupported", current: false)
+}
+
+public enum TKHarmonyForegroundAppParser {
+    public static func parse(_ text: String) -> TKHarmonyForegroundAppIdentity {
+        let lines = text.split(whereSeparator: \.isNewline).map(String.init)
+        guard let foregroundIndex = lines.firstIndex(where: { isForegroundStateLine($0) }) else {
+            return .unknown
+        }
+        let context = foregroundContext(in: lines, foregroundIndex: foregroundIndex)
+        let bundleIdentifier = firstBracketValue(after: "bundle name", in: context)
+            ?? firstBundleIdentifier(in: context)
+        let appName = firstBracketValue(after: "app name", in: context)
+        guard appName != nil || bundleIdentifier != nil else {
+            return .unknown
+        }
+        return TKHarmonyForegroundAppIdentity(
+            appName: appName,
+            bundleIdentifier: bundleIdentifier,
+            identityState: "current",
+            current: true
+        )
+    }
+
+    private static func foregroundContext(in lines: [String], foregroundIndex: Int) -> [String] {
+        let start = stride(from: foregroundIndex, through: 0, by: -1)
+            .first { index in isMissionBoundary(lines[index]) }
+            ?? 0
+        let nextBoundary = lines.indices
+            .dropFirst(foregroundIndex + 1)
+            .first { index in isMissionBoundary(lines[index]) }
+        let end = nextBoundary.map { max(start, $0 - 1) } ?? max(start, lines.count - 1)
+        return Array(lines[start...end])
+    }
+
+    private static func isMissionBoundary(_ line: String) -> Bool {
+        line.range(of: #"Mission\s+ID|MissionRecord|AbilityRecord"#, options: [.regularExpression, .caseInsensitive]) != nil
+    }
+
+    private static func isForegroundStateLine(_ line: String) -> Bool {
+        let lower = line.lowercased()
+        return (lower.contains("state #foreground") || lower.contains("state: foreground") || lower.contains("state=foreground"))
+            && !lower.contains("background")
+    }
+
+    private static func firstBracketValue(after label: String, in lines: [String]) -> String? {
+        let pattern = #"\#(NSRegularExpression.escapedPattern(for: label))\s*(?:[:=]\s*)?\[([^\]]+)\]"#
+        guard let expression = try? NSRegularExpression(pattern: pattern, options: [.caseInsensitive]) else {
+            return nil
+        }
+        for line in lines {
+            let range = NSRange(line.startIndex..<line.endIndex, in: line)
+            guard let match = expression.firstMatch(in: line, range: range), match.numberOfRanges >= 2 else {
+                continue
+            }
+            if let valueRange = Range(match.range(at: 1), in: line) {
+                let value = line[valueRange].trimmingCharacters(in: .whitespacesAndNewlines)
+                if !value.isEmpty {
+                    return value
+                }
+            }
+        }
+        return nil
+    }
+
+    private static func firstBundleIdentifier(in lines: [String]) -> String? {
+        let pattern = #"[A-Za-z][A-Za-z0-9_]*(?:\.[A-Za-z0-9_]+){2,}"#
+        guard let expression = try? NSRegularExpression(pattern: pattern) else {
+            return nil
+        }
+        for line in lines {
+            let range = NSRange(line.startIndex..<line.endIndex, in: line)
+            guard let match = expression.firstMatch(in: line, range: range),
+                  let valueRange = Range(match.range, in: line)
+            else {
+                continue
+            }
+            return String(line[valueRange])
+        }
+        return nil
     }
 }
 

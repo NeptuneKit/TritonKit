@@ -296,6 +296,24 @@ func hostArtifactOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostAndroidArtifactOutputContract(selector: String = "host.android-artifact") -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: selector,
+        format: "json",
+        kind: "host-artifact",
+        model: "HostAndroidArtifactOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether Android host artifact capture succeeded"),
+            ("action", "String", true, "Host action name"),
+            ("platform", "String", true, "android"),
+            ("target", "HostDeviceTarget", true, "Resolved Android target"),
+            ("artifact", "String", true, "Written artifact path"),
+            ("sourceCommands", "[String]", true, "Underlying host commands"),
+            ("note", "String", true, "Boundary or follow-up note"),
+        ])
+    )
+}
+
 func hostHarmonyArtifactOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.harmony-artifact",
@@ -314,9 +332,9 @@ func hostHarmonyArtifactOutputContract() -> TKCommandOutputContract {
     )
 }
 
-func hostDeviceListOutputContract() -> TKCommandOutputContract {
+func hostDeviceListOutputContract(selector: String = "host.device-list") -> TKCommandOutputContract {
     TKCommandOutputContract(
-        selector: "host.device-list",
+        selector: selector,
         format: "json",
         kind: "host-device-list",
         model: "HostDeviceListOutput",
@@ -329,8 +347,32 @@ func hostDeviceListOutputContract() -> TKCommandOutputContract {
             ("sourceCommands", "[String]", true, "Underlying host commands"),
             ("targets[].scope", "String?", false, "Target scope: simulator, emulator, or real"),
             ("targets[].kind", "String?", false, "Target kind such as simulator, emulator, or real-device"),
+            ("targets[].appName", "String?", false, "Foreground app display name when host discovery can determine it"),
+            ("targets[].bundleIdentifier", "String?", false, "Foreground app bundle identifier when host discovery can determine it"),
+            ("targets[].identityState", "String?", false, "Foreground identity state: current, unknown, or unsupported"),
+            ("targets[].current", "Bool?", false, "Whether the target identity describes the current foreground app"),
             ("targets[].blockedReasons", "[String]", true, "Readiness blockers observed during discovery"),
             ("targets[].sensitive", "Bool", true, "Whether sensitive raw identifiers are redacted from target/id output"),
+        ])
+    )
+}
+
+func hostAppInfoOutputContract(selector: String = "host.app-info") -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: selector,
+        format: "json",
+        kind: "host-action",
+        model: "HostAppInfoOutput|HostAndroidAppInfoOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether app inspection succeeded"),
+            ("action", "String", true, "app.info or app.inspect"),
+            ("simulatorUDID", "String?", false, "Resolved iOS simulator UDID"),
+            ("bundleID", "String?", false, "iOS app bundle identifier"),
+            ("app", "TKHostInstalledApp?", false, "Installed app metadata for iOS simulator apps"),
+            ("platform", "String?", false, "android when inspecting Android apps"),
+            ("target", "HostDeviceTarget?", false, "Resolved Android host target"),
+            ("packageName", "String?", false, "Android package name"),
+            ("sourceCommands", "[String]?", false, "Underlying host commands"),
         ])
     )
 }
@@ -535,6 +577,35 @@ func hostSimulatorScreenshotMetadataOutputContract() -> TKCommandOutputContract 
             ("normalizationApplied", "Bool", true, "Whether TritonKit rotated or otherwise normalized the image"),
             ("normalizationStrategy", "String", true, "Normalization strategy used for this artifact"),
             ("note", "String", true, "Human-readable caveat for agents and evidence consumers"),
+        ])
+    )
+}
+
+func hostSimulatorInputOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-input",
+        format: "json",
+        kind: "host-action",
+        model: "HostSimulatorInputOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the host simulator input command completed"),
+            ("action", "String", true, "sim.tap or sim.type"),
+            ("runtimeScope", "String", true, "host-simulator"),
+            ("target", "String", true, "Simulator target selector"),
+            ("adapter", "String", true, "Host adapter name, currently xcrun-simctl"),
+            ("tool", "String", true, "Host executable"),
+            ("exitCode", "Int32", true, "Host process exit code"),
+            ("riskLevel", "String", true, "Host command risk level"),
+            ("sourceCommand", "String", true, "Underlying xcrun simctl input command"),
+            ("stdoutTruncated", "Bool", true, "Whether stdout sample was truncated"),
+            ("stderrTruncated", "Bool", true, "Whether stderr sample was truncated"),
+            ("stdout", "String?", false, "Bounded stdout sample"),
+            ("stderr", "String?", false, "Bounded stderr sample"),
+            ("x", "Int?", false, "Tap x coordinate when action is sim.tap"),
+            ("y", "Int?", false, "Tap y coordinate when action is sim.tap"),
+            ("insertedLength", "Int?", false, "Typed text length when action is sim.type"),
+            ("textEncoding", "String?", false, "Text encoding boundary, currently ascii for sim.type"),
+            ("note", "String", true, "Boundary or follow-up verification note"),
         ])
     )
 }

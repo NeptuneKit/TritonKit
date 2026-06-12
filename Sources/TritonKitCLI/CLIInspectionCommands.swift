@@ -15,9 +15,12 @@ struct Plan: AsyncParsableCommand {
     @Argument(help: "Replay plan path for `inspect`.") var input: String?
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Task planning platform: ios, android, or harmony") var platform: String?
     @Option(help: "Host target selector for task planning") var device: String?
-    @Option(help: "Platform for host-side task planning: ios|android|harmony") var platform: String?
     @Option(help: "App bundle identifier for task planning") var bundleID: String?
+    @Option(help: "Harmony bundle name for open-url task planning") var bundle: String?
+    @Option(help: "Harmony ability name for open-url task planning") var ability: String?
+    @Option(help: "Harmony HAP path for optional install step") var hap: String?
     @Option(help: "URL or deep link for task planning") var url: String?
     @Option(help: "Text to wait for or assert during task planning") var text: String?
     @Option(help: "Expected WebView URL for webview-check planning") var expectedURL: String?
@@ -76,6 +79,9 @@ struct Plan: AsyncParsableCommand {
                 device: device,
                 platform: platform,
                 bundleID: bundleID,
+                bundle: bundle,
+                ability: ability,
+                hap: hap,
                 url: url,
                 text: text,
                 expectedURL: expectedURL,

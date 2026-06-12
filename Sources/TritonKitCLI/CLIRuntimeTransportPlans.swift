@@ -6,6 +6,9 @@ struct WorkflowPlanRequest {
     let device: String?
     let platform: String?
     let bundleID: String?
+    let bundle: String?
+    let ability: String?
+    let hap: String?
     let url: String?
     let text: String?
     let expectedURL: String?
@@ -24,6 +27,9 @@ struct WorkflowPlanRequest {
         device: String? = nil,
         platform: String? = nil,
         bundleID: String? = nil,
+        bundle: String? = nil,
+        ability: String? = nil,
+        hap: String? = nil,
         url: String? = nil,
         text: String? = nil,
         expectedURL: String? = nil,
@@ -41,6 +47,9 @@ struct WorkflowPlanRequest {
         self.device = device
         self.platform = platform
         self.bundleID = bundleID
+        self.bundle = bundle
+        self.ability = ability
+        self.hap = hap
         self.url = url
         self.text = text
         self.expectedURL = expectedURL
@@ -60,6 +69,9 @@ struct WorkflowPlanRequest {
         device: nil,
         platform: nil,
         bundleID: nil,
+        bundle: nil,
+        ability: nil,
+        hap: nil,
         url: nil,
         text: nil,
         expectedURL: nil,

@@ -380,6 +380,7 @@ public enum TKAndroidADBFakeFixture: Equatable {
     case screenshotPNG(serial: String)
     case screenshotFailure(serial: String)
     case installSuccess(serial: String, apkPath: String)
+    case dumpsysPackageSuccess(serial: String, packageName: String)
     case resolveActivitySuccess(serial: String, packageName: String, component: String)
     case amStartSuccess(serial: String, component: String)
     case uiautomatorDump(serial: String, remotePath: String)
@@ -409,6 +410,7 @@ public enum TKAndroidADBFakeFixture: Equatable {
         case .screenshotPNG: return "android-screencap-success"
         case .screenshotFailure: return "android-screencap-failure"
         case .installSuccess: return "android-install-success"
+        case .dumpsysPackageSuccess: return "android-dumpsys-package-success"
         case .resolveActivitySuccess: return "android-resolve-activity-success"
         case .amStartSuccess: return "android-am-start-success"
         case .uiautomatorDump: return "android-uiautomator-layout-basic"
@@ -432,6 +434,8 @@ public enum TKAndroidADBFakeFixture: Equatable {
             return ["-s", serial, "exec-out", "screencap", "-p"]
         case .installSuccess(let serial, let apkPath):
             return ["-s", serial, "install", "-r", apkPath]
+        case .dumpsysPackageSuccess(let serial, let packageName):
+            return ["-s", serial, "shell", "dumpsys", "package", packageName]
         case .resolveActivitySuccess(let serial, let packageName, _):
             return ["-s", serial, "shell", "cmd", "package", "resolve-activity", "--brief", packageName]
         case .amStartSuccess(let serial, let component):
@@ -528,6 +532,14 @@ public enum TKAndroidADBFakeFixture: Equatable {
             return makeResult("", stderr: "screencap failed\n", exitCode: 1)
         case .installSuccess:
             return makeResult("Success\n")
+        case .dumpsysPackageSuccess(_, let packageName):
+            return makeResult("""
+            Package [\(packageName)] (123abc):
+              codePath=/data/app/~~hash/\(packageName)-base
+              resourcePath=/data/app/~~hash/\(packageName)-base/base.apk
+              versionName=1.2.3
+              dataDir=/data/user/0/\(packageName)
+            """)
         case .resolveActivitySuccess(_, _, let component):
             return makeResult("""
             priority=0 preferredOrder=0 match=0x108000 specificIndex=-1 isDefault=true

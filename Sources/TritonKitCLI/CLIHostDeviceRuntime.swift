@@ -45,7 +45,7 @@ func harmonyHostDeviceTargets(
     runner: HostDeviceCommandRunner = { command in try runHostCommand(command) }
 ) throws -> (targets: [HostDeviceTarget], sourceCommand: String) {
     let result = try harmonyTargets(hdc: hdc, runner: runner)
-    let targets = result.targets.map(hostDeviceTarget(from:))
+    let targets = enrichHarmonyTargetsWithForegroundApp(result.targets, hdc: hdc).map(hostDeviceTarget(from:))
     return (filterHostDeviceTargets(targets, scope: scope), result.sourceCommand)
 }
 
@@ -429,6 +429,10 @@ func hostDeviceTarget(from target: TKHarmonyTarget) -> HostDeviceTarget {
         transport: target.transport,
         scope: target.scope.rawValue,
         kind: target.kind,
+        appName: target.foregroundApp.appName,
+        bundleIdentifier: target.foregroundApp.bundleIdentifier,
+        identityState: target.foregroundApp.identityState,
+        current: target.foregroundApp.current,
         blockedReasons: target.blockedReasons,
         sensitive: isSensitive,
         rawTarget: target.target
@@ -460,8 +464,41 @@ func harmonyTarget(from target: HostDeviceTarget) -> TKHarmonyTarget {
         target: target.rawTarget,
         state: target.state,
         transport: target.transport ?? "hdc",
-        source: target.source
+        source: target.source,
+        foregroundApp: TKHarmonyForegroundAppIdentity(
+            appName: target.appName,
+            bundleIdentifier: target.bundleIdentifier,
+            identityState: target.identityState ?? "unknown",
+            current: target.current ?? false
+        )
     )
+}
+
+func enrichHarmonyTargetsWithForegroundApp(_ targets: [TKHarmonyTarget], hdc: String) -> [TKHarmonyTarget] {
+    targets.map { target in
+        guard target.isConnected else {
+            return target
+        }
+        do {
+            let result = try runHostCommand(TKHarmonyHDCCommand.foregroundApp(target: target.target, executable: hdc))
+            let identity = TKHarmonyForegroundAppParser.parse(result.stdout)
+            return TKHarmonyTarget(
+                target: target.target,
+                state: target.state,
+                transport: target.transport,
+                source: target.source,
+                foregroundApp: identity
+            )
+        } catch {
+            return TKHarmonyTarget(
+                target: target.target,
+                state: target.state,
+                transport: target.transport,
+                source: target.source,
+                foregroundApp: .unsupported
+            )
+        }
+    }
 }
 
 enum HarmonyDeviceReadinessError: Error, CustomStringConvertible {

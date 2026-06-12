@@ -6,6 +6,41 @@ import TritonKitShared
 
 @Suite
 struct EvidenceBundleTests {
+    @Test("evidence capture propagates explicit target to nested runtime artifact requests")
+    func evidenceCapturePropagatesExplicitTargetToNestedRuntimeArtifactRequests() async throws {
+        let expectedTarget = "triton:ios-simulator:SIM-2"
+        let fakeServer = EvidenceTargetPropagationFakeServer(expectedTarget: expectedTarget)
+        defer { fakeServer.stop() }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-target-propagation-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["list", "hierarchy", "ax", "screenshot", "geometry", "archive"],
+            name: "target-propagation",
+            note: nil,
+            target: expectedTarget,
+            host: fakeServer.host,
+            port: fakeServer.port,
+            refresh: true
+        )
+
+        #expect(manifest.target?.id == expectedTarget)
+        #expect(manifest.skipped.isEmpty)
+        #expect(manifest.artifacts.map(\.kind).contains("hierarchy"))
+        #expect(manifest.artifacts.map(\.kind).contains("ax"))
+        #expect(manifest.artifacts.map(\.kind).contains("screenshot"))
+        #expect(manifest.artifacts.map(\.kind).contains("geometry"))
+        #expect(manifest.artifacts.map(\.kind).contains("archive"))
+        #expect(fakeServer.requestTargets.allSatisfy { $0 == expectedTarget })
+        #expect(fakeServer.requestTypes.contains("hierarchy"))
+        #expect(fakeServer.requestTypes.contains("accessibility"))
+        #expect(fakeServer.requestTypes.contains("screenshot"))
+        #expect(fakeServer.requestTypes.contains("geometry"))
+    }
+
     @Test("schema exposes explicit xcode summary evidence import option")
     func schemaExposesExplicitXcodeSummaryEvidenceImportOption() throws {
         let evidence = try #require(commandSchemas().first { $0.name == "evidence" })
@@ -676,4 +711,204 @@ private func captureEvidenceCommandOutput(_ body: () async throws -> Void) async
 
     let data = pipe.fileHandleForReading.readDataToEndOfFile()
     return String(decoding: data, as: UTF8.self)
+}
+
+private final class EvidenceTargetPropagationFakeServer {
+    let host = "127.0.0.1"
+    let port: Int
+
+    private let server: URLProtocol.Type
+
+    init(expectedTarget: String) {
+        self.port = Int.random(in: 20_000...40_000)
+        self.server = EvidenceTargetPropagationURLProtocol.self
+        EvidenceTargetPropagationURLProtocol.configure(port: port, expectedTarget: expectedTarget)
+        URLProtocol.registerClass(server)
+    }
+
+    func stop() {
+        URLProtocol.unregisterClass(server)
+        EvidenceTargetPropagationURLProtocol.reset()
+    }
+
+    var requestTargets: [String?] {
+        EvidenceTargetPropagationURLProtocol.requestTargets
+    }
+
+    var requestTypes: [String] {
+        EvidenceTargetPropagationURLProtocol.requestTypes
+    }
+}
+
+private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
+    private static let lock = NSLock()
+    private static var configuredPort: Int?
+    private static var configuredExpectedTarget: String?
+    private static var recordedTargets: [String?] = []
+    private static var recordedTypes: [String] = []
+
+    static var requestTargets: [String?] {
+        lock.withEvidenceLock { recordedTargets }
+    }
+
+    static var requestTypes: [String] {
+        lock.withEvidenceLock { recordedTypes }
+    }
+
+    static func configure(port: Int, expectedTarget: String) {
+        lock.withEvidenceLock {
+            configuredPort = port
+            configuredExpectedTarget = expectedTarget
+            recordedTargets = []
+            recordedTypes = []
+        }
+    }
+
+    static func reset() {
+        lock.withEvidenceLock {
+            configuredPort = nil
+            configuredExpectedTarget = nil
+            recordedTargets = []
+            recordedTypes = []
+        }
+    }
+
+    override class func canInit(with request: URLRequest) -> Bool {
+        guard let url = request.url else { return false }
+        return lock.withEvidenceLock {
+            url.scheme == "http"
+                && url.host == "127.0.0.1"
+                && url.port == configuredPort
+        }
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        do {
+            let response = try Self.response(for: request)
+            client?.urlProtocol(
+                self,
+                didReceive: HTTPURLResponse(
+                    url: request.url!,
+                    statusCode: response.statusCode,
+                    httpVersion: "HTTP/1.1",
+                    headerFields: ["Content-Type": response.contentType]
+                )!,
+                cacheStoragePolicy: .notAllowed
+            )
+            client?.urlProtocol(self, didLoad: response.data)
+            client?.urlProtocolDidFinishLoading(self)
+        } catch {
+            client?.urlProtocol(self, didFailWithError: error)
+        }
+    }
+
+    override func stopLoading() {}
+
+    private static func response(for request: URLRequest) throws -> (statusCode: Int, contentType: String, data: Data) {
+        guard let url = request.url else {
+            throw RuntimeError("Missing fake server URL")
+        }
+        switch (request.httpMethod ?? "GET", url.path) {
+        case ("GET", "/status"):
+            return try json(TKStatusResponse(connected: true, latestHierarchyAvailable: true, targetCount: 2))
+        case ("GET", "/targets"):
+            let targets = [
+                TKTargetSummary(id: "triton:ios-simulator:SIM-1", connected: true, latestHierarchyAvailable: true, simulatorUDID: "SIM-1"),
+                TKTargetSummary(id: configuredExpectedTarget ?? "triton:ios-simulator:SIM-2", connected: true, latestHierarchyAvailable: true, simulatorUDID: "SIM-2"),
+            ]
+            return try json(TKTargetsResponse(targets: targets))
+        case ("POST", "/request"):
+            let body = request.httpBodyStream.map(readBodyStream) ?? request.httpBody ?? Data()
+            let command = try JSONDecoder().decode(TKCLICommandRequest.self, from: body)
+            let expectedTarget = lock.withEvidenceLock { configuredExpectedTarget }
+            lock.withEvidenceLock {
+                recordedTargets.append(command.target)
+                recordedTypes.append(command.type)
+            }
+            guard command.target == expectedTarget else {
+                return try json(
+                    TKCLIErrorResponse(error: TKCLIErrorDetail(
+                        code: "ambiguous_target",
+                        message: "Target is ambiguous: \(command.target ?? TKLocalTargetID). Pass --target <id>."
+                    )),
+                    statusCode: 409
+                )
+            }
+            return try runtimeResponse(for: command.type)
+        default:
+            return (404, "text/plain", Data("not found".utf8))
+        }
+    }
+
+    private static func runtimeResponse(for type: String) throws -> (statusCode: Int, contentType: String, data: Data) {
+        switch type {
+        case "hierarchy":
+            return try json([
+                "displayItems": [],
+                "appInfo": [
+                    "appName": "Demo",
+                    "deviceDescription": "iPhone",
+                    "osDescription": "iOS 26",
+                ],
+            ] as [String: Any])
+        case "accessibility":
+            return try json([TKAXNode]())
+        case "geometry":
+            return try json(TKGeometryResponse(
+                bounds: TKRect(x: 0, y: 0, width: 390, height: 844),
+                safeArea: TKInsets(top: 59, left: 0, bottom: 34, right: 0),
+                scale: 3,
+                orientation: "portrait"
+            ))
+        case "screenshot":
+            return try json(TKScreenshotResponse(
+                format: "png",
+                width: 1,
+                height: 1,
+                scale: 1,
+                dataBase64: Data("png".utf8).base64EncodedString()
+            ))
+        default:
+            return (400, "text/plain", Data("unsupported request".utf8))
+        }
+    }
+
+    private static func json<T: Encodable>(
+        _ value: T,
+        statusCode: Int = 200
+    ) throws -> (statusCode: Int, contentType: String, data: Data) {
+        (statusCode, "application/json", try JSONEncoder().encode(value))
+    }
+
+    private static func json(
+        _ object: Any,
+        statusCode: Int = 200
+    ) throws -> (statusCode: Int, contentType: String, data: Data) {
+        (statusCode, "application/json", try JSONSerialization.data(withJSONObject: object))
+    }
+
+    private static func readBodyStream(_ stream: InputStream) -> Data {
+        stream.open()
+        defer { stream.close() }
+        var data = Data()
+        var buffer = [UInt8](repeating: 0, count: 4096)
+        while stream.hasBytesAvailable {
+            let count = stream.read(&buffer, maxLength: buffer.count)
+            if count <= 0 { break }
+            data.append(buffer, count: count)
+        }
+        return data
+    }
+}
+
+private extension NSLock {
+    func withEvidenceLock<T>(_ body: () throws -> T) rethrows -> T {
+        lock()
+        defer { unlock() }
+        return try body()
+    }
 }
