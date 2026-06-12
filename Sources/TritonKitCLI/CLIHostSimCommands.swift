@@ -207,8 +207,15 @@ struct SimProxyStatus: AsyncParsableCommand {
 
     func run() async throws {
         let target = try makeNetworkProxyPlanTarget(platform: .ios, device: simulator)
+        if let session, !session.isEmpty {
+            try printNetworkProxySession(
+                try makeNetworkProxyStatusSession(platform: .ios, target: target, sessionDirectory: session),
+                outputFormat: effectiveFormat(format, json: json)
+            )
+            return
+        }
         try printNetworkProxySession(
-            try makeNetworkProxyStatusSession(platform: .ios, target: target, sessionDirectory: session),
+            try makeNetworkProxyStatusProbeSession(platform: .ios, target: target, runner: { command in try runHostCommand(command) }),
             outputFormat: effectiveFormat(format, json: json)
         )
     }

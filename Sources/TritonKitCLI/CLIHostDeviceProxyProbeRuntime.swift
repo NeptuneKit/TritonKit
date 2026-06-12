@@ -109,6 +109,206 @@ func makeNetworkProxyProbeSession(
     )
 }
 
+func makeNetworkProxyStatusProbeSession(
+    platform: HostDevicePlatform,
+    target: HostDeviceTarget,
+    hdc: String = "hdc",
+    adb: String = "adb",
+    runner: NetworkProxyCommandRunner
+) throws -> NetworkProxySession {
+    if let rejected = makeNetworkProxyRealDeviceNotSupportedSession(action: .status, platform: platform, target: target, captureMode: nil) {
+        return rejected
+    }
+    let commands = networkProxyProbeCommands(platform: platform, target: target, hdc: hdc, adb: adb)
+    let results = commands.map { runNetworkProxyProbeCommand($0, runner: runner) }
+    let findings = networkProxyProbeFindings(platform: platform, results: results)
+    do {
+        let status = try networkProxyReadonlyStatus(platform: platform, target: target, results: results)
+        return NetworkProxySession(
+            ok: status.ok,
+            surface: "host.device-proxy",
+            action: NetworkProxyAction.status.rawValue,
+            platform: platform.rawValue,
+            target: target,
+            lane: .hostProxy,
+            captureMode: nil,
+            proxyEndpoint: status.proxyEndpoint,
+            configured: status.configured,
+            cert: networkProxyConservativeCertificate(platform: platform),
+            visibility: status.visibility,
+            limitations: status.limitations,
+            artifacts: [],
+            restore: NetworkProxyRestore(available: false, snapshotPath: nil, restored: nil),
+            sourceCommands: commands.map { hostSourceCommand($0.command) },
+            error: status.ok ? nil : networkProxyStatusProbeError(platform: platform, target: target, summary: status.errorSummary),
+            probeResults: results,
+            probeFindings: findings.isEmpty ? nil : findings
+        )
+    } catch {
+        return NetworkProxySession(
+            ok: false,
+            surface: "host.device-proxy",
+            action: NetworkProxyAction.status.rawValue,
+            platform: platform.rawValue,
+            target: target,
+            lane: .hostProxy,
+            captureMode: nil,
+            proxyEndpoint: nil,
+            configured: false,
+            cert: networkProxyConservativeCertificate(platform: platform),
+            visibility: .unknown,
+            limitations: networkProxyDoctorLimitations(platform: platform) + networkProxyProbeLimitations(platform: platform, results: results) + [
+                "proxy_status_probe_failed:\(networkProxyErrorSummaryString(String(describing: error)))",
+                "proxy_status_readonly:not_mutated",
+            ],
+            artifacts: [],
+            restore: NetworkProxyRestore(available: false, snapshotPath: nil, restored: nil),
+            sourceCommands: commands.map { hostSourceCommand($0.command) },
+            error: networkProxyStatusProbeError(platform: platform, target: target, summary: networkProxyErrorSummaryString(String(describing: error))),
+            probeResults: results,
+            probeFindings: findings.isEmpty ? nil : findings
+        )
+    }
+}
+
+private struct NetworkProxyReadonlyStatus {
+    let ok: Bool
+    let configured: Bool
+    let proxyEndpoint: String?
+    let visibility: NetworkProxyVisibility
+    let limitations: [String]
+    let errorSummary: String?
+}
+
+private func networkProxyReadonlyStatus(
+    platform: HostDevicePlatform,
+    target: HostDeviceTarget,
+    results: [NetworkProxyProbeResult]
+) throws -> NetworkProxyReadonlyStatus {
+    let baseLimitations = networkProxyDoctorLimitations(platform: platform)
+        + networkProxyProbeLimitations(platform: platform, results: results)
+        + ["proxy_status_readonly:not_mutated"]
+    switch platform {
+    case .ios:
+        guard results.count == 4, results.allSatisfy(\.ok) else {
+            return networkProxyFailedReadonlyStatus(limitations: baseLimitations, results: results)
+        }
+        let snapshot = try parseNetworkSetupServiceSnapshot(
+            service: "Wi-Fi",
+            httpOutput: results[0].stdoutPreview ?? "",
+            httpsOutput: results[1].stdoutPreview ?? "",
+            socksOutput: results[2].stdoutPreview ?? "",
+            bypassOutput: results[3].stdoutPreview ?? ""
+        )
+        let endpoint = networkProxyEndpointDescription(snapshot: snapshot)
+        return NetworkProxyReadonlyStatus(
+            ok: true,
+            configured: endpoint != nil,
+            proxyEndpoint: endpoint,
+            visibility: endpoint == nil ? .unknown : .partial,
+            limitations: baseLimitations + (endpoint == nil ? ["proxy_status_no_platform_proxy_detected"] : ["proxy_status_platform_proxy_detected:readonly_snapshot"]),
+            errorSummary: nil
+        )
+    case .android:
+        guard let result = results.first, result.ok else {
+            return networkProxyFailedReadonlyStatus(limitations: baseLimitations, results: results)
+        }
+        let endpoint = result.stdoutPreview.flatMap(parseADBHTTPProxySetting)
+        return NetworkProxyReadonlyStatus(
+            ok: true,
+            configured: endpoint != nil,
+            proxyEndpoint: endpoint,
+            visibility: endpoint == nil ? .unknown : .partial,
+            limitations: baseLimitations + (endpoint == nil ? ["proxy_status_no_platform_proxy_detected"] : ["proxy_status_platform_proxy_detected:readonly_snapshot"]),
+            errorSummary: nil
+        )
+    case .harmony:
+        let ok = results.contains { $0.name == "harmony.boot-completed" && $0.ok }
+            && results.contains { $0.name == "harmony.shell" && $0.ok }
+        guard ok else {
+            return networkProxyFailedReadonlyStatus(limitations: baseLimitations, results: results)
+        }
+        return NetworkProxyReadonlyStatus(
+            ok: true,
+            configured: false,
+            proxyEndpoint: nil,
+            visibility: .unknown,
+            limitations: baseLimitations + [
+                "proxy_session_not_running",
+                "proxy_harmony_status_probe_only:no_verified_proxy_mutation",
+            ],
+            errorSummary: nil
+        )
+    }
+}
+
+private func networkProxyFailedReadonlyStatus(
+    limitations: [String],
+    results: [NetworkProxyProbeResult]
+) -> NetworkProxyReadonlyStatus {
+    let summary = networkProxyProbeFailureSummary(results)
+    return NetworkProxyReadonlyStatus(
+        ok: false,
+        configured: false,
+        proxyEndpoint: nil,
+        visibility: .unknown,
+        limitations: limitations + ["proxy_status_probe_failed:\(summary)"],
+        errorSummary: summary
+    )
+}
+
+private func networkProxyEndpointDescription(snapshot: HostNetworkProxyServiceSnapshot) -> String? {
+    if snapshot.httpEnabled, !snapshot.httpHost.isEmpty, snapshot.httpPort > 0 {
+        return "\(snapshot.httpHost):\(snapshot.httpPort)"
+    }
+    if snapshot.httpsEnabled, !snapshot.httpsHost.isEmpty, snapshot.httpsPort > 0 {
+        return "\(snapshot.httpsHost):\(snapshot.httpsPort)"
+    }
+    if snapshot.socksEnabled, !snapshot.socksHost.isEmpty, snapshot.socksPort > 0 {
+        return "\(snapshot.socksHost):\(snapshot.socksPort)"
+    }
+    return nil
+}
+
+private func networkProxyProbeFailureSummary(_ results: [NetworkProxyProbeResult]) -> String {
+    guard let failed = results.first(where: { !$0.ok }) else { return "unknown" }
+    if let error = failed.error, !error.isEmpty {
+        return networkProxyErrorSummaryString(error)
+    }
+    if let stderr = failed.stderrPreview, !stderr.isEmpty {
+        return networkProxyErrorSummaryString(stderr)
+    }
+    if let exitCode = failed.exitCode {
+        return "exit_\(exitCode)"
+    }
+    return failed.name
+}
+
+private func networkProxyStatusProbeError(
+    platform: HostDevicePlatform,
+    target: HostDeviceTarget,
+    summary: String?
+) -> TKCLIErrorDetail {
+    let suffix = summary.map { " Last probe failure: \($0)." } ?? ""
+    return TKCLIErrorDetail(
+        code: "proxy_status_probe_failed",
+        message: "Readonly host-side proxy status probe failed for \(platform.rawValue) target \(target.target).",
+        hint: "Inspect probeResults and run a readonly proxy probe before planning proxy start.\(suffix)",
+        nextAction: TKCLINextAction(command: "device", args: ["proxy", "probe", "--platform", platform.rawValue, "--device", target.target, "--json"], category: "diagnose")
+    )
+}
+
+private func networkProxyErrorSummaryString(_ value: String) -> String {
+    let scalars = value.unicodeScalars.map { scalar -> Character in
+        CharacterSet.alphanumerics.contains(scalar) ? Character(scalar) : "_"
+    }
+    let normalized = String(scalars)
+        .split(separator: "_")
+        .joined(separator: "_")
+        .lowercased()
+    return normalized.isEmpty ? "unknown" : String(normalized.prefix(120))
+}
+
 private func runNetworkProxyProbeCommand(
     _ probe: NetworkProxyProbeCommand,
     runner: NetworkProxyCommandRunner

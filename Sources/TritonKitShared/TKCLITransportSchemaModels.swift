@@ -167,7 +167,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if failureCode == "timeout" {
             categories.append("verify")
         }
-        if ["request_failed", "server_unavailable", "target_unavailable", "runtime_unavailable"].contains(failureCode) {
+        if ["request_failed", "server_unavailable", "target_unavailable", "runtime_unavailable", "proxy_status_probe_failed"].contains(failureCode) {
             categories.append("diagnose")
         }
         if ["artifact_write_failed", "file_write_failed", "artifact_output_rejected"].contains(failureCode) {

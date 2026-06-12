@@ -246,6 +246,8 @@ struct DeviceProxyStatus: AsyncParsableCommand {
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
     @Option(help: "Unified host device selector") var device: String?
     @Option(help: "Proxy session directory produced by proxy start --output") var session: String?
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -260,7 +262,18 @@ struct DeviceProxyStatus: AsyncParsableCommand {
         }
         let target: HostDeviceTarget?
         if let device, !device.isEmpty {
-            target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+            let resolvedTarget = try makeNetworkProxyPlanTarget(platform: platform, device: device)
+            try printNetworkProxySession(
+                try makeNetworkProxyStatusProbeSession(
+                    platform: platform,
+                    target: resolvedTarget,
+                    hdc: hdc,
+                    adb: adb,
+                    runner: { command in try runHostCommand(command) }
+                ),
+                outputFormat: effectiveFormat(format, json: json)
+            )
+            return
         } else {
             target = nil
         }

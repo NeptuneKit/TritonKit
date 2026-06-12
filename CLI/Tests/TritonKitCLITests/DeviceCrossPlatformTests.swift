@@ -116,6 +116,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.failureCodes.contains("destructive_action_requires_policy"))
         #expect(device.failureCodes.contains("proxy_endpoint_unreachable"))
         #expect(device.failureCodes.contains("proxy_probe_failed"))
+        #expect(device.failureCodes.contains("proxy_status_probe_failed"))
         #expect(device.failureCodes.contains("proxy_cert_install_failed"))
         #expect(device.failureCodes.contains("proxy_start_failed"))
         #expect(device.failureCodes.contains("proxy_restore_failed"))
@@ -897,6 +898,106 @@ struct DeviceCrossPlatformTests {
             ))
             #expect(session.limitations.contains("proxy_session_not_running"))
         }
+    }
+
+    @Test("device proxy status probes readonly platform proxy state when target is provided")
+    func deviceProxyStatusProbesReadonlyPlatformProxyStateWhenTargetIsProvided() throws {
+        let iosTarget = try makeNetworkProxyPlanTarget(platform: .ios, device: "SIM-1")
+        let iosStatus = try makeNetworkProxyStatusProbeSession(
+            platform: .ios,
+            target: iosTarget,
+            runner: { command in
+                let commandLine = hostSourceCommand(command)
+                if commandLine.contains("-getwebproxy") {
+                    return successfulHostProcessResult(command, stdout: """
+                    Enabled: Yes
+                    Server: 127.0.0.1
+                    Port: 19431
+                    Authenticated Proxy Enabled: 0
+                    """)
+                }
+                if commandLine.contains("-getsecurewebproxy") || commandLine.contains("-getsocksfirewallproxy") {
+                    return successfulHostProcessResult(command, stdout: """
+                    Enabled: No
+                    Server:
+                    Port: 0
+                    Authenticated Proxy Enabled: 0
+                    """)
+                }
+                return successfulHostProcessResult(command, stdout: "There aren't any bypass domains set on Wi-Fi.\n")
+            }
+        )
+
+        #expect(iosStatus.ok)
+        #expect(iosStatus.action == "proxy.status")
+        #expect(iosStatus.configured)
+        #expect(iosStatus.proxyEndpoint == "127.0.0.1:19431")
+        #expect(iosStatus.visibility == .partial)
+        #expect(iosStatus.sourceCommands == networkSetupProxySnapshotCommands(service: "Wi-Fi").map(hostSourceCommand))
+        #expect(iosStatus.limitations.contains("proxy_status_readonly:not_mutated"))
+        #expect(iosStatus.limitations.contains("proxy_status_platform_proxy_detected:readonly_snapshot"))
+        #expect(iosStatus.probeResults?.count == 4)
+
+        let androidTarget = try makeNetworkProxyPlanTarget(platform: .android, device: "emulator-5554")
+        let androidStatus = try makeNetworkProxyStatusProbeSession(
+            platform: .android,
+            target: androidTarget,
+            runner: { command in successfulHostProcessResult(command, stdout: "10.0.2.2:19431\n") }
+        )
+
+        #expect(androidStatus.ok)
+        #expect(androidStatus.configured)
+        #expect(androidStatus.proxyEndpoint == "10.0.2.2:19431")
+        #expect(androidStatus.sourceCommands == adbProxySnapshotCommands(serial: "emulator-5554").map(hostSourceCommand))
+        #expect(androidStatus.probeResults?.count == 1)
+
+        let harmonyTarget = try makeNetworkProxyPlanTarget(platform: .harmony, device: "127.0.0.1:5555")
+        let harmonyStatus = try makeNetworkProxyStatusProbeSession(
+            platform: .harmony,
+            target: harmonyTarget,
+            runner: { command in
+                let commandLine = hostSourceCommand(command)
+                if commandLine.contains("bootevent.boot.completed") {
+                    return successfulHostProcessResult(command, stdout: "true\n")
+                }
+                if commandLine.contains("echo triton-shell-ready") {
+                    return successfulHostProcessResult(command, stdout: "triton-shell-ready\n")
+                }
+                if commandLine.contains("param ls -r proxy") {
+                    return successfulHostProcessResult(command, stdout: "persist.net.proxy.host=\n")
+                }
+                return successfulHostProcessResult(command, stdout: "")
+            }
+        )
+
+        #expect(harmonyStatus.ok)
+        #expect(harmonyStatus.configured == false)
+        #expect(harmonyStatus.proxyEndpoint == nil)
+        #expect(harmonyStatus.sourceCommands.contains("hdc -t 127.0.0.1:5555 shell param ls -r proxy"))
+        #expect(harmonyStatus.limitations.contains("proxy_harmony_status_probe_only:no_verified_proxy_mutation"))
+        #expect(harmonyStatus.probeFindings?.first?.name == "persist.net.proxy.host")
+        #expect(harmonyStatus.probeFindings?.first?.verifiedMutation == false)
+    }
+
+    @Test("device proxy status probe reports stable readonly failure envelopes")
+    func deviceProxyStatusProbeReportsStableReadonlyFailureEnvelopes() throws {
+        let target = try makeNetworkProxyPlanTarget(platform: .android, device: "emulator-5554")
+        let status = try makeNetworkProxyStatusProbeSession(
+            platform: .android,
+            target: target,
+            runner: { command in
+                throw HostCommandRunError.nonZeroExit(command: command, result: failedHostProcessResult(command, stderr: "device offline\n"))
+            }
+        )
+
+        #expect(status.ok == false)
+        #expect(status.action == "proxy.status")
+        #expect(status.configured == false)
+        #expect(status.error?.code == "proxy_status_probe_failed")
+        #expect(status.error?.nextAction?.args == ["proxy", "probe", "--platform", "android", "--device", "emulator-5554", "--json"])
+        #expect(status.limitations.contains("proxy_status_readonly:not_mutated"))
+        #expect(status.limitations.contains { $0.hasPrefix("proxy_status_probe_failed:") })
+        #expect(status.probeResults?.first?.ok == false)
     }
 
     @Test("device proxy serve parses proxy requests into redacted capture events")

@@ -227,6 +227,8 @@ Unsupported 失败族必须能导向 `plan` 类恢复。`action_not_supported`�
 
 `host.device-proxy` 的 `probeFindings[]` 是只读探测发现，不是可执行 mutation ledger。Harmony 的 `harmony.proxy-parameter-candidate` finding 必须保持 `verifiedMutation=false` 并给出 `requiredAction=manual_verification_required`，agent 只能把它当作 DevEco / Harmony proxy adapter 验证线索，不能据此生成或执行 `hdc param set` 之类未验证命令。
 
+`host.device-proxy` 的 `status --device` 可以执行只读平台代理状态探测。`configured=true` 与 `proxyEndpoint=<host:port>` 只表示当前 iOS / Android 平台设置里检测到代理值；它不是 capture proxy 已观察到业务请求的证明。证明流量经过代理仍需要 `proxy.serve.request`、`network-capture` artifact 或 `.tritonevidence` 中的请求事件。Harmony status 仍必须保持 `proxy_harmony_status_probe_only`，不能把候选参数解释为已验证 mutation。
+
 `outputContracts[].kind` 是输出模型语义分类，也必须在 schema 测试中的固定 taxonomy 内。新增响应模型、事件模型或 artifact envelope 时，先定义 kind 的 agent 消费语义，再同步文档、skills 和测试，避免 agent 解析器看到未登记的临时 kind。
 
 同一 command 内的 `outputContracts[].selector` 必须唯一。selector 是 agent 查找输出模型的键，重复 selector 会让自动解析器和回归断言无法确定应该消费哪个 contract。
