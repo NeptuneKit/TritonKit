@@ -530,11 +530,14 @@ func performSwipe(_ request: TKInputRequest) -> TKInputResult {
         return TKInputResult.failure(action: action, message: "Missing swipe coordinates")
     }
 
+    let deltaX = endX - startX
+    let deltaY = endY - startY
     let resolved = resolveView(targetOID: nil, x: startX, y: startY)
     guard let view = resolved.view else {
         return TKInputResult.failure(action: action, message: resolved.message)
     }
-    guard let scrollView = nearestSuperview(of: view, matching: UIScrollView.self) else {
+    let scrollTarget = swipeScrollTarget(from: view, deltaX: deltaX, deltaY: deltaY)
+    guard let scrollView = scrollTarget.view else {
         return TKInputResult.failure(
             action: action,
             message: "Hit view is not inside a UIScrollView",
@@ -543,8 +546,6 @@ func performSwipe(_ request: TKInputRequest) -> TKInputResult {
         )
     }
 
-    let deltaX = endX - startX
-    let deltaY = endY - startY
     let maxX = max(0, scrollView.contentSize.width - scrollView.bounds.width + scrollView.adjustedContentInset.right)
     let maxY = max(0, scrollView.contentSize.height - scrollView.bounds.height + scrollView.adjustedContentInset.bottom)
     let minX = -scrollView.adjustedContentInset.left
@@ -559,8 +560,41 @@ func performSwipe(_ request: TKInputRequest) -> TKInputResult {
         action: action,
         message: String(format: "Set contentOffset to %.1f,%.1f", newOffset.x, newOffset.y),
         targetOID: oid(for: scrollView),
-        targetClassName: NSStringFromClass(type(of: scrollView))
+        targetClassName: NSStringFromClass(type(of: scrollView)),
+        strategy: scrollTarget.strategy
     )
+}
+
+func swipeScrollTarget(from view: UIView, deltaX: Double, deltaY: Double) -> (view: UIScrollView?, strategy: String?) {
+    let axis = abs(deltaX) >= abs(deltaY) ? SwipeAxis.horizontal : .vertical
+    var nearestScrollView: UIScrollView?
+    var current: UIView? = view
+    while let candidate = current {
+        if let scrollView = candidate as? UIScrollView {
+            nearestScrollView = nearestScrollView ?? scrollView
+            if scrollView.canScroll(along: axis) {
+                return (scrollView, "axis-matched-scroll-ancestor")
+            }
+        }
+        current = candidate.superview
+    }
+    return (nearestScrollView, nearestScrollView == nil ? nil : "nearest-scroll-ancestor")
+}
+
+private enum SwipeAxis {
+    case horizontal
+    case vertical
+}
+
+private extension UIScrollView {
+    func canScroll(along axis: SwipeAxis) -> Bool {
+        switch axis {
+        case .horizontal:
+            contentSize.width + adjustedContentInset.left + adjustedContentInset.right > bounds.width + 0.5
+        case .vertical:
+            contentSize.height + adjustedContentInset.top + adjustedContentInset.bottom > bounds.height + 0.5
+        }
+    }
 }
 
 @MainActor
