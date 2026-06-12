@@ -323,6 +323,47 @@ struct TKAXUIKitTextTests {
         #expect(recorder.tapCount == 1)
     }
 
+    @Test("horizontal swipe inside nested vertical scroll view selects horizontal pager ancestor")
+    func horizontalSwipeInsideNestedVerticalScrollViewSelectsHorizontalAncestor() async throws {
+        let window = makeVisibleTestWindow()
+        defer {
+            window.isHidden = true
+        }
+
+        let pager = UIScrollView(frame: CGRect(x: 0, y: 80, width: 390, height: 320))
+        pager.contentSize = CGSize(width: 780, height: 320)
+        pager.contentOffset = CGPoint(x: 390, y: 0)
+        window.addSubview(pager)
+
+        let list = UIScrollView(frame: CGRect(x: 390, y: 0, width: 390, height: 320))
+        list.contentSize = CGSize(width: 390, height: 960)
+        list.contentOffset = CGPoint(x: 0, y: 120)
+        pager.addSubview(list)
+
+        let row = UILabel(frame: CGRect(x: 24, y: 140, width: 180, height: 40))
+        row.text = "创作中心"
+        list.addSubview(row)
+
+        let pagerOID = TKObjectRegistry.shared.register(pager)
+        let request = TKInputRequest.swipe(
+            startX: 210,
+            startY: 240,
+            endX: 330,
+            endY: 242,
+            width: 390,
+            height: 844,
+            duration: 0.2
+        )
+        let result = try await performInputRequest(request)
+
+        #expect(result.ok)
+        #expect(result.targetOID == pagerOID)
+        #expect(result.targetClassName == NSStringFromClass(UIScrollView.self))
+        #expect(pager.contentOffset.x == 270)
+        #expect(list.contentOffset.y == 120)
+        #expect(result.strategy == "axis-matched-scroll-ancestor")
+    }
+
     private func performInputRequest(_ request: TKInputRequest) async throws -> TKInputResult {
         let message = TKMessage(id: 1, type: .input, payload: try JSONEncoder().encode(request))
         let response = await TritonKitRequestHandler().tritonKit(TritonKit.shared, didReceiveMessage: message)
