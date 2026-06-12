@@ -84,6 +84,8 @@ struct NetworkProxySession: Encodable, Equatable {
     let error: TKCLIErrorDetail?
     let redaction: String?
     let requestCount: Int?
+    let eventCount: Int?
+    let failureCount: Int?
     let truncation: String?
     let probeResults: [NetworkProxyProbeResult]?
     let probeFindings: [NetworkProxyProbeFinding]?
@@ -107,6 +109,8 @@ struct NetworkProxySession: Encodable, Equatable {
         error: TKCLIErrorDetail?,
         redaction: String? = nil,
         requestCount: Int? = nil,
+        eventCount: Int? = nil,
+        failureCount: Int? = nil,
         truncation: String? = nil,
         probeResults: [NetworkProxyProbeResult]? = nil,
         probeFindings: [NetworkProxyProbeFinding]? = nil
@@ -129,6 +133,8 @@ struct NetworkProxySession: Encodable, Equatable {
         self.error = error
         self.redaction = redaction
         self.requestCount = requestCount
+        self.eventCount = eventCount
+        self.failureCount = failureCount
         self.truncation = truncation
         self.probeResults = probeResults
         self.probeFindings = probeFindings
@@ -271,6 +277,8 @@ private struct NetworkProxyCapturePayload: Encodable {
     let platform: String
     let target: String
     let requestCount: Int
+    let eventCount: Int
+    let failureCount: Int
     let redaction: String
     let visibility: String
     let events: [String]
@@ -278,6 +286,8 @@ private struct NetworkProxyCapturePayload: Encodable {
 
 struct NetworkProxyCaptureExportSummary: Equatable {
     let requestCount: Int
+    let eventCount: Int
+    let failureCount: Int
     let redaction: String
     let truncation: String
 }
@@ -381,6 +391,8 @@ final class FakeNetworkProxyHostAdapter {
             platform: request.platform.rawValue,
             target: request.target.target,
             requestCount: 0,
+            eventCount: 0,
+            failureCount: 0,
             redaction: "default",
             visibility: NetworkProxyVisibility.partial.rawValue,
             events: []
@@ -969,6 +981,8 @@ func writeNetworkProxyCapturePlaceholder(
             platform: platform.rawValue,
             target: target.target,
             requestCount: 0,
+            eventCount: 0,
+            failureCount: 0,
             redaction: "default",
             visibility: NetworkProxyVisibility.partial.rawValue,
             events: []
@@ -2007,6 +2021,8 @@ func makeNetworkProxyExportSession(
         error: nil,
         redaction: exportSummary.redaction,
         requestCount: exportSummary.requestCount,
+        eventCount: exportSummary.eventCount,
+        failureCount: exportSummary.failureCount,
         truncation: exportSummary.truncation
     )
 }

@@ -301,15 +301,21 @@ func summarizeNetworkProxyCaptureArtifact(sourceURL: URL) throws -> NetworkProxy
         .split(whereSeparator: \.isNewline)
         .map(String.init) ?? []
     let decoder = JSONDecoder()
+    var eventCount = 0
     var requestCount = 0
+    var failureCount = 0
     var redactions: Set<String> = []
 
     for line in lines {
         guard let lineData = line.data(using: .utf8) else { continue }
         if let event = try? decoder.decode(NetworkProxyServeEvent.self, from: lineData) {
+            eventCount += 1
             redactions.insert(event.redaction)
             if event.ok, event.event == "proxy.serve.request" {
                 requestCount += 1
+            }
+            if !event.ok || event.event == "proxy.serve.connection-failed" {
+                failureCount += 1
             }
             continue
         }
@@ -317,12 +323,23 @@ func summarizeNetworkProxyCaptureArtifact(sourceURL: URL) throws -> NetworkProxy
            let redaction = payload["redaction"] as? String,
            !redaction.isEmpty {
             redactions.insert(redaction)
+            if let requestCountValue = payload["requestCount"] as? Int {
+                requestCount += requestCountValue
+            }
+            if let eventCountValue = payload["eventCount"] as? Int {
+                eventCount += eventCountValue
+            }
+            if let failureCountValue = payload["failureCount"] as? Int {
+                failureCount += failureCountValue
+            }
         }
     }
 
     let redaction = redactions.sorted().joined(separator: ",")
     return NetworkProxyCaptureExportSummary(
         requestCount: requestCount,
+        eventCount: eventCount,
+        failureCount: failureCount,
         redaction: redaction.isEmpty ? "unknown" : redaction,
         truncation: "none"
     )

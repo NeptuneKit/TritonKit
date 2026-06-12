@@ -1416,6 +1416,7 @@ struct DeviceCrossPlatformTests {
         let ndjson = try events.map { try encodeCompactJSON($0) }.joined(separator: "\n") + "\n"
         try Data(ndjson.utf8).write(to: sourceURL)
 
+        let summary = try summarizeNetworkProxyCaptureArtifact(sourceURL: sourceURL)
         let bytes = try exportNetworkProxyCaptureArtifact(sourceURL: sourceURL, outputURL: outputURL)
         let har = try jsonDictionary(at: outputURL.path)
         let log = try #require(har["log"] as? [String: Any])
@@ -1436,6 +1437,10 @@ struct DeviceCrossPlatformTests {
         let firstHeaders = try #require(firstRequest["headers"] as? [[String: Any]])
 
         #expect(bytes > 0)
+        #expect(summary.requestCount == 6)
+        #expect(summary.eventCount == 6)
+        #expect(summary.failureCount == 0)
+        #expect(summary.redaction == "headers-names-only")
         #expect(log["version"] as? String == "1.2")
         #expect(entries.count == 6)
         #expect(firstRequest["method"] as? String == "GET")
@@ -2018,6 +2023,8 @@ struct DeviceCrossPlatformTests {
         #expect(exported.configured)
         #expect(exported.artifacts == [NetworkProxyArtifact(kind: "network-capture", path: exportPath.path, bytes: try Data(contentsOf: exportPath).count)])
         #expect(exported.requestCount == 0)
+        #expect(exported.eventCount == 0)
+        #expect(exported.failureCount == 0)
         #expect(exported.redaction == "default")
         #expect(exported.truncation == "none")
         let exportedPayload = try jsonDictionary(at: exportPath.path)
@@ -2143,7 +2150,35 @@ struct DeviceCrossPlatformTests {
             capturePath: capturePath,
             connectionIndex: 1
         )
-        try Data((try encodeCompactJSON(event) + "\n").utf8).write(to: URL(fileURLWithPath: capturePath))
+        let failedEvent = NetworkProxyServeEvent(
+            ok: false,
+            surface: "host.device-proxy-serve",
+            event: "proxy.serve.connection-failed",
+            schemaVersion: "triton.proxy.capture.v1",
+            listen: "127.0.0.1:19431",
+            capturePath: capturePath,
+            captureMode: "record",
+            policyAction: nil,
+            mockRuleId: nil,
+            connectionIndex: 2,
+            method: nil,
+            url: nil,
+            host: nil,
+            port: nil,
+            path: nil,
+            tunnel: nil,
+            headerNames: [],
+            responseStatus: nil,
+            responseStatusText: nil,
+            throttleDelayMs: nil,
+            redaction: "headers-names-only",
+            error: "upstream refused"
+        )
+        let captureNDJSON = [
+            try encodeCompactJSON(event),
+            try encodeCompactJSON(failedEvent),
+        ].joined(separator: "\n") + "\n"
+        try Data(captureNDJSON.utf8).write(to: URL(fileURLWithPath: capturePath))
 
         let exported = try makeNetworkProxyExportSession(platform: .android, target: target, sessionDirectory: directory.path, outputPath: exportPath.path)
         let har = try jsonDictionary(at: exportPath.path)
@@ -2155,6 +2190,8 @@ struct DeviceCrossPlatformTests {
         #expect(exported.action == "proxy.export")
         #expect(exported.artifacts == [NetworkProxyArtifact(kind: "network-capture", path: exportPath.path, bytes: try Data(contentsOf: exportPath).count)])
         #expect(exported.requestCount == 1)
+        #expect(exported.eventCount == 2)
+        #expect(exported.failureCount == 1)
         #expect(exported.redaction == "headers-names-only")
         #expect(exported.truncation == "none")
         #expect(log["version"] as? String == "1.2")
@@ -2285,6 +2322,8 @@ struct DeviceCrossPlatformTests {
         #expect(exported.ok)
         #expect(artifact.path == exportPath.path)
         #expect(exported.requestCount == 1)
+        #expect(exported.eventCount == 1)
+        #expect(exported.failureCount == 0)
         #expect(exported.redaction == "headers-names-only")
         #expect(exported.truncation == "none")
         #expect(entries.count == 1)

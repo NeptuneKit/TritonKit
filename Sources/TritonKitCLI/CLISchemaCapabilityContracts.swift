@@ -398,6 +398,8 @@ func hostDeviceProxyOutputContract() -> TKCommandOutputContract {
             ("error", "TKCLIErrorDetail?", false, "Structured proxy failure detail"),
             ("redaction", "String?", false, "Capture export redaction policy summary, such as headers-names-only"),
             ("requestCount", "Int?", false, "Number of proxy.serve.request events exported from the capture artifact"),
+            ("eventCount", "Int?", false, "Number of proxy.serve.* events decoded from the capture artifact"),
+            ("failureCount", "Int?", false, "Number of failed capture events such as proxy.serve.connection-failed"),
             ("truncation", "String?", false, "Capture export truncation status; currently none for metadata-only exports"),
             ("probeResults", "[NetworkProxyProbeResult]?", false, "Readonly proxy capability probe results with command, exitCode, stdout/stderr previews, and error summary"),
             ("probeFindings", "[NetworkProxyProbeFinding]?", false, "Structured readonly proxy probe findings such as Harmony candidate parameters that still require manual verification before mutation"),
