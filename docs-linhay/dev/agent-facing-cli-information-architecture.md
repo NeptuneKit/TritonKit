@@ -181,7 +181,7 @@ schema 必须覆盖“如何调用”和“失败后如何恢复”，不能只�
 
 `outputContracts[].kind` 也必须落在固定 agent taxonomy。kind 是输出模型的语义分类，例如 `status-envelope`、`capability-matrix`、`runtime-snapshot`、`input-result`、`evidence-manifest`、`progress-event`、`final-event`、`artifact-envelope` 等；新增输出模型时必须同步扩展 kind taxonomy，而不能直接写入临时字符串。该约束由 `SchemaFactSourceTests.schemaOutputContractKindsStayWithinAgentTaxonomy` 锁定。
 
-凡是 output contract 里声明 `error: TKCLIErrorDetail?`，schema 都必须同步展开稳定子字段，而不是只给黑盒 DTO 名字。当前通用最小集为：`error.endpoint`、`error.hint`、`error.nearestCandidates`、`error.suggestedCommands`、`error.candidateCount`、`error.nextAction`、`error.nextAction.command`、`error.nextAction.args`、`error.nextAction.category`、`error.nextAction.requiresLongRunningProcess`。这样 agent 在遇到普通命令失败时，不需要从 Swift DTO 定义或 README 猜测哪些错误子字段可读。
+凡是 output contract 里声明 `error: TKCLIErrorDetail?`，schema 都必须同步展开稳定子字段，而不是只给黑盒 DTO 名字。当前通用最小集为：`error.endpoint`、`error.hint`、`error.nearestCandidates`、`error.suggestedCommands`、`error.candidateCount`、`error.nextAction`、`error.nextAction.command`、`error.nextAction.args`、`error.nextAction.category`、`error.nextAction.requiresLongRunningProcess`、`error.nextAction.readyEvents`、`error.nextAction.finalEvents`、`error.nextAction.terminationSignals`。这样 agent 在遇到普通命令失败时，不需要从 Swift DTO 定义或 README 猜测哪些错误子字段可读，也不用从 argv 反推长驻进程的 ready / final / stop 语义。
 
 同一 command 内的 `outputContracts[].selector` 必须唯一。agent 会用 selector 定位可解析输出模型，重复 selector 会让同一个命令的输出契约出现歧义；该约束由 `SchemaFactSourceTests.schemaOutputContractSelectorsRemainUniqueForAgentLookup` 锁定。
 
@@ -189,7 +189,7 @@ schema 必须覆盖“如何调用”和“失败后如何恢复”，不能只�
 
 任何声明失败退出或 `failureShape` 的命令都必须有非空 `failureCodes[]`。如果某个命令没有失败面，例如纯 bootstrap 的 `version`，应显式保持 `failureShape=nil`，不能继承默认失败 envelope 误导 agent；该约束由 `SchemaFactSourceTests.schemaFailureSurfacesExposeStableFailureCodes` 锁定。
 
-任何在 `failureShape` 中声明 `nextAction?` 的错误 envelope，都必须同时说明 next action 的 `command/args/category/requiresLongRunningProcess` 结构。任何 `outputContracts[]` 字段声明 `error: TKCLIErrorDetail?` 时，也必须自动暴露 `error.nextAction` 与 `error.nextAction.category`，避免 agent 在 failure shape、doctor、capabilities 与 plan 之间切换解析规则；该约束由 `SchemaFactSourceTests.schemaFailureShapesDescribeNextActionCategory` 与 `SchemaFactSourceTests.errorOutputContractsExposeNextActionCategory` 锁定。
+任何在 `failureShape` 中声明 `nextAction?` 的错误 envelope，都必须同时说明 next action 的 `command/args/category/requiresLongRunningProcess/readyEvents/finalEvents/terminationSignals` 结构。任何 `outputContracts[]` 字段声明 `error: TKCLIErrorDetail?` 时，也必须自动暴露完整 `error.nextAction.*` 子字段，避免 agent 在 failure shape、doctor、capabilities 与 plan 之间切换解析规则；该约束由 `SchemaFactSourceTests.schemaFailureShapesDescribeNextActionCategory` 与 `SchemaFactSourceTests.errorOutputContractsExposeNextActionCategory` 锁定。
 
 `failureCodes[]` 必须使用稳定 lower_snake_case，且同一 command 或 subcommand 内不能重复。agent 会把 `error.code` 直接映射到恢复策略，不能依赖大小写、短横线、自然语言或重复值归一化；该约束由 `SchemaFactSourceTests.schemaFailureCodesUseStableSnakeCase` 锁定。
 
@@ -284,7 +284,7 @@ Destructive / confirmation 类失败码必须有 `plan` category 的恢复入口
 3. `reason`：不可用原因。
 4. `group`：agent-facing 信息域，例如 `target`、`runtime`、`xcode`、`observe`、`action`、`assert`、`evidence`。
 5. `requiredBy[]`：哪些 workflow 或命令族依赖它。
-6. `nextAction`：建议恢复或执行命令，使用 `{command,args,requiresLongRunningProcess}` 结构。
+6. `nextAction`：建议恢复或执行命令，使用 `{command,args,category,requiresLongRunningProcess,readyEvents,finalEvents,terminationSignals}` 结构。
 7. `evidence[]`：判断依据或可审计输出面，例如 server response、manifest field、target source、evidence bundle。
 
 WebView 能力必须拆分为两层：`webview-list` / `webview-current` 只表示可发现可见 Web 容器候选，证据来自 host layout 或 runtime AX；`webview-current-url`、`webview-snapshot`、`webview-bridge-call`、`webview-events`、`webview-wait` 与 `route-current-url-assert` 表示 provider 级能力，必须依赖 embedded runtime 或 `--runtime-base-url` 暴露的 WebView provider。没有 provider 时，agent 只能把结果当候选证据，不能宣称 DOM、URL、JS 或 bridge 可用。
@@ -560,7 +560,7 @@ triton replay <file.tritonplan> --json
 76. Round 83：在 `doctor` output contract 中显式声明 `checks[].nextAction.category`，并用测试固定 doctor recovery check 的 category 可读性。
 77. Round 84：统一错误 envelope 的 nextAction category 契约；`failureShape` 中的 `nextAction?` 自动展开为包含 `category` 的结构，`TKCLIErrorDetail?` output contract 自动声明 `error.nextAction.category`。
 78. Round 85：为 `plan.steps[]` 新增结构化执行元数据 `requires[]`、`expectedArtifacts[]` 与 `stopConditions[]`，并在 plan output contract 中声明这些字段。
-79. Round 131：把 output contract 里的 `TKCLINextAction?` 收敛成通用 schema 展开规则；`capabilities[].nextAction`、`doctor.checks[].nextAction`、`failurePrimaryNextAction` 以及 replay `failureError/steps[].error.nextAction` 现在都会自动暴露 `command/args/category/requiresLongRunningProcess`，减少 agent 回到 DTO 定义猜 nextAction 结构。
+79. Round 131：把 output contract 里的 `TKCLINextAction?` 收敛成通用 schema 展开规则；`capabilities[].nextAction`、`doctor.checks[].nextAction`、`failurePrimaryNextAction` 以及 replay `failureError/steps[].error.nextAction` 现在都会自动暴露 `command/args/category/requiresLongRunningProcess/readyEvents/finalEvents/terminationSignals`，减少 agent 回到 DTO 定义猜 nextAction 结构或从 argv 反推长驻生命周期。
 80. Round 132：为 bootstrap 三个事实源补顶层首选入口；`doctor.primaryNextAction`、`capabilities.primaryCapability` / `primaryNextAction` 和 `plan.primaryNextAction` 现在直接给出 agent 首先该尝试的结构化命令，减少为“先跑哪条命令”再扫 `checks[]`、`capabilities[]` 或 `steps[]`。
 81. Round 133：为 bootstrap 顶层首选入口补 provenance 与首选 lane；`doctor/plan.primaryNextActionSource`、`capabilities.primaryNextActionSource` 和 `capabilities.primaryWorkflowCategory` 现在直接解释这条首选命令是从哪条规则、哪类能力或哪条兼容回填路径得出的，减少 agent 再扫数组或倒推回填来源。
 82. Round 134：继续收紧 `doctor` 的 bootstrap 诊断入口；新增 `doctor.primaryCapability`，让 agent 不再必须扫描 `checks[].relatedCapabilities[]` 才能知道当前 recovery check 首先对应哪项 capability。该字段默认取 `nextStep` 对应 check 的首个 `relatedCapabilities[]`，若回退到首条 fail/warn check 或 `error.nextAction`，也沿同一保守路径回填。
