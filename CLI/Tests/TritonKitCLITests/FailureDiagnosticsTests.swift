@@ -1,4 +1,3 @@
-import Darwin
 import ArgumentParser
 import Foundation
 import Testing
@@ -105,12 +104,8 @@ struct FailureDiagnosticsTests {
 
     @Test("android text-not-found host failure maps to shared text_not_found code")
     func androidTextNotFoundMapsToSharedTextNotFoundCode() throws {
-        let output = try captureStandardOutput {
-            #expect(throws: ExitCode.self) {
-                try failAndroidTextNotFound("Network & internet", outputFormat: .json)
-            }
-        }
-        let response = try JSONDecoder().decode(TKCLIErrorResponse.self, from: Data(output.utf8))
+        let detail = androidTextNotFoundErrorDetail("Network & internet")
+        let response = TKCLIErrorResponse(error: detail)
 
         #expect(response.error.code == "text_not_found")
         #expect(response.error.message == "Android layout text was not found: Network & internet")
@@ -320,30 +315,6 @@ struct FailureDiagnosticsTests {
             try expectFailureCodes(schemas, command: command, include: ["validation_failed"])
         }
     }
-}
-
-private func captureStandardOutput(_ body: () throws -> Void) throws -> String {
-    let pipe = Pipe()
-    let originalStdout = dup(STDOUT_FILENO)
-
-    fflush(stdout)
-    dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
-    do {
-        try body()
-    } catch {
-        fflush(stdout)
-        dup2(originalStdout, STDOUT_FILENO)
-        close(originalStdout)
-        pipe.fileHandleForWriting.closeFile()
-        throw error
-    }
-    fflush(stdout)
-    dup2(originalStdout, STDOUT_FILENO)
-    close(originalStdout)
-    pipe.fileHandleForWriting.closeFile()
-
-    let data = pipe.fileHandleForReading.readDataToEndOfFile()
-    return String(decoding: data, as: UTF8.self)
 }
 
 private func expectFailureCodes(

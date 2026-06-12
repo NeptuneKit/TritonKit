@@ -716,11 +716,22 @@ func failHostValidation(code: String, message: String, hint: String, outputForma
     throw ExitCode.failure
 }
 
-func failAndroidTextNotFound(_ text: String, outputFormat: ClientOutputFormat) throws -> Never {
-    try failHostValidation(
+func androidTextNotFoundErrorDetail(_ text: String) -> TKCLIErrorDetail {
+    TKCLIErrorDetail(
         code: "text_not_found",
         message: "Android layout text was not found: \(text)",
-        hint: "Run `triton observe tree --platform android --output <path.xml> --json` and inspect the dumped text, content-desc, and resource-id values.",
-        outputFormat: outputFormat
+        hint: "Run `triton observe tree --platform android --output <path.xml> --json` and inspect the dumped text, content-desc, and resource-id values."
     )
+}
+
+func failAndroidTextNotFound(_ text: String, outputFormat: ClientOutputFormat) throws -> Never {
+    let detail = androidTextNotFoundErrorDetail(text)
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+    case .text:
+        print(detail.message)
+        if let hint = detail.hint { print("hint: \(hint)") }
+    }
+    throw ExitCode.failure
 }
