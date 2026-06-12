@@ -388,22 +388,24 @@ struct SchemaFactSourceTests {
         #expect(harmonyTap.evidence == ["host-command-json", "host-artifact"])
 
         let iosHostTap = try #require(connected["ios-simulator-host-tap"])
-        #expect(iosHostTap.supported)
+        #expect(!iosHostTap.supported)
+        #expect(iosHostTap.reason == "Host-side iOS Simulator input is not available in the current adapter")
         #expect(iosHostTap.group == "host")
         #expect(iosHostTap.requiredBy.contains("action"))
         #expect(iosHostTap.requiredBy.contains("smoke"))
         #expect(iosHostTap.nextAction?.command == "sim")
         #expect(iosHostTap.nextAction?.args == ["tap", "--simulator", "<udid|booted>", "--x", "<x>", "--y", "<y>", "--json"])
-        #expect(iosHostTap.evidence == ["host-command-json", "input.result"])
+        #expect(iosHostTap.evidence == ["unsupported-envelope", "command-schema"])
 
         let iosHostType = try #require(connected["ios-simulator-host-type"])
-        #expect(iosHostType.supported)
+        #expect(!iosHostType.supported)
+        #expect(iosHostType.reason == "Host-side iOS Simulator input is not available in the current adapter")
         #expect(iosHostType.group == "host")
         #expect(iosHostType.requiredBy.contains("action"))
         #expect(iosHostType.requiredBy.contains("smoke"))
         #expect(iosHostType.nextAction?.command == "sim")
         #expect(iosHostType.nextAction?.args == ["type", "--simulator", "<udid|booted>", "--text", "<text>", "--json"])
-        #expect(iosHostType.evidence == ["host-command-json", "input.result"])
+        #expect(iosHostType.evidence == ["unsupported-envelope", "command-schema"])
 
         let harmonyWait = try #require(connected["harmony-wait-text"])
         #expect(harmonyWait.group == "action")
@@ -740,11 +742,10 @@ struct SchemaFactSourceTests {
         #expect(iosSmoke.primaryNextActionSource == "next-step-step")
         #expect(iosSmoke.steps.map(\.id).contains("target-resolve"))
         #expect(iosSmoke.steps.map(\.id).contains("ios-smoke"))
-        #expect(iosSmoke.steps.map(\.id).contains("ios-host-input-fallback"))
+        #expect(iosSmoke.steps.map(\.id).contains("ios-host-input-unsupported"))
         #expect(iosSmoke.steps.first(where: { $0.id == "target-list" })?.workflowCategories == ["action", "app", "assert", "evidence", "observe", "runtime", "smoke", "target"])
-        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-input-fallback" })?.category == "prepare-target")
-        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-input-fallback" })?.argv == ["triton", "sim", "tap", "--simulator", "iphone15", "--x", "<x>", "--y", "<y>", "--json"])
-        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-type-fallback" })?.argv == ["triton", "sim", "type", "--simulator", "iphone15", "--text", "Home", "--json"])
+        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-input-unsupported" })?.category == "diagnose")
+        #expect(iosSmoke.steps.first(where: { $0.id == "ios-host-input-unsupported" })?.argv == ["triton", "schema", "--command", "sim", "--json"])
         #expect(iosSmoke.steps.first(where: { $0.id == "ios-smoke" })?.workflowCategories == ["app", "assert", "evidence", "smoke", "target"])
         #expect(iosSmoke.steps.first(where: { $0.id == "ios-smoke" })?.command.contains("triton smoke ios") == true)
         #expect(iosSmoke.steps.first(where: { $0.id == "evidence-summary" })?.requiresServer == false)
@@ -1219,11 +1220,13 @@ struct SchemaFactSourceTests {
         let requiresRuntime = "Requires connected embedded TritonKit runtime"
         let requiresWebViewProvider = "Requires WebView provider metadata from embedded runtime or --runtime-base-url"
         let harmonyClearBoundary = "Host-side Harmony clear is not available in the current adapter"
+        let iosHostInputBoundary = "Host-side iOS Simulator input is not available in the current adapter"
         let pressBoundary = "Host-side HID is not available in the embedded runtime"
         let knownUnsupportedReasons = Set([
             requiresRuntime,
             requiresWebViewProvider,
             harmonyClearBoundary,
+            iosHostInputBoundary,
             pressBoundary,
         ])
 
@@ -1253,11 +1256,13 @@ struct SchemaFactSourceTests {
                 }
 
                 if fixture.name == "runtime-connected" {
-                    if !["press", "harmony-clear-text"].contains(capability.name) {
+                    if !["press", "harmony-clear-text", "ios-simulator-host-tap", "ios-simulator-host-type"].contains(capability.name) {
                         connectedUnexpectedUnsupported.append("\(capability.name):\(reason)")
                     } else if capability.name == "press", reason != pressBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     } else if capability.name == "harmony-clear-text", reason != harmonyClearBoundary {
+                        connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
+                    } else if ["ios-simulator-host-tap", "ios-simulator-host-type"].contains(capability.name), reason != iosHostInputBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     }
                 }
@@ -1530,6 +1535,7 @@ struct SchemaFactSourceTests {
         let requiresRuntime = "Requires connected embedded TritonKit runtime"
         let requiresWebViewProvider = "Requires WebView provider metadata from embedded runtime or --runtime-base-url"
         let harmonyClearBoundary = "Host-side Harmony clear is not available in the current adapter"
+        let iosHostInputBoundary = "Host-side iOS Simulator input is not available in the current adapter"
         let pressBoundary = "Host-side HID is not available in the embedded runtime"
 
         let runtimeReasonGroups = Set(["runtime", "semantic", "observe", "assert", "evidence", "replay", "action"])
@@ -1596,6 +1602,14 @@ struct SchemaFactSourceTests {
                         !capability.requiredBy.contains("action") ||
                         !capability.requiredBy.contains("assert") ||
                         !capability.requiredBy.contains("evidence") ||
+                        Set(capability.evidence) != Set(["unsupported-envelope", "command-schema"]) {
+                        boundaryReasonTaxonomyMismatches.append("\(fixture.name):\(capability.name):group=\(capability.group ?? "nil"):requiredBy=\(capability.requiredBy):evidence=\(capability.evidence)")
+                    }
+
+                case iosHostInputBoundary:
+                    if capability.group != "host" ||
+                        !capability.requiredBy.contains("action") ||
+                        !capability.requiredBy.contains("smoke") ||
                         Set(capability.evidence) != Set(["unsupported-envelope", "command-schema"]) {
                         boundaryReasonTaxonomyMismatches.append("\(fixture.name):\(capability.name):group=\(capability.group ?? "nil"):requiredBy=\(capability.requiredBy):evidence=\(capability.evidence)")
                     }
@@ -3991,6 +4005,7 @@ struct SchemaFactSourceTests {
 
         #expect(sim.failureCodes.contains("simulator_not_found"))
         #expect(sim.failureCodes.contains("host_command_failed"))
+        #expect(sim.failureCodes.contains("unsupported_host_input"))
         #expect(sim.failureCodes.contains("unsupported_text_input"))
         #expect(sim.artifacts.contains("simulator-screenshot"))
         #expect(sim.nextCommands.contains("triton sim use <udid> --json"))
@@ -4000,11 +4015,12 @@ struct SchemaFactSourceTests {
         #expect(simTap.requiredOptions == ["--x", "--y"])
         #expect(simTap.optionalOptions.contains("--simulator"))
         #expect(simTap.outputSelectors == ["host.simulator-input"])
-        #expect(simTap.failureCodes.contains("host_command_failed"))
+        #expect(simTap.failureCodes.contains("unsupported_host_input"))
         let simType = try #require(sim.subcommands.first(where: { $0.name == "type" }))
         #expect(simType.requiredOptions == ["--text"])
         #expect(simType.optionalOptions.contains("--simulator"))
         #expect(simType.outputSelectors == ["host.simulator-input"])
+        #expect(simType.failureCodes.contains("unsupported_host_input"))
         #expect(simType.failureCodes.contains("unsupported_text_input"))
         expectContract(sim, selector: "host.simulator-list", fields: [
             "ok", "simulators",

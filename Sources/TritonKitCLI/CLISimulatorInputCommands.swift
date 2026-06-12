@@ -12,13 +12,11 @@ struct SimTap: AsyncParsableCommand {
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
-        try runHostSimulatorInputCommand(
-            action: "sim.tap",
-            simulator: simulator,
-            command: TKSimctlCommand.tap(udid: simulator, x: x, y: y),
-            outputFormat: effectiveFormat(format, json: json),
-            x: x,
-            y: y
+        try failHostValidation(
+            code: "unsupported_host_input",
+            message: "sim tap is not supported by the current public simctl io contract.",
+            hint: "This Xcode simctl io help does not expose a stable tap primitive. Use embedded runtime input, an app-owned debug hook, or another explicitly validated host tool.",
+            outputFormat: effectiveFormat(format, json: json)
         )
     }
 }
@@ -49,13 +47,11 @@ struct SimType: AsyncParsableCommand {
                 outputFormat: outputFormat
             )
         }
-        try runHostSimulatorInputCommand(
-            action: "sim.type",
-            simulator: simulator,
-            command: TKSimctlCommand.typeText(udid: simulator, text: text),
-            outputFormat: outputFormat,
-            insertedLength: text.count,
-            textEncoding: "ascii"
+        try failHostValidation(
+            code: "unsupported_host_input",
+            message: "sim type is not supported by the current public simctl io contract.",
+            hint: "This Xcode simctl io help does not expose a stable keyboard type primitive. Use embedded runtime semantic input or a pasteboard/debug-hook flow.",
+            outputFormat: outputFormat
         )
     }
 }

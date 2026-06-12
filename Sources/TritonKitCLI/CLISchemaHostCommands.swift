@@ -126,8 +126,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress with --wait"),
                 TKCommandSchemaOption(name: "shutdown <udid|booted>", type: "Subcommand", description: "Shutdown a simulator"),
                 TKCommandSchemaOption(name: "screenshot --output <path>", type: "Subcommand", description: "Capture simulator framebuffer screenshot"),
-                TKCommandSchemaOption(name: "tap --x <x> --y <y>", type: "Subcommand", description: "Tap host-side simulator coordinates through xcrun simctl io"),
-                TKCommandSchemaOption(name: "type --text <ascii-text>", type: "Subcommand", description: "Type ASCII text into the focused simulator field through xcrun simctl io"),
+                TKCommandSchemaOption(name: "tap --x <x> --y <y>", type: "Subcommand", description: "Reserved host-side simulator coordinate tap entry; currently returns unsupported_host_input"),
+                TKCommandSchemaOption(name: "type --text <ascii-text>", type: "Subcommand", description: "Reserved host-side simulator text entry; currently returns unsupported_host_input after ASCII validation"),
                 TKCommandSchemaOption(name: "record --output <path.mov> --duration <seconds>", type: "Subcommand", description: "Record a simulator video"),
                 TKCommandSchemaOption(name: "logs --output <path.log> --duration <seconds>", type: "Subcommand", description: "Capture bounded simulator OSLog stream output"),
                 TKCommandSchemaOption(name: "diagnose [--output <path>]", type: "Subcommand", description: "Collect simulator diagnostics and logs"),
@@ -195,11 +195,12 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.tap|sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap/type are host-side input primitives for setup when embedded runtime is unavailable; verify business completion with wait, assert, screenshot, app prefs, or evidence.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap/type are reserved host input entries, but the current public simctl io contract exposes no stable tap or keyboard type primitive, so they return unsupported_host_input rather than pretending host input succeeded.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
                 "triton device use <sim-target-id> --json",
+                "triton plan --json",
                 "triton sim tap --simulator <udid|booted> --x <x> --y <y> --json",
                 "triton sim type --simulator <udid|booted> --text <text> --json",
                 "triton evidence --output <dir.tritonevidence> --json",
@@ -217,6 +218,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "simulator_not_found",
                 "host_command_failed",
                 "host_command_timeout",
+                "unsupported_host_input",
                 "unsupported_text_input",
                 "artifact_output_rejected",
                 "sim_device_maintenance_failed",
@@ -289,27 +291,29 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "tap",
-                    summary: "Tap host-side simulator coordinates through xcrun simctl io",
+                    summary: "Reserved host-side simulator coordinate tap entry; currently unsupported by public simctl io",
                     requiredOptions: ["--x", "--y"],
                     optionalOptions: ["--simulator", "--format", "--json"],
                     nextCommands: [
+                        "triton plan --json",
                         "triton sim screenshot --simulator <udid|booted> --output <path> --json",
                         "triton wait --text <text> --json",
                     ],
                     outputSelectors: ["host.simulator-input"],
-                    failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
+                    failureCodes: ["unsupported_host_input", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "type",
-                    summary: "Type ASCII text into the focused simulator field through xcrun simctl io",
+                    summary: "Reserved host-side simulator text entry; currently unsupported by public simctl io after ASCII validation",
                     requiredOptions: ["--text"],
                     optionalOptions: ["--simulator", "--format", "--json"],
                     nextCommands: [
+                        "triton plan --json",
                         "triton sim screenshot --simulator <udid|booted> --output <path> --json",
                         "triton assert text-exists <text> --json",
                     ],
                     outputSelectors: ["host.simulator-input"],
-                    failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "unsupported_text_input", "validation_failed"]
+                    failureCodes: ["unsupported_host_input", "unsupported_text_input", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "record",
