@@ -107,6 +107,7 @@ struct DeviceProxyServe: AsyncParsableCommand {
     @Option(help: "Local proxy listen endpoint host:port") var listen: String = "127.0.0.1:19431"
     @Option(help: "Capture output directory") var output: String
     @Option(help: "Capture policy mode: record|mock|block|throttle") var mode: String = "record"
+    @Option(help: "JSON mock rules file for --mode mock") var mockRules: String?
     @Option(help: .hidden) var maxConnections: Int?
     @Flag(help: "Emit compact JSON Lines for ready/request/final events") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false
@@ -115,7 +116,7 @@ struct DeviceProxyServe: AsyncParsableCommand {
     func run() async throws {
         let endpoint = try NetworkProxyEndpoint(listen)
         let summary = try runNetworkProxyCaptureServer(
-            config: NetworkProxyServeConfig(listen: endpoint, outputDirectory: output, maxConnections: maxConnections, mode: mode),
+            config: NetworkProxyServeConfig(listen: endpoint, outputDirectory: output, maxConnections: maxConnections, mode: mode, mockRulesPath: mockRules),
             eventWriter: jsonl ? { event in
                 if let line = try? encodeCompactJSON(event) {
                     writeJSONLLine(line)

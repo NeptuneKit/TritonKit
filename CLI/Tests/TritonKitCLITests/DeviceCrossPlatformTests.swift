@@ -24,6 +24,7 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("proxy probe --platform ios|android|harmony --device <selector>"))
         #expect(usageForms.contains("proxy probe --platform ios|android|harmony --device <selector> --plan-only"))
         #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode record|mock|block|throttle --jsonl"))
+        #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode mock --mock-rules <path.json> --jsonl"))
         #expect(usageForms.contains("proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir>"))
         #expect(usageForms.contains("proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir> --plan-only"))
         #expect(usageForms.contains("proxy start --platform ios|android --device <selector> --mode record|mock|block|throttle --output <dir> --confirm --audit-record <id> --execute-runner"))
@@ -69,6 +70,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.examples.contains("triton device proxy probe --platform harmony --device harmony-a --plan-only --json"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network --mode record --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-mock --mode mock --jsonl"))
+        #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-mock --mode mock --mock-rules /tmp/triton-mock-rules.json --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-block --mode block --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-throttle --mode throttle --jsonl"))
         #expect(device.examples.contains("triton device proxy start --platform android --device android-a --mode record --output /tmp/android-network --json"))
@@ -1090,6 +1092,77 @@ struct DeviceCrossPlatformTests {
         #expect(capture.contains("\"policyAction\":\"mocked\""))
         #expect(capture.contains("\"responseStatus\":200"))
         #expect(capture.contains("\"responseStatusText\":\"TritonKit Proxy Mock\""))
+        #expect(!capture.contains("session=secret"))
+    }
+
+    @Test("device proxy serve mock rules return configured responses without storing response bodies")
+    func deviceProxyServeMockRulesReturnConfiguredResponsesWithoutStoringResponseBodies() throws {
+        let port = try reserveLocalPortForTest()
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-proxy-mock-rules-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let rulesURL = directory.appendingPathComponent("rules.json")
+        let rules = #"""
+        {
+          "schemaVersion": "triton.proxy.mock-rules.v1",
+          "rules": [
+            {
+              "id": "capture-fixture",
+              "method": "GET",
+              "host": "127.0.0.1",
+              "pathPrefix": "/capture",
+              "status": 201,
+              "statusText": "Created",
+              "headers": {
+                "Content-Type": "application/json; charset=utf-8",
+                "X-Triton-Mock": "capture-fixture"
+              },
+              "body": "{\"ok\":true,\"fixture\":\"capture\"}\n"
+            }
+          ]
+        }
+        """#
+        try Data(rules.utf8).write(to: rulesURL)
+        let endpoint = try NetworkProxyEndpoint("127.0.0.1:\(port)")
+        let finished = DispatchSemaphore(value: 0)
+        var summary: NetworkProxyServeSummary?
+        var serverError: Error?
+
+        DispatchQueue.global().async {
+            do {
+                summary = try runNetworkProxyCaptureServer(
+                    config: NetworkProxyServeConfig(
+                        listen: endpoint,
+                        outputDirectory: directory.path,
+                        maxConnections: 2,
+                        mode: "mock",
+                        mockRulesPath: rulesURL.path
+                    )
+                )
+            } catch {
+                serverError = error
+            }
+            finished.signal()
+        }
+
+        try waitUntilPortAcceptsConnections(port: port)
+        let response = try sendProxyServeTestRequestAndReadResponse(port: port)
+        #expect(finished.wait(timeout: .now() + 3) == .success)
+        if let serverError {
+            throw serverError
+        }
+
+        let capture = try String(contentsOfFile: networkProxyServeCapturePath(outputDirectory: directory.path), encoding: .utf8)
+        #expect(summary?.requestCount == 1)
+        #expect(summary?.limitations.contains("proxy_mock_rules:loaded") == true)
+        #expect(response.contains("HTTP/1.1 201 Created"))
+        #expect(response.contains("X-Triton-Mock: capture-fixture"))
+        #expect(response.contains(#""fixture":"capture""#))
+        #expect(capture.contains("\"mockRuleId\":\"capture-fixture\""))
+        #expect(capture.contains("\"responseStatus\":201"))
+        #expect(capture.contains("\"responseStatusText\":\"Created\""))
+        #expect(!capture.contains(#""fixture":"capture""#))
         #expect(!capture.contains("session=secret"))
     }
 
