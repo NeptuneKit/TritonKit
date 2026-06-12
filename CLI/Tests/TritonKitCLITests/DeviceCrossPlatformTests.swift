@@ -1251,12 +1251,36 @@ struct DeviceCrossPlatformTests {
             captureMode: "throttle",
             policyAction: "throttled"
         )
+        let customMock = NetworkProxyServeEvent(
+            ok: true,
+            surface: "host.device-proxy-serve",
+            event: "proxy.serve.request",
+            schemaVersion: "triton.proxy.capture.v1",
+            listen: "127.0.0.1:19431",
+            capturePath: sourceURL.path,
+            captureMode: "mock",
+            policyAction: "mocked",
+            mockRuleId: "created-fixture",
+            connectionIndex: 6,
+            method: "POST",
+            url: "http://example.test/created",
+            host: "example.test",
+            port: 80,
+            path: "/created",
+            tunnel: false,
+            headerNames: ["Content-Type"],
+            responseStatus: 201,
+            responseStatusText: "Created",
+            redaction: "headers-names-only",
+            error: nil
+        )
         let events = [
             try parseNetworkProxyHTTPHeader(request, listen: "127.0.0.1:19431", capturePath: sourceURL.path, connectionIndex: 1),
             try parseNetworkProxyHTTPHeader(connect, listen: "127.0.0.1:19431", capturePath: sourceURL.path, connectionIndex: 2),
             mock,
             block,
             throttle,
+            customMock,
         ]
         let ndjson = try events.map { try encodeCompactJSON($0) }.joined(separator: "\n") + "\n"
         try Data(ndjson.utf8).write(to: sourceURL)
@@ -1271,11 +1295,12 @@ struct DeviceCrossPlatformTests {
         let mockResponse = try #require(entries.dropFirst(2).first?["response"] as? [String: Any])
         let blockResponse = try #require(entries.dropFirst(3).first?["response"] as? [String: Any])
         let throttleResponse = try #require(entries.dropFirst(4).first?["response"] as? [String: Any])
+        let customMockResponse = try #require(entries.dropFirst(5).first?["response"] as? [String: Any])
         let firstHeaders = try #require(firstRequest["headers"] as? [[String: Any]])
 
         #expect(bytes > 0)
         #expect(log["version"] as? String == "1.2")
-        #expect(entries.count == 5)
+        #expect(entries.count == 6)
         #expect(firstRequest["method"] as? String == "GET")
         #expect(firstRequest["url"] as? String == "http://example.test/path?q=1")
         #expect(firstHeaders.contains { $0["name"] as? String == "Authorization" && $0["value"] as? String == "<redacted>" })
@@ -1288,6 +1313,8 @@ struct DeviceCrossPlatformTests {
         #expect(blockResponse["statusText"] as? String == "TritonKit Proxy Blocked")
         #expect(throttleResponse["status"] as? Int == 429)
         #expect(throttleResponse["statusText"] as? String == "TritonKit Proxy Throttled")
+        #expect(customMockResponse["status"] as? Int == 201)
+        #expect(customMockResponse["statusText"] as? String == "Created")
     }
 
     @Test("device proxy mutating actions stay unsupported until a platform runner exists")

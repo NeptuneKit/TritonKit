@@ -362,16 +362,16 @@ private func networkProxyHARResponse(for event: NetworkProxyServeEvent) -> Netwo
     let mimeType: String
     switch event.policyAction {
     case "mocked":
-        status = 200
-        statusText = "TritonKit Proxy Mock"
+        status = event.responseStatus ?? 200
+        statusText = event.responseStatusText ?? "TritonKit Proxy Mock"
         mimeType = "application/json"
     case "blocked":
-        status = 502
-        statusText = "TritonKit Proxy Blocked"
+        status = event.responseStatus ?? 502
+        statusText = event.responseStatusText ?? "TritonKit Proxy Blocked"
         mimeType = "text/plain"
     case "throttled":
-        status = 429
-        statusText = "TritonKit Proxy Throttled"
+        status = event.responseStatus ?? 429
+        statusText = event.responseStatusText ?? "TritonKit Proxy Throttled"
         mimeType = "text/plain"
     default:
         status = 0
