@@ -664,7 +664,7 @@ extension SchemaFactSourceTests {
                 }
 
                 for value in platformValues where !Set(["ios", "android", "harmony"]).contains(value) {
-                    if ["network-capture-export", "network-certificate-plan"].contains(capability.name), value == "<platform>" {
+                    if ["network-capture-export", "network-certificate-plan", "network-certificate-install"].contains(capability.name), value == "<platform>" {
                         continue
                     }
                     unsupportedPlatformValues.append("\(context):platform=\(value)")

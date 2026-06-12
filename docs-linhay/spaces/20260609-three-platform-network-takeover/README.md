@@ -67,7 +67,7 @@ App 内流量接管只作为 **explicit opt-in runtime lane** 参考，借鉴 At
 截至 2026-06-09，已落地机器可读发现层与安全 CLI 命令骨架，不包含真实代理配置执行器：
 
 - `triton schema --command device --json` 已暴露 `proxy doctor/start/status/export/stop` usage forms。
-- `triton capabilities --json` 已暴露 `device-proxy-ios`、`device-proxy-android`、`device-proxy-harmony`、`network-capture-export` 与 `network-certificate-plan`。
+- `triton capabilities --json` 已暴露 `device-proxy-ios`、`device-proxy-android`、`device-proxy-harmony`、`network-capture-export`、`network-certificate-plan` 与 `network-certificate-install`。
 - `device` schema 已声明 `host.device-proxy` output contract，模型名为 `NetworkProxySession`。
 - `triton device proxy doctor --platform ios|android|harmony --json` 已可执行，返回 `ok=true`、`surface=host.device-proxy`、`lane=host-proxy` 和 limitations。
 - `triton device proxy probe --platform ios|android|harmony --device <selector> --json` 已可执行，返回只读平台代理能力探测结果：`action=proxy.probe`、`configured=false`、`probeResults[]` 与 `sourceCommands[]`。iOS / Android 复用只读 snapshot ledger；Harmony 只运行 HDC readiness、shell probe 与 `param ls -r proxy|http`，用于收集候选参数证据，不执行、不声明任何 DevEco / Harmony 代理 mutation。

@@ -100,6 +100,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("device-proxy-harmony"))
         #expect(device.providedCapabilities.contains("network-capture-export"))
         #expect(device.providedCapabilities.contains("network-certificate-plan"))
+        #expect(device.providedCapabilities.contains("network-certificate-install"))
         #expect(device.failureCodes.contains("proxy_visibility_limited"))
         #expect(device.failureCodes.contains("proxy_cert_untrusted"))
         #expect(device.failureCodes.contains("proxy_platform_not_supported"))
@@ -176,6 +177,16 @@ struct DeviceCrossPlatformTests {
             evidence: ["host-command-json", "network-capture"],
             nextActionCommand: "device",
             nextActionArgs: ["proxy", "cert", "plan", "--platform", "<platform>", "--device", "<selector>", "--certificate", "<path.cer>", "--json"]
+        )
+        try assertCapability(
+            capabilities,
+            name: "network-certificate-install",
+            supported: true,
+            group: "host",
+            requiredByContains: ["target", "evidence", "smoke"],
+            evidence: ["host-command-json", "network-capture"],
+            nextActionCommand: "device",
+            nextActionArgs: ["proxy", "cert", "install", "--platform", "<platform>", "--device", "<selector>", "--certificate", "<path.cer>", "--confirm", "--audit-record", "<id>", "--execute-runner", "--json"]
         )
     }
 
