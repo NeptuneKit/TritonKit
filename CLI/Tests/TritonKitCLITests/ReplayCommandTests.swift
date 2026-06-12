@@ -108,6 +108,11 @@ struct ReplayCommandTests {
               "output": "\(temp.path)/${platform}-proxy"
             },
             {
+              "action": "proxy-status",
+              "platform": "${platform}",
+              "device": "${device}"
+            },
+            {
               "action": "proxy-stop",
               "platform": "${platform}",
               "device": "${device}",
@@ -127,7 +132,7 @@ struct ReplayCommandTests {
             port: 19421
         )
 
-        #expect(response.steps.map(\.action) == ["proxy-probe", "proxy-serve", "proxy-start", "proxy-stop"])
+        #expect(response.steps.map(\.action) == ["proxy-probe", "proxy-serve", "proxy-start", "proxy-status", "proxy-stop"])
         #expect(response.steps[0].argv == [
             "triton", "device", "proxy", "probe",
             "--platform", "android",
@@ -145,7 +150,15 @@ struct ReplayCommandTests {
         ])
         #expect(response.steps[2].argv.contains("--plan-only"))
         #expect(response.steps[2].argv.contains("emulator-5554"))
-        #expect(response.steps[3].argv.contains("--restore"))
+        #expect(response.steps[3].argv == [
+            "triton", "device", "proxy", "status",
+            "--platform", "android",
+            "--device", "emulator-5554",
+            "--json",
+        ])
+        #expect(response.steps[3].expectedArtifacts.contains("host-device-proxy"))
+        #expect(response.steps[3].argv.contains("--plan-only") == false)
+        #expect(response.steps[4].argv.contains("--restore"))
     }
 
     @Test("replay archives proxy session evidence after a failed step")
