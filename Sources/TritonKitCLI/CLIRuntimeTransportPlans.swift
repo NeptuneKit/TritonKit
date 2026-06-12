@@ -321,9 +321,11 @@ func buildTaskWorkflowPlan(
                 networkProxyCertificateInstallPlanStep(platform: platform, device: device, certificate: certificate, auditRecord: auditRecord),
                 networkProxyServePlanStep(proxy: proxy, mode: mode, output: output),
                 networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
+                networkProxyStartExecutePlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output, auditRecord: auditRecord),
                 networkProxyExportPlanStep(platform: platform, device: device, output: captureOutput),
                 networkProxyEvidencePlanStep(proxySession: output, evidence: request.evidence),
                 networkProxyStopPlanStep(platform: platform, device: device, restoreSnapshot: restoreSnapshot),
+                networkProxyStopExecutePlanStep(platform: platform, device: device, restoreSnapshot: restoreSnapshot, auditRecord: auditRecord),
             ]
         )
     case "open-url":
@@ -728,6 +730,40 @@ private func networkProxyStartPlanStep(platform: String, device: String, proxy: 
     )
 }
 
+private func networkProxyStartExecutePlanStep(
+    platform: String,
+    device: String,
+    proxy: String,
+    mode: String,
+    output: String,
+    auditRecord: String
+) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-start-execute",
+        title: "Review platform proxy start break-glass command",
+        command: [
+            "triton", "device", "proxy", "start",
+            "--platform", platform,
+            "--device", device,
+            "--proxy", proxy,
+            "--mode", mode,
+            "--output", output,
+            "--confirm",
+            "--audit-record", auditRecord,
+            "--execute-runner",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "only after proxy-start-plan and proxy.serve.ready have been reviewed",
+        expected: "Break-glass response records platform proxy state, restore-state.json, and session-state.json; Harmony remains probe-only until a verified mutation command exists",
+        requires: ["cli.available", "proxy.endpoint.ready", "operator.approval", "audit-record"],
+        expectedArtifacts: ["stdout-json", "host-device-proxy", "proxy-restore", "network-capture"],
+        stopConditions: ["command.failed", "artifact.write-failed"]
+    )
+}
+
 private func networkProxyExportPlanStep(platform: String, device: String, output: String) -> TKWorkflowPlanStep {
     TKWorkflowPlanStep(
         id: "proxy-export-plan",
@@ -792,6 +828,36 @@ private func networkProxyStopPlanStep(platform: String, device: String, restoreS
         when: "after start writes restore-state.json and before stop/restore break-glass execution",
         expected: "Plan-only response reviews restore snapshot sourceCommands and configured=false",
         requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "proxy-restore"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func networkProxyStopExecutePlanStep(
+    platform: String,
+    device: String,
+    restoreSnapshot: String,
+    auditRecord: String
+) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-stop-execute",
+        title: "Review platform proxy restore break-glass command",
+        command: [
+            "triton", "device", "proxy", "stop",
+            "--platform", platform,
+            "--device", device,
+            "--restore-snapshot", restoreSnapshot,
+            "--confirm",
+            "--audit-record", auditRecord,
+            "--execute-runner",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "only after proxy-stop-plan has reviewed the original-value restore ledger",
+        expected: "Break-glass response restores the reviewed platform proxy ledger; Harmony remains probe-only until a verified mutation command exists",
+        requires: ["cli.available", "operator.approval", "audit-record", "restore-snapshot"],
         expectedArtifacts: ["stdout-json", "proxy-restore"],
         stopConditions: ["command.failed"]
     )
