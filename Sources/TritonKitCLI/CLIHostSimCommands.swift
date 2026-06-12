@@ -259,7 +259,12 @@ struct SimProxyStop: AsyncParsableCommand {
         let target = try makeNetworkProxyPlanTarget(platform: .ios, device: simulator)
         if planOnly {
             try printNetworkProxySession(
-                try makeNetworkProxyStopPlanSession(platform: .ios, target: target, restore: restore),
+                try makeNetworkProxyStopPlanSession(
+                    platform: .ios,
+                    target: target,
+                    restore: restore,
+                    restoreSnapshotPath: restoreSnapshot
+                ),
                 outputFormat: outputFormat
             )
             return

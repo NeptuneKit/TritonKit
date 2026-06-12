@@ -31,6 +31,7 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("proxy export --platform ios|android|harmony --device <selector> --output <path.har|path.ndjson> --plan-only"))
         #expect(usageForms.contains("proxy stop --platform ios|android|harmony --device <selector> --restore"))
         #expect(usageForms.contains("proxy stop --platform ios|android|harmony --device <selector> --restore --plan-only"))
+        #expect(usageForms.contains("proxy stop --platform ios|android --device <selector> --restore-snapshot <path> --plan-only"))
         #expect(usageForms.contains("proxy stop --platform ios|android --device <selector> --restore --confirm --audit-record <id> --execute-runner"))
         #expect(usageForms.contains("list --platform ios|android|harmony"))
         #expect(usageForms.contains("list --platform ios|android|harmony --scope real"))
@@ -1214,6 +1215,43 @@ struct DeviceCrossPlatformTests {
         #expect(cleared.map(hostSourceCommand) == [
             "adb -s emulator-5554 shell settings delete global http_proxy",
         ])
+    }
+
+    @Test("proxy stop plan-only can review original-value restore snapshot ledgers")
+    func proxyStopPlanOnlyCanReviewOriginalValueRestoreSnapshotLedgers() throws {
+        let target = try makeNetworkProxyPlanTarget(platform: .android, device: "emulator-5554")
+        let endpoint = try NetworkProxyEndpoint("127.0.0.1:19431")
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-proxy-stop-plan-snapshot-\(UUID().uuidString)", isDirectory: true)
+        let restoreCommands = adbProxyRestoreCommands(serial: "emulator-5554", originalHTTPProxy: "corp-proxy.local:8080")
+        let snapshotPath = try #require(try writeNetworkProxyRestoreSnapshot(
+            platform: .android,
+            target: target,
+            endpoint: endpoint,
+            auditRecord: "ticket-plan",
+            snapshotCommands: adbProxySnapshotCommands(serial: "emulator-5554"),
+            startCommands: adbProxyOverrideCommands(serial: "emulator-5554", endpoint: endpoint),
+            restoreCommands: restoreCommands,
+            androidOriginalHTTPProxy: "corp-proxy.local:8080",
+            outputDirectory: directory.path
+        ))
+
+        let plan = try makeNetworkProxyStopPlanSession(
+            platform: .android,
+            target: target,
+            restore: false,
+            restoreSnapshotPath: snapshotPath
+        )
+
+        #expect(plan.ok)
+        #expect(plan.action == "proxy.stop")
+        #expect(plan.configured == false)
+        #expect(plan.restore?.available == true)
+        #expect(plan.restore?.snapshotPath == snapshotPath)
+        #expect(plan.restore?.restored == false)
+        #expect(plan.limitations.contains("proxy_plan_only:not_executed"))
+        #expect(plan.limitations.contains("proxy_restore_snapshot_plan:original_value_ledger"))
+        #expect(plan.sourceCommands == restoreCommands.map(hostSourceCommand))
     }
 
     @Test("Android proxy command plan preserves explicit non-loopback proxy hosts")

@@ -174,6 +174,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(usageForms.contains("proxy export --simulator <udid|booted> --output <path.har|path.ndjson> --plan-only"))
         #expect(usageForms.contains("proxy stop --simulator <udid|booted> --restore"))
         #expect(usageForms.contains("proxy stop --simulator <udid|booted> --restore --plan-only"))
+        #expect(usageForms.contains("proxy stop --simulator <udid|booted> --restore-snapshot <path> --plan-only"))
         #expect(usageForms.contains("proxy stop --simulator <udid|booted> --restore --confirm --audit-record <id> --execute-runner"))
         #expect(usageForms.contains(where: { $0.hasPrefix("runtime ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("pair ") }))

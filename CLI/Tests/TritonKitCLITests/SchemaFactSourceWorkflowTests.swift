@@ -137,7 +137,8 @@ extension SchemaFactSourceTests {
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--platform android") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--plan-only") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-evidence" })?.command.contains("--include network.proxy-session") == true)
-        #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-plan" })?.command.contains("--restore") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-plan" })?.command.contains("--restore-snapshot /tmp/proxy-session/restore-state.json") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-plan" })?.expected == "Plan-only response reviews restore snapshot sourceCommands and configured=false")
     }
 
     @Test("workflow plan mode separates bootstrap recovery from task workflows")

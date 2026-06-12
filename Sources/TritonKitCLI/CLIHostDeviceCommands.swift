@@ -271,7 +271,12 @@ struct DeviceProxyStop: AsyncParsableCommand {
         if planOnly {
             let target = try makeNetworkProxyPlanTarget(platform: platform, device: device)
             try printNetworkProxySession(
-                try makeNetworkProxyStopPlanSession(platform: platform, target: target, restore: restore),
+                try makeNetworkProxyStopPlanSession(
+                    platform: platform,
+                    target: target,
+                    restore: restore,
+                    restoreSnapshotPath: restoreSnapshot
+                ),
                 outputFormat: outputFormat
             )
             return

@@ -293,6 +293,9 @@ func buildTaskWorkflowPlan(
         let mode = planValue(request.mode, "record")
         let output = planValue(request.output, "<proxy-session-dir>")
         let certificate = planValue(request.certificate, "<path.cer>")
+        let restoreSnapshot = (request.output?.isEmpty == false)
+            ? "\(output)/restore-state.json"
+            : "<restore-state-json>"
         let captureOutput: String
         if let requestedOutput = request.output, !requestedOutput.isEmpty {
             captureOutput = requestedOutput.hasSuffix(".ndjson") || requestedOutput.hasSuffix(".har")
@@ -315,7 +318,7 @@ func buildTaskWorkflowPlan(
                 networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
                 networkProxyExportPlanStep(platform: platform, device: device, output: captureOutput),
                 networkProxyEvidencePlanStep(proxySession: output, evidence: request.evidence),
-                networkProxyStopPlanStep(platform: platform, device: device),
+                networkProxyStopPlanStep(platform: platform, device: device, restoreSnapshot: restoreSnapshot),
             ]
         )
     case "open-url":
@@ -736,23 +739,23 @@ private func networkProxyEvidencePlanStep(proxySession: String, evidence: String
     )
 }
 
-private func networkProxyStopPlanStep(platform: String, device: String) -> TKWorkflowPlanStep {
+private func networkProxyStopPlanStep(platform: String, device: String, restoreSnapshot: String) -> TKWorkflowPlanStep {
     TKWorkflowPlanStep(
         id: "proxy-stop-plan",
-        title: "Generate platform proxy restore ledger",
+        title: "Generate restore snapshot ledger review",
         command: [
             "triton", "device", "proxy", "stop",
             "--platform", platform,
             "--device", device,
-            "--restore",
+            "--restore-snapshot", restoreSnapshot,
             "--plan-only",
             "--json",
         ].map(shellEscaped).joined(separator: " "),
         workflowCategories: ["target", "evidence"],
         requiresServer: false,
         requiresTarget: false,
-        when: "before stop/restore break-glass execution or after a dry-run review",
-        expected: "Plan-only response contains restore sourceCommands and configured=false",
+        when: "after start writes restore-state.json and before stop/restore break-glass execution",
+        expected: "Plan-only response reviews restore snapshot sourceCommands and configured=false",
         requires: ["cli.available"],
         expectedArtifacts: ["stdout-json", "proxy-restore"],
         stopConditions: ["command.failed"]

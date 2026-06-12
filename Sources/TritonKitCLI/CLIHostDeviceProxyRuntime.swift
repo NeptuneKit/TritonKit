@@ -629,13 +629,18 @@ func networkProxyStartPlanCommands(platform: HostDevicePlatform, target: HostDev
 func makeNetworkProxyStopPlanSession(
     platform: HostDevicePlatform,
     target: HostDeviceTarget,
-    restore: Bool
+    restore: Bool,
+    restoreSnapshotPath: String? = nil
 ) throws -> NetworkProxySession {
     if let rejected = makeNetworkProxyRealDeviceNotSupportedSession(action: .stop, platform: platform, target: target, captureMode: nil) {
         return rejected
     }
-    let commands = networkProxyStopPlanCommands(platform: platform, target: target, restore: restore)
+    let snapshot = try restoreSnapshotPath.map(loadNetworkProxyRestoreSnapshot)
+    let commands = snapshot?.restoreCommands ?? networkProxyStopPlanCommands(platform: platform, target: target, restore: restore)
     var limitations = networkProxyDoctorLimitations(platform: platform) + ["proxy_plan_only:not_executed"]
+    if snapshot != nil {
+        limitations.append("proxy_restore_snapshot_plan:original_value_ledger")
+    }
     if platform == .harmony {
         limitations.append("proxy_restore_probe_only:no_verified_harmony_proxy_mutation")
     }
@@ -653,7 +658,11 @@ func makeNetworkProxyStopPlanSession(
         visibility: .unknown,
         limitations: limitations,
         artifacts: [],
-        restore: NetworkProxyRestore(available: restore, snapshotPath: nil, restored: false),
+        restore: NetworkProxyRestore(
+            available: restore || snapshot != nil,
+            snapshotPath: restoreSnapshotPath,
+            restored: false
+        ),
         sourceCommands: commands.map(hostSourceCommand),
         error: nil
     )
