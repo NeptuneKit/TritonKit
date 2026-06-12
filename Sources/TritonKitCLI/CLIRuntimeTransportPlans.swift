@@ -328,6 +328,7 @@ func buildTaskWorkflowPlan(
                 networkProxyServePlanStep(proxy: proxy, mode: mode, output: output, mockRules: request.mockRules, throttleMs: request.throttleMs),
                 networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
                 networkProxyStartExecutePlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output, auditRecord: auditRecord),
+                networkProxyStatusReadonlyPlanStep(platform: platform, device: device),
                 networkProxyExportPlanStep(platform: platform, device: device, output: captureOutput),
                 networkProxyEvidencePlanStep(proxySession: output, evidence: request.evidence),
                 networkProxyStopPlanStep(platform: platform, device: device, restoreSnapshot: restoreSnapshot),
@@ -774,6 +775,27 @@ private func networkProxyStartExecutePlanStep(
         requires: ["cli.available", "proxy.endpoint.ready", "operator.approval", "audit-record"],
         expectedArtifacts: ["stdout-json", "host-device-proxy", "proxy-restore", "network-capture"],
         stopConditions: ["command.failed", "artifact.write-failed"]
+    )
+}
+
+private func networkProxyStatusReadonlyPlanStep(platform: String, device: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "proxy-status-readonly",
+        title: "Verify platform proxy state with a readonly status probe",
+        command: [
+            "triton", "device", "proxy", "status",
+            "--platform", platform,
+            "--device", device,
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after proxy-start-execute and before exporting or archiving capture artifacts",
+        expected: "Readonly status reports configured/proxyEndpoint from platform state when available; Harmony remains probe-only",
+        requires: ["cli.available", "proxy-start-reviewed"],
+        expectedArtifacts: ["stdout-json", "host-device-proxy"],
+        stopConditions: ["command.failed"]
     )
 }
 
