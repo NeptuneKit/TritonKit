@@ -64,6 +64,8 @@ test("maps only ready emulator targets for Android and Harmony", () => {
           target: "emulator-5554",
           name: "Pixel API 35",
           platform: "android",
+          appName: "Overloaded",
+          packageName: "overloaded.cn.debug",
           ready: true,
           scope: "emulator",
           kind: "emulator",
@@ -94,6 +96,8 @@ test("maps only ready emulator targets for Android and Harmony", () => {
   assert.equal(result.length, 1);
   assert.equal(result[0].id, "android:emulator-5554");
   assert.equal(result[0].platform, "android");
+  assert.equal(result[0].appName, "Overloaded");
+  assert.equal(result[0].bundleIdentifier, "overloaded.cn.debug");
   assert.equal(result[0].ready, true);
 });
 

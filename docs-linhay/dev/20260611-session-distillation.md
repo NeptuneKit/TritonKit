@@ -36,9 +36,31 @@
 
 该结论已写入个人级 `open-design` skill，并同步安装到本机 Open Design plugin registry。该 skill 位于用户目录，不属于 TritonKit 仓库提交范围。
 
+### 分段提交与集中验证节奏
+
+用户明确要求“实现完成再统一测试调整、先分段提交”时，后续执行默认按切片推进：
+
+1. 先完成一个完整切片内的代码、测试、schema、文档、memory 和 skill 一致性改动。
+2. 再集中跑 focused tests、必要 schema tests、完整回归、`git diff --check`、qmd 同步和 docs check。
+3. 若验证失败，在同一切片内集中修复后重跑相关门禁。
+4. 切片验证完成后立即只 stage 该切片相关文件并提交，不把并行 WIP、截图、临时产物或外部验证残留混入。
+
+这不是放弃 TDD / BDD，而是避免“每改几行就停下来测试”的节奏拖慢多文件契约型需求。需要定位具体失败时，仍可临时回到更小粒度的红绿循环。
+
+### 工具单飞边界
+
+本轮出现过重复触发 qmd sync、同 scratch path SwiftPM 测试和提交类操作的风险，因此沉淀为内部治理规则：
+
+- `git add/commit/tag/push/merge`、`docs-linhay/scripts/qmd-sync.sh`、会写同一 `--scratch-path` 的 SwiftPM build/test、启动/停止服务、以及会修改本机或模拟器状态的命令必须单飞。
+- `multi_tool_use.parallel` 只用于只读文件读取、搜索、状态查看，或彼此完全独立且不共享输出目录的验证命令。
+- qmd sync 若出现 `SQLITE_CONSTRAINT_PRIMARYKEY`、Metal embedding 编译输出或重复 embed 噪音，先确认是否有并发实例，等所有实例退出后单独重跑一次；整理提交只认最后一次单飞退出码。
+
+该结论已写入内部 skill：`.agents/skills/tritonkit-ops-governance/SKILL.md`。
+
 ## 不纳入长期规则的内容
 
 - 本轮的具体 Playwright snapshot 文件、临时 `/tmp/od-skills*.json` 和 dev server 输出不沉淀。
+- 本轮的 `tritonkit-desktop.png` 不纳入本次整理提交；Web foreground App identity 兜底已按 Web mock 切片验收并随本次收尾提交。
 - Open Design 内置插件的既有 doctor warning 不纳入 TritonKit 问题。
 - Web mock 当前不升级为正式产品 UI，不改变 CLI / HTTP 控制边界。
 

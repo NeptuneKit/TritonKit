@@ -86,6 +86,8 @@ export type HostWebTarget = {
   target: string;
   name: string;
   platform: DevicePlatform;
+  appName?: string | null;
+  bundleIdentifier?: string | null;
   runtime: string;
   state: string;
   statusLabel: string;

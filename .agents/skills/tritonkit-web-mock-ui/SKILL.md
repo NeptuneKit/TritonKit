@@ -45,6 +45,8 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
 - Keep top-level state and page composition in `Web/src/App.tsx`.
 - Use icons from `lucide-react`.
 - Build the real tool screen first, not a landing page.
+- When a visible label depends on runtime state such as foreground app name, bundle id, hierarchy owner, readiness, or command result, first confirm the CLI / HTTP DTO exposes a machine-readable field. Web may pass through optional fields and show honest unknown/fallback states, but must not invent app identity, hierarchy source, or business status from emulator type, screenshot pixels, or static mock names.
+- If a human-facing Web mock reveals a missing CLI / HTTP field, preserve the optional field in the Web bridge where useful, add a clear fallback label, and file or link a development feedback issue for the missing machine-readable contract.
 - For TritonKit emulator work, default information architecture is:
   - target list
   - device mirror

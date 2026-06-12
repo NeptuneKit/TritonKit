@@ -117,14 +117,17 @@ function mapIosSimulatorToDeviceTarget(simulator: IosSimulatorTargetsResponse["s
 }
 
 function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
+  const hostAppName = normalizeHostIdentity(target.appName);
+  const hostBundleIdentifier = normalizeHostIdentity(target.bundleIdentifier);
+
   if (target.platform === "ios") {
     return {
       id: target.id,
       name: target.name,
       platform: "ios",
       device: target.name,
-      appName: "SpringBoard",
-      bundleId: target.target,
+      appName: hostAppName ?? "SpringBoard",
+      bundleId: hostBundleIdentifier ?? target.target,
       os: target.runtime,
       status: "ready",
       statusLabel: target.statusLabel,
@@ -155,8 +158,8 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
     name: target.name,
     platform: target.platform,
     device: target.target,
-    appName: isAndroid ? "Android Emulator" : "Harmony Emulator",
-    bundleId: target.id,
+    appName: hostAppName ?? "前台 App 未识别",
+    bundleId: hostBundleIdentifier ?? target.id,
     os: target.runtime || (isAndroid ? "Android" : "Harmony"),
     status: "ready",
     statusLabel: target.statusLabel,
@@ -178,6 +181,11 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
     frameOrientation: "portrait",
     readonly: false,
   };
+}
+
+function normalizeHostIdentity(value?: string | null) {
+  const text = value?.trim();
+  return text && text.length > 0 ? text : undefined;
 }
 
 function inferPlaceholderOrientation(deviceTypeIdentifier: string) {

@@ -422,3 +422,11 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - `npm run build` 通过。
 - `git diff --check` 通过。
 - 验收截图：`docs-linhay/spaces/20260611-web-mock-ui/screenshots/20260612/20260612-web-device-canvas-gesture-swipe-after-v02.png`。
+
+### 2026-06-12 Host emulator foreground App identity
+
+- 用户指出 Harmony / DevEco 仿真器设备列表没有显示运行中的 App 名。定位到当前 Web dev bridge 的上游 `triton device list --platform harmony --json` 只返回 target / state / transport，不包含 `appName` 或 `bundleIdentifier`，`triton app list --platform harmony --device <target> --json` 也要求预先知道 bundle，不能作为当前前台 App 发现入口。
+- 修正：`HostWebTarget` 与 Web dev bridge 先透传可选 `appName` / `bundleIdentifier`；`mapHostTargetToDeviceTarget` 使用上游 App identity 优先，否则明确显示 `前台 App 未识别`，不再把 `Harmony Emulator` / `DevEco 仿真器` 当成 App 名。
+- 左侧设备行显示改为 `App 名 · 设备类型`。当前 Harmony target 的浏览器验证结果为 `127.0.0.1:5555前台 App 未识别 · DevEco 仿真器`，避免误导；后续 CLI/HTTP 一旦补齐 foreground app identity，Web 会自动显示真实 App。
+- 已按开发反馈流程创建 issue：`https://github.com/NeptuneKit/TritonKit/issues/45`。
+- 验证记录：`npm run test` 通过 4 tests；`npm run build` 通过；`git diff --check -- Web/src/App.tsx Web/src/styles.css Web/src/types.ts Web/src/data/iosSimulatorClient.ts Web/dev/iosSimulatorBridge.mjs Web/dev/iosSimulatorBridge.test.mjs` 通过；浏览器刷新后左侧设备列表文案符合预期。

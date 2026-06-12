@@ -65,6 +65,8 @@ export function mapTritonDeviceListToWebTargets(payload, platform) {
       target: String(target.target ?? ""),
       name: String(target.name ?? target.target ?? `${platform} emulator`),
       platform,
+      appName: normalizeOptionalString(target.appName),
+      bundleIdentifier: normalizeOptionalString(target.bundleIdentifier ?? target.bundleId ?? target.packageName ?? target.bundle),
       runtime: String(target.runtime ?? platform),
       state: String(target.state ?? "Ready"),
       statusLabel: String(target.state ?? "Ready"),
@@ -174,6 +176,8 @@ async function collectHostTargets(tritonPath) {
     target: target.udid,
     name: target.name,
     platform: "ios",
+    appName: normalizeOptionalString(target.appName),
+    bundleIdentifier: normalizeOptionalString(target.bundleIdentifier ?? target.bundleId),
     runtime: target.runtime,
     state: target.state,
     statusLabel: target.statusLabel,
@@ -198,6 +202,14 @@ async function collectHostTargets(tritonPath) {
     targets: [...iosTargets, ...androidTargets, ...harmonyTargets],
     commandOutputs,
   };
+}
+
+function normalizeOptionalString(value) {
+  if (value === undefined || value === null) {
+    return null;
+  }
+  const text = String(value).trim();
+  return text.length > 0 ? text : null;
 }
 
 async function captureHostScreenshot(tritonPath, platform, target) {

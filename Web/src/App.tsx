@@ -866,23 +866,28 @@ function DeviceListPanel({
     <section className="sidebar-panel" aria-label="设备列表面板">
       <div className="sidebar-section-title">运行中</div>
       <div className="device-list">
-        {visibleTargets.map((target) => (
-          <button
-            className={`device-row ${target.id === selected.id ? "is-selected" : ""}`}
-            key={target.id}
-            onClick={() => onSelect(target.id)}
-            type="button"
-          >
-            <span className="device-row-icon" style={{ color: target.accent }}>
-              <target.Icon size={21} />
-            </span>
-            <span className="device-row-copy">
-              <strong>{target.name}</strong>
-              <span>{platformDetail[target.platform]}</span>
-            </span>
-            <span className="device-version">{target.os.replace(/^[A-Za-z ]+/, "")}</span>
-          </button>
-        ))}
+        {visibleTargets.map((target) => {
+          const appLabel = target.appName || "前台 App 未识别";
+          const detailLabel = `${appLabel} · ${platformDetail[target.platform]}`;
+
+          return (
+            <button
+              className={`device-row ${target.id === selected.id ? "is-selected" : ""}`}
+              key={target.id}
+              onClick={() => onSelect(target.id)}
+              type="button"
+            >
+              <span className="device-row-icon" style={{ color: target.accent }}>
+                <target.Icon size={21} />
+              </span>
+              <span className="device-row-copy">
+                <strong>{target.name}</strong>
+                <span title={detailLabel}>{detailLabel}</span>
+              </span>
+              <span className="device-version">{target.os.replace(/^[A-Za-z ]+/, "")}</span>
+            </button>
+          );
+        })}
 
         {visibleTargets.length === 0 ? <p className="empty-devices">暂无运行中的仿真器</p> : null}
       </div>
