@@ -144,10 +144,11 @@ func workflowPlanFixtures(includeTaskInputs: Bool) -> [TKWorkflowPlanResponse] {
                 expectedURL: nil,
                 evidence: includeTaskInputs ? "/tmp/proxy.tritonevidence" : nil,
                 proxy: includeTaskInputs ? "127.0.0.1:19431" : nil,
-                mode: includeTaskInputs ? "record" : nil,
+                mode: includeTaskInputs ? "mock" : nil,
                 output: includeTaskInputs ? "/tmp/proxy-session" : nil,
                 certificate: includeTaskInputs ? "/tmp/triton-proxy-ca.cer" : nil,
-                auditRecord: includeTaskInputs ? "ticket-123" : nil
+                auditRecord: includeTaskInputs ? "ticket-123" : nil,
+                mockRules: includeTaskInputs ? "/tmp/triton-mock-rules.json" : nil
             )
         ),
     ]

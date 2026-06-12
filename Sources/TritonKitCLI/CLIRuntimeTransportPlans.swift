@@ -15,6 +15,7 @@ struct WorkflowPlanRequest {
     let output: String?
     let certificate: String?
     let auditRecord: String?
+    let mockRules: String?
 
     init(
         goal: String,
@@ -29,7 +30,8 @@ struct WorkflowPlanRequest {
         mode: String? = nil,
         output: String? = nil,
         certificate: String? = nil,
-        auditRecord: String? = nil
+        auditRecord: String? = nil,
+        mockRules: String? = nil
     ) {
         self.goal = goal
         self.device = device
@@ -44,6 +46,7 @@ struct WorkflowPlanRequest {
         self.output = output
         self.certificate = certificate
         self.auditRecord = auditRecord
+        self.mockRules = mockRules
     }
 
     static let general = WorkflowPlanRequest(
@@ -319,7 +322,7 @@ func buildTaskWorkflowPlan(
                 networkProxyProbePlanStep(platform: platform, device: device),
                 networkProxyCertificatePlanStep(platform: platform, device: device, certificate: certificate),
                 networkProxyCertificateInstallPlanStep(platform: platform, device: device, certificate: certificate, auditRecord: auditRecord),
-                networkProxyServePlanStep(proxy: proxy, mode: mode, output: output),
+                networkProxyServePlanStep(proxy: proxy, mode: mode, output: output, mockRules: request.mockRules),
                 networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
                 networkProxyStartExecutePlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output, auditRecord: auditRecord),
                 networkProxyExportPlanStep(platform: platform, device: device, output: captureOutput),
@@ -683,17 +686,21 @@ private func networkProxyCertificateInstallPlanStep(
     )
 }
 
-private func networkProxyServePlanStep(proxy: String, mode: String, output: String) -> TKWorkflowPlanStep {
-    TKWorkflowPlanStep(
+private func networkProxyServePlanStep(proxy: String, mode: String, output: String, mockRules: String?) -> TKWorkflowPlanStep {
+    var argv = [
+        "triton", "device", "proxy", "serve",
+        "--listen", proxy,
+        "--output", output,
+        "--mode", mode,
+    ]
+    if mode == "mock", let mockRules, !mockRules.isEmpty {
+        argv += ["--mock-rules", mockRules]
+    }
+    argv.append("--jsonl")
+    return TKWorkflowPlanStep(
         id: "proxy-serve",
         title: "Start local host-side proxy endpoint",
-        command: [
-            "triton", "device", "proxy", "serve",
-            "--listen", proxy,
-            "--output", output,
-            "--mode", mode,
-            "--jsonl",
-        ].map(shellEscaped).joined(separator: " "),
+        command: argv.map(shellEscaped).joined(separator: " "),
         workflowCategories: ["target", "evidence"],
         requiresServer: false,
         requiresTarget: false,
