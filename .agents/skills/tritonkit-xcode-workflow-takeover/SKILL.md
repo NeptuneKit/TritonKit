@@ -33,7 +33,7 @@ Start from:
 ## Adoption Rules
 
 - `triton xcode`, `triton xcresult`, `triton coverage`, `triton logs`, `triton spm`, `triton debug`, and `triton device` are the target command namespaces.
-- As of 2026-05-21, Xcode build/test/run should default to `triton xcode` instead of XcodeBuildMCP. Use XcodeBuildMCP only as a reference or temporary fallback when a needed Triton capability is missing.
+- As of 2026-05-21, Xcode build/test/run should default to `triton xcode` instead of XcodeBuildMCP. Use XcodeBuildMCP only as a reference or temporary fallback after `triton schema --command xcode --json`, `triton capabilities --json`, `triton plan ... --json`, or a `triton xcode ... --jsonl` result proves the needed capability is missing, unsupported, or failed with a stable Triton error code.
 - Long-running build/test/run/log/debug commands emit JSONL progress and a final summary envelope.
 - Build/test/log/coverage artifacts must be eligible for `.tritonevidence`.
 - Build/run output must bind to simulator app targets and, when possible, embedded runtime targets.
@@ -65,7 +65,7 @@ Current boundaries:
 
 - `xcode run` covers build, simulator install, and simulator launch; it does not prove business readiness.
 - Continue readiness checks with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
-- Real workspaces may exceed default timeouts. Use `triton xcode settings/build/test/run --timeout <seconds>` before falling back to raw `xcodebuild`.
+- Real workspaces may exceed default timeouts. Use `triton xcode settings/build/test/run --timeout <seconds>` and preserve the JSONL summary or stable error envelope before falling back to raw `xcodebuild`.
 - When build/test behavior looks stuck, run `triton xcode status --json` first, then `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`; timeout returns `xcode_not_idle` with blocking PIDs.
 - `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts. Use those artifacts before deciding to wait longer or fall back to raw `xcodebuild`.
 - `xcode test --result-bundle <path> --jsonl` emits a final `TKXcodeActionSummary` with default-redacted `testResultSummary` and `topFailures` when the result bundle can be parsed. Failed tests return an `ok:false` summary and a non-zero process exit; inspect the inline top failures first, then use `triton xcresult failures --path <path> --json` for the full list.

@@ -116,7 +116,7 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "{ ok, serverReachable, connected, runtime, goal?, nextStep, steps[], error? } or { ok, path, schemaVersion, name, variables, stepCount, actions, target?, steps[] }",
             failureShape: "{ ok: false, error: { code: server_unavailable|target_unavailable|request_failed|validation_failed, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use plan for recommended command sequences. It does not execute actions; agents must run the returned commands explicitly.",
+            outputSemantics: "Use plan for recommended command sequences and as the Triton-first fallback gate before raw emulator/simulator tools. It does not execute actions; agents must run the returned commands explicitly and preserve Triton failure, unsupported, or missing-schema evidence before falling back.",
             nextCommands: [
                 "triton doctor --format json",
                 "triton capabilities --format json",

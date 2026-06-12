@@ -18,6 +18,8 @@ The product boundary is:
 
 The `triton` CLI is the stable interface for AI agents. Platform tools such as `xcrun simctl`, `adb`, `emu`, `hdc`, `aa`, `bm`, `uitest`, and `hilog` are implementation details behind JSON / JSONL contracts.
 
+Before using fallback tools for any local emulator or simulator action, run and preserve a Triton machine-readable fact source first: `triton status --json`, `triton doctor --json`, `triton capabilities --json`, `triton schema --json`, `triton schema --command <command> --json`, or a task-specific `triton plan ... --json`. Fallback to `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild` is allowed only when the Triton result proves failure, unsupported scope/capability, or a missing schema/capability for the needed action. Preserve the Triton command, error code or unsupported evidence, and fallback command in the report.
+
 ## Reference Docs
 
 Start from the current space and technical design:
@@ -56,6 +58,8 @@ Do not add Web / Wails UI, remote orchestration, real-device flows, or central s
 `triton doctor --json` is the ordered recovery view over that matrix. It should expose top-level `nextWorkflows`, plus `checks[].id`, `status`, `code`, `hint`, `nextAction`, `relatedCapabilities`, and `workflowCategories` so an agent can distinguish missing server, missing target/runtime, limited action surface, and available planning commands without re-joining doctor and capabilities by hand.
 
 `triton plan ios-smoke|open-url|webview-check --json` is the first task planning layer. It should return ordered command recommendations for local emulator work, but it must not execute those commands or replace explicit wait/assert/evidence proof.
+
+Treat `triton plan ... --json` as the preferred fallback gate for goal-specific emulator workflows. If the plan cannot express the needed action, keep that plan output together with `triton schema --command <command> --json` or `triton capabilities --json` before calling a fallback tool.
 
 `triton plan --json` should also expose `mode`, with `bootstrap` for environment recovery/discovery planning and `task` for goal-specific workflow planning. Emulator agents should use `mode` to decide whether to recover local simulator state first or proceed into a smoke/open-url/webview workflow.
 

@@ -37,6 +37,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - `triton doctor --json`
    - `triton status --json`
    - `triton capabilities --json`
+   - before using `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild`, preserve Triton-first fallback gate evidence from `status`, `doctor`, `capabilities`, `schema`, or `plan`; fallback is allowed only after Triton reports failure, unsupported capability/scope, or missing schema/capability for the required local emulator action;
    - use `doctor.checks[]` first for ordered recovery, and preserve `doctor.nextWorkflows` plus each check's `workflowCategories` so the regression report keeps the affected workflow taxonomy without re-deriving it from capabilities;
    - `triton list --json`
    - use `capabilities[].group`, `requiredBy`, `nextAction`, and `evidence` to decide whether the next step is target selection, runtime connection, Xcode preparation, action execution, assertion, or evidence capture; if a schema-provided capability lacks those planning fields, treat that as a TritonKit contract bug before relying on it;
@@ -138,7 +139,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - verify App preferences: `triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json`;
    - set simulator App preferences from property-list compatible JSON values: `triton app prefs set <key> <json-value> --device iphone15 --bundle-id <bundle-id> --json`;
    - capture host-side framebuffer: `triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json`;
-   - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`.
+   - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`, and include that schema gap or Triton error envelope in the regression report.
 8. Prepare Xcode build/test/run through Triton before falling back to XcodeBuildMCP or raw `xcodebuild`:
    - discover project containers: `triton xcode discover --path <repo> --json`;
    - set reusable defaults: `triton xcode use --workspace <workspace>|--project <project> --scheme <scheme> --configuration Debug --simulator <udid> --json`;
@@ -151,7 +152,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - build/install/launch: `triton xcode run --jsonl`;
    - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
    - `xcode settings/build/test/run --jsonl` includes stdout/stderr log paths and byte counts; inspect those artifacts before waiting longer or falling back.
-   - use XcodeBuildMCP only as a temporary fallback when `triton schema --command xcode --json` does not expose the needed capability.
+   - use XcodeBuildMCP only as a temporary fallback when `triton schema --command xcode --json` or `triton xcode ... --jsonl` evidence shows the needed capability is missing, unsupported, or failed with a stable error code.
 9. For HarmonyOS NEXT / DevEco Emulator validation, use Triton host-side device discovery before raw `hdc`:
    - probe tools: `triton device doctor --platform harmony --json`;
    - list HDC targets: `triton device list --platform harmony --json`;
