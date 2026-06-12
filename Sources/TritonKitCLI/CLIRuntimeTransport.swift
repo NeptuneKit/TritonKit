@@ -323,8 +323,8 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "sim-ui", supported: true),
         TKRuntimeCapability(name: "sim-pasteboard", supported: true),
         TKRuntimeCapability(name: "sim-push", supported: true),
-        TKRuntimeCapability(name: "ios-simulator-host-tap", supported: true),
-        TKRuntimeCapability(name: "ios-simulator-host-type", supported: true),
+        TKRuntimeCapability(name: "ios-simulator-host-tap", supported: false, reason: "Host-side iOS Simulator input is not available in the current adapter"),
+        TKRuntimeCapability(name: "ios-simulator-host-type", supported: false, reason: "Host-side iOS Simulator input is not available in the current adapter"),
         TKRuntimeCapability(name: "host-app", supported: true),
         TKRuntimeCapability(name: "host-app-open-url-ready", supported: true),
         TKRuntimeCapability(name: "host-app-open-url-snapshot", supported: true),
@@ -808,7 +808,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
     case "ledger":
         return ["runtime-ledger"]
     case "ios-simulator-host-tap", "ios-simulator-host-type":
-        return ["host-command-json", "input.result"]
+        return ["unsupported-envelope", "command-schema"]
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
         return ["host-command-json", "host-artifact"]
     case "observe", "observe-ios", "observe-android", "observe-harmony":
@@ -1326,37 +1326,19 @@ func buildTaskWorkflowPlan(
                 targetUsePlanStep(device: request.device, host: host, port: port),
                 targetWaitReadyPlanStep(device: request.device, host: host, port: port),
                 TKWorkflowPlanStep(
-                    id: "ios-host-input-fallback",
-                    title: "Fallback host-side simulator tap",
+                    id: "ios-host-input-unsupported",
+                    title: "Check host-side simulator input blocker",
                     command: [
-                        "triton", "sim", "tap",
-                        "--simulator", planValue(request.device, "<udid|booted>"),
-                        "--x", "<x>",
-                        "--y", "<y>",
+                        "triton", "schema",
+                        "--command", "sim",
                         "--json",
                     ].map(shellEscaped).joined(separator: " "),
-                    category: "prepare-target",
+                    category: "diagnose",
                     workflowCategories: ["action", "assert", "evidence", "smoke", "target"],
                     requiresServer: false,
-                    requiresTarget: true,
-                    when: "embedded runtime action is unavailable and a booted iOS Simulator is available",
-                    expected: "Host input JSON reports runtimeScope=host-simulator, adapter=xcrun-simctl, and sourceCommand"
-                ),
-                TKWorkflowPlanStep(
-                    id: "ios-host-type-fallback",
-                    title: "Fallback host-side simulator ASCII type",
-                    command: [
-                        "triton", "sim", "type",
-                        "--simulator", planValue(request.device, "<udid|booted>"),
-                        "--text", planValue(request.text, "<text>"),
-                        "--json",
-                    ].map(shellEscaped).joined(separator: " "),
-                    category: "prepare-target",
-                    workflowCategories: ["action", "assert", "evidence", "smoke", "target"],
-                    requiresServer: false,
-                    requiresTarget: true,
-                    when: "a focused simulator text field needs ASCII input before runtime is connected",
-                    expected: "Host input JSON reports textEncoding=ascii; verify completion with wait, assert, screenshot, app prefs, or evidence"
+                    requiresTarget: false,
+                    when: "embedded runtime action is unavailable and host-side iOS Simulator input would be the fallback",
+                    expected: "Schema and capabilities report ios-simulator-host-tap/type as unsupported until a stable public simctl primitive is available"
                 ),
                 TKWorkflowPlanStep(
                     id: "ios-smoke",

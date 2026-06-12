@@ -260,7 +260,7 @@ Harmony host-side layout can identify visible Web candidates without source chan
 
 Use the CLI guide independently when an agent only needs host-side simulator or Harmony / DevEco Emulator control. Use it together with the iOS or Harmony embedded runtime guides when the app process exposes TritonKit runtime endpoints.
 
-Host-side iOS Simulator setup can use `triton sim tap --simulator booted --x 200 --y 400 --json` and `triton sim type --simulator booted --text ascii --json` when the embedded runtime is unavailable. These commands use public `xcrun simctl io` primitives, return `runtimeScope=host-simulator`, `adapter=xcrun-simctl`, and `sourceCommand`, and only prove that host input was submitted. Continue with `wait`, `assert`, `sim screenshot`, app preferences, or evidence capture to prove business state. Text input is ASCII-only for now; non-ASCII input returns `unsupported_text_input` instead of pretending success.
+Host-side iOS Simulator setup should still prefer Triton commands before external fallback tools. `triton sim tap --simulator booted --x 200 --y 400 --json` and `triton sim type --simulator booted --text ascii --json` are reserved agent-facing entries for this lane, but the current public `xcrun simctl io` contract exposes screenshot/video/screen configuration primitives only, not stable tap or keyboard type primitives. TritonKit therefore returns `unsupported_host_input` for those commands instead of pretending host input succeeded; non-ASCII text is rejected earlier with `unsupported_text_input`. Use embedded runtime semantic input, app-owned debug hooks, pasteboard flows, screenshots, app preferences, or evidence capture to prove business state until a stable host input adapter is selected.
 
 ### 1. Install The CLI
 

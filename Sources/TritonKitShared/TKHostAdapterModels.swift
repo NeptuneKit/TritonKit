@@ -339,23 +339,6 @@ public enum TKSimctlCommand {
         )
     }
 
-    public static func tap(udid: String, x: Int, y: Int) -> TKHostCommand {
-        command(
-            ["simctl", "io", udid, "tap", "\(x)", "\(y)"],
-            riskLevel: .automation,
-            requiredConfig: [.target, .timeout, .auditRecord]
-        )
-    }
-
-    public static func typeText(udid: String, text: String) -> TKHostCommand {
-        command(
-            ["simctl", "io", udid, "keyboard", "type", text],
-            riskLevel: .automation,
-            requiredConfig: [.target, .timeout, .auditRecord],
-            sensitiveOutput: true
-        )
-    }
-
     public static func appInfo(udid: String, bundleID: String) -> TKHostCommand {
         command(["simctl", "appinfo", udid, bundleID])
     }
