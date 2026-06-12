@@ -921,17 +921,29 @@ extension SchemaFactSourceTests {
     @Test("capability long-running next actions stay explicit")
     func capabilityLongRunningNextActionsStayExplicit() {
         var unexpectedLongRunningActions: [String] = []
+        var missingLongRunningLifecycle: [String] = []
+        var unexpectedOneShotLifecycle: [String] = []
 
         for fixture in capabilityStateFixtures() {
-            for capability in fixture.capabilities where capability.nextAction?.requiresLongRunningProcess == true {
-                let action = capability.nextAction
-                if action?.command != "serve" || action?.args != ["--host", "127.0.0.1", "--port", "19421"] {
-                    unexpectedLongRunningActions.append("\(fixture.name):\(capability.name):\(action?.command ?? "nil")")
+            for capability in fixture.capabilities {
+                guard let action = capability.nextAction else { continue }
+                let context = "\(fixture.name):\(capability.name):\(action.command)"
+                if action.requiresLongRunningProcess {
+                    if action.command != "serve" || action.args != ["--host", "127.0.0.1", "--port", "19421"] {
+                        unexpectedLongRunningActions.append(context)
+                    }
+                    if action.terminationSignals != ["sigint", "sigterm"] {
+                        missingLongRunningLifecycle.append(context)
+                    }
+                } else if !action.readyEvents.isEmpty || !action.finalEvents.isEmpty || !action.terminationSignals.isEmpty {
+                    unexpectedOneShotLifecycle.append(context)
                 }
             }
         }
 
         #expect(unexpectedLongRunningActions == [])
+        #expect(missingLongRunningLifecycle == [])
+        #expect(unexpectedOneShotLifecycle == [])
     }
 
     @Test("capability next action placeholders are complete argv tokens")

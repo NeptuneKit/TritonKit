@@ -660,6 +660,44 @@ struct TKCLITransportModelsTests {
         #expect(command.providedCapabilities == [])
     }
 
+    @Test("CLI schema normalizes next action lifecycle failure shapes")
+    func cliSchemaNormalizesNextActionLifecycleFailureShapes() throws {
+        let oldImplicit = TKCommandSchema(
+            name: "old-implicit",
+            summary: "Old implicit next action shape",
+            requiresServer: false,
+            requiresTarget: false,
+            outputFormats: ["json"],
+            options: [],
+            examples: [],
+            failureShape: "{ ok:false, error:{ code, message, nextAction? } }"
+        )
+        let oldExplicit = TKCommandSchema(
+            name: "old-explicit",
+            summary: "Old explicit next action shape",
+            requiresServer: false,
+            requiresTarget: false,
+            outputFormats: ["json"],
+            options: [],
+            examples: [],
+            failureShape: "{ ok:false, error:{ code, message, nextAction?{ command,args,category,requiresLongRunningProcess? } } }"
+        )
+
+        let shapes = try [oldImplicit, oldExplicit].map { schema -> String in
+            try #require(schema.failureShape)
+        }
+
+        for shape in shapes {
+            #expect(shape.contains("command"))
+            #expect(shape.contains("args"))
+            #expect(shape.contains("category"))
+            #expect(shape.contains("requiresLongRunningProcess"))
+            #expect(shape.contains("readyEvents"))
+            #expect(shape.contains("finalEvents"))
+            #expect(shape.contains("terminationSignals"))
+        }
+    }
+
     @Test("workflow plan carries next step and command sequence")
     func workflowPlanShape() throws {
         let plan = TKWorkflowPlanResponse(
@@ -706,6 +744,10 @@ struct TKCLITransportModelsTests {
         #expect(decoded.primaryExpectedArtifact == "stdout-json")
         #expect(decoded.primaryNextAction?.command == "serve")
         #expect(decoded.primaryNextAction?.args == ["--host", "127.0.0.1", "--port", "19421"])
+        #expect(decoded.primaryNextAction?.requiresLongRunningProcess == true)
+        #expect(decoded.primaryNextAction?.readyEvents == [])
+        #expect(decoded.primaryNextAction?.finalEvents == [])
+        #expect(decoded.primaryNextAction?.terminationSignals == ["sigint", "sigterm"])
         #expect(decoded.primaryNextActionSource == "next-step-step")
         #expect(decoded.steps.first?.command.contains("triton serve") == true)
         #expect(decoded.steps.first?.argv == ["triton", "serve", "--host", "127.0.0.1", "--port", "19421"])
@@ -745,6 +787,47 @@ struct TKCLITransportModelsTests {
         #expect(step.readyEvents == ["proxy.serve.ready"])
         #expect(step.finalEvents == ["proxy.serve.summary"])
         #expect(step.terminationSignals == ["sigint", "sigterm"])
+    }
+
+    @Test("next action decodes long running lifecycle defaults for older payloads")
+    func nextActionDecodesLongRunningLifecycleDefaultsForOlderPayloads() throws {
+        let serveData = Data(
+            """
+            {
+              "command": "serve",
+              "args": ["--host", "127.0.0.1", "--port", "19421"],
+              "category": "app"
+            }
+            """.utf8
+        )
+        let proxyServeData = Data(
+            """
+            {
+              "command": "device",
+              "args": ["proxy", "serve", "--listen", "127.0.0.1:19431", "--output", "/tmp/proxy", "--mode", "record", "--jsonl"],
+              "category": "plan"
+            }
+            """.utf8
+        )
+
+        let serve = try JSONDecoder().decode(TKCLINextAction.self, from: serveData)
+        let proxyServe = try JSONDecoder().decode(TKCLINextAction.self, from: proxyServeData)
+        let proxyServeFromArgv = try #require(TKCLINextAction.fromTritonArgv(["triton"] + [proxyServe.command] + proxyServe.args))
+
+        #expect(serve.requiresLongRunningProcess == true)
+        #expect(serve.readyEvents == [])
+        #expect(serve.finalEvents == [])
+        #expect(serve.terminationSignals == ["sigint", "sigterm"])
+        #expect(proxyServe.requiresLongRunningProcess == true)
+        #expect(proxyServe.readyEvents == ["proxy.serve.ready"])
+        #expect(proxyServe.finalEvents == ["proxy.serve.summary"])
+        #expect(proxyServe.terminationSignals == ["sigint", "sigterm"])
+        #expect(proxyServeFromArgv.command == proxyServe.command)
+        #expect(proxyServeFromArgv.args == proxyServe.args)
+        #expect(proxyServeFromArgv.requiresLongRunningProcess == true)
+        #expect(proxyServeFromArgv.readyEvents == ["proxy.serve.ready"])
+        #expect(proxyServeFromArgv.finalEvents == ["proxy.serve.summary"])
+        #expect(proxyServeFromArgv.terminationSignals == ["sigint", "sigterm"])
     }
 
     @Test("workflow plan infers mode when decoding older payloads")

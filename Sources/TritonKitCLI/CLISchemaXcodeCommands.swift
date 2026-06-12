@@ -54,7 +54,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl",
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
-            failureShape: "{ ok:false, error:{ code: invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|xcode_not_idle|xcodebuild_failed|app_path_unresolved|bundle_id_unresolved, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess? } } }",
+            failureShape: "{ ok:false, error:{ code: invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|xcode_not_idle|xcodebuild_failed|app_path_unresolved|bundle_id_unresolved, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
             inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
             jsonlEvents: [
                 "xcode.<action>.invocation",

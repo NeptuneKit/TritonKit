@@ -364,7 +364,7 @@ public struct TKCommandSubcommandSchema: Codable, Equatable {
 }
 
 public struct TKCommandSchema: Codable, Equatable {
-    private static let defaultFailureShape = "{ ok: false, error: { code, message, endpoint, hint, nextAction?{ command,args,category,requiresLongRunningProcess? } } }"
+    private static let defaultFailureShape = "{ ok: false, error: { code, message, endpoint, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }"
 
     public let name: String
     public let summary: String
@@ -440,7 +440,7 @@ public struct TKCommandSchema: Codable, Equatable {
         argumentForms: [TKCommandArgumentForm] = [],
         examples: [String],
         successShape: String? = nil,
-        failureShape: String? = "{ ok: false, error: { code, message, endpoint, hint, nextAction?{ command,args,category,requiresLongRunningProcess? } } }",
+        failureShape: String? = "{ ok: false, error: { code, message, endpoint, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
         outputSemantics: String? = nil,
         requiredOptions: [String] = [],
         inheritsDefaultsFrom: [String] = [],
@@ -526,6 +526,14 @@ public struct TKCommandSchema: Codable, Equatable {
         guard let failureShape else {
             return nil
         }
+        let nextActionLifecycleShape = "nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals }"
+        let legacyNextActionShape = "nextAction?{ command,args,category,requiresLongRunningProcess? }"
+        if failureShape.contains(legacyNextActionShape) {
+            return failureShape.replacingOccurrences(
+                of: legacyNextActionShape,
+                with: nextActionLifecycleShape
+            )
+        }
         guard failureShape.contains("nextAction?"),
               !failureShape.contains("nextAction.category"),
               !failureShape.contains("nextAction?{")
@@ -534,7 +542,7 @@ public struct TKCommandSchema: Codable, Equatable {
         }
         return failureShape.replacingOccurrences(
             of: "nextAction?",
-            with: "nextAction?{ command,args,category,requiresLongRunningProcess? }"
+            with: nextActionLifecycleShape
         )
     }
 }

@@ -5,24 +5,38 @@ public struct TKCLINextAction: Codable, Equatable {
     public let args: [String]
     public let category: String
     public let requiresLongRunningProcess: Bool
+    public let readyEvents: [String]
+    public let finalEvents: [String]
+    public let terminationSignals: [String]
 
     enum CodingKeys: String, CodingKey {
         case command
         case args
         case category
         case requiresLongRunningProcess
+        case readyEvents
+        case finalEvents
+        case terminationSignals
     }
 
     public init(
         command: String,
         args: [String],
         category: String? = nil,
-        requiresLongRunningProcess: Bool = false
+        requiresLongRunningProcess: Bool? = nil,
+        readyEvents: [String]? = nil,
+        finalEvents: [String]? = nil,
+        terminationSignals: [String]? = nil
     ) {
         self.command = command
         self.args = args
         self.category = category ?? TKCommandRecoveryCommand.category(forRootCommand: command) ?? "plan"
-        self.requiresLongRunningProcess = requiresLongRunningProcess
+        let argv = ["triton", command] + args
+        let resolvedRequiresLongRunning = requiresLongRunningProcess ?? Self.defaultRequiresLongRunningProcess(for: argv)
+        self.requiresLongRunningProcess = resolvedRequiresLongRunning
+        self.readyEvents = readyEvents ?? Self.defaultReadyEvents(for: argv)
+        self.finalEvents = finalEvents ?? Self.defaultFinalEvents(for: argv)
+        self.terminationSignals = terminationSignals ?? Self.defaultTerminationSignals(for: argv)
     }
 
     public init(from decoder: Decoder) throws {
@@ -33,7 +47,15 @@ public struct TKCLINextAction: Codable, Equatable {
         self.category = try container.decodeIfPresent(String.self, forKey: .category) ??
             TKCommandRecoveryCommand.category(forRootCommand: command) ??
             "plan"
-        self.requiresLongRunningProcess = try container.decodeIfPresent(Bool.self, forKey: .requiresLongRunningProcess) ?? false
+        let argv = ["triton", command] + args
+        self.requiresLongRunningProcess = try container.decodeIfPresent(Bool.self, forKey: .requiresLongRunningProcess) ??
+            Self.defaultRequiresLongRunningProcess(for: argv)
+        self.readyEvents = try container.decodeIfPresent([String].self, forKey: .readyEvents) ??
+            Self.defaultReadyEvents(for: argv)
+        self.finalEvents = try container.decodeIfPresent([String].self, forKey: .finalEvents) ??
+            Self.defaultFinalEvents(for: argv)
+        self.terminationSignals = try container.decodeIfPresent([String].self, forKey: .terminationSignals) ??
+            Self.defaultTerminationSignals(for: argv)
     }
 
     public static func fromTritonArgv(_ argv: [String]) -> TKCLINextAction? {
@@ -42,12 +64,37 @@ public struct TKCLINextAction: Codable, Equatable {
         }
         let command = argv[1]
         let args = Array(argv.dropFirst(2))
-        let requiresLongRunningProcess = command == "serve"
         return TKCLINextAction(
             command: command,
-            args: args,
-            requiresLongRunningProcess: requiresLongRunningProcess
+            args: args
         )
+    }
+
+    private static func defaultRequiresLongRunningProcess(for argv: [String]) -> Bool {
+        Array(argv.prefix(2)) == ["triton", "serve"] ||
+            Array(argv.prefix(4)) == ["triton", "device", "proxy", "serve"]
+    }
+
+    private static func defaultReadyEvents(for argv: [String]) -> [String] {
+        if Array(argv.prefix(4)) == ["triton", "device", "proxy", "serve"] {
+            return ["proxy.serve.ready"]
+        }
+        return []
+    }
+
+    private static func defaultFinalEvents(for argv: [String]) -> [String] {
+        if Array(argv.prefix(4)) == ["triton", "device", "proxy", "serve"] {
+            return ["proxy.serve.summary"]
+        }
+        return []
+    }
+
+    private static func defaultTerminationSignals(for argv: [String]) -> [String] {
+        if Array(argv.prefix(2)) == ["triton", "serve"] ||
+            Array(argv.prefix(4)) == ["triton", "device", "proxy", "serve"] {
+            return ["sigint", "sigterm"]
+        }
+        return []
     }
 }
 

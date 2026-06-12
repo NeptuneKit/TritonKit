@@ -32,6 +32,24 @@ private func nextActionSchemaFields(
             required: true,
             description: "Whether the next action starts a long-running process"
         ),
+        TKCommandSchemaField(
+            name: "\(name).readyEvents",
+            type: "[String]",
+            required: true,
+            description: "JSONL events that prove a long-running next action is ready for dependent actions"
+        ),
+        TKCommandSchemaField(
+            name: "\(name).finalEvents",
+            type: "[String]",
+            required: true,
+            description: "JSONL events expected when a long-running next action exits cleanly"
+        ),
+        TKCommandSchemaField(
+            name: "\(name).terminationSignals",
+            type: "[String]",
+            required: true,
+            description: "Preferred signals for agents to stop a long-running next action after dependent work finishes"
+        ),
     ]
 }
 

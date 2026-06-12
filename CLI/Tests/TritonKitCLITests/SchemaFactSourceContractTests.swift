@@ -186,22 +186,29 @@ extension SchemaFactSourceTests {
         #expect(missingCodes == [])
     }
 
-    @Test("schema failure shapes describe next action category")
-    func schemaFailureShapesDescribeNextActionCategory() {
-        let missingCategory = commandSchemas()
+    @Test("schema failure shapes describe next action lifecycle")
+    func schemaFailureShapesDescribeNextActionLifecycle() {
+        let missingLifecycle = commandSchemas()
             .compactMap { schema -> String? in
                 guard let failureShape = schema.failureShape,
-                      failureShape.contains("nextAction?"),
-                      !failureShape.contains("nextAction.category"),
-                      !failureShape.contains("nextAction?{")
+                      failureShape.contains("nextAction?")
                 else {
                     return nil
                 }
-                return schema.name
+                let requiredTokens = [
+                    "command",
+                    "args",
+                    "category",
+                    "requiresLongRunningProcess",
+                    "readyEvents",
+                    "finalEvents",
+                    "terminationSignals",
+                ]
+                return requiredTokens.allSatisfy { failureShape.contains($0) } ? nil : schema.name
             }
             .sorted()
 
-        #expect(missingCategory == [])
+        #expect(missingLifecycle == [])
     }
 
     @Test("error output contracts expose stable error subfields")
@@ -217,6 +224,9 @@ extension SchemaFactSourceTests {
             "error.nextAction.args",
             "error.nextAction.category",
             "error.nextAction.requiresLongRunningProcess",
+            "error.nextAction.readyEvents",
+            "error.nextAction.finalEvents",
+            "error.nextAction.terminationSignals",
         ]
         var missingFields: [String] = []
 
@@ -246,6 +256,9 @@ extension SchemaFactSourceTests {
             ".args",
             ".category",
             ".requiresLongRunningProcess",
+            ".readyEvents",
+            ".finalEvents",
+            ".terminationSignals",
         ]
         var missingFields: [String] = []
 
