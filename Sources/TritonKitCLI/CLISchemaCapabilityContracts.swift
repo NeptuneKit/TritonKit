@@ -423,6 +423,7 @@ func hostDeviceProxyServeOutputContract() -> TKCommandOutputContract {
             ("capturePath", "String", true, "NDJSON capture artifact path"),
             ("captureMode", "String?", false, "Capture policy mode such as record, mock, block, or throttle"),
             ("policyAction", "String?", false, "Per-request proxy policy action such as forwarded, mocked, blocked, or throttled"),
+            ("policyRuleId", "String?", false, "Matched per-request policy rule id from proxy serve --policy-rules"),
             ("mockRuleId", "String?", false, "Matched mock rule id for proxy serve --mode mock when --mock-rules is provided"),
             ("responseStatus", "Int?", false, "Synthetic response status for local proxy policy actions; absent for forwarded requests"),
             ("responseStatusText", "String?", false, "Synthetic response reason phrase for mock, block, or throttle policy actions"),

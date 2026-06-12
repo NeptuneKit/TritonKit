@@ -118,7 +118,8 @@ extension SchemaFactSourceTests {
                 output: "/tmp/proxy-session",
                 certificate: "/tmp/triton-proxy-ca.cer",
                 auditRecord: "ticket-123",
-                mockRules: "/tmp/triton-mock-rules.json"
+                mockRules: "/tmp/triton-mock-rules.json",
+                policyRules: "/tmp/triton-policy-rules.json"
             )
         )
         #expect(networkProxy.mode == "task")
@@ -142,6 +143,7 @@ extension SchemaFactSourceTests {
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-cert-install" })?.requires.contains("operator.approval") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-cert-install" })?.expectedArtifacts.contains("proxy-certificate") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-serve" })?.command.contains("--mock-rules /tmp/triton-mock-rules.json") == true)
+        #expect(networkProxy.steps.first(where: { $0.id == "proxy-serve" })?.command.contains("--policy-rules /tmp/triton-policy-rules.json") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--platform android") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-plan" })?.command.contains("--plan-only") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-start-execute" })?.command.contains("--proxy 127.0.0.1:19431") == true)

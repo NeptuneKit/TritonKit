@@ -108,6 +108,7 @@ struct DeviceProxyServe: AsyncParsableCommand {
     @Option(help: "Capture output directory") var output: String
     @Option(help: "Capture policy mode: record|mock|block|throttle") var mode: String = "record"
     @Option(help: "JSON mock rules file for --mode mock") var mockRules: String?
+    @Option(help: "JSON per-request policy rules file for host-side mock/block/throttle/forward decisions") var policyRules: String?
     @Option(help: "Synthetic response delay in milliseconds for --mode throttle") var throttleMs: Int?
     @Option(help: .hidden) var maxConnections: Int?
     @Flag(help: "Emit compact JSON Lines for ready/request/final events") var jsonl = false
@@ -117,7 +118,7 @@ struct DeviceProxyServe: AsyncParsableCommand {
     func run() async throws {
         let endpoint = try NetworkProxyEndpoint(listen)
         let summary = try runNetworkProxyCaptureServer(
-            config: NetworkProxyServeConfig(listen: endpoint, outputDirectory: output, maxConnections: maxConnections, mode: mode, mockRulesPath: mockRules, throttleDelayMs: throttleMs),
+            config: NetworkProxyServeConfig(listen: endpoint, outputDirectory: output, maxConnections: maxConnections, mode: mode, mockRulesPath: mockRules, policyRulesPath: policyRules, throttleDelayMs: throttleMs),
             eventWriter: jsonl ? { event in
                 if let line = try? encodeCompactJSON(event) {
                     writeJSONLLine(line)

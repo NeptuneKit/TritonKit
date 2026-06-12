@@ -16,6 +16,7 @@ struct WorkflowPlanRequest {
     let certificate: String?
     let auditRecord: String?
     let mockRules: String?
+    let policyRules: String?
     let throttleMs: Int?
 
     init(
@@ -33,6 +34,7 @@ struct WorkflowPlanRequest {
         certificate: String? = nil,
         auditRecord: String? = nil,
         mockRules: String? = nil,
+        policyRules: String? = nil,
         throttleMs: Int? = nil
     ) {
         self.goal = goal
@@ -49,6 +51,7 @@ struct WorkflowPlanRequest {
         self.certificate = certificate
         self.auditRecord = auditRecord
         self.mockRules = mockRules
+        self.policyRules = policyRules
         self.throttleMs = throttleMs
     }
 
@@ -325,7 +328,7 @@ func buildTaskWorkflowPlan(
                 networkProxyProbePlanStep(platform: platform, device: device),
                 networkProxyCertificatePlanStep(platform: platform, device: device, certificate: certificate),
                 networkProxyCertificateInstallPlanStep(platform: platform, device: device, certificate: certificate, auditRecord: auditRecord),
-                networkProxyServePlanStep(proxy: proxy, mode: mode, output: output, mockRules: request.mockRules, throttleMs: request.throttleMs),
+                networkProxyServePlanStep(proxy: proxy, mode: mode, output: output, mockRules: request.mockRules, policyRules: request.policyRules, throttleMs: request.throttleMs),
                 networkProxyStartPlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output),
                 networkProxyStartExecutePlanStep(platform: platform, device: device, proxy: proxy, mode: mode, output: output, auditRecord: auditRecord),
                 networkProxyStatusReadonlyPlanStep(platform: platform, device: device),
@@ -690,7 +693,7 @@ private func networkProxyCertificateInstallPlanStep(
     )
 }
 
-private func networkProxyServePlanStep(proxy: String, mode: String, output: String, mockRules: String?, throttleMs: Int?) -> TKWorkflowPlanStep {
+private func networkProxyServePlanStep(proxy: String, mode: String, output: String, mockRules: String?, policyRules: String?, throttleMs: Int?) -> TKWorkflowPlanStep {
     var argv = [
         "triton", "device", "proxy", "serve",
         "--listen", proxy,
@@ -699,6 +702,9 @@ private func networkProxyServePlanStep(proxy: String, mode: String, output: Stri
     ]
     if mode == "mock", let mockRules, !mockRules.isEmpty {
         argv += ["--mock-rules", mockRules]
+    }
+    if let policyRules, !policyRules.isEmpty {
+        argv += ["--policy-rules", policyRules]
     }
     if mode == "throttle", let throttleMs {
         argv += ["--throttle-ms", String(throttleMs)]

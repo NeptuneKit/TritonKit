@@ -28,6 +28,7 @@ struct Plan: AsyncParsableCommand {
     @Option(help: "Proxy root certificate path for network-proxy certificate planning") var certificate: String?
     @Option(help: "Audit record id used by network-proxy break-glass plan steps") var auditRecord: String?
     @Option(help: "JSON mock rules file passed to proxy serve when network-proxy mode is mock") var mockRules: String?
+    @Option(help: "JSON per-request policy rules file passed to proxy serve") var policyRules: String?
     @Option(help: "Synthetic response delay passed to proxy serve when network-proxy mode is throttle") var throttleMs: Int?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -85,6 +86,7 @@ struct Plan: AsyncParsableCommand {
                 certificate: certificate,
                 auditRecord: auditRecord,
                 mockRules: mockRules,
+                policyRules: policyRules,
                 throttleMs: throttleMs
             )
         )

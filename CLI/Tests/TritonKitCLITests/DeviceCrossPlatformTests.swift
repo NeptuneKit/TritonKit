@@ -25,6 +25,7 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("proxy probe --platform ios|android|harmony --device <selector> --plan-only"))
         #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode record|mock|block|throttle --jsonl"))
         #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode mock --mock-rules <path.json> --jsonl"))
+        #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode record --policy-rules <path.json> --jsonl"))
         #expect(usageForms.contains("proxy serve --listen <host:port> --output <dir> --mode throttle --throttle-ms <ms> --jsonl"))
         #expect(usageForms.contains("proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir>"))
         #expect(usageForms.contains("proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir> --plan-only"))
@@ -55,6 +56,7 @@ struct DeviceCrossPlatformTests {
         #expect(optionNames.contains("--certificate"))
         #expect(optionNames.contains("--jsonl"))
         #expect(optionNames.contains("--throttle-ms"))
+        #expect(optionNames.contains("--policy-rules"))
         #expect(optionNames.contains("--scope"))
         #expect(optionNames.contains("--name"))
         #expect(optionNames.contains("--runtime"))
@@ -73,6 +75,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network --mode record --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-mock --mode mock --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-mock --mode mock --mock-rules /tmp/triton-mock-rules.json --jsonl"))
+        #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-policy --mode record --policy-rules /tmp/triton-policy-rules.json --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-block --mode block --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-throttle --mode throttle --jsonl"))
         #expect(device.examples.contains("triton device proxy serve --listen 127.0.0.1:19431 --output /tmp/triton-network-throttle --mode throttle --throttle-ms 250 --jsonl"))
@@ -131,6 +134,7 @@ struct DeviceCrossPlatformTests {
         #expect(proxyServeFields.contains("responseStatus"))
         #expect(proxyServeFields.contains("responseStatusText"))
         #expect(proxyServeFields.contains("throttleDelayMs"))
+        #expect(proxyServeFields.contains("policyRuleId"))
         #expect(proxyServeFields.contains("eventCount"))
         #expect(proxyServeFields.contains("failureCount"))
     }
@@ -1303,6 +1307,102 @@ struct DeviceCrossPlatformTests {
         #expect(!capture.contains("session=secret"))
     }
 
+    @Test("device proxy serve policy rules choose per-request host-side actions")
+    func deviceProxyServePolicyRulesChoosePerRequestHostSideActions() throws {
+        let port = try reserveLocalPortForTest()
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-proxy-policy-rules-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let rulesURL = directory.appendingPathComponent("policy-rules.json")
+        let rules = #"""
+        {
+          "schemaVersion": "triton.proxy.policy-rules.v1",
+          "rules": [
+            {
+              "id": "mock-login",
+              "action": "mock",
+              "method": "GET",
+              "host": "127.0.0.1",
+              "pathPrefix": "/mock",
+              "status": 202,
+              "statusText": "Accepted",
+              "headers": {
+                "Content-Type": "application/json; charset=utf-8",
+                "X-Triton-Policy": "mock-login"
+              },
+              "body": "{\"ok\":true,\"policy\":\"mock-login\"}\n"
+            },
+            {
+              "id": "block-ads",
+              "action": "block",
+              "method": "GET",
+              "host": "127.0.0.1",
+              "pathPrefix": "/block",
+              "status": 451,
+              "statusText": "Unavailable For Legal Reasons",
+              "headers": {
+                "Content-Type": "text/plain; charset=utf-8",
+                "X-Triton-Policy": "block-ads"
+              },
+              "body": "blocked by TritonKit policy\n"
+            }
+          ]
+        }
+        """#
+        try Data(rules.utf8).write(to: rulesURL)
+        let endpoint = try NetworkProxyEndpoint("127.0.0.1:\(port)")
+        let finished = DispatchSemaphore(value: 0)
+        var summary: NetworkProxyServeSummary?
+        var serverError: Error?
+
+        DispatchQueue.global().async {
+            do {
+                summary = try runNetworkProxyCaptureServer(
+                    config: NetworkProxyServeConfig(
+                        listen: endpoint,
+                        outputDirectory: directory.path,
+                        maxConnections: 3,
+                        mode: "record",
+                        policyRulesPath: rulesURL.path
+                    )
+                )
+            } catch {
+                serverError = error
+            }
+            finished.signal()
+        }
+
+        try waitUntilPortAcceptsConnections(port: port)
+        let mockResponse = try sendProxyServeTestRequestAndReadResponse(port: port, path: "/mock/login")
+        let blockResponse = try sendProxyServeTestRequestAndReadResponse(port: port, path: "/block/ads")
+        #expect(finished.wait(timeout: .now() + 3) == .success)
+        if let serverError {
+            throw serverError
+        }
+
+        let capture = try String(contentsOfFile: networkProxyServeCapturePath(outputDirectory: directory.path), encoding: .utf8)
+        #expect(summary?.requestCount == 2)
+        #expect(summary?.eventCount == 4)
+        #expect(summary?.failureCount == 1)
+        #expect(summary?.limitations.contains("proxy_policy_rules:loaded") == true)
+        #expect(mockResponse.contains("HTTP/1.1 202 Accepted"))
+        #expect(mockResponse.contains("X-Triton-Policy: mock-login"))
+        #expect(mockResponse.contains(#""policy":"mock-login""#))
+        #expect(blockResponse.contains("HTTP/1.1 451 Unavailable For Legal Reasons"))
+        #expect(blockResponse.contains("X-Triton-Policy: block-ads"))
+        #expect(blockResponse.contains("blocked by TritonKit policy"))
+        #expect(capture.contains("\"policyRuleId\":\"mock-login\""))
+        #expect(capture.contains("\"policyRuleId\":\"block-ads\""))
+        #expect(capture.contains("\"policyAction\":\"mocked\""))
+        #expect(capture.contains("\"policyAction\":\"blocked\""))
+        #expect(capture.contains("\"responseStatus\":202"))
+        #expect(capture.contains("\"responseStatus\":451"))
+        #expect(!capture.contains(#""policy":"mock-login""#))
+        #expect(!capture.contains("blocked by TritonKit policy"))
+        #expect(!capture.contains("session=secret"))
+    }
+
     @Test("device proxy serve throttle mode records metadata and optional synthetic delay")
     func deviceProxyServeThrottleModeRecordsMetadataAndOptionalSyntheticDelay() throws {
         let port = try reserveLocalPortForTest()
@@ -1405,6 +1505,7 @@ struct DeviceCrossPlatformTests {
             capturePath: sourceURL.path,
             captureMode: "mock",
             policyAction: "mocked",
+            policyRuleId: "policy-created",
             mockRuleId: "created-fixture",
             connectionIndex: 6,
             method: "POST",
@@ -1485,6 +1586,7 @@ struct DeviceCrossPlatformTests {
         #expect(customMockResponse["status"] as? Int == 201)
         #expect(customMockResponse["statusText"] as? String == "Created")
         #expect(customMockComment.contains("mockRuleId=created-fixture"))
+        #expect(customMockComment.contains("policyRuleId=policy-created"))
     }
 
     @Test("device proxy mutating actions stay unsupported until a platform runner exists")
@@ -2174,6 +2276,7 @@ struct DeviceCrossPlatformTests {
             capturePath: capturePath,
             captureMode: "record",
             policyAction: nil,
+            policyRuleId: nil,
             mockRuleId: nil,
             connectionIndex: 2,
             method: nil,
@@ -3200,11 +3303,11 @@ private func waitUntilPortAcceptsConnections(port: Int) throws {
     throw lastError ?? POSIXError(.ETIMEDOUT)
 }
 
-private func sendProxyServeTestRequest(port: Int) throws {
+private func sendProxyServeTestRequest(port: Int, path: String = "/capture") throws {
     let fd = try connectToLocalTestPort(port)
     defer { close(fd) }
     let request = Data((
-        "GET http://127.0.0.1:1/capture HTTP/1.1\r\n" +
+        "GET http://127.0.0.1:1\(path) HTTP/1.1\r\n" +
         "Host: 127.0.0.1:1\r\n" +
         "Cookie: session=secret\r\n" +
         "\r\n"
@@ -3221,11 +3324,11 @@ private func sendProxyServeTestRequest(port: Int) throws {
     shutdown(fd, SHUT_WR)
 }
 
-private func sendProxyServeTestRequestAndReadResponse(port: Int) throws -> String {
+private func sendProxyServeTestRequestAndReadResponse(port: Int, path: String = "/capture") throws -> String {
     let fd = try connectToLocalTestPort(port)
     defer { close(fd) }
     let request = Data((
-        "GET http://127.0.0.1:1/capture HTTP/1.1\r\n" +
+        "GET http://127.0.0.1:1\(path) HTTP/1.1\r\n" +
         "Host: 127.0.0.1:1\r\n" +
         "Cookie: session=secret\r\n" +
         "\r\n"

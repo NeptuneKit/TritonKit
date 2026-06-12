@@ -7,14 +7,16 @@ struct NetworkProxyServeConfig {
     let maxConnections: Int?
     let mode: String
     let mockRulesPath: String?
+    let policyRulesPath: String?
     let throttleDelayMs: Int?
 
-    init(listen: NetworkProxyEndpoint, outputDirectory: String, maxConnections: Int? = nil, mode: String = "record", mockRulesPath: String? = nil, throttleDelayMs: Int? = nil) {
+    init(listen: NetworkProxyEndpoint, outputDirectory: String, maxConnections: Int? = nil, mode: String = "record", mockRulesPath: String? = nil, policyRulesPath: String? = nil, throttleDelayMs: Int? = nil) {
         self.listen = listen
         self.outputDirectory = outputDirectory
         self.maxConnections = maxConnections
         self.mode = mode
         self.mockRulesPath = mockRulesPath
+        self.policyRulesPath = policyRulesPath
         self.throttleDelayMs = throttleDelayMs
     }
 }
@@ -28,6 +30,7 @@ struct NetworkProxyServeEvent: Codable, Equatable {
     let capturePath: String
     let captureMode: String?
     let policyAction: String?
+    let policyRuleId: String?
     let mockRuleId: String?
     let connectionIndex: Int?
     let method: String?
@@ -129,7 +132,7 @@ private struct ParsedProxyRequest {
     let upstreamPort: Int
     let upstreamRequest: Data?
     let isTunnel: Bool
-    let mockResponse: NetworkProxyMockResponse?
+    let syntheticResponse: NetworkProxySyntheticResponse?
 }
 
 private struct NetworkProxyMockRulesFile: Decodable {
@@ -149,12 +152,39 @@ private struct NetworkProxyMockRule: Decodable, Equatable {
     let body: String?
 }
 
-private struct NetworkProxyMockResponse: Equatable {
+private struct NetworkProxyPolicyRulesFile: Decodable {
+    let schemaVersion: String?
+    let rules: [NetworkProxyPolicyRule]
+}
+
+private struct NetworkProxyPolicyRule: Decodable, Equatable {
+    let id: String?
+    let action: String
+    let method: String?
+    let host: String?
+    let path: String?
+    let pathPrefix: String?
+    let status: Int?
+    let statusText: String?
+    let headers: [String: String]?
+    let body: String?
+    let throttleMs: Int?
+}
+
+private struct NetworkProxySyntheticResponse: Equatable {
     let ruleId: String?
     let status: Int
     let statusText: String
     let headers: [String: String]
     let body: String
+}
+
+private struct NetworkProxyPolicyDecision {
+    let action: String
+    let policyRuleId: String?
+    let mockRuleId: String?
+    let response: NetworkProxySyntheticResponse?
+    let throttleDelayMs: Int?
 }
 
 func runNetworkProxyCaptureServer(
@@ -165,6 +195,7 @@ func runNetworkProxyCaptureServer(
     let mode = try normalizeNetworkProxyServeMode(config.mode)
     let throttleDelayMs = try normalizeNetworkProxyThrottleDelayMs(config.throttleDelayMs, mode: mode)
     let mockRules = try config.mockRulesPath.flatMap(loadNetworkProxyMockRules)
+    let policyRules = try config.policyRulesPath.flatMap(loadNetworkProxyPolicyRules)
     let captureURL = try networkProxyServeCaptureURL(outputDirectory: config.outputDirectory)
     let listenFD = try makeNetworkProxyListenSocket(endpoint: config.listen)
     defer { close(listenFD) }
@@ -179,6 +210,7 @@ func runNetworkProxyCaptureServer(
         capturePath: captureURL.path,
         captureMode: mode,
         policyAction: nil,
+        policyRuleId: nil,
         mockRuleId: nil,
         connectionIndex: nil,
         method: nil,
@@ -213,6 +245,7 @@ func runNetworkProxyCaptureServer(
                 connectionIndex: accepted,
                 mode: mode,
                 mockRules: mockRules,
+                policyRules: policyRules,
                 throttleDelayMs: throttleDelayMs,
                 eventWriter: eventWriter
             )
@@ -226,6 +259,7 @@ func runNetworkProxyCaptureServer(
                 capturePath: captureURL.path,
                 captureMode: mode,
                 policyAction: nil,
+                policyRuleId: nil,
                 mockRuleId: nil,
                 connectionIndex: accepted,
                 method: nil,
@@ -265,6 +299,7 @@ func runNetworkProxyCaptureServer(
             "proxy_capture_mode:\(mode)",
             throttleDelayMs.map { "proxy_throttle_delay_ms:\($0)" },
             mockRules == nil ? "proxy_mock_rules:none" : "proxy_mock_rules:loaded",
+            policyRules == nil ? "proxy_policy_rules:none" : "proxy_policy_rules:loaded",
         ].compactMap { $0 }
     )
 }
@@ -427,6 +462,9 @@ private func networkProxyHARComment(for event: NetworkProxyServeEvent) -> String
     if let mockRuleId = event.mockRuleId, !mockRuleId.isEmpty {
         parts.append("mockRuleId=\(mockRuleId)")
     }
+    if let policyRuleId = event.policyRuleId, !policyRuleId.isEmpty {
+        parts.append("policyRuleId=\(policyRuleId)")
+    }
     if let throttleDelayMs = event.throttleDelayMs {
         parts.append("throttleDelayMs=\(throttleDelayMs)")
     }
@@ -496,6 +534,7 @@ func parseNetworkProxyHTTPHeader(
     connectionIndex: Int,
     captureMode: String = "record",
     policyAction: String = "forwarded",
+    policyRuleId: String? = nil,
     throttleDelayMs: Int? = nil
 ) throws -> NetworkProxyServeEvent {
     try parseNetworkProxyRequest(
@@ -505,7 +544,9 @@ func parseNetworkProxyHTTPHeader(
         connectionIndex: connectionIndex,
         captureMode: captureMode,
         policyAction: policyAction,
+        policyRules: nil,
         mockRules: nil,
+        policyRuleId: policyRuleId,
         throttleDelayMs: throttleDelayMs
     ).event
 }
@@ -517,6 +558,7 @@ private func handleNetworkProxyClient(
     connectionIndex: Int,
     mode: String,
     mockRules: [NetworkProxyMockRule]?,
+    policyRules: [NetworkProxyPolicyRule]?,
     throttleDelayMs: Int?,
     eventWriter: ((NetworkProxyServeEvent) -> Void)?
 ) throws -> NetworkProxyServeEvent {
@@ -528,22 +570,24 @@ private func handleNetworkProxyClient(
         connectionIndex: connectionIndex,
         captureMode: mode,
         policyAction: networkProxyPolicyAction(for: mode),
+        policyRules: policyRules,
         mockRules: mockRules,
+        policyRuleId: nil,
         throttleDelayMs: mode == "throttle" ? throttleDelayMs : nil
     )
     try appendNetworkProxyCaptureEvent(parsed.event, captureURL: captureURL)
     eventWriter?(parsed.event)
 
-    if mode == "block" {
-        writeNetworkProxyBlockedResponse(clientFD: clientFD)
+    if parsed.event.policyAction == "blocked" {
+        writeNetworkProxyBlockedResponse(clientFD: clientFD, response: parsed.syntheticResponse)
         return parsed.event
     }
-    if mode == "mock" {
-        writeNetworkProxyMockResponse(clientFD: clientFD, response: parsed.mockResponse)
+    if parsed.event.policyAction == "mocked" {
+        writeNetworkProxyMockResponse(clientFD: clientFD, response: parsed.syntheticResponse)
         return parsed.event
     }
-    if mode == "throttle" {
-        writeNetworkProxyThrottledResponse(clientFD: clientFD, delayMs: throttleDelayMs)
+    if parsed.event.policyAction == "throttled" {
+        writeNetworkProxyThrottledResponse(clientFD: clientFD, response: parsed.syntheticResponse, delayMs: parsed.event.throttleDelayMs)
         return parsed.event
     }
 
@@ -593,7 +637,9 @@ private func parseNetworkProxyRequest(
     connectionIndex: Int,
     captureMode: String,
     policyAction: String,
+    policyRules: [NetworkProxyPolicyRule]?,
     mockRules: [NetworkProxyMockRule]?,
+    policyRuleId: String?,
     throttleDelayMs: Int?
 ) throws -> ParsedProxyRequest {
     guard let header = String(data: data, encoding: .utf8) else {
@@ -619,8 +665,17 @@ private func parseNetworkProxyRequest(
         target = try parseHTTPProxyTarget(rawURL: rawURL, headers: headers)
     }
 
-    let mockResponse = policyAction == "mocked" ? matchNetworkProxyMockResponse(rules: mockRules, method: method, host: target.host, path: target.path) : nil
-    let policyResponse = mockResponse.map { (status: $0.status, statusText: $0.statusText) } ?? networkProxyPolicyResponse(for: policyAction)
+    let decision = makeNetworkProxyPolicyDecision(
+        defaultAction: policyAction,
+        explicitPolicyRuleId: policyRuleId,
+        policyRules: policyRules,
+        mockRules: mockRules,
+        method: method,
+        host: target.host,
+        path: target.path,
+        throttleDelayMs: throttleDelayMs
+    )
+    let policyResponse = decision.response.map { (status: $0.status, statusText: $0.statusText) } ?? networkProxyPolicyResponse(for: decision.action)
     let event = NetworkProxyServeEvent(
         ok: true,
         surface: "host.device-proxy-serve",
@@ -629,8 +684,9 @@ private func parseNetworkProxyRequest(
         listen: listen,
         capturePath: capturePath,
         captureMode: captureMode,
-        policyAction: policyAction,
-        mockRuleId: mockResponse?.ruleId,
+        policyAction: decision.action,
+        policyRuleId: decision.policyRuleId,
+        mockRuleId: decision.mockRuleId,
         connectionIndex: connectionIndex,
         method: method,
         url: rawURL,
@@ -641,7 +697,7 @@ private func parseNetworkProxyRequest(
         headerNames: headerNames,
         responseStatus: policyResponse.status,
         responseStatusText: policyResponse.statusText,
-        throttleDelayMs: throttleDelayMs,
+        throttleDelayMs: decision.throttleDelayMs,
         redaction: "headers-names-only",
         error: nil
     )
@@ -652,15 +708,18 @@ private func parseNetworkProxyRequest(
         upstreamPort: target.port,
         upstreamRequest: target.tunnel ? nil : rewriteHTTPProxyRequest(data: data, path: target.path, requestLine: requestLine),
         isTunnel: target.tunnel,
-        mockResponse: mockResponse
+        syntheticResponse: decision.response
     )
 }
 
-private func writeNetworkProxyBlockedResponse(clientFD: Int32) {
-    let body = "TritonKit proxy block mode denied this request.\n"
+private func writeNetworkProxyBlockedResponse(clientFD: Int32, response: NetworkProxySyntheticResponse?) {
+    let body = response?.body ?? "TritonKit proxy block mode denied this request.\n"
+    let status = response?.status ?? 502
+    let statusText = response?.statusText ?? "TritonKit Proxy Blocked"
+    let headers = response?.headers ?? ["Content-Type": "text/plain; charset=utf-8"]
     let response = (
-        "HTTP/1.1 502 TritonKit Proxy Blocked\r\n" +
-        "Content-Type: text/plain; charset=utf-8\r\n" +
+        "HTTP/1.1 \(status) \(statusText)\r\n" +
+        headers.map { "\($0.key): \($0.value)\r\n" }.sorted().joined() +
         "Content-Length: \(body.utf8.count)\r\n" +
         "Connection: close\r\n" +
         "\r\n" +
@@ -669,7 +728,7 @@ private func writeNetworkProxyBlockedResponse(clientFD: Int32) {
     _ = writeAll(fd: clientFD, data: Data(response.utf8))
 }
 
-private func writeNetworkProxyMockResponse(clientFD: Int32, response: NetworkProxyMockResponse?) {
+private func writeNetworkProxyMockResponse(clientFD: Int32, response: NetworkProxySyntheticResponse?) {
     let body = response?.body ?? (#"{"ok":true,"mocked":true,"source":"triton.device.proxy.serve"}"# + "\n")
     let status = response?.status ?? 200
     let statusText = response?.statusText ?? "TritonKit Proxy Mock"
@@ -683,6 +742,37 @@ private func writeNetworkProxyMockResponse(clientFD: Int32, response: NetworkPro
         body
     )
     _ = writeAll(fd: clientFD, data: Data(response.utf8))
+}
+
+private func loadNetworkProxyPolicyRules(path: String) throws -> [NetworkProxyPolicyRule] {
+    let url = URL(fileURLWithPath: path)
+    let data = try Data(contentsOf: url)
+    let file = try JSONDecoder().decode(NetworkProxyPolicyRulesFile.self, from: data)
+    guard file.schemaVersion == nil || file.schemaVersion == "triton.proxy.policy-rules.v1" else {
+        throw RuntimeError("Unsupported proxy policy rules schemaVersion: \(file.schemaVersion ?? "<missing>").")
+    }
+    try file.rules.forEach(validateNetworkProxyPolicyRule)
+    return file.rules
+}
+
+private func validateNetworkProxyPolicyRule(_ rule: NetworkProxyPolicyRule) throws {
+    _ = try normalizeNetworkProxyPolicyRuleAction(rule.action)
+    if let status = rule.status, !(100...599).contains(status) {
+        throw RuntimeError("Proxy policy rule status must be between 100 and 599.")
+    }
+    if let statusText = rule.statusText {
+        try validateNetworkProxyHTTPTokenValue(statusText, field: "statusText")
+    }
+    if let throttleMs = rule.throttleMs, !(0...60_000).contains(throttleMs) {
+        throw RuntimeError("Proxy policy rule throttleMs must be between 0 and 60000.")
+    }
+    for (name, value) in rule.headers ?? [:] {
+        guard !name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw RuntimeError("Proxy policy rule header names must be non-empty.")
+        }
+        try validateNetworkProxyHTTPTokenValue(name, field: "header name")
+        try validateNetworkProxyHTTPTokenValue(value, field: "header value")
+    }
 }
 
 private func loadNetworkProxyMockRules(path: String) throws -> [NetworkProxyMockRule] {
@@ -718,17 +808,132 @@ private func validateNetworkProxyHTTPTokenValue(_ value: String, field: String) 
     }
 }
 
-private func matchNetworkProxyMockResponse(rules: [NetworkProxyMockRule]?, method: String, host: String, path: String) -> NetworkProxyMockResponse? {
+private func matchNetworkProxyMockResponse(rules: [NetworkProxyMockRule]?, method: String, host: String, path: String) -> NetworkProxySyntheticResponse? {
     guard let rule = rules?.first(where: { networkProxyMockRule($0, matchesMethod: method, host: host, path: path) }) else {
         return nil
     }
-    return NetworkProxyMockResponse(
+    return NetworkProxySyntheticResponse(
         ruleId: rule.id,
         status: rule.status ?? 200,
         statusText: rule.statusText ?? "TritonKit Proxy Mock",
         headers: rule.headers ?? ["Content-Type": "application/json; charset=utf-8"],
         body: rule.body ?? (#"{"ok":true,"mocked":true,"source":"triton.device.proxy.serve"}"# + "\n")
     )
+}
+
+private func makeNetworkProxyPolicyDecision(
+    defaultAction: String,
+    explicitPolicyRuleId: String?,
+    policyRules: [NetworkProxyPolicyRule]?,
+    mockRules: [NetworkProxyMockRule]?,
+    method: String,
+    host: String,
+    path: String,
+    throttleDelayMs: Int?
+) -> NetworkProxyPolicyDecision {
+    if let rule = policyRules?.first(where: { networkProxyPolicyRule($0, matchesMethod: method, host: host, path: path) }),
+       let action = try? normalizeNetworkProxyPolicyRuleAction(rule.action) {
+        let response: NetworkProxySyntheticResponse?
+        switch action {
+        case "mocked":
+            response = makeNetworkProxySyntheticResponse(
+                ruleId: rule.id,
+                status: rule.status ?? 200,
+                statusText: rule.statusText ?? "TritonKit Proxy Mock",
+                headers: rule.headers ?? ["Content-Type": "application/json; charset=utf-8"],
+                body: rule.body ?? (#"{"ok":true,"mocked":true,"source":"triton.device.proxy.serve"}"# + "\n")
+            )
+        case "blocked":
+            response = makeNetworkProxySyntheticResponse(
+                ruleId: rule.id,
+                status: rule.status ?? 502,
+                statusText: rule.statusText ?? "TritonKit Proxy Blocked",
+                headers: rule.headers ?? ["Content-Type": "text/plain; charset=utf-8"],
+                body: rule.body ?? "TritonKit proxy block policy denied this request.\n"
+            )
+        case "throttled":
+            var headers = ["Content-Type": "text/plain; charset=utf-8", "Retry-After": "1"]
+            for (key, value) in rule.headers ?? [:] {
+                headers[key] = value
+            }
+            response = makeNetworkProxySyntheticResponse(
+                ruleId: rule.id,
+                status: rule.status ?? 429,
+                statusText: rule.statusText ?? "TritonKit Proxy Throttled",
+                headers: headers,
+                body: rule.body ?? "TritonKit proxy throttle policy rate-limited this request.\n"
+            )
+        default:
+            response = nil
+        }
+        return NetworkProxyPolicyDecision(
+            action: action,
+            policyRuleId: rule.id,
+            mockRuleId: nil,
+            response: response,
+            throttleDelayMs: action == "throttled" ? (rule.throttleMs ?? throttleDelayMs) : nil
+        )
+    }
+
+    if defaultAction == "mocked" {
+        let response = matchNetworkProxyMockResponse(rules: mockRules, method: method, host: host, path: path)
+        return NetworkProxyPolicyDecision(
+            action: defaultAction,
+            policyRuleId: explicitPolicyRuleId,
+            mockRuleId: response?.ruleId,
+            response: response,
+            throttleDelayMs: nil
+        )
+    }
+
+    return NetworkProxyPolicyDecision(
+        action: defaultAction,
+        policyRuleId: explicitPolicyRuleId,
+        mockRuleId: nil,
+        response: nil,
+        throttleDelayMs: defaultAction == "throttled" ? throttleDelayMs : nil
+    )
+}
+
+private func makeNetworkProxySyntheticResponse(ruleId: String?, status: Int, statusText: String, headers: [String: String], body: String) -> NetworkProxySyntheticResponse {
+    NetworkProxySyntheticResponse(
+        ruleId: ruleId,
+        status: status,
+        statusText: statusText,
+        headers: headers,
+        body: body
+    )
+}
+
+private func normalizeNetworkProxyPolicyRuleAction(_ action: String) throws -> String {
+    switch action.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() {
+    case "forward", "forwarded":
+        return "forwarded"
+    case "mock", "mocked":
+        return "mocked"
+    case "block", "blocked":
+        return "blocked"
+    case "throttle", "throttled":
+        return "throttled"
+    default:
+        throw RuntimeError("Proxy policy rule action must be forward, mock, block, or throttle.")
+    }
+}
+
+private func networkProxyPolicyRule(_ rule: NetworkProxyPolicyRule, matchesMethod method: String, host: String, path: String) -> Bool {
+    if let ruleMethod = rule.method, ruleMethod.uppercased() != method.uppercased() {
+        return false
+    }
+    if let ruleHost = rule.host, ruleHost.lowercased() != host.lowercased() {
+        return false
+    }
+    if let rulePath = rule.path, rulePath != path {
+        return false
+    }
+    if let rulePathPrefix = rule.pathPrefix, !path.hasPrefix(rulePathPrefix) {
+        return false
+    }
+    return true
 }
 
 private func networkProxyMockRule(_ rule: NetworkProxyMockRule, matchesMethod method: String, host: String, path: String) -> Bool {
@@ -747,16 +952,21 @@ private func networkProxyMockRule(_ rule: NetworkProxyMockRule, matchesMethod me
     return true
 }
 
-private func writeNetworkProxyThrottledResponse(clientFD: Int32, delayMs: Int?) {
+private func writeNetworkProxyThrottledResponse(clientFD: Int32, response: NetworkProxySyntheticResponse?, delayMs: Int?) {
     if let delayMs, delayMs > 0 {
         usleep(useconds_t(delayMs * 1000))
     }
-    let body = "TritonKit proxy throttle mode rate-limited this request.\n"
+    let body = response?.body ?? "TritonKit proxy throttle mode rate-limited this request.\n"
+    let status = response?.status ?? 429
+    let statusText = response?.statusText ?? "TritonKit Proxy Throttled"
+    var headers = ["Content-Type": "text/plain; charset=utf-8", "Retry-After": "1"]
+    for (key, value) in response?.headers ?? [:] {
+        headers[key] = value
+    }
     let response = (
-        "HTTP/1.1 429 TritonKit Proxy Throttled\r\n" +
-        "Content-Type: text/plain; charset=utf-8\r\n" +
+        "HTTP/1.1 \(status) \(statusText)\r\n" +
+        headers.map { "\($0.key): \($0.value)\r\n" }.sorted().joined() +
         "Content-Length: \(body.utf8.count)\r\n" +
-        "Retry-After: 1\r\n" +
         "Connection: close\r\n" +
         "\r\n" +
         body
