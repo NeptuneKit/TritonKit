@@ -436,7 +436,7 @@ func replayEndpoint(for action: TKReplayAction) -> String {
         return "/runtime/screenshot"
     case .evidence:
         return "/evidence/capture"
-    case .proxyProbe, .proxyServe, .proxyStart, .proxyStatus, .proxyExport, .proxyStop:
+    case .proxyProbe, .proxyCertPlan, .proxyCertInstall, .proxyServe, .proxyStart, .proxyStatus, .proxyExport, .proxyStop:
         return "/device/proxy"
     }
 }
@@ -571,7 +571,7 @@ func executeReplayStep(
             message: "evidence captured",
             evidence: manifest
         )
-    case .proxyProbe, .proxyServe, .proxyStart, .proxyStatus, .proxyExport, .proxyStop:
+    case .proxyProbe, .proxyCertPlan, .proxyCertInstall, .proxyServe, .proxyStart, .proxyStatus, .proxyExport, .proxyStop:
         let detail = TKCLIErrorDetail(
             code: "unsupported_capability",
             message: "Replay \(step.action.rawValue) is dry-run only; execute the emitted `triton device proxy` command explicitly after policy review.",

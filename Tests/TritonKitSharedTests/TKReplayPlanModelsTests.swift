@@ -164,12 +164,25 @@ struct TKReplayPlanModelsTests {
         {
           "schemaVersion": 1,
           "name": "network-proxy-flow",
-          "variables": ["platform", "device"],
+          "variables": ["platform", "device", "certificate", "auditRecord"],
           "steps": [
             {
               "action": "proxy-probe",
               "platform": "${platform}",
               "device": "${device}"
+            },
+            {
+              "action": "proxy-cert-plan",
+              "platform": "${platform}",
+              "device": "${device}",
+              "certificate": "${certificate}"
+            },
+            {
+              "action": "proxy-cert-install",
+              "platform": "${platform}",
+              "device": "${device}",
+              "certificate": "${certificate}",
+              "auditRecord": "${auditRecord}"
             },
             {
               "action": "proxy-serve",
@@ -204,7 +217,15 @@ struct TKReplayPlanModelsTests {
         let plan = try JSONDecoder().decode(TKReplayPlan.self, from: Data(json.utf8))
         let summary = TKReplayPlanSummary(ok: true, path: "/tmp/network-proxy-flow.tritonplan", plan: plan)
 
-        #expect(summary.actions == ["proxy-probe", "proxy-serve", "proxy-start", "proxy-export", "proxy-stop"])
+        #expect(summary.actions == [
+            "proxy-probe",
+            "proxy-cert-plan",
+            "proxy-cert-install",
+            "proxy-serve",
+            "proxy-start",
+            "proxy-export",
+            "proxy-stop",
+        ])
         #expect(summary.steps[0].argv == [
             "triton", "device", "proxy", "probe",
             "--platform", "${platform}",
@@ -214,22 +235,41 @@ struct TKReplayPlanModelsTests {
         ])
         #expect(summary.steps[0].expectedArtifacts.contains("host-device-proxy"))
         #expect(summary.steps[1].argv == [
+            "triton", "device", "proxy", "cert", "plan",
+            "--platform", "${platform}",
+            "--device", "${device}",
+            "--certificate", "${certificate}",
+            "--json",
+        ])
+        #expect(summary.steps[1].expectedArtifacts.contains("proxy-certificate"))
+        #expect(summary.steps[2].argv == [
+            "triton", "device", "proxy", "cert", "install",
+            "--platform", "${platform}",
+            "--device", "${device}",
+            "--certificate", "${certificate}",
+            "--confirm",
+            "--audit-record", "${auditRecord}",
+            "--execute-runner",
+            "--json",
+        ])
+        #expect(summary.steps[2].expectedArtifacts.contains("proxy-certificate"))
+        #expect(summary.steps[3].argv == [
             "triton", "device", "proxy", "serve",
             "--listen", "127.0.0.1:19431",
             "--output", "/tmp/${platform}-proxy",
             "--mode", "mock",
             "--jsonl",
         ])
-        #expect(summary.steps[2].argv.contains("--plan-only"))
-        #expect(summary.steps[3].expectedArtifacts.contains("network-capture"))
-        #expect(summary.steps[4].argv.contains("--restore"))
+        #expect(summary.steps[4].argv.contains("--plan-only"))
+        #expect(summary.steps[5].expectedArtifacts.contains("network-capture"))
+        #expect(summary.steps[6].argv.contains("--restore"))
         #expect(summary.steps.allSatisfy { $0.workflowCategories.contains("target") })
         #expect(summary.steps.allSatisfy { $0.validationErrors.isEmpty })
 
         let startArgv = try TKReplayStepExecution.argv(
-            for: plan.steps[2],
+            for: plan.steps[4],
             planName: plan.name,
-            index: 3,
+            index: 5,
             variables: ["platform": "android", "device": "emulator-5554"]
         )
         #expect(startArgv == [
@@ -240,6 +280,28 @@ struct TKReplayPlanModelsTests {
             "--mode", "mock",
             "--output", "/tmp/android-proxy",
             "--plan-only",
+            "--json",
+        ])
+
+        let certInstallArgv = try TKReplayStepExecution.argv(
+            for: plan.steps[2],
+            planName: plan.name,
+            index: 3,
+            variables: [
+                "platform": "android",
+                "device": "emulator-5554",
+                "certificate": "/tmp/triton-proxy-ca.cer",
+                "auditRecord": "ticket-123",
+            ]
+        )
+        #expect(certInstallArgv == [
+            "triton", "device", "proxy", "cert", "install",
+            "--platform", "android",
+            "--device", "emulator-5554",
+            "--certificate", "/tmp/triton-proxy-ca.cer",
+            "--confirm",
+            "--audit-record", "ticket-123",
+            "--execute-runner",
             "--json",
         ])
     }
@@ -258,6 +320,17 @@ struct TKReplayPlanModelsTests {
                 TKReplayPlanStep(
                     action: .proxyProbe,
                     device: "emulator-5554"
+                ),
+                TKReplayPlanStep(
+                    action: .proxyCertPlan,
+                    platform: "android",
+                    device: "emulator-5554"
+                ),
+                TKReplayPlanStep(
+                    action: .proxyCertInstall,
+                    platform: "android",
+                    device: "emulator-5554",
+                    certificate: "/tmp/triton-proxy-ca.cer"
                 ),
                 TKReplayPlanStep(
                     action: .proxyServe,
@@ -280,20 +353,22 @@ struct TKReplayPlanModelsTests {
 
         #expect(summary.steps[0].validationErrors.map { $0.code } == ["proxy_export_before_start"])
         #expect(summary.steps[1].validationErrors.map { $0.code } == ["missing_proxy_platform"])
-        #expect(summary.steps[2].validationErrors.map { $0.code } == ["missing_proxy_output"])
-        #expect(summary.steps[3].validationErrors.map { $0.code } == [
+        #expect(summary.steps[2].validationErrors.map { $0.code } == ["missing_proxy_certificate"])
+        #expect(summary.steps[3].validationErrors.map { $0.code } == ["missing_proxy_audit_record"])
+        #expect(summary.steps[4].validationErrors.map { $0.code } == ["missing_proxy_output"])
+        #expect(summary.steps[5].validationErrors.map { $0.code } == [
             "missing_proxy_device",
             "missing_proxy_endpoint",
             "missing_proxy_output",
         ])
-        #expect(summary.steps[4].validationErrors == [
+        #expect(summary.steps[6].validationErrors == [
             TKReplayPlanStepValidationError(
                 code: "proxy_stop_restore_required",
                 message: "Replay proxy-stop step requires restore=true so dry-run emits an explicit restore policy",
                 field: "restore"
             ),
         ])
-        #expect(summary.steps[4].argv.contains("--restore") == false)
+        #expect(summary.steps[6].argv.contains("--restore") == false)
     }
 
     @Test("plan inspect summary exposes step validation errors")

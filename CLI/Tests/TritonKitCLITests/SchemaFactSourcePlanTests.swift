@@ -183,6 +183,19 @@ extension SchemaFactSourceTests {
                 TKReplayPlanStep(action: .wait, gone: "登录", timeout: 15),
                 TKReplayPlanStep(action: .evidence, name: "login-success"),
                 TKReplayPlanStep(action: .proxyProbe, platform: "android", device: "emulator-5554"),
+                TKReplayPlanStep(
+                    action: .proxyCertPlan,
+                    platform: "android",
+                    device: "emulator-5554",
+                    certificate: "/tmp/triton-proxy-ca.cer"
+                ),
+                TKReplayPlanStep(
+                    action: .proxyCertInstall,
+                    platform: "android",
+                    device: "emulator-5554",
+                    certificate: "/tmp/triton-proxy-ca.cer",
+                    auditRecord: "ticket-123"
+                ),
             ]
         )
         let summary = TKReplayPlanSummary(ok: true, path: "/tmp/inspect-flow.tritonplan", plan: plan)
@@ -211,6 +224,19 @@ extension SchemaFactSourceTests {
                 TKReplayPlanStep(action: .wait, gone: "登录", timeout: 15),
                 TKReplayPlanStep(action: .evidence, name: "login-success"),
                 TKReplayPlanStep(action: .proxyProbe, platform: "android", device: "emulator-5554"),
+                TKReplayPlanStep(
+                    action: .proxyCertPlan,
+                    platform: "android",
+                    device: "emulator-5554",
+                    certificate: "/tmp/triton-proxy-ca.cer"
+                ),
+                TKReplayPlanStep(
+                    action: .proxyCertInstall,
+                    platform: "android",
+                    device: "emulator-5554",
+                    certificate: "/tmp/triton-proxy-ca.cer",
+                    auditRecord: "ticket-123"
+                ),
             ]
         )
         let summary = TKReplayPlanSummary(ok: true, path: "/tmp/inspect-flow.tritonplan", plan: plan)
@@ -221,6 +247,10 @@ extension SchemaFactSourceTests {
         #expect(summary.steps[3].workflowCategories == ["evidence", "replay"])
         #expect(summary.steps[4].workflowCategories == ["evidence", "target"])
         #expect(summary.steps[4].expectedArtifacts.contains("host-device-proxy"))
+        #expect(summary.steps[5].workflowCategories == ["evidence", "target"])
+        #expect(summary.steps[5].expectedArtifacts.contains("proxy-certificate"))
+        #expect(summary.steps[6].workflowCategories == ["evidence", "target"])
+        #expect(summary.steps[6].expectedArtifacts.contains("proxy-certificate"))
     }
 
     @Test("replay step results expose schema-backed argv")
