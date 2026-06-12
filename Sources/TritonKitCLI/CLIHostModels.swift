@@ -62,6 +62,40 @@ struct HostDeviceTarget: Encodable, Equatable {
     let name: String?
     let runtime: String?
     let transport: String?
+    let appName: String?
+    let bundleIdentifier: String?
+    let identityState: String?
+    let current: Bool?
+
+    init(
+        platform: String,
+        id: String,
+        target: String,
+        state: String,
+        ready: Bool,
+        source: String,
+        name: String?,
+        runtime: String?,
+        transport: String?,
+        appName: String? = nil,
+        bundleIdentifier: String? = nil,
+        identityState: String? = nil,
+        current: Bool? = nil
+    ) {
+        self.platform = platform
+        self.id = id
+        self.target = target
+        self.state = state
+        self.ready = ready
+        self.source = source
+        self.name = name
+        self.runtime = runtime
+        self.transport = transport
+        self.appName = appName
+        self.bundleIdentifier = bundleIdentifier
+        self.identityState = identityState
+        self.current = current
+    }
 }
 
 struct HostTargetAlias: Codable, Equatable {

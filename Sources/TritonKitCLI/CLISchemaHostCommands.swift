@@ -107,7 +107,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "harmony_screenshot_failed",
                 "validation_failed",
             ],
-            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-runtime-url", "harmony-device-stop"]
+            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-list", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop"]
         ),
         TKCommandSchema(
             name: "sim",

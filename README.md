@@ -526,6 +526,8 @@ triton screenshot --platform harmony --target 127.0.0.1:10100 --output /tmp/smok
 
 When multiple HDC targets are `Connected`, Triton returns `error.code=ambiguous_target` and requires an explicit `--target`. The adapter records `sourceCommand`; risk/policy metadata is for audit and configuration validation, not an interactive confirmation gate.
 
+Harmony `device list --platform harmony --json` also attempts a read-only foreground app identity probe for connected targets. When HDC exposes a stable foreground mission, targets may include optional `appName`, `bundleIdentifier`, `identityState=current`, and `current=true`. If HDC does not expose a stable identity, Triton keeps `appName` / `bundleIdentifier` empty and reports `identityState=unknown`; if the host command itself cannot run, it reports `identityState=unsupported`. Do not treat the emulator target id or device label as an app identity.
+
 When Triton starts a Harmony HVD through its `triton-harmony-emulator` launchd keepalive job, close it with `triton device stop --platform harmony ... --confirm --json` instead of raw `Emulator -stop`. The Triton command unloads `gui/<uid>/triton-harmony-emulator` before calling DevEco `Emulator -stop`, so launchd does not restart the emulator after a successful stop.
 
 Harmony host-side `ax/wait/tap/screenshot` wrap `uitest dumpLayout`, `uitest uiInput click`, and `snapshot_display` with JSON envelopes. Layout and screenshot outputs can contain private UI data; inspect or redact artifacts before attaching them to public issues.

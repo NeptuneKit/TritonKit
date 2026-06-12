@@ -377,7 +377,8 @@ func hostDeviceTargets(platform: HostDevicePlatform, hdc: String, adb: String = 
         return (targets, result.sourceCommand)
     case .harmony:
         let result = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))
-        let targets = TKHdcTargetListParser.parse(result.stdout).map(hostDeviceTarget(from:))
+        let harmonyTargets = TKHdcTargetListParser.parse(result.stdout)
+        let targets = enrichHarmonyTargetsWithForegroundApp(harmonyTargets, hdc: hdc).map(hostDeviceTarget(from:))
         return (targets, result.sourceCommand)
     case .android:
         let result = try runHostCommand(TKAndroidADBCommand.listDevices(executable: adb))
@@ -634,7 +635,11 @@ func hostDeviceTarget(from target: TKHarmonyTarget) -> HostDeviceTarget {
         source: target.source,
         name: nil,
         runtime: nil,
-        transport: target.transport
+        transport: target.transport,
+        appName: target.foregroundApp.appName,
+        bundleIdentifier: target.foregroundApp.bundleIdentifier,
+        identityState: target.foregroundApp.identityState,
+        current: target.foregroundApp.current
     )
 }
 
@@ -657,8 +662,41 @@ func harmonyTarget(from target: HostDeviceTarget) -> TKHarmonyTarget {
         target: target.target,
         state: target.state,
         transport: target.transport ?? "hdc",
-        source: target.source
+        source: target.source,
+        foregroundApp: TKHarmonyForegroundAppIdentity(
+            appName: target.appName,
+            bundleIdentifier: target.bundleIdentifier,
+            identityState: target.identityState ?? "unknown",
+            current: target.current ?? false
+        )
     )
+}
+
+func enrichHarmonyTargetsWithForegroundApp(_ targets: [TKHarmonyTarget], hdc: String) -> [TKHarmonyTarget] {
+    targets.map { target in
+        guard target.isConnected else {
+            return target
+        }
+        do {
+            let result = try runHostCommand(TKHarmonyHDCCommand.foregroundApp(target: target.target, executable: hdc))
+            let identity = TKHarmonyForegroundAppParser.parse(result.stdout)
+            return TKHarmonyTarget(
+                target: target.target,
+                state: target.state,
+                transport: target.transport,
+                source: target.source,
+                foregroundApp: identity
+            )
+        } catch {
+            return TKHarmonyTarget(
+                target: target.target,
+                state: target.state,
+                transport: target.transport,
+                source: target.source,
+                foregroundApp: .unsupported
+            )
+        }
+    }
 }
 
 func defaultLaunchdDomain() -> String {
