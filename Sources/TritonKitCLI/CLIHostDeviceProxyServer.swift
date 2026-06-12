@@ -371,8 +371,24 @@ private func networkProxyHAREntry(from event: NetworkProxyServeEvent, method: St
         response: response,
         cache: [:],
         timings: NetworkProxyHARTimings(send: 0, wait: waitMs, receive: 0),
-        comment: "metadata-only capture; header values, bodies, TLS contents, and response payloads are not stored"
+        comment: networkProxyHARComment(for: event)
     )
+}
+
+private func networkProxyHARComment(for event: NetworkProxyServeEvent) -> String {
+    var parts = [
+        "metadata-only capture",
+        "captureMode=\(event.captureMode ?? "unknown")",
+        "policyAction=\(event.policyAction ?? "unknown")",
+    ]
+    if let mockRuleId = event.mockRuleId, !mockRuleId.isEmpty {
+        parts.append("mockRuleId=\(mockRuleId)")
+    }
+    if let throttleDelayMs = event.throttleDelayMs {
+        parts.append("throttleDelayMs=\(throttleDelayMs)")
+    }
+    parts.append("header values, bodies, TLS contents, and response payloads are not stored")
+    return parts.joined(separator: "; ")
 }
 
 private func networkProxyHARResponse(for event: NetworkProxyServeEvent) -> NetworkProxyHARResponse {
