@@ -126,6 +126,7 @@ struct DeviceCrossPlatformTests {
         #expect(proxyFields.contains("requestCount"))
         #expect(proxyFields.contains("truncation"))
         #expect(proxyFields.contains("probeResults"))
+        #expect(proxyFields.contains("probeFindings"))
         #expect(proxyServeFields.contains("responseStatus"))
         #expect(proxyServeFields.contains("responseStatusText"))
         #expect(proxyServeFields.contains("throttleDelayMs"))
@@ -394,7 +395,7 @@ struct DeviceCrossPlatformTests {
                     return successfulHostProcessResult(command, stdout: "triton-shell-ready\n")
                 }
                 if commandLine.contains("param ls -r proxy") {
-                    return successfulHostProcessResult(command, stdout: "persist.net.proxy.host=\npersist.net.proxy.port=\n")
+                    return successfulHostProcessResult(command, stdout: "persist.net.proxy.host=\n[persist.net.proxy.port]: []\npersist.net.proxy.host=duplicate\n")
                 }
                 if commandLine.contains("param ls -r http") {
                     throw HostCommandRunError.nonZeroExit(command: command, result: failedHostProcessResult(command, stderr: "no matching parameter\n"))
@@ -418,6 +419,24 @@ struct DeviceCrossPlatformTests {
         #expect(probeResults.first { $0.name == "harmony.param.proxy" }?.stdoutPreview?.contains("persist.net.proxy.host") == true)
         #expect(probeResults.first { $0.name == "harmony.param.http" }?.ok == false)
         #expect((probeResults.first { $0.name == "harmony.param.http" }?.exitCode ?? 0) != 0)
+        let probeFindings = try #require(session.probeFindings)
+        #expect(probeFindings.count == 2)
+        #expect(probeFindings.contains(NetworkProxyProbeFinding(
+            platform: "harmony",
+            source: "harmony.param.proxy",
+            category: "harmony.proxy-parameter-candidate",
+            name: "persist.net.proxy.host",
+            verifiedMutation: false,
+            requiredAction: "manual_verification_required"
+        )))
+        #expect(probeFindings.contains(NetworkProxyProbeFinding(
+            platform: "harmony",
+            source: "harmony.param.proxy",
+            category: "harmony.proxy-parameter-candidate",
+            name: "persist.net.proxy.port",
+            verifiedMutation: false,
+            requiredAction: "manual_verification_required"
+        )))
     }
 
     @Test("device proxy probe CLI plan-only resolves Harmony aliases without running HDC")

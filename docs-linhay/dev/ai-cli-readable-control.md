@@ -225,6 +225,8 @@ Unsupported 失败族必须能导向 `plan` 类恢复。`action_not_supported`�
 
 `outputContracts[].format` 只允许 `json`、`jsonl`、`archive`。`json` 表示单个结构化响应，`jsonl` 表示流式事件或逐行 ledger，`archive` 表示可审计归档产物；新增格式必须先说明 agent 消费方式与 artifact 边界，不能临时写入自由字符串。
 
+`host.device-proxy` 的 `probeFindings[]` 是只读探测发现，不是可执行 mutation ledger。Harmony 的 `harmony.proxy-parameter-candidate` finding 必须保持 `verifiedMutation=false` 并给出 `requiredAction=manual_verification_required`，agent 只能把它当作 DevEco / Harmony proxy adapter 验证线索，不能据此生成或执行 `hdc param set` 之类未验证命令。
+
 `outputContracts[].kind` 是输出模型语义分类，也必须在 schema 测试中的固定 taxonomy 内。新增响应模型、事件模型或 artifact envelope 时，先定义 kind 的 agent 消费语义，再同步文档、skills 和测试，避免 agent 解析器看到未登记的临时 kind。
 
 同一 command 内的 `outputContracts[].selector` 必须唯一。selector 是 agent 查找输出模型的键，重复 selector 会让自动解析器和回归断言无法确定应该消费哪个 contract。

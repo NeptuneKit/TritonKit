@@ -73,6 +73,7 @@ func makeNetworkProxyProbeSession(
     }
     let commands = networkProxyProbeCommands(platform: platform, target: target, hdc: hdc, adb: adb)
     let results = commands.map { runNetworkProxyProbeCommand($0, runner: runner) }
+    let findings = networkProxyProbeFindings(platform: platform, results: results)
     let ok: Bool
     switch platform {
     case .harmony:
@@ -103,7 +104,8 @@ func makeNetworkProxyProbeSession(
             hint: "Inspect probeResults and host tool readiness before planning proxy start.",
             nextAction: TKCLINextAction(command: "device", args: ["proxy", "doctor", "--platform", platform.rawValue, "--json"], category: "diagnose")
         ),
-        probeResults: results
+        probeResults: results,
+        probeFindings: findings.isEmpty ? nil : findings
     )
 }
 
@@ -159,6 +161,54 @@ private func networkProxyProbePreview(_ value: String, limit: Int = 1_000) -> St
     return String(trimmed.prefix(limit))
 }
 
+private func networkProxyProbeFindings(
+    platform: HostDevicePlatform,
+    results: [NetworkProxyProbeResult]
+) -> [NetworkProxyProbeFinding] {
+    guard platform == .harmony else { return [] }
+    var seen: Set<String> = []
+    var findings: [NetworkProxyProbeFinding] = []
+    for result in results where result.ok && result.name.hasPrefix("harmony.param.") {
+        for line in (result.stdoutPreview ?? "").split(whereSeparator: \.isNewline) {
+            guard let parameter = harmonyProbeParameterName(from: String(line)) else { continue }
+            let lowercased = parameter.lowercased()
+            guard lowercased.contains("proxy") || lowercased.contains("http") else { continue }
+            let key = "\(result.name)\u{0}\(parameter)"
+            guard seen.insert(key).inserted else { continue }
+            findings.append(NetworkProxyProbeFinding(
+                platform: "harmony",
+                source: result.name,
+                category: "harmony.proxy-parameter-candidate",
+                name: parameter,
+                verifiedMutation: false,
+                requiredAction: "manual_verification_required"
+            ))
+        }
+    }
+    return findings
+}
+
+private func harmonyProbeParameterName(from line: String) -> String? {
+    let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else { return nil }
+
+    let candidate: String
+    if trimmed.hasPrefix("["),
+       let end = trimmed.dropFirst().firstIndex(of: "]") {
+        candidate = String(trimmed[trimmed.index(after: trimmed.startIndex)..<end])
+    } else if let equals = trimmed.firstIndex(of: "=") {
+        candidate = String(trimmed[..<equals])
+    } else {
+        candidate = String(trimmed.split(whereSeparator: \.isWhitespace).first ?? "")
+    }
+
+    let name = candidate.trimmingCharacters(in: CharacterSet(charactersIn: "[]'\" "))
+    guard !name.isEmpty else { return nil }
+    let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "._-:"))
+    guard name.unicodeScalars.allSatisfy({ allowed.contains($0) }) else { return nil }
+    return name
+}
+
 private func networkProxyProbeLimitations(
     platform: HostDevicePlatform,
     results: [NetworkProxyProbeResult]?
@@ -168,11 +218,7 @@ private func networkProxyProbeLimitations(
         limitations.append("proxy_harmony_probe_only:no_verified_proxy_mutation")
         limitations.append("proxy_harmony_param_probe:readonly_param_ls_only")
         if let results {
-            let text = results
-                .compactMap { [$0.stdoutPreview, $0.stderrPreview].compactMap { $0 }.joined(separator: "\n") }
-                .joined(separator: "\n")
-                .lowercased()
-            if text.contains("proxy") {
+            if !networkProxyProbeFindings(platform: platform, results: results).isEmpty {
                 limitations.append("proxy_harmony_candidate_parameters_found:manual_verification_required")
             } else {
                 limitations.append("proxy_harmony_no_verified_proxy_parameter:no_mutation_command")

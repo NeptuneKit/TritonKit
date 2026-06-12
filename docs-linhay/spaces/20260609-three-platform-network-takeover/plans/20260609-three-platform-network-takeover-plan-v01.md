@@ -268,6 +268,7 @@ triton device proxy doctor --platform harmony --json
   - `hdc -t <target> shell param ls -r http`
 - 当前不实现、不声明任何未实测的 DevEco / Harmony 系统代理设置命令；`device proxy start --platform harmony` 仍保持安全 unsupported。
 - `device proxy probe --platform harmony --device <selector> --json` 已可执行，返回 `probeResults[]`；`param ls` 命中 proxy 候选时只输出 `proxy_harmony_candidate_parameters_found:manual_verification_required`，不把候选参数升级为 mutation 命令。
+- `device proxy probe --platform harmony --device <selector> --json` 现在还会把 HDC `param ls -r proxy|http` 的候选参数名结构化为 `probeFindings[]`，每条 finding 标注 `category=harmony.proxy-parameter-candidate`、`verifiedMutation=false` 与 `requiredAction=manual_verification_required`。这只提供 agent 审计与后续 adapter 验证线索，不代表 DevEco / Harmony proxy mutation 已验证。
 - `device proxy start --platform harmony --device <target> --plan-only --json` 已可执行，输出 HDC readiness / shell probe command ledger，明确用于能力探测而非代理配置。
 - `device proxy stop --platform harmony --device <target> --restore --plan-only --json` 已可执行，继续输出 HDC readiness / shell probe ledger，并返回 `proxy_restore_probe_only:no_verified_harmony_proxy_mutation`。
 - `device proxy export --platform harmony --device <target> --output <path> --plan-only --json` 已可执行，输出 network-capture artifact plan；Harmony 仍不声明真实平台代理接管或 export 已支持。

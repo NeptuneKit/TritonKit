@@ -56,6 +56,15 @@ struct NetworkProxyProbeResult: Encodable, Equatable {
     let error: String?
 }
 
+struct NetworkProxyProbeFinding: Encodable, Equatable {
+    let platform: String
+    let source: String
+    let category: String
+    let name: String
+    let verifiedMutation: Bool
+    let requiredAction: String
+}
+
 struct NetworkProxySession: Encodable, Equatable {
     let ok: Bool
     let surface: String
@@ -77,6 +86,7 @@ struct NetworkProxySession: Encodable, Equatable {
     let requestCount: Int?
     let truncation: String?
     let probeResults: [NetworkProxyProbeResult]?
+    let probeFindings: [NetworkProxyProbeFinding]?
 
     init(
         ok: Bool,
@@ -98,7 +108,8 @@ struct NetworkProxySession: Encodable, Equatable {
         redaction: String? = nil,
         requestCount: Int? = nil,
         truncation: String? = nil,
-        probeResults: [NetworkProxyProbeResult]? = nil
+        probeResults: [NetworkProxyProbeResult]? = nil,
+        probeFindings: [NetworkProxyProbeFinding]? = nil
     ) {
         self.ok = ok
         self.surface = surface
@@ -120,6 +131,7 @@ struct NetworkProxySession: Encodable, Equatable {
         self.requestCount = requestCount
         self.truncation = truncation
         self.probeResults = probeResults
+        self.probeFindings = probeFindings
     }
 }
 
