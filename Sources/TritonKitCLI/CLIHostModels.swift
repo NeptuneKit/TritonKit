@@ -52,6 +52,27 @@ struct HostSimulatorScreenshotOutput: Encodable {
     let note: String
 }
 
+struct HostSimulatorInputOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let adapter: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let stdout: String?
+    let stderr: String?
+    let x: Int?
+    let y: Int?
+    let insertedLength: Int?
+    let textEncoding: String?
+    let note: String
+}
+
 struct HostDeviceTarget: Encodable, Equatable {
     let platform: String
     let id: String

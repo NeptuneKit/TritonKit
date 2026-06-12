@@ -323,6 +323,8 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "sim-ui", supported: true),
         TKRuntimeCapability(name: "sim-pasteboard", supported: true),
         TKRuntimeCapability(name: "sim-push", supported: true),
+        TKRuntimeCapability(name: "ios-simulator-host-tap", supported: true),
+        TKRuntimeCapability(name: "ios-simulator-host-type", supported: true),
         TKRuntimeCapability(name: "host-app", supported: true),
         TKRuntimeCapability(name: "host-app-open-url-ready", supported: true),
         TKRuntimeCapability(name: "host-app-open-url-snapshot", supported: true),
@@ -427,7 +429,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "runtime"
     case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return "xcode"
-    case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
+    case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "ios-simulator-host-tap", "ios-simulator-host-type", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
         return "host"
     case "media-playback", "observe", "observe-ios", "observe-android", "observe-harmony", "node-resolve", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait":
         return "observe"
@@ -476,6 +478,8 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["replay"]
     case "smoke-ios", "smoke-android", "smoke-harmony":
         return ["smoke", "evidence", "replay"]
+    case "ios-simulator-host-tap", "ios-simulator-host-type":
+        return ["action", "assert", "evidence", "smoke"]
     case "tap", "swipe", "type", "paste", "clear", "input", "press", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
         return ["action", "assert", "evidence"]
     default:
@@ -533,6 +537,10 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "device", args: ["wait-ready", "<selector>", "--platform", "ios", "--json"])
     case "ios-device-screenshot":
         return TKCLINextAction(command: "device", args: ["screenshot", "--platform", "ios", "--device", "<selector>", "--output", "<path>", "--json"])
+    case "ios-simulator-host-tap":
+        return TKCLINextAction(command: "sim", args: ["tap", "--simulator", "<udid|booted>", "--x", "<x>", "--y", "<y>", "--json"])
+    case "ios-simulator-host-type":
+        return TKCLINextAction(command: "sim", args: ["type", "--simulator", "<udid|booted>", "--text", "<text>", "--json"])
     case "android-device", "android-device-list":
         return TKCLINextAction(command: "device", args: ["list", "--platform", "android", "--json"])
     case "android-device-doctor":
@@ -799,6 +807,8 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["runtime-provider", "action-result", "runtime-ledger"]
     case "ledger":
         return ["runtime-ledger"]
+    case "ios-simulator-host-tap", "ios-simulator-host-type":
+        return ["host-command-json", "input.result"]
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-wait-ready", "android-device-screenshot", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app":
         return ["host-command-json", "host-artifact"]
     case "observe", "observe-ios", "observe-android", "observe-harmony":
@@ -1315,6 +1325,39 @@ func buildTaskWorkflowPlan(
                 targetResolvePlanStep(device: request.device, host: host, port: port),
                 targetUsePlanStep(device: request.device, host: host, port: port),
                 targetWaitReadyPlanStep(device: request.device, host: host, port: port),
+                TKWorkflowPlanStep(
+                    id: "ios-host-input-fallback",
+                    title: "Fallback host-side simulator tap",
+                    command: [
+                        "triton", "sim", "tap",
+                        "--simulator", planValue(request.device, "<udid|booted>"),
+                        "--x", "<x>",
+                        "--y", "<y>",
+                        "--json",
+                    ].map(shellEscaped).joined(separator: " "),
+                    category: "prepare-target",
+                    workflowCategories: ["action", "assert", "evidence", "smoke", "target"],
+                    requiresServer: false,
+                    requiresTarget: true,
+                    when: "embedded runtime action is unavailable and a booted iOS Simulator is available",
+                    expected: "Host input JSON reports runtimeScope=host-simulator, adapter=xcrun-simctl, and sourceCommand"
+                ),
+                TKWorkflowPlanStep(
+                    id: "ios-host-type-fallback",
+                    title: "Fallback host-side simulator ASCII type",
+                    command: [
+                        "triton", "sim", "type",
+                        "--simulator", planValue(request.device, "<udid|booted>"),
+                        "--text", planValue(request.text, "<text>"),
+                        "--json",
+                    ].map(shellEscaped).joined(separator: " "),
+                    category: "prepare-target",
+                    workflowCategories: ["action", "assert", "evidence", "smoke", "target"],
+                    requiresServer: false,
+                    requiresTarget: true,
+                    when: "a focused simulator text field needs ASCII input before runtime is connected",
+                    expected: "Host input JSON reports textEncoding=ascii; verify completion with wait, assert, screenshot, app prefs, or evidence"
+                ),
                 TKWorkflowPlanStep(
                     id: "ios-smoke",
                     title: "Run iOS smoke workflow",

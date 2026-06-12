@@ -738,6 +738,35 @@ func hostActionOutputContract(selector: String, model: String) -> TKCommandOutpu
     )
 }
 
+func hostSimulatorInputOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-input",
+        format: "json",
+        kind: "host-action",
+        model: "HostSimulatorInputOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the host simulator input command completed"),
+            ("action", "String", true, "sim.tap or sim.type"),
+            ("runtimeScope", "String", true, "host-simulator"),
+            ("target", "String", true, "Simulator target selector"),
+            ("adapter", "String", true, "Host adapter name, currently xcrun-simctl"),
+            ("tool", "String", true, "Host executable"),
+            ("exitCode", "Int32", true, "Host process exit code"),
+            ("riskLevel", "String", true, "Host command risk level"),
+            ("sourceCommand", "String", true, "Underlying xcrun simctl input command"),
+            ("stdoutTruncated", "Bool", true, "Whether stdout sample was truncated"),
+            ("stderrTruncated", "Bool", true, "Whether stderr sample was truncated"),
+            ("stdout", "String?", false, "Bounded stdout sample"),
+            ("stderr", "String?", false, "Bounded stderr sample"),
+            ("x", "Int?", false, "Tap x coordinate when action is sim.tap"),
+            ("y", "Int?", false, "Tap y coordinate when action is sim.tap"),
+            ("insertedLength", "Int?", false, "Typed text length when action is sim.type"),
+            ("textEncoding", "String?", false, "Text encoding boundary, currently ascii for sim.type"),
+            ("note", "String", true, "Boundary or follow-up verification note"),
+        ])
+    )
+}
+
 func hostSimulatorScreenshotMetadataOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.simulator-screenshot-metadata",
