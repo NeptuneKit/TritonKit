@@ -40,6 +40,11 @@ struct WebHostDeviceScreenshot {
     let height: Int?
 }
 
+struct WebIOSSimulatorScreenLayout: Codable, Equatable {
+    let width: Int
+    let height: Int
+}
+
 final class WebHostDeviceTargetCache: @unchecked Sendable {
     private let ttl: TimeInterval
     private let lock = NSLock()
@@ -245,10 +250,7 @@ func runWebHostDeviceInput(id: String, input: TKInputRequest, hdc: String = "hdc
     let resolved = try resolveWebHostDeviceTarget(id, hdc: hdc, adb: adb)
     switch resolved.platform {
     case .ios:
-        return .unsupported(
-            action: input.type.rawValue,
-            message: "Host-side iOS simulator input is not exposed yet. Screenshot preview uses simctl; app-level input still requires the embedded runtime target."
-        )
+        return try runWebIOSSimulatorInput(selected: resolved.target, input: input)
     case .android:
         return try runWebAndroidInput(selected: resolved.target, input: input, adb: adb)
     case .harmony:
@@ -428,11 +430,142 @@ private func webIOSSimulatorFallbackSize(for target: HostDeviceTarget) -> (width
     return (1206, 2622)
 }
 
+func normalizeWebIOSSimulatorInput(_ input: TKInputRequest, screen: WebIOSSimulatorScreenLayout) -> TKInputRequest {
+    guard screen.width > 0, screen.height > 0, let width = input.width, let height = input.height, width > 0, height > 0 else {
+        return input
+    }
+    let scaleX = Double(screen.width) / width
+    let scaleY = Double(screen.height) / height
+
+    switch input.type {
+    case .tap:
+        guard let x = input.x, let y = input.y else { return input }
+        return TKInputRequest(
+            type: input.type,
+            targetOID: input.targetOID,
+            matchedOID: input.matchedOID,
+            matchedClassName: input.matchedClassName,
+            activationStrategy: input.activationStrategy,
+            x: clampedRounded(Double(x) * scaleX, min: 0, max: screen.width),
+            y: clampedRounded(Double(y) * scaleY, min: 0, max: screen.height),
+            width: Double(screen.width),
+            height: Double(screen.height),
+            duration: input.duration,
+            text: input.text,
+            button: input.button,
+            secure: input.secure
+        )
+    case .swipe:
+        guard let startX = input.startX, let startY = input.startY, let endX = input.endX, let endY = input.endY else { return input }
+        return TKInputRequest(
+            type: input.type,
+            startX: clampedRounded(Double(startX) * scaleX, min: 0, max: screen.width),
+            startY: clampedRounded(Double(startY) * scaleY, min: 0, max: screen.height),
+            endX: clampedRounded(Double(endX) * scaleX, min: 0, max: screen.width),
+            endY: clampedRounded(Double(endY) * scaleY, min: 0, max: screen.height),
+            width: Double(screen.width),
+            height: Double(screen.height),
+            duration: input.duration
+        )
+    case .button, .typeText, .paste, .clear:
+        return input
+    }
+}
+
+func webIOSBaguetteCommand(action: TKInputRequest, udid: String, screen: WebIOSSimulatorScreenLayout, executable: String = "baguette") throws -> TKHostCommand {
+    let input = normalizeWebIOSSimulatorInput(action, screen: screen)
+    switch input.type {
+    case .tap:
+        let x = try requireCoordinate(input.x, name: "x", action: "tap")
+        let y = try requireCoordinate(input.y, name: "y", action: "tap")
+        let width = try requireCoordinate(input.width, name: "width", action: "tap")
+        let height = try requireCoordinate(input.height, name: "height", action: "tap")
+        return TKHostCommand(executable: executable, arguments: [
+            "tap",
+            "--udid", udid,
+            "--x", "\(x)",
+            "--y", "\(y)",
+            "--width", "\(width)",
+            "--height", "\(height)"
+        ])
+    case .swipe:
+        let startX = try requireCoordinate(input.startX, name: "startX", action: "swipe")
+        let startY = try requireCoordinate(input.startY, name: "startY", action: "swipe")
+        let endX = try requireCoordinate(input.endX, name: "endX", action: "swipe")
+        let endY = try requireCoordinate(input.endY, name: "endY", action: "swipe")
+        let width = try requireCoordinate(input.width, name: "width", action: "swipe")
+        let height = try requireCoordinate(input.height, name: "height", action: "swipe")
+        var arguments = [
+            "swipe",
+            "--udid", udid,
+            "--start-x", "\(startX)",
+            "--start-y", "\(startY)",
+            "--end-x", "\(endX)",
+            "--end-y", "\(endY)",
+            "--width", "\(width)",
+            "--height", "\(height)"
+        ]
+        if let duration = input.duration {
+            arguments.append(contentsOf: ["--duration", "\(duration)"])
+        }
+        return TKHostCommand(executable: executable, arguments: arguments)
+    case .button, .typeText, .paste, .clear:
+        return TKHostCommand(executable: executable, arguments: [])
+    }
+}
+
+private func clampedRounded(_ value: Double, min: Int, max: Int) -> Double {
+    Double(Swift.max(min, Swift.min(max, Int(value.rounded()))))
+}
+
 private func requireCoordinate(_ value: Double?, name: String, action: String) throws -> Int {
     guard let value else {
         throw RuntimeError("\(action) requires \(name).")
     }
     return Int(value.rounded())
+}
+
+private struct WebIOSBaguetteLayoutPayload: Decodable {
+    struct Screen: Decodable {
+        let width: Int
+        let height: Int
+    }
+
+    let screen: Screen
+}
+
+private func runWebIOSSimulatorInput(selected: HostDeviceTarget, input: TKInputRequest) throws -> TKInputResult {
+    switch input.type {
+    case .tap, .swipe:
+        let baguette = resolveBaguetteExecutable()
+        let layoutCommand = TKHostCommand(executable: baguette, arguments: ["chrome", "layout", "--udid", selected.rawTarget])
+        let layoutResult = try runHostCommand(layoutCommand)
+        let layout = try JSONDecoder().decode(WebIOSBaguetteLayoutPayload.self, from: Data(layoutResult.stdout.utf8))
+        let screen = WebIOSSimulatorScreenLayout(width: layout.screen.width, height: layout.screen.height)
+        let inputCommand = try webIOSBaguetteCommand(action: input, udid: selected.rawTarget, screen: screen, executable: baguette)
+        _ = try runHostCommand(inputCommand)
+        return .success(
+            action: input.type.rawValue,
+            message: "iOS Simulator \(input.type.rawValue) was submitted through Triton host-HID adapter."
+        )
+    case .button, .typeText, .paste, .clear:
+        return .unsupported(
+            action: input.type.rawValue,
+            message: "iOS Simulator host-side \(input.type.rawValue) is not exposed in the Web device surface yet."
+        )
+    }
+}
+
+private func resolveBaguetteExecutable() -> String {
+    let candidates = [
+        ProcessInfo.processInfo.environment["TRITONKIT_BAGUETTE_BIN"],
+        "/opt/homebrew/bin/baguette",
+        "/usr/local/bin/baguette",
+        "baguette"
+    ].compactMap { $0 }.filter { !$0.isEmpty }
+    return candidates.first { candidate in
+        candidate == "baguette" || FileManager.default.isExecutableFile(atPath: candidate)
+    } ?? "baguette"
 }
 
 private func runWebAndroidInput(selected: HostDeviceTarget, input: TKInputRequest, adb: String) throws -> TKInputResult {

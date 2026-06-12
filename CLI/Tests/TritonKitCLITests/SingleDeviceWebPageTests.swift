@@ -172,8 +172,8 @@ struct SingleDeviceWebPageTests {
         #expect(resolved.target.scope == "simulator")
     }
 
-    @Test("iOS web host input falls back to embedded runtime on same simulator")
-    func iOSWebHostInputFallsBackToEmbeddedRuntimeOnSameSimulator() {
+    @Test("iOS web host input can still locate matching runtime targets when explicitly needed")
+    func iOSWebHostInputCanStillLocateMatchingRuntimeTargetsWhenExplicitlyNeeded() {
         let runtime = TKTargetSummary(
             id: "triton:ios-simulator:SIM-1",
             connected: true,
@@ -200,6 +200,55 @@ struct SingleDeviceWebPageTests {
             forHostID: "host:ios:SIM-2",
             runtimeTargets: [disconnected, runtime]
         ) == nil)
+    }
+
+    @Test("iOS web host input normalizes framebuffer coordinates into host HID points")
+    func iOSWebHostInputNormalizesFramebufferCoordinatesIntoHostHIDPoints() {
+        let normalized = normalizeWebIOSSimulatorInput(
+            .tap(
+                x: 619,
+                y: 2338,
+                width: 1206,
+                height: 2622
+            ),
+            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872)
+        )
+
+        #expect(normalized.x == 205)
+        #expect(normalized.y == 778)
+        #expect(normalized.width == 400)
+        #expect(normalized.height == 872)
+    }
+
+    @Test("iOS web host input builds Baguette-compatible host HID argv behind Triton")
+    func iOSWebHostInputBuildsBaguetteCompatibleHostHIDArgvBehindTriton() throws {
+        let command = try webIOSBaguetteCommand(
+            action: .swipe(
+                startX: 300,
+                startY: 2400,
+                endX: 300,
+                endY: 1200,
+                width: 1206,
+                height: 2622,
+                duration: 0.25
+            ),
+            udid: "SIM-1",
+            screen: WebIOSSimulatorScreenLayout(width: 400, height: 872),
+            executable: "/opt/homebrew/bin/baguette"
+        )
+
+        #expect(command.executable == "/opt/homebrew/bin/baguette")
+        #expect(command.arguments == [
+            "swipe",
+            "--udid", "SIM-1",
+            "--start-x", "100",
+            "--start-y", "798",
+            "--end-x", "100",
+            "--end-y", "399",
+            "--width", "400",
+            "--height", "872",
+            "--duration", "0.25"
+        ])
     }
 
     @Test("non iOS web host input does not use runtime fallback")

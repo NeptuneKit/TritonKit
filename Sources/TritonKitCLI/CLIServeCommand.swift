@@ -471,26 +471,6 @@ struct Serve: AsyncParsableCommand {
 
             let requestedTarget = queryTarget(from: request)
             if let target = requestedTarget, parseWebHostTargetID(target) != nil {
-                if let runtimeTarget = webRuntimeInputFallbackTargetID(forHostID: target, runtimeTargets: state.summaries()) {
-                    let connection: TargetConnection
-                    do {
-                        connection = try state.resolve(runtimeTarget)
-                    } catch {
-                        return jsonError(detail: cliErrorDetail(for: error, endpoint: "/web/input", host: host, port: port), status: .conflict)
-                    }
-
-                    let id = counter.next()
-                    log("[tritonkit] -> input [id:\(id)] via \(runtimeTarget)")
-                    try await connection.outbound.send(TKMessage(id: id, type: .input, payload: payload), encoder: encoder)
-                    guard let responsePayload = await connection.state.waitForResponse(id: id) else {
-                        return jsonError(
-                            detail: TKCLIRuntimeTimeoutErrorDetail(requestType: "input", endpoint: "/web/input"),
-                            status: .requestTimeout
-                        )
-                    }
-                    return Response(status: .ok, headers: [.contentType: "application/json"],
-                                    body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
-                }
                 do {
                     return jsonResponse(try runWebHostDeviceInput(id: target, input: input))
                 } catch {
