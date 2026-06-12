@@ -155,6 +155,27 @@ extension SchemaFactSourceTests {
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-execute" })?.command.contains("--audit-record ticket-123") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-execute" })?.command.contains("--execute-runner") == true)
         #expect(networkProxy.steps.first(where: { $0.id == "proxy-stop-execute" })?.requires.contains("restore-snapshot") == true)
+
+        let throttleProxy = buildWorkflowPlan(
+            capabilities: capabilities,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "network-proxy",
+                device: "emulator-5554",
+                platform: "android",
+                evidence: "/tmp/proxy.tritonevidence",
+                proxy: "127.0.0.1:19431",
+                mode: "throttle",
+                output: "/tmp/proxy-session",
+                certificate: "/tmp/triton-proxy-ca.cer",
+                auditRecord: "ticket-123",
+                throttleMs: 250
+            )
+        )
+        #expect(throttleProxy.steps.first(where: { $0.id == "proxy-serve" })?.command.contains("--throttle-ms 250") == true)
+        #expect(throttleProxy.steps.first(where: { $0.id == "proxy-start-execute" })?.command.contains("--throttle-ms") == false)
+        #expect(throttleProxy.steps.first(where: { $0.id == "proxy-stop-execute" })?.command.contains("--throttle-ms") == false)
     }
 
     @Test("workflow plan mode separates bootstrap recovery from task workflows")
