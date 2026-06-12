@@ -613,18 +613,52 @@ func hostHarmonyArtifactOutputContract() -> TKCommandOutputContract {
     )
 }
 
-func hostDeviceListOutputContract() -> TKCommandOutputContract {
+func hostAndroidArtifactOutputContract(selector: String) -> TKCommandOutputContract {
     TKCommandOutputContract(
-        selector: "host.device-list",
+        selector: selector,
+        format: "json",
+        kind: "host-artifact",
+        model: "HostAndroidArtifactOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether Android host artifact capture succeeded"),
+            ("action", "String", true, "Host action name"),
+            ("platform", "String", true, "android"),
+            ("target", "HostDeviceTarget", true, "Resolved Android target"),
+            ("artifact", "String", true, "Written artifact path"),
+            ("sourceCommands", "[String]", true, "Underlying adb commands"),
+            ("note", "String", true, "Boundary or follow-up note"),
+        ])
+    )
+}
+
+func hostDeviceListOutputContract(selector: String = "host.device-list") -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: selector,
         format: "json",
         kind: "host-device-list",
         model: "HostDeviceListOutput",
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether host device listing succeeded"),
-            ("platform", "String", true, "ios or harmony"),
+            ("platform", "String", true, "ios, android, or harmony"),
             ("targets", "[HostDeviceTarget]", true, "Discovered host targets"),
             ("defaultTarget", "HostDeviceTarget?", false, "Default selected target if one exists"),
             ("sourceCommand", "String", true, "Underlying host command"),
+        ])
+    )
+}
+
+func hostAppInfoOutputContract(selector: String) -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: selector,
+        format: "json",
+        kind: "host-action",
+        model: "HostAppInfoOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether app metadata inspection succeeded"),
+            ("action", "String", true, "app.info or app.inspect"),
+            ("simulatorUDID", "String", true, "Resolved host target identifier; retained for backward compatibility"),
+            ("bundleID", "String", true, "Bundle identifier or Android package name"),
+            ("app", "TKHostInstalledApp", true, "Parsed app metadata"),
         ])
     )
 }

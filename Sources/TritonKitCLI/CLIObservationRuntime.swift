@@ -38,6 +38,7 @@ func runObserve(
             response = try observeAndroid(
                 action: action,
                 selected: selected.target,
+                adb: "adb",
                 output: output
             )
         case .ios:
@@ -151,17 +152,18 @@ func observeHarmony(
 func observeAndroid(
     action: String,
     selected: HostDeviceTarget,
+    adb: String = "adb",
     output: String?,
     runner: AndroidObserveHostRunner = { command in try runHostCommand(command) }
 ) throws -> ObserveOutput {
     let remotePath = "/sdcard/window_dump.xml"
-    let dumpCommand = TKAndroidADBCommand.uiautomatorDump(serial: selected.target, remotePath: remotePath)
+    let dumpCommand = TKAndroidADBCommand.uiautomatorDump(serial: selected.target, remotePath: remotePath, executable: adb)
     let dumpResult = try runner(dumpCommand)
     guard dumpResult.exitCode == 0 else {
         throw HostCommandRunError.nonZeroExit(command: dumpCommand, result: dumpResult)
     }
 
-    let readCommand = TKAndroidADBCommand.readFile(serial: selected.target, remotePath: remotePath)
+    let readCommand = TKAndroidADBCommand.readFile(serial: selected.target, remotePath: remotePath, executable: adb)
     let readResult = try runner(readCommand)
     guard readResult.exitCode == 0 else {
         throw HostCommandRunError.nonZeroExit(command: readCommand, result: readResult)

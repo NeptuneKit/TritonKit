@@ -495,14 +495,16 @@ triton device list --platform android --json
 triton device alias set android-a --platform android --target emulator-5554 --json
 triton device screenshot --device android-a --output /tmp/android-before.png --json
 triton app list --platform android --device android-a --json
+triton app inspect --platform android --device android-a --bundle com.android.settings --json
 triton app launch --platform android --device android-a --package-name com.android.settings --json
 triton observe tree --platform android --target emulator-5554 --json
+triton ax --platform android --device android-a --output /tmp/android-window.xml --json
 triton wait --platform android --target emulator-5554 --text "Settings" --timeout 10 --json
 triton tap --platform android --target emulator-5554 "Network & internet" --json
 triton smoke android --device android-a --package com.android.settings --wait-text "Settings" --tap-text "Network & internet" --post-tap-wait-text "Internet" --screenshot /tmp/android-smoke.png --evidence /tmp/android-smoke.tritonevidence --json
 ```
 
-Android host-side `observe tree` / `wait` / `tap` currently rely on `adb shell uiautomator dump` followed by `adb shell cat` of the dumped XML. Keep those UIAutomator-backed commands serialized per emulator target during smoke or evidence capture; concurrent dump/read-back flows on the same emulator have previously produced host command exits before the XML was fully available.
+Android `app inspect` uses `adb shell dumpsys package` and returns `host.android-app-inspect`. Android host-side `observe tree` / `ax` / `wait` / `tap` currently rely on `adb shell uiautomator dump` followed by `adb shell cat` of the dumped XML. Parse `ax --platform android` as `host.android-ax`, and keep UIAutomator-backed commands serialized per emulator target during smoke or evidence capture; concurrent dump/read-back flows on the same emulator have previously produced host command exits before the XML was fully available.
 
 HarmonyOS NEXT / DevEco Emulator host-side discovery does not require a running TritonKit embedded runtime:
 

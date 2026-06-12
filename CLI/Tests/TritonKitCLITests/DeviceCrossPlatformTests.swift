@@ -1,3 +1,4 @@
+import ArgumentParser
 import Foundation
 import Testing
 import TritonKitShared
@@ -117,6 +118,8 @@ struct DeviceCrossPlatformTests {
         #expect(appOptionNames.contains("--activity"))
         #expect(appOptionNames.contains("--apk"))
         #expect(app.examples.contains("triton app list --device iphone15 --user-only --json"))
+        #expect(app.usageForms.map(\.form).contains("inspect --platform android --bundle <bundle-id>"))
+        #expect(app.examples.contains("triton app inspect --platform android --device android-a --bundle com.example.app --json"))
         #expect(app.examples.contains("triton app install --device android-a --platform android --apk /tmp/Demo.apk --json"))
         #expect(app.examples.contains("triton app launch --device android-a --platform android --package-name com.example.app --json"))
         #expect(app.examples.contains("triton app open-url example://debug --device android-a --platform android --package-name com.example.app --json"))
@@ -125,6 +128,7 @@ struct DeviceCrossPlatformTests {
         #expect(app.examples.contains(#"triton app go "example://debug" --device iphone15"#))
         #expect(app.examples.contains("triton app prefs get DEBUG-mock --device iphone15 --bundle-id com.example.app --json"))
         #expect(app.providedCapabilities.contains("android-app"))
+        #expect(app.providedCapabilities.contains("android-app-inspect"))
         #expect(app.providedCapabilities.contains("android-app-install"))
         #expect(app.providedCapabilities.contains("android-app-launch"))
         #expect(app.providedCapabilities.contains("android-app-terminate"))
@@ -136,6 +140,71 @@ struct DeviceCrossPlatformTests {
         #expect(smokeOptionNames.contains("--ready"))
         #expect(smoke.examples.contains("triton smoke ios --device iphone15 --bundle-id com.example.app --open-url myapp://home --wait-text Ready --json"))
         #expect(smoke.examples.contains("triton smoke harmony --device harmony-a --bundle com.example.app --ability EntryAbility --open-url example://home --wait-text Ready --screenshot /tmp/smoke.jpeg --evidence /tmp/harmony.tritonevidence --json"))
+    }
+
+    @Test("issue 30 Android literal app inspect and ax entrypoints parse")
+    func issue30AndroidLiteralEntrypointsParse() throws {
+        _ = try TritonKitCLI.parseAsRoot([
+            "app", "inspect",
+            "--platform", "android",
+            "--device", "android-a",
+            "--bundle", "com.example.app",
+            "--json",
+        ])
+        _ = try TritonKitCLI.parseAsRoot([
+            "ax",
+            "--platform", "android",
+            "--device", "android-a",
+            "--json",
+        ])
+    }
+
+    @Test("issue 30 Android app inspect uses fake adb dumpsys package")
+    func issue30AndroidAppInspectUsesFakeADBDumpsysPackage() throws {
+        let target = HostDeviceTarget(
+            platform: "android",
+            id: "android:emulator-5554",
+            target: "emulator-5554",
+            state: "device",
+            ready: true,
+            source: "adb",
+            name: "Pixel_8",
+            runtime: "sdk_gphone64_arm64",
+            transport: "1"
+        )
+        let runner = TKAndroidADBFakeRunner(fixtures: [
+            .dumpsysPackageSuccess(serial: "emulator-5554", packageName: "com.example.demo"),
+        ])
+
+        let output = try inspectAndroidApp(
+            selected: target,
+            bundle: "com.example.demo",
+            adb: "adb-fixture",
+            runner: { command in
+                #expect(command.executable == "adb-fixture")
+                let fixture = try runner.run(command)
+                return HostProcessResult(
+                    stdoutData: fixture.stdout,
+                    stderrData: fixture.stderr,
+                    exitCode: fixture.exitCode,
+                    sourceCommand: hostSourceCommand(command),
+                    stdoutTruncated: false,
+                    stderrTruncated: false,
+                    stdoutLogPath: nil,
+                    stderrLogPath: nil,
+                    stdoutBytes: fixture.stdout.count,
+                    stderrBytes: fixture.stderr.count
+                )
+            }
+        )
+
+        #expect(output.ok)
+        #expect(output.action == "app.inspect")
+        #expect(output.simulatorUDID == "emulator-5554")
+        #expect(output.bundleID == "com.example.demo")
+        #expect(output.app.applicationType == "Android")
+        #expect(output.app.version == "1.2.3")
+        #expect(output.app.path == "/data/app/~~hash/com.example.demo-base")
     }
 
     @Test("unified device selector rejects mixed selector conflicts")
