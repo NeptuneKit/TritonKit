@@ -1775,6 +1775,73 @@ struct DeviceCrossPlatformTests {
         #expect(exportedPayload["target"] as? String == "emulator-5554")
     }
 
+    @Test("proxy session state preserves certificate trust evidence across status and export")
+    func proxySessionStatePreservesCertificateTrustEvidenceAcrossStatusAndExport() throws {
+        let target = makeSimulatorProxyTarget(simulator: "booted")
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-proxy-session-cert-\(UUID().uuidString)", isDirectory: true)
+        let exportPath = directory.appendingPathComponent("exported.ndjson")
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let captureArtifact = try #require(try writeNetworkProxyCapturePlaceholder(
+            platform: .ios,
+            target: target,
+            outputDirectory: directory.path
+        ))
+        let trustedCert = NetworkProxyCertificate(installed: true, trusted: true, scope: "simulator")
+        let session = NetworkProxySession(
+            ok: true,
+            surface: "host.device-proxy",
+            action: NetworkProxyAction.start.rawValue,
+            platform: "ios",
+            target: target,
+            lane: .hostProxy,
+            captureMode: "record",
+            proxyEndpoint: "127.0.0.1:19431",
+            configured: true,
+            cert: trustedCert,
+            visibility: .partial,
+            limitations: [
+                "proxy_cert_installed:simulator_root_trusted",
+                "proxy_session_state_written",
+            ],
+            artifacts: [captureArtifact],
+            restore: NetworkProxyRestore(available: false, snapshotPath: nil, restored: nil),
+            sourceCommands: ["xcrun simctl keychain booted add-root-cert /tmp/triton-proxy-ca.cer"],
+            error: nil
+        )
+
+        try writeNetworkProxySessionState(session, outputDirectory: directory.path)
+        let state = try loadNetworkProxySessionState(directory: directory.path)
+        let status = try makeNetworkProxyStatusSession(platform: .ios, target: target, sessionDirectory: directory.path)
+        let exported = try makeNetworkProxyExportSession(platform: .ios, target: target, sessionDirectory: directory.path, outputPath: exportPath.path)
+
+        #expect(state.cert == trustedCert)
+        #expect(status.cert == trustedCert)
+        #expect(status.limitations.contains("proxy_cert_installed:simulator_root_trusted"))
+        #expect(exported.cert == trustedCert)
+        #expect(exported.configured)
+        #expect(exported.artifacts == [NetworkProxyArtifact(kind: "network-capture", path: exportPath.path, bytes: try Data(contentsOf: exportPath).count)])
+
+        let legacyState = NetworkProxySessionStatePayload(
+            schemaVersion: "triton.proxy.session.v1",
+            platform: "ios",
+            target: "booted",
+            captureMode: "record",
+            proxyEndpoint: "127.0.0.1:19431",
+            configured: true,
+            visibility: .partial,
+            limitations: ["legacy_session_without_cert"],
+            artifacts: [captureArtifact],
+            restoreSnapshotPath: nil,
+            sourceCommands: []
+        )
+        try prettyEncodedData(legacyState).write(to: networkProxySessionStateURL(directory: directory.path), options: .atomic)
+        let legacyStatus = try makeNetworkProxyStatusSession(platform: .ios, target: target, sessionDirectory: directory.path)
+        #expect(legacyStatus.cert == NetworkProxyCertificate(installed: false, trusted: false, scope: "simulator"))
+        #expect(legacyStatus.limitations.contains("legacy_session_without_cert"))
+    }
+
     @Test("proxy session export writes HAR when requested by output extension")
     func proxySessionExportWritesHARWhenRequestedByOutputExtension() throws {
         let endpoint = try NetworkProxyEndpoint("127.0.0.1:19431")

@@ -26,7 +26,7 @@ enum NetworkProxyVisibility: String, Codable, Equatable {
     case unknown
 }
 
-struct NetworkProxyCertificate: Encodable, Equatable {
+struct NetworkProxyCertificate: Codable, Equatable {
     let installed: Bool
     let trusted: Bool
     let scope: String
@@ -205,11 +205,40 @@ struct NetworkProxySessionStatePayload: Codable, Equatable {
     let captureMode: String?
     let proxyEndpoint: String?
     let configured: Bool
+    let cert: NetworkProxyCertificate?
     let visibility: NetworkProxyVisibility
     let limitations: [String]
     let artifacts: [NetworkProxyArtifact]
     let restoreSnapshotPath: String?
     let sourceCommands: [String]
+
+    init(
+        schemaVersion: String,
+        platform: String,
+        target: String,
+        captureMode: String?,
+        proxyEndpoint: String?,
+        configured: Bool,
+        cert: NetworkProxyCertificate? = nil,
+        visibility: NetworkProxyVisibility,
+        limitations: [String],
+        artifacts: [NetworkProxyArtifact],
+        restoreSnapshotPath: String?,
+        sourceCommands: [String]
+    ) {
+        self.schemaVersion = schemaVersion
+        self.platform = platform
+        self.target = target
+        self.captureMode = captureMode
+        self.proxyEndpoint = proxyEndpoint
+        self.configured = configured
+        self.cert = cert
+        self.visibility = visibility
+        self.limitations = limitations
+        self.artifacts = artifacts
+        self.restoreSnapshotPath = restoreSnapshotPath
+        self.sourceCommands = sourceCommands
+    }
 }
 
 struct NetworkProxyRestoreFailurePayload: Codable, Equatable {
@@ -952,6 +981,7 @@ func writeNetworkProxySessionState(_ session: NetworkProxySession, outputDirecto
         captureMode: session.captureMode,
         proxyEndpoint: session.proxyEndpoint,
         configured: session.configured,
+        cert: session.cert,
         visibility: session.visibility,
         limitations: session.limitations,
         artifacts: session.artifacts,
@@ -1855,7 +1885,7 @@ func makeNetworkProxyStatusSession(
         captureMode: state.captureMode,
         proxyEndpoint: state.proxyEndpoint,
         configured: state.configured,
-        cert: NetworkProxyCertificate(installed: false, trusted: false, scope: networkProxyCertificateScope(platform: platform)),
+        cert: networkProxySessionStateCertificate(state, platform: platform),
         visibility: state.visibility,
         limitations: state.limitations,
         artifacts: artifacts,
@@ -1956,7 +1986,7 @@ func makeNetworkProxyExportSession(
         captureMode: state.captureMode,
         proxyEndpoint: state.proxyEndpoint,
         configured: state.configured,
-        cert: NetworkProxyCertificate(installed: false, trusted: false, scope: networkProxyCertificateScope(platform: platform)),
+        cert: networkProxySessionStateCertificate(state, platform: platform),
         visibility: state.visibility,
         limitations: state.limitations,
         artifacts: [NetworkProxyArtifact(kind: "network-capture", path: outputURL.path, bytes: byteCount)],
@@ -1986,7 +2016,7 @@ private func makeNetworkProxyArtifactWriteFailedSession(
         captureMode: state.captureMode,
         proxyEndpoint: state.proxyEndpoint,
         configured: state.configured,
-        cert: NetworkProxyCertificate(installed: false, trusted: false, scope: networkProxyCertificateScope(platform: platform)),
+        cert: networkProxySessionStateCertificate(state, platform: platform),
         visibility: .none,
         limitations: state.limitations + [
             "proxy_artifact_write_failed:\(networkProxyErrorSummary(error))",
@@ -2014,6 +2044,13 @@ private func validateNetworkProxySessionState(
     guard state.target == target.target else {
         throw HostDeviceSelectionError.parameterConflict("Proxy session target \(state.target) does not match requested target \(target.target).")
     }
+}
+
+private func networkProxySessionStateCertificate(
+    _ state: NetworkProxySessionStatePayload,
+    platform: HostDevicePlatform
+) -> NetworkProxyCertificate {
+    state.cert ?? networkProxyConservativeCertificate(platform: platform)
 }
 
 func makeNetworkProxyRealDeviceNotSupportedSession(
