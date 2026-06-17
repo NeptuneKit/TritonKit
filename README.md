@@ -377,14 +377,14 @@ This avoids confusing macOS failures where a newly invoked CLI is killed after t
 
 #### Readonly Web Device Hub
 
-If you want the React/Vite Web Device Hub for local inspection, run it from a TritonKit source checkout that contains `Web/package.json`:
+If you want the readonly Web Device Hub for local inspection, run:
 
 ```bash
 triton web --print-command --json
 triton web
 ```
 
-`triton web` is a local launcher for the readonly Device Hub only. It does not replace the CLI / HTTP control surface, and it does not introduce browser-side create / update / execute business actions.
+`triton web` is a local launcher for the readonly Device Hub only. In a source checkout it starts the React/Vite dev server from `Web/`; in a released archive or Homebrew install it serves bundled `web/` static assets from the CLI package. It does not replace the CLI / HTTP control surface, and it does not introduce browser-side create / update / execute business actions.
 
 For unreleased validation from this repo, the debug build also supports the same launcher flow:
 
@@ -399,7 +399,7 @@ After a versioned release is published, GitHub Releases provide architecture-spe
 - `triton-macos-arm64.tar.gz`
 - `triton-macos-x86_64.tar.gz`
 
-Download the archive for your Mac, then copy `triton` into a directory on `PATH`.
+Download the archive for your Mac, then copy `triton` into a directory on `PATH`. To keep `triton web` available outside a source checkout, also copy the archive's `web/` directory to `share/triton/web` next to that install prefix, for example `/usr/local/share/triton/web`.
 
 When replacing an existing `triton` executable manually, use the same temporary-file plus `mv` pattern above, or stop `triton serve` before copying over the active path.
 

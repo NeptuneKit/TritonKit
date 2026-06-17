@@ -95,6 +95,35 @@ struct WebCommandTests {
         #expect(plan.bundledWebRoot == nil)
     }
 
+    @Test("web command finds bundled static dist in Homebrew share layout")
+    func webCommandFindsBundledStaticDistInHomebrewShareLayout() throws {
+        let install = try temporaryDirectory()
+        let binDir = install.appendingPathComponent("bin", isDirectory: true)
+        let shareWeb = install
+            .appendingPathComponent("share", isDirectory: true)
+            .appendingPathComponent("triton", isDirectory: true)
+            .appendingPathComponent("web", isDirectory: true)
+        try FileManager.default.createDirectory(at: binDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: shareWeb, withIntermediateDirectories: true)
+        let bin = binDir.appendingPathComponent("triton")
+        try Data().write(to: bin)
+        try "<html></html>".write(to: shareWeb.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+
+        let plan = try makeWebLaunchPlan(
+            explicitRoot: nil,
+            currentDirectory: try temporaryDirectory().path,
+            explicitTritonBin: nil,
+            currentExecutable: bin.path,
+            host: "127.0.0.1",
+            port: 34127,
+            installMode: .auto,
+            environment: [:]
+        )
+
+        #expect(plan.mode == "packaged")
+        #expect(plan.bundledWebRoot == shareWeb.path)
+    }
+
     @Test("web command auto install runs only when node modules are missing")
     func webCommandAutoInstallRunsOnlyWhenNodeModulesAreMissing() throws {
         let repo = try temporaryRepoWithWeb(nodeModules: false)

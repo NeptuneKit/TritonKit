@@ -187,9 +187,12 @@ if [[ "$#" -gt 0 ]]; then
   exit 0
 fi
 
-if ! mapfile -t changed_files < <(changed_files_from_git); then
+changed_files=()
+while IFS= read -r changed_file; do
+  changed_files+=("${changed_file}")
+done < <(changed_files_from_git) || {
   echo "full"
   exit 0
-fi
+}
 
 classify_paths "${changed_files[@]}"

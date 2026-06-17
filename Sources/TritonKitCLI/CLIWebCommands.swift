@@ -5,7 +5,7 @@ import TritonKitShared
 struct Web: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "web",
-        abstract: "Start the React/Vite Web Device Hub from a TritonKit checkout"
+        abstract: "Start the readonly Web Device Hub from a checkout or bundled release assets"
     )
 
     @Option(help: "TritonKit repository root or Web directory. Defaults to searching upward from the current directory.")
@@ -14,11 +14,14 @@ struct Web: AsyncParsableCommand {
     @Option(help: "Triton CLI binary injected into the Web host bridge. Defaults to TRITONKIT_TRITON_BIN or the current executable.")
     var tritonBin: String?
 
-    @Option(help: "Vite host")
+    @Option(help: "Web host bind address")
     var host: String = "127.0.0.1"
 
-    @Option(help: "Vite port")
+    @Option(help: "Web Device Hub port")
     var port: Int = 34127
+
+    @Option(name: .customLong("bundled-web-root"), help: .hidden)
+    var bundledWebRoot: String?
 
     @Flag(help: "Run npm install before starting Vite.")
     var install = false
@@ -58,7 +61,8 @@ struct Web: AsyncParsableCommand {
                 host: host,
                 port: port,
                 installMode: installMode,
-                environment: ProcessInfo.processInfo.environment
+                environment: ProcessInfo.processInfo.environment,
+                explicitBundledWebRoot: bundledWebRoot
             )
 
             if printCommand {
@@ -71,7 +75,7 @@ struct Web: AsyncParsableCommand {
                 return
             }
 
-            try runWebLaunchPlan(plan)
+            try await runWebLaunchPlan(plan)
         } catch let error as WebCommandError {
             switch outputFormat {
             case .json:

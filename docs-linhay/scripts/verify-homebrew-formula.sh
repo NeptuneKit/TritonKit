@@ -25,8 +25,14 @@ grep -q 'releases/download/v0.1.0/triton-macos-x86_64.tar.gz' "${formula}"
 grep -q 'sha256 "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"' "${formula}"
 grep -q 'sha256 "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"' "${formula}"
 grep -Fq 'Dir["triton-macos-*/triton"].first || Dir["triton"].first' "${formula}"
+grep -Fq 'Dir["triton-macos-*/web"].first || Dir["web"].first' "${formula}"
+grep -Fq 'pkgshare.install web_dir => "web"' "${formula}"
 grep -Fq 'JSON.parse(shell_output("#{bin}/triton version --json"))' "${formula}"
 grep -Fq 'assert_equal true, version_json["ok"]' "${formula}"
+grep -Fq 'assert_path_exists pkgshare/"web/index.html"' "${formula}"
+grep -Fq 'JSON.parse(shell_output("#{bin}/triton web --print-command --json"))' "${formula}"
+grep -Fq 'assert_equal "packaged", web_plan["mode"]' "${formula}"
+grep -Fq 'assert_equal "#{pkgshare}/web", web_plan["bundledWebRoot"]' "${formula}"
 
 ruby -c "${formula}" >/dev/null
 

@@ -12,11 +12,11 @@ TritonKit 的业务控制事实入口仍是 CLI / HTTP 机器可读契约。`tri
 - 默认从当前仓库 checkout 发现 `Web/`，启动 `127.0.0.1:34127` 的 Vite Device Hub。
 - 默认把当前 `triton` 可执行文件注入 `TRITONKIT_TRITON_BIN`，让 Web bridge 跟随 CLI。
 - 支持 `--root`、`--triton-bin`、`--host`、`--port`、`--install`、`--no-install`、`--print-command` 和 `--json`，便于 agent 与自动化验证。
+- 发布包内携带 `Web/dist` 静态产物；源码 checkout 走 Vite dev，release/Homebrew 安装走 CLI 内置 packaged 静态服务。
 - 发布到下一版 Homebrew / GitHub Release。
 
 ## 不在本轮范围
 
-- 不把 `Web/dist` 打包进 Homebrew CLI。
 - 不恢复 Wails 桌面壳。
 - 不新增 Web 业务控制入口。
 - 不改变 `/web/host-input` 只读 405 语义。
@@ -46,14 +46,25 @@ TritonKit 的业务控制事实入口仍是 CLI / HTTP 机器可读契约。`tri
 
 - Given 用户在不包含 `Web/package.json` 的目录运行 `triton web`
 - When 未传入 `--root`
-- Then CLI 失败并说明需要从 TritonKit checkout 运行或传入 `--root`
+- Then CLI 优先尝试发现 release 包内的 `web/index.html`
+- And 若 release 包也不存在，CLI 失败并说明需要从 TritonKit checkout 运行、传入 `--root` 或安装包含 `web/` 的 release 包
 - And 错误不得伪装成 npm / Vite 内部错误
+
+### 场景：发布包可直接启动 bundled Web
+
+- Given GitHub Release 或 Homebrew 安装提供了 `triton` 二进制和 `web/index.html`
+- When 用户运行 `triton web --print-command --json`
+- Then CLI 返回 `mode=packaged`
+- And `bundledWebRoot` 指向随包静态资源目录
+- And 直接运行 `triton web` 时由 CLI 内置 HTTP 服务提供 `/`、`/assets/*`、SPA fallback 和只读 `/web/host-*` bridge
+- And `/web/host-input` 继续返回只读错误，不执行输入动作
 
 ## 验收标准
 
-- Swift focused tests 覆盖 `triton web` 启动计划、依赖安装策略、缺失 root 错误。
+- Swift focused tests 覆盖 `triton web` dev / packaged 启动计划、依赖安装策略、静态资源 fallback、只读错误和缺失 root 错误。
 - `triton --help` 可见 `web` 子命令。
 - `triton schema --command web --json` 返回 `web` 命令契约。
-- `triton web --print-command --json` 在仓库根目录返回可执行计划，不启动长进程。
+- `triton web --print-command --json` 在仓库根目录返回 dev 可执行计划，不启动长进程。
+- release tarball 包含 `web/index.html`，Homebrew formula 安装 `pkgshare/web` 并验证 packaged plan。
 - `cd Web && npm test` 与 `cd Web && npm run build` 继续通过。
 - release script 完成下一版发布，GitHub Release 和 Homebrew 可获取。

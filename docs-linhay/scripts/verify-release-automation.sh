@@ -57,6 +57,32 @@ grep -q 'actions/cache@v4' "${ci_workflow}" || fail "ci workflow must cache Swif
 grep -q 'verify-spm-dependency-boundary[.]sh' "${ci_workflow}" || fail "ci workflow must validate the SwiftPM iOS/CLI dependency boundary"
 grep -q 'swift build --package-path CLI --scratch-path [.]build/cli -c release --product triton' "${ci_workflow}" \
   || fail "ci workflow must build the CLI from CLI/Package.swift"
+web_build_count="$(grep -Fc 'npm --prefix Web run build' "${ci_workflow}" || true)"
+if (( web_build_count < 2 )); then
+  fail "ci workflow must build Web/dist before both arm64 and x86_64 CLI artifacts"
+fi
+node_setup_count="$(grep -Fc 'actions/setup-node@v6' "${ci_workflow}" || true)"
+if (( node_setup_count < 2 )); then
+  fail "ci workflow must pin Node before building bundled Web assets on both CLI release jobs"
+fi
+grep -Fq 'cache-dependency-path: Web/package-lock.json' "${ci_workflow}" \
+  || fail "ci workflow must cache npm dependencies using Web/package-lock.json"
+web_copy_count="$(grep -Fc 'cp -R "Web/dist/." "${package_dir}/web/"' "${ci_workflow}" || true)"
+if (( web_copy_count < 2 )); then
+  fail "ci workflow must copy Web/dist into both CLI artifact web directories"
+fi
+grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${ci_workflow}" \
+  || fail "CLI package README must explain bundled Web startup through triton web"
+grep -Fq 'triton-macos-arm64/web/index[.]html' "${ci_workflow}" \
+  || fail "ci workflow must validate the arm64 CLI tarball contains bundled Web assets"
+grep -Fq 'triton-macos-x86_64/web/index[.]html' "${ci_workflow}" \
+  || fail "ci workflow must validate the x86_64 CLI tarball contains bundled Web assets"
+grep -Fq 'pkgshare.install web_dir => "web"' "${root}/.github/homebrew/triton.rb.template" \
+  || fail "Homebrew formula must install bundled Web assets into pkgshare/web"
+grep -Fq 'triton web --print-command --json' "${root}/.github/homebrew/triton.rb.template" \
+  || fail "Homebrew formula test must verify triton web resolves packaged mode"
+grep -Fq 'assert_equal "packaged", web_plan["mode"]' "${root}/.github/homebrew/triton.rb.template" \
+  || fail "Homebrew formula test must assert packaged triton web mode"
 grep -q 'skip Homebrew formula rendering for non-tag release asset validation' "${ci_workflow}" \
   || fail "ci workflow must skip Homebrew formula rendering for non-tag release asset validation"
 if grep -q '| rg '\''\^  version: '\''' "${ci_workflow}"; then

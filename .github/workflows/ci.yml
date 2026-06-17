@@ -206,6 +206,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Web/package-lock.json
+
       - name: Write CLI version
         id: version
         shell: bash
@@ -221,6 +228,11 @@ jobs:
 
       - name: Build CLI
         run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+
+      - name: Build bundled Web static assets
+        run: |
+          npm --prefix Web ci
+          npm --prefix Web run build
 
       - name: Package CLI artifact
         shell: bash
@@ -239,6 +251,8 @@ jobs:
           mkdir -p "${package_dir}"
           cp ".build/cli/release/triton" "${package_dir}/triton"
           chmod +x "${package_dir}/triton"
+          mkdir -p "${package_dir}/web"
+          cp -R "Web/dist/." "${package_dir}/web/"
 
           cat > "${package_dir}/README.txt" <<README
           TritonKit CLI
@@ -248,12 +262,17 @@ jobs:
 
           Install:
             cp triton /usr/local/bin/triton
+            mkdir -p /usr/local/share/triton/web
+            cp -R web/. /usr/local/share/triton/web/
 
           Homebrew:
             brew install NeptuneKit/tap/triton
 
           Verify:
             triton version --json
+
+          Bundled Web:
+            triton web starts the bundled Web Device Hub from ./web.
           README
 
           (
@@ -279,6 +298,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Web/package-lock.json
+
       - name: Write CLI version
         id: version
         shell: bash
@@ -294,6 +320,11 @@ jobs:
 
       - name: Build CLI
         run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+
+      - name: Build bundled Web static assets
+        run: |
+          npm --prefix Web ci
+          npm --prefix Web run build
 
       - name: Package CLI artifact
         shell: bash
@@ -312,6 +343,8 @@ jobs:
           mkdir -p "${package_dir}"
           cp ".build/cli/release/triton" "${package_dir}/triton"
           chmod +x "${package_dir}/triton"
+          mkdir -p "${package_dir}/web"
+          cp -R "Web/dist/." "${package_dir}/web/"
 
           cat > "${package_dir}/README.txt" <<README
           TritonKit CLI
@@ -321,12 +354,17 @@ jobs:
 
           Install:
             cp triton /usr/local/bin/triton
+            mkdir -p /usr/local/share/triton/web
+            cp -R web/. /usr/local/share/triton/web/
 
           Homebrew:
             brew install NeptuneKit/tap/triton
 
           Verify:
             triton version --json
+
+          Bundled Web:
+            triton web starts the bundled Web Device Hub from ./web.
           README
 
           (
@@ -403,6 +441,9 @@ jobs:
           test -f dist/triton-macos-arm64.tar.gz
           test -f dist/tritonkit-skills.tar.gz
           test -f dist/tritonkit_checksums.txt
+          tar -tf dist/triton-macos-arm64.tar.gz | grep -Eq '^triton-macos-arm64/web/index[.]html$'
+          tar -xOf dist/triton-macos-arm64.tar.gz triton-macos-arm64/README.txt \
+            | grep -Fq 'triton web starts the bundled Web Device Hub from ./web.'
           ! compgen -G "dist/*.zip" >/dev/null
           ! test -f dist/tritonkit-dev-feedback.tar.gz
           ! test -f dist/tritonkit-emulator-cli-takeover.tar.gz
@@ -506,6 +547,9 @@ jobs:
 
           (
             cd dist
+            tar -tf triton-macos-x86_64.tar.gz | grep -Eq '^triton-macos-x86_64/web/index[.]html$'
+            tar -xOf triton-macos-x86_64.tar.gz triton-macos-x86_64/README.txt \
+              | grep -Fq 'triton web starts the bundled Web Device Hub from ./web.'
             grep -v 'triton-macos-x86_64[.]tar[.]gz$' tritonkit_checksums.txt > tritonkit_checksums.merged.txt
             sha256sum triton-macos-x86_64.tar.gz >> tritonkit_checksums.merged.txt
             sort -k 2 tritonkit_checksums.merged.txt > tritonkit_checksums.txt

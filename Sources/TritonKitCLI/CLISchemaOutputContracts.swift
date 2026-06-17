@@ -44,15 +44,17 @@ func webLaunchPlanOutputContract() -> TKCommandOutputContract {
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether the launch plan was resolved"),
             ("action", "String", true, "Stable action id; web.start"),
-            ("repoRoot", "String", true, "Resolved TritonKit checkout root"),
-            ("webRoot", "String", true, "Resolved Web package directory"),
+            ("mode", "String", true, "dev when launching checkout Vite, packaged when serving bundled Web/dist"),
+            ("repoRoot", "String?", false, "Resolved TritonKit checkout root in dev mode, or bundled package root in packaged mode"),
+            ("webRoot", "String?", false, "Resolved Web package directory in dev mode"),
+            ("bundledWebRoot", "String?", false, "Bundled static Web asset directory in packaged mode"),
             ("tritonBin", "String", true, "Triton CLI path injected into TRITONKIT_TRITON_BIN"),
-            ("host", "String", true, "Vite host"),
-            ("port", "Int", true, "Vite port"),
+            ("host", "String", true, "Host bind address"),
+            ("port", "Int", true, "Web Device Hub port"),
             ("url", "String", true, "Browser URL for the Device Hub"),
             ("readonly", "Bool", true, "Whether the Web surface is readonly for business control"),
             ("installCommand", "WebLaunchCommand?", false, "Optional npm install command"),
-            ("command", "WebLaunchCommand", true, "npm run dev command"),
+            ("command", "WebLaunchCommand", true, "npm run dev command in dev mode, or triton web packaged server command in packaged mode"),
             ("environment", "[String:String]", true, "Environment overrides passed to child processes"),
         ])
     )

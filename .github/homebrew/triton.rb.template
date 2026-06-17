@@ -23,7 +23,11 @@ class Triton < Formula
     binary = Dir["triton-macos-*/triton"].first || Dir["triton"].first
     odie "triton binary not found in release archive" if binary.nil?
 
+    web_dir = Dir["triton-macos-*/web"].first || Dir["web"].first
+    odie "bundled web assets not found in release archive" if web_dir.nil?
+
     bin.install binary => "triton"
+    pkgshare.install web_dir => "web"
   end
 
   test do
@@ -34,5 +38,12 @@ class Triton < Formula
     version_json = JSON.parse(shell_output("#{bin}/triton version --json"))
     assert_equal true, version_json["ok"]
     assert_equal version.to_s, version_json["version"]
+
+    assert_path_exists pkgshare/"web/index.html"
+
+    web_plan = JSON.parse(shell_output("#{bin}/triton web --print-command --json"))
+    assert_equal true, web_plan["ok"]
+    assert_equal "packaged", web_plan["mode"]
+    assert_equal "#{pkgshare}/web", web_plan["bundledWebRoot"]
   end
 end
