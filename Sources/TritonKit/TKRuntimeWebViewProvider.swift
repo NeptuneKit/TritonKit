@@ -163,6 +163,39 @@ func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextB
     """
 }
 
+func bridgeCallScript(method: String, arguments: [String: TKJSONValue]) throws -> String {
+    let methodData = try JSONEncoder().encode(method)
+    let argumentsData = try JSONEncoder().encode(arguments)
+    guard let methodLiteral = String(data: methodData, encoding: .utf8),
+          let argumentsLiteral = String(data: argumentsData, encoding: .utf8) else {
+        throw NSError(domain: "TritonKit.WebViewBridge", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode bridge call"])
+    }
+    return """
+    (function() {
+      var method = \(methodLiteral);
+      var args = \(argumentsLiteral);
+      var bridge = window.__tritonBridge;
+      if (!bridge || !bridge.methods || typeof bridge.methods[method] !== "function") {
+        return JSON.stringify({
+          ok: false,
+          error: {
+            code: "webview_method_not_allowed",
+            message: "Method is not allowlisted: " + method,
+            hint: "Expose the method through window.__tritonBridge.methods or use triton webview snapshot --include metadata,text,dom,forms --json for linked validation."
+          }
+        });
+      }
+      try {
+        var result = bridge.methods[method](args);
+        if (result === undefined) { result = null; }
+        return JSON.stringify({ ok: true, result: result });
+      } catch (error) {
+        return JSON.stringify({ ok: false, error: { code: "javascript_error", message: String(error && error.message ? error.message : error) } });
+      }
+    })()
+    """
+}
+
 #if canImport(UIKit) && canImport(WebKit)
 import UIKit
 import WebKit
@@ -606,9 +639,10 @@ private func webViewDescriptor(for webView: WKWebView) -> TKWebViewDescriptor {
         canGoBack: webView.canGoBack,
         canGoForward: webView.canGoForward,
         providerStatus: "available",
-        bridgeStatus: "unavailable",
-        capabilities: ["visible", "webview.current", "webview.list", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.wait", "webview.events"],
-        missingCapabilities: ["webview.bridge-call", "webview.tap", "webview.type"]
+        bridgeStatus: "page-bridge-required",
+        capabilities: ["visible", "webview.current", "webview.list", "webview.current-url", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.wait", "webview.events"],
+        missingCapabilities: ["webview.bridge-call", "webview.dom-input", "webview.contenteditable-typing", "webview.tap", "webview.type"],
+        providerCapabilities: TKWebViewProviderCapabilities.iosRuntimeDefaults()
     )
 }
 
@@ -693,32 +727,6 @@ private func evaluateJavaScript(_ script: String, in webView: WKWebView) async t
             }
         }
     }
-}
-
-private func bridgeCallScript(method: String, arguments: [String: TKJSONValue]) throws -> String {
-    let methodData = try JSONEncoder().encode(method)
-    let argumentsData = try JSONEncoder().encode(arguments)
-    guard let methodLiteral = String(data: methodData, encoding: .utf8),
-          let argumentsLiteral = String(data: argumentsData, encoding: .utf8) else {
-        throw NSError(domain: "TritonKit.WebViewBridge", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode bridge call"])
-    }
-    return """
-    (function() {
-      var method = \(methodLiteral);
-      var args = \(argumentsLiteral);
-      var bridge = window.__tritonBridge;
-      if (!bridge || !bridge.methods || typeof bridge.methods[method] !== "function") {
-        return JSON.stringify({ ok: false, error: { code: "webview_method_not_allowed", message: "Method is not allowlisted: " + method } });
-      }
-      try {
-        var result = bridge.methods[method](args);
-        if (result === undefined) { result = null; }
-        return JSON.stringify({ ok: true, result: result });
-      } catch (error) {
-        return JSON.stringify({ ok: false, error: { code: "javascript_error", message: String(error && error.message ? error.message : error) } });
-      }
-    })()
-    """
 }
 
 private struct BridgeEnvelope: Decodable {

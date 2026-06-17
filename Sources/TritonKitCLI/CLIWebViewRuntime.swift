@@ -176,6 +176,7 @@ func makeWebViewCurrentURLSummary(from list: TKWebViewListResponse, webViewID: S
         pageSessionID: selected.pageSessionID,
         providerStatus: selected.providerStatus,
         bridgeStatus: selected.bridgeStatus,
+        providerCapabilities: selected.providerCapabilities,
         sourceCommands: list.sourceCommands
     )
 }
