@@ -54,7 +54,7 @@ func runWebViewCurrent(
         let list = try await webViewCandidates(action: "webview.current", platform: platform, target: target, hdc: hdc, host: host, port: port, runtimeBaseURL: runtimeBaseURL, output: output)
         resolvedTarget = list.target
         let selected = try TKSelectCurrentWebView(from: list.candidates, webViewID: webViewID)
-        let response = TKWebViewCurrentResponse(ok: true, action: "webview.current", platform: list.platform, capturedAt: list.capturedAt, target: list.target, webView: selected, sources: list.sources, sourceCommands: list.sourceCommands, note: list.note)
+        let response = TKWebViewCurrentResponse(ok: true, action: "webview.current", platform: list.platform, capturedAt: list.capturedAt, target: list.target, webView: selected, sources: list.sources, sourceCommands: list.sourceCommands, warnings: list.warnings, note: list.note)
         switch outputFormat {
         case .json:
             print(try encodeJSON(response))
@@ -708,6 +708,7 @@ private func normalizeProviderWebViewList(_ response: TKWebViewListResponse, act
         candidates: response.candidates,
         sources: response.sources,
         sourceCommands: response.sourceCommands,
+        warnings: response.warnings,
         note: response.note
     )
 }
@@ -730,8 +731,43 @@ private func harmonyWebViewCandidates(action: String, target: String, hdc: Strin
             TKWebViewSource(name: "webview-provider", available: false, reason: "provider not registered"),
         ],
         sourceCommands: layout.sourceCommands,
+        warnings: harmonyRouteWebViewWarnings(hasRuntimeBaseURL: runtimeBaseURL != nil, hasCandidates: !candidates.isEmpty),
         note: "Harmony host layout can expose visible Web candidates only. DOM, URL, JavaScript, and bridge calls require an embedded WebView provider."
     )
+}
+
+func harmonyRouteWebViewWarnings(hasRuntimeBaseURL: Bool, hasCandidates: Bool) -> [TKWebViewDiagnosticWarning] {
+    var warnings: [TKWebViewDiagnosticWarning] = [
+        TKWebViewDiagnosticWarning(
+            code: "harmony_route_webview_snapshot_partial",
+            message: "Harmony host layout can identify visible WebView candidates, but it cannot expose native route stack, WebView initURL/currentURL, or route rewrite decisions without an embedded provider.",
+            nextAction: TKCLINextAction(command: "webview", args: ["list", "--platform", "harmony", "--json"], category: "observe"),
+            source: "host-layout"
+        ),
+        TKWebViewDiagnosticWarning(
+            code: "harmony_route_loop_detector_provider_required",
+            message: "Route-loop detection requires route history plus WebView navigation history; capture an embedded provider snapshot or evidence bundle before deciding whether an init URL was intercepted.",
+            nextAction: TKCLINextAction(command: "evidence", args: ["--name", "harmony-route-loop", "--json"], category: "evidence"),
+            source: "webview-provider"
+        ),
+    ]
+    if !hasRuntimeBaseURL {
+        warnings.append(TKWebViewDiagnosticWarning(
+            code: "harmony_runtime_base_url_missing",
+            message: "No Harmony runtime base URL was provided, so TritonKit cannot fuse host layout with route/WebView provider state.",
+            nextAction: TKCLINextAction(command: "device", args: ["runtime-url", "--platform", "harmony", "--probe-manifest", "--json"], category: "diagnose"),
+            source: "runtime-tree"
+        ))
+    }
+    if !hasCandidates {
+        warnings.append(TKWebViewDiagnosticWarning(
+            code: "harmony_webview_candidate_not_found",
+            message: "The Harmony host layout did not expose a visible WebView candidate. Dump layout evidence before falling back to raw HDC inspection.",
+            nextAction: TKCLINextAction(command: "ax", args: ["--platform", "harmony", "--json"], category: "observe"),
+            source: "host-layout"
+        ))
+    }
+    return warnings
 }
 
 private func webViewDescriptors(fromAX nodes: [TKAXNode], platform: String) -> [TKWebViewDescriptor] {

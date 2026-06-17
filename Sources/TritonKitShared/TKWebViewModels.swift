@@ -29,6 +29,25 @@ public struct TKWebViewSource: Codable, Equatable {
     }
 }
 
+public struct TKWebViewDiagnosticWarning: Codable, Equatable {
+    public let code: String
+    public let message: String
+    public let nextAction: TKCLINextAction?
+    public let source: String?
+
+    public init(
+        code: String,
+        message: String,
+        nextAction: TKCLINextAction? = nil,
+        source: String? = nil
+    ) {
+        self.code = code
+        self.message = message
+        self.nextAction = nextAction
+        self.source = source
+    }
+}
+
 public struct TKWebViewProviderCapability: Codable, Equatable {
     public let supported: Bool
     public let reason: String?
@@ -190,6 +209,7 @@ public struct TKWebViewListResponse: Codable, Equatable {
     public let candidates: [TKWebViewDescriptor]
     public let sources: [TKWebViewSource]
     public let sourceCommands: [String]
+    public let warnings: [TKWebViewDiagnosticWarning]
     public let note: String
 
     public init(
@@ -203,6 +223,7 @@ public struct TKWebViewListResponse: Codable, Equatable {
         candidates: [TKWebViewDescriptor],
         sources: [TKWebViewSource],
         sourceCommands: [String],
+        warnings: [TKWebViewDiagnosticWarning] = [],
         note: String
     ) {
         self.ok = ok
@@ -215,6 +236,7 @@ public struct TKWebViewListResponse: Codable, Equatable {
         self.candidates = candidates
         self.sources = sources
         self.sourceCommands = sourceCommands
+        self.warnings = warnings
         self.note = note
     }
 
@@ -229,6 +251,7 @@ public struct TKWebViewListResponse: Codable, Equatable {
         case candidates
         case sources
         case sourceCommands
+        case warnings
         case note
     }
 
@@ -245,6 +268,7 @@ public struct TKWebViewListResponse: Codable, Equatable {
         self.candidates = try container.decode([TKWebViewDescriptor].self, forKey: .candidates)
         self.sources = sources
         self.sourceCommands = try container.decode([String].self, forKey: .sourceCommands)
+        self.warnings = try container.decodeIfPresent([TKWebViewDiagnosticWarning].self, forKey: .warnings) ?? []
         self.note = try container.decode(String.self, forKey: .note)
     }
 
@@ -268,6 +292,7 @@ public struct TKWebViewCurrentResponse: Codable, Equatable {
     public let webView: TKWebViewDescriptor
     public let sources: [TKWebViewSource]
     public let sourceCommands: [String]
+    public let warnings: [TKWebViewDiagnosticWarning]
     public let note: String
 
     public init(
@@ -280,6 +305,7 @@ public struct TKWebViewCurrentResponse: Codable, Equatable {
         webView: TKWebViewDescriptor,
         sources: [TKWebViewSource],
         sourceCommands: [String],
+        warnings: [TKWebViewDiagnosticWarning] = [],
         note: String
     ) {
         self.ok = ok
@@ -291,6 +317,7 @@ public struct TKWebViewCurrentResponse: Codable, Equatable {
         self.webView = webView
         self.sources = sources
         self.sourceCommands = sourceCommands
+        self.warnings = warnings
         self.note = note
     }
 
@@ -304,6 +331,7 @@ public struct TKWebViewCurrentResponse: Codable, Equatable {
         case webView
         case sources
         case sourceCommands
+        case warnings
         case note
     }
 
@@ -319,6 +347,7 @@ public struct TKWebViewCurrentResponse: Codable, Equatable {
         self.webView = try container.decode(TKWebViewDescriptor.self, forKey: .webView)
         self.sources = sources
         self.sourceCommands = try container.decode([String].self, forKey: .sourceCommands)
+        self.warnings = try container.decodeIfPresent([TKWebViewDiagnosticWarning].self, forKey: .warnings) ?? []
         self.note = try container.decode(String.self, forKey: .note)
     }
 }
@@ -446,6 +475,7 @@ public struct TKWebViewSnapshotResponse: Codable, Equatable {
     public let forms: [TKWebViewFormFieldSummary]
     public let links: [TKWebViewLinkSummary]
     public let skipped: [TKRuntimeSnapshotSkipped]
+    public let warnings: [TKWebViewDiagnosticWarning]
     public let truncation: TKWebViewSnapshotTruncation
     public let redaction: TKWebViewRedaction
 
@@ -462,6 +492,7 @@ public struct TKWebViewSnapshotResponse: Codable, Equatable {
         forms: [TKWebViewFormFieldSummary] = [],
         links: [TKWebViewLinkSummary] = [],
         skipped: [TKRuntimeSnapshotSkipped] = [],
+        warnings: [TKWebViewDiagnosticWarning] = [],
         truncation: TKWebViewSnapshotTruncation = TKWebViewSnapshotTruncation(),
         redaction: TKWebViewRedaction = TKWebViewRedaction()
     ) {
@@ -477,6 +508,7 @@ public struct TKWebViewSnapshotResponse: Codable, Equatable {
         self.forms = forms
         self.links = links
         self.skipped = skipped
+        self.warnings = warnings
         self.truncation = truncation
         self.redaction = redaction
     }

@@ -220,6 +220,39 @@ struct WebViewRouteTests {
         #expect(schema.examples.contains("triton webview wait --text Ready --json"))
     }
 
+    @Test("Harmony route WebView warnings expose next actions")
+    func harmonyRouteWebViewWarningsExposeNextActions() {
+        let warnings = harmonyRouteWebViewWarnings(hasRuntimeBaseURL: false, hasCandidates: true)
+
+        #expect(warnings.map(\.code).contains("harmony_route_webview_snapshot_partial"))
+        #expect(warnings.map(\.code).contains("harmony_route_loop_detector_provider_required"))
+        #expect(warnings.map(\.code).contains("harmony_runtime_base_url_missing"))
+        #expect(warnings.first { $0.code == "harmony_route_loop_detector_provider_required" }?.nextAction?.command == "evidence")
+        #expect(warnings.first { $0.code == "harmony_runtime_base_url_missing" }?.nextAction?.args.contains("runtime-url") == true)
+    }
+
+    @Test("WebView responses decode missing warnings as empty")
+    func webViewResponsesDecodeMissingWarningsAsEmpty() throws {
+        let data = Data("""
+        {
+          "ok": true,
+          "action": "webview.list",
+          "platform": "harmony",
+          "capturedAt": "2026-06-17T00:00:00Z",
+          "target": "harmony:127.0.0.1:10100",
+          "current": null,
+          "candidates": [],
+          "sources": [{ "name": "host-layout", "available": true, "sourceCommands": [] }],
+          "sourceCommands": [],
+          "note": "legacy"
+        }
+        """.utf8)
+
+        let decoded = try JSONDecoder().decode(TKWebViewListResponse.self, from: data)
+
+        #expect(decoded.warnings.isEmpty)
+    }
+
     @Test("wait text matches exact visible text lines only")
     func waitTextMatchesExactVisibleTextLinesOnly() {
         let snapshot = webViewSnapshot(
@@ -344,6 +377,7 @@ private func webViewList(candidates: [TKWebViewDescriptor]) -> TKWebViewListResp
         candidates: candidates,
         sources: [TKWebViewSource(name: "webview-provider", available: true)],
         sourceCommands: ["triton webview current-url"],
+        warnings: [],
         note: "test"
     )
 }
