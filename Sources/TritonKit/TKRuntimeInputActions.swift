@@ -231,10 +231,24 @@ func performControlTap(
         )
     }
 
+    if let button = control as? UIButton, button.accessibilityActivate() {
+        return TKInputResult.success(
+            action: action,
+            message: "Activated UIButton via accessibilityActivate",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: strategy ?? "uikit-accessibility-activate"
+        )
+    }
+
     guard let dispatch = preferredTapDispatch(for: control) else {
         return TKInputResult.failure(
             action: action,
-            message: "Target UIControl has no primary or touchUpInside action",
+            message: "Target UIControl has no primary or touchUpInside action and did not activate through public UIKit accessibilityActivate",
             targetOID: activationOID,
             targetClassName: activationClassName,
             matchedOID: matched.oid,
