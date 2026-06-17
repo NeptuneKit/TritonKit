@@ -401,6 +401,36 @@ struct TKObservationModelsTests {
         #expect(try JSONDecoder().decode(TKWebViewEvent.self, from: eventData).name == "checkout.ready")
     }
 
+    @Test("WebView descriptor exposes provider capability details")
+    func webViewProviderCapabilityDetailsShape() throws {
+        let descriptor = TKWebViewDescriptor(
+            webViewID: "ios-webkit:42",
+            platform: "ios",
+            source: "webview-provider",
+            nodeID: "ios-webkit:42",
+            role: "webview",
+            candidateOnly: false,
+            confidence: 1,
+            providerStatus: "available",
+            bridgeStatus: "page-bridge-required",
+            capabilities: ["webview.current-url", "webview.snapshot", "webview.events"],
+            missingCapabilities: ["webview.dom-input", "webview.contenteditable-typing"],
+            providerCapabilities: TKWebViewProviderCapabilities.iosRuntimeDefaults()
+        )
+
+        let data = try JSONEncoder().encode(descriptor)
+        let decoded = try JSONDecoder().decode(TKWebViewDescriptor.self, from: data)
+
+        #expect(decoded.providerCapabilities?.supportsCurrentURL.supported == true)
+        #expect(decoded.providerCapabilities?.supportsSnapshot.supported == true)
+        #expect(decoded.providerCapabilities?.supportsEvents.reason == "page bridge event buffer is available after bridge installation")
+        #expect(decoded.providerCapabilities?.supportsBridgeCall.nextAction?.command == "webview")
+        #expect(decoded.providerCapabilities?.supportsDOMInput.supported == false)
+        #expect(decoded.providerCapabilities?.supportsDOMInput.reason == "generic DOM input is out of scope for the embedded iOS provider")
+        #expect(decoded.providerCapabilities?.supportsDOMInput.nextAction?.args == ["snapshot", "--include", "metadata,text,dom,forms", "--json"])
+        #expect(decoded.providerCapabilities?.supportsContentEditableTyping.supported == false)
+    }
+
     @Test("WebView request types and Harmony runtime routes are stable")
     func webViewRequestTypesAndRoutes() throws {
         #expect(TKCLICommandRequest(type: "webViewList").requestType == .webViewList)

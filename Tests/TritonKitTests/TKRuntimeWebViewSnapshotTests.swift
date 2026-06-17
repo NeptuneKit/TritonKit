@@ -80,4 +80,28 @@ struct TKRuntimeWebViewSnapshotTests {
         #expect(script.contains("links.length < maxNodes"))
         #expect(script.contains("dom.length + forms.length + links.length"))
     }
+
+    @Test("iOS WebView provider capability defaults expose unsupported recovery")
+    func iOSProviderCapabilityDefaultsExposeRecovery() throws {
+        let capabilities = TKWebViewProviderCapabilities.iosRuntimeDefaults()
+
+        #expect(capabilities.supportsCurrentURL.supported)
+        #expect(capabilities.supportsSnapshot.supported)
+        #expect(capabilities.supportsBridgeCall.supported == false)
+        #expect(capabilities.supportsBridgeCall.reason == "page must expose an allowlisted window.__tritonBridge.methods entry")
+        #expect(capabilities.supportsBridgeCall.nextAction?.args == ["call", "<method>", "--json"])
+        #expect(capabilities.supportsEvents.supported)
+        #expect(capabilities.supportsDOMInput.supported == false)
+        #expect(capabilities.supportsDOMInput.nextAction?.command == "webview")
+        #expect(capabilities.supportsContentEditableTyping.reason == "contenteditable typing is not provided by the embedded iOS provider")
+    }
+
+    @Test("bridge method not allowed script includes recovery hint")
+    func bridgeMethodNotAllowedIncludesRecoveryHint() throws {
+        let script = try bridgeCallScript(method: "missingMethod", arguments: [:])
+
+        #expect(script.contains("webview_method_not_allowed"))
+        #expect(script.contains("window.__tritonBridge.methods"))
+        #expect(script.contains("triton webview snapshot --include metadata,text,dom,forms --json"))
+    }
 }

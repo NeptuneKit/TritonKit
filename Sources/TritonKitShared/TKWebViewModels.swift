@@ -29,6 +29,80 @@ public struct TKWebViewSource: Codable, Equatable {
     }
 }
 
+public struct TKWebViewProviderCapability: Codable, Equatable {
+    public let supported: Bool
+    public let reason: String?
+    public let nextAction: TKCLINextAction?
+
+    public init(
+        supported: Bool,
+        reason: String? = nil,
+        nextAction: TKCLINextAction? = nil
+    ) {
+        self.supported = supported
+        self.reason = reason
+        self.nextAction = nextAction
+    }
+}
+
+public struct TKWebViewProviderCapabilities: Codable, Equatable {
+    public let supportsCurrentURL: TKWebViewProviderCapability
+    public let supportsSnapshot: TKWebViewProviderCapability
+    public let supportsBridgeCall: TKWebViewProviderCapability
+    public let supportsEvents: TKWebViewProviderCapability
+    public let supportsDOMInput: TKWebViewProviderCapability
+    public let supportsContentEditableTyping: TKWebViewProviderCapability
+
+    public init(
+        supportsCurrentURL: TKWebViewProviderCapability,
+        supportsSnapshot: TKWebViewProviderCapability,
+        supportsBridgeCall: TKWebViewProviderCapability,
+        supportsEvents: TKWebViewProviderCapability,
+        supportsDOMInput: TKWebViewProviderCapability,
+        supportsContentEditableTyping: TKWebViewProviderCapability
+    ) {
+        self.supportsCurrentURL = supportsCurrentURL
+        self.supportsSnapshot = supportsSnapshot
+        self.supportsBridgeCall = supportsBridgeCall
+        self.supportsEvents = supportsEvents
+        self.supportsDOMInput = supportsDOMInput
+        self.supportsContentEditableTyping = supportsContentEditableTyping
+    }
+
+    public static func iosRuntimeDefaults() -> TKWebViewProviderCapabilities {
+        TKWebViewProviderCapabilities(
+            supportsCurrentURL: TKWebViewProviderCapability(
+                supported: true,
+                nextAction: TKCLINextAction(command: "webview", args: ["current-url", "--json"])
+            ),
+            supportsSnapshot: TKWebViewProviderCapability(
+                supported: true,
+                nextAction: TKCLINextAction(command: "webview", args: ["snapshot", "--include", "metadata,text,dom,forms", "--json"])
+            ),
+            supportsBridgeCall: TKWebViewProviderCapability(
+                supported: false,
+                reason: "page must expose an allowlisted window.__tritonBridge.methods entry",
+                nextAction: TKCLINextAction(command: "webview", args: ["call", "<method>", "--json"])
+            ),
+            supportsEvents: TKWebViewProviderCapability(
+                supported: true,
+                reason: "page bridge event buffer is available after bridge installation",
+                nextAction: TKCLINextAction(command: "webview", args: ["events", "--json"])
+            ),
+            supportsDOMInput: TKWebViewProviderCapability(
+                supported: false,
+                reason: "generic DOM input is out of scope for the embedded iOS provider",
+                nextAction: TKCLINextAction(command: "webview", args: ["snapshot", "--include", "metadata,text,dom,forms", "--json"])
+            ),
+            supportsContentEditableTyping: TKWebViewProviderCapability(
+                supported: false,
+                reason: "contenteditable typing is not provided by the embedded iOS provider",
+                nextAction: TKCLINextAction(command: "webview", args: ["snapshot", "--include", "metadata,text,dom,forms", "--json"])
+            )
+        )
+    }
+}
+
 public struct TKWebViewDescriptor: Codable, Equatable {
     public let webViewID: String
     public let platform: String
@@ -52,6 +126,7 @@ public struct TKWebViewDescriptor: Codable, Equatable {
     public let bridgeStatus: String
     public let capabilities: [String]
     public let missingCapabilities: [String]
+    public let providerCapabilities: TKWebViewProviderCapabilities?
 
     public init(
         webViewID: String,
@@ -75,7 +150,8 @@ public struct TKWebViewDescriptor: Codable, Equatable {
         providerStatus: String = "unavailable",
         bridgeStatus: String = "unavailable",
         capabilities: [String],
-        missingCapabilities: [String]
+        missingCapabilities: [String],
+        providerCapabilities: TKWebViewProviderCapabilities? = nil
     ) {
         self.webViewID = webViewID
         self.platform = platform
@@ -99,6 +175,7 @@ public struct TKWebViewDescriptor: Codable, Equatable {
         self.bridgeStatus = bridgeStatus
         self.capabilities = capabilities
         self.missingCapabilities = missingCapabilities
+        self.providerCapabilities = providerCapabilities
     }
 }
 
