@@ -1,9 +1,77 @@
 import Foundation
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite
 struct XcodeDiagnosticsTests {
+    @Test("xcodebuild stale DerivedData outside-root output is parsed into actionable diagnostics")
+    func parsesStaleDerivedDataOutsideRootDiagnostics() throws {
+        let output = """
+        warning: Stale file '/Users/old/repo/.triton/DerivedData/Build/Intermediates.noindex/App.build/Debug-iphonesimulator/App.build/Objects-normal/arm64/HomeView.o' is located outside of the allowed root paths.
+        warning: Stale file '/Users/old/repo/.triton/DerivedData/Build/Products/Debug-iphonesimulator/App.app/App' is located outside of the allowed root paths.
+        ** BUILD FAILED **
+        """
+
+        let diagnostic = try #require(XcodeBuildOutputDiagnosticsParser.parse(stdout: "", stderr: output))
+
+        #expect(diagnostic.kind == "stale-derived-data-outside-root")
+        #expect(diagnostic.matchCount == 2)
+        #expect(diagnostic.samples.count == 2)
+        #expect(diagnostic.samples[0].path == "/Users/old/repo/.triton/DerivedData/Build/Intermediates.noindex/App.build/Debug-iphonesimulator/App.build/Objects-normal/arm64/HomeView.o")
+        #expect(diagnostic.samples[0].message.contains("allowed root paths"))
+        #expect(diagnostic.recovery.contains("--derived-data-path"))
+        #expect(diagnostic.recovery.contains(".triton/DerivedData"))
+        #expect(diagnostic.nextAction.command == "xcode")
+        #expect(diagnostic.nextAction.args == ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"])
+        #expect(diagnostic.nextAction.category == "recover")
+    }
+
+    @Test("xcodebuild stale DerivedData diagnostics are exposed on action summaries")
+    func actionSummaryCarriesStaleDerivedDataDiagnostics() throws {
+        let output = """
+        Stale file '/tmp/old/.triton/DerivedData/Build/Products/Debug-iphonesimulator/App.app/App' is located outside of the allowed root paths.
+        """
+        let diagnostic = try #require(XcodeBuildOutputDiagnosticsParser.parse(stdout: output, stderr: ""))
+        let summary = TKXcodeActionSummary(
+            ok: false,
+            action: "xcode.build",
+            failureCode: "xcodebuild_failed",
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData",
+            durationMs: 1200,
+            sourceCommand: "xcodebuild -workspace App.xcworkspace -scheme App build",
+            exitCode: 65,
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            xcodeDiagnostics: [diagnostic],
+            note: "Build failed."
+        )
+
+        let decoded = try JSONDecoder().decode(TKXcodeActionSummary.self, from: JSONEncoder().encode(summary))
+
+        #expect(decoded.ok == false)
+        #expect(decoded.failureCode == "xcodebuild_failed")
+        #expect(decoded.xcodeDiagnostics?.first?.kind == "stale-derived-data-outside-root")
+        #expect(decoded.xcodeDiagnostics?.first?.nextAction.args.contains("<fresh-derived-data-path>") == true)
+    }
+
+    @Test("xcodebuild output diagnostics ignore generic build failures")
+    func outputDiagnosticsIgnoreGenericBuildFailures() {
+        let output = """
+        CompileSwift normal arm64 HomeView.swift
+        /repo/App/HomeView.swift:10:8: error: no such module 'Missing'
+        ** BUILD FAILED **
+        """
+
+        #expect(XcodeBuildOutputDiagnosticsParser.parse(stdout: output, stderr: "") == nil)
+    }
+
     @Test("xcode process parser extracts build metadata from ps output")
     func processParserExtractsMetadata() throws {
         let output = """

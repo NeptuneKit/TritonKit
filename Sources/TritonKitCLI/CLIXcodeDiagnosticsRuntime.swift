@@ -1,6 +1,52 @@
 import Foundation
 import TritonKitShared
 
+enum XcodeBuildOutputDiagnosticsParser {
+    static func parse(stdout: String, stderr: String, maximumSamples: Int = 5) -> TKXcodeOutputDiagnostic? {
+        let combined = [stdout, stderr]
+            .filter { !$0.isEmpty }
+            .joined(separator: "\n")
+        guard !combined.isEmpty else { return nil }
+
+        let samples = combined
+            .split(whereSeparator: \.isNewline)
+            .compactMap { parseStaleDerivedDataLine(String($0)) }
+        guard !samples.isEmpty else { return nil }
+
+        return TKXcodeOutputDiagnostic(
+            kind: "stale-derived-data-outside-root",
+            message: "xcodebuild reported stale DerivedData files outside the allowed root paths.",
+            matchCount: samples.count,
+            samples: Array(samples.prefix(maximumSamples)),
+            recovery: "Use a fresh --derived-data-path for this checkout or remove the stale .triton/DerivedData directory before retrying.",
+            nextAction: TKCLINextAction(
+                command: "xcode",
+                args: ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"],
+                category: "recover"
+            )
+        )
+    }
+
+    private static func parseStaleDerivedDataLine(_ line: String) -> TKXcodeOutputDiagnosticSample? {
+        guard line.contains("Stale file "),
+              line.contains(" is located outside of the allowed root paths") else {
+            return nil
+        }
+        guard let pathStart = line.range(of: "Stale file '")?.upperBound,
+              let pathEnd = line[pathStart...].firstIndex(of: "'") else {
+            return nil
+        }
+        let path = String(line[pathStart..<pathEnd])
+        guard path.contains("/.triton/DerivedData/") || path.contains(".triton/DerivedData/") else {
+            return nil
+        }
+        return TKXcodeOutputDiagnosticSample(
+            path: path,
+            message: line.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+    }
+}
+
 enum XcodeProcessDiagnosticsParser {
     static func parse(
         psOutput: String,

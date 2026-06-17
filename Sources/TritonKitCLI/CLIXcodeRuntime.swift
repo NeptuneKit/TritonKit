@@ -95,7 +95,12 @@ enum XcodeWorkflowError: Error, CustomStringConvertible {
     }
 }
 
-func runXcodeBuild(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+func runXcodeBuild(
+    invocation: ResolvedXcodeInvocation,
+    jsonl: Bool,
+    timeout: Double? = nil,
+    allowNonZeroExit: Bool = true
+) throws -> TKXcodeActionSummary {
     let command = TKXcodebuildCommand.build(
         workspace: invocation.workspace,
         project: invocation.project,
@@ -105,10 +110,13 @@ func runXcodeBuild(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Do
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath
     ).withTimeout(timeout)
-    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl)
+    let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl, allowNonZeroExit: allowNonZeroExit)
+    let diagnostics = xcodeBuildOutputDiagnostics(result)
+    let ok = result.exitCode == 0
     return TKXcodeActionSummary(
-        ok: true,
+        ok: ok,
         action: "xcode.build",
+        failureCode: ok ? nil : "xcodebuild_failed",
         workspace: invocation.workspace,
         project: invocation.project,
         scheme: invocation.scheme,
@@ -126,7 +134,10 @@ func runXcodeBuild(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Do
         stderrLogPath: result.stderrLogPath,
         stdoutBytes: result.stdoutBytes,
         stderrBytes: result.stderrBytes,
-        note: "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`."
+        xcodeDiagnostics: diagnostics,
+        note: ok
+            ? "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`."
+            : "Build failed. Inspect xcodeDiagnostics first, then stdout/stderr artifacts if needed."
     )
 }
 
@@ -175,7 +186,7 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
     guard let simulator = invocation.simulatorUDID, !simulator.isEmpty else {
         throw XcodeWorkflowError.simulatorRequired
     }
-    let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout)
+    let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: false)
     let product = try resolveBuiltAppProduct(
         invocation: invocation,
         timeout: timeout,
@@ -218,6 +229,13 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
         stderrBytes: launchResult.stderrBytes,
         note: "App launch was submitted to Simulator. Verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence."
     )
+}
+
+func xcodeBuildOutputDiagnostics(_ result: HostProcessResult) -> [TKXcodeOutputDiagnostic]? {
+    guard let diagnostic = XcodeBuildOutputDiagnosticsParser.parse(stdout: result.stdout, stderr: result.stderr) else {
+        return nil
+    }
+    return [diagnostic]
 }
 
 func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool, allowNonZeroExit: Bool = false) throws -> (HostProcessResult, Int) {
