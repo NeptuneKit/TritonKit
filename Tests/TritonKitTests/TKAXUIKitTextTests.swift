@@ -216,6 +216,44 @@ struct TKAXUIKitTextTests {
         #expect(result.strategy == "ancestor-table-cell-selection")
     }
 
+    @Test("ancestor tap selects table view cell ancestor for matched label nodes")
+    func ancestorTapSelectsTableViewCellAncestorForLabel() async throws {
+        let window = makeVisibleTestWindow()
+        defer {
+            window.isHidden = true
+        }
+
+        let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
+        let dataSource = TableDataSource()
+        let delegate = TableDelegate()
+        tableView.dataSource = dataSource
+        tableView.delegate = delegate
+        window.addSubview(tableView)
+        tableView.reloadData()
+        tableView.layoutIfNeeded()
+
+        let indexPath = IndexPath(row: 0, section: 0)
+        let cell = try #require(tableView.cellForRow(at: indexPath))
+        let label = try #require(cell.textLabel)
+        let labelOID = TKObjectRegistry.shared.register(label)
+        let cellOID = TKObjectRegistry.shared.register(cell)
+        let request = TKInputRequest.tap(
+            targetOID: labelOID,
+            matchedOID: labelOID,
+            matchedClassName: NSStringFromClass(UILabel.self),
+            activationStrategy: .ancestor
+        )
+        let result = try await performInputRequest(request)
+
+        #expect(result.ok)
+        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(result.matchedOID == labelOID)
+        #expect(result.activationOID == cellOID)
+        #expect(result.targetOID == cellOID)
+        #expect(result.activationClassName == NSStringFromClass(UITableViewCell.self))
+        #expect(result.strategy == "ancestor-table-cell-selection")
+    }
+
     @Test("smart tap selects collection view cell ancestor for matched label nodes")
     func smartTapSelectsCollectionViewCellAncestorForLabel() async throws {
         let window = makeVisibleTestWindow()
