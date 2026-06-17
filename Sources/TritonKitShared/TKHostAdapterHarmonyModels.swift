@@ -1,16 +1,18 @@
 import Foundation
 
 public enum TKHarmonyHDCCommand {
+    private static let discoveryTimeoutSeconds: Double = 3
+
     public static func version(executable: String = "hdc") -> TKHostCommand {
-        TKHostCommand(executable: executable, arguments: ["-v"])
+        TKHostCommand(executable: executable, arguments: ["-v"], defaultTimeoutSeconds: discoveryTimeoutSeconds)
     }
 
     public static func listTargets(executable: String = "hdc") -> TKHostCommand {
-        TKHostCommand(executable: executable, arguments: ["list", "targets", "-v"])
+        TKHostCommand(executable: executable, arguments: ["list", "targets", "-v"], defaultTimeoutSeconds: discoveryTimeoutSeconds)
     }
 
     public static func listTargetsPlain(executable: String = "hdc") -> TKHostCommand {
-        TKHostCommand(executable: executable, arguments: ["list", "targets"])
+        TKHostCommand(executable: executable, arguments: ["list", "targets"], defaultTimeoutSeconds: discoveryTimeoutSeconds)
     }
 
     public static func bootCompleted(target: String, executable: String = "hdc") -> TKHostCommand {
