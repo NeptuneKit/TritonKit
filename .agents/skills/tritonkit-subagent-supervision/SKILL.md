@@ -51,6 +51,19 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
 7. issue 分支收尾时分别检查 `git status --short --branch`、最近 commit、测试结果、docs/memory 状态，再汇总给用户。
 8. 只有用户明确要求时才 push、开 PR、合并或删除 worktree。
 
+## GitHub Issue 全链路收口
+
+当用户在 issue 并行处理后明确要求“合并、清理、推送、关闭 issue”时，主控 agent 负责收口，不再让 subagent 各自操作远端：
+
+1. 合并前在主仓确认 `git status --short --branch` 干净，并用 `git worktree list --porcelain` 枚举仍注册的 issue worktree。
+2. 对每个 issue 分支核对 worktree clean status、最近提交和对应 issue 编号；主仓若已落后 `origin/main`，先更新或重新评估冲突风险。
+3. 合并前优先用无副作用预检确认冲突风险，例如 `git merge-tree --write-tree main <branch>`；预检通过后再在主仓按分支逐个 `git merge --no-ff`。
+4. 合并完成后跑与本轮改动匹配的 focused tests、必要 build、`git diff --check` 和 `docs-linhay/scripts/check-docs.sh`；若合并后才暴露测试不稳定或契约错位，允许在主仓补一个 integration fix commit。
+5. 只有门禁通过后才清理 worktree；清理顺序为 `git worktree remove <path>`，再用 `git branch -d <branch>` 删除已合并本地分支，不使用强制删除，除非用户明确授权并已确认无未合入提交。
+6. 推送前复查 `git status --short --branch` 和最近提交；推送成功后才关闭 GitHub issue。
+7. 关闭 issue 时只关闭本轮已处理的 issue，不顺手关闭新出现或未验证的 open issue；评论写明合并提交、关键验证命令和剩余风险。
+8. GitHub issue 评论包含命令片段、反引号或复杂 Markdown 时，使用 `docs-linhay/scripts/gh-issue-comment-file.sh` 或 `gh issue comment/close --body-file`，避免 shell 解释评论内容。
+
 ## 停止条件
 
 只有以下情况可以停止：
