@@ -1055,9 +1055,45 @@ public enum TKXcodeBuildSettingsError: Error, Equatable {
     case appPathUnresolved
 }
 
+public struct TKXcodeOutputDiagnosticSample: Codable, Equatable {
+    public let path: String
+    public let message: String
+
+    public init(path: String, message: String) {
+        self.path = path
+        self.message = message
+    }
+}
+
+public struct TKXcodeOutputDiagnostic: Codable, Equatable {
+    public let kind: String
+    public let message: String
+    public let matchCount: Int
+    public let samples: [TKXcodeOutputDiagnosticSample]
+    public let recovery: String
+    public let nextAction: TKCLINextAction
+
+    public init(
+        kind: String,
+        message: String,
+        matchCount: Int,
+        samples: [TKXcodeOutputDiagnosticSample],
+        recovery: String,
+        nextAction: TKCLINextAction
+    ) {
+        self.kind = kind
+        self.message = message
+        self.matchCount = matchCount
+        self.samples = samples
+        self.recovery = recovery
+        self.nextAction = nextAction
+    }
+}
+
 public struct TKXcodeActionSummary: Codable, Equatable {
     public let ok: Bool
     public let action: String
+    public let failureCode: String?
     public let workspace: String?
     public let project: String?
     public let scheme: String
@@ -1081,11 +1117,13 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let testResultSummary: TKXcresultSummaryMetrics?
     public let topFailures: [TKXcresultFailureRecord]?
     public let xcresultNote: String?
+    public let xcodeDiagnostics: [TKXcodeOutputDiagnostic]?
     public let note: String?
 
     public init(
         ok: Bool,
         action: String,
+        failureCode: String? = nil,
         workspace: String?,
         project: String?,
         scheme: String,
@@ -1109,10 +1147,12 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         testResultSummary: TKXcresultSummaryMetrics? = nil,
         topFailures: [TKXcresultFailureRecord]? = nil,
         xcresultNote: String? = nil,
+        xcodeDiagnostics: [TKXcodeOutputDiagnostic]? = nil,
         note: String? = nil
     ) {
         self.ok = ok
         self.action = action
+        self.failureCode = failureCode
         self.workspace = workspace
         self.project = project
         self.scheme = scheme
@@ -1136,6 +1176,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.testResultSummary = testResultSummary
         self.topFailures = topFailures
         self.xcresultNote = xcresultNote
+        self.xcodeDiagnostics = xcodeDiagnostics
         self.note = note
     }
 }

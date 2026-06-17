@@ -98,6 +98,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     fields: schemaFields([
                         ("ok", "Bool", true, "Whether the action completed"),
                         ("action", "String", true, "xcode.build, xcode.test, or xcode.run"),
+                        ("failureCode", "String?", false, "Stable failure code such as xcodebuild_failed when ok=false"),
                         ("workspace", "String?", false, "Workspace path"),
                         ("project", "String?", false, "Project path"),
                         ("scheme", "String", true, "Scheme name"),
@@ -122,6 +123,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         ("testResultSummary", "TKXcresultSummaryMetrics?", false, "Inline parsed xcresult test counts for xcode.test when --result-bundle is available"),
                         ("topFailures", "[TKXcresultFailureRecord]?", false, "Default-redacted top test failures for xcode.test"),
                         ("xcresultNote", "String?", false, "Inline xcresult parsing note"),
+                        ("xcodeDiagnostics", "[TKXcodeOutputDiagnostic]?", false, "Structured diagnostics parsed from xcodebuild stdout/stderr, including stale DerivedData outside-root recovery"),
                         ("note", "String?", false, "Boundary or next-step note"),
                     ])
                 ),
