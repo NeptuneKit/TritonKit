@@ -14,6 +14,7 @@ import {
   Info,
   Keyboard,
   Maximize2,
+  Minus,
   MoreHorizontal,
   MousePointer2,
   Network,
@@ -29,13 +30,14 @@ import {
   ZoomOut,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { HostBridgeNotice } from "./components/HostBridgeNotice";
 import { logs, networkEvents, targets } from "./data/mockData";
-import { fetchHostScreenshot, fetchHostTargets, sendHostInput } from "./data/iosSimulatorClient";
+import { describeHostBridgePresentation } from "./data/hostBridgePresentation";
+import { fetchHostLogs, fetchHostScreenshot, fetchHostTargets } from "./data/iosSimulatorClient";
 import type {
   BridgeCommandOutput,
   DeviceFrameOrientation,
   DeviceTarget,
-  HostInputRequest,
   LogEntry,
   NetworkEvent,
 } from "./types";
@@ -83,6 +85,29 @@ type InputActivity = {
   label: string;
 };
 
+type ReadonlyGestureIntent =
+  | {
+      action: "tap";
+      platform: DeviceTarget["platform"];
+      target: string;
+      x: number;
+      y: number;
+      width?: number;
+      height?: number;
+    }
+  | {
+      action: "swipe";
+      platform: DeviceTarget["platform"];
+      target: string;
+      startX: number;
+      startY: number;
+      endX: number;
+      endY: number;
+      width?: number;
+      height?: number;
+      duration?: number;
+    };
+
 type GesturePoint = {
   x: number;
   y: number;
@@ -115,6 +140,8 @@ type ViewTreeNode = {
 };
 
 const canvasZoomLevels = [0.75, 0.9, 1, 1.15, 1.3, 1.5] as const;
+const previewFpsMin = 1;
+const previewFpsMax = 60;
 
 const iosViewTreeNodes: ViewTreeNode[] = [
   {
@@ -280,9 +307,19 @@ function defaultViewTreeSelection(target: DeviceTarget): string {
   return "stack";
 }
 
+function normalizePreviewFps(value: number) {
+  if (!Number.isFinite(value)) return previewFpsMin;
+  return Math.max(previewFpsMin, Math.min(previewFpsMax, Math.round(value)));
+}
+
+function fpsToRefreshIntervalMs(fps: number) {
+  return Math.max(1000 / previewFpsMax, Math.round(1000 / normalizePreviewFps(fps)));
+}
+
 export function App() {
   const [selectedId, setSelectedId] = useState(targets[0].id);
   const [hostTargets, setHostTargets] = useState<DeviceTarget[]>([]);
+  const [targetSearch, setTargetSearch] = useState("");
   const [bridge, setBridge] = useState<BridgeState>({ loading: true, sourceCommands: [] });
   const [bridgeOutputs, setBridgeOutputs] = useState<BridgeCommandOutput[]>([]);
   const [interactionLogs, setInteractionLogs] = useState<LogEntry[]>([]);
@@ -297,17 +334,25 @@ export function App() {
   const [screenshotById, setScreenshotById] = useState<
     Record<string, { dataUrl: string; pixelWidth: number | null; pixelHeight: number | null }>
   >({});
+  const [hostLogsById, setHostLogsById] = useState<Record<string, LogEntry[]>>({});
   const [livePreviewById, setLivePreviewById] = useState<Record<string, LivePreviewState>>({});
+  const [previewFpsById, setPreviewFpsById] = useState<Record<string, number>>({});
   const [inputActivityById, setInputActivityById] = useState<Record<string, InputActivity | undefined>>({});
   const [screenshotError, setScreenshotError] = useState<string | undefined>();
   const pageTargets = useMemo(() => {
-    return hostTargets.length > 0 ? hostTargets : targets.filter((target) => target.status === "ready");
+    return mergeHostTargetsWithMockFallback(hostTargets, targets);
   }, [hostTargets]);
+  const filteredTargets = useMemo(() => filterTargetsBySearch(pageTargets, targetSearch), [pageTargets, targetSearch]);
+  const bridgePresentation = useMemo(
+    () => describeHostBridgePresentation(bridge, hostTargets.length),
+    [bridge, hostTargets.length]
+  );
   const selected = useMemo(
     () => pageTargets.find((target) => target.id === selectedId) ?? pageTargets[0] ?? targets[0],
     [pageTargets, selectedId]
   );
   const selectedHasScreenshot = Boolean(screenshotById[selected.id]);
+  const selectedPreviewFps = previewFpsById[selected.id] ?? normalizePreviewFps(Math.max(selected.fps, 1));
   const selectedWithScreenshot = useMemo(
     () => ({
       ...selected,
@@ -315,19 +360,27 @@ export function App() {
       screenshotPixelWidth: screenshotById[selected.id]?.pixelWidth,
       screenshotPixelHeight: screenshotById[selected.id]?.pixelHeight,
       frameOrientation: resolveFrameOrientation(selected, screenshotById[selected.id]),
-      fps: livePreviewById[selected.id]?.status === "live" ? Math.max(selected.fps, 1) : selected.fps,
+      fps: selectedPreviewFps,
       lastAction: lastActionById[selected.id]?.lastAction ?? selected.lastAction,
       actionResult: lastActionById[selected.id]?.actionResult ?? selected.actionResult,
     }),
-    [lastActionById, livePreviewById, screenshotById, selected]
+    [lastActionById, screenshotById, selected, selectedPreviewFps]
   );
   const selectedLivePreview = livePreviewById[selected.id];
   const selectedInputActivity = inputActivityById[selected.id];
-  const selectedEvents = networkEvents[selected.id] ?? [];
+  const selectedEvents = useMemo(
+    () => networkEvents[selected.id] ?? hostNetworkEvidenceForTarget(selected),
+    [selected]
+  );
   const isDiscoveringHostTargets = bridge.loading && hostTargets.length === 0;
   const selectedLogs = useMemo(
-    () => [...interactionLogs, ...commandOutputsToLogs(bridgeOutputs), ...(logs[selected.id] ?? [])].slice(0, 8),
-    [bridgeOutputs, interactionLogs, selected.id]
+    () => [
+      ...interactionLogs,
+      ...(hostLogsById[selected.id] ?? hostLogsForTarget(selected)),
+      ...commandOutputsToLogs(bridgeOutputs),
+      ...(logs[selected.id] ?? []),
+    ].slice(0, 8),
+    [bridgeOutputs, hostLogsById, interactionLogs, selected]
   );
 
   const loadHostTargets = async (preferredSelectedId: string) => {
@@ -375,6 +428,32 @@ export function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!(selected.realSource === "ios-simulator" && selected.readonly)) {
+      return;
+    }
+    if (hostLogsById[selected.id]) {
+      return;
+    }
+
+    let cancelled = false;
+    fetchHostLogs(selected)
+      .then((result) => {
+        if (cancelled) return;
+        setHostLogsById((current) => ({
+          ...current,
+          [selected.id]: result.entries,
+        }));
+      })
+      .catch(() => {
+        if (cancelled) return;
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hostLogsById, selected]);
 
   const refreshScreenshot = useCallback(async (target: DeviceTarget, options: { live?: boolean } = {}) => {
     if (!target.realSource || !target.canScreenshot || !(target.targetSelector ?? target.udid)) {
@@ -444,18 +523,28 @@ export function App() {
       await refreshScreenshot(selected, { live: true });
       inFlight = false;
       if (!cancelled) {
-        timer = window.setTimeout(tick, 900);
+        timer = window.setTimeout(tick, fpsToRefreshIntervalMs(selectedPreviewFps));
       }
     };
 
-    timer = window.setTimeout(tick, selectedHasScreenshot ? 900 : 120);
+    timer = window.setTimeout(tick, selectedHasScreenshot ? fpsToRefreshIntervalMs(selectedPreviewFps) : 120);
     return () => {
       cancelled = true;
       if (timer) {
         window.clearTimeout(timer);
       }
     };
-  }, [refreshScreenshot, selected, selected.canScreenshot, selected.id, selected.realSource, selected.targetSelector, selected.udid, selectedHasScreenshot]);
+  }, [
+    refreshScreenshot,
+    selected,
+    selected.canScreenshot,
+    selected.id,
+    selected.realSource,
+    selected.targetSelector,
+    selected.udid,
+    selectedHasScreenshot,
+    selectedPreviewFps,
+  ]);
 
   const handleRefreshAll = async () => {
     setIsRefreshingAll(true);
@@ -491,74 +580,30 @@ export function App() {
     }
   };
 
-  const handleInput = async (input: HostInputRequest) => {
-    const actionLabel =
-      input.action === "tap"
-        ? "正在点按"
-        : "正在滑动";
-    const activityTargetId = selected.id;
-    setInputActivityById((current) => ({
+  const handlePreviewFpsChange = (fps: number) => {
+    setPreviewFpsById((current) => ({
       ...current,
-      [activityTargetId]: {
-        status: "dispatching",
-        label: actionLabel,
-      },
+      [selected.id]: normalizePreviewFps(fps),
     }));
+  };
+
+  const handleInput = async (input: ReadonlyGestureIntent) => {
+    const activityTargetId = selected.id;
+    const point =
+      input.action === "tap"
+        ? `${Math.round(input.x)},${Math.round(input.y)}`
+        : `${Math.round(input.startX)},${Math.round(input.startY)} -> ${Math.round(input.endX)},${Math.round(input.endY)}`;
     setLastActionById((current) => ({
       ...current,
       [activityTargetId]: {
-        lastAction: `${input.action} ${input.platform}:${Math.round(input.action === "tap" ? input.x : input.startX)},${Math.round(input.action === "tap" ? input.y : input.startY)}`,
+        lastAction: `Readonly Web mock blocked ${input.action} ${point}`,
         actionResult: "warning",
       },
     }));
-    setInteractionLogs((current) => [makeLog("info", `dispatch ${input.action} ${input.platform}:${input.target}`), ...current]);
-    try {
-      const result = await sendHostInput(input);
-      setInputActivityById((current) => ({
-        ...current,
-        [activityTargetId]: {
-          status: "refreshing",
-          label: result.ok ? "正在同步画面" : "操作失败",
-        },
-      }));
-      setLastActionById((current) => ({
-        ...current,
-        [activityTargetId]: {
-          lastAction: `${result.command} exit=${result.exitCode ?? "?"}`,
-          actionResult: result.ok ? "ok" : "failed",
-        },
-      }));
-      setInteractionLogs((current) => [
-        makeLog(
-          result.ok ? "info" : "error",
-          `${result.command} exit=${result.exitCode ?? "?"} ${summarizeOutput(result.stdout || result.stderr)}`
-        ),
-        ...current,
-      ]);
-      await refreshScreenshot(selected, { live: true });
-      window.setTimeout(() => {
-        void refreshScreenshot(selected, { live: true });
-      }, 180);
-    } catch (error) {
-      setLastActionById((current) => ({
-        ...current,
-        [activityTargetId]: {
-          lastAction: error instanceof Error ? error.message : String(error),
-          actionResult: "failed",
-        },
-      }));
-      setInteractionLogs((current) => [
-        makeLog("error", error instanceof Error ? error.message : String(error)),
-        ...current,
-      ]);
-    } finally {
-      window.setTimeout(() => {
-        setInputActivityById((current) => ({
-          ...current,
-          [activityTargetId]: undefined,
-        }));
-      }, 900);
-    }
+    setInteractionLogs((current) => [
+      makeLog("warn", `readonly Web mock blocked ${input.action} ${input.platform}:${input.target}`),
+      ...current,
+    ]);
   };
 
   const canvasZoomIndex = canvasZoomLevels.findIndex((level) => level === canvasZoom);
@@ -584,18 +629,22 @@ export function App() {
       >
         <DeviceHubToolbar
           target={selectedWithScreenshot}
-          bridge={bridge}
+          bridgeSubtitle={bridgePresentation.toolbarLabel}
           isSidebarVisible={isSidebarVisible}
           isRefreshing={isRefreshingAll}
           onToggleSidebar={() => setIsSidebarVisible((current) => !current)}
           onRefresh={handleRefreshAll}
         />
         <section className={`hub-body ${isSidebarVisible ? "" : "is-sidebar-hidden"}`}>
+          {bridgePresentation.notice ? <HostBridgeNotice notice={bridgePresentation.notice} /> : null}
           {isSidebarVisible ? (
             <TargetNavigator
               selected={selectedWithScreenshot}
-              targets={pageTargets}
+              targets={filteredTargets}
               activePanel={sidebarPanel}
+              searchValue={targetSearch}
+              isSearching={targetSearch.trim().length > 0}
+              onSearchChange={setTargetSearch}
               onPanelChange={setSidebarPanel}
               onSelect={setSelectedId}
             />
@@ -614,6 +663,7 @@ export function App() {
             onZoomOut={handleZoomOut}
             onResetZoom={handleResetZoom}
             onZoomIn={handleZoomIn}
+            onPreviewFpsChange={handlePreviewFpsChange}
             onInput={handleInput}
           />
           <Inspector target={selectedWithScreenshot} events={selectedEvents} bridge={bridge} />
@@ -640,10 +690,43 @@ function resolveFrameOrientation(
   return target.frameOrientation ?? "landscape";
 }
 
+function mergeHostTargetsWithMockFallback(hostTargets: DeviceTarget[], mockTargets: DeviceTarget[]) {
+  if (hostTargets.length === 0) {
+    return mockTargets;
+  }
+  const hostPlatforms = new Set(hostTargets.map((target) => target.platform));
+  const missingPlatformTargets = mockTargets.filter((target) => !hostPlatforms.has(target.platform));
+  return [...hostTargets, ...missingPlatformTargets];
+}
+
 function commandOutputsToLogs(outputs: BridgeCommandOutput[]): LogEntry[] {
   return outputs.map((output) =>
     makeLog(output.ok ? "info" : "warn", `${output.command} exit=${output.exitCode ?? "?"} ${summarizeOutput(output.stdout || output.stderr)}`)
   );
+}
+
+function hostNetworkEvidenceForTarget(target: DeviceTarget): NetworkEvent[] {
+  if (!target.realSource) return [];
+  const selector = target.targetSelector ?? target.udid ?? target.id;
+  return [
+    {
+      id: `host-network-${target.id}`,
+      method: "GET",
+      path: `/readonly/${target.platform}/${selector}/network-not-exposed`,
+      status: 204,
+      latencyMs: 0,
+      mode: "off",
+    },
+  ];
+}
+
+function hostLogsForTarget(target: DeviceTarget): LogEntry[] {
+  if (!target.realSource) return [];
+  const selector = target.targetSelector ?? target.udid ?? target.id;
+  return [
+    makeLog("info", `${target.platform} target ${selector} selected from readonly host discovery`),
+    makeLog("warn", `${target.platform} network/app runtime evidence not exposed by CLI DTO`),
+  ];
 }
 
 function makeLog(level: LogEntry["level"], message: string): LogEntry {
@@ -695,6 +778,15 @@ function compactMessage(message: string) {
   return compact.length > 180 ? `${compact.slice(0, 177)}...` : compact;
 }
 
+function filterTargetsBySearch(targets: DeviceTarget[], query: string) {
+  const normalizedQuery = query.trim().toLowerCase();
+  if (!normalizedQuery) return targets;
+  return targets.filter((target) => {
+    const haystacks = [target.name, target.appName].filter(Boolean).map((value) => value.toLowerCase());
+    return haystacks.some((value) => value.includes(normalizedQuery));
+  });
+}
+
 function localizeStatusLabel(label: string) {
   const labels: Record<string, string> = {
     Booted: "已启动",
@@ -708,14 +800,14 @@ function localizeStatusLabel(label: string) {
 
 function DeviceHubToolbar({
   target,
-  bridge,
+  bridgeSubtitle,
   isSidebarVisible,
   isRefreshing,
   onToggleSidebar,
   onRefresh,
 }: {
   target: DeviceTarget;
-  bridge: BridgeState;
+  bridgeSubtitle: string;
   isSidebarVisible: boolean;
   isRefreshing: boolean;
   onToggleSidebar: () => void;
@@ -744,7 +836,7 @@ function DeviceHubToolbar({
 
       <div className="toolbar-title">
         <strong>{target.name}</strong>
-        <span>{bridge.loading ? "正在加载本机仿真器" : bridge.error ? "Mock 兜底" : target.os}</span>
+        <span>{bridgeSubtitle === "Readonly host targets" ? target.os : bridgeSubtitle}</span>
       </div>
 
       <div className="toolbar-center">
@@ -807,12 +899,18 @@ function TargetNavigator({
   selected,
   targets: visibleTargets,
   activePanel,
+  searchValue,
+  isSearching,
+  onSearchChange,
   onPanelChange,
   onSelect,
 }: {
   selected: DeviceTarget;
   targets: DeviceTarget[];
   activePanel: SidebarPanel;
+  searchValue: string;
+  isSearching: boolean;
+  onSearchChange: (value: string) => void;
   onPanelChange: (panel: SidebarPanel) => void;
   onSelect: (id: string) => void;
 }) {
@@ -820,7 +918,11 @@ function TargetNavigator({
     <aside className="hub-sidebar" aria-label="设备">
       <label className="sidebar-search">
         <Search size={16} />
-        <input placeholder="搜索" />
+        <input
+          placeholder="搜索"
+          value={searchValue}
+          onChange={(event) => onSearchChange(event.target.value)}
+        />
       </label>
 
       <div className="sidebar-panel-switch" role="tablist" aria-label="侧边面板">
@@ -845,9 +947,9 @@ function TargetNavigator({
       </div>
 
       {activePanel === "devices" ? (
-        <DeviceListPanel selected={selected} targets={visibleTargets} onSelect={onSelect} />
+        <DeviceListPanel selected={selected} targets={visibleTargets} isSearching={isSearching} onSelect={onSelect} />
       ) : (
-        <ViewTreePanel target={selected} />
+        <ViewTreePanel selected={selected} targets={visibleTargets} onSelect={onSelect} />
       )}
     </aside>
   );
@@ -856,10 +958,12 @@ function TargetNavigator({
 function DeviceListPanel({
   selected,
   targets: visibleTargets,
+  isSearching,
   onSelect,
 }: {
   selected: DeviceTarget;
   targets: DeviceTarget[];
+  isSearching: boolean;
   onSelect: (id: string) => void;
 }) {
   return (
@@ -889,28 +993,56 @@ function DeviceListPanel({
           );
         })}
 
-        {visibleTargets.length === 0 ? <p className="empty-devices">暂无运行中的仿真器</p> : null}
+        {visibleTargets.length === 0 ? (
+          <p className="empty-devices">{isSearching ? "未找到匹配 target" : "暂无运行中的仿真器"}</p>
+        ) : null}
       </div>
     </section>
   );
 }
 
-function ViewTreePanel({ target }: { target: DeviceTarget }) {
-  const treeNodes = useMemo(() => viewTreeNodesForTarget(target), [target]);
-  const defaultSelection = defaultViewTreeSelection(target);
+function ViewTreePanel({
+  selected,
+  targets: visibleTargets,
+  onSelect,
+}: {
+  selected: DeviceTarget;
+  targets: DeviceTarget[];
+  onSelect: (id: string) => void;
+}) {
+  const treeNodes = useMemo(() => viewTreeNodesForTarget(selected), [selected]);
+  const defaultSelection = defaultViewTreeSelection(selected);
   const [selectedNode, setSelectedNode] = useState(defaultSelection);
 
   useEffect(() => {
     setSelectedNode(defaultSelection);
-  }, [defaultSelection, target.id]);
+  }, [defaultSelection, selected.id]);
 
   return (
     <section className="sidebar-panel view-tree-panel" aria-label="视图层级面板">
+      <div className="view-tree-targets" aria-label="视图树 target 切换">
+        <div className="sidebar-section-title">切换 target</div>
+        <div className="view-tree-target-list">
+          {visibleTargets.map((target) => (
+            <button
+              className={`view-tree-target-chip ${target.id === selected.id ? "is-selected" : ""}`}
+              key={target.id}
+              type="button"
+              onClick={() => onSelect(target.id)}
+            >
+              <span className="view-tree-target-chip-platform">{platformLabel[target.platform]}</span>
+              <strong>{target.name}</strong>
+              <span>{target.appName}</span>
+            </button>
+          ))}
+          {visibleTargets.length === 0 ? <p className="empty-devices">未找到匹配 target</p> : null}
+        </div>
+      </div>
       <div className="view-tree-title">
         <span>视图层级</span>
-        <strong>{target.appName}</strong>
+        <strong>{selected.appName}</strong>
       </div>
-      <div className="view-tree-list" role="tree" aria-label={`${target.appName} 视图层级`}>
+      <div className="view-tree-list" role="tree" aria-label={`${selected.appName} 视图层级`}>
         {treeNodes.map((node) => (
           <ViewTreeRow key={node.id} node={node} depth={0} selectedNode={selectedNode} onSelect={setSelectedNode} />
         ))}
@@ -968,6 +1100,7 @@ function DeviceCanvas({
   onZoomOut,
   onResetZoom,
   onZoomIn,
+  onPreviewFpsChange,
   onInput,
 }: {
   target: DeviceTarget;
@@ -983,12 +1116,15 @@ function DeviceCanvas({
   onZoomOut: () => void;
   onResetZoom: () => void;
   onZoomIn: () => void;
-  onInput: (input: HostInputRequest) => Promise<void>;
+  onPreviewFpsChange: (fps: number) => void;
+  onInput: (input: ReadonlyGestureIntent) => Promise<void>;
 }) {
   const screenRef = useRef<HTMLDivElement | null>(null);
+  const previewControlRef = useRef<HTMLDivElement | null>(null);
   const gestureStart = useRef<GesturePoint | null>(null);
   const gestureClearTimer = useRef<number | undefined>(undefined);
   const [gesturePreview, setGesturePreview] = useState<GesturePreview | null>(null);
+  const [isPreviewFpsOpen, setIsPreviewFpsOpen] = useState(false);
   const orientation = target.frameOrientation ?? "landscape";
   const aspectRatio =
     target.screenshotPixelWidth && target.screenshotPixelHeight
@@ -1009,7 +1145,13 @@ function DeviceCanvas({
       : target.realSource
         ? `${orientation} placeholder`
         : orientation;
-  const canSendInput = Boolean(target.screenshotDataUrl && target.targetSelector && target.screenshotPixelWidth && target.screenshotPixelHeight);
+  const canSendInput = Boolean(
+    target.realSource &&
+      target.screenshotDataUrl &&
+      target.targetSelector &&
+      target.screenshotPixelWidth &&
+      target.screenshotPixelHeight
+  );
   const isWaitingForRealScreenshot = Boolean(target.realSource && !target.screenshotDataUrl);
 
   useEffect(() => {
@@ -1019,6 +1161,27 @@ function DeviceCanvas({
       }
     };
   }, []);
+
+  useEffect(() => {
+    setIsPreviewFpsOpen(false);
+  }, [target.id]);
+
+  useEffect(() => {
+    if (!isPreviewFpsOpen) return;
+
+    const handlePointerDownOutside = (event: globalThis.PointerEvent) => {
+      const targetNode = event.target;
+      if (targetNode instanceof Node && previewControlRef.current?.contains(targetNode)) {
+        return;
+      }
+      setIsPreviewFpsOpen(false);
+    };
+
+    window.addEventListener("pointerdown", handlePointerDownOutside);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDownOutside);
+    };
+  }, [isPreviewFpsOpen]);
 
   const clearGesturePreviewSoon = () => {
     if (gestureClearTimer.current) {
@@ -1153,10 +1316,52 @@ function DeviceCanvas({
   return (
     <section className="hub-canvas" aria-label="设备画布">
       {target.screenshotDataUrl ? (
-        <div className={`live-preview-badge ${livePreview?.status === "error" ? "is-error" : ""}`}>
-          <span />
-          <strong>{livePreview?.status === "error" ? "流已暂停" : "实时"}</strong>
-          <em>{target.fps} fps</em>
+        <div className={`live-preview-control ${isPreviewFpsOpen ? "is-open" : ""}`} ref={previewControlRef}>
+          <button
+            className={`live-preview-badge ${livePreview?.status === "error" ? "is-error" : ""}`}
+            type="button"
+            aria-label={isPreviewFpsOpen ? "收起实时预览帧率控制" : "展开实时预览帧率控制"}
+            aria-expanded={isPreviewFpsOpen}
+            onClick={() => setIsPreviewFpsOpen((current) => !current)}
+          >
+            <span />
+            <strong>{livePreview?.status === "error" ? "流已暂停" : "实时"}</strong>
+            <em>{target.fps} fps</em>
+          </button>
+          {isPreviewFpsOpen ? (
+            <>
+              <label className="preview-fps-control">
+                <span>刷新率</span>
+                <input
+                  type="range"
+                  min={previewFpsMin}
+                  max={previewFpsMax}
+                  step="1"
+                  value={target.fps}
+                  aria-label="调整实时预览帧率"
+                  onChange={(event) => onPreviewFpsChange(Number(event.currentTarget.value))}
+                />
+              </label>
+              <div className="preview-fps-stepper" aria-label="实时预览帧率步进">
+                <button
+                  type="button"
+                  aria-label="降低实时预览帧率"
+                  disabled={target.fps <= previewFpsMin}
+                  onClick={() => onPreviewFpsChange(target.fps - 1)}
+                >
+                  <Minus size={13} />
+                </button>
+                <button
+                  type="button"
+                  aria-label="提高实时预览帧率"
+                  disabled={target.fps >= previewFpsMax}
+                  onClick={() => onPreviewFpsChange(target.fps + 1)}
+                >
+                  <Plus size={13} />
+                </button>
+              </div>
+            </>
+          ) : null}
         </div>
       ) : null}
 

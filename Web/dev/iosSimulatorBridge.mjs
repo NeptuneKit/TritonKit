@@ -8,9 +8,6 @@ import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 
 const bridgeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
-const runtimeHost = "127.0.0.1";
-const runtimePort = 19421;
-let managedTritonServe = null;
 
 export function mapTritonSimListToWebTargets(payload) {
   if (!payload || !Array.isArray(payload.simulators)) {
@@ -80,7 +77,7 @@ export function mapTritonDeviceListToWebTargets(payload, platform) {
 
 export function createIosSimulatorBridgeMiddleware(options = {}) {
   const root = options.root ? resolve(options.root) : bridgeRoot;
-  const tritonPath = resolveTritonBinary(root);
+  const tritonPath = options.tritonPath ? resolve(options.tritonPath) : resolveTritonBinary(root);
 
   return async function iosSimulatorBridgeMiddleware(req, res, next) {
     if (!req.url?.startsWith("/web/")) {
@@ -97,7 +94,35 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
       }
 
       if (url.pathname === "/web/host-targets") {
+        if (url.searchParams.get("__tritonkit_mock_host_targets") === "request-failed") {
+          sendJSON(res, 502, {
+            ok: false,
+            error: {
+              code: "web_host_targets_forced_failure",
+              message: "Forced /web/host-targets failure for dev browser smoke.",
+            },
+          });
+          return;
+        }
         const response = await collectHostTargets(tritonPath);
+        sendJSON(res, 200, response);
+        return;
+      }
+
+      if (url.pathname === "/web/host-logs") {
+        const platform = url.searchParams.get("platform") || "ios";
+        const target = url.searchParams.get("target") || "booted";
+        if (platform !== "ios") {
+          sendJSON(res, 501, {
+            ok: false,
+            error: {
+              code: "web_host_logs_platform_not_supported",
+              message: "Readonly host logs are currently only exposed for iOS Simulator targets.",
+            },
+          });
+          return;
+        }
+        const response = await captureHostLogs(tritonPath, target);
         sendJSON(res, 200, response);
         return;
       }
@@ -146,9 +171,13 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
       }
 
       if (url.pathname === "/web/host-input" && req.method === "POST") {
-        const input = await readJSONBody(req);
-        const response = await runHostInput(tritonPath, input);
-        sendJSON(res, 200, response);
+        sendJSON(res, 405, {
+          ok: false,
+          error: {
+            code: "web_host_input_readonly",
+            message: "TritonKit Web mock is readonly; use CLI or HTTP runtime contracts for host input.",
+          },
+        });
         return;
       }
 
@@ -171,7 +200,12 @@ async function collectHostTargets(tritonPath) {
   const android = await runTritonCapture(tritonPath, ["device", "list", "--platform", "android", "--json"], "android");
   const harmony = await runTritonCapture(tritonPath, ["device", "list", "--platform", "harmony", "--json"], "harmony");
 
-  const iosTargets = ios.parsed ? mapTritonSimListToWebTargets(ios.parsed).simulators.map((target) => ({
+  return mapTritonHostCapturesToWebTargets([ios, android, harmony]);
+}
+
+export function mapTritonHostCapturesToWebTargets(captures) {
+  const [ios, android, harmony] = captures;
+  const iosTargets = ios?.parsed ? mapTritonSimListToWebTargets(ios.parsed).simulators.map((target) => ({
     id: target.id,
     target: target.udid,
     name: target.name,
@@ -187,8 +221,8 @@ async function collectHostTargets(tritonPath) {
     source: target.source,
     readonly: true,
   })) : [];
-  const androidTargets = android.parsed ? mapTritonDeviceListToWebTargets(android.parsed, "android") : [];
-  const harmonyTargets = harmony.parsed ? mapTritonDeviceListToWebTargets(harmony.parsed, "harmony") : [];
+  const androidTargets = android?.parsed ? mapTritonDeviceListToWebTargets(android.parsed, "android") : [];
+  const harmonyTargets = harmony?.parsed ? mapTritonDeviceListToWebTargets(harmony.parsed, "harmony") : [];
   const commandOutputs = [ios, android, harmony].map(({ parsed, ...output }) => output);
 
   return {
@@ -242,250 +276,29 @@ async function captureHostScreenshot(tritonPath, platform, target) {
   }
 }
 
-async function runHostInput(tritonPath, input) {
-  const action = input?.action;
-  const platform = input?.platform;
-  const target = input?.target;
-  if (!["tap", "swipe"].includes(action) || !["ios", "android", "harmony"].includes(platform) || !target) {
-    throw new Error("Expected host input with action tap|swipe, platform ios|android|harmony, and target");
-  }
-
-  if (platform === "ios") {
-    return runTritonWebHostInput(tritonPath, input);
-  }
-
-  const args = action === "tap"
-    ? buildTapArgs(input)
-    : buildSwipeArgs(input);
-  const result = await runCommand(tritonPath, args);
-  return {
-    ok: result.exitCode === 0,
-    action,
-    platform,
-    target,
-    command: `triton ${args.join(" ")}`,
-    exitCode: result.exitCode,
-    stdout: result.stdout,
-    stderr: result.stderr,
-    parsed: tryParseJSON(result.stdout),
-    coordinateSpace: "framebuffer-pixels",
-  };
-}
-
-export function normalizeIosRuntimeInput(input, appInfo) {
-  const screenWidth = numericOrNull(appInfo?.screenWidth);
-  const screenHeight = numericOrNull(appInfo?.screenHeight);
-  if (!screenWidth || !screenHeight || !input.width || !input.height) {
-    return input;
-  }
-
-  const scaleX = screenWidth / input.width;
-  const scaleY = screenHeight / input.height;
-  if (!Number.isFinite(scaleX) || !Number.isFinite(scaleY) || scaleX <= 0 || scaleY <= 0) {
-    return input;
-  }
-
-  if (input.action === "tap") {
-    return {
-      ...input,
-      x: clamp(Math.round(input.x * scaleX), 0, screenWidth),
-      y: clamp(Math.round(input.y * scaleY), 0, screenHeight),
-      width: screenWidth,
-      height: screenHeight,
-    };
-  }
-
-  return {
-    ...input,
-    startX: clamp(Math.round(input.startX * scaleX), 0, screenWidth),
-    startY: clamp(Math.round(input.startY * scaleY), 0, screenHeight),
-    endX: clamp(Math.round(input.endX * scaleX), 0, screenWidth),
-    endY: clamp(Math.round(input.endY * scaleY), 0, screenHeight),
-    width: screenWidth,
-    height: screenHeight,
-  };
-}
-
-async function runTritonWebHostInput(tritonPath, input) {
-  const status = await ensureTritonWebServer(tritonPath);
-  const target = `host:ios:${input.target}`;
-  const inputPayload = buildTritonInputPayload(input);
-  if (!status.serverReachable) {
-    const error = {
-      ok: false,
-      error: {
-        code: "server_unavailable",
-        message: "Could not start or reach Triton server before dispatching iOS host input.",
-        hint: `Run \`triton serve --host ${runtimeHost} --port ${runtimePort}\`, then retry.`,
-      },
-    };
-    return {
-      ok: false,
-      action: input.action,
-      platform: "ios",
-      target: input.target,
-      command: `triton serve POST /web/input?target=${target}`,
-      exitCode: null,
-      stdout: JSON.stringify(error),
-      stderr: "",
-      parsed: error,
-      coordinateSpace: "framebuffer-pixels",
-    };
-  }
-
-  const response = await fetch(`http://${runtimeHost}:${runtimePort}/web/input?target=${encodeURIComponent(target)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(inputPayload),
-    signal: AbortSignal.timeout(20_000),
-  });
-  const body = await response.text();
-  const parsed = tryParseJSON(body) ?? { ok: response.ok, action: input.action };
-  return {
-    ok: response.ok && parsed?.ok !== false,
-    action: input.action,
-    platform: "ios",
-    target: input.target,
-    command: `triton serve POST /web/input?target=${target}`,
-    exitCode: response.ok ? 0 : 1,
-    stdout: body || JSON.stringify(parsed),
-    stderr: "",
-    parsed,
-    coordinateSpace: "framebuffer-pixels",
-  };
-}
-
-async function ensureTritonWebServer(tritonPath) {
-  let status = await readTritonServerStatus();
-  if (status.serverReachable) {
-    return status;
-  }
-
-  if (!managedTritonServe || managedTritonServe.exitCode !== null) {
-    managedTritonServe = spawn(tritonPath, ["serve", "--host", runtimeHost, "--port", String(runtimePort)], {
-      cwd: bridgeRoot,
-      detached: true,
-      stdio: "ignore",
-    });
-    managedTritonServe.unref();
-  }
-
-  const deadline = Date.now() + 8000;
-  while (Date.now() < deadline) {
-    await delay(350);
-    status = await readTritonServerStatus();
-    if (status.serverReachable) {
-      return status;
-    }
-  }
-  return status;
-}
-
-async function readTritonServerStatus() {
+async function captureHostLogs(tritonPath, target) {
+  const outputDir = join(tmpdir(), `tritonkit-web-logs-${randomUUID()}`);
+  const outputPath = join(outputDir, "host-logs.ndjson");
+  await mkdir(outputDir, { recursive: true });
   try {
-    const response = await fetch(`http://${runtimeHost}:${runtimePort}/status`, {
-      signal: AbortSignal.timeout(900),
-    });
-    return { serverReachable: response.ok };
-  } catch {
-    return { serverReachable: false };
-  }
-}
-
-function delay(ms) {
-  return new Promise((resolveDelay) => {
-    setTimeout(resolveDelay, ms);
-  });
-}
-
-function buildTritonInputPayload(input) {
-  if (input.action === "tap") {
+    const args = ["sim", "logs", "--simulator", target, "--output", outputPath, "--duration", "2", "--style", "ndjson", "--json"];
+    await runTritonJSON(tritonPath, args);
+    const raw = await readFile(outputPath, "utf8");
+    const entries = parseHostLogEntries(raw);
+    const capturedAt = resolveLogsCapturedAt(raw) ?? new Date().toISOString();
     return {
-      type: "tap",
-      x: input.x,
-      y: input.y,
-      width: input.width,
-      height: input.height,
+      ok: true,
+      capturedAt,
+      source: {
+        command: redactArtifactPath(`triton ${args.join(" ")}`, outputPath),
+        runtimeScope: "host-simulator",
+        readonly: true,
+      },
+      entries,
     };
+  } finally {
+    await rm(outputDir, { recursive: true, force: true });
   }
-  return {
-    type: "swipe",
-    startX: input.startX,
-    startY: input.startY,
-    endX: input.endX,
-    endY: input.endY,
-    width: input.width,
-    height: input.height,
-    duration: input.duration,
-  };
-}
-
-function numericOrNull(value) {
-  const number = Number(value);
-  return Number.isFinite(number) && number > 0 ? number : null;
-}
-
-function clamp(value, min, max) {
-  return Math.max(min, Math.min(max, value));
-}
-
-function buildTapArgs(input) {
-  assertNumber(input.x, "x");
-  assertNumber(input.y, "y");
-  const args = ["tap"];
-  appendPlatformTargetArgs(args, input.platform, input.target);
-  args.push("--x", String(Math.round(input.x)), "--y", String(Math.round(input.y)), "--json");
-  return args;
-}
-
-function buildSwipeArgs(input) {
-  for (const key of ["startX", "startY", "endX", "endY"]) {
-    assertNumber(input[key], key);
-  }
-  const args = ["swipe"];
-  appendPlatformTargetArgs(args, input.platform, input.target);
-  args.push(
-    "--start-x",
-    String(Math.round(input.startX)),
-    "--start-y",
-    String(Math.round(input.startY)),
-    "--end-x",
-    String(Math.round(input.endX)),
-    "--end-y",
-    String(Math.round(input.endY)),
-    "--json"
-  );
-  return args;
-}
-
-function appendPlatformTargetArgs(args, platform, target) {
-  if (platform !== "ios") {
-    args.push("--platform", platform);
-  }
-  args.push("--target", target);
-}
-
-function assertNumber(value, name) {
-  if (typeof value !== "number" || !Number.isFinite(value)) {
-    throw new Error(`Expected numeric ${name}`);
-  }
-}
-
-function readJSONBody(req) {
-  return new Promise((resolveBody, reject) => {
-    let body = "";
-    req.on("data", (chunk) => {
-      body += chunk.toString("utf8");
-    });
-    req.on("end", () => {
-      try {
-        resolveBody(JSON.parse(body || "{}"));
-      } catch (error) {
-        reject(error);
-      }
-    });
-    req.on("error", reject);
-  });
 }
 
 function resolveTritonBinary(root) {
@@ -534,6 +347,82 @@ function tryParseJSON(value) {
   } catch {
     return null;
   }
+}
+
+function parseHostLogEntries(raw) {
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line, index) => {
+      const parsed = tryParseJSON(line);
+      const timestamp = normalizeLogTimestamp(parsed) ?? null;
+      return {
+        id: `host-log-${index}`,
+        time: formatLogTime(timestamp),
+        level: normalizeLogLevel(parsed),
+        message: normalizeLogMessage(parsed, line),
+      };
+    });
+}
+
+function resolveLogsCapturedAt(raw) {
+  const lines = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const last = lines.at(-1);
+  const parsed = last ? tryParseJSON(last) : null;
+  return normalizeLogTimestamp(parsed);
+}
+
+function normalizeLogTimestamp(record) {
+  if (!record || typeof record !== "object") return null;
+  const candidates = [
+    record.timestamp,
+    record.date,
+    record.time,
+  ];
+  for (const candidate of candidates) {
+    if (typeof candidate === "string" && !Number.isNaN(Date.parse(candidate))) {
+      return new Date(candidate).toISOString();
+    }
+  }
+  return null;
+}
+
+function formatLogTime(isoTimestamp) {
+  if (!isoTimestamp) return "--:--:--";
+  return new Date(isoTimestamp).toLocaleTimeString("en-GB", { hour12: false, timeZone: "UTC" });
+}
+
+function normalizeLogLevel(record) {
+  if (!record || typeof record !== "object") return "info";
+  const value = [
+    record.messageType,
+    record.level,
+    record.severity,
+  ].find((candidate) => typeof candidate === "string");
+  const normalized = String(value ?? "info").toLowerCase();
+  if (normalized.includes("error") || normalized.includes("fault")) return "error";
+  if (normalized.includes("warn")) return "warn";
+  return "info";
+}
+
+function normalizeLogMessage(record, fallbackLine) {
+  if (record && typeof record === "object") {
+    const message = [
+      record.eventMessage,
+      record.message,
+      record.msg,
+    ].find((candidate) => typeof candidate === "string" && candidate.trim().length > 0);
+    if (message) return message.trim();
+  }
+  return fallbackLine;
+}
+
+function redactArtifactPath(command, outputPath) {
+  return command.replace(outputPath, "<tmp.ndjson>");
 }
 
 function imageMimeType(buffer) {

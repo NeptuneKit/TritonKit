@@ -110,6 +110,17 @@ export type HostTargetsResponse = {
   commandOutputs: BridgeCommandOutput[];
 };
 
+export type HostTargetLogsResponse = {
+  ok: boolean;
+  capturedAt: string;
+  source: {
+    command: string;
+    runtimeScope: string;
+    readonly: boolean;
+  };
+  entries: LogEntry[];
+};
+
 export type IosSimulatorScreenshotResponse = {
   ok: boolean;
   simulator: string;
@@ -122,42 +133,6 @@ export type IosSimulatorScreenshotResponse = {
   pixelWidth: number | null;
   pixelHeight: number | null;
   dataUrl: string;
-};
-
-export type HostInputRequest =
-  | {
-      action: "tap";
-      platform: DevicePlatform;
-      target: string;
-      x: number;
-      y: number;
-      width?: number;
-      height?: number;
-    }
-  | {
-      action: "swipe";
-      platform: DevicePlatform;
-      target: string;
-      startX: number;
-      startY: number;
-      endX: number;
-      endY: number;
-      width?: number;
-      height?: number;
-      duration?: number;
-    };
-
-export type HostInputResponse = {
-  ok: boolean;
-  action: "tap" | "swipe";
-  platform: DevicePlatform;
-  target: string;
-  command: string;
-  exitCode: number | null;
-  stdout: string;
-  stderr: string;
-  parsed: unknown;
-  coordinateSpace?: "runtime-points" | "framebuffer-pixels";
 };
 
 export type NetworkEvent = {

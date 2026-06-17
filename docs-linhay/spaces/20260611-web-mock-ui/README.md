@@ -41,6 +41,13 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 真实截图区域捕获 click / drag，按 screenshot framebuffer 宽高换算坐标，再通过 `triton tap` / `triton swipe` 执行；Web 不直接调用 `xcrun`、`adb` 或 `hdc`。
 - 输入执行结果必须显示 stdout / stderr / exit code；执行后刷新当前目标 screenshot。
 
+### 2026-06-15 iOS host-side bounded 日志接入
+
+- Vite dev bridge 新增只读 `/web/host-logs` endpoint，当前只接 iOS running target。
+- endpoint 通过 `triton sim logs --simulator <udid|booted> --output <tmp.ndjson> --duration <seconds> --style ndjson --json` 采集一小段 bounded simulator / app OSLog。
+- Web Logs 面板在选中真实 iOS target 时优先展示这批 host-side 日志；若 CLI 未返回日志或当前平台不支持，再退回现有占位日志与 command output 摘要。
+- 本期不引入 Web 侧实时 streaming，也不把 Android / Harmony 日志一并扩展进来。
+
 ### 2026-06-17 本地编译并启动 Web 脚本
 
 - 新增本地开发入口脚本，用于先编译 `triton` CLI，再启动 `Web` Vite dev server。
@@ -155,6 +162,14 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - When 用户查看底部 Logs
 - Then Logs 至少展示对应 `triton ...` 命令、成功/失败状态，以及 stdout / stderr 摘要
 
+### 场景：iOS host target 展示 bounded 真实日志
+
+- Given 用户选中一个真实且已 Booted 的 iOS host target
+- When Web 请求 `/web/host-logs?platform=ios&target=<udid>`
+- Then endpoint 通过 `triton sim logs --json` 生成临时 `ndjson` artifact
+- And Web Logs 面板优先展示解析后的 bounded host-side 日志
+- And 若日志暂不可用，页面退回占位日志，不伪造“已接入 app runtime 日志”的状态
+
 ### 场景：底部 Logs 不撑高窗口
 
 - Given Logs 连续进入多条 `triton ...` 输出
@@ -200,6 +215,7 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - Logs 支持隐藏和恢复，隐藏后不保留空白日志区域。
 - 右上工具区提供全局刷新按钮，可刷新 targets、bridge command outputs 和当前 screenshot。
 - 有真实 screenshot 的设备画布在 tap / swipe 时显示触点或轨迹反馈，并在 Triton CLI input 执行与 screenshot 刷新期间显示非阻塞状态徽标。
+- 选中真实 iOS host target 时，Logs 面板优先展示一次 bounded host-side 日志采集结果；当前未支持的平台继续展示只读占位日志。
 - `docs-linhay/scripts/start-web-with-triton.sh` 可从任意当前目录执行，完成 CLI 构建后启动 `Web` dev server，并显式注入本轮构建出的 `triton` 路径。
 
 ## 实现记录

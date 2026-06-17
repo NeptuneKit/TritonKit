@@ -2,8 +2,7 @@ import { MonitorSmartphone, Smartphone, TabletSmartphone } from "lucide-react";
 import type {
   BridgeCommandOutput,
   DeviceTarget,
-  HostInputRequest,
-  HostInputResponse,
+  HostTargetLogsResponse,
   HostTargetsResponse,
   HostWebTarget,
   IosSimulatorScreenshotResponse,
@@ -16,7 +15,10 @@ export async function fetchHostTargets(): Promise<{
   sourceCommands: string[];
   commandOutputs: BridgeCommandOutput[];
 }> {
-  const response = await fetch("/web/host-targets", { cache: "no-store" });
+  if (resolveForcedHostTargetsMode() === "request-failed") {
+    throw new Error("Host targets request failed: 502");
+  }
+  const response = await fetch(resolveHostTargetsRequestPath(), { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`Host targets request failed: ${response.status}`);
   }
@@ -67,16 +69,16 @@ export async function fetchHostScreenshot(target: DeviceTarget): Promise<IosSimu
   return (await response.json()) as IosSimulatorScreenshotResponse;
 }
 
-export async function sendHostInput(input: HostInputRequest): Promise<HostInputResponse> {
-  const response = await fetch("/web/host-input", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(input),
+export async function fetchHostLogs(target: DeviceTarget): Promise<HostTargetLogsResponse> {
+  const params = new URLSearchParams({
+    platform: target.platform,
+    target: target.targetSelector ?? target.udid ?? target.id,
   });
+  const response = await fetch(`/web/host-logs?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) {
-    throw new Error(`Host input request failed: ${response.status}`);
+    throw new Error(`Host logs request failed: ${response.status}`);
   }
-  return (await response.json()) as HostInputResponse;
+  return (await response.json()) as HostTargetLogsResponse;
 }
 
 function mapIosSimulatorToDeviceTarget(simulator: IosSimulatorTargetsResponse["simulators"][number]): DeviceTarget {
@@ -88,8 +90,8 @@ function mapIosSimulatorToDeviceTarget(simulator: IosSimulatorTargetsResponse["s
     name: simulator.name,
     platform: "ios",
     device: simulator.name,
-    appName: isBooted ? "SpringBoard" : "Simulator",
-    bundleId: simulator.udid,
+    appName: isBooted ? `前台 App 未暴露 · ${simulator.name}` : "Simulator",
+    bundleId: formatUnknownTargetIdentity(simulator.udid),
     os: simulator.runtime,
     status,
     statusLabel: simulator.statusLabel,
@@ -126,8 +128,8 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
       name: target.name,
       platform: "ios",
       device: target.name,
-      appName: hostAppName ?? "SpringBoard",
-      bundleId: hostBundleIdentifier ?? target.target,
+      appName: hostAppName ?? `前台 App 未暴露 · ${target.name}`,
+      bundleId: hostBundleIdentifier ?? formatUnknownTargetIdentity(target.target),
       os: target.runtime,
       status: "ready",
       statusLabel: target.statusLabel,
@@ -139,7 +141,7 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
       proxyMode: "off",
       proxyLabel: "Readonly host state",
       hierarchyNodes: 0,
-      lastAction: "Ready for screenshot and Triton input",
+      lastAction: "Ready for readonly screenshot",
       actionResult: "ok",
       accent: "#64d26a",
       Icon: Smartphone,
@@ -148,7 +150,7 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
       udid: target.target,
       canScreenshot: true,
       frameOrientation: "portrait",
-      readonly: false,
+      readonly: true,
     };
   }
 
@@ -158,8 +160,8 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
     name: target.name,
     platform: target.platform,
     device: target.target,
-    appName: hostAppName ?? "前台 App 未识别",
-    bundleId: hostBundleIdentifier ?? target.id,
+    appName: hostAppName ?? `前台 App 未暴露 · ${target.name}`,
+    bundleId: hostBundleIdentifier ?? formatUnknownTargetIdentity(target.target),
     os: target.runtime || (isAndroid ? "Android" : "Harmony"),
     status: "ready",
     statusLabel: target.statusLabel,
@@ -171,7 +173,7 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
     proxyMode: "off",
     proxyLabel: "Host emulator target",
     hierarchyNodes: 0,
-    lastAction: "Ready for screenshot and Triton input",
+    lastAction: "Ready for readonly screenshot",
     actionResult: "ok",
     accent: isAndroid ? "#32d583" : "#cc3d5a",
     Icon: isAndroid ? MonitorSmartphone : TabletSmartphone,
@@ -179,13 +181,35 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
     targetSelector: target.target,
     canScreenshot: true,
     frameOrientation: "portrait",
-    readonly: false,
+    readonly: true,
   };
 }
 
 function normalizeHostIdentity(value?: string | null) {
   const text = value?.trim();
   return text && text.length > 0 ? text : undefined;
+}
+
+function resolveHostTargetsRequestPath() {
+  return "/web/host-targets";
+}
+
+function resolveForcedHostTargetsMode() {
+  if (!import.meta.env.DEV || typeof window === "undefined") {
+    return null;
+  }
+
+  const currentParams = new URLSearchParams(window.location.search);
+  const forcedMode = currentParams.get("__tritonkit_mock_host_targets");
+  return forcedMode === "request-failed" ? forcedMode : null;
+}
+
+function formatUnknownTargetIdentity(value?: string | null) {
+  const text = value?.trim();
+  if (!text) {
+    return "Target 未暴露";
+  }
+  return `Target ${text}`;
 }
 
 function inferPlaceholderOrientation(deviceTypeIdentifier: string) {
