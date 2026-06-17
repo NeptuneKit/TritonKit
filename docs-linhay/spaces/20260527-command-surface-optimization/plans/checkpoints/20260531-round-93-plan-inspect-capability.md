@@ -8,7 +8,7 @@
 
 - Curie（worker）：按 TDD 实现 `plan-inspect` capability，并补 schema / capabilities 不变量测试。
 - Chandrasekhar（explorer）：只读审计下一轮 `steps[].argv` schema-backed 校验切片。
-- 主控：复核 diff、补跑全 CLI 测试、补运行时输出证据、同步 docs / skills / memory / qmd。
+- 主控：复核 diff、补跑全 CLI 测试、补运行时输出证据、同步 docs / skills / memory。
 
 ## 完成内容
 

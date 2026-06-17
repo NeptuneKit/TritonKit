@@ -11,7 +11,7 @@ metadata:
 
 Use this skill when the user asks to create, start, coordinate, or supervise subagents for iOS / Android / Harmony real-device support in TritonKit.
 
-Always combine it with `tritonkit-subagent-supervision`: subagents do scoped implementation or design work, while the main agent owns boundary, integration, verification, docs, memory, qmd, and final completion judgment.
+Always combine it with `tritonkit-subagent-supervision`: subagents do scoped implementation or design work, while the main agent owns boundary, integration, verification, docs, memory, and final completion judgment.
 
 ## Source of Truth
 
@@ -133,7 +133,7 @@ Before final completion:
 1. Run the directed Swift tests from `plans/p0-p3-plan.md`.
 2. Run `docs-linhay/scripts/verify.sh --local`, or document exact blockers.
 3. Run real-device smoke only when a suitable local device and artifact are available.
-4. Update docs, memory, and qmd.
+4. Update docs and memory.
 5. Report residual risks and unimplemented phases.
 
 ## Stop Conditions

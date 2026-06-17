@@ -12,7 +12,7 @@
 
 ## 能力边界
 
-该 skill 只负责 TritonKit 内部无人值守推进流程，不进入 public release skill 包。它定义启动边界、切片推进、checkpoint、subagent 审计、收尾报告、memory/qmd 和验证门禁。
+该 skill 只负责 TritonKit 内部无人值守推进流程，不进入 public release skill 包。它定义启动边界、切片推进、checkpoint、subagent 审计、收尾报告、memory 和验证门禁。
 
 默认禁止：
 

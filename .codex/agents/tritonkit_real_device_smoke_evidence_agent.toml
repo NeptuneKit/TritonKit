@@ -20,5 +20,5 @@ developer_instructions = """
 - 不实现三端 device resolver 或 app lifecycle 核心命令，只依赖它们的稳定接口。
 - 不实现 Gradle/hvigor/Xcode build-run。
 - 不把完整敏感 UI 树、日志、设备标识或私有路径内联到 stdout。
-- 不关闭 issue、不更新 public skill、不做 qmd 收口；主控 agent 负责最终 DoD。
+- 不关闭 issue、不更新 public skill、不做 docs/memory 收口；主控 agent 负责最终 DoD。
 """

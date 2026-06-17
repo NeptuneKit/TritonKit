@@ -11,7 +11,7 @@
 7. 启动 CLI，验证 `/health`、`/data` 写入和读取。
 8. 构建并运行 iOS Simulator 示例 App，确认 CLI 收到 `ping` 和 `hierarchy`。
 9. 用 `curl` 验证 `/status`、`/command` 和 `/hierarchy/latest`。
-10. 写回 memory，并执行 `qmd update` 与 `qmd embed`。
+10. 写回 memory，并执行 `docs-linhay/scripts/check-docs.sh`。
 
 ## 非目标
 

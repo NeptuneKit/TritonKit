@@ -11,7 +11,7 @@ Issue #8 收尾时，代码和本地验证已经完成，但交付闭环仍卡�
 - 本地和 CI 共享一个项目级验证入口。
 - GitHub issue 评论默认通过文件传递 Markdown，避免 shell 命令替换。
 - CI 观察输出保持低噪音，失败时再进入详细日志。
-- qmd 同步入口项目化，并明确当前 qmd 维护命令仍是全量 collection。
+- 文档门禁入口项目化，并明确当前 历史检索维护命令仍是全量 collection。
 
 ## BDD 场景
 
@@ -45,5 +45,5 @@ Issue #8 收尾时，代码和本地验证已经完成，但交付闭环仍卡�
 
 ## 非目标
 
-- 不改 qmd 本体；当前 `qmd update` / `qmd embed` 仍会维护所有已配置 collection。
+- 不改 历史检索工具；当前 文档结构检查 仍会维护所有已配置 collection。
 - 不移除 release artifact 能力；只调整触发条件。

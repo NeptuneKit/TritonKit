@@ -42,7 +42,7 @@ docs-linhay/scripts/check-docs.sh
 | Batch 2 | 2 并行 | App Lifecycle / Smoke Evidence | P1 install/launch/open-url、wait/assert/evidence |
 | Gate 2 | 主控 | Main | 集成 P1、跑 schema + smoke mock、更新 docs |
 | Batch 3 | 1 串行 | Build | P2 Xcode / Gradle / hvigor build-run |
-| Gate 3 | 主控 | Main | 完整门禁、可选真实设备 smoke、memory/qmd |
+| Gate 3 | 主控 | Main | 完整门禁、可选真实设备 smoke、memory |
 
 ## 文件写入边界
 
@@ -60,7 +60,7 @@ docs-linhay/scripts/check-docs.sh
 | `Tests/TritonKitSharedTests/*` | 对应平台 agent / Contract | fixture 命名要带 `real-device` |
 | `CLI/Tests/TritonKitCLITests/*` | 对应 agent | focused tests 先红后绿 |
 | `docs-linhay/spaces/20260608-cross-platform-real-device-takeover/` | 主控为主；subagent 可追加实现 notes | 最终 docs 由主控收口 |
-| `docs-linhay/memory/` / qmd | 主控 | subagent 不写 memory |
+| `docs-linhay/memory/` / 文档记录 | 主控 | subagent 不写 memory |
 
 ## Batch 0：主控准备
 
@@ -441,7 +441,7 @@ swift test
 swift build --package-path CLI --scratch-path .build/cli --product triton
 docs-linhay/scripts/verify.sh --local
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 ```
 
 手动真机验收矩阵：

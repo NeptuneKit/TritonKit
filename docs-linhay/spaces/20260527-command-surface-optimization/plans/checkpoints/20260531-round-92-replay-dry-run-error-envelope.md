@@ -7,7 +7,7 @@
 ## Subagent 分工
 
 - Hilbert（worker）：新增进程级测试，优先只写 `CLI/Tests/TritonKitCLITests/`，不改 runtime。
-- 主控：复核测试 fixture、补临时目录清理、跑 CLI 全量验证、写回 docs / memory / qmd。
+- 主控：复核测试 fixture、补临时目录清理、跑 CLI 全量验证、写回 docs / memory。
 
 ## 完成内容
 

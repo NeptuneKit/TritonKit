@@ -62,8 +62,8 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
 3. 报告至少包含：目标、实际完成、commit checkpoint、验证、文档/skill/memory 写回、未完成 backlog、风险。
 4. 运行合适门禁：
    - 代码变更默认跑 `docs-linhay/scripts/verify.sh --local`。
-   - 纯 docs/skill 整理至少跑 `git diff --check`、`docs-linhay/scripts/check-docs.sh`、`docs-linhay/scripts/qmd-sync.sh`。
-5. 写入 `docs-linhay/memory/YYYY-MM-DD.md`，执行 qmd sync。
+   - 纯 docs/skill 整理至少跑 `git diff --check`、`docs-linhay/scripts/check-docs.sh`、`docs-linhay/scripts/check-docs.sh`。
+5. 写入 `docs-linhay/memory/YYYY-MM-DD.md`，执行文档结构检查。
 6. 做独立收尾 commit。
 7. 只有所有必要收尾完成后，才宣称巡航结束或目标完成。
 
@@ -76,7 +76,7 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
 
 ## 与其他 skill 的关系
 
-- 文档、memory、qmd、AGENTS 同步：使用 `tritonkit-ops-governance`。
+- 文档、memory、AGENTS 同步：使用 `tritonkit-ops-governance`。
 - 会话整理和模式沉淀：使用 `tritonkit-session-skill-distill`。
 - subagent 监督交付：使用 `tritonkit-subagent-supervision`。
 - 具体领域能力按需叠加 Xcode、host simulator、emulator 或真实项目回归相关 skill。

@@ -100,4 +100,4 @@ brew upgrade triton
 
 - `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`：低噪音观察 GitHub Actions run，只输出 job 状态和 URL；失败后再进入详细日志。
 - `docs-linhay/scripts/gh-issue-comment-file.sh <issue> <markdown-file>`：通过 `gh issue comment --body-file` 发送 Markdown，避免正文里的反引号命令被 shell 执行。
-- `docs-linhay/scripts/qmd-sync.sh`：固定 TritonKit 的 qmd 同步入口。当前 qmd CLI 不支持 `update/embed` 按 collection 过滤，所以脚本仍会执行全量 `qmd update` 与 `qmd embed`。
+- `docs-linhay/scripts/check-docs.sh`：固定 TritonKit 的 文档门禁入口。当前 文档记录 CLI 不支持 `update/embed` 按 collection 过滤，所以脚本仍会执行全量 `docs-linhay/scripts/check-docs.sh`。

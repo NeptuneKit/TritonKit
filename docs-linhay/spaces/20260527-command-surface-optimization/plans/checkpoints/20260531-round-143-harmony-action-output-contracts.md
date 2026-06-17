@@ -37,8 +37,8 @@
 swift test --package-path CLI --filter SchemaFactSourceTests
 git diff --check
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
-qmd query "Round 143 harmony action output contracts"
+docs-linhay/scripts/check-docs.sh
+历史检索 "Round 143 harmony action output contracts"
 ```
 
 ## 风险

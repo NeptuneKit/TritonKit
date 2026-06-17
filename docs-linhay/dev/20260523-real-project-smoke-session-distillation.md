@@ -53,4 +53,4 @@ prepare host target -> launch/open route -> wait/assert runtime or host state ->
 - 更新 `tritonkit-real-project-regression` skill，新增 Real-Project Smoke Issue Closure 检查清单。
 - 不更新 `AGENTS.md`：当前是具体领域流程沉淀，已有 repo-wide 规则足够。
 - 记忆写入 `docs-linhay/memory/2026-05-23.md`。
-- 验证走 docs/skill-only 门禁：`docs-linhay/scripts/check-docs.sh`、`git diff --check`、`docs-linhay/scripts/qmd-sync.sh`。
+- 验证走 docs/skill-only 门禁：`docs-linhay/scripts/check-docs.sh`、`git diff --check`、`docs-linhay/scripts/check-docs.sh`。

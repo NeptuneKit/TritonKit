@@ -43,7 +43,7 @@ Out of scope for this slice:
 - `swift test --filter TKPlatformFallbackTests.semanticProviderRegistry`
 - `swift test --package-path CLI --filter SchemaFactSourceTests`
 - `docs-linhay/scripts/check-docs.sh`
-- `docs-linhay/scripts/qmd-sync.sh`
+- `docs-linhay/scripts/check-docs.sh`
 - `docs-linhay/scripts/verify.sh --local`
 
 Local note: on macOS 26.4 / Xcode 17F42, some root-package SwiftPM test runs can hang after `Build complete!` while `swiftpm-xctest-helper` is still loading the `.xctest` bundle in dyld `fcntl`, before any test case starts. Use a clean temp copy named `TritonKit` for CLI package checks when the feature worktree basename causes SwiftPM package identity drift.

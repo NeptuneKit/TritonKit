@@ -64,6 +64,6 @@ TritonKit 作为 Package Manager 依赖提供给业务 App 时，embedded runtim
 - `swift build -c release --target TritonKit`
 - `swift build -c release --product triton`
 - `docs-linhay/scripts/check-docs.sh`
-- `qmd update`
-- `qmd embed`
+- `历史检索更新`
+- `历史检索嵌入`
 - GitHub CI run `26076417656` 成功

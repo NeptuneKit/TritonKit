@@ -26,8 +26,8 @@ swift test --package-path CLI --filter SchemaFactSourceTests/observationAndRunti
 swift test --package-path CLI --filter SchemaFactSourceTests
 git diff --check
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
-qmd query "Round 147 ax artifact contract test coverage"
+docs-linhay/scripts/check-docs.sh
+历史检索 "Round 147 ax artifact contract test coverage"
 ```
 
 ## 风险

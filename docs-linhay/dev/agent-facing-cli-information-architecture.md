@@ -435,7 +435,7 @@ triton replay <file.tritonplan> --json
 4. README 更新。
 5. public skills 更新。
 6. dev 文档与 space checkpoint 更新。
-7. memory 写回与 qmd 同步。
+7. memory 写回与 文档门禁。
 
 不允许出现“命令已改、schema 仍旧”或“schema 已改、skills 仍教 agent 旧路径”的状态。
 

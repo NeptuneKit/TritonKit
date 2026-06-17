@@ -79,4 +79,4 @@ And 新增字段对旧 JSON 解码保持可选兼容。
 - 新增 CLI plan 测试覆盖 bootstrap 下 `afterRecoverySteps`。
 - 新增 CLI/schema 测试覆盖 Harmony open-url 输入与 schema-backed argv。
 - 更新 agent-facing 文档、public skills 与 memory 中的 plan 契约说明。
-- 运行相关 Swift 测试、`docs-linhay/scripts/check-docs.sh`、`git diff --check`，尽量运行 `docs-linhay/scripts/qmd-sync.sh`。
+- 运行相关 Swift 测试、`docs-linhay/scripts/check-docs.sh`、`git diff --check`，尽量运行 `docs-linhay/scripts/check-docs.sh`。

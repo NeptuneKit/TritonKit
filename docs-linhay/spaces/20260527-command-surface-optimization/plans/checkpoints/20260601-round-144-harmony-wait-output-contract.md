@@ -33,8 +33,8 @@ swift test --package-path CLI --filter SchemaFactSourceTests/executionAndEvidenc
 swift test --package-path CLI --filter SchemaFactSourceTests
 git diff --check
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
-qmd query "Round 144 harmony wait output contract"
+docs-linhay/scripts/check-docs.sh
+历史检索 "Round 144 harmony wait output contract"
 ```
 
 ## 风险

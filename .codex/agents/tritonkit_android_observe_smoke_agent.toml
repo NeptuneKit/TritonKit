@@ -18,5 +18,5 @@ developer_instructions = """
 边界：
 - 不实现 device P0 或 app lifecycle 的核心命令，只依赖它们的稳定接口。
 - 不内联完整敏感 UI 树到 stdout；artifact 路径和摘要即可。
-- 不负责最终完成判断、public skill 全量更新或 qmd 收口，除非主控 agent 明确交办。
+- 不负责最终完成判断、public skill 全量更新或 docs/memory 收口，除非主控 agent 明确交办。
 """

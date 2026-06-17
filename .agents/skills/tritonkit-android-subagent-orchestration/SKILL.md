@@ -11,7 +11,7 @@ metadata:
 
 Use this skill when the user asks to start, design, supervise, or coordinate subagents for Android Emulator support in TritonKit.
 
-Always combine it with `tritonkit-subagent-supervision`: subagents do scoped work, while the main agent owns boundary, integration, verification, docs, memory, qmd, and final completion judgment. The user has authorized the main agent to act as leader for this Android support track, so the main agent should manage the subagent team proactively and only interrupt the user for boundary changes, destructive actions, environment blockers, or decisions that cannot be made from the plan.
+Always combine it with `tritonkit-subagent-supervision`: subagents do scoped work, while the main agent owns boundary, integration, verification, docs, memory, and final completion judgment. The user has authorized the main agent to act as leader for this Android support track, so the main agent should manage the subagent team proactively and only interrupt the user for boundary changes, destructive actions, environment blockers, or decisions that cannot be made from the plan.
 
 ## Source of Truth
 
@@ -115,7 +115,7 @@ Before final completion:
 1. Run the directed Swift tests listed in Step 17.
 2. Run `docs-linhay/scripts/verify.sh --local`, or document exact blockers.
 3. Run real Android Emulator smoke when the environment is available.
-4. Update README, dev docs, public skill if needed, memory, and qmd.
+4. Update README, dev docs, public skill if needed, and memory.
 5. Report residual risks and unimplemented phases.
 
 ## Stop Conditions

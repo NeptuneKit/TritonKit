@@ -18,7 +18,7 @@
 
 - Given subagent 已完成某个 issue 的实现
 - When 主控 agent 收尾
-- Then 必须逐 worktree 检查 clean status、最近 commit、测试结果、docs/memory 写回和 qmd 同步
+- Then 必须逐 worktree 检查 clean status、最近 commit、测试结果、docs/memory 写回和 文档门禁
 - And 未完成验证前不能宣称 issue 完成
 - And push、PR、merge、删除 worktree 必须等待用户明确指令
 
@@ -34,7 +34,7 @@
 
 - Issue #20 使用 `docs-linhay/spaces/20260522-issue-20-tap-activation/`、branch `feat/20260522-issue-20-tap-activation`、worktree `../TritonKit-worktrees/20260522-issue-20-tap-activation/`，提交为 `e72d398 fix: activate tappable ancestors for text matches`。
 - Issue #21 使用 `docs-linhay/spaces/20260522-issue-21-server-log-noise/`、branch `feat/20260522-issue-21-server-log-noise`、worktree `../TritonKit-worktrees/20260522-issue-21-server-log-noise/`，提交为 `ed42ca5 fix: avoid runtime websocket noise when server is down`。
-- 两个 worktree 分别通过对应 Swift 测试、文档检查、`git diff --check` 和 qmd 同步；#20 额外通过 iOS Simulator `xcodebuild test` 与 CLI build。
+- 两个 worktree 分别通过对应 Swift 测试、文档检查、`git diff --check` 和 文档门禁；#20 额外通过 iOS Simulator `xcodebuild test` 与 CLI build。
 - 主仓存在并行 WebView / transport 改动，本轮未把这些文件混入 #20 / #21 分支。
 
 ## 复用入口
@@ -42,7 +42,7 @@
 - `.agents/skills/tritonkit-subagent-supervision/SKILL.md`
 - `.agents/skills/tritonkit-ops-governance/SKILL.md`
 - `docs-linhay/scripts/check-docs.sh`
-- `docs-linhay/scripts/qmd-sync.sh`
+- `docs-linhay/scripts/check-docs.sh`
 
 ## 不纳入
 

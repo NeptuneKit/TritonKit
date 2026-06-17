@@ -19,7 +19,7 @@ description: TritonKit 会话沉淀入口：处理“整理”及可复用模式
    - 后续还会重复的，先沉淀到项目级 skill。
    - repo-wide 且长期稳定的，再考虑更新 AGENTS。
 3. 同步写入对应 docs 与 memory。
-4. 执行 `qmd update` 与 `qmd embed`。
+4. 执行 `docs-linhay/scripts/check-docs.sh`。
 
 ## SwiftPM / CLI 修复沉淀
 
@@ -59,5 +59,5 @@ description: TritonKit 会话沉淀入口：处理“整理”及可复用模式
 
 - 是否已经更新相关 skill。
 - 是否已写入 `docs-linhay/dev/` 或 `docs-linhay/memory/`。
-- 是否已跑 `qmd update` 与 `qmd embed`。
+- 是否已跑 `docs-linhay/scripts/check-docs.sh`。
 - 是否需要进一步升级到 `AGENTS.md`。

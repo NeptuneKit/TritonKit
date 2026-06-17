@@ -479,7 +479,7 @@ swift build --package-path CLI --scratch-path .build/cli --product triton
 .build/cli/debug/triton schema --command evidence --json
 TRITON_BIN=.build/cli/debug/triton docs-linhay/scripts/verify-harmony-host-smoke.sh
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 ```
 
 Run real emulator smoke only when safe for the current machine:

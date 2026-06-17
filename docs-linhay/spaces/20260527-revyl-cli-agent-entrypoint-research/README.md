@@ -75,7 +75,7 @@ TritonKit 当前产品边界仍是本机 CLI + 本机模拟器/仿真器 + embed
 6. 建立共享 execution status / result model，统一 active、terminal、success、failure、timeout、cancelled 的判断。
 7. 设计 `triton mcp serve --profile core/full` 的范围和工具分组；本期可先出设计与 schema，不强制实现完整 MCP。
 8. 新增真实项目/CI 接入示例：本机 CLI install、device/app run、capture/assert、artifact upload、comment summary。
-9. 同步 README、public skills、`docs-linhay/dev/`、memory 与 qmd。
+9. 同步 README、public skills、`docs-linhay/dev/`、memory 与 文档记录。
 
 ### Out of Scope
 

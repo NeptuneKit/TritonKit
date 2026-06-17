@@ -1,6 +1,6 @@
 ---
 name: tritonkit-ops-governance
-description: TritonKit 流程治理：CLI/HTTP/Wails 开发回路、文档记忆写回、AGENTS 同步与 qmd 索引。
+description: TritonKit 流程治理：CLI/HTTP/Wails 开发回路、文档记忆写回与 AGENTS 同步。
 metadata:
   version: 0.1.0-dev
 ---
@@ -45,7 +45,7 @@ metadata:
 - 手动 `workflow_dispatch` 只验证 release asset 集合并上传 workflow artifact，不渲染 Homebrew formula；只有真实 `v*` tag 构建才用 `GITHUB_REF_NAME` 渲染 formula，避免 dev 版本 `0.1.0-dev+<sha>` 被拼成无效 release tag。
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 只跑 `TritonKit.podspec` lint，Shared/iOS/未分类改动在 CI 中并行跑 Swift tests、两个 podspec lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 用户明确要求“实现完成再测试 / 分段提交”时，每个切片先完成代码、测试、schema、文档与 memory 的一致性改动，再集中跑该切片的 focused tests、必要 schema tests、完整回归和文档门禁；不要在同一切片里每改几行就停下来跑测试，除非正在定位失败。
-- 有副作用或共享状态的命令必须单飞，不进入 `multi_tool_use.parallel`：`git add/commit/tag/push/merge`、`docs-linhay/scripts/qmd-sync.sh`、会写同一 scratch path 的 SwiftPM build/test、会启动/停止服务或修改本机/模拟器状态的命令。只有只读检查或彼此独立的文件读取、搜索、不同 scratch path 的纯构建验证，才适合并行。
+- 有副作用或共享状态的命令必须单飞，不进入 `multi_tool_use.parallel`：`git add/commit/tag/push/merge`、会写同一 scratch path 的 SwiftPM build/test、会启动/停止服务或修改本机/模拟器状态的命令。只有只读检查或彼此独立的文件读取、搜索、不同 scratch path 的纯构建验证，才适合并行。
 - GitHub issue / PR 评论若包含 Markdown 命令片段，必须通过文件传给 `gh --body-file`，优先使用 `docs-linhay/scripts/gh-issue-comment-file.sh`，避免 shell 执行反引号内容。
 - 上报 GitHub issue 前必须脱敏工程和个人信息：真实工程名、App 名、bundle ID、team ID、组织名、用户名、账号、邮箱、手机号、内网域名、绝对私有路径、完整私有日志、未脱敏截图和证据包不得进入公开 issue；必要时使用 `<private-app>`、`<bundle-id>`、`<user>`、`<internal-host>`、`<repo-path>` 等占位符，并保留平台版本、TritonKit 版本、命令、错误码和最小可复现片段。
 - GitHub Actions 状态观察优先使用 `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`；失败后再拉完整日志，避免 `gh run watch` 重复输出淹没关键状态。
@@ -58,11 +58,8 @@ metadata:
 - 需求与验收：`docs-linhay/features/`。
 - 架构、技术方案、测试策略：`docs-linhay/dev/`。
 - 关键决策、里程碑、风险结论：`docs-linhay/memory/YYYY-MM-DD.md`。
-- 写回 docs 或 memory 后执行 `qmd update` 与 `qmd embed`。
-- qmd 写回同步优先使用 `docs-linhay/scripts/qmd-sync.sh`。当前 qmd CLI 不支持 `update/embed` 按 collection 过滤，脚本仍会执行全量维护并显式提示这一限制。
-- `docs-linhay/scripts/qmd-sync.sh` 不是并发安全门禁；若出现 qmd store constraint、Metal embedding 编译输出或重复 embed 噪音，先确认是否有并发实例，等待所有实例结束后单独重跑一次，并只以最后一次单飞退出码作为整理提交依据。
 - 用户要求“整理会话”时，先用 `git status --short --branch` 和 `git diff --stat` 隔离已提交代码、未提交文档、外部仓验证和临时产物；只 stage 本次整理相关文件，不默认 `git add -A`。
-- 用户要求 subagent 并行处理多个 GitHub issue 且强调不要串工作时，按 issue 建独立 `space` / `feat/<space-key>` / `../TritonKit-worktrees/<space-key>/`；主控 agent 逐 worktree 检查 clean status、commit、测试、docs/memory/qmd，不把多个 issue 或主仓并行改动混成一个提交。
+- 用户要求 subagent 并行处理多个 GitHub issue 且强调不要串工作时，按 issue 建独立 `space` / `feat/<space-key>` / `../TritonKit-worktrees/<space-key>/`；主控 agent 逐 worktree 检查 clean status、commit、测试、docs/memory，不把多个 issue 或主仓并行改动混成一个提交。
 - 用户要求“其他 worktree 都结束了就合并到主分支后删除”时，收尾顺序固定为：`git worktree list --porcelain` 枚举，逐 worktree 跑 `git status --short --branch`，用 `git log main..<branch>` 和 `git merge-base --is-ancestor` 判断是否还有未合入提交，对需要合入的分支先用 `git merge-tree --write-tree main <branch>` 做无副作用冲突预检；合入主仓后必须在主仓跑门禁，通过后再 `git worktree remove <path>`，最后复查 registered worktree 只剩主仓。空包装目录可在确认不是 registered worktree 且为空后用 `rmdir` 清理；本地/远端分支不随 worktree 默认删除。
 - 调整 CI、Release 或发布产物契约时，同步更新 `docs-linhay/dev/` 与 memory。
 - 调整 Homebrew、tap、checksum 或 release asset 命名时，同步更新 README、`.github/homebrew/`、`docs-linhay/dev/` 与 memory。
@@ -91,6 +88,5 @@ metadata:
 - BDD 场景满足。
 - 相关测试已运行并通过，或明确说明阻塞和风险。
 - 文档与 memory 已更新。
-- `qmd update` 与 `qmd embed` 已执行。
 - 若产生可复用模式，已更新对应 skill 或说明暂不沉淀。
 - 若任务要求“从头开始”，需同步检查 docs、skills 和 AGENTS 是否仍残留旧方向规则。

@@ -63,7 +63,7 @@
 - observation group 拆分后 CLI 全量回归：`swift test --package-path CLI` 通过，78 个 Swift Testing 用例通过。
 - action group 拆分后 schema 聚焦回归：`swift test --package-path CLI --filter SchemaFactSourceTests` 通过，7 个 Swift Testing 用例通过。
 - action group 拆分后 CLI 全量回归：`swift test --package-path CLI` 通过，78 个 Swift Testing 用例通过。
-- 收尾验证：`git diff --check` 通过；`docs-linhay/scripts/qmd-sync.sh` 完成并成功 embed 40 chunks from 3 documents；`swift test --package-path CLI` 通过，78 个 Swift Testing 用例通过。
+- 收尾验证：`git diff --check` 通过；`docs-linhay/scripts/check-docs.sh` 完成并成功 embed 40 chunks from 3 documents；`swift test --package-path CLI` 通过，78 个 Swift Testing 用例通过。
 
 ## 决策
 
@@ -79,7 +79,7 @@
 
 ## 风险
 
-- 本轮操作仍误用过并行 wrapper 触发 SwiftPM、qmd、check 命令；其中一个 qmd session 因 SQLite primary key constraint 失败，另一个 qmd session 完整成功并完成 embed。后续巡航必须严格单命令串行执行 SwiftPM、qmd、check-docs。
+- 本轮操作仍误用过并行 wrapper 触发 SwiftPM、文档记录、check 命令；其中一个 历史检索 session 因 SQLite primary key constraint 失败，另一个 历史检索 session 完整成功并完成 embed。后续巡航必须严格单命令串行执行 SwiftPM、文档记录、check-docs。
 - `CLISchemaRuntime.swift` 已降到约 13 行，只保留组合调用，root 治理目标已完成。
 - 后续重点转向最终验收和报告收敛，不再治理 root 大小。
 

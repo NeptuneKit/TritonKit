@@ -160,7 +160,7 @@ swift build --package-path CLI --scratch-path .build/cli --product triton
 .build/cli/debug/triton schema --command sim --json
 .build/cli/debug/triton schema --command app --json
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 ```
 
 Run real simulator smoke only when it is safe for the current machine state:

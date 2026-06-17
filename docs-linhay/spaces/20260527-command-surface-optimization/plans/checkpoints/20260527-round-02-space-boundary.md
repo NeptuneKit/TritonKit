@@ -35,10 +35,10 @@ git diff --check -- docs-linhay/spaces/20260527-command-surface-optimization doc
 结果：无输出，表示未发现 whitespace error。
 
 ```bash
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 ```
 
-结果：`qmd update` 与 `qmd embed` 完成；本机仍打印 Metal 编译告警，但 embedding 成功。
+结果：`docs-linhay/scripts/check-docs.sh` 完成；本机仍打印 Metal 编译告警，但 embedding 成功。
 
 ## 决策
 

@@ -23,8 +23,7 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
    - 自动化验证
    - HTTP 接口或端到端验收
    - docs / memory 写回
-   - `qmd update`
-   - `qmd embed`
+   - 文档结构检查
 5. 如果仍有未完成项，继续推进；如果卡住，明确写出 blocker 和剩余工作。
 
 ## Leader 自主管理
@@ -49,7 +48,7 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
 4. 每个 subagent 只负责自己的 issue worktree，不跨 worktree 读取或修改同一批实现文件。
 5. 主控 agent 在主仓或独立只读上下文里监督，不把多个 issue 的代码、文档、memory 提交混在同一个 commit。
 6. 若主仓已有未提交改动，先记录为并行上下文，只读核对；除非用户明确要求，不 stage、不重置、不顺手修。
-7. issue 分支收尾时分别检查 `git status --short --branch`、最近 commit、测试结果、docs/memory/qmd 状态，再汇总给用户。
+7. issue 分支收尾时分别检查 `git status --short --branch`、最近 commit、测试结果、docs/memory 状态，再汇总给用户。
 8. 只有用户明确要求时才 push、开 PR、合并或删除 worktree。
 
 ## 停止条件

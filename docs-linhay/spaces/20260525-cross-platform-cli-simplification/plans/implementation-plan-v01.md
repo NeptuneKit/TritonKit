@@ -13,7 +13,7 @@
 1. `device` 的统一契约保持稳定，schema、测试和真实 smoke 一致。
 2. iOS 与 Harmony 的设备发现、选择、等待和截图都走统一入口。
 3. `sim` 继续保留，不做破坏性迁移。
-4. 文档、memory、qmd 同步完成。
+4. 文档与 memory 同步完成。
 
 ## 里程碑
 
@@ -45,7 +45,7 @@
 
 - 更新 `README.md`、`docs-linhay/dev/`、`docs-linhay/memory/`。
 - 执行 `docs-linhay/scripts/check-docs.sh`。
-- 执行 `qmd update` 与 `qmd embed`。
+- 执行 `docs-linhay/scripts/check-docs.sh`。
 
 ## 交付物
 

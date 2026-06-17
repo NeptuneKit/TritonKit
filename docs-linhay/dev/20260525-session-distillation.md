@@ -74,7 +74,7 @@ x86_64 CLI 资产由 Intel runner 后补上传并再次刷新 checksum / tap。�
   - `docs-linhay/scripts/verify-harmony-runtime-base-url-smoke.sh`
   - `docs-linhay/scripts/verify.sh --local`
   - `docs-linhay/scripts/check-docs.sh`
-  - `docs-linhay/scripts/qmd-sync.sh`
+  - `docs-linhay/scripts/check-docs.sh`
 - `v0.1.9` Release 已发布：https://github.com/NeptuneKit/TritonKit/releases/tag/v0.1.9
 - Homebrew arm64 链路已验证：`brew fetch --formula NeptuneKit/tap/triton` 返回 `Formula triton (0.1.9)`。
 - tag CI run `26391554956` 最终成功，x86_64 backfill 已上传 `triton-macos-x86_64.tar.gz` 并刷新 `tritonkit_checksums.txt`。

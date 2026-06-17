@@ -109,7 +109,7 @@ Use this table before falling back to raw `xcodebuild`:
 3. Implement the domain service behind CLI so future HTTP/MCP can reuse it.
 4. Add CLI schema entries for every agent-facing command.
 5. Add or update evidence/plan integration when artifacts or replay steps change.
-6. Sync `README.md`, `docs-linhay/dev/ai-cli-readable-control.md`, relevant skills, memory, and qmd.
+6. Sync `README.md`, `docs-linhay/dev/ai-cli-readable-control.md`, relevant skills, and memory.
 
 ## Validation
 
@@ -120,7 +120,6 @@ swift test
 swift build --package-path CLI --scratch-path .build/cli --product triton
 .build/cli/debug/triton schema --command xcode --json
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
 ```
 
 When implementation exists, add focused smoke:

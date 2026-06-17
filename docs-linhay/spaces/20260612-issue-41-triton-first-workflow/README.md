@@ -57,4 +57,4 @@ Then `plan` schema 的 `outputSemantics` 必须明确说明 plan 也是 fallback
 - README、`docs-linhay/dev/ai-cli-readable-control.md`、`TritonKit.skills/*` 和 `.agents/skills/*` 均出现 Triton-first fallback gate。
 - `triton plan` 的 schema 语义与 `SchemaFactSourceTests` 能证明 plan 是 fallback gate 的机器可读入口。
 - 文档不新增 Web/Wails、真机、远端 agent 或设备云边界。
-- 验证命令覆盖 docs check、qmd sync 和相关 schema/docs tests。
+- 验证命令覆盖 docs check、文档门禁 和相关 schema/docs tests。

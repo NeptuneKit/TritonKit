@@ -145,7 +145,7 @@ docs-linhay/scripts/verify.sh --local
 | schema/capabilities 暴露 Harmony P0 | `schema --command device` 与 `capabilities --json` | 通过 |
 | 不保存真实 UI/layout/log/device 文件 | 真实 `device doctor` 返回 `artifactsSaved=false`；本轮未执行截图、layout、日志、file recv | 通过 |
 | 不使用交互式确认 gate | `rg requiresConfirmation Sources Tests` 无结果；测试覆盖 risk/config/policy | 通过 |
-| 文档、memory、qmd 同步 | 本报告、memory 写回、`qmd-sync.sh` | 通过 |
+| 文档与 memory 同步 | 本报告、memory 写回、`文档门禁` | 通过 |
 | 真实 target `wait-ready` | 当前 `targets=[]`，无 Connected HDC target | 未执行，非 P0 通过条件 |
 
 ## 结论
@@ -276,7 +276,7 @@ docs-linhay/scripts/verify.sh --ci-validate
 | 真实 UI 输入不依赖桌面盲点 | 点击坐标来自 `smoke-increment` layout bounds 中心点 | 通过 |
 | 仓库本地门禁 | `docs-linhay/scripts/verify.sh --local` | 通过 |
 | CI validate 门禁 | `docs-linhay/scripts/verify.sh --ci-validate` | 通过 |
-| 文档、memory、qmd 同步 | README、formal verification、memory 更新；`qmd-sync.sh` 与 `qmd query` 验证 | 通过 |
+| 文档与 memory 同步 | README、formal verification、memory 更新；`文档门禁` 与 `历史检索` 验证 | 通过 |
 
 ### 更新后的结论
 

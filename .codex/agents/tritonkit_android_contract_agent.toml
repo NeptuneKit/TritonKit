@@ -18,5 +18,5 @@ developer_instructions = """
 边界：
 - 不实现 adb runtime、真实 host command 执行、app lifecycle 或 UIAutomator 行为，除非只是为了让契约测试编译的最小 stub。
 - 不修改 Web/Wails UI，不支持真机、远端 agent 或设备云。
-- 不负责最终集成、真实 emulator 验收、docs/memory/qmd 收口。
+- 不负责最终集成、真实 emulator 验收、docs/memory 收口。
 """

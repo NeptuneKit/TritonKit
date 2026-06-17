@@ -69,7 +69,7 @@
 
 - 当前只通过 helper 级测试验证 envelope preserve，没有启动真实 server 造 HTTP 504 runtime response；后续可加 httptest/handler 级验证。
 - WebView selection、smoke step failure 和 command-local validation failure 已纳入 schema 测试；后续还可继续做“源码 error code 自动抽取 vs schema”审计，降低人工硬编码遗漏。
-- 本轮执行中误触发过并发 SwiftPM / qmd 命令；最终相关命令均完成并通过，但后续必须严格避免并发 SwiftPM 和 qmd。第四批也出现过 SwiftPM 等待另一个实例的提示，后续必须单命令串行调用。
+- 本轮执行中误触发过并发 SwiftPM / 文档记录 命令；最终相关命令均完成并通过，但后续必须严格避免并发 SwiftPM 和 文档记录。第四批也出现过 SwiftPM 等待另一个实例的提示，后续必须单命令串行调用。
 
 ## 下一轮建议
 

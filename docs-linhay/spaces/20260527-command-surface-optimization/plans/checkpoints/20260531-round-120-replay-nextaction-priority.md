@@ -33,7 +33,7 @@
 ## 剩余风险
 
 - 当前 replay failure surface 的顺序规则已经统一，但聚合逻辑仍分布在 shared model 和 CLI helper 两处；后续若继续扩展 failure ordering 或 artifact ordering，可能需要再下沉一层共享 helper。
-- `qmd embed` 仍然存在 chunk failed 的历史问题，虽然不影响本轮 checkpoint 可检索，但会影响长期索引质量，需要单独治理。
+- `历史检索嵌入` 仍然存在 chunk failed 的历史问题，虽然不影响本轮 checkpoint 可检索，但会影响长期索引质量，需要单独治理。
 
 ## 下一步
 

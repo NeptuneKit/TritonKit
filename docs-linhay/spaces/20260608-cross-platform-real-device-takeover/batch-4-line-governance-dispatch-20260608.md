@@ -4,7 +4,7 @@
 
 Batch 4 已完成。它处理 Batch 3 收尾后留下的 Swift 文件超过 1500 行治理项。
 
-本批次目标不是新增真机能力，而是在保持 P0/P1/P2 行为不变的前提下，将超线文件按职责拆分，降低后续维护成本。主控 agent 继续负责需求边界、subagent 调度、集成、验证、docs、memory、qmd 和最终完成判断。
+本批次目标不是新增真机能力，而是在保持 P0/P1/P2 行为不变的前提下，将超线文件按职责拆分，降低后续维护成本。主控 agent 继续负责需求边界、subagent 调度、集成、验证、docs 与 memory 和最终完成判断。
 
 ## 超线文件
 
@@ -46,7 +46,7 @@ swift build --package-path CLI --scratch-path .build/cli --product triton
 docs-linhay/scripts/verify.sh --local
 docs-linhay/scripts/check-docs.sh
 git diff --check
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 ```
 
 ## 完成结果
@@ -80,4 +80,4 @@ Batch 4 不新增真机能力；P0/P1/P2 的准确状态保持为：target 发�
 1. 4 个原始超线文件均低于 1500 行。
 2. 新拆出的文件职责清晰，且不产生新的超过 1500 行文件。
 3. focused gate 和本地门禁通过，或明确记录环境 blocker。
-4. space、memory 和 qmd 已写回。
+4. space 和 memory 已写回。

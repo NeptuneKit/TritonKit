@@ -148,12 +148,12 @@ docs-linhay/scripts/verify.sh --local
 3. `docs: clarify SwiftPM debug integration boundary`
    - Phase 3 文档口径。
 
-### Memory / qmd
+### Memory / 文档记录
 
 每次合并前更新：
 
 - `docs-linhay/memory/2026-06-05.md` 或对应日期日志。
-- 执行 `docs-linhay/scripts/qmd-sync.sh`。
+- 执行 `docs-linhay/scripts/check-docs.sh`。
 
 ## 风险与回滚
 

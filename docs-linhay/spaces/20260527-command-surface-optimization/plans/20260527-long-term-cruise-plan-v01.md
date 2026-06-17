@@ -176,7 +176,7 @@ README、public skills、真实项目回归指南和 dev 文档全部改成新�
 2. 不碰外部私有项目、账号、证书、签名资产或敏感日志。
 3. 不执行破坏性 simulator / runtime 操作，除非已有 dry-run、显式确认和测试覆盖。
 4. 不恢复 Web / Wails UI，除非另建 space 重新定义边界。
-5. 每轮完成后必须有 checkpoint：改动范围、验证命令、剩余风险、memory / qmd 状态。
+5. 每轮完成后必须有 checkpoint：改动范围、验证命令、剩余风险、memory 状态。
 6. 若本地验证连续失败且无法小步恢复，暂停并写明阻塞。
 
 ## 里程碑视图
@@ -190,7 +190,7 @@ README、public skills、真实项目回归指南和 dev 文档全部改成新�
 - 本文档能直接指导长期运行。
 - 明确“不维护 legacy / compatibility 层”。
 - 明确 CLI 与随包 skills 同步破坏性演进。
-- memory 与 qmd 已同步。
+- memory 与 文档门禁已完成。
 
 ### M1：当前命令面稳定化
 
@@ -247,7 +247,7 @@ README、public skills、真实项目回归指南和 dev 文档全部改成新�
 5. 先补测试或可执行证据，再做最小实现或文档更新。
 6. 运行聚焦验证。
 7. 更新本计划的 checkpoint 或对应轮次状态文档。
-8. 写入 memory，执行 qmd 同步。
+8. 写入 memory，执行 文档门禁。
 9. 若改动稳定且用户允许本地 checkpoint，可提交；默认不 push。
 
 ## 每轮 checkpoint 模板
@@ -374,7 +374,7 @@ checkpoint 只记录稳定事实，不记录临时猜测；如果发现可复用
 验证：
 
 - `docs-linhay/scripts/check-docs.sh`
-- `docs-linhay/scripts/qmd-sync.sh`
+- `docs-linhay/scripts/check-docs.sh`
 
 ### 第 3 轮：冻结当前命令面基线
 
@@ -670,13 +670,13 @@ checkpoint 只记录稳定事实，不记录临时猜测；如果发现可复用
 - 补齐 `docs-linhay/scripts/create-space.sh` 或修正相关治理规则
 - 检查 `verify.sh`
 - 检查 `check-docs.sh`
-- 检查 `qmd-sync.sh`
-- 修复或记录 qmd query / embedding 异常降级策略
+- 检查 `文档门禁`
+- 修复或记录 历史检索 / embedding 异常降级策略
 
 验证：
 
 - `docs-linhay/scripts/check-docs.sh`
-- `docs-linhay/scripts/qmd-sync.sh`
+- `docs-linhay/scripts/check-docs.sh`
 - create-space dry-run 或临时路径验证
 
 ### 第 21 轮：巡航总结与下一期 backlog
@@ -687,7 +687,7 @@ checkpoint 只记录稳定事实，不记录临时猜测；如果发现可复用
 
 - `cruise-wrap-report-<YYYYMMDD>-v01.md`
 - memory 写回
-- qmd 同步
+- 文档门禁
 - checkpoint commit 清单
 - 下一期 backlog
 
@@ -701,5 +701,5 @@ checkpoint 只记录稳定事实，不记录临时猜测；如果发现可复用
 1. agent-facing CLI 信息架构完成破坏性重排。
 2. `triton schema`、README、public skills、dev 文档和测试完全同步当前契约。
 3. 至少一条 iOS 回归链路和一条 Harmony 回归链路有可复查证据。
-4. memory 与 qmd 已同步。
+4. memory 与 文档门禁已完成。
 5. 未完成事项进入下一期 backlog，而不是散落在会话中。

@@ -75,7 +75,7 @@ swift build --package-path CLI --scratch-path .build/cli --product triton
 .build/cli/debug/triton build harmony --project <tmp> --hvigor <fake-hvigor> --module entry --mode debug --device harmony-a --json
 .build/cli/debug/triton build ios --jsonl
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 docs-linhay/scripts/verify.sh --local
 ```
 
@@ -96,7 +96,7 @@ docs-linhay/scripts/verify.sh --local
 - P2 runner focused gate：`BuildRuntimeTests|BuildRunnerTests|SchemaFactSourceTests|DeviceCrossPlatformTests|AppOpenURLFlowTests|SmokeRuntimeTests|SmokeAndroidRuntimeTests|SmokeHarmonyRuntimeTests|EvidenceBundleTests|FailureDiagnosticsTests`，10 suites / 163 tests 通过。
 - `verify-harmony-host-smoke.sh` 复现点通过。
 - `docs-linhay/scripts/check-docs.sh` 通过。
-- `docs-linhay/scripts/qmd-sync.sh` 通过。
+- `docs-linhay/scripts/check-docs.sh` 通过。
 - runner 落地后重新执行 `docs-linhay/scripts/verify.sh --local` 通过，覆盖 SwiftPM dependency boundary、iOS DEBUG isolation、Swift tests 166 tests、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build、docs structure 和 git diff whitespace check。
 
 验收判断：

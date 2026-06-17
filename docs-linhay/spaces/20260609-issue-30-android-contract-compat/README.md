@@ -55,5 +55,5 @@ And 每个 selector 应有稳定 model/field/failure 信息，避免从 prose �
 - `DeviceCrossPlatformTests` 覆盖 Android app inspect / ax 兼容 schema。
 - schema tests 覆盖 Android platform-specific output contract selector。
 - parser/runtime tests 覆盖 Android inspect/ax 可用 fake ADB fixture，不触碰真实 emulator。
-- 相关 Swift tests、`docs-linhay/scripts/check-docs.sh`、`git diff --check` 通过；`qmd-sync` 尽量执行。
+- 相关 Swift tests、`docs-linhay/scripts/check-docs.sh`、`git diff --check` 通过；文档同步 尽量执行。
 - 更新 memory；若对外 agent 使用口径变化，更新 public skill。

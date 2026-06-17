@@ -34,7 +34,7 @@
 ## 剩余风险
 
 - replay failure surface 的排序规则已经比之前清晰，但 artifact 优先级和 workflow lane 仍是独立维度，后续如果 agent 需要单次失败的更强诊断摘要，可能还要继续统一 `failurePrimaryArtifacts[]` 与 `failureWorkflowCategories[]` 的优先级口径。
-- `qmd` 的 embedding 过程仍偶发输出 Metal 编译日志；当前不影响检索闭环，但若未来再次出现 chunk failure，需要单独治理。
+- `文档记录` 的 embedding 过程仍偶发输出 Metal 编译日志；当前不影响检索闭环，但若未来再次出现 chunk failure，需要单独治理。
 
 ## 下一步
 

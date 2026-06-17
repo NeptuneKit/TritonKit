@@ -28,7 +28,7 @@
 2. P0 实现项能拆成小步 TDD：skill catalog、skill export/install、schema workflows、evidence summary、status model。
 3. 每个实现项都有测试入口、文档入口和回归命令。
 4. 不把 Revyl 的云设备、账号、dashboard、build upload 路线带入本期。
-5. 文档、memory、qmd 同步完成。
+5. 文档与 memory 同步完成。
 
 ## 里程碑
 
@@ -43,7 +43,7 @@
 验收：
 
 - `docs-linhay/scripts/check-docs.sh` 通过。
-- `qmd query "Revyl CLI agent entrypoint"` 能检索到本 space 或 memory。
+- `历史检索 "Revyl CLI agent entrypoint"` 能检索到本 space 或 memory。
 
 ### M1. Public skill catalog 与 skill 命令
 
@@ -254,7 +254,7 @@ Full profile 候选：
 ```bash
 swift test --package-path CLI --scratch-path .build/cli
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 ```
 
 涉及 release/skill 包时追加：
@@ -267,7 +267,7 @@ docs-linhay/scripts/verify.sh --local
 若某阶段只改文档：
 
 - 跑 `docs-linhay/scripts/check-docs.sh`
-- 跑 `docs-linhay/scripts/qmd-sync.sh`
+- 跑 `docs-linhay/scripts/check-docs.sh`
 - 明确说明未运行 Swift tests 的原因
 
 ## 风险与对策
@@ -288,7 +288,7 @@ docs-linhay/scripts/verify.sh --local
 - 更新 public skills。
 - 写入 `docs-linhay/memory/YYYY-MM-DD.md`。
 - 执行 `docs-linhay/scripts/check-docs.sh`。
-- 执行 `docs-linhay/scripts/qmd-sync.sh`。
+- 执行 `docs-linhay/scripts/check-docs.sh`。
 
 ## 当前状态
 

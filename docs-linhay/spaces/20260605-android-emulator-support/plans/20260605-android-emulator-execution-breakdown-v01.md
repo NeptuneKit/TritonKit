@@ -432,7 +432,7 @@ triton smoke android --device android-a --bundle <package> --open-url "example:/
 | App | `.codex/agents/tritonkit_android_app_agent.toml` | Step 8 | Batch 2 |
 | Observe Smoke | `.codex/agents/tritonkit_android_observe_smoke_agent.toml` | Step 9-12, Step 14 | Batch 3 |
 
-主控 agent 保留 Step 0、Step 15、Step 16、Step 17，并负责合并结果、跑门禁、真实 emulator 验收、docs/memory/qmd 收口和最终完成判断。
+主控 agent 保留 Step 0、Step 15、Step 16、Step 17，并负责合并结果、跑门禁、真实 emulator 验收、docs/memory 收口和最终完成判断。
 
 启动 subagents 前先使用 `tritonkit-android-subagent-orchestration`，避免职责漂移或多个 subagent 同时写同一批文件。
 
@@ -460,4 +460,4 @@ docs-linhay/scripts/verify.sh --local
 2. fake adb 和真实 emulator smoke 都有记录。
 3. 所有 Android CLI 输出都是 JSON / JSONL / artifact，不依赖裸 adb 人读输出。
 4. 失败路径有稳定 error code 和 recovery nextAction。
-5. 文档、memory、qmd 同步完成。
+5. 文档与 memory 同步完成。

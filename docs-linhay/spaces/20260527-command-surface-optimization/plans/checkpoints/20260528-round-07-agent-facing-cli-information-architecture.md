@@ -11,7 +11,7 @@
   - 定义 agent 标准流程：`version -> schema -> doctor -> capabilities -> plan`。
   - 定义 target 选择流程：`target list -> resolve -> use -> current -> wait-ready`。
   - 定义 command schema、capabilities、doctor、plan、error envelope、evidence / replay 的机器可读契约。
-  - 明确破坏性更新必须同步命令实现、schema、测试、README、public skills、dev 文档、checkpoint、memory 和 qmd。
+  - 明确破坏性更新必须同步命令实现、schema、测试、README、public skills、dev 文档、checkpoint、memory 和 文档记录。
   - 建立 Round 08 至 Round 14 的后续切片映射。
 - 更新 `docs-linhay/spaces/20260527-command-surface-optimization/README.md`：
   - 将新架构文档加入当前 space 的关联文档。

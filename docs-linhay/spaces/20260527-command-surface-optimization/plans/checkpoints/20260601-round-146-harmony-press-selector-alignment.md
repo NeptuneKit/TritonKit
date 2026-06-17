@@ -29,8 +29,8 @@ swift test --package-path CLI --filter SchemaFactSourceTests/executionAndEvidenc
 swift test --package-path CLI --filter SchemaFactSourceTests
 git diff --check
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
-qmd query "Round 146 harmony press selector alignment"
+docs-linhay/scripts/check-docs.sh
+历史检索 "Round 146 harmony press selector alignment"
 ```
 
 ## 风险

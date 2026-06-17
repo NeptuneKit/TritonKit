@@ -75,7 +75,7 @@
 4. 必要重构并保持测试通过。
 5. 更新相关文档与记忆。
 6. 若本次任务提炼出可复用的项目动作、流程或知识边界，新增或更新对应 `skills`；若同时形成长期稳定规则，再更新 `AGENTS.md`。
-7. 若用户以“整理 / 沉淀 / 整理沉淀 / 整理，沉淀，提交 / 收尾整理”作为收尾指令，必须自动进入整理流程：先隔离 `git status --short --branch` 与 `git diff --stat`，再抽取可复用模式，优先新增或更新项目级 `skills`，同步 `docs-linhay/dev/` 与 `docs-linhay/memory/`，必要时更新 `AGENTS.md`，运行 `docs-linhay/scripts/qmd-sync.sh`、`git diff --check` 和 `docs-linhay/scripts/check-docs.sh`；只有用户明确包含“提交”时才自动提交，且只提交本次整理相关文件。
+7. 若用户以“整理 / 沉淀 / 整理沉淀 / 整理，沉淀，提交 / 收尾整理”作为收尾指令，必须自动进入整理流程：先隔离 `git status --short --branch` 与 `git diff --stat`，再抽取可复用模式，优先新增或更新项目级 `skills`，同步 `docs-linhay/dev/` 与 `docs-linhay/memory/`，必要时更新 `AGENTS.md`，运行 `git diff --check` 和 `docs-linhay/scripts/check-docs.sh`；只有用户明确包含“提交”时才自动提交，且只提交本次整理相关文件。
 8. 若某个需求将进入并行开发、多日实现或与其他需求同时切换，先补齐对应 `space`，再创建同 key 的 branch / `worktree`。
 9. 若需求采用 `subagent` 交付，标准完成顺序必须覆盖：需求边界确认、subagent 分工、主控集成、自动化验证、Wails/桌面验收（如适用）、HTTP/CLI 验收（如适用）、截图或其他验收产物、文档与记忆写回；未跑完这一整链，不得宣称需求完成。
 10. 若用户已授权主控 agent 自主管理 subagents，主控 agent 默认按既有 `space`、计划、项目级 `.codex/agents/` 与 orchestration skill 直接推进；除非遇到边界变化、破坏性动作、权限/环境 blocker 或需用户取舍，不需要为每次 subagent 调度、续跑、重分配或收尾验证单独请求用户确认。

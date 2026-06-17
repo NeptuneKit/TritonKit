@@ -380,7 +380,7 @@ TritonKit Web 仍是 React / Vite mock 工程，不改变 CLI / HTTP 是业务�
 - 2026-06-15 主控复核第十三轮：真实浏览器打开 `http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed`，`1200 x 820` 下输入 `zzzz-no-target` 后，`设备` 面板与 `视图树` 面板都显示 `未找到匹配 target`，不再出现 `暂无运行中的仿真器`；当前应用仍为 `丁香园`，bundle 仍为 `cn.dxy.iDxyer`，`QA mock fallback` notice 仍保留。
 - 2026-06-15 主控复核第十三轮：清空搜索后，`视图树` 恢复 `DXY iPhone 15 / Pixel API 35 / DevEco Local` 三个 chip，切回 `设备` 后恢复三个 device row；同一流程在 `960 x 820` 下再次成立，`scrollWidth = width = 960`，console error 为空，仅有 Vite debug 与 React DevTools info。
 - 2026-06-15 主控复核第十三轮：第十三轮截图归档到 `docs-linhay/spaces/20260613-web-triad-qa/screenshots/20260615/`：空态为 `20260615-web-request-failed-search-empty-after-v13.png`，清空恢复为 `20260615-web-request-failed-search-empty-restored-after-v13.png`。
-- 2026-06-15 主控复核第十三轮：收尾补跑 `docs-linhay/scripts/check-docs.sh` 与 `docs-linhay/scripts/qmd-sync.sh` 均通过，文档结构与 qmd 索引已同步。
+- 2026-06-15 主控复核第十三轮：收尾补跑 `docs-linhay/scripts/check-docs.sh` 与 `docs-linhay/scripts/check-docs.sh` 均通过，文档结构与 文档门禁已完成。
 - 2026-06-15 主控复核第十四轮：先补 `lets users tune live preview fps without changing selected host target state` 后确认红灯成立，旧实现缺少 `调整实时预览帧率` / `提高实时预览帧率` 控件；实现后 `cd Web && npm test` 通过 18 项。
 - 2026-06-15 主控复核第十四轮：`cd Web && npm run build` 通过，`git diff --check -- Web/src/App.tsx Web/src/styles.css Web/dev/appFallbackDom.test.mjs` 通过。
 - 2026-06-15 主控复核第十四轮：真实浏览器打开 `http://127.0.0.1:34127/`，`1257 x 963` 下用真实点击 `提高实时预览帧率` 14 次，从 `1 fps` 调到 `15 fps`；live badge 显示 `实时 15 fps`，range value 为 `15`，右侧 `帧率` Metric 为 `15`，当前 app 仍为 `前台 App 未暴露 · iPhone 17`，bundle 仍为 `Target 60667794-96F8-40E6-8664-85538EC4663E`。

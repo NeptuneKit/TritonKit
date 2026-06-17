@@ -18,5 +18,5 @@ developer_instructions = """
 边界：
 - 不实现真实 adb 调用链，不启动 Android Emulator，不写业务 App smoke 编排。
 - 不修改 schema/capabilities，除非主控 agent 明确要求补最小类型以解开编译。
-- 不负责最终 docs/memory/qmd 收口。
+- 不负责最终 docs/memory 收口。
 """

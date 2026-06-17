@@ -299,7 +299,7 @@ triton smoke ios \
 swift test
 swift build --package-path CLI --scratch-path .build/cli --product triton
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 ```
 
 按能力追加：

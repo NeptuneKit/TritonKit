@@ -20,7 +20,7 @@ TritonKit 当前已经形成了较完整的本机 CLI 能力面，覆盖 Xcode w
 2. 让 agent 不依赖旧记忆或 README 猜命令，而是通过当前绑定 skills + `triton schema` 获取可执行契约。
 3. 将 CLI 信息架构重排为 agent 可自发现、可规划、可执行、可诊断、可复跑的控制面。
 4. 形成一条 iOS 和一条 Harmony 的标准 agent 回归样板链路。
-5. 所有阶段保持 BDD / TDD、文档、memory 和 qmd 同步。
+5. 所有阶段保持 BDD / TDD、文档与 memory 同步。
 
 ## 非目标
 

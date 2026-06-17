@@ -18,7 +18,7 @@
 | H3 Embedded 契约 | 对齐 TritonKit 的 AI-facing SDK 能力模型 | 增加/映射 manifest、capabilities、runtime limits、redaction、snapshot、command ack、ledger；保留 `/v2/export/*` 作为日志/sources 能力 | TritonKit iOS S0-S4 DTO 与 Harmony 现有模型对比 | host/CLI 能以同一概念理解 iOS 与 Harmony embedded runtime；unsupported reason 稳定 |
 | H4 发布 dry run | 保留鸿蒙中心仓库发布能力 | 更新 `.github/workflows/publish-ohpm.yml`；验证 `scripts/ci/build-ohpm-har.sh <version>`；确认 license/readme/changelog 进入 HAR | OHPM 证书/secret 边界调研 | GitHub workflow_dispatch dry run 可生成 HAR；无 secret 时不执行真实 publish |
 | H5 Demo smoke | 证明业务 App 接入路径可运行 | 更新 `entry` demo 依赖、bundleName 文档、UI 文案、启动脚本、demo smoke 数据 | DevEco/ohpm/hvigor 本机工具链可用性调研 | `ohpm install --all`、HAR build、demo HAP build 或脚本级 contract smoke 通过 |
-| H6 TritonKit 同步 | 主项目知道 Harmony SDK 的新边界 | 更新 TritonKit README、public skills、dev 文档、memory；必要时新增 release checklist | H0-H5 结果稳定 | 用户和外部 agent 能按新文档接入 Harmony SDK；qmd 可检索 |
+| H6 TritonKit 同步 | 主项目知道 Harmony SDK 的新边界 | 更新 TritonKit README、public skills、dev 文档、memory；必要时新增 release checklist | H0-H5 结果稳定 | 用户和外部 agent 能按新文档接入 Harmony SDK；文档可检索 |
 
 ## 技术调研执行表
 
@@ -63,7 +63,7 @@
 2. 输出 Neptune Harmony 仓库盘点。
 3. 输出迁移执行表和验收标准。
 4. 验证现有发布 workflow 的 dry-run 入口和 build 命令。
-5. 记录 memory 和 qmd。
+5. 记录 memory 和 文档记录。
 
 第二轮如果用户确认“直接做”，再进入目标仓库实施 H1-H2，并优先跑脚本级验证。
 
@@ -96,7 +96,7 @@
 
 ```bash
 docs-linhay/scripts/check-docs.sh
-docs-linhay/scripts/qmd-sync.sh
+docs-linhay/scripts/check-docs.sh
 ```
 
 目标 Harmony SDK 仓实现阶段：

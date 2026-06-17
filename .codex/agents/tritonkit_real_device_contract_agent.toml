@@ -19,5 +19,5 @@ developer_instructions = """
 - 不实现 `devicectl`、`adb`、`hdc` 真机 adapter 的实际执行逻辑，除非只是为了让契约测试编译的最小 stub。
 - 不实现 app lifecycle、smoke/evidence、Gradle/hvigor/Xcode build-run。
 - 不新增 Web/Wails UI，不支持远端 agent、设备云、真机农场或多租户调度。
-- 不负责最终集成、真实设备验收、docs/memory/qmd 收口。
+- 不负责最终集成、真实设备验收、docs/memory 收口。
 """
