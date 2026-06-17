@@ -31,11 +31,29 @@ func hostDeviceTargets(platform: HostDevicePlatform, scope: HostDeviceScope? = n
     case .harmony:
         return try harmonyHostDeviceTargets(scope: scope, hdc: hdc)
     case .android:
-        let result = try runHostCommand(TKAndroidADBCommand.listDevices(executable: adb))
+        let result: HostProcessResult
+        do {
+            result = try runHostCommand(TKAndroidADBCommand.listDevices(executable: adb))
+        } catch HostCommandRunError.launchFailed {
+            throw AndroidADBToolError.notFound(adb)
+        }
         let parsed = TKAdbDeviceListParser.parse(result.stdout)
         let androidScope = androidDeviceScope(from: scope)
         let targets = TKAdbDeviceListParser.targets(parsed, matching: androidScope).map(hostDeviceTarget(from:))
         return (targets, result.sourceCommand)
+    }
+}
+
+func hostDeviceEmptyListNextAction(platform: HostDevicePlatform) -> TKCLINextAction? {
+    switch platform {
+    case .android:
+        return TKCLINextAction(
+            command: "device",
+            args: ["doctor", "--platform", "android", "--json"],
+            category: "diagnose"
+        )
+    case .ios, .harmony:
+        return nil
     }
 }
 

@@ -477,7 +477,8 @@ struct DeviceList: AsyncParsableCommand {
                 platform: platform.rawValue,
                 targets: result.targets,
                 defaultTarget: selectHostDeviceTarget(target: nil, candidates: result.targets),
-                sourceCommand: result.sourceCommand
+                sourceCommand: result.sourceCommand,
+                nextAction: result.targets.isEmpty ? hostDeviceEmptyListNextAction(platform: platform) : nil
             )
             switch outputFormat {
             case .json:
@@ -573,8 +574,9 @@ struct DeviceCurrent: AsyncParsableCommand {
 struct DeviceResolve: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "resolve", abstract: "Resolve one host target selector without executing an action")
 
-    @Argument(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
-    @Option(help: "Platform adapter: ios|harmony") var platform: HostDevicePlatform?
+    @Argument(help: "Target selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var selector: String?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
     @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope = .all
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
@@ -588,8 +590,11 @@ struct DeviceResolve: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            if selector != nil && device != nil {
+                throw HostDeviceSelectionError.parameterConflict("device resolve accepts either <selector> or --device, not both.")
+            }
             let selection = try resolveHostDeviceSelection(
-                request: HostDeviceSelectionRequest(device: selector, platform: platform, scope: scope, name: name, runtime: runtime, state: state, ready: ready),
+                request: HostDeviceSelectionRequest(device: selector ?? device, platform: platform, scope: scope, name: name, runtime: runtime, state: state, ready: ready),
                 hdc: hdc,
                 adb: adb
             )
@@ -645,7 +650,7 @@ struct DeviceAliasSet: AsyncParsableCommand {
 
     @Argument(help: "Alias name") var name: String
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform
-    @Option(help: "Raw platform target id: iOS UDID or Harmony HDC target") var target: String
+    @Option(help: "Raw platform target id: iOS UDID, Android adb serial, or Harmony HDC target") var target: String
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -702,7 +707,7 @@ struct DeviceAliasRemove: AsyncParsableCommand {
 struct DeviceWaitReady: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "wait-ready", abstract: "Wait until a platform target is ready")
 
-    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
     @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope = .all
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
@@ -751,7 +756,7 @@ struct DeviceWaitReady: AsyncParsableCommand {
 struct DeviceScreenshot: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "screenshot", abstract: "Capture a host-side device screenshot")
 
-    @Option(help: "Unified host device selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
     @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope = .all
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
@@ -811,7 +816,12 @@ struct DeviceRuntimeURL: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             guard platform == .harmony else {
-                throw RuntimeError("device runtime-url only supports Harmony targets")
+                try failHostUnsupportedCapability(
+                    message: "device runtime-url only supports Harmony targets.",
+                    hint: "Use `triton device wait-ready --platform android --device <selector> --json` and Android host actions instead.",
+                    nextAction: TKCLINextAction(command: "schema", args: ["--command", "device", "--json"], category: "plan"),
+                    outputFormat: outputFormat
+                )
             }
             if device != nil && target != nil {
                 throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --target.")
@@ -887,7 +897,12 @@ struct DeviceStop: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             guard platform == .harmony else {
-                throw RuntimeError("device stop currently supports Harmony Emulator only")
+                try failHostUnsupportedCapability(
+                    message: "device stop currently supports Harmony Emulator only.",
+                    hint: "Android emulator lifecycle stop/start is not part of the current Triton device surface.",
+                    nextAction: TKCLINextAction(command: "schema", args: ["--command", "device", "--json"], category: "plan"),
+                    outputFormat: outputFormat
+                )
             }
             let plan = try harmonyEmulatorStopPlan(
                 hvd: hvd,
