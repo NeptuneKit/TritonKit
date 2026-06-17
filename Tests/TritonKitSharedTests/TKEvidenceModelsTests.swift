@@ -39,6 +39,9 @@ struct TKEvidenceModelsTests {
                     sourceCommand: "hdc -t <target> shell uitest dumpLayout -p <path> -a",
                     target: "harmony:127.0.0.1:10100"
                 ),
+                TKEvidenceArtifact(kind: "harmony.webview-snapshot", path: "harmony/webview-snapshot.json", contentType: "application/json", platform: "harmony", riskLevel: "evidence"),
+                TKEvidenceArtifact(kind: "harmony.route-warning", path: "harmony/route-warning.json", contentType: "application/json", platform: "harmony", riskLevel: "evidence"),
+                TKEvidenceArtifact(kind: "harmony.hdc-recovery-plan", path: "harmony/hdc-recovery-plan.json", contentType: "application/json", platform: "harmony", riskLevel: "readonly"),
             ],
             skipped: [
                 TKEvidenceSkippedArtifact(kind: "logs", reason: "unsupported"),
@@ -73,17 +76,20 @@ struct TKEvidenceModelsTests {
 
         #expect(decoded.formatVersion == 1)
         #expect(decoded.name == "login-success")
-        #expect(decoded.artifacts.map(\.kind) == ["run.events", "run.meta", "screenshot", "status", "harmony.layout"])
+        #expect(decoded.artifacts.map(\.kind) == ["run.events", "run.meta", "screenshot", "status", "harmony.layout", "harmony.webview-snapshot", "harmony.route-warning", "harmony.hdc-recovery-plan"])
         #expect(decoded.primaryArtifact?.kind == "screenshot")
         #expect(decoded.primaryArtifact?.path == "run/step-001.png")
         #expect(decoded.primaryArtifacts.map(\.kind) == ["screenshot", "run.events", "run.meta", "status", "harmony.layout"])
         #expect(decoded.artifacts.first { $0.kind == "screenshot" }?.freshness?.source == "runtime")
-        #expect(decoded.artifacts.last?.platform == "harmony")
-        #expect(decoded.artifacts.last?.riskLevel == "evidence")
-        #expect(decoded.artifacts.last?.policy == "automation")
-        #expect(decoded.artifacts.last?.redactionStatus == "summary")
-        #expect(decoded.artifacts.last?.sourceCommand?.hasPrefix("hdc -t") == true)
-        #expect(decoded.artifacts.last?.target == "harmony:127.0.0.1:10100")
+        let harmonyLayout = try #require(decoded.artifacts.first { $0.kind == "harmony.layout" })
+        #expect(harmonyLayout.platform == "harmony")
+        #expect(harmonyLayout.riskLevel == "evidence")
+        #expect(harmonyLayout.policy == "automation")
+        #expect(harmonyLayout.redactionStatus == "summary")
+        #expect(harmonyLayout.sourceCommand?.hasPrefix("hdc -t") == true)
+        #expect(harmonyLayout.target == "harmony:127.0.0.1:10100")
+        #expect(decoded.artifacts.first { $0.kind == "harmony.route-warning" }?.platform == "harmony")
+        #expect(decoded.artifacts.first { $0.kind == "harmony.hdc-recovery-plan" }?.riskLevel == "readonly")
         #expect(decoded.run?.eventsPath == "run/events.jsonl")
         #expect(decoded.run?.metaPath == "run/meta.json")
         #expect(decoded.run?.screenshotPaths == ["run/step-001.png"])
