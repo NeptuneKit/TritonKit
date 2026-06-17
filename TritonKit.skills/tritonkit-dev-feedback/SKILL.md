@@ -23,6 +23,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - Harmony host-side validation: `triton device/app --platform harmony` without embedded runtime.
    - Harmony embedded SDK: package id/import path `tritonkit`, Debug-only runtime, provider-based app semantics, and `--runtime-base-url` checks while standalone.
    - CLI-only use: Homebrew release install by default, local source build only for unreleased validation.
+   - CLI + readonly Web Device Hub: run from a TritonKit checkout, verify `triton web --print-command --json` first, then use `triton web` only as a local readonly launcher.
 3. Reproduce or inspect locally when possible. Prefer machine-readable TritonKit checks:
    - before using `baguette`, raw `xcrun` / `simctl`, `hdc`, `adb`, DevEco Emulator CLI, XcodeBuildMCP, or raw `xcodebuild` for a local emulator / simulator action, first capture Triton evidence through `status`, `doctor`, `capabilities`, `schema`, or `plan`; fallback reports must include the Triton command plus failure / unsupported / missing-schema evidence.
    - `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`
@@ -41,6 +42,7 @@ Repository: `NeptuneKit/TritonKit` (`https://github.com/NeptuneKit/TritonKit`)
    - `triton capabilities --json`
    - `triton schema --json`
    - `triton schema --command <name> --json` for the exact command being reported; every command in the schema inventory must be individually discoverable.
+   - `triton web --print-command --json` when the report involves Web Device Hub launch/discovery; preserve `repoRoot`, `webRoot`, `tritonBin`, `url`, `installCommand`, and `command` from the launch plan instead of paraphrasing it.
    - `triton plan --json`
    - `triton plan ios-smoke|open-url|webview-check --json` when feedback depends on a multi-step agent workflow; task plans are recommendations and must not be reported as execution proof.
    - `triton runtime manifest --json`; preserve `semanticDomains[]` when present so reports can show provider-backed domain/source/schema/action catalog discovery without leaking current state values.

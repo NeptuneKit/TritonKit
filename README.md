@@ -375,6 +375,23 @@ triton version --json
 
 This avoids confusing macOS failures where a newly invoked CLI is killed after the active binary file was overwritten.
 
+#### Readonly Web Device Hub
+
+If you want the React/Vite Web Device Hub for local inspection, run it from a TritonKit source checkout that contains `Web/package.json`:
+
+```bash
+triton web --print-command --json
+triton web
+```
+
+`triton web` is a local launcher for the readonly Device Hub only. It does not replace the CLI / HTTP control surface, and it does not introduce browser-side create / update / execute business actions.
+
+For unreleased validation from this repo, the debug build also supports the same launcher flow:
+
+```bash
+swift run --package-path CLI triton web --print-command --json
+```
+
 #### Manual Release Asset
 
 After a versioned release is published, GitHub Releases provide architecture-specific CLI archives:

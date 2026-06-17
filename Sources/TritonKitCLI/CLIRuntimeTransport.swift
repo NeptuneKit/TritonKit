@@ -83,6 +83,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "plan-inspect", supported: true),
         TKRuntimeCapability(name: "record", supported: true),
         TKRuntimeCapability(name: "replay-dry-run", supported: true),
+        TKRuntimeCapability(name: "web-device-hub", supported: true),
         TKRuntimeCapability(name: "schema", supported: true),
         TKRuntimeCapability(name: "status", supported: true),
         TKRuntimeCapability(name: "doctor", supported: true),
@@ -270,7 +271,7 @@ func enrichRuntimeCapability(
 
 func runtimeCapabilityGroup(for name: String) -> String {
     switch name {
-    case "version", "plan", "record", "replay-dry-run", "schema", "status", "doctor", "capabilities":
+    case "version", "plan", "record", "replay-dry-run", "web-device-hub", "schema", "status", "doctor", "capabilities":
         return "bootstrap"
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
         return "target"
@@ -303,6 +304,8 @@ func runtimeCapabilityGroup(for name: String) -> String {
 
 func runtimeCapabilityRequiredBy(for name: String) -> [String] {
     switch name {
+    case "web-device-hub":
+        return ["observe", "evidence"]
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
         return ["app", "runtime", "observe", "action", "assert", "evidence", "smoke"]
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "app-semantic-state", "app-semantic-action", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
@@ -346,6 +349,8 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "status", args: ["--json"])
     }
     switch name {
+    case "web-device-hub":
+        return TKCLINextAction(command: "web", args: ["--print-command", "--json"], requiresLongRunningProcess: false)
     case "plan":
         return TKCLINextAction(command: "plan", args: ["--format", "json"])
     case "record":
@@ -659,6 +664,8 @@ func runtimeCapabilityRequiresServer(_ name: String) -> Bool {
 func runtimeCapabilityEvidence(for name: String) -> [String] {
     switch name {
     case "version", "schema", "status", "doctor", "capabilities", "plan":
+        return ["stdout-json", "command-schema"]
+    case "web-device-hub":
         return ["stdout-json", "command-schema"]
     case "record", "replay-dry-run", "plan-inspect":
         return ["tritonplan", "stdout-json"]

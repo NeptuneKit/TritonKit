@@ -368,7 +368,7 @@ extension SchemaFactSourceTests {
     @Test("capability group stays aligned with next-action root commands")
     func capabilityGroupStaysAlignedWithNextActionRootCommands() {
         let allowedRootsByGroup: [String: Set<String>] = [
-            "bootstrap": ["status", "doctor", "capabilities", "schema", "plan", "record", "replay", "serve"],
+            "bootstrap": ["status", "doctor", "capabilities", "schema", "plan", "record", "replay", "serve", "web"],
             "target": ["target"],
             "runtime": ["runtime", "state", "snapshot", "focus", "set-text", "select-segment", "set-switch", "ledger", "schema", "status", "serve"],
             "host": ["device", "sim", "app", "ax"],

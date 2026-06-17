@@ -35,6 +35,29 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func webLaunchPlanOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "web.launch-plan",
+        format: "json",
+        kind: "host-action",
+        model: "WebLaunchPlan",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the launch plan was resolved"),
+            ("action", "String", true, "Stable action id; web.start"),
+            ("repoRoot", "String", true, "Resolved TritonKit checkout root"),
+            ("webRoot", "String", true, "Resolved Web package directory"),
+            ("tritonBin", "String", true, "Triton CLI path injected into TRITONKIT_TRITON_BIN"),
+            ("host", "String", true, "Vite host"),
+            ("port", "Int", true, "Vite port"),
+            ("url", "String", true, "Browser URL for the Device Hub"),
+            ("readonly", "Bool", true, "Whether the Web surface is readonly for business control"),
+            ("installCommand", "WebLaunchCommand?", false, "Optional npm install command"),
+            ("command", "WebLaunchCommand", true, "npm run dev command"),
+            ("environment", "[String:String]", true, "Environment overrides passed to child processes"),
+        ])
+    )
+}
+
 func runtimeManifestOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "runtime.manifest",

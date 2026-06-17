@@ -44,6 +44,41 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             failureCodes: ["validation_failed", "server_start_failed"]
         ),
         TKCommandSchema(
+            name: "web",
+            summary: "Start the React/Vite Web Device Hub from a TritonKit checkout",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "cli-long-running",
+            exitCodeOnFailure: 1,
+            outputFormats: ["text", "json", "logs"],
+            options: [
+                TKCommandSchemaOption(name: "--root", type: "Path", description: "TritonKit repository root or Web directory; defaults to searching upward from cwd"),
+                TKCommandSchemaOption(name: "--triton-bin", type: "Path", description: "Triton CLI binary injected into TRITONKIT_TRITON_BIN for the Web host bridge"),
+                TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "127.0.0.1", description: "Vite host"),
+                TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "34127", description: "Vite port"),
+                TKCommandSchemaOption(name: "--install", type: "Bool", defaultValue: "false", description: "Run npm install before launching Vite"),
+                TKCommandSchemaOption(name: "--no-install", type: "Bool", defaultValue: "false", description: "Skip dependency install even if Web/node_modules is missing"),
+                TKCommandSchemaOption(name: "--print-command", type: "Bool", defaultValue: "false", description: "Print the resolved launch plan without starting Vite"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format for --print-command and validation errors"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: [
+                "triton web --print-command --json",
+                "triton web --root /path/to/TritonKit --no-install",
+            ],
+            successShape: "{ ok, action:web.start, url, repoRoot, webRoot, tritonBin, readonly, installCommand?, command, environment }",
+            failureShape: "{ ok: false, error: { code: web_root_not_found|validation_failed|web_start_failed, message, hint } }",
+            outputSemantics: "Use web as a local development launcher for the readonly React/Vite Device Hub. Business control remains in CLI/HTTP contracts; Web host bridge actions are limited to existing readonly DTO and host observation endpoints.",
+            nextCommands: [
+                "triton web --print-command --json",
+                "triton schema --command web --json",
+            ],
+            outputContracts: [webLaunchPlanOutputContract()],
+            failureCodes: ["web_root_not_found", "validation_failed", "web_start_failed"],
+            providedCapabilities: ["web-device-hub"]
+        ),
+        TKCommandSchema(
             name: "status",
             summary: "Read local TritonKit server status",
             requiresServer: true,

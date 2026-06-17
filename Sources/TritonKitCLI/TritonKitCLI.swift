@@ -27,6 +27,7 @@ struct TritonKitCLI: AsyncParsableCommand {
         version: TritonKitBuildInfo.cliVersion,
         subcommands: [
             Serve.self,
+            Web.self,
             Version.self,
             Status.self,
             Doctor.self,

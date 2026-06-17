@@ -160,6 +160,7 @@ struct ChineseCommandHelp {
 func chineseRootHelp() -> String {
     let commands: [(String, String)] = [
         ("serve", "启动本地 WebSocket 与 HTTP 控制服务"),
+        ("web", "启动 React/Vite Web Device Hub"),
         ("version", "输出 Triton CLI 版本和启动默认值"),
         ("status", "读取本地 TritonKit 服务状态"),
         ("doctor", "诊断服务、目标和运行时能力"),
@@ -261,6 +262,15 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("--host <host>", "监听 host，默认 0.0.0.0"),
             ("--port <port>", "监听端口，默认 19421"),
         ]),
+        "web": ChineseCommandHelp(name: "web", overview: "从 TritonKit checkout 启动 React/Vite Web Device Hub。", usage: "triton web [--root <path>] [--host <host>] [--port <port>] [--print-command] [--json]", options: [
+            ("--root <path>", "TritonKit 仓库根目录或 Web 目录；默认从当前目录向上查找"),
+            ("--triton-bin <path>", "注入给 Web host bridge 的 triton CLI 路径"),
+            ("--host <host>", "Vite host，默认 127.0.0.1"),
+            ("--port <port>", "Vite 端口，默认 34127"),
+            ("--install", "启动前强制执行 npm install"),
+            ("--no-install", "即使缺少 node_modules 也跳过 npm install"),
+            ("--print-command", "只输出启动计划，不启动 Vite"),
+        ] + formatTextJSON),
         "version": ChineseCommandHelp(name: "version", overview: "输出 Triton CLI 版本和启动默认值。", usage: "triton version [--format <format>] [--json]", options: formatTextJSON),
         "status": ChineseCommandHelp(name: "status", overview: "读取本地 TritonKit 服务状态。", usage: "triton status [选项]", options: hostPort + formatTextJSON),
         "doctor": ChineseCommandHelp(name: "doctor", overview: "诊断服务、目标和运行时能力。", usage: "triton doctor [选项]", options: hostPort + formatTextJSON),

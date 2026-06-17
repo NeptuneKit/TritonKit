@@ -43,6 +43,7 @@ TritonKit 首期不需要 Web 端。AI agent 的读取与控制入口收敛到 C
 Fallback 记录必须同时包含 Triton 命令、稳定错误码或 unsupported / missing schema 证据、fallback 工具命令和后续验证方式。不能只写“改用 hdc / xcrun / baguette / XcodeBuildMCP”；这类记录无法让 agent 判断是 TritonKit 缺能力、环境未准备好，还是调用者绕过了既有契约。
 
 - `triton serve`：启动本地控制服务。
+- `triton web --print-command --format json` / `triton web`：从 TritonKit checkout 启动只读 React/Vite Web Device Hub。`--print-command` 返回机器可读启动计划，暴露 `repoRoot/webRoot/tritonBin/url/installCommand?/command/environment`，用于 agent 审计 root 发现、`TRITONKIT_TRITON_BIN` 注入和依赖安装策略；直接 `triton web` 才会执行 `npm install`（按 `--install|--no-install|auto`）并启动 Vite。该命令属于本地观察入口，不替代 CLI/HTTP 业务控制面。
 - `triton --version` / `triton version --format json`：读取 CLI 版本、schema version 与默认 host/port。
 - `triton status --format json`：读取本地控制服务状态；成功态也返回 `ok/serverReachable/runtime/connected/latestHierarchyAvailable/activeHierarchyAvailable/hierarchyCacheState/targetConnectionState/targetCount` envelope，用于区分当前连接状态与 stale hierarchy cache。
 - `triton doctor --format json`：诊断 server、target、runtime 与能力状态；即使 server 不可达也输出机器可读诊断并以 0 退出。输出模型为 `TKDoctorResponse`，顶层固定 `surface=doctor`，核心字段是 `nextStep`、`nextWorkflows[]` 与有序 `checks[]`；每个 check 含 `id/status/code/message/hint/nextAction/relatedCapabilities/workflowCategories`。其中 `workflowCategories[]` 与 `nextWorkflows[]` 由 `relatedCapabilities + capabilities[].requiredBy` 派生，agent 不需要自己再把 doctor 与 capabilities 做一轮 join 才知道当前受影响的 workflow 分类。

@@ -33,6 +33,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - Call the bootstrap only from a `#if DEBUG` branch in AppDelegate, SceneDelegate, or SwiftUI `onAppear`.
    - Prefer `TritonKit.shared.start()` or the `start { config in ... }` facade; only use lower-level `delegate` / `connect(host:port:)` when the real app needs a custom delegate.
 5. Start server with explicit port: `triton serve --host 127.0.0.1 --port 19421`.
+   - If a human reviewer needs the readonly Web Device Hub during the same investigation, prefer `triton web --print-command --json` from this checkout before launching it; preserve the launch plan and treat `triton web` as observation-only support, not as proof of business control.
 6. Verify connection and target identity:
    - `triton doctor --json`
    - `triton status --json`

@@ -225,6 +225,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "target": "prepare-target",
         "type": "act",
         "wait": "verify",
+        "web": "observe",
         "webview": "observe",
         "xcode": "project",
         "xcresult": "archive",
