@@ -218,6 +218,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "proxy_restore_failed",
                 "proxy_artifact_write_failed",
                 "harmony_hdc_not_found",
+                "harmony_discovery_timeout",
                 "harmony_target_unauthorized",
                 "harmony_target_offline",
                 "harmony_debugging_disabled",

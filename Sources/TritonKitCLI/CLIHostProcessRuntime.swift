@@ -290,6 +290,30 @@ func shellEscaped(_ value: String) -> String {
     }
     return "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
 }
+
+private func isHarmonyDiscoveryCommand(_ command: TKHostCommand) -> Bool {
+    let isHDC = command.executable == "hdc" || command.executable.hasSuffix("/hdc")
+    guard isHDC else { return false }
+    return command.arguments == ["-v"]
+        || command.arguments == ["list", "targets", "-v"]
+        || command.arguments == ["list", "targets"]
+}
+
+func hostCommandTimeoutErrorDetail(command: TKHostCommand, message: String) -> TKCLIErrorDetail {
+    if isHarmonyDiscoveryCommand(command) {
+        return TKCLIErrorDetail(
+            code: "harmony_discovery_timeout",
+            message: message,
+            hint: "Check that hdc and DevEco Emulator are responsive, then rerun `triton device doctor --platform harmony --json`."
+        )
+    }
+    return TKCLIErrorDetail(
+        code: "host_command_timeout",
+        message: message,
+        hint: "Retry with a smaller target set or a command-specific timeout when supported."
+    )
+}
+
 private func iosDevicectlErrorMapping(stderr: String) -> (code: String, hint: String) {
     let lowercased = stderr.lowercased()
     if lowercased.contains("unable to find utility") || lowercased.contains("devicectl") && lowercased.contains("not found") {
@@ -471,12 +495,8 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: "Run `triton ax --platform harmony --output <path> --json` and inspect the dumped attributes.text values."
         )
-    case HostCommandRunError.timeout:
-        detail = TKCLIErrorDetail(
-            code: "host_command_timeout",
-            message: "\(error)",
-            hint: "Retry with a smaller target set or a command-specific timeout when supported."
-        )
+    case HostCommandRunError.timeout(let command, _, _, _):
+        detail = hostCommandTimeoutErrorDetail(command: command, message: "\(error)")
     case HostCommandRunError.missingPreferences:
         detail = TKCLIErrorDetail(
             code: "plist_not_found",

@@ -176,6 +176,7 @@ struct FailureDiagnosticsTests {
             "android_app_install_failed",
             "android_activity_resolve_failed",
             "harmony_hdc_not_found",
+            "harmony_discovery_timeout",
             "harmony_target_unauthorized",
             "harmony_target_offline",
             "harmony_debugging_disabled",
