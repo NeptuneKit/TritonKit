@@ -23,12 +23,13 @@ func captureEvidenceBundle(
     refresh: Bool,
     xcodeSummaryPath: String? = nil,
     proxySessionPath: String? = nil,
-    hostXcodeProviders: EvidenceHostXcodeArtifactProviders = .live
+    hostXcodeProviders: EvidenceHostXcodeArtifactProviders = .live,
+    urlSession: URLSession = .shared
 ) async throws -> TKEvidenceManifest {
     let outputURL = URL(fileURLWithPath: output)
     try prepareEvidenceOutputDirectory(outputURL)
 
-    var client = TritonKitHTTPClient(host: host, port: port)
+    var client = TritonKitHTTPClient(host: host, port: port, session: urlSession)
     let startedAt = ISO8601DateFormatter().string(from: Date())
     var artifacts: [TKEvidenceArtifact] = []
     var skipped: [TKEvidenceSkippedArtifact] = []
@@ -76,7 +77,7 @@ func captureEvidenceBundle(
                 if targetSummary == nil {
                     targetSummary = try? TKResolveTargetSummary(target, in: targets.targets)
                     if let targetSummary {
-                        client = TritonKitHTTPClient(host: host, port: port, target: targetSummary.id)
+                        client = TritonKitHTTPClient(host: host, port: port, target: targetSummary.id, session: urlSession)
                     }
                 }
                 try appendEvidenceArtifact(

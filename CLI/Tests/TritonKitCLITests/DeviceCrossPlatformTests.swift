@@ -46,7 +46,7 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("resolve --platform ios|android|harmony --device <selector>"))
         #expect(usageForms.contains("wait-ready --device <selector>"))
         #expect(usageForms.contains("screenshot --device <selector> --output <path>"))
-        #expect(try #require(device.options.first { $0.name == "screenshot --device <selector> --output <path>" }).description.contains("Android"))
+        #expect(try #require(device.usageForms.first { $0.form == "screenshot --device <selector> --output <path>" }).description.contains("Android"))
         #expect(usageForms.contains("runtime-url --device <selector>"))
         #expect(usageForms.contains("stop --platform harmony --hvd <name> --path <deployed-path> --confirm"))
         #expect(optionNames.contains("--device"))

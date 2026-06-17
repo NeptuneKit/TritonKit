@@ -4,7 +4,7 @@ import Testing
 import TritonKitShared
 @testable import TritonKitCLI
 
-@Suite
+@Suite(.serialized)
 struct EvidenceBundleTests {
     @Test("evidence capture propagates explicit target to nested runtime artifact requests")
     func evidenceCapturePropagatesExplicitTargetToNestedRuntimeArtifactRequests() async throws {
@@ -24,7 +24,8 @@ struct EvidenceBundleTests {
             target: expectedTarget,
             host: fakeServer.host,
             port: fakeServer.port,
-            refresh: true
+            refresh: true,
+            urlSession: fakeServer.session
         )
 
         #expect(manifest.target?.id == expectedTarget)
@@ -59,7 +60,8 @@ struct EvidenceBundleTests {
             target: expectedTarget,
             host: fakeServer.host,
             port: fakeServer.port,
-            refresh: false
+            refresh: false,
+            urlSession: fakeServer.session
         )
 
         #expect(manifest.target?.id == expectedTarget)
@@ -743,12 +745,16 @@ private func captureEvidenceCommandOutput(_ body: () async throws -> Void) async
 private final class EvidenceTargetPropagationFakeServer {
     let host = "127.0.0.1"
     let port: Int
+    let session: URLSession
 
     private let server: URLProtocol.Type
 
     init(expectedTarget: String) {
         self.port = Int.random(in: 20_000...40_000)
         self.server = EvidenceTargetPropagationURLProtocol.self
+        let configuration = URLSessionConfiguration.ephemeral
+        configuration.protocolClasses = [server]
+        self.session = URLSession(configuration: configuration)
         EvidenceTargetPropagationURLProtocol.configure(port: port, expectedTarget: expectedTarget)
         URLProtocol.registerClass(server)
     }

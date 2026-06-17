@@ -5,6 +5,7 @@ struct TritonKitHTTPClient {
     let host: String
     let port: Int
     var target: String? = nil
+    var session: URLSession = .shared
 
     func getData(_ path: String) async throws -> Data {
         try await data(for: URLRequest(url: url(path)))
@@ -61,7 +62,7 @@ struct TritonKitHTTPClient {
     }
 
     private func data(for request: URLRequest) async throws -> Data {
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw RuntimeError("No HTTP response")
         }
