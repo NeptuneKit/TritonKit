@@ -59,9 +59,20 @@ TritonKit 的业务控制事实入口仍是 CLI / HTTP 机器可读契约。`tri
 - And 直接运行 `triton web` 时由 CLI 内置 HTTP 服务提供 `/`、`/assets/*`、SPA fallback 和只读 `/web/host-*` bridge
 - And `/web/host-input` 继续返回只读错误，不执行输入动作
 
+### 场景：Homebrew 可执行文件经过额外 PATH symlink 仍能发现 bundled Web
+
+- Given Homebrew 安装的 `triton` 位于 `Cellar/triton/<version>/bin/triton`
+- And `bin/triton` 与用户 PATH 中的额外 `triton` 都是指向该二进制的 symlink
+- And packaged Web 产物存在于 `Cellar/triton/<version>/share/triton/web/index.html`
+- When 用户通过 PATH 中的额外 symlink 运行 `triton web --print-command --json`
+- Then CLI 应解析 symlink 链并返回 `mode=packaged`
+- And `bundledWebRoot` 指向真实 Homebrew packaged Web 目录
+- And 启动命令仍保留用户实际调用的 `triton` 路径，避免破坏 PATH 覆盖场景
+
 ## 验收标准
 
 - Swift focused tests 覆盖 `triton web` dev / packaged 启动计划、依赖安装策略、静态资源 fallback、只读错误和缺失 root 错误。
+- Swift focused tests 覆盖 Homebrew 额外 PATH symlink 指向 packaged Web 的发现路径。
 - `triton --help` 可见 `web` 子命令。
 - `triton schema --command web --json` 返回 `web` 命令契约。
 - `triton web --print-command --json` 在仓库根目录返回 dev 可执行计划，不启动长进程。

@@ -124,6 +124,48 @@ struct WebCommandTests {
         #expect(plan.bundledWebRoot == shareWeb.path)
     }
 
+    @Test("web command resolves bundled static dist through extra PATH symlink")
+    func webCommandResolvesBundledStaticDistThroughExtraPATHSymlink() throws {
+        let install = try temporaryDirectory()
+        let cellar = install
+            .appendingPathComponent("Cellar", isDirectory: true)
+            .appendingPathComponent("triton", isDirectory: true)
+            .appendingPathComponent("0.1.20", isDirectory: true)
+        let cellarBinDir = cellar.appendingPathComponent("bin", isDirectory: true)
+        let cellarShareWeb = cellar
+            .appendingPathComponent("share", isDirectory: true)
+            .appendingPathComponent("triton", isDirectory: true)
+            .appendingPathComponent("web", isDirectory: true)
+        let homebrewBinDir = install.appendingPathComponent("bin", isDirectory: true)
+        let userBinDir = try temporaryDirectory()
+        try FileManager.default.createDirectory(at: cellarBinDir, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: cellarShareWeb, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: homebrewBinDir, withIntermediateDirectories: true)
+        let cellarBin = cellarBinDir.appendingPathComponent("triton")
+        let homebrewBin = homebrewBinDir.appendingPathComponent("triton")
+        let userBin = userBinDir.appendingPathComponent("triton")
+        try Data().write(to: cellarBin)
+        try "<html></html>".write(to: cellarShareWeb.appendingPathComponent("index.html"), atomically: true, encoding: .utf8)
+        try FileManager.default.createSymbolicLink(atPath: homebrewBin.path, withDestinationPath: "../Cellar/triton/0.1.20/bin/triton")
+        try FileManager.default.createSymbolicLink(atPath: userBin.path, withDestinationPath: homebrewBin.path)
+
+        let plan = try makeWebLaunchPlan(
+            explicitRoot: nil,
+            currentDirectory: try temporaryDirectory().path,
+            explicitTritonBin: nil,
+            currentExecutable: userBin.path,
+            host: "127.0.0.1",
+            port: 34127,
+            installMode: .auto,
+            environment: [:]
+        )
+
+        #expect(plan.mode == "packaged")
+        #expect(plan.bundledWebRoot == cellarShareWeb.path)
+        #expect(plan.command.executable == userBin.path)
+        #expect(plan.tritonBin == userBin.path)
+    }
+
     @Test("web command auto install runs only when node modules are missing")
     func webCommandAutoInstallRunsOnlyWhenNodeModulesAreMissing() throws {
         let repo = try temporaryRepoWithWeb(nodeModules: false)

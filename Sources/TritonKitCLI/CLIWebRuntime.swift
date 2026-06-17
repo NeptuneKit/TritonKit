@@ -279,16 +279,32 @@ private func discoverBundledWebRoot(currentExecutable: String, environment: [Str
         }
     }
 
-    let executable = URL(fileURLWithPath: currentExecutable).standardizedFileURL
-    let executableDir = executable.deletingLastPathComponent()
-    let candidates = [
-        executableDir.appendingPathComponent("web", isDirectory: true),
-        executableDir.deletingLastPathComponent()
-            .appendingPathComponent("share", isDirectory: true)
-            .appendingPathComponent("triton", isDirectory: true)
-            .appendingPathComponent("web", isDirectory: true),
-    ]
+    let executableCandidates = executableURLs(for: currentExecutable)
+    let candidates = executableCandidates.flatMap { executable -> [URL] in
+        let executableDir = executable.deletingLastPathComponent()
+        return [
+            executableDir.appendingPathComponent("web", isDirectory: true),
+            executableDir.deletingLastPathComponent()
+                .appendingPathComponent("share", isDirectory: true)
+                .appendingPathComponent("triton", isDirectory: true)
+                .appendingPathComponent("web", isDirectory: true),
+        ]
+    }
     return candidates.first(where: isValidBundledWebRoot)
+}
+
+private func executableURLs(for currentExecutable: String) -> [URL] {
+    let executable = URL(fileURLWithPath: currentExecutable)
+    let candidates = [
+        executable.standardizedFileURL,
+        executable.resolvingSymlinksInPath().standardizedFileURL,
+    ]
+    return candidates.reduce(into: [URL]()) { unique, candidate in
+        guard !unique.contains(where: { $0.path == candidate.path }) else {
+            return
+        }
+        unique.append(candidate)
+    }
 }
 
 private func webRoots(for root: URL) -> (repoRoot: URL, webRoot: URL)? {
