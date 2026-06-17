@@ -41,6 +41,12 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 真实截图区域捕获 click / drag，按 screenshot framebuffer 宽高换算坐标，再通过 `triton tap` / `triton swipe` 执行；Web 不直接调用 `xcrun`、`adb` 或 `hdc`。
 - 输入执行结果必须显示 stdout / stderr / exit code；执行后刷新当前目标 screenshot。
 
+### 2026-06-17 本地编译并启动 Web 脚本
+
+- 新增本地开发入口脚本，用于先编译 `triton` CLI，再启动 `Web` Vite dev server。
+- 脚本必须把刚编译出的 `triton` 通过 `TRITONKIT_TRITON_BIN` 传给 Web dev bridge，避免读取 PATH 或旧构建产物。
+- 默认保持 Web dev server 固定在 `127.0.0.1:34127`，并继续由 Vite `strictPort` 负责端口冲突失败。
+
 ## 不在本期范围
 
 - 不恢复 Wails 桌面壳。
@@ -173,6 +179,14 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - And Logs 记录 refresh action 与三端 discovery 命令输出
 - And Logs 隐藏状态保持不变，刷新过程中不显示 mock 占位图
 
+### 场景：一条命令编译 triton 并启动 Web
+
+- Given 开发者在仓库根目录或任意子目录执行脚本
+- When 执行 `docs-linhay/scripts/start-web-with-triton.sh`
+- Then 脚本先构建 `triton` CLI
+- And 使用 `TRITONKIT_TRITON_BIN=<built-triton>` 启动 `Web` dev server
+- And 页面仍运行在 `http://127.0.0.1:34127/`
+
 ## 验收标准
 
 - `Web/` 工程可通过 `npm install` 安装依赖。
@@ -186,6 +200,7 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - Logs 支持隐藏和恢复，隐藏后不保留空白日志区域。
 - 右上工具区提供全局刷新按钮，可刷新 targets、bridge command outputs 和当前 screenshot。
 - 有真实 screenshot 的设备画布在 tap / swipe 时显示触点或轨迹反馈，并在 Triton CLI input 执行与 screenshot 刷新期间显示非阻塞状态徽标。
+- `docs-linhay/scripts/start-web-with-triton.sh` 可从任意当前目录执行，完成 CLI 构建后启动 `Web` dev server，并显式注入本轮构建出的 `triton` 路径。
 
 ## 实现记录
 
