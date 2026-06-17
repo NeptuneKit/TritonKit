@@ -63,6 +63,8 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
 6. 推送前复查 `git status --short --branch` 和最近提交；推送成功后才关闭 GitHub issue。
 7. 关闭 issue 时只关闭本轮已处理的 issue，不顺手关闭新出现或未验证的 open issue；评论写明合并提交、关键验证命令和剩余风险。
 8. GitHub issue 评论包含命令片段、反引号或复杂 Markdown 时，使用 `docs-linhay/scripts/gh-issue-comment-file.sh` 或 `gh issue comment/close --body-file`，避免 shell 解释评论内容。
+9. 如果上一轮关闭后又出现新的 open issue，先以最新 `origin/main` 为基线新建下一轮 issue worktree；上一轮整理 / 关闭 issue 的提交不应留在主仓未提交状态里。
+10. 多个 issue 分支都追加同一天 memory 时，后合并的分支可能只在 `docs-linhay/memory/YYYY-MM-DD.md` 冲突；解决时保留每个 issue 的独立段落，再完成 merge commit，不把它改写成单个混合段落。
 
 ## 停止条件
 

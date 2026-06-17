@@ -60,7 +60,7 @@ metadata:
 - 关键决策、里程碑、风险结论：`docs-linhay/memory/YYYY-MM-DD.md`。
 - 用户要求“整理会话”时，先用 `git status --short --branch` 和 `git diff --stat` 隔离已提交代码、未提交文档、外部仓验证和临时产物；只 stage 本次整理相关文件，不默认 `git add -A`。
 - 用户要求 subagent 并行处理多个 GitHub issue 且强调不要串工作时，按 issue 建独立 `space` / `feat/<space-key>` / `../TritonKit-worktrees/<space-key>/`；主控 agent 逐 worktree 检查 clean status、commit、测试、docs/memory，不把多个 issue 或主仓并行改动混成一个提交。
-- 用户要求“其他 worktree 都结束了就合并到主分支后删除”时，收尾顺序固定为：`git worktree list --porcelain` 枚举，逐 worktree 跑 `git status --short --branch`，用 `git log main..<branch>` 和 `git merge-base --is-ancestor` 判断是否还有未合入提交，对需要合入的分支先用 `git merge-tree --write-tree main <branch>` 做无副作用冲突预检；合入主仓后必须在主仓跑门禁，通过后再 `git worktree remove <path>`，最后复查 registered worktree 只剩主仓。空包装目录可在确认不是 registered worktree 且为空后用 `rmdir` 清理；本地/远端分支不随 worktree 默认删除。
+- 用户要求“其他 worktree 都结束了就合并到主分支后删除”时，收尾顺序固定为：`git worktree list --porcelain` 枚举，逐 worktree 跑 `git status --short --branch`，用 `git log main..<branch>` 和 `git merge-base --is-ancestor` 判断是否还有未合入提交，对需要合入的分支先用 `git merge-tree --write-tree main <branch>` 做无副作用冲突预检；合入主仓后必须在主仓跑门禁，通过后再 `git worktree remove <path>`，最后复查 registered worktree 只剩主仓。空包装目录可在确认不是 registered worktree 且为空后用 `rmdir` 清理；本地/远端分支不随 worktree 默认删除。若 `git branch -d` 因分支尚未合入 `origin/main` 拒绝删除，但它已经合入本地 `HEAD`，先推送 `main` 并 `git fetch origin main`，再重试非强制 `git branch -d`，不要直接升级到 `-D`。
 - 用户要求在 issue 合并后推送并关闭对应 GitHub issue 时，先确认 `main` 已推送成功，再关闭本轮已实现和验证的 issue；若 open 列表里出现新 issue，不顺手关闭。关闭评论写明实现提交、合并提交、integration fix 和验证范围；评论含命令片段或复杂 Markdown 时用 `--body-file`。
 - 调整 CI、Release 或发布产物契约时，同步更新 `docs-linhay/dev/` 与 memory。
 - 调整 Homebrew、tap、checksum 或 release asset 命名时，同步更新 README、`.github/homebrew/`、`docs-linhay/dev/` 与 memory。
