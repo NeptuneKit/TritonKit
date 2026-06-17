@@ -289,5 +289,5 @@ func evidenceHierarchyData(client: TritonKitHTTPClient, refresh: Bool) async thr
     if refresh {
         return try await client.request(type: "hierarchy")
     }
-    return try await waitForHierarchy(client: client)
+    return try await client.latestHierarchyData()
 }

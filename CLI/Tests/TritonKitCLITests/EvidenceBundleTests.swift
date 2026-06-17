@@ -41,6 +41,33 @@ struct EvidenceBundleTests {
         #expect(fakeServer.requestTypes.contains("geometry"))
     }
 
+    @Test("evidence capture propagates explicit target to cached hierarchy requests")
+    func evidenceCapturePropagatesExplicitTargetToCachedHierarchyRequests() async throws {
+        let expectedTarget = "triton:ios-simulator:SIM-2"
+        let fakeServer = EvidenceTargetPropagationFakeServer(expectedTarget: expectedTarget)
+        defer { fakeServer.stop() }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-cached-hierarchy-target-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["list", "hierarchy"],
+            name: "cached-hierarchy-target",
+            note: nil,
+            target: expectedTarget,
+            host: fakeServer.host,
+            port: fakeServer.port,
+            refresh: false
+        )
+
+        #expect(manifest.target?.id == expectedTarget)
+        #expect(manifest.skipped.isEmpty)
+        #expect(manifest.artifacts.map(\.kind).contains("hierarchy"))
+        #expect(fakeServer.latestHierarchyTargets == [expectedTarget])
+    }
+
     @Test("schema exposes explicit xcode summary evidence import option")
     func schemaExposesExplicitXcodeSummaryEvidenceImportOption() throws {
         let evidence = try #require(commandSchemas().first { $0.name == "evidence" })
@@ -738,6 +765,10 @@ private final class EvidenceTargetPropagationFakeServer {
     var requestTypes: [String] {
         EvidenceTargetPropagationURLProtocol.requestTypes
     }
+
+    var latestHierarchyTargets: [String?] {
+        EvidenceTargetPropagationURLProtocol.latestHierarchyTargets
+    }
 }
 
 private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
@@ -746,6 +777,7 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
     private static var configuredExpectedTarget: String?
     private static var recordedTargets: [String?] = []
     private static var recordedTypes: [String] = []
+    private static var recordedLatestHierarchyTargets: [String?] = []
 
     static var requestTargets: [String?] {
         lock.withEvidenceLock { recordedTargets }
@@ -755,12 +787,17 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
         lock.withEvidenceLock { recordedTypes }
     }
 
+    static var latestHierarchyTargets: [String?] {
+        lock.withEvidenceLock { recordedLatestHierarchyTargets }
+    }
+
     static func configure(port: Int, expectedTarget: String) {
         lock.withEvidenceLock {
             configuredPort = port
             configuredExpectedTarget = expectedTarget
             recordedTargets = []
             recordedTypes = []
+            recordedLatestHierarchyTargets = []
         }
     }
 
@@ -770,6 +807,7 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
             configuredExpectedTarget = nil
             recordedTargets = []
             recordedTypes = []
+            recordedLatestHierarchyTargets = []
         }
     }
 
@@ -821,6 +859,25 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
                 TKTargetSummary(id: configuredExpectedTarget ?? "triton:ios-simulator:SIM-2", connected: true, latestHierarchyAvailable: true, simulatorUDID: "SIM-2"),
             ]
             return try json(TKTargetsResponse(targets: targets))
+        case ("GET", "/hierarchy/latest"):
+            let target = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?
+                .first { $0.name == "target" }?
+                .value
+            let expectedTarget = lock.withEvidenceLock { configuredExpectedTarget }
+            lock.withEvidenceLock {
+                recordedLatestHierarchyTargets.append(target)
+            }
+            guard target == expectedTarget else {
+                return try json(
+                    TKCLIErrorResponse(error: TKCLIErrorDetail(
+                        code: "ambiguous_target",
+                        message: "Target is ambiguous: \(target ?? TKLocalTargetID). Pass --target <id>."
+                    )),
+                    statusCode: 409
+                )
+            }
+            return try runtimeResponse(for: "hierarchy")
         case ("POST", "/request"):
             let body = request.httpBodyStream.map(readBodyStream) ?? request.httpBody ?? Data()
             let command = try JSONDecoder().decode(TKCLICommandRequest.self, from: body)
