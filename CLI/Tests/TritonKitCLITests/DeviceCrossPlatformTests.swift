@@ -43,8 +43,10 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("use <selector>"))
         #expect(usageForms.contains("current"))
         #expect(usageForms.contains("resolve <selector>"))
+        #expect(usageForms.contains("resolve --platform ios|android|harmony --device <selector>"))
         #expect(usageForms.contains("wait-ready --device <selector>"))
         #expect(usageForms.contains("screenshot --device <selector> --output <path>"))
+        #expect(try #require(device.options.first { $0.name == "screenshot --device <selector> --output <path>" }).description.contains("Android"))
         #expect(usageForms.contains("runtime-url --device <selector>"))
         #expect(usageForms.contains("stop --platform harmony --hvd <name> --path <deployed-path> --confirm"))
         #expect(optionNames.contains("--device"))
@@ -61,6 +63,7 @@ struct DeviceCrossPlatformTests {
         #expect(optionNames.contains("--name"))
         #expect(optionNames.contains("--runtime"))
         #expect(device.examples.contains("triton device list --platform android --scope real --json"))
+        #expect(device.examples.contains("triton device resolve --platform android --device android-a --ready --json"))
         #expect(device.examples.contains("triton device wait-ready --platform android --scope real --device <android-real-target> --json"))
         #expect(usageForms.contains("runtime-url --platform harmony --target <target>"))
         #expect(device.examples.contains("triton device runtime-url --device harmony-a --probe-manifest --json"))
@@ -2778,6 +2781,40 @@ struct DeviceCrossPlatformTests {
             "ax",
             "--platform", "android",
             "--device", "android-a",
+            "--json",
+        ])
+    }
+
+    @Test("issue 61 Android device platform surface parses public P0 commands")
+    func issue61AndroidDevicePlatformSurfaceParsesPublicP0Commands() throws {
+        _ = try TritonKitCLI.parseAsRoot([
+            "device", "doctor",
+            "--platform", "android",
+            "--json",
+        ])
+        _ = try TritonKitCLI.parseAsRoot([
+            "device", "list",
+            "--platform", "android",
+            "--json",
+        ])
+        _ = try TritonKitCLI.parseAsRoot([
+            "device", "resolve",
+            "--platform", "android",
+            "--device", "android:emulator-5554",
+            "--json",
+        ])
+        _ = try TritonKitCLI.parseAsRoot([
+            "device", "wait-ready",
+            "--platform", "android",
+            "--device", "android:emulator-5554",
+            "--timeout", "1",
+            "--json",
+        ])
+        _ = try TritonKitCLI.parseAsRoot([
+            "device", "screenshot",
+            "--platform", "android",
+            "--device", "android:emulator-5554",
+            "--output", "/tmp/triton-android.png",
             "--json",
         ])
     }

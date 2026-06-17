@@ -128,6 +128,17 @@ func captureHarmonyScreenshot(
 
 func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDeviceTarget, selection: HostDeviceSelectionResult? = nil, hdc: String, adb: String = "adb", output: String) throws -> HostDeviceArtifactOutput {
     guard target.ready else {
+        if platform == .android {
+            if target.blockedReasons.contains("unauthorized") {
+                throw AndroidDeviceReadinessError.unauthorized(target.target)
+            }
+            if target.blockedReasons.contains("offline") {
+                throw AndroidDeviceReadinessError.offline(target.target)
+            }
+            if target.blockedReasons.contains("debugging-disabled") {
+                throw AndroidDeviceReadinessError.debuggingDisabled(target.target)
+            }
+        }
         throw HostCommandRunError.deviceNotReady(target: target.target, timeoutSeconds: 0)
     }
     switch platform {
@@ -141,6 +152,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             target: target,
             selection: selection,
             artifact: output,
+            format: "png",
             sourceCommands: [result.sourceCommand],
             note: "Host-side iOS simulator screenshot was written."
         )
@@ -153,6 +165,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             target: target,
             selection: selection,
             artifact: output,
+            format: "jpeg",
             sourceCommands: capture.sourceCommands,
             note: "Host-side Harmony screenshot was captured through snapshot_display using remote artifact \(capture.remotePath)."
         )
@@ -169,6 +182,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             target: target,
             selection: selection,
             artifact: output,
+            format: "png",
             sourceCommands: [screenshotResult.sourceCommand, pullResult.sourceCommand],
             note: "Host-side Android screenshot was captured through adb screencap and pulled from the emulator."
         )

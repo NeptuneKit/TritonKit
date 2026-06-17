@@ -77,7 +77,7 @@ func observeSurfaceOutputContract() -> TKCommandOutputContract {
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether observation completed"),
             ("action", "String", true, "observe.current or observe.tree"),
-            ("platform", "String", true, "ios or harmony"),
+            ("platform", "String", true, "ios, android, or harmony"),
             ("capturedAt", "String", true, "Capture timestamp"),
             ("partial", "Bool", true, "Whether observation is partial"),
             ("target", "String", true, "Resolved target selector"),
@@ -320,6 +320,7 @@ func hostArtifactOutputContract() -> TKCommandOutputContract {
             ("target", "HostDeviceTarget", true, "Resolved host target"),
             ("selection", "HostDeviceSelectionResult?", false, "Target selection details"),
             ("artifact", "String", true, "Written artifact path"),
+            ("format", "String", true, "Artifact file format such as png or jpeg"),
             ("sourceCommands", "[String]", true, "Underlying host commands"),
             ("note", "String", true, "Boundary or follow-up note"),
         ])

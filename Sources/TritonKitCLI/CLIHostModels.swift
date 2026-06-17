@@ -294,6 +294,7 @@ struct HostDeviceListOutput: Encodable {
     let defaultTarget: HostDeviceTarget?
     let sourceCommand: String
     let sourceCommands: [String]
+    let nextAction: TKCLINextAction?
 
     init(
         ok: Bool,
@@ -301,7 +302,8 @@ struct HostDeviceListOutput: Encodable {
         targets: [HostDeviceTarget],
         defaultTarget: HostDeviceTarget?,
         sourceCommand: String,
-        sourceCommands: [String]? = nil
+        sourceCommands: [String]? = nil,
+        nextAction: TKCLINextAction? = nil
     ) {
         self.ok = ok
         self.platform = platform
@@ -309,6 +311,7 @@ struct HostDeviceListOutput: Encodable {
         self.defaultTarget = defaultTarget
         self.sourceCommand = sourceCommand
         self.sourceCommands = sourceCommands ?? [sourceCommand]
+        self.nextAction = nextAction
     }
 }
 
@@ -391,6 +394,7 @@ struct HostDeviceArtifactOutput: Encodable {
     let target: HostDeviceTarget
     let selection: HostDeviceSelectionResult?
     let artifact: String
+    let format: String
     let sourceCommands: [String]
     let note: String
 }
@@ -662,6 +666,31 @@ enum AndroidDeviceReadinessError: Error, CustomStringConvertible {
             "Enable Developer options and USB debugging, and verify host USB permissions allow adb access."
         case .packageManagerUnavailable:
             "Wait for Android boot/package services to finish, unlock if needed, or increase --timeout."
+        }
+    }
+}
+
+enum AndroidADBToolError: Error, CustomStringConvertible {
+    case notFound(String)
+
+    var description: String {
+        switch self {
+        case .notFound(let executable):
+            "Android adb executable was not found: \(executable)"
+        }
+    }
+
+    var code: String {
+        switch self {
+        case .notFound:
+            "android_adb_not_found"
+        }
+    }
+
+    var hint: String {
+        switch self {
+        case .notFound:
+            "Install Android SDK platform-tools or pass --adb <path> to the Triton command."
         }
     }
 }

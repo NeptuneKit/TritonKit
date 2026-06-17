@@ -410,6 +410,12 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: error.hint
         )
+    case let error as AndroidADBToolError:
+        detail = TKCLIErrorDetail(
+            code: error.code,
+            message: "\(error)",
+            hint: error.hint
+        )
     case let error as HarmonyDeviceReadinessError:
         detail = TKCLIErrorDetail(
             code: error.code,
@@ -529,10 +535,27 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         let code: String
         let hint: String
         let isHDC = command.executable == "hdc" || command.executable.hasSuffix("/hdc")
+        let isADB = command.executable == "adb" || command.executable.hasSuffix("/adb")
+        let stderr = result.stderr.lowercased()
         let simctlSubcommand = command.arguments.dropFirst().first
         if command.executable == "xcodebuild" {
             code = "xcodebuild_failed"
             hint = "Inspect the xcodebuild output, verify workspace/project, scheme, destination, signing, and DerivedData path."
+        } else if isADB && (result.exitCode == 127 || stderr.contains("no such file") || stderr.contains("not found")) {
+            code = "android_adb_not_found"
+            hint = "Install Android SDK platform-tools or pass --adb <path> to the Triton command."
+        } else if isADB && command.arguments.contains("screencap") {
+            code = "android_screenshot_failed"
+            hint = "Verify the Android emulator is ready, then retry `triton device screenshot --platform android --device <selector> --output <path> --json`."
+        } else if isADB && command.arguments.contains("pull") {
+            code = "android_screenshot_failed"
+            hint = "Verify the Android screenshot artifact exists on the emulator and the local output path is writable."
+        } else if isADB && command.arguments.contains("install") {
+            code = "android_app_install_failed"
+            hint = "Verify the emulator is ready and --apk points to a debuggable APK."
+        } else if isADB && command.arguments.contains("am") && command.arguments.contains("start") {
+            code = command.arguments.contains("android.intent.action.VIEW") ? "host_open_url_failed" : "android_activity_resolve_failed"
+            hint = "Verify the Android package/activity or URL intent can be resolved, then validate business state with wait/assert/screenshot."
         } else if command.arguments.first == "xctrace" {
             code = "xctrace_record_failed"
             hint = "Verify the template, target device, attach/launch selection, time limit, privacy prompt state, and output path."
@@ -692,6 +715,28 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
     case .text:
         print(detail.message)
         if let hint = detail.hint { print("hint: \(hint)") }
+    }
+    throw ExitCode.failure
+}
+
+func failHostUnsupportedCapability(
+    message: String,
+    hint: String,
+    nextAction: TKCLINextAction,
+    outputFormat: ClientOutputFormat
+) throws -> Never {
+    let detail = TKCLIErrorDetail(
+        code: "unsupported_capability",
+        message: message,
+        hint: hint,
+        nextAction: nextAction
+    )
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+    case .text:
+        print(message)
+        print("hint: \(hint)")
     }
     throw ExitCode.failure
 }
