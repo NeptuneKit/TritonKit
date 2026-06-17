@@ -442,8 +442,9 @@ jobs:
           test -f dist/tritonkit-skills.tar.gz
           test -f dist/tritonkit_checksums.txt
           tar -tf dist/triton-macos-arm64.tar.gz | grep -Eq '^triton-macos-arm64/web/index[.]html$'
-          tar -xOf dist/triton-macos-arm64.tar.gz triton-macos-arm64/README.txt \
-            | grep -Fq 'triton web starts the bundled Web Device Hub from ./web.'
+          arm64_readme="$(mktemp)"
+          tar -xOf dist/triton-macos-arm64.tar.gz triton-macos-arm64/README.txt > "${arm64_readme}"
+          grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${arm64_readme}"
           ! compgen -G "dist/*.zip" >/dev/null
           ! test -f dist/tritonkit-dev-feedback.tar.gz
           ! test -f dist/tritonkit-emulator-cli-takeover.tar.gz
@@ -548,8 +549,9 @@ jobs:
           (
             cd dist
             tar -tf triton-macos-x86_64.tar.gz | grep -Eq '^triton-macos-x86_64/web/index[.]html$'
-            tar -xOf triton-macos-x86_64.tar.gz triton-macos-x86_64/README.txt \
-              | grep -Fq 'triton web starts the bundled Web Device Hub from ./web.'
+            x86_readme="$(mktemp)"
+            tar -xOf triton-macos-x86_64.tar.gz triton-macos-x86_64/README.txt > "${x86_readme}"
+            grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${x86_readme}"
             grep -v 'triton-macos-x86_64[.]tar[.]gz$' tritonkit_checksums.txt > tritonkit_checksums.merged.txt
             sha256sum triton-macos-x86_64.tar.gz >> tritonkit_checksums.merged.txt
             sort -k 2 tritonkit_checksums.merged.txt > tritonkit_checksums.txt

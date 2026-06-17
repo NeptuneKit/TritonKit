@@ -73,6 +73,9 @@ if (( web_copy_count < 2 )); then
 fi
 grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${ci_workflow}" \
   || fail "CLI package README must explain bundled Web startup through triton web"
+if grep -Fq "| grep -Fq 'triton web starts the bundled Web Device Hub from ./web.'" "${ci_workflow}"; then
+  fail "release README validation must not pipe tar output into grep -q because grep can close the pipe before tar finishes"
+fi
 grep -Fq 'triton-macos-arm64/web/index[.]html' "${ci_workflow}" \
   || fail "ci workflow must validate the arm64 CLI tarball contains bundled Web assets"
 grep -Fq 'triton-macos-x86_64/web/index[.]html' "${ci_workflow}" \
