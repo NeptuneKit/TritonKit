@@ -124,6 +124,8 @@ if ! gh secret list --repo "${repo}" | awk '{ print $1 }' | grep -Fxq "TAP_GITHU
   fail "TAP_GITHUB_TOKEN is not configured in ${repo}; set a token that can push ${tap_repository}"
 fi
 
+docs-linhay/scripts/verify-release-package-versions.sh "${version}"
+
 git fetch origin main --tags
 current_branch="$(git symbolic-ref --quiet --short HEAD || true)"
 [[ "${current_branch}" == "main" ]] || fail "release must run from main; current branch is ${current_branch:-detached}"

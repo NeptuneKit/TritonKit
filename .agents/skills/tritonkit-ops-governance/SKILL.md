@@ -36,6 +36,7 @@ metadata:
 - GitHub CI / Release 最终必须产出 macOS arm64 / x86_64 `triton` CLI tar 包、checksum manifest 和合并后的对外项目级 `tritonkit-skills.tar.gz`；发布顺序是 arm64 CLI + skill 包先创建 Release / 更新 Homebrew，x86_64 CLI 由 Intel runner 后补上传并再次刷新 checksum / tap。该 skill 包只能从 `TritonKit.skills/` 打包，当前至少包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`，便于外部使用者拿到开发阶段反馈流程、真实项目回归流程和本机模拟器 CLI 接管流程。
 - Public skill 打包必须走 `docs-linhay/scripts/package-public-skills.py`，参考 `harmony-next.skills` 的独立脚本产物生成方式，在包内 `TritonKit.skills/BUILD_INFO.json` 写入 metadata，但仍保持 TritonKit 的合并 `tritonkit-skills.tar.gz` 契约，不新增 `.skill.zip` 或单独 skill tarball。安装默认以整个 `TritonKit.skills/` 文件夹为单位；升级旧安装时先删除 agent skills 目录下的三个独立 public skill 目录。
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；维护者默认用 `docs-linhay/scripts/release.sh <version>` 发布，脚本负责前置检查、tag 推送、CI 观察、Release 资产验证和 Homebrew fetch 验证。
+- 整体发布、各端内置包版本同步、Homebrew/Web/SwiftPM/CocoaPods/public skill 包一致性发版，优先使用 `tritonkit-release-package-governance`。
 - 发版前必须保持主仓 worktree 完全干净，包含 memory、临时截图、未跟踪 space 和并行 issue WIP；若 release 途中需要抢修本地门禁 blocker，只做最小 release-blocker commit，推送 `main` 后重新跑 release 脚本，不把未完成 WebView/issue work 混入 tag。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；`NeptuneKit/TritonKit` 必须配置 `TAP_GITHUB_TOKEN`，让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - `v0.1.0` 起 GitHub Release 和 `NeptuneKit/homebrew-tap` 已可用；对外接入文档和 skill 默认优先给 `brew install NeptuneKit/tap/triton`，只有验证未发布源码变更或 release/tap 不可用时才使用 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` fallback。

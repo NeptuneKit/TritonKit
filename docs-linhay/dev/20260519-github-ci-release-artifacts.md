@@ -35,6 +35,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
    - `tritonkit-skills.tar.gz`，顶层包含 `TritonKit.skills/`，其内包含 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover` 与 `tritonkit-real-project-regression`
 13. 所有包先作为 workflow artifact 上传；tag 发布时 arm64 包与 skill 包先作为 GitHub Release asset 上传，x86_64 包成功后再补传。
 14. arm64 发布完成后触发 Homebrew tap 更新 workflow；x86_64 后补完成后再次触发 tap 更新，让 Intel formula 分支拿到 checksum。
+15. 整体发布必须先同步所有对外包入口版本：`TritonKit.podspec`、`TritonKitShared.podspec`、`Web/package.json` 与 `Web/package-lock.json` 都必须等于 release tag 版本；`release.sh` 在打 tag 前通过 `verify-release-package-versions.sh` 强制校验。
 
 Skill 源码分层约束：release packaging 只能读取 `TritonKit.skills/`。`.agents/skills/` 只存放 repo 维护、治理、实现和监督用 skill，不进入 `tritonkit-skills.tar.gz`，也不作为 release packaging 源。
 
