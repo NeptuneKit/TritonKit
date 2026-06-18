@@ -21,7 +21,7 @@ jobs:
 
     outputs:
       mode: ${{ steps.validate-scope.outputs.mode }}
-      release: ${{ steps.validate-scope.outputs.release }}
+      is_release_tag: ${{ steps.validate-scope.outputs.is_release_tag }}
 
     steps:
       - name: Checkout
@@ -35,14 +35,14 @@ jobs:
           TRITON_CI_BASE_SHA: ${{ github.event.before }}
         run: |
           mode="$(docs-linhay/scripts/ci-validate-mode.sh)"
-          release="false"
+          is_release_tag="false"
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" || "${GITHUB_REF:-}" == refs/tags/v* ]]; then
-            release="true"
+            is_release_tag="true"
           fi
           echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
-          echo "release=${release}" >> "${GITHUB_OUTPUT}"
+          echo "is_release_tag=${is_release_tag}" >> "${GITHUB_OUTPUT}"
           echo "validate mode: ${mode}"
-          echo "release tag: ${release}"
+          echo "release tag: ${is_release_tag}"
 
       - name: Validate docs and skills
         if: steps.validate-scope.outputs.mode == 'docs'
@@ -205,7 +205,7 @@ jobs:
 
   build-cli-arm64:
     name: Build CLI (arm64)
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.classify-validate.outputs.release == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - validate
@@ -299,7 +299,7 @@ jobs:
 
   build-cli-x86_64:
     name: Build CLI (x86_64)
-    if: ${{ github.event_name == 'workflow_dispatch' || needs.classify-validate.outputs.release == 'true' }}
+    if: ${{ github.event_name == 'workflow_dispatch' || needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - validate
@@ -536,7 +536,7 @@ jobs:
 
   publish-x86-release-asset:
     name: Publish x86_64 release asset
-    if: ${{ needs.classify-validate.outputs.release == 'true' }}
+    if: ${{ needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - package-release-assets
@@ -593,7 +593,7 @@ jobs:
 
   update-homebrew-tap:
     name: Update Homebrew tap (arm64)
-    if: ${{ needs.classify-validate.outputs.release == 'true' }}
+    if: ${{ needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - package-release-assets
@@ -605,7 +605,7 @@ jobs:
 
   update-homebrew-tap-x86:
     name: Update Homebrew tap (x86_64 backfill)
-    if: ${{ needs.classify-validate.outputs.release == 'true' }}
+    if: ${{ needs.classify-validate.outputs.is_release_tag == 'true' }}
     needs:
       - classify-validate
       - publish-x86-release-asset
