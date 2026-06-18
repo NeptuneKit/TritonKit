@@ -13,6 +13,7 @@ If upgrading from the old layout, delete these old top-level directories from th
 - `tritonkit-dev-feedback`
 - `tritonkit-emulator-cli-takeover`
 - `tritonkit-real-project-regression`
+- `tritonkit-update`
 
 Release automation packages this directory into `tritonkit-skills.tar.gz`; extracting that asset into the agent skills directory creates `TritonKit.skills/`.
 
@@ -21,5 +22,6 @@ The bundle contains:
 - `tritonkit-dev-feedback`
 - `tritonkit-emulator-cli-takeover`
 - `tritonkit-real-project-regression`
+- `tritonkit-update`
 
 Repository-maintenance, governance, planning, supervision, and implementation skills live under `.agents/skills/` and must not be packaged into public release skill bundles.

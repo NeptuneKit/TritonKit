@@ -15,6 +15,7 @@ The installer removes the older top-level per-skill layout first:
   tritonkit-dev-feedback
   tritonkit-emulator-cli-takeover
   tritonkit-real-project-regression
+  tritonkit-update
 USAGE
 }
 
@@ -54,7 +55,8 @@ mkdir -p "${agent_skills_dir}"
 for legacy_skill in \
   tritonkit-dev-feedback \
   tritonkit-emulator-cli-takeover \
-  tritonkit-real-project-regression; do
+  tritonkit-real-project-regression \
+  tritonkit-update; do
   rm -rf "${agent_skills_dir:?}/${legacy_skill}"
 done
 rm -rf "${agent_skills_dir:?}/TritonKit.skills"

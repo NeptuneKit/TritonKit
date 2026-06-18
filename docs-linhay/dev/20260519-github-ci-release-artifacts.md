@@ -32,7 +32,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 11. 生成 checksum manifest：
    - `tritonkit_checksums.txt`
 12. 打包 skill：
-   - `tritonkit-skills.tar.gz`，顶层包含 `TritonKit.skills/`，其内包含 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover` 与 `tritonkit-real-project-regression`
+   - `tritonkit-skills.tar.gz`，顶层包含 `TritonKit.skills/`，其内包含 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression` 与 `tritonkit-update`
 13. 所有包先作为 workflow artifact 上传；tag 发布时 arm64 包与 skill 包先作为 GitHub Release asset 上传，x86_64 包成功后再补传。
 14. arm64 发布完成后触发 Homebrew tap 更新 workflow；x86_64 后补完成后再次触发 tap 更新，让 Intel formula 分支拿到 checksum。
 15. 整体发布必须先同步所有对外包入口版本：`TritonKit.podspec`、`TritonKitShared.podspec`、`Web/package.json` 与 `Web/package-lock.json` 都必须等于 release tag 版本；`release.sh` 在打 tag 前通过 `verify-release-package-versions.sh` 强制校验。
@@ -41,7 +41,7 @@ Skill 源码分层约束：release packaging 只能读取 `TritonKit.skills/`。
 
 Skill 打包流程参考 `harmony-next.skills` 的独立脚本式产物生成：TritonKit 使用 `docs-linhay/scripts/package-public-skills.py` 统一完成 public skill 复制、版本 stamp、`TritonKit.skills/BUILD_INFO.json` 写入和 `tritonkit-skills.tar.gz` 生成。与 `harmony-next.skills` 不同，TritonKit 保持既有 release 契约：只发布合并后的 tar.gz，不发布 `.skill.zip` 或单个 skill tarball。
 
-安装与升级约定：外部用户默认把整个 `TritonKit.skills/` 文件夹放到对应 agent skills 目录下。若用户曾按旧文档安装过三个顶层目录 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression`，升级到本版时先删除旧三个目录，再安装 `TritonKit.skills/`。维护者可用 `docs-linhay/scripts/install-public-skills.sh <agent-skills-dir> [--from-tar tritonkit-skills.tar.gz]` 自动完成删除与安装。
+安装与升级约定：外部用户默认把整个 `TritonKit.skills/` 文件夹放到对应 agent skills 目录下。若用户曾按旧文档安装过顶层目录 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression` 或 `tritonkit-update`，升级到本版时先删除这些旧目录，再安装 `TritonKit.skills/`。维护者可用 `docs-linhay/scripts/install-public-skills.sh <agent-skills-dir> [--from-tar tritonkit-skills.tar.gz]` 自动完成删除与安装。
 
 补充约束：`workflow_dispatch` 的非 tag 构建只验证 release asset 集合并上传 workflow artifact，不渲染 Homebrew formula。原因是非 tag 版本形如 `0.1.0-dev+<short-sha>`，不是可发布的 Homebrew release tag；只有真实 `v*` tag 构建才使用 `GITHUB_REF_NAME` 渲染 formula 并做 Ruby 语法检查。
 
@@ -52,7 +52,7 @@ GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免
 发布产物必须至少包含：
 
 1. `triton` CLI 可执行文件包，最终必须同时覆盖 macOS arm64 与 x86_64；arm64 是首发门槛，x86_64 是后补资产。
-2. 面向外部使用者的项目级 skill 合并包 `tritonkit-skills.tar.gz`，当前至少包括 `TritonKit.skills/tritonkit-dev-feedback`、`TritonKit.skills/tritonkit-real-project-regression` 与 `TritonKit.skills/tritonkit-emulator-cli-takeover`。
+2. 面向外部使用者的项目级 skill 合并包 `tritonkit-skills.tar.gz`，当前至少包括 `TritonKit.skills/tritonkit-dev-feedback`、`TritonKit.skills/tritonkit-real-project-regression`、`TritonKit.skills/tritonkit-emulator-cli-takeover` 与 `TritonKit.skills/tritonkit-update`。
 3. `tritonkit_checksums.txt`，用于 Homebrew formula 渲染和用户校验。
 4. CLI 与 skill 包必须携带同一个 CI 解析出的版本号；skill 使用 `metadata.version`，保持 skill front matter 兼容。
 

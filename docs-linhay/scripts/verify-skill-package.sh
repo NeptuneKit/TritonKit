@@ -20,7 +20,7 @@ tar -tzf "${package}" | sort > "${tmp_dir}/contents.txt"
 grep -q '^TritonKit[.]skills/BUILD_INFO[.]json$' "${tmp_dir}/contents.txt"
 grep -q '^TritonKit[.]skills/README[.]md$' "${tmp_dir}/contents.txt"
 
-for skill_name in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonkit-real-project-regression; do
+for skill_name in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonkit-real-project-regression tritonkit-update; do
   grep -q "^TritonKit[.]skills/${skill_name}/SKILL[.]md$" "${tmp_dir}/contents.txt"
   tar -xOf "${package}" "TritonKit.skills/${skill_name}/SKILL.md" > "${tmp_dir}/${skill_name}.skill.md"
   grep -q '^  version: 9.8.7-dev+abcdef0$' "${tmp_dir}/${skill_name}.skill.md"
@@ -44,6 +44,7 @@ expected = [
     "tritonkit-dev-feedback",
     "tritonkit-emulator-cli-takeover",
     "tritonkit-real-project-regression",
+    "tritonkit-update",
 ]
 
 assert build_info["name"] == "tritonkit-skills"
@@ -58,19 +59,22 @@ PY
 install_dir="${tmp_dir}/agent-skills"
 mkdir -p "${install_dir}/tritonkit-dev-feedback" \
   "${install_dir}/tritonkit-emulator-cli-takeover" \
-  "${install_dir}/tritonkit-real-project-regression"
+  "${install_dir}/tritonkit-real-project-regression" \
+  "${install_dir}/tritonkit-update"
 "${root}/docs-linhay/scripts/install-public-skills.sh" "${install_dir}" --from-tar "${package}" >/tmp/tritonkit-install-skills.log
 test -d "${install_dir}/TritonKit.skills"
 test -f "${install_dir}/TritonKit.skills/tritonkit-dev-feedback/SKILL.md"
 test ! -e "${install_dir}/tritonkit-dev-feedback"
 test ! -e "${install_dir}/tritonkit-emulator-cli-takeover"
 test ! -e "${install_dir}/tritonkit-real-project-regression"
+test ! -e "${install_dir}/tritonkit-update"
 
 source_install_dir="${tmp_dir}/agent-skills-source"
 mkdir -p "${source_install_dir}/tritonkit-dev-feedback"
 "${root}/docs-linhay/scripts/install-public-skills.sh" "${source_install_dir}" >/tmp/tritonkit-install-source-skills.log
 test -d "${source_install_dir}/TritonKit.skills"
 test -f "${source_install_dir}/TritonKit.skills/tritonkit-real-project-regression/SKILL.md"
+test -f "${source_install_dir}/TritonKit.skills/tritonkit-update/SKILL.md"
 test ! -e "${source_install_dir}/tritonkit-dev-feedback"
 
 echo "skill package verification passed"

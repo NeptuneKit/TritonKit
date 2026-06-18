@@ -95,6 +95,7 @@ if grep -q '| rg '\''\^  version: '\''' "${ci_workflow}"; then
   fail "ci workflow must not require rg when validating skill versions in release jobs"
 fi
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"
+grep -q 'tritonkit-update' "${package_skill_script}" || fail "package script must package the public update skill"
 grep -q 'package-public-skills[.]py' "${ci_workflow}" || fail "ci workflow must package skills through package-public-skills.py"
 grep -q 'TritonKit[.]skills/BUILD_INFO[.]json' "${ci_workflow}" || fail "ci workflow must validate packaged skill bundle BUILD_INFO.json"
 grep -q 'TritonKit[.]skills' "${package_skill_script}" || fail "package script must package public skills from TritonKit.skills"
@@ -102,7 +103,7 @@ if grep -q '[.]agents/skills/[$][{]skill_name[}]' "${ci_workflow}" \
   || grep -q '[.]agents/tritonkit-skills' "${ci_workflow}"; then
   fail "ci workflow must not package release skills from internal skills or retired roots"
 fi
-for public_skill in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonkit-real-project-regression; do
+for public_skill in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonkit-real-project-regression tritonkit-update; do
   test -f "${public_skill_root}/${public_skill}/SKILL.md" || fail "missing public skill source: ${public_skill}"
   test ! -e "${root}/.agents/skills/${public_skill}" || fail "public skill must not live in .agents/skills: ${public_skill}"
 done

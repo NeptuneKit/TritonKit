@@ -16,6 +16,7 @@ PUBLIC_SKILLS = [
     "tritonkit-dev-feedback",
     "tritonkit-emulator-cli-takeover",
     "tritonkit-real-project-regression",
+    "tritonkit-update",
 ]
 
 
