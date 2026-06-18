@@ -144,6 +144,8 @@ grep -Fq 'release: ${{ steps.validate-scope.outputs.release }}' "${ci_workflow}"
   || fail "ci workflow must expose release tag detection from classify-validate"
 grep -Fq "needs.classify-validate.outputs.release == 'true'" "${ci_workflow}" \
   || fail "ci workflow release jobs must depend on classify-validate release output"
+grep -Fq 'if: ${{ needs.classify-validate.outputs.release == '\''true'\'' }}' "${ci_workflow}" \
+  || fail "ci workflow release job conditions must use explicit GitHub expressions for needs outputs"
 grep -Fq 'completed successfully before arm64 release assets were created' "${release_script}" \
   || fail "release script must fail if a tag run succeeds without creating release assets"
 
