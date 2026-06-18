@@ -106,7 +106,7 @@ jobs:
   build-cli-x86_64:
     name: Build CLI (x86_64)
     needs: release-contracts
-    runs-on: macos-15-intel
+    runs-on: macos-15
 
     steps:
       - name: Checkout
@@ -129,7 +129,7 @@ jobs:
           echo "version=${version}" >> "${GITHUB_OUTPUT}"
 
       - name: Build CLI
-        run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+        run: swift build --package-path CLI --scratch-path .build/cli-x86 -c release --product triton --triple x86_64-apple-macosx14.0
 
       - name: Build bundled Web static assets
         run: |
@@ -140,12 +140,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          [[ "$(uname -m)" == "x86_64" ]]
+          [[ "$(uname -m)" == "arm64" ]]
           package_name="triton-macos-x86_64"
           package_dir="dist/${package_name}"
           mkdir -p "${package_dir}/web"
-          cp .build/cli/release/triton "${package_dir}/triton"
+          cp .build/cli-x86/x86_64-apple-macosx/release/triton "${package_dir}/triton"
           chmod +x "${package_dir}/triton"
+          file "${package_dir}/triton" | grep -q 'Mach-O 64-bit executable x86_64'
           cp -R Web/dist/. "${package_dir}/web/"
           cat > "${package_dir}/README.txt" <<README
           TritonKit CLI
@@ -256,6 +257,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
       - name: Download x86_64 CLI artifact
         uses: actions/download-artifact@v4
         with:

@@ -146,6 +146,17 @@ grep -q '^name: Release$' "${release_workflow}" || fail "release workflow must e
 grep -q 'tags:' "${release_workflow}" || fail "release workflow must run on version tags"
 grep -q 'Build CLI [(]arm64[)]' "${release_workflow}" || fail "release workflow must build arm64 CLI"
 grep -q 'Build CLI [(]x86_64[)]' "${release_workflow}" || fail "release workflow must build x86_64 CLI"
+if grep -q 'macos-15-intel' "${release_workflow}"; then
+  fail "release workflow must not wait for the slow Intel runner; cross-compile x86_64 on the arm64 runner"
+fi
+grep -Fq -- '--triple x86_64-apple-macosx14.0' "${release_workflow}" \
+  || fail "release workflow must cross-compile x86_64 through SwiftPM --triple"
+grep -Fq '.build/cli-x86/x86_64-apple-macosx/release/triton' "${release_workflow}" \
+  || fail "release workflow must package the x86_64 cross-compiled binary"
+grep -Fq 'Mach-O 64-bit executable x86_64' "${release_workflow}" \
+  || fail "release workflow must verify the x86_64 binary architecture before upload"
+grep -A12 'publish-x86-release-asset:' "${release_workflow}" | grep -Fq 'actions/checkout@v5' \
+  || fail "release workflow must checkout before gh release download in the x86_64 publish job"
 grep -Fq 'is_release_tag: ${{ steps.validate-scope.outputs.is_release_tag }}' "${ci_workflow}" \
   || fail "ci workflow must expose release tag detection from classify-validate"
 grep -Fq "needs.classify-validate.outputs.is_release_tag == 'true'" "${ci_workflow}" \
