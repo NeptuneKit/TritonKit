@@ -33,7 +33,7 @@ metadata:
 - Swift 源文件超过 1500 行即进入治理范围；新增或扩展 CLI 能力时，默认按 `*Commands.swift`、`*Runtime.swift` / `*Service.swift`、`*Models.swift` 拆分。`*Models.swift` 只放 Codable/Encodable/Argument enum 等 wire contract，`*Commands.swift` 只放 ArgumentParser 参数和 glue，执行逻辑进入 runtime/service 文件。
 - 新增配置项时同步覆盖默认值、环境变量覆盖和非法值。
 - 新增外部依赖时先说明必要性；首期优先 Go 标准库。
-- GitHub CI / Release 最终必须产出 macOS arm64 / x86_64 `triton` CLI tar 包、checksum manifest 和合并后的对外项目级 `tritonkit-skills.tar.gz`；发布顺序是 arm64 CLI + skill 包先创建 Release / 更新 Homebrew，x86_64 CLI 由 Intel runner 后补上传并再次刷新 checksum / tap。该 skill 包只能从 `TritonKit.skills/` 打包，当前至少包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression` 与 `tritonkit-emulator-cli-takeover`，便于外部使用者拿到开发阶段反馈流程、真实项目回归流程和本机模拟器 CLI 接管流程。
+- GitHub CI / Release 最终必须产出 macOS arm64 / x86_64 `triton` CLI tar 包、checksum manifest 和合并后的对外项目级 `tritonkit-skills.tar.gz`；发布顺序是 arm64 CLI + skill 包先创建 Release / 更新 Homebrew，x86_64 CLI 在 arm64 macOS runner 上通过 SwiftPM `--triple x86_64-apple-macosx14.0` 交叉编译后补上传，并再次刷新 checksum / tap。该 skill 包只能从 `TritonKit.skills/` 打包，当前至少包含 `tritonkit-dev-feedback`、`tritonkit-real-project-regression`、`tritonkit-emulator-cli-takeover` 与 `tritonkit-update`，便于外部使用者拿到开发阶段反馈流程、真实项目回归流程、本机模拟器 CLI 接管流程和 TritonKit 自更新流程。
 - Public skill 打包必须走 `docs-linhay/scripts/package-public-skills.py`，参考 `harmony-next.skills` 的独立脚本产物生成方式，在包内 `TritonKit.skills/BUILD_INFO.json` 写入 metadata，但仍保持 TritonKit 的合并 `tritonkit-skills.tar.gz` 契约，不新增 `.skill.zip` 或单独 skill tarball。安装默认以整个 `TritonKit.skills/` 文件夹为单位；升级旧安装时先删除 agent skills 目录下的三个独立 public skill 目录。
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；维护者默认用 `docs-linhay/scripts/release.sh <version>` 发布，脚本负责前置检查、tag 推送、CI 观察、Release 资产验证和 Homebrew fetch 验证。
 - 整体发布、各端内置包版本同步、Homebrew/Web/SwiftPM/CocoaPods/public skill 包一致性发版，优先使用 `tritonkit-release-package-governance`。
@@ -51,7 +51,7 @@ metadata:
 - 上报 GitHub issue 前必须脱敏工程和个人信息：真实工程名、App 名、bundle ID、team ID、组织名、用户名、账号、邮箱、手机号、内网域名、绝对私有路径、完整私有日志、未脱敏截图和证据包不得进入公开 issue；必要时使用 `<private-app>`、`<bundle-id>`、`<user>`、`<internal-host>`、`<repo-path>` 等占位符，并保留平台版本、TritonKit 版本、命令、错误码和最小可复现片段。
 - GitHub Actions 状态观察优先使用 `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`；失败后再拉完整日志，避免 `gh run watch` 重复输出淹没关键状态。
 - 发布脚本查找 GitHub Actions run 时必须从 `gh run list --json headBranch,url` 的 URL 字符串解析 run id；不要通过 `databaseId` + Go template 渲染大整数，避免被格式化成科学计数法后导致 `gh run view` 404。
-- Release 脚本完成后，完成定义是 arm64 CLI 包、skill 包、checksum manifest、GitHub Release 和 Homebrew tap 已可用；x86_64 CLI 资产由 Intel runner 后补，不阻塞 Apple Silicon 发布闭环。若额外开了 `gh-run-summary --watch` 观察 backfill，release 脚本完成后可停止本地 watcher，但不要取消 GitHub Actions run。
+- Release 脚本完成后，完成定义是 arm64 CLI 包、skill 包、checksum manifest、GitHub Release 和 Homebrew tap 已可用；x86_64 CLI 资产由 arm64 macOS runner 交叉编译后补，不阻塞 Apple Silicon 发布闭环。若额外开了 `gh-run-summary --watch` 观察 backfill，release 脚本完成后可停止本地 watcher，但不要取消当前有效发布的 GitHub Actions run；只有被新 tag 明确 supersede 的旧 run 才可取消。
 - Release tag 推送完成后再写 memory 时，只用 docs-only commit 推回 `main`，不要移动 tag；随后观察该 docs-only main CI 通过，作为整理收尾证据。
 
 ## 文档与记忆

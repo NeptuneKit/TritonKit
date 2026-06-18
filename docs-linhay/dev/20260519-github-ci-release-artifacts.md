@@ -6,12 +6,12 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 
 ## Workflow
 
-新增 `.github/workflows/ci.yml`：
+新增 `.github/workflows/ci.yml` 与独立 `.github/workflows/release.yml`：
 
 1. `push` 到 `main`、`pull_request` 到 `main`、手动 `workflow_dispatch` 时运行 validate。
 2. 普通 `main` push / PR 只阻塞 validate，不等待双架构 CLI artifact 与 release asset 打包。
-3. `v*` tag 或手动 `workflow_dispatch` 才运行 CLI build 和 release asset packaging；`v*` tag 的 validate mode 固定为 `contracts`，只做发布脚本、Homebrew、版本 stamping、CI 分类和 release asset 契约快检，避免重复等待 main/PR 已覆盖的 Swift tests 与 CocoaPods lint。
-4. tag `v*` 推送时，arm64 CLI 产物完成后先创建或复用 GitHub Release，并上传 arm64 CLI、skill 包与 checksum；x86_64 CLI 产物由后补 job 上传到同一个 Release。
+3. `v*` tag 触发独立 `Release` workflow 构建 CLI、skill bundle、checksum 和 release assets；`CI` workflow 中的 `v*` tag validate mode 固定为 `contracts`，只做发布脚本、Homebrew、版本 stamping、CI 分类和 release asset 契约快检，避免重复等待 main/PR 已覆盖的 Swift tests 与 CocoaPods lint。
+4. tag `v*` 推送时，arm64 CLI 产物完成后先创建或复用 GitHub Release，并上传 arm64 CLI、skill 包与 checksum；x86_64 CLI 产物在 arm64 macOS runner 上交叉编译后由后补 job 上传到同一个 Release。
 5. validate 先调用 `docs-linhay/scripts/ci-validate-mode.sh` 分类变更范围：
    - docs/skill-only：运行 `docs-linhay/scripts/verify.sh --ci-docs`，覆盖文档结构、diff whitespace、版本脚本和 release/skill packaging 契约。
    - swift-only：只跑 Swift tests、CLI release build 与 release/homebrew contract checks，跳过 CocoaPods lint；适用于 `Sources/TritonKitCLI/`、`CLI/Package.swift`、`CLI/Package.resolved`、`Tests/`、`Package.swift`、`Package.resolved`。
@@ -21,7 +21,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 6. CI 中保留名为 `Validate` 的聚合 job；full validate 内部拆成 `Validate Swift Tests`、`Validate Podspec (TritonKitShared)`、`Validate Podspec (TritonKit)` 与 `Validate Contracts` 并行执行，降低 wall-clock 等待时间，同时保持分支保护只需依赖稳定的 `Validate`。`podkit-only` 只运行 `Validate Podspec (TritonKit)`，不运行 Shared podspec lint。`docs` 与 `contracts` 短路径的实际检查直接在 `Classify Validate Scope` job 内完成，避免额外启动一个 Ubuntu job。
 7. `Validate Swift Tests` 使用 `actions/cache@v4` 缓存 `.build` 与 SwiftPM dependency cache，cache key 基于根 package 与 `CLI/` package 的 manifest / resolved 文件。
 8. CLI build 执行 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，根 `Package.swift` 只保留 iOS embedded SDK 依赖边界。
-9. 按架构打包 CLI，发布顺序为 arm64 先发、x86_64 后补：
+9. 按架构打包 CLI，发布顺序为 arm64 先发、x86_64 后补；x86_64 使用 SwiftPM `--triple x86_64-apple-macosx14.0` 在 arm64 macOS runner 上交叉编译，并用 `file` 校验产物架构：
    - `triton-macos-arm64.tar.gz`
    - `triton-macos-x86_64.tar.gz`
 10. CI 写入版本号与 build metadata：
@@ -36,6 +36,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 13. 所有包先作为 workflow artifact 上传；tag 发布时 arm64 包与 skill 包先作为 GitHub Release asset 上传，x86_64 包成功后再补传。
 14. arm64 发布完成后触发 Homebrew tap 更新 workflow；x86_64 后补完成后再次触发 tap 更新，让 Intel formula 分支拿到 checksum。
 15. 整体发布必须先同步所有对外包入口版本：`TritonKit.podspec`、`TritonKitShared.podspec`、`Web/package.json` 与 `Web/package-lock.json` 都必须等于 release tag 版本；`release.sh` 在打 tag 前通过 `verify-release-package-versions.sh` 强制校验。
+16. Release workflow 的 arm64 与 x86_64 build job 使用 `actions/cache@v4` 缓存 SwiftPM dependency/build 输出；cache key 分别包含 `release-cli-arm64` 与 `release-cli-x86_64`，避免为了 Intel 产物回退到慢 Intel runner。
 
 Skill 源码分层约束：release packaging 只能读取 `TritonKit.skills/`。`.agents/skills/` 只存放 repo 维护、治理、实现和监督用 skill，不进入 `tritonkit-skills.tar.gz`，也不作为 release packaging 源。
 
@@ -96,7 +97,8 @@ brew upgrade triton
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
 - 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。
 - Release tarball README 校验必须先把 `tar -xOf ... README.txt` 写入临时文件，再对临时文件执行 `grep -Fq`；禁止直接把 `tar` 输出管给 `grep -q`，否则 grep 命中后提前关闭 pipe，GNU tar 可能在 x86_64 runner 上因 stdout write error 失败。
-- 用 Python YAML parser 校验 `.github/workflows/ci.yml` 语法可解析。
+- 用 Python YAML parser 校验 `.github/workflows/ci.yml` 与 `.github/workflows/release.yml` 语法可解析。
+- `docs-linhay/scripts/verify-release-automation.sh` 必须防止 Release workflow 回退到 `macos-15-intel`，并检查 x86_64 cross build triple、架构校验、SwiftPM cache key 与 x86 publish checkout。
 
 ## 交付辅助脚本
 

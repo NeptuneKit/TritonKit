@@ -40,7 +40,7 @@
 - arm64 CLI 包、skill 包、checksum manifest 已上传
 - Homebrew tap 已更新并可 `brew fetch --formula NeptuneKit/tap/triton`
 
-x86_64 CLI 资产由 Intel runner 后补上传并再次刷新 checksum / tap。它应被持续观察，但不阻塞 release 脚本返回，也不应在交付说明中写成发布未完成。
+x86_64 CLI 资产由 arm64 macOS runner 交叉编译后补上传并再次刷新 checksum / tap。它应被持续观察，但不阻塞 release 脚本返回，也不应在交付说明中写成发布未完成。
 
 本轮发版还沉淀出一个收尾顺序：
 

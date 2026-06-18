@@ -40,6 +40,15 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 8. Commit and push `main`, then publish through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`.
 9. After release, verify GitHub Release assets, GitHub Actions success including x86_64 backfill, Homebrew upgrade, `triton version --json`, packaged `triton web --print-command --json`, and a real `triton web` HTTP smoke.
 
+## CI / Release Performance Contract
+
+- `CI` handles validation only. `v*` tag validation must stay on the contracts fast path and must not wait for Swift tests or CocoaPods lint.
+- Release asset builds live in the independent `Release` workflow. Do not restore release builds as active jobs in the `CI` workflow.
+- arm64 release assets are the Apple Silicon publish gate: arm64 CLI, public skill bundle, checksum manifest, GitHub Release, and Homebrew tap must become available before waiting on x86_64.
+- x86_64 CLI is a backfill asset. Build it on the arm64 macOS runner with `swift build --package-path CLI --scratch-path .build/cli-x86 -c release --product triton --triple x86_64-apple-macosx14.0`, then verify `file` reports `Mach-O 64-bit executable x86_64` before upload.
+- Release SwiftPM cache keys are architecture-specific: keep separate `release-cli-arm64` and `release-cli-x86_64` cache keys so dependency/build cache does not force the release path back onto the Intel runner.
+- `publish-x86-release-asset` must checkout the repository before calling `gh release download`; the GitHub CLI requires git repository context for release lookup.
+
 ## Reporting
 
 State which surfaces were aligned, which validations passed, and whether CocoaPods was only linted or also pushed to a pod repo/trunk. If CocoaPods publishing is not performed, say that explicitly.
