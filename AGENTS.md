@@ -91,7 +91,7 @@
 7. Wails 绑定先测绑定对象和 DTO；涉及真实窗口、菜单、图标、原生能力时再做桌面验收。
 8. 纯文档或治理规则调整若无可执行测试，至少要完成结构自检、路径校对与引用校对，并在交付说明中明确写明“未运行自动化测试”的原因。
 9. 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 只跑 `TritonKit.podspec` lint，Shared/iOS/未分类改动在 CI 中并行跑 Swift tests、两个 podspec lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
-10. 普通 `main` push / PR 的 CI 只阻塞 validate；CLI、skill 包、checksum 与 release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行；tag 发布时 arm64 资产先发布，x86_64 资产后补。
+10. 普通 `main` push / PR 的 CI 只阻塞 validate；CLI、skill 包、checksum 与 release asset 打包只在 `v*` tag 或手动 `workflow_dispatch` 执行；`v*` tag validate 固定走 release contracts 快检，不重复等待 Swift tests / CocoaPods lint；tag 发布时 arm64 资产先发布，x86_64 资产后补。
 
 ## 4. 文档系统规则（docs-linhay）
 

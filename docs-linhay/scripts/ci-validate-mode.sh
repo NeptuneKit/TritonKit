@@ -187,6 +187,11 @@ if [[ "$#" -gt 0 ]]; then
   exit 0
 fi
 
+if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]] || [[ "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+  echo "contracts"
+  exit 0
+fi
+
 changed_files=()
 while IFS= read -r changed_file; do
   changed_files+=("${changed_file}")

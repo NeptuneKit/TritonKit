@@ -39,6 +39,14 @@ expect_mode contracts docs-linhay/scripts/package-public-skills.py
 expect_mode contracts docs-linhay/scripts/install-public-skills.sh
 expect_mode contracts docs-linhay/scripts/verify-skill-package.sh
 
+tag_mode="$(
+  GITHUB_REF_TYPE=tag GITHUB_REF=refs/tags/v9.8.7 GITHUB_EVENT_NAME=push "${classifier}"
+)"
+if [[ "${tag_mode}" != "contracts" ]]; then
+  echo "expected contracts, got ${tag_mode} for release tag validation" >&2
+  exit 1
+fi
+
 expect_mode podkit Sources/TritonKit/TritonKit.swift
 expect_mode podkit TritonKit.podspec
 expect_mode podkit Sources/TritonKit/TritonKit.swift Sources/TritonKitCLI/TritonKitCLI.swift

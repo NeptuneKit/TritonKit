@@ -10,7 +10,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 
 1. `push` 到 `main`、`pull_request` 到 `main`、手动 `workflow_dispatch` 时运行 validate。
 2. 普通 `main` push / PR 只阻塞 validate，不等待双架构 CLI artifact 与 release asset 打包。
-3. `v*` tag 或手动 `workflow_dispatch` 才运行 CLI build 和 release asset packaging。
+3. `v*` tag 或手动 `workflow_dispatch` 才运行 CLI build 和 release asset packaging；`v*` tag 的 validate mode 固定为 `contracts`，只做发布脚本、Homebrew、版本 stamping、CI 分类和 release asset 契约快检，避免重复等待 main/PR 已覆盖的 Swift tests 与 CocoaPods lint。
 4. tag `v*` 推送时，arm64 CLI 产物完成后先创建或复用 GitHub Release，并上传 arm64 CLI、skill 包与 checksum；x86_64 CLI 产物由后补 job 上传到同一个 Release。
 5. validate 先调用 `docs-linhay/scripts/ci-validate-mode.sh` 分类变更范围：
    - docs/skill-only：运行 `docs-linhay/scripts/verify.sh --ci-docs`，覆盖文档结构、diff whitespace、版本脚本和 release/skill packaging 契约。
@@ -88,7 +88,7 @@ brew upgrade triton
 - CI docs/skill-only fast path 使用 `docs-linhay/scripts/verify.sh --ci-docs`；只允许 README、AGENTS、docs/memory/references/screenshots、`TritonKit.skills/` 与 `.agents/skills/` 进入 fast path，`Sources/`、`Tests/`、podspec、workflow、`docs-linhay/scripts/` 和 fixtures 默认触发 full validate。
 - 本地运行 `docs-linhay/scripts/verify-ci-validate-mode.sh` 验证 fast/full 分类边界。
 - Swift-only fast path 会跳过 CocoaPods lint，只允许 CLI target、tests 和 SwiftPM manifest/lockfile；iOS runtime 与 Shared model 改动仍触发 full validate。
-- Contract-only fast path 会跳过 macOS Swift 和 CocoaPods job，只验证 CI/release/Homebrew 脚本契约；podkit-only 会跳过 `TritonKitShared.podspec` lint，只保留 `TritonKit.podspec` lint。
+- Contract-only fast path 会跳过 macOS Swift 和 CocoaPods job，只验证 CI/release/Homebrew 脚本契约；`v*` tag 固定走该路径，让 release asset packaging 尽快启动。podkit-only 会跳过 `TritonKitShared.podspec` lint，只保留 `TritonKit.podspec` lint。
 - Docs-only 与 contract-only fast path 不再单独启动 `Validate Docs` / `Validate Contracts` job；它们复用分类 job 的 checkout 与 runner，聚合 `Validate` 只负责检查 `Classify Validate Scope` 成功。
 - Full validate 在 CI 中并行运行 Swift tests、两个 podspec lint 与 release/homebrew 契约检查；本地仍可用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。

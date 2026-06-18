@@ -4,7 +4,7 @@
 
 TritonKit 的 Homebrew 能力建立在 GitHub Release 二进制资产上：
 
-1. CI 只在 `v*` tag 或手动 `workflow_dispatch` 时进入发布物链路；普通 `main` push / PR 只跑 validate。
+1. CI 只在 `v*` tag 或手动 `workflow_dispatch` 时进入发布物链路；普通 `main` push / PR 只跑 validate。`v*` tag 的 validate 固定走 contracts 快检，完整 Swift/CocoaPods 远端验证留给 main/PR，本地发布前仍由 `release.sh` 运行 preflight。
 2. 发布物链路在 macOS arm64 与 x86_64 runner 上分别构建 release `triton`，但 arm64 完成后即可发布 Release / Homebrew，x86_64 作为后补资产上传。
 3. 每个架构产出一个压缩包：
    - `triton-macos-arm64.tar.gz`
