@@ -226,11 +226,14 @@ for _ in {1..120}; do
   fi
 
   run_status="$(gh run view "${run_id}" --repo "${repo}" --json status,conclusion --jq '.status + ":" + (.conclusion // "")' 2>/dev/null || true)"
-  if [[ "${run_status}" == completed:* && "${run_status}" != "completed:success" ]]; then
-    fail "GitHub Actions run failed before arm64 release was ready: ${run_status}"
-  fi
+	if [[ "${run_status}" == completed:* && "${run_status}" != "completed:success" ]]; then
+	  fail "GitHub Actions run failed before arm64 release was ready: ${run_status}"
+	fi
+	if [[ "${run_status}" == "completed:success" ]]; then
+	  fail "GitHub Actions run completed successfully before arm64 release assets were created; check release job conditions"
+	fi
 
-  sleep 10
+	sleep 10
 done
 
 [[ "${release_ready}" == "1" ]] || fail "arm64 release or Homebrew tap was not ready in time for ${tag}"
