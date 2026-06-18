@@ -248,6 +248,92 @@ struct WebCommandTests {
         #expect(String(data: css.data, encoding: .utf8) == "body{}")
     }
 
+    @Test("packaged web missing static root renders browser readable diagnostic")
+    func packagedWebMissingStaticRootRendersBrowserReadableDiagnostic() throws {
+        let missingWeb = try temporaryDirectory().appendingPathComponent("web", isDirectory: true)
+
+        let html = makePackagedWebStaticDiagnosticHTML(webRoot: missingWeb.path)
+
+        #expect(html.contains("Triton Web assets are missing"))
+        #expect(html.contains("web_static_asset_failed"))
+        #expect(html.contains(missingWeb.path))
+        #expect(html.contains("triton web --print-command --json"))
+        #expect(shouldRenderPackagedWebStaticDiagnosticHTML(requestPath: "/") == true)
+        #expect(shouldRenderPackagedWebStaticDiagnosticHTML(requestPath: "/device/host") == true)
+        #expect(shouldRenderPackagedWebStaticDiagnosticHTML(requestPath: "/web/unknown") == false)
+    }
+
+    @Test("web port in use error has stable code and actionable hint")
+    func webPortInUseErrorHasStableCodeAndActionableHint() {
+        let error = WebCommandError.portInUse(host: "127.0.0.1", port: 34127)
+
+        #expect(error.code == "web_port_in_use")
+        #expect(error.description.contains("127.0.0.1:34127"))
+        #expect(error.hint.contains("lsof -nP -iTCP:34127 -sTCP:LISTEN"))
+        #expect(error.hint.contains("triton web --port"))
+    }
+
+    @Test("web status response reports idle and occupied launch states")
+    func webStatusResponseReportsIdleAndOccupiedLaunchStates() {
+        let idle = makeWebStatusResponse(host: "127.0.0.1", port: 34127, portListening: false, probe: nil)
+
+        #expect(idle.ok == true)
+        #expect(idle.action == "web.status")
+        #expect(idle.portListening == false)
+        #expect(idle.recommendedActions.contains("triton web"))
+
+        let probe = WebServiceProbe(
+            url: "http://127.0.0.1:34127/",
+            reachable: true,
+            statusCode: 404,
+            contentType: "application/json",
+            serviceKind: "triton-web",
+            detectedCode: "web_static_asset_failed",
+            message: "Bundled Triton Web static assets were not found."
+        )
+        let occupied = makeWebStatusResponse(host: "127.0.0.1", port: 34127, portListening: true, probe: probe)
+
+        #expect(occupied.portListening == true)
+        #expect(occupied.probe?.detectedCode == "web_static_asset_failed")
+        #expect(occupied.recommendedActions.contains("lsof -nP -iTCP:34127 -sTCP:LISTEN"))
+        #expect(occupied.recommendedActions.contains("triton web --port <port>"))
+    }
+
+    @Test("web doctor marks static asset failure unhealthy")
+    func webDoctorMarksStaticAssetFailureUnhealthy() {
+        let status = makeWebStatusResponse(
+            host: "127.0.0.1",
+            port: 34127,
+            portListening: true,
+            probe: WebServiceProbe(
+                url: "http://127.0.0.1:34127/",
+                reachable: true,
+                statusCode: 404,
+                contentType: "application/json",
+                serviceKind: "triton-web",
+                detectedCode: "web_static_asset_failed",
+                message: "Bundled Triton Web static assets were not found."
+            )
+        )
+
+        let doctor = makeWebDoctorResponse(status: status)
+
+        #expect(doctor.ok == true)
+        #expect(doctor.action == "web.doctor")
+        #expect(doctor.healthy == false)
+        #expect(doctor.checks.contains(WebDoctorCheck(id: "web-static-assets", status: "failed", message: "Bundled Web static assets are missing.")))
+        #expect(doctor.recommendedActions.contains("Reinstall or update the packaged Triton release."))
+        #expect(doctor.recommendedActions.contains("triton web --root /path/to/TritonKit"))
+    }
+
+    @Test("web diagnostic output format honors json after subcommand")
+    func webDiagnosticOutputFormatHonorsJSONAfterSubcommand() {
+        #expect(webDiagnosticOutputFormat(.text, json: false, arguments: ["triton", "web", "status", "--json"]) == .json)
+        #expect(webDiagnosticOutputFormat(.text, json: false, arguments: ["triton", "web", "doctor", "--format", "json"]) == .json)
+        #expect(webDiagnosticOutputFormat(.text, json: false, arguments: ["triton", "web", "--json", "status"]) == .json)
+        #expect(webDiagnosticOutputFormat(.text, json: false, arguments: ["triton", "web", "status"]) == .text)
+    }
+
     @Test("web host logs rejects non iOS platforms with readonly envelope")
     func webHostLogsRejectsNonIOSPlatformsWithReadonlyEnvelope() {
         let error = webHostLogsUnsupportedResponse(platform: "android")
@@ -263,6 +349,11 @@ struct WebCommandTests {
         #expect(schema?.runtimeScope == "cli-long-running")
         #expect(schema?.examples.contains("triton web --print-command --json") == true)
         #expect(schema?.failureCodes.contains("web_root_not_found") == true)
+        #expect(schema?.failureCodes.contains("web_port_in_use") == true)
+        #expect(schema?.subcommands.map(\.name).contains("status") == true)
+        #expect(schema?.subcommands.map(\.name).contains("doctor") == true)
+        #expect(schema?.outputContracts.contains { $0.selector == "web.status" } == true)
+        #expect(schema?.outputContracts.contains { $0.selector == "web.doctor" } == true)
     }
 
     @Test("root command registers web subcommand")

@@ -14,6 +14,7 @@ enum WebCommandError: Error, Equatable, CustomStringConvertible {
     case webRootNotFound(currentDirectory: String, explicitRoot: String?)
     case bundledWebRootNotFound(path: String?)
     case conflictingInstallOptions
+    case portInUse(host: String, port: Int)
     case processFailed(command: String, exitCode: Int32)
 
     var description: String {
@@ -26,6 +27,8 @@ enum WebCommandError: Error, Equatable, CustomStringConvertible {
             return "Bundled Triton Web static assets were not found\(location). Expected web/index.html."
         case .conflictingInstallOptions:
             return "Use only one of --install or --no-install."
+        case .portInUse(let host, let port):
+            return "Triton Web port \(host):\(port) is already in use."
         case .processFailed(let command, let exitCode):
             return "Command failed with exit code \(exitCode): \(command)"
         }
@@ -39,6 +42,8 @@ enum WebCommandError: Error, Equatable, CustomStringConvertible {
             return "bundled_web_root_not_found"
         case .conflictingInstallOptions:
             return "validation_failed"
+        case .portInUse:
+            return "web_port_in_use"
         case .processFailed:
             return "web_start_failed"
         }
@@ -52,6 +57,8 @@ enum WebCommandError: Error, Equatable, CustomStringConvertible {
             return "Reinstall the release package, or pass --root /path/to/TritonKit to use checkout dev mode."
         case .conflictingInstallOptions:
             return "Choose --install to force npm install, or --no-install to skip it."
+        case .portInUse(_, let port):
+            return "Find the existing listener with lsof -nP -iTCP:\(port) -sTCP:LISTEN, stop stale triton web / Vite processes, or choose a free port with triton web --port <port>."
         case .processFailed:
             return "Inspect npm output above, then retry `triton web --print-command --json` to verify the launch plan."
         }
@@ -82,6 +89,121 @@ struct WebLaunchPlan: Codable, Equatable {
     let installCommand: WebLaunchCommand?
     let command: WebLaunchCommand
     let environment: [String: String]
+}
+
+struct WebServiceProbe: Codable, Equatable {
+    let url: String
+    let reachable: Bool
+    let statusCode: Int?
+    let contentType: String?
+    let serviceKind: String?
+    let detectedCode: String?
+    let message: String?
+}
+
+struct WebStatusResponse: Codable, Equatable {
+    let ok: Bool
+    let action: String
+    let host: String
+    let port: Int
+    let url: String
+    let portListening: Bool
+    let probe: WebServiceProbe?
+    let recommendedActions: [String]
+}
+
+struct WebDoctorCheck: Codable, Equatable {
+    let id: String
+    let status: String
+    let message: String
+}
+
+struct WebDoctorResponse: Codable, Equatable {
+    let ok: Bool
+    let action: String
+    let healthy: Bool
+    let status: WebStatusResponse
+    let checks: [WebDoctorCheck]
+    let recommendedActions: [String]
+}
+
+func makeWebStatusResponse(
+    host: String,
+    port: Int,
+    portListening: Bool,
+    probe: WebServiceProbe?
+) -> WebStatusResponse {
+    var actions: [String] = []
+    if portListening {
+        actions.append("lsof -nP -iTCP:\(port) -sTCP:LISTEN")
+        actions.append("triton web --port <port>")
+    } else {
+        actions.append("triton web")
+    }
+    if probe?.detectedCode == "web_static_asset_failed" {
+        actions.append("Reinstall or update the packaged Triton release.")
+        actions.append("triton web --root /path/to/TritonKit")
+    }
+    return WebStatusResponse(
+        ok: true,
+        action: "web.status",
+        host: host,
+        port: port,
+        url: webDeviceHubURL(host: host, port: port),
+        portListening: portListening,
+        probe: probe,
+        recommendedActions: uniqueOrdered(actions)
+    )
+}
+
+func makeWebDoctorResponse(status: WebStatusResponse) -> WebDoctorResponse {
+    var checks: [WebDoctorCheck] = [
+        WebDoctorCheck(
+            id: "web-port",
+            status: status.portListening ? "warning" : "passed",
+            message: status.portListening
+                ? "Web Device Hub port is already listening."
+                : "Web Device Hub port is available."
+        ),
+    ]
+    if status.probe?.detectedCode == "web_static_asset_failed" {
+        checks.append(WebDoctorCheck(
+            id: "web-static-assets",
+            status: "failed",
+            message: "Bundled Web static assets are missing."
+        ))
+    } else if status.probe?.reachable == true {
+        checks.append(WebDoctorCheck(
+            id: "web-service",
+            status: "passed",
+            message: "Existing Web service is reachable."
+        ))
+    } else if status.portListening {
+        checks.append(WebDoctorCheck(
+            id: "web-service",
+            status: "warning",
+            message: "A listener exists but did not return a recognizable Web response."
+        ))
+    }
+    let healthy = !checks.contains { $0.status == "failed" }
+    return WebDoctorResponse(
+        ok: true,
+        action: "web.doctor",
+        healthy: healthy,
+        status: status,
+        checks: checks,
+        recommendedActions: status.recommendedActions
+    )
+}
+
+func webDeviceHubURL(host: String, port: Int) -> String {
+    "http://\(host):\(port)/"
+}
+
+func makeWebStatusResponse(host: String, port: Int) async -> WebStatusResponse {
+    let listening = isTCPPortListening(host: host, port: port)
+    let probe = listening ? await probeWebService(host: host, port: port) : nil
+    return makeWebStatusResponse(host: host, port: port, portListening: listening, probe: probe)
 }
 
 func makeWebLaunchPlan(
@@ -227,7 +349,57 @@ func renderWebLaunchPlanText(_ plan: WebLaunchPlan) -> String {
     return lines.joined(separator: "\n")
 }
 
+func renderWebStatusText(_ status: WebStatusResponse) -> String {
+    var lines = [
+        "url: \(status.url)",
+        "portListening: \(status.portListening)",
+    ]
+    if let probe = status.probe {
+        lines.append("probeReachable: \(probe.reachable)")
+        if let statusCode = probe.statusCode {
+            lines.append("probeStatusCode: \(statusCode)")
+        }
+        if let detectedCode = probe.detectedCode {
+            lines.append("detectedCode: \(detectedCode)")
+        }
+        if let serviceKind = probe.serviceKind {
+            lines.append("serviceKind: \(serviceKind)")
+        }
+    }
+    lines.append("recommendedActions:")
+    lines.append(contentsOf: status.recommendedActions.map { "- \($0)" })
+    return lines.joined(separator: "\n")
+}
+
+func renderWebDoctorText(_ doctor: WebDoctorResponse) -> String {
+    var lines = [
+        "healthy: \(doctor.healthy)",
+        "url: \(doctor.status.url)",
+        "checks:",
+    ]
+    lines.append(contentsOf: doctor.checks.map { "- \($0.id): \($0.status) - \($0.message)" })
+    lines.append("recommendedActions:")
+    lines.append(contentsOf: doctor.recommendedActions.map { "- \($0)" })
+    return lines.joined(separator: "\n")
+}
+
+func webDiagnosticOutputFormat(
+    _ format: ClientOutputFormat,
+    json: Bool,
+    arguments: [String] = ProcessInfo.processInfo.arguments
+) -> ClientOutputFormat {
+    if json || arguments.contains("--json") {
+        return .json
+    }
+    for (index, argument) in arguments.enumerated()
+        where argument == "--format" && arguments.indices.contains(index + 1) && arguments[index + 1] == "json" {
+        return .json
+    }
+    return format
+}
+
 func runWebLaunchPlan(_ plan: WebLaunchPlan) async throws {
+    try ensureWebPortAvailable(host: plan.host, port: plan.port)
     if plan.mode == "packaged" {
         try await runPackagedWebServer(plan)
         return
@@ -630,6 +802,9 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
     guard let webRoot = plan.bundledWebRoot else {
         throw WebCommandError.bundledWebRootNotFound(path: nil)
     }
+    guard isValidBundledWebRoot(URL(fileURLWithPath: webRoot, isDirectory: true).standardizedFileURL) else {
+        throw WebCommandError.bundledWebRootNotFound(path: webRoot)
+    }
 
     let router = Router(context: BasicRequestContext.self)
     router.get("/") { request, _ -> Response in
@@ -707,8 +882,56 @@ private func packagedWebResponse(webRoot: String, requestPath: String) -> Respon
             body: .init(byteBuffer: ByteBuffer(data: payload.data))
         )
     } catch {
+        if shouldRenderPackagedWebStaticDiagnosticHTML(requestPath: requestPath) {
+            let html = makePackagedWebStaticDiagnosticHTML(webRoot: webRoot)
+            return Response(
+                status: .notFound,
+                headers: [.contentType: "text/html; charset=utf-8"],
+                body: .init(byteBuffer: ByteBuffer(string: html))
+            )
+        }
         return jsonError(code: "web_static_asset_failed", message: "\(error)", status: .notFound)
     }
+}
+
+func makePackagedWebStaticDiagnosticHTML(webRoot: String) -> String {
+    let escapedRoot = htmlEscape(webRoot)
+    return """
+    <!doctype html>
+    <html lang="en">
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1">
+      <title>Triton Web assets are missing</title>
+      <style>
+        body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0b1020; color: #e5e7eb; font: 14px -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+        main { max-width: 760px; margin: 32px; padding: 28px; border: 1px solid rgba(148, 163, 184, .35); border-radius: 18px; background: rgba(15, 23, 42, .92); box-shadow: 0 24px 80px rgba(0, 0, 0, .35); }
+        h1 { margin: 0 0 12px; font-size: 22px; }
+        p { margin: 10px 0; color: #cbd5e1; line-height: 1.55; }
+        code { color: #bfdbfe; background: rgba(30, 41, 59, .9); padding: 2px 6px; border-radius: 6px; }
+        .path { word-break: break-all; }
+      </style>
+    </head>
+    <body>
+      <main>
+        <h1>Triton Web assets are missing</h1>
+        <p><code>web_static_asset_failed</code>: bundled static assets were not found at <code class="path">\(escapedRoot)</code>. Expected <code>web/index.html</code>.</p>
+        <p>Run <code>triton web --print-command --json</code> to inspect whether this CLI is using a source checkout or packaged Web assets.</p>
+        <p>For Homebrew or release installs, reinstall/update the package so <code>share/triton/web/index.html</code> is present. For checkout development, run <code>triton web --root /path/to/TritonKit</code>.</p>
+      </main>
+    </body>
+    </html>
+    """
+}
+
+func shouldRenderPackagedWebStaticDiagnosticHTML(requestPath: String) -> Bool {
+    let decodedPath = requestPath.removingPercentEncoding ?? requestPath
+    let pathOnly = decodedPath.split(separator: "?", maxSplits: 1).first.map(String.init) ?? decodedPath
+    if pathOnly == "/web" || pathOnly.hasPrefix("/web/") {
+        return false
+    }
+    let ext = URL(fileURLWithPath: pathOnly).pathExtension.lowercased()
+    return pathOnly == "/" || pathOnly.isEmpty || ext.isEmpty || ext == "html"
 }
 
 private func webHostTarget(from target: HostDeviceTarget) -> WebHostTarget {
@@ -812,6 +1035,126 @@ private func runWebProcess(
     guard process.terminationStatus == 0 else {
         throw WebCommandError.processFailed(command: command.display, exitCode: process.terminationStatus)
     }
+}
+
+private func ensureWebPortAvailable(host: String, port: Int) throws {
+    if isTCPPortListening(host: host, port: port) {
+        throw WebCommandError.portInUse(host: host, port: port)
+    }
+}
+
+func isTCPPortListening(host: String, port: Int) -> Bool {
+    var hints = addrinfo(
+        ai_flags: AI_NUMERICSERV,
+        ai_family: AF_UNSPEC,
+        ai_socktype: SOCK_STREAM,
+        ai_protocol: 0,
+        ai_addrlen: 0,
+        ai_canonname: nil,
+        ai_addr: nil,
+        ai_next: nil
+    )
+    var result: UnsafeMutablePointer<addrinfo>?
+    guard getaddrinfo(host, String(port), &hints, &result) == 0, let result else {
+        return false
+    }
+    defer { freeaddrinfo(result) }
+
+    var cursor: UnsafeMutablePointer<addrinfo>? = result
+    while let info = cursor {
+        let fd = socket(info.pointee.ai_family, info.pointee.ai_socktype, info.pointee.ai_protocol)
+        if fd >= 0 {
+            let connected = connect(fd, info.pointee.ai_addr, info.pointee.ai_addrlen) == 0
+            close(fd)
+            if connected {
+                return true
+            }
+        }
+        cursor = info.pointee.ai_next
+    }
+    return false
+}
+
+private func probeWebService(host: String, port: Int) async -> WebServiceProbe {
+    let urlString = webDeviceHubURL(host: host, port: port)
+    guard let url = URL(string: urlString) else {
+        return WebServiceProbe(
+            url: urlString,
+            reachable: false,
+            statusCode: nil,
+            contentType: nil,
+            serviceKind: nil,
+            detectedCode: "invalid_url",
+            message: "Invalid Web Device Hub URL."
+        )
+    }
+    var request = URLRequest(url: url)
+    request.timeoutInterval = 1.0
+    do {
+        let (data, response) = try await URLSession.shared.data(for: request)
+        let http = response as? HTTPURLResponse
+        let body = String(data: data, encoding: .utf8) ?? ""
+        let detectedCode = webProbeDetectedCode(body: body)
+        return WebServiceProbe(
+            url: urlString,
+            reachable: true,
+            statusCode: http?.statusCode,
+            contentType: http?.value(forHTTPHeaderField: "Content-Type"),
+            serviceKind: webProbeServiceKind(body: body, detectedCode: detectedCode),
+            detectedCode: detectedCode,
+            message: webProbeMessage(body: body, detectedCode: detectedCode)
+        )
+    } catch {
+        return WebServiceProbe(
+            url: urlString,
+            reachable: false,
+            statusCode: nil,
+            contentType: nil,
+            serviceKind: nil,
+            detectedCode: nil,
+            message: "\(error)"
+        )
+    }
+}
+
+private func webProbeDetectedCode(body: String) -> String? {
+    if body.contains("web_static_asset_failed") {
+        return "web_static_asset_failed"
+    }
+    return nil
+}
+
+private func webProbeServiceKind(body: String, detectedCode: String?) -> String? {
+    if detectedCode == "web_static_asset_failed" || body.contains("Triton Web") || body.contains("TritonKit") {
+        return "triton-web"
+    }
+    return nil
+}
+
+private func webProbeMessage(body: String, detectedCode: String?) -> String? {
+    if detectedCode == "web_static_asset_failed" {
+        return "Bundled Triton Web static assets were not found."
+    }
+    return body.isEmpty ? nil : String(body.prefix(240))
+}
+
+private func uniqueOrdered(_ values: [String]) -> [String] {
+    var seen = Set<String>()
+    var result: [String] = []
+    for value in values where !seen.contains(value) {
+        seen.insert(value)
+        result.append(value)
+    }
+    return result
+}
+
+private func htmlEscape(_ value: String) -> String {
+    value
+        .replacingOccurrences(of: "&", with: "&amp;")
+        .replacingOccurrences(of: "<", with: "&lt;")
+        .replacingOccurrences(of: ">", with: "&gt;")
+        .replacingOccurrences(of: "\"", with: "&quot;")
+        .replacingOccurrences(of: "'", with: "&#39;")
 }
 
 private func shellQuote(_ value: String) -> String {

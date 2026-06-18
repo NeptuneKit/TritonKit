@@ -60,6 +60,42 @@ func webLaunchPlanOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func webStatusOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "web.status",
+        format: "json",
+        kind: "status-envelope",
+        model: "WebStatusResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the status inspection completed"),
+            ("action", "String", true, "Stable action id; web.status"),
+            ("host", "String", true, "Inspected host address"),
+            ("port", "Int", true, "Inspected Web Device Hub port"),
+            ("url", "String", true, "Inspected Web Device Hub URL"),
+            ("portListening", "Bool", true, "Whether a TCP listener is present"),
+            ("probe", "WebServiceProbe?", false, "Optional HTTP probe result when a listener is present"),
+            ("recommendedActions", "[String]", true, "Human-copyable recovery or next commands"),
+        ])
+    )
+}
+
+func webDoctorOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "web.doctor",
+        format: "json",
+        kind: "diagnostic-checks",
+        model: "WebDoctorResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the doctor inspection completed"),
+            ("action", "String", true, "Stable action id; web.doctor"),
+            ("healthy", "Bool", true, "False when a failed check is present"),
+            ("status", "WebStatusResponse", true, "Embedded web.status response"),
+            ("checks", "[WebDoctorCheck]", true, "Ordered diagnostic checks"),
+            ("recommendedActions", "[String]", true, "Human-copyable recovery or next commands"),
+        ])
+    )
+}
+
 func runtimeManifestOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "runtime.manifest",

@@ -202,6 +202,22 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - And 使用 `TRITONKIT_TRITON_BIN=<built-triton>` 启动 `Web` dev server
 - And 页面仍运行在 `http://127.0.0.1:34127/`
 
+### 场景：默认 Web 端口已被旧服务占用
+
+- Given `127.0.0.1:34127` 已存在 `triton web` 或 Vite listener
+- When 开发者再次执行 `triton web --json`
+- Then CLI 不再先启动 npm / Vite
+- And 返回单个机器可读错误 `web_port_in_use`
+- And hint 包含 `lsof -nP -iTCP:34127 -sTCP:LISTEN` 与 `triton web --port <port>` 恢复路径
+
+### 场景：packaged Web 静态资源缺失
+
+- Given release / Homebrew 模式解析到 bundled web root，但 `web/index.html` 不存在
+- When 浏览器打开 `/` 或 SPA fallback 路径
+- Then 页面返回可读 HTML 诊断，说明 `web_static_asset_failed`、缺失路径和恢复命令
+- And JSON API 路径仍保持机器可读错误 envelope
+- And 新版本 packaged server 在启动前重新校验 bundled root，避免继续监听一个已知损坏的 Web root
+
 ## 验收标准
 
 - `Web/` 工程可通过 `npm install` 安装依赖。
@@ -217,6 +233,8 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 有真实 screenshot 的设备画布在 tap / swipe 时显示触点或轨迹反馈，并在 Triton CLI input 执行与 screenshot 刷新期间显示非阻塞状态徽标。
 - 选中真实 iOS host target 时，Logs 面板优先展示一次 bounded host-side 日志采集结果；当前未支持的平台继续展示只读占位日志。
 - `docs-linhay/scripts/start-web-with-triton.sh` 可从任意当前目录执行，完成 CLI 构建后启动 `Web` dev server，并显式注入本轮构建出的 `triton` 路径。
+- 默认端口被占用时，`triton web --json` 返回 `web_port_in_use`，并给出 listener 排查与改用端口的恢复建议。
+- packaged Web 静态资源缺失时，浏览器根路径显示可读诊断页，不再只展示裸 JSON；CLI 启动 packaged server 前也会重新校验 bundled root。
 
 ## 实现记录
 
@@ -461,3 +479,10 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 左侧设备行显示改为 `App 名 · 设备类型`。当前 Harmony target 的浏览器验证结果为 `127.0.0.1:5555前台 App 未识别 · DevEco 仿真器`，避免误导；后续 CLI/HTTP 一旦补齐 foreground app identity，Web 会自动显示真实 App。
 - 已按开发反馈流程创建 issue：`https://github.com/NeptuneKit/TritonKit/issues/45`。
 - 验证记录：`npm run test` 通过 4 tests；`npm run build` 通过；`git diff --check -- Web/src/App.tsx Web/src/styles.css Web/src/types.ts Web/src/data/iosSimulatorClient.ts Web/dev/iosSimulatorBridge.mjs Web/dev/iosSimulatorBridge.test.mjs` 通过；浏览器刷新后左侧设备列表文案符合预期。
+
+### 2026-06-18 Web Device Hub launch hardening
+
+- 本机复现：`127.0.0.1:34127` 被 PID 61415 的旧 `triton web` 占用；该进程仍指向 `/opt/homebrew/Cellar/triton/0.1.22/share/triton/web`，且缺少 `index.html`，导致新 checkout dev 模式启动 Vite 时报 `Port 34127 is already in use`，浏览器访问 `/` 只看到 `web_static_asset_failed` JSON。
+- 修正：`triton web` 启动前先探测目标 host/port，若已被监听则返回 `web_port_in_use`，不再继续调用 npm / Vite；`--print-command --json` 仍只输出计划，便于排查。
+- 修正：packaged server 启动前重新校验 `bundledWebRoot/index.html`；若运行期静态资源缺失，浏览器文档路径返回 HTML 诊断页，保留 `web_static_asset_failed`、缺失路径和恢复命令。
+- 验证：`swift test --package-path CLI --filter WebCommandTests` 通过 14 tests；在当前端口占用状态下执行 `CLI/.build/debug/triton web --json` 返回单个 `web_port_in_use` JSON envelope。

@@ -386,6 +386,10 @@ triton web
 
 `triton web` is a local launcher for the readonly Device Hub only. In a source checkout it starts the React/Vite dev server from `Web/`; in a released archive or Homebrew install it serves bundled `web/` static assets from the CLI package. It does not replace the CLI / HTTP control surface, and it does not introduce browser-side create / update / execute business actions.
 
+If the default port is already occupied, `triton web --json` reports `web_port_in_use` before invoking npm/Vite. Use `lsof -nP -iTCP:34127 -sTCP:LISTEN` to find stale listeners, stop the old `triton web` / Vite process, or run `triton web --port <free-port>`. If a packaged/Homebrew server reports missing static assets, reinstall or update the package so `share/triton/web/index.html` exists, or pass `--root /path/to/TritonKit` when validating from a checkout.
+
+For a non-mutating preflight, use `triton web status --json` to inspect whether the Web port is listening and `triton web doctor --json` to get ordered launch-readiness checks and recovery actions. These commands do not start npm/Vite and do not stop existing processes.
+
 For unreleased validation from this repo, the debug build also supports the same launcher flow:
 
 ```bash

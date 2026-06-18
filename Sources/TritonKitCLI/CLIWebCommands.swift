@@ -5,7 +5,8 @@ import TritonKitShared
 struct Web: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "web",
-        abstract: "Start the readonly Web Device Hub from a checkout or bundled release assets"
+        abstract: "Start the readonly Web Device Hub from a checkout or bundled release assets",
+        subcommands: [WebStatus.self, WebDoctor.self]
     )
 
     @Option(help: "TritonKit repository root or Web directory. Defaults to searching upward from the current directory.")
@@ -86,6 +87,65 @@ struct Web: AsyncParsableCommand {
                 print("hint: \(error.hint)")
             }
             throw ExitCode.failure
+        }
+    }
+}
+
+struct WebStatus: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "status",
+        abstract: "Inspect the readonly Web Device Hub launch port without starting it"
+    )
+
+    @Option(help: "Web host address to inspect")
+    var host: String = "127.0.0.1"
+
+    @Option(help: "Web Device Hub port to inspect")
+    var port: Int = 34127
+
+    @Option(help: "Output format: text or json")
+    var format: ClientOutputFormat = .text
+
+    @Flag(name: .customLong("json"), help: "Alias for --format json")
+    var json = false
+
+    func run() async throws {
+        let response = await makeWebStatusResponse(host: host, port: port)
+        switch webDiagnosticOutputFormat(format, json: json) {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            print(renderWebStatusText(response))
+        }
+    }
+}
+
+struct WebDoctor: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "doctor",
+        abstract: "Diagnose the readonly Web Device Hub launch environment without starting it"
+    )
+
+    @Option(help: "Web host address to inspect")
+    var host: String = "127.0.0.1"
+
+    @Option(help: "Web Device Hub port to inspect")
+    var port: Int = 34127
+
+    @Option(help: "Output format: text or json")
+    var format: ClientOutputFormat = .text
+
+    @Flag(name: .customLong("json"), help: "Alias for --format json")
+    var json = false
+
+    func run() async throws {
+        let status = await makeWebStatusResponse(host: host, port: port)
+        let response = makeWebDoctorResponse(status: status)
+        switch webDiagnosticOutputFormat(format, json: json) {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            print(renderWebDoctorText(response))
         }
     }
 }

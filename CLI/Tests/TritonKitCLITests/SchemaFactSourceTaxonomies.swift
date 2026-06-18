@@ -271,6 +271,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "project"]
     case "validation_failed", "unknown_command_schema":
         return ["diagnose", "plan", "discover", "observe", "archive"]
+    case "web_port_in_use":
+        return ["diagnose", "plan"]
     case "proxy_visibility_limited":
         return ["diagnose", "plan", "observe", "archive"]
     case "proxy_cert_untrusted", "proxy_runner_not_configured", "proxy_unverified_platform_proxy":

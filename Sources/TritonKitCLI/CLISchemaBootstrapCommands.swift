@@ -63,19 +63,41 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
                 jsonAlias,
                 languageOption,
             ],
+            usageForms: [
+                TKCommandUsageForm(form: "status --json", kind: "Subcommand", description: "Inspect the Web Device Hub port without starting it"),
+                TKCommandUsageForm(form: "doctor --json", kind: "Subcommand", description: "Diagnose Web Device Hub launch readiness and stale listeners"),
+            ],
             examples: [
                 "triton web --print-command --json",
+                "triton web status --json",
+                "triton web doctor --json",
                 "triton web --root /path/to/TritonKit --no-install",
             ],
             successShape: "{ ok, action:web.start, mode:dev|packaged, url, repoRoot?, webRoot?, bundledWebRoot?, tritonBin, readonly, installCommand?, command, environment }",
-            failureShape: "{ ok: false, error: { code: web_root_not_found|bundled_web_root_not_found|validation_failed|web_start_failed, message, hint } }",
+            failureShape: "{ ok: false, error: { code: web_root_not_found|bundled_web_root_not_found|validation_failed|web_port_in_use|web_start_failed, message, hint } }",
             outputSemantics: "Use web as a readonly Device Hub launcher. Source checkouts use React/Vite dev mode; release/Homebrew installs serve bundled Web/dist through the CLI. Business control remains in CLI/HTTP contracts; Web host bridge actions are limited to existing readonly DTO and host observation endpoints.",
             nextCommands: [
                 "triton web --print-command --json",
                 "triton schema --command web --json",
             ],
-            outputContracts: [webLaunchPlanOutputContract()],
-            failureCodes: ["web_root_not_found", "bundled_web_root_not_found", "validation_failed", "web_start_failed"],
+            outputContracts: [webLaunchPlanOutputContract(), webStatusOutputContract(), webDoctorOutputContract()],
+            failureCodes: ["web_root_not_found", "bundled_web_root_not_found", "validation_failed", "web_port_in_use", "web_start_failed"],
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "status",
+                    summary: "Inspect the Web Device Hub port and existing listener without starting Vite or packaged server",
+                    optionalOptions: ["--host", "--port", "--format", "--json"],
+                    nextCommands: ["triton web --json"],
+                    outputSelectors: ["web.status"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "doctor",
+                    summary: "Diagnose Web Device Hub launch readiness, stale listeners, and bundled static asset failures",
+                    optionalOptions: ["--host", "--port", "--format", "--json"],
+                    nextCommands: ["triton web status --json", "triton web --print-command --json"],
+                    outputSelectors: ["web.doctor"]
+                ),
+            ],
             providedCapabilities: ["web-device-hub"]
         ),
         TKCommandSchema(
