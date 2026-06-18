@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'TritonKitShared'
-  s.version = '0.1.34'
+  s.version = '0.1.35'
   s.summary = 'Shared wire models for TritonKit.'
   s.description = 'TritonKitShared contains Codable transport, input, observation, and archive models shared by the TritonKit embedded runtime and CLI tooling.'
   s.homepage = 'https://github.com/NeptuneKit/TritonKit'

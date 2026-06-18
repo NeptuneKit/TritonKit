@@ -151,6 +151,12 @@ if grep -q 'macos-15-intel' "${release_workflow}"; then
 fi
 grep -Fq -- '--triple x86_64-apple-macosx14.0' "${release_workflow}" \
   || fail "release workflow must cross-compile x86_64 through SwiftPM --triple"
+grep -Fq 'actions/cache@v4' "${release_workflow}" \
+  || fail "release workflow must cache SwiftPM dependencies and build outputs"
+grep -Fq 'release-cli-arm64' "${release_workflow}" \
+  || fail "release workflow must keep a dedicated arm64 CLI cache key"
+grep -Fq 'release-cli-x86_64' "${release_workflow}" \
+  || fail "release workflow must keep a dedicated x86_64 CLI cache key"
 grep -Fq '.build/cli-x86/x86_64-apple-macosx/release/triton' "${release_workflow}" \
   || fail "release workflow must package the x86_64 cross-compiled binary"
 grep -Fq 'Mach-O 64-bit executable x86_64' "${release_workflow}" \
