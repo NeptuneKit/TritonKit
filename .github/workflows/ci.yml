@@ -21,6 +21,7 @@ jobs:
 
     outputs:
       mode: ${{ steps.validate-scope.outputs.mode }}
+      release: ${{ steps.validate-scope.outputs.release }}
 
     steps:
       - name: Checkout
@@ -34,8 +35,14 @@ jobs:
           TRITON_CI_BASE_SHA: ${{ github.event.before }}
         run: |
           mode="$(docs-linhay/scripts/ci-validate-mode.sh)"
+          release="false"
+          if [[ "${GITHUB_REF_TYPE:-}" == "tag" || "${GITHUB_REF:-}" == refs/tags/v* ]]; then
+            release="true"
+          fi
           echo "mode=${mode}" >> "${GITHUB_OUTPUT}"
+          echo "release=${release}" >> "${GITHUB_OUTPUT}"
           echo "validate mode: ${mode}"
+          echo "release tag: ${release}"
 
       - name: Validate docs and skills
         if: steps.validate-scope.outputs.mode == 'docs'
@@ -198,8 +205,10 @@ jobs:
 
   build-cli-arm64:
     name: Build CLI (arm64)
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name != 'main')
-    needs: validate
+    if: github.event_name == 'workflow_dispatch' || needs.classify-validate.outputs.release == 'true'
+    needs:
+      - classify-validate
+      - validate
     runs-on: macos-15
 
     steps:
@@ -290,8 +299,10 @@ jobs:
 
   build-cli-x86_64:
     name: Build CLI (x86_64)
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name != 'main')
-    needs: validate
+    if: github.event_name == 'workflow_dispatch' || needs.classify-validate.outputs.release == 'true'
+    needs:
+      - classify-validate
+      - validate
     runs-on: macos-15-intel
 
     steps:
@@ -382,7 +393,6 @@ jobs:
 
   package-release-assets:
     name: Package arm64 release assets
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name != 'main')
     needs: build-cli-arm64
     runs-on: ubuntu-latest
 
@@ -504,12 +514,16 @@ jobs:
           if-no-files-found: error
 
       - name: Publish GitHub release assets
-        if: github.event_name == 'push' && github.ref_name != 'main'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
+
+          if [[ "${GITHUB_REF_TYPE:-}" != "tag" ]]; then
+            echo "skip GitHub release upload for non-tag run"
+            exit 0
+          fi
 
           tag="${GITHUB_REF_NAME}"
           if ! gh release view "${tag}" >/dev/null 2>&1; then
@@ -522,8 +536,9 @@ jobs:
 
   publish-x86-release-asset:
     name: Publish x86_64 release asset
-    if: github.event_name == 'push' && github.ref_name != 'main'
+    if: needs.classify-validate.outputs.release == 'true'
     needs:
+      - classify-validate
       - package-release-assets
       - build-cli-x86_64
     runs-on: ubuntu-latest
@@ -578,8 +593,10 @@ jobs:
 
   update-homebrew-tap:
     name: Update Homebrew tap (arm64)
-    if: github.event_name == 'push' && github.ref_name != 'main'
-    needs: package-release-assets
+    if: needs.classify-validate.outputs.release == 'true'
+    needs:
+      - classify-validate
+      - package-release-assets
     uses: ./.github/workflows/update-homebrew-tap.yml
     with:
       version: ${{ github.ref_name }}
@@ -588,8 +605,10 @@ jobs:
 
   update-homebrew-tap-x86:
     name: Update Homebrew tap (x86_64 backfill)
-    if: github.event_name == 'push' && github.ref_name != 'main'
-    needs: publish-x86-release-asset
+    if: needs.classify-validate.outputs.release == 'true'
+    needs:
+      - classify-validate
+      - publish-x86-release-asset
     uses: ./.github/workflows/update-homebrew-tap.yml
     with:
       version: ${{ github.ref_name }}
