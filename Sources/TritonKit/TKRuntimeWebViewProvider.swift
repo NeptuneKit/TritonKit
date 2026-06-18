@@ -873,37 +873,9 @@ private func webViewWaitResponse(
 }
 
 func currentRuntimeManifestWithWebViewProvider(sdkVersion: String) -> TKRuntimeManifestResponse {
-    let capabilities = TKRuntimeManifestResponse.defaultDebugCapabilities.map { capability in
-        switch capability.name {
-        case TKRuntimeCapabilityName.semanticState.rawValue,
-             TKRuntimeCapabilityName.semanticActionProvider.rawValue:
-            let hasProviders = TritonKit.shared.hasSemanticStateProviders
-            return TKRuntimeCapabilityDetail(
-                name: capability.name,
-                supported: hasProviders,
-                scope: TKRuntimeCapabilityScope.optInProvider.rawValue,
-                boundary: TKRuntimeCapabilityBoundary.businessOptIn.rawValue,
-                reason: hasProviders ? nil : capability.reason,
-                nextAction: capability.nextAction
-            )
-        case TKRuntimeCapabilityName.webViewList.rawValue,
-             TKRuntimeCapabilityName.webViewCurrent.rawValue,
-             TKRuntimeCapabilityName.webViewSnapshot.rawValue,
-             TKRuntimeCapabilityName.webViewWait.rawValue,
-             TKRuntimeCapabilityName.webViewEvents.rawValue:
-            return TKRuntimeCapabilityDetail(
-                name: capability.name,
-                supported: true,
-                scope: TKRuntimeCapabilityScope.embedded.rawValue,
-                boundary: TKRuntimeCapabilityBoundary.appProcess.rawValue
-            )
-        default:
-            return capability
-        }
-    }
     return TKRuntimeManifestResponse.debugDefault(
         sdkVersion: sdkVersion,
-        capabilities: capabilities,
+        capabilities: currentRuntimeCapabilities(webViewProviderAvailable: true),
         semanticDomains: TritonKit.shared.semanticDomainManifests
     )
 }
@@ -1129,26 +1101,9 @@ private final class RuntimeWebViewScriptBridgeInstall: @unchecked Sendable {
 #else
 
 func currentRuntimeManifestWithWebViewProvider(sdkVersion: String) -> TKRuntimeManifestResponse {
-    let capabilities = TKRuntimeManifestResponse.defaultDebugCapabilities.map { capability in
-        switch capability.name {
-        case TKRuntimeCapabilityName.semanticState.rawValue,
-             TKRuntimeCapabilityName.semanticActionProvider.rawValue:
-            let hasProviders = TritonKit.shared.hasSemanticStateProviders
-            return TKRuntimeCapabilityDetail(
-                name: capability.name,
-                supported: hasProviders,
-                scope: TKRuntimeCapabilityScope.optInProvider.rawValue,
-                boundary: TKRuntimeCapabilityBoundary.businessOptIn.rawValue,
-                reason: hasProviders ? nil : capability.reason,
-                nextAction: capability.nextAction
-            )
-        default:
-            return capability
-        }
-    }
     return TKRuntimeManifestResponse.debugDefault(
         sdkVersion: sdkVersion,
-        capabilities: capabilities,
+        capabilities: currentRuntimeCapabilities(webViewProviderAvailable: false),
         semanticDomains: TritonKit.shared.semanticDomainManifests
     )
 }

@@ -147,6 +147,8 @@ enum TritonKitDebugBootstrap {
 
 Enable it from Xcode with the launch argument `--triton-enabled`, the environment variable `TRITON_ENABLED=1`, or the Debug-only user default `TRITON_ENABLED=true`. `config.endpoint = .environment()` reads `TRITON_HOST` / `TRITON_PORT` and falls back to `127.0.0.1:19421`. Use `TritonKit.shared.start { config in config.endpoint = .device("192.168.1.20", port: 19421) }` when a physical device needs to connect to a Mac LAN address.
 
+`config.features` is an app-owned runtime capability gate. Keep the single `TritonKit` package product attached to the Debug app target, then enable only the app-process capabilities this build should expose. Disabled capabilities remain visible in `triton runtime manifest --json` as `supported=true, enabled=false` with `reason=Capability disabled by app runtime configuration`; runtime requests for disabled input, WebView, or semantic actions return `error.code=capability_disabled` instead of executing. Omit `config.features` to use the default Debug capability set.
+
 Preferred facade APIs:
 
 | Need | API |
@@ -167,7 +169,7 @@ For advanced debug bootstrap code, keep the same file-level `#if DEBUG` guard an
 TritonKit.shared.start { config in
     config.endpoint = .device("192.168.1.20", port: 19421)
     config.autoReconnect = true
-    config.features = [.hierarchy, .accessibility, .input]
+    config.features = [.appInfo, .hierarchy, .accessibility, .geometry, .screenshot, .input, .webView, .semantic]
     config.redaction.secureText = .lengthOnly
     config.appIdentity = .init(name: "YourApp", tags: ["smoke"])
 }
@@ -308,7 +310,7 @@ If your app blocks cleartext development traffic through App Transport Security,
 
 ### 6. WebView Observation
 
-Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current --platform ios --json` can discover visible `WKWebView` candidates from the runtime tree; `triton webview current-url --platform ios --json` and `triton route assert-current-url '<url>' --platform ios --json` require provider URL metadata and are the smoke path for proving the native flow opened the expected H5 link. Provider-backed descriptors expose `providerCapabilities` so agents can read `supportsCurrentURL`, `supportsSnapshot`, `supportsBridgeCall`, `supportsEvents`, `supportsDOMInput`, and `supportsContentEditableTyping` with stable `supported`, `reason`, and `nextAction` fields. DOM input and contenteditable typing are intentionally unsupported in the embedded iOS provider; use linked validation through URL, snapshot, wait, route assertions, or app-level semantic actions instead of pretending native DOM typing is available. Page interaction remains opt-in: `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
+Hybrid pages are exposed through the CLI instead of a browser UI. On iOS, `triton webview list/current --platform ios --json` can discover visible `WKWebView` candidates from the runtime tree; `triton webview current-url --platform ios --json` and `triton route assert-current-url '<url>' --platform ios --json` require provider URL metadata and are the smoke path for proving the native flow opened the expected H5 link. Provider-backed descriptors expose `providerCapabilities` so agents can read `supportsCurrentURL`, `supportsSnapshot`, `supportsBridgeCall`, `supportsEvents`, `supportsDOMInput`, and `supportsContentEditableTyping` with stable `supported`, `reason`, and `nextAction` fields. The embedded iOS provider supports focused `activeElement` text insertion for visible `input`, `textarea`, and `contenteditable` elements after runtime focus; broader page interaction remains opt-in. `triton webview call <method> --platform ios --json` only invokes methods explicitly allowlisted by the page or app, and `triton webview events --platform ios --limit 50 --json` only reads page events the app bridge has reported. TritonKit does not expose arbitrary JavaScript eval by default.
 
 Harmony host-side layout can identify visible Web candidates without source changes, but it must not be treated as DOM, URL, JS, or bridge access. Register a Harmony embedded WebView provider before claiming provider-level capabilities. `triton capabilities --json` mirrors this split: `webview-list/current` are candidate discovery capabilities, while `webview-current-url/snapshot/bridge-call/events/wait` and `route-current-url-assert` are provider-level capabilities with separate `nextAction` and `evidence`.
 

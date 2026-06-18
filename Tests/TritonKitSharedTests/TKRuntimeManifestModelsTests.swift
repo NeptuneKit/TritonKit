@@ -42,7 +42,9 @@ struct TKRuntimeManifestModelsTests {
         #expect(decoded.redaction.clipboard == "not-collected")
         #expect(decoded.capabilities.first?.scope == "embedded")
         #expect(decoded.capabilities.first?.boundary == "app-process")
+        #expect(decoded.capabilities.first?.enabled == true)
         #expect(decoded.capabilities.last?.supported == false)
+        #expect(decoded.capabilities.last?.enabled == false)
         #expect(decoded.capabilities.last?.nextAction?.command == "sim")
     }
 
@@ -59,8 +61,45 @@ struct TKRuntimeManifestModelsTests {
         let decoded = try JSONDecoder().decode(TKRuntimeCapabilityDetail.self, from: data)
 
         #expect(decoded.name == "ledger")
+        #expect(decoded.enabled)
         #expect(decoded.scope == "embedded")
         #expect(decoded.boundary == "app-process")
+    }
+
+    @Test("runtime capability can be supported but disabled")
+    func supportedDisabledCapabilityShape() throws {
+        let capability = TKRuntimeCapabilityDetail(
+            name: .inputTap,
+            supported: true,
+            enabled: false,
+            scope: .embedded,
+            boundary: .appProcess,
+            reason: "Capability disabled by app runtime configuration"
+        )
+
+        let data = try JSONEncoder().encode(capability)
+        let decoded = try JSONDecoder().decode(TKRuntimeCapabilityDetail.self, from: data)
+
+        #expect(decoded.supported)
+        #expect(decoded.enabled == false)
+        #expect(decoded.reason == "Capability disabled by app runtime configuration")
+    }
+
+    @Test("runtime capability defaults enabled to supported for older payloads")
+    func capabilityEnabledDefaultsToSupported() throws {
+        let data = """
+        {
+          "name": "input.tap",
+          "supported": true,
+          "scope": "embedded",
+          "boundary": "app-process"
+        }
+        """.data(using: .utf8)!
+
+        let decoded = try JSONDecoder().decode(TKRuntimeCapabilityDetail.self, from: data)
+
+        #expect(decoded.supported)
+        #expect(decoded.enabled)
     }
 
     @Test("default debug capabilities are named from the shared capability catalog")

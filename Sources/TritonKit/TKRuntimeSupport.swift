@@ -151,6 +151,77 @@ func currentStateTimestamp() -> String {
     ISO8601DateFormatter().string(from: Date())
 }
 
+let runtimeCapabilityDisabledReason = "Capability disabled by app runtime configuration"
+
+func runtimeCapabilityDisabledError(
+    capability: TKRuntimeCapabilityName,
+    action: String
+) -> TKCLIErrorDetail {
+    TKCLIErrorDetail(
+        code: "capability_disabled",
+        message: "\(action) is disabled by TritonKit runtime configuration.",
+        hint: "Enable \(capability.rawValue) in TritonKit.shared.start { config in ... } before retrying.",
+        nextAction: TKCLINextAction(command: "runtime", args: ["manifest", "--json"])
+    )
+}
+
+func currentRuntimeCapabilities(
+    webViewProviderAvailable: Bool
+) -> [TKRuntimeCapabilityDetail] {
+    TKRuntimeManifestResponse.defaultDebugCapabilities.map { capability in
+        let resolved = resolveRuntimeCapabilitySupport(
+            capability,
+            hasSemanticProviders: TritonKit.shared.hasSemanticStateProviders,
+            webViewProviderAvailable: webViewProviderAvailable
+        )
+        guard let name = TKRuntimeCapabilityName(rawValue: resolved.name) else {
+            return resolved
+        }
+        let enabled = resolved.supported && TritonKit.shared.configuration.isRuntimeCapabilityEnabled(name)
+        return TKRuntimeCapabilityDetail(
+            name: resolved.name,
+            supported: resolved.supported,
+            enabled: enabled,
+            scope: resolved.scope,
+            boundary: resolved.boundary,
+            reason: enabled ? resolved.reason : (resolved.supported ? runtimeCapabilityDisabledReason : resolved.reason),
+            nextAction: resolved.nextAction
+        )
+    }
+}
+
+private func resolveRuntimeCapabilitySupport(
+    _ capability: TKRuntimeCapabilityDetail,
+    hasSemanticProviders: Bool,
+    webViewProviderAvailable: Bool
+) -> TKRuntimeCapabilityDetail {
+    switch capability.name {
+    case TKRuntimeCapabilityName.semanticState.rawValue,
+         TKRuntimeCapabilityName.semanticActionProvider.rawValue:
+        return TKRuntimeCapabilityDetail(
+            name: capability.name,
+            supported: hasSemanticProviders,
+            scope: TKRuntimeCapabilityScope.optInProvider.rawValue,
+            boundary: TKRuntimeCapabilityBoundary.businessOptIn.rawValue,
+            reason: hasSemanticProviders ? nil : capability.reason,
+            nextAction: capability.nextAction
+        )
+    case TKRuntimeCapabilityName.webViewList.rawValue,
+         TKRuntimeCapabilityName.webViewCurrent.rawValue,
+         TKRuntimeCapabilityName.webViewSnapshot.rawValue,
+         TKRuntimeCapabilityName.webViewWait.rawValue,
+         TKRuntimeCapabilityName.webViewEvents.rawValue where webViewProviderAvailable:
+        return TKRuntimeCapabilityDetail(
+            name: capability.name,
+            supported: true,
+            scope: TKRuntimeCapabilityScope.embedded.rawValue,
+            boundary: TKRuntimeCapabilityBoundary.appProcess.rawValue
+        )
+    default:
+        return capability
+    }
+}
+
 // MARK: - Response Payloads
 
 struct PingResponse: Codable {

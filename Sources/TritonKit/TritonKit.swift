@@ -73,6 +73,7 @@ public class TritonKit {
         case geometry
         case screenshot
         case input
+        case webView
         case semantic
     }
 
@@ -118,6 +119,7 @@ public class TritonKit {
             .geometry,
             .screenshot,
             .input,
+            .webView,
             .semantic,
         ]
 

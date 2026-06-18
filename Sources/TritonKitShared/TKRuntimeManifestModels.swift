@@ -54,6 +54,7 @@ public enum TKRuntimeCapabilityBoundary: String, Codable {
 public struct TKRuntimeCapabilityDetail: Codable, Equatable {
     public let name: String
     public let supported: Bool
+    public let enabled: Bool
     public let scope: String
     public let boundary: String
     public let reason: String?
@@ -62,6 +63,7 @@ public struct TKRuntimeCapabilityDetail: Codable, Equatable {
     public init(
         name: String,
         supported: Bool,
+        enabled: Bool? = nil,
         scope: String,
         boundary: String,
         reason: String? = nil,
@@ -69,6 +71,7 @@ public struct TKRuntimeCapabilityDetail: Codable, Equatable {
     ) {
         self.name = name
         self.supported = supported
+        self.enabled = enabled ?? supported
         self.scope = scope
         self.boundary = boundary
         self.reason = reason
@@ -78,6 +81,7 @@ public struct TKRuntimeCapabilityDetail: Codable, Equatable {
     public init(
         name: TKRuntimeCapabilityName,
         supported: Bool,
+        enabled: Bool? = nil,
         scope: TKRuntimeCapabilityScope,
         boundary: TKRuntimeCapabilityBoundary,
         reason: String? = nil,
@@ -86,11 +90,33 @@ public struct TKRuntimeCapabilityDetail: Codable, Equatable {
         self.init(
             name: name.rawValue,
             supported: supported,
+            enabled: enabled,
             scope: scope.rawValue,
             boundary: boundary.rawValue,
             reason: reason,
             nextAction: nextAction
         )
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case name
+        case supported
+        case enabled
+        case scope
+        case boundary
+        case reason
+        case nextAction
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        supported = try container.decode(Bool.self, forKey: .supported)
+        enabled = try container.decodeIfPresent(Bool.self, forKey: .enabled) ?? supported
+        scope = try container.decode(String.self, forKey: .scope)
+        boundary = try container.decode(String.self, forKey: .boundary)
+        reason = try container.decodeIfPresent(String.self, forKey: .reason)
+        nextAction = try container.decodeIfPresent(TKCLINextAction.self, forKey: .nextAction)
     }
 }
 

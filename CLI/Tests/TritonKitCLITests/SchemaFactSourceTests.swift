@@ -213,7 +213,7 @@ struct SchemaFactSourceTests {
         let build = try #require(schemas["build"])
 
         #expect(xcode.options.map(\.name).contains("--device"))
-        #expect(xcode.examples.contains("triton xcode build --device <ios-real-target> --sdk iphoneos --jsonl"))
+        #expect(xcode.examples.contains("triton xcode build --device <ios-real-target> --sdk iphoneos --allow-provisioning-updates --jsonl"))
         #expect(xcode.examples.contains("triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl"))
         #expect(xcode.failureCodes.contains("device_not_ready"))
         #expect(xcode.failureCodes.contains("xcode_signing_failed"))

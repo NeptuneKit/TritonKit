@@ -161,6 +161,7 @@ public struct TKInputResult: Codable, Equatable {
     public let redacted: Bool?
     public let insertedLength: Int?
     public let deletedLength: Int?
+    public let error: TKCLIErrorDetail?
 
     public init(
         ok: Bool,
@@ -176,7 +177,8 @@ public struct TKInputResult: Codable, Equatable {
         secure: Bool? = nil,
         redacted: Bool? = nil,
         insertedLength: Int? = nil,
-        deletedLength: Int? = nil
+        deletedLength: Int? = nil,
+        error: TKCLIErrorDetail? = nil
     ) {
         self.ok = ok
         self.action = action
@@ -192,6 +194,7 @@ public struct TKInputResult: Codable, Equatable {
         self.redacted = redacted
         self.insertedLength = insertedLength
         self.deletedLength = deletedLength
+        self.error = error
     }
 
     public static func success(
@@ -207,7 +210,8 @@ public struct TKInputResult: Codable, Equatable {
         secure: Bool? = nil,
         redacted: Bool? = nil,
         insertedLength: Int? = nil,
-        deletedLength: Int? = nil
+        deletedLength: Int? = nil,
+        error: TKCLIErrorDetail? = nil
     ) -> TKInputResult {
         TKInputResult(
             ok: true,
@@ -223,7 +227,8 @@ public struct TKInputResult: Codable, Equatable {
             secure: secure,
             redacted: redacted,
             insertedLength: insertedLength,
-            deletedLength: deletedLength
+            deletedLength: deletedLength,
+            error: error
         )
     }
 
@@ -236,7 +241,8 @@ public struct TKInputResult: Codable, Equatable {
         matchedClassName: String? = nil,
         activationOID: UInt? = nil,
         activationClassName: String? = nil,
-        strategy: String? = nil
+        strategy: String? = nil,
+        error: TKCLIErrorDetail? = nil
     ) -> TKInputResult {
         TKInputResult(
             ok: false,
@@ -248,7 +254,8 @@ public struct TKInputResult: Codable, Equatable {
             matchedClassName: matchedClassName,
             activationOID: activationOID,
             activationClassName: activationClassName,
-            strategy: strategy
+            strategy: strategy,
+            error: error
         )
     }
 
@@ -259,7 +266,8 @@ public struct TKInputResult: Codable, Equatable {
         matchedOID: UInt? = nil,
         matchedClassName: String? = nil,
         activationOID: UInt? = nil,
-        activationClassName: String? = nil
+        activationClassName: String? = nil,
+        error: TKCLIErrorDetail? = nil
     ) -> TKInputResult {
         failure(
             action: action,
@@ -270,7 +278,8 @@ public struct TKInputResult: Codable, Equatable {
             matchedClassName: matchedClassName,
             activationOID: activationOID,
             activationClassName: activationClassName,
-            strategy: strategy
+            strategy: strategy,
+            error: error
         )
     }
 }
