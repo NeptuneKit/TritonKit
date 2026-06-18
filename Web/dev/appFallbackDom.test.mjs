@@ -299,6 +299,344 @@ test("renders bounded iOS host logs in the log strip when readonly host logs are
   }
 });
 
+test("renders only ready wired real device targets and requests App runtime screenshot", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
+  const hostInputPayloads = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      const method = init?.method ?? resolveRequestMethod(input);
+      fetchCalls.push({ pathname: url.pathname, method });
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-18T09:30:00.000Z",
+            source: {
+              commands: [
+                "triton sim list --json",
+                "triton device list --platform ios --scope real --json",
+              ],
+              runtimeScope: "host-device",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "host:ios:00008140-redacted",
+                target: "00008140-redacted",
+                name: "Lin iPhone",
+                platform: "ios",
+                appName: null,
+                bundleIdentifier: null,
+                runtime: "iOS 18.5",
+                state: "connected",
+                statusLabel: "Ready",
+                ready: true,
+                scope: "real",
+                kind: "real-device",
+                transport: "wired",
+                source: "devicectl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: true,
+              },
+              {
+                id: "host:ios:offline-redacted",
+                target: "offline-redacted",
+                name: "Offline iPhone",
+                platform: "ios",
+                appName: null,
+                bundleIdentifier: null,
+                runtime: "iOS 18.5",
+                state: "offline",
+                statusLabel: "offline",
+                ready: false,
+                scope: "real",
+                kind: "real-device",
+                source: "devicectl",
+                readonly: true,
+                blockedReasons: ["offline", "ddi-missing"],
+                sensitive: true,
+              },
+              {
+                id: "host:ios:wireless-redacted",
+                target: "wireless-redacted",
+                name: "Wireless iPhone",
+                platform: "ios",
+                appName: null,
+                bundleIdentifier: null,
+                runtime: "iOS 27.0",
+                state: "connected",
+                statusLabel: "connected",
+                ready: true,
+                scope: "real",
+                kind: "real-device",
+                transport: "localNetwork",
+                source: "devicectl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: true,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        assert.equal(url.searchParams.get("platform"), "ios");
+        assert.equal(url.searchParams.get("scope"), "real");
+        assert.equal(url.searchParams.get("kind"), "real-device");
+        assert.equal(url.searchParams.get("source"), "runtime");
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "00008140-redacted",
+            source: {
+              command: "triton screenshot --output /tmp/runtime.png --json",
+              runtimeScope: "app-runtime",
+              readonly: true,
+            },
+            artifact: "memory://runtime.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,iVBORw0KGgo=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-input") {
+        assert.equal(url.searchParams.get("platform"), "ios");
+        assert.equal(url.searchParams.get("scope"), "real");
+        assert.equal(url.searchParams.get("kind"), "real-device");
+        assert.equal(url.searchParams.get("source"), "runtime");
+        hostInputPayloads.push(JSON.parse(init?.body?.toString() ?? "{}"));
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            action: "type",
+            message: "Inserted text",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error("Unexpected fetch route: " + url.pathname);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => deviceRowText().includes("Lin iPhone"));
+
+    assert.match(deviceRowText(), /Lin iPhone/);
+    assert.equal(document.querySelectorAll(".device-row-icon").length, 0);
+    assert.ok(Array.from(document.querySelectorAll(".device-platform-badge")).some((badge) => badge.textContent?.trim() === "iOS"));
+    assert.doesNotMatch(deviceRowText(), /真机/);
+    assert.doesNotMatch(deviceRowText(), /App runtime 已连接/);
+    assert.doesNotMatch(deviceRowText(), /前台 App 未暴露/);
+    assert.doesNotMatch(deviceRowText(), /Offline iPhone/);
+    assert.doesNotMatch(deviceRowText(), /Wireless iPhone/);
+    assert.doesNotMatch(deviceRowText(), /Pixel API 35/);
+    assert.doesNotMatch(deviceRowText(), /DevEco Local/);
+    assert.match(bodyText(), /triton device list --platform ios --scope real --json/);
+    assert.match(bodyText(), /就绪/);
+    assert.equal(document.querySelector('[aria-label="主屏幕"]'), null);
+    await waitFor(() => fetchCalls.some((call) => call.pathname === "/web/host-screenshot"));
+    assert.doesNotMatch(bodyText(), /真机画面未接入/);
+    assert.deepEqual(fetchCalls.map((call) => call.pathname), ["/web/host-targets", "/web/host-screenshot"]);
+
+    const screen = document.querySelector(".device-screen");
+    assert.ok(screen, "Expected interactive device screen");
+    await act(async () => {
+      screen.dispatchEvent(new window.KeyboardEvent("keydown", { key: "x", bubbles: true }));
+    });
+    await waitFor(() => hostInputPayloads.length === 1);
+    assert.deepEqual(hostInputPayloads[0], { type: "type", text: "x" });
+    await act(async () => {
+      screen.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Backspace", bubbles: true }));
+    });
+    await waitFor(() => hostInputPayloads.length === 2);
+    assert.deepEqual(hostInputPayloads[1], { type: "deleteBackward" });
+    await act(async () => {
+      screen.dispatchEvent(new window.KeyboardEvent("keydown", { key: "Delete", bubbles: true }));
+    });
+    await waitFor(() => hostInputPayloads.length === 3);
+    assert.deepEqual(hostInputPayloads[2], { type: "deleteBackward" });
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("dispatches iOS Simulator canvas tap through the host input bridge", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
+  const hostInputPayloads = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      const method = init?.method ?? resolveRequestMethod(input);
+      fetchCalls.push({ pathname: url.pathname, method });
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-18T11:30:00.000Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host-device",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "sim:AAAA-BBBB",
+                target: "AAAA-BBBB",
+                name: "iPhone 17",
+                platform: "ios",
+                appName: "前台 App 未暴露 · iPhone 17",
+                bundleIdentifier: "Target AAAA-BBBB",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Booted",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                source: "simctl",
+                readonly: true,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        assert.equal(url.searchParams.get("platform"), "ios");
+        assert.equal(url.searchParams.get("scope"), "simulator");
+        assert.equal(url.searchParams.get("kind"), "simulator");
+        assert.equal(url.searchParams.get("source"), "host");
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "AAAA-BBBB",
+            source: {
+              command: "triton sim screenshot --simulator AAAA-BBBB --output /tmp/frame.png --json",
+              runtimeScope: "host-simulator",
+              readonly: true,
+            },
+            artifact: "memory://simulator-frame.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,iVBORw0KGgo=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-input") {
+        assert.equal(url.searchParams.get("platform"), "ios");
+        assert.equal(url.searchParams.get("scope"), "simulator");
+        assert.equal(url.searchParams.get("kind"), "simulator");
+        assert.equal(url.searchParams.get("source"), "host");
+        hostInputPayloads.push(JSON.parse(init?.body?.toString() ?? "{}"));
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            action: "tap",
+            message: "iOS Simulator tap was submitted through Triton host-HID adapter.",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error("Unexpected fetch route: " + url.pathname);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => document.querySelector(".device-screen.is-interactive"));
+    const screen = document.querySelector(".device-screen");
+    assert.ok(screen, "Expected iOS Simulator screen to accept input");
+    screen.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 390,
+      height: 844,
+      right: 390,
+      bottom: 844,
+      x: 0,
+      y: 0,
+      toJSON() {
+        return {};
+      },
+    });
+
+    await act(async () => {
+      screen.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 1, clientX: 180, clientY: 410, bubbles: true }));
+      screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 1, clientX: 180, clientY: 410, bubbles: true }));
+    });
+
+    await waitFor(() => hostInputPayloads.length === 1);
+    assert.deepEqual(hostInputPayloads[0], { type: "tap", x: 180, y: 410, width: 390, height: 844 });
+    assert.ok(fetchCalls.some((call) => call.pathname === "/web/host-input" && call.method === "POST"));
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
 test("keeps request-failed fallback notice while switching Android and Harmony targets in mounted DOM", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",

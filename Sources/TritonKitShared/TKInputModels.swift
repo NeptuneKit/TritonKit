@@ -7,6 +7,7 @@ public enum TKInputType: String, Codable, CaseIterable {
     case typeText = "type"
     case paste
     case clear
+    case deleteBackward
 }
 
 public enum TKTapActivationStrategy: String, Codable, CaseIterable {
@@ -139,6 +140,10 @@ public struct TKInputRequest: Codable, Equatable {
     public static func clear(targetOID: UInt? = nil, x: Double? = nil, y: Double? = nil) -> TKInputRequest {
         TKInputRequest(type: .clear, targetOID: targetOID, x: x, y: y)
     }
+
+    public static func deleteBackward(targetOID: UInt? = nil, x: Double? = nil, y: Double? = nil) -> TKInputRequest {
+        TKInputRequest(type: .deleteBackward, targetOID: targetOID, x: x, y: y)
+    }
 }
 
 public struct TKInputResult: Codable, Equatable {
@@ -155,6 +160,7 @@ public struct TKInputResult: Codable, Equatable {
     public let secure: Bool?
     public let redacted: Bool?
     public let insertedLength: Int?
+    public let deletedLength: Int?
 
     public init(
         ok: Bool,
@@ -169,7 +175,8 @@ public struct TKInputResult: Codable, Equatable {
         strategy: String? = nil,
         secure: Bool? = nil,
         redacted: Bool? = nil,
-        insertedLength: Int? = nil
+        insertedLength: Int? = nil,
+        deletedLength: Int? = nil
     ) {
         self.ok = ok
         self.action = action
@@ -184,6 +191,7 @@ public struct TKInputResult: Codable, Equatable {
         self.secure = secure
         self.redacted = redacted
         self.insertedLength = insertedLength
+        self.deletedLength = deletedLength
     }
 
     public static func success(
@@ -198,7 +206,8 @@ public struct TKInputResult: Codable, Equatable {
         strategy: String? = nil,
         secure: Bool? = nil,
         redacted: Bool? = nil,
-        insertedLength: Int? = nil
+        insertedLength: Int? = nil,
+        deletedLength: Int? = nil
     ) -> TKInputResult {
         TKInputResult(
             ok: true,
@@ -213,7 +222,8 @@ public struct TKInputResult: Codable, Equatable {
             strategy: strategy,
             secure: secure,
             redacted: redacted,
-            insertedLength: insertedLength
+            insertedLength: insertedLength,
+            deletedLength: deletedLength
         )
     }
 

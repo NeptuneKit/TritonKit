@@ -72,6 +72,18 @@ struct TKInputModelsTests {
         #expect(json["secure"] as? Bool == true)
     }
 
+    @Test("delete backward request preserves focused target intent")
+    func deleteBackwardRequestWireShape() throws {
+        let request = TKInputRequest.deleteBackward(targetOID: 42, x: 180, y: 304)
+        let data = try JSONEncoder().encode(request)
+        let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+
+        #expect(json["type"] as? String == "deleteBackward")
+        #expect(json["targetOID"] as? Int == 42)
+        #expect(json["x"] as? Double == 180)
+        #expect(json["y"] as? Double == 304)
+    }
+
     @Test("secure input result reports length without text")
     func secureInputResultShape() throws {
         let result = TKInputResult.success(

@@ -373,9 +373,7 @@ public class TritonKitRequestHandler: TritonKitDelegate {
         }
 
         #if canImport(UIKit)
-        let result = await MainActor.run {
-            performInput(request)
-        }
+        let result = await performInput(request)
         return TKMessage(id: msg.id, type: .input, payload: try? JSONEncoder().encode(result))
         #else
         let result = TKInputResult.unsupported(

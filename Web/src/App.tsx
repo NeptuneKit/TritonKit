@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import {
   Activity,
   Braces,
@@ -33,7 +33,7 @@ import type { LucideIcon } from "lucide-react";
 import { HostBridgeNotice } from "./components/HostBridgeNotice";
 import { logs, networkEvents, targets } from "./data/mockData";
 import { describeHostBridgePresentation } from "./data/hostBridgePresentation";
-import { fetchHostLogs, fetchHostScreenshot, fetchHostTargets } from "./data/iosSimulatorClient";
+import { fetchHostLogs, fetchHostScreenshot, fetchHostTargets, sendHostInput } from "./data/iosSimulatorClient";
 import type {
   BridgeCommandOutput,
   DeviceFrameOrientation,
@@ -107,6 +107,21 @@ type ReadonlyGestureIntent =
       height?: number;
       duration?: number;
     };
+
+type ReadonlyTextIntent =
+  | {
+      action: "type";
+      text: string;
+    }
+  | {
+      action: "paste";
+      text: string;
+    }
+  | {
+      action: "deleteBackward";
+    };
+
+type ReadonlyInputIntent = ReadonlyGestureIntent | ReadonlyTextIntent;
 
 type GesturePoint = {
   x: number;
@@ -587,23 +602,76 @@ export function App() {
     }));
   };
 
-  const handleInput = async (input: ReadonlyGestureIntent) => {
+  const handleInput = async (input: ReadonlyInputIntent) => {
     const activityTargetId = selected.id;
-    const point =
-      input.action === "tap"
-        ? `${Math.round(input.x)},${Math.round(input.y)}`
-        : `${Math.round(input.startX)},${Math.round(input.startY)} -> ${Math.round(input.endX)},${Math.round(input.endY)}`;
+    const detail = describeInputIntent(input);
+    if (!selected.canInput) {
+      setLastActionById((current) => ({
+        ...current,
+        [activityTargetId]: {
+          lastAction: "Input not available for " + input.action + " " + detail,
+          actionResult: "warning",
+        },
+      }));
+      setInteractionLogs((current) => [
+        makeLog("warn", "input unavailable " + input.action + " " + detail),
+        ...current,
+      ]);
+      return;
+    }
+
+    setInputActivityById((current) => ({
+      ...current,
+      [activityTargetId]: {
+        status: "dispatching",
+        label: `dispatching ${input.action}`,
+      },
+    }));
     setLastActionById((current) => ({
       ...current,
       [activityTargetId]: {
-        lastAction: `Readonly Web mock blocked ${input.action} ${point}`,
-        actionResult: "warning",
+        lastAction: "Dispatching " + input.action + " " + detail,
+        actionResult: "ok",
       },
     }));
-    setInteractionLogs((current) => [
-      makeLog("warn", `readonly Web mock blocked ${input.action} ${input.platform}:${input.target}`),
-      ...current,
-    ]);
+    try {
+      const payload = inputPayload(input);
+      const result = await sendHostInput(selected, payload);
+      setInteractionLogs((current) => [
+        makeLog(result.ok ? "info" : "warn", `runtime input ${input.action} ${result.message ?? (result.ok ? "ok" : "failed")}`),
+        ...current,
+      ]);
+      setLastActionById((current) => ({
+        ...current,
+        [activityTargetId]: {
+          lastAction: result.message ?? `Runtime ${input.action} submitted`,
+          actionResult: result.ok ? "ok" : "warning",
+        },
+      }));
+      setInputActivityById((current) => ({
+        ...current,
+        [activityTargetId]: {
+          status: "refreshing",
+          label: "refreshing App screen",
+        },
+      }));
+      await refreshScreenshot(selected);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setInteractionLogs((current) => [makeLog("error", `runtime input failed ${message}`), ...current]);
+      setLastActionById((current) => ({
+        ...current,
+        [activityTargetId]: {
+          lastAction: `Input failed: ${message}`,
+          actionResult: "failed",
+        },
+      }));
+    } finally {
+      setInputActivityById((current) => ({
+        ...current,
+        [activityTargetId]: undefined,
+      }));
+    }
   };
 
   const canvasZoomIndex = canvasZoomLevels.findIndex((level) => level === canvasZoom);
@@ -620,6 +688,52 @@ export function App() {
       setCanvasZoom(canvasZoomLevels[canvasZoomIndex + 1]);
     }
   };
+
+  function describeInputIntent(input: ReadonlyInputIntent) {
+    if (input.action === "tap") {
+      return Math.round(input.x) + "," + Math.round(input.y);
+    }
+    if (input.action === "swipe") {
+      return Math.round(input.startX) + "," + Math.round(input.startY) + " -> " + Math.round(input.endX) + "," + Math.round(input.endY);
+    }
+    if (input.action === "deleteBackward") {
+      return "1 char";
+    }
+    return input.text.length + " chars";
+  }
+
+  function inputPayload(input: ReadonlyInputIntent) {
+    if (input.action === "tap") {
+      return {
+        type: "tap",
+        x: input.x,
+        y: input.y,
+        width: input.width,
+        height: input.height,
+      };
+    }
+    if (input.action === "swipe") {
+      return {
+        type: "swipe",
+        startX: input.startX,
+        startY: input.startY,
+        endX: input.endX,
+        endY: input.endY,
+        width: input.width,
+        height: input.height,
+        duration: input.duration,
+      };
+    }
+    if (input.action === "deleteBackward") {
+      return {
+        type: "deleteBackward",
+      };
+    }
+    return {
+      type: input.action,
+      text: input.text,
+    };
+  }
 
   return (
     <main className="device-hub-shell">
@@ -694,9 +808,18 @@ function mergeHostTargetsWithMockFallback(hostTargets: DeviceTarget[], mockTarge
   if (hostTargets.length === 0) {
     return mockTargets;
   }
-  const hostPlatforms = new Set(hostTargets.map((target) => target.platform));
-  const missingPlatformTargets = mockTargets.filter((target) => !hostPlatforms.has(target.platform));
-  return [...hostTargets, ...missingPlatformTargets];
+  return hostTargets;
+}
+
+function isRealTarget(target: DeviceTarget) {
+  return target.scope === "real" || target.kind === "real-device";
+}
+
+function targetKindLabel(target: DeviceTarget) {
+  if (target.scope === "real" || target.kind === "real-device" || target.realSource?.endsWith("real-device")) {
+    return "真机";
+  }
+  return platformDetail[target.platform];
 }
 
 function commandOutputsToLogs(outputs: BridgeCommandOutput[]): LogEntry[] {
@@ -723,9 +846,10 @@ function hostNetworkEvidenceForTarget(target: DeviceTarget): NetworkEvent[] {
 function hostLogsForTarget(target: DeviceTarget): LogEntry[] {
   if (!target.realSource) return [];
   const selector = target.targetSelector ?? target.udid ?? target.id;
+  const blocked = target.blockedReasons?.length ? ` blocked=${target.blockedReasons.join(",")}` : "";
   return [
     makeLog("info", `${target.platform} target ${selector} selected from readonly host discovery`),
-    makeLog("warn", `${target.platform} network/app runtime evidence not exposed by CLI DTO`),
+    makeLog("warn", `${target.platform} network/app runtime evidence not exposed by CLI DTO${blocked}`),
   ];
 }
 
@@ -793,6 +917,11 @@ function localizeStatusLabel(label: string) {
     Shutdown: "已关机",
     Ready: "就绪",
     Offline: "离线",
+    device_not_trusted: "未信任",
+    developer_mode_required: "需开发者模式",
+    device_locked: "设备锁定",
+    ddi_missing: "缺少 DDI",
+    unauthorized: "未授权",
     Unknown: "未知",
   };
   return labels[label] ?? label;
@@ -972,7 +1101,7 @@ function DeviceListPanel({
       <div className="device-list">
         {visibleTargets.map((target) => {
           const appLabel = target.appName || "前台 App 未识别";
-          const detailLabel = `${appLabel} · ${platformDetail[target.platform]}`;
+          const detailLabel = appLabel;
 
           return (
             <button
@@ -981,20 +1110,22 @@ function DeviceListPanel({
               onClick={() => onSelect(target.id)}
               type="button"
             >
-              <span className="device-row-icon" style={{ color: target.accent }}>
-                <target.Icon size={21} />
-              </span>
               <span className="device-row-copy">
                 <strong>{target.name}</strong>
                 <span title={detailLabel}>{detailLabel}</span>
               </span>
-              <span className="device-version">{target.os.replace(/^[A-Za-z ]+/, "")}</span>
+              <span className="device-row-meta">
+                <span className="device-platform-badge" style={{ color: target.accent }}>
+                  {platformLabel[target.platform]}
+                </span>
+                <span className="device-version">{target.os.replace(/^[A-Za-z ]+/, "")}</span>
+              </span>
             </button>
           );
         })}
 
         {visibleTargets.length === 0 ? (
-          <p className="empty-devices">{isSearching ? "未找到匹配 target" : "暂无运行中的仿真器"}</p>
+          <p className="empty-devices">{isSearching ? "未找到匹配 target" : "暂无运行中的设备"}</p>
         ) : null}
       </div>
     </section>
@@ -1117,7 +1248,7 @@ function DeviceCanvas({
   onResetZoom: () => void;
   onZoomIn: () => void;
   onPreviewFpsChange: (fps: number) => void;
-  onInput: (input: ReadonlyGestureIntent) => Promise<void>;
+  onInput: (input: ReadonlyInputIntent) => Promise<void>;
 }) {
   const screenRef = useRef<HTMLDivElement | null>(null);
   const previewControlRef = useRef<HTMLDivElement | null>(null);
@@ -1147,12 +1278,13 @@ function DeviceCanvas({
         : orientation;
   const canSendInput = Boolean(
     target.realSource &&
+      target.canInput &&
       target.screenshotDataUrl &&
       target.targetSelector &&
       target.screenshotPixelWidth &&
       target.screenshotPixelHeight
   );
-  const isWaitingForRealScreenshot = Boolean(target.realSource && !target.screenshotDataUrl);
+  const isWaitingForRealScreenshot = Boolean(target.realSource && target.canScreenshot && !target.screenshotDataUrl);
 
   useEffect(() => {
     return () => {
@@ -1205,6 +1337,7 @@ function DeviceCanvas({
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (!canSendInput) return;
+    screenRef.current?.focus({ preventScroll: true });
     const start = mapPointer(event);
     gestureStart.current = start;
     if (start) {
@@ -1301,6 +1434,27 @@ function DeviceCanvas({
     });
   };
 
+  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (!canSendInput) return;
+    if (event.metaKey || event.ctrlKey || event.altKey) return;
+    if (event.key === "Backspace" || event.key === "Delete") {
+      event.preventDefault();
+      onInput({ action: "deleteBackward" });
+      return;
+    }
+    if (event.key.length !== 1) return;
+    event.preventDefault();
+    onInput({ action: "type", text: event.key });
+  };
+
+  const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
+    if (!canSendInput) return;
+    const text = event.clipboardData.getData("text");
+    if (!text) return;
+    event.preventDefault();
+    onInput({ action: "paste", text });
+  };
+
   if (isDiscoveringHostTargets) {
     return (
       <section className="hub-canvas" aria-label="设备画布">
@@ -1375,10 +1529,13 @@ function DeviceCanvas({
           <div className="device-side bottom" />
           <div
             className={`device-screen orientation-${orientation} ${target.screenshotTone} ${canSendInput ? "is-interactive" : ""}`}
+            tabIndex={canSendInput ? 0 : undefined}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerCancel}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
             ref={screenRef}
           >
             {target.screenshotDataUrl ? (
@@ -1399,7 +1556,7 @@ function DeviceCanvas({
                 </div>
                 <div className="screen-content">
                   <div>
-                    <h2>{platformDetail[target.platform]}</h2>
+                    <h2>{targetKindLabel(target)}</h2>
                     <p>{target.device}</p>
                   </div>
                   <div className="screen-card-row">
@@ -1627,7 +1784,7 @@ function DeviceControls({
     { label: "应用", Icon: Grid3X3 },
     { label: "点选", Icon: MousePointer2 },
     { label: "探测", Icon: Crosshair },
-    { label: "主屏幕", Icon: Home },
+    ...(supportsSystemHomeControl(target) ? [{ label: "主屏幕", Icon: Home }] : []),
     { label: target.frameOrientation === "portrait" ? "竖屏" : "横屏", Icon: ScanLine },
   ];
 
@@ -1651,6 +1808,13 @@ function DeviceControls({
       </div>
     </section>
   );
+}
+
+function supportsSystemHomeControl(target: DeviceTarget) {
+  if (target.screenshotSource === "runtime") {
+    return false;
+  }
+  return target.canInput !== false;
 }
 
 function NetworkStrip({ events }: { events: NetworkEvent[] }) {

@@ -626,8 +626,11 @@ private struct WebHostTarget: Codable, Equatable {
     let ready: Bool
     let scope: String
     let kind: String
+    let transport: String?
     let source: String
     let readonly: Bool
+    let blockedReasons: [String]
+    let sensitive: Bool
 }
 
 private struct WebHostTargetsBridgeResponse: Codable, Equatable {
@@ -636,6 +639,12 @@ private struct WebHostTargetsBridgeResponse: Codable, Equatable {
     let source: WebBridgeSource
     let targets: [WebHostTarget]
     let commandOutputs: [WebBridgeCommandOutput]
+}
+
+private struct WebHostTargetDiscoveryPlan {
+    let platform: HostDevicePlatform
+    let scope: HostDeviceScope
+    let command: String
 }
 
 private struct WebIOSSimulatorTarget: Codable, Equatable {
@@ -687,21 +696,17 @@ private struct WebHostLogsBridgeResponse: Codable, Equatable {
 }
 
 private func makeWebHostTargetsBridgeResponse(hdc: String = "hdc", adb: String = "adb") -> WebHostTargetsBridgeResponse {
-    let platforms: [(HostDevicePlatform, String)] = [
-        (.ios, "triton sim list --json"),
-        (.android, "triton device list --platform android --json"),
-        (.harmony, "triton device list --platform harmony --json"),
-    ]
+    let plans = webHostTargetDiscoveryPlans()
     var targets: [WebHostTarget] = []
     var outputs: [WebBridgeCommandOutput] = []
-    for (platform, command) in platforms {
+    for plan in plans {
         do {
-            let discovered = try hostDeviceTargets(platform: platform, scope: webHostDeviceScope(for: platform), hdc: hdc, adb: adb).targets
-            targets.append(contentsOf: discovered.filter { $0.ready }.map(webHostTarget(from:)))
+            let discovered = try hostDeviceTargets(platform: plan.platform, scope: plan.scope, hdc: hdc, adb: adb).targets
+            targets.append(contentsOf: discovered.filter(shouldExposeWebHostTarget).map(webHostTarget(from:)))
             outputs.append(WebBridgeCommandOutput(
-                id: platform.rawValue,
-                platform: platform.rawValue,
-                command: command,
+                id: "\(plan.platform.rawValue)-\(plan.scope.rawValue)",
+                platform: plan.platform.rawValue,
+                command: plan.command,
                 ok: true,
                 exitCode: 0,
                 stdout: "",
@@ -709,9 +714,9 @@ private func makeWebHostTargetsBridgeResponse(hdc: String = "hdc", adb: String =
             ))
         } catch {
             outputs.append(WebBridgeCommandOutput(
-                id: platform.rawValue,
-                platform: platform.rawValue,
-                command: command,
+                id: "\(plan.platform.rawValue)-\(plan.scope.rawValue)",
+                platform: plan.platform.rawValue,
+                command: plan.command,
                 ok: false,
                 exitCode: nil,
                 stdout: "",
@@ -722,10 +727,33 @@ private func makeWebHostTargetsBridgeResponse(hdc: String = "hdc", adb: String =
     return WebHostTargetsBridgeResponse(
         ok: outputs.contains(where: \.ok),
         capturedAt: isoTimestamp(),
-        source: WebBridgeSource(command: nil, commands: platforms.map(\.1), runtimeScope: "host-emulator", readonly: true),
+        source: WebBridgeSource(command: nil, commands: plans.map(\.command), runtimeScope: "host-device", readonly: true),
         targets: targets.sorted { $0.id < $1.id },
         commandOutputs: outputs
     )
+}
+
+private func webHostTargetDiscoveryPlans() -> [WebHostTargetDiscoveryPlan] {
+    [
+        WebHostTargetDiscoveryPlan(platform: .ios, scope: .simulator, command: "triton sim list --json"),
+        WebHostTargetDiscoveryPlan(platform: .ios, scope: .real, command: "triton device list --platform ios --scope real --json"),
+        WebHostTargetDiscoveryPlan(platform: .android, scope: .emulator, command: "triton device list --platform android --scope emulator --json"),
+        WebHostTargetDiscoveryPlan(platform: .android, scope: .real, command: "triton device list --platform android --scope real --json"),
+        WebHostTargetDiscoveryPlan(platform: .harmony, scope: .emulator, command: "triton device list --platform harmony --scope emulator --json"),
+        WebHostTargetDiscoveryPlan(platform: .harmony, scope: .real, command: "triton device list --platform harmony --scope real --json"),
+    ]
+}
+
+private func shouldExposeWebHostTarget(_ target: HostDeviceTarget) -> Bool {
+    if target.scope == HostDeviceScope.real.rawValue || target.kind == "real-device" {
+        return target.ready && hasDirectWebRealDeviceConnection(target)
+    }
+    return target.ready
+}
+
+private func hasDirectWebRealDeviceConnection(_ target: HostDeviceTarget) -> Bool {
+    let transport = target.transport?.lowercased()
+    return transport == "wired" || transport == "usb"
 }
 
 private func makeWebIOSSimulatorTargetsBridgeResponse() -> WebIOSSimulatorTargetsBridgeResponse {
@@ -738,9 +766,35 @@ private func makeWebIOSSimulatorTargetsBridgeResponse() -> WebIOSSimulatorTarget
     )
 }
 
-private func makeWebHostScreenshotBridgeResponse(platform: String, target: String) throws -> WebHostScreenshotBridgeResponse {
+private func makeWebHostScreenshotBridgeResponse(
+    platform: String,
+    target: String,
+    scope: String? = nil,
+    kind: String? = nil,
+    source: String? = nil
+) async throws -> WebHostScreenshotBridgeResponse {
     guard let hostPlatform = HostDevicePlatform(rawValue: platform) else {
         throw RuntimeError("Unsupported host platform: \(platform).")
+    }
+    if isWebIOSRuntimeMirror(platform: hostPlatform, scope: scope, kind: kind, source: source) {
+        let client = TritonKitHTTPClient(host: "127.0.0.1", port: 19421)
+        let data = try await client.request(type: "screenshot")
+        let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
+        let imageData = try await screenshotImageData(screenshot, client: client)
+        return WebHostScreenshotBridgeResponse(
+            ok: true,
+            simulator: target,
+            source: WebBridgeSource(
+                command: "triton screenshot --output <artifact> --json",
+                commands: nil,
+                runtimeScope: "app-runtime",
+                readonly: true
+            ),
+            artifact: "",
+            pixelWidth: Int(screenshot.width.rounded()),
+            pixelHeight: Int(screenshot.height.rounded()),
+            dataUrl: "data:image/png;base64,\(imageData.base64EncodedString())"
+        )
     }
     let id = webHostDeviceTargetID(HostDeviceTarget(
         platform: platform,
@@ -770,6 +824,32 @@ private func makeWebHostScreenshotBridgeResponse(platform: String, target: Strin
         pixelHeight: screenshot.height,
         dataUrl: "data:\(screenshot.contentType);base64,\(screenshot.data.base64EncodedString())"
     )
+}
+
+private func makeWebHostInputBridgeResponse(
+    platform: String,
+    scope: String? = nil,
+    kind: String? = nil,
+    source: String? = nil,
+    input: TKInputRequest
+) async throws -> TKInputResult {
+    guard let hostPlatform = HostDevicePlatform(rawValue: platform),
+          isWebIOSRuntimeMirror(platform: hostPlatform, scope: scope, kind: kind, source: source) else {
+        return .unsupported(
+            action: input.type.rawValue,
+            message: "Web host input is only enabled for iOS real-device App runtime mirror targets in this bridge."
+        )
+    }
+    return try await executeInputRequest(input, client: TritonKitHTTPClient(host: "127.0.0.1", port: 19421))
+}
+
+private func isWebIOSRuntimeMirror(
+    platform: HostDevicePlatform,
+    scope: String?,
+    kind: String?,
+    source: String?
+) -> Bool {
+    platform == .ios && (source == "runtime" || scope == HostDeviceScope.real.rawValue || kind == "real-device")
 }
 
 private func makeWebHostLogsBridgeResponse(tritonBin: String, platform: String, target: String) throws -> WebHostLogsBridgeResponse {
@@ -819,11 +899,14 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
     router.get("/web/host-screenshot") { request, _ -> Response in
         let platform = request.uri.queryParameters.get("platform") ?? ""
         let target = request.uri.queryParameters.get("target") ?? ""
+        let scope = request.uri.queryParameters.get("scope")
+        let kind = request.uri.queryParameters.get("kind")
+        let source = request.uri.queryParameters.get("source")
         guard !platform.isEmpty, !target.isEmpty else {
             return jsonError(code: "invalid_query", message: "platform and target are required.", endpoint: "/web/host-screenshot", status: .badRequest)
         }
         do {
-            return jsonResponse(try makeWebHostScreenshotBridgeResponse(platform: platform, target: target))
+            return jsonResponse(try await makeWebHostScreenshotBridgeResponse(platform: platform, target: target, scope: scope, kind: kind, source: source))
         } catch {
             return jsonError(code: "web_host_screenshot_failed", message: "\(error)", endpoint: "/web/host-screenshot", status: .conflict)
         }
@@ -834,7 +917,7 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
             return jsonError(code: "invalid_query", message: "simulator is required.", endpoint: "/web/ios-simulator/screenshot", status: .badRequest)
         }
         do {
-            return jsonResponse(try makeWebHostScreenshotBridgeResponse(platform: HostDevicePlatform.ios.rawValue, target: simulator))
+            return jsonResponse(try await makeWebHostScreenshotBridgeResponse(platform: HostDevicePlatform.ios.rawValue, target: simulator, scope: HostDeviceScope.simulator.rawValue, kind: "simulator", source: "host"))
         } catch {
             return jsonError(code: "web_ios_simulator_screenshot_failed", message: "\(error)", endpoint: "/web/ios-simulator/screenshot", status: .conflict)
         }
@@ -854,8 +937,23 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
             return jsonError(code: "web_host_logs_failed", message: "\(error)", endpoint: "/web/host-logs", status: .conflict)
         }
     }
-    router.post("/web/host-input") { _, _ -> Response in
-        jsonResponse(webReadonlyInputResponse(), status: .methodNotAllowed)
+    router.post("/web/host-input") { request, _ -> Response in
+        let platform = request.uri.queryParameters.get("platform") ?? ""
+        let scope = request.uri.queryParameters.get("scope")
+        let kind = request.uri.queryParameters.get("kind")
+        let source = request.uri.queryParameters.get("source")
+        var bodyData = Data()
+        for try await chunk in request.body {
+            bodyData.append(Data(buffer: chunk))
+        }
+        guard let input = try? JSONDecoder().decode(TKInputRequest.self, from: bodyData) else {
+            return jsonError(code: "invalid_payload", message: "Unsupported input payload", endpoint: "/web/host-input", status: .badRequest)
+        }
+        do {
+            return jsonResponse(try await makeWebHostInputBridgeResponse(platform: platform, scope: scope, kind: kind, source: source, input: input))
+        } catch {
+            return jsonError(code: "web_host_input_failed", message: "\(error)", endpoint: "/web/host-input", status: .conflict)
+        }
     }
     router.get("/web/host-input") { _, _ -> Response in
         jsonResponse(webReadonlyInputResponse(), status: .methodNotAllowed)
@@ -948,8 +1046,11 @@ private func webHostTarget(from target: HostDeviceTarget) -> WebHostTarget {
         ready: target.ready,
         scope: target.scope ?? "",
         kind: target.kind ?? "",
+        transport: target.transport,
         source: target.source,
-        readonly: true
+        readonly: true,
+        blockedReasons: target.blockedReasons,
+        sensitive: target.sensitive
     )
 }
 

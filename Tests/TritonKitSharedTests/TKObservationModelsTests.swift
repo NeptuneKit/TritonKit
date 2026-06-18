@@ -414,7 +414,7 @@ struct TKObservationModelsTests {
             providerStatus: "available",
             bridgeStatus: "page-bridge-required",
             capabilities: ["webview.current-url", "webview.snapshot", "webview.events"],
-            missingCapabilities: ["webview.dom-input", "webview.contenteditable-typing"],
+            missingCapabilities: ["webview.bridge-call", "webview.tap"],
             providerCapabilities: TKWebViewProviderCapabilities.iosRuntimeDefaults()
         )
 
@@ -425,10 +425,10 @@ struct TKObservationModelsTests {
         #expect(decoded.providerCapabilities?.supportsSnapshot.supported == true)
         #expect(decoded.providerCapabilities?.supportsEvents.reason == "page bridge event buffer is available after bridge installation")
         #expect(decoded.providerCapabilities?.supportsBridgeCall.nextAction?.command == "webview")
-        #expect(decoded.providerCapabilities?.supportsDOMInput.supported == false)
-        #expect(decoded.providerCapabilities?.supportsDOMInput.reason == "generic DOM input is out of scope for the embedded iOS provider")
-        #expect(decoded.providerCapabilities?.supportsDOMInput.nextAction?.args == ["snapshot", "--include", "metadata,text,dom,forms", "--json"])
-        #expect(decoded.providerCapabilities?.supportsContentEditableTyping.supported == false)
+        #expect(decoded.providerCapabilities?.supportsDOMInput.supported == true)
+        #expect(decoded.providerCapabilities?.supportsDOMInput.reason == "focused activeElement text insertion is supported after runtime focus")
+        #expect(decoded.providerCapabilities?.supportsDOMInput.nextAction?.args == ["--json"])
+        #expect(decoded.providerCapabilities?.supportsContentEditableTyping.supported == true)
     }
 
     @Test("WebView request types and Harmony runtime routes are stable")

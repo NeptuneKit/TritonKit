@@ -145,7 +145,7 @@ public enum TKXcodeDiscoveryError: Error, Equatable {
 
 public enum TKXcodebuildCommand {
     public static func listSchemes(workspace: String?, project: String?) -> TKHostCommand {
-        TKHostCommand(
+        return TKHostCommand(
             executable: "xcodebuild",
             arguments: containerArguments(workspace: workspace, project: project) + ["-list", "-json"],
             defaultTimeoutSeconds: 60
@@ -183,19 +183,25 @@ public enum TKXcodebuildCommand {
         configuration: String,
         sdk: String?,
         destination: String?,
-        derivedDataPath: String?
+        derivedDataPath: String?,
+        allowProvisioningUpdates: Bool = false
     ) -> TKHostCommand {
-        TKHostCommand(
+        var arguments = buildArguments(
+            workspace: workspace,
+            project: project,
+            scheme: scheme,
+            configuration: configuration,
+            sdk: sdk,
+            destination: destination,
+            derivedDataPath: derivedDataPath
+        )
+        if allowProvisioningUpdates {
+            arguments.append("-allowProvisioningUpdates")
+        }
+        arguments.append("build")
+        return TKHostCommand(
             executable: "xcodebuild",
-            arguments: buildArguments(
-                workspace: workspace,
-                project: project,
-                scheme: scheme,
-                configuration: configuration,
-                sdk: sdk,
-                destination: destination,
-                derivedDataPath: derivedDataPath
-            ) + ["build"],
+            arguments: arguments,
             riskLevel: .automation,
             requiredConfig: [.timeout, .auditRecord],
             defaultTimeoutSeconds: 900

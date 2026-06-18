@@ -102,4 +102,8 @@ echo "==> Start Web dev server"
 echo "TRITONKIT_TRITON_BIN=$triton_bin"
 echo "URL: http://127.0.0.1:34127/"
 
-exec env TRITONKIT_TRITON_BIN="$triton_bin" npm --prefix "$root/Web" run dev -- "${extra_vite_args[@]}"
+if (( ${#extra_vite_args[@]} > 0 )); then
+  exec env TRITONKIT_TRITON_BIN="$triton_bin" npm --prefix "$root/Web" run dev -- "${extra_vite_args[@]}"
+else
+  exec env TRITONKIT_TRITON_BIN="$triton_bin" npm --prefix "$root/Web" run dev --
+fi

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import { chmod, mkdtemp, writeFile } from "node:fs/promises";
+import { createServer as createTestHttpServer } from "node:http";
 import { join } from "node:path";
 import test from "node:test";
 import { tmpdir } from "node:os";
@@ -62,7 +63,7 @@ test("rejects malformed triton sim list output", () => {
   );
 });
 
-test("maps only ready emulator targets for Android and Harmony", () => {
+test("maps ready emulator targets and visible real devices for Android and Harmony", () => {
   const result = mapTritonDeviceListToWebTargets(
     {
       ok: true,
@@ -87,6 +88,8 @@ test("maps only ready emulator targets for Android and Harmony", () => {
           scope: "real",
           kind: "real-device",
           state: "device",
+          transport: "usb",
+          blockedReasons: [],
         },
         {
           id: "android:emulator-5556",
@@ -101,12 +104,69 @@ test("maps only ready emulator targets for Android and Harmony", () => {
     "android"
   );
 
-  assert.equal(result.length, 1);
+  assert.equal(result.length, 2);
   assert.equal(result[0].id, "android:emulator-5554");
   assert.equal(result[0].platform, "android");
   assert.equal(result[0].appName, "Overloaded");
   assert.equal(result[0].bundleIdentifier, "overloaded.cn.debug");
   assert.equal(result[0].ready, true);
+  assert.equal(result[1].id, "android:RF8N");
+  assert.equal(result[1].scope, "real");
+  assert.equal(result[1].kind, "real-device");
+  assert.equal(result[1].ready, true);
+  assert.equal(result[1].transport, "usb");
+});
+
+test("filters non-ready real devices from the visible device list", () => {
+  const result = mapTritonDeviceListToWebTargets(
+    {
+      ok: true,
+      targets: [
+        {
+          id: "ios:00008140-redacted",
+          target: "00008140-redacted",
+          name: "Lin iPhone",
+          platform: "ios",
+          runtime: "iOS 18.5",
+          ready: false,
+          scope: "real",
+          kind: "real-device",
+          state: "device_not_trusted",
+          source: "devicectl",
+          blockedReasons: ["device_not_trusted"],
+        },
+      ],
+    },
+    "ios"
+  );
+
+  assert.equal(result.length, 0);
+});
+
+test("filters ready real devices without direct wired or usb transport", () => {
+  const result = mapTritonDeviceListToWebTargets(
+    {
+      ok: true,
+      targets: [
+        {
+          id: "ios:wireless",
+          target: "ios-real:wireless",
+          name: "Wireless iPhone",
+          platform: "ios",
+          runtime: "iOS 27.0",
+          ready: true,
+          scope: "real",
+          kind: "real-device",
+          state: "connected",
+          source: "devicectl",
+          transport: "localNetwork",
+        },
+      ],
+    },
+    "ios"
+  );
+
+  assert.equal(result.length, 0);
 });
 
 test("combines iOS, Android, and Harmony host captures for visible target switching", () => {
@@ -137,9 +197,35 @@ test("combines iOS, Android, and Harmony host captures for visible target switch
       },
     },
     {
+      id: "ios-real-command",
+      platform: "ios",
+      command: "triton device list --platform ios --scope real --json",
+      ok: true,
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      parsed: {
+        ok: true,
+        targets: [
+          {
+            id: "ios:00008140-redacted",
+            target: "00008140-redacted",
+            name: "Lin iPhone",
+            runtime: "iOS 18.5",
+            ready: true,
+            scope: "real",
+            kind: "real-device",
+            state: "Ready",
+            source: "devicectl",
+            transport: "wired",
+          },
+        ],
+      },
+    },
+    {
       id: "android-command",
       platform: "android",
-      command: "triton device list --platform android --json",
+      command: "triton device list --platform android --scope emulator --json",
       ok: true,
       exitCode: 0,
       stdout: "",
@@ -165,7 +251,7 @@ test("combines iOS, Android, and Harmony host captures for visible target switch
     {
       id: "harmony-command",
       platform: "harmony",
-      command: "triton device list --platform harmony --json",
+      command: "triton device list --platform harmony --scope emulator --json",
       ok: true,
       exitCode: 0,
       stdout: "",
@@ -193,13 +279,15 @@ test("combines iOS, Android, and Harmony host captures for visible target switch
   assert.equal(result.ok, true);
   assert.deepEqual(result.source.commands, [
     "triton sim list --json",
-    "triton device list --platform android --json",
-    "triton device list --platform harmony --json",
+    "triton device list --platform ios --scope real --json",
+    "triton device list --platform android --scope emulator --json",
+    "triton device list --platform harmony --scope emulator --json",
   ]);
   assert.deepEqual(
     result.targets.map((target) => `${target.platform}:${target.name}:${target.bundleIdentifier ?? target.target}`),
     [
       "ios:iPhone 15 Pro:AAAA-BBBB",
+      "ios:Lin iPhone:00008140-redacted",
       "android:Pixel API 35:overloaded.cn.debug",
       "harmony:DevEco Local:com.tritonkit.demo",
     ]
@@ -283,22 +371,92 @@ test("server-renders error fallback notice markup when host bridge request fails
   assert.match(markup, /<span>Host targets request failed: 502<\/span>/);
 });
 
-test("keeps Web host input POST route readonly with 405 semantics", async () => {
-  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath: process.execPath });
+test("dispatches iOS real-device Web input through App runtime", async () => {
+  const tritonPath = await createFakeTritonScript({
+    stdout: JSON.stringify({ ok: true, action: "tap", message: "Tapped through runtime" }),
+    outputTemplate: "unused",
+  });
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
   const response = await invokeMiddleware(middleware, {
     method: "POST",
-    url: "/web/host-input",
+    url: "/web/host-input?platform=ios&target=ios-real%3Aabc&scope=real&kind=real-device&source=runtime",
+    body: JSON.stringify({ type: "tap", x: 20, y: 40 }),
   });
 
-  assert.equal(response.statusCode, 405);
+  assert.equal(response.statusCode, 200);
   assert.match(response.headers["content-type"], /application\/json/);
   assert.deepEqual(JSON.parse(response.body), {
-    ok: false,
-    error: {
-      code: "web_host_input_readonly",
-      message: "TritonKit Web mock is readonly; use CLI or HTTP runtime contracts for host input.",
-    },
+    ok: true,
+    action: "tap",
+    message: "Tapped through runtime",
   });
+});
+
+test("proxies iOS Simulator Web input through triton serve host target route", async () => {
+  const received = [];
+  const server = await createFakeHostInputServer(received, {
+    ok: true,
+    action: "tap",
+    message: "iOS Simulator tap was submitted through Triton host-HID adapter.",
+  });
+  const middleware = createIosSimulatorBridgeMiddleware({
+    tritonPath: process.execPath,
+    hostInputBaseURL: server.baseURL,
+  });
+
+  try {
+    const response = await invokeMiddleware(middleware, {
+      method: "POST",
+      url: "/web/host-input?platform=ios&target=AAAA-BBBB&scope=simulator&kind=simulator&source=host",
+      body: JSON.stringify({ type: "tap", x: 180, y: 410, width: 390, height: 844 }),
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(JSON.parse(response.body), {
+      ok: true,
+      action: "tap",
+      message: "iOS Simulator tap was submitted through Triton host-HID adapter.",
+    });
+    assert.deepEqual(received, [
+      {
+        method: "POST",
+        pathname: "/web/input",
+        target: "host:ios:AAAA-BBBB",
+        body: { type: "tap", x: 180, y: 410, width: 390, height: 844 },
+      },
+    ]);
+  } finally {
+    await server.close();
+  }
+});
+
+test("captures iOS real-device Web screenshot from App runtime mirror", async () => {
+  const tritonPath = await createFakeTritonScript({
+    stdout: JSON.stringify({
+      ok: true,
+      format: "png",
+      width: 12,
+      height: 8,
+      scale: 1,
+      output: "__OUTPUT__",
+      bytes: 24,
+    }),
+    outputTemplate: pngBytes(12, 8),
+  });
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "GET",
+    url: "/web/host-screenshot?platform=ios&target=ios-real%3Aabc&scope=real&kind=real-device&source=runtime",
+  });
+
+  assert.equal(response.statusCode, 200);
+  const body = JSON.parse(response.body);
+  assert.equal(body.ok, true);
+  assert.equal(body.source.runtimeScope, "app-runtime");
+  assert.match(body.source.command, /^triton screenshot --output /);
+  assert.equal(body.pixelWidth, 12);
+  assert.equal(body.pixelHeight, 8);
+  assert.match(body.dataUrl, /^data:image\/png;base64,/);
 });
 
 test("forces /web/host-targets failure for dev browser fallback smoke", async () => {
@@ -414,11 +572,51 @@ function invokeMiddleware(middleware, request) {
         {
           method: request.method,
           url: request.url,
+          on(event, callback) {
+            if (event === "data" && request.body) {
+              callback(Buffer.from(request.body));
+            }
+            if (event === "end") {
+              queueMicrotask(callback);
+            }
+            return this;
+          },
         },
         response,
         () => reject(new Error("readonly host input route should not call next()"))
       )
     ).catch(reject);
+  });
+}
+
+function createFakeHostInputServer(received, responseBody) {
+  return new Promise((resolve, reject) => {
+    const server = createTestHttpServer((req, res) => {
+      const url = new URL(req.url ?? "/", "http://127.0.0.1");
+      let body = "";
+      req.on("data", (chunk) => {
+        body += chunk;
+      });
+      req.on("end", () => {
+        received.push({
+          method: req.method,
+          pathname: url.pathname,
+          target: url.searchParams.get("target"),
+          body: JSON.parse(body || "{}"),
+        });
+        res.statusCode = 200;
+        res.setHeader("content-type", "application/json");
+        res.end(JSON.stringify(responseBody));
+      });
+    });
+    server.on("error", reject);
+    server.listen(0, "127.0.0.1", () => {
+      const address = server.address();
+      resolve({
+        baseURL: `http://127.0.0.1:${address.port}`,
+        close: () => new Promise((resolveClose, rejectClose) => server.close((error) => error ? rejectClose(error) : resolveClose())),
+      });
+    });
   });
 }
 
@@ -432,7 +630,7 @@ const artifactIndex = process.argv.indexOf("--output");
 if (artifactIndex >= 0) {
   const outputPath = process.argv[artifactIndex + 1];
   if (outputPath) {
-    writeFileSync(outputPath, ${JSON.stringify(outputTemplate)});
+    writeFileSync(outputPath, Buffer.from(${JSON.stringify(Buffer.from(outputTemplate).toString("base64"))}, "base64"));
   }
 }
 
@@ -445,4 +643,12 @@ process.stdout.write(JSON.stringify(payload));
   await writeFile(scriptPath, script, "utf8");
   await chmod(scriptPath, 0o755);
   return scriptPath;
+}
+
+function pngBytes(width, height) {
+  const buffer = Buffer.alloc(24);
+  Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]).copy(buffer, 0);
+  buffer.writeUInt32BE(width, 16);
+  buffer.writeUInt32BE(height, 20);
+  return buffer;
 }

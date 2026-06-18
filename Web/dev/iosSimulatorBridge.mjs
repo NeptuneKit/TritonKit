@@ -8,6 +8,8 @@ import { spawn } from "node:child_process";
 import { tmpdir } from "node:os";
 
 const bridgeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
+const defaultHostInputBaseURL = "http://127.0.0.1:19421";
+let managedTritonServeProcess;
 
 export function mapTritonSimListToWebTargets(payload) {
   if (!payload || !Array.isArray(payload.simulators)) {
@@ -56,7 +58,7 @@ export function mapTritonDeviceListToWebTargets(payload, platform) {
   }
 
   return payload.targets
-    .filter((target) => Boolean(target.ready) && target.scope === "emulator" && target.kind === "emulator")
+    .filter((target) => shouldExposeHostDeviceTarget(target))
     .map((target) => ({
       id: String(target.id ?? `${platform}:${target.target}`),
       target: String(target.target ?? ""),
@@ -70,14 +72,32 @@ export function mapTritonDeviceListToWebTargets(payload, platform) {
       ready: Boolean(target.ready),
       scope: String(target.scope ?? "emulator"),
       kind: String(target.kind ?? "emulator"),
+      transport: normalizeOptionalString(target.transport),
       source: String(target.source ?? platform),
       readonly: true,
+      blockedReasons: Array.isArray(target.blockedReasons) ? target.blockedReasons.map(String) : [],
+      sensitive: Boolean(target.sensitive),
     }));
+}
+
+function shouldExposeHostDeviceTarget(target) {
+  const scope = String(target.scope ?? "");
+  const kind = String(target.kind ?? "");
+  if (scope === "real" || kind === "real-device") {
+    return Boolean(target.ready) && hasDirectRealDeviceConnection(target);
+  }
+  return Boolean(target.ready) && (scope === "emulator" || scope === "simulator" || kind === "emulator" || kind === "simulator");
+}
+
+function hasDirectRealDeviceConnection(target) {
+  const transport = String(target.transport ?? "").toLowerCase();
+  return transport === "wired" || transport === "usb";
 }
 
 export function createIosSimulatorBridgeMiddleware(options = {}) {
   const root = options.root ? resolve(options.root) : bridgeRoot;
   const tritonPath = options.tritonPath ? resolve(options.tritonPath) : resolveTritonBinary(root);
+  const hostInputBaseURL = options.hostInputBaseURL || defaultHostInputBaseURL;
 
   return async function iosSimulatorBridgeMiddleware(req, res, next) {
     if (!req.url?.startsWith("/web/")) {
@@ -165,19 +185,38 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
       if (url.pathname === "/web/host-screenshot") {
         const platform = url.searchParams.get("platform") || "ios";
         const target = url.searchParams.get("target") || "booted";
-        const screenshot = await captureHostScreenshot(tritonPath, platform, target);
-        sendJSON(res, 200, screenshot);
+        const scope = url.searchParams.get("scope") || "";
+        const kind = url.searchParams.get("kind") || "";
+        const source = url.searchParams.get("source") || "";
+        try {
+          const screenshot = await captureHostScreenshot(tritonPath, platform, target, { scope, kind, source });
+          sendJSON(res, 200, screenshot);
+        } catch (error) {
+          sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source }, error, "screenshot"));
+        }
         return;
       }
 
       if (url.pathname === "/web/host-input" && req.method === "POST") {
-        sendJSON(res, 405, {
-          ok: false,
-          error: {
-            code: "web_host_input_readonly",
-            message: "TritonKit Web mock is readonly; use CLI or HTTP runtime contracts for host input.",
-          },
-        });
+        const platform = url.searchParams.get("platform") || "ios";
+        const target = url.searchParams.get("target") || "local";
+        const scope = url.searchParams.get("scope") || "";
+        const kind = url.searchParams.get("kind") || "";
+        const source = url.searchParams.get("source") || "";
+        const body = await readRequestBody(req);
+        const input = JSON.parse(body || "{}");
+        try {
+          const result = await dispatchHostInput(tritonPath, platform, target, input, {
+            scope,
+            kind,
+            source,
+            hostInputBaseURL,
+            manageHostInputServer: !options.hostInputBaseURL,
+          });
+          sendJSON(res, 200, result);
+        } catch (error) {
+          sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source }, error, "input"));
+        }
         return;
       }
 
@@ -196,46 +235,68 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
 }
 
 async function collectHostTargets(tritonPath) {
-  const ios = await runTritonCapture(tritonPath, ["sim", "list", "--json"], "ios");
-  const android = await runTritonCapture(tritonPath, ["device", "list", "--platform", "android", "--json"], "android");
-  const harmony = await runTritonCapture(tritonPath, ["device", "list", "--platform", "harmony", "--json"], "harmony");
+  const captures = [];
+  for (const plan of hostTargetCapturePlans()) {
+    captures.push(await runTritonCapture(tritonPath, plan.args, plan.platform));
+  }
 
-  return mapTritonHostCapturesToWebTargets([ios, android, harmony]);
+  return mapTritonHostCapturesToWebTargets(captures);
+}
+
+function hostTargetCapturePlans() {
+  return [
+    { platform: "ios", args: ["sim", "list", "--json"] },
+    { platform: "ios", args: ["device", "list", "--platform", "ios", "--scope", "real", "--json"] },
+    { platform: "android", args: ["device", "list", "--platform", "android", "--scope", "emulator", "--json"] },
+    { platform: "android", args: ["device", "list", "--platform", "android", "--scope", "real", "--json"] },
+    { platform: "harmony", args: ["device", "list", "--platform", "harmony", "--scope", "emulator", "--json"] },
+    { platform: "harmony", args: ["device", "list", "--platform", "harmony", "--scope", "real", "--json"] },
+  ];
 }
 
 export function mapTritonHostCapturesToWebTargets(captures) {
-  const [ios, android, harmony] = captures;
-  const iosTargets = ios?.parsed ? mapTritonSimListToWebTargets(ios.parsed).simulators.map((target) => ({
-    id: target.id,
-    target: target.udid,
-    name: target.name,
-    platform: "ios",
-    appName: normalizeOptionalString(target.appName),
-    bundleIdentifier: normalizeOptionalString(target.bundleIdentifier ?? target.bundleId),
-    runtime: target.runtime,
-    state: target.state,
-    statusLabel: target.statusLabel,
-    ready: target.isBooted,
-    scope: "emulator",
-    kind: "emulator",
-    source: target.source,
-    readonly: true,
-  })) : [];
-  const androidTargets = android?.parsed ? mapTritonDeviceListToWebTargets(android.parsed, "android") : [];
-  const harmonyTargets = harmony?.parsed ? mapTritonDeviceListToWebTargets(harmony.parsed, "harmony") : [];
-  const commandOutputs = [ios, android, harmony].map(({ parsed, ...output }) => output);
+  const targets = captures.flatMap((capture) => mapHostCaptureToWebTargets(capture));
+  const commandOutputs = captures.map(({ parsed, ...output }) => output);
 
   return {
     ok: commandOutputs.every((output) => output.ok),
     capturedAt: new Date().toISOString(),
     source: {
       commands: commandOutputs.map((output) => output.command),
-      runtimeScope: "host-emulator",
+      runtimeScope: "host-device",
       readonly: true,
     },
-    targets: [...iosTargets, ...androidTargets, ...harmonyTargets],
+    targets,
     commandOutputs,
   };
+}
+
+function mapHostCaptureToWebTargets(capture) {
+  if (!capture?.parsed) return [];
+  if (Array.isArray(capture.parsed.simulators)) {
+    return mapTritonSimListToWebTargets(capture.parsed).simulators.map((target) => ({
+      id: target.id,
+      target: target.udid,
+      name: target.name,
+      platform: "ios",
+      appName: normalizeOptionalString(target.appName),
+      bundleIdentifier: normalizeOptionalString(target.bundleIdentifier ?? target.bundleId),
+      runtime: target.runtime,
+      state: target.state,
+      statusLabel: target.statusLabel,
+      ready: target.isBooted,
+      scope: "simulator",
+      kind: "simulator",
+      source: target.source,
+      readonly: true,
+      blockedReasons: [],
+      sensitive: false,
+    }));
+  }
+  if (Array.isArray(capture.parsed.targets)) {
+    return mapTritonDeviceListToWebTargets(capture.parsed, capture.platform);
+  }
+  return [];
 }
 
 function normalizeOptionalString(value) {
@@ -246,12 +307,14 @@ function normalizeOptionalString(value) {
   return text.length > 0 ? text : null;
 }
 
-async function captureHostScreenshot(tritonPath, platform, target) {
+async function captureHostScreenshot(tritonPath, platform, target, options = {}) {
   const outputDir = join(tmpdir(), `tritonkit-web-host-${randomUUID()}`);
-  const outputPath = join(outputDir, "screenshot.bin");
+  const outputPath = join(outputDir, isIOSRuntimeMirror(platform, options) ? "screenshot.png" : "screenshot.bin");
   await mkdir(outputDir, { recursive: true });
   try {
-    const args = platform === "ios"
+    const args = isIOSRuntimeMirror(platform, options)
+      ? ["screenshot", "--output", outputPath, "--json"]
+      : platform === "ios"
       ? ["sim", "screenshot", "--simulator", target, "--output", outputPath, "--json"]
       : ["device", "screenshot", "--platform", platform, "--device", target, "--output", outputPath, "--json"];
     const payload = await runTritonJSON(tritonPath, args);
@@ -263,7 +326,7 @@ async function captureHostScreenshot(tritonPath, platform, target) {
       simulator: target,
       source: {
         command: `triton ${args.join(" ")}`,
-        runtimeScope: platform === "ios" ? "host-simulator" : `host-${platform}`,
+        runtimeScope: isIOSRuntimeMirror(platform, options) ? "app-runtime" : platform === "ios" ? "host-simulator" : `host-${platform}`,
         readonly: true,
       },
       artifact: payload.artifact,
@@ -274,6 +337,122 @@ async function captureHostScreenshot(tritonPath, platform, target) {
   } finally {
     await rm(outputDir, { recursive: true, force: true });
   }
+}
+
+function isIOSRuntimeMirror(platform, options = {}) {
+  return platform === "ios" && (options.source === "runtime" || options.scope === "real" || options.kind === "real-device");
+}
+
+function webHostRuntimeError(platform, options, error, action) {
+  const runtimeMirror = isIOSRuntimeMirror(platform, options);
+  return {
+    ok: false,
+    error: {
+      code: runtimeMirror ? "app_runtime_unavailable" : `web_host_${action}_failed`,
+      message: error instanceof Error ? error.message : String(error),
+      hint: runtimeMirror
+        ? "Start `triton serve --host 127.0.0.1 --port 19421`, launch a Debug app that embeds TritonKit runtime, then retry the App runtime mirror."
+        : "Verify the selected host target is ready and the platform screenshot/input command is supported.",
+    },
+  };
+}
+
+async function dispatchHostInput(tritonPath, platform, target, input, options = {}) {
+  if (isWebHostInputTarget(platform, options)) {
+    return dispatchHostTargetInput(tritonPath, platform, target, input, options);
+  }
+  if (!isIOSRuntimeMirror(platform, options)) {
+    return {
+      ok: false,
+      action: String(input?.type ?? "input"),
+      message: "Web host input is only enabled for iOS real-device App runtime mirror targets in this bridge.",
+    };
+  }
+  const result = await runCommand(tritonPath, ["input", "--json", "--summary"], {
+    stdin: `${JSON.stringify(input)}\n`,
+  });
+  if (result.exitCode !== 0) {
+    throw new Error(result.stderr || result.stdout || `triton input exited with ${result.exitCode}`);
+  }
+  const lines = result.stdout.split(/\r?\n/).map((line) => line.trim()).filter(Boolean);
+  const first = lines.map(tryParseJSON).find((record) => record && typeof record === "object" && "ok" in record);
+  if (!first) {
+    throw new Error("triton input did not return a JSON input result");
+  }
+  return first;
+}
+
+function isWebHostInputTarget(platform, options = {}) {
+  if (!["ios", "android", "harmony"].includes(platform)) return false;
+  if (isIOSRuntimeMirror(platform, options)) return false;
+  return options.scope === "simulator" ||
+    options.scope === "emulator" ||
+    options.source === "host" ||
+    options.kind === "simulator" ||
+    options.kind === "emulator";
+}
+
+async function dispatchHostTargetInput(tritonPath, platform, target, input, options = {}) {
+  if (options.manageHostInputServer) {
+    await ensureTritonServe(tritonPath, options.hostInputBaseURL || defaultHostInputBaseURL);
+  }
+  const targetID = `host:${platform}:${target}`;
+  const url = new URL("/web/input", options.hostInputBaseURL || defaultHostInputBaseURL);
+  url.searchParams.set("target", targetID);
+  const response = await fetch(url, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(await describeFetchBridgeError(response, "triton serve /web/input failed"));
+  }
+  return response.json();
+}
+
+async function ensureTritonServe(tritonPath, baseURL) {
+  if (await canReachTritonServe(baseURL)) return;
+  if (!managedTritonServeProcess || managedTritonServeProcess.exitCode !== null) {
+    const url = new URL(baseURL);
+    managedTritonServeProcess = spawn(tritonPath, [
+      "serve",
+      "--host",
+      url.hostname,
+      "--port",
+      String(url.port || 19421),
+    ], {
+      stdio: "ignore",
+    });
+    managedTritonServeProcess.once("error", () => {});
+  }
+
+  const deadline = Date.now() + 3000;
+  while (Date.now() < deadline) {
+    if (await canReachTritonServe(baseURL)) return;
+    await new Promise((resolve) => setTimeout(resolve, 100));
+  }
+  throw new Error(`triton serve did not become ready at ${baseURL}`);
+}
+
+async function canReachTritonServe(baseURL) {
+  try {
+    const response = await fetch(new URL("/health", baseURL), { signal: AbortSignal.timeout(500) });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function describeFetchBridgeError(response, fallback) {
+  try {
+    const payload = await response.json();
+    const error = payload?.error;
+    const parts = [error?.code, error?.message, error?.hint].filter(Boolean);
+    if (parts.length > 0) return parts.join(" · ");
+  } catch {
+    // Fall back to the HTTP status below.
+  }
+  return `${fallback}: ${response.status}`;
 }
 
 async function captureHostLogs(tritonPath, target) {
@@ -460,9 +639,9 @@ function readImageDimensions(buffer) {
   return { width: null, height: null };
 }
 
-function runCommand(command, args) {
+function runCommand(command, args, options = {}) {
   return new Promise((resolveCommand, reject) => {
-    const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(command, args, { stdio: [options.stdin === undefined ? "ignore" : "pipe", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     const timer = setTimeout(() => {
@@ -476,6 +655,9 @@ function runCommand(command, args) {
     child.stderr.on("data", (chunk) => {
       stderr += chunk.toString("utf8");
     });
+    if (options.stdin !== undefined) {
+      child.stdin.end(options.stdin);
+    }
     child.on("error", (error) => {
       clearTimeout(timer);
       reject(error);
@@ -484,6 +666,17 @@ function runCommand(command, args) {
       clearTimeout(timer);
       resolveCommand({ exitCode: exitCode ?? 1, stdout, stderr });
     });
+  });
+}
+
+function readRequestBody(req) {
+  return new Promise((resolveBody, reject) => {
+    let body = "";
+    req.on("data", (chunk) => {
+      body += chunk.toString("utf8");
+    });
+    req.on("end", () => resolveBody(body));
+    req.on("error", reject);
   });
 }
 

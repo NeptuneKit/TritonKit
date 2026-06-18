@@ -91,9 +91,10 @@ struct TKRuntimeWebViewSnapshotTests {
         #expect(capabilities.supportsBridgeCall.reason == "page must expose an allowlisted window.__tritonBridge.methods entry")
         #expect(capabilities.supportsBridgeCall.nextAction?.args == ["call", "<method>", "--json"])
         #expect(capabilities.supportsEvents.supported)
-        #expect(capabilities.supportsDOMInput.supported == false)
-        #expect(capabilities.supportsDOMInput.nextAction?.command == "webview")
-        #expect(capabilities.supportsContentEditableTyping.reason == "contenteditable typing is not provided by the embedded iOS provider")
+        #expect(capabilities.supportsDOMInput.supported)
+        #expect(capabilities.supportsDOMInput.nextAction?.command == "input")
+        #expect(capabilities.supportsContentEditableTyping.supported)
+        #expect(capabilities.supportsContentEditableTyping.reason == "focused contenteditable insertion is supported after runtime focus")
     }
 
     @Test("bridge method not allowed script includes recovery hint")

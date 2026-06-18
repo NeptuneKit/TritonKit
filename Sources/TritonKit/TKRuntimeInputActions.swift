@@ -6,18 +6,20 @@ import UIKit
 
 #if canImport(UIKit)
 @MainActor
-func performInput(_ request: TKInputRequest) -> TKInputResult {
+func performInput(_ request: TKInputRequest) async -> TKInputResult {
     switch request.type {
     case .tap:
         return performTap(request)
     case .swipe:
         return performSwipe(request)
     case .typeText:
-        return performExactTextInsertion(request)
+        return await performExactTextInsertion(request)
     case .paste:
-        return performExactTextInsertion(request)
+        return await performExactTextInsertion(request)
     case .clear:
         return performClear(request)
+    case .deleteBackward:
+        return await performDeleteBackward(request)
     case .button:
         return TKInputResult.unsupported(
             action: request.type.rawValue,
@@ -550,6 +552,9 @@ func performSwipe(_ request: TKInputRequest) -> TKInputResult {
     guard let view = resolved.view else {
         return TKInputResult.failure(action: action, message: resolved.message)
     }
+    if let slider = nearestSuperview(of: view, matching: UISlider.self) {
+        return performSliderDrag(slider, endX: endX, endY: endY, action: action)
+    }
     let scrollTarget = swipeScrollTarget(from: view, deltaX: deltaX, deltaY: deltaY)
     guard let scrollView = scrollTarget.view else {
         return TKInputResult.failure(
@@ -576,6 +581,22 @@ func performSwipe(_ request: TKInputRequest) -> TKInputResult {
         targetOID: oid(for: scrollView),
         targetClassName: NSStringFromClass(type(of: scrollView)),
         strategy: scrollTarget.strategy
+    )
+}
+
+@MainActor
+func performSliderDrag(_ slider: UISlider, endX: Double, endY: Double, action: String) -> TKInputResult {
+    let point = slider.convert(CGPoint(x: endX, y: endY), from: nil)
+    let ratio = Float(min(max(point.x / max(slider.bounds.width, 1), 0), 1))
+    let nextValue = slider.minimumValue + ratio * (slider.maximumValue - slider.minimumValue)
+    slider.setValue(nextValue, animated: false)
+    slider.sendActions(for: .valueChanged)
+    return TKInputResult.success(
+        action: action,
+        message: String(format: "Dragged UISlider value to %.2f", nextValue),
+        targetOID: oid(for: slider),
+        targetClassName: NSStringFromClass(type(of: slider)),
+        strategy: "slider-drag"
     )
 }
 
@@ -612,7 +633,7 @@ private extension UIScrollView {
 }
 
 @MainActor
-func performExactTextInsertion(_ request: TKInputRequest) -> TKInputResult {
+func performExactTextInsertion(_ request: TKInputRequest) async -> TKInputResult {
     let action = request.type.rawValue
     guard let text = request.text else {
         return TKInputResult.failure(action: action, message: "Missing text")
@@ -622,6 +643,28 @@ func performExactTextInsertion(_ request: TKInputRequest) -> TKInputResult {
     guard let responder = resolved.responder else {
         return TKInputResult.failure(action: action, message: resolved.message)
     }
+
+    #if canImport(WebKit)
+    if let webViewResult = await performFocusedWebViewTextInsertionIfAvailable(
+        responder: responder,
+        text: text,
+        action: action,
+        secure: request.secure == true
+    ) {
+        return webViewResult
+    }
+    #endif
+
+    return performUIKeyInputTextInsertion(request, responder: responder, text: text, action: action)
+}
+
+@MainActor
+func performUIKeyInputTextInsertion(
+    _ request: TKInputRequest,
+    responder: UIResponder,
+    text: String,
+    action: String
+) -> TKInputResult {
     guard let keyInput = responder as? UIKeyInput else {
         return TKInputResult.failure(
             action: action,
@@ -643,6 +686,54 @@ func performExactTextInsertion(_ request: TKInputRequest) -> TKInputResult {
         secure: secure,
         redacted: secure,
         insertedLength: text.count
+    )
+}
+
+@MainActor
+func performDeleteBackward(_ request: TKInputRequest) async -> TKInputResult {
+    let action = request.type.rawValue
+    let resolved = resolveTextInputResponder(request)
+    guard let responder = resolved.responder else {
+        return TKInputResult.failure(action: action, message: resolved.message)
+    }
+
+    #if canImport(WebKit)
+    if let webViewResult = await performFocusedWebViewDeleteBackwardIfAvailable(
+        responder: responder,
+        action: action
+    ) {
+        return webViewResult
+    }
+    #endif
+
+    guard let keyInput = responder as? UIKeyInput else {
+        return TKInputResult.failure(
+            action: action,
+            message: "Target does not conform to UIKeyInput",
+            targetOID: oid(for: responder),
+            targetClassName: NSStringFromClass(type(of: responder))
+        )
+    }
+
+    guard keyInput.hasText else {
+        return TKInputResult.success(
+            action: action,
+            message: "No text to delete",
+            targetOID: oid(for: responder),
+            targetClassName: NSStringFromClass(type(of: responder)),
+            deletedLength: 0
+        )
+    }
+
+    keyInput.deleteBackward()
+    notifyTextDidChange(for: responder)
+
+    return TKInputResult.success(
+        action: action,
+        message: "Deleted backward",
+        targetOID: oid(for: responder),
+        targetClassName: NSStringFromClass(type(of: responder)),
+        deletedLength: 1
     )
 }
 
@@ -811,7 +902,20 @@ func performSemanticAction(_ request: TKSemanticActionRequest) -> TKSemanticActi
                 redaction: semanticRedaction(secure: request.secure == true, length: text.count)
             )
         }
-        let inserted = performExactTextInsertion(input)
+        let insertedResolved = resolveTextInputResponder(input)
+        guard let insertedResponder = insertedResolved.responder else {
+            return failure(
+                code: "action_not_supported",
+                message: insertedResolved.message,
+                redaction: semanticRedaction(secure: request.secure == true, length: text.count)
+            )
+        }
+        let inserted = performUIKeyInputTextInsertion(
+            input,
+            responder: insertedResponder,
+            text: text,
+            action: input.type.rawValue
+        )
         guard inserted.ok else {
             return failure(
                 code: "action_not_supported",

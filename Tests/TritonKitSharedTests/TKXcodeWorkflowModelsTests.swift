@@ -54,6 +54,27 @@ struct TKXcodeWorkflowModelsTests {
             "-derivedDataPath", ".triton/DerivedData/App",
             "build",
         ])
+
+        let signedDeviceBuild = TKXcodebuildCommand.build(
+            workspace: nil,
+            project: "App.xcodeproj",
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: "generic/platform=iOS",
+            derivedDataPath: ".triton/DerivedData/App",
+            allowProvisioningUpdates: true
+        )
+        #expect(signedDeviceBuild.argv == [
+            "-project", "App.xcodeproj",
+            "-scheme", "App",
+            "-configuration", "Debug",
+            "-sdk", "iphoneos",
+            "-destination", "generic/platform=iOS",
+            "-derivedDataPath", ".triton/DerivedData/App",
+            "-allowProvisioningUpdates",
+            "build",
+        ])
     }
 
     @Test("xctrace and coverage command builders emit stable argv")

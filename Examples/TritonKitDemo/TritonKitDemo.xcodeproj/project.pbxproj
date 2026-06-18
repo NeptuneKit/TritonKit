@@ -1,13 +1,15 @@
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
-	classes = {};
-	objectVersion = 56;
+	classes = {
+	};
+	objectVersion = 60;
 	objects = {
 
 /* Begin PBXBuildFile section */
-		A001 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001; };
-		A002 /* TritonKitDebugBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003; };
+		A001 /* App.swift in Sources */ = {isa = PBXBuildFile; fileRef = F001 /* App.swift */; };
+		A002 /* TritonKitDebugBootstrap.swift in Sources */ = {isa = PBXBuildFile; fileRef = F003 /* TritonKitDebugBootstrap.swift */; };
+		CDB2CB082FE4067B00DC8804 /* TritonKit in Frameworks */ = {isa = PBXBuildFile; productRef = PD001 /* TritonKit */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -21,7 +23,9 @@
 		B001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
-			files = ();
+			files = (
+				CDB2CB082FE4067B00DC8804 /* TritonKit in Frameworks */,
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
@@ -50,20 +54,22 @@
 /* Begin PBXNativeTarget section */
 		N001 /* TritonKitDemo */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = C002;
+			buildConfigurationList = C002 /* Build configuration list for PBXNativeTarget "TritonKitDemo" */;
 			buildPhases = (
 				B002 /* Sources */,
 				B001 /* Frameworks */,
 			);
-			buildRules = ();
-			dependencies = ();
+			buildRules = (
+			);
+			dependencies = (
+			);
 			name = TritonKitDemo;
-			productName = TritonKitDemo;
-			productReference = R001;
-			productType = "com.apple.product-type.application";
 			packageProductDependencies = (
 				PD001 /* TritonKit */,
 			);
+			productName = TritonKitDemo;
+			productReference = R001 /* TritonKitDemo.app */;
+			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
 
@@ -75,16 +81,21 @@
 				LastSwiftUpdateCheck = 1530;
 				LastUpgradeCheck = 1530;
 			};
-			buildConfigurationList = C001;
+			buildConfigurationList = C001 /* Build configuration list for PBXProject "TritonKitDemo" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
-			knownRegions = (en, Base);
-			mainGroup = G001;
-			productRefGroup = G001;
-			packageReferences = (
-				PR001 /* Local TritonKit */,
+			knownRegions = (
+				en,
+				Base,
 			);
+			mainGroup = G001;
+			packageReferences = (
+				PR001 /* XCLocalSwiftPackageReference "../.." */,
+			);
+			productRefGroup = G001;
+			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				N001 /* TritonKitDemo */,
 			);
@@ -141,19 +152,22 @@
 		};
 		TC001 /* Debug */ = {
 			isa = XCBuildConfiguration;
-			baseConfigurationReference = null;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3L8RM3MDLS;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = TritonKitDemo/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks");
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neptunekit.tritonkit.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 			};
 			name = Debug;
 		};
@@ -162,22 +176,26 @@
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 3L8RM3MDLS;
 				ENABLE_PREVIEWS = YES;
 				INFOPLIST_FILE = TritonKitDemo/Info.plist;
-				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/Frameworks");
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neptunekit.tritonkit.demo;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		C001 /* Build config list for PBXProject */ = {
+		C001 /* Build configuration list for PBXProject "TritonKitDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				BC001 /* Debug */,
@@ -186,7 +204,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		C002 /* Build config list for PBXNativeTarget */ = {
+		C002 /* Build configuration list for PBXNativeTarget "TritonKitDemo" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				TC001 /* Debug */,
@@ -197,21 +215,20 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCSwiftPackageProductDependency section */
-		PD001 /* TritonKit */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = PR001;
-			productName = TritonKit;
-		};
-/* End XCSwiftPackageProductDependency section */
-
 /* Begin XCLocalSwiftPackageReference section */
-		PR001 /* Local TritonKit */ = {
+		PR001 /* XCLocalSwiftPackageReference "../.." */ = {
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../..;
 		};
 /* End XCLocalSwiftPackageReference section */
 
+/* Begin XCSwiftPackageProductDependency section */
+		PD001 /* TritonKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = PR001 /* XCLocalSwiftPackageReference "../.." */;
+			productName = TritonKit;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = P001 /* Project object */;
 }

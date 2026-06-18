@@ -467,7 +467,7 @@ func normalizeWebIOSSimulatorInput(_ input: TKInputRequest, screen: WebIOSSimula
             height: Double(screen.height),
             duration: input.duration
         )
-    case .button, .typeText, .paste, .clear:
+    case .button, .typeText, .paste, .clear, .deleteBackward:
         return input
     }
 }
@@ -509,7 +509,7 @@ func webIOSBaguetteCommand(action: TKInputRequest, udid: String, screen: WebIOSS
             arguments.append(contentsOf: ["--duration", "\(duration)"])
         }
         return TKHostCommand(executable: executable, arguments: arguments)
-    case .button, .typeText, .paste, .clear:
+    case .button, .typeText, .paste, .clear, .deleteBackward:
         return TKHostCommand(executable: executable, arguments: [])
     }
 }
@@ -548,7 +548,7 @@ private func runWebIOSSimulatorInput(selected: HostDeviceTarget, input: TKInputR
             action: input.type.rawValue,
             message: "iOS Simulator \(input.type.rawValue) was submitted through Triton host-HID adapter."
         )
-    case .button, .typeText, .paste, .clear:
+    case .button, .typeText, .paste, .clear, .deleteBackward:
         return .unsupported(
             action: input.type.rawValue,
             message: "iOS Simulator host-side \(input.type.rawValue) is not exposed in the Web device surface yet."
@@ -594,6 +594,9 @@ private func runWebAndroidInput(selected: HostDeviceTarget, input: TKInputReques
         return .success(action: "button", message: "Android keyevent \(keyCode) was submitted through adb input.")
     case .clear:
         return .unsupported(action: "clear", message: "Android host clear is not exposed in the Web device surface yet.")
+    case .deleteBackward:
+        _ = try runHostCommand(TKAndroidADBCommand.keyEvent(serial: selected.rawTarget, keyCode: "KEYCODE_DEL", executable: adb))
+        return .success(action: "deleteBackward", message: "Android deleteBackward was submitted through adb keyevent.", deletedLength: 1)
     }
 }
 
@@ -621,5 +624,7 @@ private func runWebHarmonyInput(selected: HostDeviceTarget, input: TKInputReques
         return .success(action: "button", message: "Harmony keyEvent \(key) was submitted through uitest.")
     case .clear:
         return .unsupported(action: "clear", message: "Harmony host clear is not exposed in the Web device surface yet.")
+    case .deleteBackward:
+        return .unsupported(action: "deleteBackward", message: "Harmony host deleteBackward is not exposed in the Web device surface yet.")
     }
 }

@@ -109,14 +109,14 @@ public struct TKWebViewProviderCapabilities: Codable, Equatable {
                 nextAction: TKCLINextAction(command: "webview", args: ["events", "--json"])
             ),
             supportsDOMInput: TKWebViewProviderCapability(
-                supported: false,
-                reason: "generic DOM input is out of scope for the embedded iOS provider",
-                nextAction: TKCLINextAction(command: "webview", args: ["snapshot", "--include", "metadata,text,dom,forms", "--json"])
+                supported: true,
+                reason: "focused activeElement text insertion is supported after runtime focus",
+                nextAction: TKCLINextAction(command: "input", args: ["--json"])
             ),
             supportsContentEditableTyping: TKWebViewProviderCapability(
-                supported: false,
-                reason: "contenteditable typing is not provided by the embedded iOS provider",
-                nextAction: TKCLINextAction(command: "webview", args: ["snapshot", "--include", "metadata,text,dom,forms", "--json"])
+                supported: true,
+                reason: "focused contenteditable insertion is supported after runtime focus",
+                nextAction: TKCLINextAction(command: "input", args: ["--json"])
             )
         )
     }

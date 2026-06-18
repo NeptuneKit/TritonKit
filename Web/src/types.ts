@@ -30,12 +30,18 @@ export type DeviceTarget = {
   actionResult: "ok" | "warning" | "failed";
   accent: string;
   Icon: LucideIcon;
-  realSource?: "ios-simulator" | "android-emulator" | "harmony-emulator";
+  realSource?: "ios-simulator" | "ios-real-device" | "android-emulator" | "android-real-device" | "harmony-emulator" | "harmony-real-device";
+  scope?: "simulator" | "emulator" | "real" | string;
+  kind?: "simulator" | "emulator" | "real-device" | string;
   targetSelector?: string;
   udid?: string;
+  blockedReasons?: string[];
+  sensitive?: boolean;
   runtimeIdentifier?: string;
   deviceTypeIdentifier?: string;
   canScreenshot?: boolean;
+  canInput?: boolean;
+  screenshotSource?: "host" | "runtime";
   screenshotDataUrl?: string;
   screenshotPixelWidth?: number | null;
   screenshotPixelHeight?: number | null;
@@ -94,8 +100,11 @@ export type HostWebTarget = {
   ready: boolean;
   scope: string;
   kind: string;
+  transport?: string | null;
   source: string;
   readonly: boolean;
+  blockedReasons?: string[];
+  sensitive?: boolean;
 };
 
 export type HostTargetsResponse = {

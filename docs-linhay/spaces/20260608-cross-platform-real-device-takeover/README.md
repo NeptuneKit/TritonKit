@@ -157,6 +157,59 @@ triton smoke harmony --device <selector> --bundle <id> --ability <ability> --ope
 3. P2：三端 build/run 编排。iOS 走 `triton xcode`，Android 走 Gradle，Harmony 走 hvigor。
 4. P3：日志、截图、录屏、性能、LLDB/调试能力，全部显式 opt-in。
 
+## Web mock 真机 App runtime mirror 约束（2026-06-18）
+
+- `Web/` 仍是 mock / diagnostics UI，不是业务控制入口。
+- `/web/host-targets` 可以消费 `triton device list --platform ios|android|harmony --scope real --json`，但 Web mock 左侧只展示 `ready=true` 且具备直接连接证明（当前为 `transport=wired|usb`）的真机目标。
+- 真机 `ready=false`、离线、未信任、未授权、DDI 缺失、无线配对或无直接连接证明时不进入 Web mock 左侧设备列表；这类诊断仍由 CLI / HTTP 机器可读契约暴露。
+- host bridge 返回任意真实 target 时，不再补齐缺失平台的 QA mock target，避免 Android / Harmony 未启动时仍出现 mock 设备。
+- 用户接受的真机展示底线是 App 启动、App 实时画面与模拟手势；Web mock 对 iOS 真机采用 App 内 embedded runtime mirror，不承诺整机系统级投屏或 HID。
+- iOS 真机画面走 `triton screenshot --output <tmp> --json` 的 embedded runtime screenshot；手势走 `triton input --json` 的 embedded runtime input。runtime 未连接时返回 `app_runtime_unavailable`，提示启动 `triton serve` 并启动 Debug App。
+- 真实设备安装、启动、wait/assert/evidence 仍走 CLI / HTTP 机器可读契约；Web 在没有 bundle id / runtime target 时不猜测启动哪个 App。
+
+## 真机安装与 runtime mirror 验证结论（2026-06-18）
+
+- 已用 Triton-first 路径验证 `Examples/TritonKitDemo/TritonKitDemo.xcodeproj`：`triton xcode discover`、`triton xcode settings` 能发现工程、scheme 与 `.app` 产物路径。
+- 真实 iOS device build 首次暴露 Triton 能力缺口：`triton xcode build` 原本不能传递 Xcode 自动签名所需的 `-allowProvisioningUpdates`。本轮已新增 `--allow-provisioning-updates`，schema、CLI fake `xcodebuild` smoke 与真实工程 build invocation 均已验证该参数进入 `sourceCommand`。
+- 用户补齐 Xcode signing 后，真机安装与启动已跑通：`triton xcode build --allow-provisioning-updates` 成功产出 Debug `.app`，`triton app install --platform ios --scope real --device ios-real:73f725dfa795` 成功安装，`triton app launch --bundle-id com.neptunekit.tritonkit.demo` 成功启动。
+- `triton serve --host 0.0.0.0 --port 19421` 后，真机 Debug App 能连接 embedded runtime；`triton status --json` 返回 `connected=true`、`runtime=embedded`、`targetCount=1`、`activeHierarchyAvailable=true`。
+- App runtime screenshot 已验证：`triton screenshot --output /tmp/tritonkit-real-runtime.png --json` 返回 `402x874` PNG；Web bridge `/web/host-screenshot?...source=runtime` 返回 `ok=true`。
+- App runtime input 已验证：`printf '{"type":"tap","x":194,"y":330}' | triton input --json --summary --strict` 命中 `UIButton` 并返回 `failedCount=0`；重启 34127 到最新 bridge 后，`POST /web/host-input?...source=runtime` 也返回 `ok=true`。
+- Web canvas 拖动滑块已验证：前端拖拽仍统一转为 runtime `swipe`，iOS runtime 对命中的 `UISlider` 走 `slider-drag` 策略并按 end point 计算 value；真机实测 `POST /web/host-input?...source=runtime` 返回 `ok=true`、`strategy=slider-drag`，截图 `/tmp/tritonkit-slider-after-drag.png` 显示进度从 60% 更新到 93%。
+- Web 设备列表不再对 iOS 真机 runtime mirror 显示“前台 App 未暴露”：host 真机 discovery 仍不伪造 foreground app identity；当缺少 `appName` 但目标是 iOS 真机时，初始展示为“App runtime 镜像”，runtime 截图成功且 `runtimeScope=app-runtime` 后同步为“App runtime 已连接”。真实 App 名 / bundle id 需要后续补 runtime target identity join 后再展示。
+- 真机 runtime 连接需要避免 `127.0.0.1` 默认值。`TritonKitDemo` 现在支持通过 Info.plist build setting `TRITONKIT_DEFAULT_HOST` 注入 Mac 可达 IP；本机实测默认路由 IP `192.168.228.128` 可用，未设置时仍回落到 `127.0.0.1`，保证模拟器路径不变。
+
+推荐的真机验证命令：
+
+```bash
+triton serve --host 0.0.0.0 --port 19421
+
+TRITONKIT_DEFAULT_HOST=<mac-lan-ip> \
+triton xcode build \
+  --project Examples/TritonKitDemo/TritonKitDemo.xcodeproj \
+  --scheme TritonKitDemo \
+  --configuration Debug \
+  --sdk iphoneos \
+  --destination 'generic/platform=iOS' \
+  --derived-data-path /tmp/tritonkit-real-dd \
+  --allow-provisioning-updates \
+  --jsonl
+
+triton app install \
+  --platform ios \
+  --scope real \
+  --device <ios-real-target> \
+  --app /tmp/tritonkit-real-dd/Build/Products/Debug-iphoneos/TritonKitDemo.app \
+  --json
+
+triton app launch \
+  --platform ios \
+  --scope real \
+  --device <ios-real-target> \
+  --bundle-id com.neptunekit.tritonkit.demo \
+  --json
+```
+
 ## 验收标准
 
 1. `triton schema --command device --json` 暴露 `--scope real`、`kind=real-device`、三端错误码和 recovery。

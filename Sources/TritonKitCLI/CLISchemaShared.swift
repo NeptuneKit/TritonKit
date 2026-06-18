@@ -134,6 +134,20 @@ func inputActionSchemas() -> [TKInputActionSchema] {
             resultShape: "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }"
         ),
         TKInputActionSchema(
+            type: "deleteBackward",
+            requiredFields: ["type"],
+            optionalFields: ["targetOID", "x", "y"],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["deleteBackward"], "Action discriminator"),
+                inputField("targetOID", "UInt", "Optional UIKeyInput target oid"),
+                inputField("x", "Double", "Window x coordinate to focus before deleting; required with y"),
+                inputField("y", "Double", "Window y coordinate to focus before deleting; required with x"),
+            ],
+            example: #"{"type":"deleteBackward"}"#,
+            resultShape: "{ ok, action, message, targetOID, targetClassName, deletedLength }"
+        ),
+        TKInputActionSchema(
             type: "button",
             requiredFields: ["type", "button"],
             optionalFields: ["duration"],

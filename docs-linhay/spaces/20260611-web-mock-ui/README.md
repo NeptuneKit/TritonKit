@@ -54,6 +54,18 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 脚本必须把刚编译出的 `triton` 通过 `TRITONKIT_TRITON_BIN` 传给 Web dev bridge，避免读取 PATH 或旧构建产物。
 - 默认保持 Web dev server 固定在 `127.0.0.1:34127`，并继续由 Vite `strictPort` 负责端口冲突失败。
 
+### 2026-06-18 真机 App runtime mirror
+
+- Vite dev bridge 与 packaged Web bridge 的 `/web/host-targets` 同步纳入 `triton device list --platform ios|android|harmony --scope real --json`。
+- Web Devices navigator 将 `ready=true`、`scope=real` / `kind=real-device` 且具备直接连接证明（当前为 `transport=wired|usb`）的目标显示为“真机”；无线配对、离线、未信任、未授权、无 transport 证明或其他 `ready=false` 真机不进入左侧设备列表。
+- 只要 host bridge 成功返回任意真实 target，Web 不再按缺失平台补齐 QA mock 的 Pixel / DevEco / iOS mock；QA mock 只在 host targets 为空或请求失败时整体启用。
+- 用户补充底线为“App 启动 + App 实时画面 + 支持模拟手势”，并允许参考 Lookin；本期采用 Lookin-style App 内 server / runtime 路线：真机 Web canvas 不读取整机系统画面，而是通过业务 App Debug 版内嵌的 TritonKit runtime 提供 App 截图与 input。
+- iOS 真机目标进入 canvas 后，`/web/host-screenshot?scope=real&kind=real-device&source=runtime` 调用 `triton screenshot --output <tmp> --json`，即 App runtime screenshot；runtime 未连接时返回 `app_runtime_unavailable`，提示先启动 `triton serve --host 127.0.0.1 --port 19421` 并启动接入 TritonKit 的 Debug App。
+- iOS 真机 canvas 在已有 App runtime screenshot 时允许 tap / swipe；`/web/host-input?scope=real&kind=real-device&source=runtime` 转发为 `triton input --json`，坐标沿用 App runtime screenshot 的 UIKit point 坐标，不走系统级 HID。
+- App 启动仍以 CLI / HTTP 机器可读契约为事实入口：`triton app launch --platform ios --scope real --device <selector> --bundle-id <id> --json`。Web 不在没有 bundle id / runtime target 的情况下猜测启动哪个 App。
+- Devices navigator 设备行不再显示左侧平台图标；平台信息统一作为右上角标展示，版本号保留在右侧下方，避免图标与设备名 / App 状态文本争抢横向空间。
+- 底部设备控制只展示当前 target 支持的能力；`主屏幕` 属于系统级控制，iOS 真机 App runtime mirror 只支持 App 内 screenshot/input 时不显示该按钮。
+
 ## 不在本期范围
 
 - 不恢复 Wails 桌面壳。
@@ -129,13 +141,20 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - And Web canvas 显示该 PNG
 - But endpoint 不启动模拟器、不安装 App、不发送输入事件
 
-### 场景：只显示运行中的三端模拟器
+### 场景：显示运行中的三端模拟器与真机诊断目标
 
-- Given 本机存在 iOS Simulator、Android Emulator、Harmony / DevEco Emulator
+- Given 本机存在 iOS Simulator、Android Emulator、Harmony / DevEco Emulator，且可能连接 iOS / Android / Harmony 真机
 - When Vite dev server 收到 `/web/host-targets`
 - Then endpoint 通过 Triton CLI 查询三端 host targets
 - And Web 左侧只展示 Booted iOS Simulator、ready Android Emulator、ready Harmony Emulator
-- And Shutdown / Offline / real-device target 不进入 Devices 列表
+- And `ready=true` 且 `scope=real` / `kind=real-device` 且 `transport=wired|usb` 的真机目标以“真机”标签展示
+- And 设备行不显示左侧图标，右上角显示平台角标，右侧下方显示系统版本
+- And `ready=false`、Shutdown、Offline、未信任、未授权、无线配对或无直接连接证明的 target 不进入 Devices 列表
+- And host targets 非空时不补齐缺失平台的 QA mock target
+- And iOS 真机 canvas 自动请求 App runtime screenshot，而不是整机系统截图
+- And App runtime 未连接时显示明确失败，不再无限停留在“正在获取实时画面”
+- And 有 App runtime screenshot 时，点击 / 拖动 canvas 通过 runtime input 发送 tap / swipe
+- And iOS 真机 App runtime mirror 不显示不支持的系统级“主屏幕”按钮
 
 ### 场景：截图区域响应点击和滑动
 
@@ -486,3 +505,18 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 修正：`triton web` 启动前先探测目标 host/port，若已被监听则返回 `web_port_in_use`，不再继续调用 npm / Vite；`--print-command --json` 仍只输出计划，便于排查。
 - 修正：packaged server 启动前重新校验 `bundledWebRoot/index.html`；若运行期静态资源缺失，浏览器文档路径返回 HTML 诊断页，保留 `web_static_asset_failed`、缺失路径和恢复命令。
 - 验证：`swift test --package-path CLI --filter WebCommandTests` 通过 14 tests；在当前端口占用状态下执行 `CLI/.build/debug/triton web --json` 返回单个 `web_port_in_use` JSON envelope。
+
+### 2026-06-18 Real-device App runtime mirror keyboard input
+
+- 用户指出真机 App runtime mirror 点击输入框后不能输入文字，随后指出 Backspace 无效，并要求统一排查这类键盘输入问题。
+- 修正：`.device-screen` 在可输入 target 上变为可聚焦元素；点击画布会保留焦点；字符键与粘贴继续转发为 `type` / `paste`，Backspace 与 Delete 统一转发为新增输入契约 `deleteBackward`。
+- Runtime 修正：`TKInputType` 新增 `deleteBackward`，`TKInputResult` 新增 `deletedLength`；UIKit `UIKeyInput` 执行单字符 `deleteBackward()`；WKWebView 通过 DOM active/fallback 可编辑节点执行文本插入和 `deleteContentBackward`，避免焦点落在 `WKContentView` 时无效。
+- 用户指出设备列表第二行只需要 App 名称。本轮不再把 `App runtime 已连接` 写入 `appName`；设备行第二行只显示 App 名称或 `前台 App 未识别`，平台信息留在右上角角标，状态继续由状态字段、Inspector 或日志表达。
+- 验证：`swift test` 通过 189 tests；`cd Web && npm test && npm run build` 通过 25 tests 与 Vite build。DOM 测试覆盖 ready+wired 真机过滤、无设备图标、iOS 平台角标、无主屏幕按钮、设备行不显示 `App runtime 已连接`，以及 `x` / `Backspace` / `Delete` 三类键盘输入 payload。
+
+### 2026-06-18 iOS Simulator canvas host input
+
+- 用户在 Web canvas 上标注“为什么我点不掉这个 alert”。定位到 iOS Simulator target 已有真实 screenshot，但前端 `canInput` 只对 iOS real-device runtime mirror 打开，导致点击不会 POST `/web/host-input`。
+- 修正：ready 的 iOS Simulator target 也标记为 `canInput=true`，并保持 `screenshotSource=host`；真实截图上的 tap/swipe 会携带 `scope=simulator&kind=simulator&source=host` 进入 `/web/host-input`。
+- 修正：Vite dev bridge 对 host simulator/emulator input 不再返回 real-device-only unsupported，而是代理到 `triton serve /web/input?target=host:<platform>:<target>`；本地未有 serve 时自动拉起 `triton serve --host 127.0.0.1 --port 19421`，继续复用 Triton 机器可读契约，不直接调用平台工具。
+- 验证：`npm --prefix Web test` 通过 27 tests；`npm --prefix Web run build` 通过；`git diff --check` 通过。in-app Browser 刷新验证被 Browser URL policy 拦截，未做浏览器点击实测。

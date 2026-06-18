@@ -199,6 +199,7 @@ struct XcodeSettings: AsyncParsableCommand {
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
     @Option(help: "DerivedData path") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -261,6 +262,7 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
     @Option(help: "DerivedData path") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
+    @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -278,7 +280,12 @@ struct XcodeBuild: AsyncParsableCommand {
                 simulator: simulator,
                 derivedDataPath: derivedDataPath
             )
-            let summary = try runXcodeBuild(invocation: resolved, jsonl: jsonl, timeout: timeout)
+            let summary = try runXcodeBuild(
+                invocation: resolved,
+                jsonl: jsonl,
+                timeout: timeout,
+                allowProvisioningUpdates: allowProvisioningUpdates
+            )
             try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
             if !summary.ok {
                 throw ExitCode.failure

@@ -99,7 +99,8 @@ func runXcodeBuild(
     invocation: ResolvedXcodeInvocation,
     jsonl: Bool,
     timeout: Double? = nil,
-    allowNonZeroExit: Bool = true
+    allowNonZeroExit: Bool = true,
+    allowProvisioningUpdates: Bool = false
 ) throws -> TKXcodeActionSummary {
     let command = TKXcodebuildCommand.build(
         workspace: invocation.workspace,
@@ -108,7 +109,8 @@ func runXcodeBuild(
         configuration: invocation.configuration,
         sdk: invocation.sdk,
         destination: invocation.destination,
-        derivedDataPath: invocation.derivedDataPath
+        derivedDataPath: invocation.derivedDataPath,
+        allowProvisioningUpdates: allowProvisioningUpdates
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl, allowNonZeroExit: allowNonZeroExit)
     let diagnostics = xcodeBuildOutputDiagnostics(result)

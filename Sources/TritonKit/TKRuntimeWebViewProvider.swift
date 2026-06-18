@@ -196,6 +196,190 @@ func bridgeCallScript(method: String, arguments: [String: TKJSONValue]) throws -
     """
 }
 
+func webViewFocusedTextInsertionScript(text: String) throws -> String {
+    let textData = try JSONEncoder().encode(text)
+    guard let textLiteral = String(data: textData, encoding: .utf8) else {
+        throw NSError(domain: "TritonKit.WebViewInput", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode text"])
+    }
+    return """
+    (function() {
+      var text = \(textLiteral);
+      var element = document.activeElement;
+      if (!element) {
+        return JSON.stringify({ ok: false, message: "No active DOM element" });
+      }
+      var tag = String(element.tagName || "").toLowerCase();
+      var editable = !!element.isContentEditable;
+      var supportsValue = tag === "input" || tag === "textarea";
+      if (!editable && !supportsValue) {
+        var candidates = Array.prototype.slice.call(document.querySelectorAll("input:not([type=hidden]):not([disabled]), textarea:not([disabled]), [contenteditable=true]"));
+        element = null;
+        for (var candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
+          var candidate = candidates[candidateIndex];
+          var rect = candidate.getBoundingClientRect ? candidate.getBoundingClientRect() : null;
+          var style = window.getComputedStyle ? window.getComputedStyle(candidate) : null;
+          if (rect && rect.width > 0 && rect.height > 0 && (!style || (style.visibility !== "hidden" && style.display !== "none"))) {
+            element = candidate;
+            break;
+          }
+        }
+        if (!element) {
+          return JSON.stringify({
+            ok: false,
+            message: "No editable DOM element is focused or visible",
+            tagName: tag || null
+          });
+        }
+        if (typeof element.focus === "function") { element.focus(); }
+        tag = String(element.tagName || "").toLowerCase();
+        editable = !!element.isContentEditable;
+        supportsValue = tag === "input" || tag === "textarea";
+      }
+      if (!editable && !supportsValue) {
+        return JSON.stringify({
+          ok: false,
+          message: "Active DOM element is not text editable",
+          tagName: tag || null
+        });
+      }
+      try {
+        if (supportsValue) {
+          var oldValue = String(element.value || "");
+          var start = typeof element.selectionStart === "number" ? element.selectionStart : oldValue.length;
+          var end = typeof element.selectionEnd === "number" ? element.selectionEnd : start;
+          var nextValue = oldValue.slice(0, start) + text + oldValue.slice(end);
+          element.value = nextValue;
+          var cursor = start + text.length;
+          if (typeof element.setSelectionRange === "function") {
+            element.setSelectionRange(cursor, cursor);
+          }
+          if (typeof InputEvent === "function") {
+            element.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "insertText", data: text }));
+          } else {
+            element.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          element.dispatchEvent(new Event("change", { bubbles: true }));
+          return JSON.stringify({ ok: true, tagName: tag, insertedLength: text.length });
+        }
+        if (document.execCommand && document.execCommand("insertText", false, text)) {
+          return JSON.stringify({ ok: true, tagName: tag || "contenteditable", insertedLength: text.length });
+        }
+        element.textContent = String(element.textContent || "") + text;
+        element.dispatchEvent(new Event("input", { bubbles: true }));
+        return JSON.stringify({ ok: true, tagName: tag || "contenteditable", insertedLength: text.length });
+      } catch (error) {
+        return JSON.stringify({
+          ok: false,
+          message: String(error && error.message ? error.message : error),
+          tagName: tag || null
+        });
+      }
+    })()
+    """
+}
+
+func webViewFocusedDeleteBackwardScript() -> String {
+    """
+    (function() {
+      var element = document.activeElement;
+      if (!element) {
+        return JSON.stringify({ ok: false, message: "No active DOM element" });
+      }
+      var tag = String(element.tagName || "").toLowerCase();
+      var editable = !!element.isContentEditable;
+      var supportsValue = tag === "input" || tag === "textarea";
+      if (!editable && !supportsValue) {
+        var candidates = Array.prototype.slice.call(document.querySelectorAll("input:not([type=hidden]):not([disabled]), textarea:not([disabled]), [contenteditable=true]"));
+        element = null;
+        for (var candidateIndex = 0; candidateIndex < candidates.length; candidateIndex += 1) {
+          var candidate = candidates[candidateIndex];
+          var rect = candidate.getBoundingClientRect ? candidate.getBoundingClientRect() : null;
+          var style = window.getComputedStyle ? window.getComputedStyle(candidate) : null;
+          if (rect && rect.width > 0 && rect.height > 0 && (!style || (style.visibility !== "hidden" && style.display !== "none"))) {
+            element = candidate;
+            break;
+          }
+        }
+        if (!element) {
+          return JSON.stringify({
+            ok: false,
+            message: "No editable DOM element is focused or visible",
+            tagName: tag || null
+          });
+        }
+        if (typeof element.focus === "function") { element.focus(); }
+        tag = String(element.tagName || "").toLowerCase();
+        editable = !!element.isContentEditable;
+        supportsValue = tag === "input" || tag === "textarea";
+      }
+      if (!editable && !supportsValue) {
+        return JSON.stringify({
+          ok: false,
+          message: "Active DOM element is not text editable",
+          tagName: tag || null
+        });
+      }
+      try {
+        if (supportsValue) {
+          var oldValue = String(element.value || "");
+          var start = typeof element.selectionStart === "number" ? element.selectionStart : oldValue.length;
+          var end = typeof element.selectionEnd === "number" ? element.selectionEnd : start;
+          var deletedLength = 0;
+          var nextValue = oldValue;
+          var cursor = start;
+          if (start !== end) {
+            deletedLength = Math.max(0, end - start);
+            nextValue = oldValue.slice(0, start) + oldValue.slice(end);
+          } else if (start > 0) {
+            deletedLength = 1;
+            cursor = start - 1;
+            nextValue = oldValue.slice(0, cursor) + oldValue.slice(end);
+          }
+          element.value = nextValue;
+          if (typeof element.setSelectionRange === "function") {
+            element.setSelectionRange(cursor, cursor);
+          }
+          if (typeof InputEvent === "function") {
+            element.dispatchEvent(new InputEvent("input", { bubbles: true, inputType: "deleteContentBackward", data: null }));
+          } else {
+            element.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+          element.dispatchEvent(new Event("change", { bubbles: true }));
+          return JSON.stringify({ ok: true, tagName: tag, deletedLength: deletedLength });
+        }
+        if (document.execCommand && document.execCommand("delete", false, null)) {
+          return JSON.stringify({ ok: true, tagName: tag || "contenteditable", deletedLength: 1 });
+        }
+        var text = String(element.textContent || "");
+        if (!text) {
+          return JSON.stringify({ ok: true, tagName: tag || "contenteditable", deletedLength: 0 });
+        }
+        element.textContent = text.slice(0, -1);
+        element.dispatchEvent(new Event("input", { bubbles: true }));
+        return JSON.stringify({ ok: true, tagName: tag || "contenteditable", deletedLength: 1 });
+      } catch (error) {
+        return JSON.stringify({
+          ok: false,
+          message: String(error && error.message ? error.message : error),
+          tagName: tag || null
+        });
+      }
+    })()
+    """
+}
+
+struct WebViewFocusedTextInsertionPayload: Decodable, Equatable {
+    let ok: Bool
+    let message: String?
+    let tagName: String?
+    let insertedLength: Int?
+    let deletedLength: Int?
+}
+
+func decodeWebViewFocusedTextInsertionPayload(_ json: String) throws -> WebViewFocusedTextInsertionPayload {
+    try JSONDecoder().decode(WebViewFocusedTextInsertionPayload.self, from: Data(json.utf8))
+}
+
 #if canImport(UIKit) && canImport(WebKit)
 import UIKit
 import WebKit
@@ -203,6 +387,129 @@ import WebKit
 private let runtimeWebViewEventStore = RuntimeWebViewEventStore(maxEntries: 100)
 private let runtimeWebViewScriptBridge = RuntimeWebViewScriptBridge()
 private let runtimeWebViewScriptBridgeInstall = RuntimeWebViewScriptBridgeInstall()
+
+@MainActor
+func performFocusedWebViewTextInsertionIfAvailable(
+    responder: UIResponder,
+    text: String,
+    action: String,
+    secure: Bool
+) async -> TKInputResult? {
+    let className = NSStringFromClass(type(of: responder))
+    guard className.contains("WKContentView") else {
+        return nil
+    }
+    let pairs = currentWKWebViewsWithDescriptors()
+    let selected: TKWebViewDescriptor
+    do {
+        selected = try TKSelectCurrentWebView(from: pairs.map(\.descriptor))
+    } catch {
+        return TKInputResult.failure(
+            action: action,
+            message: "No current WKWebView available for focused WebView input",
+            targetOID: oid(for: responder),
+            targetClassName: className
+        )
+    }
+    guard let pair = pairs.first(where: { $0.descriptor.webViewID == selected.webViewID }) else {
+        return TKInputResult.failure(
+            action: action,
+            message: "No current WKWebView available for focused WebView input",
+            targetOID: oid(for: responder),
+            targetClassName: className
+        )
+    }
+    do {
+        let script = try webViewFocusedTextInsertionScript(text: text)
+        let value = try await evaluateJavaScript(script, in: pair.webView)
+        let json = value as? String ?? "\(value)"
+        let payload = try decodeWebViewFocusedTextInsertionPayload(json)
+        guard payload.ok else {
+            return TKInputResult.failure(
+                action: action,
+                message: payload.message ?? "Focused WebView DOM input failed",
+                targetOID: oid(for: responder),
+                targetClassName: className
+            )
+        }
+        return TKInputResult.success(
+            action: action,
+            message: secure ? "Inserted redacted WebView text" : "Inserted WebView text",
+            targetOID: oid(for: responder),
+            targetClassName: className,
+            strategy: "webview-dom-active-element",
+            secure: secure,
+            redacted: secure,
+            insertedLength: payload.insertedLength ?? text.count
+        )
+    } catch {
+        return TKInputResult.failure(
+            action: action,
+            message: "Focused WebView DOM input failed: \(error)",
+            targetOID: oid(for: responder),
+            targetClassName: className
+        )
+    }
+}
+
+@MainActor
+func performFocusedWebViewDeleteBackwardIfAvailable(
+    responder: UIResponder,
+    action: String
+) async -> TKInputResult? {
+    let className = NSStringFromClass(type(of: responder))
+    guard className.contains("WKContentView") else {
+        return nil
+    }
+    let pairs = currentWKWebViewsWithDescriptors()
+    let selected: TKWebViewDescriptor
+    do {
+        selected = try TKSelectCurrentWebView(from: pairs.map(\.descriptor))
+    } catch {
+        return TKInputResult.failure(
+            action: action,
+            message: "No current WKWebView available for focused WebView input",
+            targetOID: oid(for: responder),
+            targetClassName: className
+        )
+    }
+    guard let pair = pairs.first(where: { $0.descriptor.webViewID == selected.webViewID }) else {
+        return TKInputResult.failure(
+            action: action,
+            message: "No current WKWebView available for focused WebView input",
+            targetOID: oid(for: responder),
+            targetClassName: className
+        )
+    }
+    do {
+        let value = try await evaluateJavaScript(webViewFocusedDeleteBackwardScript(), in: pair.webView)
+        let json = value as? String ?? "\(value)"
+        let payload = try decodeWebViewFocusedTextInsertionPayload(json)
+        guard payload.ok else {
+            return TKInputResult.failure(
+                action: action,
+                message: payload.message ?? "Focused WebView DOM delete failed",
+                targetOID: oid(for: responder),
+                targetClassName: className
+            )
+        }
+        return TKInputResult.success(
+            action: action,
+            message: (payload.deletedLength ?? 0) > 0 ? "Deleted WebView text backward" : "No WebView text to delete",
+            targetOID: oid(for: responder),
+            targetClassName: className,
+            strategy: "webview-dom-active-element",
+            deletedLength: payload.deletedLength ?? 0
+        )
+    } catch {
+        return TKInputResult.failure(
+            action: action,
+            message: "Focused WebView DOM delete failed: \(error)",
+            targetOID: oid(for: responder),
+            targetClassName: className
+        )
+    }
+}
 
 @MainActor
 func currentWebViewListResponse(action: String = "webview.list") -> TKWebViewListResponse {
@@ -220,7 +527,7 @@ func currentWebViewListResponse(action: String = "webview.list") -> TKWebViewLis
             TKWebViewSource(name: "webview-provider", available: true, sourceCommands: ["triton webViewList request"]),
         ],
         sourceCommands: ["triton webViewList request"],
-        note: "iOS WKWebView provider exposes metadata and bounded DOM/text/form/link snapshots. Bridge calls, DOM input, and page events require an opt-in page bridge."
+        note: "iOS WKWebView provider exposes metadata, bounded DOM/text/form/link snapshots, and focused activeElement text input. Bridge calls and page events require an opt-in page bridge."
     )
 }
 
@@ -640,8 +947,8 @@ private func webViewDescriptor(for webView: WKWebView) -> TKWebViewDescriptor {
         canGoForward: webView.canGoForward,
         providerStatus: "available",
         bridgeStatus: "page-bridge-required",
-        capabilities: ["visible", "webview.current", "webview.list", "webview.current-url", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.wait", "webview.events"],
-        missingCapabilities: ["webview.bridge-call", "webview.dom-input", "webview.contenteditable-typing", "webview.tap", "webview.type"],
+        capabilities: ["visible", "webview.current", "webview.list", "webview.current-url", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.wait", "webview.events", "webview.dom-input", "webview.contenteditable-typing", "webview.type"],
+        missingCapabilities: ["webview.bridge-call", "webview.tap"],
         providerCapabilities: TKWebViewProviderCapabilities.iosRuntimeDefaults()
     )
 }

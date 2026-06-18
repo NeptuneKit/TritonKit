@@ -24,7 +24,7 @@ export async function fetchHostTargets(): Promise<{
   }
   const payload = (await response.json()) as HostTargetsResponse;
   return {
-    targets: payload.targets.map(mapHostTargetToDeviceTarget),
+    targets: payload.targets.filter(shouldExposeHostWebTarget).map(mapHostTargetToDeviceTarget),
     capturedAt: payload.capturedAt,
     sourceCommands: payload.source.commands,
     commandOutputs: payload.commandOutputs,
@@ -62,11 +62,33 @@ export async function fetchHostScreenshot(target: DeviceTarget): Promise<IosSimu
     platform: target.platform,
     target: target.targetSelector ?? target.udid ?? target.id,
   });
+  if (target.scope) params.set("scope", target.scope);
+  if (target.kind) params.set("kind", target.kind);
+  if (target.screenshotSource) params.set("source", target.screenshotSource);
   const response = await fetch(`/web/host-screenshot?${params.toString()}`, { cache: "no-store" });
   if (!response.ok) {
-    throw new Error(`Host screenshot request failed: ${response.status}`);
+    throw new Error(await describeBridgeError(response, "Host screenshot request failed"));
   }
   return (await response.json()) as IosSimulatorScreenshotResponse;
+}
+
+export async function sendHostInput(target: DeviceTarget, input: Record<string, unknown>): Promise<{ ok: boolean; action?: string; message?: string }> {
+  const params = new URLSearchParams({
+    platform: target.platform,
+    target: target.targetSelector ?? target.udid ?? target.id,
+  });
+  if (target.scope) params.set("scope", target.scope);
+  if (target.kind) params.set("kind", target.kind);
+  if (target.screenshotSource) params.set("source", target.screenshotSource);
+  const response = await fetch(`/web/host-input?${params.toString()}`, {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(input),
+  });
+  if (!response.ok) {
+    throw new Error(await describeBridgeError(response, "Host input request failed"));
+  }
+  return (await response.json()) as { ok: boolean; action?: string; message?: string };
 }
 
 export async function fetchHostLogs(target: DeviceTarget): Promise<HostTargetLogsResponse> {
@@ -79,6 +101,19 @@ export async function fetchHostLogs(target: DeviceTarget): Promise<HostTargetLog
     throw new Error(`Host logs request failed: ${response.status}`);
   }
   return (await response.json()) as HostTargetLogsResponse;
+}
+
+async function describeBridgeError(response: Response, fallback: string) {
+  try {
+    const payload = (await response.json()) as { error?: { code?: string; message?: string; hint?: string } };
+    const parts = [payload.error?.code, payload.error?.message, payload.error?.hint].filter(Boolean);
+    if (parts.length > 0) {
+      return parts.join(" · ");
+    }
+  } catch {
+    // Fall back to the HTTP status below.
+  }
+  return `${fallback}: ${response.status}`;
 }
 
 function mapIosSimulatorToDeviceTarget(simulator: IosSimulatorTargetsResponse["simulators"][number]): DeviceTarget {
@@ -108,6 +143,8 @@ function mapIosSimulatorToDeviceTarget(simulator: IosSimulatorTargetsResponse["s
     accent: isBooted ? "#64d26a" : "#8bb6ff",
     Icon: Smartphone,
     realSource: "ios-simulator",
+    scope: "simulator",
+    kind: "simulator",
     targetSelector: simulator.udid,
     udid: simulator.udid,
     runtimeIdentifier: simulator.runtimeIdentifier,
@@ -121,6 +158,9 @@ function mapIosSimulatorToDeviceTarget(simulator: IosSimulatorTargetsResponse["s
 function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
   const hostAppName = normalizeHostIdentity(target.appName);
   const hostBundleIdentifier = normalizeHostIdentity(target.bundleIdentifier);
+  const isRealDevice = isHostRealDevice(target);
+  const status = hostTargetStatus(target);
+  const fallbackAppName = fallbackHostAppName(target, isRealDevice);
 
   if (target.platform === "ios") {
     return {
@@ -128,61 +168,108 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
       name: target.name,
       platform: "ios",
       device: target.name,
-      appName: hostAppName ?? `前台 App 未暴露 · ${target.name}`,
+      appName: hostAppName ?? fallbackAppName,
       bundleId: hostBundleIdentifier ?? formatUnknownTargetIdentity(target.target),
       os: target.runtime,
-      status: "ready",
+      status,
       statusLabel: target.statusLabel,
-      transport: "triton sim list --json",
+      transport: isRealDevice ? "triton device list --platform ios --scope real --json" : "triton sim list --json",
       screenshotTone: "ios-screen",
-      screenSize: "Awaiting framebuffer",
-      fps: 1,
+      screenSize: isRealDevice ? "App runtime framebuffer" : "Awaiting framebuffer",
+      fps: isRealDevice ? 1 : 1,
       latencyMs: 0,
       proxyMode: "off",
       proxyLabel: "Readonly host state",
       hierarchyNodes: 0,
-      lastAction: "Ready for readonly screenshot",
-      actionResult: "ok",
-      accent: "#64d26a",
+      lastAction: isRealDevice ? "Ready for App runtime mirror" : "Ready for readonly screenshot",
+      actionResult: target.ready ? "ok" : "warning",
+      accent: target.ready ? "#64d26a" : "#f59e0b",
       Icon: Smartphone,
-      realSource: "ios-simulator",
+      realSource: isRealDevice ? "ios-real-device" : "ios-simulator",
+      scope: target.scope,
+      kind: target.kind,
       targetSelector: target.target,
       udid: target.target,
-      canScreenshot: true,
+      blockedReasons: target.blockedReasons ?? [],
+      sensitive: target.sensitive,
+      canScreenshot: target.ready,
+      canInput: target.ready,
+      screenshotSource: isRealDevice ? "runtime" : "host",
       frameOrientation: "portrait",
       readonly: true,
     };
   }
 
   const isAndroid = target.platform === "android";
+  const platform = target.platform;
   return {
     id: target.id,
     name: target.name,
     platform: target.platform,
     device: target.target,
-    appName: hostAppName ?? `前台 App 未暴露 · ${target.name}`,
+    appName: hostAppName ?? fallbackAppName,
     bundleId: hostBundleIdentifier ?? formatUnknownTargetIdentity(target.target),
     os: target.runtime || (isAndroid ? "Android" : "Harmony"),
-    status: "ready",
+    status,
     statusLabel: target.statusLabel,
-    transport: isAndroid ? "triton device list --platform android --json" : "triton device list --platform harmony --json",
+    transport: `triton device list --platform ${platform} --scope ${isRealDevice ? "real" : "emulator"} --json`,
     screenshotTone: isAndroid ? "android-screen" : "harmony-screen",
-    screenSize: "Awaiting framebuffer",
+    screenSize: isRealDevice ? "真机画面未接入" : "Awaiting framebuffer",
     fps: 0,
     latencyMs: 0,
     proxyMode: "off",
-    proxyLabel: "Host emulator target",
+    proxyLabel: isRealDevice ? "Host real device target" : "Host emulator target",
     hierarchyNodes: 0,
-    lastAction: "Ready for readonly screenshot",
-    actionResult: "ok",
-    accent: isAndroid ? "#32d583" : "#cc3d5a",
+    lastAction: isRealDevice ? "Real device listed by readonly Triton discovery" : "Ready for readonly screenshot",
+    actionResult: target.ready ? "ok" : "warning",
+    accent: target.ready ? (isAndroid ? "#32d583" : "#cc3d5a") : "#f59e0b",
     Icon: isAndroid ? MonitorSmartphone : TabletSmartphone,
-    realSource: isAndroid ? "android-emulator" : "harmony-emulator",
+    realSource: isRealDevice
+      ? isAndroid ? "android-real-device" : "harmony-real-device"
+      : isAndroid ? "android-emulator" : "harmony-emulator",
+    scope: target.scope,
+    kind: target.kind,
     targetSelector: target.target,
-    canScreenshot: true,
+    blockedReasons: target.blockedReasons ?? [],
+    sensitive: target.sensitive,
+    canScreenshot: !isRealDevice && target.ready,
+    canInput: !isRealDevice && target.ready,
+    screenshotSource: "host",
     frameOrientation: "portrait",
     readonly: true,
   };
+}
+
+function isHostRealDevice(target: HostWebTarget) {
+  return target.scope === "real" || target.kind === "real-device";
+}
+
+function fallbackHostAppName(target: HostWebTarget, isRealDevice: boolean) {
+  if (target.platform === "ios" && isRealDevice) {
+    return "App runtime 镜像";
+  }
+  return `前台 App 未暴露 · ${target.name}`;
+}
+
+function shouldExposeHostWebTarget(target: HostWebTarget) {
+  if (isHostRealDevice(target)) {
+    return target.ready && hasDirectRealDeviceConnection(target);
+  }
+  return target.ready;
+}
+
+function hasDirectRealDeviceConnection(target: HostWebTarget) {
+  const transport = target.transport?.toLowerCase();
+  return transport === "wired" || transport === "usb";
+}
+
+function hostTargetStatus(target: HostWebTarget) {
+  if (target.ready) return "ready" as const;
+  const state = target.state.toLowerCase();
+  if (state.includes("offline") || state.includes("shutdown") || state.includes("disconnected")) {
+    return "busy" as const;
+  }
+  return "limited" as const;
 }
 
 function normalizeHostIdentity(value?: string | null) {

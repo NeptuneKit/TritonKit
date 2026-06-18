@@ -45,7 +45,7 @@ enum DemoScenario: String, CaseIterable, Identifiable {
 
 final class DemoModel: ObservableObject {
     @Published var status = "Disconnected"
-    @Published var host = "127.0.0.1"
+    @Published var host = Bundle.main.tritonKitDefaultHost
     @Published var port = "19421"
     @Published var scenario: DemoScenario = .overview
     @Published var log: [String] = []
@@ -95,6 +95,17 @@ final class DemoModel: ObservableObject {
     private func addLog(_ msg: String) {
         let entry = "[\(Date().formatted(.dateTime.hour().minute().second()))] \(msg)"
         DispatchQueue.main.async { self.log.append(entry) }
+    }
+}
+
+private extension Bundle {
+    var tritonKitDefaultHost: String {
+        let value = object(forInfoDictionaryKey: "TritonKitDefaultHost") as? String
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        if trimmed.isEmpty || trimmed == "$(TRITONKIT_DEFAULT_HOST)" {
+            return "127.0.0.1"
+        }
+        return trimmed
     }
 }
 
