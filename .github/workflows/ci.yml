@@ -198,7 +198,7 @@ jobs:
 
   build-cli-arm64:
     name: Build CLI (arm64)
-    if: github.event_name == 'workflow_dispatch' || (github.ref_type == 'tag' && startsWith(github.ref_name, 'v'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name != 'main')
     needs: validate
     runs-on: macos-15
 
@@ -290,7 +290,7 @@ jobs:
 
   build-cli-x86_64:
     name: Build CLI (x86_64)
-    if: github.event_name == 'workflow_dispatch' || (github.ref_type == 'tag' && startsWith(github.ref_name, 'v'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name != 'main')
     needs: validate
     runs-on: macos-15-intel
 
@@ -382,7 +382,7 @@ jobs:
 
   package-release-assets:
     name: Package arm64 release assets
-    if: github.event_name == 'workflow_dispatch' || (github.ref_type == 'tag' && startsWith(github.ref_name, 'v'))
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref_name != 'main')
     needs: build-cli-arm64
     runs-on: ubuntu-latest
 
@@ -504,7 +504,7 @@ jobs:
           if-no-files-found: error
 
       - name: Publish GitHub release assets
-        if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+        if: github.event_name == 'push' && github.ref_name != 'main'
         env:
           GH_TOKEN: ${{ github.token }}
         shell: bash
@@ -522,7 +522,7 @@ jobs:
 
   publish-x86-release-asset:
     name: Publish x86_64 release asset
-    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    if: github.event_name == 'push' && github.ref_name != 'main'
     needs:
       - package-release-assets
       - build-cli-x86_64
@@ -578,7 +578,7 @@ jobs:
 
   update-homebrew-tap:
     name: Update Homebrew tap (arm64)
-    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    if: github.event_name == 'push' && github.ref_name != 'main'
     needs: package-release-assets
     uses: ./.github/workflows/update-homebrew-tap.yml
     with:
@@ -588,7 +588,7 @@ jobs:
 
   update-homebrew-tap-x86:
     name: Update Homebrew tap (x86_64 backfill)
-    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+    if: github.event_name == 'push' && github.ref_name != 'main'
     needs: publish-x86-release-asset
     uses: ./.github/workflows/update-homebrew-tap.yml
     with:

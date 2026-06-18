@@ -140,8 +140,8 @@ if grep -q 'tar -czf .*tritonkit-dev-feedback[.]tar[.]gz' "${ci_workflow}" \
 fi
 grep -q 'workflow_dispatch:' "${tap_workflow}" || fail "tap workflow must support manual reruns"
 grep -q 'TAP_GITHUB_TOKEN is required' "${tap_workflow}" || fail "tap workflow must fail clearly when the secret is missing"
-grep -Fq "github.ref_type == 'tag' && startsWith(github.ref_name, 'v')" "${ci_workflow}" \
-  || fail "ci workflow release jobs must use ref_type/ref_name tag checks"
+grep -Fq "github.event_name == 'push' && github.ref_name != 'main'" "${ci_workflow}" \
+  || fail "ci workflow release jobs must distinguish tag pushes from main pushes using event/ref_name"
 grep -Fq 'completed successfully before arm64 release assets were created' "${release_script}" \
   || fail "release script must fail if a tag run succeeds without creating release assets"
 
