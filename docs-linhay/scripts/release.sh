@@ -4,7 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 repo="${TRITON_RELEASE_REPO:-NeptuneKit/TritonKit}"
 tap_repository="${TRITON_TAP_REPOSITORY:-NeptuneKit/homebrew-tap}"
-workflow_name="${TRITON_RELEASE_WORKFLOW:-CI}"
+workflow_name="${TRITON_RELEASE_WORKFLOW:-Release}"
 run_local_verify=1
 assume_yes=0
 dry_run=0

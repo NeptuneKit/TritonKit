@@ -4,6 +4,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 release_script="${root}/docs-linhay/scripts/release.sh"
 ci_workflow="${root}/.github/workflows/ci.yml"
+release_workflow="${root}/.github/workflows/release.yml"
 tap_workflow="${root}/.github/workflows/update-homebrew-tap.yml"
 package_skill_script="${root}/docs-linhay/scripts/package-public-skills.py"
 verify_skill_package_script="${root}/docs-linhay/scripts/verify-skill-package.sh"
@@ -28,6 +29,7 @@ grep -q 'NeptuneKit/homebrew-tap' "${release_script}" || fail "release script mu
 grep -q 'git tag -a' "${release_script}" || fail "release script must create annotated version tags"
 grep -q 'verify-release-package-versions[.]sh' "${release_script}" || fail "release script must verify all public package versions before tagging"
 grep -q 'gh run' "${release_script}" || fail "release script must observe GitHub Actions runs"
+grep -q 'TRITON_RELEASE_WORKFLOW:-Release' "${release_script}" || fail "release script must observe the Release workflow by default"
 grep -Fq -- '--json headBranch,url' "${release_script}" || fail "release script must resolve run ids from run URLs, not numeric databaseId templates"
 grep -Fq 'run_id="${run_url##*/}"' "${release_script}" || fail "release script must parse the run id from the run URL string"
 if grep -Fq -- '--json databaseId,headBranch' "${release_script}"; then
@@ -140,6 +142,10 @@ if grep -q 'tar -czf .*tritonkit-dev-feedback[.]tar[.]gz' "${ci_workflow}" \
 fi
 grep -q 'workflow_dispatch:' "${tap_workflow}" || fail "tap workflow must support manual reruns"
 grep -q 'TAP_GITHUB_TOKEN is required' "${tap_workflow}" || fail "tap workflow must fail clearly when the secret is missing"
+grep -q '^name: Release$' "${release_workflow}" || fail "release workflow must exist"
+grep -q 'tags:' "${release_workflow}" || fail "release workflow must run on version tags"
+grep -q 'Build CLI [(]arm64[)]' "${release_workflow}" || fail "release workflow must build arm64 CLI"
+grep -q 'Build CLI [(]x86_64[)]' "${release_workflow}" || fail "release workflow must build x86_64 CLI"
 grep -Fq 'is_release_tag: ${{ steps.validate-scope.outputs.is_release_tag }}' "${ci_workflow}" \
   || fail "ci workflow must expose release tag detection from classify-validate"
 grep -Fq "needs.classify-validate.outputs.is_release_tag == 'true'" "${ci_workflow}" \

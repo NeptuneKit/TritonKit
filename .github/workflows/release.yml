@@ -1,0 +1,306 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release-contracts:
+    name: Release Contracts
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Validate release contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME#v}"
+          docs-linhay/scripts/verify-release-package-versions.sh "${version}"
+          docs-linhay/scripts/verify-ci-validate-mode.sh
+          docs-linhay/scripts/verify-homebrew-formula.sh
+          docs-linhay/scripts/verify-version-stamping.sh
+          docs-linhay/scripts/verify-release-automation.sh
+
+  build-cli-arm64:
+    name: Build CLI (arm64)
+    needs: release-contracts
+    runs-on: macos-15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Web/package-lock.json
+
+      - name: Write CLI version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(docs-linhay/scripts/resolve-ci-version.sh)"
+          docs-linhay/scripts/write-cli-version.sh "${version}" Sources/TritonKitCLI/CLIBuildInfo.swift
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build CLI
+        run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+
+      - name: Build bundled Web static assets
+        run: |
+          npm --prefix Web ci
+          npm --prefix Web run build
+
+      - name: Package CLI artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(uname -m)" == "arm64" ]]
+          package_name="triton-macos-arm64"
+          package_dir="dist/${package_name}"
+          mkdir -p "${package_dir}/web"
+          cp .build/cli/release/triton "${package_dir}/triton"
+          chmod +x "${package_dir}/triton"
+          cp -R Web/dist/. "${package_dir}/web/"
+          cat > "${package_dir}/README.txt" <<README
+          TritonKit CLI
+
+          Version:
+            ${{ steps.version.outputs.version }}
+
+          Install:
+            cp triton /usr/local/bin/triton
+            mkdir -p /usr/local/share/triton/web
+            cp -R web/. /usr/local/share/triton/web/
+
+          Homebrew:
+            brew install NeptuneKit/tap/triton
+
+          Verify:
+            triton version --json
+
+          Bundled Web:
+            triton web starts the bundled Web Device Hub from ./web.
+          README
+          (cd dist && tar -czf "${package_name}.tar.gz" "${package_name}")
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: triton-cli-arm64
+          path: dist/triton-macos-arm64.tar.gz
+          if-no-files-found: error
+
+  build-cli-x86_64:
+    name: Build CLI (x86_64)
+    needs: release-contracts
+    runs-on: macos-15-intel
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: Web/package-lock.json
+
+      - name: Write CLI version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(docs-linhay/scripts/resolve-ci-version.sh)"
+          docs-linhay/scripts/write-cli-version.sh "${version}" Sources/TritonKitCLI/CLIBuildInfo.swift
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Build CLI
+        run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
+
+      - name: Build bundled Web static assets
+        run: |
+          npm --prefix Web ci
+          npm --prefix Web run build
+
+      - name: Package CLI artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$(uname -m)" == "x86_64" ]]
+          package_name="triton-macos-x86_64"
+          package_dir="dist/${package_name}"
+          mkdir -p "${package_dir}/web"
+          cp .build/cli/release/triton "${package_dir}/triton"
+          chmod +x "${package_dir}/triton"
+          cp -R Web/dist/. "${package_dir}/web/"
+          cat > "${package_dir}/README.txt" <<README
+          TritonKit CLI
+
+          Version:
+            ${{ steps.version.outputs.version }}
+
+          Install:
+            cp triton /usr/local/bin/triton
+            mkdir -p /usr/local/share/triton/web
+            cp -R web/. /usr/local/share/triton/web/
+
+          Homebrew:
+            brew install NeptuneKit/tap/triton
+
+          Verify:
+            triton version --json
+
+          Bundled Web:
+            triton web starts the bundled Web Device Hub from ./web.
+          README
+          (cd dist && tar -czf "${package_name}.tar.gz" "${package_name}")
+
+      - name: Upload CLI artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: triton-cli-x86_64
+          path: dist/triton-macos-x86_64.tar.gz
+          if-no-files-found: error
+
+  package-release-assets:
+    name: Package arm64 release assets
+    needs: build-cli-arm64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Download arm64 CLI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: triton-cli-arm64
+          path: dist
+
+      - name: Resolve release version
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="$(docs-linhay/scripts/resolve-ci-version.sh)"
+          echo "version=${version}" >> "${GITHUB_OUTPUT}"
+
+      - name: Package skill artifact
+        run: |
+          mkdir -p dist
+          docs-linhay/scripts/package-public-skills.py \
+            --version "${{ steps.version.outputs.version }}" \
+            --release-tag "${GITHUB_REF_NAME}" \
+            --output dist/tritonkit-skills.tar.gz \
+            --json
+
+      - name: Generate and validate arm64 release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          (cd dist && sha256sum *.tar.gz | sort -k 2 > tritonkit_checksums.txt)
+          test -f dist/triton-macos-arm64.tar.gz
+          test -f dist/tritonkit-skills.tar.gz
+          test -f dist/tritonkit_checksums.txt
+          arm64_contents="$(mktemp)"
+          tar -tf dist/triton-macos-arm64.tar.gz > "${arm64_contents}"
+          grep -Eq '^triton-macos-arm64/web/index[.]html$' "${arm64_contents}"
+          arm64_readme="$(mktemp)"
+          tar -xOf dist/triton-macos-arm64.tar.gz triton-macos-arm64/README.txt > "${arm64_readme}"
+          grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${arm64_readme}"
+          docs-linhay/scripts/render-homebrew-formula.sh \
+            "${GITHUB_REF_NAME}" \
+            dist/tritonkit_checksums.txt \
+            .github/homebrew/triton.rb.template \
+            /tmp/triton.rb
+          ruby -c /tmp/triton.rb >/dev/null
+
+      - name: Upload workflow artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: tritonkit-release-assets
+          path: dist/*
+          if-no-files-found: error
+
+      - name: Publish GitHub release assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if ! gh release view "${tag}" >/dev/null 2>&1; then
+            gh release create "${tag}" --title "${tag}" --notes "Automated TritonKit release for ${GITHUB_SHA}."
+          fi
+          gh release upload "${tag}" dist/* --clobber
+
+  publish-x86-release-asset:
+    name: Publish x86_64 release asset
+    needs:
+      - package-release-assets
+      - build-cli-x86_64
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download x86_64 CLI artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: triton-cli-x86_64
+          path: dist
+
+      - name: Merge release checksums
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh release download "${GITHUB_REF_NAME}" --pattern tritonkit_checksums.txt --dir dist --clobber
+          (
+            cd dist
+            x86_contents="$(mktemp)"
+            tar -tf triton-macos-x86_64.tar.gz > "${x86_contents}"
+            grep -Eq '^triton-macos-x86_64/web/index[.]html$' "${x86_contents}"
+            x86_readme="$(mktemp)"
+            tar -xOf triton-macos-x86_64.tar.gz triton-macos-x86_64/README.txt > "${x86_readme}"
+            grep -Fq 'triton web starts the bundled Web Device Hub from ./web.' "${x86_readme}"
+            grep -v 'triton-macos-x86_64[.]tar[.]gz$' tritonkit_checksums.txt > tritonkit_checksums.merged.txt
+            sha256sum triton-macos-x86_64.tar.gz >> tritonkit_checksums.merged.txt
+            sort -k 2 tritonkit_checksums.merged.txt > tritonkit_checksums.txt
+          )
+
+      - name: Publish x86_64 release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${GITHUB_REF_NAME}" dist/triton-macos-x86_64.tar.gz dist/tritonkit_checksums.txt --clobber
+
+  update-homebrew-tap:
+    name: Update Homebrew tap (arm64)
+    needs: package-release-assets
+    uses: ./.github/workflows/update-homebrew-tap.yml
+    with:
+      version: ${{ github.ref_name }}
+      tap_repository: NeptuneKit/homebrew-tap
+    secrets: inherit
+
+  update-homebrew-tap-x86:
+    name: Update Homebrew tap (x86_64 backfill)
+    needs: publish-x86-release-asset
+    uses: ./.github/workflows/update-homebrew-tap.yml
+    with:
+      version: ${{ github.ref_name }}
+      tap_repository: NeptuneKit/homebrew-tap
+    secrets: inherit
