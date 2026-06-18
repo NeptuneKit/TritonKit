@@ -95,6 +95,7 @@ if grep -q '| rg '\''\^  version: '\''' "${ci_workflow}"; then
   fail "ci workflow must not require rg when validating skill versions in release jobs"
 fi
 grep -q 'tritonkit-emulator-cli-takeover' "${ci_workflow}" || fail "ci workflow must package the emulator CLI takeover skill"
+grep -q 'tritonkit-update' "${ci_workflow}" || fail "ci workflow must validate the public update skill in release assets"
 grep -q 'tritonkit-update' "${package_skill_script}" || fail "package script must package the public update skill"
 grep -q 'package-public-skills[.]py' "${ci_workflow}" || fail "ci workflow must package skills through package-public-skills.py"
 grep -q 'TritonKit[.]skills/BUILD_INFO[.]json' "${ci_workflow}" || fail "ci workflow must validate packaged skill bundle BUILD_INFO.json"
@@ -130,7 +131,8 @@ if grep -q 'path:.*[.]zip' "${ci_workflow}" || grep -q 'sha256sum .*[*][.]zip' "
 fi
 if grep -q 'tar -czf .*tritonkit-dev-feedback[.]tar[.]gz' "${ci_workflow}" \
   || grep -q 'tar -czf .*tritonkit-real-project-regression[.]tar[.]gz' "${ci_workflow}" \
-  || grep -q 'tar -czf .*tritonkit-emulator-cli-takeover[.]tar[.]gz' "${ci_workflow}"; then
+  || grep -q 'tar -czf .*tritonkit-emulator-cli-takeover[.]tar[.]gz' "${ci_workflow}" \
+  || grep -q 'tar -czf .*tritonkit-update[.]tar[.]gz' "${ci_workflow}"; then
   fail "ci workflow must not publish individual skill tarballs"
 fi
 grep -q 'workflow_dispatch:' "${tap_workflow}" || fail "tap workflow must support manual reruns"
