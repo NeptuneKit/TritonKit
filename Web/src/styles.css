@@ -58,6 +58,10 @@ button {
   grid-template-rows: 64px minmax(0, 1fr) 82px;
 }
 
+.device-hub-window.is-evidence-hidden {
+  grid-template-rows: 64px minmax(0, 1fr) 0;
+}
+
 .hub-toolbar {
   display: grid;
   grid-template-columns: auto auto auto minmax(190px, 0.55fr) minmax(330px, 1fr) auto;
@@ -1010,6 +1014,43 @@ button {
   white-space: nowrap;
 }
 
+.keyboard-relay {
+  position: absolute;
+  left: clamp(96px, var(--relay-x), calc(100% - 96px));
+  top: clamp(38px, calc(var(--relay-y) + 28px), calc(100% - 48px));
+  z-index: 6;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px;
+  width: min(192px, calc(100% - 24px));
+  height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(40, 76, 118, 0.18);
+  border-radius: 999px;
+  background: rgba(245, 250, 255, 0.94);
+  color: #1f3448;
+  box-shadow:
+    0 12px 28px rgba(33, 61, 92, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.72);
+  transform: translateX(-50%);
+}
+
+.keyboard-relay input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: #16293b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.keyboard-relay input::placeholder {
+  color: rgba(43, 72, 101, 0.52);
+}
+
 @keyframes gesture-pop {
   0% {
     opacity: 0;
@@ -1452,8 +1493,13 @@ button {
   background: rgba(255, 255, 255, 0.06);
 }
 
-.hub-bottom.is-logs-hidden {
+.hub-bottom.is-logs-hidden,
+.hub-bottom.is-network-hidden {
   grid-template-columns: 1fr;
+}
+
+.hub-bottom.is-bottom-hidden {
+  display: none;
 }
 
 .evidence-strip {
@@ -1649,6 +1695,10 @@ button {
     grid-template-rows: 64px minmax(0, 1fr) 88px;
   }
 
+  .device-hub-window.is-evidence-hidden {
+    grid-template-rows: 64px minmax(0, 1fr) 0;
+  }
+
   .hub-toolbar {
     grid-template-columns: auto auto auto minmax(160px, 1fr) auto;
   }
@@ -1674,7 +1724,8 @@ button {
     grid-template-rows: minmax(0, 1fr);
   }
 
-  .hub-bottom.is-logs-hidden {
+  .hub-bottom.is-logs-hidden,
+  .hub-bottom.is-network-hidden {
     grid-template-columns: 1fr;
     grid-template-rows: 1fr;
   }
@@ -1708,6 +1759,10 @@ button {
 
   .device-hub-window.is-logs-hidden {
     grid-template-rows: 58px minmax(0, 1fr) 108px;
+  }
+
+  .device-hub-window.is-evidence-hidden {
+    grid-template-rows: 58px minmax(0, 1fr) 0;
   }
 
   .hub-toolbar {

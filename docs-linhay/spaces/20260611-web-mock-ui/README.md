@@ -520,3 +520,18 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 修正：ready 的 iOS Simulator target 也标记为 `canInput=true`，并保持 `screenshotSource=host`；真实截图上的 tap/swipe 会携带 `scope=simulator&kind=simulator&source=host` 进入 `/web/host-input`。
 - 修正：Vite dev bridge 对 host simulator/emulator input 不再返回 real-device-only unsupported，而是代理到 `triton serve /web/input?target=host:<platform>:<target>`；本地未有 serve 时自动拉起 `triton serve --host 127.0.0.1 --port 19421`，继续复用 Triton 机器可读契约，不直接调用平台工具。
 - 验证：`npm --prefix Web test` 通过 27 tests；`npm --prefix Web run build` 通过；`git diff --check` 通过。in-app Browser 刷新验证被 Browser URL policy 拦截，未做浏览器点击实测。
+
+### 2026-06-18 Device canvas keyboard relay input
+
+- 用户指出点击 App 内输入框后，Web 端也需要提供输入框来联动键盘事件。单纯让 `.device-screen` 接收 keydown 不利于真实键盘、中文输入法、粘贴和浏览器文本编辑行为。
+- 修正：真实 screenshot 短 tap 后，Web 在 tap 位置附近显示并聚焦 `设备键盘输入` relay input；输入新增文本转发为 `type`，清空或删除已有文本转发为连续 `deleteBackward`，粘贴转发为 `paste`，Escape 收起 relay。
+- 该 relay 只负责把用户键盘输入转成 Triton input，不解析 screenshot 像素、不猜测 App 输入框身份；设备端是否命中输入框仍由先发出的 tap 和 Triton runtime/host input 结果决定。
+- 验证：`npm --prefix Web test` 通过 27 tests；`npm --prefix Web run build` 通过。
+
+### 2026-06-18 Network evidence strip hide/restore
+
+- 用户指出底部 `网络证据` strip 需要支持关闭。
+- 修正：设备控制胶囊新增 `隐藏网络` / `显示网络` 按钮，和已有 `隐藏日志` / `显示日志` 一起作为底部证据面板的主控制入口。
+- `NetworkStrip` 自身仍保留 `隐藏网络证据` 按钮作为就近关闭入口；网络和日志面板分别独立控制，只关闭网络时日志继续显示并占满底部，只关闭日志时网络继续显示并占满底部。
+- 当网络和日志都关闭时，底部证据区域直接折叠，不再显示 `证据面板已隐藏` 状态条；恢复入口只保留在画布控制胶囊的 `显示网络` 与 `显示日志` 按钮上。
+- 验证：`npm --prefix Web test` 通过 28 tests；`npm --prefix Web run build` 通过。

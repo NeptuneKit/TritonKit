@@ -627,6 +627,24 @@ test("dispatches iOS Simulator canvas tap through the host input bridge", async 
 
     await waitFor(() => hostInputPayloads.length === 1);
     assert.deepEqual(hostInputPayloads[0], { type: "tap", x: 180, y: 410, width: 390, height: 844 });
+    const relay = document.querySelector('input[aria-label="设备键盘输入"]');
+    assert.ok(relay, "Expected Web keyboard relay input after tapping the device screen");
+    assert.equal(document.activeElement, relay);
+
+    await setTextInputValue(act, relay, "hello");
+    await waitFor(() => hostInputPayloads.length === 2);
+    assert.deepEqual(hostInputPayloads[1], { type: "type", text: "hello" });
+
+    await setTextInputValue(act, relay, "");
+    await waitFor(() => hostInputPayloads.length === 7);
+    assert.deepEqual(hostInputPayloads.slice(2), [
+      { type: "deleteBackward" },
+      { type: "deleteBackward" },
+      { type: "deleteBackward" },
+      { type: "deleteBackward" },
+      { type: "deleteBackward" },
+    ]);
+
     assert.ok(fetchCalls.some((call) => call.pathname === "/web/host-input" && call.method === "POST"));
   } finally {
     await act(async () => {
@@ -1141,6 +1159,73 @@ test("shows search empty state across devices and view-tree panels without imply
   }
 });
 
+test("lets users hide and restore network evidence independently from logs", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async () =>
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => hasRequestFailedFallbackNotice() && networkEvidenceText().includes("/v1/home/feed"));
+    assert.ok(document.querySelector('[aria-label="运行日志"]'));
+    assert.equal(document.querySelectorAll('button[aria-label="隐藏网络"]').length, 1);
+    assert.equal(document.querySelectorAll('button[aria-label="隐藏日志"]').length, 2);
+
+    await clickButtonByLabel(act, "隐藏网络");
+    await waitFor(() => !document.querySelector('[aria-label="网络证据"]'));
+    assert.equal(networkEvidenceText(), "");
+    assert.ok(document.querySelector('[aria-label="运行日志"]'));
+    assert.equal(document.querySelector('[aria-label="证据面板已隐藏"]'), null);
+    assert.equal(document.querySelectorAll('button[aria-label="显示网络"]').length, 1);
+
+    await clickButtonByLabel(act, "隐藏日志");
+    await waitFor(() => !document.querySelector('[aria-label="网络证据"]') && !document.querySelector('[aria-label="运行日志"]'));
+    assert.equal(document.querySelector('[aria-label="网络证据"]'), null);
+    assert.equal(document.querySelector('[aria-label="运行日志"]'), null);
+    assert.equal(document.querySelector('[aria-label="证据面板已隐藏"]'), null);
+    assert.ok(document.querySelector(".device-hub-window.is-evidence-hidden"));
+    assert.equal(document.querySelectorAll('button[aria-label="显示网络"]').length, 1);
+    assert.equal(document.querySelectorAll('button[aria-label="显示日志"]').length, 1);
+
+    await clickButtonByLabel(act, "显示网络");
+    await waitFor(() => networkEvidenceText().includes("/v1/home/feed"));
+    assert.equal(document.querySelector('[aria-label="运行日志"]'), null);
+    assert.equal(document.querySelectorAll('button[aria-label="隐藏网络"]').length, 1);
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
 test("lets users tune live preview fps without changing selected host target state", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
@@ -1370,9 +1455,29 @@ async function clickViewTreeTarget(act, deviceName) {
   });
 }
 
+async function clickButtonByLabel(act, label) {
+  const button = document.querySelector(`button[aria-label="${label}"]`) ??
+    Array.from(document.querySelectorAll("button")).find((candidate) => candidate.textContent?.trim() === label);
+  assert.ok(button, `Expected to find button for ${label}`);
+  await act(async () => {
+    button.click();
+  });
+}
+
 async function fillSearchInput(act, value) {
   const input = document.querySelector('input[placeholder="搜索"]');
   assert.ok(input && "value" in input, "Expected to find search input");
+  await act(async () => {
+    const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
+    assert.ok(setter, "Expected HTMLInputElement value setter");
+    setter.call(input, value);
+    input.dispatchEvent(new window.Event("input", { bubbles: true, cancelable: true }));
+    input.dispatchEvent(new window.Event("change", { bubbles: true, cancelable: true }));
+  });
+}
+
+async function setTextInputValue(act, input, value) {
+  assert.ok(input && "value" in input, "Expected text input element");
   await act(async () => {
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
     assert.ok(setter, "Expected HTMLInputElement value setter");

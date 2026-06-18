@@ -55,6 +55,24 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
   - network evidence
   - logs
 
+## Device Canvas Interaction Pattern
+
+- When the Web canvas mirrors a real screenshot and proxies device input, keep the machine action boundary in Triton CLI / HTTP. The Web UI may collect human gestures, but it should emit DTO-shaped `tap`, `swipe`, `type`, `paste`, `deleteBackward`, or similar input payloads instead of calling platform tools directly.
+- Do not infer focused App controls from screenshot pixels. A tap on the canvas may open a local keyboard relay, but whether the App focused an input must be determined by the preceding Triton input result, runtime state, screenshot, AX, or other machine-readable evidence.
+- For keyboard entry on a screenshot canvas, prefer a visible focused relay input near the tap point over relying only on `keydown` on a generic `div`. This preserves browser text editing behavior, IME composition direction, paste, selection deletion, and Backspace/Delete semantics.
+- Keep relay semantics explicit:
+  - appended text maps to `type`;
+  - paste maps to `paste`;
+  - deletion maps to repeated `deleteBackward`;
+  - Escape or an equivalent UI action dismisses only the relay, not the remote App state.
+- Tests should cover the relay at the DOM payload level: tap creates/focuses the relay, typed text emits `type`, deletion emits `deleteBackward`, and paste emits `paste` without requiring a real device.
+
+## Evidence Panel Interaction Pattern
+
+- Network and log evidence are separate panes. If users can hide them, keep independent state for each pane rather than coupling all evidence visibility to a single logs toggle.
+- Every hidden evidence pane needs a visible restore path. If both network and logs are hidden, render a compact restore strip with explicit controls such as `显示网络` and `显示日志`.
+- Keep evidence pane controls as UI state only. Hiding network/log strips must not stop capture, mutate backend state, or change CLI/HTTP evidence contracts unless a separate requirement explicitly adds that control loop.
+
 ## Validation
 
 Run these before delivery:

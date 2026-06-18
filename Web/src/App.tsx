@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ClipboardEvent, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import {
   Activity,
   Braces,
@@ -144,6 +144,11 @@ type GesturePreview =
       endYPercent: number;
       distance: number;
     };
+
+type KeyboardRelayState = {
+  xPercent: number;
+  yPercent: number;
+};
 
 type SidebarPanel = "devices" | "view-tree";
 
@@ -338,6 +343,7 @@ export function App() {
   const [bridge, setBridge] = useState<BridgeState>({ loading: true, sourceCommands: [] });
   const [bridgeOutputs, setBridgeOutputs] = useState<BridgeCommandOutput[]>([]);
   const [interactionLogs, setInteractionLogs] = useState<LogEntry[]>([]);
+  const [isNetworkVisible, setIsNetworkVisible] = useState(true);
   const [isLogsVisible, setIsLogsVisible] = useState(true);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>("devices");
@@ -397,6 +403,16 @@ export function App() {
     ].slice(0, 8),
     [bridgeOutputs, hostLogsById, interactionLogs, selected]
   );
+  const bottomPanelState = [
+    isNetworkVisible ? "" : "is-network-hidden",
+    isLogsVisible ? "" : "is-logs-hidden",
+    !isNetworkVisible && !isLogsVisible ? "is-bottom-hidden" : "",
+  ].filter(Boolean).join(" ");
+  const isEvidenceVisible = isNetworkVisible || isLogsVisible;
+  const windowEvidenceState = [
+    isLogsVisible ? "" : "is-logs-hidden",
+    isEvidenceVisible ? "" : "is-evidence-hidden",
+  ].filter(Boolean).join(" ");
 
   const loadHostTargets = async (preferredSelectedId: string) => {
     const result = await fetchHostTargets();
@@ -738,7 +754,7 @@ export function App() {
   return (
     <main className="device-hub-shell">
       <section
-        className={`device-hub-window ${isLogsVisible ? "" : "is-logs-hidden"}`}
+        className={`device-hub-window ${windowEvidenceState}`}
         aria-label="TritonKit 设备中心原型"
       >
         <DeviceHubToolbar
@@ -768,11 +784,13 @@ export function App() {
             screenshotError={screenshotError}
             livePreview={selectedLivePreview}
             inputActivity={selectedInputActivity}
+            isNetworkVisible={isNetworkVisible}
             isLogsVisible={isLogsVisible}
             zoomLevel={canvasZoom}
             isDiscoveringHostTargets={isDiscoveringHostTargets}
             canZoomOut={canZoomOut}
             canZoomIn={canZoomIn}
+            onToggleNetwork={() => setIsNetworkVisible((current) => !current)}
             onToggleLogs={() => setIsLogsVisible((current) => !current)}
             onZoomOut={handleZoomOut}
             onResetZoom={handleResetZoom}
@@ -782,8 +800,8 @@ export function App() {
           />
           <Inspector target={selectedWithScreenshot} events={selectedEvents} bridge={bridge} />
         </section>
-        <section className={`hub-bottom ${isLogsVisible ? "" : "is-logs-hidden"}`} aria-label="设备证据">
-          <NetworkStrip events={selectedEvents} />
+        <section className={`hub-bottom ${bottomPanelState}`} aria-label="设备证据">
+          {isNetworkVisible ? <NetworkStrip events={selectedEvents} onHide={() => setIsNetworkVisible(false)} /> : null}
           {isLogsVisible ? <LogStrip entries={selectedLogs} onHide={() => setIsLogsVisible(false)} /> : null}
         </section>
       </section>
@@ -1222,11 +1240,13 @@ function DeviceCanvas({
   screenshotError,
   livePreview,
   inputActivity,
+  isNetworkVisible,
   isLogsVisible,
   zoomLevel,
   isDiscoveringHostTargets,
   canZoomOut,
   canZoomIn,
+  onToggleNetwork,
   onToggleLogs,
   onZoomOut,
   onResetZoom,
@@ -1238,11 +1258,13 @@ function DeviceCanvas({
   screenshotError?: string;
   livePreview?: LivePreviewState;
   inputActivity?: InputActivity;
+  isNetworkVisible: boolean;
   isLogsVisible: boolean;
   zoomLevel: number;
   isDiscoveringHostTargets: boolean;
   canZoomOut: boolean;
   canZoomIn: boolean;
+  onToggleNetwork: () => void;
   onToggleLogs: () => void;
   onZoomOut: () => void;
   onResetZoom: () => void;
@@ -1251,10 +1273,14 @@ function DeviceCanvas({
   onInput: (input: ReadonlyInputIntent) => Promise<void>;
 }) {
   const screenRef = useRef<HTMLDivElement | null>(null);
+  const keyboardRelayRef = useRef<HTMLInputElement | null>(null);
+  const keyboardRelayValue = useRef("");
   const previewControlRef = useRef<HTMLDivElement | null>(null);
   const gestureStart = useRef<GesturePoint | null>(null);
   const gestureClearTimer = useRef<number | undefined>(undefined);
   const [gesturePreview, setGesturePreview] = useState<GesturePreview | null>(null);
+  const [keyboardRelay, setKeyboardRelay] = useState<KeyboardRelayState | null>(null);
+  const [keyboardRelayText, setKeyboardRelayText] = useState("");
   const [isPreviewFpsOpen, setIsPreviewFpsOpen] = useState(false);
   const orientation = target.frameOrientation ?? "landscape";
   const aspectRatio =
@@ -1296,7 +1322,15 @@ function DeviceCanvas({
 
   useEffect(() => {
     setIsPreviewFpsOpen(false);
+    setKeyboardRelay(null);
+    setKeyboardRelayText("");
+    keyboardRelayValue.current = "";
   }, [target.id]);
+
+  useEffect(() => {
+    if (!keyboardRelay) return;
+    keyboardRelayRef.current?.focus({ preventScroll: true });
+  }, [keyboardRelay]);
 
   useEffect(() => {
     if (!isPreviewFpsOpen) return;
@@ -1399,6 +1433,10 @@ function DeviceCanvas({
         xPercent: start.xPercent,
         yPercent: start.yPercent,
       });
+      setKeyboardRelay({
+        xPercent: start.xPercent,
+        yPercent: start.yPercent,
+      });
       clearGesturePreviewSoon();
       onInput({
         action: "tap",
@@ -1452,6 +1490,70 @@ function DeviceCanvas({
     const text = event.clipboardData.getData("text");
     if (!text) return;
     event.preventDefault();
+    onInput({ action: "paste", text });
+  };
+
+  const setRelayText = (text: string) => {
+    keyboardRelayValue.current = text;
+    setKeyboardRelayText(text);
+  };
+
+  const handleRelayChange = (event: ChangeEvent<HTMLInputElement>) => {
+    if (!canSendInput) return;
+    const next = event.currentTarget.value;
+    const previous = keyboardRelayValue.current;
+    setRelayText(next);
+
+    if (next === previous) return;
+    if (next.startsWith(previous)) {
+      const inserted = next.slice(previous.length);
+      if (inserted) {
+        onInput({ action: "type", text: inserted });
+      }
+      return;
+    }
+
+    if (previous.startsWith(next)) {
+      const deletedCount = previous.length - next.length;
+      for (let index = 0; index < deletedCount; index += 1) {
+        onInput({ action: "deleteBackward" });
+      }
+      return;
+    }
+
+    const deletedCount = previous.length;
+    for (let index = 0; index < deletedCount; index += 1) {
+      onInput({ action: "deleteBackward" });
+    }
+    if (next) {
+      onInput({ action: "type", text: next });
+    }
+  };
+
+  const handleRelayKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
+    if (!canSendInput) return;
+    if (event.key === "Escape") {
+      event.preventDefault();
+      setKeyboardRelay(null);
+      return;
+    }
+    if ((event.key === "Backspace" || event.key === "Delete") && keyboardRelayValue.current.length === 0) {
+      event.preventDefault();
+      onInput({ action: "deleteBackward" });
+    }
+  };
+
+  const handleRelayPaste = (event: ClipboardEvent<HTMLInputElement>) => {
+    if (!canSendInput) return;
+    const text = event.clipboardData.getData("text");
+    if (!text) return;
+    event.preventDefault();
+
+    const input = event.currentTarget;
+    const selectionStart = input.selectionStart ?? keyboardRelayValue.current.length;
+    const selectionEnd = input.selectionEnd ?? selectionStart;
+    const next = keyboardRelayValue.current.slice(0, selectionStart) + text + keyboardRelayValue.current.slice(selectionEnd);
+    setRelayText(next);
     onInput({ action: "paste", text });
   };
 
@@ -1569,10 +1671,41 @@ function DeviceCanvas({
             )}
             {gesturePreview ? <GestureOverlay gesture={gesturePreview} /> : null}
             {inputActivity ? <InputActivityBadge activity={inputActivity} /> : null}
+            {keyboardRelay ? (
+              <label
+                className="keyboard-relay"
+                style={{
+                  "--relay-x": `${keyboardRelay.xPercent}%`,
+                  "--relay-y": `${keyboardRelay.yPercent}%`,
+                } as CSSProperties}
+              >
+                <Keyboard size={13} />
+                <input
+                  ref={keyboardRelayRef}
+                  value={keyboardRelayText}
+                  aria-label="设备键盘输入"
+                  autoCapitalize="none"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  inputMode="text"
+                  placeholder="输入到设备"
+                  onChange={handleRelayChange}
+                  onKeyDown={handleRelayKeyDown}
+                  onPaste={handleRelayPaste}
+                />
+              </label>
+            ) : null}
           </div>
         </div>
       </div>
-      <DeviceControls target={target} isLogsVisible={isLogsVisible} onToggleLogs={onToggleLogs} />
+      <DeviceControls
+        target={target}
+        isNetworkVisible={isNetworkVisible}
+        isLogsVisible={isLogsVisible}
+        onToggleNetwork={onToggleNetwork}
+        onToggleLogs={onToggleLogs}
+      />
       <CanvasZoomControls
         zoomLevel={zoomLevel}
         canZoomOut={canZoomOut}
@@ -1773,11 +1906,15 @@ function CanvasZoomControls({
 
 function DeviceControls({
   target,
+  isNetworkVisible,
   isLogsVisible,
+  onToggleNetwork,
   onToggleLogs,
 }: {
   target: DeviceTarget;
+  isNetworkVisible: boolean;
   isLogsVisible: boolean;
+  onToggleNetwork: () => void;
   onToggleLogs: () => void;
 }) {
   const actions = [
@@ -1796,6 +1933,15 @@ function DeviceControls({
             <Icon size={17} />
           </button>
         ))}
+        <button
+          className={isNetworkVisible ? "is-active" : ""}
+          type="button"
+          aria-label={isNetworkVisible ? "隐藏网络" : "显示网络"}
+          title={isNetworkVisible ? "隐藏网络" : "显示网络"}
+          onClick={onToggleNetwork}
+        >
+          <Network size={17} />
+        </button>
         <button
           className={isLogsVisible ? "is-active" : ""}
           type="button"
@@ -1817,12 +1963,15 @@ function supportsSystemHomeControl(target: DeviceTarget) {
   return target.canInput !== false;
 }
 
-function NetworkStrip({ events }: { events: NetworkEvent[] }) {
+function NetworkStrip({ events, onHide }: { events: NetworkEvent[]; onHide: () => void }) {
   return (
     <section className="evidence-strip" aria-label="网络证据">
       <div className="strip-heading">
         <Network size={16} />
         <strong>网络</strong>
+        <button className="strip-action" type="button" aria-label="隐藏网络证据" title="隐藏网络证据" onClick={onHide}>
+          <EyeOff size={15} />
+        </button>
       </div>
       <div className="network-rows">
         {events.map((event) => (
