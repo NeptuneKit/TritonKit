@@ -106,6 +106,23 @@ public struct TKDevicectlDeviceTarget: Codable, Equatable {
     public let kind: String
     public let id: String
     public let redactedTarget: String
+    public let alternateIdentifiers: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case identifier
+        case name
+        case runtime
+        case state
+        case ready
+        case transport
+        case blockedReasons
+        case source
+        case platform
+        case scope
+        case kind
+        case id
+        case redactedTarget
+    }
 
     public init(
         identifier: String,
@@ -115,7 +132,8 @@ public struct TKDevicectlDeviceTarget: Codable, Equatable {
         ready: Bool,
         transport: String? = nil,
         blockedReasons: [String],
-        source: String = "devicectl"
+        source: String = "devicectl",
+        alternateIdentifiers: [String] = []
     ) {
         self.identifier = identifier
         self.name = name
@@ -130,6 +148,25 @@ public struct TKDevicectlDeviceTarget: Codable, Equatable {
         self.kind = "real-device"
         self.id = "ios-real:\(TKDevicectlDeviceTarget.stableHash(identifier))"
         self.redactedTarget = self.id
+        self.alternateIdentifiers = Array(NSOrderedSet(array: alternateIdentifiers.filter { !$0.isEmpty && $0 != identifier })) as? [String] ?? alternateIdentifiers
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.identifier = try container.decode(String.self, forKey: .identifier)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name)
+        self.runtime = try container.decodeIfPresent(String.self, forKey: .runtime)
+        self.state = try container.decode(String.self, forKey: .state)
+        self.ready = try container.decode(Bool.self, forKey: .ready)
+        self.transport = try container.decodeIfPresent(String.self, forKey: .transport)
+        self.blockedReasons = try container.decode([String].self, forKey: .blockedReasons)
+        self.source = try container.decode(String.self, forKey: .source)
+        self.platform = try container.decode(String.self, forKey: .platform)
+        self.scope = try container.decode(String.self, forKey: .scope)
+        self.kind = try container.decode(String.self, forKey: .kind)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.redactedTarget = try container.decode(String.self, forKey: .redactedTarget)
+        self.alternateIdentifiers = []
     }
 
     private static func stableHash(_ value: String) -> String {
@@ -171,6 +208,7 @@ public enum TKDevicectlDeviceListParser {
             return nil
         }
         let deviceProperties = dictionary(record["deviceProperties"])
+        let hardwareProperties = dictionary(record["hardwareProperties"])
         let connectionProperties = dictionary(record["connectionProperties"])
         let name = string(deviceProperties["name"] ?? deviceProperties["deviceName"])
         let runtime = runtimeName(from: string(deviceProperties["osVersionNumber"] ?? deviceProperties["osVersion"] ?? deviceProperties["productVersion"]))
@@ -184,8 +222,19 @@ public enum TKDevicectlDeviceListParser {
             state: state,
             ready: blockedReasons.isEmpty,
             transport: transport,
-            blockedReasons: blockedReasons
+            blockedReasons: blockedReasons,
+            alternateIdentifiers: alternateIdentifiers(record: record, deviceProperties: deviceProperties, hardwareProperties: hardwareProperties)
         )
+    }
+
+    private static func alternateIdentifiers(record: [String: Any], deviceProperties: [String: Any], hardwareProperties: [String: Any]) -> [String] {
+        let values = [
+            string(record["udid"] ?? record["UDID"] ?? record["uniqueDeviceID"] ?? record["uniqueDeviceIdentifier"]),
+            string(deviceProperties["udid"] ?? deviceProperties["UDID"] ?? deviceProperties["uniqueDeviceID"] ?? deviceProperties["uniqueDeviceIdentifier"]),
+            string(hardwareProperties["udid"] ?? hardwareProperties["UDID"] ?? hardwareProperties["uniqueDeviceID"] ?? hardwareProperties["uniqueDeviceIdentifier"]),
+            string(hardwareProperties["serialNumber"] ?? hardwareProperties["serial"]),
+        ]
+        return Array(NSOrderedSet(array: values.compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty })) as? [String] ?? []
     }
 
     private static func blockedReasons(record: [String: Any], deviceProperties: [String: Any], connectionProperties: [String: Any]) -> [String] {

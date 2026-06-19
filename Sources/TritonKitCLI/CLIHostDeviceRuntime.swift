@@ -188,7 +188,7 @@ func selectHostDeviceTarget(target: String?, candidates: [HostDeviceTarget]) -> 
             let ready = candidates.filter(\.ready)
             return ready.count == 1 ? ready[0] : nil
         }
-        return candidates.first(where: { $0.target == target || $0.id == target || $0.rawTarget == target })
+        return candidates.first(where: { $0.target == target || $0.id == target || $0.rawTarget == target || $0.rawTargetAliases.contains(target) })
     }
     let ready = candidates.filter(\.ready)
     if ready.count == 1 {
@@ -258,7 +258,22 @@ private func explicitHostDeviceMatch(selector: String, candidates: [HostDeviceTa
         let udid = String(normalizedSelector.dropFirst("triton:ios-simulator:".count))
         return candidates.first { $0.platform == HostDevicePlatform.ios.rawValue && $0.target == udid }
     }
-    return candidates.first { $0.id == normalizedSelector || $0.target == normalizedSelector || $0.rawTarget == normalizedSelector }
+    return candidates.first {
+        $0.id == normalizedSelector
+            || $0.target == normalizedSelector
+            || $0.rawTarget == normalizedSelector
+            || $0.rawTargetAliases.contains(normalizedSelector)
+    }
+}
+
+func hostDeviceDiscoveryScope(for request: HostDeviceSelectionRequest) -> HostDeviceScope? {
+    guard request.scope == nil, request.platform == .ios, let selector = request.device, !selector.isEmpty else {
+        return request.scope
+    }
+    if selector == "booted" {
+        return .simulator
+    }
+    return .all
 }
 
 private func uniqueHostDeviceTarget(
@@ -360,7 +375,7 @@ func resolveHostDeviceSelection(
 
 func resolveHostDeviceSelection(request: HostDeviceSelectionRequest, hdc: String, adb: String = "adb") throws -> HostDeviceSelectionResult {
     let aliases = try loadHostTargetAliasStore()
-    let candidates = try hostDeviceTargetsByPlatform(platform: request.platform, scope: request.scope, hdc: hdc, adb: adb)
+    let candidates = try hostDeviceTargetsByPlatform(platform: request.platform, scope: hostDeviceDiscoveryScope(for: request), hdc: hdc, adb: adb)
     return try resolveHostDeviceSelection(request: request, candidates: candidates, aliases: aliases)
 }
 
@@ -429,7 +444,8 @@ func hostDeviceTarget(from target: TKDevicectlDeviceTarget) -> HostDeviceTarget 
         kind: target.kind,
         blockedReasons: target.blockedReasons,
         sensitive: false,
-        rawTarget: target.identifier
+        rawTarget: target.identifier,
+        rawTargetAliases: target.alternateIdentifiers
     )
 }
 
@@ -581,7 +597,7 @@ func waitForHostDeviceReady(
         case .ios:
             if selected.scope == HostDeviceScope.real.rawValue {
                 let result = try iosRealDeviceTargets()
-                guard let currentTarget = result.targets.first(where: { $0.id == selected.id || $0.target == selected.target || $0.rawTarget == selected.rawTarget }) else {
+                guard let currentTarget = result.targets.first(where: { $0.id == selected.id || $0.target == selected.target || $0.rawTarget == selected.rawTarget || $0.rawTargetAliases.contains(selected.rawTarget) }) else {
                     throw HostDeviceSelectionError.targetNotFound(selected.target)
                 }
                 let event = HostDeviceReadyEvent(

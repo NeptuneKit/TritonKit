@@ -3053,6 +3053,51 @@ struct DeviceCrossPlatformTests {
         #expect(resolved.source == .explicit)
     }
 
+    @Test("host device selector resolves iOS real devices by raw identifier and UDID aliases")
+    func hostDeviceSelectorResolvesIOSRealDevicesByRawIdentifierAndUDIDAliases() throws {
+        let ready = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:abc123",
+            target: "ios-real:abc123",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "Lin iPhone",
+            runtime: "iOS 26.5",
+            transport: "usb",
+            scope: "real",
+            kind: "real-device",
+            blockedReasons: [],
+            rawTarget: "COREDEVICE-IDENTIFIER",
+            rawTargetAliases: ["IOS-DEVICE-UDID"]
+        )
+
+        for selector in ["COREDEVICE-IDENTIFIER", "IOS-DEVICE-UDID"] {
+            let resolved = try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(device: selector, platform: .ios, ready: true),
+                candidates: [.ios: [ready]],
+                aliases: .empty
+            )
+
+            #expect(resolved.platform == .ios)
+            #expect(resolved.target == ready)
+            #expect(resolved.target.scope == "real")
+            #expect(resolved.target.kind == "real-device")
+            #expect(resolved.source == .explicit)
+            #expect(resolved.selector == selector)
+        }
+    }
+
+    @Test("explicit iOS host selectors discover real devices without requiring scope real")
+    func explicitIOSHostSelectorsDiscoverRealDevicesWithoutRequiringScopeReal() {
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "ios-real:abc123", platform: .ios)) == .all)
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "COREDEVICE-IDENTIFIER", platform: .ios)) == .all)
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "IOS-DEVICE-UDID", platform: .ios)) == .all)
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "booted", platform: .ios)) == .simulator)
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(platform: .ios)) == nil)
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "android-real:abc123", platform: .android)) == nil)
+    }
+
     @Test("host device target mapping carries Harmony foreground app identity")
     func hostDeviceTargetMappingCarriesHarmonyForegroundAppIdentity() {
         let target = TKHarmonyTarget(

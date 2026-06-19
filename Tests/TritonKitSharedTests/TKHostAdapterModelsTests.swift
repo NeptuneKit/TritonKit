@@ -55,6 +55,7 @@ struct TKHostAdapterModelsTests {
             "lockState": "unlocked"
           },
           "hardwareProperties": {
+            "udid": "00008110-001C195E0A10801E-UDID",
             "serialNumber": "F2LPRIVATE",
             "ecid": "1234567890"
           },
@@ -73,6 +74,7 @@ struct TKHostAdapterModelsTests {
         #expect(device.kind == "real-device")
         #expect(device.source == "devicectl")
         #expect(device.identifier == "00008110-001C195E0A10801E")
+        #expect(device.alternateIdentifiers.contains("00008110-001C195E0A10801E-UDID"))
         #expect(device.id.hasPrefix("ios-real:"))
         #expect(device.redactedTarget == device.id)
         #expect(device.ready)
@@ -81,6 +83,11 @@ struct TKHostAdapterModelsTests {
         #expect(device.runtime == "iOS 26.5")
         #expect(device.transport == "usb")
         #expect(device.id.contains("00008110") == false)
+
+        let encoded = String(decoding: try JSONEncoder().encode(device), as: UTF8.self)
+        #expect(!encoded.contains("alternateIdentifiers"))
+        #expect(!encoded.contains("00008110-001C195E0A10801E-UDID"))
+        #expect(!encoded.contains("F2LPRIVATE"))
     }
 
     @Test("devicectl parser maps blocked real-device fixtures")
