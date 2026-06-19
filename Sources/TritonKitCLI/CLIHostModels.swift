@@ -739,7 +739,7 @@ enum HostCommandRunError: Error, CustomStringConvertible {
         case .deviceNotReady(let target, let timeoutSeconds):
             "Host device target \(target) was not ready after \(timeoutSeconds)s"
         case .nonZeroExit(_, let result):
-            result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Host command exited \(result.exitCode)" : result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            hostCommandNonZeroExitDescription(result)
         case .missingPreferences(let path):
             "Preferences plist not found: \(path)"
         case .preferenceKeyNotFound(let key):
@@ -750,6 +750,18 @@ enum HostCommandRunError: Error, CustomStringConvertible {
             "Harmony layout text was not found: \(text)"
         }
     }
+}
+
+private func hostCommandNonZeroExitDescription(_ result: HostProcessResult) -> String {
+    let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+    let stdout = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+    if !stderr.isEmpty {
+        return stderr
+    }
+    if !stdout.isEmpty {
+        return stdout
+    }
+    return "Host command exited \(result.exitCode)"
 }
 
 enum HostArtifactOutputError: Error, CustomStringConvertible {

@@ -89,6 +89,16 @@ struct AppOpenURLFlowTests {
         let harmonyInfo = try planHostAppInfo(selection: harmony, bundleID: "com.example.demo", adb: "adb", hdc: "hdc", devicectlArtifacts: nil)
         #expect(harmonyInfo.command.argv == ["-t", "HDCREAL001", "shell", "bm", "dump", "-n", "com.example.demo"])
         #expect(harmonyInfo.target == "harmony-real:fed789/app:com.example.demo")
+
+        let harmonyLaunch = try planHostAppLaunch(selection: harmony, bundleID: nil, packageName: nil, activity: nil, bundle: "com.example.demo", ability: "EntryAbility", payloadURL: nil, adb: "adb", hdc: "hdc", devicectlArtifacts: nil)
+        #expect(harmonyLaunch.command.argv == ["-t", "HDCREAL001", "shell", "aa", "start", "-b", "com.example.demo", "-a", "EntryAbility"])
+        #expect(harmonyLaunch.command.argv.contains("harmony-real:fed789") == false)
+        #expect(harmonyLaunch.target == "harmony-real:fed789/app:com.example.demo")
+
+        let harmonyOpenURL = try planHostAppOpenURL(selection: harmony, url: "demo://nativejump/index", bundleID: nil, packageName: nil, bundle: "com.example.demo", ability: "EntryAbility", adb: "adb", hdc: "hdc", devicectlArtifacts: nil)
+        #expect(harmonyOpenURL.command.argv == ["-t", "HDCREAL001", "shell", "aa", "start", "-a", "EntryAbility", "-b", "com.example.demo", "-U", "demo://nativejump/index"])
+        #expect(harmonyOpenURL.command.argv.contains("harmony-real:fed789") == false)
+        #expect(harmonyOpenURL.target == "harmony-real:fed789/app:com.example.demo")
     }
 
     @Test("host app action output marks submission as non-business-ready evidence")
