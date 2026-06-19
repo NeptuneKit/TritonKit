@@ -321,6 +321,11 @@ func hostArtifactOutputContract() -> TKCommandOutputContract {
             ("selection", "HostDeviceSelectionResult?", false, "Target selection details"),
             ("artifact", "String", true, "Written artifact path"),
             ("format", "String", true, "Artifact file format such as png or jpeg"),
+            ("bytes", "Int", true, "Artifact byte count"),
+            ("width", "Int?", false, "Image pixel width when readable"),
+            ("height", "Int?", false, "Image pixel height when readable"),
+            ("sha256", "String", true, "SHA-256 digest of the written artifact"),
+            ("capturedAt", "String", true, "Host-side capture timestamp in ISO-8601 format"),
             ("sourceCommands", "[String]", true, "Underlying host commands"),
             ("note", "String", true, "Boundary or follow-up note"),
         ])

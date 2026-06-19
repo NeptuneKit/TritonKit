@@ -153,6 +153,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             selection: selection,
             artifact: output,
             format: "png",
+            metadata: try makeHostScreenshotArtifactMetadata(outputPath: output),
             sourceCommands: [result.sourceCommand],
             note: "Host-side iOS simulator screenshot was written."
         )
@@ -166,6 +167,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             selection: selection,
             artifact: output,
             format: "jpeg",
+            metadata: try makeHostScreenshotArtifactMetadata(outputPath: output),
             sourceCommands: capture.sourceCommands,
             note: "Host-side Harmony screenshot was captured through snapshot_display using remote artifact \(capture.remotePath)."
         )
@@ -183,6 +185,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             selection: selection,
             artifact: output,
             format: "png",
+            metadata: try makeHostScreenshotArtifactMetadata(outputPath: output),
             sourceCommands: [screenshotResult.sourceCommand, pullResult.sourceCommand],
             note: "Host-side Android screenshot was captured through adb screencap and pulled from the emulator."
         )
