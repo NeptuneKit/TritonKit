@@ -36,3 +36,31 @@
 4. `tritonkit-ops-governance` 记录本地 visual recap、docs-first 和内部 / public skill 边界。
 5. `docs-linhay/dev/` 有一份可检索的吸收决策文档。
 6. 文档结构检查、skill 基础校验和 `git diff --check` 通过，或明确说明阻塞。
+
+## P1 Skill 瘦身
+
+目标：
+
+1. 把 Android Emulator 和 cross-platform real-device 两个历史 subagent orchestration skill 合并为一个设备类 router skill。
+2. 将历史 plan 中的旧 skill 路径更新为新统一入口。
+3. 从 `.agents/skills/` 移除 `apple-docs` symlink，保留外部 / 用户级 Apple 文档 skill 来源。
+
+验收：
+
+1. `.agents/skills/` 中不再存在 `tritonkit-android-subagent-orchestration`、`tritonkit-real-device-subagent-orchestration` 和 `apple-docs`。
+2. 新增 `tritonkit-device-subagent-orchestration`，覆盖 Android Emulator 与 real-device 两个 track。
+3. `.agents/skills/README.md`、相关 space plan 和 dev 治理文档引用新入口。
+
+## P2 Session Distill 合并
+
+目标：
+
+1. 将 `tritonkit-session-skill-distill` 的“整理 / 沉淀”触发、收尾隔离和 SwiftPM / CLI 修复沉淀规则并入 `tritonkit-ops-governance`。
+2. 更新 `AGENTS.md` 与内部 skill 交叉引用，避免删除独立 skill 后触发链断开。
+3. 删除 `.agents/skills/tritonkit-session-skill-distill/`，减少只做治理分流的入口。
+
+验收：
+
+1. `rg "tritonkit-session-skill-distill" AGENTS.md .agents docs-linhay/dev/20260619-agent-workflow-skill-governance.md docs-linhay/spaces/20260619-agent-workflow-skill-governance/README.md` 不再命中非历史说明。
+2. `tritonkit-ops-governance` description 明确覆盖“整理 / 沉淀”触发。
+3. skill front matter 校验、`git diff --check` 和文档结构检查完成，或明确说明既有 blocker。

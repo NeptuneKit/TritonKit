@@ -108,6 +108,6 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
 ## 与其他 skill 的关系
 
 - 文档、memory、AGENTS 同步：使用 `tritonkit-ops-governance`。
-- 会话整理和模式沉淀：使用 `tritonkit-session-skill-distill`。
+- 会话整理和模式沉淀：使用 `tritonkit-ops-governance`。
 - subagent 监督交付：使用 `tritonkit-subagent-supervision`。
 - 具体领域能力按需叠加 Xcode、host simulator、emulator 或真实项目回归相关 skill。

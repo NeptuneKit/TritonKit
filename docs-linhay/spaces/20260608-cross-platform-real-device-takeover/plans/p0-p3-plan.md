@@ -137,7 +137,7 @@ triton smoke harmony --device harmony-phone --bundle <bundle> --ability <ability
 
 ## Subagent 拆分
 
-项目级 subagent 配置已落在 `.codex/agents/`，调度说明见 `.agents/skills/tritonkit-real-device-subagent-orchestration/SKILL.md`，具体派发计划见 `plans/20260608-subagent-execution-plan-v01.md`。
+项目级 subagent 配置已落在 `.codex/agents/`，调度说明见 `.agents/skills/tritonkit-device-subagent-orchestration/SKILL.md` 的 cross-platform real-device track，具体派发计划见 `plans/20260608-subagent-execution-plan-v01.md`。
 
 | Agent | 阶段 | 主要写入面 |
 | --- | --- | --- |

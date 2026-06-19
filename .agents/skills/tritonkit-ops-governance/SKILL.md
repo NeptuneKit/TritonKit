@@ -1,6 +1,6 @@
 ---
 name: tritonkit-ops-governance
-description: TritonKit 流程治理：CLI/HTTP/Wails 开发回路、文档记忆写回与 AGENTS 同步。
+description: TritonKit 流程治理：CLI/HTTP/Wails 开发回路、文档记忆写回、AGENTS 同步，以及用户明确说“整理”“沉淀”“整理沉淀”“收尾整理”时的会话沉淀流程。
 metadata:
   version: 0.1.0-dev
 ---
@@ -69,6 +69,29 @@ metadata:
 - 调整 replay plan schema、record/replay 行为或 `.tritonplan` 对外契约时，同步更新 README、`docs-linhay/dev/ai-cli-readable-control.md`、真实项目回归 skill 与 memory。
 - 调整 agent-facing CLI 默认输出、参数简写或 command schema 时，同步更新 README、`docs-linhay/dev/ai-cli-readable-control.md`、真实项目回归 skill、开发反馈 skill 与 memory。
 - 调整 iOS / Harmony / CLI 接入使用指南时，同步更新 README、对应 dev 验收文档、`tritonkit-dev-feedback`、`tritonkit-real-project-regression`、必要时 `tritonkit-emulator-cli-takeover` 与 memory；接入口径必须拆分为 iOS embedded runtime、Harmony host-side HDC adapter、Harmony embedded SDK 和 macOS CLI install/run。
+
+## 会话整理与模式沉淀
+
+当用户明确说“整理”“沉淀”“整理沉淀”“整理，沉淀，提交”“收尾整理”等，且语境指向刚完成的一轮工作会话时，自动执行会话沉淀，不再追问是否需要沉淀。
+
+沉淀顺序：
+
+1. 先用 `git status --short --branch` 和 `git diff --stat` 隔离已提交代码、未提交文档、外部仓验证和临时产物。
+2. 抽取可复用模式，再区分稳定性边界：
+   - 只在本次会话出现的，丢弃。
+   - 后续还会重复的，先沉淀到项目级 skill。
+   - repo-wide 且长期稳定的，再考虑更新 AGENTS。
+3. 同步写入对应 `docs-linhay/dev/`、`docs-linhay/memory/` 或相关 `space`。
+4. 运行 `git diff --check` 和 `docs-linhay/scripts/check-docs.sh`；若被既有文档结构问题阻塞，写清具体路径和与本次改动的关系。
+5. 用户指令包含“提交”时，沉淀完成并验证后只 stage 本次整理相关文件并创建整理提交；不要默认 `git add -A`。
+
+SwiftPM / CLI 修复沉淀：
+
+1. 记录症状对应的 SwiftPM 边界：根 `Package.swift`、`CLI/Package.swift`、local path dependency、product/target identity。
+2. 若修复是本地 path dependency identity，优先沉淀为显式 `.package(name:path:)` 规则，不把它误写成 product rename、target rename 或锁文件更新。
+3. 验证顺序写清楚：先跑最小失败面，例如 `swift test --package-path CLI --filter <Suite>`；再跑完整 nested package；最后跑根 package。
+4. 整理结论必须说明是否有 `Package.resolved`、生成文件或 build artifact 变化；没有变化时明确写“无需提交锁文件/生成文件”。
+5. 这类流程优先写入对应 `docs-linhay/spaces/<space>/README.md` 的 session note；只有跨多个 space 重复出现时再升级到 ops governance 或 AGENTS。
 
 ## AGENTS 同步
 

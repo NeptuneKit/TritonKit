@@ -53,7 +53,7 @@
 12. 当前已有 `Web/` React / Vite mock 工程，但它只是可运行设计原型，不是业务控制入口或 Wails 复活；任何恢复正式 Web/Wails 产品体验的工作仍必须先重新建立或更新 `space`、需求边界、BDD 场景、技术栈和验收方式，不预设执行方或历史设计方向。
 13. 前端改动若影响后端接口、领域模型或关键交互闭环，必须先明确 CLI/HTTP 契约、状态流转、测试门禁和回归验收，避免由 UI 先行定义业务控制能力；确需人类展示时，Web/Wails 默认只消费只读 DTO，不承载 create/update/delete/execute/approve/deny 等业务控制闭环。
 14. 当一次会话中出现“有用且重复出现”的行为模式、排障路径或交付动作时，必须先识别复用边界，再优先新增或更新项目级 `skills`；只有当规则已经上升为 repo-wide、长期稳定的约束时，才同步更新 `AGENTS.md`。
-15. 当用户明确说“整理”“沉淀”“整理沉淀”“整理，沉淀，提交”“收尾整理”等，且语境指向刚完成的一轮工作会话时，自动触发会话沉淀流程，不再追问是否需要沉淀：先用 `tritonkit-session-skill-distill` 提炼可复用模式，再用 `tritonkit-ops-governance` 判断写入 `skills`、`docs-linhay/dev/`、`docs-linhay/memory/`，只有 repo-wide 长期稳定规则才同步更新 `AGENTS.md`；若用户指令中包含“提交”，沉淀完成并验证后只 stage 本次整理相关文件并创建整理提交。
+15. 当用户明确说“整理”“沉淀”“整理沉淀”“整理，沉淀，提交”“收尾整理”等，且语境指向刚完成的一轮工作会话时，自动触发会话沉淀流程，不再追问是否需要沉淀：使用 `tritonkit-ops-governance` 提炼可复用模式、判断写入 `skills`、`docs-linhay/dev/`、`docs-linhay/memory/`，只有 repo-wide 长期稳定规则才同步更新 `AGENTS.md`；若用户指令中包含“提交”，沉淀完成并验证后只 stage 本次整理相关文件并创建整理提交。
 16. 多份独立需求稿并行推进时，默认按“一个需求单元一个 `space`，必要时再配一个同 key 的 branch 与 `worktree`”组织，不按个人姓名或临时阶段单独命名工作目录。
 17. 当用户明确要求“由 subagent 去做、主控 agent 负责监督”时，主控 agent 必须承担需求边界、任务拆分、集成、验收、文档与最终完成判断，不得在“代码已改完”但截图、实机验证、文档写回等验收环节仍未完成时提前停止。
 18. 当用户明确授权主控 agent 作为 leader 自主管理 subagents 队伍时，后续同一需求执行中默认不再逐项请求用户介入；主控 agent 可以自行创建、分批调度、改派、停止或续跑 subagent，以快速推进为优先，并只在需求边界变化、破坏性操作、权限/环境 blocker 或需要用户决策时打断用户。
@@ -141,7 +141,7 @@ Git `worktree` 治理：
 3. 当前 `Web/` 仅是 React / Vite mock 原型，不是活跃产品 UI；涉及 Web mock、设计稿或浏览器交互验收时，优先使用 `tritonkit-web-mock-ui`，涉及正式 Wails/Web 产品恢复时再用 `tritonkit-design-system` 确认边界。
 4. 涉及 `space` 创建、命名、README 模板或截图归档时，优先使用 `tritonkit-ops-governance`。
 5. 涉及文档写回、memory 写回同步时，优先使用 `tritonkit-ops-governance`。
-6. 涉及 AGENTS 级长期治理规则时，优先使用 `tritonkit-ops-governance`；若用户明确说“整理”“沉淀”或同义收尾指令，同时使用 `tritonkit-session-skill-distill` 并自动执行会话沉淀流程。
+6. 涉及 AGENTS 级长期治理规则、文档写回、memory 写回或用户明确说“整理”“沉淀”及同义收尾指令时，优先使用 `tritonkit-ops-governance` 并自动执行会话沉淀流程。
 7. 涉及长期计划、自动巡航、提前巡航、无人值守推进、离开一段时间让 agent 自主进化或巡航收尾时，优先使用 `tritonkit-autonomous-cruise`，并坚持小切片、checkpoint、验证、报告、memory 与本地提交闭环；默认不 push、不 tag、不 release。
 8. 涉及整体发布、各端内置包版本同步、Homebrew/Web/SwiftPM/CocoaPods/public skill 包一致性发版时，优先使用 `tritonkit-release-package-governance`；已发布 tag 不移动，缺漏版本入口时创建下一 patch tag 补发。
 9. 涉及“主控 agent 监督、subagent 实做、直到完整需求闭环才停止”的执行模式时，优先使用 `tritonkit-subagent-supervision`。

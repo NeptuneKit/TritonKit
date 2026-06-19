@@ -90,3 +90,11 @@
 - skill front matter 基础校验。
 - `docs-linhay/scripts/check-docs.sh`
 - `git diff --check`
+
+## Skill 瘦身决策
+
+后续瘦身按“复用流程留 skill，一次性拆单回 space plan”的原则执行：
+
+- 合并 `tritonkit-android-subagent-orchestration` 与 `tritonkit-real-device-subagent-orchestration` 为 `tritonkit-device-subagent-orchestration`。两个旧 skill 都是设备类 subagent track 的执行包装，结构相同，适合由一个 router skill 按 track 读取对应 space plan。
+- 移除 `.agents/skills/apple-docs` symlink。Apple 文档查询是通用本机 skill，来源仍在用户级 / 外部 skill 目录；TritonKit 仓库 `.agents/skills/` 只保留真实目录形式的项目治理、实现、监督和规划 skill。
+- 合并 `tritonkit-session-skill-distill` 进 `tritonkit-ops-governance`。保留“整理 / 沉淀”触发词和收尾隔离、SwiftPM / CLI 修复沉淀规则，但由 ops governance 统一承载文档、memory、skill 和 AGENTS 同步边界，减少一个只做治理分流的独立入口。
