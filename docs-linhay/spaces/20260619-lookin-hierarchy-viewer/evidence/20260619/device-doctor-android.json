@@ -1,0 +1,23 @@
+{
+  "artifactsSaved" : false,
+  "capabilities" : [
+    "device.list",
+    "device.use",
+    "device.wait-ready",
+    "device.screenshot",
+    "android.adb-targets",
+    "android.real-device",
+    "android.emulator-scope"
+  ],
+  "ok" : true,
+  "platform" : "android",
+  "tools" : [
+    {
+      "available" : true,
+      "name" : "adb",
+      "path" : "adb",
+      "sourceCommand" : "adb version",
+      "versionSummary" : "Android Debug Bridge version 1.0.41"
+    }
+  ]
+}

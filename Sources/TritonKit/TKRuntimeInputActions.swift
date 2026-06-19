@@ -10,8 +10,18 @@ func performInput(_ request: TKInputRequest) async -> TKInputResult {
     switch request.type {
     case .tap:
         return performTap(request)
+    case .longPress:
+        return TKInputResult.unsupported(
+            action: request.type.rawValue,
+            message: "Long press is not exposed in the embedded TritonKit runtime yet."
+        )
     case .swipe:
         return performSwipe(request)
+    case .pinch:
+        return TKInputResult.unsupported(
+            action: request.type.rawValue,
+            message: "Pinch is not exposed in the embedded TritonKit runtime yet."
+        )
     case .typeText:
         return await performExactTextInsertion(request)
     case .paste:

@@ -84,6 +84,50 @@ struct TKInputModelsTests {
         #expect(json["y"] as? Double == 304)
     }
 
+    @Test("long press request preserves coordinate and duration")
+    func longPressRequestWireShape() throws {
+        let request = TKInputRequest.longPress(x: 190, y: 420, width: 390, height: 844, duration: 0.7)
+        let data = try JSONEncoder().encode(request)
+        let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let decoded = try JSONDecoder().decode(TKInputRequest.self, from: data)
+
+        #expect(json["type"] as? String == "longPress")
+        #expect(json["x"] as? Double == 190)
+        #expect(json["y"] as? Double == 420)
+        #expect(json["width"] as? Double == 390)
+        #expect(json["height"] as? Double == 844)
+        #expect(json["duration"] as? Double == 0.7)
+        #expect(decoded.type == .longPress)
+    }
+
+    @Test("pinch request preserves center scale and distance fields")
+    func pinchRequestWireShape() throws {
+        let request = TKInputRequest.pinch(
+            centerX: 190,
+            centerY: 420,
+            startDistance: 60,
+            endDistance: 120,
+            scale: 2,
+            width: 390,
+            height: 844,
+            duration: 0.25
+        )
+        let data = try JSONEncoder().encode(request)
+        let json = try #require(JSONSerialization.jsonObject(with: data) as? [String: Any])
+        let decoded = try JSONDecoder().decode(TKInputRequest.self, from: data)
+
+        #expect(json["type"] as? String == "pinch")
+        #expect(json["centerX"] as? Double == 190)
+        #expect(json["centerY"] as? Double == 420)
+        #expect(json["startDistance"] as? Double == 60)
+        #expect(json["endDistance"] as? Double == 120)
+        #expect(json["scale"] as? Double == 2)
+        #expect(json["width"] as? Double == 390)
+        #expect(json["height"] as? Double == 844)
+        #expect(json["duration"] as? Double == 0.25)
+        #expect(decoded.type == .pinch)
+    }
+
     @Test("secure input result reports length without text")
     func secureInputResultShape() throws {
         let result = TKInputResult.success(

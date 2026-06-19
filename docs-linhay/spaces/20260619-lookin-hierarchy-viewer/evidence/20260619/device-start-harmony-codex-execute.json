@@ -1,0 +1,46 @@
+{
+  "action" : "device.start",
+  "deployedPath" : "\/Users\/linhey\/.Huawei\/Emulator\/deployed",
+  "emulator" : "\/Applications\/DevEco-Studio.app\/Contents\/tools\/emulator\/Emulator",
+  "executedSourceCommands" : [
+    "\/Applications\/DevEco-Studio.app\/Contents\/tools\/emulator\/Emulator -start 'Codex Test Phone' -path \/Users\/linhey\/.Huawei\/Emulator\/deployed -hdcPort 10100 -bootmode coldboot"
+  ],
+  "hdc" : "\/Users\/linhey\/harmonyOS-command-line-tools\/bin\/hdc",
+  "hdcPort" : 10100,
+  "name" : "Codex Test Phone",
+  "nextAction" : {
+    "args" : [
+      "wait-ready",
+      "--platform",
+      "harmony",
+      "--device",
+      "127.0.0.1:10100",
+      "--json"
+    ],
+    "category" : "wait",
+    "command" : "device",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : false,
+    "terminationSignals" : [
+
+    ]
+  },
+  "note" : "Harmony emulator launch is detached. If HDC is not connected yet, run the planned hdc tconn command after boot progress, then wait-ready.",
+  "ok" : true,
+  "pid" : 82872,
+  "planOnly" : false,
+  "platform" : "harmony",
+  "sourceCommands" : [
+    "\/Applications\/DevEco-Studio.app\/Contents\/tools\/emulator\/Emulator -start 'Codex Test Phone' -path \/Users\/linhey\/.Huawei\/Emulator\/deployed -hdcPort 10100 -bootmode coldboot",
+    "\/Users\/linhey\/harmonyOS-command-line-tools\/bin\/hdc tconn 127.0.0.1:10100"
+  ],
+  "started" : true,
+  "stderrLogPath" : "docs-linhay\/spaces\/20260619-lookin-hierarchy-viewer\/evidence\/20260619\/device-start-harmony-codex-stderr.log",
+  "stdoutLogPath" : "docs-linhay\/spaces\/20260619-lookin-hierarchy-viewer\/evidence\/20260619\/device-start-harmony-codex-stdout.log",
+  "target" : "127.0.0.1:10100"
+}

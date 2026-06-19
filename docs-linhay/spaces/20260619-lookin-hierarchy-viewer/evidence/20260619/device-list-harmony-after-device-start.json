@@ -1,0 +1,44 @@
+{
+  "defaultTarget" : {
+    "blockedReasons" : [
+
+    ],
+    "current" : false,
+    "id" : "harmony:127.0.0.1:10100",
+    "identityState" : "unknown",
+    "kind" : "emulator",
+    "platform" : "harmony",
+    "ready" : true,
+    "scope" : "emulator",
+    "sensitive" : false,
+    "source" : "hdc",
+    "state" : "Connected",
+    "target" : "127.0.0.1:10100",
+    "transport" : "TCP"
+  },
+  "ok" : true,
+  "platform" : "harmony",
+  "sourceCommand" : "hdc list targets -v",
+  "sourceCommands" : [
+    "hdc list targets -v"
+  ],
+  "targets" : [
+    {
+      "blockedReasons" : [
+
+      ],
+      "current" : false,
+      "id" : "harmony:127.0.0.1:10100",
+      "identityState" : "unknown",
+      "kind" : "emulator",
+      "platform" : "harmony",
+      "ready" : true,
+      "scope" : "emulator",
+      "sensitive" : false,
+      "source" : "hdc",
+      "state" : "Connected",
+      "target" : "127.0.0.1:10100",
+      "transport" : "TCP"
+    }
+  ]
+}

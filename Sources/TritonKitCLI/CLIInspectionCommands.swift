@@ -205,18 +205,52 @@ struct Inspect: AsyncParsableCommand {
 struct Hierarchy: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Fetch the latest hierarchy from a TritonKit target")
 
+    @Option(help: "Optional scene platform: ios, android, or harmony. When set, returns a platform-neutral hierarchy scene.")
+    var platform: ObservationPlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current")
+    var device: String?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Path to hdc executable for --platform harmony host selection") var hdc: String = "hdc"
+    @Option(help: "Direct embedded runtime base URL, for example http://127.0.0.1:28767") var runtimeBaseURL: String?
+    @Option(help: "Maximum nodes to include in the scene") var maxNodes: Int?
     @Option(help: "Output format: tree or json") var format: HierarchyOutputFormat = .tree
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Option(help: "Write output to a file instead of stdout") var output: String?
+    @Option(help: "Write Android or Harmony host layout artifact to a file while emitting the scene separately")
+    var artifactOutput: String?
     @Flag(inversion: .prefixedNo, help: "Request a fresh hierarchy before reading the latest snapshot")
     var refresh = true
     @Flag(inversion: .prefixedNo, help: "Hide low-signal UIKit wrapper views in tree output")
     var hideNoise = true
 
     func run() async throws {
+        if let platform {
+            let outputFormat: ClientOutputFormat = (json || format == .json) ? .json : .text
+            do {
+                let resolved = try resolveObservationTarget(device: device, platform: platform, target: target, hdc: hdc, runtimeBaseURL: runtimeBaseURL)
+                try await runHierarchyScene(
+                    platform: resolved.platform,
+                    target: resolved.target,
+                    hdc: hdc,
+                    host: host,
+                    port: port,
+                    runtimeBaseURL: runtimeBaseURL,
+                    maxNodes: maxNodes,
+                    output: output,
+                    artifactOutput: artifactOutput,
+                    json: json || format == .json
+                )
+            } catch {
+                if error is ExitCode { throw error }
+                if platform == .harmony || platform == .android {
+                    try failHostCommand(error, outputFormat: outputFormat)
+                }
+                try failCommand(error, outputFormat: outputFormat, endpoint: runtimeBaseURL ?? "/request", host: host, port: port)
+            }
+            return
+        }
         let outputFormat = effectiveFormat(format, json: json)
         let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
         let data = refresh ? try await client.request(type: "hierarchy") : try await waitForHierarchy(client: client)

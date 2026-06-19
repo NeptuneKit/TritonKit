@@ -1,0 +1,579 @@
+{
+  "capturedAt" : "2026-06-18T19:28:55Z",
+  "ok" : true,
+  "scene" : {
+    "nodes" : [
+      {
+        "color" : "#34d399",
+        "depth" : 0,
+        "frame" : {
+          "height" : 2400,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 0
+        },
+        "id" : "android:host:0",
+        "interactive" : false,
+        "name" : "android.widget.FrameLayout",
+        "source" : "host-layout",
+        "type" : "android.widget.FrameLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 1,
+        "frame" : {
+          "height" : 2400,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 0
+        },
+        "id" : "android:host:1",
+        "interactive" : false,
+        "name" : "android.widget.LinearLayout",
+        "parentId" : "android:host:0",
+        "source" : "host-layout",
+        "type" : "android.widget.LinearLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 2,
+        "frame" : {
+          "height" : 2400,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 0
+        },
+        "id" : "android:host:2",
+        "interactive" : false,
+        "name" : "android:id\/content",
+        "parentId" : "android:host:1",
+        "source" : "host-layout",
+        "type" : "android.widget.FrameLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 3,
+        "frame" : {
+          "height" : 2400,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 0
+        },
+        "id" : "android:host:3",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/launcher",
+        "parentId" : "android:host:2",
+        "source" : "host-layout",
+        "type" : "android.widget.FrameLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 4,
+        "frame" : {
+          "height" : 2400,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 0
+        },
+        "id" : "android:host:4",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/drag_layer",
+        "parentId" : "android:host:3",
+        "source" : "host-layout",
+        "type" : "android.widget.FrameLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 5,
+        "frame" : {
+          "height" : 2400,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 0
+        },
+        "id" : "android:host:5",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/scrim_view",
+        "parentId" : "android:host:4",
+        "source" : "host-layout",
+        "type" : "android.view.View",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 6,
+        "frame" : {
+          "height" : 2400,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 0
+        },
+        "id" : "android:host:6",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/workspace",
+        "parentId" : "android:host:5",
+        "source" : "host-layout",
+        "type" : "android.widget.ScrollView",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 7,
+        "frame" : {
+          "height" : 1584,
+          "width" : 1022,
+          "x" : 29,
+          "y" : 203
+        },
+        "id" : "android:host:7",
+        "interactive" : false,
+        "name" : "android.view.ViewGroup",
+        "parentId" : "android:host:6",
+        "source" : "host-layout",
+        "type" : "android.view.ViewGroup",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 8,
+        "frame" : {
+          "height" : 1528,
+          "width" : 966,
+          "x" : 57,
+          "y" : 231
+        },
+        "id" : "android:host:8",
+        "interactive" : false,
+        "name" : "android.view.ViewGroup",
+        "parentId" : "android:host:7",
+        "source" : "host-layout",
+        "type" : "android.view.ViewGroup",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 9,
+        "frame" : {
+          "height" : 272,
+          "width" : 966,
+          "x" : 57,
+          "y" : 231
+        },
+        "id" : "android:host:9",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/search_container_workspace",
+        "parentId" : "android:host:8",
+        "source" : "host-layout",
+        "type" : "android.widget.FrameLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 10,
+        "frame" : {
+          "height" : 271,
+          "width" : 924,
+          "x" : 99,
+          "y" : 232
+        },
+        "id" : "android:host:10",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/bc_smartspace_view",
+        "parentId" : "android:host:9",
+        "source" : "host-layout",
+        "type" : "android.widget.FrameLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 11,
+        "frame" : {
+          "height" : 271,
+          "width" : 924,
+          "x" : 99,
+          "y" : 232
+        },
+        "id" : "android:host:11",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/smartspace_card_pager",
+        "parentId" : "android:host:10",
+        "source" : "host-layout",
+        "type" : "androidx.viewpager.widget.ViewPager",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 271,
+          "width" : 924,
+          "x" : 99,
+          "y" : 232
+        },
+        "id" : "android:host:12",
+        "interactive" : true,
+        "name" : "android.view.ViewGroup",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.view.ViewGroup",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 12,
+        "frame" : {
+          "height" : 135,
+          "width" : 924,
+          "x" : 99,
+          "y" : 300
+        },
+        "id" : "android:host:13",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/text_group",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.RelativeLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 62,
+          "width" : 924,
+          "x" : 99,
+          "y" : 300
+        },
+        "id" : "android:host:14",
+        "interactive" : true,
+        "name" : "Fri, Jun 19",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.TextView",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 12,
+        "frame" : {
+          "height" : 49,
+          "width" : 21,
+          "x" : 99,
+          "y" : 386
+        },
+        "id" : "android:host:15",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/smartspace_subtitle_group",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.view.ViewGroup",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 272,
+          "width" : 210,
+          "x" : 309,
+          "y" : 1487
+        },
+        "id" : "android:host:16",
+        "interactive" : true,
+        "name" : "Gmail",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.TextView",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 272,
+          "width" : 210,
+          "x" : 561,
+          "y" : 1487
+        },
+        "id" : "android:host:17",
+        "interactive" : true,
+        "name" : "Photos",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.TextView",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 272,
+          "width" : 210,
+          "x" : 813,
+          "y" : 1487
+        },
+        "id" : "android:host:18",
+        "interactive" : true,
+        "name" : "YouTube",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.TextView",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 12,
+        "frame" : {
+          "height" : 2201,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 136
+        },
+        "id" : "android:host:19",
+        "interactive" : false,
+        "name" : "Home",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.view.View",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 12,
+        "frame" : {
+          "height" : 63,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 1810
+        },
+        "id" : "android:host:20",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/page_indicator",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.view.View",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 12,
+        "frame" : {
+          "height" : 527,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 1873
+        },
+        "id" : "android:host:21",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/hotseat",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.view.ViewGroup",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 12,
+        "frame" : {
+          "height" : 195,
+          "width" : 928,
+          "x" : 76,
+          "y" : 1873
+        },
+        "id" : "android:host:22",
+        "interactive" : false,
+        "name" : "android.view.ViewGroup",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.view.ViewGroup",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 195,
+          "width" : 173,
+          "x" : 76,
+          "y" : 1873
+        },
+        "id" : "android:host:23",
+        "interactive" : true,
+        "name" : "Phone",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.TextView",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 195,
+          "width" : 173,
+          "x" : 328,
+          "y" : 1873
+        },
+        "id" : "android:host:24",
+        "interactive" : true,
+        "name" : "Messages",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.TextView",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 195,
+          "width" : 173,
+          "x" : 580,
+          "y" : 1873
+        },
+        "id" : "android:host:25",
+        "interactive" : true,
+        "name" : "Chrome",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.TextView",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 195,
+          "width" : 172,
+          "x" : 832,
+          "y" : 1873
+        },
+        "id" : "android:host:26",
+        "interactive" : true,
+        "name" : "丁香园",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.TextView",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 165,
+          "width" : 929,
+          "x" : 75,
+          "y" : 2125
+        },
+        "id" : "android:host:27",
+        "interactive" : true,
+        "name" : "Search",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.FrameLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 126,
+          "width" : 126,
+          "x" : 86,
+          "y" : 2144
+        },
+        "id" : "android:host:28",
+        "interactive" : true,
+        "name" : "Google app",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.ImageView",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 12,
+        "frame" : {
+          "height" : 165,
+          "width" : 252,
+          "x" : 741,
+          "y" : 2125
+        },
+        "id" : "android:host:29",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/end_part",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.LinearLayout",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 165,
+          "width" : 126,
+          "x" : 741,
+          "y" : 2125
+        },
+        "id" : "android:host:30",
+        "interactive" : true,
+        "name" : "Voice search",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.ImageView",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 165,
+          "width" : 126,
+          "x" : 867,
+          "y" : 2125
+        },
+        "id" : "android:host:31",
+        "interactive" : true,
+        "name" : "Google Lens",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.ImageButton",
+        "visible" : true
+      },
+      {
+        "color" : "#34d399",
+        "depth" : 12,
+        "frame" : {
+          "height" : 390,
+          "width" : 1080,
+          "x" : 0,
+          "y" : 2010
+        },
+        "id" : "android:host:32",
+        "interactive" : false,
+        "name" : "com.google.android.apps.nexuslauncher:id\/overview_actions_view",
+        "parentId" : "android:host:11",
+        "source" : "host-layout",
+        "type" : "android.widget.FrameLayout",
+        "visible" : true
+      }
+    ],
+    "platform" : "android",
+    "rootId" : "android:host:0",
+    "viewport" : {
+      "height" : 2400,
+      "width" : 1080
+    }
+  },
+  "source" : {
+    "command" : "triton hierarchy --platform android --target emulator-5554 --json",
+    "readonly" : true,
+    "runtimeScope" : "host-layout"
+  }
+}

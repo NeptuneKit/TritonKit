@@ -1,0 +1,1634 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+
+      ],
+      "artifacts" : [
+
+      ],
+      "examples" : [
+        "triton device doctor --platform ios --json",
+        "triton device list --platform ios --json",
+        "triton device alias set iphone15 --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+        "triton device proxy doctor --platform ios --json",
+        "triton device proxy cert doctor --platform ios --json",
+        "triton device proxy cert plan --platform android --device emulator-5554 --certificate \/tmp\/triton-proxy-ca.cer --json",
+        "triton device proxy cert install --platform ios --device booted --certificate \/tmp\/triton-proxy-ca.cer --confirm --audit-record ticket-123 --execute-runner --json",
+        "triton device proxy cert install --platform harmony --device harmony-a --certificate \/tmp\/triton-proxy-ca.cer --confirm --audit-record ticket-123 --execute-runner --json",
+        "triton device proxy probe --platform harmony --device harmony-a --json",
+        "triton device proxy probe --platform harmony --device harmony-a --plan-only --json",
+        "triton device proxy serve --listen 127.0.0.1:19431 --output \/tmp\/triton-network --mode record --jsonl",
+        "triton device proxy serve --listen 127.0.0.1:19431 --output \/tmp\/triton-network-mock --mode mock --jsonl",
+        "triton device proxy serve --listen 127.0.0.1:19431 --output \/tmp\/triton-network-mock --mode mock --mock-rules \/tmp\/triton-mock-rules.json --jsonl",
+        "triton device proxy serve --listen 127.0.0.1:19431 --output \/tmp\/triton-network-policy --mode record --policy-rules \/tmp\/triton-policy-rules.json --jsonl",
+        "triton device proxy serve --listen 127.0.0.1:19431 --output \/tmp\/triton-network-block --mode block --jsonl",
+        "triton device proxy serve --listen 127.0.0.1:19431 --output \/tmp\/triton-network-throttle --mode throttle --jsonl",
+        "triton device proxy serve --listen 127.0.0.1:19431 --output \/tmp\/triton-network-throttle --mode throttle --throttle-ms 250 --jsonl",
+        "triton device proxy export --platform ios --device iphone15 --output \/tmp\/network.har --json",
+        "triton device proxy export --platform android --device emulator-5554 --session \/tmp\/android-network --output \/tmp\/network.ndjson --json",
+        "triton device proxy export --platform ios --device booted --output \/tmp\/network.ndjson --plan-only --json",
+        "triton device proxy stop --platform ios --device iphone15 --restore --json",
+        "triton device proxy stop --platform ios --device booted --restore --plan-only --json",
+        "triton device proxy stop --platform android --device emulator-5554 --restore-snapshot \/tmp\/android-network\/restore-state.json --confirm --audit-record ticket-123 --execute-runner --json",
+        "triton device proxy start --platform ios --device booted --mode record --output \/tmp\/ios-network --confirm --audit-record ticket-123 --execute-runner --json",
+        "triton device use iphone15 --json",
+        "triton device current --json",
+        "triton device resolve --platform ios --name 'iPhone 15' --ready --json",
+        "triton device wait-ready --device iphone15 --json",
+        "triton device screenshot --device iphone15 --output \/tmp\/sim.png --json",
+        "triton device doctor --platform android --json",
+        "triton device list --platform android --json",
+        "triton device list --platform android --scope real --json",
+        "triton device resolve --platform android --device android-a --ready --json",
+        "triton device alias set android-a --platform android --target emulator-5554 --json",
+        "triton device proxy start --platform android --device android-a --mode record --output \/tmp\/android-network --json",
+        "triton device proxy start --platform android --device emulator-5554 --mode record --output \/tmp\/android-network --plan-only --json",
+        "triton device wait-ready --platform android --scope real --device <android-real-target> --json",
+        "triton device wait-ready --device android-a --json",
+        "triton device screenshot --device android-a --output \/tmp\/android.png --json",
+        "triton device doctor --platform harmony --json",
+        "triton device list --platform harmony --json",
+        "triton device alias set harmony-a --platform harmony --target 127.0.0.1:10100 --json",
+        "triton device proxy status --platform harmony --device harmony-a --json",
+        "triton device wait-ready --device harmony-a --json",
+        "triton device screenshot --device harmony-a --output \/tmp\/smoke.jpeg --json",
+        "triton device runtime-url --device harmony-a --probe-manifest --json",
+        "triton device runtime-url --platform harmony --target 127.0.0.1:10100 --probe-manifest --json",
+        "triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~\/.Huawei\/Emulator\/deployed --confirm --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "ambiguous_target",
+        "target_not_found",
+        "target_offline",
+        "target_platform_mismatch",
+        "parameter_conflict",
+        "device_not_ready",
+        "device_locked",
+        "debug_runtime_disabled",
+        "runtime_not_connected",
+        "host_command_timeout",
+        "host_action_failed",
+        "unsupported_host_action",
+        "unsupported_capability",
+        "devicectl_not_found",
+        "devicectl_json_missing",
+        "devicectl_json_parse_failed",
+        "device_not_trusted",
+        "developer_mode_required",
+        "ddi_missing",
+        "xcode_signing_failed",
+        "provisioning_profile_missing",
+        "android_adb_not_found",
+        "android_target_offline",
+        "android_target_unauthorized",
+        "android_debugging_disabled",
+        "android_package_manager_unavailable",
+        "android_app_install_failed",
+        "android_activity_resolve_failed",
+        "android_screenshot_failed",
+        "proxy_visibility_limited",
+        "proxy_cert_untrusted",
+        "proxy_platform_not_supported",
+        "proxy_real_device_not_supported",
+        "proxy_runner_not_configured",
+        "proxy_unverified_platform_proxy",
+        "destructive_action_requires_policy",
+        "proxy_endpoint_unreachable",
+        "proxy_probe_failed",
+        "proxy_status_probe_failed",
+        "proxy_cert_install_failed",
+        "proxy_start_failed",
+        "proxy_restore_failed",
+        "proxy_artifact_write_failed",
+        "harmony_hdc_not_found",
+        "harmony_discovery_timeout",
+        "harmony_target_unauthorized",
+        "harmony_target_offline",
+        "harmony_debugging_disabled",
+        "harmony_shell_unavailable",
+        "harmony_app_install_failed",
+        "harmony_ability_launch_failed",
+        "harmony_screenshot_failed",
+        "validation_failed"
+      ],
+      "failureShape" : "{ ok:false, error:{ code: ambiguous_target|target_offline|device_not_ready|host_action_failed, message, hint } }",
+      "finalEventKind" : "proxy.serve.summary",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+        "proxy.serve.ready",
+        "proxy.serve.request",
+        "proxy.serve.connection-failed",
+        "proxy.serve.summary"
+      ],
+      "name" : "device",
+      "nextCommands" : [
+        "triton device resolve --device <selector> --json",
+        "triton device use <selector> --json",
+        "triton device wait-ready --device <selector> --json",
+        "triton device proxy doctor --platform <platform> --json",
+        "triton device proxy cert doctor --platform <platform> --json",
+        "triton device proxy serve --listen 127.0.0.1:19431 --output <dir> --jsonl",
+        "triton doctor --format json",
+        "triton app launch --device <selector> --json",
+        "triton target resolve <selector> --json",
+        "triton plan --format json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "harmony",
+          "description" : "Host device platform adapter",
+          "name" : "--platform",
+          "required" : false,
+          "type" : "ios|android|harmony"
+        },
+        {
+          "defaultValue" : "all",
+          "description" : "Device scope filter; Android real excludes emulator-* adb serials",
+          "name" : "--scope",
+          "required" : false,
+          "type" : "simulator|emulator|real|all"
+        },
+        {
+          "description" : "Unified target selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current",
+          "name" : "--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Host-side proxy takeover mode for network capture or policy enforcement; proxy serve currently supports record|mock|block|throttle",
+          "name" : "--mode",
+          "required" : false,
+          "type" : "record|mock|block|throttle"
+        },
+        {
+          "description" : "Optional JSON response rules for proxy serve --mode mock only; other modes reject this flag instead of ignoring it",
+          "name" : "--mock-rules",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Optional JSON per-request policy rules for proxy serve; matching emits policyRuleId and can forward, mock, block, or throttle without app integration",
+          "name" : "--policy-rules",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Optional synthetic response delay in milliseconds for proxy serve --mode throttle; must be between 0 and 60000",
+          "name" : "--throttle-ms",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Return host command ledger for proxy takeover without changing host or emulator settings",
+          "name" : "--plan-only",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "127.0.0.1:19431",
+          "description" : "Host-side proxy endpoint; Android Emulator loopback hosts are rewritten to the emulator host gateway in sourceCommands",
+          "name" : "--proxy",
+          "required" : false,
+          "type" : "host:port"
+        },
+        {
+          "defaultValue" : "127.0.0.1:19431",
+          "description" : "Host-side capture proxy listen endpoint for proxy serve",
+          "name" : "--listen",
+          "required" : false,
+          "type" : "host:port"
+        },
+        {
+          "description" : "Root certificate path for proxy cert plan or explicitly confirmed proxy cert install",
+          "name" : "--certificate",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Audit record id required with --confirm before break-glass proxy mutation can proceed",
+          "name" : "--audit-record",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Required with --confirm and --audit-record before iOS or Android break-glass proxy mutation can call host tools",
+          "name" : "--execute-runner",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Proxy session directory produced by proxy start --output",
+          "name" : "--session",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Restore snapshot path produced by proxy start",
+          "name" : "--restore-snapshot",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Device name filter, for example iPhone 15",
+          "name" : "--name",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Runtime filter, for example iOS 26.5",
+          "name" : "--runtime",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Target state filter, for example booted or connected",
+          "name" : "--state",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Only match ready host targets",
+          "name" : "--ready",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "hdc",
+          "description" : "HDC executable path",
+          "name" : "--hdc",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "adb",
+          "description" : "ADB executable path",
+          "name" : "--adb",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Compatibility target option: simulator UDID or Harmony target, for example 127.0.0.1:10100",
+          "name" : "--target",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Harmony HVD name for device stop",
+          "name" : "--hvd",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "DevEco deployed emulator path for device stop",
+          "name" : "--path",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "\/Applications\/DevEco-Studio.app\/Contents\/tools\/emulator\/Emulator",
+          "description" : "DevEco Emulator executable for device stop",
+          "name" : "--emulator",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "triton-harmony-emulator",
+          "description" : "Triton launchd job label to unload before Harmony stop",
+          "name" : "--launchd-label",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "gui\/<uid>",
+          "description" : "launchd domain for the Triton Harmony emulator job",
+          "name" : "--launchd-domain",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Only run Emulator -stop without launchd print\/bootout",
+          "name" : "--skip-launchd",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Required for Harmony device stop and break-glass proxy runner execution",
+          "name" : "--confirm",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Screenshot output path for device screenshot",
+          "name" : "--output",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "30",
+          "description" : "Bounded wait timeout in seconds",
+          "name" : "--timeout",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "defaultValue" : "28767",
+          "description" : "Local TCP port used in the generated base URL",
+          "name" : "--local-port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "28767",
+          "description" : "Remote TCP port where the Harmony embedded runtime host-access server listens",
+          "name" : "--remote-port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Skip HDC fport setup and only print the local URL",
+          "name" : "--no-forward",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Probe \/v2\/runtime\/manifest after preparing the URL",
+          "name" : "--probe-manifest",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Restore platform proxy settings when stopping a host-side proxy session",
+          "name" : "--restore",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Emit JSON Lines ready\/request\/final events for long-running proxy serve",
+          "name" : "--jsonl",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Whether host device listing succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "ios or harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Discovered host targets",
+              "name" : "targets",
+              "required" : true,
+              "type" : "[HostDeviceTarget]"
+            },
+            {
+              "description" : "Default selected target if one exists",
+              "name" : "defaultTarget",
+              "required" : false,
+              "type" : "HostDeviceTarget?"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Target scope: simulator, emulator, or real",
+              "name" : "targets[].scope",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Target kind such as simulator, emulator, or real-device",
+              "name" : "targets[].kind",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Foreground app display name when host discovery can determine it",
+              "name" : "targets[].appName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Foreground app bundle identifier when host discovery can determine it",
+              "name" : "targets[].bundleIdentifier",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Foreground identity state: current, unknown, or unsupported",
+              "name" : "targets[].identityState",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Whether the target identity describes the current foreground app",
+              "name" : "targets[].current",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Readiness blockers observed during discovery",
+              "name" : "targets[].blockedReasons",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Whether sensitive raw identifiers are redacted from target\/id output",
+              "name" : "targets[].sensitive",
+              "required" : true,
+              "type" : "Bool"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-device-list",
+          "model" : "HostDeviceListOutput",
+          "selector" : "host.device-list"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether host device listing succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "ios or harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Discovered host targets",
+              "name" : "targets",
+              "required" : true,
+              "type" : "[HostDeviceTarget]"
+            },
+            {
+              "description" : "Default selected target if one exists",
+              "name" : "defaultTarget",
+              "required" : false,
+              "type" : "HostDeviceTarget?"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Target scope: simulator, emulator, or real",
+              "name" : "targets[].scope",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Target kind such as simulator, emulator, or real-device",
+              "name" : "targets[].kind",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Foreground app display name when host discovery can determine it",
+              "name" : "targets[].appName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Foreground app bundle identifier when host discovery can determine it",
+              "name" : "targets[].bundleIdentifier",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Foreground identity state: current, unknown, or unsupported",
+              "name" : "targets[].identityState",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Whether the target identity describes the current foreground app",
+              "name" : "targets[].current",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Readiness blockers observed during discovery",
+              "name" : "targets[].blockedReasons",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Whether sensitive raw identifiers are redacted from target\/id output",
+              "name" : "targets[].sensitive",
+              "required" : true,
+              "type" : "Bool"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-device-list",
+          "model" : "HostDeviceListOutput",
+          "selector" : "host.android-device"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether host device selection succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "ios or harmony",
+              "name" : "platform",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Current alias or target id",
+              "name" : "current",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Resolved target",
+              "name" : "target",
+              "required" : false,
+              "type" : "HostDeviceTarget?"
+            },
+            {
+              "description" : "Persisted defaults path",
+              "name" : "defaultsPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Selection source and filters",
+              "name" : "selection",
+              "required" : false,
+              "type" : "HostDeviceSelectionResult?"
+            },
+            {
+              "description" : "Requested target scope filter",
+              "name" : "selection.filters.scope",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Alias store path",
+              "name" : "path",
+              "required" : false,
+              "type" : "String?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-device-selection",
+          "model" : "HostDeviceUseOutput|HostDeviceResolveOutput|HostDeviceCurrentOutput",
+          "selector" : "host.device-selection"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether target readiness was reached",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "ios or harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved host target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Whether the target is ready",
+              "name" : "ready",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Readiness poll attempt",
+              "name" : "attempt",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Structured readiness failure",
+              "name" : "error",
+              "required" : false,
+              "type" : "TKCLIErrorDetail?"
+            },
+            {
+              "description" : "Associated endpoint when the failure came from runtime transport or another addressable surface",
+              "name" : "error.endpoint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Suggested diagnostic hint for the failure",
+              "name" : "error.hint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Nearest candidate strings when the failure exposes selector or text alternatives",
+              "name" : "error.nearestCandidates",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Command suggestions bundled directly inside the failure diagnostic",
+              "name" : "error.suggestedCommands",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Candidate count associated with the failure diagnostic",
+              "name" : "error.candidateCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Recommended recovery command when the failure is actionable",
+              "name" : "error.nextAction",
+              "required" : false,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "error.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "error.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "error.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "error.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "error.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "error.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "error.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-device-ready",
+          "model" : "HostDeviceReadyEvent",
+          "selector" : "host.device-ready"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the host-side proxy request succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Stable response surface, host.device-proxy",
+              "name" : "surface",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Proxy action: doctor, start, status, export, or stop",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "ios, android, or harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved simulator or emulator target",
+              "name" : "target",
+              "required" : false,
+              "type" : "HostDeviceTarget?"
+            },
+            {
+              "description" : "Proxy lane, host-side by default or app-runtime when explicitly enabled",
+              "name" : "lane",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Proxy mode: record, mock, block, or throttle",
+              "name" : "captureMode",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Local proxy host and port when a session is configured",
+              "name" : "proxyEndpoint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Whether platform network settings are currently configured",
+              "name" : "configured",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Certificate trust or installation state for HTTPS visibility",
+              "name" : "cert",
+              "required" : false,
+              "type" : "NetworkProxyCertificate?"
+            },
+            {
+              "description" : "Observed traffic visibility and HTTPS inspection boundaries",
+              "name" : "visibility",
+              "required" : true,
+              "type" : "NetworkProxyVisibility"
+            },
+            {
+              "description" : "Known platform or app-scoped visibility limitations",
+              "name" : "limitations",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Capture\/export artifacts such as HAR or NDJSON",
+              "name" : "artifacts",
+              "required" : true,
+              "type" : "[HostArtifact]"
+            },
+            {
+              "description" : "Restore plan or result for platform proxy settings",
+              "name" : "restore",
+              "required" : false,
+              "type" : "NetworkProxyRestore?"
+            },
+            {
+              "description" : "Underlying host commands or plan-only command ledger",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Structured proxy failure detail",
+              "name" : "error",
+              "required" : false,
+              "type" : "TKCLIErrorDetail?"
+            },
+            {
+              "description" : "Associated endpoint when the failure came from runtime transport or another addressable surface",
+              "name" : "error.endpoint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Suggested diagnostic hint for the failure",
+              "name" : "error.hint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Nearest candidate strings when the failure exposes selector or text alternatives",
+              "name" : "error.nearestCandidates",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Command suggestions bundled directly inside the failure diagnostic",
+              "name" : "error.suggestedCommands",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Candidate count associated with the failure diagnostic",
+              "name" : "error.candidateCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Recommended recovery command when the failure is actionable",
+              "name" : "error.nextAction",
+              "required" : false,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "error.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "error.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "error.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "error.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "error.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "error.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "error.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Capture export redaction policy summary, such as headers-names-only",
+              "name" : "redaction",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Number of proxy.serve.request events exported from the capture artifact",
+              "name" : "requestCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Number of proxy.serve.* events decoded from the capture artifact",
+              "name" : "eventCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Number of failed capture events such as proxy.serve.connection-failed",
+              "name" : "failureCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Capture export truncation status; currently none for metadata-only exports",
+              "name" : "truncation",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Readonly proxy capability probe results with command, exitCode, stdout\/stderr previews, and error summary",
+              "name" : "probeResults",
+              "required" : false,
+              "type" : "[NetworkProxyProbeResult]?"
+            },
+            {
+              "description" : "Structured readonly proxy probe findings such as Harmony candidate parameters that still require manual verification before mutation",
+              "name" : "probeFindings",
+              "required" : false,
+              "type" : "[NetworkProxyProbeFinding]?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-device-proxy",
+          "model" : "NetworkProxySession",
+          "selector" : "host.device-proxy"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the serve event or summary succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Stable response surface, host.device-proxy-serve",
+              "name" : "surface",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "JSONL event name such as proxy.serve.ready, proxy.serve.request, proxy.serve.connection-failed, or proxy.serve.summary",
+              "name" : "event",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Network capture event schema version, triton.proxy.capture.v1",
+              "name" : "schemaVersion",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Final summary action, proxy.serve",
+              "name" : "action",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Local proxy listen endpoint",
+              "name" : "listen",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "NDJSON capture artifact path",
+              "name" : "capturePath",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Capture policy mode such as record, mock, block, or throttle",
+              "name" : "captureMode",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Per-request proxy policy action such as forwarded, mocked, blocked, or throttled",
+              "name" : "policyAction",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Matched per-request policy rule id from proxy serve --policy-rules",
+              "name" : "policyRuleId",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Matched mock rule id for proxy serve --mode mock when --mock-rules is provided",
+              "name" : "mockRuleId",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Synthetic response status for local proxy policy actions; absent for forwarded requests",
+              "name" : "responseStatus",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Synthetic response reason phrase for mock, block, or throttle policy actions",
+              "name" : "responseStatusText",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Synthetic response delay in milliseconds for proxy serve --mode throttle",
+              "name" : "throttleDelayMs",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Final captured request count",
+              "name" : "requestCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Final non-summary serve event count, including ready, request, and connection-failed events",
+              "name" : "eventCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Final failed serve event count, including proxy.serve.connection-failed events",
+              "name" : "failureCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Captured HTTP method for request events",
+              "name" : "method",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Captured upstream host for request events",
+              "name" : "host",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Captured upstream port for request events",
+              "name" : "port",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Captured request path for request events",
+              "name" : "path",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Whether the request used CONNECT tunneling",
+              "name" : "tunnel",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Header names only; values are redacted",
+              "name" : "headerNames",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Capture visibility and redaction limitations",
+              "name" : "limitations",
+              "required" : false,
+              "type" : "[String]?"
+            }
+          ],
+          "format" : "jsonl",
+          "kind" : "host-device-proxy",
+          "model" : "NetworkProxyServeEvent|NetworkProxyServeSummary",
+          "selector" : "host.device-proxy-serve"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether host artifact capture succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "ios or harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved host target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Target selection details",
+              "name" : "selection",
+              "required" : false,
+              "type" : "HostDeviceSelectionResult?"
+            },
+            {
+              "description" : "Written artifact path",
+              "name" : "artifact",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Artifact file format such as png or jpeg",
+              "name" : "format",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-artifact",
+          "model" : "HostDeviceArtifactOutput",
+          "selector" : "host.artifact"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the runtime manifest request succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Runtime platform such as ios",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Runtime scope, usually embedded",
+              "name" : "runtime",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Runtime transport name",
+              "name" : "transport",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether runtime features are enabled",
+              "name" : "enabled",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Embedded SDK version",
+              "name" : "sdkVersion",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "debug or release",
+              "name" : "buildConfiguration",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Runtime capability details",
+              "name" : "capabilities",
+              "required" : true,
+              "type" : "[TKRuntimeCapabilityDetail]"
+            },
+            {
+              "description" : "Machine-readable runtime capability identifier",
+              "name" : "capabilities[].name",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the runtime can support this capability in the current environment",
+              "name" : "capabilities[].supported",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether the app runtime configuration currently allows this capability",
+              "name" : "capabilities[].enabled",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Why a capability is unsupported or disabled",
+              "name" : "capabilities[].reason",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Registered app semantic domains advertised by opt-in providers; state values are read through snapshot",
+              "name" : "semanticDomains",
+              "required" : true,
+              "type" : "[TKRuntimeSemanticDomainManifest]"
+            },
+            {
+              "description" : "Provider-owned semantic domain identifier",
+              "name" : "semanticDomains[].domain",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Provider source such as runtime-provider",
+              "name" : "semanticDomains[].source",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Provider confidence such as provider-backed",
+              "name" : "semanticDomains[].confidence",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Typed state field catalog for query\/assert planning",
+              "name" : "semanticDomains[].schema",
+              "required" : true,
+              "type" : "[TKRuntimeSemanticStateField]"
+            },
+            {
+              "description" : "Provider-declared action catalog for action discovery",
+              "name" : "semanticDomains[].actions",
+              "required" : true,
+              "type" : "[TKRuntimeSemanticActionDescriptor]"
+            },
+            {
+              "description" : "Provider-declared redaction policy",
+              "name" : "semanticDomains[].redaction",
+              "required" : true,
+              "type" : "TKRuntimeSemanticRedaction"
+            },
+            {
+              "description" : "Runtime collection limits",
+              "name" : "limits",
+              "required" : true,
+              "type" : "TKRuntimeLimits"
+            },
+            {
+              "description" : "Runtime redaction policy",
+              "name" : "redaction",
+              "required" : true,
+              "type" : "TKRuntimeRedactionPolicy"
+            }
+          ],
+          "format" : "json",
+          "kind" : "runtime-manifest",
+          "model" : "TKRuntimeManifestResponse",
+          "selector" : "runtime.manifest"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json",
+        "jsonl"
+      ],
+      "outputSemantics" : "Use device as the host target fact source before simulator, Harmony, app, screenshot, or smoke actions. Prefer aliases and current target to avoid repeated disambiguation.",
+      "providedCapabilities" : [
+        "host-device",
+        "host-device-selector",
+        "device-alias",
+        "device-list",
+        "device-use",
+        "device-current",
+        "device-resolve",
+        "device-wait-ready",
+        "device-screenshot",
+        "ios-device",
+        "android-device",
+        "android-device-doctor",
+        "android-device-list",
+        "android-device-wait-ready",
+        "android-device-screenshot",
+        "harmony-device",
+        "harmony-device-list",
+        "harmony-foreground-app-identity",
+        "harmony-runtime-url",
+        "harmony-device-stop",
+        "device-proxy-ios",
+        "device-proxy-android",
+        "device-proxy-harmony",
+        "network-capture-export",
+        "network-certificate-plan",
+        "network-certificate-install"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "prepare-target",
+          "command" : "triton device resolve --device <selector> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton device use <selector> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton device wait-ready --device <selector> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton device proxy doctor --platform <platform> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton device proxy cert doctor --platform <platform> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton device proxy serve --listen 127.0.0.1:19431 --output <dir> --jsonl"
+        },
+        {
+          "category" : "diagnose",
+          "command" : "triton doctor --format json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton app launch --device <selector> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        },
+        {
+          "category" : "plan",
+          "command" : "triton plan --format json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "retryable" : false,
+      "runtimeScope" : "host-device",
+      "subcommands" : [
+
+      ],
+      "successShape" : "{ ok, platform, tools[]?, targets[]?, defaultTarget?, target?, defaultsPath?, ready?, artifact?, baseURL?, manifest?, hvd?, launchdLabel?, launchdDomain?, sourceCommand?, sourceCommands?[] }",
+      "summary" : "Discover and inspect host-side platform devices",
+      "usageForms" : [
+        {
+          "description" : "Probe platform host tool availability",
+          "form" : "doctor --platform ios|android|harmony",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Probe host-side proxy takeover prerequisites without touching app code",
+          "form" : "proxy doctor --platform ios|android|harmony",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Inspect certificate trust boundaries for host-side proxy HTTPS visibility without changing trust settings",
+          "form" : "proxy cert doctor --platform ios|android|harmony",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Return a platform certificate trust setup ledger without installing or trusting the certificate",
+          "form" : "proxy cert plan --platform ios|android|harmony --device <selector> --certificate <path.cer>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Execute the reviewed iOS or Android certificate trust setup after break-glass confirmation; Harmony returns probe-only until a trust command is verified",
+          "form" : "proxy cert install --platform ios|android|harmony --device <selector> --certificate <path.cer> --confirm --audit-record <id> --execute-runner",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run readonly platform proxy capability probes and return per-command probeResults plus structured probeFindings",
+          "form" : "proxy probe --platform ios|android|harmony --device <selector>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Return readonly proxy capability probe ledger without running host tools",
+          "form" : "proxy probe --platform ios|android|harmony --device <selector> --plan-only",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run a local host-side capture, mock, block, or throttle proxy shared by iOS Simulator, Android Emulator, and Harmony emulator proxy plans",
+          "form" : "proxy serve --listen <host:port> --output <dir> --mode record|mock|block|throttle --jsonl",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run a local host-side mock proxy with metadata-only request capture and file-backed response rules",
+          "form" : "proxy serve --listen <host:port> --output <dir> --mode mock --mock-rules <path.json> --jsonl",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run a local host-side proxy with per-request forward, mock, block, or throttle policy rules",
+          "form" : "proxy serve --listen <host:port> --output <dir> --mode record --policy-rules <path.json> --jsonl",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run a local host-side throttle proxy with metadata-only capture and synthetic response delay evidence",
+          "form" : "proxy serve --listen <host:port> --output <dir> --mode throttle --throttle-ms <ms> --jsonl",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Declare a host-side proxy capture or policy session for a local simulator\/emulator target",
+          "form" : "proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Return a platform host-command proxy takeover plan without changing host or emulator settings",
+          "form" : "proxy start --platform ios|android|harmony --device <selector> --mode record|mock|block|throttle --output <dir> --plan-only",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Execute the break-glass iOS or Android proxy runner after plan review, confirmation, and audit metadata",
+          "form" : "proxy start --platform ios|android --device <selector> --mode record|mock|block|throttle --output <dir> --confirm --audit-record <id> --execute-runner",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Inspect the current host-side proxy takeover state with readonly platform probes for a local target",
+          "form" : "proxy status --platform ios|android|harmony --device <selector>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Inspect persisted host-side proxy takeover state produced by proxy start --output",
+          "form" : "proxy status --platform ios|android|harmony --device <selector> --session <dir>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Export captured network traffic from a host-side proxy session",
+          "form" : "proxy export --platform ios|android|harmony --device <selector> --output <path.har|path.ndjson>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Export captured network traffic from a persisted proxy session directory",
+          "form" : "proxy export --platform ios|android|harmony --device <selector> --session <dir> --output <path.har|path.ndjson>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Return a network capture artifact plan without reading or writing capture files",
+          "form" : "proxy export --platform ios|android|harmony --device <selector> --output <path.har|path.ndjson> --plan-only",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Stop a host-side proxy session and restore simulator\/emulator network settings",
+          "form" : "proxy stop --platform ios|android|harmony --device <selector> --restore",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Return a platform host-command restore plan without changing host or emulator settings",
+          "form" : "proxy stop --platform ios|android|harmony --device <selector> --restore --plan-only",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Return the restore command ledger from a proxy start restore snapshot without changing host or emulator settings",
+          "form" : "proxy stop --platform ios|android --device <selector> --restore-snapshot <path> --plan-only",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Execute the break-glass iOS or Android proxy restore runner after plan review, confirmation, and audit metadata",
+          "form" : "proxy stop --platform ios|android --device <selector> --restore --confirm --audit-record <id> --execute-runner",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Execute restore commands from a proxy start restore snapshot",
+          "form" : "proxy stop --platform ios|android --device <selector> --restore-snapshot <path> --confirm --audit-record <id> --execute-runner",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "List iOS Simulator, Android Emulator\/real devices, or Harmony HDC targets with the same envelope",
+          "form" : "list --platform ios|android|harmony",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "List only local real devices and return HostDeviceTarget.kind=real-device where supported",
+          "form" : "list --platform ios|android|harmony --scope real",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "List stable host target aliases from .triton\/host-targets.json",
+          "form" : "alias list",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Map a stable alias to an iOS UDID, Android adb serial, or Harmony HDC target",
+          "form" : "alias set <name> --platform ios|android|harmony --target <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Remove a stable host target alias",
+          "form" : "alias remove <name>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Resolve a target selector and save it as the current agent target",
+          "form" : "use <selector>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Show the current agent target",
+          "form" : "current",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Resolve a target selector without executing an action",
+          "form" : "resolve <selector>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Resolve a unified target selector without executing an action",
+          "form" : "resolve --platform ios|android|harmony --device <selector>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Wait for iOS Booted, Android adb state\/package manager, or Harmony bootevent.boot.completed",
+          "form" : "wait-ready --device <selector>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Capture a host-side iOS, Android, or Harmony screenshot artifact",
+          "form" : "screenshot --device <selector> --output <path>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Prepare HDC fport and print a direct Harmony embedded runtime base URL",
+          "form" : "runtime-url --device <selector>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Compatibility path for preparing a direct Harmony embedded runtime base URL",
+          "form" : "runtime-url --platform harmony --target <target>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Unload Triton launchd supervision and stop a Harmony HVD",
+          "form" : "stop --platform harmony --hvd <name> --path <deployed-path> --confirm",
+          "kind" : "Subcommand"
+        }
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

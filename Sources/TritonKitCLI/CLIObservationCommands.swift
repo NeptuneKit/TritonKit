@@ -23,7 +23,7 @@ private func hostDevicePlatform(from platform: ObservationPlatform) -> HostDevic
     }
 }
 
-private func resolveObservationTarget(
+func resolveObservationTarget(
     device: String?,
     platform: ObservationPlatform?,
     target: String,
@@ -33,13 +33,14 @@ private func resolveObservationTarget(
     if device != nil && target != TKLocalTargetID {
         throw HostDeviceSelectionError.parameterConflict("--device cannot be combined with --target.")
     }
-    guard device != nil || platform == .harmony else {
+    let effectivePlatform = platform ?? .ios
+    if device == nil && effectivePlatform == .ios {
         return (platform ?? .ios, target)
     }
     let selection = try resolveHostDeviceSelection(
         request: HostDeviceSelectionRequest(
             device: device ?? (target == TKLocalTargetID ? nil : target),
-            platform: platform.map(hostDevicePlatform(from:)),
+            platform: hostDevicePlatform(from: effectivePlatform),
             ready: runtimeBaseURL == nil
         ),
         hdc: hdc

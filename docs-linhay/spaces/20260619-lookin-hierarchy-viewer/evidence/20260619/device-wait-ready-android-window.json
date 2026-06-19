@@ -1,0 +1,8 @@
+{
+  "error" : {
+    "code" : "android_target_offline",
+    "hint" : "Reconnect the Android device or restart adb, then verify it appears as state=device in `adb devices -l`.",
+    "message" : "Android target is offline: emulator-5554"
+  },
+  "ok" : false
+}

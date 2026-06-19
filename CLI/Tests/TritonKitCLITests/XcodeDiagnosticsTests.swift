@@ -5,6 +5,26 @@ import TritonKitShared
 
 @Suite
 struct XcodeDiagnosticsTests {
+    @Test("derived data cache state reports warm and missing paths without cleanup")
+    func derivedDataCacheStateReportsWarmAndMissingPaths() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-xcode-cache-state-\(UUID().uuidString)", isDirectory: true)
+        let warm = root.appendingPathComponent("DerivedData", isDirectory: true)
+        try FileManager.default.createDirectory(at: warm, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let warmState = xcodeDerivedDataCacheState(path: warm.path)
+        #expect(warmState.derivedDataPath == warm.path)
+        #expect(warmState.exists == true)
+        #expect(warmState.cacheState == "warm")
+        #expect(warmState.incrementalExpected == true)
+
+        let missingState = xcodeDerivedDataCacheState(path: root.appendingPathComponent("Missing").path)
+        #expect(missingState.exists == false)
+        #expect(missingState.cacheState == "missing-derived-data")
+        #expect(missingState.incrementalExpected == true)
+    }
+
     @Test("xcodebuild stale DerivedData outside-root output is parsed into actionable diagnostics")
     func parsesStaleDerivedDataOutsideRootDiagnostics() throws {
         let output = """
@@ -149,4 +169,5 @@ struct XcodeDiagnosticsTests {
             )
         }
     }
+
 }

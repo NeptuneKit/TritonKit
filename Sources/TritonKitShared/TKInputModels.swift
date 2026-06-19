@@ -2,7 +2,9 @@ import Foundation
 
 public enum TKInputType: String, Codable, CaseIterable {
     case tap
+    case longPress
     case swipe
+    case pinch
     case button
     case typeText = "type"
     case paste
@@ -28,6 +30,11 @@ public struct TKInputRequest: Codable, Equatable {
     public let startY: Double?
     public let endX: Double?
     public let endY: Double?
+    public let centerX: Double?
+    public let centerY: Double?
+    public let startDistance: Double?
+    public let endDistance: Double?
+    public let scale: Double?
     public let width: Double?
     public let height: Double?
     public let duration: Double?
@@ -47,6 +54,11 @@ public struct TKInputRequest: Codable, Equatable {
         startY: Double? = nil,
         endX: Double? = nil,
         endY: Double? = nil,
+        centerX: Double? = nil,
+        centerY: Double? = nil,
+        startDistance: Double? = nil,
+        endDistance: Double? = nil,
+        scale: Double? = nil,
         width: Double? = nil,
         height: Double? = nil,
         duration: Double? = nil,
@@ -65,6 +77,11 @@ public struct TKInputRequest: Codable, Equatable {
         self.startY = startY
         self.endX = endX
         self.endY = endY
+        self.centerX = centerX
+        self.centerY = centerY
+        self.startDistance = startDistance
+        self.endDistance = endDistance
+        self.scale = scale
         self.width = width
         self.height = height
         self.duration = duration
@@ -98,6 +115,16 @@ public struct TKInputRequest: Codable, Equatable {
         )
     }
 
+    public static func longPress(
+        x: Double,
+        y: Double,
+        width: Double? = nil,
+        height: Double? = nil,
+        duration: Double? = nil
+    ) -> TKInputRequest {
+        TKInputRequest(type: .longPress, x: x, y: y, width: width, height: height, duration: duration)
+    }
+
     public static func swipe(
         startX: Double,
         startY: Double,
@@ -113,6 +140,29 @@ public struct TKInputRequest: Codable, Equatable {
             startY: startY,
             endX: endX,
             endY: endY,
+            width: width,
+            height: height,
+            duration: duration
+        )
+    }
+
+    public static func pinch(
+        centerX: Double,
+        centerY: Double,
+        startDistance: Double,
+        endDistance: Double,
+        scale: Double,
+        width: Double? = nil,
+        height: Double? = nil,
+        duration: Double? = nil
+    ) -> TKInputRequest {
+        TKInputRequest(
+            type: .pinch,
+            centerX: centerX,
+            centerY: centerY,
+            startDistance: startDistance,
+            endDistance: endDistance,
+            scale: scale,
             width: width,
             height: height,
             duration: duration

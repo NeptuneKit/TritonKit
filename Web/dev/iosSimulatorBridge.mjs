@@ -147,6 +147,43 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         return;
       }
 
+      if (url.pathname === "/web/host-hierarchy") {
+        const platform = url.searchParams.get("platform") || "ios";
+        const target = url.searchParams.get("target") || "local";
+        if (!["GET", "POST"].includes(req.method ?? "GET")) {
+          sendJSON(res, 405, {
+            ok: false,
+            error: {
+              code: "web_host_hierarchy_method_not_allowed",
+              message: "Host hierarchy capture only supports GET and POST.",
+            },
+          });
+          return;
+        }
+        if (!["ios", "android", "harmony"].includes(platform)) {
+          sendJSON(res, 501, {
+            ok: false,
+            error: {
+              code: "web_host_hierarchy_platform_not_supported",
+              message: `Readonly host hierarchy is not available for platform: ${platform}`,
+            },
+          });
+          return;
+        }
+        try {
+          sendJSON(res, 200, await captureHostHierarchy(tritonPath, platform, target, req.method ?? "GET"));
+        } catch (error) {
+          sendJSON(res, 409, {
+            ok: false,
+            error: {
+              code: "web_host_hierarchy_failed",
+              message: error instanceof Error ? error.message : String(error),
+            },
+          });
+        }
+        return;
+      }
+
       if (url.pathname === "/web/ios-simulator/screenshot") {
         const simulator = url.searchParams.get("simulator") || "booted";
         const outputDir = join(tmpdir(), `tritonkit-web-ios-${randomUUID()}`);
@@ -478,6 +515,195 @@ async function captureHostLogs(tritonPath, target) {
   } finally {
     await rm(outputDir, { recursive: true, force: true });
   }
+}
+
+async function captureHostHierarchy(tritonPath, platform, target, method = "GET") {
+  const args = ["hierarchy", "--platform", platform, "--target", target, "--json"];
+  let payload;
+  try {
+    payload = await runTritonJSON(tritonPath, args);
+  } catch (error) {
+    if (platform === "ios" && isLegacyIosHierarchySchemaError(error)) {
+      const legacyPayload = await runTritonJSON(tritonPath, ["hierarchy", "--target", target, "--json"]);
+      return attachHierarchyCaptureControl(mapLegacyIosHierarchyToHostResponse(legacyPayload, target), method);
+    }
+    throw error;
+  }
+  if (!payload || payload.ok !== true || !payload.scene) {
+    throw new Error("triton hierarchy did not return a valid HostHierarchyResponse scene");
+  }
+  return attachHierarchyCaptureControl(payload, method);
+}
+
+function isLegacyIosHierarchySchemaError(error) {
+  const message = error instanceof Error ? error.message : String(error);
+  return message.includes("Unknown option '--platform'") || message.includes("unknown option '--platform'");
+}
+
+function attachHierarchyCaptureControl(payload, method) {
+  return {
+    ...payload,
+    control: {
+      action: "hierarchy.capture",
+      entrypoint: "web-dev-bridge",
+      method,
+      readonly: true,
+      mutatesApp: false,
+    },
+  };
+}
+
+function mapLegacyIosHierarchyToHostResponse(payload, target) {
+  const viewport = resolveLegacyIosViewport(payload);
+  const nodes = [];
+  const rootItems = Array.isArray(payload?.displayItems) ? payload.displayItems : [];
+  for (const item of rootItems) {
+    appendLegacyIosNode(nodes, item, undefined, viewport);
+  }
+  if (nodes.length === 0) {
+    throw new Error("legacy iOS hierarchy did not include displayItems[]");
+  }
+  return {
+    ok: true,
+    capturedAt: new Date().toISOString(),
+    source: {
+      command: `triton hierarchy --target ${target} --json`,
+      runtimeScope: "runtime-tree",
+      readonly: true,
+    },
+    scene: {
+      platform: "ios",
+      rootId: nodes[0].id,
+      viewport,
+      nodes,
+    },
+  };
+}
+
+function resolveLegacyIosViewport(payload) {
+  const appInfo = payload?.appInfo && typeof payload.appInfo === "object" ? payload.appInfo : {};
+  const root = Array.isArray(payload?.displayItems) ? payload.displayItems[0] : null;
+  const rootFrame = parseLegacyFrame(root?.frame);
+  return {
+    width: positiveNumber(appInfo.screenWidth) ?? rootFrame.width ?? 390,
+    height: positiveNumber(appInfo.screenHeight) ?? rootFrame.height ?? 844,
+  };
+}
+
+function appendLegacyIosNode(nodes, item, parentId, viewport) {
+  if (!item || typeof item !== "object") return;
+  const frame = parseLegacyFrame(item.frame);
+  if (!frame) return;
+  const oid = item.layerObject?.oid ?? item.viewObject?.oid ?? nodes.length;
+  const type = legacyIosClassName(item);
+  const id = `ios:runtime:${oid}`;
+  const depth = Number.isFinite(Number(item.indentLevel)) ? Number(item.indentLevel) : parentId ? 1 : 0;
+  const alpha = typeof item.alpha === "number" ? item.alpha : 1;
+  const visible = item.isHidden !== true && alpha > 0.01 && frame.width > 0 && frame.height > 0;
+  const interactive = legacyIosNodeIsInteractive(type, item);
+  const color = legacyIosNodeColor(item, interactive);
+  nodes.push({
+    id,
+    parentId,
+    type,
+    name: legacyIosNodeName(type, oid, item),
+    frame: clampFrameToViewport(frame, viewport),
+    depth,
+    visible,
+    interactive,
+    color,
+    style: legacyIosNodeStyle(item, color, alpha),
+    renderHints: legacyIosRenderHints(type, frame, viewport),
+  });
+  const children = Array.isArray(item.subitems) ? item.subitems : [];
+  for (const child of children) {
+    appendLegacyIosNode(nodes, child, id, viewport);
+  }
+}
+
+function parseLegacyFrame(value) {
+  if (!Array.isArray(value) || !Array.isArray(value[0]) || !Array.isArray(value[1])) return null;
+  const x = Number(value[0][0]);
+  const y = Number(value[0][1]);
+  const width = Number(value[1][0]);
+  const height = Number(value[1][1]);
+  if (![x, y, width, height].every(Number.isFinite)) return null;
+  return { x, y, width, height };
+}
+
+function positiveNumber(value) {
+  const number = Number(value);
+  return Number.isFinite(number) && number > 0 ? number : null;
+}
+
+function legacyIosClassName(item) {
+  return String(
+    item.layerObject?.classChainList?.[0] ??
+      item.viewObject?.classChainList?.[0] ??
+      item.hostViewControllerObject?.classChainList?.[0] ??
+      "UIView"
+  );
+}
+
+function legacyIosNodeName(type, oid, item) {
+  if (item.representedAsKeyWindow) return "keyWindow";
+  const shortType = type.split(".").at(-1) ?? type;
+  return `${shortType}#${oid}`;
+}
+
+function legacyIosNodeIsInteractive(type, item) {
+  return /(button|control|cell|collection|table|scroll|textfield|textview|switch|slider|segmented)/i.test(type) ||
+    (Array.isArray(item.eventHandlers) && item.eventHandlers.length > 0);
+}
+
+function legacyIosNodeColor(item, interactive) {
+  const background = item.backgroundColor;
+  if (background && typeof background === "object" && typeof background.red === "number") {
+    const alpha = typeof background.alpha === "number" ? background.alpha : 1;
+    if (alpha > 0.03) {
+      return rgbFloatToHex(background.red, background.green, background.blue);
+    }
+  }
+  return interactive ? "#2563eb" : "#94a3b8";
+}
+
+function rgbFloatToHex(red, green, blue) {
+  const toHex = (value) => Math.max(0, Math.min(255, Math.round(Number(value ?? 0) * 255))).toString(16).padStart(2, "0");
+  return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
+}
+
+function legacyIosNodeStyle(item, color, alpha) {
+  return {
+    display: legacyIosStyleDisplay(legacyIosClassName(item)),
+    backgroundColor: color,
+    alpha,
+  };
+}
+
+function legacyIosStyleDisplay(type) {
+  if (/button|control/i.test(type)) return "button";
+  if (/label|text/i.test(type)) return "text";
+  if (/cell|card/i.test(type)) return "card";
+  if (/collection|table|scroll|stack/i.test(type)) return "container";
+  if (/navigation|bar/i.test(type)) return "bar";
+  return "view";
+}
+
+function legacyIosRenderHints(type, frame, viewport) {
+  const isFullscreen = frame.width >= viewport.width * 0.96 && frame.height >= viewport.height * 0.9;
+  if (isFullscreen && /window|transition|shadow|container|wrapper|root/i.test(type)) {
+    return { preferredMode: "wireframe", fallbackMode: "wireframe", quality: "fallback" };
+  }
+  return { preferredMode: "slice", fallbackMode: "style", quality: "approximate" };
+}
+
+function clampFrameToViewport(frame, viewport) {
+  return {
+    x: Math.max(0, Math.min(viewport.width, frame.x)),
+    y: Math.max(0, Math.min(viewport.height, frame.y)),
+    width: Math.max(0, Math.min(viewport.width, frame.width)),
+    height: Math.max(0, Math.min(viewport.height, frame.height)),
+  };
 }
 
 function resolveTritonBinary(root) {

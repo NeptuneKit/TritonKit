@@ -174,6 +174,73 @@ test("mounts QA mock fallback error notice in DOM when host bridge request fails
   }
 });
 
+test("switches devices from the narrow toolbar title target menu", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async () =>
+      new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      }),
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => hasRequestFailedFallbackNotice());
+    assert.equal(document.querySelector(".toolbar-title strong")?.textContent?.trim(), "DXY iPhone 15");
+
+    const titleSwitch = document.querySelector('button[aria-label="切换设备"]');
+    assert.ok(titleSwitch, "Expected toolbar title to expose a target switch button");
+
+    await act(async () => {
+      titleSwitch.click();
+    });
+
+    const menu = document.querySelector('[role="listbox"][aria-label="切换设备"]');
+    assert.ok(menu, "Expected toolbar target menu to open");
+
+    const androidOption = Array.from(document.querySelectorAll(".toolbar-target-option")).find((option) =>
+      option.textContent?.includes("Pixel API 35")
+    );
+    assert.ok(androidOption, "Expected Android target in toolbar menu");
+
+    await act(async () => {
+      androidOption.click();
+    });
+
+    await waitFor(() => document.querySelector(".toolbar-title strong")?.textContent?.trim() === "Pixel API 35");
+    assert.equal(currentAppName(), "Overloaded");
+    assert.equal(document.querySelector('[role="listbox"][aria-label="切换设备"]'), null);
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
 test("renders bounded iOS host logs in the log strip when readonly host logs are available", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
@@ -574,12 +641,14 @@ test("dispatches iOS Simulator canvas tap through the host input bridge", async 
         assert.equal(url.searchParams.get("scope"), "simulator");
         assert.equal(url.searchParams.get("kind"), "simulator");
         assert.equal(url.searchParams.get("source"), "host");
-        hostInputPayloads.push(JSON.parse(init?.body?.toString() ?? "{}"));
+        const requestBody = JSON.parse(init?.body?.toString() ?? "{}");
+        hostInputPayloads.push(requestBody);
         return new Response(
           JSON.stringify({
             ok: true,
-            action: "tap",
-            message: "iOS Simulator tap was submitted through Triton host-HID adapter.",
+            action: requestBody.type,
+            message: "iOS Simulator input was submitted through Triton host-HID adapter.",
+            activationClassName: requestBody.type === "tap" ? "UITextField" : undefined,
           }),
           { status: 200, headers: { "content-type": "application/json" } }
         );
@@ -646,6 +715,299 @@ test("dispatches iOS Simulator canvas tap through the host input bridge", async 
     ]);
 
     assert.ok(fetchCalls.some((call) => call.pathname === "/web/host-input" && call.method === "POST"));
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("dispatches canvas long press and pinch gestures through the host input bridge", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const hostInputPayloads = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T09:10:00.000Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host-device",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "sim:GESTURE",
+                target: "GESTURE",
+                name: "Gesture iPhone",
+                platform: "ios",
+                appName: "前台 App 未暴露 · Gesture iPhone",
+                bundleIdentifier: "Target GESTURE",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Booted",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                source: "simctl",
+                readonly: true,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "GESTURE",
+            source: {
+              command: "triton sim screenshot --simulator GESTURE --output /tmp/frame.png --json",
+              runtimeScope: "host-simulator",
+              readonly: true,
+            },
+            artifact: "memory://simulator-frame.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,iVBORw0KGgo=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-input") {
+        const requestBody = JSON.parse(init?.body?.toString() ?? "{}");
+        hostInputPayloads.push(requestBody);
+        return new Response(
+          JSON.stringify({
+            ok: requestBody.type === "longPress",
+            action: requestBody.type,
+            message: requestBody.type === "longPress" ? "long press submitted" : "pinch unsupported",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error("Unexpected fetch route: " + url.pathname);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => document.querySelector(".device-screen.is-interactive"));
+    const screen = document.querySelector(".device-screen");
+    assert.ok(screen, "Expected iOS Simulator screen to accept input");
+    screen.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 390,
+      height: 844,
+      right: 390,
+      bottom: 844,
+      x: 0,
+      y: 0,
+      toJSON() {
+        return {};
+      },
+    });
+
+    await act(async () => {
+      screen.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 1, clientX: 190, clientY: 420, bubbles: true }));
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 570));
+    });
+    await act(async () => {
+      screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 1, clientX: 190, clientY: 420, bubbles: true }));
+    });
+
+    await waitFor(() => hostInputPayloads.length === 1);
+    assert.equal(hostInputPayloads[0].type, "longPress");
+    assert.equal(hostInputPayloads[0].x, 190);
+    assert.equal(hostInputPayloads[0].y, 420);
+    assert.equal(hostInputPayloads[0].width, 390);
+    assert.equal(hostInputPayloads[0].height, 844);
+    assert.ok(hostInputPayloads[0].duration >= 0.5);
+
+    await act(async () => {
+      screen.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 10, clientX: 160, clientY: 420, bubbles: true }));
+      screen.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 11, clientX: 220, clientY: 420, bubbles: true }));
+      screen.dispatchEvent(new window.PointerEvent("pointermove", { pointerId: 10, clientX: 130, clientY: 420, bubbles: true }));
+      screen.dispatchEvent(new window.PointerEvent("pointermove", { pointerId: 11, clientX: 250, clientY: 420, bubbles: true }));
+      screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 11, clientX: 250, clientY: 420, bubbles: true }));
+    });
+
+    await waitFor(() => hostInputPayloads.length === 2);
+    assert.deepEqual(hostInputPayloads[1], {
+      type: "pinch",
+      centerX: 190,
+      centerY: 420,
+      startDistance: 60,
+      endDistance: 120,
+      scale: 2,
+      width: 390,
+      height: 844,
+      duration: 0.25,
+    });
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("does not show keyboard relay when tap result is not an editable control", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-18T15:54:44Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host-device",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "sim:AAAA-BBBB",
+                target: "AAAA-BBBB",
+                name: "iPhone 17",
+                platform: "ios",
+                appName: "前台 App 未暴露 · iPhone 17",
+                bundleIdentifier: "Target AAAA-BBBB",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Booted",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                source: "simctl",
+                readonly: true,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "AAAA-BBBB",
+            source: {
+              command: "triton sim screenshot --simulator AAAA-BBBB --output /tmp/frame.png --json",
+              runtimeScope: "host-simulator",
+              readonly: true,
+            },
+            artifact: "memory://simulator-frame.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,iVBORw0KGgo=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-input") {
+        const requestBody = JSON.parse(init?.body?.toString() ?? "{}");
+        assert.equal(requestBody.type, "tap");
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            action: "tap",
+            message: "iOS Simulator tap was submitted through Triton host-HID adapter.",
+            activationClassName: "UIButton",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error("Unexpected fetch route: " + url.pathname);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => document.querySelector(".device-screen.is-interactive"));
+    const screen = document.querySelector(".device-screen");
+    assert.ok(screen, "Expected iOS Simulator screen to accept input");
+    screen.getBoundingClientRect = () => ({
+      left: 0,
+      top: 0,
+      width: 390,
+      height: 844,
+      right: 390,
+      bottom: 844,
+      x: 0,
+      y: 0,
+      toJSON() {
+        return {};
+      },
+    });
+
+    await act(async () => {
+      screen.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 1, clientX: 180, clientY: 410, bubbles: true }));
+      screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 1, clientX: 180, clientY: 410, bubbles: true }));
+    });
+
+    await waitFor(() => !document.querySelector(".input-activity-badge"));
+    assert.equal(document.querySelector('input[aria-label="设备键盘输入"]'), null);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1226,6 +1588,234 @@ test("lets users hide and restore network evidence independently from logs", asy
   }
 });
 
+test("toggles device control tool state when probe is selected", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T09:00:00Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host-device",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "sim:AAAA-BBBB",
+                target: "AAAA-BBBB",
+                name: "iPhone 17",
+                platform: "ios",
+                appName: "前台 App 未暴露 · iPhone 17",
+                bundleIdentifier: "Target AAAA-BBBB",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Booted",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                source: "simctl",
+                readonly: true,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "AAAA-BBBB",
+            source: {
+              command: "triton sim screenshot --simulator AAAA-BBBB --output /tmp/frame.png --json",
+              runtimeScope: "host-simulator",
+              readonly: true,
+            },
+            artifact: "memory://simulator-frame.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,iVBORw0KGgo=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error("Unexpected fetch route: " + url.pathname);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => document.querySelector(".device-screen.is-interactive"));
+    const screen = document.querySelector(".device-screen");
+    assert.ok(screen, "Expected device screen to be interactive");
+    const pointButton = document.querySelector('button[aria-label="点选"]');
+    const probeButton = document.querySelector('button[aria-label="探测"]');
+    assert.ok(pointButton, "Expected point tool button");
+    assert.ok(probeButton, "Expected probe tool button");
+    assert.equal(document.querySelector('button[aria-label="应用"]'), null);
+    assert.equal(document.querySelector('button[aria-label="主屏幕"]'), null);
+    assert.equal(document.querySelector('button[aria-label="竖屏"]'), null);
+    assert.equal(document.querySelector('button[aria-label="横屏"]'), null);
+    assert.equal(pointButton.getAttribute("aria-pressed"), "true");
+    assert.equal(probeButton.getAttribute("aria-pressed"), "false");
+    assert.match(screen.className, /tool-point/);
+    assert.equal(screen.getAttribute("aria-label"), "设备画面，当前工具 点选");
+
+    await clickButtonByLabel(act, "探测");
+    await waitFor(() =>
+      document.querySelector('button[aria-label="探测"]')?.getAttribute("aria-pressed") === "true" &&
+      document.querySelector(".hierarchy-stage")?.className.includes("tool-probe")
+    );
+
+    assert.equal(document.querySelector('button[aria-label="点选"]')?.getAttribute("aria-pressed"), "false");
+    assert.equal(document.querySelector('button[aria-label="探测"]')?.getAttribute("aria-pressed"), "true");
+    assert.equal(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim(), "视图树");
+    assert.equal(document.querySelector(".device-frame"), null);
+    assert.equal(document.querySelector(".device-screen"), null);
+    assert.equal(document.querySelector(".real-screenshot"), null);
+    assert.equal(document.querySelector(".hierarchy-stage")?.getAttribute("aria-label"), "3D 视图层级，当前工具 探测");
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("shows rotatable Lookin-style hierarchy layers for iOS Android and Harmony targets", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      const method = init?.method ?? resolveRequestMethod(input);
+      fetchCalls.push({ pathname: url.pathname, method, platform: url.searchParams.get("platform") });
+
+      if (url.pathname === "/web/host-hierarchy") {
+        const platform = url.searchParams.get("platform") ?? "ios";
+        return new Response(JSON.stringify(hostHierarchyResponseForDom(platform, method)), {
+          status: 200,
+          headers: {
+            "content-type": "application/json",
+          },
+        });
+      }
+
+      return new Response(JSON.stringify({ ok: true }), {
+        status: 200,
+        headers: {
+          "content-type": "application/json",
+        },
+      });
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => hasRequestFailedFallbackNotice());
+
+    await clickButtonByLabel(act, "探测");
+    await waitFor(() => hierarchySceneText().includes("iOS") && hierarchySceneText().includes("UIStackView"));
+    assert.match(hierarchySceneText(), /现场采集/);
+    assert.equal(document.querySelector(".hierarchy-capture-button")?.textContent?.trim(), "重新采集");
+    await clickButtonByLabel(act, "重新采集真实层级");
+    await waitFor(() => fetchCalls.some((call) => call.pathname === "/web/host-hierarchy" && call.method === "POST"));
+    assert.match(hierarchySceneText(), /手动采集/);
+    assert.equal(document.querySelector(".device-frame"), null);
+    assert.equal(document.querySelector(".device-screen"), null);
+    assert.ok(document.querySelector(".hierarchy-stage"), "Expected hierarchy stage without phone frame");
+    assert.match(hierarchySceneText(), /questionList/);
+    const initialRotation = hierarchyRotationText();
+    const viewer = document.querySelector(".hierarchy-scene-viewer");
+    assert.ok(viewer, "Expected hierarchy scene viewer");
+    await act(async () => {
+      viewer.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 4, clientX: 140, clientY: 180, bubbles: true }));
+      viewer.dispatchEvent(new window.PointerEvent("pointermove", { pointerId: 4, clientX: 220, clientY: 120, bubbles: true }));
+      viewer.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 4, clientX: 220, clientY: 120, bubbles: true }));
+    });
+    await waitFor(() => hierarchyRotationText() !== initialRotation);
+    assert.match(hierarchyRotationText(), /^水平旋转/);
+    const horizontalRotation = hierarchyRotationText();
+    await act(async () => {
+      viewer.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 5, clientX: 220, clientY: 120, bubbles: true }));
+      viewer.dispatchEvent(new window.PointerEvent("pointermove", { pointerId: 5, clientX: 220, clientY: 240, bubbles: true }));
+      viewer.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 5, clientX: 220, clientY: 240, bubbles: true }));
+    });
+    assert.equal(hierarchyRotationText(), horizontalRotation);
+
+    await clickViewTreeTarget(act, "Pixel API 35");
+    await waitFor(() => viewTreeTitle()?.includes("Overloaded"));
+    await clickButtonByLabel(act, "探测");
+    await waitFor(() =>
+      hierarchySceneLabel().includes("Android") &&
+      viewTreeText().includes("AndroidComposeView") &&
+      viewTreeText().includes("settingsList")
+    );
+
+    await clickViewTreeTarget(act, "DevEco Local");
+    await waitFor(() => viewTreeTitle()?.includes("Triton Smoke"));
+    await clickButtonByLabel(act, "探测");
+    await waitFor(() =>
+      hierarchySceneLabel().includes("Harmony") &&
+      viewTreeText().includes("ArkUIRoot") &&
+      viewTreeText().includes("settingsContent")
+    );
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
 test("lets users tune live preview fps without changing selected host target state", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
@@ -1435,6 +2025,16 @@ async function clickDeviceRow(act, deviceName) {
   });
 }
 
+async function clickViewTreeTarget(act, deviceName) {
+  const chip = Array.from(document.querySelectorAll(".view-tree-target-chip")).find((candidate) =>
+    candidate.textContent?.includes(deviceName)
+  );
+  assert.ok(chip, `Expected to find view-tree target chip for ${deviceName}`);
+  await act(async () => {
+    chip.click();
+  });
+}
+
 async function clickTabButton(act, label) {
   const tab = Array.from(document.querySelectorAll(".sidebar-panel-switch button")).find((candidate) =>
     candidate.textContent?.includes(label)
@@ -1442,16 +2042,6 @@ async function clickTabButton(act, label) {
   assert.ok(tab, `Expected to find sidebar tab for ${label}`);
   await act(async () => {
     tab.click();
-  });
-}
-
-async function clickViewTreeTarget(act, deviceName) {
-  const row = Array.from(document.querySelectorAll(".view-tree-target-chip")).find((candidate) =>
-    candidate.textContent?.includes(deviceName)
-  );
-  assert.ok(row, `Expected to find view-tree target chip for ${deviceName}`);
-  await act(async () => {
-    row.click();
   });
 }
 
@@ -1547,6 +2137,18 @@ function logsText() {
   return document.querySelector('[aria-label="运行日志"]')?.textContent ?? "";
 }
 
+function hierarchySceneText() {
+  return document.querySelector(".hierarchy-scene-viewer")?.textContent ?? "";
+}
+
+function hierarchySceneLabel() {
+  return document.querySelector(".hierarchy-scene-viewer")?.getAttribute("aria-label") ?? "";
+}
+
+function hierarchyRotationText() {
+  return document.querySelector(".hierarchy-rotation-state")?.textContent ?? "";
+}
+
 function viewTreeTitle() {
   return document.querySelector(".view-tree-title strong")?.textContent?.trim();
 }
@@ -1586,4 +2188,58 @@ function deviceRowText() {
 
 function emptyDevicesText() {
   return document.querySelector(".empty-devices")?.textContent?.trim();
+}
+
+function hostHierarchyResponseForDom(platform, method = "GET") {
+  const cases = {
+    ios: ["UIStackView", "questionList", "#6ea8ff"],
+    android: ["AndroidComposeView", "settingsList", "#34d399"],
+    harmony: ["ArkUIRoot", "settingsContent", "#f59e0b"],
+  };
+  const [type, name, color] = cases[platform] ?? cases.ios;
+  return {
+    ok: true,
+    capturedAt: "2026-06-19T00:00:00.000Z",
+    source: {
+      command: `triton hierarchy --platform ${platform} --target local --json`,
+      runtimeScope: platform === "ios" ? "runtime-tree" : "host-layout",
+      readonly: true,
+    },
+    control: {
+      action: "hierarchy.capture",
+      entrypoint: "web-dev-bridge",
+      method,
+      readonly: true,
+      mutatesApp: false,
+    },
+    scene: {
+      platform,
+      rootId: `${platform}-root`,
+      viewport: { width: 390, height: 844 },
+      nodes: [
+        {
+          id: `${platform}-root`,
+          type: platform === "ios" ? "UIWindow" : "RootView",
+          name: "root",
+          frame: { x: 0, y: 0, width: 390, height: 844 },
+          depth: 0,
+          visible: true,
+          interactive: false,
+          color,
+        },
+        {
+          id: `${platform}-child`,
+          parentId: `${platform}-root`,
+          type,
+          name,
+          frame: { x: 24, y: 120, width: 342, height: 56 },
+          depth: 3,
+          visible: true,
+          interactive: true,
+          color,
+          renderHints: { preferredMode: "slice", quality: "approximate" },
+        },
+      ],
+    },
+  };
 }

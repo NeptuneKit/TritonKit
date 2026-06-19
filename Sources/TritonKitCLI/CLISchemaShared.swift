@@ -75,6 +75,22 @@ func inputActionSchemas() -> [TKInputActionSchema] {
             example: #"{"type":"tap","x":270,"y":300}"#
         ),
         TKInputActionSchema(
+            type: "longPress",
+            requiredFields: ["type", "x", "y"],
+            optionalFields: ["width", "height", "duration"],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["longPress"], "Action discriminator"),
+                inputField("x", "Double", required: true, "Window x coordinate in points"),
+                inputField("y", "Double", required: true, "Window y coordinate in points"),
+                inputField("width", "Double", "Optional window width in points for caller bookkeeping"),
+                inputField("height", "Double", "Optional window height in points for caller bookkeeping"),
+                inputField("duration", "Double", "Hold duration in seconds"),
+            ],
+            example: #"{"type":"longPress","x":270,"y":300,"duration":0.65}"#,
+            resultShape: "{ ok, action, message }"
+        ),
+        TKInputActionSchema(
             type: "swipe",
             requiredFields: ["type", "startX", "startY", "endX", "endY"],
             optionalFields: ["width", "height", "duration"],
@@ -90,6 +106,25 @@ func inputActionSchemas() -> [TKInputActionSchema] {
                 inputField("duration", "Double", "Optional gesture duration in seconds"),
             ],
             example: #"{"type":"swipe","startX":350,"startY":390,"endX":100,"endY":390}"#
+        ),
+        TKInputActionSchema(
+            type: "pinch",
+            requiredFields: ["type", "centerX", "centerY", "startDistance", "endDistance", "scale"],
+            optionalFields: ["width", "height", "duration"],
+            coordinateSpace: "window-points",
+            fields: [
+                inputField("type", "String", required: true, enumValues: ["pinch"], "Action discriminator"),
+                inputField("centerX", "Double", required: true, "Gesture center x coordinate in window points"),
+                inputField("centerY", "Double", required: true, "Gesture center y coordinate in window points"),
+                inputField("startDistance", "Double", required: true, "Initial two-finger distance in window points"),
+                inputField("endDistance", "Double", required: true, "Final two-finger distance in window points"),
+                inputField("scale", "Double", required: true, "Final distance divided by initial distance"),
+                inputField("width", "Double", "Optional window width in points for caller bookkeeping"),
+                inputField("height", "Double", "Optional window height in points for caller bookkeeping"),
+                inputField("duration", "Double", "Gesture duration in seconds"),
+            ],
+            example: #"{"type":"pinch","centerX":190,"centerY":420,"startDistance":60,"endDistance":120,"scale":2}"#,
+            resultShape: "{ ok, action, message }"
         ),
         TKInputActionSchema(
             type: "type",

@@ -410,6 +410,48 @@ struct HarmonyEmulatorStopPlan {
     let commands: [TKHostCommand]
 }
 
+struct HostDeviceStartPlan {
+    let action: String
+    let platform: String
+    let name: String
+    let target: String
+    let deployedPath: String?
+    let emulator: String
+    let hdc: String?
+    let hdcPort: Int?
+    let commands: [TKHostCommand]
+    let waitReadyArgs: [String]
+    let note: String
+}
+
+struct HostDetachedProcessResult {
+    let pid: Int32
+    let sourceCommand: String
+    let stdoutLogPath: String?
+    let stderrLogPath: String?
+}
+
+struct HostDeviceStartOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let name: String
+    let target: String
+    let deployedPath: String?
+    let emulator: String
+    let hdc: String?
+    let hdcPort: Int?
+    let planOnly: Bool
+    let started: Bool
+    let pid: Int32?
+    let sourceCommands: [String]
+    let executedSourceCommands: [String]
+    let stdoutLogPath: String?
+    let stderrLogPath: String?
+    let nextAction: TKCLINextAction
+    let note: String
+}
+
 struct HostDeviceStopOutput: Encodable {
     let ok: Bool
     let action: String

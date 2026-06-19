@@ -6,6 +6,7 @@ triton="${TRITON_BIN:-$repo_root/.build/cli/debug/triton}"
 out_dir="${1:-$repo_root/.build/harmony-host-smoke}"
 target="127.0.0.1:10100"
 
+rm -rf "$out_dir"
 mkdir -p "$out_dir"
 
 fake_hdc="$out_dir/fake-hdc.sh"

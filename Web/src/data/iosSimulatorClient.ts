@@ -2,6 +2,8 @@ import { MonitorSmartphone, Smartphone, TabletSmartphone } from "lucide-react";
 import type {
   BridgeCommandOutput,
   DeviceTarget,
+  HierarchyScene,
+  HostHierarchyResponse,
   HostTargetLogsResponse,
   HostTargetsResponse,
   HostWebTarget,
@@ -72,7 +74,16 @@ export async function fetchHostScreenshot(target: DeviceTarget): Promise<IosSimu
   return (await response.json()) as IosSimulatorScreenshotResponse;
 }
 
-export async function sendHostInput(target: DeviceTarget, input: Record<string, unknown>): Promise<{ ok: boolean; action?: string; message?: string }> {
+export type HostInputResponse = {
+  ok: boolean;
+  action?: string;
+  message?: string;
+  targetClassName?: string;
+  matchedClassName?: string;
+  activationClassName?: string;
+};
+
+export async function sendHostInput(target: DeviceTarget, input: Record<string, unknown>): Promise<HostInputResponse> {
   const params = new URLSearchParams({
     platform: target.platform,
     target: target.targetSelector ?? target.udid ?? target.id,
@@ -88,7 +99,7 @@ export async function sendHostInput(target: DeviceTarget, input: Record<string, 
   if (!response.ok) {
     throw new Error(await describeBridgeError(response, "Host input request failed"));
   }
-  return (await response.json()) as { ok: boolean; action?: string; message?: string };
+  return (await response.json()) as HostInputResponse;
 }
 
 export async function fetchHostLogs(target: DeviceTarget): Promise<HostTargetLogsResponse> {
@@ -101,6 +112,32 @@ export async function fetchHostLogs(target: DeviceTarget): Promise<HostTargetLog
     throw new Error(`Host logs request failed: ${response.status}`);
   }
   return (await response.json()) as HostTargetLogsResponse;
+}
+
+export async function fetchHostHierarchy(target: DeviceTarget): Promise<HierarchyScene> {
+  const payload = await fetchHostHierarchyResponse(target);
+  return payload.scene;
+}
+
+export async function fetchHostHierarchyResponse(
+  target: DeviceTarget,
+  options: { method?: "GET" | "POST" } = {}
+): Promise<HostHierarchyResponse> {
+  const params = new URLSearchParams({
+    platform: target.platform,
+    target: target.targetSelector ?? target.udid ?? target.id,
+  });
+  if (target.scope) params.set("scope", target.scope);
+  if (target.kind) params.set("kind", target.kind);
+  if (target.screenshotSource) params.set("source", target.screenshotSource);
+  const response = await fetch(`/web/host-hierarchy?${params.toString()}`, {
+    cache: "no-store",
+    method: options.method ?? "GET",
+  });
+  if (!response.ok) {
+    throw new Error(await describeBridgeError(response, "Host hierarchy request failed"));
+  }
+  return (await response.json()) as HostHierarchyResponse;
 }
 
 async function describeBridgeError(response: Response, fallback: string) {

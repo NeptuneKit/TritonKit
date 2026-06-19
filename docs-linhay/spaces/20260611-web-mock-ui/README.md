@@ -524,9 +524,20 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 ### 2026-06-18 Device canvas keyboard relay input
 
 - 用户指出点击 App 内输入框后，Web 端也需要提供输入框来联动键盘事件。单纯让 `.device-screen` 接收 keydown 不利于真实键盘、中文输入法、粘贴和浏览器文本编辑行为。
-- 修正：真实 screenshot 短 tap 后，Web 在 tap 位置附近显示并聚焦 `设备键盘输入` relay input；输入新增文本转发为 `type`，清空或删除已有文本转发为连续 `deleteBackward`，粘贴转发为 `paste`，Escape 收起 relay。
+- 修正：真实 screenshot 短 tap 后，先发送 tap，再依据 Triton `input.result` 返回的 `targetClassName` / `matchedClassName` / `activationClassName` 判断是否命中可编辑控件；只有命中 `UITextField` / `UITextView` 等文本输入类时，Web 才在 tap 位置附近显示并聚焦 `设备键盘输入` relay input。
+- relay 输入新增文本转发为 `type`，清空或删除已有文本转发为连续 `deleteBackward`，粘贴转发为 `paste`，Escape 收起 relay。
 - 该 relay 只负责把用户键盘输入转成 Triton input，不解析 screenshot 像素、不猜测 App 输入框身份；设备端是否命中输入框仍由先发出的 tap 和 Triton runtime/host input 结果决定。
-- 验证：`npm --prefix Web test` 通过 27 tests；`npm --prefix Web run build` 通过。
+- 验证：`npm --prefix Web test` 通过；新增 DOM 用例覆盖“tap 命中 `UITextField` 时出现 relay”和“tap 命中 `UIButton` 时不出现 relay”；`npm --prefix Web run build` 通过。
+
+### 2026-06-19 Device canvas longPress / pinch gestures
+
+- 用户在设备画布标注“没支持长按和双指捏合等手势吗”。定位到前端只识别单指 tap / swipe，Shared `TKInputRequest` 与 CLI input schema 也没有 `longPress` / `pinch` action，packaged Web bridge 会把这类 payload 拒为 `invalid_payload`。
+- 修正：`TKInputType` / `TKInputRequest` / `triton schema --command input --json` 新增 `longPress` 与 `pinch` wire shape；`longPress` 复用 input tap capability gate，`pinch` 复用 input swipe capability gate。
+- 修正：Web 设备画布支持单指长按识别与双 pointer 捏合识别。长按 payload 为 `{ type: "longPress", x, y, width, height, duration }`；捏合 payload 为 `{ type: "pinch", centerX, centerY, startDistance, endDistance, scale, width, height, duration }`。
+- 视觉反馈同步扩展：tap 仍显示触点，longPress 显示按住环，swipe 显示轨迹，pinch 显示中心缩放环。
+- 边界：Web 负责采集和转发 DTO；当前底层平台 adapter 按能力返回成功或 unsupported。已明确支持的新增底层路径只有 Android host `longPress`，通过 `adb input swipe x y x y <duration>` 提交；iOS Simulator host、Harmony host、embedded runtime 的 `longPress` / `pinch` 暂返回明确 unsupported，不伪造执行成功。
+- 验证：新增 DOM 用例覆盖 canvas `longPress` / `pinch` payload；新增 Shared model 用例覆盖两个 action 的编码/解码；capability gate 用例覆盖 `longPress -> inputTap`、`pinch -> inputSwipe`；`npm --prefix Web test -- --test-name-pattern 'long press|pinch'`、`npm --prefix Web test`、`npm --prefix Web run build`、`swift test --filter TKInputModelsTests/longPressRequestWireShape --filter TKInputModelsTests/pinchRequestWireShape`、`swift test --filter TKPlatformFallbackTests/capabilityGateMapsRequestMessages`、`swift test --package-path CLI --filter SingleDeviceWebPageTests` 通过。
+- 浏览器烟测：Playwright 打开 `http://127.0.0.1:34127/`，合成长按与双 pointer 捏合后拦截到 `{type:"longPress"}` 与 `{type:"pinch", scale:2}` payload；console error 为 0。验收截图：`docs-linhay/spaces/20260611-web-mock-ui/screenshots/20260619/20260619-web-device-canvas-gestures-after-v01.png`。
 
 ### 2026-06-18 Network evidence strip hide/restore
 
@@ -535,3 +546,33 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - `NetworkStrip` 自身仍保留 `隐藏网络证据` 按钮作为就近关闭入口；网络和日志面板分别独立控制，只关闭网络时日志继续显示并占满底部，只关闭日志时网络继续显示并占满底部。
 - 当网络和日志都关闭时，底部证据区域直接折叠，不再显示 `证据面板已隐藏` 状态条；恢复入口只保留在画布控制胶囊的 `显示网络` 与 `显示日志` 按钮上。
 - 验证：`npm --prefix Web test` 通过 28 tests；`npm --prefix Web run build` 通过。
+
+### 2026-06-19 Device control tool feedback
+
+- 用户在设备控制胶囊标注“探测”为何点击没有反应。定位到 `DeviceControls` 中 `应用 / 点选 / 探测` 三个按钮只被渲染出来，没有绑定任何 `onClick` 或 active 状态。
+- 修正：为 `应用 / 点选 / 探测` 新增本地工具态 `app | point | probe`；默认进入 `点选`，切换按钮后通过 `.is-active`、`aria-pressed` 和 `设备画面，当前工具 ...` 的 aria-label 给出明确可见反馈。
+- `探测` 目前仍是本地 UI 模式，不伪造新的 CLI / HTTP 控制能力；它只把画布 cursor 切为 `zoom-in` 并保留后续接入 inspect/probe 契约的位置。`点选` 保持现有 host input 交互，`应用` 切回中性 cursor。
+- 验证：`npm --prefix Web test` 新增 DOM 用例覆盖默认 `点选` 高亮、点击 `探测` 后 active 态切换，以及 `.device-screen` class / aria-label 同步更新；`npm --prefix Web run build` 通过。
+
+### 2026-06-19 Device controls 去占位按钮
+
+- 用户继续指出设备控制面板上“很多都没用”。复查后确认 `应用`、`主屏幕`、`竖屏/横屏` 在当前 Web mock 中没有真实事件链路或机器可读契约支撑，继续渲染为可点击按钮会误导。
+- 修正：设备控制胶囊只保留当前确实有行为或明确本地反馈的按钮：`点选`、`探测`、`隐藏/显示网络`、`隐藏/显示日志`。未接线的占位按钮全部移除，不再伪装成可操作控件。
+- 边界保持不变：横竖屏仍由真实 framebuffer / screenshot orientation 决定；系统级 `主屏幕` 在当前 Web mock 里没有单独契约，不在面板暴露；`应用` 模式没有独立业务价值，也一并移除。
+- 验证：`npm --prefix Web test` DOM 用例补充断言 `应用`、`主屏幕`、`竖屏/横屏` 按钮不存在；`npm --prefix Web run build` 通过。
+
+### 2026-06-19 Lookin-style 3D hierarchy viewer P0
+
+- 用户要求设备画布具备 Lookin 对应的视图层级分层三维可旋转形态，并明确“开始执行，落实到三端可用”。
+- 新建独立 space：`docs-linhay/spaces/20260619-lookin-hierarchy-viewer/README.md`，定义 P0 边界为三端可用的只读 3D hierarchy viewer，不完整复刻 Lookin，也不在 Web 里新增真实采集或业务控制入口。
+- Web 侧新增 `HierarchyScene` / `HierarchyLayerNode` DTO，iOS / Android / Harmony 三端 mock target 都有 viewport、frame、depth、interactive、color 等 layer 数据；左侧 `视图树` 与中央 3D viewer 从同一份 DTO 派生。
+- `探测` 模式现在会把设备屏幕切换为 Lookin-style 3D hierarchy viewer：Three.js 负责主 3D layer 渲染，DOM fallback 暴露同一批 layer 和 rotation 状态，测试环境没有 WebGL 时仍可验证。
+- viewer 支持拖动旋转，拖拽事件会在 viewer 内停止传播，不会误发 screenshot tap / swipe。切换 iOS / Android / Harmony target 后，点击 `探测` 会展示对应平台的 layer、节点数、层级数和交互节点数。
+- 验证：`npm --prefix Web test` 新增用例覆盖 iOS / Android / Harmony 三端 hierarchy viewer、拖动旋转状态变化；`npm --prefix Web run build` 通过。
+
+### 2026-06-19 Web host hierarchy endpoint
+
+- Web dev bridge 新增只读 `/web/host-hierarchy?platform=<platform>&target=<target>` endpoint，返回 `HostHierarchyResponse.scene`。
+- `探测` 模式现在优先消费该 endpoint，失败时回退内置三端 mock DTO；这固定了 Web 接真实 hierarchy dump 的消费路径。
+- endpoint 已改为调用 `triton hierarchy --platform <platform> --target <target> --json`，由 CLI 侧把 iOS runtime AX、Android UIAutomator、Harmony dumpLayout 归一成 scene。
+- 验证：`npm --prefix Web test` 通过 33 tests，新增用例覆盖 iOS / Android / Harmony 响应和 unsupported platform 错误 envelope。

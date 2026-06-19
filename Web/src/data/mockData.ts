@@ -1,5 +1,5 @@
 import { MonitorSmartphone, Smartphone, TabletSmartphone } from "lucide-react";
-import type { DeviceTarget, LogEntry, NetworkEvent } from "../types";
+import type { DevicePlatform, DeviceTarget, HierarchyScene, LogEntry, NetworkEvent } from "../types";
 
 export const targets: DeviceTarget[] = [
   {
@@ -107,4 +107,72 @@ export const logs: Record<string, LogEntry[]> = {
     { id: "harmony-log-2", time: "18:40:29", level: "info", message: "Snapshot display returned JPEG framebuffer" },
     { id: "harmony-log-3", time: "18:40:35", level: "warn", message: "Proxy lane reports limited host visibility" },
   ],
+};
+
+export const hierarchyScenes: Record<DevicePlatform, HierarchyScene> = {
+  ios: {
+    platform: "ios",
+    rootId: "scene",
+    viewport: { width: 390, height: 844 },
+    nodes: [
+      { id: "scene", type: "UIWindowScene", name: "mainScene", frame: { x: 0, y: 0, width: 390, height: 844 }, depth: 0, visible: true, interactive: false, color: "#6ea8ff" },
+      { id: "window", parentId: "scene", type: "UIWindow", name: "keyWindow", frame: { x: 0, y: 0, width: 390, height: 844 }, depth: 1, visible: true, interactive: false, color: "#7dd3fc" },
+      { id: "root", parentId: "window", type: "UIView", name: "rootView", frame: { x: 0, y: 0, width: 390, height: 844 }, depth: 2, visible: true, interactive: false, color: "#93c5fd" },
+      { id: "nav", parentId: "root", type: "UINavigationBar", name: "topBar", frame: { x: 0, y: 44, width: 390, height: 52 }, depth: 3, visible: true, interactive: true, color: "#facc15" },
+      { id: "back", parentId: "nav", type: "UIButton", name: "backButton", frame: { x: 14, y: 55, width: 34, height: 34 }, depth: 4, visible: true, interactive: true, color: "#fb7185" },
+      { id: "title", parentId: "nav", type: "UILabel", name: "titleLabel", frame: { x: 72, y: 57, width: 188, height: 28 }, depth: 4, visible: true, interactive: false, color: "#fde68a" },
+      { id: "scroll", parentId: "root", type: "UIScrollView", name: "contentScroll", frame: { x: 0, y: 96, width: 390, height: 664 }, depth: 3, visible: true, interactive: true, color: "#22d3ee" },
+      { id: "stack", parentId: "scroll", type: "UIStackView", name: "questionList", frame: { x: 16, y: 120, width: 358, height: 420 }, depth: 4, visible: true, interactive: false, color: "#38bdf8" },
+      { id: "question-0", parentId: "stack", type: "UIButton", name: "caseOption[0]", frame: { x: 24, y: 132, width: 342, height: 58 }, depth: 5, visible: true, interactive: true, color: "#fb7185" },
+      { id: "question-1", parentId: "stack", type: "UIButton", name: "caseOption[1]", frame: { x: 24, y: 202, width: 342, height: 58 }, depth: 5, visible: true, interactive: true, color: "#fb7185" },
+      { id: "question-2", parentId: "stack", type: "UIButton", name: "caseOption[2]", frame: { x: 24, y: 272, width: 342, height: 58 }, depth: 5, visible: true, interactive: true, color: "#fb7185" },
+      { id: "question-3", parentId: "stack", type: "UIButton", name: "caseOption[3]", frame: { x: 24, y: 342, width: 342, height: 58 }, depth: 5, visible: true, interactive: true, color: "#fb7185" },
+      { id: "question-4", parentId: "stack", type: "UIButton", name: "caseOption[4]", frame: { x: 24, y: 412, width: 342, height: 58 }, depth: 5, visible: true, interactive: true, color: "#fb7185" },
+      { id: "tabbar", parentId: "root", type: "UITabBar", name: "tabBar", frame: { x: 0, y: 760, width: 390, height: 84 }, depth: 3, visible: true, interactive: true, color: "#a78bfa" },
+      { id: "home-tab", parentId: "tabbar", type: "UIButton", name: "homeTab", frame: { x: 36, y: 770, width: 72, height: 48 }, depth: 4, visible: true, interactive: true, color: "#c084fc" },
+      { id: "message-tab", parentId: "tabbar", type: "UIButton", name: "messageTab", frame: { x: 158, y: 770, width: 72, height: 48 }, depth: 4, visible: true, interactive: true, color: "#c084fc" },
+      { id: "profile-tab", parentId: "tabbar", type: "UIButton", name: "profileTab", frame: { x: 282, y: 770, width: 72, height: 48 }, depth: 4, visible: true, interactive: true, color: "#c084fc" },
+    ],
+  },
+  android: {
+    platform: "android",
+    rootId: "decor-view",
+    viewport: { width: 412, height: 915 },
+    nodes: [
+      { id: "decor-view", type: "DecorView", name: "MainActivity", frame: { x: 0, y: 0, width: 412, height: 915 }, depth: 0, visible: true, interactive: false, color: "#34d399" },
+      { id: "content", parentId: "decor-view", type: "FrameLayout", name: "android.R.id.content", frame: { x: 0, y: 24, width: 412, height: 891 }, depth: 1, visible: true, interactive: false, color: "#6ee7b7" },
+      { id: "compose-root", parentId: "content", type: "AndroidComposeView", name: "root", frame: { x: 0, y: 24, width: 412, height: 891 }, depth: 2, visible: true, interactive: false, color: "#86efac" },
+      { id: "top-app-bar", parentId: "compose-root", type: "Toolbar", name: "deviceToolbar", frame: { x: 0, y: 24, width: 412, height: 64 }, depth: 3, visible: true, interactive: true, color: "#fbbf24" },
+      { id: "lazy-column", parentId: "compose-root", type: "RecyclerView", name: "settingsList", frame: { x: 12, y: 96, width: 388, height: 660 }, depth: 3, visible: true, interactive: true, color: "#2dd4bf" },
+      { id: "card-network", parentId: "lazy-column", type: "MaterialCardView", name: "networkPolicy", frame: { x: 24, y: 116, width: 364, height: 92 }, depth: 4, visible: true, interactive: true, color: "#60a5fa" },
+      { id: "card-cache", parentId: "lazy-column", type: "MaterialCardView", name: "cachePressure", frame: { x: 24, y: 224, width: 364, height: 92 }, depth: 4, visible: true, interactive: true, color: "#60a5fa" },
+      { id: "card-session", parentId: "lazy-column", type: "MaterialCardView", name: "sessionState", frame: { x: 24, y: 332, width: 364, height: 92 }, depth: 4, visible: true, interactive: true, color: "#60a5fa" },
+      { id: "bottom-nav", parentId: "compose-root", type: "BottomNavigationView", name: "navigationBar", frame: { x: 0, y: 812, width: 412, height: 88 }, depth: 3, visible: true, interactive: true, color: "#a78bfa" },
+    ],
+  },
+  harmony: {
+    platform: "harmony",
+    rootId: "ability-window",
+    viewport: { width: 393, height: 873 },
+    nodes: [
+      { id: "ability-window", type: "UIAbilityWindow", name: "EntryAbility", frame: { x: 0, y: 0, width: 393, height: 873 }, depth: 0, visible: true, interactive: false, color: "#fb7185" },
+      { id: "arkui-root", parentId: "ability-window", type: "ArkUIRoot", name: "Index", frame: { x: 0, y: 0, width: 393, height: 873 }, depth: 1, visible: true, interactive: false, color: "#fda4af" },
+      { id: "navigation", parentId: "arkui-root", type: "Navigation", name: "developerSettings", frame: { x: 0, y: 30, width: 393, height: 64 }, depth: 2, visible: true, interactive: true, color: "#facc15" },
+      { id: "back-image", parentId: "navigation", type: "Image", name: "back", frame: { x: 18, y: 46, width: 28, height: 28 }, depth: 3, visible: true, interactive: true, color: "#f97316" },
+      { id: "title-text", parentId: "navigation", type: "Text", name: "开发者设置", frame: { x: 64, y: 44, width: 164, height: 32 }, depth: 3, visible: true, interactive: false, color: "#fde68a" },
+      { id: "scroll", parentId: "arkui-root", type: "Scroll", name: "settingsScroll", frame: { x: 0, y: 94, width: 393, height: 724 }, depth: 2, visible: true, interactive: true, color: "#22d3ee" },
+      { id: "content-column", parentId: "scroll", type: "Column", name: "settingsContent", frame: { x: 14, y: 108, width: 365, height: 610 }, depth: 3, visible: true, interactive: false, color: "#38bdf8" },
+      { id: "server-row", parentId: "content-column", type: "Row", name: "服务器环境", frame: { x: 24, y: 128, width: 345, height: 64 }, depth: 4, visible: true, interactive: false, color: "#60a5fa" },
+      { id: "env-dev", parentId: "server-row", type: "Button", name: "dev", frame: { x: 32, y: 138, width: 72, height: 42 }, depth: 5, visible: true, interactive: true, color: "#c084fc" },
+      { id: "env-test", parentId: "server-row", type: "Button", name: "test", frame: { x: 112, y: 138, width: 72, height: 42 }, depth: 5, visible: true, interactive: true, color: "#c084fc" },
+      { id: "env-uat", parentId: "server-row", type: "Button", name: "uat", frame: { x: 192, y: 138, width: 72, height: 42 }, depth: 5, visible: true, interactive: true, color: "#c084fc" },
+      { id: "env-prd", parentId: "server-row", type: "Button", name: "prd", frame: { x: 272, y: 138, width: 72, height: 42 }, depth: 5, visible: true, interactive: true, color: "#c084fc" },
+      { id: "switch-proxy", parentId: "content-column", type: "Toggle", name: "代理配置", frame: { x: 24, y: 212, width: 345, height: 56 }, depth: 4, visible: true, interactive: true, color: "#34d399" },
+      { id: "debug-link", parentId: "content-column", type: "TextInput", name: "调试链接", frame: { x: 24, y: 288, width: 345, height: 54 }, depth: 4, visible: true, interactive: true, color: "#fb7185" },
+      { id: "codepush-row", parentId: "content-column", type: "Row", name: "CodePush", frame: { x: 24, y: 366, width: 345, height: 70 }, depth: 4, visible: true, interactive: false, color: "#60a5fa" },
+      { id: "update-button", parentId: "codepush-row", type: "Button", name: "更新", frame: { x: 32, y: 380, width: 88, height: 42 }, depth: 5, visible: true, interactive: true, color: "#c084fc" },
+      { id: "custom-button", parentId: "codepush-row", type: "Button", name: "自定义", frame: { x: 132, y: 380, width: 88, height: 42 }, depth: 5, visible: true, interactive: true, color: "#c084fc" },
+      { id: "clear-button", parentId: "codepush-row", type: "Button", name: "清除", frame: { x: 232, y: 380, width: 88, height: 42 }, depth: 5, visible: true, interactive: true, color: "#c084fc" },
+    ],
+  },
 };

@@ -1,0 +1,221 @@
+{
+  "checks" : [
+    {
+      "code" : "server_reachable",
+      "id" : "server",
+      "message" : "Local Triton server responded",
+      "nextAction" : {
+        "args" : [
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "status",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "status",
+        "capabilities"
+      ],
+      "status" : "pass",
+      "workflowCategories" : [
+
+      ]
+    },
+    {
+      "code" : "target_connected",
+      "id" : "target",
+      "message" : "At least one embedded runtime target is connected",
+      "nextAction" : {
+        "args" : [
+          "current",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "target",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "target-current",
+        "runtime-manifest",
+        "snapshot"
+      ],
+      "status" : "pass",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "runtime",
+        "smoke"
+      ]
+    },
+    {
+      "code" : "runtime_available",
+      "id" : "runtime",
+      "message" : "Embedded runtime capabilities are available",
+      "nextAction" : {
+        "args" : [
+          "manifest",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "runtime",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "runtime-manifest",
+        "state-app",
+        "state-scene",
+        "state-route",
+        "state-responder",
+        "snapshot",
+        "app-semantic-state",
+        "app-semantic-action",
+        "media-playback",
+        "focus",
+        "set-text",
+        "select-segment",
+        "set-switch",
+        "semantic-action",
+        "ledger"
+      ],
+      "status" : "pass",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe"
+      ]
+    },
+    {
+      "code" : "action_capabilities_limited",
+      "hint" : "Use capabilities to inspect per-action reason and nextAction.",
+      "id" : "action-surface",
+      "message" : "Some action capabilities are unavailable in the current environment",
+      "nextAction" : {
+        "args" : [
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "capabilities",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "press"
+      ],
+      "status" : "warn",
+      "workflowCategories" : [
+        "action",
+        "assert",
+        "evidence"
+      ]
+    },
+    {
+      "code" : "plan_available",
+      "id" : "plan",
+      "message" : "Task planning is available",
+      "nextAction" : {
+        "args" : [
+          "--json"
+        ],
+        "category" : "plan",
+        "command" : "plan",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "plan",
+        "target-list",
+        "evidence-summary"
+      ],
+      "status" : "pass",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "replay",
+        "runtime",
+        "smoke"
+      ]
+    }
+  ],
+  "connected" : true,
+  "nextStep" : "action-surface",
+  "nextWorkflows" : [
+    "action",
+    "assert",
+    "evidence"
+  ],
+  "ok" : true,
+  "primaryCapability" : "press",
+  "primaryNextAction" : {
+    "args" : [
+      "--json"
+    ],
+    "category" : "diagnose",
+    "command" : "capabilities",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : false,
+    "terminationSignals" : [
+
+    ]
+  },
+  "primaryNextActionSource" : "next-step-check",
+  "primaryWorkflowCategory" : "action",
+  "runtime" : "embedded",
+  "serverReachable" : true,
+  "surface" : "doctor"
+}

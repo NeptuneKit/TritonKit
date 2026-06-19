@@ -1,0 +1,27 @@
+{
+  "attempt" : 1,
+  "ok" : true,
+  "platform" : "harmony",
+  "ready" : true,
+  "sourceCommand" : "hdc list targets -v\nhdc -t 127.0.0.1:10100 shell param get bootevent.boot.completed\nhdc -t 127.0.0.1:10100 shell echo triton-shell-ready",
+  "sourceCommands" : [
+    "hdc list targets -v\nhdc -t 127.0.0.1:10100 shell param get bootevent.boot.completed\nhdc -t 127.0.0.1:10100 shell echo triton-shell-ready"
+  ],
+  "target" : {
+    "blockedReasons" : [
+
+    ],
+    "current" : false,
+    "id" : "harmony:127.0.0.1:10100",
+    "identityState" : "unknown",
+    "kind" : "emulator",
+    "platform" : "harmony",
+    "ready" : true,
+    "scope" : "emulator",
+    "sensitive" : false,
+    "source" : "hdc",
+    "state" : "Connected",
+    "target" : "127.0.0.1:10100",
+    "transport" : "TCP"
+  }
+}

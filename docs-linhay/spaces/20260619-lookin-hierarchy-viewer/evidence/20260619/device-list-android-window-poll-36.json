@@ -1,0 +1,40 @@
+{
+  "defaultTarget" : {
+    "blockedReasons" : [
+      "offline"
+    ],
+    "id" : "android:emulator-5554",
+    "kind" : "emulator",
+    "platform" : "android",
+    "ready" : false,
+    "scope" : "emulator",
+    "sensitive" : false,
+    "source" : "adb",
+    "state" : "offline",
+    "target" : "emulator-5554",
+    "transport" : "4"
+  },
+  "ok" : true,
+  "platform" : "android",
+  "sourceCommand" : "adb devices -l",
+  "sourceCommands" : [
+    "adb devices -l"
+  ],
+  "targets" : [
+    {
+      "blockedReasons" : [
+        "offline"
+      ],
+      "id" : "android:emulator-5554",
+      "kind" : "emulator",
+      "platform" : "android",
+      "ready" : false,
+      "scope" : "emulator",
+      "sensitive" : false,
+      "source" : "adb",
+      "state" : "offline",
+      "target" : "emulator-5554",
+      "transport" : "4"
+    }
+  ]
+}

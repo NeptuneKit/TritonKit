@@ -1,0 +1,42 @@
+{
+  "action" : "device.start",
+  "emulator" : "\/Users\/linhey\/Library\/Android\/sdk\/emulator\/emulator",
+  "executedSourceCommands" : [
+    "\/Users\/linhey\/Library\/Android\/sdk\/emulator\/emulator @Dxyer_API_34 -no-window -gpu swiftshader_indirect -memory 4096 -no-snapshot-load -no-audio -no-boot-anim"
+  ],
+  "name" : "Dxyer_API_34",
+  "nextAction" : {
+    "args" : [
+      "wait-ready",
+      "--platform",
+      "android",
+      "--device",
+      "emulator-5554",
+      "--json"
+    ],
+    "category" : "wait",
+    "command" : "device",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : false,
+    "terminationSignals" : [
+
+    ]
+  },
+  "note" : "Android emulator launch is detached. Use the nextAction wait-ready command before app, hierarchy, screenshot, or smoke actions.",
+  "ok" : true,
+  "pid" : 61585,
+  "planOnly" : false,
+  "platform" : "android",
+  "sourceCommands" : [
+    "\/Users\/linhey\/Library\/Android\/sdk\/emulator\/emulator @Dxyer_API_34 -no-window -gpu swiftshader_indirect -memory 4096 -no-snapshot-load -no-audio -no-boot-anim"
+  ],
+  "started" : true,
+  "stderrLogPath" : "docs-linhay\/spaces\/20260619-lookin-hierarchy-viewer\/evidence\/20260619\/device-start-android-dxyer-stderr.log",
+  "stdoutLogPath" : "docs-linhay\/spaces\/20260619-lookin-hierarchy-viewer\/evidence\/20260619\/device-start-android-dxyer-stdout.log",
+  "target" : "emulator-5554"
+}

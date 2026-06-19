@@ -1,0 +1,120 @@
+2026-06-19 03:05:35.2936432387072 W [teleport_express_register.c(send_device_prop_to_guest:50)] get_device_prop id f4241 data_len 64 prop_size 256 not match
+2026-06-19 03:05:37.4816432387072 I [camera_utils.m(list_avfoundation_devices:71)] Device Name 'MacBook Pro相机' uid 6C707041-05AC-0011-0002-000000000001
+
+2026-06-19 03:05:37.4816432387072 I [camera_utils.m(list_avfoundation_devices:88)] 摄像头帧率: 30.00
+2026-06-19 03:05:37.4816432387072 I [camera_utils.m(list_avfoundation_devices:92)] 摄像头分辨率: 1280x720
+2026-06-19 03:05:37.4816432387072 I [camera_utils.m(list_avfoundation_devices:71)] Device Name '“iPhone (2)”的相机' uid 0815DB9E-5B7C-4592-9B00-08C500000001
+
+2026-06-19 03:05:37.4816432387072 I [camera_utils.m(list_avfoundation_devices:88)] 摄像头帧率: 60.00
+2026-06-19 03:05:37.4816432387072 I [camera_utils.m(list_avfoundation_devices:92)] 摄像头分辨率: 1280x720
+2026-06-19 03:05:37.4816432387072 I [camera_utils.m(list_avfoundation_devices:95)] skip camera
+2026-06-19 03:05:37.4816432387072 I [express_camera.c(load_camera_device_props:753)] list_cameras: found 3 cameras.
+2026-06-19 03:05:37.4816432387072 E [express_camera.c(load_camera_device_props:762)] load camera thread context not ok
+2026-06-19 03:05:37.4816432387072 I [express_camera.c(get_camera_thread_context:962)] context is null, before thread_context create
+2026-06-19 03:05:37.4816432387072 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 80
+2026-06-19 03:05:37.4836432387072 I [express_camera.c(get_camera_thread_context:962)] context is null, before thread_context create
+2026-06-19 03:05:37.4836432387072 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 80
+2026-06-19 03:05:37.4836432387072 I [express_camera.c(get_camera_thread_context:962)] context is null, before thread_context create
+2026-06-19 03:05:37.4836432387072 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 80
+2026-06-19 03:05:37.4846432387072 I [express_camera.c(get_camera_thread_context:962)] context is null, before thread_context create
+2026-06-19 03:05:37.4846432387072 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 80
+2026-06-19 03:08:12.0726205616128 E [vl.c(delete_snapshot_bin_file:2416)] error file /Users/linhey/.Huawei/Emulator/deployed/Codex Test Phone/ram.bin not exist or permission denied
+2026-06-19 03:08:12.1356205616128 I [UiProxyUtil.cpp(VirtioTrackpadLoadConfig:388)] trackpad config width:3200 height:2400 width_resolution:30 touchscreen:0
+2026-06-19 03:08:12.1356205616128 I [UiProxyUtil.cpp(VirtioTrackpadLoadConfig:388)] trackpad config width:1308 height:2880 width_resolution:20 touchscreen:1
+2026-06-19 03:08:12.1356205616128 I [UiProxyUtil.cpp(VirtioTrackpadLoadConfig:388)] trackpad config width:1308 height:2880 width_resolution:20 touchscreen:1
+2026-06-19 03:08:12.1356205616128 I [UiProxyUtil.cpp(VirtioTrackpadLoadConfig:388)] trackpad config width:1308 height:2880 width_resolution:20 touchscreen:1
+2026-06-19 03:08:12.1356205616128 I [UiProxyUtil.cpp(VirtioTrackpadLoadConfig:388)] trackpad config width:1308 height:2880 width_resolution:20 touchscreen:1
+2026-06-19 03:08:12.1356205616128 I [UiProxyUtil.cpp(VirtioTrackpadLoadConfig:388)] trackpad config width:1308 height:2880 width_resolution:20 touchscreen:1
+2026-06-19 03:08:12.1366205616128 I [teleport_express_pci.c(init_express_driver_names:295)] init_express_driver_names |express_gpu express_bridge express_touchscreen express_mic express_hotplug express_sensor express_keyboard express_camera express_sync express_battery express_gps express_motion |
+2026-06-19 03:08:12.1366205616128 I [express_touchscreen.c(update_touchscreen_prop:313)] express multi touch disabled
+2026-06-19 03:08:12.1366279622656 I [express_gpu_render.c(native_window_thread:1007)] native_window_thread create, index: 0
+2026-06-19 03:08:12.1758327715008 I [express_gpu_render.c(native_window_create_full:801)] native create window Trinity 0x14ef4dbc0
+2026-06-19 03:08:12.1758327715008 I [express_gpu_render.c(native_window_thread_block_invoke:1055)] Create glfw main windows.
+2026-06-19 03:08:12.1758327715008 I [express_gpu_render.c(native_window_thread_block_invoke:1081)] window_width:646, window_height:1422, index:0
+2026-06-19 03:08:12.1846279622656 I [express_gpu_render.c(init_global_gbuffer_data:856)] register shutdown_notify_callback.
+2026-06-19 03:08:12.1876279622656 I [texture_utils.cpp(check_texture_support_status:260)] GL_COMPRESSED_TEXTURE_FORMATS: etc2 [not all support: 0 vs 10]
+2026-06-19 03:08:12.1876279622656 I [texture_utils.cpp(check_texture_support_status:268)] GL_COMPRESSED_TEXTURE_FORMATS: astc [not all support: 0 vs 28]
+2026-06-19 03:08:12.1876279622656 E [gl_helper.c(prepare_integer_value:966)] Error in copy string, errno: 34.
+2026-06-19 03:08:12.1876279622656 E [gl_helper.c(prepare_integer_value:972)] Error in copy string, errno: 34.
+2026-06-19 03:08:12.1876279622656 E [express_gpu_render.c(static_value_prepare:533)] when creating static vaules 500
+2026-06-19 03:08:12.1876279622656 I [express_gpu_render.c(static_value_prepare:589)] gl vendor:Apple
+2026-06-19 03:08:12.1876279622656 I [express_gpu_render.c(static_value_prepare:616)] gl version:OpenGL ES 3.0 (4.1 Metal - 90.5)
+2026-06-19 03:08:12.1876279622656 I [express_gpu_render.c(static_value_prepare:626)] gl renderer:Apple M5
+2026-06-19 03:08:12.1876279622656 I [express_gpu_render.c(static_value_prepare:646)] gl shading_language_version:OpenGL ES GLSL ES 3.0
+2026-06-19 03:08:12.1876279622656 I [express_gpu_render.c(static_value_prepare:663)] host gl 41 DSA_enable 0
+2026-06-19 03:08:12.1876279622656 I [express_gpu_render.c(static_value_prepare:666)] current image not support bgra.
+2026-06-19 03:08:12.1886279622656 I [express_gpu_render.c(native_window_thread:1132)] native windows inited!
+2026-06-19 03:08:12.1886279622656 I [express_gpu_render.c(native_window_thread:1165)] window render start 0
+2026-06-19 03:08:12.2146205616128 E [HvdInfo.c(GetLayoutConfig:98)] Get layoutConfig before initialization.
+2026-06-19 03:08:12.2146205616128 E [BootParams.cpp(QemuBootParamsAdd:89)] param value null
+2026-06-19 03:08:12.2146205616128 E [HvdInfo.c(GetQemuDefaultCutoutPath:134)] Get defaultDisplayCutoutPath before initialization.
+2026-06-19 03:08:12.2146205616128 E [BootParams.cpp(QemuBootParamsAdd:89)] param value null
+2026-06-19 03:08:12.2146205616128 E [HvdInfo.c(GetQemuSubCutoutPath:143)] Get subDisplayCutoutPath before initialization.
+2026-06-19 03:08:12.2146205616128 E [BootParams.cpp(QemuBootParamsAdd:89)] param value null
+2026-06-19 03:08:12.2146205616128 E [HvdInfo.c(GetMainDisplayMode:152)] Get mainDisplayMode before initialization.
+2026-06-19 03:08:12.2146205616128 E [BootParams.cpp(QemuBootParamsAdd:89)] param value null
+2026-06-19 03:08:12.2146205616128 E [HvdInfo.c(GetFullDisplayMode:161)] Get fullDisplayMode before initialization.
+2026-06-19 03:08:12.2146205616128 E [BootParams.cpp(QemuBootParamsAdd:89)] param value null
+2026-06-19 03:08:12.2146205616128 I [vl.c(RunQemuMain:4080)] Qemu Init end
+2026-06-19 03:08:12.7586277328896 I [express_pipe.c(dev_read:751)] Clean up all existing stale pipes.
+2026-06-19 03:08:12.7726277328896 I [teleport_express_call.c(guest_null_ptr_init:678)] null ptr 13472457704
+2026-06-19 03:08:12.7826277328896 I [teleport_express.c(teleport_express_output_handle:54)] start handle thread
+2026-06-19 03:08:12.7846277328896 I [express_touchscreen.c(touchscreen_buffer_register:365)] touch register buffer
+2026-06-19 03:08:12.7856277328896 I [express_keyboard.c(keyboard_buffer_register:206)] keyboard register buffer
+2026-06-19 03:08:12.7866277328896 I [express_battery.c(battery_buffer_register:210)] battery register buffer
+2026-06-19 03:08:12.7866285766656 I [express_sync.c(sync_buffer_register:207)] sync register buffer
+2026-06-19 03:08:12.7866277328896 W [teleport_express_register.c(send_device_prop_to_guest:50)] get_device_prop id f4241 data_len 64 prop_size 256 not match
+2026-06-19 03:08:13.1426277328896 I [camera_utils.m(list_avfoundation_devices:71)] Device Name 'MacBook Pro相机' uid 6C707041-05AC-0011-0002-000000000001
+
+2026-06-19 03:08:13.1426277328896 I [camera_utils.m(list_avfoundation_devices:88)] 摄像头帧率: 30.00
+2026-06-19 03:08:13.1426277328896 I [camera_utils.m(list_avfoundation_devices:92)] 摄像头分辨率: 1280x720
+2026-06-19 03:08:13.1426277328896 I [camera_utils.m(list_avfoundation_devices:71)] Device Name '“iPhone (2)”的相机' uid 0815DB9E-5B7C-4592-9B00-08C500000001
+
+2026-06-19 03:08:13.1426277328896 I [camera_utils.m(list_avfoundation_devices:88)] 摄像头帧率: 60.00
+2026-06-19 03:08:13.1426277328896 I [camera_utils.m(list_avfoundation_devices:92)] 摄像头分辨率: 1280x720
+2026-06-19 03:08:13.1426277328896 I [camera_utils.m(list_avfoundation_devices:95)] skip camera
+2026-06-19 03:08:13.1426277328896 I [express_camera.c(load_camera_device_props:753)] list_cameras: found 3 cameras.
+2026-06-19 03:08:13.1426277328896 E [express_camera.c(load_camera_device_props:762)] load camera thread context not ok
+2026-06-19 03:08:13.1426277328896 I [express_camera.c(get_camera_thread_context:962)] context is null, before thread_context create
+2026-06-19 03:08:13.1426277328896 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 80
+2026-06-19 03:08:13.1436277328896 I [express_camera.c(get_camera_thread_context:962)] context is null, before thread_context create
+2026-06-19 03:08:13.1436277328896 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 80
+2026-06-19 03:08:13.1436277328896 I [express_camera.c(get_camera_thread_context:962)] context is null, before thread_context create
+2026-06-19 03:08:13.1436277328896 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 80
+2026-06-19 03:08:13.1446277328896 I [express_camera.c(get_camera_thread_context:962)] context is null, before thread_context create
+2026-06-19 03:08:13.1446277328896 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 80
+2026-06-19 03:08:18.2356277902336 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 1
+2026-06-19 03:08:18.2476145044480 E [egl_context.c(d_eglCreateContext:50)] real share context is NULL
+2026-06-19 03:08:18.2526145044480 W [express_gpu.c(decode_invoke:735)] #fun_id 10013 context 151b64a00 gl error 500
+2026-06-19 03:08:18.2576278475776 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 40
+2026-06-19 03:08:18.2576281916416 I [express_bridge.c(bridge_socket_listen:117)] listen bridge socket port 10100
+2026-06-19 03:08:18.2996279049216 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 10
+2026-06-19 03:08:18.29918410991616 I [express_display.c(display_context_init:502)] display_context_init, device_id id: 10
+2026-06-19 03:08:18.29918410991616 I [express_display.c(display_context_init:507)] send_message_to_main_window(MAIN_CREATE_CHILD_WINDOW),index:0
+2026-06-19 03:08:18.30318410991616 I [express_display.c(display_decode_invoke:360)] screen num: 1
+2026-06-19 03:08:18.30718410991616 I [express_display.c(display_decode_invoke:310)] FUNID_Get_Display_Mods return display[index = 0, screen_id = 0, device_id = 10,                 pixel_width = 1308, pixel_height = 2880]
+2026-06-19 03:08:18.30818410991616 I [express_display.c(display_decode_invoke:346)] Get Display id : 0, power state :0
+2026-06-19 03:08:18.30818410991616 I [express_display.c(display_decode_invoke:369)] device type: 0
+2026-06-19 03:08:18.34818410991616 I [express_display.c(display_decode_invoke:346)] Get Display id : 0, power state :0
+2026-06-19 03:08:18.4126277902336 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 1
+2026-06-19 03:08:18.41218411565056 E [egl_context.c(d_eglCreateContext:50)] real share context is NULL
+2026-06-19 03:08:18.41318411565056 W [express_gpu.c(decode_invoke:735)] #fun_id 10013 context 12fe2b160 gl error 500
+2026-06-19 03:08:18.4556277902336 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 1
+2026-06-19 03:08:18.47118412138496 W [express_gpu.c(decode_invoke:735)] #fun_id 10013 context 12fe2c540 gl error 500
+2026-06-19 03:08:18.5276277902336 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 1
+2026-06-19 03:08:18.52718414841856 W [express_gpu.c(decode_invoke:735)] #fun_id 10013 context 14828aa00 gl error 500
+2026-06-19 03:08:18.5356279049216 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 1
+2026-06-19 03:08:18.53818415415296 W [express_gpu.c(decode_invoke:735)] #fun_id 10013 context 14abce770 gl error 500
+2026-06-19 03:08:18.5486278475776 I [teleport_express_distribute.c(thread_context_create:54)] thread_context_create device_id: 1
+2026-06-19 03:08:18.55018415988736 W [express_gpu.c(decode_invoke:735)] #fun_id 10013 context 14abcfe50 gl error 500
+2026-06-19 03:08:18.62518410991616 E [express_display.c(opengl_paint_composer_layers:702)] not support transform_type 8
+2026-06-19 03:08:21.59918410991616 I [express_display.c(display_status_change:776)] Display id: 0 power status : 0 from guest, now_display_status 0.
+2026-06-19 03:08:21.72018410991616 I [express_display.c(display_status_change:776)] Display id: 0 power status : 0 from guest, now_display_status 0.
+2026-06-19 03:08:22.16218410991616 I [express_display.c(display_status_change:776)] Display id: 0 power status : 0 from guest, now_display_status 0.
+2026-06-19 03:08:23.08318410991616 I [express_display.c(display_status_change:776)] Display id: 0 power status : 0 from guest, now_display_status 0.
+2026-06-19 03:08:23.8286145044480 W [express_gpu.c(decode_invoke:735)] #fun_id 197 context 151b64a00 gl error 500
+2026-06-19 03:08:24.6906279049216 I [BootComplete.cpp(BootCompletePipeClientRecv:78)] guest os boot completed.
+2026-06-19 03:08:24.7238327715008 I [camera_utils.m(camera_avfoundation_authorized:34)] 摄像头访问权限已授权
+2026-06-19 03:08:24.7238327715008 E [express_camera.c(load_camera_device_props:748)] camera inited
+2026-06-19 03:08:24.8036278475776 I [ClipboardContent.cpp(ClipboardContentPipeClientRecv:39)] clipboard content pipe is ready
+2026-06-19 03:08:24.9326277902336 I [EmuCommandClient.cpp(CommandClientPipeRecv:38)] command pipe is ready

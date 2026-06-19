@@ -72,13 +72,8 @@ func prepareHostArtifactOutputPath(_ path: String) throws {
         throw HostArtifactOutputError.rejected(path: path, reason: "path already exists")
     }
 }
-func runHostCommand(
-    _ command: TKHostCommand,
-    interruptAfter: Double? = nil,
-    maximumOutputBytes: Int? = 1_048_576
-) throws -> HostProcessResult {
-    let timeoutSeconds = command.defaultTimeoutSeconds
-    let process = Process()
+
+private func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) {
     if command.executable.contains("/") {
         process.executableURL = URL(fileURLWithPath: command.executable)
         process.arguments = command.processArguments
@@ -89,6 +84,54 @@ func runHostCommand(
         process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
         process.arguments = [command.executable] + command.processArguments
     }
+}
+
+private func hostDetachedOutputHandle(path: String?) throws -> FileHandle {
+    guard let path else {
+        return try FileHandle(forWritingTo: URL(fileURLWithPath: "/dev/null"))
+    }
+    try prepareHostArtifactOutputPath(path)
+    FileManager.default.createFile(atPath: path, contents: nil)
+    return try FileHandle(forWritingTo: URL(fileURLWithPath: path))
+}
+
+func runHostCommandDetached(
+    _ command: TKHostCommand,
+    stdoutLogPath: String? = nil,
+    stderrLogPath: String? = nil
+) throws -> HostDetachedProcessResult {
+    let process = Process()
+    configureHostProcessExecutable(process, command: command)
+    let stdout = try hostDetachedOutputHandle(path: stdoutLogPath)
+    let stderr = try hostDetachedOutputHandle(path: stderrLogPath)
+    process.standardOutput = stdout
+    process.standardError = stderr
+    process.standardInput = FileHandle.nullDevice
+
+    do {
+        try process.run()
+    } catch {
+        try? stdout.close()
+        try? stderr.close()
+        throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
+    try? stdout.close()
+    try? stderr.close()
+    return HostDetachedProcessResult(
+        pid: process.processIdentifier,
+        sourceCommand: hostSourceCommand(command),
+        stdoutLogPath: stdoutLogPath,
+        stderrLogPath: stderrLogPath
+    )
+}
+func runHostCommand(
+    _ command: TKHostCommand,
+    interruptAfter: Double? = nil,
+    maximumOutputBytes: Int? = 1_048_576
+) throws -> HostProcessResult {
+    let timeoutSeconds = command.defaultTimeoutSeconds
+    let process = Process()
+    configureHostProcessExecutable(process, command: command)
 
     let stdout = Pipe()
     let stderr = Pipe()
@@ -463,7 +506,7 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         detail = TKCLIErrorDetail(
             code: "target_not_found",
             message: "\(error)",
-            hint: "Run `triton device list --platform ios --json` or `triton device list --platform harmony --json`, then retry with --device <alias-or-id>."
+            hint: "Run `triton device list --platform ios|android|harmony --json`, then retry with --device <alias-or-id>."
         )
     case HostDeviceSelectionError.platformMismatch:
         detail = TKCLIErrorDetail(

@@ -1,0 +1,28 @@
+{
+  "attempt" : 1,
+  "ok" : true,
+  "platform" : "android",
+  "ready" : true,
+  "sourceCommand" : "adb -s emulator-5554 get-state\nadb -s emulator-5554 shell pm path android",
+  "sourceCommands" : [
+    "adb -s emulator-5554 get-state",
+    "adb -s emulator-5554 shell pm path android"
+  ],
+  "target" : {
+    "blockedReasons" : [
+
+    ],
+    "id" : "android:emulator-5554",
+    "kind" : "emulator",
+    "name" : "sdk_gphone64_arm64",
+    "platform" : "android",
+    "ready" : true,
+    "runtime" : "sdk_gphone64_arm64",
+    "scope" : "emulator",
+    "sensitive" : false,
+    "source" : "adb",
+    "state" : "device",
+    "target" : "emulator-5554",
+    "transport" : "5"
+  }
+}

@@ -477,6 +477,206 @@ test("forces /web/host-targets failure for dev browser fallback smoke", async ()
   });
 });
 
+test("serves readonly Lookin-style hierarchy scenes for iOS Android and Harmony host targets", async () => {
+  const cases = [
+    ["ios", "AAAA-BBBB", "UIStackView", "questionList"],
+    ["android", "emulator-5554", "AndroidComposeView", "settingsList"],
+    ["harmony", "127.0.0.1:5555", "ArkUIRoot", "settingsContent"],
+  ];
+
+  for (const [platform, target, type, name] of cases) {
+    const tritonPath = await createFakeTritonScript({
+      stdout: JSON.stringify({
+        ok: true,
+        capturedAt: "2026-06-19T00:00:00.000Z",
+        source: {
+          command: `triton hierarchy --platform ${platform} --target ${target} --json`,
+          runtimeScope: platform === "ios" ? "runtime-tree" : "host-layout",
+          readonly: true,
+        },
+        scene: {
+          platform,
+          rootId: "root",
+          viewport: { width: 390, height: 844 },
+          nodes: [
+            {
+              id: "root",
+              type: "RootView",
+              name: "root",
+              frame: { x: 0, y: 0, width: 390, height: 844 },
+              depth: 0,
+              visible: true,
+              interactive: false,
+              color: "#6ea8ff",
+            },
+            {
+              id: "child",
+              parentId: "root",
+              type,
+              name,
+              frame: { x: 24, y: 120, width: 342, height: 56 },
+              depth: 1,
+              visible: true,
+              interactive: true,
+              color: "#fb7185",
+            },
+          ],
+        },
+      }),
+      outputTemplate: "unused",
+    });
+    const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+    const response = await invokeMiddleware(middleware, {
+      method: "GET",
+      url: `/web/host-hierarchy?platform=${platform}&target=${encodeURIComponent(target)}`,
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.match(response.headers["content-type"], /application\/json/);
+
+    const body = JSON.parse(response.body);
+    assert.equal(body.ok, true);
+    assert.equal(body.source.command, `triton hierarchy --platform ${platform} --target ${target} --json`);
+    assert.equal(body.source.runtimeScope, platform === "ios" ? "runtime-tree" : "host-layout");
+    assert.equal(body.source.readonly, true);
+    assert.equal(body.scene.platform, platform);
+    assert.ok(body.scene.viewport.width > 0);
+    assert.ok(body.scene.viewport.height > 0);
+    assert.ok(body.scene.nodes.some((node) => node.type === type));
+    assert.ok(body.scene.nodes.some((node) => node.name === name));
+  }
+});
+
+test("exposes explicit Web hierarchy capture control through POST without mutating the app", async () => {
+  const tritonPath = await createFakeTritonScript({
+    stdout: JSON.stringify({
+      ok: true,
+      capturedAt: "2026-06-19T00:00:00.000Z",
+      source: {
+        command: "triton hierarchy --platform ios --target AAAA-BBBB --json",
+        runtimeScope: "runtime-tree",
+        readonly: true,
+      },
+      scene: {
+        platform: "ios",
+        rootId: "root",
+        viewport: { width: 390, height: 844 },
+        nodes: [
+          {
+            id: "root",
+            type: "UIWindow",
+            name: "keyWindow",
+            frame: { x: 0, y: 0, width: 390, height: 844 },
+            depth: 0,
+            visible: true,
+            interactive: false,
+            color: "#6ea8ff",
+          },
+        ],
+      },
+    }),
+    outputTemplate: "unused",
+  });
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "POST",
+    url: "/web/host-hierarchy?platform=ios&target=AAAA-BBBB",
+  });
+
+  assert.equal(response.statusCode, 200);
+  const body = JSON.parse(response.body);
+  assert.equal(body.ok, true);
+  assert.deepEqual(body.control, {
+    action: "hierarchy.capture",
+    entrypoint: "web-dev-bridge",
+    method: "POST",
+    readonly: true,
+    mutatesApp: false,
+  });
+  assert.equal(body.source.command, "triton hierarchy --platform ios --target AAAA-BBBB --json");
+});
+
+test("falls back to legacy iOS runtime hierarchy and converts it to a Web scene when platform scene schema is unavailable", async () => {
+  const legacyPayload = {
+    appInfo: {
+      appName: "Overloaded",
+      screenWidth: 402,
+      screenHeight: 874,
+    },
+    displayItems: [
+      {
+        indentLevel: 0,
+        frame: [[0, 0], [402, 874]],
+        alpha: 1,
+        isHidden: false,
+        backgroundColor: { red: 1, green: 1, blue: 1, alpha: 1 },
+        layerObject: { oid: 2, classChainList: ["UIWindow", "UIView"] },
+        subitems: [
+          {
+            indentLevel: 1,
+            frame: [[0, 106], [402, 685]],
+            alpha: 1,
+            isHidden: false,
+            backgroundColor: { red: 0.96, green: 0.96, blue: 0.96, alpha: 1 },
+            layerObject: { oid: 26, classChainList: ["SectionUI.SKCollectionView", "UICollectionView"] },
+            subitems: [
+              {
+                indentLevel: 2,
+                frame: [[24, 132], [342, 58]],
+                alpha: 1,
+                isHidden: false,
+                layerObject: { oid: 38, classChainList: ["UILabel", "UIView"] },
+                subitems: [],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  };
+  const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
+if (process.argv.includes("--platform")) {
+  process.stderr.write("Error: Unknown option '--platform'\\n");
+  process.exit(64);
+}
+process.stdout.write(${JSON.stringify(JSON.stringify(legacyPayload))});
+`);
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "POST",
+    url: "/web/host-hierarchy?platform=ios&target=AAAA-BBBB",
+  });
+
+  assert.equal(response.statusCode, 200);
+  const body = JSON.parse(response.body);
+  assert.equal(body.ok, true);
+  assert.equal(body.source.command, "triton hierarchy --target AAAA-BBBB --json");
+  assert.equal(body.source.runtimeScope, "runtime-tree");
+  assert.equal(body.scene.platform, "ios");
+  assert.equal(body.scene.viewport.width, 402);
+  assert.equal(body.scene.viewport.height, 874);
+  assert.ok(body.scene.nodes.some((node) => node.type === "SectionUI.SKCollectionView"));
+  assert.ok(body.scene.nodes.some((node) => node.type === "UILabel" && node.renderHints.preferredMode === "slice"));
+});
+
+test("rejects unsupported /web/host-hierarchy platform with readonly unsupported envelope", async () => {
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath: process.execPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "GET",
+    url: "/web/host-hierarchy?platform=webos&target=local",
+  });
+
+  assert.equal(response.statusCode, 501);
+  assert.match(response.headers["content-type"], /application\/json/);
+  assert.deepEqual(JSON.parse(response.body), {
+    ok: false,
+    error: {
+      code: "web_host_hierarchy_platform_not_supported",
+      message: "Readonly host hierarchy is not available for platform: webos",
+    },
+  });
+});
+
 test("captures bounded iOS host logs through /web/host-logs", async () => {
   const tritonPath = await createFakeTritonScript({
     stdout: JSON.stringify({
@@ -640,6 +840,14 @@ if (artifactIndex >= 0) {
 }
 process.stdout.write(JSON.stringify(payload));
 `;
+  await writeFile(scriptPath, script, "utf8");
+  await chmod(scriptPath, 0o755);
+  return scriptPath;
+}
+
+async function createFakeTritonScriptFromSource(script) {
+  const directory = await mkdtemp(join(tmpdir(), "tritonkit-web-bridge-test-"));
+  const scriptPath = join(directory, "fake-triton.mjs");
   await writeFile(scriptPath, script, "utf8");
   await chmod(scriptPath, 0o755);
   return scriptPath;

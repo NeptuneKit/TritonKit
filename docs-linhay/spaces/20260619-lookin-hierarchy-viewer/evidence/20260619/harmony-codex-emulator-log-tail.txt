@@ -1,0 +1,120 @@
+2026-06-17 14:36:29.759 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_TOOL_NAVIGATION","detail":{"API_LEVEL":"22","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OPERATION":"back","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T14:36:29.759"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 14:36:36.568 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_TOOL_NAVIGATION","detail":{"API_LEVEL":"22","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OPERATION":"back","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T14:36:36.568"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 14:36:37.108 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_TOOL_NAVIGATION","detail":{"API_LEVEL":"22","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OPERATION":"back","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T14:36:37.108"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 14:36:37.526 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_TOOL_NAVIGATION","detail":{"API_LEVEL":"22","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OPERATION":"back","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T14:36:37.526"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 14:36:49.883 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_TOOL_NAVIGATION","detail":{"API_LEVEL":"22","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OPERATION":"back","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T14:36:49.883"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 14:36:50.437 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_TOOL_NAVIGATION","detail":{"API_LEVEL":"22","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OPERATION":"back","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T14:36:50.437"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 14:41:18.156 19325136896 [Warning] [QemuManager.cpp(HandleMemInfo:264)]hidumper --mem result is null or wrong
+2026-06-17 14:41:18.157 19325136896 [Warning] [QemuManager.cpp(CheckGuestMem:218)]hidumper --mem can not get the memory
+2026-06-17 14:47:18.168 19325136896 [Warning] [QemuManager.cpp(HandleMemInfo:264)]hidumper --mem result is null or wrong
+2026-06-17 14:47:18.168 19325136896 [Warning] [QemuManager.cpp(CheckGuestMem:218)]hidumper --mem can not get the memory
+2026-06-17 14:57:18.163 19325136896 [Warning] [QemuManager.cpp(HandleMemInfo:264)]hidumper --mem result is null or wrong
+2026-06-17 14:57:18.163 19325136896 [Warning] [QemuManager.cpp(CheckGuestMem:218)]hidumper --mem can not get the memory
+2026-06-17 15:15:18.193 19325136896 [Warning] [QemuManager.cpp(HandleMemInfo:264)]hidumper --mem result is null or wrong
+2026-06-17 15:15:18.193 19325136896 [Warning] [QemuManager.cpp(CheckGuestMem:218)]hidumper --mem can not get the memory
+2026-06-17 15:24:08.220 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_TOOL_NAVIGATION","detail":{"API_LEVEL":"22","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OPERATION":"back","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T15:24:08.220"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 15:24:27.078 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_TOOL_NAVIGATION","detail":{"API_LEVEL":"22","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OPERATION":"back","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T15:24:27.078"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 15:29:17.654 8460507328 [Warning] [SkinBase.cpp(CalculateWindowPosByRequestPos:315)]window offline screen!  QRect(3990,-366 336x736)
+2026-06-17 15:29:17.657 8460507328 [Warning] [SkinBase.cpp(CalculateWindowPosByRequestPos:316)]screen  QRect(1512,-494 1080x1890)
+2026-06-17 15:33:18.181 19325136896 [Warning] [QemuManager.cpp(HandleMemInfo:264)]hidumper --mem result is null or wrong
+2026-06-17 15:33:18.187 19325136896 [Warning] [QemuManager.cpp(CheckGuestMem:218)]hidumper --mem can not get the memory
+2026-06-17 15:47:55.738 8460507328 [Info] [EmulatorManager.cpp(void StopMultiScreen:152)]Stop multiscreen before quit
+2026-06-17 15:47:55.738 8460507328 [Info] [EmulatorManager.cpp(void RecordHardwareInfo:120)]record hardware info
+2026-06-17 15:47:56.180 8460507328 [Info] [HdcClient.cpp(GetFreeDisk:577)]curFree =  1784416
+2026-06-17 15:47:56.199 8460507328 [Info] [EmulatorManager.cpp(void QuitEmulator:59)]quit emulator
+2026-06-17 15:47:56.199 8460507328 [Info] [CrashClient.cpp(StopCrashLog:522)]stop crash log dumper
+2026-06-17 15:47:56.288 6439858176 [Info] [MacTaskCall.mm(Call:85)]close hdc connection while emulator will quit.
+2026-06-17 15:47:56.294 6439858176 [Warning] [HdcClient.cpp(IsHdcConnected:114)]hdc is not connected, hdc list target not identify
+2026-06-17 15:47:56.294 6439858176 [Warning] [CrashClient.cpp(RecvFile:253)]crash: excute remove error.
+2026-06-17 15:47:56.300 8460507328 [Info] [CrashClient.cpp(DeleteDirectoryIfUnoccupied:697)]Directory deleted successfully: "/Users/linhey/.Huawei/Emulator/deployed/Codex Test Phone/Log/hilog_tmp_2026-06-17T143044"
+2026-06-17 15:47:56.300 8460507328 [Info] [HdcClient.cpp(StopKeepHdcAlive:75)]stop hdc keep-alive thread
+2026-06-17 15:47:56.301 8460507328 [Info] [HdcClient.cpp(HdcDisConnect:548)]dicconnect hdc server
+2026-06-17 15:47:56.418 8460507328 [Info] [MacTaskCall.mm(Call:85)]close hdc connection while emulator will quit.
+2026-06-17 15:47:56.437 19317043200 [Critical] [LocalSocket.cpp(WriteData:58)][LocalSocket] WriteData WriteFile failed
+2026-06-17 15:47:56.437 19317043200 [Info] [TraceTool.cpp(SendTraceData:52)]{"action":"EMULATOR_QUIT_COST","detail":{"API_LEVEL":"22","COST":"230","CPU":"arm64","DEVICE_TYPE":"phone","EMULATOR_VERSION":"6.1.1.200","HOST_OS":"macOS 26.4","OS_VERSION":"6.0.0.130","TIME":"2026-06-17T15:47:56.433"},"devModel":"PHEMU-FD00","sid":"10077"}
+2026-06-17 15:47:59.758 8460507328 [Info] [CheckImage.cpp(StopAllCheckThread:153)]Check and stop all image check thread
+2026-06-17 15:47:59.782 8460507328 [Info] [CrashClient.cpp(~CrashClient:65)]delete pCrashHandel,crash-service normal quit
+2026-06-17 15:47:59.782 8460507328 [Info] [HdcClient.cpp(StopKeepHdcAlive:75)]stop hdc keep-alive thread
+2026-06-17 15:47:59.782 8460507328 [Info] [QemuManager.cpp(StopCheckGuestMem:410)]StopCheckGuestMem
+2026-06-17 15:47:59.782 8460507328 [Info] [QemuManager.cpp(StopCheckGuestStatus:562)]StopCheckGuestStatus
+8460507328 [Info] [TraceTool.cpp(DisConnTracePipe:77)][TraceTool] trace pipe closed
+8460507328 [Info] [TraceTool.cpp(DisConnTracePipe:79)][TraceTool] delete socket
+2026-06-19 03:05:33.997 8327715008 [Info] [TraceTool.cpp(InitPipe:27)][TraceTool] trace pipe name is: ""
+2026-06-19 03:05:34.069 8327715008 [Warning] [LogUtil.cpp(OutputPath:246)]can not find file :  "/private/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/d0570aea-bc94-4625-99d9-93f981f0ad99"
+2026-06-19 03:05:34.069 8327715008 [Info] [SnUtil.cpp(CheckWhitelist:187)]isUseWhitelist is false. The user is not restricted.
+2026-06-19 03:05:34.069 8327715008 [Critical] [TraceTool.cpp(HandleTrace:59)][TraceTool] Trace pipe is not prepared
+2026-06-19 03:05:34.069 6106820608 [Info] [HiviewxClient.cpp(GetPortFromConfig:128)]HiviewxClient read port:  0
+2026-06-19 03:05:34.069 6106820608 [Info] [HiviewxClient.cpp(JudgePort:115)]HiviewxClient link failed, port should be  1  ~  65535 , your port is  0
+2026-06-19 03:05:34.070 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:88)]Enable Camera.
+2026-06-19 03:05:34.070 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:92)]Enable front and back cameras.
+2026-06-19 03:05:34.070 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:97)]Enable MultiDisplay Kernel Feature.
+2026-06-19 03:05:34.070 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:106)]Enable Express Multi Touch.
+2026-06-19 03:05:34.070 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:111)]Enable Sensor Configuration.
+2026-06-19 03:05:34.071 8327715008 [Info] [CheckImage.cpp(CheckAllSign:88)]start check image
+2026-06-19 03:05:34.072 8327715008 [Info] [Skin.cpp(InitByDeviceType:620)]Emulator screen  "notCustomize"
+2026-06-19 03:05:34.072 8327715008 [Info] [Skin.cpp(InitPhone:678)]Init Phone dpi =  560
+2026-06-19 03:05:34.073 8327715008 [Warning] [LogUtil.cpp(OutputPath:246)]can not open file :  "$USER_HOME$/.Huawei/Emulator/deployed/Codex Test Phone/Camera.properties"
+2026-06-19 03:05:34.073 8327715008 [Warning] [Skin.cpp(InitConfig:568)]Camera config parse failed
+2026-06-19 03:05:34.120 6106820608 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "ramdisk.img"  result  0  cost  49
+2026-06-19 03:05:34.203 6106820608 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "Image"  result  0  cost  83
+2026-06-19 03:05:34.211 8327715008 [Info] [WidgetSettings.cpp(InitImageLanguageComboBox:247)]Init imge language to Index  0
+2026-06-19 03:05:34.254 8327715008 [Warning] [(:0)]Cannot open file ':/light/charging-off.svg', because: No such file or directory
+2026-06-19 03:05:34.254 8327715008 [Warning] [(:0)]Cannot open file ':/light/charging-off.svg', because: No such file or directory
+2026-06-19 03:05:34.254 8327715008 [Warning] [(:0)]Cannot open file ':/light/charging-on.svg', because: No such file or directory
+2026-06-19 03:05:34.254 8327715008 [Warning] [(:0)]Cannot open file ':/light/charging-on.svg', because: No such file or directory
+2026-06-19 03:05:34.332 8327715008 [Warning] [LogUtil.cpp(OutputPath:246)]can not find file :  "$USER_HOME$/Library/Application Support/Huawei/DevEcoStudio6.0/emulator/proxy.settings.pwd"
+2026-06-19 03:05:34.336 8327715008 [Info] [PlayerApiToolBar.cpp(UpdateOverflowButtonIcon:109)]":/light/overflow-default"
+2026-06-19 03:05:34.337 8327715008 [Info] [PlayerApiToolBar.cpp(UpdateOverflowButtonIcon:109)]":/light/overflow-hover"
+2026-06-19 03:05:34.348 8327715008 [Info] [ToolBarController.cpp(StackedActionAdder:231)]enable multi display
+2026-06-19 03:05:34.415 6107394048 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "vendor.img"  result  0  cost  344
+2026-06-19 03:05:34.537 8327715008 [Warning] [(:0)]Populating font family aliases took 135 ms. Replace uses of missing font family "HarmonyOS Sans SC Medium" with one that exists to avoid this cost.
+2026-06-19 03:05:34.544 8327715008 [Info] [EmulatorWindowEvent.cpp(ShowBootAnimation:1306)]ShowBootAnimation.
+2026-06-19 03:05:34.554 8327715008 [Info] [CrashClient.cpp(StartCrashDetect:148)]StartCrash Detect.
+2026-06-19 03:05:34.554 8327715008 [Info] [CrashClient.cpp(StartCrashServer:404)]start crash server.
+2026-06-19 03:05:34.740 6107394048 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "userdata.img"  result  0  cost  325
+2026-06-19 03:05:34.743 6360100864 [Info] [QemuManager.cpp(OnSystemReset:640)]System is reset
+2026-06-19 03:05:34.743 6360100864 [Info] [HdcClient.cpp(HdcDisConnect:548)]dicconnect hdc server
+2026-06-19 03:05:37.048 6107394048 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "sys_prod.img"  result  0  cost  2308
+2026-06-19 03:08:11.531 8327715008 [Info] [TraceTool.cpp(InitPipe:27)][TraceTool] trace pipe name is: ""
+2026-06-19 03:08:11.604 8327715008 [Warning] [LogUtil.cpp(OutputPath:246)]can not find file :  "/private/var/folders/rk/yj_4tlx92sz7t5k73kxppyl80000gn/T/d0570aea-bc94-4625-99d9-93f981f0ad99"
+2026-06-19 03:08:11.604 8327715008 [Info] [SnUtil.cpp(CheckWhitelist:187)]isUseWhitelist is false. The user is not restricted.
+2026-06-19 03:08:11.604 8327715008 [Critical] [TraceTool.cpp(HandleTrace:59)][TraceTool] Trace pipe is not prepared
+2026-06-19 03:08:11.605 6144471040 [Info] [HiviewxClient.cpp(GetPortFromConfig:128)]HiviewxClient read port:  0
+2026-06-19 03:08:11.605 6144471040 [Info] [HiviewxClient.cpp(JudgePort:115)]HiviewxClient link failed, port should be  1  ~  65535 , your port is  0
+2026-06-19 03:08:11.606 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:88)]Enable Camera.
+2026-06-19 03:08:11.606 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:92)]Enable front and back cameras.
+2026-06-19 03:08:11.606 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:97)]Enable MultiDisplay Kernel Feature.
+2026-06-19 03:08:11.606 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:106)]Enable Express Multi Touch.
+2026-06-19 03:08:11.606 8327715008 [Info] [UiMain.cpp(void InitFeatureConfig:111)]Enable Sensor Configuration.
+2026-06-19 03:08:11.606 8327715008 [Info] [CheckImage.cpp(CheckAllSign:88)]start check image
+2026-06-19 03:08:11.607 8327715008 [Info] [Skin.cpp(InitByDeviceType:620)]Emulator screen  "notCustomize"
+2026-06-19 03:08:11.607 8327715008 [Info] [Skin.cpp(InitPhone:678)]Init Phone dpi =  560
+2026-06-19 03:08:11.607 8327715008 [Warning] [LogUtil.cpp(OutputPath:246)]can not open file :  "$USER_HOME$/.Huawei/Emulator/deployed/Codex Test Phone/Camera.properties"
+2026-06-19 03:08:11.607 8327715008 [Warning] [Skin.cpp(InitConfig:568)]Camera config parse failed
+2026-06-19 03:08:11.651 6144471040 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "ramdisk.img"  result  0  cost  45
+2026-06-19 03:08:11.747 6144471040 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "Image"  result  0  cost  95
+2026-06-19 03:08:11.758 8327715008 [Info] [WidgetSettings.cpp(InitImageLanguageComboBox:247)]Init imge language to Index  0
+2026-06-19 03:08:11.798 8327715008 [Warning] [(:0)]Cannot open file ':/light/charging-off.svg', because: No such file or directory
+2026-06-19 03:08:11.799 8327715008 [Warning] [(:0)]Cannot open file ':/light/charging-off.svg', because: No such file or directory
+2026-06-19 03:08:11.799 8327715008 [Warning] [(:0)]Cannot open file ':/light/charging-on.svg', because: No such file or directory
+2026-06-19 03:08:11.799 8327715008 [Warning] [(:0)]Cannot open file ':/light/charging-on.svg', because: No such file or directory
+2026-06-19 03:08:11.880 8327715008 [Warning] [LogUtil.cpp(OutputPath:246)]can not find file :  "$USER_HOME$/Library/Application Support/Huawei/DevEcoStudio6.0/emulator/proxy.settings.pwd"
+2026-06-19 03:08:11.885 8327715008 [Info] [PlayerApiToolBar.cpp(UpdateOverflowButtonIcon:109)]":/light/overflow-default"
+2026-06-19 03:08:11.886 8327715008 [Info] [PlayerApiToolBar.cpp(UpdateOverflowButtonIcon:109)]":/light/overflow-hover"
+2026-06-19 03:08:11.898 8327715008 [Info] [ToolBarController.cpp(StackedActionAdder:231)]enable multi display
+2026-06-19 03:08:11.940 6145044480 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "vendor.img"  result  0  cost  334
+2026-06-19 03:08:12.042 8327715008 [Warning] [(:0)]Populating font family aliases took 78 ms. Replace uses of missing font family "HarmonyOS Sans SC Medium" with one that exists to avoid this cost.
+2026-06-19 03:08:12.048 8327715008 [Info] [EmulatorWindowEvent.cpp(ShowBootAnimation:1306)]ShowBootAnimation.
+2026-06-19 03:08:12.058 8327715008 [Info] [CrashClient.cpp(StartCrashDetect:148)]StartCrash Detect.
+2026-06-19 03:08:12.058 8327715008 [Info] [CrashClient.cpp(StartCrashServer:404)]start crash server.
+2026-06-19 03:08:12.203 6205616128 [Info] [QemuManager.cpp(OnSystemReset:640)]System is reset
+2026-06-19 03:08:12.203 6205616128 [Info] [HdcClient.cpp(HdcDisConnect:548)]dicconnect hdc server
+2026-06-19 03:08:12.374 6145044480 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "userdata.img"  result  0  cost  434
+2026-06-19 03:08:14.291 6145044480 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "sys_prod.img"  result  0  cost  1917
+2026-06-19 03:08:22.440 6144471040 [Info] [CheckImage.cpp(CheckSign:127)]finish check image  "system.img"  result  0  cost  10692
+2026-06-19 03:08:24.691 6279049216 [Info] [QemuManager.cpp(EmitGuestOSBootComplete:131)]Guest OS Boot Completed!!
+2026-06-19 03:08:24.695 8327715008 [Info] [EmulatorWindowEvent.cpp(StopBootAnimation:1317)]StopBootAnimation.
+2026-06-19 03:08:24.695 8327715008 [Info] [WidgetSettings.cpp(InitImageLanguageComboBox:236)]GuestOS Boot Complete! Enabling ImageLanguageComboBox
+2026-06-19 03:08:24.803 6278475776 [Info] [QemuManager.cpp(OnClipboardPipeReady:730)]Clipboard Pipe is Ready
+2026-06-19 03:08:25.221 6205042688 [Info] [LambdaRepeatWorker.cpp(run:29)]current interval:  4000
+2026-06-19 03:08:25.261 6146191360 [Warning] [HdcClient.cpp(IsHdcConnected:110)]hdc is not connected, hdc not init

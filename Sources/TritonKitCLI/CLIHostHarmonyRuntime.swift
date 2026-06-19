@@ -33,6 +33,178 @@ func harmonyEmulatorStopCommand(hvd: String, deployedPath: String, emulator: Str
     )
 }
 
+func androidEmulatorStartCommand(
+    avd: String,
+    emulator: String,
+    headless: Bool,
+    gpu: String?,
+    memory: Int?,
+    noSnapshotLoad: Bool,
+    noAudio: Bool,
+    noBootAnim: Bool
+) -> TKHostCommand {
+    var arguments = ["@\(avd)"]
+    if headless {
+        arguments.append("-no-window")
+    }
+    if let gpu, !gpu.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        arguments += ["-gpu", gpu]
+    }
+    if let memory {
+        arguments += ["-memory", String(memory)]
+    }
+    if noSnapshotLoad {
+        arguments.append("-no-snapshot-load")
+    }
+    if noAudio {
+        arguments.append("-no-audio")
+    }
+    if noBootAnim {
+        arguments.append("-no-boot-anim")
+    }
+    return TKHostCommand(
+        executable: emulator,
+        arguments: arguments,
+        riskLevel: .automation,
+        requiredConfig: [.target, .timeout, .auditRecord],
+        defaultTimeoutSeconds: 5
+    )
+}
+
+func androidEmulatorStartPlan(
+    avd: String,
+    emulator: String,
+    headless: Bool,
+    gpu: String?,
+    memory: Int?,
+    noSnapshotLoad: Bool,
+    noAudio: Bool,
+    noBootAnim: Bool,
+    adbSerial: String = "emulator-5554"
+) throws -> HostDeviceStartPlan {
+    let trimmedAVD = avd.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedEmulator = emulator.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedAVD.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Android device start requires --avd.")
+    }
+    guard !trimmedEmulator.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Android device start requires --emulator.")
+    }
+    if let memory, memory <= 0 {
+        throw HostDeviceSelectionError.parameterConflict("Android device start requires --memory to be positive when provided.")
+    }
+    let command = androidEmulatorStartCommand(
+        avd: trimmedAVD,
+        emulator: trimmedEmulator,
+        headless: headless,
+        gpu: gpu,
+        memory: memory,
+        noSnapshotLoad: noSnapshotLoad,
+        noAudio: noAudio,
+        noBootAnim: noBootAnim
+    )
+    return HostDeviceStartPlan(
+        action: "device.start",
+        platform: "android",
+        name: trimmedAVD,
+        target: adbSerial,
+        deployedPath: nil,
+        emulator: trimmedEmulator,
+        hdc: nil,
+        hdcPort: nil,
+        commands: [command],
+        waitReadyArgs: ["wait-ready", "--platform", "android", "--device", adbSerial, "--json"],
+        note: "Android emulator launch is detached. Use the nextAction wait-ready command before app, hierarchy, screenshot, or smoke actions."
+    )
+}
+
+func harmonyEmulatorStartCommand(
+    hvd: String,
+    deployedPath: String,
+    emulator: String,
+    hdcPort: Int,
+    bootmode: String
+) -> TKHostCommand {
+    TKHostCommand(
+        executable: emulator,
+        arguments: ["-start", hvd, "-path", deployedPath, "-hdcPort", String(hdcPort), "-bootmode", bootmode],
+        riskLevel: .automation,
+        requiredConfig: [.target, .timeout, .auditRecord],
+        defaultTimeoutSeconds: 5
+    )
+}
+
+func harmonyHDCConnectCommand(hdc: String, hdcPort: Int) -> TKHostCommand {
+    TKHostCommand(
+        executable: hdc,
+        arguments: ["tconn", "127.0.0.1:\(hdcPort)"],
+        riskLevel: .automation,
+        requiredConfig: [.target, .timeout, .auditRecord],
+        defaultTimeoutSeconds: 10
+    )
+}
+
+func harmonyEmulatorStartPlan(
+    hvd: String,
+    deployedPath: String,
+    emulator: String,
+    hdc: String,
+    hdcPort: Int,
+    bootmode: String,
+    connectAfterLaunch: Bool
+) throws -> HostDeviceStartPlan {
+    let trimmedHVD = hvd.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedPath = deployedPath.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedEmulator = emulator.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedHDC = hdc.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedBootmode = bootmode.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmedHVD.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device start requires --hvd.")
+    }
+    guard !trimmedPath.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device start requires --path.")
+    }
+    guard !trimmedEmulator.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device start requires --emulator.")
+    }
+    guard !trimmedHDC.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device start requires --hdc.")
+    }
+    guard hdcPort > 0 else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device start requires --hdc-port to be positive.")
+    }
+    guard !trimmedBootmode.isEmpty else {
+        throw HostDeviceSelectionError.parameterConflict("Harmony device start requires --bootmode.")
+    }
+
+    var commands = [
+        harmonyEmulatorStartCommand(
+            hvd: trimmedHVD,
+            deployedPath: trimmedPath,
+            emulator: trimmedEmulator,
+            hdcPort: hdcPort,
+            bootmode: trimmedBootmode
+        ),
+    ]
+    if connectAfterLaunch {
+        commands.append(harmonyHDCConnectCommand(hdc: trimmedHDC, hdcPort: hdcPort))
+    }
+    let target = "127.0.0.1:\(hdcPort)"
+    return HostDeviceStartPlan(
+        action: "device.start",
+        platform: "harmony",
+        name: trimmedHVD,
+        target: target,
+        deployedPath: trimmedPath,
+        emulator: trimmedEmulator,
+        hdc: trimmedHDC,
+        hdcPort: hdcPort,
+        commands: commands,
+        waitReadyArgs: ["wait-ready", "--platform", "harmony", "--device", target, "--json"],
+        note: "Harmony emulator launch is detached. If HDC is not connected yet, run the planned hdc tconn command after boot progress, then wait-ready."
+    )
+}
+
 func harmonyEmulatorStopPlan(
     hvd: String,
     deployedPath: String,

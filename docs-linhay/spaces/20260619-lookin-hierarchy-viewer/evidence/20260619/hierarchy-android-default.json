@@ -1,0 +1,8 @@
+{
+  "error" : {
+    "code" : "target_not_found",
+    "hint" : "Run `triton device list --platform ios --json` or `triton device list --platform harmony --json`, then retry with --device <alias-or-id>.",
+    "message" : "Host device was not found: triton:local"
+  },
+  "ok" : false
+}

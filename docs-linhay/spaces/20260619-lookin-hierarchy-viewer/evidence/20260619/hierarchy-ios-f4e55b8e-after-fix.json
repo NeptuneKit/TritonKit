@@ -1,0 +1,171 @@
+{
+  "capturedAt" : "2026-06-18T18:44:34Z",
+  "ok" : true,
+  "scene" : {
+    "nodes" : [
+      {
+        "color" : "#fb7185",
+        "depth" : 1,
+        "frame" : {
+          "height" : 874,
+          "width" : 402,
+          "x" : 0,
+          "y" : 0
+        },
+        "id" : "ios-runtime:1",
+        "interactive" : true,
+        "name" : "window",
+        "source" : "runtime-tree",
+        "type" : "window",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 44,
+          "width" : 44,
+          "x" : 4,
+          "y" : 62
+        },
+        "id" : "ios-runtime:217",
+        "interactive" : true,
+        "name" : "Back",
+        "parentId" : "ios-runtime:1",
+        "source" : "runtime-tree",
+        "type" : "button",
+        "visible" : true
+      },
+      {
+        "color" : "#6ea8ff",
+        "depth" : 12,
+        "frame" : {
+          "height" : 21.33333333333337,
+          "width" : 241.33333333333337,
+          "x" : 22.000000000000014,
+          "y" : 743
+        },
+        "id" : "ios-runtime:218",
+        "interactive" : false,
+        "name" : "swipe-second.mp4",
+        "parentId" : "ios-runtime:1",
+        "source" : "runtime-tree",
+        "type" : "text",
+        "visible" : true
+      },
+      {
+        "color" : "#6ea8ff",
+        "depth" : 12,
+        "frame" : {
+          "height" : 16.66666666666663,
+          "width" : 241.33333333333337,
+          "x" : 22.000000000000014,
+          "y" : 769.3333333333334
+        },
+        "id" : "ios-runtime:219",
+        "interactive" : false,
+        "name" : "2 \/ 2 · DebugRemoteVideoAutoplayEnd",
+        "parentId" : "ios-runtime:1",
+        "source" : "runtime-tree",
+        "type" : "text",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 20,
+          "width" : 370,
+          "x" : 16,
+          "y" : 802
+        },
+        "id" : "ios-runtime:220",
+        "interactive" : true,
+        "name" : "0.33",
+        "parentId" : "ios-runtime:1",
+        "source" : "runtime-tree",
+        "type" : "slider",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 62,
+          "width" : 52,
+          "x" : 336,
+          "y" : 486
+        },
+        "id" : "ios-runtime:221",
+        "interactive" : true,
+        "name" : "队列",
+        "parentId" : "ios-runtime:1",
+        "source" : "runtime-tree",
+        "type" : "control",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 62,
+          "width" : 52,
+          "x" : 336,
+          "y" : 562
+        },
+        "id" : "ios-runtime:222",
+        "interactive" : true,
+        "name" : "循环",
+        "parentId" : "ios-runtime:1",
+        "source" : "runtime-tree",
+        "type" : "control",
+        "visible" : true
+      },
+      {
+        "color" : "#6ea8ff",
+        "depth" : 12,
+        "frame" : {
+          "height" : 62,
+          "width" : 52,
+          "x" : 336,
+          "y" : 638
+        },
+        "id" : "ios-runtime:223",
+        "interactive" : false,
+        "name" : "字幕",
+        "parentId" : "ios-runtime:1",
+        "source" : "runtime-tree",
+        "type" : "control",
+        "visible" : true
+      },
+      {
+        "color" : "#fb7185",
+        "depth" : 12,
+        "frame" : {
+          "height" : 62,
+          "width" : 52,
+          "x" : 336,
+          "y" : 714
+        },
+        "id" : "ios-runtime:224",
+        "interactive" : true,
+        "name" : "更多",
+        "parentId" : "ios-runtime:1",
+        "source" : "runtime-tree",
+        "type" : "control",
+        "visible" : true
+      }
+    ],
+    "platform" : "ios",
+    "rootId" : "ios-runtime:1",
+    "viewport" : {
+      "height" : 874,
+      "width" : 402
+    }
+  },
+  "source" : {
+    "command" : "triton hierarchy --platform ios --target F4E55B8E-0141-4C46-9965-263CCE782B5F --json",
+    "readonly" : true,
+    "runtimeScope" : "runtime-tree"
+  }
+}

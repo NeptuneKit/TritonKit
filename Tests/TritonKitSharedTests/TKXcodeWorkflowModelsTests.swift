@@ -135,6 +135,12 @@ struct TKXcodeWorkflowModelsTests {
 
     @Test("xcode action progress and summary preserve streaming artifacts")
     func xcodeStreamingArtifactsRoundTrip() throws {
+        let cache = TKXcodeDerivedDataCacheState(
+            derivedDataPath: ".triton/DerivedData",
+            exists: true,
+            cacheState: "warm",
+            incrementalExpected: true
+        )
         let event = TKXcodeProgressEvent(
             event: "xcode.build.heartbeat",
             message: "running",
@@ -143,7 +149,10 @@ struct TKXcodeWorkflowModelsTests {
             stdoutLogPath: "/tmp/triton-xcode-artifacts/case/stdout.log",
             stderrLogPath: "/tmp/triton-xcode-artifacts/case/stderr.log",
             stdoutBytes: 1_024,
-            stderrBytes: 128
+            stderrBytes: 128,
+            derivedDataPath: cache.derivedDataPath,
+            cacheState: cache.cacheState,
+            incrementalExpected: cache.incrementalExpected
         )
         let decodedEvent = try JSONDecoder().decode(TKXcodeProgressEvent.self, from: JSONEncoder().encode(event))
 
@@ -151,6 +160,9 @@ struct TKXcodeWorkflowModelsTests {
         #expect(decodedEvent.stderrLogPath == "/tmp/triton-xcode-artifacts/case/stderr.log")
         #expect(decodedEvent.stdoutBytes == 1_024)
         #expect(decodedEvent.stderrBytes == 128)
+        #expect(decodedEvent.derivedDataPath == ".triton/DerivedData")
+        #expect(decodedEvent.cacheState == "warm")
+        #expect(decodedEvent.incrementalExpected == true)
 
         let summary = TKXcodeActionSummary(
             ok: true,
@@ -198,7 +210,8 @@ struct TKXcodeWorkflowModelsTests {
                     location: "LoginTests.swift:42"
                 ),
             ],
-            xcresultNote: "Showing top 1 of 2 failures."
+            xcresultNote: "Showing top 1 of 2 failures.",
+            derivedDataCache: cache
         )
         let decodedSummary = try JSONDecoder().decode(TKXcodeActionSummary.self, from: JSONEncoder().encode(summary))
 
@@ -209,6 +222,8 @@ struct TKXcodeWorkflowModelsTests {
         #expect(decodedSummary.testResultSummary?.failedTests == 1)
         #expect(decodedSummary.topFailures?.map { $0.testName } == ["testSubmit()"])
         #expect(decodedSummary.xcresultNote == "Showing top 1 of 2 failures.")
+        #expect(decodedSummary.derivedDataCache?.cacheState == "warm")
+        #expect(decodedSummary.derivedDataCache?.incrementalExpected == true)
     }
 
     @Test("xcodebuild list json parser returns schemes")

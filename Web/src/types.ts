@@ -8,6 +8,54 @@ export type ProxyMode = "record" | "mock" | "blocked" | "off";
 
 export type DeviceFrameOrientation = "portrait" | "landscape" | "unknown";
 
+export type HierarchyFrame = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+export type HierarchyLayerNode = {
+  id: string;
+  parentId?: string;
+  type: string;
+  name: string;
+  frame: HierarchyFrame;
+  depth: number;
+  visible: boolean;
+  interactive: boolean;
+  color: string;
+  slice?: {
+    available?: boolean;
+    dataUrl?: string;
+    mode?: string;
+    source?: string;
+  };
+  style?: {
+    display?: string;
+    text?: string;
+    backgroundColor?: string;
+    foregroundColor?: string;
+    alpha?: number;
+    cornerRadius?: number;
+  };
+  renderHints?: {
+    preferredMode?: "slice" | "style" | "fallback" | "wireframe" | string;
+    fallbackMode?: "style" | "fallback" | "wireframe" | string;
+    quality?: "exact" | "approximate" | "fallback" | string;
+  };
+};
+
+export type HierarchyScene = {
+  platform: DevicePlatform;
+  rootId: string;
+  viewport: {
+    width: number;
+    height: number;
+  };
+  nodes: HierarchyLayerNode[];
+};
+
 export type DeviceTarget = {
   id: string;
   name: string;
@@ -128,6 +176,24 @@ export type HostTargetLogsResponse = {
     readonly: boolean;
   };
   entries: LogEntry[];
+};
+
+export type HostHierarchyResponse = {
+  ok: boolean;
+  capturedAt: string;
+  source: {
+    command: string;
+    runtimeScope: string;
+    readonly: boolean;
+  };
+  control?: {
+    action: "hierarchy.capture" | string;
+    entrypoint: "web-dev-bridge" | string;
+    method: "GET" | "POST" | string;
+    readonly: boolean;
+    mutatesApp: boolean;
+  };
+  scene: HierarchyScene;
 };
 
 export type IosSimulatorScreenshotResponse = {

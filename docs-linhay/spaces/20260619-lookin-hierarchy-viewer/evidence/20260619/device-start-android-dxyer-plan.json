@@ -1,0 +1,39 @@
+{
+  "action" : "device.start",
+  "emulator" : "emulator",
+  "executedSourceCommands" : [
+
+  ],
+  "name" : "Dxyer_API_34",
+  "nextAction" : {
+    "args" : [
+      "wait-ready",
+      "--platform",
+      "android",
+      "--device",
+      "emulator-5554",
+      "--json"
+    ],
+    "category" : "wait",
+    "command" : "device",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : false,
+    "terminationSignals" : [
+
+    ]
+  },
+  "note" : "Android emulator launch is detached. Use the nextAction wait-ready command before app, hierarchy, screenshot, or smoke actions.",
+  "ok" : true,
+  "planOnly" : true,
+  "platform" : "android",
+  "sourceCommands" : [
+    "emulator @Dxyer_API_34 -no-window -gpu swiftshader_indirect -memory 4096 -no-snapshot-load -no-audio -no-boot-anim"
+  ],
+  "started" : false,
+  "target" : "emulator-5554"
+}

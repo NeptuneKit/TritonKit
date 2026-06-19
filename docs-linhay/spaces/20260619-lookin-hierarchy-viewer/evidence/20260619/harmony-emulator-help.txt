@@ -1,0 +1,77 @@
+These are common Emulator commands used in various situations:
+Emulator [-start <name> [-instancePath <path> -imageRoot <path> -bootmode <mode>]
+         [-create <name> -deviceType <type> -osVersion <version> [-instancePath <path> -imageRoot <path>
+            -screenProfile <model> -screen <config> -storage <size> -memory <size>]]
+         [-delete <name> [-instancePath <path> -force]]
+         [-imageList [-deviceType <type> -downloaded <true/false> -http_proxy <url>]]
+         [-install -deviceType <type> -osVersion <version> [-imageRoot <path> -http_proxy <url> -force]]
+         [-uninstall -deviceType <type> -osVersion <version> [-imageRoot <path> -force]]
+         [-logZip <name> -logPath <path>]
+         [-stop <name>]
+         [-version]
+         [-list [-details]]
+         [-screenProfileList [-deviceType <type> -details -update -http_proxy <url>]]
+         [-license [accept]]
+         [-config [-instancePath <path> -imageRoot <path> -http_proxy <url>]]
+         [-unset <instancePath/imageRoot/http_proxy>]
+
+-license:              Display all license agreements, use "accept" to auto-accept
+-start/-hvd:           Start the emulator (HarmonyOS software service agreement must be accepted)
+-stop:                 Stop the emulator
+-instancePath/-path:   Emulator instance directory
+-imageRoot:            Emulator image root directory
+-list:                 List all emulator instances
+-version:              Show emulator version
+-hdcPort:              Specify hdc port (10000~16555)
+-logZip:               Collect the emulator logs
+-logPath:              Directory for collected logs
+-create:               Create a new emulator instance
+-delete:               Delete the specified emulator instance
+-deviceType:           Specify emulator device type
+-osVersion:            Specify HarmonyOS image version
+-screenProfile:        Specify screen profile model
+-screen:               Specify screen configuration
+-storage               Virtual storage size in GBs (2~1023, default: 6)
+-memory:               Virtual memory size in GBs (2~32, default: 4)
+-details:              Display detailed information
+-imageList:            List available emulator images
+-screenProfileList:    List all device types and models that support custom screen profiles
+-downloaded:           List downloaded emulator image versions
+-install:              Download emulator image for specified [deviceType] and [osVersion]
+-uninstall:            Remove emulator image for specified [deviceType] and [osVersion]
+-config:               Set default config (instancePath, imageRoot, http_proxy)
+-unset:                Remove default config
+-http_proxy:           Network proxy configuration
+-force:                Skip interaction and forcibly execute the command
+-bootmode:             Boot mode:coldboot(boot with data) reset(boot with data reset) snapshot(Quick boot)
+
+========= help for create
+-deviceType:
+    Specify the emulator device type.
+    Supported values:
+      Phone | Foldable | WideFold | TripleFold | Tablet | 2in1 | 2in1 Foldable | Wearable | WearableKid | TV
+
+-osVersion:
+    Specify the HarmonyOS image version for the emulator.
+    Format: HarmonyOS <version>(<api_version>) [BetaX]
+    Examples:
+      "HarmonyOS 6.0.0(20)"
+      "HarmonyOS 6.0.1(21) Beta1"
+
+-screenProfile:
+    Specify a predefined screen model (e.g. "Mate 70 Pro").
+    If both -screenProfile and -screen are specified, -screen takes precedence.
+    If neither is specified, a default model is selected based on -deviceType.
+
+-screen:
+    Specify a custom screen configuration.
+    Parameter order: width height dpi size
+      Phone / Tablet / 2in1:
+        "width height dpi size"
+        Example: "1080 2340 480 6.5"
+      Foldable devices:
+        "unfolded_width unfolded_height unfolded_dpi unfolded_size" "folded_width folded_height folded_dpi folded_size"
+        Example: "2200 2480 480 7.8" "1080 2480 480 6.4"
+    Notes:
+      - Width, height and DPI must be integers.
+      - Size (diagonal) is a floating-point number with up to 2 decimal places.

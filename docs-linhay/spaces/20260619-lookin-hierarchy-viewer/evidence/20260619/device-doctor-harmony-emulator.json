@@ -1,0 +1,29 @@
+{
+  "artifactsSaved" : false,
+  "capabilities" : [
+    "device.list",
+    "device.use",
+    "device.wait-ready",
+    "device.runtime-url",
+    "device.screenshot",
+    "harmony.hdc-targets"
+  ],
+  "ok" : true,
+  "platform" : "harmony",
+  "tools" : [
+    {
+      "available" : true,
+      "name" : "hdc",
+      "path" : "hdc",
+      "sourceCommand" : "hdc -v",
+      "versionSummary" : "Ver: 3.2.0d"
+    },
+    {
+      "available" : true,
+      "name" : "emulator",
+      "path" : "\/Applications\/DevEco-Studio.app\/Contents\/tools\/emulator\/Emulator",
+      "sourceCommand" : "\/Applications\/DevEco-Studio.app\/Contents\/tools\/emulator\/Emulator -version",
+      "versionSummary" : "HarmonyOS Emulator :6.1.1.200"
+    }
+  ]
+}

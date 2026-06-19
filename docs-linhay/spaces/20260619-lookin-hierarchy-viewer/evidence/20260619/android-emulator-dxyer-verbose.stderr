@@ -1,0 +1,4 @@
+WARNING: loader_scanned_icd_add: Driver /Users/linhey/Library/Android/sdk/emulator/lib64/gles_angle/././libvk_swiftshader.dylib says it supports interface version 3 but still exports core entrypoints (Policy #LDP_DRIVER_6)
+WARNING: loader_scanned_icd_add: Driver /Users/linhey/Library/Android/sdk/emulator/lib64/gles_angle/././libvk_swiftshader.dylib says it supports interface version 3 but still exports core entrypoints (Policy #LDP_DRIVER_6)
+WARNING: loader_scanned_icd_add: Driver /Users/linhey/Library/Android/sdk/emulator/lib64/gles_angle/././libvk_swiftshader.dylib says it supports interface version 3 but still exports core entrypoints (Policy #LDP_DRIVER_6)
+WARNING: loader_scanned_icd_add: Driver /Users/linhey/Library/Android/sdk/emulator/lib64/gles_angle/././libvk_swiftshader.dylib says it supports interface version 3 but still exports core entrypoints (Policy #LDP_DRIVER_6)

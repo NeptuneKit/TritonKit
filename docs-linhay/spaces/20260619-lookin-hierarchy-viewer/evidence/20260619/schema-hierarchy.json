@@ -1,0 +1,240 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+
+      ],
+      "artifacts" : [
+        "hierarchy-json"
+      ],
+      "examples" : [
+        "triton hierarchy --target triton:local --format json --output \/tmp\/hierarchy.json",
+        "triton hierarchy --platform ios --target triton:local --json",
+        "triton hierarchy --platform android --device emulator-5554 --json",
+        "triton hierarchy --platform harmony --device 127.0.0.1:10100 --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "server_unavailable",
+        "target_unavailable",
+        "target_not_found",
+        "request_failed",
+        "runtime_unavailable",
+        "runtime_ui_interrupted",
+        "request_timeout",
+        "invalid_payload",
+        "validation_failed",
+        "hierarchy_unavailable",
+        "host_command_failed",
+        "artifact_write_failed"
+      ],
+      "failureShape" : "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|hierarchy_unavailable|request_failed|host_command_failed|artifact_write_failed, message, endpoint?, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "hierarchy",
+      "nextCommands" : [
+        "triton status --json",
+        "triton observe tree --platform <platform> --json",
+        "triton nodes --json",
+        "triton node --oid <oid> --json",
+        "triton evidence --output <dir.tritonevidence> --json",
+        "triton target resolve <selector> --json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Target id from `triton list`, or simulator UDID for iOS simulator runtime targets; commands auto-select the only connected target when omitted",
+          "name" : "--target",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Return a platform-neutral hierarchy scene using iOS runtime AX, Android UIAutomator, or Harmony dumpLayout sources",
+          "name" : "--platform",
+          "required" : false,
+          "type" : "ios|android|harmony"
+        },
+        {
+          "description" : "Unified host target selector for --platform mode",
+          "name" : "--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Bypass Triton server and call a direct embedded runtime HTTP base URL, for example http:\/\/127.0.0.1:28767",
+          "name" : "--runtime-base-url",
+          "required" : false,
+          "type" : "URL"
+        },
+        {
+          "defaultValue" : "hdc",
+          "description" : "HDC executable path for --platform harmony",
+          "name" : "--hdc",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Maximum nodes to include in --platform scene mode",
+          "name" : "--max-nodes",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "tree",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "tree|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Optional output file",
+          "name" : "--output",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Optional Android or Harmony host layout artifact path in --platform mode",
+          "name" : "--artifact-output",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "true",
+          "description" : "Request fresh hierarchy before reading",
+          "name" : "--refresh\/--no-refresh",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "true",
+          "description" : "Hide low-signal UIKit wrapper views in tree output",
+          "name" : "--hide-noise\/--no-hide-noise",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Nested display item hierarchy",
+              "name" : "displayItems",
+              "required" : true,
+              "type" : "[TKDisplayItem]"
+            },
+            {
+              "description" : "App and device metadata",
+              "name" : "appInfo",
+              "required" : true,
+              "type" : "TKAppInfo"
+            },
+            {
+              "description" : "Lookin\/Triton hierarchy server version",
+              "name" : "serverVersion",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Color alias metadata",
+              "name" : "colorAlias",
+              "required" : true,
+              "type" : "[String:String]"
+            },
+            {
+              "description" : "Classes collapsed by the hierarchy renderer",
+              "name" : "collapsedClassList",
+              "required" : true,
+              "type" : "[String]"
+            }
+          ],
+          "format" : "json",
+          "kind" : "hierarchy-info",
+          "model" : "TKHierarchyInfo",
+          "selector" : "hierarchy.info"
+        }
+      ],
+      "outputFormats" : [
+        "tree",
+        "json"
+      ],
+      "outputSemantics" : "Use hierarchy --platform for Lookin-style cross-platform scene data consumed by Web and agents. Legacy mode keeps full raw iOS runtime hierarchy inspection. Prefer snapshot\/observe for bounded decisions.",
+      "providedCapabilities" : [
+        "hierarchy",
+        "hierarchy-scene",
+        "android-hierarchy",
+        "harmony-hierarchy"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "observe",
+          "command" : "triton observe tree --platform <platform> --json"
+        },
+        {
+          "category" : "observe",
+          "command" : "triton nodes --json"
+        },
+        {
+          "category" : "observe",
+          "command" : "triton node --oid <oid> --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : true,
+      "requiresTarget" : true,
+      "retryable" : false,
+      "runtimeScope" : "embedded|host-android|host-harmony",
+      "subcommands" : [
+
+      ],
+      "successShape" : "Legacy mode: TKHierarchyInfo JSON or rendered tree. --platform mode: TKHostHierarchyResponse { ok, capturedAt, source, scene:{ platform, rootId, viewport, nodes[] } }",
+      "summary" : "Read latest hierarchy snapshot or platform-neutral hierarchy scene",
+      "usageForms" : [
+
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

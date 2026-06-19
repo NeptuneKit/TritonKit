@@ -70,8 +70,19 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
 ## Evidence Panel Interaction Pattern
 
 - Network and log evidence are separate panes. If users can hide them, keep independent state for each pane rather than coupling all evidence visibility to a single logs toggle.
-- Every hidden evidence pane needs a visible restore path. If both network and logs are hidden, render a compact restore strip with explicit controls such as `显示网络` and `显示日志`.
+- Every hidden evidence pane needs a visible restore path, preferably in a persistent device-control area that remains available after the pane is hidden.
+- If both network and logs are hidden and restore controls already exist in the persistent canvas controls, collapse the bottom evidence region entirely instead of rendering an extra hidden-state strip.
 - Keep evidence pane controls as UI state only. Hiding network/log strips must not stop capture, mutate backend state, or change CLI/HTTP evidence contracts unless a separate requirement explicitly adds that control loop.
+
+## Hierarchy Viewer Pattern
+
+- For Lookin-style hierarchy views, keep a platform-neutral DTO such as `HierarchyScene` / `HierarchyLayerNode` as the fact source, then derive both the sidebar tree and the canvas visualization from it.
+- A Web mock may render a 3D hierarchy scene with Three.js, but it should remain a read-only visualization unless CLI / HTTP exposes a machine-readable inspect/probe action.
+- Three-platform hierarchy demos must include iOS, Android, and Harmony data, even if the first slice is mock data. Use platform-specific node names and frame/depth geometry so target switching proves the viewer is not hard-coded to iOS.
+- Keep a DOM fallback or overlay for tests and non-WebGL environments. Tests should verify target-specific layer text, rotation state changes, and that drag gestures inside the hierarchy viewer do not become device tap/swipe input.
+- If a Web dev bridge endpoint exists for hierarchy data, it should call `triton hierarchy --platform <platform> --target <target> --json` and pass through `HostHierarchyResponse.scene`; keep static DTOs only as demo/test fallback when the bridge or command is unavailable.
+- For real three-platform hierarchy validation, start and diagnose Android/Harmony emulators through Triton first: use `triton device start --platform android|harmony --plan-only --json` to capture the launch ledger, execute `triton device start ... --json` when needed, then prove readiness with `triton device list`, `triton device wait-ready`, and `triton hierarchy --platform <platform> --target <target> --json`. Raw `emulator`, `hdc`, or `adb` commands should only appear as sourceCommands or fallback evidence.
+- Do not claim Lookin parity until real per-node hierarchy metadata and screenshot/surface slices are available from Triton runtime/host contracts.
 
 ## Validation
 

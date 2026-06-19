@@ -1,0 +1,11 @@
+{
+  "ok" : true,
+  "platform" : "harmony",
+  "sourceCommand" : "hdc list targets -v",
+  "sourceCommands" : [
+    "hdc list targets -v"
+  ],
+  "targets" : [
+
+  ]
+}

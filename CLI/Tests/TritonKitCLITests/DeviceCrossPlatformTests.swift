@@ -48,6 +48,8 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("screenshot --device <selector> --output <path>"))
         #expect(try #require(device.usageForms.first { $0.form == "screenshot --device <selector> --output <path>" }).description.contains("Android"))
         #expect(usageForms.contains("runtime-url --device <selector>"))
+        #expect(usageForms.contains("start --platform android --avd <name> --plan-only"))
+        #expect(usageForms.contains("start --platform harmony --hvd <name> --path <deployed-path> --plan-only"))
         #expect(usageForms.contains("stop --platform harmony --hvd <name> --path <deployed-path> --confirm"))
         #expect(optionNames.contains("--device"))
         #expect(optionNames.contains("--plan-only"))
@@ -68,6 +70,8 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("runtime-url --platform harmony --target <target>"))
         #expect(device.examples.contains("triton device runtime-url --device harmony-a --probe-manifest --json"))
         #expect(device.examples.contains("triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --confirm --json"))
+        #expect(device.examples.contains("triton device start --platform android --avd Dxyer_API_34 --headless --gpu swiftshader_indirect --plan-only --json"))
+        #expect(device.examples.contains("triton device start --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --hdc-port 10100 --plan-only --json"))
         #expect(device.examples.contains("triton device proxy doctor --platform ios --json"))
         #expect(device.examples.contains("triton device proxy cert doctor --platform ios --json"))
         #expect(device.examples.contains("triton device proxy cert plan --platform android --device emulator-5554 --certificate /tmp/triton-proxy-ca.cer --json"))
@@ -102,11 +106,13 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("device-screenshot"))
         #expect(device.providedCapabilities.contains("android-device"))
         #expect(device.providedCapabilities.contains("android-device-list"))
+        #expect(device.providedCapabilities.contains("android-device-start"))
         #expect(device.providedCapabilities.contains("android-device-wait-ready"))
         #expect(device.providedCapabilities.contains("android-device-screenshot"))
         #expect(device.failureCodes.contains("android_debugging_disabled"))
         #expect(device.failureCodes.contains("android_package_manager_unavailable"))
         #expect(device.providedCapabilities.contains("harmony-device-list"))
+        #expect(device.providedCapabilities.contains("harmony-device-start"))
         #expect(device.providedCapabilities.contains("harmony-foreground-app-identity"))
         #expect(device.providedCapabilities.contains("harmony-device-stop"))
         #expect(device.providedCapabilities.contains("device-proxy-ios"))
@@ -2684,6 +2690,51 @@ struct DeviceCrossPlatformTests {
             "launchctl print gui/501/triton-harmony-emulator",
             "launchctl bootout gui/501/triton-harmony-emulator",
             "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator -stop 'Codex Test Phone' -path /Users/linhey/.Huawei/Emulator/deployed",
+        ])
+    }
+
+    @Test("Android emulator start plan builds a detached headless emulator command")
+    func androidEmulatorStartPlanBuildsDetachedHeadlessEmulatorCommand() throws {
+        let plan = try androidEmulatorStartPlan(
+            avd: "Dxyer_API_34",
+            emulator: "/Users/linhey/Library/Android/sdk/emulator/emulator",
+            headless: true,
+            gpu: "swiftshader_indirect",
+            memory: 4096,
+            noSnapshotLoad: true,
+            noAudio: true,
+            noBootAnim: true
+        )
+
+        #expect(plan.action == "device.start")
+        #expect(plan.platform == "android")
+        #expect(plan.name == "Dxyer_API_34")
+        #expect(plan.waitReadyArgs == ["wait-ready", "--platform", "android", "--device", "emulator-5554", "--json"])
+        #expect(plan.commands.map(hostSourceCommand) == [
+            "/Users/linhey/Library/Android/sdk/emulator/emulator @Dxyer_API_34 -no-window -gpu swiftshader_indirect -memory 4096 -no-snapshot-load -no-audio -no-boot-anim",
+        ])
+    }
+
+    @Test("Harmony emulator start plan builds DevEco start and HDC connect commands")
+    func harmonyEmulatorStartPlanBuildsDevEcoStartAndHDCConnectCommands() throws {
+        let plan = try harmonyEmulatorStartPlan(
+            hvd: "Codex Test Phone",
+            deployedPath: "/Users/linhey/.Huawei/Emulator/deployed",
+            emulator: "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator",
+            hdc: "/Users/linhey/harmonyOS-command-line-tools/bin/hdc",
+            hdcPort: 10100,
+            bootmode: "coldboot",
+            connectAfterLaunch: true
+        )
+
+        #expect(plan.action == "device.start")
+        #expect(plan.platform == "harmony")
+        #expect(plan.name == "Codex Test Phone")
+        #expect(plan.hdcPort == 10100)
+        #expect(plan.waitReadyArgs == ["wait-ready", "--platform", "harmony", "--device", "127.0.0.1:10100", "--json"])
+        #expect(plan.commands.map(hostSourceCommand) == [
+            "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator -start 'Codex Test Phone' -path /Users/linhey/.Huawei/Emulator/deployed -hdcPort 10100 -bootmode coldboot",
+            "/Users/linhey/harmonyOS-command-line-tools/bin/hdc tconn 127.0.0.1:10100",
         ])
     }
 

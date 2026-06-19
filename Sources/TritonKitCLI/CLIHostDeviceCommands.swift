@@ -8,7 +8,7 @@ struct Device: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "device",
         abstract: "Discover and inspect host-side devices and emulators",
-        subcommands: [DeviceDoctor.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStop.self]
+        subcommands: [DeviceDoctor.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStart.self, DeviceStop.self]
     )
 }
 
@@ -875,6 +875,111 @@ struct DeviceRuntimeURL: AsyncParsableCommand {
             }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
+struct DeviceStart: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "start", abstract: "Start a host-side Android or Harmony emulator with a machine-readable launch ledger")
+
+    @Option(help: "Platform adapter: android|harmony") var platform: HostDevicePlatform = .android
+    @Option(help: "Android AVD name, for example Dxyer_API_34") var avd: String?
+    @Option(help: "Harmony HVD name, for example Codex Test Phone") var hvd: String?
+    @Option(help: "DevEco deployed emulator path, for example ~/.Huawei/Emulator/deployed") var path: String?
+    @Option(help: "Android emulator or DevEco Emulator executable path") var emulator: String?
+    @Option(help: "HDC executable path for Harmony tconn follow-up") var hdc: String = "hdc"
+    @Option(help: "Harmony HDC bridge port") var hdcPort: Int = 10100
+    @Option(help: "Harmony boot mode passed to DevEco Emulator") var bootmode: String = "coldboot"
+    @Option(help: "Expected Android adb serial after first emulator launch") var adbSerial: String = "emulator-5554"
+    @Flag(help: "Run Android emulator without a visible window") var headless = false
+    @Option(help: "Android emulator GPU mode, for example swiftshader_indirect") var gpu: String?
+    @Option(help: "Android emulator memory in MB") var memory: Int?
+    @Flag(help: "Pass -no-snapshot-load to Android emulator") var noSnapshotLoad = false
+    @Flag(help: "Pass -no-audio to Android emulator") var noAudio = false
+    @Flag(help: "Pass -no-boot-anim to Android emulator") var noBootAnim = false
+    @Flag(inversion: .prefixedNo, help: "Include Harmony hdc tconn follow-up command in sourceCommands") var connectAfterLaunch = true
+    @Flag(help: "Return the launch ledger without starting an emulator") var planOnly = false
+    @Option(help: "Optional stdout log path for detached emulator launch") var stdoutLog: String?
+    @Option(help: "Optional stderr log path for detached emulator launch") var stderrLog: String?
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let plan = try makePlan()
+            let detached: HostDetachedProcessResult?
+            if planOnly {
+                detached = nil
+            } else {
+                detached = try runHostCommandDetached(
+                    plan.commands[0],
+                    stdoutLogPath: stdoutLog,
+                    stderrLogPath: stderrLog
+                )
+            }
+            let nextAction = TKCLINextAction(
+                command: "device",
+                args: plan.waitReadyArgs,
+                category: "wait"
+            )
+            let output = HostDeviceStartOutput(
+                ok: true,
+                action: plan.action,
+                platform: plan.platform,
+                name: plan.name,
+                target: plan.target,
+                deployedPath: plan.deployedPath,
+                emulator: plan.emulator,
+                hdc: plan.hdc,
+                hdcPort: plan.hdcPort,
+                planOnly: planOnly,
+                started: detached != nil,
+                pid: detached?.pid,
+                sourceCommands: plan.commands.map(hostSourceCommand),
+                executedSourceCommands: detached.map { [$0.sourceCommand] } ?? [],
+                stdoutLogPath: detached?.stdoutLogPath,
+                stderrLogPath: detached?.stderrLogPath,
+                nextAction: nextAction,
+                note: plan.note
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print(output.note)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+
+    private func makePlan() throws -> HostDeviceStartPlan {
+        switch platform {
+        case .android:
+            return try androidEmulatorStartPlan(
+                avd: avd ?? "",
+                emulator: emulator ?? "emulator",
+                headless: headless,
+                gpu: gpu,
+                memory: memory,
+                noSnapshotLoad: noSnapshotLoad,
+                noAudio: noAudio,
+                noBootAnim: noBootAnim,
+                adbSerial: adbSerial
+            )
+        case .harmony:
+            return try harmonyEmulatorStartPlan(
+                hvd: hvd ?? "",
+                deployedPath: path ?? "",
+                emulator: emulator ?? "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator",
+                hdc: hdc,
+                hdcPort: hdcPort,
+                bootmode: bootmode,
+                connectAfterLaunch: connectAfterLaunch
+            )
+        case .ios:
+            throw HostDeviceSelectionError.parameterConflict("iOS Simulator lifecycle uses `triton sim boot <udid> --wait --json`, not `triton device start`.")
         }
     }
 }

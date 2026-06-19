@@ -438,7 +438,7 @@ func normalizeWebIOSSimulatorInput(_ input: TKInputRequest, screen: WebIOSSimula
     let scaleY = Double(screen.height) / height
 
     switch input.type {
-    case .tap:
+    case .tap, .longPress:
         guard let x = input.x, let y = input.y else { return input }
         return TKInputRequest(
             type: input.type,
@@ -454,6 +454,23 @@ func normalizeWebIOSSimulatorInput(_ input: TKInputRequest, screen: WebIOSSimula
             text: input.text,
             button: input.button,
             secure: input.secure
+        )
+    case .pinch:
+        guard let centerX = input.centerX,
+              let centerY = input.centerY,
+              let startDistance = input.startDistance,
+              let endDistance = input.endDistance else { return input }
+        let distanceScale = (scaleX + scaleY) / 2
+        return TKInputRequest(
+            type: input.type,
+            centerX: clampedRounded(Double(centerX) * scaleX, min: 0, max: screen.width),
+            centerY: clampedRounded(Double(centerY) * scaleY, min: 0, max: screen.height),
+            startDistance: Double(startDistance) * distanceScale,
+            endDistance: Double(endDistance) * distanceScale,
+            scale: input.scale,
+            width: Double(screen.width),
+            height: Double(screen.height),
+            duration: input.duration
         )
     case .swipe:
         guard let startX = input.startX, let startY = input.startY, let endX = input.endX, let endY = input.endY else { return input }
@@ -509,7 +526,7 @@ func webIOSBaguetteCommand(action: TKInputRequest, udid: String, screen: WebIOSS
             arguments.append(contentsOf: ["--duration", "\(duration)"])
         }
         return TKHostCommand(executable: executable, arguments: arguments)
-    case .button, .typeText, .paste, .clear, .deleteBackward:
+    case .longPress, .pinch, .button, .typeText, .paste, .clear, .deleteBackward:
         return TKHostCommand(executable: executable, arguments: [])
     }
 }
@@ -548,7 +565,7 @@ private func runWebIOSSimulatorInput(selected: HostDeviceTarget, input: TKInputR
             action: input.type.rawValue,
             message: "iOS Simulator \(input.type.rawValue) was submitted through Triton host-HID adapter."
         )
-    case .button, .typeText, .paste, .clear, .deleteBackward:
+    case .longPress, .pinch, .button, .typeText, .paste, .clear, .deleteBackward:
         return .unsupported(
             action: input.type.rawValue,
             message: "iOS Simulator host-side \(input.type.rawValue) is not exposed in the Web device surface yet."
@@ -575,6 +592,12 @@ private func runWebAndroidInput(selected: HostDeviceTarget, input: TKInputReques
         let y = try requireCoordinate(input.y, name: "y", action: "tap")
         _ = try runHostCommand(TKAndroidADBCommand.tapCoordinate(serial: selected.rawTarget, x: x, y: y, executable: adb))
         return .success(action: "tap", message: "Android tap was submitted through adb input.")
+    case .longPress:
+        let x = try requireCoordinate(input.x, name: "x", action: "longPress")
+        let y = try requireCoordinate(input.y, name: "y", action: "longPress")
+        let durationMs = Int(((input.duration ?? 0.65) * 1000).rounded())
+        _ = try runHostCommand(TKAndroidADBCommand.swipeCoordinate(serial: selected.rawTarget, startX: x, startY: y, endX: x, endY: y, durationMs: durationMs, executable: adb))
+        return .success(action: "longPress", message: "Android longPress was submitted through adb input swipe hold.")
     case .swipe:
         let startX = try requireCoordinate(input.startX, name: "startX", action: "swipe")
         let startY = try requireCoordinate(input.startY, name: "startY", action: "swipe")
@@ -583,6 +606,8 @@ private func runWebAndroidInput(selected: HostDeviceTarget, input: TKInputReques
         let durationMs = input.duration.map { Int(($0 * 1000).rounded()) }
         _ = try runHostCommand(TKAndroidADBCommand.swipeCoordinate(serial: selected.rawTarget, startX: startX, startY: startY, endX: endX, endY: endY, durationMs: durationMs, executable: adb))
         return .success(action: "swipe", message: "Android swipe was submitted through adb input.")
+    case .pinch:
+        return .unsupported(action: "pinch", message: "Android host pinch is not exposed in the Web device surface yet.")
     case .typeText, .paste:
         let text = input.text ?? ""
         _ = try runHostCommand(TKAndroidADBCommand.inputText(serial: selected.rawTarget, text: text, executable: adb))
@@ -607,6 +632,8 @@ private func runWebHarmonyInput(selected: HostDeviceTarget, input: TKInputReques
         let y = try requireCoordinate(input.y, name: "y", action: "tap")
         _ = try runHostCommand(TKHarmonyHDCCommand.tapCoordinate(target: selected.rawTarget, x: x, y: y, executable: hdc))
         return .success(action: "tap", message: "Harmony tap was submitted through uitest.")
+    case .longPress:
+        return .unsupported(action: "longPress", message: "Harmony host longPress is not exposed in the Web device surface yet.")
     case .swipe:
         let startX = try requireCoordinate(input.startX, name: "startX", action: "swipe")
         let startY = try requireCoordinate(input.startY, name: "startY", action: "swipe")
@@ -614,6 +641,8 @@ private func runWebHarmonyInput(selected: HostDeviceTarget, input: TKInputReques
         let endY = try requireCoordinate(input.endY, name: "endY", action: "swipe")
         _ = try runHostCommand(TKHarmonyHDCCommand.swipeCoordinate(target: selected.rawTarget, startX: startX, startY: startY, endX: endX, endY: endY, velocity: harmonySwipeVelocity(startX: Double(startX), startY: Double(startY), endX: Double(endX), endY: Double(endY), duration: input.duration), executable: hdc))
         return .success(action: "swipe", message: "Harmony swipe was submitted through uitest.")
+    case .pinch:
+        return .unsupported(action: "pinch", message: "Harmony host pinch is not exposed in the Web device surface yet.")
     case .typeText, .paste:
         let text = input.text ?? ""
         _ = try runHostCommand(TKHarmonyHDCCommand.inputText(target: selected.rawTarget, text: text, executable: hdc))

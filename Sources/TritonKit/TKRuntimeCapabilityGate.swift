@@ -92,9 +92,9 @@ enum TKRuntimeCapabilityGate {
         case .input:
             let request = message.payload.flatMap { try? JSONDecoder().decode(TKInputRequest.self, from: $0) }
             switch request?.type {
-            case .tap:
+            case .tap, .longPress:
                 return .inputTap
-            case .swipe:
+            case .swipe, .pinch:
                 return .inputSwipe
             case .typeText:
                 return .inputType

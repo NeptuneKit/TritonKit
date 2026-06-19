@@ -100,9 +100,13 @@ struct TKPlatformFallbackTests {
     @Test("capability gate maps request messages without executing handlers")
     func capabilityGateMapsRequestMessages() throws {
         let tapPayload = try JSONEncoder().encode(TKInputRequest.tap(x: 10, y: 20))
+        let longPressPayload = try JSONEncoder().encode(TKInputRequest.longPress(x: 10, y: 20, duration: 0.6))
+        let pinchPayload = try JSONEncoder().encode(TKInputRequest.pinch(centerX: 40, centerY: 80, startDistance: 30, endDistance: 60, scale: 2))
         let semanticPayload = try JSONEncoder().encode(TKSemanticActionRequest(action: .selectSegment, segmentIndex: 1))
 
         #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .input, payload: tapPayload)) == .inputTap)
+        #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .input, payload: longPressPayload)) == .inputTap)
+        #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .input, payload: pinchPayload)) == .inputSwipe)
         #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .semanticAction, payload: semanticPayload)) == .semanticSelectSegment)
         #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .webViewSnapshot)) == .webViewSnapshot)
         #expect(TKRuntimeCapabilityGate.actionName(for: TKMessage(id: 1, type: .webViewSnapshot)) == "webview.snapshot")

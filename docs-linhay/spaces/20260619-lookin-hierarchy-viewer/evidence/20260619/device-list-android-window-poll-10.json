@@ -1,0 +1,31 @@
+{
+  "nextAction" : {
+    "args" : [
+      "doctor",
+      "--platform",
+      "android",
+      "--json"
+    ],
+    "category" : "diagnose",
+    "command" : "device",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : false,
+    "terminationSignals" : [
+
+    ]
+  },
+  "ok" : true,
+  "platform" : "android",
+  "sourceCommand" : "adb devices -l",
+  "sourceCommands" : [
+    "adb devices -l"
+  ],
+  "targets" : [
+
+  ]
+}

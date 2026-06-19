@@ -1,0 +1,30 @@
+{
+  "artifactsSaved" : false,
+  "capabilities" : [
+    "device.list",
+    "device.use",
+    "device.wait-ready",
+    "device.screenshot",
+    "android.adb-targets",
+    "android.real-device",
+    "android.emulator-scope"
+  ],
+  "ok" : true,
+  "platform" : "android",
+  "tools" : [
+    {
+      "available" : true,
+      "name" : "adb",
+      "path" : "adb",
+      "sourceCommand" : "adb version",
+      "versionSummary" : "Android Debug Bridge version 1.0.41"
+    },
+    {
+      "available" : true,
+      "name" : "emulator",
+      "path" : "\/Users\/linhey\/Library\/Android\/sdk\/emulator\/emulator",
+      "sourceCommand" : "\/Users\/linhey\/Library\/Android\/sdk\/emulator\/emulator -version",
+      "versionSummary" : "Android emulator version 36.6.11.0 (build_id 15507667) (CL:N\/A)"
+    }
+  ]
+}
