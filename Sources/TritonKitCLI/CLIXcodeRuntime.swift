@@ -2,6 +2,22 @@ import ArgumentParser
 import Foundation
 import TritonKitShared
 
+let defaultXcodeDerivedDataPath = ".triton/DerivedData"
+
+func makeXcodeDerivedDataCacheInfo(path: String?) -> TKXcodeDerivedDataCacheInfo {
+    let resolvedPath = (path?.isEmpty == false ? path : nil) ?? defaultXcodeDerivedDataPath
+    var isDirectory: ObjCBool = false
+    let exists = FileManager.default.fileExists(atPath: resolvedPath, isDirectory: &isDirectory) && isDirectory.boolValue
+    return TKXcodeDerivedDataCacheInfo(
+        path: resolvedPath,
+        exists: exists,
+        cacheState: exists ? "warm" : "empty",
+        incrementalExpected: exists,
+        cleanupPolicy: "preserve-by-default",
+        guidance: "Keep \(resolvedPath) to preserve Xcode incremental build cache; cleanup should not delete it by default."
+    )
+}
+
 func validateXcodeContainer(workspace: String?, project: String?, outputFormat: ClientOutputFormat) throws {
     if workspace != nil, project != nil {
         try failHostValidation(
@@ -56,7 +72,8 @@ func resolveXcodeInvocation(
     let resolvedSDK = sdk ?? xcode?.sdk ?? "iphonesimulator"
     let resolvedSimulator = simulator ?? defaults?.defaultSimulatorUDID
     let resolvedDestination = destination ?? xcode?.destination ?? resolvedSimulator.map { "platform=iOS Simulator,id=\($0)" }
-    let resolvedDerivedDataPath = derivedDataPath ?? xcode?.derivedDataPath ?? ".triton/DerivedData"
+    let resolvedDerivedDataPath = derivedDataPath ?? xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath
+    let derivedDataCache = makeXcodeDerivedDataCacheInfo(path: resolvedDerivedDataPath)
     return ResolvedXcodeInvocation(
         workspace: resolvedWorkspace,
         project: resolvedProject,
@@ -65,6 +82,7 @@ func resolveXcodeInvocation(
         sdk: resolvedSDK,
         destination: resolvedDestination,
         derivedDataPath: resolvedDerivedDataPath,
+        derivedDataCache: derivedDataCache,
         simulatorUDID: resolvedSimulator
     )
 }
@@ -124,6 +142,7 @@ func runXcodeBuild(
         sdk: invocation.sdk,
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath,
+        derivedDataCache: invocation.derivedDataCache,
         simulatorUDID: invocation.simulatorUDID,
         durationMs: durationMs,
         sourceCommand: result.sourceCommand,
@@ -164,6 +183,7 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         sdk: invocation.sdk,
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath,
+        derivedDataCache: invocation.derivedDataCache,
         resultBundlePath: resultBundlePath,
         simulatorUDID: invocation.simulatorUDID,
         durationMs: durationMs,
@@ -215,6 +235,7 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
         sdk: invocation.sdk,
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath,
+        derivedDataCache: invocation.derivedDataCache,
         appPath: product.appPath,
         bundleID: bundleID,
         simulatorUDID: simulator,

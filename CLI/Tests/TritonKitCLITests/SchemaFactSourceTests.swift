@@ -77,6 +77,28 @@ struct SchemaFactSourceTests {
         ])
     }
 
+    @Test("xcode schema exposes DerivedData cache semantics for incremental builds")
+    func xcodeSchemaExposesDerivedDataCacheSemantics() throws {
+        let schemas = commandSchemaMap()
+        let xcode = try #require(schemas["xcode"])
+        let derivedDataOption = try #require(xcode.options.first { $0.name == "--derived-data-path" })
+
+        #expect(derivedDataOption.defaultValue == ".triton/DerivedData")
+        #expect(derivedDataOption.description.contains("incremental"))
+        #expect(derivedDataOption.description.contains("cleanup"))
+
+        expectContract(xcode, selector: "xcode.final", fields: [
+            "derivedDataPath",
+            "derivedDataCache",
+            "derivedDataCache.path",
+            "derivedDataCache.exists",
+            "derivedDataCache.cacheState",
+            "derivedDataCache.incrementalExpected",
+            "derivedDataCache.cleanupPolicy",
+            "derivedDataCache.guidance",
+        ])
+    }
+
     @Test("doctor response exposes ordered recovery checks")
     func doctorResponseExposesOrderedRecoveryChecks() throws {
         let unavailable = buildDoctorResponse(

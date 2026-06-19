@@ -1,5 +1,7 @@
 import Foundation
 
+import TritonKitShared
+
 struct XcodeProcessSummary: Codable, Equatable {
     let pid: Int
     let name: String
@@ -25,9 +27,28 @@ struct XcodeProcessStatusOutput: Codable, Equatable {
     let ok: Bool
     let active: Bool
     let workspaceFilter: String?
+    let derivedDataCache: TKXcodeDerivedDataCacheInfo
     let processes: [XcodeProcessSummary]
     let summary: XcodeProcessStatusSummary
     let sourceCommand: String
+
+    init(
+        ok: Bool,
+        active: Bool,
+        workspaceFilter: String?,
+        derivedDataCache: TKXcodeDerivedDataCacheInfo = makeXcodeDerivedDataCacheInfo(path: nil),
+        processes: [XcodeProcessSummary],
+        summary: XcodeProcessStatusSummary,
+        sourceCommand: String
+    ) {
+        self.ok = ok
+        self.active = active
+        self.workspaceFilter = workspaceFilter
+        self.derivedDataCache = derivedDataCache
+        self.processes = processes
+        self.summary = summary
+        self.sourceCommand = sourceCommand
+    }
 }
 
 struct XcodeWaitIdleOutput: Codable, Equatable {

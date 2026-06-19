@@ -51,6 +51,7 @@ enum XcodeProcessDiagnosticsParser {
     static func parse(
         psOutput: String,
         workspace: String? = nil,
+        derivedDataPath: String? = nil,
         sourceCommand: String = "ps -axo pid=,comm=,etime=,args="
     ) throws -> XcodeProcessStatusOutput {
         let allProcesses = psOutput
@@ -72,6 +73,9 @@ enum XcodeProcessDiagnosticsParser {
             ok: true,
             active: !filtered.isEmpty,
             workspaceFilter: workspace,
+            derivedDataCache: makeXcodeDerivedDataCacheInfo(
+                path: derivedDataPath ?? filtered.first(where: { $0.derivedDataPath != nil })?.derivedDataPath
+            ),
             processes: filtered,
             summary: summary,
             sourceCommand: sourceCommand
@@ -197,6 +201,8 @@ enum XcodeProcessDiagnosticsParser {
 }
 
 func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessStatusOutput {
+    let defaults = try? loadHostWorkspaceDefaults()
+    let derivedDataPath = defaults?.xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath
     let pgrep = TKHostCommand(
         executable: "pgrep",
         arguments: ["-f", "xcodebuild|swift-build|SwiftBuildService|XCBBuildService|xctest"],
@@ -209,6 +215,7 @@ func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessS
         return try XcodeProcessDiagnosticsParser.parse(
             psOutput: "",
             workspace: workspace,
+            derivedDataPath: derivedDataPath,
             sourceCommand: hostSourceCommand(pgrep)
         )
     }
@@ -219,6 +226,7 @@ func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessS
         return try XcodeProcessDiagnosticsParser.parse(
             psOutput: "",
             workspace: workspace,
+            derivedDataPath: derivedDataPath,
             sourceCommand: pidResult.sourceCommand
         )
     }
@@ -231,6 +239,7 @@ func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessS
     return try XcodeProcessDiagnosticsParser.parse(
         psOutput: result.stdout,
         workspace: workspace,
+        derivedDataPath: derivedDataPath,
         sourceCommand: result.sourceCommand
     )
 }
@@ -270,6 +279,7 @@ func waitForXcodeIdle(
         ok: true,
         active: false,
         workspaceFilter: workspace,
+        derivedDataCache: makeXcodeDerivedDataCacheInfo(path: nil),
         processes: [],
         summary: XcodeProcessStatusSummary(xcodebuildCount: 0, buildServiceCount: 0, xctestCount: 0, matchingWorkspaceCount: 0),
         sourceCommand: "ps -axo pid=,comm=,etime=,args="

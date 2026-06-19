@@ -57,7 +57,7 @@ struct XcodeUse: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String = "iphonesimulator"
     @Option(help: "Simulator UDID") var simulator: String?
     @Option(help: "xcodebuild destination") var destination: String?
-    @Option(help: "DerivedData path") var derivedDataPath: String = ".triton/DerivedData"
+    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String = defaultXcodeDerivedDataPath
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -81,7 +81,13 @@ struct XcodeUse: AsyncParsableCommand {
                 xcode: xcode
             )
             let path = try saveHostWorkspaceDefaults(defaults)
-            let output = XcodeUseOutput(ok: true, action: "xcode.use", defaultsPath: path, defaults: defaults)
+            let output = XcodeUseOutput(
+                ok: true,
+                action: "xcode.use",
+                defaultsPath: path,
+                defaults: defaults,
+                derivedDataCache: makeXcodeDerivedDataCacheInfo(path: derivedDataPath)
+            )
             switch outputFormat {
             case .json:
                 print(try encodeJSON(output))
@@ -197,7 +203,7 @@ struct XcodeSettings: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
-    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false
@@ -259,7 +265,7 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
-    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false
@@ -301,7 +307,7 @@ struct XcodeTest: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
-    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(help: "Result bundle output path") var resultBundle: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
@@ -344,7 +350,7 @@ struct XcodeRun: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "Simulator UDID") var simulator: String?
-    @Option(help: "DerivedData path") var derivedDataPath: String?
+    @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false

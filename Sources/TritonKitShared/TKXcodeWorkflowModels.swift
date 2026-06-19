@@ -28,6 +28,31 @@ public struct TKXcodeWorkspaceDefaults: Codable, Equatable {
     }
 }
 
+public struct TKXcodeDerivedDataCacheInfo: Codable, Equatable {
+    public let path: String
+    public let exists: Bool
+    public let cacheState: String
+    public let incrementalExpected: Bool
+    public let cleanupPolicy: String
+    public let guidance: String
+
+    public init(
+        path: String,
+        exists: Bool,
+        cacheState: String,
+        incrementalExpected: Bool,
+        cleanupPolicy: String,
+        guidance: String
+    ) {
+        self.path = path
+        self.exists = exists
+        self.cacheState = cacheState
+        self.incrementalExpected = incrementalExpected
+        self.cleanupPolicy = cleanupPolicy
+        self.guidance = guidance
+    }
+}
+
 public enum TKXcodeContainerKind: String, Codable, Equatable {
     case workspace
     case project
@@ -1101,6 +1126,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let sdk: String?
     public let destination: String?
     public let derivedDataPath: String?
+    public let derivedDataCache: TKXcodeDerivedDataCacheInfo?
     public let appPath: String?
     public let bundleID: String?
     public let resultBundlePath: String?
@@ -1131,6 +1157,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         sdk: String?,
         destination: String?,
         derivedDataPath: String?,
+        derivedDataCache: TKXcodeDerivedDataCacheInfo? = nil,
         appPath: String? = nil,
         bundleID: String? = nil,
         resultBundlePath: String? = nil,
@@ -1160,6 +1187,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.sdk = sdk
         self.destination = destination
         self.derivedDataPath = derivedDataPath
+        self.derivedDataCache = derivedDataCache
         self.appPath = appPath
         self.bundleID = bundleID
         self.resultBundlePath = resultBundlePath

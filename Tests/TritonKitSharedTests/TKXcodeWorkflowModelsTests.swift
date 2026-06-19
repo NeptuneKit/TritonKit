@@ -190,6 +190,28 @@ struct TKXcodeWorkflowModelsTests {
         #expect(decodedSummary.xcresultNote == "Showing top 1 of 2 failures.")
     }
 
+    @Test("DerivedData cache info makes incremental build expectation explicit")
+    func derivedDataCacheInfoRoundTrip() throws {
+        let cache = TKXcodeDerivedDataCacheInfo(
+            path: ".triton/DerivedData",
+            exists: true,
+            cacheState: "warm",
+            incrementalExpected: true,
+            cleanupPolicy: "preserve-by-default",
+            guidance: "Keep .triton/DerivedData to preserve Xcode incremental build cache; cleanup should not delete it by default."
+        )
+
+        let decoded = try JSONDecoder().decode(TKXcodeDerivedDataCacheInfo.self, from: JSONEncoder().encode(cache))
+
+        #expect(decoded.path == ".triton/DerivedData")
+        #expect(decoded.exists)
+        #expect(decoded.cacheState == "warm")
+        #expect(decoded.incrementalExpected)
+        #expect(decoded.cleanupPolicy == "preserve-by-default")
+        #expect(decoded.guidance.contains("incremental build"))
+        #expect(decoded.guidance.contains("should not delete"))
+    }
+
     @Test("xcodebuild list json parser returns schemes")
     func xcodebuildListParser() throws {
         let json = """

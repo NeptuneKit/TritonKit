@@ -61,6 +61,64 @@ struct XcodeDiagnosticsTests {
         #expect(decoded.xcodeDiagnostics?.first?.nextAction.args.contains("<fresh-derived-data-path>") == true)
     }
 
+    @Test("DerivedData cache state is derived from path existence")
+    func derivedDataCacheStateUsesPathExistence() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-derived-data-cache-\(UUID().uuidString)", isDirectory: true)
+        let warmPath = root.appendingPathComponent("DerivedData", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let empty = makeXcodeDerivedDataCacheInfo(path: warmPath.path)
+        #expect(empty.path == warmPath.path)
+        #expect(empty.exists == false)
+        #expect(empty.cacheState == "empty")
+        #expect(empty.incrementalExpected == false)
+        #expect(empty.cleanupPolicy == "preserve-by-default")
+        #expect(empty.guidance.contains("cleanup should not delete"))
+
+        try FileManager.default.createDirectory(at: warmPath, withIntermediateDirectories: true)
+        let warm = makeXcodeDerivedDataCacheInfo(path: warmPath.path)
+        #expect(warm.exists)
+        #expect(warm.cacheState == "warm")
+        #expect(warm.incrementalExpected)
+    }
+
+    @Test("xcode action summary carries DerivedData cache guidance")
+    func actionSummaryCarriesDerivedDataCacheGuidance() throws {
+        let cache = TKXcodeDerivedDataCacheInfo(
+            path: ".triton/DerivedData",
+            exists: true,
+            cacheState: "warm",
+            incrementalExpected: true,
+            cleanupPolicy: "preserve-by-default",
+            guidance: "Keep .triton/DerivedData to preserve Xcode incremental build cache; cleanup should not delete it by default."
+        )
+        let summary = TKXcodeActionSummary(
+            ok: true,
+            action: "xcode.build",
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData",
+            derivedDataCache: cache,
+            durationMs: 1200,
+            sourceCommand: "xcodebuild -workspace App.xcworkspace -scheme App build",
+            exitCode: 0,
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            note: "Build finished."
+        )
+
+        let decoded = try JSONDecoder().decode(TKXcodeActionSummary.self, from: JSONEncoder().encode(summary))
+
+        #expect(decoded.derivedDataCache?.path == ".triton/DerivedData")
+        #expect(decoded.derivedDataCache?.cacheState == "warm")
+        #expect(decoded.derivedDataCache?.incrementalExpected == true)
+    }
+
     @Test("xcodebuild output diagnostics ignore generic build failures")
     func outputDiagnosticsIgnoreGenericBuildFailures() {
         let output = """
@@ -83,6 +141,8 @@ struct XcodeDiagnosticsTests {
         let status = try XcodeProcessDiagnosticsParser.parse(psOutput: output)
 
         #expect(status.active)
+        #expect(status.derivedDataCache.path == ".triton/DerivedData")
+        #expect(status.derivedDataCache.cleanupPolicy == "preserve-by-default")
         #expect(status.processes.count == 2)
         #expect(status.summary.xcodebuildCount == 1)
         #expect(status.summary.buildServiceCount == 1)
