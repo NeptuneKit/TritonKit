@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent, type CSSProperties, type KeyboardEvent, type PointerEvent, type WheelEvent } from "react";
 import {
   Activity,
   Braces,
@@ -31,6 +31,7 @@ import type { LucideIcon } from "lucide-react";
 import { HostBridgeNotice } from "./components/HostBridgeNotice";
 import { hierarchyScenes, logs, networkEvents, targets } from "./data/mockData";
 import { describeHostBridgePresentation } from "./data/hostBridgePresentation";
+import { computeParityClaim, getMaterialExplanation, resolveEvidenceSources } from "./data/hierarchyMaterialPolicy";
 import { fetchHostHierarchyResponse, fetchHostLogs, fetchHostScreenshot, fetchHostTargets, type HostInputResponse, sendHostInput } from "./data/iosSimulatorClient";
 import type {
   BridgeCommandOutput,
@@ -38,6 +39,7 @@ import type {
   DeviceTarget,
   HierarchyLayerNode,
   HierarchyScene,
+  HierarchyVisualSource,
   HostHierarchyResponse,
   LogEntry,
   NetworkEvent,
@@ -216,6 +218,7 @@ type HierarchyCaptureState = {
   capturedAt?: string;
   command?: string;
   method?: "GET" | "POST" | string;
+  evidence?: HostHierarchyResponse["captureEvidence"];
   error?: string;
 };
 
@@ -226,6 +229,12 @@ type ViewTreeNode = {
   type: string;
   name?: string;
   children?: ViewTreeNode[];
+};
+
+type DeviceHubRouteState = {
+  targetId?: string;
+  panel?: SidebarPanel;
+  nodeId?: string;
 };
 
 const canvasZoomLevels = [0.75, 0.9, 1, 1.15, 1.3, 1.5] as const;
@@ -244,6 +253,7 @@ function hierarchyCaptureStateFromResponse(response: HostHierarchyResponse, fall
     capturedAt: response.capturedAt,
     command: response.source.command,
     method: response.control?.method ?? fallbackMethod,
+    evidence: response.captureEvidence,
   };
 }
 
@@ -278,8 +288,48 @@ function fpsToRefreshIntervalMs(fps: number) {
   return Math.max(1000 / previewFpsMax, Math.round(1000 / normalizePreviewFps(fps)));
 }
 
+function readDeviceHubRoute(): DeviceHubRouteState {
+  if (typeof window === "undefined") return {};
+  const params = new URL(window.location.href).searchParams;
+  return {
+    targetId: params.get("target") ?? undefined,
+    panel: parseSidebarPanel(params.get("panel")),
+    nodeId: params.get("node") ?? undefined,
+  };
+}
+
+function parseSidebarPanel(value: string | null): SidebarPanel | undefined {
+  if (value === "devices" || value === "view-tree") {
+    return value;
+  }
+  return undefined;
+}
+
+function writeDeviceHubRoute(route: Required<Pick<DeviceHubRouteState, "targetId">> & DeviceHubRouteState) {
+  if (typeof window === "undefined") return;
+  const url = new URL(window.location.href);
+  url.searchParams.set("target", route.targetId);
+  if (route.panel && route.panel !== "devices") {
+    url.searchParams.set("panel", route.panel);
+  } else {
+    url.searchParams.delete("panel");
+  }
+  if (route.nodeId) {
+    url.searchParams.set("node", route.nodeId);
+  } else {
+    url.searchParams.delete("node");
+  }
+
+  const nextURL = `${url.pathname}${url.search}${url.hash}`;
+  const currentURL = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+  if (nextURL !== currentURL) {
+    window.history.replaceState(null, "", nextURL);
+  }
+}
+
 export function App() {
-  const [selectedId, setSelectedId] = useState(targets[0].id);
+  const initialRoute = useMemo(() => readDeviceHubRoute(), []);
+  const [selectedId, setSelectedId] = useState(initialRoute.targetId ?? targets[0].id);
   const [hostTargets, setHostTargets] = useState<DeviceTarget[]>([]);
   const [targetSearch, setTargetSearch] = useState("");
   const [bridge, setBridge] = useState<BridgeState>({ loading: true, sourceCommands: [] });
@@ -288,9 +338,11 @@ export function App() {
   const [isNetworkVisible, setIsNetworkVisible] = useState(true);
   const [isLogsVisible, setIsLogsVisible] = useState(true);
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
-  const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>("devices");
+  const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(initialRoute.panel ?? (initialRoute.nodeId ? "view-tree" : "devices"));
   const [isToolbarTargetMenuOpen, setIsToolbarTargetMenuOpen] = useState(false);
   const [canvasZoom, setCanvasZoom] = useState(1);
+  const [isHierarchySnapshotMode, setIsHierarchySnapshotMode] = useState(false);
+  const [selectedHierarchyNode, setSelectedHierarchyNode] = useState<string | null>(initialRoute.nodeId ?? null);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [lastActionById, setLastActionById] = useState<
     Record<string, { lastAction: string; actionResult: DeviceTarget["actionResult"] }>
@@ -356,6 +408,38 @@ export function App() {
     isLogsVisible ? "" : "is-logs-hidden",
     isEvidenceVisible ? "" : "is-evidence-hidden",
   ].filter(Boolean).join(" ");
+
+  useEffect(() => {
+    const handlePopState = () => {
+      const route = readDeviceHubRoute();
+      if (route.targetId) {
+        setSelectedId(route.targetId);
+      }
+      setSidebarPanel(route.panel ?? (route.nodeId ? "view-tree" : "devices"));
+      setSelectedHierarchyNode(route.nodeId ?? null);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => {
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  useEffect(() => {
+    writeDeviceHubRoute({
+      targetId: selected.id,
+      panel: sidebarPanel,
+      nodeId: selectedHierarchyNode ?? undefined,
+    });
+  }, [selected.id, selectedHierarchyNode, sidebarPanel]);
+
+  useEffect(() => {
+    if (!selectedHierarchyNode) return;
+    const scene = hierarchySceneForTarget(selected);
+    if (!scene.nodes.some((node) => node.id === selectedHierarchyNode)) {
+      setSelectedHierarchyNode(null);
+    }
+  }, [selected, selectedHierarchyNode]);
 
   const loadHostTargets = async (preferredSelectedId: string) => {
     const result = await fetchHostTargets();
@@ -484,6 +568,9 @@ export function App() {
     if (!selected.realSource || !selected.canScreenshot || !(selected.targetSelector ?? selected.udid)) {
       return;
     }
+    if (isHierarchySnapshotMode) {
+      return;
+    }
 
     let cancelled = false;
     let timer: number | undefined;
@@ -518,6 +605,7 @@ export function App() {
     selected.udid,
     selectedHasScreenshot,
     selectedPreviewFps,
+    isHierarchySnapshotMode,
   ]);
 
   const handleRefreshAll = async () => {
@@ -560,6 +648,15 @@ export function App() {
       [selected.id]: normalizePreviewFps(fps),
     }));
   };
+
+  const handleProbeMode = useCallback(() => {
+    setIsHierarchySnapshotMode(true);
+    setSidebarPanel("view-tree");
+  }, []);
+
+  const handlePointMode = useCallback(() => {
+    setIsHierarchySnapshotMode(false);
+  }, []);
 
   const handleInput = async (input: ReadonlyInputIntent): Promise<HostInputResponse | null> => {
     const activityTargetId = selected.id;
@@ -759,6 +856,8 @@ export function App() {
               onSearchChange={setTargetSearch}
               onPanelChange={setSidebarPanel}
               onSelect={setSelectedId}
+              selectedHierarchyNode={selectedHierarchyNode}
+              onSelectHierarchyNode={setSelectedHierarchyNode}
             />
           ) : null}
           <DeviceCanvas
@@ -778,8 +877,11 @@ export function App() {
             onResetZoom={handleResetZoom}
             onZoomIn={handleZoomIn}
             onPreviewFpsChange={handlePreviewFpsChange}
-            onProbeMode={() => setSidebarPanel("view-tree")}
+            onProbeMode={handleProbeMode}
+            onPointMode={handlePointMode}
             onInput={handleInput}
+            selectedHierarchyNode={selectedHierarchyNode}
+            onSelectHierarchyNode={setSelectedHierarchyNode}
           />
           <Inspector target={selectedWithScreenshot} events={selectedEvents} bridge={bridge} />
         </section>
@@ -1100,6 +1202,8 @@ function TargetNavigator({
   onSearchChange,
   onPanelChange,
   onSelect,
+  selectedHierarchyNode,
+  onSelectHierarchyNode,
 }: {
   selected: DeviceTarget;
   targets: DeviceTarget[];
@@ -1109,6 +1213,8 @@ function TargetNavigator({
   onSearchChange: (value: string) => void;
   onPanelChange: (panel: SidebarPanel) => void;
   onSelect: (id: string) => void;
+  selectedHierarchyNode: string | null;
+  onSelectHierarchyNode: (nodeId: string | null) => void;
 }) {
   return (
     <aside className="hub-sidebar" aria-label="设备">
@@ -1145,7 +1251,7 @@ function TargetNavigator({
       {activePanel === "devices" ? (
         <DeviceListPanel selected={selected} targets={visibleTargets} isSearching={isSearching} onSelect={onSelect} />
       ) : (
-        <ViewTreePanel selected={selected} targets={visibleTargets} onSelect={onSelect} />
+        <ViewTreePanel selected={selected} targets={visibleTargets} onSelect={onSelect} selectedHierarchyNode={selectedHierarchyNode} onSelectHierarchyNode={onSelectHierarchyNode} />
       )}
     </aside>
   );
@@ -1203,19 +1309,23 @@ function ViewTreePanel({
   selected,
   targets: visibleTargets,
   onSelect,
+  selectedHierarchyNode,
+  onSelectHierarchyNode,
 }: {
   selected: DeviceTarget;
   targets: DeviceTarget[];
   onSelect: (id: string) => void;
+  selectedHierarchyNode: string | null;
+  onSelectHierarchyNode: (nodeId: string | null) => void;
 }) {
   const hierarchyScene = hierarchySceneForTarget(selected);
   const treeNodes = useMemo(() => viewTreeNodesForScene(hierarchyScene), [hierarchyScene]);
   const defaultSelection = defaultViewTreeSelection(hierarchyScene);
-  const [selectedNode, setSelectedNode] = useState(defaultSelection);
+  const selectedNode = selectedHierarchyNode ?? defaultSelection;
 
   useEffect(() => {
-    setSelectedNode(defaultSelection);
-  }, [defaultSelection, selected.id]);
+    onSelectHierarchyNode(null);
+  }, [selected.id]);
 
   return (
     <section className="sidebar-panel view-tree-panel" aria-label="视图层级面板">
@@ -1243,7 +1353,7 @@ function ViewTreePanel({
       </div>
       <div className="view-tree-list" role="tree" aria-label={`${selected.appName} 视图层级`}>
         {treeNodes.map((node) => (
-          <ViewTreeRow key={node.id} node={node} depth={0} selectedNode={selectedNode} onSelect={setSelectedNode} />
+          <ViewTreeRow key={node.id} node={node} depth={0} selectedNode={selectedNode} onSelect={onSelectHierarchyNode} />
         ))}
       </div>
     </section>
@@ -1272,6 +1382,7 @@ function ViewTreeRow({
         role="treeitem"
         aria-selected={selectedNode === node.id}
         aria-expanded={hasChildren ? true : undefined}
+        data-node-id={node.id}
         onClick={() => onSelect(node.id)}
       >
         <span className="tree-disclosure">{hasChildren ? "▾" : "·"}</span>
@@ -1303,7 +1414,10 @@ function DeviceCanvas({
   onZoomIn,
   onPreviewFpsChange,
   onProbeMode,
+  onPointMode,
   onInput,
+  selectedHierarchyNode,
+  onSelectHierarchyNode,
 }: {
   target: DeviceTarget;
   screenshotError?: string;
@@ -1322,7 +1436,10 @@ function DeviceCanvas({
   onZoomIn: () => void;
   onPreviewFpsChange: (fps: number) => void;
   onProbeMode: () => void;
+  onPointMode: () => void;
   onInput: (input: ReadonlyInputIntent) => Promise<HostInputResponse | null>;
+  selectedHierarchyNode: string | null;
+  onSelectHierarchyNode: (nodeId: string | null) => void;
 }) {
   const screenRef = useRef<HTMLDivElement | null>(null);
   const keyboardRelayRef = useRef<HTMLInputElement | null>(null);
@@ -1341,6 +1458,10 @@ function DeviceCanvas({
   const fallbackHierarchyScene = hierarchySceneForTarget(target);
   const [remoteHierarchyScene, setRemoteHierarchyScene] = useState<HierarchyScene | null>(null);
   const [hierarchyCapture, setHierarchyCapture] = useState<HierarchyCaptureState>({ status: "idle" });
+  const hierarchyRequestTarget = useMemo(
+    () => target,
+    [target.id, target.kind, target.platform, target.scope, target.screenshotSource, target.targetSelector, target.udid]
+  );
   const hierarchyScene = remoteHierarchyScene?.platform === target.platform ? remoteHierarchyScene : fallbackHierarchyScene;
   const orientation = target.frameOrientation ?? "landscape";
   const aspectRatio =
@@ -1371,6 +1492,7 @@ function DeviceCanvas({
       target.screenshotPixelHeight
   );
   const isWaitingForRealScreenshot = Boolean(target.realSource && target.canScreenshot && !target.screenshotDataUrl);
+  const pendingScreenshotState = screenshotPendingState(target, screenshotError);
 
   useEffect(() => {
     return () => {
@@ -1389,9 +1511,10 @@ function DeviceCanvas({
     setKeyboardRelayText("");
     keyboardRelayValue.current = "";
     setActiveTool("point");
+    onPointMode();
     setRemoteHierarchyScene(null);
     setHierarchyCapture({ status: "idle" });
-  }, [target.id]);
+  }, [onPointMode, target.id]);
 
   const captureHierarchy = useCallback(async (method: "GET" | "POST" = "GET") => {
     setHierarchyCapture((current) => ({
@@ -1401,7 +1524,7 @@ function DeviceCanvas({
       error: undefined,
     }));
     try {
-      const response = await fetchHostHierarchyResponse(target, { method });
+      const response = await fetchHostHierarchyResponse(hierarchyRequestTarget, { method });
       setRemoteHierarchyScene(response.scene);
       setHierarchyCapture(hierarchyCaptureStateFromResponse(response, method));
     } catch (error) {
@@ -1412,7 +1535,7 @@ function DeviceCanvas({
         error: error instanceof Error ? error.message : String(error),
       });
     }
-  }, [target]);
+  }, [hierarchyRequestTarget]);
 
   useEffect(() => {
     if (activeTool !== "probe") return;
@@ -1824,7 +1947,7 @@ function DeviceCanvas({
 
   return (
     <section className={`hub-canvas tool-${activeTool}`} aria-label="设备画布">
-      {target.screenshotDataUrl ? (
+      {target.screenshotDataUrl && activeTool !== "probe" ? (
         <div className={`live-preview-control ${isPreviewFpsOpen ? "is-open" : ""}`} ref={previewControlRef}>
           <button
             className={`live-preview-badge ${livePreview?.status === "error" ? "is-error" : ""}`}
@@ -1886,6 +2009,8 @@ function DeviceCanvas({
               target={target}
               captureState={hierarchyCapture}
               onCapture={() => captureHierarchy("POST")}
+              selectedNodeId={selectedHierarchyNode}
+              onSelectNode={onSelectHierarchyNode}
             />
           </div>
         ) : (
@@ -1911,10 +2036,11 @@ function DeviceCanvas({
               {target.screenshotDataUrl ? (
                 <img className="real-screenshot" src={target.screenshotDataUrl} alt={`${target.name} 截图`} />
               ) : isWaitingForRealScreenshot ? (
-                <div className="real-screenshot-pending" role="status" aria-live="polite">
-                  <span />
-                  <strong>正在获取实时画面</strong>
-                  <em>{target.transport}</em>
+                <div className={`real-screenshot-pending ${pendingScreenshotState.kind === "error" ? "is-error" : ""}`} role="status" aria-live="polite">
+                  {pendingScreenshotState.kind === "error" ? <Info size={28} /> : <span />}
+                  <strong>{pendingScreenshotState.title}</strong>
+                  <em>{pendingScreenshotState.detail}</em>
+                  {pendingScreenshotState.command ? <code>{pendingScreenshotState.command}</code> : null}
                 </div>
               ) : (
                 <>
@@ -1974,6 +2100,8 @@ function DeviceCanvas({
           setActiveTool(tool);
           if (tool === "probe") {
             onProbeMode();
+          } else {
+            onPointMode();
           }
         }}
         target={target}
@@ -1995,6 +2123,33 @@ function DeviceCanvas({
   );
 }
 
+function screenshotPendingState(target: DeviceTarget, screenshotError?: string) {
+  const isIOSRuntimeMirror = target.platform === "ios" && target.scope === "real" && target.screenshotSource === "runtime";
+  if (screenshotError && isIOSRuntimeMirror) {
+    const serverUnavailable = screenshotError.includes("server_unavailable") || screenshotError.includes("app_runtime_unavailable");
+    return {
+      kind: "error" as const,
+      title: serverUnavailable ? "App runtime 未连接" : "实时画面不可用",
+      detail: serverUnavailable
+        ? "真机实时画面依赖 Debug App 内嵌 TritonKit runtime。"
+        : conciseBridgeError(screenshotError),
+      command: serverUnavailable ? "triton serve --host 127.0.0.1 --port 19421" : undefined,
+    };
+  }
+
+  return {
+    kind: "loading" as const,
+    title: "正在获取实时画面",
+    detail: target.transport,
+    command: undefined,
+  };
+}
+
+function conciseBridgeError(error: string) {
+  const firstLine = error.split("\n").map((line) => line.trim()).find(Boolean) ?? error;
+  return firstLine.length > 96 ? `${firstLine.slice(0, 93)}...` : firstLine;
+}
+
 function ScreenMini({ label, value }: { label: string; value: string }) {
   return (
     <div className="screen-mini">
@@ -2006,6 +2161,51 @@ function ScreenMini({ label, value }: { label: string; value: string }) {
 
 const HIERARCHY_FIXED_TILT_X = -18;
 const HIERARCHY_INITIAL_YAW = 24;
+const HIERARCHY_INITIAL_ZOOM = 1;
+const HIERARCHY_MIN_ZOOM = 0.45;
+const HIERARCHY_MAX_ZOOM = 2.4;
+
+/**
+ * 2D hit-test: find which hierarchy node was clicked by converting screen coordinates
+ * back to scene space and checking node frames. Returns the deepest (highest depth) node
+ * whose frame contains the click point, or null if no node was hit.
+ */
+function hitTestHierarchyNode(
+  event: PointerEvent,
+  scene: HierarchyScene,
+  mountEl: HTMLDivElement | null,
+): HierarchyLayerNode | null {
+  if (!mountEl) return null;
+  const rect = mountEl.getBoundingClientRect();
+  const cx = event.clientX - rect.left;
+  const cy = event.clientY - rect.top;
+  const w = rect.width || 1;
+  const h = rect.height || 1;
+
+  const scale = Math.min(0.64, 280 / scene.viewport.width, 560 / scene.viewport.height);
+  const tiltX = (HIERARCHY_FIXED_TILT_X * Math.PI) / 180;
+  const zoom = 1; // use nominal zoom for hit-test
+
+  // Approximate inverse: undo viewport normalization, then undo scale
+  // The 3D scene centers nodes around (0,0) with (node.frame.x + w/2 - viewport.w/2) * scale
+  // For hit-testing we approximate by mapping screen % back to viewport coordinates
+  let best: HierarchyLayerNode | null = null;
+  for (const node of scene.nodes) {
+    if (!node.visible || node.depth === 0) continue;
+    const nx = (node.frame.x / scene.viewport.width) * 100;
+    const ny = (node.frame.y / scene.viewport.height) * 100;
+    const nw = (node.frame.width / scene.viewport.width) * 100;
+    const nh = (node.frame.height / scene.viewport.height) * 100;
+    const px = (cx / w) * 100;
+    const py = (cy / h) * 100;
+    if (px >= nx && px <= nx + nw && py >= ny && py <= ny + nh) {
+      if (!best || node.depth > best.depth) {
+        best = node;
+      }
+    }
+  }
+  return best;
+}
 
 function clampCanvasSize(value: number, min: number, max: number) {
   return Math.max(min, Math.min(max, Math.round(value)));
@@ -2053,33 +2253,67 @@ function drawRoundedRect(
   context.closePath();
 }
 
-function clampNumber(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, value));
-}
-
 type HierarchySurfaceSource = {
-  scene: HierarchyScene;
-  image: HTMLImageElement | null;
+  sliceImages?: Map<string, HTMLImageElement>;
 };
+
+type HierarchyRenderModel =
+  | "main-snapshot-with-structure"
+  | "structure-only-fallback"
+  | "selected-slice-evidence";
 
 function isNearFullscreenNode(node: HierarchyLayerNode, scene: HierarchyScene) {
   return node.frame.width >= scene.viewport.width * 0.96 && node.frame.height >= scene.viewport.height * 0.9;
 }
 
-function shouldUseHierarchySurfaceSlice(node: HierarchyLayerNode, scene: HierarchyScene, hasSurfaceImage: boolean) {
-  if (node.slice?.available && node.slice.dataUrl) return true;
-  if (!hasSurfaceImage) return false;
-  if (node.renderHints?.preferredMode === "wireframe") return false;
-  if (node.depth <= 1) return false;
-  if (isNearFullscreenNode(node, scene) && node.depth <= 3) return false;
-  return node.frame.width >= 4 && node.frame.height >= 4;
+function selectHierarchyEvidenceNode(scene: HierarchyScene) {
+  const nodesWithSlice = scene.nodes.filter((node) =>
+    node.visible &&
+    node.depth > 0 &&
+    resolveEvidenceSources(node).some((source) => "dataUrl" in source && Boolean(source.dataUrl))
+  );
+  return (
+    nodesWithSlice.find((node) => node.interactive && !isNearFullscreenNode(node, scene)) ??
+    nodesWithSlice.find((node) => !isNearFullscreenNode(node, scene)) ??
+    nodesWithSlice[0] ??
+    null
+  );
 }
 
-function isHierarchyStructuralShell(node: HierarchyLayerNode, scene: HierarchyScene, hasSurfaceImage: boolean) {
-  if (shouldUseHierarchySurfaceSlice(node, scene, hasSurfaceImage)) return false;
-  const sliceKind = hierarchySliceKind(node);
-  if (node.renderHints?.preferredMode === "wireframe") return true;
-  return node.depth <= 2 || sliceKind === "view";
+function firstHierarchyVisualSourceDataUrl(source: HierarchyVisualSource | undefined) {
+  return source && "dataUrl" in source ? source.dataUrl : undefined;
+}
+
+function selectedHierarchyEvidenceSource(node: HierarchyLayerNode | null) {
+  if (!node) return undefined;
+  return resolveEvidenceSources(node).find((source) => Boolean(firstHierarchyVisualSourceDataUrl(source)));
+}
+
+function hierarchyNumber(value: number | undefined) {
+  return typeof value === "number" && Number.isFinite(value) ? Number(value.toFixed(2)).toString() : "—";
+}
+
+function hierarchyRectSummary(rect: { x: number; y: number; width: number; height: number } | undefined) {
+  if (!rect) return "—";
+  return `${hierarchyNumber(rect.x)}, ${hierarchyNumber(rect.y)} · ${hierarchyNumber(rect.width)}×${hierarchyNumber(rect.height)}`;
+}
+
+function drawHierarchyMainSurface(scene: HierarchyScene, image: HTMLImageElement) {
+  const canvas = document.createElement("canvas");
+  const width = clampCanvasSize(scene.viewport.width * 2, 260, 1200);
+  const height = clampCanvasSize(scene.viewport.height * 2, 480, 1800);
+  canvas.width = width;
+  canvas.height = height;
+
+  const context = canvas.getContext("2d");
+  if (!context) return canvas;
+
+  context.clearRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+  context.strokeStyle = "rgba(37, 99, 235, 0.38)";
+  context.lineWidth = 2;
+  context.strokeRect(1, 1, Math.max(1, width - 2), Math.max(1, height - 2));
+  return canvas;
 }
 
 function drawHierarchyNodeSlice(node: HierarchyLayerNode, surface?: HierarchySurfaceSource) {
@@ -2104,14 +2338,9 @@ function drawHierarchyNodeSlice(node: HierarchyLayerNode, surface?: HierarchySur
 
   context.clearRect(0, 0, w, h);
 
-  if (surface?.image && shouldUseHierarchySurfaceSlice(node, surface.scene, true)) {
-    const imageWidth = surface.image.naturalWidth || surface.image.width;
-    const imageHeight = surface.image.naturalHeight || surface.image.height;
-    const sourceX = clampNumber(node.frame.x * (imageWidth / surface.scene.viewport.width), 0, imageWidth);
-    const sourceY = clampNumber(node.frame.y * (imageHeight / surface.scene.viewport.height), 0, imageHeight);
-    const sourceWidth = clampNumber(node.frame.width * (imageWidth / surface.scene.viewport.width), 1, imageWidth - sourceX);
-    const sourceHeight = clampNumber(node.frame.height * (imageHeight / surface.scene.viewport.height), 1, imageHeight - sourceY);
-    context.drawImage(surface.image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, w, h);
+  const exactSliceImage = surface?.sliceImages?.get(node.id);
+  if (exactSliceImage) {
+    context.drawImage(exactSliceImage, 0, 0, w, h);
     context.strokeStyle = node.interactive ? "rgba(37, 99, 235, 0.72)" : "rgba(100, 116, 139, 0.32)";
     context.lineWidth = node.interactive ? 1.4 : 0.8;
     drawRoundedRect(context, 0.5, 0.5, Math.max(1, w - 1), Math.max(1, h - 1), Math.min(12, h / 2));
@@ -2235,31 +2464,84 @@ function drawHierarchyNodeSlice(node: HierarchyLayerNode, surface?: HierarchySur
   return canvas;
 }
 
+function clampHierarchyZoom(value: number) {
+  return Math.max(HIERARCHY_MIN_ZOOM, Math.min(HIERARCHY_MAX_ZOOM, value));
+}
+
+function hierarchyPointerDistance(pointers: Map<number, { x: number; y: number }>) {
+  const [first, second] = Array.from(pointers.values());
+  if (!first || !second) return 0;
+  return Math.hypot(second.x - first.x, second.y - first.y);
+}
+
 function HierarchySceneViewer({
   scene,
   target,
   captureState,
   onCapture,
+  selectedNodeId,
+  onSelectNode,
 }: {
   scene: HierarchyScene;
   target: DeviceTarget;
   captureState: HierarchyCaptureState;
   onCapture: () => void;
+  selectedNodeId: string | null;
+  onSelectNode: (nodeId: string | null) => void;
 }) {
   const mountRef = useRef<HTMLDivElement | null>(null);
   const dragStart = useRef<{ x: number; yaw: number } | null>(null);
+  const activePointers = useRef(new Map<number, { x: number; y: number }>());
+  const pinchStart = useRef<{ distance: number; zoom: number } | null>(null);
+  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
   const threeRef = useRef<{
     renderer: import("three").WebGLRenderer;
     scene: import("three").Scene;
     camera: import("three").PerspectiveCamera;
     group: import("three").Group;
+    THREE: typeof import("three");
   } | null>(null);
+  const nodeObjectsRef = useRef<Map<string, { mesh: import("three").Mesh; edges: import("three").LineSegments }>>(new Map());
   const [yaw, setYaw] = useState(HIERARCHY_INITIAL_YAW);
+  const [zoom, setZoom] = useState(HIERARCHY_INITIAL_ZOOM);
   const [hasWebGLScene, setHasWebGLScene] = useState(false);
   const [surfaceImage, setSurfaceImage] = useState<HTMLImageElement | null>(null);
+  const [sliceImages, setSliceImages] = useState<Map<string, HTMLImageElement>>(new Map());
+  const autoSelectedSliceNode = useMemo(() => selectHierarchyEvidenceNode(scene), [scene]);
+  const selectedSliceNode = useMemo(() => {
+    if (selectedNodeId) {
+      const found = scene.nodes.find((n) => n.id === selectedNodeId && n.visible && n.depth > 0);
+      if (found) return found;
+    }
+    return autoSelectedSliceNode;
+  }, [selectedNodeId, scene, autoSelectedSliceNode]);
+  const selectedVisualSource = useMemo(() => selectedHierarchyEvidenceSource(selectedSliceNode), [selectedSliceNode]);
+  const selectedMaterialExplanation = useMemo(
+    () => selectedSliceNode ? getMaterialExplanation(selectedSliceNode) : null,
+    [selectedSliceNode]
+  );
+  const parityClaim = useMemo(() => computeParityClaim(scene), [scene]);
+  const selectedVisualSourceDataUrl = firstHierarchyVisualSourceDataUrl(selectedVisualSource);
+  const sliceImageSources = useMemo(
+    () => selectedSliceNode && selectedVisualSourceDataUrl ? [[selectedSliceNode.id, selectedVisualSourceDataUrl] as const] : [],
+    [selectedSliceNode, selectedVisualSourceDataUrl]
+  );
   const layerCount = new Set(scene.nodes.map((node) => node.depth)).size;
   const interactiveCount = scene.nodes.filter((node) => node.interactive).length;
-  const hasSurfaceImage = Boolean(surfaceImage);
+  const hasMainSnapshotSurface = Boolean(target.screenshotDataUrl);
+  const hasSelectedSliceEvidence = Boolean(selectedVisualSourceDataUrl);
+  const renderModel: HierarchyRenderModel = hasMainSnapshotSurface
+    ? "main-snapshot-with-structure"
+    : hasSelectedSliceEvidence
+      ? "selected-slice-evidence"
+      : "structure-only-fallback";
+  const captureEvidenceMode = captureState.evidence?.source.nodeSlice === "real"
+    ? "real-node-slices-available"
+    : hasMainSnapshotSurface
+      ? "main-snapshot-only"
+      : captureState.evidence?.source.nodeSlice === "styled"
+        ? "styled-fallback"
+        : "structure-only";
 
   useEffect(() => {
     if (!target.screenshotDataUrl) {
@@ -2285,9 +2567,47 @@ function HierarchySceneViewer({
   }, [target.screenshotDataUrl]);
 
   useEffect(() => {
+    if (sliceImageSources.length === 0 || typeof Image === "undefined") {
+      setSliceImages(new Map());
+      return;
+    }
+
+    let cancelled = false;
+    const loadedImages = new Map<string, HTMLImageElement>();
+    setSliceImages(new Map());
+    let pending = sliceImageSources.length;
+    const finishOne = () => {
+      pending -= 1;
+      if (!cancelled && pending === 0) {
+        setSliceImages(new Map(loadedImages));
+      }
+    };
+
+    for (const [nodeId, dataUrl] of sliceImageSources) {
+      const image = new Image();
+      image.onload = () => {
+        if (cancelled) return;
+        loadedImages.set(nodeId, image);
+        finishOne();
+      };
+      image.onerror = () => {
+        if (cancelled) return;
+        loadedImages.delete(nodeId);
+        finishOne();
+      };
+      image.src = dataUrl;
+    }
+
+    return () => {
+      cancelled = true;
+    };
+  }, [sliceImageSources]);
+
+  useEffect(() => {
     setYaw(HIERARCHY_INITIAL_YAW);
+    setZoom(HIERARCHY_INITIAL_ZOOM);
     setHasWebGLScene(false);
-  }, [scene.platform]);
+  }, [scene.platform, scene.rootId]);
 
   useEffect(() => {
     let disposed = false;
@@ -2312,17 +2632,36 @@ function HierarchySceneViewer({
         const group = new THREE.Group();
         const scale = Math.min(0.64, 280 / scene.viewport.width, 560 / scene.viewport.height);
 
+        if (surfaceImage) {
+          const mainTexture = new THREE.CanvasTexture(drawHierarchyMainSurface(scene, surfaceImage));
+          mainTexture.colorSpace = THREE.SRGBColorSpace;
+          mainTexture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
+          const mainGeometry = new THREE.PlaneGeometry(scene.viewport.width * scale, scene.viewport.height * scale);
+          const mainMaterial = new THREE.MeshBasicMaterial({
+            map: mainTexture,
+            transparent: true,
+            opacity: 0.84,
+            side: THREE.DoubleSide,
+            depthTest: false,
+            depthWrite: false,
+          });
+          const mainSurface = new THREE.Mesh(mainGeometry, mainMaterial);
+          mainSurface.position.set(0, 0, 0);
+          mainSurface.renderOrder = 500;
+          group.add(mainSurface);
+        }
+
+        nodeObjectsRef.current.clear();
         for (const node of scene.nodes) {
           if (!node.visible) continue;
           if (node.depth === 0) continue;
           const geometry = new THREE.PlaneGeometry(Math.max(8, node.frame.width * scale), Math.max(8, node.frame.height * scale));
-          const isStructuralShell = isHierarchyStructuralShell(node, scene, hasSurfaceImage);
-          const layerOpacity = isStructuralShell ? 0.018 : node.interactive ? 0.065 : 0.035;
           const material = new THREE.MeshBasicMaterial({
             color: node.color,
             transparent: true,
-            opacity: layerOpacity,
+            opacity: node.interactive ? 0.12 : 0.06,
             side: THREE.DoubleSide,
+            depthTest: false,
             depthWrite: false,
           });
           const mesh = new THREE.Mesh(geometry, material);
@@ -2335,40 +2674,30 @@ function HierarchySceneViewer({
           mesh.renderOrder = sliceRenderOrder;
           group.add(mesh);
 
-          if (!isStructuralShell) {
-            const sliceTexture = new THREE.CanvasTexture(drawHierarchyNodeSlice(node, { scene, image: surfaceImage }));
-            sliceTexture.colorSpace = THREE.SRGBColorSpace;
-            sliceTexture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-            const styledMaterial = new THREE.MeshBasicMaterial({
-              map: sliceTexture,
-              transparent: true,
-              opacity: node.interactive ? 0.88 : 0.68,
-              side: THREE.DoubleSide,
-              depthWrite: false,
-            });
-            const styledSlice = new THREE.Mesh(geometry, styledMaterial);
-            styledSlice.position.copy(mesh.position);
-            styledSlice.position.z += 0.7;
-            styledSlice.renderOrder = sliceRenderOrder + 1;
-            group.add(styledSlice);
-          }
-
           const edges = new THREE.LineSegments(
             new THREE.EdgesGeometry(geometry),
-            new THREE.LineBasicMaterial({ color: node.interactive ? 0x2563eb : 0x94a3b8, transparent: true, opacity: isStructuralShell ? 0.16 : node.interactive ? 0.48 : 0.24 })
+            new THREE.LineBasicMaterial({
+              color: node.interactive ? 0x2563eb : 0x94a3b8,
+              transparent: true,
+              opacity: node.interactive ? 0.52 : 0.32,
+              depthTest: false,
+              depthWrite: false,
+            })
           );
           edges.position.copy(mesh.position);
           edges.position.z += 1.1;
           edges.renderOrder = sliceRenderOrder + 2;
           group.add(edges);
+
+          nodeObjectsRef.current.set(node.id, { mesh, edges });
         }
 
         group.position.set(24, -4, -Math.max(140, layerCount * 22));
         threeScene.add(group);
         mountRef.current.replaceChildren(renderer.domElement);
-        threeRef.current = { renderer, scene: threeScene, camera, group };
+        threeRef.current = { renderer, scene: threeScene, camera, group, THREE };
         setHasWebGLScene(true);
-        renderHierarchyScene(yaw);
+        renderHierarchyScene(yaw, zoom);
       } catch {
         setHasWebGLScene(false);
         threeRef.current = null;
@@ -2382,23 +2711,99 @@ function HierarchySceneViewer({
       setHasWebGLScene(false);
       mount.replaceChildren();
     };
-  }, [scene, surfaceImage, hasSurfaceImage]);
+  }, [scene, surfaceImage, sliceImages]);
 
   useEffect(() => {
-    renderHierarchyScene(yaw);
-  }, [yaw]);
+    renderHierarchyScene(yaw, zoom);
+  }, [yaw, zoom]);
 
-  const renderHierarchyScene = (nextYaw: number) => {
+  // Update node materials when selection changes (no scene rebuild)
+  useEffect(() => {
+    const objects = nodeObjectsRef.current;
+    if (objects.size === 0) return;
+    const three = threeRef.current;
+    if (!three) return;
+    const { THREE } = three;
+
+    // Remove old slice meshes
+    const toRemove: import("three").Object3D[] = [];
+    three.group.children.forEach((child) => {
+      if ((child as any).userData?.isSliceMesh) toRemove.push(child);
+    });
+    toRemove.forEach((obj) => {
+      three.group.remove(obj);
+      if ((obj as any).geometry) (obj as any).geometry.dispose();
+      if ((obj as any).material) {
+        const mat = (obj as any).material;
+        if (mat.map) mat.map.dispose();
+        mat.dispose();
+      }
+    });
+
+    const sceneNodeMap = new Map(scene.nodes.map((n) => [n.id, n]));
+
+    for (const [nodeId, { mesh, edges }] of objects) {
+      const node = sceneNodeMap.get(nodeId);
+      if (!node) continue;
+      const isUserSelected = selectedNodeId === nodeId;
+      const isAutoSelected = selectedSliceNode?.id === nodeId;
+
+      // Update mesh material
+      const mat = mesh.material as import("three").MeshBasicMaterial;
+      mat.color.set(isUserSelected ? 0x2563eb : node.color);
+      mat.opacity = isUserSelected ? 0.28 : node.interactive ? 0.12 : 0.06;
+
+      // Update edge material
+      const edgeMat = edges.material as import("three").LineBasicMaterial;
+      edgeMat.color.set(isUserSelected ? 0x1d4ed8 : node.interactive ? 0x2563eb : 0x94a3b8);
+      edgeMat.opacity = isUserSelected ? 0.88 : isAutoSelected ? 0.72 : node.interactive ? 0.52 : 0.32;
+
+      // Add slice mesh for selected node
+      if (isAutoSelected || isUserSelected) {
+        const sliceCanvas = drawHierarchyNodeSlice(node, { sliceImages });
+        const sliceTexture = new THREE.CanvasTexture(sliceCanvas);
+        sliceTexture.colorSpace = THREE.SRGBColorSpace;
+        const styledMaterial = new THREE.MeshBasicMaterial({
+          map: sliceTexture,
+          transparent: true,
+          opacity: 0.92,
+          side: THREE.DoubleSide,
+          depthTest: false,
+          depthWrite: false,
+        });
+        const styledSlice = new THREE.Mesh(mesh.geometry, styledMaterial);
+        styledSlice.position.copy(mesh.position);
+        styledSlice.position.z += 1.4;
+        styledSlice.renderOrder = 1200 + node.depth * 8;
+        (styledSlice as any).userData = { isSliceMesh: true };
+        three.group.add(styledSlice);
+      }
+    }
+
+    renderHierarchyScene(yaw, zoom);
+  }, [selectedNodeId, selectedSliceNode, scene, sliceImages, yaw, zoom]);
+
+  const renderHierarchyScene = (nextYaw: number, nextZoom: number) => {
     const three = threeRef.current;
     if (!three) return;
     three.group.rotation.x = (HIERARCHY_FIXED_TILT_X * Math.PI) / 180;
     three.group.rotation.y = (nextYaw * Math.PI) / 180;
+    three.group.scale.setScalar(nextZoom);
     three.renderer.render(three.scene, three.camera);
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     event.stopPropagation();
-    dragStart.current = { x: event.clientX, yaw };
+    activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    pointerDownPos.current = { x: event.clientX, y: event.clientY };
+    if (activePointers.current.size >= 2) {
+      const distance = hierarchyPointerDistance(activePointers.current);
+      pinchStart.current = distance > 0 ? { distance, zoom } : null;
+      dragStart.current = null;
+    } else {
+      pinchStart.current = null;
+      dragStart.current = { x: event.clientX, yaw };
+    }
     try {
       event.currentTarget.setPointerCapture(event.pointerId);
     } catch {
@@ -2408,6 +2813,16 @@ function HierarchySceneViewer({
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
     event.stopPropagation();
+    if (activePointers.current.has(event.pointerId)) {
+      activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+    }
+    if (activePointers.current.size >= 2 && pinchStart.current) {
+      const distance = hierarchyPointerDistance(activePointers.current);
+      if (distance > 0) {
+        setZoom(clampHierarchyZoom(pinchStart.current.zoom * (distance / pinchStart.current.distance)));
+      }
+      return;
+    }
     const start = dragStart.current;
     if (!start) return;
     setYaw(start.yaw + (event.clientX - start.x) * 0.42);
@@ -2415,18 +2830,48 @@ function HierarchySceneViewer({
 
   const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
     event.stopPropagation();
-    dragStart.current = null;
+    activePointers.current.delete(event.pointerId);
+    pinchStart.current = null;
+
+    // Click detection: if pointer didn't move much, treat as node selection
+    const downPos = pointerDownPos.current;
+    pointerDownPos.current = null;
+    if (downPos && activePointers.current.size === 0) {
+      const dx = event.clientX - downPos.x;
+      const dy = event.clientY - downPos.y;
+      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) {
+        const hitNode = hitTestHierarchyNode(event, scene, mountRef.current);
+        onSelectNode(hitNode?.id ?? null);
+      }
+    }
+
+    if (activePointers.current.size === 1) {
+      const [remaining] = activePointers.current.values();
+      dragStart.current = { x: remaining.x, yaw };
+    } else {
+      dragStart.current = null;
+    }
+  };
+
+  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
+    if (!event.ctrlKey && !event.metaKey) return;
+    event.preventDefault();
+    event.stopPropagation();
+    const delta = event.deltaY < 0 ? 0.08 : -0.08;
+    setZoom((current) => clampHierarchyZoom(current + delta));
   };
 
   return (
     <div
       className={`hierarchy-scene-viewer ${hasWebGLScene ? "has-webgl" : "is-dom-fallback"}`}
+      data-render-model={renderModel}
       role="img"
       aria-label={`${platformLabel[target.platform]} ${target.appName} 3D 视图层级`}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerUp}
+      onWheel={handleWheel}
     >
       <div className="hierarchy-scene-toolbar">
         <span>{platformLabel[target.platform]}</span>
@@ -2447,6 +2892,48 @@ function HierarchySceneViewer({
           {captureState.status === "loading" ? "采集中" : "重新采集"}
         </button>
       </div>
+      {selectedSliceNode ? (
+        <section className="hierarchy-node-inspector" aria-label="选中节点 Inspector">
+          <div>
+            <strong>Node</strong>
+            <span>{selectedSliceNode.className ?? selectedSliceNode.type}</span>
+          </div>
+          <dl>
+            <div>
+              <dt>frame</dt>
+              <dd>{hierarchyRectSummary(selectedSliceNode.frame)}</dd>
+            </div>
+            <div>
+              <dt>depth</dt>
+              <dd>{selectedSliceNode.depth}</dd>
+            </div>
+            <div>
+              <dt>layer.zPosition</dt>
+              <dd>{hierarchyNumber(selectedSliceNode.layer?.zPosition)}</dd>
+            </div>
+            <div>
+              <dt>layer.opacity</dt>
+              <dd>{hierarchyNumber(selectedSliceNode.layer?.opacity)}</dd>
+            </div>
+            <div>
+              <dt>layer.masksToBounds</dt>
+              <dd>{selectedSliceNode.layer?.masksToBounds === undefined ? "—" : String(selectedSliceNode.layer.masksToBounds)}</dd>
+            </div>
+            <div>
+              <dt>layer.cornerRadius</dt>
+              <dd>{hierarchyNumber(selectedSliceNode.layer?.cornerRadius)}</dd>
+            </div>
+            <div>
+              <dt>visualSources</dt>
+              <dd>{selectedMaterialExplanation?.evidenceSources.join(" / ") || "styledFallback"}</dd>
+            </div>
+            <div>
+              <dt>defaultMaterial</dt>
+              <dd>{selectedMaterialExplanation?.defaultMaterial ?? "none"}</dd>
+            </div>
+          </dl>
+        </section>
+      ) : null}
       <div className="hierarchy-scene-mount" ref={mountRef} />
       <div
         className="hierarchy-layer-stack"
@@ -2454,45 +2941,119 @@ function HierarchySceneViewer({
         style={{
           "--hierarchy-tilt-x": `${HIERARCHY_FIXED_TILT_X}deg`,
           "--hierarchy-rotate-y": `${yaw}deg`,
+          "--hierarchy-zoom": zoom,
         } as CSSProperties}
       >
-        {scene.nodes.filter((node) => node.visible).map((node) => (
+        {hasMainSnapshotSurface ? (
           <span
-            key={node.id}
-            className={node.interactive ? "is-interactive" : ""}
-            data-node-id={node.id}
-            data-platform={scene.platform}
+            className="is-main-snapshot"
+            data-render-role="main-snapshot-surface"
+            data-render-mode="main-snapshot"
+            aria-hidden="true"
             style={{
-              "--node-x": `${(node.frame.x / scene.viewport.width) * 100}%`,
-              "--node-y": `${(node.frame.y / scene.viewport.height) * 100}%`,
-              "--node-width": `${(node.frame.width / scene.viewport.width) * 100}%`,
-              "--node-height": `${(node.frame.height / scene.viewport.height) * 100}%`,
-              "--node-depth": node.depth,
-              "--node-color": node.color,
+              "--node-x": "0%",
+              "--node-y": "0%",
+              "--node-width": "100%",
+              "--node-height": "100%",
+              "--node-depth": 0,
+              "--node-color": "#94a3b8",
+            } as CSSProperties}
+          />
+        ) : null}
+        {scene.nodes.filter((node) => node.visible).map((node) => {
+          return (
+            <span
+              key={node.id}
+              className={`${node.interactive ? "is-interactive" : ""} ${selectedNodeId === node.id ? "is-selected" : ""}`}
+              data-node-id={node.id}
+              data-platform={scene.platform}
+              data-render-mode="structure"
+              onClick={(e) => {
+                e.stopPropagation();
+                onSelectNode(selectedNodeId === node.id ? null : node.id);
+              }}
+              style={{
+                "--node-x": `${(node.frame.x / scene.viewport.width) * 100}%`,
+                "--node-y": `${(node.frame.y / scene.viewport.height) * 100}%`,
+                "--node-width": `${(node.frame.width / scene.viewport.width) * 100}%`,
+                "--node-height": `${(node.frame.height / scene.viewport.height) * 100}%`,
+                "--node-depth": node.depth,
+                "--node-color": node.color,
+              } as CSSProperties}
+            >
+              {node.type}
+              <small>{node.name}</small>
+            </span>
+          );
+        })}
+        {selectedSliceNode ? (
+          <span
+            className="is-selected-slice"
+            data-node-id={selectedSliceNode.id}
+            data-platform={scene.platform}
+            data-render-mode="selected-slice"
+            data-texture-source={selectedVisualSource?.kind ?? "unknown"}
+            style={{
+              "--node-x": `${(selectedSliceNode.frame.x / scene.viewport.width) * 100}%`,
+              "--node-y": `${(selectedSliceNode.frame.y / scene.viewport.height) * 100}%`,
+              "--node-width": `${(selectedSliceNode.frame.width / scene.viewport.width) * 100}%`,
+              "--node-height": `${(selectedSliceNode.frame.height / scene.viewport.height) * 100}%`,
+              "--node-depth": selectedSliceNode.depth + 0.12,
+              "--node-color": selectedSliceNode.color,
             } as CSSProperties}
           >
-            {node.type}
-            <small>{node.name}</small>
+            {selectedSliceNode.type}
+            <small>{selectedSliceNode.name}</small>
           </span>
-        ))}
+        ) : null}
       </div>
       <output className="hierarchy-rotation-state" aria-label="层级旋转状态">
-        水平旋转 {Math.round(yaw)}°
+        水平旋转 {Math.round(yaw)}° · 缩放 {Math.round(zoom * 100)}%
       </output>
-      <output className={`hierarchy-capture-state is-${captureState.status}`} aria-label="层级采集状态">
-        {hierarchyCaptureStatusText(captureState, hasSurfaceImage)}
+      <output
+        className="hierarchy-parity-state"
+        aria-label="Lookin parity 状态"
+        data-parity-level={parityClaim.level}
+        data-lookin-parity={parityClaim.canClaimLookinParity ? "available" : "unavailable"}
+        title={parityClaim.reasons.join("；")}
+      >
+        Snapshot Evidence Mode · Lookin parity {parityClaim.canClaimLookinParity ? "available" : "unavailable"}
+      </output>
+      {selectedMaterialExplanation ? (
+        <output
+          className="hierarchy-material-state"
+          aria-label="当前节点视觉来源"
+          data-default-material={selectedMaterialExplanation.defaultMaterial ?? "none"}
+          data-evidence-sources={selectedMaterialExplanation.evidenceSources.join(",")}
+        >
+          当前节点视觉来源：{selectedMaterialExplanation.evidenceSources.join(" / ") || "styledFallback"}
+        </output>
+      ) : null}
+      <output
+        className={`hierarchy-capture-state is-${captureState.status}`}
+        aria-label="层级采集状态"
+        data-evidence={captureEvidenceMode}
+      >
+        {hierarchyCaptureStatusText(captureState, hasMainSnapshotSurface)}
       </output>
     </div>
   );
 }
 
-function hierarchyCaptureStatusText(captureState: HierarchyCaptureState, hasSurfaceImage: boolean) {
-  if (captureState.status === "loading") return "正在采集真实层级";
+function hierarchyCaptureStatusText(captureState: HierarchyCaptureState, hasMainSnapshotSurface: boolean) {
+  const hasRealNodeSlice = captureState.evidence?.source.nodeSlice === "real";
+  if (captureState.status === "loading") return "正在采集快照…";
   if (captureState.status === "ready") {
     const source = captureState.method === "POST" ? "手动采集" : "现场采集";
-    return hasSurfaceImage ? `${source} · 真实截图切片` : `${source} · hierarchy scene`;
+    if (hasMainSnapshotSurface && hasRealNodeSlice) return `${source} · 真实截图切片可用`;
+    if (hasMainSnapshotSurface) return `${source} · 节点切片不可用`;
+    if (hasRealNodeSlice) return "结构快照 · 局部切片可用";
+    if (captureState.evidence?.source.nodeSlice === "styled") return "样式化快照 · 非真实节点切片";
+    return "样式化快照 · 非真实节点切片";
   }
-  if (captureState.status === "error") return `采集失败 · 使用 fallback · ${captureState.error ?? "unknown"}`;
+  if (captureState.status === "error") {
+    return "采集失败 · 已显示 fallback scene";
+  }
   return "等待采集";
 }
 

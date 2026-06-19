@@ -1,5 +1,7 @@
 import ArgumentParser
+import CoreGraphics
 import Foundation
+import TritonKit
 import TritonKitShared
 
 func runHierarchyScene(
@@ -16,6 +18,35 @@ func runHierarchyScene(
 ) async throws {
     let outputFormat: ClientOutputFormat = json ? .json : .text
     do {
+        if platform == .ios, runtimeBaseURL == nil {
+            let (summary, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
+            let data = try await client.request(type: "hierarchy")
+            let hierarchy = try JSONDecoder().decode(LegacyIosHierarchyPayload.self, from: data)
+            let scene = makeLegacyIosHierarchyScene(
+                target: summary.id,
+                displayItems: hierarchy.displayItems,
+                viewportOverride: hierarchy.viewport,
+                maxNodes: maxNodes
+            )
+            let response = TKHostHierarchyResponse(
+                ok: true,
+                capturedAt: ISO8601DateFormatter().string(from: Date()),
+                source: TKHierarchySourceInfo(
+                    command: hierarchySourceCommand(platform: platform.rawValue, target: target),
+                    runtimeScope: "runtime-tree",
+                    readonly: true
+                ),
+                scene: scene
+            )
+            switch outputFormat {
+            case .json:
+                try writeOrPrint(try encodeJSON(response), output: output)
+            case .text:
+                try writeOrPrint(renderHierarchyScene(response.scene), output: output)
+            }
+            return
+        }
+
         let observation = try await hierarchyObservation(
             platform: platform,
             target: target,
@@ -57,6 +88,275 @@ func runHierarchyScene(
     }
 }
 
+func makeLegacyIosHierarchyScene(
+    target: String,
+    displayItems: [TKDisplayItem],
+    viewportOverride: TKHierarchyViewport? = nil,
+    maxNodes: Int? = nil
+) -> TKHierarchyScene {
+    let viewport = legacyIosViewport(displayItems: displayItems, viewportOverride: viewportOverride)
+    var nodes: [TKHierarchyLayerNode] = []
+    for item in displayItems {
+        appendLegacyIosHierarchyNode(&nodes, item: item, parentId: nil, viewport: viewport, maxNodes: maxNodes)
+    }
+    let rootId = nodes.first?.id ?? "ios:(target):root"
+    return TKHierarchyScene(platform: "ios", rootId: rootId, viewport: viewport, nodes: nodes)
+}
+
+private struct LegacyIosHierarchyPayload: Decodable {
+    let displayItems: [TKDisplayItem]
+    let appInfo: LegacyIosAppInfo?
+
+    var viewport: TKHierarchyViewport? {
+        guard let width = appInfo?.screenWidth, let height = appInfo?.screenHeight, width > 0, height > 0 else {
+            return nil
+        }
+        return TKHierarchyViewport(width: width, height: height)
+    }
+}
+
+private struct LegacyIosAppInfo: Decodable {
+    let screenWidth: Double?
+    let screenHeight: Double?
+}
+
+private func appendLegacyIosHierarchyNode(
+    _ nodes: inout [TKHierarchyLayerNode],
+    item: TKDisplayItem,
+    parentId: String?,
+    viewport: TKHierarchyViewport,
+    maxNodes: Int?
+) {
+    if let maxNodes, nodes.count >= maxNodes { return }
+    guard item.frame.width > 0, item.frame.height > 0 else { return }
+    let oid = item.layerObject?.oid ?? item.viewObject?.oid ?? UInt(nodes.count)
+    let type = legacyIosHierarchyClassName(item)
+    let id = "ios:runtime:\(oid)"
+    let frame = clampLegacyIosFrame(item.frame, viewport: viewport)
+    let alpha = Double(item.alpha)
+    let visible = !item.isHidden && alpha > 0.01 && frame.width > 0 && frame.height > 0
+    let interactive = legacyIosHierarchyNodeIsInteractive(type: type, item: item)
+    let color = legacyIosHierarchyNodeColor(item: item, interactive: interactive)
+    let slice = legacyIosHierarchyNodeSlice(item)
+    let visualSources = legacyIosHierarchyVisualSources(frame: frame, slice: slice)
+    nodes.append(TKHierarchyLayerNode(
+        id: id,
+        parentId: parentId,
+        type: type,
+        name: legacyIosHierarchyNodeName(type: type, oid: oid, item: item),
+        frame: frame,
+        depth: max(0, item.indentLevel),
+        visible: visible,
+        interactive: interactive,
+        color: color,
+        source: "runtime-tree",
+        style: legacyIosHierarchyNodeStyle(item: item, type: type, color: color, alpha: alpha),
+        slice: slice,
+        view: legacyIosHierarchyViewMetadata(item: item, type: type),
+        layer: legacyIosHierarchyLayerMetadata(item: item),
+        visualSources: visualSources,
+        raw: TKHierarchyNodeRawInfo(
+            platform: "ios",
+            source: "runtime-tree",
+            role: type,
+            identifier: item.screenshotRef
+        ),
+        renderHints: legacyIosHierarchyRenderHints(type: type, frame: frame, viewport: viewport, slice: slice)
+    ))
+    for child in item.subitems {
+        appendLegacyIosHierarchyNode(&nodes, item: child, parentId: id, viewport: viewport, maxNodes: maxNodes)
+    }
+}
+
+private func legacyIosViewport(displayItems: [TKDisplayItem], viewportOverride: TKHierarchyViewport?) -> TKHierarchyViewport {
+    if let viewportOverride {
+        return viewportOverride
+    }
+    if let root = displayItems.first, root.frame.width > 0, root.frame.height > 0 {
+        return TKHierarchyViewport(width: Double(root.frame.width), height: Double(root.frame.height))
+    }
+    return TKHierarchyViewport(width: 390, height: 844)
+}
+
+private func legacyIosHierarchyClassName(_ item: TKDisplayItem) -> String {
+    item.layerObject?.classChainList.first
+        ?? item.viewObject?.classChainList.first
+        ?? item.hostViewControllerObject?.classChainList.first
+        ?? "UIView"
+}
+
+private func legacyIosHierarchyNodeName(type: String, oid: UInt, item: TKDisplayItem) -> String {
+    if item.representedAsKeyWindow { return "keyWindow" }
+    if let title = normalizedLegacyString(item.customDisplayTitle) { return title }
+    return "\(type.split(separator: ".").last.map(String.init) ?? type)#\(oid)"
+}
+
+private func legacyIosHierarchyNodeIsInteractive(type: String, item: TKDisplayItem) -> Bool {
+    let merged = type.lowercased()
+    return merged.range(of: "button|control|cell|collection|table|scroll|textfield|textview|switch|slider|segmented", options: .regularExpression) != nil
+        || !item.eventHandlers.isEmpty
+}
+
+private func legacyIosHierarchyNodeColor(item: TKDisplayItem, interactive: Bool) -> String {
+    if let color = item.backgroundColor, color.alpha > 0.03 {
+        return rgbFloatToHex(red: Double(color.red), green: Double(color.green), blue: Double(color.blue))
+    }
+    return interactive ? "#2563eb" : "#94a3b8"
+}
+
+private func legacyIosHierarchyNodeStyle(item: TKDisplayItem, type: String, color: String, alpha: Double) -> TKHierarchyNodeStyle {
+    TKHierarchyNodeStyle(
+        display: legacyIosHierarchyDisplayKind(type),
+        text: normalizedLegacyString(item.customDisplayTitle),
+        backgroundColor: color,
+        foregroundColor: nil,
+        alpha: alpha,
+        cornerRadius: nil
+    )
+}
+
+private func legacyIosHierarchyViewMetadata(item: TKDisplayItem, type: String) -> TKHierarchyViewMetadata {
+    TKHierarchyViewMetadata(
+        className: item.viewObject?.classChainList.first ?? type,
+        isHidden: item.isHidden,
+        alpha: Double(item.alpha),
+        isUserInteractionEnabled: nil,
+        accessibilityIdentifier: nil,
+        accessibilityLabel: normalizedLegacyString(item.customDisplayTitle)
+    )
+}
+
+private func legacyIosHierarchyLayerMetadata(item: TKDisplayItem) -> TKHierarchyLayerMetadata {
+    TKHierarchyLayerMetadata(
+        bounds: tkRect(item.bounds),
+        position: TKHierarchyPoint(
+            x: Double(item.layerPosition?.x ?? item.frame.midX),
+            y: Double(item.layerPosition?.y ?? item.frame.midY)
+        ),
+        anchorPoint: TKHierarchyPoint(
+            x: Double(item.layerAnchorPoint?.x ?? 0.5),
+            y: Double(item.layerAnchorPoint?.y ?? 0.5)
+        ),
+        zPosition: Double(item.layerZPosition ?? 0),
+        transform: item.layerTransform,
+        sublayerTransform: item.layerSublayerTransform,
+        masksToBounds: item.layerMasksToBounds ?? false,
+        cornerRadius: Double(item.layerCornerRadius ?? 0),
+        opacity: Double(item.layerOpacity ?? item.alpha),
+        isHidden: item.layerIsHidden ?? item.isHidden,
+        contentsScale: item.layerContentsScale.map(Double.init),
+        contentsGravity: item.layerContentsGravity,
+        contentsRect: item.layerContentsRect.map(tkRect),
+        borderWidth: item.layerBorderWidth.map(Double.init),
+        borderColor: item.layerBorderColor.flatMap(tkColorToHex),
+        shadowOpacity: item.layerShadowOpacity.map(Double.init),
+        shadowRadius: item.layerShadowRadius.map(Double.init),
+        shadowOffset: item.layerShadowOffset.map { TKHierarchySize(width: Double($0.width), height: Double($0.height)) },
+        shadowColor: item.layerShadowColor.flatMap(tkColorToHex)
+    )
+}
+
+private func tkColorToHex(_ color: TKColor) -> String? {
+    guard color.alpha > 0.01 else { return nil }
+    return rgbFloatToHex(red: Double(color.red), green: Double(color.green), blue: Double(color.blue))
+}
+
+private func tkRect(_ rect: CGRect) -> TKRect {
+    TKRect(
+        x: Double(rect.origin.x),
+        y: Double(rect.origin.y),
+        width: Double(rect.size.width),
+        height: Double(rect.size.height)
+    )
+}
+
+private func legacyIosHierarchyNodeSlice(_ item: TKDisplayItem) -> TKHierarchyNodeSlice {
+    guard let ref = normalizedLegacyString(item.screenshotRef) else {
+        return TKHierarchyNodeSlice(
+            available: false,
+            mode: "node-screenshot-ref",
+            source: "triton-runtime-data-ref"
+        )
+    }
+    return TKHierarchyNodeSlice(
+        available: true,
+        mode: "node-screenshot-ref",
+        source: "triton-runtime-data-ref",
+        dataRef: ref
+    )
+}
+
+private func legacyIosHierarchyVisualSources(frame: TKRect, slice: TKHierarchyNodeSlice) -> [TKHierarchyVisualSource] {
+    guard slice.available, slice.dataRef != nil || slice.dataUrl != nil else {
+        return [
+            TKHierarchyVisualSource(
+                kind: "styledFallback",
+                rect: frame,
+                reason: "No subtree snapshot dataRef available"
+            )
+        ]
+    }
+    return [
+        TKHierarchyVisualSource(
+            kind: "subtreeSnapshot",
+            dataRef: slice.dataRef,
+            dataUrl: slice.dataUrl,
+            rect: frame,
+            capturedBy: "UIView.render"
+        )
+    ]
+}
+
+private func legacyIosHierarchyRenderHints(
+    type: String,
+    frame: TKRect,
+    viewport: TKHierarchyViewport,
+    slice: TKHierarchyNodeSlice
+) -> TKHierarchyNodeRenderHints {
+    if slice.available {
+        return TKHierarchyNodeRenderHints(preferredMode: "slice", fallbackMode: "style", quality: "exact")
+    }
+    let isFullscreen = frame.width >= viewport.width * 0.96 && frame.height >= viewport.height * 0.9
+    if isFullscreen && type.range(of: "window|transition|shadow|container|wrapper|root", options: [.regularExpression, .caseInsensitive]) != nil {
+        return TKHierarchyNodeRenderHints(preferredMode: "wireframe", fallbackMode: "wireframe", quality: "fallback")
+    }
+    return TKHierarchyNodeRenderHints(preferredMode: "slice", fallbackMode: "style", quality: "approximate")
+}
+
+private func legacyIosHierarchyDisplayKind(_ type: String) -> String {
+    let lowered = type.lowercased()
+    if lowered.contains("button") || lowered.contains("control") { return "button" }
+    if lowered.contains("label") || lowered.contains("text") { return "text" }
+    if lowered.contains("cell") || lowered.contains("card") { return "card" }
+    if lowered.contains("collection") || lowered.contains("table") || lowered.contains("scroll") || lowered.contains("stack") { return "container" }
+    if lowered.contains("tabbar") || lowered.contains("tab bar") { return "tabbar" }
+    if lowered.contains("navigation") || lowered.contains("toolbar") || lowered.contains("bar") { return "bar" }
+    return "view"
+}
+
+private func clampLegacyIosFrame(_ frame: CGRect, viewport: TKHierarchyViewport) -> TKRect {
+    TKRect(
+        x: max(0, min(viewport.width, Double(frame.origin.x))),
+        y: max(0, min(viewport.height, Double(frame.origin.y))),
+        width: max(0, min(viewport.width, Double(frame.width))),
+        height: max(0, min(viewport.height, Double(frame.height)))
+    )
+}
+
+private func rgbFloatToHex(red: Double, green: Double, blue: Double) -> String {
+    func hex(_ value: Double) -> String {
+        String(format: "%02x", max(0, min(255, Int((value * 255).rounded()))))
+    }
+    return "#\(hex(red))\(hex(green))\(hex(blue))"
+}
+
+private func normalizedLegacyString(_ value: String?) -> String? {
+    guard let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines), !trimmed.isEmpty else {
+        return nil
+    }
+    return trimmed
+}
+
 func makeHierarchyScene(
     platform: String,
     target: String,
@@ -78,7 +378,17 @@ func makeHierarchyScene(
                 visible: node.hidden != true,
                 interactive: node.capabilities.contains("tap") || node.capabilities.contains("scroll"),
                 color: hierarchyColor(platform: platform, interactive: node.capabilities.contains("tap")),
-                source: node.source
+                source: node.source,
+                style: hierarchyNodeStyle(node),
+                slice: hierarchyNodeSlice(node),
+                visualSources: hierarchyNodeVisualSources(node),
+                raw: TKHierarchyNodeRawInfo(
+                    platform: platform,
+                    source: node.source,
+                    role: node.role,
+                    identifier: node.identifier
+                ),
+                renderHints: hierarchyNodeRenderHints(node)
             )
         }
 
@@ -171,6 +481,65 @@ private func hierarchyNodeName(_ node: ObserveNodeOutput, fallback: String) -> S
     [node.text, node.identifier, node.role]
         .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
         .first { !$0.isEmpty } ?? fallback
+}
+
+private func hierarchyNodeStyle(_ node: ObserveNodeOutput) -> TKHierarchyNodeStyle? {
+    let display = hierarchyNodeDisplayKind(node)
+    let text = [node.text, node.identifier]
+        .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .first { !$0.isEmpty }
+    return TKHierarchyNodeStyle(
+        display: display,
+        text: text,
+        backgroundColor: node.capabilities.contains("tap") ? "#eff6ff" : nil,
+        foregroundColor: node.capabilities.contains("tap") ? "#1d4ed8" : nil,
+        alpha: node.hidden == true ? 0 : 1,
+        cornerRadius: display == "button" || display == "card" ? 12 : nil
+    )
+}
+
+private func hierarchyNodeSlice(_ node: ObserveNodeOutput) -> TKHierarchyNodeSlice {
+    TKHierarchyNodeSlice(
+        available: false,
+        mode: "node-snapshot",
+        source: node.source,
+        dataUrl: nil
+    )
+}
+
+private func hierarchyNodeVisualSources(_ node: ObserveNodeOutput) -> [TKHierarchyVisualSource] {
+    [
+        TKHierarchyVisualSource(
+            kind: "styledFallback",
+            rect: node.frame,
+            reason: "Host observe node does not expose layer-own contents or runtime subtree snapshot"
+        )
+    ]
+}
+
+private func hierarchyNodeRenderHints(_ node: ObserveNodeOutput) -> TKHierarchyNodeRenderHints {
+    let display = hierarchyNodeDisplayKind(node)
+    let preferred = display == "view" ? "wireframe" : "style"
+    return TKHierarchyNodeRenderHints(
+        preferredMode: preferred,
+        fallbackMode: "wireframe",
+        quality: "approximate"
+    )
+}
+
+private func hierarchyNodeDisplayKind(_ node: ObserveNodeOutput) -> String {
+    let role = (node.role ?? "").lowercased()
+    let identifier = (node.identifier ?? "").lowercased()
+    let text = (node.text ?? "").lowercased()
+    let merged = [role, identifier, text].joined(separator: " ")
+    if merged.contains("button") { return "button" }
+    if merged.contains("label") || merged.contains("text") || node.text != nil { return "text" }
+    if merged.contains("textfield") || merged.contains("input") || merged.contains("search") { return "input" }
+    if merged.contains("cell") || merged.contains("card") || merged.contains("row") { return "card" }
+    if merged.contains("scroll") || merged.contains("list") || merged.contains("collection") || merged.contains("stack") { return "container" }
+    if merged.contains("tabbar") || merged.contains("tab bar") { return "tabbar" }
+    if merged.contains("navigation") || merged.contains("toolbar") || merged.contains("bar") { return "bar" }
+    return node.capabilities.contains("tap") ? "button" : "view"
 }
 
 private func hierarchyViewport(from nodes: [TKHierarchyLayerNode]) -> TKHierarchyViewport {

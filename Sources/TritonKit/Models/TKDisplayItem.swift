@@ -21,6 +21,24 @@ public struct TKDisplayItem: Codable {
     public var eventHandlers: [TKEventHandler]
     public var representedAsKeyWindow: Bool
     public var backgroundColor: TKColor?
+    public var layerPosition: CGPoint?
+    public var layerAnchorPoint: CGPoint?
+    public var layerZPosition: CGFloat?
+    public var layerTransform: [Double]?
+    public var layerSublayerTransform: [Double]?
+    public var layerMasksToBounds: Bool?
+    public var layerCornerRadius: CGFloat?
+    public var layerOpacity: Float?
+    public var layerIsHidden: Bool?
+    public var layerContentsScale: CGFloat?
+    public var layerContentsGravity: String?
+    public var layerContentsRect: CGRect?
+    public var layerBorderWidth: CGFloat?
+    public var layerBorderColor: TKColor?
+    public var layerShadowOpacity: Float?
+    public var layerShadowRadius: CGFloat?
+    public var layerShadowOffset: CGSize?
+    public var layerShadowColor: TKColor?
     public var shouldCaptureImage: Bool
     public var customDisplayTitle: String?
     public var danceuiSource: String?
@@ -51,6 +69,24 @@ public struct TKDisplayItem: Codable {
         eventHandlers: [TKEventHandler] = [],
         representedAsKeyWindow: Bool = false,
         backgroundColor: TKColor? = nil,
+        layerPosition: CGPoint? = nil,
+        layerAnchorPoint: CGPoint? = nil,
+        layerZPosition: CGFloat? = nil,
+        layerTransform: [Double]? = nil,
+        layerSublayerTransform: [Double]? = nil,
+        layerMasksToBounds: Bool? = nil,
+        layerCornerRadius: CGFloat? = nil,
+        layerOpacity: Float? = nil,
+        layerIsHidden: Bool? = nil,
+        layerContentsScale: CGFloat? = nil,
+        layerContentsGravity: String? = nil,
+        layerContentsRect: CGRect? = nil,
+        layerBorderWidth: CGFloat? = nil,
+        layerBorderColor: TKColor? = nil,
+        layerShadowOpacity: Float? = nil,
+        layerShadowRadius: CGFloat? = nil,
+        layerShadowOffset: CGSize? = nil,
+        layerShadowColor: TKColor? = nil,
         shouldCaptureImage: Bool = true,
         customDisplayTitle: String? = nil,
         indentLevel: Int = 0
@@ -69,6 +105,24 @@ public struct TKDisplayItem: Codable {
         self.eventHandlers = eventHandlers
         self.representedAsKeyWindow = representedAsKeyWindow
         self.backgroundColor = backgroundColor
+        self.layerPosition = layerPosition
+        self.layerAnchorPoint = layerAnchorPoint
+        self.layerZPosition = layerZPosition
+        self.layerTransform = layerTransform
+        self.layerSublayerTransform = layerSublayerTransform
+        self.layerMasksToBounds = layerMasksToBounds
+        self.layerCornerRadius = layerCornerRadius
+        self.layerOpacity = layerOpacity
+        self.layerIsHidden = layerIsHidden
+        self.layerContentsScale = layerContentsScale
+        self.layerContentsGravity = layerContentsGravity
+        self.layerContentsRect = layerContentsRect
+        self.layerBorderWidth = layerBorderWidth
+        self.layerBorderColor = layerBorderColor
+        self.layerShadowOpacity = layerShadowOpacity
+        self.layerShadowRadius = layerShadowRadius
+        self.layerShadowOffset = layerShadowOffset
+        self.layerShadowColor = layerShadowColor
         self.shouldCaptureImage = shouldCaptureImage
         self.customDisplayTitle = customDisplayTitle
         self.doNotFetchScreenshotReason = .permitted
