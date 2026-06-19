@@ -22,6 +22,32 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
    - 不执行破坏性命令；需要时单独请求确认。
    - 不把临时失败、subagent 中间观点或命令流水升级为长期规则。
 
+## 自治决策规则
+
+用户授权巡航、无人值守或“你来负责”后，普通不确定性转成明确假设继续推进：
+
+1. 复用现有 repo 模式，不发明新流程。
+2. 选择本地、可逆、低影响面的方案。
+3. 保持切片小，先满足当前验收，不顺手扩 scope。
+4. 正确性、可维护性和机器可读证据优先于炫技。
+5. 先跑最小有意义验证，风险升高时再扩大门禁。
+6. 两个方案接近时，选择后续维护者更容易理解的路径。
+
+巡航期间维护轻量 decision log；可以写在阶段报告、space 计划或最终回答中，不为每个小判断新建文档。
+
+## 停止条件
+
+只有以下情况需要停下来向用户要决策：
+
+1. 需要凭据、账号、私有数据、付费服务或生产权限。
+2. 下一步是破坏性、不可逆或生产变更。
+3. 需要未授权的 branch 操作、历史改写、force push、tag、release 或删除。
+4. 安全、隐私、法律或公开发布风险无法通过保守本地选择降低。
+5. 用户明确保留某个决策。
+6. 同一验证失败经合理调查仍重复，下一步只能靠大范围猜测或重写。
+
+若停止，留下自包含 handoff：已完成什么、阻塞点、需要用户给什么、下一条命令或文件入口。
+
 ## 巡航执行节奏
 
 1. 先做只读盘点：`git status --short --branch`、相关 docs/space、最近 memory、当前测试门禁。
@@ -30,9 +56,11 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
    - 先补测试或可执行证据，再实现。
    - 改动集中，避免横跨无关模块。
    - 完成后运行聚焦验证。
-3. 大切片或高风险切片可以使用 subagent，但主控 agent 仍负责边界、集成、验证和最终判断。
-4. 每个稳定 checkpoint 后写入 memory；必要时提交本地 commit，commit message 要能说明切片结果。
-5. 巡航中优先推进能增强 agent 自主使用 TritonKit 的能力：CLI/HTTP schema、机器可读证据、Xcode/Simulator takeover、失败诊断、artifact 安全、redaction、真实项目回归闭环。
+3. 长任务按 wave 推进；默认每波最多 3 个并行 subagent，除非用户或环境给出更低阈值。
+4. 每波结束后先复核关键证据，再决定继续、改派、收敛或停止。
+5. 大切片或高风险切片可以使用 subagent，但主控 agent 仍负责边界、集成、验证和最终判断。
+6. 每个稳定 checkpoint 后写入 memory；必要时提交本地 commit，commit message 要能说明切片结果。
+7. 巡航中优先推进能增强 agent 自主使用 TritonKit 的能力：CLI/HTTP schema、机器可读证据、Xcode/Simulator takeover、失败诊断、artifact 安全、redaction、真实项目回归闭环。
 
 ## Subagent 使用
 
@@ -40,6 +68,8 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
 - 只读审计适合交给 subagent：安全审计、架构审计、外部 agent 使用体验、遗漏风险扫描。
 - 代码实现型 subagent 必须有明确文件范围；多个 subagent 不写同一批文件。
 - 主控 agent 不把 subagent 结论原样当事实；需要与本地 diff、测试、文档和产品边界对齐后再采纳。
+- subagent 返回证据，不返回最终 verdict；主控 agent 保留架构取舍、风险判断、集成和最终完成声明。
+- 每个 handoff 都写清 repo path、目标、scope、out-of-scope、验证命令、预期证据和停止条件。
 
 ## Checkpoint 规则
 
@@ -50,6 +80,7 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
 - 运行过的验证命令和结果。
 - 剩余风险与后续队列。
 - 是否已提交；若已提交，记录 commit hash。
+- 主控 agent 在无人值守期间做出的关键假设和理由。
 
 长期巡航可以有多个 checkpoint commit，但每个 commit 都必须保持可解释、可回归，避免把半成品和临时文件混入。
 

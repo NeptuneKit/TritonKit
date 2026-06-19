@@ -9,7 +9,7 @@ metadata:
 
 ## CLI / HTTP / Wails 开发回路
 
-- 需求变更先写 `docs-linhay/features/` 的 BDD 场景。
+- 新单需求优先在 `docs-linhay/spaces/<space-key>/README.md` 写清 BDD 场景和验收边界；历史或项目级规格再使用 `docs-linhay/features/`。
 - 先补失败测试，再实现最小代码。
 - HTTP handler 用 `httptest` 优先验证，只有进程生命周期或信号处理才启动真实 server。
 - CLI 行为优先测试参数解析和命令分发，不在单元测试里长期占用端口。
@@ -37,6 +37,7 @@ metadata:
 - Public skill 打包必须走 `docs-linhay/scripts/package-public-skills.py`，参考 `harmony-next.skills` 的独立脚本产物生成方式，在包内 `TritonKit.skills/BUILD_INFO.json` 写入 metadata，但仍保持 TritonKit 的合并 `tritonkit-skills.tar.gz` 契约，不新增 `.skill.zip` 或单独 skill tarball。安装默认以整个 `TritonKit.skills/` 文件夹为单位；升级旧安装时先删除 agent skills 目录下的三个独立 public skill 目录。
 - `triton` CLI 的外部分发必须支持 Homebrew 二进制安装与更新；维护者默认用 `docs-linhay/scripts/release.sh <version>` 发布，脚本负责前置检查、tag 推送、CI 观察、Release 资产验证和 Homebrew fetch 验证。
 - 整体发布、各端内置包版本同步、Homebrew/Web/SwiftPM/CocoaPods/public skill 包一致性发版，优先使用 `tritonkit-release-package-governance`。
+- 涉及多个 agent / 多份计划 / 多个 PR 策略需要裁决时，优先使用 `tritonkit-plan-arbiter`；输出必须是 adopt / hybrid / revise-first 中的一种，并列出验证门禁和拒绝项。
 - 发版前必须保持主仓 worktree 完全干净，包含 memory、临时截图、未跟踪 space 和并行 issue WIP；若 release 途中需要抢修本地门禁 blocker，只做最小 release-blocker commit，推送 `main` 后重新跑 release 脚本，不把未完成 WebView/issue work 混入 tag。
 - Homebrew 默认 tap 仓库是 `NeptuneKit/homebrew-tap`；`NeptuneKit/TritonKit` 必须配置 `TAP_GITHUB_TOKEN`，让 `v*` tag release 自动推送 `Formula/triton.rb`。
 - `v0.1.0` 起 GitHub Release 和 `NeptuneKit/homebrew-tap` 已可用；对外接入文档和 skill 默认优先给 `brew install NeptuneKit/tap/triton`，只有验证未发布源码变更或 release/tap 不可用时才使用 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton` fallback。
@@ -76,6 +77,9 @@ metadata:
 - 单个领域或流程的可复用动作优先补充既有 skill；新增 skill 前先判断它是 `public` 还是 `internal`，避免对外使用者拿到内部治理规则。
 - 新增 skill 前先判断是否能补充既有 skill，避免入口膨胀。
 - skill 的 front matter `description` 只写触发场景和能力边界，详细规则写正文。
+- 吸收外部 agent workflow skill 时，优先本地化触发条件、证据格式、停止条件和验收门禁；不要直接复制 hosted 服务依赖、模型品牌绑定或与 TritonKit 产品边界冲突的交互面。
+- 大 diff / PR / worktree / 会话复盘可吸收 visual recap 的结构化方法，但默认产物是 `docs-linhay/spaces/<space-key>/plans/<YYYYMMDD>-recap-v01.md` 或 `docs-linhay/dev/<YYYYMMDD>-<topic>.md`；不把 Agent-Native hosted Plan 作为默认依赖。
+- 涉及第三方快速变化 API、SDK、CLI、CI、包管理、Xcode、Android Emulator、DevEco / Harmony、Homebrew 或 GitHub 行为时，先读本地 repo docs/schema/generated types 或官方文档 / release notes，再写契约和示例。
 
 ## Subagent 监督交付
 
