@@ -245,9 +245,23 @@ func waitForXcodeIdle(
     let deadline = startedAt.addingTimeInterval(timeout)
     var pollCount = 0
     var lastStatus: XcodeProcessStatusOutput?
+    var lastTransientError: Error?
     repeat {
         pollCount += 1
-        let status = try statusProvider()
+        let status: XcodeProcessStatusOutput
+        do {
+            status = try statusProvider()
+        } catch let error as HostCommandRunError {
+            guard case .timeout = error else {
+                throw error
+            }
+            lastTransientError = error
+            if Date() >= deadline {
+                break
+            }
+            try await Task.sleep(nanoseconds: UInt64(max(0.01, interval) * 1_000_000_000))
+            continue
+        }
         lastStatus = status
         if !status.active {
             return XcodeWaitIdleOutput(
@@ -266,7 +280,13 @@ func waitForXcodeIdle(
         try await Task.sleep(nanoseconds: UInt64(max(0.01, interval) * 1_000_000_000))
     } while Date() <= deadline
 
-    throw XcodeDiagnosticsError.notIdle(status: lastStatus ?? XcodeProcessStatusOutput(
+    if let lastStatus {
+        throw XcodeDiagnosticsError.notIdle(status: lastStatus)
+    }
+    if let lastTransientError {
+        throw lastTransientError
+    }
+    throw XcodeDiagnosticsError.notIdle(status: XcodeProcessStatusOutput(
         ok: true,
         active: false,
         workspaceFilter: workspace,

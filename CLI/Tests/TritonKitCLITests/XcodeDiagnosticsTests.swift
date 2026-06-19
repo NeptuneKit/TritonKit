@@ -149,4 +149,57 @@ struct XcodeDiagnosticsTests {
             )
         }
     }
+
+    @Test("wait idle treats process lookup timeout as transient while build remains active")
+    func waitIdleTreatsProcessLookupTimeoutAsTransientWhileBuildRemainsActive() async throws {
+        let pgrep = TKHostCommand(
+            executable: "pgrep",
+            arguments: ["-f", "xcodebuild|swift-build|SwiftBuildService|XCBBuildService|xctest"],
+            defaultTimeoutSeconds: 5
+        )
+        let active = XcodeProcessStatusOutput(
+            ok: true,
+            active: true,
+            workspaceFilter: "App.xcworkspace",
+            processes: [
+                XcodeProcessSummary(
+                    pid: 222,
+                    name: "xcodebuild",
+                    commandLine: "xcodebuild -workspace App.xcworkspace build",
+                    elapsed: "00:45",
+                    elapsedSeconds: 45,
+                    workspace: "App.xcworkspace",
+                    project: nil,
+                    scheme: nil,
+                    destination: nil,
+                    derivedDataPath: nil,
+                    confidence: "medium"
+                )
+            ],
+            summary: XcodeProcessStatusSummary(
+                xcodebuildCount: 1,
+                buildServiceCount: 0,
+                xctestCount: 0,
+                matchingWorkspaceCount: 1
+            ),
+            sourceCommand: "ps -axo pid=,comm=,etime=,args="
+        )
+        var polls = 0
+
+        await #expect(throws: XcodeDiagnosticsError.notIdle(status: active)) {
+            try await waitForXcodeIdle(
+                workspace: "App.xcworkspace",
+                timeout: 0.03,
+                interval: 0.01,
+                statusProvider: {
+                    polls += 1
+                    if polls == 1 {
+                        throw HostCommandRunError.timeout(command: pgrep, timeoutSeconds: 5, stdoutLogPath: nil, stderrLogPath: nil)
+                    }
+                    return active
+                }
+            )
+        }
+        #expect(polls >= 2)
+    }
 }
