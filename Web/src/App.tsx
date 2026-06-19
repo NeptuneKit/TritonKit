@@ -1,46 +1,34 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent, type CSSProperties, type KeyboardEvent, type PointerEvent, type WheelEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
 import {
   Activity,
   Braces,
   ChevronDown,
   Clock3,
-  Crosshair,
   DatabaseZap,
-  EyeOff,
-  FileText,
   Gauge,
   Info,
   Keyboard,
-  Maximize2,
   Minus,
-  MoreHorizontal,
-  MousePointer2,
   Network,
   PanelLeft,
   Plus,
   RefreshCw,
-  ScanLine,
   Search,
   Settings2,
-  SlidersHorizontal,
   TerminalSquare,
-  ZoomIn,
-  ZoomOut,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { HostBridgeNotice } from "./components/HostBridgeNotice";
-import { hierarchyScenes, logs, networkEvents, targets } from "./data/mockData";
+import { logs, networkEvents } from "./data/mockData";
 import { describeHostBridgePresentation } from "./data/hostBridgePresentation";
-import { computeParityClaim, getMaterialExplanation, resolveEvidenceSources } from "./data/hierarchyMaterialPolicy";
-import { fetchHostHierarchyResponse, fetchHostLogs, fetchHostScreenshot, fetchHostTargets, type HostInputResponse, sendHostInput } from "./data/iosSimulatorClient";
+import { fetchHostHierarchy, fetchHostLogs, fetchHostScreenshot, fetchHostTargets, type HostInputResponse, sendHostInput } from "./data/iosSimulatorClient";
 import type {
   BridgeCommandOutput,
   DeviceFrameOrientation,
   DeviceTarget,
+  HierarchyControllerEntry,
   HierarchyLayerNode,
   HierarchyScene,
-  HierarchyVisualSource,
-  HostHierarchyResponse,
   LogEntry,
   NetworkEvent,
 } from "./types";
@@ -57,17 +45,40 @@ const platformDetail = {
   harmony: "DevEco 仿真器",
 };
 
-const modeLabel = {
-  record: "录制",
-  mock: "Mock",
-  blocked: "阻断",
-  off: "关闭",
+const modeLabel: Record<DisplayLanguage, Record<NetworkEvent["mode"], string>> = {
+  "zh-CN": {
+    record: "录制",
+    mock: "Mock",
+    blocked: "阻断",
+    off: "关闭",
+  },
+  "en-US": {
+    record: "Record",
+    mock: "Mock",
+    blocked: "Blocked",
+    off: "Off",
+  },
 };
 
-const logLevelLabel: Record<LogEntry["level"], string> = {
-  info: "信息",
-  warn: "警告",
-  error: "错误",
+const logLevelLabel: Record<DisplayLanguage, Record<LogEntry["level"], string>> = {
+  "zh-CN": {
+    info: "信息",
+    warn: "警告",
+    error: "错误",
+  },
+  "en-US": {
+    info: "Info",
+    warn: "Warn",
+    error: "Error",
+  },
+};
+
+type LocalizedLogEntry = {
+  timeLabel: string;
+  levelLabel: string;
+  sourceLabel: string;
+  messageLabel: string;
+  originalMessage: string;
 };
 
 type BridgeState = {
@@ -209,20 +220,9 @@ type KeyboardRelayState = {
   yPercent: number;
 };
 
-type DeviceCanvasTool = "point" | "probe";
-
-type HierarchyCaptureStatus = "idle" | "loading" | "ready" | "error";
-
-type HierarchyCaptureState = {
-  status: HierarchyCaptureStatus;
-  capturedAt?: string;
-  command?: string;
-  method?: "GET" | "POST" | string;
-  evidence?: HostHierarchyResponse["captureEvidence"];
-  error?: string;
-};
-
 type SidebarPanel = "devices" | "view-tree";
+type DevtoolsPanel = "config" | "network" | "logs" | "settings";
+type DisplayLanguage = "zh-CN" | "en-US";
 
 type ViewTreeNode = {
   id: string;
@@ -237,25 +237,70 @@ type DeviceHubRouteState = {
   nodeId?: string;
 };
 
-const canvasZoomLevels = [0.75, 0.9, 1, 1.15, 1.3, 1.5] as const;
+type ViewNodeHighlight = {
+  node: HierarchyLayerNode;
+  style: CSSProperties;
+  isHiddenDraft: boolean;
+};
+
+type ControllerShellBadge = {
+  name: string;
+  className?: string;
+  stack: string[];
+  source: string;
+  isFallback: boolean;
+};
+
+type HierarchyCacheEntry = {
+  loading: boolean;
+  error?: string;
+  scene?: HierarchyScene;
+};
+
+type HierarchyNodeHotEditDraft = {
+  frame?: Partial<HierarchyLayerNode["frame"]>;
+  opacity?: number;
+  cornerRadius?: number;
+  backgroundColor?: string;
+  hidden?: boolean;
+};
+
 const previewFpsMin = 1;
 const previewFpsMax = 60;
 const longPressThresholdMs = 520;
 const tapDistanceThreshold = 18;
+const emptyTargetId = "__no-host-target__";
+const displayLanguageStorageKey = "tritonkit.web.displayLanguage";
 
-function hierarchySceneForTarget(target: DeviceTarget): HierarchyScene {
-  return hierarchyScenes[target.platform];
-}
+const displayLanguageOptions: Array<{ id: DisplayLanguage; label: string; detail: string }> = [
+  { id: "zh-CN", label: "简体中文", detail: "中文界面标签与日志说明" },
+  { id: "en-US", label: "English", detail: "English tool labels and log messages" },
+];
 
-function hierarchyCaptureStateFromResponse(response: HostHierarchyResponse, fallbackMethod: "GET" | "POST"): HierarchyCaptureState {
-  return {
-    status: "ready",
-    capturedAt: response.capturedAt,
-    command: response.source.command,
-    method: response.control?.method ?? fallbackMethod,
-    evidence: response.captureEvidence,
-  };
-}
+const emptyTarget: DeviceTarget = {
+  id: emptyTargetId,
+  name: "未选择 target",
+  platform: "ios",
+  device: "Host bridge",
+  appName: "暂无运行中的设备",
+  bundleId: "unknown",
+  os: "等待 host targets",
+  status: "limited",
+  statusLabel: "No host targets",
+  transport: "triton host bridge",
+  screenshotTone: "ios-screen",
+  screenSize: "No framebuffer",
+  fps: 0,
+  latencyMs: 0,
+  proxyMode: "off",
+  proxyLabel: "No mock data",
+  hierarchyNodes: 0,
+  lastAction: "Host target discovery has not returned a selectable target",
+  actionResult: "warning",
+  accent: "#8bb6ff",
+  Icon: Activity,
+  readonly: true,
+};
 
 function viewTreeNodesForScene(scene: HierarchyScene): ViewTreeNode[] {
   const nodesByParent = new Map<string | undefined, HierarchyLayerNode[]>();
@@ -279,6 +324,198 @@ function defaultViewTreeSelection(scene: HierarchyScene): string {
   return scene.nodes.find((node) => node.interactive && node.depth >= 3)?.id ?? scene.rootId;
 }
 
+function readableViewTreeLabel(value: string): string {
+  const suffix = value.match(/#\d+$/)?.[0] ?? "";
+  const withoutSuffix = suffix ? value.slice(0, -suffix.length) : value;
+  const swiftNames: string[] = [];
+  for (const match of withoutSuffix.matchAll(/\d+/g)) {
+    const length = Number(match[0]);
+    const start = (match.index ?? 0) + match[0].length;
+    const candidate = withoutSuffix.slice(start, start + length);
+    if (candidate.length === length && /^[A-Za-z][A-Za-z0-9_]*$/.test(candidate)) {
+      swiftNames.push(candidate);
+    }
+  }
+  const swiftName = swiftNames.at(-1);
+  if (swiftName && swiftName.length >= 3) {
+    return `${swiftName}${suffix}`;
+  }
+
+  const namespaceIndex = withoutSuffix.lastIndexOf(".");
+  if (namespaceIndex >= 0 && namespaceIndex < withoutSuffix.length - 1) {
+    return `${withoutSuffix.slice(namespaceIndex + 1)}${suffix}`;
+  }
+
+  return value;
+}
+
+function readableViewTreeName(typeLabel: string, nameLabel: string | null): string | null {
+  if (!nameLabel || nameLabel === typeLabel) return null;
+  const instanceMatch = nameLabel.match(/^(.+?)(#\d+)$/);
+  if (instanceMatch && instanceMatch[1] === typeLabel) {
+    return instanceMatch[2];
+  }
+  return nameLabel;
+}
+
+function selectedHierarchyNodeForScene(scene: HierarchyScene | undefined, nodeId: string | null): HierarchyLayerNode | null {
+  if (!scene || !nodeId) return null;
+  return scene.nodes.find((candidate) => candidate.id === nodeId) ?? null;
+}
+
+function resolveHotEditFrame(node: HierarchyLayerNode, draft?: HierarchyNodeHotEditDraft) {
+  return {
+    x: draft?.frame?.x ?? node.frame.x,
+    y: draft?.frame?.y ?? node.frame.y,
+    width: draft?.frame?.width ?? node.frame.width,
+    height: draft?.frame?.height ?? node.frame.height,
+  };
+}
+
+function resolveHotEditOpacity(node: HierarchyLayerNode, draft?: HierarchyNodeHotEditDraft) {
+  return draft?.opacity ?? node.style?.alpha ?? node.layer?.opacity ?? 1;
+}
+
+function resolveHotEditCornerRadius(node: HierarchyLayerNode, draft?: HierarchyNodeHotEditDraft) {
+  return draft?.cornerRadius ?? node.style?.cornerRadius ?? node.layer?.cornerRadius ?? 0;
+}
+
+function resolveHotEditBackgroundColor(node: HierarchyLayerNode, draft?: HierarchyNodeHotEditDraft) {
+  return draft?.backgroundColor ?? node.style?.backgroundColor ?? node.color;
+}
+
+function resolveHotEditHidden(node: HierarchyLayerNode, draft?: HierarchyNodeHotEditDraft) {
+  if (typeof draft?.hidden === "boolean") return draft.hidden;
+  if (typeof node.style?.alpha === "number" && node.style.alpha <= 0) return true;
+  if (typeof node.layer?.isHidden === "boolean") return node.layer.isHidden;
+  if (typeof node.view?.isHidden === "boolean") return node.view.isHidden;
+  return !node.visible;
+}
+
+function viewNodeHighlightForScene(scene: HierarchyScene, nodeId: string | null, draft?: HierarchyNodeHotEditDraft): ViewNodeHighlight | null {
+  if (!nodeId || scene.viewport.width <= 0 || scene.viewport.height <= 0) return null;
+  const node = scene.nodes.find((candidate) => candidate.id === nodeId);
+  if (!node) return null;
+  const frame = resolveHotEditFrame(node, draft);
+  if (frame.width <= 0 || frame.height <= 0) return null;
+
+  const left = Math.max(0, Math.min(100, (frame.x / scene.viewport.width) * 100));
+  const top = Math.max(0, Math.min(100, (frame.y / scene.viewport.height) * 100));
+  const right = Math.max(0, Math.min(100, ((frame.x + frame.width) / scene.viewport.width) * 100));
+  const bottom = Math.max(0, Math.min(100, ((frame.y + frame.height) / scene.viewport.height) * 100));
+  const opacity = resolveHotEditHidden(node, draft) ? 0.24 : resolveHotEditOpacity(node, draft);
+
+  return {
+    node,
+    isHiddenDraft: resolveHotEditHidden(node, draft),
+    style: {
+      left: `${left}%`,
+      top: `${top}%`,
+      width: `${Math.max(0, right - left)}%`,
+      height: `${Math.max(0, bottom - top)}%`,
+      "--view-node-accent": resolveHotEditBackgroundColor(node, draft),
+      "--view-node-alpha": opacity.toString(),
+      "--view-node-radius": `${resolveHotEditCornerRadius(node, draft)}px`,
+    } as CSSProperties,
+  };
+}
+
+function hierarchyNodeAtPoint(scene: HierarchyScene, xPercent: number, yPercent: number) {
+  const x = (xPercent / 100) * scene.viewport.width;
+  const y = (yPercent / 100) * scene.viewport.height;
+  return scene.nodes
+    .filter((node) => {
+      if (!node.visible) return false;
+      if (node.frame.width <= 0 || node.frame.height <= 0) return false;
+      return x >= node.frame.x &&
+        x <= node.frame.x + node.frame.width &&
+        y >= node.frame.y &&
+        y <= node.frame.y + node.frame.height;
+    })
+    .sort((first, second) => second.depth - first.depth)
+    .at(0) ?? null;
+}
+
+function resolveControllerShellBadge(scene: HierarchyScene | undefined, selectedNodeId: string | null): ControllerShellBadge | null {
+  if (!scene || scene.platform !== "ios") return null;
+  const selectedOwner = selectedNodeId ? controllerAncestorForNode(scene, selectedNodeId) : null;
+  if (selectedOwner) {
+    return {
+      name: controllerNodeDisplayName(selectedOwner),
+      className: selectedOwner.type,
+      stack: controllerStackNames(scene.controllerContext?.stack, selectedOwner),
+      source: scene.controllerContext?.source ?? "selected-node-owner",
+      isFallback: scene.controllerContext?.source !== "runtime-route",
+    };
+  }
+
+  const context = scene.controllerContext;
+  if (context?.activeControllerName || context?.activeControllerClassName) {
+    return {
+      name: context.activeControllerName ?? shortClassName(context.activeControllerClassName ?? "UIViewController"),
+      className: context.activeControllerClassName,
+      stack: controllerStackNames(context.stack),
+      source: context.source,
+      isFallback: context.source !== "runtime-route",
+    };
+  }
+
+  const fallback = fallbackControllerNodeForScene(scene);
+  if (!fallback) return null;
+  return {
+    name: controllerNodeDisplayName(fallback),
+    className: fallback.type,
+    stack: [controllerNodeDisplayName(fallback)],
+    source: "scene-controller-node-fallback",
+    isFallback: true,
+  };
+}
+
+function controllerAncestorForNode(scene: HierarchyScene, nodeId: string) {
+  const nodesById = new Map(scene.nodes.map((node) => [node.id, node]));
+  let cursor = nodesById.get(nodeId) ?? null;
+  while (cursor) {
+    if (isControllerNode(cursor)) return cursor;
+    cursor = cursor.parentId ? nodesById.get(cursor.parentId) ?? null : null;
+  }
+  return null;
+}
+
+function fallbackControllerNodeForScene(scene: HierarchyScene) {
+  return scene.nodes
+    .filter(isControllerNode)
+    .filter((node) => node.visible)
+    .filter((node) => !/UITrackingElementWindowController|UIEditingOverlayViewController/.test(node.type))
+    .sort((first, second) => {
+      const area = second.frame.width * second.frame.height - first.frame.width * first.frame.height;
+      return area === 0 ? second.depth - first.depth : area;
+    })
+    .at(0) ?? null;
+}
+
+function isControllerNode(node: HierarchyLayerNode) {
+  return node.source === "runtime-controller" ||
+    node.raw?.role === "UIViewController" ||
+    node.id.startsWith("ios:controller:");
+}
+
+function controllerNodeDisplayName(node: HierarchyLayerNode) {
+  return node.name.replace(/#\d+$/, "") || shortClassName(node.type);
+}
+
+function controllerStackNames(stack: HierarchyControllerEntry[] | undefined, selectedOwner?: HierarchyLayerNode) {
+  const names = (stack ?? []).map((entry) => entry.name || shortClassName(entry.className)).filter(Boolean);
+  if (selectedOwner) {
+    const selectedName = controllerNodeDisplayName(selectedOwner);
+    return names.includes(selectedName) ? names : [...names, selectedName];
+  }
+  return names;
+}
+
+function shortClassName(className: string) {
+  return className.split(".").at(-1) ?? className;
+}
+
 function normalizePreviewFps(value: number) {
   if (!Number.isFinite(value)) return previewFpsMin;
   return Math.max(previewFpsMin, Math.min(previewFpsMax, Math.round(value)));
@@ -286,6 +523,29 @@ function normalizePreviewFps(value: number) {
 
 function fpsToRefreshIntervalMs(fps: number) {
   return Math.max(1000 / previewFpsMax, Math.round(1000 / normalizePreviewFps(fps)));
+}
+
+function isDisplayLanguage(value: string | null): value is DisplayLanguage {
+  return value === "zh-CN" || value === "en-US";
+}
+
+function readDisplayLanguagePreference(): DisplayLanguage {
+  if (typeof window === "undefined") return "zh-CN";
+  try {
+    const value = window.localStorage.getItem(displayLanguageStorageKey);
+    return isDisplayLanguage(value) ? value : "zh-CN";
+  } catch {
+    return "zh-CN";
+  }
+}
+
+function writeDisplayLanguagePreference(language: DisplayLanguage) {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(displayLanguageStorageKey, language);
+  } catch {
+    // localStorage may be unavailable in restricted browser contexts.
+  }
 }
 
 function readDeviceHubRoute(): DeviceHubRouteState {
@@ -329,20 +589,19 @@ function writeDeviceHubRoute(route: Required<Pick<DeviceHubRouteState, "targetId
 
 export function App() {
   const initialRoute = useMemo(() => readDeviceHubRoute(), []);
-  const [selectedId, setSelectedId] = useState(initialRoute.targetId ?? targets[0].id);
+  const [selectedId, setSelectedId] = useState(initialRoute.targetId ?? "");
   const [hostTargets, setHostTargets] = useState<DeviceTarget[]>([]);
   const [targetSearch, setTargetSearch] = useState("");
   const [bridge, setBridge] = useState<BridgeState>({ loading: true, sourceCommands: [] });
   const [bridgeOutputs, setBridgeOutputs] = useState<BridgeCommandOutput[]>([]);
   const [interactionLogs, setInteractionLogs] = useState<LogEntry[]>([]);
-  const [isNetworkVisible, setIsNetworkVisible] = useState(true);
-  const [isLogsVisible, setIsLogsVisible] = useState(true);
+  const [activeDevtoolsPanel, setActiveDevtoolsPanel] = useState<DevtoolsPanel>("config");
+  const [displayLanguage, setDisplayLanguage] = useState<DisplayLanguage>(() => readDisplayLanguagePreference());
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(initialRoute.panel ?? (initialRoute.nodeId ? "view-tree" : "devices"));
   const [isToolbarTargetMenuOpen, setIsToolbarTargetMenuOpen] = useState(false);
-  const [canvasZoom, setCanvasZoom] = useState(1);
-  const [isHierarchySnapshotMode, setIsHierarchySnapshotMode] = useState(false);
   const [selectedHierarchyNode, setSelectedHierarchyNode] = useState<string | null>(initialRoute.nodeId ?? null);
+  const [hierarchyReloadKey, setHierarchyReloadKey] = useState(0);
   const [isRefreshingAll, setIsRefreshingAll] = useState(false);
   const [lastActionById, setLastActionById] = useState<
     Record<string, { lastAction: string; actionResult: DeviceTarget["actionResult"] }>
@@ -351,22 +610,33 @@ export function App() {
     Record<string, { dataUrl: string; pixelWidth: number | null; pixelHeight: number | null }>
   >({});
   const [hostLogsById, setHostLogsById] = useState<Record<string, LogEntry[]>>({});
+  const [hierarchyById, setHierarchyById] = useState<Record<string, HierarchyCacheEntry>>({});
+  const [hierarchyNodeDraftsByTargetId, setHierarchyNodeDraftsByTargetId] = useState<Record<string, Record<string, HierarchyNodeHotEditDraft>>>({});
   const [livePreviewById, setLivePreviewById] = useState<Record<string, LivePreviewState>>({});
   const [previewFpsById, setPreviewFpsById] = useState<Record<string, number>>({});
+  const [snapshotModeByTargetId, setSnapshotModeByTargetId] = useState<Record<string, boolean>>({});
+  const [snapshotRefreshingByTargetId, setSnapshotRefreshingByTargetId] = useState<Record<string, boolean>>({});
   const [inputActivityById, setInputActivityById] = useState<Record<string, InputActivity | undefined>>({});
   const [screenshotError, setScreenshotError] = useState<string | undefined>();
-  const pageTargets = useMemo(() => {
-    return mergeHostTargetsWithMockFallback(hostTargets, targets);
-  }, [hostTargets]);
+  const pageTargets = hostTargets;
   const filteredTargets = useMemo(() => filterTargetsBySearch(pageTargets, targetSearch), [pageTargets, targetSearch]);
   const bridgePresentation = useMemo(
     () => describeHostBridgePresentation(bridge, hostTargets.length),
     [bridge, hostTargets.length]
   );
   const selected = useMemo(
-    () => pageTargets.find((target) => target.id === selectedId) ?? pageTargets[0] ?? targets[0],
+    () => pageTargets.find((target) => target.id === selectedId) ?? pageTargets[0] ?? emptyTarget,
     [pageTargets, selectedId]
   );
+  const selectedHierarchy = hierarchyById[selected.id];
+  const selectedHierarchyNodeData = useMemo(
+    () => selectedHierarchyNodeForScene(selectedHierarchy?.scene, selectedHierarchyNode),
+    [selectedHierarchy?.scene, selectedHierarchyNode]
+  );
+  const selectedHierarchyNodeDraft =
+    selectedHierarchyNode && selectedHierarchyNodeData
+      ? hierarchyNodeDraftsByTargetId[selected.id]?.[selectedHierarchyNode]
+      : undefined;
   const selectedHasScreenshot = Boolean(screenshotById[selected.id]);
   const selectedPreviewFps = previewFpsById[selected.id] ?? normalizePreviewFps(Math.max(selected.fps, 1));
   const selectedWithScreenshot = useMemo(
@@ -384,6 +654,8 @@ export function App() {
   );
   const selectedLivePreview = livePreviewById[selected.id];
   const selectedInputActivity = inputActivityById[selected.id];
+  const isSelectedSnapshotMode = snapshotModeByTargetId[selected.id] ?? false;
+  const isSelectedSnapshotRefreshing = snapshotRefreshingByTargetId[selected.id] ?? false;
   const selectedEvents = useMemo(
     () => networkEvents[selected.id] ?? hostNetworkEvidenceForTarget(selected),
     [selected]
@@ -398,17 +670,6 @@ export function App() {
     ].slice(0, 8),
     [bridgeOutputs, hostLogsById, interactionLogs, selected]
   );
-  const bottomPanelState = [
-    isNetworkVisible ? "" : "is-network-hidden",
-    isLogsVisible ? "" : "is-logs-hidden",
-    !isNetworkVisible && !isLogsVisible ? "is-bottom-hidden" : "",
-  ].filter(Boolean).join(" ");
-  const isEvidenceVisible = isNetworkVisible || isLogsVisible;
-  const windowEvidenceState = [
-    isLogsVisible ? "" : "is-logs-hidden",
-    isEvidenceVisible ? "" : "is-evidence-hidden",
-  ].filter(Boolean).join(" ");
-
   useEffect(() => {
     const handlePopState = () => {
       const route = readDeviceHubRoute();
@@ -426,6 +687,7 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (selected.id === emptyTargetId) return;
     writeDeviceHubRoute({
       targetId: selected.id,
       panel: sidebarPanel,
@@ -434,12 +696,52 @@ export function App() {
   }, [selected.id, selectedHierarchyNode, sidebarPanel]);
 
   useEffect(() => {
+    writeDisplayLanguagePreference(displayLanguage);
+  }, [displayLanguage]);
+
+  useEffect(() => {
     if (!selectedHierarchyNode) return;
-    const scene = hierarchySceneForTarget(selected);
+    const scene = selectedHierarchy?.scene;
+    if (!scene) return;
     if (!scene.nodes.some((node) => node.id === selectedHierarchyNode)) {
       setSelectedHierarchyNode(null);
     }
-  }, [selected, selectedHierarchyNode]);
+  }, [selectedHierarchy?.scene, selectedHierarchyNode]);
+
+  useEffect(() => {
+    if (sidebarPanel !== "view-tree") return;
+    if (selected.id === emptyTargetId || !(selected.targetSelector ?? selected.udid ?? selected.id)) return;
+    if (hierarchyById[selected.id]) return;
+
+    let cancelled = false;
+    setHierarchyById((entries) => ({
+      ...entries,
+      [selected.id]: { loading: true },
+    }));
+
+    fetchHostHierarchy(selected)
+      .then((scene) => {
+        if (cancelled) return;
+        setHierarchyById((entries) => ({
+          ...entries,
+          [selected.id]: { loading: false, scene },
+        }));
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+        setHierarchyById((entries) => ({
+          ...entries,
+          [selected.id]: {
+            loading: false,
+            error: error instanceof Error ? error.message : String(error),
+          },
+        }));
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [hierarchyReloadKey, selected, sidebarPanel]);
 
   const loadHostTargets = async (preferredSelectedId: string) => {
     const result = await fetchHostTargets();
@@ -568,10 +870,9 @@ export function App() {
     if (!selected.realSource || !selected.canScreenshot || !(selected.targetSelector ?? selected.udid)) {
       return;
     }
-    if (isHierarchySnapshotMode) {
+    if (isSelectedSnapshotMode) {
       return;
     }
-
     let cancelled = false;
     let timer: number | undefined;
     let inFlight = false;
@@ -605,12 +906,14 @@ export function App() {
     selected.udid,
     selectedHasScreenshot,
     selectedPreviewFps,
-    isHierarchySnapshotMode,
+    isSelectedSnapshotMode,
   ]);
 
   const handleRefreshAll = async () => {
     setIsRefreshingAll(true);
     setBridge((current) => ({ ...current, loading: true, error: undefined }));
+    setHierarchyById({});
+    setHierarchyReloadKey((current) => current + 1);
     setInteractionLogs((current) => [makeLog("info", "refresh all host data"), ...current]);
     try {
       const refreshedSelected = await loadHostTargets(selected.id);
@@ -649,14 +952,96 @@ export function App() {
     }));
   };
 
-  const handleProbeMode = useCallback(() => {
-    setIsHierarchySnapshotMode(true);
-    setSidebarPanel("view-tree");
-  }, []);
+  const setSelectedSnapshotMode = (enabled: boolean) => {
+    setSnapshotModeByTargetId((current) => ({
+      ...current,
+      [selected.id]: enabled,
+    }));
+    if (enabled) {
+      setInputActivityById((current) => ({
+        ...current,
+        [selected.id]: undefined,
+      }));
+    }
+  };
 
-  const handlePointMode = useCallback(() => {
-    setIsHierarchySnapshotMode(false);
-  }, []);
+  const refreshSelectedSnapshot = async () => {
+    const target = selected;
+    if (!target.realSource || !target.canScreenshot || !(target.targetSelector ?? target.udid)) return;
+    setSnapshotRefreshingByTargetId((current) => ({
+      ...current,
+      [target.id]: true,
+    }));
+    setInteractionLogs((current) => [makeLog("info", "snapshot refresh requested"), ...current]);
+    try {
+      await refreshScreenshot(target);
+      if (target.realSource && (sidebarPanel === "view-tree" || hierarchyById[target.id]?.scene)) {
+        setHierarchyById((entries) => ({
+          ...entries,
+          [target.id]: { ...entries[target.id], loading: true },
+        }));
+        const scene = await fetchHostHierarchy(target);
+        setHierarchyById((entries) => ({
+          ...entries,
+          [target.id]: { loading: false, scene },
+        }));
+      }
+      setLastActionById((current) => ({
+        ...current,
+        [target.id]: {
+          lastAction: "Snapshot refreshed manually",
+          actionResult: "ok",
+        },
+      }));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setInteractionLogs((current) => [makeLog("error", `snapshot refresh failed ${message}`), ...current]);
+      setLastActionById((current) => ({
+        ...current,
+        [target.id]: {
+          lastAction: "Snapshot refresh failed",
+          actionResult: "failed",
+        },
+      }));
+    } finally {
+      setSnapshotRefreshingByTargetId((current) => ({
+        ...current,
+        [target.id]: false,
+      }));
+    }
+  };
+
+  const updateSelectedHierarchyNodeDraft = (patch: HierarchyNodeHotEditDraft) => {
+    if (!selectedHierarchyNodeData || !selectedHierarchyNode) return;
+    setHierarchyNodeDraftsByTargetId((current) => {
+      const targetDrafts = current[selected.id] ?? {};
+      const existing = targetDrafts[selectedHierarchyNode] ?? {};
+      return {
+        ...current,
+        [selected.id]: {
+          ...targetDrafts,
+          [selectedHierarchyNode]: {
+            ...existing,
+            ...patch,
+            frame: patch.frame ? { ...existing.frame, ...patch.frame } : existing.frame,
+          },
+        },
+      };
+    });
+  };
+
+  const resetSelectedHierarchyNodeDraft = () => {
+    if (!selectedHierarchyNode) return;
+    setHierarchyNodeDraftsByTargetId((current) => {
+      const targetDrafts = current[selected.id];
+      if (!targetDrafts?.[selectedHierarchyNode]) return current;
+      const { [selectedHierarchyNode]: _removed, ...remainingTargetDrafts } = targetDrafts;
+      return {
+        ...current,
+        [selected.id]: remainingTargetDrafts,
+      };
+    });
+  };
 
   const handleInput = async (input: ReadonlyInputIntent): Promise<HostInputResponse | null> => {
     const activityTargetId = selected.id;
@@ -729,21 +1114,6 @@ export function App() {
         ...current,
         [activityTargetId]: undefined,
       }));
-    }
-  };
-
-  const canvasZoomIndex = canvasZoomLevels.findIndex((level) => level === canvasZoom);
-  const canZoomOut = canvasZoomIndex > 0;
-  const canZoomIn = canvasZoomIndex >= 0 && canvasZoomIndex < canvasZoomLevels.length - 1;
-  const handleZoomOut = () => {
-    if (canZoomOut) {
-      setCanvasZoom(canvasZoomLevels[canvasZoomIndex - 1]);
-    }
-  };
-  const handleResetZoom = () => setCanvasZoom(1);
-  const handleZoomIn = () => {
-    if (canZoomIn) {
-      setCanvasZoom(canvasZoomLevels[canvasZoomIndex + 1]);
     }
   };
 
@@ -825,7 +1195,7 @@ export function App() {
   return (
     <main className="device-hub-shell">
       <section
-        className={`device-hub-window ${windowEvidenceState}`}
+        className="device-hub-window"
         aria-label="TritonKit 设备中心原型"
       >
         <DeviceHubToolbar
@@ -850,6 +1220,7 @@ export function App() {
             <TargetNavigator
               selected={selectedWithScreenshot}
               targets={filteredTargets}
+              hierarchy={selectedHierarchy}
               activePanel={sidebarPanel}
               searchValue={targetSearch}
               isSearching={targetSearch.trim().length > 0}
@@ -862,32 +1233,58 @@ export function App() {
           ) : null}
           <DeviceCanvas
             target={selectedWithScreenshot}
+            hierarchyScene={selectedHierarchy?.scene}
+            selectedHierarchyNode={selectedHierarchyNode}
+            selectedHierarchyNodeDraft={selectedHierarchyNodeDraft}
             screenshotError={screenshotError}
             livePreview={selectedLivePreview}
             inputActivity={selectedInputActivity}
-            isNetworkVisible={isNetworkVisible}
-            isLogsVisible={isLogsVisible}
-            zoomLevel={canvasZoom}
+            isSnapshotMode={isSelectedSnapshotMode}
+            isSnapshotRefreshing={isSelectedSnapshotRefreshing}
             isDiscoveringHostTargets={isDiscoveringHostTargets}
-            canZoomOut={canZoomOut}
-            canZoomIn={canZoomIn}
-            onToggleNetwork={() => setIsNetworkVisible((current) => !current)}
-            onToggleLogs={() => setIsLogsVisible((current) => !current)}
-            onZoomOut={handleZoomOut}
-            onResetZoom={handleResetZoom}
-            onZoomIn={handleZoomIn}
             onPreviewFpsChange={handlePreviewFpsChange}
-            onProbeMode={handleProbeMode}
-            onPointMode={handlePointMode}
-            onInput={handleInput}
-            selectedHierarchyNode={selectedHierarchyNode}
+            onSnapshotModeChange={setSelectedSnapshotMode}
+            onSnapshotRefresh={refreshSelectedSnapshot}
             onSelectHierarchyNode={setSelectedHierarchyNode}
+            onInput={handleInput}
           />
-          <Inspector target={selectedWithScreenshot} events={selectedEvents} bridge={bridge} />
-        </section>
-        <section className={`hub-bottom ${bottomPanelState}`} aria-label="设备证据">
-          {isNetworkVisible ? <NetworkStrip events={selectedEvents} onHide={() => setIsNetworkVisible(false)} /> : null}
-          {isLogsVisible ? <LogStrip entries={selectedLogs} onHide={() => setIsLogsVisible(false)} /> : null}
+          <aside className="hub-devtools" aria-label="右侧开发者工具">
+            <DevtoolsTabs
+              activePanel={activeDevtoolsPanel}
+              language={displayLanguage}
+              onSelectPanel={setActiveDevtoolsPanel}
+            />
+            <div className="devtools-panel-stack">
+              <Inspector
+                hidden={activeDevtoolsPanel !== "config"}
+                target={selectedWithScreenshot}
+                events={selectedEvents}
+                bridge={bridge}
+                selectedNode={selectedHierarchyNodeData}
+                selectedNodeDraft={selectedHierarchyNodeDraft}
+                onSelectedNodeDraftChange={updateSelectedHierarchyNodeDraft}
+                onSelectedNodeDraftReset={resetSelectedHierarchyNodeDraft}
+              />
+              <NetworkStrip
+                id="network-evidence-panel"
+                hidden={activeDevtoolsPanel !== "network"}
+                language={displayLanguage}
+                events={selectedEvents}
+              />
+              <LogStrip
+                id="logs-evidence-panel"
+                hidden={activeDevtoolsPanel !== "logs"}
+                language={displayLanguage}
+                entries={selectedLogs}
+              />
+              <SettingsPanel
+                id="settings-panel"
+                hidden={activeDevtoolsPanel !== "settings"}
+                language={displayLanguage}
+                onLanguageChange={setDisplayLanguage}
+              />
+            </div>
+          </aside>
         </section>
       </section>
     </main>
@@ -905,13 +1302,6 @@ function resolveFrameOrientation(
     return target.frameOrientation ?? "unknown";
   }
   return target.frameOrientation ?? "landscape";
-}
-
-function mergeHostTargetsWithMockFallback(hostTargets: DeviceTarget[], mockTargets: DeviceTarget[]) {
-  if (hostTargets.length === 0) {
-    return mockTargets;
-  }
-  return hostTargets;
 }
 
 function isRealTarget(target: DeviceTarget) {
@@ -1005,6 +1395,126 @@ function compactMessage(message: string) {
   return compact.length > 180 ? `${compact.slice(0, 177)}...` : compact;
 }
 
+function localizeLogEntry(entry: LogEntry, language: DisplayLanguage): LocalizedLogEntry {
+  return {
+    timeLabel: formatLogTime(entry.time, language),
+    levelLabel: logLevelLabel[language][entry.level],
+    sourceLabel: inferLogSource(entry.message, language),
+    messageLabel: localizeLogMessage(entry.message, language),
+    originalMessage: entry.message,
+  };
+}
+
+function formatLogTime(time: string, language: DisplayLanguage) {
+  const trimmed = time.trim();
+  const parsed = Date.parse(trimmed);
+  if (!Number.isNaN(parsed) && /[TZ]/.test(trimmed)) {
+    return new Intl.DateTimeFormat(language, {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: false,
+    }).format(new Date(parsed));
+  }
+  return trimmed || (language === "zh-CN" ? "未知时间" : "Unknown time");
+}
+
+function inferLogSource(message: string, language: DisplayLanguage) {
+  if (/(Android|ADB|adb)/i.test(message)) return "Android";
+  if (/(Harmony|HDC|hdc)/i.test(message)) return "Harmony";
+  if (/(App launched|App runtime)/i.test(message)) return language === "zh-CN" ? "应用" : "App";
+  if (/(iOS|simctl|framebuffer)/i.test(message)) return "iOS";
+  if (/(network|proxy|route|timeout)/i.test(message)) return language === "zh-CN" ? "网络" : "Network";
+  if (/(triton| exit=)/i.test(message)) return "CLI";
+  return language === "zh-CN" ? "系统" : "System";
+}
+
+function localizeLogMessage(message: string, language: DisplayLanguage) {
+  const trimmed = message.replace(/\s+/g, " ").trim();
+  const hostSelection = trimmed.match(/^(\w+) target (.+) selected from readonly host discovery$/);
+  if (hostSelection) {
+    if (language === "en-US") {
+      return `${platformName(hostSelection[1])} target selected from read-only host discovery: ${hostSelection[2]}`;
+    }
+    return `已从只读 host 发现结果选择 ${platformName(hostSelection[1])} 目标：${hostSelection[2]}`;
+  }
+
+  const missingEvidence = trimmed.match(/^(\w+) network\/app runtime evidence not exposed by CLI DTO(?: blocked=(.+))?$/);
+  if (missingEvidence) {
+    if (language === "en-US") {
+      const blocked = missingEvidence[2] ? ` Blocked by: ${missingEvidence[2]}` : "";
+      return `CLI DTO has not exposed ${platformName(missingEvidence[1])} network or App runtime evidence.${blocked}`;
+    }
+    const blocked = missingEvidence[2] ? `；阻塞原因：${missingEvidence[2]}` : "";
+    return `CLI DTO 尚未暴露 ${platformName(missingEvidence[1])} 的网络或 App runtime 证据${blocked}`;
+  }
+
+  const commandOutput = trimmed.match(/^(.+?) exit=([^ ]+)(?: (.*))?$/);
+  if (commandOutput) {
+    if (language === "en-US") {
+      const summary = commandOutput[3] ? ` Summary: ${commandOutput[3]}.` : "";
+      return `Command completed: ${commandOutput[1]} (exit code ${commandOutput[2]}).${summary}`;
+    }
+    const summary = commandOutput[3] ? `；摘要：${commandOutput[3]}` : "";
+    return `命令执行完成：${commandOutput[1]}（退出码 ${commandOutput[2]}）${summary}`;
+  }
+
+  const framebuffer = trimmed.match(/^Fetched framebuffer through simctl in (\d+) ms$/);
+  if (framebuffer) {
+    return language === "zh-CN"
+      ? `已通过 simctl 获取画面，耗时 ${framebuffer[1]} 毫秒`
+      : `Fetched framebuffer through simctl in ${framebuffer[1]} ms`;
+  }
+
+  const adbReady = trimmed.match(/^ADB target ready: (.+)$/);
+  if (adbReady) {
+    return language === "zh-CN" ? `Android ADB 目标已就绪：${adbReady[1]}` : `Android ADB target is ready: ${adbReady[1]}`;
+  }
+
+  if (trimmed === "HDC target discovered from plain list fallback") {
+    return language === "zh-CN" ? "已从 HDC 列表 fallback 发现目标" : "HDC target discovered from plain list fallback";
+  }
+
+  const dictionary: Record<DisplayLanguage, Record<string, string>> = {
+    "zh-CN": {
+      "Selected host iOS target and paired embedded runtime": "已选择 iOS 目标，并匹配到内嵌 App runtime",
+      "Network proxy restore snapshot pending verification": "网络代理恢复快照等待验证",
+      "Mock route returned conflict for dry-run request": "Mock 路由在试运行请求中返回冲突",
+      "Input command completed through adb shell input": "已通过 adb shell input 完成输入命令",
+      "Snapshot display returned JPEG framebuffer": "快照接口返回 JPEG 画面",
+      "Proxy lane reports limited host visibility": "代理通道报告 host 可见性受限",
+      "App launched": "应用已启动",
+      "Network timeout": "网络请求超时",
+      ok: "成功",
+      failed: "失败",
+      "no output": "无输出",
+    },
+    "en-US": {
+      "Selected host iOS target and paired embedded runtime": "Selected iOS target and paired embedded App runtime",
+      "Network proxy restore snapshot pending verification": "Network proxy restore snapshot is pending verification",
+      "Mock route returned conflict for dry-run request": "Mock route returned a conflict for the dry-run request",
+      "Input command completed through adb shell input": "Input command completed through adb shell input",
+      "Snapshot display returned JPEG framebuffer": "Snapshot display returned a JPEG framebuffer",
+      "Proxy lane reports limited host visibility": "Proxy lane reports limited host visibility",
+      "App launched": "App launched",
+      "Network timeout": "Network timeout",
+      ok: "Succeeded",
+      failed: "Failed",
+      "no output": "No output",
+    },
+  };
+
+  return dictionary[language][trimmed] ?? (trimmed || (language === "zh-CN" ? "无日志内容" : "No log message"));
+}
+
+function platformName(platform: string) {
+  const normalized = platform.toLowerCase();
+  if (normalized === "ios") return "iOS";
+  if (normalized === "android") return "Android";
+  if (normalized === "harmony") return "Harmony";
+  return platform;
+}
+
 function filterTargetsBySearch(targets: DeviceTarget[], query: string) {
   const normalizedQuery = query.trim().toLowerCase();
   if (!normalizedQuery) return targets;
@@ -1083,17 +1593,6 @@ function DeviceHubToolbar({
 
   return (
     <header className="hub-toolbar">
-      <div className="traffic-lights" aria-hidden="true">
-        <span className="traffic-red" />
-        <span className="traffic-yellow" />
-        <span className="traffic-green" />
-      </div>
-
-      <div className="toolbar-cluster" aria-label="添加模拟器和设备">
-        <IconTool label="添加目标" icon={Plus} />
-        <IconTool label="筛选与排序" icon={SlidersHorizontal} />
-      </div>
-
       <IconTool
         label={isSidebarVisible ? "收起侧边栏" : "展开侧边栏"}
         icon={PanelLeft}
@@ -1137,17 +1636,6 @@ function DeviceHubToolbar({
         ) : null}
       </div>
 
-      <div className="toolbar-center">
-        <div className="toolbar-cluster" aria-label="设备交互">
-          <IconTool label="键盘" icon={Keyboard} />
-          <IconTool label="屏幕布局" icon={ScanLine} />
-        </div>
-        <div className="toolbar-cluster" aria-label="压缩或展开窗口">
-          <IconTool label="展开" icon={Maximize2} />
-          <IconTool label="更多" icon={MoreHorizontal} />
-        </div>
-      </div>
-
       <div className="toolbar-cluster inspector-tools" aria-label="检查器工具">
         <IconTool
           label={isRefreshing ? "正在刷新全局数据" : "刷新全局数据"}
@@ -1156,9 +1644,6 @@ function DeviceHubToolbar({
           disabled={isRefreshing}
           onClick={onRefresh}
         />
-        <IconTool label="调整" icon={Settings2} />
-        <IconTool label="文档" icon={FileText} />
-        <IconTool label="信息" icon={Info} />
       </div>
     </header>
   );
@@ -1196,6 +1681,7 @@ function IconTool({
 function TargetNavigator({
   selected,
   targets: visibleTargets,
+  hierarchy,
   activePanel,
   searchValue,
   isSearching,
@@ -1207,6 +1693,7 @@ function TargetNavigator({
 }: {
   selected: DeviceTarget;
   targets: DeviceTarget[];
+  hierarchy?: HierarchyCacheEntry;
   activePanel: SidebarPanel;
   searchValue: string;
   isSearching: boolean;
@@ -1251,7 +1738,12 @@ function TargetNavigator({
       {activePanel === "devices" ? (
         <DeviceListPanel selected={selected} targets={visibleTargets} isSearching={isSearching} onSelect={onSelect} />
       ) : (
-        <ViewTreePanel selected={selected} targets={visibleTargets} onSelect={onSelect} selectedHierarchyNode={selectedHierarchyNode} onSelectHierarchyNode={onSelectHierarchyNode} />
+        <ViewTreePanel
+          selected={selected}
+          hierarchy={hierarchy}
+          selectedHierarchyNode={selectedHierarchyNode}
+          onSelectHierarchyNode={onSelectHierarchyNode}
+        />
       )}
     </aside>
   );
@@ -1307,55 +1799,37 @@ function DeviceListPanel({
 
 function ViewTreePanel({
   selected,
-  targets: visibleTargets,
-  onSelect,
+  hierarchy,
   selectedHierarchyNode,
   onSelectHierarchyNode,
 }: {
   selected: DeviceTarget;
-  targets: DeviceTarget[];
-  onSelect: (id: string) => void;
+  hierarchy?: HierarchyCacheEntry;
   selectedHierarchyNode: string | null;
   onSelectHierarchyNode: (nodeId: string | null) => void;
 }) {
-  const hierarchyScene = hierarchySceneForTarget(selected);
-  const treeNodes = useMemo(() => viewTreeNodesForScene(hierarchyScene), [hierarchyScene]);
-  const defaultSelection = defaultViewTreeSelection(hierarchyScene);
+  const hierarchyScene = hierarchy?.scene;
+  const treeNodes = useMemo(() => (hierarchyScene ? viewTreeNodesForScene(hierarchyScene) : []), [hierarchyScene]);
+  const defaultSelection = hierarchyScene ? defaultViewTreeSelection(hierarchyScene) : null;
   const selectedNode = selectedHierarchyNode ?? defaultSelection;
-
-  useEffect(() => {
-    onSelectHierarchyNode(null);
-  }, [selected.id]);
 
   return (
     <section className="sidebar-panel view-tree-panel" aria-label="视图层级面板">
-      <div className="view-tree-targets" aria-label="视图树 target 切换">
-        <div className="sidebar-section-title">切换 target</div>
-        <div className="view-tree-target-list">
-          {visibleTargets.map((target) => (
-            <button
-              className={`view-tree-target-chip ${target.id === selected.id ? "is-selected" : ""}`}
-              key={target.id}
-              type="button"
-              onClick={() => onSelect(target.id)}
-            >
-              <span className="view-tree-target-chip-platform">{platformLabel[target.platform]}</span>
-              <strong>{target.name}</strong>
-              <span>{target.appName}</span>
-            </button>
+      {hierarchy?.loading ? (
+        <p className="view-tree-empty">正在读取实时视图层级...</p>
+      ) : hierarchy?.error ? (
+        <p className="view-tree-empty" title={hierarchy.error}>
+          未拿到实时视图层级
+        </p>
+      ) : hierarchyScene ? (
+        <div className="view-tree-list" role="tree" aria-label={`${selected.appName} 视图层级`}>
+          {treeNodes.map((node) => (
+            <ViewTreeRow key={node.id} node={node} depth={0} selectedNode={selectedNode} onSelect={onSelectHierarchyNode} />
           ))}
-          {visibleTargets.length === 0 ? <p className="empty-devices">未找到匹配 target</p> : null}
         </div>
-      </div>
-      <div className="view-tree-title">
-        <span>视图层级</span>
-        <strong>{selected.appName}</strong>
-      </div>
-      <div className="view-tree-list" role="tree" aria-label={`${selected.appName} 视图层级`}>
-        {treeNodes.map((node) => (
-          <ViewTreeRow key={node.id} node={node} depth={0} selectedNode={selectedNode} onSelect={onSelectHierarchyNode} />
-        ))}
-      </div>
+      ) : (
+        <p className="view-tree-empty">暂无实时视图层级</p>
+      )}
     </section>
   );
 }
@@ -1368,10 +1842,13 @@ function ViewTreeRow({
 }: {
   node: ViewTreeNode;
   depth: number;
-  selectedNode: string;
+  selectedNode: string | null;
   onSelect: (id: string) => void;
 }) {
   const hasChildren = Boolean(node.children?.length);
+  const displayType = readableViewTreeLabel(node.type);
+  const displayName = readableViewTreeName(displayType, node.name ? readableViewTreeLabel(node.name) : null);
+  const fullLabel = [node.type, node.name].filter(Boolean).join(" ");
 
   return (
     <>
@@ -1386,8 +1863,10 @@ function ViewTreeRow({
         onClick={() => onSelect(node.id)}
       >
         <span className="tree-disclosure">{hasChildren ? "▾" : "·"}</span>
-        <strong>{node.type}</strong>
-        {node.name ? <span>{node.name}</span> : null}
+        <span className="tree-node-copy" title={fullLabel}>
+          <strong>{displayType}</strong>
+          {displayName ? <span>{displayName}</span> : null}
+        </span>
       </button>
       {node.children?.map((child) => (
         <ViewTreeRow key={child.id} node={child} depth={depth + 1} selectedNode={selectedNode} onSelect={onSelect} />
@@ -1398,48 +1877,36 @@ function ViewTreeRow({
 
 function DeviceCanvas({
   target,
+  hierarchyScene,
+  selectedHierarchyNode,
+  selectedHierarchyNodeDraft,
   screenshotError,
   livePreview,
   inputActivity,
-  isNetworkVisible,
-  isLogsVisible,
-  zoomLevel,
+  isSnapshotMode,
+  isSnapshotRefreshing,
   isDiscoveringHostTargets,
-  canZoomOut,
-  canZoomIn,
-  onToggleNetwork,
-  onToggleLogs,
-  onZoomOut,
-  onResetZoom,
-  onZoomIn,
   onPreviewFpsChange,
-  onProbeMode,
-  onPointMode,
-  onInput,
-  selectedHierarchyNode,
+  onSnapshotModeChange,
+  onSnapshotRefresh,
   onSelectHierarchyNode,
+  onInput,
 }: {
   target: DeviceTarget;
+  hierarchyScene?: HierarchyScene;
+  selectedHierarchyNode: string | null;
+  selectedHierarchyNodeDraft?: HierarchyNodeHotEditDraft;
   screenshotError?: string;
   livePreview?: LivePreviewState;
   inputActivity?: InputActivity;
-  isNetworkVisible: boolean;
-  isLogsVisible: boolean;
-  zoomLevel: number;
+  isSnapshotMode: boolean;
+  isSnapshotRefreshing: boolean;
   isDiscoveringHostTargets: boolean;
-  canZoomOut: boolean;
-  canZoomIn: boolean;
-  onToggleNetwork: () => void;
-  onToggleLogs: () => void;
-  onZoomOut: () => void;
-  onResetZoom: () => void;
-  onZoomIn: () => void;
   onPreviewFpsChange: (fps: number) => void;
-  onProbeMode: () => void;
-  onPointMode: () => void;
-  onInput: (input: ReadonlyInputIntent) => Promise<HostInputResponse | null>;
-  selectedHierarchyNode: string | null;
+  onSnapshotModeChange: (enabled: boolean) => void;
+  onSnapshotRefresh: () => Promise<void>;
   onSelectHierarchyNode: (nodeId: string | null) => void;
+  onInput: (input: ReadonlyInputIntent) => Promise<HostInputResponse | null>;
 }) {
   const screenRef = useRef<HTMLDivElement | null>(null);
   const keyboardRelayRef = useRef<HTMLInputElement | null>(null);
@@ -1453,16 +1920,9 @@ function DeviceCanvas({
   const [gesturePreview, setGesturePreview] = useState<GesturePreview | null>(null);
   const [keyboardRelay, setKeyboardRelay] = useState<KeyboardRelayState | null>(null);
   const [keyboardRelayText, setKeyboardRelayText] = useState("");
-  const [activeTool, setActiveTool] = useState<DeviceCanvasTool>("point");
   const [isPreviewFpsOpen, setIsPreviewFpsOpen] = useState(false);
-  const fallbackHierarchyScene = hierarchySceneForTarget(target);
-  const [remoteHierarchyScene, setRemoteHierarchyScene] = useState<HierarchyScene | null>(null);
-  const [hierarchyCapture, setHierarchyCapture] = useState<HierarchyCaptureState>({ status: "idle" });
-  const hierarchyRequestTarget = useMemo(
-    () => target,
-    [target.id, target.kind, target.platform, target.scope, target.screenshotSource, target.targetSelector, target.udid]
-  );
-  const hierarchyScene = remoteHierarchyScene?.platform === target.platform ? remoteHierarchyScene : fallbackHierarchyScene;
+  const selectedNodeHighlight = hierarchyScene ? viewNodeHighlightForScene(hierarchyScene, selectedHierarchyNode, selectedHierarchyNodeDraft) : null;
+  const controllerBadge = resolveControllerShellBadge(hierarchyScene, selectedHierarchyNode);
   const orientation = target.frameOrientation ?? "landscape";
   const aspectRatio =
     target.screenshotPixelWidth && target.screenshotPixelHeight
@@ -1472,11 +1932,8 @@ function DeviceCanvas({
     target.screenshotPixelWidth && target.screenshotPixelHeight
       ? {
           "--screen-aspect-ratio": aspectRatio,
-          "--canvas-zoom": zoomLevel,
         } as CSSProperties
-      : ({
-          "--canvas-zoom": zoomLevel,
-        } as CSSProperties);
+      : undefined;
   const orientationLabel =
     target.screenshotPixelWidth && target.screenshotPixelHeight
       ? `${orientation} ${target.screenshotPixelWidth} x ${target.screenshotPixelHeight}`
@@ -1484,6 +1941,7 @@ function DeviceCanvas({
         ? `${orientation} placeholder`
         : orientation;
   const canSendInput = Boolean(
+    !isSnapshotMode &&
     target.realSource &&
       target.canInput &&
       target.screenshotDataUrl &&
@@ -1493,6 +1951,7 @@ function DeviceCanvas({
   );
   const isWaitingForRealScreenshot = Boolean(target.realSource && target.canScreenshot && !target.screenshotDataUrl);
   const pendingScreenshotState = screenshotPendingState(target, screenshotError);
+  const canSelectSnapshotNode = Boolean(isSnapshotMode && hierarchyScene);
 
   useEffect(() => {
     return () => {
@@ -1510,37 +1969,7 @@ function DeviceCanvas({
     setKeyboardRelay(null);
     setKeyboardRelayText("");
     keyboardRelayValue.current = "";
-    setActiveTool("point");
-    onPointMode();
-    setRemoteHierarchyScene(null);
-    setHierarchyCapture({ status: "idle" });
-  }, [onPointMode, target.id]);
-
-  const captureHierarchy = useCallback(async (method: "GET" | "POST" = "GET") => {
-    setHierarchyCapture((current) => ({
-      ...current,
-      status: "loading",
-      method,
-      error: undefined,
-    }));
-    try {
-      const response = await fetchHostHierarchyResponse(hierarchyRequestTarget, { method });
-      setRemoteHierarchyScene(response.scene);
-      setHierarchyCapture(hierarchyCaptureStateFromResponse(response, method));
-    } catch (error) {
-      setRemoteHierarchyScene(null);
-      setHierarchyCapture({
-        status: "error",
-        method,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }, [hierarchyRequestTarget]);
-
-  useEffect(() => {
-    if (activeTool !== "probe") return;
-    void captureHierarchy("GET");
-  }, [activeTool, captureHierarchy]);
+  }, [target.id]);
 
   useEffect(() => {
     if (!keyboardRelay) return;
@@ -1563,6 +1992,13 @@ function DeviceCanvas({
       window.removeEventListener("pointerdown", handlePointerDownOutside);
     };
   }, [isPreviewFpsOpen]);
+
+  useEffect(() => {
+    if (isSnapshotMode) {
+      setIsPreviewFpsOpen(false);
+      setKeyboardRelay(null);
+    }
+  }, [isSnapshotMode]);
 
   const clearGesturePreviewSoon = () => {
     if (gestureClearTimer.current) {
@@ -1617,6 +2053,16 @@ function DeviceCanvas({
   };
 
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+    if (isSnapshotMode) {
+      screenRef.current?.focus({ preventScroll: true });
+      const start = mapPointer(event);
+      if (!start || !hierarchyScene) return;
+      const hitNode = hierarchyNodeAtPoint(hierarchyScene, start.xPercent, start.yPercent);
+      if (hitNode) {
+        onSelectHierarchyNode(hitNode.id);
+      }
+      return;
+    }
     if (!canSendInput) return;
     screenRef.current?.focus({ preventScroll: true });
     const start = mapPointer(event);
@@ -1676,6 +2122,7 @@ function DeviceCanvas({
   };
 
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+    if (isSnapshotMode) return;
     if (!canSendInput) return;
     const current = mapPointer(event);
     if (!current) return;
@@ -1725,6 +2172,7 @@ function DeviceCanvas({
   };
 
   const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
+    if (isSnapshotMode) return;
     if (!canSendInput || !target.targetSelector) return;
     const end = mapPointer(event);
     if (end && activeGesturePointers.current.has(event.pointerId)) {
@@ -1946,93 +2394,120 @@ function DeviceCanvas({
   }
 
   return (
-    <section className={`hub-canvas tool-${activeTool}`} aria-label="设备画布">
-      {target.screenshotDataUrl && activeTool !== "probe" ? (
-        <div className={`live-preview-control ${isPreviewFpsOpen ? "is-open" : ""}`} ref={previewControlRef}>
-          <button
-            className={`live-preview-badge ${livePreview?.status === "error" ? "is-error" : ""}`}
-            type="button"
-            aria-label={isPreviewFpsOpen ? "收起实时预览帧率控制" : "展开实时预览帧率控制"}
-            aria-expanded={isPreviewFpsOpen}
-            onClick={() => setIsPreviewFpsOpen((current) => !current)}
-          >
-            <span />
-            <strong>{livePreview?.status === "error" ? "流已暂停" : "实时"}</strong>
-            <em>{target.fps} fps</em>
-          </button>
-          {isPreviewFpsOpen ? (
+    <section className={`hub-canvas ${isSnapshotMode ? "tool-snapshot" : "tool-point"}`} aria-label="设备画布">
+      {target.realSource && target.canScreenshot ? (
+        <div className={`live-preview-control ${isPreviewFpsOpen ? "is-open" : ""} ${isSnapshotMode ? "is-snapshot" : ""}`} ref={previewControlRef}>
+          <div className="canvas-mode-switch" aria-label="设备画布模式">
+            <button
+              className={!isSnapshotMode ? "is-active" : ""}
+              type="button"
+              aria-pressed={!isSnapshotMode}
+              onClick={() => onSnapshotModeChange(false)}
+            >
+              实时
+            </button>
+            <button
+              className={isSnapshotMode ? "is-active" : ""}
+              type="button"
+              aria-pressed={isSnapshotMode}
+              onClick={() => onSnapshotModeChange(true)}
+            >
+              快照
+            </button>
+          </div>
+          {isSnapshotMode ? (
+            <button
+              className="snapshot-refresh-button"
+              type="button"
+              aria-label="手动刷新快照"
+              disabled={isSnapshotRefreshing}
+              onClick={() => {
+                void onSnapshotRefresh();
+              }}
+            >
+              <RefreshCw size={13} />
+              <span>{isSnapshotRefreshing ? "刷新中" : "刷新"}</span>
+            </button>
+          ) : target.screenshotDataUrl ? (
+            <button
+              className={`live-preview-badge ${livePreview?.status === "error" ? "is-error" : ""}`}
+              type="button"
+              aria-label={isPreviewFpsOpen ? "收起实时预览帧率控制" : "展开实时预览帧率控制"}
+              aria-expanded={isPreviewFpsOpen}
+              onClick={() => setIsPreviewFpsOpen((current) => !current)}
+            >
+              <span />
+              <strong>{livePreview?.status === "error" ? "流已暂停" : "实时"}</strong>
+              <em>{target.fps} fps</em>
+            </button>
+          ) : null}
+          {!isSnapshotMode && isPreviewFpsOpen ? (
             <>
-              <label className="preview-fps-control">
-                <span>刷新率</span>
-                <input
-                  type="range"
-                  min={previewFpsMin}
-                  max={previewFpsMax}
-                  step="1"
-                  value={target.fps}
-                  aria-label="调整实时预览帧率"
-                  onChange={(event) => onPreviewFpsChange(Number(event.currentTarget.value))}
-                />
-              </label>
-              <div className="preview-fps-stepper" aria-label="实时预览帧率步进">
-                <button
-                  type="button"
-                  aria-label="降低实时预览帧率"
-                  disabled={target.fps <= previewFpsMin}
-                  onClick={() => onPreviewFpsChange(target.fps - 1)}
-                >
-                  <Minus size={13} />
-                </button>
-                <button
-                  type="button"
-                  aria-label="提高实时预览帧率"
-                  disabled={target.fps >= previewFpsMax}
-                  onClick={() => onPreviewFpsChange(target.fps + 1)}
-                >
-                  <Plus size={13} />
-                </button>
-              </div>
+            <label className="preview-fps-control">
+              <span>刷新率</span>
+              <input
+                type="range"
+                min={previewFpsMin}
+                max={previewFpsMax}
+                step="1"
+                value={target.fps}
+                aria-label="调整实时预览帧率"
+                onChange={(event) => onPreviewFpsChange(Number(event.currentTarget.value))}
+              />
+            </label>
+            <div className="preview-fps-stepper" aria-label="实时预览帧率步进">
+              <button
+                type="button"
+                aria-label="降低实时预览帧率"
+                disabled={target.fps <= previewFpsMin}
+                onClick={() => onPreviewFpsChange(target.fps - 1)}
+              >
+                <Minus size={13} />
+              </button>
+              <button
+                type="button"
+                aria-label="提高实时预览帧率"
+                disabled={target.fps >= previewFpsMax}
+                onClick={() => onPreviewFpsChange(target.fps + 1)}
+              >
+                <Plus size={13} />
+              </button>
+            </div>
             </>
           ) : null}
         </div>
       ) : null}
 
-      <div className="device-stage" aria-label={`画布缩放 ${Math.round(zoomLevel * 100)}%`}>
-        {activeTool === "probe" ? (
-          <div
-            className="hierarchy-stage tool-probe"
-            style={frameStyle}
-            aria-label={`3D 视图层级，当前工具 ${deviceToolLabel(activeTool)}`}
-          >
-            <HierarchySceneViewer
-              scene={hierarchyScene}
-              target={target}
-              captureState={hierarchyCapture}
-              onCapture={() => captureHierarchy("POST")}
-              selectedNodeId={selectedHierarchyNode}
-              onSelectNode={onSelectHierarchyNode}
-            />
-          </div>
-        ) : (
-          <div
-            className={`device-frame orientation-${orientation} ${aspectRatio ? "has-real-frame" : ""}`}
-            style={frameStyle}
-          >
-            <div className="device-side left" />
-            <div className="device-side top" />
-            <div className="device-side bottom" />
+      <div className="device-stage" aria-label="设备镜像区域">
+        <div
+          className={`device-frame orientation-${orientation} ${aspectRatio ? "has-real-frame" : ""}`}
+          style={frameStyle}
+        >
+          {hierarchyScene?.platform === "ios" ? (
             <div
-              className={`device-screen orientation-${orientation} ${target.screenshotTone} tool-${activeTool} ${canSendInput ? "is-interactive" : ""}`}
-              aria-label={`设备画面，当前工具 ${deviceToolLabel(activeTool)}`}
-              tabIndex={canSendInput ? 0 : undefined}
-              onPointerDown={handlePointerDown}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerCancel}
-              onKeyDown={handleKeyDown}
-              onPaste={handlePaste}
-              ref={screenRef}
+              className={`controller-shell-badge ${controllerBadge?.isFallback ? "is-fallback" : ""}`}
+              title={controllerBadge?.stack.length ? controllerBadge.stack.join(" > ") : controllerBadge?.className ?? "UIViewController 未暴露"}
             >
+              <span>UIViewController</span>
+              <strong>{controllerBadge?.name ?? "未暴露"}</strong>
+              {controllerBadge?.isFallback ? <em>fallback</em> : null}
+            </div>
+          ) : null}
+          <div className="device-side left" />
+          <div className="device-side top" />
+          <div className="device-side bottom" />
+          <div
+            className={`device-screen orientation-${orientation} ${target.screenshotTone} ${isSnapshotMode ? "tool-snapshot" : "tool-point"} ${canSendInput || canSelectSnapshotNode ? "is-interactive" : ""}`}
+            aria-label={isSnapshotMode ? "设备画面，当前工具 快照选节点" : "设备画面，当前工具 点选"}
+            tabIndex={canSendInput || canSelectSnapshotNode ? 0 : undefined}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+            onKeyDown={handleKeyDown}
+            onPaste={handlePaste}
+            ref={screenRef}
+          >
               {target.screenshotDataUrl ? (
                 <img className="real-screenshot" src={target.screenshotDataUrl} alt={`${target.name} 截图`} />
               ) : isWaitingForRealScreenshot ? (
@@ -2063,6 +2538,16 @@ function DeviceCanvas({
                   </div>
                 </>
               )}
+              {selectedNodeHighlight ? (
+                <div
+                  className={`view-node-highlight ${selectedNodeHighlight.isHiddenDraft ? "is-hidden-draft" : ""}`}
+                  data-node-id={selectedNodeHighlight.node.id}
+                  data-node-type={selectedNodeHighlight.node.type}
+                  data-hot-hidden={selectedNodeHighlight.isHiddenDraft ? "true" : "false"}
+                  aria-label={`选中视图区域 ${selectedNodeHighlight.node.type}${selectedNodeHighlight.node.name ? ` ${selectedNodeHighlight.node.name}` : ""}`}
+                  style={selectedNodeHighlight.style}
+                />
+              ) : null}
               {gesturePreview ? <GestureOverlay gesture={gesturePreview} /> : null}
               {inputActivity ? <InputActivityBadge activity={inputActivity} /> : null}
               {keyboardRelay ? (
@@ -2090,34 +2575,9 @@ function DeviceCanvas({
                   />
                 </label>
               ) : null}
-            </div>
           </div>
-        )}
+        </div>
       </div>
-      <DeviceControls
-        activeTool={activeTool}
-        onSelectTool={(tool) => {
-          setActiveTool(tool);
-          if (tool === "probe") {
-            onProbeMode();
-          } else {
-            onPointMode();
-          }
-        }}
-        target={target}
-        isNetworkVisible={isNetworkVisible}
-        isLogsVisible={isLogsVisible}
-        onToggleNetwork={onToggleNetwork}
-        onToggleLogs={onToggleLogs}
-      />
-      <CanvasZoomControls
-        zoomLevel={zoomLevel}
-        canZoomOut={canZoomOut}
-        canZoomIn={canZoomIn}
-        onZoomOut={onZoomOut}
-        onResetZoom={onResetZoom}
-        onZoomIn={onZoomIn}
-      />
       {screenshotError ? <p className="canvas-error">{screenshotError}</p> : null}
     </section>
   );
@@ -2159,915 +2619,12 @@ function ScreenMini({ label, value }: { label: string; value: string }) {
   );
 }
 
-const HIERARCHY_FIXED_TILT_X = -18;
-const HIERARCHY_INITIAL_YAW = 24;
-const HIERARCHY_INITIAL_ZOOM = 1;
-const HIERARCHY_MIN_ZOOM = 0.45;
-const HIERARCHY_MAX_ZOOM = 2.4;
-
-/**
- * 2D hit-test: find which hierarchy node was clicked by converting screen coordinates
- * back to scene space and checking node frames. Returns the deepest (highest depth) node
- * whose frame contains the click point, or null if no node was hit.
- */
-function hitTestHierarchyNode(
-  event: PointerEvent,
-  scene: HierarchyScene,
-  mountEl: HTMLDivElement | null,
-): HierarchyLayerNode | null {
-  if (!mountEl) return null;
-  const rect = mountEl.getBoundingClientRect();
-  const cx = event.clientX - rect.left;
-  const cy = event.clientY - rect.top;
-  const w = rect.width || 1;
-  const h = rect.height || 1;
-
-  const scale = Math.min(0.64, 280 / scene.viewport.width, 560 / scene.viewport.height);
-  const tiltX = (HIERARCHY_FIXED_TILT_X * Math.PI) / 180;
-  const zoom = 1; // use nominal zoom for hit-test
-
-  // Approximate inverse: undo viewport normalization, then undo scale
-  // The 3D scene centers nodes around (0,0) with (node.frame.x + w/2 - viewport.w/2) * scale
-  // For hit-testing we approximate by mapping screen % back to viewport coordinates
-  let best: HierarchyLayerNode | null = null;
-  for (const node of scene.nodes) {
-    if (!node.visible || node.depth === 0) continue;
-    const nx = (node.frame.x / scene.viewport.width) * 100;
-    const ny = (node.frame.y / scene.viewport.height) * 100;
-    const nw = (node.frame.width / scene.viewport.width) * 100;
-    const nh = (node.frame.height / scene.viewport.height) * 100;
-    const px = (cx / w) * 100;
-    const py = (cy / h) * 100;
-    if (px >= nx && px <= nx + nw && py >= ny && py <= ny + nh) {
-      if (!best || node.depth > best.depth) {
-        best = node;
-      }
-    }
-  }
-  return best;
-}
-
-function clampCanvasSize(value: number, min: number, max: number) {
-  return Math.max(min, Math.min(max, Math.round(value)));
-}
-
-function hierarchySliceKind(node: HierarchyLayerNode) {
-  const display = node.style?.display?.toLowerCase();
-  if (display === "bar" || display === "navigation" || display === "toolbar") return "bar";
-  if (display === "tabbar") return "tabbar";
-  if (display === "button" || display === "control" || display === "image") return "control";
-  if (display === "text") return "text";
-  if (display === "input") return "input";
-  if (display === "card") return "card";
-  if (display === "container" || display === "list") return "container";
-  const type = node.type.toLowerCase();
-  if (/(navigationbar|toolbar|navigation)/.test(type)) return "bar";
-  if (/(tabbar|bottomnavigation|floatingbar)/.test(type)) return "tabbar";
-  if (/(button|toggle|switch|image)/.test(type)) return "control";
-  if (/(label|text)/.test(type)) return "text";
-  if (/(textinput|textfield|edittext|search)/.test(type)) return "input";
-  if (/(card|row|cell)/.test(type)) return "card";
-  if (/(scroll|recycler|list|stack|column)/.test(type)) return "container";
-  return node.interactive ? "control" : "view";
-}
-
-function drawRoundedRect(
-  context: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  radius: number
-) {
-  const safeRadius = Math.min(radius, width / 2, height / 2);
-  context.beginPath();
-  context.moveTo(x + safeRadius, y);
-  context.lineTo(x + width - safeRadius, y);
-  context.quadraticCurveTo(x + width, y, x + width, y + safeRadius);
-  context.lineTo(x + width, y + height - safeRadius);
-  context.quadraticCurveTo(x + width, y + height, x + width - safeRadius, y + height);
-  context.lineTo(x + safeRadius, y + height);
-  context.quadraticCurveTo(x, y + height, x, y + height - safeRadius);
-  context.lineTo(x, y + safeRadius);
-  context.quadraticCurveTo(x, y, x + safeRadius, y);
-  context.closePath();
-}
-
-type HierarchySurfaceSource = {
-  sliceImages?: Map<string, HTMLImageElement>;
-};
-
-type HierarchyRenderModel =
-  | "main-snapshot-with-structure"
-  | "structure-only-fallback"
-  | "selected-slice-evidence";
-
-function isNearFullscreenNode(node: HierarchyLayerNode, scene: HierarchyScene) {
-  return node.frame.width >= scene.viewport.width * 0.96 && node.frame.height >= scene.viewport.height * 0.9;
-}
-
-function selectHierarchyEvidenceNode(scene: HierarchyScene) {
-  const nodesWithSlice = scene.nodes.filter((node) =>
-    node.visible &&
-    node.depth > 0 &&
-    resolveEvidenceSources(node).some((source) => "dataUrl" in source && Boolean(source.dataUrl))
-  );
-  return (
-    nodesWithSlice.find((node) => node.interactive && !isNearFullscreenNode(node, scene)) ??
-    nodesWithSlice.find((node) => !isNearFullscreenNode(node, scene)) ??
-    nodesWithSlice[0] ??
-    null
-  );
-}
-
-function firstHierarchyVisualSourceDataUrl(source: HierarchyVisualSource | undefined) {
-  return source && "dataUrl" in source ? source.dataUrl : undefined;
-}
-
-function selectedHierarchyEvidenceSource(node: HierarchyLayerNode | null) {
-  if (!node) return undefined;
-  return resolveEvidenceSources(node).find((source) => Boolean(firstHierarchyVisualSourceDataUrl(source)));
-}
-
-function hierarchyNumber(value: number | undefined) {
-  return typeof value === "number" && Number.isFinite(value) ? Number(value.toFixed(2)).toString() : "—";
-}
-
-function hierarchyRectSummary(rect: { x: number; y: number; width: number; height: number } | undefined) {
-  if (!rect) return "—";
-  return `${hierarchyNumber(rect.x)}, ${hierarchyNumber(rect.y)} · ${hierarchyNumber(rect.width)}×${hierarchyNumber(rect.height)}`;
-}
-
-function drawHierarchyMainSurface(scene: HierarchyScene, image: HTMLImageElement) {
-  const canvas = document.createElement("canvas");
-  const width = clampCanvasSize(scene.viewport.width * 2, 260, 1200);
-  const height = clampCanvasSize(scene.viewport.height * 2, 480, 1800);
-  canvas.width = width;
-  canvas.height = height;
-
-  const context = canvas.getContext("2d");
-  if (!context) return canvas;
-
-  context.clearRect(0, 0, width, height);
-  context.drawImage(image, 0, 0, width, height);
-  context.strokeStyle = "rgba(37, 99, 235, 0.38)";
-  context.lineWidth = 2;
-  context.strokeRect(1, 1, Math.max(1, width - 2), Math.max(1, height - 2));
-  return canvas;
-}
-
-function drawHierarchyNodeSlice(node: HierarchyLayerNode, surface?: HierarchySurfaceSource) {
-  const canvas = document.createElement("canvas");
-  const width = clampCanvasSize(node.frame.width * 2, 96, 900);
-  const height = clampCanvasSize(node.frame.height * 2, 44, 620);
-  const scaleX = width / Math.max(1, node.frame.width);
-  const scaleY = height / Math.max(1, node.frame.height);
-  canvas.width = width;
-  canvas.height = height;
-
-  const context = canvas.getContext("2d");
-  if (!context) return canvas;
-
-  context.scale(scaleX, scaleY);
-  const w = node.frame.width;
-  const h = node.frame.height;
-  const kind = hierarchySliceKind(node);
-  const label = node.name || node.type;
-  const shortLabel = label.length > 34 ? label.slice(0, 31) + "..." : label;
-  const accent = node.interactive ? node.color : "#94a3b8";
-
-  context.clearRect(0, 0, w, h);
-
-  const exactSliceImage = surface?.sliceImages?.get(node.id);
-  if (exactSliceImage) {
-    context.drawImage(exactSliceImage, 0, 0, w, h);
-    context.strokeStyle = node.interactive ? "rgba(37, 99, 235, 0.72)" : "rgba(100, 116, 139, 0.32)";
-    context.lineWidth = node.interactive ? 1.4 : 0.8;
-    drawRoundedRect(context, 0.5, 0.5, Math.max(1, w - 1), Math.max(1, h - 1), Math.min(12, h / 2));
-    context.stroke();
-    return canvas;
-  }
-
-  context.shadowColor = "rgba(15, 23, 42, 0.06)";
-  context.shadowBlur = Math.min(16, Math.max(2, h * 0.08));
-  context.shadowOffsetY = 2;
-
-  if (kind === "bar") {
-    context.fillStyle = "rgba(248, 250, 252, 0.86)";
-    drawRoundedRect(context, 0, 0, w, h, 14);
-    context.fill();
-    context.shadowColor = "transparent";
-    context.strokeStyle = "rgba(148, 163, 184, 0.44)";
-    context.stroke();
-    context.fillStyle = "rgba(37, 99, 235, 0.16)";
-    drawRoundedRect(context, 12, Math.max(6, h * 0.24), Math.min(32, h * 0.52), Math.min(32, h * 0.52), 999);
-    context.fill();
-    context.fillStyle = "#334155";
-    context.font = `700 ${Math.max(10, Math.min(18, h * 0.28))}px ui-sans-serif, system-ui`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(shortLabel, w / 2, h / 2, w * 0.6);
-    return canvas;
-  }
-
-  if (kind === "tabbar") {
-    context.fillStyle = "rgba(255, 255, 255, 0.9)";
-    drawRoundedRect(context, 0, 0, w, h, 22);
-    context.fill();
-    context.shadowColor = "transparent";
-    context.strokeStyle = "rgba(148, 163, 184, 0.44)";
-    context.stroke();
-    const itemCount = 4;
-    for (let index = 0; index < itemCount; index += 1) {
-      const centerX = ((index + 0.5) / itemCount) * w;
-      context.fillStyle = index === 0 ? "rgba(37, 99, 235, 0.16)" : "rgba(100, 116, 139, 0.12)";
-      drawRoundedRect(context, centerX - 16, h * 0.2, 32, Math.max(20, h * 0.3), 999);
-      context.fill();
-      context.fillStyle = index === 0 ? "#2563eb" : "#64748b";
-      context.fillRect(centerX - 7, h * 0.6, 14, 2);
-    }
-    return canvas;
-  }
-
-  if (kind === "control") {
-    context.fillStyle = node.interactive ? "rgba(37, 99, 235, 0.16)" : "rgba(255, 255, 255, 0.72)";
-    drawRoundedRect(context, 0, 0, w, h, Math.min(16, h / 2));
-    context.fill();
-    context.shadowColor = "transparent";
-    context.strokeStyle = node.interactive ? accent : "rgba(148, 163, 184, 0.48)";
-    context.lineWidth = 1.3;
-    context.stroke();
-    context.fillStyle = node.interactive ? "#1d4ed8" : "#475569";
-    context.font = `700 ${Math.max(9, Math.min(15, h * 0.28))}px ui-sans-serif, system-ui`;
-    context.textAlign = "center";
-    context.textBaseline = "middle";
-    context.fillText(shortLabel, w / 2, h / 2, w - 12);
-    return canvas;
-  }
-
-  if (kind === "input") {
-    context.fillStyle = "rgba(255, 255, 255, 0.92)";
-    drawRoundedRect(context, 0, 0, w, h, Math.min(12, h / 2));
-    context.fill();
-    context.shadowColor = "transparent";
-    context.strokeStyle = "rgba(37, 99, 235, 0.42)";
-    context.stroke();
-    context.fillStyle = "#94a3b8";
-    context.font = `500 ${Math.max(9, Math.min(14, h * 0.26))}px ui-sans-serif, system-ui`;
-    context.textAlign = "left";
-    context.textBaseline = "middle";
-    context.fillText(shortLabel, 12, h / 2, w - 24);
-    return canvas;
-  }
-
-  if (kind === "text") {
-    context.fillStyle = "rgba(248, 250, 252, 0.74)";
-    drawRoundedRect(context, 0, 0, w, h, 8);
-    context.fill();
-    context.shadowColor = "transparent";
-    context.fillStyle = "#334155";
-    context.font = `650 ${Math.max(9, Math.min(16, h * 0.36))}px ui-sans-serif, system-ui`;
-    context.textAlign = "left";
-    context.textBaseline = "middle";
-    context.fillText(shortLabel, 8, h / 2, w - 16);
-    return canvas;
-  }
-
-  if (kind === "card" || kind === "container") {
-    context.fillStyle = kind === "card" ? "rgba(255, 255, 255, 0.78)" : "rgba(248, 250, 252, 0.38)";
-    drawRoundedRect(context, 0, 0, w, h, kind === "card" ? 14 : 6);
-    context.fill();
-    context.shadowColor = "transparent";
-    context.strokeStyle = kind === "card" ? "rgba(148, 163, 184, 0.5)" : "rgba(148, 163, 184, 0.28)";
-    context.stroke();
-    const rowCount = Math.max(2, Math.min(5, Math.floor(h / 26)));
-    for (let index = 0; index < rowCount; index += 1) {
-      const y = 10 + index * Math.max(16, (h - 20) / rowCount);
-      context.fillStyle = index === 0 && kind === "card" ? "rgba(37, 99, 235, 0.18)" : "rgba(100, 116, 139, 0.18)";
-      drawRoundedRect(context, 10, y, Math.max(18, w * (index === 0 ? 0.62 : 0.78)), Math.max(4, Math.min(8, h * 0.05)), 999);
-      context.fill();
-    }
-    context.fillStyle = "#475569";
-    context.font = `650 ${Math.max(8, Math.min(13, h * 0.14))}px ui-sans-serif, system-ui`;
-    context.textAlign = "left";
-    context.textBaseline = "bottom";
-    context.fillText(shortLabel, 10, Math.max(14, h - 8), w - 20);
-    return canvas;
-  }
-
-  context.fillStyle = "rgba(248, 250, 252, 0.2)";
-  drawRoundedRect(context, 0, 0, w, h, 6);
-  context.fill();
-  context.shadowColor = "transparent";
-  context.strokeStyle = "rgba(148, 163, 184, 0.24)";
-  context.stroke();
-  return canvas;
-}
-
-function clampHierarchyZoom(value: number) {
-  return Math.max(HIERARCHY_MIN_ZOOM, Math.min(HIERARCHY_MAX_ZOOM, value));
-}
-
-function hierarchyPointerDistance(pointers: Map<number, { x: number; y: number }>) {
-  const [first, second] = Array.from(pointers.values());
-  if (!first || !second) return 0;
-  return Math.hypot(second.x - first.x, second.y - first.y);
-}
-
-function HierarchySceneViewer({
-  scene,
-  target,
-  captureState,
-  onCapture,
-  selectedNodeId,
-  onSelectNode,
-}: {
-  scene: HierarchyScene;
-  target: DeviceTarget;
-  captureState: HierarchyCaptureState;
-  onCapture: () => void;
-  selectedNodeId: string | null;
-  onSelectNode: (nodeId: string | null) => void;
-}) {
-  const mountRef = useRef<HTMLDivElement | null>(null);
-  const dragStart = useRef<{ x: number; yaw: number } | null>(null);
-  const activePointers = useRef(new Map<number, { x: number; y: number }>());
-  const pinchStart = useRef<{ distance: number; zoom: number } | null>(null);
-  const pointerDownPos = useRef<{ x: number; y: number } | null>(null);
-  const threeRef = useRef<{
-    renderer: import("three").WebGLRenderer;
-    scene: import("three").Scene;
-    camera: import("three").PerspectiveCamera;
-    group: import("three").Group;
-    THREE: typeof import("three");
-  } | null>(null);
-  const nodeObjectsRef = useRef<Map<string, { mesh: import("three").Mesh; edges: import("three").LineSegments }>>(new Map());
-  const [yaw, setYaw] = useState(HIERARCHY_INITIAL_YAW);
-  const [zoom, setZoom] = useState(HIERARCHY_INITIAL_ZOOM);
-  const [hasWebGLScene, setHasWebGLScene] = useState(false);
-  const [surfaceImage, setSurfaceImage] = useState<HTMLImageElement | null>(null);
-  const [sliceImages, setSliceImages] = useState<Map<string, HTMLImageElement>>(new Map());
-  const autoSelectedSliceNode = useMemo(() => selectHierarchyEvidenceNode(scene), [scene]);
-  const selectedSliceNode = useMemo(() => {
-    if (selectedNodeId) {
-      const found = scene.nodes.find((n) => n.id === selectedNodeId && n.visible && n.depth > 0);
-      if (found) return found;
-    }
-    return autoSelectedSliceNode;
-  }, [selectedNodeId, scene, autoSelectedSliceNode]);
-  const selectedVisualSource = useMemo(() => selectedHierarchyEvidenceSource(selectedSliceNode), [selectedSliceNode]);
-  const selectedMaterialExplanation = useMemo(
-    () => selectedSliceNode ? getMaterialExplanation(selectedSliceNode) : null,
-    [selectedSliceNode]
-  );
-  const parityClaim = useMemo(() => computeParityClaim(scene), [scene]);
-  const selectedVisualSourceDataUrl = firstHierarchyVisualSourceDataUrl(selectedVisualSource);
-  const sliceImageSources = useMemo(
-    () => selectedSliceNode && selectedVisualSourceDataUrl ? [[selectedSliceNode.id, selectedVisualSourceDataUrl] as const] : [],
-    [selectedSliceNode, selectedVisualSourceDataUrl]
-  );
-  const layerCount = new Set(scene.nodes.map((node) => node.depth)).size;
-  const interactiveCount = scene.nodes.filter((node) => node.interactive).length;
-  const hasMainSnapshotSurface = Boolean(target.screenshotDataUrl);
-  const hasSelectedSliceEvidence = Boolean(selectedVisualSourceDataUrl);
-  const renderModel: HierarchyRenderModel = hasMainSnapshotSurface
-    ? "main-snapshot-with-structure"
-    : hasSelectedSliceEvidence
-      ? "selected-slice-evidence"
-      : "structure-only-fallback";
-  const captureEvidenceMode = captureState.evidence?.source.nodeSlice === "real"
-    ? "real-node-slices-available"
-    : hasMainSnapshotSurface
-      ? "main-snapshot-only"
-      : captureState.evidence?.source.nodeSlice === "styled"
-        ? "styled-fallback"
-        : "structure-only";
-
-  useEffect(() => {
-    if (!target.screenshotDataUrl) {
-      setSurfaceImage(null);
-      return;
-    }
-    if (typeof Image === "undefined") {
-      setSurfaceImage(null);
-      return;
-    }
-    let cancelled = false;
-    const image = new Image();
-    image.onload = () => {
-      if (!cancelled) setSurfaceImage(image);
-    };
-    image.onerror = () => {
-      if (!cancelled) setSurfaceImage(null);
-    };
-    image.src = target.screenshotDataUrl;
-    return () => {
-      cancelled = true;
-    };
-  }, [target.screenshotDataUrl]);
-
-  useEffect(() => {
-    if (sliceImageSources.length === 0 || typeof Image === "undefined") {
-      setSliceImages(new Map());
-      return;
-    }
-
-    let cancelled = false;
-    const loadedImages = new Map<string, HTMLImageElement>();
-    setSliceImages(new Map());
-    let pending = sliceImageSources.length;
-    const finishOne = () => {
-      pending -= 1;
-      if (!cancelled && pending === 0) {
-        setSliceImages(new Map(loadedImages));
-      }
-    };
-
-    for (const [nodeId, dataUrl] of sliceImageSources) {
-      const image = new Image();
-      image.onload = () => {
-        if (cancelled) return;
-        loadedImages.set(nodeId, image);
-        finishOne();
-      };
-      image.onerror = () => {
-        if (cancelled) return;
-        loadedImages.delete(nodeId);
-        finishOne();
-      };
-      image.src = dataUrl;
-    }
-
-    return () => {
-      cancelled = true;
-    };
-  }, [sliceImageSources]);
-
-  useEffect(() => {
-    setYaw(HIERARCHY_INITIAL_YAW);
-    setZoom(HIERARCHY_INITIAL_ZOOM);
-    setHasWebGLScene(false);
-  }, [scene.platform, scene.rootId]);
-
-  useEffect(() => {
-    let disposed = false;
-    const mount = mountRef.current;
-    if (!mount) return;
-
-    void import("three").then((THREE) => {
-      if (disposed || !mountRef.current) return;
-      const width = Math.max(1, mount.clientWidth || 360);
-      const height = Math.max(1, mount.clientHeight || 640);
-
-      try {
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-        renderer.setSize(width, height);
-        renderer.domElement.className = "hierarchy-three-canvas";
-
-        const threeScene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(34, width / height, 1, 2400);
-        camera.position.set(0, 0, 860);
-
-        const group = new THREE.Group();
-        const scale = Math.min(0.64, 280 / scene.viewport.width, 560 / scene.viewport.height);
-
-        if (surfaceImage) {
-          const mainTexture = new THREE.CanvasTexture(drawHierarchyMainSurface(scene, surfaceImage));
-          mainTexture.colorSpace = THREE.SRGBColorSpace;
-          mainTexture.anisotropy = Math.min(4, renderer.capabilities.getMaxAnisotropy());
-          const mainGeometry = new THREE.PlaneGeometry(scene.viewport.width * scale, scene.viewport.height * scale);
-          const mainMaterial = new THREE.MeshBasicMaterial({
-            map: mainTexture,
-            transparent: true,
-            opacity: 0.84,
-            side: THREE.DoubleSide,
-            depthTest: false,
-            depthWrite: false,
-          });
-          const mainSurface = new THREE.Mesh(mainGeometry, mainMaterial);
-          mainSurface.position.set(0, 0, 0);
-          mainSurface.renderOrder = 500;
-          group.add(mainSurface);
-        }
-
-        nodeObjectsRef.current.clear();
-        for (const node of scene.nodes) {
-          if (!node.visible) continue;
-          if (node.depth === 0) continue;
-          const geometry = new THREE.PlaneGeometry(Math.max(8, node.frame.width * scale), Math.max(8, node.frame.height * scale));
-          const material = new THREE.MeshBasicMaterial({
-            color: node.color,
-            transparent: true,
-            opacity: node.interactive ? 0.12 : 0.06,
-            side: THREE.DoubleSide,
-            depthTest: false,
-            depthWrite: false,
-          });
-          const mesh = new THREE.Mesh(geometry, material);
-          const sliceRenderOrder = 800 + node.depth * 8;
-          mesh.position.set(
-            (node.frame.x + node.frame.width / 2 - scene.viewport.width / 2) * scale - node.depth * 5,
-            -(node.frame.y + node.frame.height / 2 - scene.viewport.height / 2) * scale,
-            node.depth * 18
-          );
-          mesh.renderOrder = sliceRenderOrder;
-          group.add(mesh);
-
-          const edges = new THREE.LineSegments(
-            new THREE.EdgesGeometry(geometry),
-            new THREE.LineBasicMaterial({
-              color: node.interactive ? 0x2563eb : 0x94a3b8,
-              transparent: true,
-              opacity: node.interactive ? 0.52 : 0.32,
-              depthTest: false,
-              depthWrite: false,
-            })
-          );
-          edges.position.copy(mesh.position);
-          edges.position.z += 1.1;
-          edges.renderOrder = sliceRenderOrder + 2;
-          group.add(edges);
-
-          nodeObjectsRef.current.set(node.id, { mesh, edges });
-        }
-
-        group.position.set(24, -4, -Math.max(140, layerCount * 22));
-        threeScene.add(group);
-        mountRef.current.replaceChildren(renderer.domElement);
-        threeRef.current = { renderer, scene: threeScene, camera, group, THREE };
-        setHasWebGLScene(true);
-        renderHierarchyScene(yaw, zoom);
-      } catch {
-        setHasWebGLScene(false);
-        threeRef.current = null;
-      }
-    });
-
-    return () => {
-      disposed = true;
-      threeRef.current?.renderer.dispose();
-      threeRef.current = null;
-      setHasWebGLScene(false);
-      mount.replaceChildren();
-    };
-  }, [scene, surfaceImage, sliceImages]);
-
-  useEffect(() => {
-    renderHierarchyScene(yaw, zoom);
-  }, [yaw, zoom]);
-
-  // Update node materials when selection changes (no scene rebuild)
-  useEffect(() => {
-    const objects = nodeObjectsRef.current;
-    if (objects.size === 0) return;
-    const three = threeRef.current;
-    if (!three) return;
-    const { THREE } = three;
-
-    // Remove old slice meshes
-    const toRemove: import("three").Object3D[] = [];
-    three.group.children.forEach((child) => {
-      if ((child as any).userData?.isSliceMesh) toRemove.push(child);
-    });
-    toRemove.forEach((obj) => {
-      three.group.remove(obj);
-      if ((obj as any).geometry) (obj as any).geometry.dispose();
-      if ((obj as any).material) {
-        const mat = (obj as any).material;
-        if (mat.map) mat.map.dispose();
-        mat.dispose();
-      }
-    });
-
-    const sceneNodeMap = new Map(scene.nodes.map((n) => [n.id, n]));
-
-    for (const [nodeId, { mesh, edges }] of objects) {
-      const node = sceneNodeMap.get(nodeId);
-      if (!node) continue;
-      const isUserSelected = selectedNodeId === nodeId;
-      const isAutoSelected = selectedSliceNode?.id === nodeId;
-
-      // Update mesh material
-      const mat = mesh.material as import("three").MeshBasicMaterial;
-      mat.color.set(isUserSelected ? 0x2563eb : node.color);
-      mat.opacity = isUserSelected ? 0.28 : node.interactive ? 0.12 : 0.06;
-
-      // Update edge material
-      const edgeMat = edges.material as import("three").LineBasicMaterial;
-      edgeMat.color.set(isUserSelected ? 0x1d4ed8 : node.interactive ? 0x2563eb : 0x94a3b8);
-      edgeMat.opacity = isUserSelected ? 0.88 : isAutoSelected ? 0.72 : node.interactive ? 0.52 : 0.32;
-
-      // Add slice mesh for selected node
-      if (isAutoSelected || isUserSelected) {
-        const sliceCanvas = drawHierarchyNodeSlice(node, { sliceImages });
-        const sliceTexture = new THREE.CanvasTexture(sliceCanvas);
-        sliceTexture.colorSpace = THREE.SRGBColorSpace;
-        const styledMaterial = new THREE.MeshBasicMaterial({
-          map: sliceTexture,
-          transparent: true,
-          opacity: 0.92,
-          side: THREE.DoubleSide,
-          depthTest: false,
-          depthWrite: false,
-        });
-        const styledSlice = new THREE.Mesh(mesh.geometry, styledMaterial);
-        styledSlice.position.copy(mesh.position);
-        styledSlice.position.z += 1.4;
-        styledSlice.renderOrder = 1200 + node.depth * 8;
-        (styledSlice as any).userData = { isSliceMesh: true };
-        three.group.add(styledSlice);
-      }
-    }
-
-    renderHierarchyScene(yaw, zoom);
-  }, [selectedNodeId, selectedSliceNode, scene, sliceImages, yaw, zoom]);
-
-  const renderHierarchyScene = (nextYaw: number, nextZoom: number) => {
-    const three = threeRef.current;
-    if (!three) return;
-    three.group.rotation.x = (HIERARCHY_FIXED_TILT_X * Math.PI) / 180;
-    three.group.rotation.y = (nextYaw * Math.PI) / 180;
-    three.group.scale.setScalar(nextZoom);
-    three.renderer.render(three.scene, three.camera);
-  };
-
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    event.stopPropagation();
-    activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    pointerDownPos.current = { x: event.clientX, y: event.clientY };
-    if (activePointers.current.size >= 2) {
-      const distance = hierarchyPointerDistance(activePointers.current);
-      pinchStart.current = distance > 0 ? { distance, zoom } : null;
-      dragStart.current = null;
-    } else {
-      pinchStart.current = null;
-      dragStart.current = { x: event.clientX, yaw };
-    }
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      // Browser smoke tests may synthesize pointer events without active capture state.
-    }
-  };
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    event.stopPropagation();
-    if (activePointers.current.has(event.pointerId)) {
-      activePointers.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
-    }
-    if (activePointers.current.size >= 2 && pinchStart.current) {
-      const distance = hierarchyPointerDistance(activePointers.current);
-      if (distance > 0) {
-        setZoom(clampHierarchyZoom(pinchStart.current.zoom * (distance / pinchStart.current.distance)));
-      }
-      return;
-    }
-    const start = dragStart.current;
-    if (!start) return;
-    setYaw(start.yaw + (event.clientX - start.x) * 0.42);
-  };
-
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    event.stopPropagation();
-    activePointers.current.delete(event.pointerId);
-    pinchStart.current = null;
-
-    // Click detection: if pointer didn't move much, treat as node selection
-    const downPos = pointerDownPos.current;
-    pointerDownPos.current = null;
-    if (downPos && activePointers.current.size === 0) {
-      const dx = event.clientX - downPos.x;
-      const dy = event.clientY - downPos.y;
-      if (Math.abs(dx) < 6 && Math.abs(dy) < 6) {
-        const hitNode = hitTestHierarchyNode(event, scene, mountRef.current);
-        onSelectNode(hitNode?.id ?? null);
-      }
-    }
-
-    if (activePointers.current.size === 1) {
-      const [remaining] = activePointers.current.values();
-      dragStart.current = { x: remaining.x, yaw };
-    } else {
-      dragStart.current = null;
-    }
-  };
-
-  const handleWheel = (event: WheelEvent<HTMLDivElement>) => {
-    if (!event.ctrlKey && !event.metaKey) return;
-    event.preventDefault();
-    event.stopPropagation();
-    const delta = event.deltaY < 0 ? 0.08 : -0.08;
-    setZoom((current) => clampHierarchyZoom(current + delta));
-  };
-
-  return (
-    <div
-      className={`hierarchy-scene-viewer ${hasWebGLScene ? "has-webgl" : "is-dom-fallback"}`}
-      data-render-model={renderModel}
-      role="img"
-      aria-label={`${platformLabel[target.platform]} ${target.appName} 3D 视图层级`}
-      onPointerDown={handlePointerDown}
-      onPointerMove={handlePointerMove}
-      onPointerUp={handlePointerUp}
-      onPointerCancel={handlePointerUp}
-      onWheel={handleWheel}
-    >
-      <div className="hierarchy-scene-toolbar">
-        <span>{platformLabel[target.platform]}</span>
-        <strong>{target.appName}</strong>
-        <em>{scene.nodes.length} nodes · {layerCount} layers · {interactiveCount} interactive</em>
-        <button
-          className="hierarchy-capture-button"
-          type="button"
-          aria-label="重新采集真实层级"
-          disabled={captureState.status === "loading"}
-          title={captureState.command}
-          onPointerDown={(event) => event.stopPropagation()}
-          onClick={(event) => {
-            event.stopPropagation();
-            onCapture();
-          }}
-        >
-          {captureState.status === "loading" ? "采集中" : "重新采集"}
-        </button>
-      </div>
-      {selectedSliceNode ? (
-        <section className="hierarchy-node-inspector" aria-label="选中节点 Inspector">
-          <div>
-            <strong>Node</strong>
-            <span>{selectedSliceNode.className ?? selectedSliceNode.type}</span>
-          </div>
-          <dl>
-            <div>
-              <dt>frame</dt>
-              <dd>{hierarchyRectSummary(selectedSliceNode.frame)}</dd>
-            </div>
-            <div>
-              <dt>depth</dt>
-              <dd>{selectedSliceNode.depth}</dd>
-            </div>
-            <div>
-              <dt>layer.zPosition</dt>
-              <dd>{hierarchyNumber(selectedSliceNode.layer?.zPosition)}</dd>
-            </div>
-            <div>
-              <dt>layer.opacity</dt>
-              <dd>{hierarchyNumber(selectedSliceNode.layer?.opacity)}</dd>
-            </div>
-            <div>
-              <dt>layer.masksToBounds</dt>
-              <dd>{selectedSliceNode.layer?.masksToBounds === undefined ? "—" : String(selectedSliceNode.layer.masksToBounds)}</dd>
-            </div>
-            <div>
-              <dt>layer.cornerRadius</dt>
-              <dd>{hierarchyNumber(selectedSliceNode.layer?.cornerRadius)}</dd>
-            </div>
-            <div>
-              <dt>visualSources</dt>
-              <dd>{selectedMaterialExplanation?.evidenceSources.join(" / ") || "styledFallback"}</dd>
-            </div>
-            <div>
-              <dt>defaultMaterial</dt>
-              <dd>{selectedMaterialExplanation?.defaultMaterial ?? "none"}</dd>
-            </div>
-          </dl>
-        </section>
-      ) : null}
-      <div className="hierarchy-scene-mount" ref={mountRef} />
-      <div
-        className="hierarchy-layer-stack"
-        aria-label="3D hierarchy DOM fallback"
-        style={{
-          "--hierarchy-tilt-x": `${HIERARCHY_FIXED_TILT_X}deg`,
-          "--hierarchy-rotate-y": `${yaw}deg`,
-          "--hierarchy-zoom": zoom,
-        } as CSSProperties}
-      >
-        {hasMainSnapshotSurface ? (
-          <span
-            className="is-main-snapshot"
-            data-render-role="main-snapshot-surface"
-            data-render-mode="main-snapshot"
-            aria-hidden="true"
-            style={{
-              "--node-x": "0%",
-              "--node-y": "0%",
-              "--node-width": "100%",
-              "--node-height": "100%",
-              "--node-depth": 0,
-              "--node-color": "#94a3b8",
-            } as CSSProperties}
-          />
-        ) : null}
-        {scene.nodes.filter((node) => node.visible).map((node) => {
-          return (
-            <span
-              key={node.id}
-              className={`${node.interactive ? "is-interactive" : ""} ${selectedNodeId === node.id ? "is-selected" : ""}`}
-              data-node-id={node.id}
-              data-platform={scene.platform}
-              data-render-mode="structure"
-              onClick={(e) => {
-                e.stopPropagation();
-                onSelectNode(selectedNodeId === node.id ? null : node.id);
-              }}
-              style={{
-                "--node-x": `${(node.frame.x / scene.viewport.width) * 100}%`,
-                "--node-y": `${(node.frame.y / scene.viewport.height) * 100}%`,
-                "--node-width": `${(node.frame.width / scene.viewport.width) * 100}%`,
-                "--node-height": `${(node.frame.height / scene.viewport.height) * 100}%`,
-                "--node-depth": node.depth,
-                "--node-color": node.color,
-              } as CSSProperties}
-            >
-              {node.type}
-              <small>{node.name}</small>
-            </span>
-          );
-        })}
-        {selectedSliceNode ? (
-          <span
-            className="is-selected-slice"
-            data-node-id={selectedSliceNode.id}
-            data-platform={scene.platform}
-            data-render-mode="selected-slice"
-            data-texture-source={selectedVisualSource?.kind ?? "unknown"}
-            style={{
-              "--node-x": `${(selectedSliceNode.frame.x / scene.viewport.width) * 100}%`,
-              "--node-y": `${(selectedSliceNode.frame.y / scene.viewport.height) * 100}%`,
-              "--node-width": `${(selectedSliceNode.frame.width / scene.viewport.width) * 100}%`,
-              "--node-height": `${(selectedSliceNode.frame.height / scene.viewport.height) * 100}%`,
-              "--node-depth": selectedSliceNode.depth + 0.12,
-              "--node-color": selectedSliceNode.color,
-            } as CSSProperties}
-          >
-            {selectedSliceNode.type}
-            <small>{selectedSliceNode.name}</small>
-          </span>
-        ) : null}
-      </div>
-      <output className="hierarchy-rotation-state" aria-label="层级旋转状态">
-        水平旋转 {Math.round(yaw)}° · 缩放 {Math.round(zoom * 100)}%
-      </output>
-      <output
-        className="hierarchy-parity-state"
-        aria-label="Lookin parity 状态"
-        data-parity-level={parityClaim.level}
-        data-lookin-parity={parityClaim.canClaimLookinParity ? "available" : "unavailable"}
-        title={parityClaim.reasons.join("；")}
-      >
-        Snapshot Evidence Mode · Lookin parity {parityClaim.canClaimLookinParity ? "available" : "unavailable"}
-      </output>
-      {selectedMaterialExplanation ? (
-        <output
-          className="hierarchy-material-state"
-          aria-label="当前节点视觉来源"
-          data-default-material={selectedMaterialExplanation.defaultMaterial ?? "none"}
-          data-evidence-sources={selectedMaterialExplanation.evidenceSources.join(",")}
-        >
-          当前节点视觉来源：{selectedMaterialExplanation.evidenceSources.join(" / ") || "styledFallback"}
-        </output>
-      ) : null}
-      <output
-        className={`hierarchy-capture-state is-${captureState.status}`}
-        aria-label="层级采集状态"
-        data-evidence={captureEvidenceMode}
-      >
-        {hierarchyCaptureStatusText(captureState, hasMainSnapshotSurface)}
-      </output>
-    </div>
-  );
-}
-
-function hierarchyCaptureStatusText(captureState: HierarchyCaptureState, hasMainSnapshotSurface: boolean) {
-  const hasRealNodeSlice = captureState.evidence?.source.nodeSlice === "real";
-  if (captureState.status === "loading") return "正在采集快照…";
-  if (captureState.status === "ready") {
-    const source = captureState.method === "POST" ? "手动采集" : "现场采集";
-    if (hasMainSnapshotSurface && hasRealNodeSlice) return `${source} · 真实截图切片可用`;
-    if (hasMainSnapshotSurface) return `${source} · 节点切片不可用`;
-    if (hasRealNodeSlice) return "结构快照 · 局部切片可用";
-    if (captureState.evidence?.source.nodeSlice === "styled") return "样式化快照 · 非真实节点切片";
-    return "样式化快照 · 非真实节点切片";
-  }
-  if (captureState.status === "error") {
-    return "采集失败 · 已显示 fallback scene";
-  }
-  return "等待采集";
-}
-
 function isEditableInputClassName(className: string) {
   return /(TextField|TextView|SearchBarTextField|TextInput|SecureText)/i.test(className);
 }
 
 function roundedGestureValue(value: number) {
   return Number(value.toFixed(3));
-}
-
-function deviceToolLabel(tool: DeviceCanvasTool) {
-  if (tool === "probe") return "探测";
-  return "点选";
 }
 
 function GestureOverlay({ gesture }: { gesture: GesturePreview }) {
@@ -3147,24 +2704,28 @@ function InputActivityBadge({ activity }: { activity: InputActivity }) {
 }
 
 function Inspector({
+  hidden,
   target,
   events,
   bridge,
+  selectedNode,
+  selectedNodeDraft,
+  onSelectedNodeDraftChange,
+  onSelectedNodeDraftReset,
 }: {
+  hidden?: boolean;
   target: DeviceTarget;
   events: NetworkEvent[];
   bridge: BridgeState;
+  selectedNode: HierarchyLayerNode | null;
+  selectedNodeDraft?: HierarchyNodeHotEditDraft;
+  onSelectedNodeDraftChange: (patch: HierarchyNodeHotEditDraft) => void;
+  onSelectedNodeDraftReset: () => void;
 }) {
   const errorCount = events.filter((event) => event.status >= 400).length;
 
   return (
-    <aside className="hub-inspector" aria-label="检查器">
-      <div className="inspector-tabs" role="tablist" aria-label="检查器分区">
-        <button className="is-active" type="button">信息</button>
-        <button type="button">应用</button>
-        <button type="button">配置</button>
-      </div>
-
+    <aside className="hub-inspector" aria-label="检查器" hidden={hidden}>
       <section className="app-tile" aria-label="当前应用">
         <div className="app-icon">
           <Activity size={18} />
@@ -3182,6 +2743,13 @@ function Inspector({
         <Metric icon={Braces} label="AX 节点" value={target.hierarchyNodes.toString()} />
         <Metric icon={DatabaseZap} label="HTTP 错误" value={errorCount.toString()} />
       </div>
+
+      <SelectedNodeHotEditPanel
+        node={selectedNode}
+        draft={selectedNodeDraft}
+        onDraftChange={onSelectedNodeDraftChange}
+        onReset={onSelectedNodeDraftReset}
+      />
 
       <dl className="inspector-details">
         <div>
@@ -3214,6 +2782,224 @@ function Inspector({
   );
 }
 
+function SelectedNodeHotEditPanel({
+  node,
+  draft,
+  onDraftChange,
+  onReset,
+}: {
+  node: HierarchyLayerNode | null;
+  draft?: HierarchyNodeHotEditDraft;
+  onDraftChange: (patch: HierarchyNodeHotEditDraft) => void;
+  onReset: () => void;
+}) {
+  if (!node) {
+    return (
+      <section className="selected-node-panel is-empty" aria-label="选中视图节点">
+        <div className="selected-node-heading">
+          <strong>选中视图节点</strong>
+          <span>在左侧视图树中选择节点后显示配置</span>
+        </div>
+      </section>
+    );
+  }
+
+  const frame = resolveHotEditFrame(node, draft);
+  const opacity = resolveHotEditOpacity(node, draft);
+  const cornerRadius = resolveHotEditCornerRadius(node, draft);
+  const backgroundColor = resolveHotEditBackgroundColor(node, draft);
+  const hidden = resolveHotEditHidden(node, draft);
+  const hasDraft = hasHierarchyNodeDraft(draft);
+  const nodeName = node.name ? readableViewTreeLabel(node.name) : "";
+  const typeLabel = readableViewTreeLabel(node.type);
+
+  return (
+    <section className="selected-node-panel" aria-label="选中视图节点">
+      <div className="selected-node-heading">
+        <div>
+          <strong>{typeLabel}</strong>
+          {nodeName ? <span>{nodeName}</span> : null}
+        </div>
+        <em>{hasDraft ? "本地热修改预览" : "Runtime DTO"}</em>
+      </div>
+
+      <dl className="selected-node-summary">
+        <div>
+          <dt>ID</dt>
+          <dd>{node.id}</dd>
+        </div>
+        <div>
+          <dt>Frame</dt>
+          <dd>{`${formatInspectorNumber(frame.x)}, ${formatInspectorNumber(frame.y)}, ${formatInspectorNumber(frame.width)} x ${formatInspectorNumber(frame.height)}`}</dd>
+        </div>
+        <div>
+          <dt>Depth</dt>
+          <dd>{node.depth}</dd>
+        </div>
+        <div>
+          <dt>State</dt>
+          <dd>{hidden ? "隐藏" : node.interactive ? "可交互" : "可见"}</dd>
+        </div>
+      </dl>
+
+      <div className="hot-edit-grid" aria-label="热修改预览">
+        <HotEditNumber
+          label="X"
+          value={frame.x}
+          onChange={(value) => onDraftChange({ frame: { x: value } })}
+        />
+        <HotEditNumber
+          label="Y"
+          value={frame.y}
+          onChange={(value) => onDraftChange({ frame: { y: value } })}
+        />
+        <HotEditNumber
+          label="Width"
+          min={1}
+          value={frame.width}
+          onChange={(value) => onDraftChange({ frame: { width: Math.max(1, value) } })}
+        />
+        <HotEditNumber
+          label="Height"
+          min={1}
+          value={frame.height}
+          onChange={(value) => onDraftChange({ frame: { height: Math.max(1, value) } })}
+        />
+        <HotEditNumber
+          label="Opacity"
+          max={1}
+          min={0}
+          step={0.05}
+          value={opacity}
+          onChange={(value) => onDraftChange({ opacity: Math.max(0, Math.min(1, value)) })}
+        />
+        <HotEditNumber
+          label="Radius"
+          min={0}
+          value={cornerRadius}
+          onChange={(value) => onDraftChange({ cornerRadius: Math.max(0, value) })}
+        />
+        <label className="hot-edit-control">
+          <span>Color</span>
+          <input
+            aria-label="修改选中节点背景色"
+            type="color"
+            value={normalizeColorInput(backgroundColor)}
+            onChange={(event) => onDraftChange({ backgroundColor: event.currentTarget.value })}
+          />
+        </label>
+        <label className="hot-edit-toggle">
+          <input
+            aria-label="隐藏选中节点预览"
+            checked={hidden}
+            type="checkbox"
+            onChange={(event) => onDraftChange({ hidden: event.currentTarget.checked })}
+          />
+          <span>Hidden</span>
+        </label>
+      </div>
+
+      <div className="hot-edit-footer">
+        <span>本地预览，未写回 App runtime</span>
+        <button type="button" disabled={!hasDraft} onClick={onReset}>重置</button>
+      </div>
+    </section>
+  );
+}
+
+function HotEditNumber({
+  label,
+  max,
+  min,
+  step = 1,
+  value,
+  onChange,
+}: {
+  label: string;
+  max?: number;
+  min?: number;
+  step?: number;
+  value: number;
+  onChange: (value: number) => void;
+}) {
+  return (
+    <label className="hot-edit-control">
+      <span>{label}</span>
+      <input
+        aria-label={`修改选中节点 ${label}`}
+        max={max}
+        min={min}
+        step={step}
+        type="number"
+        value={formatInputNumber(value)}
+        onChange={(event) => {
+          const next = Number(event.currentTarget.value);
+          if (Number.isFinite(next)) {
+            onChange(next);
+          }
+        }}
+      />
+    </label>
+  );
+}
+
+function hasHierarchyNodeDraft(draft?: HierarchyNodeHotEditDraft) {
+  if (!draft) return false;
+  if (draft.frame && Object.keys(draft.frame).length > 0) return true;
+  return draft.opacity !== undefined || draft.cornerRadius !== undefined || draft.backgroundColor !== undefined || draft.hidden !== undefined;
+}
+
+function formatInspectorNumber(value: number) {
+  return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+}
+
+function formatInputNumber(value: number) {
+  return Number.isInteger(value) ? value.toString() : Number(value.toFixed(3)).toString();
+}
+
+function normalizeColorInput(value: string) {
+  const trimmed = value.trim();
+  if (/^#[0-9a-f]{6}$/i.test(trimmed)) return trimmed;
+  if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+  }
+  return "#64d26a";
+}
+
+function DevtoolsTabs({
+  activePanel,
+  language,
+  onSelectPanel,
+}: {
+  activePanel: DevtoolsPanel;
+  language: DisplayLanguage;
+  onSelectPanel: (panel: DevtoolsPanel) => void;
+}) {
+  const tabs: Array<{ id: DevtoolsPanel; label: string }> = [
+    { id: "config", label: language === "zh-CN" ? "配置" : "Config" },
+    { id: "network", label: language === "zh-CN" ? "网络" : "Network" },
+    { id: "logs", label: language === "zh-CN" ? "日志" : "Logs" },
+    { id: "settings", label: language === "zh-CN" ? "设置" : "Settings" },
+  ];
+
+  return (
+    <div className="inspector-tabs" role="tablist" aria-label={language === "zh-CN" ? "右侧工具分区" : "Right-side tool sections"}>
+      {tabs.map((tab) => (
+        <button
+          key={tab.id}
+          className={activePanel === tab.id ? "is-active" : ""}
+          type="button"
+          role="tab"
+          aria-selected={activePanel === tab.id}
+          onClick={() => onSelectPanel(tab.id)}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Metric({
   icon: Icon,
   label,
@@ -3232,110 +3018,95 @@ function Metric({
   );
 }
 
-function CanvasZoomControls({
-  zoomLevel,
-  canZoomOut,
-  canZoomIn,
-  onZoomOut,
-  onResetZoom,
-  onZoomIn,
+function SettingsPanel({
+  id,
+  hidden,
+  language,
+  onLanguageChange,
 }: {
-  zoomLevel: number;
-  canZoomOut: boolean;
-  canZoomIn: boolean;
-  onZoomOut: () => void;
-  onResetZoom: () => void;
-  onZoomIn: () => void;
+  id?: string;
+  hidden?: boolean;
+  language: DisplayLanguage;
+  onLanguageChange: (language: DisplayLanguage) => void;
 }) {
-  const zoomPercent = Math.round(zoomLevel * 100);
+  const isChinese = language === "zh-CN";
 
   return (
-    <section className="canvas-zoom-controls" aria-label="画布缩放控制">
-      <div className="control-pill">
-        <button type="button" aria-label={`缩小 (${zoomPercent}%)`} title={`缩小 (${zoomPercent}%)`} disabled={!canZoomOut} onClick={onZoomOut}>
-          <ZoomOut size={17} />
-        </button>
-        <button type="button" aria-label="实际大小 (100%)" title="实际大小 (100%)" disabled={zoomLevel === 1} onClick={onResetZoom}>
-          <Search size={17} />
-        </button>
-        <button type="button" aria-label={`放大 (${zoomPercent}%)`} title={`放大 (${zoomPercent}%)`} disabled={!canZoomIn} onClick={onZoomIn}>
-          <ZoomIn size={17} />
-        </button>
+    <section
+      id={id}
+      className="settings-panel"
+      role={id ? "tabpanel" : undefined}
+      aria-label={isChinese ? "设置" : "Settings"}
+      hidden={hidden}
+    >
+      <div className="settings-heading">
+        <Settings2 size={17} />
+        <div>
+          <strong>{isChinese ? "设置" : "Settings"}</strong>
+          <span>{isChinese ? "仅影响本机 Web 展示偏好" : "Local Web display preferences only"}</span>
+        </div>
       </div>
+
+      <div className="settings-group">
+        <div className="settings-copy">
+          <strong>{isChinese ? "语言偏好" : "Language preference"}</strong>
+          <span>
+            {isChinese
+              ? "用于右侧工具区标签、日志和展示层格式化；不改变 CLI / HTTP 机器可读契约。"
+              : "Used for right-side tool labels, logs, and display formatting. CLI / HTTP contracts remain unchanged."}
+          </span>
+        </div>
+
+        <div className="language-options" role="radiogroup" aria-label={isChinese ? "语言偏好" : "Language preference"}>
+          {displayLanguageOptions.map((option) => (
+            <label className={language === option.id ? "is-selected" : ""} key={option.id}>
+              <input
+                checked={language === option.id}
+                name="display-language"
+                onChange={() => onLanguageChange(option.id)}
+                type="radio"
+                value={option.id}
+              />
+              <span>
+                <strong>{option.label}</strong>
+                <em>{option.detail}</em>
+              </span>
+            </label>
+          ))}
+        </div>
+      </div>
+
+      <p className="settings-footnote">
+        {isChinese
+          ? "偏好保存在当前浏览器的 localStorage，刷新页面后继续生效。"
+          : "The preference is stored in this browser's localStorage and survives refreshes."}
+      </p>
     </section>
   );
 }
 
-function DeviceControls({
-  activeTool,
-  onSelectTool,
-  target,
-  isNetworkVisible,
-  isLogsVisible,
-  onToggleNetwork,
-  onToggleLogs,
+function NetworkStrip({
+  id,
+  hidden,
+  language,
+  events,
 }: {
-  activeTool: DeviceCanvasTool;
-  onSelectTool: (tool: DeviceCanvasTool) => void;
-  target: DeviceTarget;
-  isNetworkVisible: boolean;
-  isLogsVisible: boolean;
-  onToggleNetwork: () => void;
-  onToggleLogs: () => void;
+  id?: string;
+  hidden?: boolean;
+  language: DisplayLanguage;
+  events: NetworkEvent[];
 }) {
-  const actions = [
-    { label: "点选", tool: "point" as const, Icon: MousePointer2 },
-    { label: "探测", tool: "probe" as const, Icon: Crosshair },
-  ];
-
   return (
-    <section className="device-controls" aria-label="设备控制">
-      <div className="control-pill">
-        {actions.map(({ label, tool, Icon }) => (
-          <button
-            key={label}
-            className={tool && activeTool === tool ? "is-active" : ""}
-            type="button"
-            aria-label={label}
-            aria-pressed={tool ? activeTool === tool : undefined}
-            title={tool ? `${label}${activeTool === tool ? "（当前）" : ""}` : label}
-            onClick={tool ? () => onSelectTool(tool) : undefined}
-          >
-            <Icon size={17} />
-          </button>
-        ))}
-        <button
-          className={isNetworkVisible ? "is-active" : ""}
-          type="button"
-          aria-label={isNetworkVisible ? "隐藏网络" : "显示网络"}
-          title={isNetworkVisible ? "隐藏网络" : "显示网络"}
-          onClick={onToggleNetwork}
-        >
-          <Network size={17} />
-        </button>
-        <button
-          className={isLogsVisible ? "is-active" : ""}
-          type="button"
-          aria-label={isLogsVisible ? "隐藏日志" : "显示日志"}
-          title={isLogsVisible ? "隐藏日志" : "显示日志"}
-          onClick={onToggleLogs}
-        >
-          <TerminalSquare size={17} />
-        </button>
-      </div>
-    </section>
-  );
-}
-
-function NetworkStrip({ events, onHide }: { events: NetworkEvent[]; onHide: () => void }) {
-  return (
-    <section className="evidence-strip" aria-label="网络证据">
+    <section
+      id={id}
+      className="evidence-strip"
+      role={id ? "tabpanel" : undefined}
+      aria-label={language === "zh-CN" ? "网络证据" : "Network evidence"}
+      hidden={hidden}
+    >
       <div className="strip-heading">
         <Network size={16} />
-        <strong>网络</strong>
-        <button className="strip-action" type="button" aria-label="隐藏网络证据" title="隐藏网络证据" onClick={onHide}>
-          <EyeOff size={15} />
-        </button>
+        <strong>{language === "zh-CN" ? "网络" : "Network"}</strong>
       </div>
       <div className="network-rows">
         {events.map((event) => (
@@ -3344,7 +3115,7 @@ function NetworkStrip({ events, onHide }: { events: NetworkEvent[]; onHide: () =
             <span className="path">{event.path}</span>
             <span className={event.status >= 400 ? "code is-error" : "code"}>{event.status}</span>
             <span>{event.latencyMs} 毫秒</span>
-            <span>{modeLabel[event.mode]}</span>
+            <span>{modeLabel[language][event.mode]}</span>
           </div>
         ))}
       </div>
@@ -3352,24 +3123,41 @@ function NetworkStrip({ events, onHide }: { events: NetworkEvent[]; onHide: () =
   );
 }
 
-function LogStrip({ entries, onHide }: { entries: LogEntry[]; onHide: () => void }) {
+function LogStrip({
+  id,
+  hidden,
+  language,
+  entries,
+}: {
+  id?: string;
+  hidden?: boolean;
+  language: DisplayLanguage;
+  entries: LogEntry[];
+}) {
   return (
-    <section className="evidence-strip log-strip" aria-label="运行日志">
+    <section
+      id={id}
+      className="evidence-strip log-strip"
+      role={id ? "tabpanel" : undefined}
+      aria-label={language === "zh-CN" ? "运行日志" : "Runtime logs"}
+      hidden={hidden}
+    >
       <div className="strip-heading">
         <TerminalSquare size={16} />
-        <strong>日志</strong>
-        <button className="strip-action" type="button" aria-label="隐藏日志" title="隐藏日志" onClick={onHide}>
-          <EyeOff size={15} />
-        </button>
+        <strong>{language === "zh-CN" ? "日志" : "Logs"}</strong>
       </div>
       <div className="log-rows">
-        {entries.map((entry) => (
-          <div className={`log-row log-${entry.level}`} key={entry.id}>
-            <span>{entry.time}</span>
-            <strong>{logLevelLabel[entry.level]}</strong>
-            <p>{entry.message}</p>
-          </div>
-        ))}
+        {entries.map((entry) => {
+          const localized = localizeLogEntry(entry, language);
+          return (
+            <div className={`log-row log-${entry.level}`} key={entry.id} title={localized.originalMessage}>
+              <span className="log-time">{localized.timeLabel}</span>
+              <strong>{localized.levelLabel}</strong>
+              <em>{localized.sourceLabel}</em>
+              <p>{localized.messageLabel}</p>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

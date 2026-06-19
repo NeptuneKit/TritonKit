@@ -94,6 +94,25 @@ func currentRouteState() -> TKRuntimeRouteStateResponse {
 }
 
 @MainActor
+func currentHierarchyControllerContext() -> TKHierarchyControllerContext? {
+    guard let root = keyWindows().first?.rootViewController else {
+        return nil
+    }
+    var stack: [UIViewController] = []
+    appendVisibleControllerPath(from: root, into: &stack)
+    let active = stack.last ?? visibleController(from: root) ?? root
+    let entries = stack.map(hierarchyControllerEntry)
+    let activeEntry = hierarchyControllerEntry(active)
+    return TKHierarchyControllerContext(
+        activeControllerId: activeEntry.id,
+        activeControllerName: activeEntry.name,
+        activeControllerClassName: activeEntry.className,
+        stack: entries.isEmpty ? [activeEntry] : entries,
+        source: "runtime-route"
+    )
+}
+
+@MainActor
 func currentResponderState() -> TKRuntimeResponderStateResponse {
     let windows = keyWindows()
     for (windowIndex, window) in windows.enumerated() {
@@ -329,6 +348,67 @@ func visibleController(from controller: UIViewController?) -> UIViewController? 
         return visibleController(from: first) ?? page
     }
     return controller
+}
+
+func appendVisibleControllerPath(from controller: UIViewController, into stack: inout [UIViewController]) {
+    appendUniqueController(controller, into: &stack)
+    if let presented = controller.presentedViewController {
+        appendVisibleControllerPath(from: presented, into: &stack)
+        return
+    }
+    if let tab = controller as? UITabBarController {
+        if let selected = tab.selectedViewController {
+            appendVisibleControllerPath(from: selected, into: &stack)
+        }
+        return
+    }
+    if let navigation = controller as? UINavigationController {
+        for child in navigation.viewControllers {
+            appendUniqueController(child, into: &stack)
+        }
+        if let top = navigation.topViewController {
+            appendVisibleControllerPath(from: top, into: &stack)
+        }
+        return
+    }
+    if let split = controller as? UISplitViewController, let last = split.viewControllers.last {
+        appendVisibleControllerPath(from: last, into: &stack)
+        return
+    }
+    if let page = controller as? UIPageViewController, let first = page.viewControllers?.first {
+        appendVisibleControllerPath(from: first, into: &stack)
+        return
+    }
+    if let visibleChild = controller.children.last(where: { child in
+        guard child.parent === controller, child.isViewLoaded, let view = child.view else { return false }
+        guard view.window != nil, !view.isHidden, view.alpha > 0.01 else { return false }
+        return view.bounds.width > 0 && view.bounds.height > 0
+    }) {
+        appendVisibleControllerPath(from: visibleChild, into: &stack)
+    }
+}
+
+func appendUniqueController(_ controller: UIViewController, into stack: inout [UIViewController]) {
+    if stack.contains(where: { $0 === controller }) { return }
+    stack.append(controller)
+}
+
+func hierarchyControllerEntry(_ controller: UIViewController) -> TKHierarchyControllerEntry {
+    let className = NSStringFromClass(type(of: controller))
+    let oid = oid(for: controller)
+    return TKHierarchyControllerEntry(
+        id: oid.map { "ios:controller:\($0)" },
+        oid: oid,
+        className: className,
+        name: shortControllerClassName(className),
+        title: nonEmptyText(controller.title)
+            ?? nonEmptyText(controller.navigationItem.title)
+            ?? nonEmptyText(controller.tabBarItem.title)
+    )
+}
+
+func shortControllerClassName(_ className: String) -> String {
+    className.split(separator: ".").last.map(String.init) ?? className
 }
 
 func presentedControllerStack(from controller: UIViewController) -> [TKRuntimeControllerState] {

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { after, test } from "node:test";
 import { Window } from "happy-dom";
 import { createServer } from "vite";
@@ -13,12 +14,185 @@ const viteServer = await createServer({
 });
 
 const { App } = await viteServer.ssrLoadModule("/src/App.tsx");
+const {
+  computeParityClaim,
+  getMaterialExplanation,
+  resolveDefaultMaterialSource,
+  resolveEvidenceSources,
+} = await viteServer.ssrLoadModule("/src/data/hierarchyMaterialPolicy.ts");
+const { hierarchyScenes } = await viteServer.ssrLoadModule("/src/data/mockData.ts");
 
 after(async () => {
   await viteServer.close();
 });
 
-test("mounts QA mock fallback notice in DOM when readonly host bridge returns no targets", async () => {
+test("keeps subtree snapshots out of default hierarchy materials", () => {
+  const node = {
+    id: "button",
+    type: "UIButton",
+    name: "button",
+    frame: { x: 0, y: 0, width: 100, height: 44 },
+    depth: 1,
+    visible: true,
+    interactive: true,
+    color: "#2563eb",
+    visualSources: [
+      {
+        kind: "subtreeSnapshot",
+        dataUrl: "data:image/png;base64,AAA=",
+        rect: { x: 0, y: 0, width: 100, height: 44 },
+        capturedBy: "UIView.render",
+      },
+    ],
+  };
+
+  assert.equal(resolveDefaultMaterialSource(node), null);
+  assert.deepEqual(resolveEvidenceSources(node).map((source) => source.kind), ["subtreeSnapshot"]);
+});
+
+test("allows only layerOwnContents as default hierarchy material", () => {
+  const node = {
+    id: "imageView",
+    type: "UIImageView",
+    name: "imageView",
+    frame: { x: 0, y: 0, width: 80, height: 80 },
+    depth: 1,
+    visible: true,
+    interactive: false,
+    color: "#94a3b8",
+    visualSources: [
+      {
+        kind: "subtreeSnapshot",
+        dataUrl: "data:image/png;base64,BBB=",
+        rect: { x: 0, y: 0, width: 80, height: 80 },
+        capturedBy: "CALayer.render",
+      },
+      {
+        kind: "layerOwnContents",
+        dataUrl: "data:image/png;base64,CCC=",
+        rect: { x: 0, y: 0, width: 80, height: 80 },
+        contentsScale: 3,
+        contentsGravity: "resizeAspectFill",
+      },
+    ],
+  };
+
+  assert.equal(resolveDefaultMaterialSource(node)?.kind, "layerOwnContents");
+});
+
+test("keeps iOS fallback tab bar aligned with the four Overloaded bottom tabs", () => {
+  const tabButtons = hierarchyScenes.ios.nodes.filter(
+    (node) => node.parentId === "tabbar" && node.type === "UIButton"
+  );
+
+  assert.deepEqual(
+    tabButtons.map((node) => [node.id, node.name]),
+    [
+      ["server-tab", "serverTab"],
+      ["photos-tab", "photosTab"],
+      ["music-tab", "musicTab"],
+      ["settings-tab", "settingsTab"],
+    ]
+  );
+});
+
+test("keeps view-tree labels readable for deep and long runtime node names", () => {
+  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const viewTreeRowRule = css.match(/\.view-tree-row \{[^}]+\}/)?.[0] ?? "";
+  const typeRule = css.match(/\.view-tree-row strong \{[^}]+\}/)?.[0] ?? "";
+  const labelRule = css.match(/\.view-tree-row span \{[^}]+\}/)?.[0] ?? "";
+
+  assert.match(viewTreeRowRule, /grid-template-columns:\s*18px minmax\(0, 1fr\)/);
+  assert.match(viewTreeRowRule, /clamp\(0px, var\(--tree-depth\) \* 14px, 112px\)/);
+  assert.match(typeRule, /overflow-wrap:\s*anywhere/);
+  assert.match(typeRule, /white-space:\s*normal/);
+  assert.match(labelRule, /overflow-wrap:\s*anywhere/);
+  assert.match(labelRule, /white-space:\s*normal/);
+  assert.doesNotMatch(typeRule, /text-overflow:\s*ellipsis/);
+  assert.doesNotMatch(labelRule, /text-overflow:\s*ellipsis/);
+});
+
+test("does not claim Lookin parity when only subtree snapshot evidence exists", () => {
+  const scene = {
+    platform: "ios",
+    rootId: "root",
+    viewport: { width: 390, height: 844 },
+    nodes: [
+      {
+        id: "root",
+        type: "UIWindow",
+        name: "root",
+        frame: { x: 0, y: 0, width: 390, height: 844 },
+        depth: 0,
+        visible: true,
+        interactive: false,
+        color: "#94a3b8",
+      },
+      {
+        id: "titleLabel",
+        type: "UILabel",
+        name: "titleLabel",
+        frame: { x: 24, y: 88, width: 160, height: 32 },
+        depth: 1,
+        visible: true,
+        interactive: false,
+        color: "#94a3b8",
+        visualSources: [
+          {
+            kind: "subtreeSnapshot",
+            dataUrl: "data:image/png;base64,DDD=",
+            rect: { x: 24, y: 88, width: 160, height: 32 },
+            capturedBy: "UIView.render",
+          },
+        ],
+      },
+    ],
+  };
+
+  assert.deepEqual(computeParityClaim(scene), {
+    level: "snapshotEvidenceViewer",
+    canClaimLookinParity: false,
+    reasons: [
+      "subtreeSnapshot is evidence only and cannot reconstruct layer-own contents",
+      "not every visible non-root node has layerOwnContents source",
+    ],
+  });
+});
+
+test("explains hierarchy material source and evidence sources", () => {
+  const node = {
+    id: "titleLabel",
+    type: "UILabel",
+    name: "titleLabel",
+    frame: { x: 24, y: 88, width: 160, height: 32 },
+    depth: 1,
+    visible: true,
+    interactive: false,
+    color: "#94a3b8",
+    visualSources: [
+      {
+        kind: "subtreeSnapshot",
+        dataUrl: "data:image/png;base64,EEE=",
+        rect: { x: 24, y: 88, width: 160, height: 32 },
+        capturedBy: "UIView.render",
+      },
+      {
+        kind: "mainScreenshotCrop",
+        dataUrl: "data:image/png;base64,FFF=",
+        rect: { x: 24, y: 88, width: 160, height: 32 },
+      },
+    ],
+  };
+
+  assert.deepEqual(getMaterialExplanation(node), {
+    nodeId: "titleLabel",
+    defaultMaterial: null,
+    reason: "No layerOwnContents source available",
+    evidenceSources: ["subtreeSnapshot", "mainScreenshotCrop"],
+  });
+});
+
+test("does not mount mock targets when readonly host bridge returns no targets", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
   });
@@ -78,8 +252,8 @@ test("mounts QA mock fallback notice in DOM when readonly host bridge returns no
       const noticeDetail = document.querySelector(".bridge-notice span")?.textContent?.trim();
 
       return (
-        subtitle === "QA mock fallback" &&
-        noticeTitle === "当前没有可用 host target，正在展示 QA mock fallback" &&
+        subtitle === "No host targets" &&
+        noticeTitle === "当前没有可用 host target" &&
         typeof noticeDetail === "string" &&
         noticeDetail.includes("targets 为空") &&
         noticeDetail.includes("triton sim list --json")
@@ -87,13 +261,15 @@ test("mounts QA mock fallback notice in DOM when readonly host bridge returns no
     });
 
     assert.deepEqual(fetchCalls, [{ pathname: "/web/host-targets", method: "GET" }]);
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "QA mock fallback");
+    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "No host targets");
     assert.equal(
       document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "当前没有可用 host target，正在展示 QA mock fallback"
+      "当前没有可用 host target"
     );
     assert.match(document.querySelector(".bridge-notice span")?.textContent ?? "", /targets 为空/);
     assert.match(document.querySelector(".bridge-notice span")?.textContent ?? "", /triton sim list --json/);
+    assert.deepEqual(deviceRowNames(), []);
+    assert.doesNotMatch(bodyText(), /QA mock fallback|DXY iPhone 15|Pixel API 35|DevEco Local/);
   } finally {
     await act(async () => {
       root.unmount();
@@ -103,7 +279,7 @@ test("mounts QA mock fallback notice in DOM when readonly host bridge returns no
   }
 });
 
-test("mounts QA mock fallback error notice in DOM when host bridge request fails", async () => {
+test("does not mount mock targets when host bridge request fails", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
   });
@@ -152,19 +328,161 @@ test("mounts QA mock fallback error notice in DOM when host bridge request fails
       const noticeDetail = document.querySelector(".bridge-notice span")?.textContent?.trim();
 
       return (
-        subtitle === "QA mock fallback" &&
-        noticeTitle === "Host bridge 请求失败，正在展示 QA mock fallback" &&
+        subtitle === "Host bridge unavailable" &&
+        noticeTitle === "Host bridge 请求失败" &&
         noticeDetail === "Host targets request failed: 502"
       );
     });
 
     assert.deepEqual(fetchCalls, []);
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "QA mock fallback");
+    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "Host bridge unavailable");
     assert.equal(
       document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "Host bridge 请求失败，正在展示 QA mock fallback"
+      "Host bridge 请求失败"
     );
     assert.equal(document.querySelector(".bridge-notice span")?.textContent?.trim(), "Host targets request failed: 502");
+    assert.deepEqual(deviceRowNames(), []);
+    assert.doesNotMatch(bodyText(), /QA mock fallback|DXY iPhone 15|Pixel API 35|DevEco Local/);
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("does not render static mock hierarchy when host hierarchy is unavailable", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?panel=view-tree&node=music-tab",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      const method = init?.method ?? resolveRequestMethod(input);
+      fetchCalls.push({ pathname: url.pathname, method });
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "host:ios:SIM1",
+                target: "SIM1",
+                name: "iPhone 15",
+                platform: "ios",
+                appName: "Overloaded",
+                bundleIdentifier: "overloaded.cn.debug",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Ready",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                transport: "simctl",
+                source: "simctl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: false,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "SIM1",
+            source: {
+              command: "triton screenshot --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            artifact: "/tmp/sim.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,AAA=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-logs") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              command: "triton logs --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            entries: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-hierarchy") {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: {
+              code: "hierarchy_unavailable",
+              message: "No active runtime hierarchy",
+            },
+          }),
+          { status: 503, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error("Unexpected fetch route: " + url.pathname);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await act(async () => {
+      await waitFor(() => fetchCalls.some((call) => call.pathname === "/web/host-hierarchy"), 3000);
+    });
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
+    await waitFor(() => bodyText().includes("未拿到实时视图层级"), 3000);
+
+    assert.ok(fetchCalls.some((call) => call.pathname === "/web/host-hierarchy"));
+    assert.equal(document.querySelectorAll(".view-tree-row").length, 0);
+    assert.equal(document.querySelector(".view-node-highlight"), null);
+    assert.doesNotMatch(bodyText(), /serverTab|photosTab|musicTab|settingsTab|QA mock fallback/);
   } finally {
     await act(async () => {
       root.unmount();
@@ -352,11 +670,27 @@ test("renders bounded iOS host logs in the log strip when readonly host logs are
       root.render(createElement(App));
     });
 
-    await waitFor(() => logsText().includes("App launched") && logsText().includes("Network timeout"));
+    await waitFor(() => logsText().includes("应用已启动") && logsText().includes("网络请求超时"));
 
-    assert.match(logsText(), /App launched/);
-    assert.match(logsText(), /Network timeout/);
+    assert.match(logsText(), /应用已启动/);
+    assert.match(logsText(), /网络请求超时/);
+    assert.equal(document.querySelector(".log-row")?.getAttribute("title"), "App launched");
     assert.ok(fetchCalls.some((call) => call.pathname === "/web/host-logs" && call.method === "GET"));
+
+    await clickRightSideTab(act, "设置");
+    assert.match(document.querySelector('[aria-label="设置"]')?.textContent ?? "", /语言偏好/);
+    const englishOption = document.querySelector('input[name="display-language"][value="en-US"]');
+    assert.ok(englishOption, "Expected English language option");
+    await act(async () => {
+      englishOption.click();
+    });
+
+    assert.equal(window.localStorage.getItem("tritonkit.web.displayLanguage"), "en-US");
+    assert.deepEqual(rightSideTabLabels(), ["Config", "Network", "Logs", "Settings"]);
+
+    await clickRightSideTab(act, "Logs");
+    await waitFor(() => logsText().includes("App launched") && logsText().includes("Network timeout"));
+    assert.doesNotMatch(logsText(), /应用已启动|网络请求超时/);
   } finally {
     await act(async () => {
       root.unmount();
@@ -553,6 +887,106 @@ test("renders only ready wired real device targets and requests App runtime scre
     });
     await waitFor(() => hostInputPayloads.length === 3);
     assert.deepEqual(hostInputPayloads[2], { type: "deleteBackward" });
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("shows explicit runtime server guidance when iOS real-device live screenshot is unavailable", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      fetchCalls.push({ pathname: url.pathname, method: init?.method ?? resolveRequestMethod(input) });
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:30:00.000Z",
+            source: {
+              commands: ["triton device list --platform ios --scope real --json"],
+              runtimeScope: "host-device",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "host:ios:ios-real:abc",
+                target: "ios-real:abc",
+                name: "Debug iPhone",
+                platform: "ios",
+                appName: null,
+                bundleIdentifier: null,
+                runtime: "iOS 26.5",
+                state: "connected",
+                statusLabel: "connected",
+                ready: true,
+                scope: "real",
+                kind: "real-device",
+                transport: "wired",
+                source: "devicectl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: false,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: false,
+            error: {
+              code: "app_runtime_unavailable",
+              message: "server_unavailable",
+              hint: "Start `triton serve --host 127.0.0.1 --port 19421`, launch a Debug app that embeds TritonKit runtime, then retry the App runtime mirror.",
+            },
+          }),
+          { status: 409, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error("Unexpected fetch route: " + url.pathname);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => fetchCalls.some((call) => call.pathname === "/web/host-screenshot"));
+    await waitFor(() => bodyText().includes("App runtime 未连接"));
+
+    assert.match(bodyText(), /真机实时画面依赖 Debug App 内嵌 TritonKit runtime/);
+    assert.match(bodyText(), /triton serve --host 127\.0\.0\.1 --port 19421/);
+    assert.equal(document.querySelector(".real-screenshot"), null);
+    assert.ok(document.querySelector(".real-screenshot-pending.is-error"));
   } finally {
     await act(async () => {
       root.unmount();
@@ -1069,7 +1503,7 @@ test("keeps request-failed fallback notice while switching Android and Harmony t
       currentAppName() === "Overloaded" &&
       currentBundleId() === "overloaded.cn.debug" &&
       bodyText().includes("/api/catalog") &&
-      bodyText().includes("ADB target ready: emulator-5556")
+      bodyText().includes("Android ADB 目标已就绪：emulator-5556")
     );
 
     await clickDeviceRow(act, "DevEco Local");
@@ -1078,19 +1512,19 @@ test("keeps request-failed fallback notice while switching Android and Harmony t
       currentAppName() === "Triton Smoke" &&
       currentBundleId() === "com.tritonkit.demo" &&
       bodyText().includes("/capabilities") &&
-      bodyText().includes("HDC target discovered from plain list fallback")
+      bodyText().includes("已从 HDC 列表 fallback 发现目标")
     );
 
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "QA mock fallback");
+    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "Host bridge unavailable");
     assert.equal(
       document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "Host bridge 请求失败，正在展示 QA mock fallback"
+      "Host bridge 请求失败"
     );
     assert.equal(document.querySelector(".bridge-notice span")?.textContent?.trim(), "Host targets request failed: 502");
     assert.equal(currentAppName(), "Triton Smoke");
     assert.equal(currentBundleId(), "com.tritonkit.demo");
     assert.match(bodyText(), /\/capabilities/);
-    assert.match(bodyText(), /HDC target discovered from plain list fallback/);
+    assert.match(bodyText(), /已从 HDC 列表 fallback 发现目标/);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1148,7 +1582,7 @@ test("restores iOS DTO after round-tripping Android and Harmony targets in reque
       currentAppName() === "丁香园" &&
       currentBundleId() === "cn.dxy.iDxyer" &&
       networkEvidenceText().includes("/v1/home/feed") &&
-      logsText().includes("Selected host iOS target and paired embedded runtime")
+      logsText().includes("已选择 iOS 目标，并匹配到内嵌 App runtime")
     );
 
     assert.deepEqual(fetchCalls, []);
@@ -1159,7 +1593,7 @@ test("restores iOS DTO after round-tripping Android and Harmony targets in reque
       currentAppName() === "Overloaded" &&
       currentBundleId() === "overloaded.cn.debug" &&
       networkEvidenceText().includes("/api/catalog") &&
-      logsText().includes("ADB target ready: emulator-5556")
+      logsText().includes("Android ADB 目标已就绪：emulator-5556")
     );
 
     await clickDeviceRow(act, "DevEco Local");
@@ -1168,7 +1602,7 @@ test("restores iOS DTO after round-tripping Android and Harmony targets in reque
       currentAppName() === "Triton Smoke" &&
       currentBundleId() === "com.tritonkit.demo" &&
       networkEvidenceText().includes("/capabilities") &&
-      logsText().includes("HDC target discovered from plain list fallback")
+      logsText().includes("已从 HDC 列表 fallback 发现目标")
     );
 
     await clickDeviceRow(act, "DXY iPhone 15");
@@ -1177,21 +1611,21 @@ test("restores iOS DTO after round-tripping Android and Harmony targets in reque
       currentAppName() === "丁香园" &&
       currentBundleId() === "cn.dxy.iDxyer" &&
       networkEvidenceText().includes("/v1/home/feed") &&
-      logsText().includes("Selected host iOS target and paired embedded runtime")
+      logsText().includes("已选择 iOS 目标，并匹配到内嵌 App runtime")
     );
 
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "QA mock fallback");
+    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "Host bridge unavailable");
     assert.equal(
       document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "Host bridge 请求失败，正在展示 QA mock fallback"
+      "Host bridge 请求失败"
     );
     assert.equal(document.querySelector(".bridge-notice span")?.textContent?.trim(), "Host targets request failed: 502");
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
     assert.match(networkEvidenceText(), /\/v1\/home\/feed/);
-    assert.match(logsText(), /Selected host iOS target and paired embedded runtime/);
-    assert.doesNotMatch(logsText(), /ADB target ready: emulator-5556/);
-    assert.doesNotMatch(logsText(), /HDC target discovered from plain list fallback/);
+    assert.match(logsText(), /已选择 iOS 目标，并匹配到内嵌 App runtime/);
+    assert.doesNotMatch(logsText(), /Android ADB 目标已就绪：emulator-5556/);
+    assert.doesNotMatch(logsText(), /已从 HDC 列表 fallback 发现目标/);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1201,7 +1635,7 @@ test("restores iOS DTO after round-tripping Android and Harmony targets in reque
   }
 });
 
-test("keeps target switching available inside view-tree panel during request-failed fallback round-trip", async () => {
+test("keeps target switching only in devices tab during request-failed fallback round-trip", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
   });
@@ -1249,54 +1683,60 @@ test("keeps target switching available inside view-tree panel during request-fai
 
     await clickTabButton(act, "视图树");
     await waitFor(() =>
-      viewTreeTargetNames().includes("DXY iPhone 15") &&
-      viewTreeTitle() === "丁香园" &&
       viewTreeText().includes("UIStackView") &&
       viewTreeText().includes("questionList")
     );
+    assert.equal(viewTreeHeaderText(), "");
+    assert.deepEqual(viewTreeTargetNames(), []);
+    assert.equal(viewTreeTargetText(), "");
 
-    await clickViewTreeTarget(act, "Pixel API 35");
+    await clickTabButton(act, "设备");
+    await clickDeviceRow(act, "Pixel API 35");
+    await clickTabButton(act, "视图树");
     await waitFor(() =>
       hasRequestFailedFallbackNotice() &&
-      viewTreeTitle() === "Overloaded" &&
       viewTreeText().includes("AndroidComposeView") &&
       viewTreeText().includes("settingsList") &&
       currentAppName() === "Overloaded" &&
       currentBundleId() === "overloaded.cn.debug" &&
       networkEvidenceText().includes("/api/catalog") &&
-      logsText().includes("ADB target ready: emulator-5556")
+      logsText().includes("Android ADB 目标已就绪：emulator-5556")
     );
+    assert.deepEqual(viewTreeTargetNames(), []);
 
-    await clickViewTreeTarget(act, "DevEco Local");
+    await clickTabButton(act, "设备");
+    await clickDeviceRow(act, "DevEco Local");
+    await clickTabButton(act, "视图树");
     await waitFor(() =>
       hasRequestFailedFallbackNotice() &&
-      viewTreeTitle() === "Triton Smoke" &&
       viewTreeText().includes("Column") &&
       viewTreeText().includes("settingsContent") &&
       currentAppName() === "Triton Smoke" &&
       currentBundleId() === "com.tritonkit.demo" &&
       networkEvidenceText().includes("/capabilities") &&
-      logsText().includes("HDC target discovered from plain list fallback")
+      logsText().includes("已从 HDC 列表 fallback 发现目标")
     );
+    assert.deepEqual(viewTreeTargetNames(), []);
 
-    await clickViewTreeTarget(act, "DXY iPhone 15");
+    await clickTabButton(act, "设备");
+    await clickDeviceRow(act, "DXY iPhone 15");
+    await clickTabButton(act, "视图树");
     await waitFor(() =>
       hasRequestFailedFallbackNotice() &&
-      viewTreeTitle() === "丁香园" &&
       viewTreeText().includes("UIStackView") &&
       viewTreeText().includes("questionList") &&
       currentAppName() === "丁香园" &&
       currentBundleId() === "cn.dxy.iDxyer" &&
       networkEvidenceText().includes("/v1/home/feed") &&
-      logsText().includes("Selected host iOS target and paired embedded runtime")
+      logsText().includes("已选择 iOS 目标，并匹配到内嵌 App runtime")
     );
 
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "QA mock fallback");
+    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "Host bridge unavailable");
     assert.equal(
       document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "Host bridge 请求失败，正在展示 QA mock fallback"
+      "Host bridge 请求失败"
     );
-    assert.equal(viewTreeTitle(), "丁香园");
+    assert.equal(viewTreeHeaderText(), "");
     assert.match(viewTreeText(), /UIStackView/);
     assert.match(viewTreeText(), /questionList/);
     assert.doesNotMatch(viewTreeText(), /AndroidComposeView/);
@@ -1304,7 +1744,472 @@ test("keeps target switching available inside view-tree panel during request-fai
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
     assert.match(networkEvidenceText(), /\/v1\/home\/feed/);
-    assert.match(logsText(), /Selected host iOS target and paired embedded runtime/);
+    assert.match(logsText(), /已选择 iOS 目标，并匹配到内嵌 App runtime/);
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("syncs selected device and view-tree node into the URL route", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed&target=host%3Aandroid%3Aemulator-5556&panel=view-tree&node=lazy-column",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async () => new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+      },
+    }),
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() =>
+      hasRequestFailedFallbackNotice() &&
+      viewTreeText().includes("AndroidComposeView") &&
+      selectedViewTreeNodeId() === "lazy-column"
+    );
+    assert.equal(viewTreeHeaderText(), "");
+
+    let route = new URL(window.location.href);
+    assert.equal(route.searchParams.get("target"), "host:android:emulator-5556");
+    assert.equal(route.searchParams.get("panel"), "view-tree");
+    assert.equal(route.searchParams.get("node"), "lazy-column");
+    assert.equal(route.searchParams.get("__tritonkit_mock_host_targets"), "request-failed");
+
+    assert.deepEqual(viewTreeTargetNames(), []);
+    await clickTabButton(act, "设备");
+    await clickDeviceRow(act, "DevEco Local");
+    await clickTabButton(act, "视图树");
+    await waitFor(() =>
+      viewTreeText().includes("ArkUIRoot") &&
+      selectedViewTreeNodeId() !== "lazy-column"
+    );
+
+    route = new URL(window.location.href);
+    assert.equal(route.searchParams.get("target"), "host:harmony:127.0.0.1:5555");
+    assert.equal(route.searchParams.get("panel"), "view-tree");
+    assert.equal(route.searchParams.get("node"), null);
+    assert.equal(route.searchParams.get("__tritonkit_mock_host_targets"), "request-failed");
+
+    await clickViewTreeNode(act, "debug-link");
+    await waitFor(() => selectedViewTreeNodeId() === "debug-link");
+
+    route = new URL(window.location.href);
+    assert.equal(route.searchParams.get("target"), "host:harmony:127.0.0.1:5555");
+    assert.equal(route.searchParams.get("panel"), "view-tree");
+    assert.equal(route.searchParams.get("node"), "debug-link");
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("highlights selected view-tree node area on the device canvas", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed&panel=view-tree&node=back",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async () => new Response(JSON.stringify({ ok: true }), {
+      status: 200,
+      headers: {
+        "content-type": "application/json",
+      },
+    }),
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() =>
+      hasRequestFailedFallbackNotice() &&
+      selectedViewTreeNodeId() === "back" &&
+      selectedViewNodeHighlightId() === "back"
+    );
+    const highlight = selectedViewNodeHighlight();
+    assert.ok(highlight, "Expected selected view node highlight");
+    assert.equal(highlight.getAttribute("data-node-type"), "UIButton");
+    assertApproxPercent(highlight.style.left, 3.59);
+    assertApproxPercent(highlight.style.top, 6.52);
+    assertApproxPercent(highlight.style.width, 8.72);
+    assertApproxPercent(highlight.style.height, 4.03);
+
+    await clickViewTreeNode(act, "title");
+    await waitFor(() =>
+      selectedViewTreeNodeId() === "title" &&
+      selectedViewNodeHighlightId() === "title"
+    );
+    assert.equal(selectedViewNodeHighlight()?.getAttribute("data-node-type"), "UILabel");
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("shows selected view-tree node details in config tab and previews hot edits locally", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?target=host%3Aios%3ASIM1&panel=view-tree&node=back",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "host:ios:SIM1",
+                target: "SIM1",
+                name: "iPhone 15",
+                platform: "ios",
+                appName: "Overloaded",
+                bundleIdentifier: "overloaded.cn.debug",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Ready",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                transport: "simctl",
+                source: "simctl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: false,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-hierarchy") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              command: "triton hierarchy --platform ios --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            scene: hierarchyScenes.ios,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "SIM1",
+            source: {
+              command: "triton screenshot --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            artifact: "/tmp/sim.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,AAA=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-logs") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              command: "triton logs --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            entries: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error(`Unexpected fetch route: ${url.pathname}`);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => selectedViewTreeNodeId() === "back" && selectedViewNodeHighlightId() === "back");
+    assert.match(controllerShellBadgeText(), /UIViewController/);
+    assert.match(controllerShellBadgeText(), /ProfileViewController/);
+    assert.equal(controllerShellBadgeTitle(), "MainTabBarController > ProfileViewController");
+    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /UIButton/);
+    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /backButton/);
+    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Runtime DTO/);
+
+    assertApproxPercent(selectedViewNodeHighlight()?.style.left ?? "", 3.59);
+
+    await setTextInputValue(act, document.querySelector('input[aria-label="修改选中节点 X"]'), "40");
+    await waitFor(() => (document.querySelector(".selected-node-panel")?.textContent ?? "").includes("本地热修改预览"));
+    assertApproxPercent(selectedViewNodeHighlight()?.style.left ?? "", 10.26);
+
+    await setTextInputValue(act, document.querySelector('input[aria-label="修改选中节点背景色"]'), "#ff0000");
+    await setTextInputValue(act, document.querySelector('input[aria-label="修改选中节点 Radius"]'), "12");
+    await setTextInputValue(act, document.querySelector('input[aria-label="修改选中节点 Opacity"]'), "0.5");
+    assert.equal(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-accent"), "#ff0000");
+    assert.equal(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-radius"), "12px");
+    assert.equal(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-alpha"), "0.5");
+
+    await act(async () => {
+      document.querySelector('input[aria-label="隐藏选中节点预览"]')?.click();
+    });
+    assert.equal(selectedViewNodeHighlight()?.getAttribute("data-hot-hidden"), "true");
+
+    await clickButtonByLabel(act, "重置");
+    await waitFor(() => (document.querySelector(".selected-node-panel")?.textContent ?? "").includes("Runtime DTO"));
+    assertApproxPercent(selectedViewNodeHighlight()?.style.left ?? "", 3.59);
+    assert.notEqual(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-accent"), "#ff0000");
+    assert.equal(selectedViewNodeHighlight()?.getAttribute("data-hot-hidden"), "false");
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("snapshot mode stops live refresh and selects view nodes instead of sending input", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?target=host%3Aios%3ASIM1&panel=view-tree&node=window",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      const method = init?.method ?? resolveRequestMethod(input);
+      fetchCalls.push({ pathname: url.pathname, method });
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "host:ios:SIM1",
+                target: "SIM1",
+                name: "iPhone 15",
+                platform: "ios",
+                appName: "Overloaded",
+                bundleIdentifier: "overloaded.cn.debug",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Ready",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                transport: "simctl",
+                source: "simctl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: false,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-hierarchy") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              command: "triton hierarchy --platform ios --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            scene: hierarchyScenes.ios,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "SIM1",
+            source: {
+              command: "triton screenshot --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            artifact: "/tmp/sim.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,AAA=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-logs") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              command: "triton logs --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            entries: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-input") {
+        throw new Error("Snapshot mode must not send host input");
+      }
+
+      throw new Error(`Unexpected fetch route: ${url.pathname}`);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => selectedViewTreeNodeId() === "window" && document.querySelector(".live-preview-badge"));
+    await clickButtonByLabel(act, "快照");
+    await waitFor(() => document.querySelector(".snapshot-refresh-button"));
+
+    const screenshotCallsAfterSnapshot = fetchCalls.filter((call) => call.pathname === "/web/host-screenshot").length;
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 1250));
+    });
+    assert.equal(fetchCalls.filter((call) => call.pathname === "/web/host-screenshot").length, screenshotCallsAfterSnapshot);
+
+    const screen = document.querySelector(".device-screen");
+    assert.ok(screen, "Expected device screen");
+    screen.getBoundingClientRect = () => ({
+      x: 0,
+      y: 0,
+      left: 0,
+      top: 0,
+      right: 390,
+      bottom: 844,
+      width: 390,
+      height: 844,
+      toJSON: () => ({}),
+    });
+
+    await act(async () => {
+      screen.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 1, clientX: 20, clientY: 60, bubbles: true }));
+      screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 1, clientX: 20, clientY: 60, bubbles: true }));
+    });
+    await waitFor(() => selectedViewTreeNodeId() === "back");
+    assert.equal(new URL(window.location.href).searchParams.get("node"), "back");
+    assert.equal(fetchCalls.some((call) => call.pathname === "/web/host-input"), false);
+
+    const screenshotCallsBeforeManualRefresh = fetchCalls.filter((call) => call.pathname === "/web/host-screenshot").length;
+    await clickButtonByLabel(act, "刷新");
+    await waitFor(() => fetchCalls.filter((call) => call.pathname === "/web/host-screenshot").length === screenshotCallsBeforeManualRefresh + 1);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1377,35 +2282,37 @@ test("filters targets through the shared search box across devices and view-tree
       currentAppName() === "Overloaded" &&
       currentBundleId() === "overloaded.cn.debug" &&
       networkEvidenceText().includes("/api/catalog") &&
-      logsText().includes("ADB target ready: emulator-5556")
+      logsText().includes("Android ADB 目标已就绪：emulator-5556")
     );
 
     await clickTabButton(act, "视图树");
     await waitFor(() =>
-      viewTreeTargetNames().length === 1 &&
-      viewTreeTargetNames()[0] === "Pixel API 35" &&
-      viewTreeTitle() === "Overloaded"
+      viewTreeText().includes("AndroidComposeView") &&
+      viewTreeTargetNames().length === 0
     );
 
     await fillSearchInput(act, "DXY");
     await waitFor(() =>
       hasRequestFailedFallbackNotice() &&
-      viewTreeTargetNames().length === 1 &&
-      viewTreeTargetNames()[0] === "DXY iPhone 15"
+      viewTreeText().includes("AndroidComposeView") &&
+      viewTreeTargetNames().length === 0
     );
 
-    assert.equal(viewTreeTitle(), "Overloaded");
+    assert.equal(viewTreeHeaderText(), "");
     assert.equal(currentAppName(), "Overloaded");
     assert.equal(currentBundleId(), "overloaded.cn.debug");
 
-    await clickViewTreeTarget(act, "DXY iPhone 15");
+    await clickTabButton(act, "设备");
+    await waitFor(() => deviceRowNames().length === 1 && deviceRowNames()[0] === "DXY iPhone 15");
+    await clickDeviceRow(act, "DXY iPhone 15");
+    await clickTabButton(act, "视图树");
     await waitFor(() =>
       hasRequestFailedFallbackNotice() &&
-      viewTreeTitle() === "丁香园" &&
+      viewTreeText().includes("UIStackView") &&
       currentAppName() === "丁香园" &&
       currentBundleId() === "cn.dxy.iDxyer" &&
       networkEvidenceText().includes("/v1/home/feed") &&
-      logsText().includes("Selected host iOS target and paired embedded runtime")
+      logsText().includes("已选择 iOS 目标，并匹配到内嵌 App runtime")
     );
 
     await clickTabButton(act, "设备");
@@ -1418,19 +2325,19 @@ test("filters targets through the shared search box across devices and view-tree
 
     await clickTabButton(act, "视图树");
     await waitFor(() =>
+      viewTreeText().includes("UIStackView") &&
       viewTreeTargetNames().length === 0 &&
-      viewTreeTargetText().includes("未找到匹配 target")
+      viewTreeTargetText() === ""
     );
 
     await fillSearchInput(act, "");
-    await waitFor(() => viewTreeTargetNames().length === 3);
     await clickTabButton(act, "设备");
     await waitFor(() => deviceRowNames().length === 3);
 
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "QA mock fallback");
+    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "Host bridge unavailable");
     assert.equal(
       document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "Host bridge 请求失败，正在展示 QA mock fallback"
+      "Host bridge 请求失败"
     );
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
@@ -1497,20 +2404,21 @@ test("shows search empty state across devices and view-tree panels without imply
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
 
     await clickTabButton(act, "视图树");
-    await waitFor(() => viewTreeTargetNames().length === 0 && emptyDevicesText() === "未找到匹配 target");
-    assert.equal(viewTreeTitle(), "丁香园");
+    await waitFor(() => viewTreeText().includes("UIStackView") && viewTreeTargetNames().length === 0);
+    assert.equal(emptyDevicesText(), undefined);
+    assert.equal(viewTreeTargetText(), "");
+    assert.equal(viewTreeHeaderText(), "");
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
 
     await fillSearchInput(act, "");
-    await waitFor(() => viewTreeTargetNames().length === 3);
     await clickTabButton(act, "设备");
     await waitFor(() => deviceRowNames().length === 3);
     assert.equal(emptyDevicesText(), undefined);
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "QA mock fallback");
+    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "Host bridge unavailable");
     assert.equal(
       document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "Host bridge 请求失败，正在展示 QA mock fallback"
+      "Host bridge 请求失败"
     );
   } finally {
     await act(async () => {
@@ -1521,9 +2429,9 @@ test("shows search empty state across devices and view-tree panels without imply
   }
 });
 
-test("lets users hide and restore network evidence independently from logs", async () => {
+test("keeps network and logs as persistent right-side DevTools tabs", async () => {
   const window = new Window({
-    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
+    url: "http://127.0.0.1:34127/",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
@@ -1531,13 +2439,80 @@ test("lets users hide and restore network evidence independently from logs", asy
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
     "fetch",
-    async () =>
-      new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-        },
-      }),
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T10:00:00.000Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "host:ios:60667794-96F8-40E6-8664-85538EC4663E",
+                target: "60667794-96F8-40E6-8664-85538EC4663E",
+                name: "DXY iPhone 15",
+                platform: "ios",
+                appName: "丁香园",
+                bundleIdentifier: "cn.dxy.iDxyer",
+                runtime: "iOS 18.5",
+                state: "Booted",
+                statusLabel: "Ready",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                source: "host",
+                readonly: true,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-logs") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T10:00:01.000Z",
+            source: {
+              command: "triton sim logs --json",
+              runtimeScope: "host-simulator",
+              readonly: true,
+            },
+            entries: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "60667794-96F8-40E6-8664-85538EC4663E",
+            source: {
+              command: "triton sim screenshot --json",
+              runtimeScope: "host-simulator",
+              readonly: true,
+            },
+            artifact: "/tmp/mock.png",
+            pixelWidth: 1206,
+            pixelHeight: 2622,
+            dataUrl:
+              "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Z0uoAAAAASUVORK5CYII=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error(`Unexpected fetch route: ${url.pathname}`);
+    },
     restoreCallbacks
   );
 
@@ -1554,31 +2529,46 @@ test("lets users hide and restore network evidence independently from logs", asy
       root.render(createElement(App));
     });
 
-    await waitFor(() => hasRequestFailedFallbackNotice() && networkEvidenceText().includes("/v1/home/feed"));
-    assert.ok(document.querySelector('[aria-label="运行日志"]'));
-    assert.equal(document.querySelectorAll('button[aria-label="隐藏网络"]').length, 1);
-    assert.equal(document.querySelectorAll('button[aria-label="隐藏日志"]').length, 2);
-
-    await clickButtonByLabel(act, "隐藏网络");
-    await waitFor(() => !document.querySelector('[aria-label="网络证据"]'));
-    assert.equal(networkEvidenceText(), "");
-    assert.ok(document.querySelector('[aria-label="运行日志"]'));
-    assert.equal(document.querySelector('[aria-label="证据面板已隐藏"]'), null);
-    assert.equal(document.querySelectorAll('button[aria-label="显示网络"]').length, 1);
-
-    await clickButtonByLabel(act, "隐藏日志");
-    await waitFor(() => !document.querySelector('[aria-label="网络证据"]') && !document.querySelector('[aria-label="运行日志"]'));
-    assert.equal(document.querySelector('[aria-label="网络证据"]'), null);
-    assert.equal(document.querySelector('[aria-label="运行日志"]'), null);
-    assert.equal(document.querySelector('[aria-label="证据面板已隐藏"]'), null);
-    assert.ok(document.querySelector(".device-hub-window.is-evidence-hidden"));
-    assert.equal(document.querySelectorAll('button[aria-label="显示网络"]').length, 1);
-    assert.equal(document.querySelectorAll('button[aria-label="显示日志"]').length, 1);
-
-    await clickButtonByLabel(act, "显示网络");
     await waitFor(() => networkEvidenceText().includes("/v1/home/feed"));
-    assert.equal(document.querySelector('[aria-label="运行日志"]'), null);
-    assert.equal(document.querySelectorAll('button[aria-label="隐藏网络"]').length, 1);
+    const devtoolsRail = document.querySelector(".hub-devtools");
+    assert.ok(devtoolsRail, "Expected evidence panes to live in the right-side DevTools tab area");
+    assert.equal(document.querySelector(".hub-bottom"), null);
+    assert.equal(document.querySelector(".device-controls"), null);
+    assert.equal(document.querySelector(".traffic-lights"), null);
+    assert.equal(document.querySelector('.toolbar-cluster[aria-label="添加模拟器和设备"]'), null);
+    assert.equal(document.querySelectorAll('.hub-toolbar button[aria-label="收起侧边栏"], .hub-toolbar button[aria-label="展开侧边栏"]').length, 1);
+    assert.ok(document.querySelector('button[aria-label="刷新全局数据"]'));
+    for (const unusedToolbarLabel of ["添加目标", "筛选与排序", "键盘", "屏幕布局", "展开", "更多", "调整", "文档", "信息"]) {
+      assert.equal(
+        document.querySelector(`.hub-toolbar button[aria-label="${unusedToolbarLabel}"]`),
+        null,
+        `Expected unused toolbar action ${unusedToolbarLabel} to be removed`
+      );
+    }
+    const topTabs = document.querySelector('.inspector-tabs[role="tablist"]');
+    assert.ok(topTabs, "Expected right-side top tab list");
+    assert.deepEqual(rightSideTabLabels(), ["配置", "网络", "日志", "设置"]);
+    assert.equal(activeRightSideTab(), "配置");
+    assert.equal(document.querySelector('.inspector-tabs button[role="tab"][aria-label="信息"]'), null);
+    assert.equal(document.querySelector('.inspector-tabs button[role="tab"][aria-label="应用"]'), null);
+
+    await clickRightSideTab(act, "网络");
+    await waitFor(() => networkEvidenceText().includes("/v1/home/feed"));
+    assert.ok(devtoolsRail.contains(document.querySelector('[aria-label="网络证据"]')));
+    assert.equal(document.querySelector('[aria-label="运行日志"]')?.hasAttribute("hidden"), true);
+    assert.equal(activeRightSideTab(), "网络");
+    await clickRightSideTab(act, "日志");
+    await waitFor(() => logsText().includes("已选择 iOS 目标"));
+    assert.equal(document.querySelector('[aria-label="网络证据"]')?.hasAttribute("hidden"), true);
+    assert.ok(devtoolsRail.contains(document.querySelector('[aria-label="运行日志"]')));
+    assert.equal(activeRightSideTab(), "日志");
+    await clickRightSideTab(act, "网络");
+    await waitFor(() => networkEvidenceText().includes("/v1/home/feed"));
+    assert.equal(document.querySelector('[aria-label="运行日志"]')?.hasAttribute("hidden"), true);
+    assert.equal(document.querySelectorAll('button[aria-label^="隐藏网络"]').length, 0);
+    assert.equal(document.querySelectorAll('button[aria-label^="显示网络"]').length, 0);
+    assert.equal(document.querySelectorAll('button[aria-label^="隐藏日志"]').length, 0);
+    assert.equal(document.querySelectorAll('button[aria-label^="显示日志"]').length, 0);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1588,18 +2578,21 @@ test("lets users hide and restore network evidence independently from logs", asy
   }
 });
 
-test("toggles device control tool state when probe is selected", async () => {
+test("keeps device canvas in point mode without bottom control groups after removing 3D probe", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
 
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
     "fetch",
-    async (input) => {
+    async (input, init) => {
       const url = new URL(resolveRequestURL(input), window.location.href);
+      const method = init?.method ?? resolveRequestMethod(input);
+      fetchCalls.push({ pathname: url.pathname, method });
 
       if (url.pathname === "/web/host-targets") {
         return new Response(
@@ -1654,6 +2647,10 @@ test("toggles device control tool state when probe is selected", async () => {
         );
       }
 
+      if (url.pathname === "/web/host-hierarchy") {
+        throw new Error("3D probe mode should not request host hierarchy from the Web UI");
+      }
+
       throw new Error("Unexpected fetch route: " + url.pathname);
     },
     restoreCallbacks
@@ -1674,33 +2671,23 @@ test("toggles device control tool state when probe is selected", async () => {
 
     await waitFor(() => document.querySelector(".device-screen.is-interactive"));
     const screen = document.querySelector(".device-screen");
-    assert.ok(screen, "Expected device screen to be interactive");
-    const pointButton = document.querySelector('button[aria-label="点选"]');
-    const probeButton = document.querySelector('button[aria-label="探测"]');
-    assert.ok(pointButton, "Expected point tool button");
-    assert.ok(probeButton, "Expected probe tool button");
-    assert.equal(document.querySelector('button[aria-label="应用"]'), null);
-    assert.equal(document.querySelector('button[aria-label="主屏幕"]'), null);
-    assert.equal(document.querySelector('button[aria-label="竖屏"]'), null);
-    assert.equal(document.querySelector('button[aria-label="横屏"]'), null);
-    assert.equal(pointButton.getAttribute("aria-pressed"), "true");
-    assert.equal(probeButton.getAttribute("aria-pressed"), "false");
+    assert.ok(screen, "Expected device screen to stay interactive");
+    assert.equal(document.querySelector(".device-controls"), null);
+    assert.equal(document.querySelector('button[aria-label="点选"]'), null);
+    assert.equal(document.querySelector('button[aria-label="探测"]'), null);
+    assert.equal(document.querySelector(".hierarchy-stage"), null);
+    assert.equal(document.querySelector(".hierarchy-scene-viewer"), null);
+    assert.equal(document.querySelector(".hierarchy-three-canvas"), null);
+    assert.equal(document.querySelector('[aria-label="画布缩放控制"]'), null);
+    assert.equal(document.querySelector(".canvas-zoom-controls"), null);
     assert.match(screen.className, /tool-point/);
     assert.equal(screen.getAttribute("aria-label"), "设备画面，当前工具 点选");
+    assert.ok(document.querySelector(".live-preview-badge"), "Expected live preview control to remain available");
 
-    await clickButtonByLabel(act, "探测");
-    await waitFor(() =>
-      document.querySelector('button[aria-label="探测"]')?.getAttribute("aria-pressed") === "true" &&
-      document.querySelector(".hierarchy-stage")?.className.includes("tool-probe")
-    );
-
-    assert.equal(document.querySelector('button[aria-label="点选"]')?.getAttribute("aria-pressed"), "false");
-    assert.equal(document.querySelector('button[aria-label="探测"]')?.getAttribute("aria-pressed"), "true");
-    assert.equal(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent?.trim(), "视图树");
-    assert.equal(document.querySelector(".device-frame"), null);
-    assert.equal(document.querySelector(".device-screen"), null);
-    assert.equal(document.querySelector(".real-screenshot"), null);
-    assert.equal(document.querySelector(".hierarchy-stage")?.getAttribute("aria-label"), "3D 视图层级，当前工具 探测");
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 1250));
+    });
+    assert.equal(fetchCalls.some((call) => call.pathname === "/web/host-hierarchy"), false);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1710,32 +2697,21 @@ test("toggles device control tool state when probe is selected", async () => {
   }
 });
 
-test("shows rotatable Lookin-style hierarchy layers for iOS Android and Harmony targets", async () => {
+test("keeps view tree available without rendering a 3D hierarchy canvas", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
-  const fetchCalls = [];
 
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
     "fetch",
-    async (input, init) => {
+    async (input) => {
       const url = new URL(resolveRequestURL(input), window.location.href);
-      const method = init?.method ?? resolveRequestMethod(input);
-      fetchCalls.push({ pathname: url.pathname, method, platform: url.searchParams.get("platform") });
-
       if (url.pathname === "/web/host-hierarchy") {
-        const platform = url.searchParams.get("platform") ?? "ios";
-        return new Response(JSON.stringify(hostHierarchyResponseForDom(platform, method)), {
-          status: 200,
-          headers: {
-            "content-type": "application/json",
-          },
-        });
+        throw new Error("Removed 3D mode should not call host hierarchy from Web canvas");
       }
-
       return new Response(JSON.stringify({ ok: true }), {
         status: 200,
         headers: {
@@ -1760,53 +2736,22 @@ test("shows rotatable Lookin-style hierarchy layers for iOS Android and Harmony 
     });
 
     await waitFor(() => hasRequestFailedFallbackNotice());
+    assert.equal(document.querySelector('button[aria-label="探测"]'), null);
+    assert.equal(document.querySelector(".hierarchy-stage"), null);
+    assert.equal(document.querySelector(".hierarchy-scene-viewer"), null);
 
-    await clickButtonByLabel(act, "探测");
-    await waitFor(() => hierarchySceneText().includes("iOS") && hierarchySceneText().includes("UIStackView"));
-    assert.match(hierarchySceneText(), /现场采集/);
-    assert.equal(document.querySelector(".hierarchy-capture-button")?.textContent?.trim(), "重新采集");
-    await clickButtonByLabel(act, "重新采集真实层级");
-    await waitFor(() => fetchCalls.some((call) => call.pathname === "/web/host-hierarchy" && call.method === "POST"));
-    assert.match(hierarchySceneText(), /手动采集/);
-    assert.equal(document.querySelector(".device-frame"), null);
-    assert.equal(document.querySelector(".device-screen"), null);
-    assert.ok(document.querySelector(".hierarchy-stage"), "Expected hierarchy stage without phone frame");
-    assert.match(hierarchySceneText(), /questionList/);
-    const initialRotation = hierarchyRotationText();
-    const viewer = document.querySelector(".hierarchy-scene-viewer");
-    assert.ok(viewer, "Expected hierarchy scene viewer");
-    await act(async () => {
-      viewer.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 4, clientX: 140, clientY: 180, bubbles: true }));
-      viewer.dispatchEvent(new window.PointerEvent("pointermove", { pointerId: 4, clientX: 220, clientY: 120, bubbles: true }));
-      viewer.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 4, clientX: 220, clientY: 120, bubbles: true }));
-    });
-    await waitFor(() => hierarchyRotationText() !== initialRotation);
-    assert.match(hierarchyRotationText(), /^水平旋转/);
-    const horizontalRotation = hierarchyRotationText();
-    await act(async () => {
-      viewer.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 5, clientX: 220, clientY: 120, bubbles: true }));
-      viewer.dispatchEvent(new window.PointerEvent("pointermove", { pointerId: 5, clientX: 220, clientY: 240, bubbles: true }));
-      viewer.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 5, clientX: 220, clientY: 240, bubbles: true }));
-    });
-    assert.equal(hierarchyRotationText(), horizontalRotation);
+    await clickTabButton(act, "视图树");
+    await waitFor(() => viewTreeText().includes("UIStackView") && viewTreeText().includes("questionList"));
 
-    await clickViewTreeTarget(act, "Pixel API 35");
-    await waitFor(() => viewTreeTitle()?.includes("Overloaded"));
-    await clickButtonByLabel(act, "探测");
-    await waitFor(() =>
-      hierarchySceneLabel().includes("Android") &&
-      viewTreeText().includes("AndroidComposeView") &&
-      viewTreeText().includes("settingsList")
-    );
+    await clickTabButton(act, "设备");
+    await clickDeviceRow(act, "Pixel API 35");
+    await clickTabButton(act, "视图树");
+    await waitFor(() => viewTreeText().includes("AndroidComposeView") && viewTreeText().includes("settingsList"));
 
-    await clickViewTreeTarget(act, "DevEco Local");
-    await waitFor(() => viewTreeTitle()?.includes("Triton Smoke"));
-    await clickButtonByLabel(act, "探测");
-    await waitFor(() =>
-      hierarchySceneLabel().includes("Harmony") &&
-      viewTreeText().includes("ArkUIRoot") &&
-      viewTreeText().includes("settingsContent")
-    );
+    await clickTabButton(act, "设备");
+    await clickDeviceRow(act, "DevEco Local");
+    await clickTabButton(act, "视图树");
+    await waitFor(() => viewTreeText().includes("ArkUIRoot") && viewTreeText().includes("settingsContent"));
   } finally {
     await act(async () => {
       root.unmount();
@@ -2025,13 +2970,21 @@ async function clickDeviceRow(act, deviceName) {
   });
 }
 
-async function clickViewTreeTarget(act, deviceName) {
-  const chip = Array.from(document.querySelectorAll(".view-tree-target-chip")).find((candidate) =>
-    candidate.textContent?.includes(deviceName)
-  );
-  assert.ok(chip, `Expected to find view-tree target chip for ${deviceName}`);
+async function clickViewTreeNode(act, nodeId) {
+  const row = document.querySelector(`.view-tree-row[data-node-id="${nodeId}"]`);
+  assert.ok(row, `Expected to find view-tree node for ${nodeId}`);
   await act(async () => {
-    chip.click();
+    row.click();
+  });
+}
+
+async function clickRightSideTab(act, label) {
+  const tab = Array.from(document.querySelectorAll('.inspector-tabs [role="tab"]')).find((candidate) =>
+    candidate.textContent?.trim() === label
+  );
+  assert.ok(tab, `Expected to find right-side tab for ${label}`);
+  await act(async () => {
+    tab.click();
   });
 }
 
@@ -2106,9 +3059,9 @@ async function clickLivePreviewBadge(act) {
 
 function hasRequestFailedFallbackNotice() {
   return (
-    document.querySelector(".toolbar-title span")?.textContent?.trim() === "QA mock fallback" &&
+    document.querySelector(".toolbar-title span")?.textContent?.trim() === "Host bridge unavailable" &&
     document.querySelector(".bridge-notice strong")?.textContent?.trim() ===
-      "Host bridge 请求失败，正在展示 QA mock fallback" &&
+      "Host bridge 请求失败" &&
     document.querySelector(".bridge-notice span")?.textContent?.trim() === "Host targets request failed: 502"
   );
 }
@@ -2130,11 +3083,11 @@ function bodyText() {
 }
 
 function networkEvidenceText() {
-  return document.querySelector('[aria-label="网络证据"]')?.textContent ?? "";
+  return document.querySelector('[aria-label="网络证据"], [aria-label="Network evidence"]')?.textContent ?? "";
 }
 
 function logsText() {
-  return document.querySelector('[aria-label="运行日志"]')?.textContent ?? "";
+  return document.querySelector('[aria-label="运行日志"], [aria-label="Runtime logs"]')?.textContent ?? "";
 }
 
 function hierarchySceneText() {
@@ -2149,8 +3102,8 @@ function hierarchyRotationText() {
   return document.querySelector(".hierarchy-rotation-state")?.textContent ?? "";
 }
 
-function viewTreeTitle() {
-  return document.querySelector(".view-tree-title strong")?.textContent?.trim();
+function viewTreeHeaderText() {
+  return document.querySelector(".view-tree-title")?.textContent?.trim() ?? "";
 }
 
 function livePreviewFpsText() {
@@ -2170,6 +3123,40 @@ function metricValue(label) {
 
 function viewTreeText() {
   return document.querySelector(".view-tree-list")?.textContent ?? "";
+}
+
+function selectedViewTreeNodeId() {
+  return document.querySelector(".view-tree-row.is-selected")?.getAttribute("data-node-id") ?? null;
+}
+
+function selectedViewNodeHighlight() {
+  return document.querySelector(".view-node-highlight");
+}
+
+function selectedViewNodeHighlightId() {
+  return selectedViewNodeHighlight()?.getAttribute("data-node-id") ?? null;
+}
+
+function controllerShellBadgeText() {
+  return document.querySelector(".controller-shell-badge")?.textContent?.trim() ?? "";
+}
+
+function controllerShellBadgeTitle() {
+  return document.querySelector(".controller-shell-badge")?.getAttribute("title") ?? "";
+}
+
+function assertApproxPercent(actual, expected, tolerance = 0.02) {
+  assert.ok(actual.endsWith("%"), `Expected percent value, got ${actual}`);
+  const numeric = Number.parseFloat(actual);
+  assert.ok(Math.abs(numeric - expected) <= tolerance, `Expected ${actual} to be within ${tolerance}% of ${expected}%`);
+}
+
+function activeRightSideTab() {
+  return document.querySelector('.inspector-tabs [role="tab"][aria-selected="true"]')?.textContent?.trim();
+}
+
+function rightSideTabLabels() {
+  return Array.from(document.querySelectorAll('.inspector-tabs [role="tab"]')).map((tab) => tab.textContent?.trim() ?? "");
 }
 
 function viewTreeTargetNames() {
@@ -2211,6 +3198,24 @@ function hostHierarchyResponseForDom(platform, method = "GET") {
       method,
       readonly: true,
       mutatesApp: false,
+    },
+    captureEvidence: {
+      captureId: `${platform}-mock-capture`,
+      capturedAt: "2026-06-19T00:00:00.000Z",
+      target: {
+        id: "local",
+        ambiguous: false,
+      },
+      source: {
+        kind: "triton-hierarchy",
+        nodeSlice: "styled",
+        screenshotSlice: "none",
+      },
+      hydration: {
+        dataUrlCount: 0,
+        nodeCount: 2,
+        failedNodeCount: 0,
+      },
     },
     scene: {
       platform,

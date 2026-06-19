@@ -80,9 +80,18 @@ extension TritonKitRequestHandler {
             return TKMessage(id: message.id, type: .runtimeSnapshot, payload: try? JSONEncoder().encode(snapshot))
 
         case .hierarchy:
-            let items = await TKHierarchyBuilder.buildHierarchy()
+            let uploader = kit?.uploader
+            var items = await TKHierarchyBuilder.buildHierarchy(includeScreenshots: uploader != nil)
+            if let uploader {
+                items = await uploadHierarchyScreenshots(items, uploader: uploader)
+            }
             let appInfo = TKAppInfo()
-            let hierarchy = TKHierarchyInfo(displayItems: items, appInfo: appInfo)
+            #if canImport(UIKit)
+            let controllerContext = await MainActor.run { currentHierarchyControllerContext() }
+            #else
+            let controllerContext: TKHierarchyControllerContext? = nil
+            #endif
+            let hierarchy = TKHierarchyInfo(displayItems: items, appInfo: appInfo, controllerContext: controllerContext)
             return TKMessage(id: message.id, type: .hierarchy, payload: try? JSONEncoder().encode(hierarchy))
 
         case .accessibility:
@@ -162,5 +171,24 @@ extension TritonKitRequestHandler {
         default:
             return unsupportedMessage(message)
         }
+    }
+
+    private func uploadHierarchyScreenshots(
+        _ items: [TKDisplayItem],
+        uploader: TritonKitDataUploader
+    ) async -> [TKDisplayItem] {
+        var result: [TKDisplayItem] = []
+        result.reserveCapacity(items.count)
+        for var item in items {
+            item.subitems = await uploadHierarchyScreenshots(item.subitems, uploader: uploader)
+            if let screenshot = item.groupScreenshot ?? item.soloScreenshot,
+               let ref = try? await uploader.upload(screenshot) {
+                item.screenshotRef = ref
+            }
+            item.groupScreenshot = nil
+            item.soloScreenshot = nil
+            result.append(item)
+        }
+        return result
     }
 }

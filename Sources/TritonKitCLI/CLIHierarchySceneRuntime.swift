@@ -26,7 +26,8 @@ func runHierarchyScene(
                 target: summary.id,
                 displayItems: hierarchy.displayItems,
                 viewportOverride: hierarchy.viewport,
-                maxNodes: maxNodes
+                maxNodes: maxNodes,
+                controllerContext: hierarchy.controllerContext
             )
             let response = TKHostHierarchyResponse(
                 ok: true,
@@ -92,7 +93,8 @@ func makeLegacyIosHierarchyScene(
     target: String,
     displayItems: [TKDisplayItem],
     viewportOverride: TKHierarchyViewport? = nil,
-    maxNodes: Int? = nil
+    maxNodes: Int? = nil,
+    controllerContext: TKHierarchyControllerContext? = nil
 ) -> TKHierarchyScene {
     let viewport = legacyIosViewport(displayItems: displayItems, viewportOverride: viewportOverride)
     var nodes: [TKHierarchyLayerNode] = []
@@ -100,12 +102,19 @@ func makeLegacyIosHierarchyScene(
         appendLegacyIosHierarchyNode(&nodes, item: item, parentId: nil, viewport: viewport, maxNodes: maxNodes)
     }
     let rootId = nodes.first?.id ?? "ios:(target):root"
-    return TKHierarchyScene(platform: "ios", rootId: rootId, viewport: viewport, nodes: nodes)
+    return TKHierarchyScene(
+        platform: "ios",
+        rootId: rootId,
+        viewport: viewport,
+        nodes: nodes,
+        controllerContext: resolvedLegacyIosControllerContext(controllerContext, nodes: nodes)
+    )
 }
 
 private struct LegacyIosHierarchyPayload: Decodable {
     let displayItems: [TKDisplayItem]
     let appInfo: LegacyIosAppInfo?
+    let controllerContext: TKHierarchyControllerContext?
 
     var viewport: TKHierarchyViewport? {
         guard let width = appInfo?.screenWidth, let height = appInfo?.screenHeight, width > 0, height > 0 else {
@@ -125,11 +134,65 @@ private func appendLegacyIosHierarchyNode(
     item: TKDisplayItem,
     parentId: String?,
     viewport: TKHierarchyViewport,
-    maxNodes: Int?
+    maxNodes: Int?,
+    depthOffset: Int = 0,
+    currentControllerOID: UInt? = nil
 ) {
     if let maxNodes, nodes.count >= maxNodes { return }
     guard item.frame.width > 0, item.frame.height > 0 else { return }
     let oid = item.layerObject?.oid ?? item.viewObject?.oid ?? UInt(nodes.count)
+    let controllerOID = item.hostViewControllerObject?.oid
+    let shouldInsertController = controllerOID != nil && controllerOID != currentControllerOID
+    let controllerId = shouldInsertController ? "ios:controller:\(controllerOID ?? 0)" : nil
+    if shouldInsertController, let controller = item.hostViewControllerObject, let controllerId {
+        nodes.append(TKHierarchyLayerNode(
+            id: controllerId,
+            parentId: parentId,
+            type: controller.classChainList.first ?? "UIViewController",
+            name: legacyIosControllerNodeName(controller),
+            frame: clampLegacyIosFrame(item.frame, viewport: viewport),
+            depth: max(0, item.indentLevel + depthOffset),
+            visible: !item.isHidden,
+            interactive: false,
+            color: "#b48cff",
+            source: "runtime-controller",
+            style: TKHierarchyNodeStyle(
+                display: "controller",
+                text: legacyIosControllerNodeName(controller),
+                backgroundColor: "#b48cff",
+                foregroundColor: nil,
+                alpha: Double(item.alpha),
+                cornerRadius: nil
+            ),
+            slice: nil,
+            view: nil,
+            layer: nil,
+            visualSources: [
+                TKHierarchyVisualSource(
+                    kind: "styledFallback",
+                    dataRef: nil,
+                    dataUrl: nil,
+                    rect: clampLegacyIosFrame(item.frame, viewport: viewport),
+                    capturedBy: nil,
+                    contentsScale: nil,
+                    contentsGravity: nil,
+                    contentsRect: nil,
+                    reason: "UIViewController host object has no standalone view snapshot"
+                )
+            ],
+            raw: TKHierarchyNodeRawInfo(
+                platform: "ios",
+                source: "runtime-tree",
+                role: "UIViewController",
+                identifier: String(controller.oid)
+            ),
+            renderHints: TKHierarchyNodeRenderHints(
+                preferredMode: "structure",
+                fallbackMode: "wireframe",
+                quality: "semantic"
+            )
+        ))
+    }
     let type = legacyIosHierarchyClassName(item)
     let id = "ios:runtime:\(oid)"
     let frame = clampLegacyIosFrame(item.frame, viewport: viewport)
@@ -141,11 +204,11 @@ private func appendLegacyIosHierarchyNode(
     let visualSources = legacyIosHierarchyVisualSources(frame: frame, slice: slice)
     nodes.append(TKHierarchyLayerNode(
         id: id,
-        parentId: parentId,
+        parentId: controllerId ?? parentId,
         type: type,
         name: legacyIosHierarchyNodeName(type: type, oid: oid, item: item),
         frame: frame,
-        depth: max(0, item.indentLevel),
+        depth: max(0, item.indentLevel + depthOffset + (shouldInsertController ? 1 : 0)),
         visible: visible,
         interactive: interactive,
         color: color,
@@ -163,9 +226,78 @@ private func appendLegacyIosHierarchyNode(
         ),
         renderHints: legacyIosHierarchyRenderHints(type: type, frame: frame, viewport: viewport, slice: slice)
     ))
+    let childDepthOffset = depthOffset + (shouldInsertController ? 1 : 0)
+    let nextControllerOID = controllerOID ?? currentControllerOID
     for child in item.subitems {
-        appendLegacyIosHierarchyNode(&nodes, item: child, parentId: id, viewport: viewport, maxNodes: maxNodes)
+        appendLegacyIosHierarchyNode(
+            &nodes,
+            item: child,
+            parentId: id,
+            viewport: viewport,
+            maxNodes: maxNodes,
+            depthOffset: childDepthOffset,
+            currentControllerOID: nextControllerOID
+        )
     }
+}
+
+private func legacyIosControllerNodeName(_ controller: TKObject) -> String {
+    let type = controller.classChainList.first ?? "UIViewController"
+    return "\(type.split(separator: ".").last.map(String.init) ?? type)#\(controller.oid)"
+}
+
+private func resolvedLegacyIosControllerContext(
+    _ context: TKHierarchyControllerContext?,
+    nodes: [TKHierarchyLayerNode]
+) -> TKHierarchyControllerContext? {
+    if let context, context.activeControllerName != nil || !context.stack.isEmpty {
+        return context
+    }
+    let controllerNodes = nodes.filter(isLegacyIosControllerNode)
+    guard let active = controllerNodes
+        .filter(\.visible)
+        .filter({ !isSystemOverlayControllerType($0.type) })
+        .sorted(by: { first, second in
+            let firstArea = first.frame.width * first.frame.height
+            let secondArea = second.frame.width * second.frame.height
+            if firstArea != secondArea { return firstArea > secondArea }
+            return first.depth > second.depth
+        })
+        .first ?? controllerNodes.first
+    else {
+        return nil
+    }
+    let entry = hierarchyControllerEntry(from: active)
+    return TKHierarchyControllerContext(
+        activeControllerId: entry.id,
+        activeControllerName: entry.name,
+        activeControllerClassName: entry.className,
+        stack: [entry],
+        source: "scene-controller-node-fallback"
+    )
+}
+
+private func isLegacyIosControllerNode(_ node: TKHierarchyLayerNode) -> Bool {
+    node.source == "runtime-controller" ||
+        node.raw?.role == "UIViewController" ||
+        node.id.hasPrefix("ios:controller:")
+}
+
+private func isSystemOverlayControllerType(_ type: String) -> Bool {
+    type.contains("UITrackingElementWindowController") ||
+        type.contains("UIEditingOverlayViewController")
+}
+
+private func hierarchyControllerEntry(from node: TKHierarchyLayerNode) -> TKHierarchyControllerEntry {
+    let oid = node.raw?.identifier.flatMap(UInt.init)
+    let name = node.name.replacingOccurrences(of: #"#\d+$"#, with: "", options: .regularExpression)
+    return TKHierarchyControllerEntry(
+        id: node.id,
+        oid: oid,
+        className: node.type,
+        name: name.isEmpty ? node.type : name,
+        title: nil
+    )
 }
 
 private func legacyIosViewport(displayItems: [TKDisplayItem], viewportOverride: TKHierarchyViewport?) -> TKHierarchyViewport {

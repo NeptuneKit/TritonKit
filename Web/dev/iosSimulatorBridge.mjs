@@ -9,6 +9,7 @@ import { tmpdir } from "node:os";
 
 const bridgeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const defaultHostInputBaseURL = "http://127.0.0.1:19421";
+const defaultRuntimeDataBaseURL = "http://127.0.0.1:19421";
 let managedTritonServeProcess;
 
 export function mapTritonSimListToWebTargets(payload) {
@@ -98,6 +99,7 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
   const root = options.root ? resolve(options.root) : bridgeRoot;
   const tritonPath = options.tritonPath ? resolve(options.tritonPath) : resolveTritonBinary(root);
   const hostInputBaseURL = options.hostInputBaseURL || defaultHostInputBaseURL;
+  const runtimeDataBaseURL = options.runtimeDataBaseURL || defaultRuntimeDataBaseURL;
 
   return async function iosSimulatorBridgeMiddleware(req, res, next) {
     if (!req.url?.startsWith("/web/")) {
@@ -150,6 +152,9 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
       if (url.pathname === "/web/host-hierarchy") {
         const platform = url.searchParams.get("platform") || "ios";
         const target = url.searchParams.get("target") || "local";
+        const scope = url.searchParams.get("scope") || undefined;
+        const kind = url.searchParams.get("kind") || undefined;
+        const source = url.searchParams.get("source") || undefined;
         if (!["GET", "POST"].includes(req.method ?? "GET")) {
           sendJSON(res, 405, {
             ok: false,
@@ -171,7 +176,7 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
           return;
         }
         try {
-          sendJSON(res, 200, await captureHostHierarchy(tritonPath, platform, target, req.method ?? "GET"));
+          sendJSON(res, 200, await captureHostHierarchy(tritonPath, platform, target, req.method ?? "GET", { runtimeDataBaseURL, scope, kind, source, target }));
         } catch (error) {
           sendJSON(res, 409, {
             ok: false,
@@ -226,10 +231,10 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         const kind = url.searchParams.get("kind") || "";
         const source = url.searchParams.get("source") || "";
         try {
-          const screenshot = await captureHostScreenshot(tritonPath, platform, target, { scope, kind, source });
+          const screenshot = await captureHostScreenshot(tritonPath, platform, target, { scope, kind, source, target });
           sendJSON(res, 200, screenshot);
         } catch (error) {
-          sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source }, error, "screenshot"));
+          sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source, target }, error, "screenshot"));
         }
         return;
       }
@@ -247,12 +252,13 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
             scope,
             kind,
             source,
+            target,
             hostInputBaseURL,
             manageHostInputServer: !options.hostInputBaseURL,
           });
           sendJSON(res, 200, result);
         } catch (error) {
-          sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source }, error, "input"));
+          sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source, target }, error, "input"));
         }
         return;
       }
@@ -346,11 +352,13 @@ function normalizeOptionalString(value) {
 
 async function captureHostScreenshot(tritonPath, platform, target, options = {}) {
   const outputDir = join(tmpdir(), `tritonkit-web-host-${randomUUID()}`);
-  const outputPath = join(outputDir, isIOSRuntimeMirror(platform, options) ? "screenshot.png" : "screenshot.bin");
+  const runtimeMirror = isIOSRuntimeMirror(platform, options);
+  const outputPath = join(outputDir, runtimeMirror ? "screenshot.png" : "screenshot.bin");
   await mkdir(outputDir, { recursive: true });
   try {
-    const args = isIOSRuntimeMirror(platform, options)
-      ? ["screenshot", "--output", outputPath, "--json"]
+    const runtimeTarget = runtimeMirror ? await resolveIOSRuntimeMirrorTarget(tritonPath, target, options) : null;
+    const args = runtimeMirror
+      ? ["screenshot", "--target", runtimeTarget, "--output", outputPath, "--json"]
       : platform === "ios"
       ? ["sim", "screenshot", "--simulator", target, "--output", outputPath, "--json"]
       : ["device", "screenshot", "--platform", platform, "--device", target, "--output", outputPath, "--json"];
@@ -363,7 +371,7 @@ async function captureHostScreenshot(tritonPath, platform, target, options = {})
       simulator: target,
       source: {
         command: `triton ${args.join(" ")}`,
-        runtimeScope: isIOSRuntimeMirror(platform, options) ? "app-runtime" : platform === "ios" ? "host-simulator" : `host-${platform}`,
+        runtimeScope: runtimeMirror ? "app-runtime" : platform === "ios" ? "host-simulator" : `host-${platform}`,
         readonly: true,
       },
       artifact: payload.artifact,
@@ -377,7 +385,51 @@ async function captureHostScreenshot(tritonPath, platform, target, options = {})
 }
 
 function isIOSRuntimeMirror(platform, options = {}) {
-  return platform === "ios" && (options.source === "runtime" || options.scope === "real" || options.kind === "real-device");
+  return platform === "ios" && (
+    options.source === "runtime" ||
+    options.scope === "real" ||
+    options.kind === "real-device" ||
+    String(options.target ?? "").startsWith("ios-real:")
+  );
+}
+
+async function resolveIOSRuntimeMirrorTarget(tritonPath, hostTarget, options = {}) {
+  const payload = await runTritonJSON(tritonPath, ["list", "--json"]);
+  const runtimeTargets = Array.isArray(payload?.targets)
+    ? payload.targets.filter((target) => String(target.platform ?? "").toLowerCase() === "ios" && target.connected !== false)
+    : [];
+  if (runtimeTargets.length === 0) {
+    throw new Error("No connected iOS App runtime targets were reported by `triton list --json`.");
+  }
+
+  if (isIOSRealHostTarget(hostTarget, options)) {
+    const realTargets = runtimeTargets.filter((target) => !normalizeOptionalString(target.simulatorUDID));
+    if (realTargets.length === 1) return String(realTargets[0].id);
+    if (realTargets.length > 1) {
+      throw new Error(`Multiple connected iOS real-device App runtime targets are available: ${describeRuntimeTargets(realTargets)}.`);
+    }
+    throw new Error(`No connected iOS real-device App runtime target matched host target ${hostTarget}.`);
+  }
+
+  const simulatorUDID = String(hostTarget ?? "").replace(/^sim:/, "");
+  const simulatorTarget = runtimeTargets.find((target) => {
+    const runtimeID = String(target.id ?? "");
+    const runtimeSimulatorUDID = String(target.simulatorUDID ?? "");
+    return runtimeSimulatorUDID === simulatorUDID || runtimeID === hostTarget || runtimeID.endsWith(simulatorUDID);
+  });
+  if (simulatorTarget) return String(simulatorTarget.id);
+  if (runtimeTargets.length === 1) return String(runtimeTargets[0].id);
+  throw new Error(`No connected iOS App runtime target matched host target ${hostTarget}. Available: ${describeRuntimeTargets(runtimeTargets)}.`);
+}
+
+function isIOSRealHostTarget(hostTarget, options = {}) {
+  return options.scope === "real" ||
+    options.kind === "real-device" ||
+    String(hostTarget ?? options.target ?? "").startsWith("ios-real:");
+}
+
+function describeRuntimeTargets(targets) {
+  return targets.map((target) => String(target.id ?? "<unknown>")).join(", ");
 }
 
 function webHostRuntimeError(platform, options, error, action) {
@@ -405,7 +457,8 @@ async function dispatchHostInput(tritonPath, platform, target, input, options = 
       message: "Web host input is only enabled for iOS real-device App runtime mirror targets in this bridge.",
     };
   }
-  const result = await runCommand(tritonPath, ["input", "--json", "--summary"], {
+  const runtimeTarget = await resolveIOSRuntimeMirrorTarget(tritonPath, target, options);
+  const result = await runCommand(tritonPath, ["input", "--target", runtimeTarget, "--json", "--summary"], {
     stdin: `${JSON.stringify(input)}\n`,
   });
   if (result.exitCode !== 0) {
@@ -517,30 +570,47 @@ async function captureHostLogs(tritonPath, target) {
   }
 }
 
-async function captureHostHierarchy(tritonPath, platform, target, method = "GET") {
-  const args = ["hierarchy", "--platform", platform, "--target", target, "--json"];
+async function captureHostHierarchy(tritonPath, platform, target, method = "GET", options = {}) {
+  const runtimeMirror = isIOSRuntimeMirror(platform, options);
+  const hierarchyTarget = runtimeMirror ? await resolveIOSRuntimeMirrorTarget(tritonPath, target, options) : target;
+  const args = ["hierarchy", "--platform", platform, "--target", hierarchyTarget, "--json"];
   let payload;
   try {
     payload = await runTritonJSON(tritonPath, args);
   } catch (error) {
-    if (platform === "ios" && isLegacyIosHierarchySchemaError(error)) {
-      const legacyPayload = await runTritonJSON(tritonPath, ["hierarchy", "--target", target, "--json"]);
-      return attachHierarchyCaptureControl(mapLegacyIosHierarchyToHostResponse(legacyPayload, target), method);
+    if (platform === "ios" && shouldFallbackToLegacyIosHierarchy(error)) {
+      const legacyPayload = await runTritonJSON(tritonPath, ["hierarchy", "--target", hierarchyTarget, "--json"]);
+      return attachHierarchyCaptureControl(
+        await mapLegacyIosHierarchyToHostResponse(legacyPayload, target, {
+          runtimeDataBaseURL: options.runtimeDataBaseURL || defaultRuntimeDataBaseURL,
+        }),
+        method,
+        target
+      );
     }
     throw error;
   }
   if (!payload || payload.ok !== true || !payload.scene) {
     throw new Error("triton hierarchy did not return a valid HostHierarchyResponse scene");
   }
-  return attachHierarchyCaptureControl(payload, method);
+  return attachHierarchyCaptureControl(
+    await hydrateHierarchySceneNodeSlices(payload, options.runtimeDataBaseURL || defaultRuntimeDataBaseURL),
+    method,
+    target
+  );
 }
 
-function isLegacyIosHierarchySchemaError(error) {
+function shouldFallbackToLegacyIosHierarchy(error) {
   const message = error instanceof Error ? error.message : String(error);
-  return message.includes("Unknown option '--platform'") || message.includes("unknown option '--platform'");
+  return message.includes("Unknown option '--platform'") ||
+    message.includes("unknown option '--platform'") ||
+    message.includes('"code" : "target_not_found"') ||
+    message.includes('"code":"target_not_found"') ||
+    message.includes("Target not found");
 }
 
-function attachHierarchyCaptureControl(payload, method) {
+function attachHierarchyCaptureControl(payload, method, target) {
+  const captureEvidence = hierarchyCaptureEvidence(payload, target);
   return {
     ...payload,
     control: {
@@ -550,15 +620,48 @@ function attachHierarchyCaptureControl(payload, method) {
       readonly: true,
       mutatesApp: false,
     },
+    captureEvidence,
   };
 }
 
-function mapLegacyIosHierarchyToHostResponse(payload, target) {
+function hierarchyCaptureEvidence(payload, target) {
+  const nodes = Array.isArray(payload?.scene?.nodes) ? payload.scene.nodes : [];
+  const visualSources = nodes.flatMap(hierarchyNodeVisualSources);
+  const dataUrlCount = visualSources.filter((source) => source.kind !== "styledFallback" && Boolean(source.dataUrl)).length;
+  const realSliceCount = visualSources.filter((source) => source.kind !== "styledFallback" && Boolean(source.dataUrl || source.dataRef)).length;
+  const failedNodeCount = visualSources.filter((source) => source.kind !== "styledFallback" && Boolean(source.dataRef) && !source.dataUrl).length;
+  const sourceCommand = String(payload?.source?.command ?? "");
+  return {
+    captureId: hierarchyCaptureId(payload, target, nodes.length, dataUrlCount),
+    capturedAt: payload?.capturedAt ?? new Date().toISOString(),
+    target: {
+      id: target,
+      ambiguous: false,
+    },
+    source: {
+      kind: sourceCommand.includes("--platform") ? "triton-hierarchy" : "fallback",
+      nodeSlice: realSliceCount > 0 ? "real" : nodes.length > 0 ? "styled" : "none",
+      screenshotSlice: dataUrlCount > 0 ? "real" : "none",
+    },
+    hydration: {
+      dataUrlCount,
+      nodeCount: nodes.length,
+      failedNodeCount,
+    },
+  };
+}
+
+function hierarchyCaptureId(payload, target, nodeCount, dataUrlCount) {
+  const capturedAt = String(payload?.capturedAt ?? "");
+  return Buffer.from([target, capturedAt, nodeCount, dataUrlCount].join("|")).toString("base64url").slice(0, 24);
+}
+
+async function mapLegacyIosHierarchyToHostResponse(payload, target, options = {}) {
   const viewport = resolveLegacyIosViewport(payload);
   const nodes = [];
   const rootItems = Array.isArray(payload?.displayItems) ? payload.displayItems : [];
   for (const item of rootItems) {
-    appendLegacyIosNode(nodes, item, undefined, viewport);
+    await appendLegacyIosNode(nodes, item, undefined, viewport, options);
   }
   if (nodes.length === 0) {
     throw new Error("legacy iOS hierarchy did not include displayItems[]");
@@ -576,7 +679,46 @@ function mapLegacyIosHierarchyToHostResponse(payload, target) {
       rootId: nodes[0].id,
       viewport,
       nodes,
+      controllerContext: resolveLegacyIosControllerContext(payload?.controllerContext, nodes),
     },
+  };
+}
+
+function resolveLegacyIosControllerContext(context, nodes) {
+  if (context && (context.activeControllerName || Array.isArray(context.stack) && context.stack.length > 0)) {
+    return context;
+  }
+  const controllerNodes = nodes.filter(isLegacyIosControllerNode);
+  const active = controllerNodes
+    .filter((node) => node.visible)
+    .filter((node) => !/UITrackingElementWindowController|UIEditingOverlayViewController/.test(node.type))
+    .sort((first, second) => {
+      const area = second.frame.width * second.frame.height - first.frame.width * first.frame.height;
+      return area === 0 ? second.depth - first.depth : area;
+    })[0] ?? controllerNodes[0];
+  if (!active) return undefined;
+  const entry = legacyIosControllerEntryFromNode(active);
+  return {
+    activeControllerId: entry.id,
+    activeControllerName: entry.name,
+    activeControllerClassName: entry.className,
+    stack: [entry],
+    source: "scene-controller-node-fallback",
+  };
+}
+
+function isLegacyIosControllerNode(node) {
+  return node?.source === "runtime-controller" ||
+    node?.raw?.role === "UIViewController" ||
+    String(node?.id ?? "").startsWith("ios:controller:");
+}
+
+function legacyIosControllerEntryFromNode(node) {
+  return {
+    id: node.id,
+    oid: Number.isFinite(Number(node.raw?.identifier)) ? Number(node.raw.identifier) : undefined,
+    className: node.type,
+    name: String(node.name ?? node.type).replace(/#\d+$/, "") || node.type,
   };
 }
 
@@ -590,21 +732,68 @@ function resolveLegacyIosViewport(payload) {
   };
 }
 
-function appendLegacyIosNode(nodes, item, parentId, viewport) {
+async function appendLegacyIosNode(nodes, item, parentId, viewport, options, context = {}) {
   if (!item || typeof item !== "object") return;
   const frame = parseLegacyFrame(item.frame);
   if (!frame) return;
   const oid = item.layerObject?.oid ?? item.viewObject?.oid ?? nodes.length;
+  const controllerOID = item.hostViewControllerObject?.oid;
+  const shouldInsertController = controllerOID !== undefined && controllerOID !== null && controllerOID !== context.currentControllerOID;
+  const controllerId = shouldInsertController ? `ios:controller:${controllerOID}` : null;
+  const depthOffset = Number.isFinite(Number(context.depthOffset)) ? Number(context.depthOffset) : 0;
+  if (shouldInsertController) {
+    const controllerType = legacyIosControllerClassName(item);
+    const controllerName = legacyIosControllerNodeName(item);
+    const controllerFrame = clampFrameToViewport(frame, viewport);
+    nodes.push({
+      id: controllerId,
+      parentId,
+      type: controllerType,
+      name: controllerName,
+      frame: controllerFrame,
+      depth: Math.max(0, legacyIosNodeDepth(item, parentId) + depthOffset),
+      visible: item.isHidden !== true,
+      interactive: false,
+      color: "#b48cff",
+      source: "runtime-controller",
+      style: {
+        display: "controller",
+        text: controllerName,
+        backgroundColor: "#b48cff",
+        alpha: typeof item.alpha === "number" ? item.alpha : 1,
+      },
+      visualSources: [
+        {
+          kind: "styledFallback",
+          rect: controllerFrame,
+          reason: "UIViewController host object has no standalone view snapshot",
+        },
+      ],
+      raw: {
+        platform: "ios",
+        source: "runtime-tree",
+        role: "UIViewController",
+        identifier: String(controllerOID),
+      },
+      renderHints: {
+        preferredMode: "structure",
+        fallbackMode: "wireframe",
+        quality: "semantic",
+      },
+    });
+  }
   const type = legacyIosClassName(item);
   const id = `ios:runtime:${oid}`;
-  const depth = Number.isFinite(Number(item.indentLevel)) ? Number(item.indentLevel) : parentId ? 1 : 0;
+  const depth = legacyIosNodeDepth(item, parentId) + depthOffset + (shouldInsertController ? 1 : 0);
   const alpha = typeof item.alpha === "number" ? item.alpha : 1;
   const visible = item.isHidden !== true && alpha > 0.01 && frame.width > 0 && frame.height > 0;
   const interactive = legacyIosNodeIsInteractive(type, item);
   const color = legacyIosNodeColor(item, interactive);
+  const slice = await legacyIosNodeSlice(item, options);
+  const visualSources = hierarchyNodeVisualSources({ frame: clampFrameToViewport(frame, viewport), slice });
   nodes.push({
     id,
-    parentId,
+    parentId: controllerId ?? parentId,
     type,
     name: legacyIosNodeName(type, oid, item),
     frame: clampFrameToViewport(frame, viewport),
@@ -612,13 +801,24 @@ function appendLegacyIosNode(nodes, item, parentId, viewport) {
     visible,
     interactive,
     color,
+    source: "runtime-tree",
     style: legacyIosNodeStyle(item, color, alpha),
-    renderHints: legacyIosRenderHints(type, frame, viewport),
+    slice,
+    visualSources,
+    renderHints: legacyIosRenderHints(type, frame, viewport, slice),
   });
   const children = Array.isArray(item.subitems) ? item.subitems : [];
+  const childContext = {
+    depthOffset: depthOffset + (shouldInsertController ? 1 : 0),
+    currentControllerOID: controllerOID ?? context.currentControllerOID,
+  };
   for (const child of children) {
-    appendLegacyIosNode(nodes, child, id, viewport);
+    await appendLegacyIosNode(nodes, child, id, viewport, options, childContext);
   }
+}
+
+function legacyIosNodeDepth(item, parentId) {
+  return Number.isFinite(Number(item.indentLevel)) ? Number(item.indentLevel) : parentId ? 1 : 0;
 }
 
 function parseLegacyFrame(value) {
@@ -645,8 +845,21 @@ function legacyIosClassName(item) {
   );
 }
 
+function legacyIosControllerClassName(item) {
+  return String(item.hostViewControllerObject?.classChainList?.[0] ?? "UIViewController");
+}
+
+function legacyIosControllerNodeName(item) {
+  const type = legacyIosControllerClassName(item);
+  const oid = item.hostViewControllerObject?.oid ?? "unknown";
+  const shortType = type.split(".").at(-1) ?? type;
+  return `${shortType}#${oid}`;
+}
+
 function legacyIosNodeName(type, oid, item) {
   if (item.representedAsKeyWindow) return "keyWindow";
+  const title = normalizeOptionalString(item.customDisplayTitle);
+  if (title) return title;
   const shortType = type.split(".").at(-1) ?? type;
   return `${shortType}#${oid}`;
 }
@@ -673,8 +886,10 @@ function rgbFloatToHex(red, green, blue) {
 }
 
 function legacyIosNodeStyle(item, color, alpha) {
+  const title = normalizeOptionalString(item.customDisplayTitle);
   return {
     display: legacyIosStyleDisplay(legacyIosClassName(item)),
+    text: title ?? undefined,
     backgroundColor: color,
     alpha,
   };
@@ -689,7 +904,138 @@ function legacyIosStyleDisplay(type) {
   return "view";
 }
 
-function legacyIosRenderHints(type, frame, viewport) {
+async function legacyIosNodeSlice(item, options) {
+  const screenshotRef = normalizeOptionalString(item.screenshotRef);
+  if (!screenshotRef) {
+    return {
+      available: false,
+      mode: "node-screenshot-ref",
+      source: "triton-runtime-data-ref",
+    };
+  }
+  const dataUrl = await fetchRuntimeDataRefDataUrl(options.runtimeDataBaseURL || defaultRuntimeDataBaseURL, screenshotRef);
+  if (!dataUrl) {
+    return {
+      available: false,
+      mode: "node-screenshot-ref",
+      source: "triton-runtime-data-ref",
+    };
+  }
+  return {
+    available: true,
+    mode: "node-screenshot-ref",
+    source: "triton-runtime-data-ref",
+    dataRef: screenshotRef,
+    dataUrl,
+  };
+}
+
+async function fetchRuntimeDataRefDataUrl(baseURL, screenshotRef) {
+  if (typeof fetch !== "function") return null;
+  const url = runtimeDataRefURL(baseURL, screenshotRef);
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const buffer = Buffer.from(await response.arrayBuffer());
+    if (buffer.length === 0) return null;
+    const mimeType = imageMimeType(buffer);
+    if (!mimeType.startsWith("image/")) return null;
+    return `data:${mimeType};base64,${buffer.toString("base64")}`;
+  } catch {
+    return null;
+  }
+}
+
+async function hydrateHierarchySceneNodeSlices(payload, runtimeDataBaseURL) {
+  const nodes = Array.isArray(payload?.scene?.nodes) ? payload.scene.nodes : [];
+  if (nodes.length === 0) return payload;
+  const hydratedNodes = await Promise.all(nodes.map(async (node) => {
+    const hydratedSlice = await hydrateHierarchyNodeSlice(node, runtimeDataBaseURL);
+    const visualSources = await hydrateHierarchyVisualSources({ ...node, slice: hydratedSlice }, runtimeDataBaseURL);
+    return {
+      ...node,
+      slice: hydratedSlice,
+      visualSources,
+      renderHints: {
+        preferredMode: visualSources.some((source) => source.kind === "layerOwnContents") ? "slice" : node.renderHints?.preferredMode ?? "style",
+        fallbackMode: node.renderHints?.fallbackMode ?? "style",
+        quality: visualSources.some((source) => source.dataUrl || source.dataRef) ? "exact" : node.renderHints?.quality ?? "approximate",
+      },
+    };
+  }));
+  return {
+    ...payload,
+    scene: {
+      ...payload.scene,
+      nodes: hydratedNodes,
+    },
+  };
+}
+
+async function hydrateHierarchyNodeSlice(node, runtimeDataBaseURL) {
+  const dataRef = normalizeOptionalString(node?.slice?.dataRef);
+  if (!node?.slice?.available || node.slice.dataUrl || !dataRef) {
+    return node?.slice;
+  }
+  const dataUrl = await fetchRuntimeDataRefDataUrl(runtimeDataBaseURL, dataRef);
+  if (!dataUrl) return node.slice;
+  return {
+    ...node.slice,
+    dataUrl,
+  };
+}
+
+async function hydrateHierarchyVisualSources(node, runtimeDataBaseURL) {
+  const sources = hierarchyNodeVisualSources(node);
+  return Promise.all(sources.map(async (source) => {
+    const dataRef = normalizeOptionalString(source?.dataRef);
+    if (!dataRef || source.dataUrl || source.kind === "styledFallback") return source;
+    const dataUrl = await fetchRuntimeDataRefDataUrl(runtimeDataBaseURL, dataRef);
+    return dataUrl ? { ...source, dataUrl } : source;
+  }));
+}
+
+function hierarchyNodeVisualSources(node) {
+  const explicit = Array.isArray(node?.visualSources) ? node.visualSources.filter(Boolean) : [];
+  const legacy = legacySliceVisualSource(node);
+  if (!legacy) return explicit;
+  const alreadyRepresented = explicit.some((source) =>
+    source?.kind === "subtreeSnapshot" &&
+    (normalizeOptionalString(source.dataRef) === legacy.dataRef || normalizeOptionalString(source.dataUrl) === legacy.dataUrl)
+  );
+  return alreadyRepresented ? explicit : [...explicit, legacy];
+}
+
+function legacySliceVisualSource(node) {
+  if (!node?.slice?.available) return null;
+  const dataRef = normalizeOptionalString(node.slice.dataRef);
+  const dataUrl = normalizeOptionalString(node.slice.dataUrl);
+  if (!dataRef && !dataUrl) return null;
+  const rect = node.frame && typeof node.frame === "object"
+    ? node.frame
+    : { x: 0, y: 0, width: 1, height: 1 };
+  return {
+    kind: "subtreeSnapshot",
+    dataRef: dataRef || undefined,
+    dataUrl: dataUrl || undefined,
+    rect,
+    capturedBy: node.slice.source === "triton-runtime-data-ref" ? "UIView.render" : "unknown",
+  };
+}
+
+function runtimeDataRefURL(baseURL, screenshotRef) {
+  const normalizedBaseURL = String(baseURL || defaultRuntimeDataBaseURL).replace(/\/+$/, "");
+  const normalizedRef = String(screenshotRef).replace(/^\/+/, "");
+  if (normalizedRef.startsWith("data/")) {
+    return `${normalizedBaseURL}/${normalizedRef.split("/").map(encodeURIComponent).join("/")}`;
+  }
+  return `${normalizedBaseURL}/data/${encodeURIComponent(normalizedRef)}`;
+}
+
+function legacyIosRenderHints(type, frame, viewport, slice) {
+  if (slice?.available && slice.dataUrl) {
+    return { preferredMode: "slice", fallbackMode: "style", quality: "exact" };
+  }
   const isFullscreen = frame.width >= viewport.width * 0.96 && frame.height >= viewport.height * 0.9;
   if (isFullscreen && /window|transition|shadow|container|wrapper|root/i.test(type)) {
     return { preferredMode: "wireframe", fallbackMode: "wireframe", quality: "fallback" };

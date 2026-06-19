@@ -15,18 +15,93 @@ export type HierarchyFrame = {
   height: number;
 };
 
+export type HierarchyPoint = {
+  x: number;
+  y: number;
+};
+
+export type HierarchySize = {
+  width: number;
+  height: number;
+};
+
+export type HierarchyLayerMetadata = {
+  bounds: HierarchyFrame;
+  position: HierarchyPoint;
+  anchorPoint: HierarchyPoint;
+  zPosition: number;
+  transform?: number[];
+  sublayerTransform?: number[];
+  masksToBounds: boolean;
+  cornerRadius: number;
+  opacity: number;
+  isHidden: boolean;
+  contentsScale?: number;
+  contentsGravity?: string;
+  contentsRect?: HierarchyFrame;
+  borderWidth?: number;
+  borderColor?: string;
+  shadowOpacity?: number;
+  shadowRadius?: number;
+  shadowOffset?: HierarchySize;
+  shadowColor?: string;
+};
+
+export type HierarchyViewMetadata = {
+  className?: string;
+  isHidden?: boolean;
+  alpha?: number;
+  isUserInteractionEnabled?: boolean;
+  accessibilityIdentifier?: string;
+  accessibilityLabel?: string;
+};
+
+export type HierarchyVisualSource =
+  | {
+      kind: "subtreeSnapshot";
+      dataUrl?: string;
+      dataRef?: string;
+      rect: HierarchyFrame;
+      capturedBy: "UIView.render" | "CALayer.render" | "drawHierarchy" | "unknown";
+    }
+  | {
+      kind: "layerOwnContents";
+      dataUrl?: string;
+      dataRef?: string;
+      rect: HierarchyFrame;
+      contentsScale?: number;
+      contentsGravity?: string;
+      contentsRect?: HierarchyFrame;
+    }
+  | {
+      kind: "mainScreenshotCrop";
+      dataUrl?: string;
+      dataRef?: string;
+      rect: HierarchyFrame;
+    }
+  | {
+      kind: "styledFallback";
+      reason: string;
+    };
+
 export type HierarchyLayerNode = {
   id: string;
   parentId?: string;
   type: string;
+  className?: string;
   name: string;
   frame: HierarchyFrame;
   depth: number;
   visible: boolean;
   interactive: boolean;
   color: string;
+  source?: string;
+  view?: HierarchyViewMetadata;
+  layer?: HierarchyLayerMetadata;
+  visualSources?: HierarchyVisualSource[];
   slice?: {
     available?: boolean;
+    dataRef?: string;
     dataUrl?: string;
     mode?: string;
     source?: string;
@@ -39,11 +114,33 @@ export type HierarchyLayerNode = {
     alpha?: number;
     cornerRadius?: number;
   };
+  raw?: {
+    platform?: string;
+    source?: string;
+    role?: string;
+    identifier?: string;
+  };
   renderHints?: {
     preferredMode?: "slice" | "style" | "fallback" | "wireframe" | string;
     fallbackMode?: "style" | "fallback" | "wireframe" | string;
     quality?: "exact" | "approximate" | "fallback" | string;
   };
+};
+
+export type HierarchyControllerEntry = {
+  id?: string;
+  oid?: number;
+  className: string;
+  name: string;
+  title?: string;
+};
+
+export type HierarchyControllerContext = {
+  activeControllerId?: string;
+  activeControllerName?: string;
+  activeControllerClassName?: string;
+  stack: HierarchyControllerEntry[];
+  source: string;
 };
 
 export type HierarchyScene = {
@@ -54,6 +151,7 @@ export type HierarchyScene = {
     height: number;
   };
   nodes: HierarchyLayerNode[];
+  controllerContext?: HierarchyControllerContext;
 };
 
 export type DeviceTarget = {
@@ -192,6 +290,27 @@ export type HostHierarchyResponse = {
     method: "GET" | "POST" | string;
     readonly: boolean;
     mutatesApp: boolean;
+  };
+  captureEvidence?: {
+    captureId: string;
+    capturedAt: string;
+    target: {
+      id?: string;
+      bundleId?: string;
+      processId?: number;
+      appName?: string;
+      ambiguous?: boolean;
+    };
+    source: {
+      kind: "triton-hierarchy" | "fallback";
+      nodeSlice: "real" | "styled" | "none";
+      screenshotSlice: "real" | "none";
+    };
+    hydration: {
+      dataUrlCount: number;
+      nodeCount: number;
+      failedNodeCount: number;
+    };
   };
   scene: HierarchyScene;
 };

@@ -429,6 +429,29 @@ func hierarchyInfoOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hierarchySceneOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "hierarchy.scene",
+        format: "json",
+        kind: "hierarchy-scene",
+        model: "TKHostHierarchyResponse",
+        fields: schemaContractFields([
+            ("platform", "String", true, "Scene platform: ios, android, or harmony"),
+            ("rootId", "String", true, "Root node id"),
+            ("viewport", "TKHierarchyViewport", true, "Viewport coordinate space"),
+            ("nodes", "[TKHierarchyLayerNode]", true, "Flattened hierarchy layer nodes"),
+            ("controllerContext", "TKHierarchyControllerContext?", false, "Current UIViewController context for iOS scenes, including active controller and stack"),
+            ("style", "TKHierarchyNodeStyle?", false, "Normalized drawable style for Lookin-style node surfaces"),
+            ("slice", "TKHierarchyNodeSlice?", false, "Per-node screenshot slice metadata with dataRef/dataUrl when available"),
+            ("view", "TKHierarchyViewMetadata?", false, "UIView metadata for future Lookin-like object reconstruction"),
+            ("layer", "TKHierarchyLayerMetadata?", false, "CALayer geometry, transform, clipping, opacity, and contents metadata"),
+            ("visualSources", "[TKHierarchyVisualSource]?", false, "Material/evidence source list; subtreeSnapshot is evidence-only and layerOwnContents is default-material eligible"),
+            ("raw", "TKHierarchyNodeRawInfo?", false, "Platform/source metadata for debugging and future exact mapping"),
+            ("renderHints", "TKHierarchyNodeRenderHints?", false, "Preferred rendering order: slice, style, fallback, or wireframe"),
+        ])
+    )
+}
+
 func hierarchyNodesOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "hierarchy.nodes",

@@ -35,7 +35,28 @@ struct TKHierarchySceneModelsTests {
                     color: "#fb7185",
                     source: "runtime-tree"
                 ),
-            ]
+            ],
+            controllerContext: TKHierarchyControllerContext(
+                activeControllerId: "ios:controller:88",
+                activeControllerName: "ProfileViewController",
+                activeControllerClassName: "Demo.ProfileViewController",
+                stack: [
+                    TKHierarchyControllerEntry(
+                        id: "ios:controller:12",
+                        oid: 12,
+                        className: "Demo.MainTabBarController",
+                        name: "MainTabBarController"
+                    ),
+                    TKHierarchyControllerEntry(
+                        id: "ios:controller:88",
+                        oid: 88,
+                        className: "Demo.ProfileViewController",
+                        name: "ProfileViewController",
+                        title: "Profile"
+                    ),
+                ],
+                source: "runtime-route"
+            )
         )
         let response = TKHostHierarchyResponse(
             ok: true,
@@ -57,6 +78,9 @@ struct TKHierarchySceneModelsTests {
         #expect(decoded.scene.nodes.count == 2)
         #expect(decoded.scene.nodes[1].parentId == "root")
         #expect(decoded.scene.nodes[1].interactive)
+        #expect(decoded.scene.controllerContext?.activeControllerId == "ios:controller:88")
+        #expect(decoded.scene.controllerContext?.activeControllerName == "ProfileViewController")
+        #expect(decoded.scene.controllerContext?.stack.map(\.name) == ["MainTabBarController", "ProfileViewController"])
         #expect(decoded.source.readonly)
     }
 }
