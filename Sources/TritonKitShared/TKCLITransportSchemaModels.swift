@@ -173,6 +173,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["artifact_write_failed", "file_write_failed", "artifact_output_rejected"].contains(failureCode) {
             categories.append("archive")
         }
+        if failureCode == "app_map_error" {
+            categories.append(contentsOf: ["archive", "plan"])
+        }
         return categories
     }
 
@@ -198,6 +201,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "inspect": "discover",
         "ledger": "archive",
         "list": "discover",
+        "map": "archive",
         "node": "observe",
         "nodes": "observe",
         "object": "observe",
@@ -223,6 +227,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "swipe": "act",
         "tap": "act",
         "target": "prepare-target",
+        "test": "diagnose",
         "type": "act",
         "wait": "verify",
         "web": "observe",

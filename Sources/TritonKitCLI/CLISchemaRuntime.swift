@@ -10,9 +10,11 @@ import TritonKitShared
 
 func commandSchemas() -> [TKCommandSchema] {
     let schemas = bootstrapCommandSchemas()
+        + testCommandSchemas()
         + targetCommandSchemas()
         + xcodeCommandSchemas()
         + buildCommandSchemas()
+        + mapCommandSchemas()
         + runtimeCommandSchemas()
         + hostCommandSchemas()
         + observationCommandSchemas()

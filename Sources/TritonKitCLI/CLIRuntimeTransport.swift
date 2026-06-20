@@ -85,6 +85,9 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "replay-dry-run", supported: true),
         TKRuntimeCapability(name: "web-device-hub", supported: true),
         TKRuntimeCapability(name: "schema", supported: true),
+        TKRuntimeCapability(name: "test-validate", supported: true),
+        TKRuntimeCapability(name: "test-normalized-plan", supported: true),
+        TKRuntimeCapability(name: "test-run-minimal", supported: true),
         TKRuntimeCapability(name: "status", supported: true),
         TKRuntimeCapability(name: "doctor", supported: true),
         TKRuntimeCapability(name: "capabilities", supported: true),
@@ -240,6 +243,17 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "evidence", supported: true),
         TKRuntimeCapability(name: "evidence-summary", supported: true),
         TKRuntimeCapability(name: "evidence-redact", supported: true),
+        TKRuntimeCapability(name: "evidence-project-workspace", supported: true),
+        TKRuntimeCapability(name: "evidence-project-screens", supported: true),
+        TKRuntimeCapability(name: "app-map-merge", supported: true),
+        TKRuntimeCapability(name: "app-map-inspect", supported: true),
+        TKRuntimeCapability(name: "app-map-paths", supported: true),
+        TKRuntimeCapability(name: "app-map-screens", supported: true),
+        TKRuntimeCapability(name: "app-map-transitions", supported: true),
+        TKRuntimeCapability(name: "app-map-path-show", supported: true),
+        TKRuntimeCapability(name: "app-map-health", supported: true),
+        TKRuntimeCapability(name: "app-map-suite-inspect", supported: true),
+        TKRuntimeCapability(name: "app-map-export-flow", supported: true),
         TKRuntimeCapability(name: "smoke-ios", supported: true),
         TKRuntimeCapability(name: "smoke-android", supported: true),
         TKRuntimeCapability(name: "smoke-harmony", supported: true),
@@ -278,6 +292,8 @@ func runtimeCapabilityGroup(for name: String) -> String {
     switch name {
     case "version", "plan", "record", "replay-dry-run", "web-device-hub", "schema", "status", "doctor", "capabilities":
         return "bootstrap"
+    case "test-validate", "test-normalized-plan", "test-run-minimal":
+        return "test"
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
         return "target"
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "app-semantic-state", "app-semantic-action", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
@@ -292,7 +308,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "webview"
     case "route-current-url-assert":
         return "route"
-    case "capture", "evidence", "evidence-summary", "evidence-redact", "network-capture-export":
+    case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-health", "app-map-suite-inspect", "app-map-export-flow", "network-capture-export":
         return "evidence"
     case "smoke-ios", "smoke-android", "smoke-harmony":
         return "smoke"
@@ -311,6 +327,8 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
     switch name {
     case "web-device-hub":
         return ["observe", "evidence"]
+    case "test-validate", "test-normalized-plan", "test-run-minimal":
+        return ["test"]
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
         return ["app", "runtime", "observe", "action", "assert", "evidence", "smoke"]
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "app-semantic-state", "app-semantic-action", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
@@ -327,8 +345,10 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["route", "assert", "evidence", "webview-check"]
     case "route-current-url-assert":
         return ["assert", "smoke", "evidence", "webview-check"]
-    case "capture", "evidence", "evidence-summary", "evidence-redact", "network-capture-export":
+    case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "network-capture-export":
         return ["evidence", "replay"]
+    case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-health", "app-map-suite-inspect", "app-map-export-flow":
+        return ["evidence", "test"]
     case "plan-inspect":
         return ["replay"]
     case "smoke-ios", "smoke-android", "smoke-harmony":
@@ -356,6 +376,12 @@ func runtimeCapabilityNextAction(
     switch name {
     case "web-device-hub":
         return TKCLINextAction(command: "web", args: ["--print-command", "--json"], requiresLongRunningProcess: false)
+    case "test-validate":
+        return TKCLINextAction(command: "test", args: ["validate", "<path.tritontest.yaml>", "--json"])
+    case "test-normalized-plan":
+        return TKCLINextAction(command: "test", args: ["normalize", "<path.tritontest.yaml>", "--json"])
+    case "test-run-minimal":
+        return TKCLINextAction(command: "test", args: ["run", "<path.tritontest.yaml>", "--json", "--evidence-dir", "<dir.tritonevidence>"])
     case "plan":
         return TKCLINextAction(command: "plan", args: ["--format", "json"])
     case "record":
@@ -508,6 +534,28 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "evidence", args: ["summary", "<dir.tritonevidence>", "--json"])
     case "evidence-redact":
         return TKCLINextAction(command: "evidence", args: ["redact", "<dir.tritonevidence>", "--output", "<safe.tritonevidence>", "--json"])
+    case "evidence-project-workspace":
+        return TKCLINextAction(command: "evidence", args: ["project-workspace", "<dir.tritonevidence>", "--json"])
+    case "evidence-project-screens":
+        return TKCLINextAction(command: "evidence", args: ["project-screens", "<dir.tritonevidence>", "--json"])
+    case "app-map-merge":
+        return TKCLINextAction(command: "map", args: ["merge", "<dir.tritonevidence>", "--into", "<dir.tritonmap>", "--json"])
+    case "app-map-inspect":
+        return TKCLINextAction(command: "map", args: ["inspect", "<dir.tritonmap>", "--json"])
+    case "app-map-paths":
+        return TKCLINextAction(command: "map", args: ["paths", "<dir.tritonmap>", "--json"])
+    case "app-map-screens":
+        return TKCLINextAction(command: "map", args: ["screens", "<dir.tritonmap>", "--json"])
+    case "app-map-transitions":
+        return TKCLINextAction(command: "map", args: ["transitions", "<dir.tritonmap>", "--json"])
+    case "app-map-path-show":
+        return TKCLINextAction(command: "map", args: ["path", "show", "<dir.tritonmap>", "--path", "<pathId>", "--json"])
+    case "app-map-health":
+        return TKCLINextAction(command: "map", args: ["health", "<dir.tritonmap>", "--json"])
+    case "app-map-suite-inspect":
+        return TKCLINextAction(command: "map", args: ["suite", "inspect", "<dir.tritonmap>", "--suite", "smoke", "--json"])
+    case "app-map-export-flow":
+        return TKCLINextAction(command: "map", args: ["export-flow", "<dir.tritonmap>", "--path", "<pathId>", "--out", "<file.tritontest.yaml>", "--json"])
     case "smoke-ios":
         return TKCLINextAction(command: "smoke", args: ["ios", "--device", "<device>", "--bundle-id", "<bundle-id>", "--open-url", "<url>", "--wait-text", "<text>", "--json"])
     case "smoke-android":
@@ -682,6 +730,10 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
     switch name {
     case "version", "schema", "status", "doctor", "capabilities", "plan":
         return ["stdout-json", "command-schema"]
+    case "test-validate", "test-normalized-plan":
+        return ["stdout-json", "command-schema", "test.normalized-plan"]
+    case "test-run-minimal":
+        return ["stdout-json", "command-schema", "test.normalized-plan", "evidence-bundle"]
     case "web-device-hub":
         return ["stdout-json", "command-schema"]
     case "record", "replay-dry-run", "plan-inspect":
@@ -740,6 +792,12 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["xcodebuild-json", "xcresult", "trace", "coverage"]
     case "capture", "evidence", "evidence-summary", "evidence-redact":
         return ["evidence-bundle"]
+    case "evidence-project-workspace", "evidence-project-screens":
+        return ["evidence-bundle", "screen-workspace"]
+    case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-health", "app-map-suite-inspect":
+        return ["evidence-bundle", "screen-workspace", "app-map"]
+    case "app-map-export-flow":
+        return ["app-map", "test.normalized-plan"]
     case "network-capture-export":
         return ["network-capture", "evidence-bundle"]
     case "smoke-ios", "smoke-android", "smoke-harmony":

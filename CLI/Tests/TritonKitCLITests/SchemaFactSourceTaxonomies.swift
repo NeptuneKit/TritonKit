@@ -6,6 +6,7 @@ func capabilityGroupTaxonomy() -> Set<String> {
     [
         "action", "assert", "bootstrap", "evidence", "host", "observe",
         "replay", "route", "runtime", "smoke", "target", "webview", "xcode",
+        "test",
     ]
 }
 
@@ -13,19 +14,20 @@ func capabilityWorkflowTaxonomy() -> Set<String> {
     [
         "action", "app", "assert", "evidence", "observe", "project",
         "replay", "route", "runtime", "smoke", "target", "webview-check", "xcode",
+        "test",
     ]
 }
 
 func capabilityEvidenceTaxonomy() -> Set<String> {
     [
         "action-result", "assert.result", "bridge-call-result", "command-schema",
-        "coverage", "evidence-bundle", "host-artifact", "host-command-json",
+        "app-map", "coverage", "evidence-bundle", "host-artifact", "host-command-json",
         "host-layout", "host-targets.json", "hierarchy-node", "input.result",
         "page-events", "provider-url", "route-assertion", "runtime-ax",
         "runtime-ledger", "runtime-manifest", "runtime-provider",
         "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
         "network-capture", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
-        "surface-tree", "target.resolution", "trace", "tritonplan",
+        "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan",
         "unsupported-envelope", "wait.result", "wait-samples", "webview-candidates",
         "webview-provider", "webview-snapshot", "xcodebuild-json", "xcresult",
     ]
@@ -39,6 +41,15 @@ func outputContractKindTaxonomy() -> Set<String> {
     [
         "artifact-envelope",
         "assert-result",
+        "app-map-export-flow-result",
+        "app-map-health-result",
+        "app-map-inspect-result",
+        "app-map-merge-result",
+        "app-map-path-show-result",
+        "app-map-paths-result",
+        "app-map-screens-result",
+        "app-map-suite-inspect-result",
+        "app-map-transitions-result",
         "ax-node-list",
         "capability-matrix",
         "command-schema-list",
@@ -48,6 +59,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "export-archive",
         "final-event",
         "hierarchy-info",
+        "hierarchy-scene",
         "hierarchy-node",
         "hierarchy-node-list",
         "hit-test-result",
@@ -80,11 +92,15 @@ func outputContractKindTaxonomy() -> Set<String> {
         "runtime-state",
         "screenshot-metadata",
         "semantic-action-result",
+        "screen-workspace-projection-result",
         "smoke-result",
         "status-envelope",
         "target-list",
         "target-resolution",
         "target-summary",
+        "test-normalized-plan",
+        "test-run-result",
+        "test-validation-result",
         "wait-result",
         "webview-bridge-call",
         "webview-candidates",
@@ -134,6 +150,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "inspect",
         "ledger",
         "list",
+        "map",
         "node",
         "nodes",
         "object",
@@ -159,6 +176,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "swipe",
         "tap",
         "target",
+        "test",
         "type",
         "wait",
         "web",
@@ -208,6 +226,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "inspect": "discover",
         "ledger": "archive",
         "list": "discover",
+        "map": "archive",
         "node": "observe",
         "nodes": "observe",
         "object": "observe",
@@ -233,6 +252,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "swipe": "act",
         "tap": "act",
         "target": "prepare-target",
+        "test": "diagnose",
         "type": "act",
         "wait": "verify",
         "web": "observe",
@@ -253,6 +273,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["verify", "observe", "archive"]
     case "artifact_write_failed", "file_write_failed", "overwrite_refused":
         return ["archive", "diagnose"]
+    case "app_map_error":
+        return ["archive", "plan", "diagnose"]
     case "action_failed", "step_failed":
         return ["act", "observe", "verify", "archive"]
     case "confirmation_required", "destructive_action_requires_policy":
@@ -269,7 +291,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "archive"]
     case "provisioning_profile_missing":
         return ["diagnose", "project"]
-    case "validation_failed", "unknown_command_schema":
+    case "validation_error", "validation_failed", "unknown_command_schema", "unknown_step", "duplicate_step_id":
         return ["diagnose", "plan", "discover", "observe", "archive"]
     case "web_port_in_use":
         return ["diagnose", "plan"]
@@ -355,6 +377,11 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
 func schemaArtifactTaxonomy() -> Set<String> {
     [
         "app-container",
+        "app-map",
+        "app-map.paths",
+        "app-map.screens",
+        "app-map.suites",
+        "app-map.transitions",
         "app-preferences",
         "ax",
         "build.summary",
@@ -380,6 +407,9 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "runtime-snapshot",
         "screenshot",
         "screenshots",
+        "screen-workspace",
+        "screen-workspace.screens",
+        "screen-workspace.transitions",
         "simulator-diagnostics",
         "simulator-logs",
         "simulator-screenshot",
@@ -388,6 +418,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "stdout-log",
         "trace",
         "triton-plan",
+        "tritontest-yaml",
         "xcode-artifacts",
     ]
 }

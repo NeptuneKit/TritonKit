@@ -716,6 +716,62 @@ struct EvidenceBundleTests {
         #expect(FileManager.default.fileExists(atPath: redacted.appendingPathComponent("manifest.json").path))
         #expect(FileManager.default.fileExists(atPath: redacted.appendingPathComponent("summary.json").path))
     }
+
+    @Test("evidence summary exposes P0C run event overview")
+    func summaryExposesP0CRunEventOverview() throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("evidence-p0c-run-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try FileManager.default.createDirectory(at: root.appendingPathComponent("run"), withIntermediateDirectories: true)
+
+        let run = TKTestRunMetadata(
+            runID: "run-p0c-001",
+            source: "manual-primitive-smoke",
+            status: .passed,
+            startedAt: "2026-06-20T00:00:00Z",
+            endedAt: "2026-06-20T00:00:04Z",
+            durationMs: 4000,
+            evidenceManifestRef: "../manifest.json"
+        )
+        try prettyEncodedData(run).write(to: root.appendingPathComponent("run/run.json"), options: .atomic)
+        let events = """
+        {"schemaVersion":1,"type":"run.started","runId":"run-p0c-001","timestamp":"2026-06-20T00:00:00Z"}
+        {"schemaVersion":1,"type":"assertion.result","runId":"run-p0c-001","timestamp":"2026-06-20T00:00:01Z","stepIndex":2,"status":"passed","selector":{"text":{"value":"Fixture Login","match":"exact","source":"ax"}}}
+        {"schemaVersion":1,"type":"run.finished","runId":"run-p0c-001","timestamp":"2026-06-20T00:00:04Z","status":"passed","durationMs":4000}
+        """
+        try Data(events.utf8).write(to: root.appendingPathComponent("run/events.jsonl"), options: .atomic)
+
+        let manifest = TKEvidenceManifest(
+            ok: true,
+            name: "p0c-pass",
+            createdAt: "2026-06-20T00:00:00Z",
+            output: root.path,
+            artifacts: [
+                TKEvidenceArtifact(kind: "run.run", path: "run/run.json", contentType: "application/json"),
+                TKEvidenceArtifact(kind: "run.events", path: "run/events.jsonl", contentType: "application/x-ndjson"),
+            ],
+            cli: TKEvidenceCLI(version: "test"),
+            run: TKEvidenceRunManifest(
+                eventsPath: "run/events.jsonl",
+                metaPath: "run/run.json",
+                eventCount: 3,
+                status: .completed,
+                summary: TKEvidenceRunSummary(
+                    runID: "run-p0c-001",
+                    verdict: .success,
+                    frictionCount: 0,
+                    stepCount: 0
+                )
+            )
+        )
+        try prettyEncodedData(manifest).write(to: root.appendingPathComponent("manifest.json"), options: .atomic)
+
+        let summary = try summarizeEvidenceBundle(input: root.path)
+
+        #expect(summary.run?.eventCount == 3)
+        #expect(summary.run?.metaPath == "run/run.json")
+        #expect(summary.run?.summary?.runID == "run-p0c-001")
+        #expect(summary.primaryArtifacts.map(\.kind) == ["run.events", "run.run"])
+    }
 }
 
 private func captureEvidenceCommandOutput(_ body: () async throws -> Void) async throws -> String {

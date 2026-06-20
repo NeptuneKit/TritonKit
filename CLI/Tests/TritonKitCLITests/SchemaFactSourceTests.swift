@@ -336,6 +336,12 @@ struct SchemaFactSourceTests {
         #expect(evidenceRedact.supported)
         #expect(evidenceRedact.nextAction?.args == ["redact", "<dir.tritonevidence>", "--output", "<safe.tritonevidence>", "--json"])
 
+        let evidenceProjectScreens = try #require(disconnected["evidence-project-screens"])
+        #expect(evidenceProjectScreens.supported)
+        #expect(evidenceProjectScreens.group == "evidence")
+        #expect(evidenceProjectScreens.nextAction?.args == ["project-screens", "<dir.tritonevidence>", "--json"])
+        #expect(evidenceProjectScreens.evidence == ["evidence-bundle", "screen-workspace"])
+
         let smokeIOS = try #require(disconnected["smoke-ios"])
         #expect(smokeIOS.supported)
         #expect(smokeIOS.group == "smoke")

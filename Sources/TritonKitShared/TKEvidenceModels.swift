@@ -14,6 +14,7 @@ public struct TKEvidenceManifest: Codable, Equatable {
     public let target: TKEvidenceTarget?
     public let cli: TKEvidenceCLI
     public let run: TKEvidenceRunManifest?
+    public let screenWorkspace: TKEvidenceScreenWorkspaceManifest?
 
     public init(
         ok: Bool,
@@ -28,7 +29,8 @@ public struct TKEvidenceManifest: Codable, Equatable {
         skipped: [TKEvidenceSkippedArtifact] = [],
         target: TKEvidenceTarget? = nil,
         cli: TKEvidenceCLI,
-        run: TKEvidenceRunManifest? = nil
+        run: TKEvidenceRunManifest? = nil,
+        screenWorkspace: TKEvidenceScreenWorkspaceManifest? = nil
     ) {
         self.ok = ok
         self.formatVersion = formatVersion
@@ -43,6 +45,7 @@ public struct TKEvidenceManifest: Codable, Equatable {
         self.target = target
         self.cli = cli
         self.run = run
+        self.screenWorkspace = screenWorkspace
     }
 
     enum CodingKeys: String, CodingKey {
@@ -59,6 +62,7 @@ public struct TKEvidenceManifest: Codable, Equatable {
         case target
         case cli
         case run
+        case screenWorkspace
     }
 
     public init(from decoder: Decoder) throws {
@@ -79,6 +83,7 @@ public struct TKEvidenceManifest: Codable, Equatable {
         self.target = try container.decodeIfPresent(TKEvidenceTarget.self, forKey: .target)
         self.cli = try container.decode(TKEvidenceCLI.self, forKey: .cli)
         self.run = try container.decodeIfPresent(TKEvidenceRunManifest.self, forKey: .run)
+        self.screenWorkspace = try container.decodeIfPresent(TKEvidenceScreenWorkspaceManifest.self, forKey: .screenWorkspace)
     }
 }
 
@@ -88,6 +93,7 @@ public struct TKEvidenceRunManifest: Codable, Equatable, Sendable {
     public let screenshotPaths: [String]
     public let debugArtifactPaths: [String]
     public let eventCount: Int?
+    public let observationCount: Int?
     public let status: TKEvidenceRunParseStatus?
     public let summary: TKEvidenceRunSummary?
 
@@ -97,6 +103,7 @@ public struct TKEvidenceRunManifest: Codable, Equatable, Sendable {
         screenshotPaths: [String] = [],
         debugArtifactPaths: [String] = [],
         eventCount: Int? = nil,
+        observationCount: Int? = nil,
         status: TKEvidenceRunParseStatus? = nil,
         summary: TKEvidenceRunSummary? = nil
     ) {
@@ -105,8 +112,31 @@ public struct TKEvidenceRunManifest: Codable, Equatable, Sendable {
         self.screenshotPaths = screenshotPaths
         self.debugArtifactPaths = debugArtifactPaths
         self.eventCount = eventCount
+        self.observationCount = observationCount
         self.status = status
         self.summary = summary
+    }
+}
+
+public struct TKEvidenceScreenWorkspaceManifest: Codable, Equatable, Sendable {
+    public let screensPath: String
+    public let transitionsPath: String
+    public let screenCount: Int
+    public let transitionCount: Int
+    public let warningCount: Int?
+
+    public init(
+        screensPath: String = "screens.json",
+        transitionsPath: String = "transitions.json",
+        screenCount: Int,
+        transitionCount: Int,
+        warningCount: Int? = nil
+    ) {
+        self.screensPath = screensPath
+        self.transitionsPath = transitionsPath
+        self.screenCount = screenCount
+        self.transitionCount = transitionCount
+        self.warningCount = warningCount
     }
 }
 
@@ -288,15 +318,18 @@ public struct TKEvidenceArtifactSummary: Codable, Equatable {
             "ax": 13,
             "hierarchy": 14,
             "run.events": 15,
-            "run.meta": 16,
-            "status": 17,
-            "list": 18,
-            "version": 19,
-            "host.defaults": 20,
-            "host.simulators": 21,
-            "xcode.status": 22,
-            "xcode.discovery": 23,
-            "xcode.defaults": 24,
+            "run.run": 16,
+            "run.meta": 17,
+            "screen-workspace.screens": 18,
+            "screen-workspace.transitions": 19,
+            "status": 20,
+            "list": 21,
+            "version": 22,
+            "host.defaults": 23,
+            "host.simulators": 24,
+            "xcode.status": 25,
+            "xcode.discovery": 26,
+            "xcode.defaults": 27,
         ]
 
         return artifacts.enumerated()
@@ -331,6 +364,8 @@ public struct TKEvidenceSummaryResponse: Codable, Equatable {
     public let primaryArtifact: TKEvidenceArtifactSummary?
     public let primaryArtifacts: [TKEvidenceArtifactSummary]
     public let skipped: [TKEvidenceSkippedArtifact]
+    public let run: TKEvidenceRunManifest?
+    public let screenWorkspace: TKEvidenceScreenWorkspaceManifest?
     public let suggestedCommands: [String]
 
     public init(
@@ -351,6 +386,8 @@ public struct TKEvidenceSummaryResponse: Codable, Equatable {
         primaryArtifact: TKEvidenceArtifactSummary? = nil,
         primaryArtifacts: [TKEvidenceArtifactSummary]? = nil,
         skipped: [TKEvidenceSkippedArtifact],
+        run: TKEvidenceRunManifest? = nil,
+        screenWorkspace: TKEvidenceScreenWorkspaceManifest? = nil,
         suggestedCommands: [String]
     ) {
         self.ok = ok
@@ -370,6 +407,8 @@ public struct TKEvidenceSummaryResponse: Codable, Equatable {
         self.primaryArtifacts = primaryArtifacts ?? TKEvidenceArtifactSummary.defaultPrimaryArtifacts(from: artifacts)
         self.primaryArtifact = primaryArtifact ?? self.primaryArtifacts.first
         self.skipped = skipped
+        self.run = run
+        self.screenWorkspace = screenWorkspace
         self.suggestedCommands = suggestedCommands
     }
 
@@ -391,6 +430,8 @@ public struct TKEvidenceSummaryResponse: Codable, Equatable {
         case primaryArtifact
         case primaryArtifacts
         case skipped
+        case run
+        case screenWorkspace
         case suggestedCommands
     }
 
@@ -416,6 +457,8 @@ public struct TKEvidenceSummaryResponse: Codable, Equatable {
         self.primaryArtifact = try container.decodeIfPresent(TKEvidenceArtifactSummary.self, forKey: .primaryArtifact)
             ?? self.primaryArtifacts.first
         self.skipped = try container.decode([TKEvidenceSkippedArtifact].self, forKey: .skipped)
+        self.run = try container.decodeIfPresent(TKEvidenceRunManifest.self, forKey: .run)
+        self.screenWorkspace = try container.decodeIfPresent(TKEvidenceScreenWorkspaceManifest.self, forKey: .screenWorkspace)
         self.suggestedCommands = try container.decodeIfPresent([String].self, forKey: .suggestedCommands) ?? []
     }
 }

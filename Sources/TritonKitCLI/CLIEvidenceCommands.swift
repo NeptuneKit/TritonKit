@@ -53,11 +53,11 @@ struct Export: AsyncParsableCommand {
 
 struct Evidence: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
-        abstract: "Capture, inspect, summarize, or redact an agent-friendly regression evidence bundle"
+        abstract: "Capture, inspect, summarize, redact, or project an agent-friendly regression evidence bundle"
     )
 
-    @Argument(help: "Optional action. Use `inspect`, `summary`, or `redact` for existing bundles.") var action: String?
-    @Argument(help: "Evidence bundle path for `inspect`, `summary`, or `redact`.") var input: String?
+    @Argument(help: "Optional action. Use `inspect`, `summary`, `redact`, `project-screens`, or `project-workspace` for existing bundles.") var action: String?
+    @Argument(help: "Evidence bundle path for `inspect`, `summary`, `redact`, `project-screens`, or `project-workspace`.") var input: String?
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
@@ -103,6 +103,19 @@ struct Evidence: AsyncParsableCommand {
                 }
                 let redacted = try redactEvidenceBundle(input: input, output: output, profile: profile)
                 try printEvidenceRedaction(redacted, format: outputFormat)
+                return
+            case "project-screens", "project-workspace":
+                guard let input else {
+                    try failEvidenceValidation("`triton evidence \(action)` requires a bundle path", outputFormat: outputFormat)
+                }
+                do {
+                    let projection = try projectEvidenceWorkspace(evidencePath: input)
+                    try printScreenWorkspaceProjection(projection, format: outputFormat)
+                } catch let error as TKScreenWorkspaceProjectionError {
+                    try failScreenWorkspaceProjection(error, outputFormat: outputFormat)
+                } catch {
+                    try failScreenWorkspaceProjection(.invalidRunEvents("\(error)"), outputFormat: outputFormat)
+                }
                 return
             default:
                 try failEvidenceValidation("Unsupported evidence action: \(action)", outputFormat: outputFormat)

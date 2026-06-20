@@ -35,6 +35,92 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func testValidationOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.validation",
+        format: "json",
+        kind: "test-validation-result",
+        model: "TKTestValidationResponse|TKTestValidationFailureResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the .tritontest.yaml contract validated"),
+            ("schemaVersion", "Int?", false, "Validation response schema version for ok responses"),
+            ("kind", "String?", false, "Stable response kind; triton.test.validation-result when ok"),
+            ("input", "String?", false, "Input .tritontest.yaml path when validation succeeds"),
+            ("normalizedPlan", "TKTestNormalizedPlan?", false, "Normalized offline plan when validation succeeds"),
+            ("error", "TKTestValidationErrorDetail?", false, "Machine-readable validation failure when ok is false"),
+            ("error.type", "String?", false, "Stable failure type; validation_error"),
+            ("error.message", "String?", false, "Human-readable validation failure summary"),
+            ("error.path", "String?", false, "JSONPath-style path to the rejected field"),
+            ("error.code", "String?", false, "Stable validation error code"),
+            ("error.allowed", "[String]?", false, "Allowed values for unsupported step or coordinate-space failures"),
+        ])
+    )
+}
+
+func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.normalized-plan",
+        format: "json",
+        kind: "test-normalized-plan",
+        model: "TKTestNormalizedPlan",
+        fields: schemaContractFields([
+            ("schemaVersion", "Int", true, "Normalized plan schema version; always 1 for P0B"),
+            ("kind", "String", true, "Stable kind; triton.test.normalized-plan"),
+            ("name", "String", true, "Test case name from the input YAML"),
+            ("app", "TKTestPlanApp", true, "Target app metadata"),
+            ("app.bundleId", "String", true, "App bundle identifier"),
+            ("device", "TKTestPlanDevice", true, "Device platform metadata"),
+            ("device.platform", "String", true, "Platform such as ios"),
+            ("settings", "TKTestPlanSettings", true, "Normalized validation settings"),
+            ("settings.strict", "Bool", true, "Whether strict validation is enabled"),
+            ("settings.timeoutMs", "Int", true, "Default step timeout in milliseconds"),
+            ("settings.retry", "TKTestPlanRetry", true, "Retry policy"),
+            ("settings.retry.count", "Int", true, "Retry count"),
+            ("settings.retry.intervalMs", "Int", true, "Retry interval in milliseconds"),
+            ("steps", "[TKTestPlanStep]", true, "0-based normalized steps"),
+            ("steps[].index", "Int", true, "0-based step index"),
+            ("steps[].id", "String", true, "Stable step id, generated as step-000 when omitted"),
+            ("steps[].kind", "String", true, "Step kind: action, observation, or assertion"),
+            ("steps[].type", "String", true, "Step type: launch, takeScreenshot, tap, or assertVisible"),
+            ("steps[].optional", "Bool", true, "Whether failure of this step is optional"),
+            ("steps[].timeoutMs", "Int?", false, "Step timeout override"),
+            ("steps[].point", "TKTestPlanPoint?", false, "Runtime point for tap steps"),
+            ("steps[].point.x", "Double?", false, "Runtime point x coordinate"),
+            ("steps[].point.y", "Double?", false, "Runtime point y coordinate"),
+            ("steps[].point.coordinateSpace", "String?", false, "Coordinate space; runtime-point"),
+            ("steps[].selector", "TKTestPlanSelector?", false, "AX text selector for assertVisible"),
+            ("steps[].selector.text", "String?", false, "Exact visible text"),
+            ("steps[].selector.match", "String?", false, "Match mode; exact"),
+            ("steps[].selector.source", "String?", false, "Observation source; ax"),
+        ])
+    )
+}
+
+func testRunOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.run-result",
+        format: "json",
+        kind: "test-run-result",
+        model: "TKTestRunExecutionResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether all executed P0E minimal steps passed"),
+            ("schemaVersion", "Int", true, "Runner response schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.run-result"),
+            ("input", "String", true, "Input .tritontest.yaml path"),
+            ("evidenceDir", "String", true, "Output .tritonevidence directory"),
+            ("normalizedPlan", "TKTestNormalizedPlan", true, "P0B normalized plan reused before execution"),
+            ("run", "TKTestRunMetadata", true, "Run metadata saved to run/run.json"),
+            ("summary", "TKTestRunEventSummary", true, "Parsed summary of run/events.jsonl"),
+            ("summary.observationCount", "Int", true, "Count of P0E observation.captured events"),
+            ("run.planRef", "String?", false, "Reference to normalized-plan.json from run/run.json"),
+            ("failedStepIndex", "Int?", false, "0-based failed step index when ok is false"),
+            ("failure", "TKTestRunFailure?", false, "Machine-readable failure with selector and artifactRefs"),
+            ("failure.artifactRefs", "[String]?", false, "Relative refs to assertion, screenshot, AX, or hierarchy evidence on failure"),
+            ("evidence artifacts", "[TKEvidenceArtifact]", false, "manifest.json includes coordinate.contract, run events, normalized plan, and captured observation artifacts"),
+        ])
+    )
+}
+
 func webLaunchPlanOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "web.launch-plan",

@@ -38,6 +38,10 @@ func handleResponse(
         return
     }
 
+    if msg.type == .ping && msg.id == 0 {
+        return
+    }
+
     log("[tritonkit] <- \(msg.type.rawValue) [id:\(msg.id)]")
 
     guard let payload = msg.payload,

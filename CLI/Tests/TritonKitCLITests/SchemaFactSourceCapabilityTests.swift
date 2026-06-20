@@ -375,11 +375,12 @@ extension SchemaFactSourceTests {
             "observe": ["observe", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export", "geometry", "ax", "screenshot", "hit", "wait", "status", "serve"],
             "webview": ["webview"],
             "route": ["route"],
-            "evidence": ["evidence", "device", "status", "serve"],
+            "evidence": ["evidence", "map", "device", "status", "serve"],
             "assert": ["assert", "status", "serve"],
             "replay": ["plan", "status", "serve"],
             "smoke": ["smoke"],
             "action": ["tap", "swipe", "type", "paste", "clear", "press", "input", "wait", "schema", "status", "serve"],
+            "test": ["test", "schema"],
             "xcode": ["xcode", "xcresult", "xctrace", "coverage"],
         ]
 

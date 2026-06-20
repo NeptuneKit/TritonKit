@@ -115,16 +115,21 @@ extension SchemaFactSourceTests {
 
         #expect(evidence.failureCodes.contains("validation_failed"))
         #expect(evidence.artifacts.contains("evidence-bundle"))
+        #expect(evidence.artifacts.contains("screen-workspace"))
         #expect(evidence.nextCommands.contains("triton evidence summary <dir.tritonevidence> --json"))
+        #expect(evidence.nextCommands.contains("triton evidence project-screens <dir.tritonevidence> --json"))
         #expect(Set(evidence.providedCapabilities).isSubset(of: connectedCapabilityNames))
         expectContract(evidence, selector: "evidence.manifest", fields: [
-            "ok", "formatVersion", "output", "artifacts", "primaryArtifact", "primaryArtifacts", "skipped", "target", "cli", "run",
+            "ok", "formatVersion", "output", "artifacts", "primaryArtifact", "primaryArtifacts", "skipped", "target", "cli", "run", "screenWorkspace",
         ])
         expectContract(evidence, selector: "evidence.summary", fields: [
-            "ok", "action", "input", "profile", "output", "artifactCount", "sensitiveArtifactCount", "artifacts", "primaryArtifact", "primaryArtifacts", "suggestedCommands",
+            "ok", "action", "input", "profile", "output", "artifactCount", "sensitiveArtifactCount", "artifacts", "primaryArtifact", "primaryArtifacts", "screenWorkspace", "suggestedCommands",
         ])
         expectContract(evidence, selector: "evidence.redact", fields: [
             "ok", "action", "input", "output", "profile", "artifactCount", "redactedArtifactCount", "manifest", "primaryArtifact", "primaryArtifacts", "summaryPath", "suggestedCommands",
+        ])
+        expectContract(evidence, selector: "evidence.screen-workspace-projection", fields: [
+            "ok", "evidenceDir", "screensRef", "transitionsRef", "screenCount", "transitionCount", "warningCount", "warnings", "error",
         ])
 
         #expect(capture.failureCodes.contains("validation_failed"))
@@ -132,7 +137,7 @@ extension SchemaFactSourceTests {
         #expect(capture.nextCommands.contains("triton evidence summary <dir.tritonevidence> --json"))
         #expect(Set(capture.providedCapabilities).isSubset(of: connectedCapabilityNames))
         expectContract(capture, selector: "evidence.manifest", fields: [
-            "ok", "formatVersion", "output", "artifacts", "primaryArtifact", "primaryArtifacts", "skipped", "target", "cli", "run",
+            "ok", "formatVersion", "output", "artifacts", "primaryArtifact", "primaryArtifacts", "skipped", "target", "cli", "run", "screenWorkspace",
         ])
 
         #expect(Set(smoke.providedCapabilities).isSubset(of: connectedCapabilityNames))
@@ -390,6 +395,9 @@ extension SchemaFactSourceTests {
         #expect(hierarchy.nextCommands.contains("triton nodes --json"))
         expectContract(hierarchy, selector: "hierarchy.info", fields: [
             "displayItems", "appInfo", "serverVersion", "colorAlias", "collapsedClassList",
+        ])
+        expectContract(hierarchy, selector: "hierarchy.scene", fields: [
+            "platform", "rootId", "viewport", "nodes", "style", "slice", "view", "layer", "visualSources", "raw", "renderHints",
         ])
 
         #expect(nodes.failureCodes.contains("hierarchy_unavailable"))

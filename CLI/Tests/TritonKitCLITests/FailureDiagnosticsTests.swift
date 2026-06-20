@@ -76,6 +76,32 @@ struct FailureDiagnosticsTests {
         #expect(response.error.hint == "Dismiss system alerts and retry")
     }
 
+    @Test("target state extracts identity from appInfo envelope")
+    func targetStateExtractsIdentityFromAppInfoEnvelope() throws {
+        let payload = Data("""
+        {
+          "displayItems": [],
+          "appInfo": {
+            "appName": "Overloaded",
+            "appBundleIdentifier": "overloaded.cn.debug",
+            "platform": "ios",
+            "deviceDescription": "iPhone",
+            "osDescription": "26.5"
+          }
+        }
+        """.utf8)
+        let state = TargetState()
+
+        state.setLatestAppInfo(payload)
+        let summary = try #require(state.summary(connected: true, connectionID: 7))
+
+        #expect(summary.appName == "Overloaded")
+        #expect(summary.bundleIdentifier == "overloaded.cn.debug")
+        #expect(summary.deviceDescription == "iPhone")
+        #expect(summary.osDescription == "26.5")
+        #expect(summary.identityState == "current")
+    }
+
     @Test("runtime-facing schemas include preserved runtime envelope failure codes")
     func runtimeFacingSchemasIncludePreservedRuntimeEnvelopeFailureCodes() throws {
         let schemas = Dictionary(uniqueKeysWithValues: commandSchemas().map { ($0.name, $0) })

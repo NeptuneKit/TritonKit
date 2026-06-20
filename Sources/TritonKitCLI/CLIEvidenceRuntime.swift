@@ -64,6 +64,16 @@ func failEvidenceValidation(_ message: String, outputFormat: ClientOutputFormat)
     throw ExitCode.failure
 }
 
+func failScreenWorkspaceProjection(_ error: TKScreenWorkspaceProjectionError, outputFormat: ClientOutputFormat) throws -> Never {
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(TKScreenWorkspaceProjectionFailureResponse(error: error.detail)))
+    case .text:
+        fputs("error: \(error.detail.message)\n", stderr)
+    }
+    throw ExitCode.failure
+}
+
 func readEvidenceManifest(from path: String) throws -> TKEvidenceManifest {
     let inputURL = URL(fileURLWithPath: path)
     let manifestURL: URL
@@ -95,6 +105,13 @@ func summarizeEvidenceBundle(input: String, profile: String = "ios-private") thr
     let manifest = try readEvidenceManifest(from: input)
     let artifacts = manifest.artifacts.map(evidenceArtifactSummary)
     let sensitiveArtifactCount = manifest.artifacts.filter(evidenceArtifactIsSensitive).count
+    var suggestedCommands: [String] = []
+    if (manifest.run?.observationCount ?? 0) > 0 {
+        suggestedCommands.append("triton evidence project-screens \(shellQuotedEvidencePath(input)) --json")
+    }
+    suggestedCommands.append(
+        "triton evidence redact \(shellQuotedEvidencePath(input)) --profile \(profile) --output \(shellQuotedEvidencePath(evidenceBundleRoot(from: input).appendingPathComponent("redacted").path)) --json"
+    )
     let summary = TKEvidenceSummaryResponse(
         action: "evidence.summary",
         input: input,
@@ -111,9 +128,9 @@ func summarizeEvidenceBundle(input: String, profile: String = "ios-private") thr
         artifacts: artifacts,
         primaryArtifacts: manifest.primaryArtifacts,
         skipped: manifest.skipped,
-        suggestedCommands: [
-            "triton evidence redact \(shellQuotedEvidencePath(input)) --profile \(profile) --output \(shellQuotedEvidencePath(evidenceBundleRoot(from: input).appendingPathComponent("redacted").path)) --json",
-        ]
+        run: manifest.run,
+        screenWorkspace: manifest.screenWorkspace,
+        suggestedCommands: suggestedCommands
     )
     return summary
 }
@@ -228,7 +245,8 @@ func redactEvidenceBundle(input: String, output: String, profile: String) throws
         skipped: manifest.skipped,
         target: manifest.target,
         cli: manifest.cli,
-        run: manifest.run
+        run: manifest.run,
+        screenWorkspace: manifest.screenWorkspace
     )
     let summaryPath = outputURL.appendingPathComponent("summary.json").path
     let summary = TKEvidenceSummaryResponse(
@@ -247,6 +265,8 @@ func redactEvidenceBundle(input: String, output: String, profile: String) throws
         artifacts: outputSummaries,
         primaryArtifacts: redactedManifest.primaryArtifacts,
         skipped: manifest.skipped,
+        run: redactedManifest.run,
+        screenWorkspace: redactedManifest.screenWorkspace,
         suggestedCommands: [
             "triton evidence summary \(shellQuotedEvidencePath(outputURL.path)) --profile \(profile) --json",
         ]
@@ -422,6 +442,23 @@ func printEvidenceSummary(_ summary: TKEvidenceSummaryResponse, format: ClientOu
         print("artifacts: \(summary.artifactCount)")
         print("sensitiveArtifacts: \(summary.sensitiveArtifactCount)")
         print("skipped: \(summary.skippedCount)")
+        if let screenWorkspace = summary.screenWorkspace {
+            print("screens: \(screenWorkspace.screenCount)")
+            print("transitions: \(screenWorkspace.transitionCount)")
+        }
+    }
+}
+
+func printScreenWorkspaceProjection(_ projection: TKScreenWorkspaceProjectionResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(projection))
+    case .text:
+        print("ok: \(projection.ok)")
+        print("evidenceDir: \(projection.evidenceDir)")
+        print("screens: \(projection.screenCount)")
+        print("transitions: \(projection.transitionCount)")
+        print("warnings: \(projection.warningCount)")
     }
 }
 

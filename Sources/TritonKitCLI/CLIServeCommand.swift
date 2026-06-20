@@ -525,6 +525,15 @@ struct Serve: AsyncParsableCommand {
             log("[tritonkit] -> hierarchy [id:\(id)]")
             try await outbound.send(TKMessage(id: id, type: .hierarchy), encoder: encoder)
 
+            let heartbeat = Task {
+                while !Task.isCancelled {
+                    try? await Task.sleep(nanoseconds: 2_000_000_000)
+                    if Task.isCancelled { break }
+                    try? await outbound.send(TKMessage(id: 0, type: .ping), encoder: encoder)
+                }
+            }
+            defer { heartbeat.cancel() }
+
             do {
                 for try await frame in inbound {
                     let data: Data

@@ -155,6 +155,7 @@ func summarizeEvidenceManifest(_ manifest: TKEvidenceManifest, input: String, pr
         cli: manifest.cli,
         artifacts: manifest.artifacts.map(evidenceArtifactSummary),
         skipped: manifest.skipped,
+        run: manifest.run,
         suggestedCommands: []
     )
 }

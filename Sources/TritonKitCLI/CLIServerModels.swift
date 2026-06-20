@@ -204,7 +204,7 @@ final class TargetState: @unchecked Sendable {
         }
     }
 
-    func waitForResponse(id: Int, attempts: Int = 25) async -> Data? {
+    func waitForResponse(id: Int, attempts: Int = 100) async -> Data? {
         for _ in 0..<attempts {
             if let data = lock.withLock({ responses.removeValue(forKey: id) }) {
                 return data
@@ -223,9 +223,10 @@ final class TargetState: @unchecked Sendable {
     }
 
     private func extractAppInfo(fromAppInfoPayload data: Data) -> TargetMetadata? {
-        guard let appInfo = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
             return nil
         }
+        let appInfo = (json["appInfo"] as? [String: Any]) ?? json
         return extractMetadata(from: appInfo)
     }
 

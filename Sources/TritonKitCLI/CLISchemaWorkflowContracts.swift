@@ -134,6 +134,7 @@ func evidenceManifestOutputContract() -> TKCommandOutputContract {
             ("target", "TKEvidenceTarget?", false, "Target metadata"),
             ("cli", "TKEvidenceCLI", true, "CLI metadata"),
             ("run", "TKEvidenceRunManifest?", false, "Run events and screenshots metadata"),
+            ("screenWorkspace", "TKEvidenceScreenWorkspaceManifest?", false, "Run-local projected screen and transition metadata"),
         ])
     )
 }
@@ -162,7 +163,202 @@ func evidenceSummaryOutputContract() -> TKCommandOutputContract {
             ("primaryArtifact", "TKEvidenceArtifactSummary?", false, "Primary artifact summary agents should inspect first"),
             ("primaryArtifacts", "[TKEvidenceArtifactSummary]", true, "High-signal artifact summaries agents should inspect first"),
             ("skipped", "[TKEvidenceSkippedArtifact]", true, "Skipped artifact records"),
+            ("run", "TKEvidenceRunManifest?", false, "Run events and screenshots metadata"),
+            ("screenWorkspace", "TKEvidenceScreenWorkspaceManifest?", false, "Run-local projected screen and transition metadata"),
             ("suggestedCommands", "[String]", true, "Suggested offline follow-up commands"),
+        ])
+    )
+}
+
+func evidenceScreenWorkspaceProjectionOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "evidence.screen-workspace-projection",
+        format: "json",
+        kind: "screen-workspace-projection-result",
+        model: "TKScreenWorkspaceProjectionResponse|TKScreenWorkspaceProjectionFailureResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether screen workspace projection succeeded"),
+            ("schemaVersion", "Int?", false, "Projection response schema version when ok is true"),
+            ("kind", "String?", false, "Stable kind; triton.screen-workspace.projection-result when ok"),
+            ("evidenceDir", "String?", false, "Input .tritonevidence directory"),
+            ("screensRef", "String?", false, "Projected screens.json path relative to evidence root"),
+            ("transitionsRef", "String?", false, "Projected transitions.json path relative to evidence root"),
+            ("screenCount", "Int?", false, "Number of run-local screens projected from observation fingerprints"),
+            ("transitionCount", "Int?", false, "Number of observed tap transitions projected"),
+            ("warningCount", "Int?", false, "Number of non-fatal projection warnings"),
+            ("warnings", "[TKScreenWorkspaceProjectionWarning]?", false, "Projection warnings for incomplete action observations"),
+            ("error", "TKScreenWorkspaceProjectionErrorDetail?", false, "Machine-readable projection failure when ok is false"),
+            ("error.type", "String?", false, "Stable failure type; projection_error"),
+            ("error.code", "String?", false, "Stable projection error code"),
+            ("error.message", "String?", false, "Human-readable projection failure summary"),
+        ])
+    )
+}
+
+func appMapMergeOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.merge",
+        format: "json",
+        kind: "app-map-merge-result",
+        model: "TKAppMapMergeResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether merge completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.merge-result"),
+            ("evidenceDir", "String", true, "Input .tritonevidence directory"),
+            ("mapDir", "String", true, "Output .tritonmap directory"),
+            ("projectedWorkspace", "Bool", true, "Whether screens/transitions were generated before merge"),
+            ("screenCount", "Int", true, "Merged screen count from this run"),
+            ("transitionCount", "Int", true, "Merged transition count from this run"),
+            ("pathCount", "Int", true, "Generated path count from this run"),
+            ("suiteCount", "Int", true, "Suite file count after merge"),
+            ("pathIDs", "[String]", true, "Generated path ids"),
+        ])
+    )
+}
+
+func appMapInspectOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.inspect",
+        format: "json",
+        kind: "app-map-inspect-result",
+        model: "TKAppMapInspectResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether inspect completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.inspect-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("screenCount", "Int", true, "Total screen count"),
+            ("transitionCount", "Int", true, "Total transition count"),
+            ("pathCount", "Int", true, "Total path count"),
+            ("suiteCount", "Int", true, "Total suite count"),
+            ("health", "TKAppMapHealth", true, "Observed run health"),
+        ])
+    )
+}
+
+func appMapPathsOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.paths",
+        format: "json",
+        kind: "app-map-paths-result",
+        model: "TKAppMapPathsResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether path listing completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.paths-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("pathCount", "Int", true, "Total path count"),
+            ("paths", "[TKAppMapPath]", true, "Replayable and observed path assets"),
+        ])
+    )
+}
+
+func appMapScreensOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.screens",
+        format: "json",
+        kind: "app-map-screens-result",
+        model: "TKAppMapScreensResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether screen listing completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.screens-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("screenCount", "Int", true, "Total screen count"),
+            ("screens", "[TKAppMapScreen]", true, "Screen graph nodes"),
+        ])
+    )
+}
+
+func appMapTransitionsOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.transitions",
+        format: "json",
+        kind: "app-map-transitions-result",
+        model: "TKAppMapTransitionsResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether transition listing completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.transitions-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("transitionCount", "Int", true, "Total transition count"),
+            ("transitions", "[TKAppMapTransition]", true, "Transition graph edges"),
+        ])
+    )
+}
+
+func appMapPathShowOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.path-show",
+        format: "json",
+        kind: "app-map-path-show-result",
+        model: "TKAppMapPathShowResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether path show completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.path-show-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("path", "TKAppMapPath", true, "Selected path"),
+            ("screens", "[TKAppMapScreen]", true, "Path screens"),
+            ("transitions", "[TKAppMapTransition]", true, "Path transitions"),
+        ])
+    )
+}
+
+func appMapHealthOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.health",
+        format: "json",
+        kind: "app-map-health-result",
+        model: "TKAppMapHealthResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether health inspect completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.health-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("health", "TKAppMapHealth", true, "Observed run health"),
+            ("pathCount", "Int", true, "Total path count"),
+            ("failingPathIds", "[String]", true, "Paths with recorded failures"),
+            ("unconfirmedPathIds", "[String]", true, "Paths not confirmed for suite use"),
+            ("unreplayablePathIds", "[String]", true, "Paths that cannot be exported safely"),
+            ("uncoveredScreenIds", "[String]", true, "Screens not present in any path"),
+            ("uncoveredTransitionIds", "[String]", true, "Transitions not covered by a suite path"),
+        ])
+    )
+}
+
+func appMapSuiteInspectOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.suite-inspect",
+        format: "json",
+        kind: "app-map-suite-inspect-result",
+        model: "TKAppMapSuiteInspectResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether suite inspect completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.suite-inspect-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("suite", "TKAppMapSuite", true, "Selected suite"),
+            ("paths", "[TKAppMapPath]", true, "Paths included in the suite"),
+        ])
+    )
+}
+
+func appMapExportFlowOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.export-flow",
+        format: "json",
+        kind: "app-map-export-flow-result",
+        model: "TKAppMapExportFlowResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether flow export completed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.export-flow-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("pathID", "String", true, "Exported path id"),
+            ("output", "String", true, "Written .tritontest.yaml file"),
+            ("stepCount", "Int", true, "Number of generated P0D-compatible test steps"),
         ])
     )
 }

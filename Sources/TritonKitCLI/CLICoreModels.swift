@@ -34,7 +34,7 @@ struct LocalizationOptions: ParsableArguments {
     var language: CLILanguage?
 }
 
-let tritonWebSocketMaxFrameSize = 16_777_216
+let tritonWebSocketMaxFrameSize = 67_108_864
 
 func effectiveFormat(_ format: ClientOutputFormat, json: Bool) -> ClientOutputFormat {
     json ? .json : format
@@ -166,6 +166,7 @@ func chineseRootHelp() -> String {
         ("doctor", "诊断服务、目标和运行时能力"),
         ("capabilities", "输出 Triton 运行时能力矩阵"),
         ("schema", "输出机器可读命令 schema 和示例"),
+        ("test", "离线校验 .tritontest.yaml 并输出 normalized plan"),
         ("xcode", "发现、构建、测试和运行 Xcode 工程"),
         ("xcresult", "读取 Xcode result bundle 汇总和失败列表"),
         ("xctrace", "采集 Instruments .trace 证据"),
@@ -278,6 +279,11 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         "schema": ChineseCommandHelp(name: "schema", overview: "输出机器可读命令 schema 和示例。", usage: "triton schema [--command <command>] [--format <format>] [--json]", options: [
             ("--command <command>", "筛选单个命令，例如 input 或 tap"),
         ] + formatTextJSON),
+        "test": ChineseCommandHelp(name: "test", overview: "离线校验 .tritontest.yaml 合约并输出 normalized plan；不会启动 App、设备、runner 或 VLM。", usage: "triton test <validate|normalize> <path.tritontest.yaml> [选项]", options: formatTextJSON + [
+            ("validate <path>", "校验 YAML 并输出 { ok, normalizedPlan } 或机器可读 validation_error"),
+            ("normalize <path>", "校验 YAML 并只输出 triton.test.normalized-plan JSON"),
+            ("--emit-normalized-plan", "validate 成功时只输出 normalized plan"),
+        ]),
         "xcode": ChineseCommandHelp(name: "xcode", overview: "发现、配置、构建、测试和运行 Xcode 工程。", usage: "triton xcode <discover|use|schemes|status|wait-idle|settings|build|test|run> [选项]", options: formatTextJSON + [
             ("discover --path <path>", "发现 workspace / project / Package.swift 候选"),
             ("use --workspace <path> --scheme <name>", "写入工作区 Xcode 默认值"),
