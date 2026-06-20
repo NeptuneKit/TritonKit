@@ -58,6 +58,8 @@ Do not use it for CLI / HTTP contract work unless the request also needs a human
 ## Device Canvas Interaction Pattern
 
 - When the Web canvas mirrors a real screenshot and proxies device input, keep the machine action boundary in Triton CLI / HTTP. The Web UI may collect human gestures, but it should emit DTO-shaped `tap`, `swipe`, `type`, `paste`, `deleteBackward`, or similar input payloads instead of calling platform tools directly.
+- Simulator gestures are not all equivalent at the host boundary. If host-side adapters do not expose a gesture such as iOS Simulator `longPress` or `pinch`, Web must mark that request as a runtime-backed input (`source=runtime`) and let the embedded runtime return the public API result or boundary error; do not keep retrying the host-side surface after it has reported unsupported.
+- Long press dispatch should happen when the hold threshold is reached while the pointer is still down, not only on `pointerup`. Track whether the long press was already dispatched so releasing the pointer does not send a duplicate long press or a fallback tap.
 - Do not infer focused App controls from screenshot pixels. A tap on the canvas may open a local keyboard relay, but whether the App focused an input must be determined by the preceding Triton input result, runtime state, screenshot, AX, or other machine-readable evidence.
 - For keyboard entry on a screenshot canvas, prefer a visible focused relay input near the tap point over relying only on `keydown` on a generic `div`. This preserves browser text editing behavior, IME composition direction, paste, selection deletion, and Backspace/Delete semantics.
 - Keep relay semantics explicit:

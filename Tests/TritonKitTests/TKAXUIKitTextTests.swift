@@ -206,6 +206,7 @@ struct TKAXUIKitTextTests {
             activationStrategy: .smart
         )
         let result = try await performInputRequest(request)
+        await Task.yield()
 
         #expect(result.ok)
         #expect(delegate.selectedIndexPath == indexPath)
@@ -294,8 +295,44 @@ struct TKAXUIKitTextTests {
         #expect(result.strategy == "ancestor-collection-cell-selection")
     }
 
-    @Test("smart tap reports gesture parent activation as an actionable unsupported strategy")
-    func smartTapReportsGestureParentUnsupported() async throws {
+    @Test("coordinate tap selects collection view cell containing point")
+    func coordinateTapSelectsCollectionViewCellContainingPoint() async throws {
+        let window = makeVisibleTestWindow()
+        defer {
+            window.isHidden = true
+        }
+
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 60)
+        let collectionView = UICollectionView(frame: CGRect(x: 0, y: 80, width: 390, height: 240), collectionViewLayout: layout)
+        let dataSource = CollectionDataSource()
+        let delegate = CollectionDelegate()
+        collectionView.register(CollectionCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.dataSource = dataSource
+        collectionView.delegate = delegate
+        window.addSubview(collectionView)
+        collectionView.reloadData()
+        collectionView.layoutIfNeeded()
+
+        let indexPath = IndexPath(item: 0, section: 0)
+        let cell = try #require(collectionView.cellForItem(at: indexPath) as? CollectionCell)
+        let cellFrame = cell.convert(cell.bounds, to: nil)
+        let request = TKInputRequest.tap(
+            x: Double(cellFrame.midX),
+            y: Double(cellFrame.midY)
+        )
+        let result = try await performInputRequest(request)
+        await Task.yield()
+
+        #expect(result.ok)
+        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(result.activationOID == TKObjectRegistry.shared.register(cell))
+        #expect(result.activationClassName == NSStringFromClass(CollectionCell.self))
+        #expect(result.strategy == "ancestor-collection-cell-selection")
+    }
+
+    @Test("smart tap reports gesture parent unsupported without private introspection")
+    func smartTapReportsGestureParentUnsupportedWithoutPrivateIntrospection() async throws {
         let window = makeVisibleTestWindow()
         defer {
             window.isHidden = true
@@ -303,9 +340,10 @@ struct TKAXUIKitTextTests {
 
         let wrapper = UIView(frame: CGRect(x: 20, y: 120, width: 260, height: 72))
         let label = UILabel(frame: CGRect(x: 16, y: 20, width: 180, height: 24))
+        let recorder = TapRecorder()
         label.text = "查看不合适原因"
         wrapper.addSubview(label)
-        wrapper.addGestureRecognizer(UITapGestureRecognizer(target: TapRecorder(), action: #selector(TapRecorder.didTap(_:))))
+        wrapper.addGestureRecognizer(UITapGestureRecognizer(target: recorder, action: #selector(TapRecorder.didTap(_:))))
         window.addSubview(wrapper)
 
         let labelOID = TKObjectRegistry.shared.register(label)
@@ -317,14 +355,16 @@ struct TKAXUIKitTextTests {
             activationStrategy: .smart
         )
         let result = try await performInputRequest(request)
+        await Task.yield()
 
         #expect(!result.ok)
+        #expect(recorder.tapCount == 0)
         #expect(result.matchedOID == labelOID)
         #expect(result.activationOID == wrapperOID)
         #expect(result.targetOID == wrapperOID)
         #expect(result.activationClassName == NSStringFromClass(UIView.self))
-        #expect(result.strategy == "ancestor-gesture-coordinate-unsupported")
-        #expect(result.message?.contains("tap gesture") == true)
+        #expect(result.strategy == "ancestor-tap-gesture-recognizer")
+        #expect(result.message == "UITapGestureRecognizer target actions are not exposed through public UIKit runtime APIs")
     }
 
     @Test("exact tap preserves matched metadata and exact strategy")

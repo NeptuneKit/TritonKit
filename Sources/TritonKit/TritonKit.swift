@@ -205,6 +205,9 @@ public class TritonKit {
     private var semanticProviders: [String: SemanticProviderRegistration] = [:]
     internal var endpointReadinessTimeout: TimeInterval = 0.25
     internal var endpointReadinessProbe: (String, UInt16, TimeInterval) -> Bool = TritonKit.probeEndpointReadiness
+    internal var runtimeVerboseLogging: Bool {
+        ProcessInfo.processInfo.environment["TRITONKIT_RUNTIME_VERBOSE"] == "1"
+    }
 
     /// HTTP data uploader (for screenshots / heavy payloads)
     public private(set) var uploader: TritonKitDataUploader?
@@ -471,6 +474,9 @@ public class TritonKit {
     public func send(_ message: TKMessage) {
         guard Self.isRuntimeEnabled else { return }
         guard let data = try? JSONEncoder().encode(message) else { return }
+        if runtimeVerboseLogging {
+            NSLog("[TritonKit] -> \(message.type.rawValue) [id:\(message.id)]")
+        }
         task?.send(.data(data)) { [weak self] error in
             guard let self, let error else { return }
             self.notifyError(error)
@@ -493,6 +499,9 @@ public class TritonKit {
             guard let self else { return }
             switch result {
             case .success(let message):
+                if self.runtimeVerboseLogging {
+                    NSLog("[TritonKit] <- websocket frame")
+                }
                 if self.state != .connected {
                     self.state = .connected
                 }
@@ -518,10 +527,18 @@ public class TritonKit {
         Task {
             do {
                 let msg = try JSONDecoder().decode(TKMessage.self, from: data)
+                if self.runtimeVerboseLogging {
+                    NSLog("[TritonKit] <- \(msg.type.rawValue) [id:\(msg.id)]")
+                }
                 if let response = await delegate?.tritonKit(self, didReceiveMessage: msg) {
                     send(response)
+                } else if self.runtimeVerboseLogging {
+                    NSLog("[TritonKit] no response for \(msg.type.rawValue) [id:\(msg.id)]")
                 }
             } catch {
+                if self.runtimeVerboseLogging {
+                    NSLog("[TritonKit] decode error: \(error.localizedDescription)")
+                }
                 send(TKMessage(id: 0, type: .ping, payload: try? JSONEncoder().encode(
                     TKErrorPayload(message: "Parse error: \(error.localizedDescription)")
                 )))
@@ -555,8 +572,15 @@ public class TritonKit {
     private func startPing() {
         guard Self.isRuntimeEnabled else { return }
         stopTimers()
-        pingTimer = Timer.scheduledTimer(withTimeInterval: 15, repeats: true) { [weak self] _ in
-            self?.task?.sendPing { _ in }
+        task?.sendPing { [weak self] error in
+            guard let self, let error else { return }
+            self.notifyError(error)
+        }
+        pingTimer = Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { [weak self] _ in
+            self?.task?.sendPing { error in
+                guard let self, let error else { return }
+                self.notifyError(error)
+            }
         }
     }
 

@@ -11,17 +11,11 @@ func performInput(_ request: TKInputRequest) async -> TKInputResult {
     case .tap:
         return performTap(request)
     case .longPress:
-        return TKInputResult.unsupported(
-            action: request.type.rawValue,
-            message: "Long press is not exposed in the embedded TritonKit runtime yet."
-        )
+        return await performLongPress(request)
     case .swipe:
         return performSwipe(request)
     case .pinch:
-        return TKInputResult.unsupported(
-            action: request.type.rawValue,
-            message: "Pinch is not exposed in the embedded TritonKit runtime yet."
-        )
+        return performPinch(request)
     case .typeText:
         return await performExactTextInsertion(request)
     case .paste:
@@ -36,6 +30,94 @@ func performInput(_ request: TKInputRequest) async -> TKInputResult {
             message: "Host-side HID is not available in the embedded TritonKit runtime"
         )
     }
+}
+
+@MainActor
+func performLongPress(_ request: TKInputRequest) async -> TKInputResult {
+    let action = request.type.rawValue
+    let resolved = resolveView(targetOID: request.targetOID, x: request.x, y: request.y)
+    guard let view = resolved.view else {
+        return TKInputResult.failure(action: action, message: resolved.message)
+    }
+
+    if let control = nearestSuperview(of: view, matching: UIControl.self) {
+        return await performControlLongPress(control, request: request, action: action, matchedView: view)
+    }
+
+    let matched = tapMatchedContext(request, fallback: view)
+    let activationOID = oid(for: view)
+    let activationClassName = NSStringFromClass(type(of: view))
+    if nearestLongPressGestureCandidate(from: view) != nil {
+        return TKInputResult.unsupported(
+            action: action,
+            message: "UILongPressGestureRecognizer target actions are not exposed through public UIKit runtime APIs",
+            strategy: "long-press-gesture-recognizer",
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName
+        )
+    }
+
+    return TKInputResult.failure(
+        action: action,
+        message: "Hit view does not expose a public UIControl long-press action",
+        targetOID: activationOID,
+        targetClassName: activationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        strategy: "control-long-press-required"
+    )
+}
+
+@MainActor
+func performControlLongPress(
+    _ control: UIControl,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView?
+) async -> TKInputResult {
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let activationOID = oid(for: control)
+    let activationClassName = NSStringFromClass(type(of: control))
+    guard control.isEnabled else {
+        return TKInputResult.failure(
+            action: action,
+            message: "Target UIControl is disabled",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: "control-long-press-touch-events"
+        )
+    }
+
+    control.sendActions(for: .touchDown)
+    try? await Task.sleep(nanoseconds: UInt64(longPressHoldDuration(from: request) * 1_000_000_000))
+    control.sendActions(for: .touchUpInside)
+
+    return TKInputResult.success(
+        action: action,
+        message: "Submitted UIControl long press touch events",
+        targetOID: activationOID,
+        targetClassName: activationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        strategy: "control-long-press-touch-events"
+    )
+}
+
+func longPressHoldDuration(from request: TKInputRequest) -> Double {
+    guard let duration = request.duration, duration.isFinite, duration > 0 else {
+        return 0.52
+    }
+    return min(max(duration, 0.05), 2)
 }
 
 @MainActor
@@ -88,19 +170,26 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
     }
 
     guard let control = nearestSuperview(of: view, matching: UIControl.self) else {
-        let matched = tapMatchedContext(request, fallback: view)
-        let activationOID = oid(for: view)
-        let activationClassName = NSStringFromClass(type(of: view))
-        return TKInputResult.failure(
+        if let tableCell = nearestSuperview(of: view, matching: UITableViewCell.self)
+            ?? tableCellContaining(request: request),
+           let result = performTableCellTap(tableCell, request: request, action: action, matchedView: view) {
+            return result
+        }
+
+        if let collectionCell = nearestSuperview(of: view, matching: UICollectionViewCell.self)
+            ?? collectionCellContaining(request: request),
+           let result = performCollectionCellTap(collectionCell, request: request, action: action, matchedView: view) {
+            return result
+        }
+
+        if let result = performTapGestureActivation(from: view, request: request, action: action, matchedView: view) {
+            return result
+        }
+        return tapActivationFailure(
+            request: request,
             action: action,
-            message: "Hit view does not expose a public UIControl tap action",
-            targetOID: activationOID,
-            targetClassName: activationClassName,
-            matchedOID: matched.oid,
-            matchedClassName: matched.className,
-            activationOID: activationOID,
-            activationClassName: activationClassName,
-            strategy: request.activationStrategy?.rawValue
+            view: view,
+            message: "Hit view does not expose a public UIControl or UITapGestureRecognizer tap action"
         )
     }
 
@@ -243,10 +332,14 @@ func performControlTap(
         )
     }
 
-    if let button = control as? UIButton, button.accessibilityActivate() {
+    if let result = performTabBarControlTap(control, request: request, action: action, matchedView: matchedView, strategy: strategy) {
+        return result
+    }
+
+    if control.accessibilityActivate() {
         return TKInputResult.success(
             action: action,
-            message: "Activated UIButton via accessibilityActivate",
+            message: "Activated UIControl via accessibilityActivate",
             targetOID: activationOID,
             targetClassName: activationClassName,
             matchedOID: matched.oid,
@@ -285,6 +378,122 @@ func performControlTap(
 }
 
 @MainActor
+func performTabBarControlTap(
+    _ control: UIControl,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView?,
+    strategy: String?
+) -> TKInputResult? {
+    let className = NSStringFromClass(type(of: control))
+    let tabBar = nearestSuperview(of: control, matching: UITabBar.self) ?? tabBarContaining(control, request: request)
+    guard let tabBar,
+          let items = tabBar.items,
+          !items.isEmpty else {
+        return nil
+    }
+
+    let buttons = allSubviews(of: tabBar, matching: UIControl.self)
+        .filter { !$0.isHidden && $0.alpha > 0.01 && $0.bounds.width > 0 && $0.bounds.height > 0 }
+        .sorted { $0.frame.minX < $1.frame.minX }
+    let slots = tabBarButtonSlots(buttons)
+    let requestPoint = request.x.flatMap { x in request.y.map { CGPoint(x: x, y: $0) } }
+    let indexFromButton = slots.firstIndex(where: { slot in
+        slot.contains { $0 === control || control.isDescendant(of: $0) }
+    })
+    let indexFromPoint = requestPoint.flatMap { point in
+        slots.firstIndex(where: { slot in
+            slot.contains { button in button.convert(button.bounds, to: nil).contains(point) }
+        })
+    }
+    let indexFromClass = className.contains("_UITabButton") ? indexFromPoint : nil
+    guard let index = indexFromButton ?? indexFromPoint ?? indexFromClass,
+          index < items.count else {
+        return nil
+    }
+
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let activationOID = oid(for: control)
+    let activationClassName = NSStringFromClass(type(of: control))
+    let item = items[index]
+    DispatchQueue.main.async { [weak tabBar] in
+        guard let tabBar else { return }
+        if let controller = nearestTabBarController(from: tabBar) {
+            controller.selectedIndex = index
+        } else {
+            tabBar.selectedItem = item
+            tabBar.delegate?.tabBar?(tabBar, didSelect: item)
+        }
+    }
+
+    return TKInputResult.success(
+        action: action,
+        message: "Submitted UITabBar item selection",
+        targetOID: activationOID,
+        targetClassName: activationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        strategy: strategy ?? "tab-bar-selection"
+    )
+}
+
+@MainActor
+func tabBarButtonSlots(_ buttons: [UIControl]) -> [[UIControl]] {
+    let sorted = buttons.sorted {
+        let lhs = $0.convert($0.bounds, to: nil).midX
+        let rhs = $1.convert($1.bounds, to: nil).midX
+        if abs(lhs - rhs) > 1 {
+            return lhs < rhs
+        }
+        return $0.convert($0.bounds, to: nil).minY < $1.convert($1.bounds, to: nil).minY
+    }
+    return sorted.reduce(into: [[UIControl]]()) { slots, button in
+        let midX = button.convert(button.bounds, to: nil).midX
+        if let last = slots.last,
+           let representativeMidX = last.map({ $0.convert($0.bounds, to: nil).midX }).min(),
+           abs(midX - representativeMidX) <= 2 {
+            slots[slots.count - 1].append(button)
+        } else {
+            slots.append([button])
+        }
+    }
+}
+
+@MainActor
+func tabBarContaining(_ control: UIControl, request: TKInputRequest) -> UITabBar? {
+    let className = NSStringFromClass(type(of: control))
+    guard className.contains("_UITabButton"),
+          let x = request.x,
+          let y = request.y else {
+        return nil
+    }
+    let point = CGPoint(x: x, y: y)
+    for window in keyWindows() {
+        for tabBar in allSubviews(of: window, matching: UITabBar.self) {
+            if !tabBar.isHidden,
+               tabBar.alpha > 0.01,
+               tabBar.convert(tabBar.bounds, to: nil).contains(point) {
+                return tabBar
+            }
+        }
+    }
+    return nil
+}
+
+func allSubviews<T: UIView>(of root: UIView, matching type: T.Type) -> [T] {
+    var matches: [T] = []
+    for subview in root.subviews {
+        if let match = subview as? T {
+            matches.append(match)
+        }
+        matches.append(contentsOf: allSubviews(of: subview, matching: type))
+    }
+    return matches
+}
+
+@MainActor
 func performAncestorTapActivation(from view: UIView, request: TKInputRequest, action: String) -> TKInputResult? {
     if let control = nearestSuperview(of: view, matching: UIControl.self) {
         return performControlTap(
@@ -296,34 +505,161 @@ func performAncestorTapActivation(from view: UIView, request: TKInputRequest, ac
         )
     }
 
-    if let tableCell = nearestSuperview(of: view, matching: UITableViewCell.self),
+    if let tableCell = nearestSuperview(of: view, matching: UITableViewCell.self)
+        ?? tableCellContaining(request: request),
        let result = performTableCellTap(tableCell, request: request, action: action, matchedView: view) {
         return result
     }
 
-    if let collectionCell = nearestSuperview(of: view, matching: UICollectionViewCell.self),
+    if let collectionCell = nearestSuperview(of: view, matching: UICollectionViewCell.self)
+        ?? collectionCellContaining(request: request),
        let result = performCollectionCellTap(collectionCell, request: request, action: action, matchedView: view) {
         return result
     }
 
     if let gestureView = nearestTapGestureView(from: view) {
-        let matched = tapMatchedContext(request, fallback: view)
-        let activationOID = oid(for: gestureView)
-        let activationClassName = NSStringFromClass(type(of: gestureView))
-        return TKInputResult.failure(
+        return performTapGestureActivation(
+            from: gestureView,
+            request: request,
             action: action,
-            message: "Matched text node has a tap gesture ancestor, but embedded runtime cannot dispatch arbitrary tap gesture recognizers through public UIKit API",
+            matchedView: view,
+            strategy: "ancestor-tap-gesture-recognizer"
+        )
+    }
+
+    return nil
+}
+
+@MainActor
+func performTapGestureActivation(
+    from view: UIView,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView?,
+    strategy: String = "tap-gesture-recognizer"
+) -> TKInputResult? {
+    guard let candidate = nearestTapGestureCandidate(from: view) else {
+        return nil
+    }
+    let matched = tapMatchedContext(request, fallback: matchedView ?? view)
+    let activationOID = oid(for: candidate.view)
+    let activationClassName = NSStringFromClass(type(of: candidate.view))
+
+    if candidate.view.accessibilityActivate() {
+        return TKInputResult.success(
+            action: action,
+            message: "Activated tap gesture view via accessibilityActivate",
             targetOID: activationOID,
             targetClassName: activationClassName,
             matchedOID: matched.oid,
             matchedClassName: matched.className,
             activationOID: activationOID,
             activationClassName: activationClassName,
-            strategy: "ancestor-gesture-coordinate-unsupported"
+            strategy: "tap-gesture-accessibility-activate"
         )
     }
 
+    return tapActivationFailure(
+        request: request,
+        action: action,
+        view: candidate.view,
+        message: "UITapGestureRecognizer target actions are not exposed through public UIKit runtime APIs",
+        strategy: strategy
+    )
+}
+
+func nearestTapGestureCandidate(from view: UIView) -> (view: UIView, gesture: UITapGestureRecognizer)? {
+    var current: UIView? = view
+    while let view = current {
+        if view.isUserInteractionEnabled,
+           let gesture = view.gestureRecognizers?.compactMap({ $0 as? UITapGestureRecognizer }).first(where: { gesture in
+               gesture.isEnabled && gesture.numberOfTapsRequired <= 1 && gesture.numberOfTouchesRequired <= 1
+           }) {
+            return (view, gesture)
+        }
+        current = view.superview
+    }
     return nil
+}
+
+func nearestLongPressGestureCandidate(from view: UIView) -> (view: UIView, gesture: UILongPressGestureRecognizer)? {
+    var current: UIView? = view
+    while let view = current {
+        if view.isUserInteractionEnabled,
+           let gesture = view.gestureRecognizers?.compactMap({ $0 as? UILongPressGestureRecognizer }).first(where: { $0.isEnabled }) {
+            return (view, gesture)
+        }
+        current = view.superview
+    }
+    return nil
+}
+
+func tapActivationFailure(
+    request: TKInputRequest,
+    action: String,
+    view: UIView,
+    message: String,
+    strategy: String? = nil
+) -> TKInputResult {
+    let matched = tapMatchedContext(request, fallback: view)
+    let activationOID = oid(for: view)
+    let activationClassName = NSStringFromClass(type(of: view))
+    return TKInputResult.failure(
+        action: action,
+        message: message,
+        targetOID: activationOID,
+        targetClassName: activationClassName,
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        strategy: strategy ?? request.activationStrategy?.rawValue
+    )
+}
+
+@MainActor
+func tableCellContaining(request: TKInputRequest) -> UITableViewCell? {
+    guard let point = inputPoint(from: request) else { return nil }
+    for window in keyWindows() {
+        for tableView in allSubviews(of: window, matching: UITableView.self) where isInteractable(tableView) {
+            let tablePoint = tableView.convert(point, from: nil)
+            guard tableView.bounds.contains(tablePoint),
+                  let indexPath = tableView.indexPathForRow(at: tablePoint) else {
+                continue
+            }
+            if let cell = tableView.cellForRow(at: indexPath) {
+                return cell
+            }
+        }
+    }
+    return nil
+}
+
+@MainActor
+func collectionCellContaining(request: TKInputRequest) -> UICollectionViewCell? {
+    guard let point = inputPoint(from: request) else { return nil }
+    for window in keyWindows() {
+        for collectionView in allSubviews(of: window, matching: UICollectionView.self) where isInteractable(collectionView) {
+            let collectionPoint = collectionView.convert(point, from: nil)
+            guard collectionView.bounds.contains(collectionPoint),
+                  let indexPath = collectionView.indexPathForItem(at: collectionPoint) else {
+                continue
+            }
+            if let cell = collectionView.cellForItem(at: indexPath) {
+                return cell
+            }
+        }
+    }
+    return nil
+}
+
+func inputPoint(from request: TKInputRequest) -> CGPoint? {
+    guard let x = request.x, let y = request.y else { return nil }
+    return CGPoint(x: x, y: y)
+}
+
+func isInteractable(_ view: UIView) -> Bool {
+    !view.isHidden && view.alpha > 0.01 && view.isUserInteractionEnabled
 }
 
 @MainActor
@@ -369,12 +705,15 @@ func performTableCellTap(
         )
     }
 
-    tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
-    tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+    DispatchQueue.main.async { [weak tableView] in
+        guard let tableView else { return }
+        tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
+        tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
+    }
 
     return TKInputResult.success(
         action: action,
-        message: "Matched text node; selected UITableViewCell ancestor",
+        message: "Submitted UITableViewCell ancestor selection",
         targetOID: activationOID,
         targetClassName: activationClassName,
         matchedOID: matched.oid,
@@ -428,12 +767,15 @@ func performCollectionCellTap(
         )
     }
 
-    collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
-    collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: indexPath)
+    DispatchQueue.main.async { [weak collectionView] in
+        guard let collectionView else { return }
+        collectionView.selectItem(at: indexPath, animated: false, scrollPosition: [])
+        collectionView.delegate?.collectionView?(collectionView, didSelectItemAt: indexPath)
+    }
 
     return TKInputResult.success(
         action: action,
-        message: "Matched text node; selected UICollectionViewCell ancestor",
+        message: "Submitted UICollectionViewCell ancestor selection",
         targetOID: activationOID,
         targetClassName: activationClassName,
         matchedOID: matched.oid,
@@ -534,7 +876,7 @@ func dispatchValueChangedActions(for control: UIControl) {
 }
 
 @MainActor
-func dispatchTargetAction(_ action: Selector, to target: AnyObject, sender: UIControl) {
+func dispatchTargetAction(_ action: Selector, to target: AnyObject, sender: AnyObject) {
     let argumentCount = NSStringFromSelector(action).filter { $0 == ":" }.count
     switch argumentCount {
     case 0:
@@ -608,6 +950,81 @@ func performSliderDrag(_ slider: UISlider, endX: Double, endY: Double, action: S
         targetClassName: NSStringFromClass(type(of: slider)),
         strategy: "slider-drag"
     )
+}
+
+@MainActor
+func performPinch(_ request: TKInputRequest) -> TKInputResult {
+    let action = request.type.rawValue
+    guard let scale = pinchScale(from: request) else {
+        return TKInputResult.failure(action: action, message: "Missing or invalid pinch scale")
+    }
+
+    let resolved = resolveView(targetOID: request.targetOID, x: request.centerX, y: request.centerY)
+    guard let view = resolved.view else {
+        return TKInputResult.failure(action: action, message: resolved.message)
+    }
+    guard let scrollView = nearestZoomableScrollView(from: view) else {
+        let activationOID = oid(for: view)
+        let activationClassName = NSStringFromClass(type(of: view))
+        return TKInputResult.unsupported(
+            action: action,
+            message: "Hit view is not inside a zoomable UIScrollView",
+            strategy: "zoomable-scroll-view-required",
+            matchedOID: activationOID,
+            matchedClassName: activationClassName,
+            activationOID: activationOID,
+            activationClassName: activationClassName
+        )
+    }
+
+    let currentZoomScale = scrollView.zoomScale
+    let nextZoomScale = min(
+        max(currentZoomScale * CGFloat(scale), scrollView.minimumZoomScale),
+        scrollView.maximumZoomScale
+    )
+    scrollView.setZoomScale(nextZoomScale, animated: false)
+
+    return TKInputResult.success(
+        action: action,
+        message: String(format: "Set zoomScale to %.2f", nextZoomScale),
+        targetOID: oid(for: scrollView),
+        targetClassName: NSStringFromClass(type(of: scrollView)),
+        matchedOID: oid(for: view),
+        matchedClassName: NSStringFromClass(type(of: view)),
+        activationOID: oid(for: scrollView),
+        activationClassName: NSStringFromClass(type(of: scrollView)),
+        strategy: "scroll-view-pinch-zoom"
+    )
+}
+
+func pinchScale(from request: TKInputRequest) -> Double? {
+    if let scale = request.scale, scale > 0, scale.isFinite {
+        return scale
+    }
+    guard let startDistance = request.startDistance,
+          let endDistance = request.endDistance,
+          startDistance > 0,
+          endDistance > 0,
+          startDistance.isFinite,
+          endDistance.isFinite else {
+        return nil
+    }
+    return endDistance / startDistance
+}
+
+func nearestZoomableScrollView(from view: UIView) -> UIScrollView? {
+    var current: UIView? = view
+    while let candidate = current {
+        if let scrollView = candidate as? UIScrollView,
+           scrollView.maximumZoomScale > scrollView.minimumZoomScale,
+           !scrollView.isHidden,
+           scrollView.alpha > 0.01,
+           scrollView.isUserInteractionEnabled {
+            return scrollView
+        }
+        current = candidate.superview
+    }
+    return nil
 }
 
 func swipeScrollTarget(from view: UIView, deltaX: Double, deltaY: Double) -> (view: UIScrollView?, strategy: String?) {
@@ -1079,5 +1496,24 @@ func keyWindows() -> [UIWindow] {
     if !registryKey.isEmpty { return registryKey }
     if !sceneWindows.isEmpty { return sceneWindows }
     return fallbackWindows.isEmpty ? registryWindows : fallbackWindows
+}
+
+func nearestTabBarController(from view: UIView) -> UITabBarController? {
+    var current: UIView? = view
+    while let view = current {
+        var responder: UIResponder? = view
+        while let next = responder {
+            if let controller = next as? UITabBarController {
+                return controller
+            }
+            if let controller = next as? UIViewController,
+               let tabBarController = controller.tabBarController {
+                return tabBarController
+            }
+            responder = next.next
+        }
+        current = view.superview
+    }
+    return nil
 }
 #endif

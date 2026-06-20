@@ -93,9 +93,9 @@ public struct TKDisplayItem: Codable {
     ) {
         self.subitems = subitems
         self.isHidden = isHidden
-        self.alpha = alpha
-        self.frame = frame
-        self.bounds = bounds
+        self.alpha = tkFinite(alpha)
+        self.frame = tkFinite(frame)
+        self.bounds = tkFinite(bounds)
         self.screenshotRef = screenshotRef
         self.viewObject = viewObject
         self.layerObject = layerObject
@@ -105,23 +105,23 @@ public struct TKDisplayItem: Codable {
         self.eventHandlers = eventHandlers
         self.representedAsKeyWindow = representedAsKeyWindow
         self.backgroundColor = backgroundColor
-        self.layerPosition = layerPosition
-        self.layerAnchorPoint = layerAnchorPoint
-        self.layerZPosition = layerZPosition
-        self.layerTransform = layerTransform
-        self.layerSublayerTransform = layerSublayerTransform
+        self.layerPosition = layerPosition.map(tkFinite)
+        self.layerAnchorPoint = layerAnchorPoint.map(tkFinite)
+        self.layerZPosition = layerZPosition.map(tkFinite)
+        self.layerTransform = layerTransform?.map(tkFinite)
+        self.layerSublayerTransform = layerSublayerTransform?.map(tkFinite)
         self.layerMasksToBounds = layerMasksToBounds
-        self.layerCornerRadius = layerCornerRadius
-        self.layerOpacity = layerOpacity
+        self.layerCornerRadius = layerCornerRadius.map(tkFinite)
+        self.layerOpacity = layerOpacity.map(tkFinite)
         self.layerIsHidden = layerIsHidden
-        self.layerContentsScale = layerContentsScale
+        self.layerContentsScale = layerContentsScale.map(tkFinite)
         self.layerContentsGravity = layerContentsGravity
-        self.layerContentsRect = layerContentsRect
-        self.layerBorderWidth = layerBorderWidth
+        self.layerContentsRect = layerContentsRect.map(tkFinite)
+        self.layerBorderWidth = layerBorderWidth.map(tkFinite)
         self.layerBorderColor = layerBorderColor
-        self.layerShadowOpacity = layerShadowOpacity
-        self.layerShadowRadius = layerShadowRadius
-        self.layerShadowOffset = layerShadowOffset
+        self.layerShadowOpacity = layerShadowOpacity.map(tkFinite)
+        self.layerShadowRadius = layerShadowRadius.map(tkFinite)
+        self.layerShadowOffset = layerShadowOffset.map(tkFinite)
         self.layerShadowColor = layerShadowColor
         self.shouldCaptureImage = shouldCaptureImage
         self.customDisplayTitle = customDisplayTitle
@@ -147,6 +147,30 @@ public struct TKDisplayItem: Codable {
     }
 }
 
+private func tkFinite(_ value: Double) -> Double {
+    value.isFinite ? value : 0
+}
+
+private func tkFinite(_ value: Float) -> Float {
+    value.isFinite ? value : 0
+}
+
+private func tkFinite(_ value: CGFloat) -> CGFloat {
+    value.isFinite ? value : 0
+}
+
+private func tkFinite(_ point: CGPoint) -> CGPoint {
+    CGPoint(x: tkFinite(point.x), y: tkFinite(point.y))
+}
+
+private func tkFinite(_ size: CGSize) -> CGSize {
+    CGSize(width: tkFinite(size.width), height: tkFinite(size.height))
+}
+
+private func tkFinite(_ rect: CGRect) -> CGRect {
+    CGRect(origin: tkFinite(rect.origin), size: tkFinite(rect.size))
+}
+
 // MARK: - Color
 
 public struct TKColor: Codable {
@@ -156,10 +180,10 @@ public struct TKColor: Codable {
     public let alpha: CGFloat
 
     public init(red: CGFloat, green: CGFloat, blue: CGFloat, alpha: CGFloat = 1) {
-        self.red = red
-        self.green = green
-        self.blue = blue
-        self.alpha = alpha
+        self.red = tkFinite(red)
+        self.green = tkFinite(green)
+        self.blue = tkFinite(blue)
+        self.alpha = tkFinite(alpha)
     }
 
     #if canImport(UIKit)

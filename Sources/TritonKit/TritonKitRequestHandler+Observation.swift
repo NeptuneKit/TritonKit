@@ -92,7 +92,14 @@ extension TritonKitRequestHandler {
             let controllerContext: TKHierarchyControllerContext? = nil
             #endif
             let hierarchy = TKHierarchyInfo(displayItems: items, appInfo: appInfo, controllerContext: controllerContext)
-            return TKMessage(id: message.id, type: .hierarchy, payload: try? JSONEncoder().encode(hierarchy))
+            do {
+                return TKMessage(id: message.id, type: .hierarchy, payload: try JSONEncoder().encode(hierarchy))
+            } catch {
+                #if canImport(Foundation)
+                NSLog("[TritonKit] hierarchy encode failed: \(error)")
+                #endif
+                return errorResponse(id: message.id, message: "Hierarchy encode failed: \(error)")
+            }
 
         case .accessibility:
             #if canImport(UIKit)

@@ -45,10 +45,10 @@ public enum TKAttributeValue: Codable {
         switch self {
         case .null: try container.encodeNil()
         case .string(let v): try container.encode(v)
-        case .number(let v): try container.encode(v)
+        case .number(let v): try container.encode(v.isFinite ? v : 0)
         case .bool(let v): try container.encode(v)
         case .stringArray(let v): try container.encode(v)
-        case .numberArray(let v): try container.encode(v)
+        case .numberArray(let v): try container.encode(v.map { $0.isFinite ? $0 : 0 })
         }
     }
 }

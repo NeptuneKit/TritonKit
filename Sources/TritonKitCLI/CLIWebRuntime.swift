@@ -777,7 +777,24 @@ private func makeWebHostScreenshotBridgeResponse(
         throw RuntimeError("Unsupported host platform: \(platform).")
     }
     if isWebIOSRuntimeMirror(platform: hostPlatform, scope: scope, kind: kind, source: source) {
-        let client = TritonKitHTTPClient(host: "127.0.0.1", port: 19421)
+        var client = TritonKitHTTPClient(host: "127.0.0.1", port: 19421)
+        let runtimeTargets: TKTargetsResponse = try await client.getJSON("/targets")
+        let hostID = webHostDeviceTargetID(HostDeviceTarget(
+            platform: platform,
+            id: target,
+            target: target,
+            state: "Ready",
+            ready: true,
+            source: "host",
+            name: nil,
+            runtime: nil,
+            transport: nil,
+            scope: scope ?? HostDeviceScope.real.rawValue,
+            kind: kind ?? "real-device"
+        ))
+        if let runtimeTarget = webRuntimeInputFallbackTargetID(forHostID: hostID, runtimeTargets: runtimeTargets.targets) {
+            client.target = runtimeTarget
+        }
         let data = try await client.request(type: "screenshot")
         let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
         let imageData = try await screenshotImageData(screenshot, client: client)
@@ -828,6 +845,7 @@ private func makeWebHostScreenshotBridgeResponse(
 
 private func makeWebHostInputBridgeResponse(
     platform: String,
+    target: String,
     scope: String? = nil,
     kind: String? = nil,
     source: String? = nil,
@@ -840,7 +858,27 @@ private func makeWebHostInputBridgeResponse(
             message: "Web host input is only enabled for iOS real-device App runtime mirror targets in this bridge."
         )
     }
-    return try await executeInputRequest(input, client: TritonKitHTTPClient(host: "127.0.0.1", port: 19421))
+    var client = TritonKitHTTPClient(host: "127.0.0.1", port: 19421)
+    let runtimeTargets: TKTargetsResponse = try await client.getJSON("/targets")
+    let resolvedScope = scope ?? (kind == "simulator" || target.hasPrefix("sim:") ? HostDeviceScope.simulator.rawValue : HostDeviceScope.real.rawValue)
+    let resolvedKind = kind ?? (resolvedScope == HostDeviceScope.simulator.rawValue ? "simulator" : "real-device")
+    let hostID = webHostDeviceTargetID(HostDeviceTarget(
+        platform: platform,
+        id: target,
+        target: target,
+        state: "Ready",
+        ready: true,
+        source: "host",
+        name: nil,
+        runtime: nil,
+        transport: nil,
+        scope: resolvedScope,
+        kind: resolvedKind
+    ))
+    if let runtimeTarget = webRuntimeInputFallbackTargetID(forHostID: hostID, runtimeTargets: runtimeTargets.targets) {
+        client.target = runtimeTarget
+    }
+    return try await executeInputRequest(input, client: client)
 }
 
 private func isWebIOSRuntimeMirror(
@@ -939,6 +977,7 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
     }
     router.post("/web/host-input") { request, _ -> Response in
         let platform = request.uri.queryParameters.get("platform") ?? ""
+        let target = request.uri.queryParameters.get("target") ?? ""
         let scope = request.uri.queryParameters.get("scope")
         let kind = request.uri.queryParameters.get("kind")
         let source = request.uri.queryParameters.get("source")
@@ -950,7 +989,7 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
             return jsonError(code: "invalid_payload", message: "Unsupported input payload", endpoint: "/web/host-input", status: .badRequest)
         }
         do {
-            return jsonResponse(try await makeWebHostInputBridgeResponse(platform: platform, scope: scope, kind: kind, source: source, input: input))
+            return jsonResponse(try await makeWebHostInputBridgeResponse(platform: platform, target: target, scope: scope, kind: kind, source: source, input: input))
         } catch {
             return jsonError(code: "web_host_input_failed", message: "\(error)", endpoint: "/web/host-input", status: .conflict)
         }
