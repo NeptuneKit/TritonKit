@@ -143,7 +143,7 @@ test("filters non-ready real devices from the visible device list", () => {
   assert.equal(result.length, 0);
 });
 
-test("filters ready real devices without direct wired or usb transport", () => {
+test("shows ready iOS localNetwork real devices as App runtime mirror candidates", () => {
   const result = mapTritonDeviceListToWebTargets(
     {
       ok: true,
@@ -166,7 +166,117 @@ test("filters ready real devices without direct wired or usb transport", () => {
     "ios"
   );
 
-  assert.equal(result.length, 0);
+  assert.equal(result.length, 1);
+  assert.equal(result[0].source, "runtime");
+  assert.equal(result[0].transport, "localNetwork");
+});
+
+test("shows iOS localNetwork real device when an App runtime target is connected", () => {
+  const result = mapTritonHostCapturesToWebTargets([
+    {
+      id: "ios-real-command",
+      platform: "ios",
+      command: "triton device list --platform ios --scope real --json",
+      ok: true,
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      parsed: {
+        ok: true,
+        targets: [
+          {
+            id: "ios-real:7a9d976cc4d4",
+            target: "ios-real:7a9d976cc4d4",
+            name: "iPhone",
+            platform: "ios",
+            runtime: "iOS 26.5",
+            ready: true,
+            scope: "real",
+            kind: "real-device",
+            state: "connected",
+            source: "devicectl",
+            transport: "localNetwork",
+          },
+        ],
+      },
+    },
+    {
+      id: "runtime-command",
+      platform: "runtime",
+      command: "triton list --json",
+      ok: true,
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      parsed: {
+        targets: [
+          {
+            id: "triton:connection:7",
+            platform: "ios",
+            connected: true,
+            activeHierarchyAvailable: true,
+            transport: "local-websocket",
+          },
+        ],
+      },
+    },
+  ]);
+
+  assert.equal(result.targets.length, 1);
+  assert.equal(result.targets[0].id, "ios-real:7a9d976cc4d4");
+  assert.equal(result.targets[0].source, "runtime");
+  assert.equal(result.targets[0].transport, "localNetwork");
+});
+
+test("keeps host targets ok when optional App runtime target discovery is unavailable", () => {
+  const result = mapTritonHostCapturesToWebTargets([
+    {
+      id: "ios-command",
+      platform: "ios",
+      command: "triton sim list --json",
+      ok: true,
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      parsed: {
+        ok: true,
+        simulators: [
+          {
+            id: "sim:AAAA-BBBB",
+            udid: "AAAA-BBBB",
+            name: "Overloaded-v2 Dedicated iPhone 16 Pro",
+            platform: "iOS Simulator",
+            runtime: "iOS 26.5",
+            state: "Booted",
+            isAvailable: true,
+            isBooted: true,
+            source: "simctl",
+          },
+        ],
+      },
+    },
+    {
+      id: "runtime-command",
+      platform: "runtime",
+      command: "triton list --json",
+      ok: false,
+      exitCode: 1,
+      stdout: JSON.stringify({
+        ok: false,
+        error: {
+          code: "server_unavailable",
+          message: "Could not connect to the server.",
+        },
+      }),
+      stderr: "",
+      parsed: null,
+    },
+  ]);
+
+  assert.equal(result.ok, true);
+  assert.equal(result.targets.length, 1);
+  assert.equal(result.targets[0].id, "sim:AAAA-BBBB");
+  assert.equal(result.commandOutputs.at(-1).ok, false);
 });
 
 test("combines iOS, Android, and Harmony host captures for visible target switching", () => {
@@ -459,6 +569,62 @@ test("proxies iOS Simulator Web input through triton serve host target route", a
   }
 });
 
+test("dispatches iOS Simulator runtime long press through matched App runtime", async () => {
+  const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.join(" ") === "list --json") {
+  process.stdout.write(JSON.stringify({
+    targets: [
+      {
+        id: "triton:connection:2",
+        platform: "ios",
+        connected: true,
+        deviceDescription: "iPhone",
+        transport: "local-websocket"
+      },
+      {
+        id: "triton:ios-simulator:SIM-UDID",
+        platform: "ios",
+        connected: true,
+        simulatorUDID: "SIM-UDID",
+        deviceDescription: "Simulator",
+        transport: "local-websocket"
+      }
+    ]
+  }));
+  process.exit(0);
+}
+if (args.join(" ") !== "input --target triton:ios-simulator:SIM-UDID --json --summary") {
+  process.stderr.write("unexpected args: " + args.join(" "));
+  process.exit(64);
+}
+let body = "";
+process.stdin.setEncoding("utf8");
+process.stdin.on("data", (chunk) => { body += chunk; });
+process.stdin.on("end", () => {
+  const request = JSON.parse(body);
+  process.stdout.write(JSON.stringify({
+    ok: true,
+    action: request.type,
+    message: "Long press through runtime"
+  }));
+});
+`);
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "POST",
+    url: "/web/host-input?platform=ios&target=SIM-UDID&scope=simulator&kind=simulator&source=runtime",
+    body: JSON.stringify({ type: "longPress", x: 20, y: 40, width: 390, height: 844, duration: 0.52 }),
+  });
+
+  assert.equal(response.statusCode, 200);
+  assert.deepEqual(JSON.parse(response.body), {
+    ok: true,
+    action: "longPress",
+    message: "Long press through runtime",
+  });
+});
+
 test("captures iOS real-device Web screenshot from App runtime mirror", async () => {
   const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
 import { writeFileSync } from "node:fs";
@@ -673,6 +839,70 @@ process.stdout.write(JSON.stringify({
   assert.equal(body.ok, true);
   assert.equal(body.source.command, "triton hierarchy --platform ios --target triton:connection:42 --json");
   assert.equal(body.scene.viewport.width, 428);
+});
+
+test("falls back to active iOS runtime hierarchy when real-device identity is transient", async () => {
+  const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.join(" ") === "list --json") {
+  process.stdout.write(JSON.stringify({
+    targets: [
+      {
+        id: "triton:ios-simulator:SIM-UDID",
+        platform: "ios",
+        connected: true,
+        simulatorUDID: "SIM-UDID",
+        activeHierarchyAvailable: true,
+        appName: "Overloaded",
+        bundleIdentifier: "overloaded.cn.debug",
+        transport: "local-websocket"
+      }
+    ]
+  }));
+  process.exit(0);
+}
+if (args.join(" ") !== "hierarchy --platform ios --target triton:ios-simulator:SIM-UDID --json") {
+  process.stderr.write("unexpected args: " + args.join(" "));
+  process.exit(64);
+}
+process.stdout.write(JSON.stringify({
+  ok: true,
+  capturedAt: "2026-06-20T00:00:00.000Z",
+  source: {
+    command: "triton hierarchy --platform ios --target triton:ios-simulator:SIM-UDID --json",
+    runtimeScope: "runtime-tree",
+    readonly: true
+  },
+  scene: {
+    platform: "ios",
+    rootId: "root",
+    viewport: { width: 402, height: 874 },
+    nodes: [
+      {
+        id: "root",
+        type: "UIWindow",
+        name: "keyWindow",
+        frame: { x: 0, y: 0, width: 402, height: 874 },
+        depth: 0,
+        visible: true,
+        interactive: false,
+        color: "#6ea8ff"
+      }
+    ]
+  }
+}));
+`);
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "GET",
+    url: "/web/host-hierarchy?platform=ios&target=ios-real%3A7a9d976cc4d4&scope=real&kind=real-device&source=runtime",
+  });
+
+  assert.equal(response.statusCode, 200);
+  const body = JSON.parse(response.body);
+  assert.equal(body.ok, true);
+  assert.equal(body.source.command, "triton hierarchy --platform ios --target triton:ios-simulator:SIM-UDID --json");
+  assert.equal(body.scene.viewport.width, 402);
 });
 
 test("exposes explicit Web hierarchy capture control through POST without mutating the app", async () => {

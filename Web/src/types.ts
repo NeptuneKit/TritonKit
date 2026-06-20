@@ -86,7 +86,7 @@ export type HierarchyVisualSource =
 
 export type HierarchyLayerNode = {
   id: string;
-  parentId?: string;
+  parentId?: string | null;
   type: string;
   className?: string;
   name: string;

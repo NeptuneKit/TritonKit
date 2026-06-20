@@ -54,12 +54,16 @@ export function mapTritonSimListToWebTargets(payload) {
 }
 
 export function mapTritonDeviceListToWebTargets(payload, platform) {
+  return mapTritonDeviceListToWebTargetsWithRuntime(payload, platform);
+}
+
+function mapTritonDeviceListToWebTargetsWithRuntime(payload, platform, runtimeTargets = []) {
   if (!payload || !Array.isArray(payload.targets)) {
     throw new Error(`Expected triton device list payload with targets[] for ${platform}`);
   }
 
   return payload.targets
-    .filter((target) => shouldExposeHostDeviceTarget(target))
+    .filter((target) => shouldExposeHostDeviceTarget(target, platform, runtimeTargets))
     .map((target) => ({
       id: String(target.id ?? `${platform}:${target.target}`),
       target: String(target.target ?? ""),
@@ -74,18 +78,21 @@ export function mapTritonDeviceListToWebTargets(payload, platform) {
       scope: String(target.scope ?? "emulator"),
       kind: String(target.kind ?? "emulator"),
       transport: normalizeOptionalString(target.transport),
-      source: String(target.source ?? platform),
+      source: isRealDeviceRuntimeVisible(target, platform, runtimeTargets) ? "runtime" : String(target.source ?? platform),
       readonly: true,
       blockedReasons: Array.isArray(target.blockedReasons) ? target.blockedReasons.map(String) : [],
       sensitive: Boolean(target.sensitive),
     }));
 }
 
-function shouldExposeHostDeviceTarget(target) {
+function shouldExposeHostDeviceTarget(target, platform, runtimeTargets = []) {
   const scope = String(target.scope ?? "");
   const kind = String(target.kind ?? "");
   if (scope === "real" || kind === "real-device") {
-    return Boolean(target.ready) && hasDirectRealDeviceConnection(target);
+    return Boolean(target.ready) && (
+      hasDirectRealDeviceConnection(target) ||
+      isRealDeviceRuntimeVisible(target, platform, runtimeTargets)
+    );
   }
   return Boolean(target.ready) && (scope === "emulator" || scope === "simulator" || kind === "emulator" || kind === "simulator");
 }
@@ -93,6 +100,23 @@ function shouldExposeHostDeviceTarget(target) {
 function hasDirectRealDeviceConnection(target) {
   const transport = String(target.transport ?? "").toLowerCase();
   return transport === "wired" || transport === "usb";
+}
+
+function isRealDeviceRuntimeVisible(target, platform, runtimeTargets = []) {
+  if (platform !== "ios") return false;
+  const scope = String(target.scope ?? "");
+  const kind = String(target.kind ?? "");
+  if (scope !== "real" && kind !== "real-device") return false;
+  const transport = String(target.transport ?? "").toLowerCase();
+  if (transport !== "localnetwork" && transport !== "network") return false;
+  if (Boolean(target.ready)) return true;
+  return runtimeTargets.some((runtimeTarget) => {
+    const runtimePlatform = String(runtimeTarget.platform ?? "").toLowerCase();
+    const connected = runtimeTarget.connected !== false;
+    const simulatorUDID = normalizeOptionalString(runtimeTarget.simulatorUDID);
+    const activeHierarchy = runtimeTarget.activeHierarchyAvailable !== false || runtimeTarget.latestHierarchyAvailable !== false;
+    return runtimePlatform === "ios" && connected && !simulatorUDID && activeHierarchy;
+  });
 }
 
 export function createIosSimulatorBridgeMiddleware(options = {}) {
@@ -282,6 +306,7 @@ async function collectHostTargets(tritonPath) {
   for (const plan of hostTargetCapturePlans()) {
     captures.push(await runTritonCapture(tritonPath, plan.args, plan.platform));
   }
+  captures.push(await runTritonCapture(tritonPath, ["list", "--json"], "runtime"));
 
   return mapTritonHostCapturesToWebTargets(captures);
 }
@@ -298,11 +323,17 @@ function hostTargetCapturePlans() {
 }
 
 export function mapTritonHostCapturesToWebTargets(captures) {
-  const targets = captures.flatMap((capture) => mapHostCaptureToWebTargets(capture));
+  const runtimeTargets = captures.flatMap((capture) => {
+    if (capture?.platform !== "runtime" || !Array.isArray(capture.parsed?.targets)) return [];
+    return capture.parsed.targets;
+  });
+  const targets = captures.flatMap((capture) => mapHostCaptureToWebTargets(capture, runtimeTargets));
   const commandOutputs = captures.map(({ parsed, ...output }) => output);
 
+  const requiredHostOutputs = commandOutputs.filter((output) => output.platform !== "runtime");
+
   return {
-    ok: commandOutputs.every((output) => output.ok),
+    ok: requiredHostOutputs.every((output) => output.ok),
     capturedAt: new Date().toISOString(),
     source: {
       commands: commandOutputs.map((output) => output.command),
@@ -314,8 +345,9 @@ export function mapTritonHostCapturesToWebTargets(captures) {
   };
 }
 
-function mapHostCaptureToWebTargets(capture) {
+function mapHostCaptureToWebTargets(capture, runtimeTargets = []) {
   if (!capture?.parsed) return [];
+  if (capture.platform === "runtime") return [];
   if (Array.isArray(capture.parsed.simulators)) {
     return mapTritonSimListToWebTargets(capture.parsed).simulators.map((target) => ({
       id: target.id,
@@ -337,7 +369,7 @@ function mapHostCaptureToWebTargets(capture) {
     }));
   }
   if (Array.isArray(capture.parsed.targets)) {
-    return mapTritonDeviceListToWebTargets(capture.parsed, capture.platform);
+    return mapTritonDeviceListToWebTargetsWithRuntime(capture.parsed, capture.platform, runtimeTargets);
   }
   return [];
 }
@@ -408,6 +440,10 @@ async function resolveIOSRuntimeMirrorTarget(tritonPath, hostTarget, options = {
     if (realTargets.length > 1) {
       throw new Error(`Multiple connected iOS real-device App runtime targets are available: ${describeRuntimeTargets(realTargets)}.`);
     }
+    const activeRuntimeTarget = runtimeTargets.find((target) =>
+      target.activeHierarchyAvailable === true || target.latestHierarchyAvailable === true
+    );
+    if (activeRuntimeTarget) return String(activeRuntimeTarget.id);
     throw new Error(`No connected iOS real-device App runtime target matched host target ${hostTarget}.`);
   }
 

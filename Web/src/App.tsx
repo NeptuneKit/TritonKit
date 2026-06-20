@@ -11,6 +11,7 @@ import {
   Minus,
   Network,
   PanelLeft,
+  PanelRight,
   Plus,
   RefreshCw,
   Search,
@@ -171,6 +172,7 @@ type SingleGestureState = {
   pointerId: number;
   start: GesturePoint;
   startedAt: number;
+  longPressDispatched: boolean;
 };
 
 type PinchSnapshot = {
@@ -267,6 +269,7 @@ type HierarchyNodeHotEditDraft = {
 
 const previewFpsMin = 1;
 const previewFpsMax = 60;
+const liveHierarchyRefreshIntervalMs = 1000;
 const longPressThresholdMs = 520;
 const tapDistanceThreshold = 18;
 const emptyTargetId = "__no-host-target__";
@@ -305,9 +308,10 @@ const emptyTarget: DeviceTarget = {
 function viewTreeNodesForScene(scene: HierarchyScene): ViewTreeNode[] {
   const nodesByParent = new Map<string | undefined, HierarchyLayerNode[]>();
   for (const node of scene.nodes) {
-    const siblings = nodesByParent.get(node.parentId) ?? [];
+    const parentId = node.parentId ?? undefined;
+    const siblings = nodesByParent.get(parentId) ?? [];
     siblings.push(node);
-    nodesByParent.set(node.parentId, siblings);
+    nodesByParent.set(parentId, siblings);
   }
 
   const buildNode = (node: HierarchyLayerNode): ViewTreeNode => ({
@@ -441,7 +445,7 @@ function resolveControllerShellBadge(scene: HierarchyScene | undefined, selected
   const selectedOwner = selectedNodeId ? controllerAncestorForNode(scene, selectedNodeId) : null;
   if (selectedOwner) {
     return {
-      name: controllerNodeDisplayName(selectedOwner),
+      name: shortClassName(selectedOwner.type),
       className: selectedOwner.type,
       stack: controllerStackNames(scene.controllerContext?.stack, selectedOwner),
       source: scene.controllerContext?.source ?? "selected-node-owner",
@@ -452,7 +456,7 @@ function resolveControllerShellBadge(scene: HierarchyScene | undefined, selected
   const context = scene.controllerContext;
   if (context?.activeControllerName || context?.activeControllerClassName) {
     return {
-      name: context.activeControllerName ?? shortClassName(context.activeControllerClassName ?? "UIViewController"),
+      name: shortClassName(context.activeControllerClassName ?? context.activeControllerName ?? "UIViewController"),
       className: context.activeControllerClassName,
       stack: controllerStackNames(context.stack),
       source: context.source,
@@ -463,7 +467,7 @@ function resolveControllerShellBadge(scene: HierarchyScene | undefined, selected
   const fallback = fallbackControllerNodeForScene(scene);
   if (!fallback) return null;
   return {
-    name: controllerNodeDisplayName(fallback),
+    name: shortClassName(fallback.type),
     className: fallback.type,
     stack: [controllerNodeDisplayName(fallback)],
     source: "scene-controller-node-fallback",
@@ -504,7 +508,7 @@ function controllerNodeDisplayName(node: HierarchyLayerNode) {
 }
 
 function controllerStackNames(stack: HierarchyControllerEntry[] | undefined, selectedOwner?: HierarchyLayerNode) {
-  const names = (stack ?? []).map((entry) => entry.name || shortClassName(entry.className)).filter(Boolean);
+  const names = (stack ?? []).map((entry) => shortClassName(entry.className || entry.name)).filter(Boolean);
   if (selectedOwner) {
     const selectedName = controllerNodeDisplayName(selectedOwner);
     return names.includes(selectedName) ? names : [...names, selectedName];
@@ -513,7 +517,10 @@ function controllerStackNames(stack: HierarchyControllerEntry[] | undefined, sel
 }
 
 function shortClassName(className: string) {
-  return className.split(".").at(-1) ?? className;
+  const lastSegment = className.split(".").at(-1) ?? className;
+  const swiftPrivateName = lastSegment.match(/^_TtC\d+[A-Za-z_][A-Za-z0-9_]*P\d+_[A-Fa-f0-9]{32}\d+([A-Za-z_][A-Za-z0-9_]*)$/);
+  if (swiftPrivateName?.[1]) return swiftPrivateName[1];
+  return lastSegment;
 }
 
 function normalizePreviewFps(value: number) {
@@ -598,6 +605,7 @@ export function App() {
   const [activeDevtoolsPanel, setActiveDevtoolsPanel] = useState<DevtoolsPanel>("config");
   const [displayLanguage, setDisplayLanguage] = useState<DisplayLanguage>(() => readDisplayLanguagePreference());
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
+  const [isDevtoolsVisible, setIsDevtoolsVisible] = useState(true);
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(initialRoute.panel ?? (initialRoute.nodeId ? "view-tree" : "devices"));
   const [isToolbarTargetMenuOpen, setIsToolbarTargetMenuOpen] = useState(false);
   const [selectedHierarchyNode, setSelectedHierarchyNode] = useState<string | null>(initialRoute.nodeId ?? null);
@@ -670,6 +678,32 @@ export function App() {
     ].slice(0, 8),
     [bridgeOutputs, hostLogsById, interactionLogs, selected]
   );
+  const refreshHierarchy = useCallback(async (target: DeviceTarget, options: { showLoading?: boolean } = {}) => {
+    if (target.id === emptyTargetId || !(target.targetSelector ?? target.udid ?? target.id)) return;
+    if (options.showLoading ?? true) {
+      setHierarchyById((entries) => ({
+        ...entries,
+        [target.id]: { ...entries[target.id], loading: true },
+      }));
+    }
+    try {
+      const scene = await fetchHostHierarchy(target);
+      setHierarchyById((entries) => ({
+        ...entries,
+        [target.id]: { loading: false, scene },
+      }));
+    } catch (error) {
+      setHierarchyById((entries) => ({
+        ...entries,
+        [target.id]: {
+          loading: false,
+          error: error instanceof Error ? error.message : String(error),
+        },
+      }));
+      throw error;
+    }
+  }, []);
+
   useEffect(() => {
     const handlePopState = () => {
       const route = readDeviceHubRoute();
@@ -713,35 +747,43 @@ export function App() {
     if (selected.id === emptyTargetId || !(selected.targetSelector ?? selected.udid ?? selected.id)) return;
     if (hierarchyById[selected.id]) return;
 
+    void refreshHierarchy(selected).catch(() => {
+      // Error state is stored in hierarchy cache for the panel to render.
+    });
+  }, [hierarchyById, hierarchyReloadKey, refreshHierarchy, selected, sidebarPanel]);
+
+  useEffect(() => {
+    if (sidebarPanel !== "view-tree") return;
+    if (!selected.realSource || selected.id === emptyTargetId || !(selected.targetSelector ?? selected.udid ?? selected.id)) return;
+    if (isSelectedSnapshotMode) return;
+
     let cancelled = false;
-    setHierarchyById((entries) => ({
-      ...entries,
-      [selected.id]: { loading: true },
-    }));
+    let timer: number | undefined;
+    let inFlight = false;
 
-    fetchHostHierarchy(selected)
-      .then((scene) => {
-        if (cancelled) return;
-        setHierarchyById((entries) => ({
-          ...entries,
-          [selected.id]: { loading: false, scene },
-        }));
-      })
-      .catch((error: unknown) => {
-        if (cancelled) return;
-        setHierarchyById((entries) => ({
-          ...entries,
-          [selected.id]: {
-            loading: false,
-            error: error instanceof Error ? error.message : String(error),
-          },
-        }));
-      });
+    const tick = async () => {
+      if (cancelled || inFlight) return;
+      inFlight = true;
+      try {
+        await refreshHierarchy(selected, { showLoading: false });
+      } catch {
+        // Error state is stored in hierarchy cache; keep the live loop alive for recovery.
+      } finally {
+        inFlight = false;
+        if (!cancelled) {
+          timer = window.setTimeout(tick, liveHierarchyRefreshIntervalMs);
+        }
+      }
+    };
 
+    timer = window.setTimeout(tick, liveHierarchyRefreshIntervalMs);
     return () => {
       cancelled = true;
+      if (timer) {
+        window.clearTimeout(timer);
+      }
     };
-  }, [hierarchyReloadKey, selected, sidebarPanel]);
+  }, [isSelectedSnapshotMode, refreshHierarchy, selected, sidebarPanel]);
 
   const loadHostTargets = async (preferredSelectedId: string) => {
     const result = await fetchHostTargets();
@@ -870,6 +912,9 @@ export function App() {
     if (!selected.realSource || !selected.canScreenshot || !(selected.targetSelector ?? selected.udid)) {
       return;
     }
+    if (sidebarPanel === "view-tree" && selected.realSource === "ios-real-device") {
+      return;
+    }
     if (isSelectedSnapshotMode) {
       return;
     }
@@ -907,6 +952,7 @@ export function App() {
     selectedHasScreenshot,
     selectedPreviewFps,
     isSelectedSnapshotMode,
+    sidebarPanel,
   ]);
 
   const handleRefreshAll = async () => {
@@ -1203,9 +1249,11 @@ export function App() {
           targets={pageTargets}
           bridgeSubtitle={bridgePresentation.toolbarLabel}
           isSidebarVisible={isSidebarVisible}
+          isDevtoolsVisible={isDevtoolsVisible}
           isRefreshing={isRefreshingAll}
           isTargetMenuOpen={isToolbarTargetMenuOpen}
           onToggleSidebar={() => setIsSidebarVisible((current) => !current)}
+          onToggleDevtools={() => setIsDevtoolsVisible((current) => !current)}
           onRefresh={handleRefreshAll}
           onToggleTargetMenu={() => setIsToolbarTargetMenuOpen((current) => !current)}
           onCloseTargetMenu={() => setIsToolbarTargetMenuOpen(false)}
@@ -1214,7 +1262,13 @@ export function App() {
             setIsToolbarTargetMenuOpen(false);
           }}
         />
-        <section className={`hub-body ${isSidebarVisible ? "" : "is-sidebar-hidden"}`}>
+        <section
+          className={[
+            "hub-body",
+            isSidebarVisible ? "" : "is-sidebar-hidden",
+            isDevtoolsVisible ? "" : "is-devtools-hidden",
+          ].filter(Boolean).join(" ")}
+        >
           {bridgePresentation.notice ? <HostBridgeNotice notice={bridgePresentation.notice} /> : null}
           {isSidebarVisible ? (
             <TargetNavigator
@@ -1248,43 +1302,45 @@ export function App() {
             onSelectHierarchyNode={setSelectedHierarchyNode}
             onInput={handleInput}
           />
-          <aside className="hub-devtools" aria-label="右侧开发者工具">
-            <DevtoolsTabs
-              activePanel={activeDevtoolsPanel}
-              language={displayLanguage}
-              onSelectPanel={setActiveDevtoolsPanel}
-            />
-            <div className="devtools-panel-stack">
-              <Inspector
-                hidden={activeDevtoolsPanel !== "config"}
-                target={selectedWithScreenshot}
-                events={selectedEvents}
-                bridge={bridge}
-                selectedNode={selectedHierarchyNodeData}
-                selectedNodeDraft={selectedHierarchyNodeDraft}
-                onSelectedNodeDraftChange={updateSelectedHierarchyNodeDraft}
-                onSelectedNodeDraftReset={resetSelectedHierarchyNodeDraft}
-              />
-              <NetworkStrip
-                id="network-evidence-panel"
-                hidden={activeDevtoolsPanel !== "network"}
+          {isDevtoolsVisible ? (
+            <aside className="hub-devtools" aria-label="右侧开发者工具">
+              <DevtoolsTabs
+                activePanel={activeDevtoolsPanel}
                 language={displayLanguage}
-                events={selectedEvents}
+                onSelectPanel={setActiveDevtoolsPanel}
               />
-              <LogStrip
-                id="logs-evidence-panel"
-                hidden={activeDevtoolsPanel !== "logs"}
-                language={displayLanguage}
-                entries={selectedLogs}
-              />
-              <SettingsPanel
-                id="settings-panel"
-                hidden={activeDevtoolsPanel !== "settings"}
-                language={displayLanguage}
-                onLanguageChange={setDisplayLanguage}
-              />
-            </div>
-          </aside>
+              <div className="devtools-panel-stack">
+                <Inspector
+                  hidden={activeDevtoolsPanel !== "config"}
+                  target={selectedWithScreenshot}
+                  events={selectedEvents}
+                  bridge={bridge}
+                  selectedNode={selectedHierarchyNodeData}
+                  selectedNodeDraft={selectedHierarchyNodeDraft}
+                  onSelectedNodeDraftChange={updateSelectedHierarchyNodeDraft}
+                  onSelectedNodeDraftReset={resetSelectedHierarchyNodeDraft}
+                />
+                <NetworkStrip
+                  id="network-evidence-panel"
+                  hidden={activeDevtoolsPanel !== "network"}
+                  language={displayLanguage}
+                  events={selectedEvents}
+                />
+                <LogStrip
+                  id="logs-evidence-panel"
+                  hidden={activeDevtoolsPanel !== "logs"}
+                  language={displayLanguage}
+                  entries={selectedLogs}
+                />
+                <SettingsPanel
+                  id="settings-panel"
+                  hidden={activeDevtoolsPanel !== "settings"}
+                  language={displayLanguage}
+                  onLanguageChange={setDisplayLanguage}
+                />
+              </div>
+            </aside>
+          ) : null}
         </section>
       </section>
     </main>
@@ -1545,9 +1601,11 @@ function DeviceHubToolbar({
   targets,
   bridgeSubtitle,
   isSidebarVisible,
+  isDevtoolsVisible,
   isRefreshing,
   isTargetMenuOpen,
   onToggleSidebar,
+  onToggleDevtools,
   onRefresh,
   onToggleTargetMenu,
   onCloseTargetMenu,
@@ -1557,9 +1615,11 @@ function DeviceHubToolbar({
   targets: DeviceTarget[];
   bridgeSubtitle: string;
   isSidebarVisible: boolean;
+  isDevtoolsVisible: boolean;
   isRefreshing: boolean;
   isTargetMenuOpen: boolean;
   onToggleSidebar: () => void;
+  onToggleDevtools: () => void;
   onRefresh: () => void;
   onToggleTargetMenu: () => void;
   onCloseTargetMenu: () => void;
@@ -1637,6 +1697,12 @@ function DeviceHubToolbar({
       </div>
 
       <div className="toolbar-cluster inspector-tools" aria-label="检查器工具">
+        <IconTool
+          label={isDevtoolsVisible ? "收起右侧面板" : "展开右侧面板"}
+          icon={PanelRight}
+          className={isDevtoolsVisible ? "is-active" : ""}
+          onClick={onToggleDevtools}
+        />
         <IconTool
           label={isRefreshing ? "正在刷新全局数据" : "刷新全局数据"}
           icon={RefreshCw}
@@ -1857,6 +1923,7 @@ function ViewTreeRow({
         style={{ "--tree-depth": depth } as CSSProperties}
         type="button"
         role="treeitem"
+        aria-level={depth + 1}
         aria-selected={selectedNode === node.id}
         aria-expanded={hasChildren ? true : undefined}
         data-node-id={node.id}
@@ -1868,9 +1935,13 @@ function ViewTreeRow({
           {displayName ? <span>{displayName}</span> : null}
         </span>
       </button>
-      {node.children?.map((child) => (
-        <ViewTreeRow key={child.id} node={child} depth={depth + 1} selectedNode={selectedNode} onSelect={onSelect} />
-      ))}
+      {node.children?.length ? (
+        <div className="view-tree-group" role="group">
+          {node.children.map((child) => (
+            <ViewTreeRow key={child.id} node={child} depth={depth + 1} selectedNode={selectedNode} onSelect={onSelect} />
+          ))}
+        </div>
+      ) : null}
     </>
   );
 }
@@ -2052,6 +2123,37 @@ function DeviceCanvas({
     });
   };
 
+  const handlePinchCommand = (scale: number) => {
+    if (!canSendInput || !target.targetSelector || !target.screenshotPixelWidth || !target.screenshotPixelHeight) return;
+    const minDimension = Math.min(target.screenshotPixelWidth, target.screenshotPixelHeight);
+    const startDistance = Math.max(48, Math.min(150, minDimension * 0.22));
+    const endDistance = startDistance * scale;
+    const centerX = target.screenshotPixelWidth / 2;
+    const centerY = target.screenshotPixelHeight / 2;
+    setGesturePreview({
+      kind: "pinch",
+      centerXPercent: 50,
+      centerYPercent: 50,
+      startDistance,
+      endDistance,
+      scale,
+    });
+    clearGesturePreviewSoon();
+    onInput({
+      action: "pinch",
+      platform: target.platform,
+      target: target.targetSelector,
+      centerX: roundedGestureValue(centerX),
+      centerY: roundedGestureValue(centerY),
+      startDistance: roundedGestureValue(startDistance),
+      endDistance: roundedGestureValue(endDistance),
+      scale,
+      width: target.screenshotPixelWidth,
+      height: target.screenshotPixelHeight,
+      duration: 0.25,
+    });
+  };
+
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
     if (isSnapshotMode) {
       screenRef.current?.focus({ preventScroll: true });
@@ -2077,6 +2179,7 @@ function DeviceCanvas({
           pointerId: event.pointerId,
           start,
           startedAt: Date.now(),
+          longPressDispatched: false,
         };
         pinchGesture.current = null;
         setGesturePreview({
@@ -2088,13 +2191,28 @@ function DeviceCanvas({
         longPressPreviewTimer.current = window.setTimeout(() => {
           const single = singleGesture.current;
           const current = activeGesturePointers.current.get(event.pointerId);
-          if (!single || !current) return;
+          if (!single || !current || single.longPressDispatched || !target.targetSelector) return;
           const distance = Math.hypot(current.x - single.start.x, current.y - single.start.y);
           if (distance >= tapDistanceThreshold) return;
+          single.longPressDispatched = true;
+          longPressPreviewTimer.current = undefined;
+          setKeyboardRelay(null);
+          setKeyboardRelayText("");
+          keyboardRelayValue.current = "";
           setGesturePreview({
             kind: "longPress",
             xPercent: single.start.xPercent,
             yPercent: single.start.yPercent,
+          });
+          void onInput({
+            action: "longPress",
+            platform: target.platform,
+            target: target.targetSelector,
+            x: roundedGestureValue(single.start.x),
+            y: roundedGestureValue(single.start.y),
+            width: target.screenshotPixelWidth ?? undefined,
+            height: target.screenshotPixelHeight ?? undefined,
+            duration: roundedGestureValue(longPressThresholdMs / 1000),
           });
         }, longPressThresholdMs);
       } else {
@@ -2140,7 +2258,7 @@ function DeviceCanvas({
       return;
     }
     const start = singleGesture.current?.start;
-    if (!start) return;
+    if (!start || singleGesture.current?.longPressDispatched) return;
     const distance = Math.hypot(current.x - start.x, current.y - start.y);
     if (distance < 10) {
       if (Date.now() - (singleGesture.current?.startedAt ?? 0) < longPressThresholdMs) {
@@ -2216,10 +2334,15 @@ function DeviceCanvas({
 
     const start = singleGesture.current?.start;
     const startedAt = singleGesture.current?.startedAt ?? Date.now();
+    const longPressDispatched = singleGesture.current?.longPressDispatched ?? false;
     activeGesturePointers.current.delete(event.pointerId);
     singleGesture.current = null;
     clearLongPressPreviewTimer();
     if (!start || !end) return;
+    if (longPressDispatched) {
+      clearGesturePreviewSoon();
+      return;
+    }
     const distance = Math.hypot(end.x - start.x, end.y - start.y);
     if (distance < tapDistanceThreshold) {
       setKeyboardRelay(null);
@@ -2441,6 +2564,26 @@ function DeviceCanvas({
               <em>{target.fps} fps</em>
             </button>
           ) : null}
+          {!isSnapshotMode && target.realSource && target.canInput ? (
+            <div className="pinch-command-group" aria-label="捏合手势">
+              <button
+                type="button"
+                aria-label="发送缩小捏合"
+                disabled={!canSendInput}
+                onClick={() => handlePinchCommand(0.5)}
+              >
+                <Minus size={13} />
+              </button>
+              <button
+                type="button"
+                aria-label="发送放大捏合"
+                disabled={!canSendInput}
+                onClick={() => handlePinchCommand(2)}
+              >
+                <Plus size={13} />
+              </button>
+            </div>
+          ) : null}
           {!isSnapshotMode && isPreviewFpsOpen ? (
             <>
             <label className="preview-fps-control">
@@ -2479,20 +2622,18 @@ function DeviceCanvas({
       ) : null}
 
       <div className="device-stage" aria-label="设备镜像区域">
+        {hierarchyScene?.platform === "ios" ? (
+          <div
+            className={`controller-shell-badge ${controllerBadge?.isFallback ? "is-fallback" : ""}`}
+            title={controllerBadge?.stack.length ? controllerBadge.stack.join(" > ") : controllerBadge?.className ?? "UIViewController 未暴露"}
+          >
+            <strong>{controllerBadge?.name ?? "未暴露"}</strong>
+          </div>
+        ) : null}
         <div
           className={`device-frame orientation-${orientation} ${aspectRatio ? "has-real-frame" : ""}`}
           style={frameStyle}
         >
-          {hierarchyScene?.platform === "ios" ? (
-            <div
-              className={`controller-shell-badge ${controllerBadge?.isFallback ? "is-fallback" : ""}`}
-              title={controllerBadge?.stack.length ? controllerBadge.stack.join(" > ") : controllerBadge?.className ?? "UIViewController 未暴露"}
-            >
-              <span>UIViewController</span>
-              <strong>{controllerBadge?.name ?? "未暴露"}</strong>
-              {controllerBadge?.isFallback ? <em>fallback</em> : null}
-            </div>
-          ) : null}
           <div className="device-side left" />
           <div className="device-side top" />
           <div className="device-side bottom" />

@@ -258,6 +258,25 @@ Lookin 的关键价值不是单张截图，而是把 view hierarchy、节点几�
 - WebGL viewer 已独立加载 \`node.slice.dataUrl\`，即使没有整屏 screenshot，也能把真实节点截图贴到对应 3D plane；整屏 screenshot 裁剪只作为次级 fallback，最后才退到样式化 texture / 淡描边。
 - 仍未声明 100% Lookin 客户端完整复刻：当前 exact slice 覆盖节点外观纹理，但属性面板、transform、mask、shadow、font、border、完整 CALayer 属性编辑等还未产品化；本轮目标中的“不是线稿图、真实节点切片还原”已经进入 CLI/HTTP/Web 同一契约链路。
 
+## 2026-06-20 iOS runtime input 联调收尾
+
+- 本轮与 Overloaded iOS Debug App 本地联调，确认 Web Device Hub 的实时截图、view-tree、节点高亮、controller 标签、TabBar 命中和 runtime input 都必须以 runtime / CLI / HTTP 事实为准，Web 只负责只读展示和 DTO-shaped input payload。
+- 修复 Simulator runtime target 映射：Web dev bridge 和打包 Web bridge 在 `source=runtime` 时会通过 `triton list --json` 把 `sim:<UDID>` 映射到 `triton:ios-simulator:<UDID>`，避免多个 runtime target 连接时出现 ambiguous target。
+- 修复 iOS Simulator `longPress` / `pinch` 路由：Web 发送这两类 host-side 不完整手势时强制使用 `source=runtime`，不再落到 host adapter 后返回 `iOS Simulator host-side longPress is not exposed`。
+- 修复长按触发时机：Web canvas 在 hold 阈值到达时立即发送 `longPress`，并用 `longPressDispatched` 防止松手阶段重复触发或退化成 tap。
+- embedded runtime 增加公开 UIKit 边界内的 `longPress` / `pinch` 语义：
+  - `longPress` 命中 `UIControl` 时发送 `.touchDown`、等待 `duration`、再发送 `.touchUpInside`；命中只有 `UILongPressGestureRecognizer` 的视图时返回公开 API 边界错误，不做私有 target-action 反射。
+  - `pinch` 命中可缩放 `UIScrollView` 时调整 `zoomScale`；命中非 zoomable 视图时返回 `zoomable-scroll-view-required`。
+- 现场验证：
+  - `npm run build` 通过。
+  - `swift build` 通过。
+  - `swift build --package-path CLI --scratch-path .build/cli -c debug --product triton` 通过。
+  - `git diff --check` 通过。
+  - Web DOM 长按/捏合测试与 dev bridge runtime longPress 测试通过。
+  - Overloaded 已通过 `triton xcode run` 重新 build/install/launch 到 simulator `1B360513-22E7-46DB-A942-198EE522C6DC`，进程 `29174`。
+  - 实测 `/web/host-input?...source=runtime` 长按 `_UITabButton` 返回 `ok=true`、`strategy=control-long-press-touch-events`。
+- 已知未通过项：`swift test --filter TKRuntimeInputActionsTests` 仍会编译整个 root test target，并被既有 `Tests/TritonKitTests/TKDisplayItemTests.swift` / `TKXcodeWorkflowModelsTests.swift` 编译错误阻塞；这不是本轮 runtime input 改动引入的问题。
+
 验证：
 
 - \`npm --prefix Web test\`：40/40 通过，新增覆盖 platform scene \`dataRef\` 水合与 legacy \`screenshotRef\` 水合。
@@ -694,3 +713,41 @@ Lookin 的关键价值不是单张截图，而是把 view hierarchy、节点几�
 - `npm --prefix Web run build`：通过。
 - in-app browser 复验当前 simulator URL：壳上显示 `UIViewController · PhotosViewController`，由于当前模拟器 App 仍是旧 embedded runtime，badge 来源为 `fallback`；view-tree 中可见 `MainTabBarController#12`、`AppNavigationController#585`、`PhotosViewController#592` 等 controller 节点，横向溢出为 `0`。
 - `swift test --filter TKHierarchySceneModelsTests` 被既有 `Tests/TritonKitSharedTests/TKXcodeWorkflowModelsTests.swift` 编译错误阻塞，错误仍是缺少 `TKXcodeDerivedDataCacheState` 与 Xcode progress / summary 初始化参数不匹配。
+
+## 2026-06-20 右侧 DevTools 面板支持收起
+
+- 用户要求右侧面板也支持收起。
+- 需求边界：
+  - 右侧 `配置 / 网络 / 日志 / 设置` DevTools 面板支持一键收起和展开。
+  - 收起是纯 Web UI 布局状态，不停止 hierarchy、screenshot、network、logs 等已有采集，也不改变 CLI / HTTP 契约。
+  - 收起后中央设备画布占用释放出来的空间；再次展开时恢复上一次选中的右侧 tab。
+- 验收场景：
+  - Given 右侧 DevTools 面板可见，When 点击顶部工具栏的收起右侧面板按钮，Then `.hub-devtools` 不再渲染，`.hub-body` 标记为右侧隐藏，设备画布横向扩展。
+  - Given 右侧 DevTools 面板已收起，When 点击展开右侧面板按钮，Then `配置 / 网络 / 日志 / 设置` tabs 恢复显示，之前选中的 tab 状态保留。
+  - Given 右侧面板收起或展开，Then 左侧面板收起逻辑、URL 选中节点和设备输入 / 快照语义不变。
+
+## 2026-06-20 模拟器壳 controller 类名不截断
+
+- 用户指出模拟器壳上的 `UIViewController` 名称被截断。
+- 需求边界：
+  - 只调整 Web 设备壳的 controller badge 展示布局，不改变 `HierarchyScene.controllerContext`、view-tree 节点或 CLI / HTTP 契约。
+  - controller 类名必须优先完整可读；空间不足时允许换行，不使用省略号隐藏类名。
+  - 标注位于模拟器壳上方，显示内容只保留可读的自定义 controller 类名，支持直接文本选择 / 复制；不显示 `UIViewController` 标签、fallback 文案、Swift mangled 前缀或节点 oid。
+  - `title` 继续保留 controller stack，便于查看完整父链。
+- 验收场景：
+  - Given 当前 controller 为 `RemoteImageBrowserViewController`，When Web 显示模拟器壳，Then badge 直接显示完整类名，不出现 CSS ellipsis 截断。
+  - Given 类名长度超过当前设备壳宽度，Then badge 在壳上方换行并保持横向溢出为 0。
+  - Given 用户需要复制 controller 类名，When 在 badge 文本上拖选，Then 浏览器允许选择类名文本。
+  - Given Swift 私有 controller 类名为 mangled runtime class，Then 壳上只显示可读后缀类名。
+
+## 2026-06-20 实时模式刷新 controller 标签
+
+- 用户指出 App 页面已经切换，但模拟器壳上方 controller 标签仍停留在旧类名。
+- 根因：Web 只在首次打开 `view-tree` 时读取 `/web/host-hierarchy`，实时预览只刷新 screenshot，不刷新 hierarchy；controller 标签依赖 `HierarchyScene.controllerContext`，因此会读到旧缓存。
+- 需求边界：
+  - 非快照实时模式下，`view-tree` 面板需要低频刷新 hierarchy，使 controller 标签和视图树跟随 App 页面变化。
+  - 快照模式保持手动刷新语义：不实时刷新 hierarchy，不实时刷新 screenshot。
+  - 刷新仍通过只读 `/web/host-hierarchy` DTO，不从截图像素猜 controller。
+- 验收场景：
+  - Given 当前处于实时模式且打开 `view-tree`，When App 页面从 `FirstViewController` 切到 `SecondViewController`，Then 壳上方 controller 标签自动更新为 `SecondViewController`。
+  - Given 当前处于快照模式，When App 页面变化，Then 不自动刷新 hierarchy，直到用户点击手动刷新。

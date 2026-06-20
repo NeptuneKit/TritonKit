@@ -90,7 +90,8 @@ export async function sendHostInput(target: DeviceTarget, input: Record<string, 
   });
   if (target.scope) params.set("scope", target.scope);
   if (target.kind) params.set("kind", target.kind);
-  if (target.screenshotSource) params.set("source", target.screenshotSource);
+  const source = hostInputSourceForTarget(target, input);
+  if (source) params.set("source", source);
   const response = await fetch(`/web/host-input?${params.toString()}`, {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -100,6 +101,16 @@ export async function sendHostInput(target: DeviceTarget, input: Record<string, 
     throw new Error(await describeBridgeError(response, "Host input request failed"));
   }
   return (await response.json()) as HostInputResponse;
+}
+
+const iosRuntimePreferredInputTypes = new Set(["longPress", "pinch"]);
+
+function hostInputSourceForTarget(target: DeviceTarget, input: Record<string, unknown>) {
+  const type = typeof input.type === "string" ? input.type : "";
+  if (target.platform === "ios" && target.scope === "simulator" && iosRuntimePreferredInputTypes.has(type)) {
+    return "runtime";
+  }
+  return target.screenshotSource;
 }
 
 export async function fetchHostLogs(target: DeviceTarget): Promise<HostTargetLogsResponse> {
@@ -285,7 +296,7 @@ function fallbackHostAppName(target: HostWebTarget, isRealDevice: boolean) {
   if (target.platform === "ios" && isRealDevice) {
     return "App runtime 镜像";
   }
-  return `前台 App 未暴露 · ${target.name}`;
+  return target.name;
 }
 
 function shouldExposeHostWebTarget(target: HostWebTarget) {
@@ -297,7 +308,8 @@ function shouldExposeHostWebTarget(target: HostWebTarget) {
 
 function hasDirectRealDeviceConnection(target: HostWebTarget) {
   const transport = target.transport?.toLowerCase();
-  return transport === "wired" || transport === "usb";
+  const source = target.source?.toLowerCase();
+  return transport === "wired" || transport === "usb" || (source === "runtime" && transport === "localnetwork");
 }
 
 function hostTargetStatus(target: HostWebTarget) {

@@ -101,6 +101,9 @@ test("keeps view-tree labels readable for deep and long runtime node names", () 
   const viewTreeRowRule = css.match(/\.view-tree-row \{[^}]+\}/)?.[0] ?? "";
   const typeRule = css.match(/\.view-tree-row strong \{[^}]+\}/)?.[0] ?? "";
   const labelRule = css.match(/\.view-tree-row span \{[^}]+\}/)?.[0] ?? "";
+  const deviceStageRule = css.match(/\.device-stage \{[^}]+\}/)?.[0] ?? "";
+  const controllerBadgeRule = css.match(/\.controller-shell-badge \{[^}]+\}/)?.[0] ?? "";
+  const controllerBadgeNameRule = css.match(/\.controller-shell-badge strong \{[^}]+\}/)?.[0] ?? "";
 
   assert.match(viewTreeRowRule, /grid-template-columns:\s*18px minmax\(0, 1fr\)/);
   assert.match(viewTreeRowRule, /clamp\(0px, var\(--tree-depth\) \* 14px, 112px\)/);
@@ -110,6 +113,14 @@ test("keeps view-tree labels readable for deep and long runtime node names", () 
   assert.match(labelRule, /white-space:\s*normal/);
   assert.doesNotMatch(typeRule, /text-overflow:\s*ellipsis/);
   assert.doesNotMatch(labelRule, /text-overflow:\s*ellipsis/);
+  assert.match(deviceStageRule, /position:\s*relative/);
+  assert.match(deviceStageRule, /grid-template-rows:\s*auto minmax\(0, 1fr\)/);
+  assert.match(deviceStageRule, /row-gap:\s*8px/);
+  assert.match(controllerBadgeRule, /pointer-events:\s*auto/);
+  assert.match(controllerBadgeRule, /user-select:\s*text/);
+  assert.match(controllerBadgeNameRule, /overflow-wrap:\s*anywhere/);
+  assert.match(controllerBadgeNameRule, /white-space:\s*normal/);
+  assert.doesNotMatch(controllerBadgeNameRule, /text-overflow:\s*ellipsis/);
 });
 
 test("does not claim Lookin parity when only subtree snapshot evidence exists", () => {
@@ -483,6 +494,168 @@ test("does not render static mock hierarchy when host hierarchy is unavailable",
     assert.equal(document.querySelectorAll(".view-tree-row").length, 0);
     assert.equal(document.querySelector(".view-node-highlight"), null);
     assert.doesNotMatch(bodyText(), /serverTab|photosTab|musicTab|settingsTab|QA mock fallback/);
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("keeps runtime hierarchy nested when root parentId is null", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?target=host%3Aios%3ASIM1&panel=view-tree",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const runtimeScene = {
+    platform: "ios",
+    rootId: "root",
+    viewport: { width: 390, height: 844 },
+    nodes: [
+      {
+        id: "root",
+        parentId: null,
+        type: "UIWindow",
+        name: "keyWindow",
+        frame: { x: 0, y: 0, width: 390, height: 844 },
+        depth: 0,
+        visible: true,
+        interactive: false,
+        color: "#ffffff",
+      },
+      {
+        id: "child",
+        parentId: "root",
+        type: "UIViewControllerWrapperView",
+        name: "wrapper",
+        frame: { x: 0, y: 0, width: 390, height: 760 },
+        depth: 1,
+        visible: true,
+        interactive: false,
+        color: "#7dd3fc",
+      },
+      {
+        id: "button",
+        parentId: "child",
+        type: "UIButton",
+        name: "primaryAction",
+        frame: { x: 24, y: 120, width: 180, height: 44 },
+        depth: 3,
+        visible: true,
+        interactive: true,
+        color: "#fb7185",
+      },
+    ],
+  };
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-20T02:00:00.000Z",
+            source: {
+              commands: ["triton sim list --json", "triton list --json"],
+              runtimeScope: "host",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "host:ios:SIM1",
+                target: "SIM1",
+                name: "iPhone 15",
+                platform: "ios",
+                appName: null,
+                bundleIdentifier: "overloaded.cn.debug",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Ready",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                transport: "simctl",
+                source: "simctl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: false,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-hierarchy") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-20T02:00:00.000Z",
+            source: {
+              command: "triton hierarchy --platform ios --target SIM1 --json",
+              runtimeScope: "runtime-tree",
+              readonly: true,
+            },
+            scene: runtimeScene,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "SIM1",
+            source: {
+              command: "triton screenshot --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            artifact: "/tmp/sim.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,AAA=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      return new Response(JSON.stringify({ ok: true, entries: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      });
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => selectedViewTreeNodeId() === "button");
+    const rows = Array.from(document.querySelectorAll(".view-tree-row"));
+    assert.deepEqual(rows.map((row) => row.getAttribute("data-node-id")), ["root", "child", "button"]);
+    assert.deepEqual(rows.map((row) => row.style.getPropertyValue("--tree-depth")), ["0", "1", "2"]);
+    assert.deepEqual(rows.map((row) => row.getAttribute("aria-level")), ["1", "2", "3"]);
+    assert.equal(currentAppName(), "iPhone 15");
+    assert.doesNotMatch(currentAppName(), /前台 App 未暴露/);
   } finally {
     await act(async () => {
       root.unmount();
@@ -896,6 +1069,135 @@ test("renders only ready wired real device targets and requests App runtime scre
   }
 });
 
+test("pauses iOS real-device live screenshot polling while view tree is active", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?target=ios-real%3A7a9d976cc4d4&panel=view-tree",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      const method = init?.method ?? resolveRequestMethod(input);
+      fetchCalls.push({ pathname: url.pathname, method });
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-20T01:00:00.000Z",
+            source: {
+              commands: [
+                "triton device list --platform ios --scope real --json",
+                "triton list --json",
+              ],
+              runtimeScope: "host-device",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "ios-real:7a9d976cc4d4",
+                target: "ios-real:7a9d976cc4d4",
+                name: "iPhone",
+                platform: "ios",
+                appName: "Overloaded",
+                bundleIdentifier: "overloaded.cn.debug",
+                runtime: "iOS 26.5",
+                state: "connected",
+                statusLabel: "Ready",
+                ready: true,
+                scope: "real",
+                kind: "real-device",
+                transport: "wired",
+                source: "devicectl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: false,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        assert.equal(url.searchParams.get("source"), "runtime");
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "ios-real:7a9d976cc4d4",
+            source: {
+              command: "triton screenshot --target triton:connection:14 --json",
+              runtimeScope: "app-runtime",
+              readonly: true,
+            },
+            artifact: "memory://runtime.png",
+            pixelWidth: 402,
+            pixelHeight: 874,
+            dataUrl: "data:image/png;base64,iVBORw0KGgo=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-hierarchy") {
+        assert.equal(url.searchParams.get("source"), "runtime");
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-20T01:00:00.000Z",
+            source: {
+              command: "triton hierarchy --platform ios --target triton:connection:14 --json",
+              runtimeScope: "runtime-tree",
+              readonly: true,
+            },
+            scene: hierarchyScenes.ios,
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error("Unexpected fetch route: " + url.pathname);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => fetchCalls.some((call) => call.pathname === "/web/host-screenshot"));
+    await waitFor(() => fetchCalls.some((call) => call.pathname === "/web/host-hierarchy"));
+    const screenshotCalls = fetchCalls.filter((call) => call.pathname === "/web/host-screenshot").length;
+
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 1250));
+    });
+
+    assert.equal(fetchCalls.filter((call) => call.pathname === "/web/host-screenshot").length, screenshotCalls);
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
 test("shows explicit runtime server guidance when iOS real-device live screenshot is unavailable", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
@@ -1165,6 +1467,7 @@ test("dispatches canvas long press and pinch gestures through the host input bri
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
   const hostInputPayloads = [];
+  const hostInputSources = [];
 
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
@@ -1228,6 +1531,7 @@ test("dispatches canvas long press and pinch gestures through the host input bri
       if (url.pathname === "/web/host-input") {
         const requestBody = JSON.parse(init?.body?.toString() ?? "{}");
         hostInputPayloads.push(requestBody);
+        hostInputSources.push(url.searchParams.get("source"));
         return new Response(
           JSON.stringify({
             ok: requestBody.type === "longPress",
@@ -1279,12 +1583,14 @@ test("dispatches canvas long press and pinch gestures through the host input bri
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 570));
     });
+    await waitFor(() => hostInputPayloads.length === 1);
     await act(async () => {
       screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 1, clientX: 190, clientY: 420, bubbles: true }));
     });
 
-    await waitFor(() => hostInputPayloads.length === 1);
+    assert.equal(hostInputPayloads.length, 1);
     assert.equal(hostInputPayloads[0].type, "longPress");
+    assert.equal(hostInputSources[0], "runtime");
     assert.equal(hostInputPayloads[0].x, 190);
     assert.equal(hostInputPayloads[0].y, 420);
     assert.equal(hostInputPayloads[0].width, 390);
@@ -1300,12 +1606,33 @@ test("dispatches canvas long press and pinch gestures through the host input bri
     });
 
     await waitFor(() => hostInputPayloads.length === 2);
+    assert.equal(hostInputSources[1], "runtime");
     assert.deepEqual(hostInputPayloads[1], {
       type: "pinch",
       centerX: 190,
       centerY: 420,
       startDistance: 60,
       endDistance: 120,
+      scale: 2,
+      width: 390,
+      height: 844,
+      duration: 0.25,
+    });
+
+    const zoomInButton = document.querySelector('[aria-label="发送放大捏合"]');
+    assert.ok(zoomInButton, "Expected explicit pinch zoom-in control");
+    await act(async () => {
+      zoomInButton.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
+    });
+
+    await waitFor(() => hostInputPayloads.length === 3);
+    assert.equal(hostInputSources[2], "runtime");
+    assert.deepEqual(hostInputPayloads[2], {
+      type: "pinch",
+      centerX: 195,
+      centerY: 422,
+      startDistance: 85.8,
+      endDistance: 171.6,
       scale: 2,
       width: 390,
       height: 844,
@@ -1892,10 +2219,37 @@ test("highlights selected view-tree node area on the device canvas", async () =>
 
 test("shows selected view-tree node details in config tab and previews hot edits locally", async () => {
   const window = new Window({
-    url: "http://127.0.0.1:34127/?target=host%3Aios%3ASIM1&panel=view-tree&node=back",
+    url: "http://127.0.0.1:34127/?target=host%3Aios%3ASIM1&panel=view-tree",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
+  const mangledControllerClass =
+    "_TtC10OverloadedP33_2366C6587D0D3ED5C44035A7EBDE340F31LocalPhotoPreviewViewController";
+  const readableControllerClass = "LocalPhotoPreviewViewController";
+  const hierarchySceneWithSwiftPrivateController = {
+    ...hierarchyScenes.ios,
+    controllerContext: {
+      ...hierarchyScenes.ios.controllerContext,
+      activeControllerId: "ios:controller:88",
+      activeControllerName: readableControllerClass,
+      activeControllerClassName: mangledControllerClass,
+      stack: [
+        hierarchyScenes.ios.controllerContext.stack[0],
+        {
+          id: "ios:controller:88",
+          oid: 88,
+          className: mangledControllerClass,
+          name: readableControllerClass,
+          title: "Search",
+        },
+      ],
+    },
+    nodes: hierarchyScenes.ios.nodes.map((node) =>
+      node.id === "ios:controller:88"
+        ? { ...node, type: mangledControllerClass, name: `${readableControllerClass}#88` }
+        : node
+    ),
+  };
 
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
@@ -1950,7 +2304,7 @@ test("shows selected view-tree node details in config tab and previews hot edits
               runtimeScope: "host",
               readonly: true,
             },
-            scene: hierarchyScenes.ios,
+            scene: hierarchySceneWithSwiftPrivateController,
           }),
           { status: 200, headers: { "content-type": "application/json" } }
         );
@@ -2009,10 +2363,13 @@ test("shows selected view-tree node details in config tab and previews hot edits
       root.render(createElement(App));
     });
 
+    await waitFor(() => controllerShellBadgeText() === readableControllerClass);
+    assert.equal(controllerShellBadgeTitle(), `MainTabBarController > ${readableControllerClass}`);
+
+    await clickViewTreeNode(act, "back");
     await waitFor(() => selectedViewTreeNodeId() === "back" && selectedViewNodeHighlightId() === "back");
-    assert.match(controllerShellBadgeText(), /UIViewController/);
-    assert.match(controllerShellBadgeText(), /ProfileViewController/);
-    assert.equal(controllerShellBadgeTitle(), "MainTabBarController > ProfileViewController");
+    assert.equal(controllerShellBadgeText(), readableControllerClass);
+    assert.equal(controllerShellBadgeTitle(), `MainTabBarController > ${readableControllerClass}`);
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /UIButton/);
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /backButton/);
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Runtime DTO/);
@@ -2040,6 +2397,165 @@ test("shows selected view-tree node details in config tab and previews hot edits
     assertApproxPercent(selectedViewNodeHighlight()?.style.left ?? "", 3.59);
     assert.notEqual(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-accent"), "#ff0000");
     assert.equal(selectedViewNodeHighlight()?.getAttribute("data-hot-hidden"), "false");
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("live view-tree refresh updates the controller shell badge when the app page changes", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?target=host%3Aios%3ASIM1&panel=view-tree",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  let hierarchyRequests = 0;
+  const sceneForController = (controllerName) => ({
+    ...hierarchyScenes.ios,
+    controllerContext: {
+      ...hierarchyScenes.ios.controllerContext,
+      activeControllerId: "ios:controller:88",
+      activeControllerName: controllerName,
+      activeControllerClassName: `Demo.${controllerName}`,
+      stack: [
+        hierarchyScenes.ios.controllerContext.stack[0],
+        {
+          id: "ios:controller:88",
+          oid: 88,
+          className: `Demo.${controllerName}`,
+          name: controllerName,
+        },
+      ],
+    },
+    nodes: hierarchyScenes.ios.nodes.map((node) =>
+      node.id === "ios:controller:88"
+        ? { ...node, type: `Demo.${controllerName}`, name: `${controllerName}#88` }
+        : node
+    ),
+  });
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+
+      if (url.pathname === "/web/host-targets") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              commands: ["triton sim list --json"],
+              runtimeScope: "host",
+              readonly: true,
+            },
+            targets: [
+              {
+                id: "host:ios:SIM1",
+                target: "SIM1",
+                name: "iPhone 15",
+                platform: "ios",
+                appName: "Overloaded",
+                bundleIdentifier: "overloaded.cn.debug",
+                runtime: "iOS 26.5",
+                state: "Booted",
+                statusLabel: "Ready",
+                ready: true,
+                scope: "simulator",
+                kind: "simulator",
+                transport: "simctl",
+                source: "simctl",
+                readonly: true,
+                blockedReasons: [],
+                sensitive: false,
+              },
+            ],
+            commandOutputs: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-hierarchy") {
+        hierarchyRequests += 1;
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              command: "triton hierarchy --platform ios --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            scene: sceneForController(hierarchyRequests === 1 ? "FirstViewController" : "SecondViewController"),
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-screenshot") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            simulator: "SIM1",
+            source: {
+              command: "triton screenshot --target SIM1 --json",
+              runtimeScope: "host",
+              readonly: true,
+            },
+            artifact: "/tmp/sim.png",
+            pixelWidth: 390,
+            pixelHeight: 844,
+            dataUrl: "data:image/png;base64,AAA=",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      if (url.pathname === "/web/host-logs") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            capturedAt: "2026-06-19T12:00:00.000Z",
+            source: {
+              command: "triton logs --target SIM1 --json",
+              runtimeScope: "host-simulator",
+              readonly: true,
+            },
+            entries: [],
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
+
+      throw new Error(`Unexpected fetch route: ${url.pathname}`);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => controllerShellBadgeText() === "FirstViewController");
+    await act(async () => {
+      await new Promise((resolve) => window.setTimeout(resolve, 1100));
+    });
+    await waitFor(() => controllerShellBadgeText() === "SecondViewController");
+    assert.ok(hierarchyRequests >= 2, "Expected live hierarchy refresh to request a fresh scene");
   } finally {
     await act(async () => {
       root.unmount();
@@ -2530,13 +3046,14 @@ test("keeps network and logs as persistent right-side DevTools tabs", async () =
     });
 
     await waitFor(() => networkEvidenceText().includes("/v1/home/feed"));
-    const devtoolsRail = document.querySelector(".hub-devtools");
+    let devtoolsRail = document.querySelector(".hub-devtools");
     assert.ok(devtoolsRail, "Expected evidence panes to live in the right-side DevTools tab area");
     assert.equal(document.querySelector(".hub-bottom"), null);
     assert.equal(document.querySelector(".device-controls"), null);
     assert.equal(document.querySelector(".traffic-lights"), null);
     assert.equal(document.querySelector('.toolbar-cluster[aria-label="添加模拟器和设备"]'), null);
     assert.equal(document.querySelectorAll('.hub-toolbar button[aria-label="收起侧边栏"], .hub-toolbar button[aria-label="展开侧边栏"]').length, 1);
+    assert.ok(document.querySelector('button[aria-label="收起右侧面板"]'));
     assert.ok(document.querySelector('button[aria-label="刷新全局数据"]'));
     for (const unusedToolbarLabel of ["添加目标", "筛选与排序", "键盘", "屏幕布局", "展开", "更多", "调整", "文档", "信息"]) {
       assert.equal(
@@ -2557,6 +3074,20 @@ test("keeps network and logs as persistent right-side DevTools tabs", async () =
     assert.ok(devtoolsRail.contains(document.querySelector('[aria-label="网络证据"]')));
     assert.equal(document.querySelector('[aria-label="运行日志"]')?.hasAttribute("hidden"), true);
     assert.equal(activeRightSideTab(), "网络");
+
+    await clickButtonByLabel(act, "收起右侧面板");
+    await waitFor(() => document.querySelector(".hub-devtools") === null);
+    assert.equal(document.querySelector(".inspector-tabs"), null);
+    assert.equal(document.querySelector(".hub-body")?.classList.contains("is-devtools-hidden"), true);
+    assert.ok(document.querySelector('button[aria-label="展开右侧面板"]'));
+
+    await clickButtonByLabel(act, "展开右侧面板");
+    await waitFor(() => document.querySelector(".hub-devtools") !== null);
+    devtoolsRail = document.querySelector(".hub-devtools");
+    assert.ok(devtoolsRail, "Expected right-side DevTools to be restored");
+    assert.equal(document.querySelector(".hub-body")?.classList.contains("is-devtools-hidden"), false);
+    assert.equal(activeRightSideTab(), "网络");
+
     await clickRightSideTab(act, "日志");
     await waitFor(() => logsText().includes("已选择 iOS 目标"));
     assert.equal(document.querySelector('[aria-label="网络证据"]')?.hasAttribute("hidden"), true);

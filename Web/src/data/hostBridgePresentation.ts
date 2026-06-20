@@ -30,10 +30,10 @@ export function describeHostBridgePresentation(
 
   if (bridge.error) {
     return {
-      toolbarLabel: "QA mock fallback",
+      toolbarLabel: "Host bridge unavailable",
       notice: {
         tone: "error",
-        title: "Host bridge 请求失败，正在展示 QA mock fallback",
+        title: "Host bridge 请求失败",
         detail: bridge.error,
       },
     };
@@ -41,10 +41,10 @@ export function describeHostBridgePresentation(
 
   if (hostTargetCount === 0) {
     return {
-      toolbarLabel: "QA mock fallback",
+      toolbarLabel: "No host targets",
       notice: {
         tone: "warning",
-        title: "当前没有可用 host target，正在展示 QA mock fallback",
+        title: "当前没有可用 host target",
         detail: summarizeReadonlyBridge(bridge),
       },
     };
