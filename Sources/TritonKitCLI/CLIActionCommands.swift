@@ -8,6 +8,26 @@ import NIOCore
 import TritonKit
 import TritonKitShared
 
+struct Action: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "action",
+        abstract: "Grouped UI action commands for agent discovery",
+        discussion: "Use this help surface to discover Triton UI action commands. Existing top-level commands such as triton tap remain supported.",
+        subcommands: [
+            Tap.self,
+            Swipe.self,
+            TypeText.self,
+            PasteText.self,
+            ClearText.self,
+            Press.self,
+            Focus.self,
+            SetText.self,
+            SelectSegment.self,
+            SetSwitch.self,
+        ]
+    )
+}
+
 enum TapStrategyOption: String, ExpressibleByArgument {
     case smart
     case exact

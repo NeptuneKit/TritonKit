@@ -64,6 +64,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             Replay.self,
             Find.self,
             Wait.self,
+            Action.self,
             Focus.self,
             SetText.self,
             SelectSegment.self,
