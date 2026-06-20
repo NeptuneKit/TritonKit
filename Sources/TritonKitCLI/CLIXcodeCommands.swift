@@ -197,6 +197,7 @@ struct XcodeSettings: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
@@ -215,6 +216,7 @@ struct XcodeSettings: AsyncParsableCommand {
                 sdk: sdk,
                 destination: destination,
                 simulator: simulator,
+                device: device,
                 derivedDataPath: derivedDataPath
             )
             let command = TKXcodebuildCommand.showBuildSettings(
@@ -260,6 +262,7 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
@@ -278,6 +281,7 @@ struct XcodeBuild: AsyncParsableCommand {
                 sdk: sdk,
                 destination: destination,
                 simulator: simulator,
+                device: device,
                 derivedDataPath: derivedDataPath
             )
             let summary = try runXcodeBuild(
@@ -308,6 +312,7 @@ struct XcodeTest: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path") var derivedDataPath: String?
     @Option(help: "Result bundle output path") var resultBundle: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
@@ -326,6 +331,7 @@ struct XcodeTest: AsyncParsableCommand {
                 sdk: sdk,
                 destination: destination,
                 simulator: simulator,
+                device: device,
                 derivedDataPath: derivedDataPath
             )
             let summary = try runXcodeTest(invocation: resolved, resultBundlePath: resultBundle, jsonl: jsonl, timeout: timeout)
@@ -342,7 +348,7 @@ struct XcodeTest: AsyncParsableCommand {
 }
 
 struct XcodeRun: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "run", abstract: "Build, install, and launch an Xcode app on a simulator")
+    static let configuration = CommandConfiguration(commandName: "run", abstract: "Build, install, and launch an Xcode app on a simulator or real device")
 
     @Option(help: "Path to .xcworkspace") var workspace: String?
     @Option(help: "Path to .xcodeproj") var project: String?
@@ -351,6 +357,7 @@ struct XcodeRun: AsyncParsableCommand {
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "Simulator UDID") var simulator: String?
+    @Option(help: "Real-device selector used to build, install, and launch through devicectl") var device: String?
     @Option(help: "DerivedData path") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
@@ -368,6 +375,7 @@ struct XcodeRun: AsyncParsableCommand {
                 sdk: sdk,
                 destination: destination,
                 simulator: simulator,
+                device: device,
                 derivedDataPath: derivedDataPath
             )
             let summary = try runXcodeBuildInstallLaunch(invocation: resolved, jsonl: jsonl, timeout: timeout)

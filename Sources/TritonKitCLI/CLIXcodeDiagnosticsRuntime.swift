@@ -1,6 +1,16 @@
 import Foundation
 import TritonKitShared
 
+func xcodeDerivedDataCacheState(path: String, fileManager: FileManager = .default) -> XcodeDerivedDataCacheState {
+    let exists = fileManager.fileExists(atPath: path)
+    return XcodeDerivedDataCacheState(
+        derivedDataPath: path,
+        exists: exists,
+        cacheState: exists ? "warm" : "missing-derived-data",
+        incrementalExpected: true
+    )
+}
+
 enum XcodeBuildOutputDiagnosticsParser {
     static func parse(stdout: String, stderr: String, maximumSamples: Int = 5) -> TKXcodeOutputDiagnostic? {
         let combined = [stdout, stderr]

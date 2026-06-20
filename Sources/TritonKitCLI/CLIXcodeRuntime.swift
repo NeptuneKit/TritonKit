@@ -42,6 +42,7 @@ func resolveXcodeInvocation(
     sdk: String? = nil,
     destination: String? = nil,
     simulator: String? = nil,
+    device: String? = nil,
     derivedDataPath: String? = nil
 ) throws -> ResolvedXcodeInvocation {
     let defaults = try loadHostWorkspaceDefaults()
@@ -53,9 +54,17 @@ func resolveXcodeInvocation(
         throw XcodeWorkflowError.missingScheme
     }
     let resolvedConfiguration = configuration ?? xcode?.configuration ?? "Debug"
-    let resolvedSDK = sdk ?? xcode?.sdk ?? "iphonesimulator"
-    let resolvedSimulator = simulator ?? defaults?.defaultSimulatorUDID
-    let resolvedDestination = destination ?? xcode?.destination ?? resolvedSimulator.map { "platform=iOS Simulator,id=\($0)" }
+    if hasXcodeSelector(device), hasXcodeSelector(simulator) {
+        throw XcodeWorkflowError.conflictingTargetSelectors
+    }
+    let resolvedSDK = resolvedXcodeSDK(sdk: sdk, defaultSDK: xcode?.sdk, device: device)
+    let resolvedSimulator = hasXcodeSelector(device) ? nil : simulator ?? defaults?.defaultSimulatorUDID
+    let resolvedDestination = resolvedXcodeDestination(
+        destination: destination,
+        defaultDestination: xcode?.destination,
+        simulatorUDID: resolvedSimulator,
+        device: device
+    )
     let resolvedDerivedDataPath = derivedDataPath ?? xcode?.derivedDataPath ?? ".triton/DerivedData"
     return ResolvedXcodeInvocation(
         workspace: resolvedWorkspace,
@@ -65,8 +74,42 @@ func resolveXcodeInvocation(
         sdk: resolvedSDK,
         destination: resolvedDestination,
         derivedDataPath: resolvedDerivedDataPath,
-        simulatorUDID: resolvedSimulator
+        simulatorUDID: resolvedSimulator,
+        device: device
     )
+}
+
+func resolvedXcodeSDK(sdk: String?, defaultSDK: String?, device: String?) -> String {
+    if let sdk, !sdk.isEmpty {
+        return sdk
+    }
+    if hasXcodeSelector(device) {
+        return "iphoneos"
+    }
+    return defaultSDK ?? "iphonesimulator"
+}
+
+func resolvedXcodeDestination(
+    destination: String?,
+    defaultDestination: String?,
+    simulatorUDID: String?,
+    device: String?
+) -> String? {
+    if let destination, !destination.isEmpty {
+        return destination
+    }
+    if hasXcodeSelector(device) {
+        return "generic/platform=iOS"
+    }
+    if let defaultDestination, !defaultDestination.isEmpty {
+        return defaultDestination
+    }
+    return simulatorUDID.map { "platform=iOS Simulator,id=\($0)" }
+}
+
+private func hasXcodeSelector(_ value: String?) -> Bool {
+    guard let value else { return false }
+    return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
 }
 
 enum XcodeWorkflowError: Error, CustomStringConvertible {
@@ -76,6 +119,7 @@ enum XcodeWorkflowError: Error, CustomStringConvertible {
     case appPathUnresolved
     case bundleIDUnresolved(String)
     case simulatorRequired
+    case conflictingTargetSelectors
 
     var description: String {
         switch self {
@@ -91,6 +135,8 @@ enum XcodeWorkflowError: Error, CustomStringConvertible {
             "Bundle identifier could not be resolved from \(appPath)."
         case .simulatorRequired:
             "Xcode run requires --simulator or `triton sim use <udid>` defaults."
+        case .conflictingTargetSelectors:
+            "Pass either --simulator or --device, not both."
         }
     }
 }
@@ -127,6 +173,7 @@ func runXcodeBuild(
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath,
         simulatorUDID: invocation.simulatorUDID,
+        device: invocation.device,
         durationMs: durationMs,
         sourceCommand: result.sourceCommand,
         exitCode: result.exitCode,
@@ -168,6 +215,7 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         derivedDataPath: invocation.derivedDataPath,
         resultBundlePath: resultBundlePath,
         simulatorUDID: invocation.simulatorUDID,
+        device: invocation.device,
         durationMs: durationMs,
         sourceCommand: result.sourceCommand,
         exitCode: result.exitCode,
@@ -185,6 +233,10 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
 }
 
 func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+    if hasXcodeSelector(invocation.device) {
+        return try runXcodeRealDeviceBuildInstallLaunch(invocation: invocation, jsonl: jsonl, timeout: timeout)
+    }
+
     guard let simulator = invocation.simulatorUDID, !simulator.isEmpty else {
         throw XcodeWorkflowError.simulatorRequired
     }
@@ -220,6 +272,7 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
         appPath: product.appPath,
         bundleID: bundleID,
         simulatorUDID: simulator,
+        device: invocation.device,
         durationMs: buildSummary.durationMs + launchDurationMs,
         sourceCommand: launchResult.sourceCommand,
         exitCode: launchResult.exitCode,
@@ -230,6 +283,84 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
         stdoutBytes: launchResult.stdoutBytes,
         stderrBytes: launchResult.stderrBytes,
         note: "App launch was submitted to Simulator. Verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence."
+    )
+}
+
+func runXcodeRealDeviceBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+    guard let device = invocation.device, !device.isEmpty else {
+        throw XcodeWorkflowError.simulatorRequired
+    }
+    let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: false)
+    let product = try resolveBuiltAppProduct(
+        invocation: invocation,
+        timeout: timeout,
+        jsonl: jsonl,
+        event: "xcode.run.settings"
+    )
+    let bundleID: String
+    if let productBundleID = product.bundleID {
+        bundleID = productBundleID
+    } else {
+        bundleID = try bundleIdentifier(appPath: product.appPath)
+    }
+
+    let selection = try resolveHostDeviceSelection(
+        request: HostDeviceSelectionRequest(
+            device: device,
+            platform: .ios,
+            scope: .real,
+            ready: true
+        ),
+        hdc: "hdc"
+    )
+    let installPlan = try planHostAppInstall(
+        selection: selection,
+        app: product.appPath,
+        apk: nil,
+        hap: nil,
+        adb: "adb",
+        hdc: "hdc",
+        devicectlArtifacts: nil
+    )
+    let (_, installDurationMs) = try runXcodeHostCommand(installPlan.command, event: "xcode.run.install", jsonl: jsonl)
+    let launchPlan = try planHostAppLaunch(
+        selection: selection,
+        bundleID: bundleID,
+        packageName: nil,
+        activity: nil,
+        bundle: nil,
+        ability: nil,
+        payloadURL: nil,
+        adb: "adb",
+        hdc: "hdc",
+        devicectlArtifacts: nil
+    )
+    let (launchResult, launchDurationMs) = try runXcodeHostCommand(launchPlan.command, event: "xcode.run.launch", jsonl: jsonl)
+
+    return TKXcodeActionSummary(
+        ok: true,
+        action: "xcode.run",
+        workspace: invocation.workspace,
+        project: invocation.project,
+        scheme: invocation.scheme,
+        configuration: invocation.configuration,
+        sdk: invocation.sdk,
+        destination: invocation.destination,
+        derivedDataPath: invocation.derivedDataPath,
+        appPath: product.appPath,
+        bundleID: bundleID,
+        simulatorUDID: nil,
+        device: device,
+        durationMs: buildSummary.durationMs + installDurationMs + launchDurationMs,
+        sourceCommand: launchResult.sourceCommand,
+        exitCode: launchResult.exitCode,
+        stdoutTruncated: launchResult.stdoutTruncated,
+        stderrTruncated: launchResult.stderrTruncated,
+        stdoutLogPath: launchResult.stdoutLogPath,
+        stderrLogPath: launchResult.stderrLogPath,
+        stdoutBytes: launchResult.stdoutBytes,
+        stderrBytes: launchResult.stderrBytes,
+        note: "App launch was submitted to the selected real device. Verify business readiness with runtime `triton status/wait/assert`, screenshot, or evidence."
     )
 }
 

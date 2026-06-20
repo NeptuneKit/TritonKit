@@ -40,6 +40,13 @@ struct XcodeWaitIdleOutput: Codable, Equatable {
     let status: XcodeProcessStatusOutput
 }
 
+struct XcodeDerivedDataCacheState: Codable, Equatable {
+    let derivedDataPath: String
+    let exists: Bool
+    let cacheState: String
+    let incrementalExpected: Bool
+}
+
 enum XcodeDiagnosticsError: Error, Equatable, CustomStringConvertible {
     case notIdle(status: XcodeProcessStatusOutput)
 

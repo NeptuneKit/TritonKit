@@ -37,9 +37,10 @@ struct BuildIOS: AsyncParsableCommand {
                 project: project,
                 scheme: scheme,
                 configuration: configuration,
-                sdk: sdk ?? (device == nil ? nil : "iphoneos"),
-                destination: destination ?? device.map { "platform=iOS,id=\($0)" },
+                sdk: sdk,
+                destination: destination,
                 simulator: nil,
+                device: device,
                 derivedDataPath: derivedDataPath
             )
             if jsonl {

@@ -1111,6 +1111,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let bundleID: String?
     public let resultBundlePath: String?
     public let simulatorUDID: String?
+    public let device: String?
     public let durationMs: Int
     public let sourceCommand: String
     public let exitCode: Int32
@@ -1141,6 +1142,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         bundleID: String? = nil,
         resultBundlePath: String? = nil,
         simulatorUDID: String? = nil,
+        device: String? = nil,
         durationMs: Int,
         sourceCommand: String,
         exitCode: Int32,
@@ -1170,6 +1172,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.bundleID = bundleID
         self.resultBundlePath = resultBundlePath
         self.simulatorUDID = simulatorUDID
+        self.device = device
         self.durationMs = durationMs
         self.sourceCommand = sourceCommand
         self.exitCode = exitCode

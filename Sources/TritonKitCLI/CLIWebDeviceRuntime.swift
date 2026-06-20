@@ -263,9 +263,13 @@ func webRuntimeInputFallbackTargetID(forHostID id: String, runtimeTargets: [TKTa
         return nil
     }
     return runtimeTargets.first { runtime in
-        runtime.platform == HostDevicePlatform.ios.rawValue
-            && (runtime.simulatorUDID == parsed.selector || runtime.id.hasSuffix(parsed.selector))
-            && runtime.connected
+        guard runtime.platform == HostDevicePlatform.ios.rawValue, runtime.connected else {
+            return false
+        }
+        if parsed.selector.hasPrefix("ios-real:") {
+            return runtime.simulatorUDID == nil
+        }
+        return runtime.simulatorUDID == parsed.selector || runtime.id.hasSuffix(parsed.selector)
     }?.id
 }
 

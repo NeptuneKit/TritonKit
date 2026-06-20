@@ -202,6 +202,32 @@ struct SingleDeviceWebPageTests {
         ) == nil)
     }
 
+    @Test("iOS real-device web runtime mirror ignores simulator runtime targets")
+    func iOSRealDeviceWebRuntimeMirrorIgnoresSimulatorRuntimeTargets() {
+        let simulator = TKTargetSummary(
+            id: "triton:ios-simulator:SIM-1",
+            connected: true,
+            latestHierarchyAvailable: true,
+            appName: "Simulator App",
+            simulatorUDID: "SIM-1",
+            platform: "ios"
+        )
+        let realDevice = TKTargetSummary(
+            id: "triton:connection:2",
+            connected: true,
+            latestHierarchyAvailable: true,
+            appName: "Overloaded",
+            deviceDescription: "iPhone",
+            osDescription: "iOS 26.5",
+            platform: "ios"
+        )
+
+        #expect(webRuntimeInputFallbackTargetID(
+            forHostID: "host:ios:ios-real:abc",
+            runtimeTargets: [simulator, realDevice]
+        ) == "triton:connection:2")
+    }
+
     @Test("iOS web host input normalizes framebuffer coordinates into host HID points")
     func iOSWebHostInputNormalizesFramebufferCoordinatesIntoHostHIDPoints() {
         let normalized = normalizeWebIOSSimulatorInput(

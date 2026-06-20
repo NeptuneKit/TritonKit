@@ -25,6 +25,7 @@ struct ResolvedXcodeInvocation: Encodable {
     let destination: String?
     let derivedDataPath: String?
     let simulatorUDID: String?
+    let device: String?
 }
 
 struct XcodeSettingsOutput: Encodable {
