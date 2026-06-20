@@ -232,8 +232,17 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
     )
 }
 
-func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+func runXcodeBuildInstallLaunch(
+    invocation: ResolvedXcodeInvocation,
+    launchEnvironment: [String: String] = [:],
+    launchArguments: [String] = [],
+    jsonl: Bool,
+    timeout: Double? = nil
+) throws -> TKXcodeActionSummary {
     if hasXcodeSelector(invocation.device) {
+        if !launchEnvironment.isEmpty || !launchArguments.isEmpty {
+            throw ValidationError("xcode run launch env/args are only supported for iOS Simulator targets.")
+        }
         return try runXcodeRealDeviceBuildInstallLaunch(invocation: invocation, jsonl: jsonl, timeout: timeout)
     }
 
@@ -256,7 +265,12 @@ func runXcodeBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool
 
     let installCommand = TKSimctlCommand.installApp(udid: simulator, appPath: product.appPath)
     _ = try runXcodeHostCommand(installCommand, event: "xcode.run.install", jsonl: jsonl)
-    let launchCommand = TKSimctlCommand.launchApp(udid: simulator, bundleID: bundleID)
+    let launchCommand = TKSimctlCommand.launchApp(
+        udid: simulator,
+        bundleID: bundleID,
+        environment: launchEnvironment,
+        arguments: launchArguments
+    )
     let (launchResult, launchDurationMs) = try runXcodeHostCommand(launchCommand, event: "xcode.run.launch", jsonl: jsonl)
 
     return TKXcodeActionSummary(

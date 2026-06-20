@@ -238,6 +238,8 @@ func planHostAppLaunch(
     bundle: String?,
     ability: String?,
     payloadURL: String?,
+    launchEnvironment: [String: String] = [:],
+    launchArguments: [String] = [],
     adb: String,
     hdc: String,
     devicectlArtifacts: (json: String, log: String)?
@@ -250,14 +252,25 @@ func planHostAppLaunch(
         let command: TKHostCommand
         let artifacts: [String]
         if selection.target.scope == "real" {
+            if !launchEnvironment.isEmpty || !launchArguments.isEmpty {
+                throw ValidationError("iOS real-device launch env/args are not supported yet; use an iOS Simulator target.")
+            }
             let devicectlArtifacts = try devicectlArtifacts ?? freshDevicectlArtifactPaths(action: payloadURL == nil ? "app-launch" : "app-open-url")
             command = TKDevicectlCommand.launchApp(identifier: selection.target.rawTarget, bundleID: bundleID, payloadURL: payloadURL, jsonOutput: devicectlArtifacts.json, logOutput: devicectlArtifacts.log)
             artifacts = [devicectlArtifacts.json, devicectlArtifacts.log]
         } else if let payloadURL {
+            if !launchEnvironment.isEmpty || !launchArguments.isEmpty {
+                throw ValidationError("Launch env/args are only supported for simulator app launch, not open-url.")
+            }
             command = TKSimctlCommand.openURL(udid: selection.target.target, url: payloadURL)
             artifacts = []
         } else {
-            command = TKSimctlCommand.launchApp(udid: selection.target.target, bundleID: bundleID)
+            command = TKSimctlCommand.launchApp(
+                udid: selection.target.target,
+                bundleID: bundleID,
+                environment: launchEnvironment,
+                arguments: launchArguments
+            )
             artifacts = []
         }
         return HostAppCommandPlan(action: payloadURL == nil ? "app.launch" : "app.open-url", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection, appID: bundleID), command: command, artifacts: artifacts, note: hostAppSubmissionNote(payloadURL == nil ? "app.launch" : "app.open-url", followUp: "`triton status`, wait/assert, smoke, or evidence"))
@@ -276,6 +289,30 @@ func planHostAppLaunch(
         }
         return HostAppCommandPlan(action: "app.launch", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection, appID: bundle), command: TKHarmonyHDCCommand.appLaunch(target: selection.target.rawTarget, bundleName: bundle, abilityName: ability, executable: hdc), artifacts: [], note: hostAppSubmissionNote("app.launch", followUp: "`triton wait --platform harmony`, observe, screenshot, smoke, or evidence"))
     }
+}
+
+func parseLaunchEnvironment(_ values: [String]) throws -> [String: String] {
+    var environment: [String: String] = [:]
+    for value in values {
+        guard let separator = value.firstIndex(of: "=") else {
+            throw ValidationError("Launch environment entries must use KEY=VALUE.")
+        }
+        let key = String(value[..<separator])
+        let envValue = String(value[value.index(after: separator)...])
+        guard isValidLaunchEnvironmentKey(key) else {
+            throw ValidationError("Launch environment key must match [A-Za-z_][A-Za-z0-9_]*: \(key)")
+        }
+        environment[key] = envValue
+    }
+    return environment
+}
+
+private func isValidLaunchEnvironmentKey(_ key: String) -> Bool {
+    guard let first = key.unicodeScalars.first else { return false }
+    let firstAllowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_")
+    let restAllowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789")
+    guard firstAllowed.contains(first) else { return false }
+    return key.unicodeScalars.dropFirst().allSatisfy { restAllowed.contains($0) }
 }
 
 func planHostAppOpenURL(
@@ -801,6 +838,8 @@ struct HostAppLaunch: AsyncParsableCommand {
     @Option(help: "Harmony bundle name") var bundle: String?
     @Option(help: "Harmony ability name") var ability: String?
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
+    @Option(name: .customLong("env"), help: "iOS simulator launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []
+    @Option(name: .customLong("arg"), help: "Argument passed to the launched iOS simulator app; repeat for multiple arguments") var launchArguments: [String] = []
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Flag(help: "Alias for --format json") var json = false
@@ -826,7 +865,20 @@ struct HostAppLaunch: AsyncParsableCommand {
             )
             switch hostAppPlatform(from: selection.platform) {
         case .ios:
-            let plan = try planHostAppLaunch(selection: selection, bundleID: bundleID, packageName: nil, activity: nil, bundle: nil, ability: nil, payloadURL: nil, adb: adb, hdc: hdc, devicectlArtifacts: nil)
+            let plan = try planHostAppLaunch(
+                selection: selection,
+                bundleID: bundleID,
+                packageName: nil,
+                activity: nil,
+                bundle: nil,
+                ability: nil,
+                payloadURL: nil,
+                launchEnvironment: try parseLaunchEnvironment(launchEnvironment),
+                launchArguments: launchArguments,
+                adb: adb,
+                hdc: hdc,
+                devicectlArtifacts: nil
+            )
             try runSimpleHostCommand(
                 action: plan.action,
                 runtimeScope: plan.runtimeScope,
