@@ -151,6 +151,7 @@ public struct TKEvidenceArtifact: Codable, Equatable {
     public let policy: String?
     public let redactionStatus: String?
     public let sourceCommand: String?
+    public let metadata: [String: TKJSONValue]?
     public let target: String?
 
     public init(
@@ -164,6 +165,7 @@ public struct TKEvidenceArtifact: Codable, Equatable {
         policy: String? = nil,
         redactionStatus: String? = nil,
         sourceCommand: String? = nil,
+        metadata: [String: TKJSONValue]? = nil,
         target: String? = nil
     ) {
         self.kind = kind
@@ -176,6 +178,7 @@ public struct TKEvidenceArtifact: Codable, Equatable {
         self.policy = policy
         self.redactionStatus = redactionStatus
         self.sourceCommand = sourceCommand
+        self.metadata = metadata
         self.target = target
     }
 }
