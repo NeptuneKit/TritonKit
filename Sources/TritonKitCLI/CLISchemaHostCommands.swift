@@ -311,7 +311,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "pasteboard get", type: "Subcommand", description: "Read simulator pasteboard content"),
                 TKCommandSchemaOption(name: "pasteboard sync <source> <destination>", type: "Subcommand", description: "Sync pasteboard content between host and simulator"),
                 TKCommandSchemaOption(name: "push --bundle-id <id> --payload <path|->", type: "Subcommand", description: "Send a simulated push notification"),
+                TKCommandSchemaOption(name: "media seed --manifest <path>", type: "Subcommand", description: "Add manifest-described media fixtures to a simulator photo library"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted target selector"),
+                TKCommandSchemaOption(name: "--manifest", type: "Path", description: "Media seed manifest JSON path"),
                 TKCommandSchemaOption(name: "--x", type: "Int", description: "Simulator x coordinate for host-side tap"),
                 TKCommandSchemaOption(name: "--y", type: "Int", description: "Simulator y coordinate for host-side tap"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "ASCII text for host-side simulator type"),
@@ -358,6 +360,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim erase <udid> --confirm --json",
                 "triton sim runtime delete <runtime-id> --dry-run --json",
                 "triton sim personalization scan-and-personalize --json",
+                "triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json",
             ],
             successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.tap|sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
@@ -380,6 +383,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorReadyEvent"),
                 hostSimulatorScreenshotMetadataOutputContract(),
                 hostDeviceProxyOutputContract(),
+                hostSimulatorMediaSeedOutputContract(),
             ],
             failureCodes: [
                 "simulator_not_found",
@@ -395,6 +399,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "ui_operation_failed",
                 "pasteboard_operation_failed",
                 "push_payload_invalid",
+                "media_seed_manifest_invalid",
                 "proxy_visibility_limited",
                 "proxy_platform_not_supported",
                 "proxy_endpoint_unreachable",
@@ -599,8 +604,16 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     optionalOptions: ["--simulator", "--format", "--json"],
                     outputSelectors: ["host.simulator-action"]
                 ),
+                TKCommandSubcommandSchema(
+                    name: "media seed",
+                    summary: "Add manifest-described media fixtures to a simulator photo library",
+                    requiredOptions: ["--manifest"],
+                    optionalOptions: ["--simulator", "--format", "--json"],
+                    outputSelectors: ["host.simulator-media-seed"],
+                    failureCodes: ["media_seed_manifest_invalid", "host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
+                ),
             ],
-            providedCapabilities: ["host-simulator", "ios-simulator-host-tap", "ios-simulator-host-type", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "device-proxy-ios", "network-capture-export"]
+            providedCapabilities: ["host-simulator", "ios-simulator-host-tap", "ios-simulator-host-type", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
         ),
         TKCommandSchema(
             name: "app",

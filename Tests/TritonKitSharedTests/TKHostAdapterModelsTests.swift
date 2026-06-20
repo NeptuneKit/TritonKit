@@ -167,6 +167,48 @@ struct TKHostAdapterModelsTests {
         #expect(TKSimctlCommand.pasteboardPaste(udid: "U").argv == ["simctl", "pbpaste", "U"])
         #expect(TKSimctlCommand.pasteboardSync(source: "host", destination: "U").argv == ["simctl", "pbsync", "host", "U"])
         #expect(TKSimctlCommand.push(udid: "U", bundleID: "com.example.app", payload: "/tmp/push.json").argv == ["simctl", "push", "U", "com.example.app", "/tmp/push.json"])
+        #expect(TKSimctlCommand.addMedia(udid: "U", files: ["/tmp/a.png", "/tmp/b.mov"]).argv == ["simctl", "addmedia", "U", "/tmp/a.png", "/tmp/b.mov"])
+    }
+
+    @Test("media seed manifest decodes fixture metadata and resolves relative files")
+    func mediaSeedManifestDecodesFixtureMetadata() throws {
+        let directory = URL(fileURLWithPath: "/fixtures/gallery", isDirectory: true)
+        let manifestURL = directory.appendingPathComponent("manifest.json")
+        let manifest = try TKSimulatorMediaSeedManifest.parse(
+            Data("""
+            {
+              "fixtureId": "onboarding-gallery",
+              "metadata": { "locale": "en-US" },
+              "files": [
+                "photos/welcome.png",
+                { "path": "videos/intro.mov", "kind": "video", "sha256": "abc123" }
+              ]
+            }
+            """.utf8),
+            manifestURL: manifestURL
+        )
+
+        #expect(manifest.fixtureId == "onboarding-gallery")
+        #expect(manifest.metadata["locale"] == "en-US")
+        #expect(manifest.resolvedFiles.map(\.path) == [
+            "/fixtures/gallery/photos/welcome.png",
+            "/fixtures/gallery/videos/intro.mov",
+        ])
+        #expect(manifest.resolvedFiles[0].kind == "image")
+        #expect(manifest.resolvedFiles[1].kind == "video")
+        #expect(manifest.resolvedFiles[1].sha256 == "abc123")
+    }
+
+    @Test("media seed manifest rejects missing fixture id or empty files")
+    func mediaSeedManifestRejectsInvalidInput() throws {
+        let manifestURL = URL(fileURLWithPath: "/fixtures/manifest.json")
+
+        #expect(throws: TKSimulatorMediaSeedManifestError.self) {
+            _ = try TKSimulatorMediaSeedManifest.parse(Data(#"{ "files": ["a.png"] }"#.utf8), manifestURL: manifestURL)
+        }
+        #expect(throws: TKSimulatorMediaSeedManifestError.self) {
+            _ = try TKSimulatorMediaSeedManifest.parse(Data(#"{ "fixtureId": "empty", "files": [] }"#.utf8), manifestURL: manifestURL)
+        }
     }
 
     @Test("simctl command builder emits phase three simulator maintenance argv")

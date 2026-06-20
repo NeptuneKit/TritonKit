@@ -80,6 +80,52 @@ struct HostSimulatorInputOutput: Encodable {
     let note: String
 }
 
+struct HostSimulatorMediaSeedArtifact: Encodable, Equatable {
+    let kind: String
+    let path: String
+    let role: String
+    let bytes: UInt64?
+    let contentType: String?
+    let sha256: String?
+}
+
+struct HostSimulatorMediaSeedFileMetadata: Encodable, Equatable {
+    let sourcePath: String
+    let resolvedPath: String
+    let kind: String
+    let sha256: String?
+    let bytes: UInt64?
+}
+
+struct HostSimulatorMediaSeedMetadata: Encodable, Equatable {
+    let schema: String
+    let fixtureId: String
+    let manifestPath: String
+    let files: [HostSimulatorMediaSeedFileMetadata]
+    let manifestMetadata: [String: String]
+}
+
+struct HostSimulatorMediaSeedOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let fixtureId: String
+    let importedCount: Int
+    let manifestPath: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let stdout: String?
+    let stderr: String?
+    let artifacts: [HostSimulatorMediaSeedArtifact]
+    let metadata: HostSimulatorMediaSeedMetadata
+    let note: String
+}
+
 struct HostDeviceTarget: Encodable, Equatable {
     let platform: String
     let id: String

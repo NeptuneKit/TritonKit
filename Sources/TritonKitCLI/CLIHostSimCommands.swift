@@ -136,6 +136,7 @@ struct Sim: AsyncParsableCommand {
             SimUI.self,
             SimPasteboard.self,
             SimPush.self,
+            SimMedia.self,
             SimPersonalization.self,
         ]
     )
@@ -1011,5 +1012,95 @@ struct SimPush: AsyncParsableCommand {
             outputFormat: effectiveFormat(format, json: json),
             note: "Simulated push notification was submitted."
         )
+    }
+}
+
+struct SimMedia: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "media",
+        abstract: "Seed simulator media fixtures from metadata manifests",
+        subcommands: [SimMediaSeed.self]
+    )
+}
+
+struct SimMediaSeed: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "seed", abstract: "Import media fixture files into the simulator Photos library")
+
+    @Option(help: "Media seed manifest JSON path") var manifest: String
+    @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        let manifestURL = URL(fileURLWithPath: manifest)
+        let parsedManifest: TKSimulatorMediaSeedManifest
+        do {
+            parsedManifest = try TKSimulatorMediaSeedManifest.parse(Data(contentsOf: manifestURL), manifestURL: manifestURL)
+        } catch let error as TKSimulatorMediaSeedManifestError {
+            try failHostValidation(
+                code: "media_seed_manifest_invalid",
+                message: error.description,
+                hint: "Provide a JSON manifest with non-empty fixtureId and files[]. Relative file paths resolve from the manifest directory.",
+                outputFormat: outputFormat
+            )
+        } catch {
+            try failHostValidation(
+                code: "media_seed_manifest_invalid",
+                message: "Unable to read media seed manifest at \(manifestURL.path): \(error.localizedDescription)",
+                hint: "Check that --manifest points to a readable JSON file with fixtureId and files[].",
+                outputFormat: outputFormat
+            )
+        }
+
+        let command = TKSimctlCommand.addMedia(udid: simulator, files: parsedManifest.resolvedFiles.map(\.path))
+        do {
+            let result = try runHostCommand(command)
+            let stdout = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+            let metadataFiles = parsedManifest.resolvedFiles.map { file in
+                HostSimulatorMediaSeedFileMetadata(
+                    sourcePath: file.sourcePath,
+                    resolvedPath: file.path,
+                    kind: file.kind,
+                    sha256: file.sha256,
+                    bytes: fileByteCount(path: file.path)
+                )
+            }
+            let output = HostSimulatorMediaSeedOutput(
+                ok: true,
+                action: "sim.media.seed",
+                runtimeScope: "host-simulator",
+                target: "sim:\(simulator)",
+                fixtureId: parsedManifest.fixtureId,
+                importedCount: parsedManifest.resolvedFiles.count,
+                manifestPath: parsedManifest.manifestPath,
+                tool: command.executable,
+                exitCode: result.exitCode,
+                riskLevel: command.riskLevel.rawValue,
+                sourceCommand: result.sourceCommand,
+                stdoutTruncated: result.stdoutTruncated,
+                stderrTruncated: result.stderrTruncated,
+                stdout: stdout.isEmpty ? nil : stdout,
+                stderr: stderr.isEmpty ? nil : stderr,
+                artifacts: mediaSeedArtifacts(manifest: parsedManifest),
+                metadata: HostSimulatorMediaSeedMetadata(
+                    schema: "triton.sim.media-seed.v1",
+                    fixtureId: parsedManifest.fixtureId,
+                    manifestPath: parsedManifest.manifestPath,
+                    files: metadataFiles,
+                    manifestMetadata: parsedManifest.metadata
+                ),
+                note: "Media fixture was submitted to the simulator through Triton-wrapped simctl addmedia. Verify app-level Photos consumption separately when required."
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print("\(output.fixtureId): imported \(output.importedCount) media file(s)")
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
     }
 }

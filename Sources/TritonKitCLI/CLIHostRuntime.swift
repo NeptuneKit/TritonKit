@@ -176,6 +176,63 @@ func imagePixelSize(path: String) -> (width: Int, height: Int)? {
     return (width, height)
 }
 
+func mediaSeedArtifacts(manifest: TKSimulatorMediaSeedManifest) -> [HostSimulatorMediaSeedArtifact] {
+    var artifacts = [
+        HostSimulatorMediaSeedArtifact(
+            kind: "media-seed-manifest",
+            path: manifest.manifestPath,
+            role: "manifest",
+            bytes: fileByteCount(path: manifest.manifestPath),
+            contentType: "application/json",
+            sha256: nil
+        )
+    ]
+    artifacts += manifest.resolvedFiles.map { file in
+        HostSimulatorMediaSeedArtifact(
+            kind: "media-fixture-file",
+            path: file.path,
+            role: file.kind,
+            bytes: fileByteCount(path: file.path),
+            contentType: mediaSeedContentType(kind: file.kind, path: file.path),
+            sha256: file.sha256
+        )
+    }
+    return artifacts
+}
+
+func fileByteCount(path: String) -> UInt64? {
+    guard let attributes = try? FileManager.default.attributesOfItem(atPath: path) else {
+        return nil
+    }
+    if let size = attributes[.size] as? UInt64 {
+        return size
+    }
+    if let size = attributes[.size] as? NSNumber {
+        return size.uint64Value
+    }
+    return nil
+}
+
+private func mediaSeedContentType(kind: String, path: String) -> String? {
+    let ext = URL(fileURLWithPath: path).pathExtension.lowercased()
+    switch ext {
+    case "jpg", "jpeg":
+        return "image/jpeg"
+    case "png":
+        return "image/png"
+    case "gif":
+        return "image/gif"
+    case "heic", "heif":
+        return "image/heic"
+    case "mov":
+        return "video/quicktime"
+    case "mp4", "m4v":
+        return "video/mp4"
+    default:
+        return kind == "image" ? "image/*" : kind == "video" ? "video/*" : nil
+    }
+}
+
 private func value(after marker: String, before terminator: String, in line: String) -> String? {
     guard let markerRange = line.range(of: marker) else { return nil }
     let tail = line[markerRange.upperBound...]
