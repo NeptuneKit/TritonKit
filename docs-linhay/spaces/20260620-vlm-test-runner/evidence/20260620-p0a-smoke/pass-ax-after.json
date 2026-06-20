@@ -1,0 +1,722 @@
+[
+  {
+    "children" : [
+      {
+        "children" : [
+
+        ],
+        "className" : "UITextField",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 34,
+          "width" : 140,
+          "x" : 87,
+          "y" : 171
+        },
+        "hidden" : false,
+        "label" : "Host",
+        "role" : "textField",
+        "targetOID" : 12,
+        "value" : "127.0.0.1",
+        "viewOID" : 12
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UITextField",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 34,
+          "width" : 80,
+          "x" : 235,
+          "y" : 171
+        },
+        "hidden" : false,
+        "label" : "Port",
+        "role" : "textField",
+        "targetOID" : 24,
+        "value" : "19421",
+        "viewOID" : 24
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "_TtCV7SwiftUIP33_D74FE142C3C5A6C2CEA4987A69AEBD7522SystemSegmentedControl18UISegmentedControl",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 32,
+          "width" : 370,
+          "x" : 16,
+          "y" : 257.33333333333331
+        },
+        "hidden" : false,
+        "role" : "segmentedControl",
+        "targetOID" : 36,
+        "value" : "Overview",
+        "viewOID" : 36
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 15.666666666666686,
+          "width" : 123,
+          "x" : 28,
+          "y" : 321.66666666666669
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessStatus",
+        "label" : "Complex harness: 1",
+        "role" : "text",
+        "targetOID" : 120,
+        "viewOID" : 120
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 30,
+          "width" : 53,
+          "x" : 163,
+          "y" : 314.33333333333331
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessPrimary",
+        "label" : "Primary",
+        "role" : "button",
+        "targetOID" : 122,
+        "title" : "Primary",
+        "viewOID" : 122
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 30,
+          "width" : 74,
+          "x" : 228,
+          "y" : 314.33333333333331
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessSecondary",
+        "label" : "Secondary",
+        "role" : "button",
+        "targetOID" : 126,
+        "title" : "Secondary",
+        "viewOID" : 126
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UISwitch",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 28,
+          "width" : 62,
+          "x" : 314,
+          "y" : 315.33333333333331
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessSwitch",
+        "label" : "Enabled",
+        "role" : "switch",
+        "targetOID" : 130,
+        "value" : "0",
+        "viewOID" : 130
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 10.333333333333314,
+          "width" : 346,
+          "x" : 28,
+          "y" : 352.33333333333331
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessSummary",
+        "label" : "mode=Inspect progress=50 count=2 switch=off text=-",
+        "role" : "text",
+        "targetOID" : 152,
+        "viewOID" : 152
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UISegmentedControl",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 32,
+          "width" : 346,
+          "x" : 28,
+          "y" : 370.66666666666669
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessMode",
+        "label" : "Mode",
+        "role" : "segmentedControl",
+        "targetOID" : 154,
+        "value" : "Inspect",
+        "viewOID" : 154
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UISlider",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 14.333333333333314,
+          "width" : 294,
+          "x" : 28,
+          "y" : 409.66666666666669
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessSlider",
+        "label" : "Progress",
+        "role" : "slider",
+        "targetOID" : 202,
+        "value" : "0.50",
+        "viewOID" : 202
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 14.333333333333314,
+          "width" : 44,
+          "x" : 330,
+          "y" : 409.66666666666669
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessSliderValue",
+        "label" : "50%",
+        "role" : "text",
+        "targetOID" : 218,
+        "viewOID" : 218
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 14.333333333333314,
+          "width" : 36,
+          "x" : 28,
+          "y" : 432
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessStepperValue",
+        "label" : "2",
+        "role" : "text",
+        "targetOID" : 222,
+        "viewOID" : 222
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIStepper",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 14.333333333333314,
+          "width" : 298,
+          "x" : 76,
+          "y" : 432
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessStepper",
+        "label" : "Count",
+        "role" : "stepper",
+        "targetOID" : 224,
+        "value" : "2",
+        "viewOID" : 224
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UITextField",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 34,
+          "width" : 346,
+          "x" : 28,
+          "y" : 454.33333333333331
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessTextField",
+        "label" : "Triton type target",
+        "role" : "textField",
+        "targetOID" : 230,
+        "value" : "Triton type target",
+        "viewOID" : 230
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UITextView",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 61.999999999999943,
+          "width" : 346,
+          "x" : 28,
+          "y" : 496.33333333333331
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessTextView",
+        "role" : "textView",
+        "targetOID" : 242,
+        "value" : "Notes",
+        "viewOID" : 242
+      },
+      {
+        "children" : [
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 28,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem1",
+            "label" : "item 1",
+            "role" : "text",
+            "targetOID" : 266,
+            "viewOID" : 266
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 110,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem2",
+            "label" : "item 2",
+            "role" : "text",
+            "targetOID" : 268,
+            "viewOID" : 268
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 192,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem3",
+            "label" : "item 3",
+            "role" : "text",
+            "targetOID" : 270,
+            "viewOID" : 270
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 274,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem4",
+            "label" : "item 4",
+            "role" : "text",
+            "targetOID" : 272,
+            "viewOID" : 272
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 356,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem5",
+            "label" : "item 5",
+            "role" : "text",
+            "targetOID" : 274,
+            "viewOID" : 274
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 438,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem6",
+            "label" : "item 6",
+            "role" : "text",
+            "targetOID" : 276,
+            "viewOID" : 276
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 520,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem7",
+            "label" : "item 7",
+            "role" : "text",
+            "targetOID" : 278,
+            "viewOID" : 278
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 602,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem8",
+            "label" : "item 8",
+            "role" : "text",
+            "targetOID" : 280,
+            "viewOID" : 280
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 684,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem9",
+            "label" : "item 9",
+            "role" : "text",
+            "targetOID" : 282,
+            "viewOID" : 282
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 766,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem10",
+            "label" : "item 10",
+            "role" : "text",
+            "targetOID" : 284,
+            "viewOID" : 284
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 848,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem11",
+            "label" : "item 11",
+            "role" : "text",
+            "targetOID" : 286,
+            "viewOID" : 286
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 930,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem12",
+            "label" : "item 12",
+            "role" : "text",
+            "targetOID" : 288,
+            "viewOID" : 288
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 1012,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem13",
+            "label" : "item 13",
+            "role" : "text",
+            "targetOID" : 290,
+            "viewOID" : 290
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 1094,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem14",
+            "label" : "item 14",
+            "role" : "text",
+            "targetOID" : 292,
+            "viewOID" : 292
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 1176,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem15",
+            "label" : "item 15",
+            "role" : "text",
+            "targetOID" : 294,
+            "viewOID" : 294
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 1258,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem16",
+            "label" : "item 16",
+            "role" : "text",
+            "targetOID" : 296,
+            "viewOID" : 296
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 1340,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem17",
+            "label" : "item 17",
+            "role" : "text",
+            "targetOID" : 298,
+            "viewOID" : 298
+          },
+          {
+            "children" : [
+
+            ],
+            "className" : "TritonKitDemo.PaddedLabel",
+            "enabled" : false,
+            "focused" : false,
+            "frame" : {
+              "height" : 48,
+              "width" : 72,
+              "x" : 1422,
+              "y" : 566.33333333333337
+            },
+            "hidden" : false,
+            "identifier" : "ComplexHarnessCarouselItem18",
+            "label" : "item 18",
+            "role" : "text",
+            "targetOID" : 300,
+            "viewOID" : 300
+          }
+        ],
+        "className" : "UIScrollView",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 48,
+          "width" : 346,
+          "x" : 28,
+          "y" : 566.33333333333337
+        },
+        "hidden" : false,
+        "identifier" : "ComplexHarnessCarousel",
+        "role" : "scrollView",
+        "targetOID" : 262,
+        "viewOID" : 262
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "WKScrollView",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 150,
+          "width" : 370,
+          "x" : 16,
+          "y" : 636.33333333333326
+        },
+        "hidden" : false,
+        "identifier" : "WebViewSmokeScrollView",
+        "role" : "scrollView",
+        "targetOID" : 314,
+        "viewOID" : 314
+      }
+    ],
+    "className" : "UIWindow",
+    "enabled" : true,
+    "focused" : true,
+    "frame" : {
+      "height" : 874,
+      "width" : 402,
+      "x" : 0,
+      "y" : 0
+    },
+    "hidden" : false,
+    "role" : "window",
+    "targetOID" : 1,
+    "viewOID" : 1
+  }
+]

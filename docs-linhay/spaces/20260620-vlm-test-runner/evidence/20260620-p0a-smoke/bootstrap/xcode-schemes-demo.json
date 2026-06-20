@@ -1,0 +1,10 @@
+{
+  "ok" : true,
+  "project" : "Examples\/TritonKitDemo\/TritonKitDemo.xcodeproj",
+  "schemes" : [
+    "TritonKit",
+    "TritonKitDemo",
+    "TritonKitShared"
+  ],
+  "sourceCommand" : "xcodebuild -project Examples\/TritonKitDemo\/TritonKitDemo.xcodeproj -list -json"
+}

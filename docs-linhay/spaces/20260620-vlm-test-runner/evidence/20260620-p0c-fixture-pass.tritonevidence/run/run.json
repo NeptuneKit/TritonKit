@@ -1,0 +1,1 @@
+{"durationMs":4000,"endedAt":"2026-06-20T08:32:57Z","evidenceManifestRef":"../manifest.json","kind":"triton.test.run","planRef":null,"runId":"run-p0c-fixture-pass-001","schemaVersion":1,"source":"manual-primitive-smoke","startedAt":"2026-06-20T08:32:53Z","status":"passed"}

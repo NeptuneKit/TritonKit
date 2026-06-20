@@ -1,0 +1,133 @@
+{
+  "artifacts" : [
+    {
+      "contentType" : "application\/json",
+      "kind" : "test.normalized-plan",
+      "path" : "normalized-plan.json"
+    },
+    {
+      "contentType" : "application\/json",
+      "kind" : "test.run.meta",
+      "path" : "run\/run.json"
+    },
+    {
+      "contentType" : "application\/jsonl",
+      "kind" : "test.run.events",
+      "path" : "run\/events.jsonl"
+    },
+    {
+      "contentType" : "application\/json",
+      "kind" : "runtime.target",
+      "path" : "runtime-target.json",
+      "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+    },
+    {
+      "bytes" : 25571,
+      "contentType" : "image\/png",
+      "kind" : "screenshot",
+      "path" : "screenshots\/step-001.png",
+      "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+    },
+    {
+      "bytes" : 116,
+      "contentType" : "application\/json",
+      "kind" : "screenshot.metadata",
+      "path" : "screenshots\/step-001.json",
+      "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+    },
+    {
+      "bytes" : 48180,
+      "contentType" : "image\/png",
+      "kind" : "screenshot",
+      "path" : "screenshots\/step-004.png",
+      "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+    },
+    {
+      "bytes" : 116,
+      "contentType" : "application\/json",
+      "kind" : "screenshot.metadata",
+      "path" : "screenshots\/step-004.json",
+      "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+    }
+  ],
+  "cli" : {
+    "schemaVersion" : 1,
+    "version" : "0.1.0-dev"
+  },
+  "createdAt" : "2026-06-20T09:06:19Z",
+  "formatVersion" : 1,
+  "name" : "triton-test-run",
+  "ok" : true,
+  "output" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260620-p0d-fixture-pass.tritonevidence",
+  "primaryArtifact" : {
+    "bytes" : 25571,
+    "contentType" : "image\/png",
+    "kind" : "screenshot",
+    "path" : "screenshots\/step-001.png",
+    "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+  },
+  "primaryArtifacts" : [
+    {
+      "bytes" : 25571,
+      "contentType" : "image\/png",
+      "kind" : "screenshot",
+      "path" : "screenshots\/step-001.png",
+      "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+    },
+    {
+      "bytes" : 48180,
+      "contentType" : "image\/png",
+      "kind" : "screenshot",
+      "path" : "screenshots\/step-004.png",
+      "target" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+    },
+    {
+      "contentType" : "application\/json",
+      "kind" : "test.normalized-plan",
+      "path" : "normalized-plan.json"
+    },
+    {
+      "contentType" : "application\/json",
+      "kind" : "test.run.meta",
+      "path" : "run\/run.json"
+    },
+    {
+      "contentType" : "application\/jsonl",
+      "kind" : "test.run.events",
+      "path" : "run\/events.jsonl"
+    }
+  ],
+  "run" : {
+    "debugArtifactPaths" : [
+
+    ],
+    "eventCount" : 27,
+    "eventsPath" : "run\/events.jsonl",
+    "metaPath" : "run\/run.json",
+    "screenshotPaths" : [
+      "screenshots\/step-001.png",
+      "screenshots\/step-004.png"
+    ],
+    "status" : "completed",
+    "summary" : {
+      "frictionCount" : 0,
+      "runID" : "run-976f4b24-71cf-44b0-bc26-eb930816d6c6",
+      "stepCount" : 6,
+      "verdict" : "success"
+    }
+  },
+  "skipped" : [
+
+  ],
+  "target" : {
+    "appName" : "TritonKitTestFixture",
+    "bundleIdentifier" : "com.neptunekit.tritonkit.testfixture",
+    "connected" : true,
+    "deviceDescription" : "iPhone",
+    "hierarchyCacheState" : "active",
+    "id" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+    "identityState" : "current",
+    "osDescription" : "26.5",
+    "targetConnectionState" : "connected"
+  }
+}

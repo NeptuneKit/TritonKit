@@ -1,0 +1,12 @@
+{
+  "defaultHost" : "127.0.0.1",
+  "defaultPort" : 19421,
+  "language" : "en",
+  "ok" : true,
+  "schemaVersion" : 1,
+  "supportedLanguages" : [
+    "en",
+    "zh"
+  ],
+  "version" : "0.1.0-dev"
+}

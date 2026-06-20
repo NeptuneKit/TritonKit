@@ -1,0 +1,395 @@
+{
+  "dryRun" : true,
+  "elapsedMs" : 6,
+  "executedCount" : 8,
+  "failurePrimaryArtifacts" : [
+
+  ],
+  "failureRecoveryCategories" : [
+
+  ],
+  "failureWorkflowCategories" : [
+
+  ],
+  "ok" : true,
+  "planName" : "replay-template",
+  "recoveryCommands" : [
+
+  ],
+  "stepCount" : 8,
+  "steps" : [
+    {
+      "action" : "tap",
+      "argv" : [
+        "triton",
+        "tap",
+        "登录",
+        "--json"
+      ],
+      "category" : "act",
+      "command" : [
+        "triton",
+        "tap",
+        "登录",
+        "--json"
+      ],
+      "dryRun" : true,
+      "elapsedMs" : 0,
+      "expectedArtifacts" : [
+        "stdout-json",
+        "input-result"
+      ],
+      "index" : 1,
+      "message" : "dry-run",
+      "ok" : true,
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable"
+      ],
+      "workflowCategories" : [
+        "action",
+        "assert",
+        "evidence"
+      ]
+    },
+    {
+      "action" : "tap",
+      "argv" : [
+        "triton",
+        "tap",
+        "--x",
+        "180",
+        "--y",
+        "250",
+        "--json"
+      ],
+      "category" : "act",
+      "command" : [
+        "triton",
+        "tap",
+        "--x",
+        "180",
+        "--y",
+        "250",
+        "--json"
+      ],
+      "dryRun" : true,
+      "elapsedMs" : 0,
+      "expectedArtifacts" : [
+        "stdout-json",
+        "input-result"
+      ],
+      "index" : 2,
+      "message" : "dry-run",
+      "ok" : true,
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable"
+      ],
+      "workflowCategories" : [
+        "action",
+        "assert",
+        "evidence"
+      ]
+    },
+    {
+      "action" : "paste",
+      "argv" : [
+        "triton",
+        "paste",
+        "demo@example.com",
+        "--json"
+      ],
+      "category" : "act",
+      "command" : [
+        "triton",
+        "paste",
+        "demo@example.com",
+        "--json"
+      ],
+      "dryRun" : true,
+      "elapsedMs" : 0,
+      "expectedArtifacts" : [
+        "stdout-json",
+        "input-result"
+      ],
+      "index" : 3,
+      "message" : "dry-run",
+      "ok" : true,
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable"
+      ],
+      "workflowCategories" : [
+        "action",
+        "assert",
+        "evidence"
+      ]
+    },
+    {
+      "action" : "tap",
+      "argv" : [
+        "triton",
+        "tap",
+        "--x",
+        "180",
+        "--y",
+        "304",
+        "--json"
+      ],
+      "category" : "act",
+      "command" : [
+        "triton",
+        "tap",
+        "--x",
+        "180",
+        "--y",
+        "304",
+        "--json"
+      ],
+      "dryRun" : true,
+      "elapsedMs" : 0,
+      "expectedArtifacts" : [
+        "stdout-json",
+        "input-result"
+      ],
+      "index" : 4,
+      "message" : "dry-run",
+      "ok" : true,
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable"
+      ],
+      "workflowCategories" : [
+        "action",
+        "assert",
+        "evidence"
+      ]
+    },
+    {
+      "action" : "paste",
+      "argv" : [
+        "triton",
+        "paste",
+        "--secure",
+        "<redacted:13>",
+        "--json"
+      ],
+      "category" : "act",
+      "command" : [
+        "triton",
+        "paste",
+        "--secure",
+        "<redacted:13>",
+        "--json"
+      ],
+      "dryRun" : true,
+      "elapsedMs" : 0,
+      "expectedArtifacts" : [
+        "stdout-json",
+        "input-result"
+      ],
+      "index" : 5,
+      "message" : "dry-run",
+      "ok" : true,
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable"
+      ],
+      "workflowCategories" : [
+        "action",
+        "assert",
+        "evidence"
+      ]
+    },
+    {
+      "action" : "tap",
+      "argv" : [
+        "triton",
+        "tap",
+        "--x",
+        "201",
+        "--y",
+        "459",
+        "--json"
+      ],
+      "category" : "act",
+      "command" : [
+        "triton",
+        "tap",
+        "--x",
+        "201",
+        "--y",
+        "459",
+        "--json"
+      ],
+      "dryRun" : true,
+      "elapsedMs" : 0,
+      "expectedArtifacts" : [
+        "stdout-json",
+        "input-result"
+      ],
+      "index" : 6,
+      "message" : "dry-run",
+      "ok" : true,
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable"
+      ],
+      "workflowCategories" : [
+        "action",
+        "assert",
+        "evidence"
+      ]
+    },
+    {
+      "action" : "wait",
+      "argv" : [
+        "triton",
+        "wait",
+        "--gone",
+        "登录",
+        "--timeout",
+        "15",
+        "--interval",
+        "0.5",
+        "--json"
+      ],
+      "category" : "verify",
+      "command" : [
+        "triton",
+        "wait",
+        "--gone",
+        "登录",
+        "--timeout",
+        "15",
+        "--interval",
+        "0.5",
+        "--json"
+      ],
+      "dryRun" : true,
+      "elapsedMs" : 0,
+      "expectedArtifacts" : [
+        "stdout-json",
+        "wait-result"
+      ],
+      "index" : 7,
+      "message" : "dry-run",
+      "ok" : true,
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable",
+        "timeout"
+      ],
+      "workflowCategories" : [
+        "assert",
+        "evidence",
+        "observe"
+      ]
+    },
+    {
+      "action" : "evidence",
+      "argv" : [
+        "triton",
+        "evidence",
+        "--output",
+        "\/tmp\/login-success.tritonevidence",
+        "--include",
+        "status,list,version,hierarchy,ax,screenshot",
+        "--name",
+        "login-success",
+        "--json"
+      ],
+      "category" : "archive",
+      "command" : [
+        "triton",
+        "evidence",
+        "--output",
+        "\/tmp\/login-success.tritonevidence",
+        "--include",
+        "status,list,version,hierarchy,ax,screenshot",
+        "--name",
+        "login-success",
+        "--json"
+      ],
+      "dryRun" : true,
+      "elapsedMs" : 0,
+      "expectedArtifacts" : [
+        "stdout-json",
+        "evidence-bundle"
+      ],
+      "index" : 8,
+      "message" : "dry-run",
+      "name" : "login-success",
+      "ok" : true,
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable",
+        "artifact.write-failed"
+      ],
+      "workflowCategories" : [
+        "evidence",
+        "replay"
+      ]
+    }
+  ],
+  "suggestedCommands" : [
+
+  ]
+}

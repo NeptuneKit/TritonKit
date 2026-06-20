@@ -1,0 +1,56 @@
+{
+  "message" : "Created editable Triton replay plan template; interactive recording is not implemented yet",
+  "ok" : true,
+  "output" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260620-p0a-smoke\/replay-template.tritonplan",
+  "plan" : {
+    "name" : "replay-template",
+    "schemaVersion" : 1,
+    "steps" : [
+      {
+        "action" : "tap",
+        "text" : "登录"
+      },
+      {
+        "action" : "tap",
+        "x" : 180,
+        "y" : 250
+      },
+      {
+        "action" : "paste",
+        "value" : "${username}"
+      },
+      {
+        "action" : "tap",
+        "x" : 180,
+        "y" : 304
+      },
+      {
+        "action" : "paste",
+        "secure" : true,
+        "value" : "${password}"
+      },
+      {
+        "action" : "tap",
+        "x" : 201,
+        "y" : 459
+      },
+      {
+        "action" : "wait",
+        "gone" : "登录",
+        "timeout" : 15
+      },
+      {
+        "action" : "evidence",
+        "name" : "login-success"
+      }
+    ],
+    "target" : {
+      "id" : "triton:local"
+    },
+    "variables" : [
+      "username",
+      "password"
+    ]
+  },
+  "templateOnly" : true
+}

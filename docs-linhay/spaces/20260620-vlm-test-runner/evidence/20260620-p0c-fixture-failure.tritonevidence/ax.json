@@ -1,0 +1,100 @@
+[
+  {
+    "children" : [
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 19.333333333333343,
+          "width" : 257.33333333333326,
+          "x" : 72.333333333333343,
+          "y" : 126
+        },
+        "hidden" : false,
+        "identifier" : "fixture.runtime.status",
+        "label" : "Fixture Runtime: Connected",
+        "role" : "text",
+        "targetOID" : 16,
+        "viewOID" : 16
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 50.333333333333343,
+          "width" : 251.33333333333337,
+          "x" : 75.333333333333329,
+          "y" : 161.33333333333334
+        },
+        "hidden" : false,
+        "identifier" : "fixture.login.title",
+        "label" : "Fixture Login",
+        "role" : "text",
+        "targetOID" : 18,
+        "viewOID" : 18
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 26.333333333333343,
+          "width" : 187,
+          "x" : 107.66666666666669,
+          "y" : 227.66666666666666
+        },
+        "hidden" : false,
+        "identifier" : "fixture.login.ready",
+        "label" : "Fixture Login Ready",
+        "role" : "text",
+        "targetOID" : 20,
+        "viewOID" : 20
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 39,
+          "width" : 94,
+          "x" : 154,
+          "y" : 270
+        },
+        "hidden" : false,
+        "identifier" : "fixture.login.goHome",
+        "label" : "Go Home",
+        "role" : "button",
+        "targetOID" : 51,
+        "title" : "Go Home",
+        "viewOID" : 51
+      }
+    ],
+    "className" : "UIWindow",
+    "enabled" : true,
+    "focused" : true,
+    "frame" : {
+      "height" : 874,
+      "width" : 402,
+      "x" : 0,
+      "y" : 0
+    },
+    "hidden" : false,
+    "role" : "window",
+    "targetOID" : 1,
+    "viewOID" : 1
+  }
+]

@@ -1,0 +1,27 @@
+{
+  "fingerprint" : {
+    "axTextHash" : "9dd8366eaabc10bceb70f53fd242a741b90a63095e5126c3aa7d0dd3ee7247b6",
+    "hierarchySha256" : "d1c3752c8d74a356ba2ff6fad935c2b156cf5874d42ecd6762d7daa513bf79e8",
+    "screenshotSha256" : "f62761381de403a456ba0abdd80a80393cae4309d773db5ce3d2fd736e897c73"
+  },
+  "kind" : "triton.app-map.screen",
+  "primaryText" : "Fixture Login",
+  "runLocalScreenIds" : [
+    "screen-000"
+  ],
+  "schemaVersion" : 1,
+  "screenId" : "screen-a5170de89946",
+  "sourceRuns" : [
+    "run-5bba70db-d435-4fa0-9a3f-c53d03212f1a"
+  ],
+  "visibleTexts" : [
+    "Fixture Runtime: Connected",
+    "fixture.runtime.status",
+    "Fixture Login",
+    "fixture.login.title",
+    "Fixture Login Ready",
+    "fixture.login.ready",
+    "Go Home",
+    "fixture.login.goHome"
+  ]
+}

@@ -1,0 +1,1224 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+
+      ],
+      "artifacts" : [
+        "app-container",
+        "app-preferences",
+        "runtime-snapshot"
+      ],
+      "examples" : [
+        "triton app list --device iphone15 --user-only --json",
+        "triton app info --device iphone15 --bundle-id com.example.app --json",
+        "triton app inspect --platform android --device android-a --bundle com.example.app --json",
+        "triton app inspect --platform harmony --bundle com.example.app --json",
+        "triton app install --device iphone15 --app \/tmp\/Demo.app --json",
+        "triton app install --device android-a --platform android --apk \/tmp\/Demo.apk --json",
+        "triton app install --device harmony-a --hap \/tmp\/Demo.hap --json",
+        "triton app install --device <android-real-target> --platform android --scope real --apk \/tmp\/Demo.apk --json",
+        "triton app info --device <ios-real-target> --platform ios --scope real --bundle-id com.example.app --json",
+        "triton app list --device <android-real-target> --platform android --scope real --user-only --json",
+        "triton app uninstall --device iphone15 --bundle-id com.example.app --confirm --json",
+        "triton app uninstall --device android-a --platform android --package-name com.example.app --confirm --json",
+        "triton app launch --device iphone15 --bundle-id com.example.app --json",
+        "triton app launch --platform ios --name 'iPhone 15' --bundle-id com.example.app --json",
+        "triton app launch --bundle-id com.example.app --json",
+        "triton app launch --device android-a --platform android --package-name com.example.app --json",
+        "triton app launch --device harmony-a --bundle com.example.app --ability EntryAbility --json",
+        "triton app launch --device <ios-real-target> --platform ios --scope real --bundle-id com.example.app --json",
+        "triton app launch --platform harmony --bundle com.example.app --ability EntryAbility --json",
+        "triton app open-url example:\/\/debug --device android-a --platform android --package-name com.example.app --json",
+        "triton app open-url example:\/\/debug --device <android-real-target> --platform android --scope real --package-name com.example.app --json",
+        "triton app open-url --device harmony-a --bundle com.example.app --ability EntryAbility example:\/\/debug --json",
+        "triton app terminate --device iphone15 --bundle-id com.example.app --json",
+        "triton app terminate --device android-a --platform android --package-name com.example.app --json",
+        "triton app terminate --device <harmony-real-target> --platform harmony --scope real --bundle com.example.app --json",
+        "triton app go \"example:\/\/debug\"",
+        "triton app go \"example:\/\/debug\" --device iphone15",
+        "triton app open-url \"example:\/\/debug\" --device iphone15 --json",
+        "triton app open-url \"example:\/\/debug\" --device iphone15 --wait-ready --snapshot --json",
+        "triton app container --device iphone15 --bundle-id com.example.app --kind data --json",
+        "triton app prefs get DEBUG-mock --device iphone15 --bundle-id com.example.app --json",
+        "triton app prefs set DEBUG-mock true --device iphone15 --bundle-id com.example.app --json",
+        "triton app prefs set SeedState --type data --base64 W3t9XQ== --device iphone15 --bundle-id com.example.app --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "ambiguous_target",
+        "target_not_found",
+        "target_offline",
+        "target_platform_mismatch",
+        "parameter_conflict",
+        "simulator_not_found",
+        "unsupported_host_action",
+        "device_not_ready",
+        "device_locked",
+        "debug_runtime_disabled",
+        "runtime_not_connected",
+        "devicectl_not_found",
+        "device_not_trusted",
+        "developer_mode_required",
+        "ddi_missing",
+        "xcode_signing_failed",
+        "provisioning_profile_missing",
+        "android_adb_not_found",
+        "android_target_unauthorized",
+        "android_target_offline",
+        "android_debugging_disabled",
+        "android_package_manager_unavailable",
+        "android_app_install_failed",
+        "android_activity_resolve_failed",
+        "harmony_hdc_not_found",
+        "harmony_target_unauthorized",
+        "harmony_target_offline",
+        "harmony_debugging_disabled",
+        "harmony_shell_unavailable",
+        "harmony_app_install_failed",
+        "harmony_ability_launch_failed",
+        "app_info_not_available",
+        "app_container_not_found",
+        "app_install_failed",
+        "app_launch_failed",
+        "app_terminate_failed",
+        "host_open_url_failed",
+        "host_command_timeout",
+        "host_action_failed",
+        "missing_preferences",
+        "plist_not_found",
+        "preference_key_not_found",
+        "destructive_action_requires_policy",
+        "validation_failed"
+      ],
+      "failureShape" : "{ ok:false, error:{ code, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "app",
+      "nextCommands" : [
+        "triton app go <url>",
+        "triton status --json",
+        "triton assert text-exists <text> --json",
+        "triton evidence --output <dir.tritonevidence> --json",
+        "triton target resolve <selector> --json",
+        "triton plan --format json"
+      ],
+      "options" : [
+        {
+          "description" : "Host app platform filter; when omitted, install\/launch\/terminate\/open-url infer the platform from the provided app identifiers",
+          "name" : "--platform",
+          "required" : false,
+          "type" : "ios|android|harmony"
+        },
+        {
+          "description" : "Unified host target selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current",
+          "name" : "--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Device scope filter for resolving host app targets",
+          "name" : "--scope",
+          "required" : false,
+          "type" : "simulator|emulator|real|all"
+        },
+        {
+          "description" : "iOS app bundle identifier for info, uninstall, launch, terminate, container, and preferences",
+          "name" : "--bundle-id",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Android package name for install, launch, terminate, and open-url",
+          "name" : "--package-name",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Android activity name for explicit component launch",
+          "name" : "--activity",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Harmony bundle name for inspect, launch, terminate, and open-url",
+          "name" : "--bundle",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Harmony ability name for launch and open-url",
+          "name" : "--ability",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Path to iOS .app bundle for install",
+          "name" : "--app",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Path to Android .apk package for install",
+          "name" : "--apk",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Path to Harmony .hap package for install",
+          "name" : "--hap",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "List only user-installed simulator apps",
+          "name" : "--user-only",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Required for destructive app operations such as uninstall",
+          "name" : "--confirm",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "data",
+          "description" : "Container kind to resolve, for example app, data, groups, or all",
+          "name" : "--kind",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Preference set value type; data requires exactly one of --base64 or --hex",
+          "name" : "--type",
+          "required" : false,
+          "type" : "json|data"
+        },
+        {
+          "description" : "Base64 payload for prefs set --type data",
+          "name" : "--base64",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Hex payload for prefs set --type data; optional 0x prefix and whitespace are accepted",
+          "name" : "--hex",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Device name filter, for example iPhone 15",
+          "name" : "--name",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Runtime filter, for example iOS 26.5",
+          "name" : "--runtime",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Target state filter, for example booted or connected",
+          "name" : "--state",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Only match ready host targets",
+          "name" : "--ready",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Explicit iOS simulator selector; cannot be combined with --device",
+          "name" : "--simulator",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "iOS embedded runtime target for open-url readiness\/snapshot verification",
+          "name" : "--runtime-target",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "After open-url, wait until embedded runtime is connected with active hierarchy",
+          "name" : "--wait-ready",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "After open-url, return embedded runtime app\/scene\/route\/AX\/geometry snapshot summary",
+          "name" : "--snapshot",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "app,scene,route,ax,geometry",
+          "description" : "Comma-separated snapshot sections",
+          "name" : "--snapshot-include",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Maximum AX nodes in the runtime snapshot",
+          "name" : "--max-ax-nodes",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host for readiness\/snapshot verification",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port for readiness\/snapshot verification",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "20",
+          "description" : "Runtime readiness timeout in seconds",
+          "name" : "--timeout",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "defaultValue" : "0.5",
+          "description" : "Runtime readiness polling interval in seconds",
+          "name" : "--interval",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Compatibility Harmony target selector, for example 127.0.0.1:10100; cannot be combined with --device",
+          "name" : "--target",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "hdc",
+          "description" : "HDC executable path",
+          "name" : "--hdc",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Whether the host action completed",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "host-simulator or host-harmony",
+              "name" : "runtimeScope",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved host target id",
+              "name" : "target",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Unified target selection details",
+              "name" : "selection",
+              "required" : false,
+              "type" : "HostDeviceSelectionResult?"
+            },
+            {
+              "description" : "Submission proof; ok=true only means host action was accepted",
+              "name" : "hostAction",
+              "required" : true,
+              "type" : "HostActionSubmissionEvidence"
+            },
+            {
+              "description" : "Whether the host action was submitted",
+              "name" : "hostAction.ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Always host-action for this output",
+              "name" : "hostAction.proofSource",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Always false until wait\/assert\/smoke\/evidence proves business readiness",
+              "name" : "hostAction.businessReady",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Suggested proof-producing follow-up command",
+              "name" : "hostAction.nextAction",
+              "required" : true,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "hostAction.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "hostAction.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "hostAction.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "hostAction.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "hostAction.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "hostAction.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "hostAction.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Host executable",
+              "name" : "tool",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Host process exit code",
+              "name" : "exitCode",
+              "required" : true,
+              "type" : "Int32"
+            },
+            {
+              "description" : "Host command risk level",
+              "name" : "riskLevel",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether stdout sample was truncated",
+              "name" : "stdoutTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether stderr sample was truncated",
+              "name" : "stderrTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Bounded stdout sample",
+              "name" : "stdout",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Bounded stderr sample",
+              "name" : "stderr",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Written artifact paths",
+              "name" : "artifacts",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Simulator screenshot orientation and pixel metadata",
+              "name" : "screenshot",
+              "required" : false,
+              "type" : "HostSimulatorScreenshotMetadata?"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : false,
+              "type" : "String?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostActionOutput|HostAppContainerOutput|HostAppPreferenceOutput",
+          "selector" : "host.app-action"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether app inspection succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "app.info or app.inspect",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved iOS simulator UDID",
+              "name" : "simulatorUDID",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "iOS app bundle identifier",
+              "name" : "bundleID",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Installed app metadata for iOS simulator apps",
+              "name" : "app",
+              "required" : false,
+              "type" : "TKHostInstalledApp?"
+            },
+            {
+              "description" : "android when inspecting Android apps",
+              "name" : "platform",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Resolved Android host target",
+              "name" : "target",
+              "required" : false,
+              "type" : "HostDeviceTarget?"
+            },
+            {
+              "description" : "Android package name",
+              "name" : "packageName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : false,
+              "type" : "[String]?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostAppInfoOutput|HostAndroidAppInfoOutput",
+          "selector" : "host.android-app-inspect"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the host action completed",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "host-simulator or host-harmony",
+              "name" : "runtimeScope",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved host target id",
+              "name" : "target",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Unified target selection details",
+              "name" : "selection",
+              "required" : false,
+              "type" : "HostDeviceSelectionResult?"
+            },
+            {
+              "description" : "Submission proof; ok=true only means host action was accepted",
+              "name" : "hostAction",
+              "required" : true,
+              "type" : "HostActionSubmissionEvidence"
+            },
+            {
+              "description" : "Whether the host action was submitted",
+              "name" : "hostAction.ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Always host-action for this output",
+              "name" : "hostAction.proofSource",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Always false until wait\/assert\/smoke\/evidence proves business readiness",
+              "name" : "hostAction.businessReady",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Suggested proof-producing follow-up command",
+              "name" : "hostAction.nextAction",
+              "required" : true,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "hostAction.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "hostAction.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "hostAction.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "hostAction.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "hostAction.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "hostAction.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "hostAction.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Host executable",
+              "name" : "tool",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Host process exit code",
+              "name" : "exitCode",
+              "required" : true,
+              "type" : "Int32"
+            },
+            {
+              "description" : "Host command risk level",
+              "name" : "riskLevel",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether stdout sample was truncated",
+              "name" : "stdoutTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether stderr sample was truncated",
+              "name" : "stderrTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Bounded stdout sample",
+              "name" : "stdout",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Bounded stderr sample",
+              "name" : "stderr",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Written artifact paths",
+              "name" : "artifacts",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Simulator screenshot orientation and pixel metadata",
+              "name" : "screenshot",
+              "required" : false,
+              "type" : "HostSimulatorScreenshotMetadata?"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : false,
+              "type" : "String?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostActionOutput",
+          "selector" : "host.android-app-install"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the host action completed",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "host-simulator or host-harmony",
+              "name" : "runtimeScope",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved host target id",
+              "name" : "target",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Unified target selection details",
+              "name" : "selection",
+              "required" : false,
+              "type" : "HostDeviceSelectionResult?"
+            },
+            {
+              "description" : "Submission proof; ok=true only means host action was accepted",
+              "name" : "hostAction",
+              "required" : true,
+              "type" : "HostActionSubmissionEvidence"
+            },
+            {
+              "description" : "Whether the host action was submitted",
+              "name" : "hostAction.ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Always host-action for this output",
+              "name" : "hostAction.proofSource",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Always false until wait\/assert\/smoke\/evidence proves business readiness",
+              "name" : "hostAction.businessReady",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Suggested proof-producing follow-up command",
+              "name" : "hostAction.nextAction",
+              "required" : true,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "hostAction.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "hostAction.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "hostAction.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "hostAction.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "hostAction.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "hostAction.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "hostAction.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Host executable",
+              "name" : "tool",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Host process exit code",
+              "name" : "exitCode",
+              "required" : true,
+              "type" : "Int32"
+            },
+            {
+              "description" : "Host command risk level",
+              "name" : "riskLevel",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether stdout sample was truncated",
+              "name" : "stdoutTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether stderr sample was truncated",
+              "name" : "stderrTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Bounded stdout sample",
+              "name" : "stdout",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Bounded stderr sample",
+              "name" : "stderr",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Written artifact paths",
+              "name" : "artifacts",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Simulator screenshot orientation and pixel metadata",
+              "name" : "screenshot",
+              "required" : false,
+              "type" : "HostSimulatorScreenshotMetadata?"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : false,
+              "type" : "String?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostActionOutput",
+          "selector" : "host.android-app-launch"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the open-url flow passed",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "app.open-url",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "pass or fail",
+              "name" : "status",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "ios",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Submitted URL",
+              "name" : "url",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Simulator target",
+              "name" : "simulator",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Embedded runtime target",
+              "name" : "runtimeTarget",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Host-side URL submission result",
+              "name" : "hostAction",
+              "required" : true,
+              "type" : "HostAppOpenURLHostStep"
+            },
+            {
+              "description" : "Optional runtime readiness summary",
+              "name" : "ready",
+              "required" : false,
+              "type" : "HostAppOpenURLReadySummary?"
+            },
+            {
+              "description" : "Optional runtime snapshot summary",
+              "name" : "snapshot",
+              "required" : false,
+              "type" : "HostAppOpenURLSnapshotSummary?"
+            },
+            {
+              "description" : "Elapsed milliseconds",
+              "name" : "elapsedMs",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-app-open-url-flow",
+          "model" : "HostAppOpenURLFlowSummary",
+          "selector" : "host.app-open-url"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json"
+      ],
+      "outputSemantics" : "Use app for host-side install, launch, terminate, open-url, container, and preferences across iOS Simulator, Android Emulator, and Harmony Emulator. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait\/observe\/screenshot or smoke evidence.",
+      "providedCapabilities" : [
+        "host-app",
+        "host-app-open-url-ready",
+        "host-app-open-url-snapshot",
+        "host-preferences",
+        "ios-real-app",
+        "android-app",
+        "android-app-inspect",
+        "android-app-install",
+        "android-app-launch",
+        "android-app-terminate",
+        "android-app-open-url",
+        "harmony-app",
+        "harmony-app-install",
+        "harmony-app-open-url",
+        "harmony-app-info"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "prepare-target",
+          "command" : "triton app go <url>"
+        },
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton assert text-exists <text> --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        },
+        {
+          "category" : "plan",
+          "command" : "triton plan --format json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "retryable" : false,
+      "runtimeScope" : "host-simulator|host-android|host-harmony",
+      "subcommands" : [
+
+      ],
+      "successShape" : "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? } or { ok, action, plistPath, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
+      "summary" : "Control local simulator and emulator apps through host-side tools",
+      "usageForms" : [
+        {
+          "description" : "List installed simulator apps",
+          "form" : "list",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Show installed app metadata",
+          "form" : "info --bundle-id <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Compatibility alias for Android package metadata inspection through adb dumpsys package",
+          "form" : "inspect --platform android --bundle <bundle-id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Inspect a Harmony app with bm dump",
+          "form" : "inspect --platform harmony --bundle <bundle>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Install an .app bundle into the simulator",
+          "form" : "install --app <path.app>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Install an Android APK through adb install -r",
+          "form" : "install --platform android --apk <path.apk>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Install a Harmony HAP through hdc install -r",
+          "form" : "install --platform harmony --hap <path.hap>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Real-device install contract placeholder; host action submission does not prove business readiness",
+          "form" : "install --device <selector> --scope real --app|--apk|--hap <path>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Uninstall an app from the simulator",
+          "form" : "uninstall --bundle-id <id> --confirm",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Uninstall an Android package through adb uninstall",
+          "form" : "uninstall --platform android --package-name <package> --confirm",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Launch an installed simulator app",
+          "form" : "launch --bundle-id <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Launch an Android package; when --activity is omitted Triton resolves the default activity before adb am start",
+          "form" : "launch --platform android --package-name <package>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Launch a Harmony app ability",
+          "form" : "launch --platform harmony --bundle <bundle> --ability <ability>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Real-device launch contract placeholder; use wait\/assert\/evidence for business readiness",
+          "form" : "launch --device <selector> --scope real --bundle-id|--package-name|--bundle <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Terminate a running simulator app",
+          "form" : "terminate --bundle-id <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Force-stop an Android package through adb shell am force-stop",
+          "form" : "terminate --platform android --package-name <package>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Force-stop a Harmony app",
+          "form" : "terminate --platform harmony --bundle <bundle>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Open an iOS URL, wait for embedded runtime readiness, and return a snapshot summary",
+          "form" : "go <url>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Submit a URL to the simulator",
+          "form" : "open-url <url>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Submit an Android VIEW intent through adb shell am start",
+          "form" : "open-url --platform android <url>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Open a URL, wait for embedded runtime readiness, and return an app\/route\/AX snapshot summary",
+          "form" : "open-url <url> --wait-ready --snapshot",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Open a Harmony deep link through aa start -U",
+          "form" : "open-url --platform harmony --bundle <bundle> --ability <ability> <url>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Real-device deep-link contract placeholder; host action submission is not business proof",
+          "form" : "open-url <url> --device <selector> --scope real --bundle-id|--package-name|--bundle <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Print app container path",
+          "form" : "container --bundle-id <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Dump app preferences plist as JSON",
+          "form" : "prefs dump --bundle-id <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Read one app preference",
+          "form" : "prefs get <key> --bundle-id <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Set one simulator app preference from a property-list compatible JSON value",
+          "form" : "prefs set <key> <json-value> --bundle-id <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Set one simulator app preference as plist Data from base64",
+          "form" : "prefs set <key> --type data --base64 <base64> --bundle-id <id>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Set one simulator app preference as plist Data from defaults-style hex bytes",
+          "form" : "prefs set <key> --type data --hex <hex> --bundle-id <id>",
+          "kind" : "Subcommand"
+        }
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

@@ -1,0 +1,24 @@
+{
+  "action" : "app.info",
+  "app" : {
+    "applicationType" : "User",
+    "bundleContainerURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/F4BCD2E2-C7B1-4762-9550-5E6990C038EC\/",
+    "bundleID" : "com.neptunekit.tritonkit.demo",
+    "bundleURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/F4BCD2E2-C7B1-4762-9550-5E6990C038EC\/TritonKitDemo.app\/",
+    "dataContainerURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Data\/Application\/194ED78C-D4D8-4136-B8D3-1C95459E630D\/",
+    "displayName" : "TritonKitDemo",
+    "executable" : "TritonKitDemo",
+    "groupContainers" : {
+
+    },
+    "name" : "TritonKitDemo",
+    "path" : "\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/F4BCD2E2-C7B1-4762-9550-5E6990C038EC\/TritonKitDemo.app",
+    "tags" : [
+
+    ],
+    "version" : "1"
+  },
+  "bundleID" : "com.neptunekit.tritonkit.demo",
+  "ok" : true,
+  "simulatorUDID" : "1B360513-22E7-46DB-A942-198EE522C6DC"
+}

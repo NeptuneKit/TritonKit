@@ -1,0 +1,48 @@
+{
+  "condition" : "text-exists",
+  "count" : 1,
+  "hierarchyCacheState" : "active",
+  "matches" : [
+    {
+      "className" : "UILabel",
+      "frame" : {
+        "height" : 10.333333333333314,
+        "width" : 346,
+        "x" : 28,
+        "y" : 352.3333333333333
+      },
+      "identifier" : "ComplexHarnessSummary",
+      "label" : "mode=Inspect progress=50 count=2 switch=off text=p0a",
+      "role" : "text",
+      "source" : "label",
+      "targetOID" : 152,
+      "text" : "mode=Inspect progress=50 count=2 switch=off text=p0a",
+      "viewOID" : 152
+    }
+  ],
+  "ok" : true,
+  "query" : "mode=Inspect progress=50 count=2 switch=off text=p0a",
+  "sample" : [
+    "Host",
+    "127.0.0.1",
+    "Port",
+    "19421",
+    "Overview",
+    "Complex harness: 2",
+    "ComplexHarnessStatus",
+    "Primary",
+    "ComplexHarnessPrimary",
+    "Secondary",
+    "ComplexHarnessSecondary",
+    "Enabled",
+    "0",
+    "ComplexHarnessSwitch",
+    "mode=Inspect progress=50 count=2 switch=off text=p0a",
+    "ComplexHarnessSummary",
+    "Mode",
+    "Inspect",
+    "ComplexHarnessMode",
+    "Progress"
+  ],
+  "targetConnectionState" : "connected"
+}

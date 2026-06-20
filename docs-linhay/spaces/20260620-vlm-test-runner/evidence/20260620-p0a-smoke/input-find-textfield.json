@@ -1,0 +1,78 @@
+{
+  "candidates" : [
+    {
+      "className" : "UITextField",
+      "frame" : {
+        "height" : 34,
+        "width" : 346,
+        "x" : 28,
+        "y" : 454.3333333333333
+      },
+      "identifier" : "ComplexHarnessTextField",
+      "index" : 1,
+      "label" : "Triton type target",
+      "query" : "Triton type target",
+      "request" : {
+        "activationStrategy" : "smart",
+        "matchedClassName" : "UITextField",
+        "matchedOID" : 230,
+        "targetOID" : 230,
+        "type" : "tap"
+      },
+      "role" : "textField",
+      "source" : "ax",
+      "strategy" : "smart",
+      "targetOID" : 230,
+      "value" : "Triton type target",
+      "viewOID" : 230
+    },
+    {
+      "className" : "UITextFieldLabel",
+      "frame" : {
+        "height" : 20.333333333333314,
+        "width" : 332,
+        "x" : 35,
+        "y" : 461.3333333333333
+      },
+      "index" : 2,
+      "label" : "Triton type target",
+      "layerOID" : 237,
+      "query" : "Triton type target",
+      "request" : {
+        "activationStrategy" : "smart",
+        "matchedClassName" : "UITextFieldLabel",
+        "matchedOID" : 236,
+        "targetOID" : 236,
+        "type" : "tap"
+      },
+      "source" : "hierarchy-text",
+      "strategy" : "smart",
+      "viewOID" : 236
+    }
+  ],
+  "className" : "UITextField",
+  "frame" : {
+    "height" : 34,
+    "width" : 346,
+    "x" : 28,
+    "y" : 454.3333333333333
+  },
+  "identifier" : "ComplexHarnessTextField",
+  "label" : "Triton type target",
+  "matchCount" : 2,
+  "matchIndex" : 1,
+  "query" : "Triton type target",
+  "request" : {
+    "activationStrategy" : "smart",
+    "matchedClassName" : "UITextField",
+    "matchedOID" : 230,
+    "targetOID" : 230,
+    "type" : "tap"
+  },
+  "role" : "textField",
+  "source" : "ax",
+  "strategy" : "smart",
+  "targetOID" : 230,
+  "value" : "Triton type target",
+  "viewOID" : 230
+}

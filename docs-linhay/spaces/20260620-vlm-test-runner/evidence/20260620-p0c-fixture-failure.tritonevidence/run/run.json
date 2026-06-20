@@ -1,0 +1,1 @@
+{"durationMs":2000,"endedAt":"2026-06-20T08:32:55Z","evidenceManifestRef":"../manifest.json","kind":"triton.test.run","planRef":null,"runId":"run-p0c-fixture-failure-001","schemaVersion":1,"source":"manual-primitive-smoke","startedAt":"2026-06-20T08:32:53Z","status":"failed"}

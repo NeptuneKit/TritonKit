@@ -1,0 +1,48 @@
+{
+  "kind" : "triton.screen-workspace.transitions",
+  "runId" : "run-5bba70db-d435-4fa0-9a3f-c53d03212f1a",
+  "schemaVersion" : 1,
+  "source" : {
+    "eventsRef" : "run\/events.jsonl",
+    "screensRef" : "screens.json"
+  },
+  "transitions" : [
+    {
+      "after" : {
+        "eventIndex" : 29,
+        "screenId" : "screen-001"
+      },
+      "before" : {
+        "eventIndex" : 28,
+        "screenId" : "screen-000"
+      },
+      "fromScreenId" : "screen-000",
+      "stepIndex" : 3,
+      "toScreenId" : "screen-001",
+      "transitionId" : "transition-000",
+      "trigger" : {
+        "command" : [
+          "triton",
+          "tap",
+          "--target",
+          "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+          "--x",
+          "201",
+          "--y",
+          "289.5",
+          "--json"
+        ],
+        "coordinateSpace" : "runtime-point",
+        "point" : {
+          "x" : 201,
+          "y" : 289.5
+        },
+        "replayable" : true,
+        "type" : "tap"
+      }
+    }
+  ],
+  "warnings" : [
+
+  ]
+}

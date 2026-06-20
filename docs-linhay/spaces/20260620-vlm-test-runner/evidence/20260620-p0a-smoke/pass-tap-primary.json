@@ -1,0 +1,1 @@
+{"action":"tap","activationClassName":"UIButton","activationOID":122,"matchedClassName":"UIButton","matchedOID":122,"message":"Dispatched UIControl.touchUpInside","ok":true,"strategy":"ancestor-control-action","targetClassName":"UIButton","targetOID":122}

@@ -1,0 +1,13 @@
+{
+  "kind" : "triton.app-map.suite",
+  "name" : "Smoke",
+  "paths" : [
+
+  ],
+  "policy" : {
+    "stopOnFailure" : true,
+    "strict" : true
+  },
+  "schemaVersion" : 1,
+  "suiteId" : "smoke"
+}

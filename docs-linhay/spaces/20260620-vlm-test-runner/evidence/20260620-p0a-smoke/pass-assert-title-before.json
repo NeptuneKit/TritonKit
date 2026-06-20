@@ -1,0 +1,45 @@
+{
+  "condition" : "text-exists",
+  "count" : 0,
+  "hierarchyCacheState" : "active",
+  "matches" : [
+
+  ],
+  "message" : "Expected text to exist: TritonKit Demo",
+  "nearestText" : [
+    "Host",
+    "127.0.0.1",
+    "Port",
+    "19421",
+    "Overview"
+  ],
+  "ok" : false,
+  "query" : "TritonKit Demo",
+  "sample" : [
+    "Host",
+    "127.0.0.1",
+    "Port",
+    "19421",
+    "Overview",
+    "Complex harness: 0",
+    "ComplexHarnessStatus",
+    "Primary",
+    "ComplexHarnessPrimary",
+    "Secondary",
+    "ComplexHarnessSecondary",
+    "Enabled",
+    "0",
+    "ComplexHarnessSwitch",
+    "mode=Inspect progress=50 count=2 switch=off text=-",
+    "ComplexHarnessSummary",
+    "Mode",
+    "Inspect",
+    "ComplexHarnessMode",
+    "Progress"
+  ],
+  "suggestedCommands" : [
+    "triton find 'TritonKit Demo' --all --json",
+    "triton screenshot --json"
+  ],
+  "targetConnectionState" : "connected"
+}

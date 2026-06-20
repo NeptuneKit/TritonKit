@@ -1,0 +1,47 @@
+{
+  "app" : {
+    "bundleId" : "com.neptunekit.tritonkit.testfixture"
+  },
+  "device" : {
+    "platform" : "ios-simulator"
+  },
+  "kind" : "triton.test.normalized-plan",
+  "name" : "p0d-fixture-failure",
+  "schemaVersion" : 1,
+  "settings" : {
+    "retry" : {
+      "count" : 0,
+      "intervalMs" : 250
+    },
+    "strict" : true,
+    "timeoutMs" : 5000
+  },
+  "steps" : [
+    {
+      "id" : "step-000",
+      "index" : 0,
+      "kind" : "action",
+      "optional" : false,
+      "type" : "launch"
+    },
+    {
+      "id" : "step-001",
+      "index" : 1,
+      "kind" : "observation",
+      "optional" : false,
+      "type" : "takeScreenshot"
+    },
+    {
+      "id" : "step-002",
+      "index" : 2,
+      "kind" : "assertion",
+      "optional" : false,
+      "selector" : {
+        "match" : "exact",
+        "source" : "ax",
+        "text" : "Definitely Not Existing"
+      },
+      "type" : "assertVisible"
+    }
+  ]
+}

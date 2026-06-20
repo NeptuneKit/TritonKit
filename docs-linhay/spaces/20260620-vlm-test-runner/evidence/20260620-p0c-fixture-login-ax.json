@@ -1,0 +1,215 @@
+{
+  "axNodeCount" : 5,
+  "hierarchyNodeCount" : 13,
+  "mappedCount" : 5,
+  "nodes" : [
+    {
+      "className" : "UIWindow",
+      "depth" : 0,
+      "enabled" : true,
+      "focused" : true,
+      "frame" : {
+        "height" : 874,
+        "width" : 402,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "hierarchy" : {
+        "alpha" : 1,
+        "className" : "UIWindow",
+        "depth" : 0,
+        "frame" : {
+          "height" : 874,
+          "width" : 402,
+          "x" : 0,
+          "y" : 0
+        },
+        "hidden" : false,
+        "layerOID" : 2,
+        "path" : [
+          "UIWindow"
+        ],
+        "viewOID" : 1
+      },
+      "role" : "window",
+      "targetOID" : 1,
+      "viewOID" : 1
+    },
+    {
+      "className" : "UILabel",
+      "depth" : 1,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 19.333333333333343,
+        "width" : 257.33333333333326,
+        "x" : 72.33333333333334,
+        "y" : 126
+      },
+      "hidden" : false,
+      "hierarchy" : {
+        "alpha" : 1,
+        "className" : "UILabel",
+        "depth" : 8,
+        "frame" : {
+          "height" : 19.333333333333343,
+          "width" : 257.33333333333326,
+          "x" : 72.33333333333334,
+          "y" : 126
+        },
+        "hidden" : false,
+        "layerOID" : 17,
+        "path" : [
+          "UIWindow",
+          "UITransitionView",
+          "UIDropShadowView",
+          "UIDropShadowView",
+          "_TtGC7SwiftUI14_UIHostingViewGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+          "_TtGC7SwiftUI21UIKitPlatformViewHostGVS_P10$1d374ce4432PlatformViewRepresentableAdaptorV20TritonKitTestFixture17FixtureUIKitPanel__",
+          "TritonKitTestFixture.FixtureUIKitView",
+          "UIStackView",
+          "UILabel"
+        ],
+        "viewOID" : 16
+      },
+      "identifier" : "fixture.runtime.status",
+      "label" : "Fixture Runtime: Connected",
+      "role" : "text",
+      "targetOID" : 16,
+      "viewOID" : 16
+    },
+    {
+      "className" : "UILabel",
+      "depth" : 1,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 50.33333333333334,
+        "width" : 251.33333333333337,
+        "x" : 75.33333333333333,
+        "y" : 161.33333333333334
+      },
+      "hidden" : false,
+      "hierarchy" : {
+        "alpha" : 1,
+        "className" : "UILabel",
+        "depth" : 8,
+        "frame" : {
+          "height" : 50.33333333333334,
+          "width" : 251.33333333333337,
+          "x" : 75.33333333333333,
+          "y" : 161.33333333333334
+        },
+        "hidden" : false,
+        "layerOID" : 19,
+        "path" : [
+          "UIWindow",
+          "UITransitionView",
+          "UIDropShadowView",
+          "UIDropShadowView",
+          "_TtGC7SwiftUI14_UIHostingViewGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+          "_TtGC7SwiftUI21UIKitPlatformViewHostGVS_P10$1d374ce4432PlatformViewRepresentableAdaptorV20TritonKitTestFixture17FixtureUIKitPanel__",
+          "TritonKitTestFixture.FixtureUIKitView",
+          "UIStackView",
+          "UILabel"
+        ],
+        "viewOID" : 18
+      },
+      "identifier" : "fixture.login.title",
+      "label" : "Fixture Login",
+      "role" : "text",
+      "targetOID" : 18,
+      "viewOID" : 18
+    },
+    {
+      "className" : "UILabel",
+      "depth" : 1,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 26.333333333333343,
+        "width" : 187,
+        "x" : 107.66666666666669,
+        "y" : 227.66666666666666
+      },
+      "hidden" : false,
+      "hierarchy" : {
+        "alpha" : 1,
+        "className" : "UILabel",
+        "depth" : 8,
+        "frame" : {
+          "height" : 26.333333333333343,
+          "width" : 187,
+          "x" : 107.66666666666669,
+          "y" : 227.66666666666666
+        },
+        "hidden" : false,
+        "layerOID" : 21,
+        "path" : [
+          "UIWindow",
+          "UITransitionView",
+          "UIDropShadowView",
+          "UIDropShadowView",
+          "_TtGC7SwiftUI14_UIHostingViewGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+          "_TtGC7SwiftUI21UIKitPlatformViewHostGVS_P10$1d374ce4432PlatformViewRepresentableAdaptorV20TritonKitTestFixture17FixtureUIKitPanel__",
+          "TritonKitTestFixture.FixtureUIKitView",
+          "UIStackView",
+          "UILabel"
+        ],
+        "viewOID" : 20
+      },
+      "identifier" : "fixture.login.ready",
+      "label" : "Fixture Login Ready",
+      "role" : "text",
+      "targetOID" : 20,
+      "viewOID" : 20
+    },
+    {
+      "className" : "UIButton",
+      "depth" : 1,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 39,
+        "width" : 94,
+        "x" : 154,
+        "y" : 270
+      },
+      "hidden" : false,
+      "hierarchy" : {
+        "alpha" : 1,
+        "className" : "UIButton",
+        "depth" : 8,
+        "frame" : {
+          "height" : 39,
+          "width" : 94,
+          "x" : 154,
+          "y" : 270
+        },
+        "hidden" : false,
+        "layerOID" : 52,
+        "path" : [
+          "UIWindow",
+          "UITransitionView",
+          "UIDropShadowView",
+          "UIDropShadowView",
+          "_TtGC7SwiftUI14_UIHostingViewGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+          "_TtGC7SwiftUI21UIKitPlatformViewHostGVS_P10$1d374ce4432PlatformViewRepresentableAdaptorV20TritonKitTestFixture17FixtureUIKitPanel__",
+          "TritonKitTestFixture.FixtureUIKitView",
+          "UIStackView",
+          "UIButton"
+        ],
+        "viewOID" : 51
+      },
+      "identifier" : "fixture.login.goHome",
+      "label" : "Go Home",
+      "role" : "button",
+      "targetOID" : 51,
+      "title" : "Go Home",
+      "viewOID" : 51
+    }
+  ],
+  "schemaVersion" : 1,
+  "unmatchedCount" : 0
+}

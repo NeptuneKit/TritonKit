@@ -1,0 +1,12 @@
+{
+  "durationMs" : 1504,
+  "endedAt" : "2026-06-20T17:14:44Z",
+  "evidenceManifestRef" : "..\/manifest.json",
+  "kind" : "triton.test.run",
+  "planRef" : "..\/normalized-plan.json",
+  "runId" : "run-5bba70db-d435-4fa0-9a3f-c53d03212f1a",
+  "schemaVersion" : 1,
+  "source" : "docs-linhay\/spaces\/20260620-vlm-test-runner\/generated-p2b-fixture-login-home.tritontest.yaml",
+  "startedAt" : "2026-06-20T17:14:42Z",
+  "status" : "passed"
+}

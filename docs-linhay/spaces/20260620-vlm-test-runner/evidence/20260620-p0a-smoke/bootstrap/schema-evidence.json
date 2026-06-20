@@ -1,0 +1,526 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+
+      ],
+      "artifacts" : [
+        "evidence-bundle",
+        "manifest",
+        "screenshots",
+        "logs",
+        "host-artifacts",
+        "xcode-artifacts",
+        "real-device.diagnostics",
+        "host.app-action",
+        "runtime.snapshot",
+        "host.layout",
+        "build.summary",
+        "network-capture",
+        "proxy-restore"
+      ],
+      "examples" : [
+        "triton evidence --output \/tmp\/login-success.tritonevidence --json",
+        "triton evidence --include status,list,version,logs --output \/tmp\/partial.tritonevidence --json",
+        "triton evidence --include host,xcode --output \/tmp\/host-xcode.tritonevidence --json",
+        "triton evidence --include real-device.diagnostics,host.app-action,runtime.snapshot,host.layout,logs,build.summary --output \/tmp\/real-device.tritonevidence --json",
+        "triton evidence --include xcode --xcode-summary \/tmp\/xcode-summary.json --output \/tmp\/xcode.tritonevidence --json",
+        "triton evidence --include network.proxy-session --proxy-session \/tmp\/ios-network --output \/tmp\/network.tritonevidence --json",
+        "triton evidence --name v11-login --note \"DEBUG mock disabled\" --output \/tmp\/login.tritonevidence --json",
+        "triton evidence inspect \/tmp\/login-success.tritonevidence --json",
+        "triton evidence summary \/tmp\/login-success.tritonevidence --json",
+        "triton evidence redact \/tmp\/login-success.tritonevidence --profile ios-private --output \/tmp\/login-redacted.tritonevidence --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "validation_failed",
+        "server_unavailable",
+        "target_not_found",
+        "ambiguous_target",
+        "request_failed"
+      ],
+      "failureShape" : "Validation\/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "evidence",
+      "nextCommands" : [
+        "triton status --json",
+        "triton assert text-exists <text> --json",
+        "triton evidence summary <dir.tritonevidence> --json",
+        "triton evidence redact <dir.tritonevidence> --output <safe.tritonevidence> --json",
+        "triton replay <path.tritonplan> --dry-run --json",
+        "triton target resolve <selector> --json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Target id from `triton list`, or simulator UDID for iOS simulator runtime targets; commands auto-select the only connected target when omitted",
+          "name" : "--target",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Evidence bundle directory path; capture mode requires it",
+          "name" : "--output",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "status,list,version,hierarchy,ax,screenshot",
+          "description" : "Comma-separated artifact kinds: status,list,version,hierarchy,ax,screenshot,geometry,archive,logs,host,xcode,real-device.diagnostics,host.app-action,runtime.snapshot,host.layout,build.summary,network.proxy-session",
+          "name" : "--include",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Scenario name stored in manifest",
+          "name" : "--name",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Human note stored in manifest",
+          "name" : "--note",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Explicit TKXcodeActionSummary JSON to import when --include contains xcode",
+          "name" : "--xcode-summary",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Explicit device proxy session directory to import when --include contains network.proxy-session",
+          "name" : "--proxy-session",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "ios-private",
+          "description" : "Redaction profile for summary\/redact",
+          "name" : "--profile",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "true",
+          "description" : "Request fresh hierarchy before hierarchy\/archive capture",
+          "name" : "--refresh\/--no-refresh",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Whether the evidence operation succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Evidence manifest format version",
+              "name" : "formatVersion",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Scenario name",
+              "name" : "name",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Human note",
+              "name" : "note",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Creation timestamp",
+              "name" : "createdAt",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Evidence bundle output path",
+              "name" : "output",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Captured artifact records",
+              "name" : "artifacts",
+              "required" : true,
+              "type" : "[TKEvidenceArtifact]"
+            },
+            {
+              "description" : "Primary artifact summary agents should inspect first",
+              "name" : "primaryArtifact",
+              "required" : false,
+              "type" : "TKEvidenceArtifactSummary?"
+            },
+            {
+              "description" : "High-signal artifact summaries agents should inspect first",
+              "name" : "primaryArtifacts",
+              "required" : true,
+              "type" : "[TKEvidenceArtifactSummary]"
+            },
+            {
+              "description" : "Skipped artifact records",
+              "name" : "skipped",
+              "required" : true,
+              "type" : "[TKEvidenceSkippedArtifact]"
+            },
+            {
+              "description" : "Target metadata",
+              "name" : "target",
+              "required" : false,
+              "type" : "TKEvidenceTarget?"
+            },
+            {
+              "description" : "CLI metadata",
+              "name" : "cli",
+              "required" : true,
+              "type" : "TKEvidenceCLI"
+            },
+            {
+              "description" : "Run events and screenshots metadata",
+              "name" : "run",
+              "required" : false,
+              "type" : "TKEvidenceRunManifest?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "evidence-manifest",
+          "model" : "TKEvidenceManifest",
+          "selector" : "evidence.manifest"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the evidence summary succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Summary action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Input evidence bundle path",
+              "name" : "input",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Redaction profile used for the summary",
+              "name" : "profile",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Bundle creation timestamp",
+              "name" : "createdAt",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Scenario name",
+              "name" : "name",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Human note",
+              "name" : "note",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Evidence bundle output path",
+              "name" : "output",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Number of artifact records in the bundle",
+              "name" : "artifactCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Number of artifacts that should be redacted before handoff",
+              "name" : "sensitiveArtifactCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Number of skipped artifact records",
+              "name" : "skippedCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Target metadata",
+              "name" : "target",
+              "required" : false,
+              "type" : "TKEvidenceTarget?"
+            },
+            {
+              "description" : "CLI metadata",
+              "name" : "cli",
+              "required" : true,
+              "type" : "TKEvidenceCLI"
+            },
+            {
+              "description" : "Safe artifact summaries for offline inspection",
+              "name" : "artifacts",
+              "required" : true,
+              "type" : "[TKEvidenceArtifactSummary]"
+            },
+            {
+              "description" : "Primary artifact summary agents should inspect first",
+              "name" : "primaryArtifact",
+              "required" : false,
+              "type" : "TKEvidenceArtifactSummary?"
+            },
+            {
+              "description" : "High-signal artifact summaries agents should inspect first",
+              "name" : "primaryArtifacts",
+              "required" : true,
+              "type" : "[TKEvidenceArtifactSummary]"
+            },
+            {
+              "description" : "Skipped artifact records",
+              "name" : "skipped",
+              "required" : true,
+              "type" : "[TKEvidenceSkippedArtifact]"
+            },
+            {
+              "description" : "Suggested offline follow-up commands",
+              "name" : "suggestedCommands",
+              "required" : true,
+              "type" : "[String]"
+            }
+          ],
+          "format" : "json",
+          "kind" : "artifact-envelope",
+          "model" : "TKEvidenceSummaryResponse",
+          "selector" : "evidence.summary"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the evidence redaction succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Redaction action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Input evidence bundle path",
+              "name" : "input",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Output redacted bundle path",
+              "name" : "output",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Applied redaction profile",
+              "name" : "profile",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Original bundle creation timestamp",
+              "name" : "createdAt",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Total artifact count in the input bundle",
+              "name" : "artifactCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Number of artifacts replaced with redacted placeholders",
+              "name" : "redactedArtifactCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Number of artifacts copied through unchanged",
+              "name" : "keptArtifactCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Redacted evidence manifest",
+              "name" : "manifest",
+              "required" : true,
+              "type" : "TKEvidenceManifest"
+            },
+            {
+              "description" : "Redacted artifact summaries",
+              "name" : "redactedArtifacts",
+              "required" : true,
+              "type" : "[TKEvidenceArtifactSummary]"
+            },
+            {
+              "description" : "Kept artifact summaries",
+              "name" : "keptArtifacts",
+              "required" : true,
+              "type" : "[TKEvidenceArtifactSummary]"
+            },
+            {
+              "description" : "Primary artifact summary agents should inspect first",
+              "name" : "primaryArtifact",
+              "required" : false,
+              "type" : "TKEvidenceArtifactSummary?"
+            },
+            {
+              "description" : "High-signal artifact summaries agents should inspect first",
+              "name" : "primaryArtifacts",
+              "required" : true,
+              "type" : "[TKEvidenceArtifactSummary]"
+            },
+            {
+              "description" : "Path to the offline summary JSON written into the output bundle",
+              "name" : "summaryPath",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested offline follow-up commands for the redacted bundle",
+              "name" : "suggestedCommands",
+              "required" : true,
+              "type" : "[String]"
+            }
+          ],
+          "format" : "json",
+          "kind" : "artifact-envelope",
+          "model" : "TKEvidenceRedactionResponse",
+          "selector" : "evidence.redact"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json"
+      ],
+      "outputSemantics" : "Use evidence after a failed or completed run to capture auditable artifacts. Summaries and redaction are offline and do not require a runtime connection.",
+      "providedCapabilities" : [
+        "evidence",
+        "evidence-summary",
+        "evidence-redact"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton assert text-exists <text> --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence summary <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence redact <dir.tritonevidence> --output <safe.tritonevidence> --json"
+        },
+        {
+          "category" : "replay",
+          "command" : "triton replay <path.tritonplan> --dry-run --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "retryable" : false,
+      "runtimeScope" : "cli+embedded",
+      "subcommands" : [
+
+      ],
+      "successShape" : "TKEvidenceManifest, TKEvidenceSummaryResponse, or TKEvidenceRedactionResponse",
+      "summary" : "Capture, inspect, summarize, or redact an agent-friendly regression evidence bundle",
+      "usageForms" : [
+        {
+          "description" : "Read an existing bundle manifest without connecting to runtime",
+          "form" : "inspect <path>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Print a safe high-level evidence summary without binary artifacts",
+          "form" : "summary <path>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Write a redacted evidence bundle for safe handoff",
+          "form" : "redact <path> --output <path>",
+          "kind" : "Subcommand"
+        }
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

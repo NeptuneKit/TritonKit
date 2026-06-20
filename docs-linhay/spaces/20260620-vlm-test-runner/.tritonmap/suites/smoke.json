@@ -1,0 +1,13 @@
+{
+  "kind" : "triton.app-map.suite",
+  "name" : "Smoke",
+  "paths" : [
+    "path-fixture-login-home"
+  ],
+  "policy" : {
+    "stopOnFailure" : true,
+    "strict" : true
+  },
+  "schemaVersion" : 1,
+  "suiteId" : "smoke"
+}

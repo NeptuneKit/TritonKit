@@ -1,0 +1,23 @@
+{
+  "ambiguous" : false,
+  "ok" : true,
+  "packages" : [
+
+  ],
+  "path" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/Examples\/TritonKitDemo",
+  "projects" : [
+    {
+      "kind" : "project",
+      "name" : "TritonKitDemo.xcodeproj",
+      "path" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/Examples\/TritonKitDemo\/TritonKitDemo.xcodeproj"
+    }
+  ],
+  "recommendedContainer" : {
+    "kind" : "project",
+    "name" : "TritonKitDemo.xcodeproj",
+    "path" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/Examples\/TritonKitDemo\/TritonKitDemo.xcodeproj"
+  },
+  "workspaces" : [
+
+  ]
+}

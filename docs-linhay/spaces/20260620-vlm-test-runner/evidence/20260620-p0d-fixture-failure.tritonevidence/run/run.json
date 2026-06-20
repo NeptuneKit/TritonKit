@@ -1,0 +1,12 @@
+{
+  "durationMs" : 364,
+  "endedAt" : "2026-06-20T09:06:32Z",
+  "evidenceManifestRef" : "..\/manifest.json",
+  "kind" : "triton.test.run",
+  "planRef" : "..\/normalized-plan.json",
+  "runId" : "run-37a94b5f-52ca-4d27-b1c4-aa940b9977fc",
+  "schemaVersion" : 1,
+  "source" : "docs-linhay\/spaces\/20260620-vlm-test-runner\/p0d-fixture-failure.tritontest.yaml",
+  "startedAt" : "2026-06-20T09:06:32Z",
+  "status" : "failed"
+}

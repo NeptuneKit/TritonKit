@@ -1,0 +1,27 @@
+{
+  "ok" : true,
+  "selection" : {
+    "filters" : {
+      "ready" : false
+    },
+    "platform" : "ios",
+    "selector" : "booted",
+    "source" : "explicit",
+    "target" : {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:1B360513-22E7-46DB-A942-198EE522C6DC",
+      "kind" : "simulator",
+      "name" : "Overloaded-v2 Dedicated iPhone 16 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "1B360513-22E7-46DB-A942-198EE522C6DC"
+    }
+  }
+}

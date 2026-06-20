@@ -1,0 +1,18 @@
+{
+  "canonicalTapSpace" : "runtime-point",
+  "hostFramebufferSpace" : "not-supported-in-p0e",
+  "runtimeGeometry" : {
+    "height" : 874,
+    "orientation" : "portrait",
+    "scale" : 3,
+    "width" : 402
+  },
+  "runtimeScreenshotSpace" : {
+    "height" : 874,
+    "kind" : "runtime-point-sized-image",
+    "scale" : 1,
+    "width" : 402
+  },
+  "schemaVersion" : 1,
+  "vlmImageSpace" : "not-supported-in-p0e"
+}

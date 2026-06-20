@@ -1,0 +1,15 @@
+version: 1
+name: p0d-unsupported
+app:
+  bundleId: com.neptunekit.tritonkit.testfixture
+device:
+  platform: ios-simulator
+steps:
+  - launch: {}
+  - swipe:
+      from:
+        x: 10
+        y: 20
+      to:
+        x: 10
+        y: 200

@@ -1,0 +1,174 @@
+{
+  "artifacts" : [
+    {
+      "bytes" : 196,
+      "contentType" : "application\/json",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:48Z",
+        "hierarchyCacheState" : "active",
+        "source" : "server",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "status",
+      "path" : "status.json"
+    },
+    {
+      "bytes" : 626,
+      "contentType" : "application\/json",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:48Z",
+        "hierarchyCacheState" : "active",
+        "source" : "server",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "list",
+      "path" : "targets.json"
+    },
+    {
+      "bytes" : 195,
+      "contentType" : "application\/json",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:48Z",
+        "hierarchyCacheState" : "active",
+        "source" : "cli",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "version",
+      "path" : "version.json"
+    },
+    {
+      "bytes" : 1428143,
+      "contentType" : "application\/json",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:49Z",
+        "hierarchyCacheState" : "active",
+        "source" : "runtime",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "hierarchy",
+      "path" : "hierarchy.json"
+    },
+    {
+      "bytes" : 18322,
+      "contentType" : "application\/json",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:49Z",
+        "hierarchyCacheState" : "active",
+        "source" : "runtime",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "ax",
+      "path" : "ax.json"
+    },
+    {
+      "bytes" : 64438,
+      "contentType" : "image\/png",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:49Z",
+        "hierarchyCacheState" : "active",
+        "source" : "runtime",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "screenshot",
+      "path" : "screenshot.png"
+    },
+    {
+      "bytes" : 179,
+      "contentType" : "application\/json",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:49Z",
+        "hierarchyCacheState" : "active",
+        "source" : "runtime",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "screenshot-metadata",
+      "path" : "screenshot.json"
+    },
+    {
+      "bytes" : 220,
+      "contentType" : "application\/json",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:49Z",
+        "hierarchyCacheState" : "active",
+        "source" : "runtime",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "geometry",
+      "path" : "geometry.json"
+    },
+    {
+      "bytes" : 1625511,
+      "contentType" : "application\/json",
+      "freshness" : {
+        "capturedAt" : "2026-06-20T07:20:49Z",
+        "hierarchyCacheState" : "active",
+        "source" : "runtime",
+        "targetConnectionState" : "connected"
+      },
+      "kind" : "archive",
+      "path" : "archive.json"
+    }
+  ],
+  "cli" : {
+    "schemaVersion" : 1,
+    "version" : "0.1.0-dev"
+  },
+  "createdAt" : "2026-06-20T07:20:48Z",
+  "formatVersion" : 1,
+  "name" : "p0a-pass",
+  "note" : "P0A pass smoke: Complex harness primary tap changed count from 0 to 1.",
+  "ok" : true,
+  "output" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260620-p0a-pass.tritonevidence",
+  "primaryArtifact" : {
+    "bytes" : 64438,
+    "contentType" : "image\/png",
+    "kind" : "screenshot",
+    "path" : "screenshot.png"
+  },
+  "primaryArtifacts" : [
+    {
+      "bytes" : 64438,
+      "contentType" : "image\/png",
+      "kind" : "screenshot",
+      "path" : "screenshot.png"
+    },
+    {
+      "bytes" : 1625511,
+      "contentType" : "application\/json",
+      "kind" : "archive",
+      "path" : "archive.json"
+    },
+    {
+      "bytes" : 220,
+      "contentType" : "application\/json",
+      "kind" : "geometry",
+      "path" : "geometry.json"
+    },
+    {
+      "bytes" : 18322,
+      "contentType" : "application\/json",
+      "kind" : "ax",
+      "path" : "ax.json"
+    },
+    {
+      "bytes" : 1428143,
+      "contentType" : "application\/json",
+      "kind" : "hierarchy",
+      "path" : "hierarchy.json"
+    }
+  ],
+  "skipped" : [
+
+  ],
+  "target" : {
+    "appName" : "TritonKitDemo",
+    "bundleIdentifier" : "com.neptunekit.tritonkit.demo",
+    "connected" : true,
+    "deviceDescription" : "iPhone",
+    "hierarchyCacheState" : "active",
+    "id" : "triton:ios-simulator:1B360513-22E7-46DB-A942-198EE522C6DC",
+    "identityState" : "current",
+    "osDescription" : "26.5",
+    "targetConnectionState" : "connected"
+  }
+}

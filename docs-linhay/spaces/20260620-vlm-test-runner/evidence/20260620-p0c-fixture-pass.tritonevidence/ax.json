@@ -1,0 +1,185 @@
+[
+  {
+    "children" : [
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 19.333333333333343,
+          "width" : 257.33333333333326,
+          "x" : 72.333333333333343,
+          "y" : 126.00000000000003
+        },
+        "hidden" : false,
+        "identifier" : "fixture.runtime.status",
+        "label" : "Fixture Runtime: Connected",
+        "role" : "text",
+        "targetOID" : 16,
+        "viewOID" : 16
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UILabel",
+        "enabled" : false,
+        "focused" : false,
+        "frame" : {
+          "height" : 50.333333333333343,
+          "width" : 259.33333333333326,
+          "x" : 71.333333333333343,
+          "y" : 161.33333333333337
+        },
+        "hidden" : false,
+        "identifier" : "fixture.home.title",
+        "label" : "Fixture Home",
+        "role" : "text",
+        "targetOID" : 18,
+        "viewOID" : 18
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 39,
+          "width" : 142.99999999999997,
+          "x" : 129.66666666666666,
+          "y" : 227.66666666666669
+        },
+        "hidden" : false,
+        "identifier" : "fixture.home.openSettings",
+        "label" : "Open Settings",
+        "role" : "button",
+        "targetOID" : 31,
+        "title" : "Open Settings",
+        "viewOID" : 31
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 39,
+          "width" : 226,
+          "x" : 88,
+          "y" : 282.66666666666674
+        },
+        "hidden" : false,
+        "identifier" : "fixture.home.openDelayed",
+        "label" : "Open Delayed Loading",
+        "role" : "button",
+        "targetOID" : 30,
+        "title" : "Open Delayed Loading",
+        "viewOID" : 30
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 39,
+          "width" : 188,
+          "x" : 107,
+          "y" : 337.66666666666674
+        },
+        "hidden" : false,
+        "identifier" : "fixture.home.openDynamicList",
+        "label" : "Open Dynamic List",
+        "role" : "button",
+        "targetOID" : 29,
+        "title" : "Open Dynamic List",
+        "viewOID" : 29
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 39,
+          "width" : 166,
+          "x" : 118,
+          "y" : 392.66666666666674
+        },
+        "hidden" : false,
+        "identifier" : "fixture.home.openError",
+        "label" : "Open Error State",
+        "role" : "button",
+        "targetOID" : 28,
+        "title" : "Open Error State",
+        "viewOID" : 28
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 39,
+          "width" : 182,
+          "x" : 110,
+          "y" : 447.66666666666674
+        },
+        "hidden" : false,
+        "identifier" : "fixture.home.openAlert",
+        "label" : "Open Fixture Alert",
+        "role" : "button",
+        "targetOID" : 27,
+        "title" : "Open Fixture Alert",
+        "viewOID" : 27
+      },
+      {
+        "children" : [
+
+        ],
+        "className" : "UIButton",
+        "enabled" : true,
+        "focused" : false,
+        "frame" : {
+          "height" : 39,
+          "width" : 134.99999999999997,
+          "x" : 133.66666666666666,
+          "y" : 502.66666666666674
+        },
+        "hidden" : false,
+        "identifier" : "fixture.home.backLogin",
+        "label" : "Back to Login",
+        "role" : "button",
+        "targetOID" : 32,
+        "title" : "Back to Login",
+        "viewOID" : 32
+      }
+    ],
+    "className" : "UIWindow",
+    "enabled" : true,
+    "focused" : true,
+    "frame" : {
+      "height" : 874,
+      "width" : 402,
+      "x" : 0,
+      "y" : 0
+    },
+    "hidden" : false,
+    "role" : "window",
+    "targetOID" : 1,
+    "viewOID" : 1
+  }
+]

@@ -1,0 +1,825 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+
+      ],
+      "artifacts" : [
+
+      ],
+      "examples" : [
+        "printf '%s\\n' '{\"type\":\"tap\",\"x\":270,\"y\":300}' '{\"type\":\"type\",\"text\":\"hello\"}' | triton input --format json --summary --strict"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "validation_failed",
+        "server_unavailable",
+        "target_not_found",
+        "ambiguous_target",
+        "request_failed",
+        "action_failed"
+      ],
+      "failureShape" : "{ ok: false, error: { code, message, endpoint, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "inputActions" : [
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"tap\",\"x\":270,\"y\":300}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "tap"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Window x coordinate in points; required with y unless targetOID is used",
+              "name" : "x",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate in points; required with x unless targetOID is used",
+              "name" : "y",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "View oid from hierarchy\/ax\/hit; alternative to x\/y",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Original matched node oid for smart text activation",
+              "name" : "matchedOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Original matched node class name for smart text activation",
+              "name" : "matchedClassName",
+              "required" : false,
+              "type" : "String"
+            },
+            {
+              "description" : "Tap activation strategy",
+              "enumValues" : [
+                "smart",
+                "exact",
+                "ancestor"
+              ],
+              "name" : "activationStrategy",
+              "required" : false,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional window width in points for caller bookkeeping",
+              "name" : "width",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window height in points for caller bookkeeping",
+              "name" : "height",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional hold duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+            [
+              "x",
+              "y"
+            ],
+            [
+              "targetOID"
+            ]
+          ],
+          "optionalFields" : [
+            "x",
+            "y",
+            "targetOID",
+            "matchedOID",
+            "matchedClassName",
+            "activationStrategy",
+            "width",
+            "height",
+            "duration"
+          ],
+          "requiredFields" : [
+            "type"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName }",
+          "type" : "tap"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"longPress\",\"x\":270,\"y\":300,\"duration\":0.65}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "longPress"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Window x coordinate in points",
+              "name" : "x",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate in points",
+              "name" : "y",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window width in points for caller bookkeeping",
+              "name" : "width",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window height in points for caller bookkeeping",
+              "name" : "height",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Hold duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "width",
+            "height",
+            "duration"
+          ],
+          "requiredFields" : [
+            "type",
+            "x",
+            "y"
+          ],
+          "resultShape" : "{ ok, action, message }",
+          "type" : "longPress"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"swipe\",\"startX\":350,\"startY\":390,\"endX\":100,\"endY\":390}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "swipe"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Start x coordinate in window points",
+              "name" : "startX",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Start y coordinate in window points",
+              "name" : "startY",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "End x coordinate in window points",
+              "name" : "endX",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "End y coordinate in window points",
+              "name" : "endY",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window width in points for caller bookkeeping",
+              "name" : "width",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window height in points for caller bookkeeping",
+              "name" : "height",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional gesture duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "width",
+            "height",
+            "duration"
+          ],
+          "requiredFields" : [
+            "type",
+            "startX",
+            "startY",
+            "endX",
+            "endY"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName }",
+          "type" : "swipe"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"pinch\",\"centerX\":190,\"centerY\":420,\"startDistance\":60,\"endDistance\":120,\"scale\":2}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "pinch"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Gesture center x coordinate in window points",
+              "name" : "centerX",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Gesture center y coordinate in window points",
+              "name" : "centerY",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Initial two-finger distance in window points",
+              "name" : "startDistance",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Final two-finger distance in window points",
+              "name" : "endDistance",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Final distance divided by initial distance",
+              "name" : "scale",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window width in points for caller bookkeeping",
+              "name" : "width",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window height in points for caller bookkeeping",
+              "name" : "height",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Gesture duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "width",
+            "height",
+            "duration"
+          ],
+          "requiredFields" : [
+            "type",
+            "centerX",
+            "centerY",
+            "startDistance",
+            "endDistance",
+            "scale"
+          ],
+          "resultShape" : "{ ok, action, message }",
+          "type" : "pinch"
+        },
+        {
+          "example" : "{\"type\":\"type\",\"text\":\"hello\"}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "type"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Text to insert into target or first responder",
+              "name" : "text",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional UIKeyInput target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Redact inserted text details in command output",
+              "name" : "secure",
+              "required" : false,
+              "type" : "Bool"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "targetOID",
+            "secure"
+          ],
+          "requiredFields" : [
+            "type",
+            "text"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName }",
+          "type" : "type"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"paste\",\"text\":\"console\",\"secure\":false}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "paste"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Exact text to insert into target or first responder",
+              "name" : "text",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional UIKeyInput target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Window x coordinate to focus before paste; required with y",
+              "name" : "x",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate to focus before paste; required with x",
+              "name" : "y",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Redact inserted text details in command output",
+              "name" : "secure",
+              "required" : false,
+              "type" : "Bool"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "targetOID",
+            "x",
+            "y",
+            "secure"
+          ],
+          "requiredFields" : [
+            "type",
+            "text"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName, secure, redacted, insertedLength }",
+          "type" : "paste"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"clear\"}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "clear"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional UIKeyInput target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Window x coordinate to focus before clear; required with y",
+              "name" : "x",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate to focus before clear; required with x",
+              "name" : "y",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "targetOID",
+            "x",
+            "y"
+          ],
+          "requiredFields" : [
+            "type"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }",
+          "type" : "clear"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"deleteBackward\"}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "deleteBackward"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional UIKeyInput target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Window x coordinate to focus before deleting; required with y",
+              "name" : "x",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate to focus before deleting; required with x",
+              "name" : "y",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "targetOID",
+            "x",
+            "y"
+          ],
+          "requiredFields" : [
+            "type"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName, deletedLength }",
+          "type" : "deleteBackward"
+        },
+        {
+          "example" : "{\"type\":\"button\",\"button\":\"home\"}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "button"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Device button name; embedded runtime returns unsupported",
+              "enumValues" : [
+                "home"
+              ],
+              "name" : "button",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional press duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "duration"
+          ],
+          "requiredFields" : [
+            "type",
+            "button"
+          ],
+          "resultShape" : "{ ok: false, action, message } in embedded runtime",
+          "type" : "button"
+        }
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "input",
+      "nextCommands" : [
+        "triton status --json",
+        "triton evidence --output <dir.tritonevidence> --json",
+        "triton wait --text <text> --json",
+        "triton assert text-exists <text> --json",
+        "triton target resolve <selector> --json",
+        "triton input --json --summary --strict"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Runtime target selector; --device is an alias for --target and accepts target ids, iOS simulator UDIDs, booted, or the only connected target when omitted",
+          "name" : "--target\/--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Stop on first failed action",
+          "name" : "--fail-fast",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Print a final JSON batch summary",
+          "name" : "--summary",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Exit non-zero when any action fails",
+          "name" : "--strict",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Whether the action succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Human-readable action message",
+              "name" : "message",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Target view oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Target view class",
+              "name" : "targetClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Original matched oid",
+              "name" : "matchedOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Original matched class",
+              "name" : "matchedClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Activated target oid",
+              "name" : "activationOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Activated target class",
+              "name" : "activationClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Activation strategy",
+              "name" : "strategy",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Whether inserted text was treated as secure",
+              "name" : "secure",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Whether output text details were redacted",
+              "name" : "redacted",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Inserted text length",
+              "name" : "insertedLength",
+              "required" : false,
+              "type" : "Int?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "input-result",
+          "model" : "TKInputResult",
+          "selector" : "input.result"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the batch completed under strict\/fail-fast rules",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Number of input actions processed",
+              "name" : "actionCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Number of failed input actions",
+              "name" : "failedCount",
+              "required" : true,
+              "type" : "Int"
+            }
+          ],
+          "format" : "json",
+          "kind" : "input-batch-summary",
+          "model" : "TKInputBatchSummaryResponse",
+          "selector" : "input.summary"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json"
+      ],
+      "outputSemantics" : "Use input for batched low-level actions. Prefer --summary --strict when an agent needs a single completion gate for a batch.",
+      "providedCapabilities" : [
+        "input",
+        "tap",
+        "swipe",
+        "type",
+        "paste",
+        "clear"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton wait --text <text> --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton assert text-exists <text> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        },
+        {
+          "category" : "act",
+          "command" : "triton input --json --summary --strict"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : true,
+      "requiresTarget" : true,
+      "retryable" : false,
+      "runtimeScope" : "embedded",
+      "subcommands" : [
+
+      ],
+      "successShape" : "One TKInputResult JSON object per input line; with --summary, final { ok, actionCount, failedCount }",
+      "summary" : "Run newline-delimited JSON actions from stdin",
+      "usageForms" : [
+
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

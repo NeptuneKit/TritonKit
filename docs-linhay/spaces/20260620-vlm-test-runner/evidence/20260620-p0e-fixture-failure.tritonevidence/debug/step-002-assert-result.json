@@ -1,0 +1,41 @@
+{
+  "condition" : "text-exists",
+  "count" : 0,
+  "hierarchyCacheState" : "active",
+  "matches" : [
+
+  ],
+  "message" : "Expected text to exist: Definitely Not Existing",
+  "nearestText" : [
+    "Fixture Runtime: Connected",
+    "fixture.runtime.status",
+    "Fixture Home",
+    "fixture.home.title",
+    "Open Settings"
+  ],
+  "ok" : false,
+  "query" : "Definitely Not Existing",
+  "sample" : [
+    "Fixture Runtime: Connected",
+    "fixture.runtime.status",
+    "Fixture Home",
+    "fixture.home.title",
+    "Open Settings",
+    "fixture.home.openSettings",
+    "Open Delayed Loading",
+    "fixture.home.openDelayed",
+    "Open Dynamic List",
+    "fixture.home.openDynamicList",
+    "Open Error State",
+    "fixture.home.openError",
+    "Open Fixture Alert",
+    "fixture.home.openAlert",
+    "Back to Login",
+    "fixture.home.backLogin"
+  ],
+  "suggestedCommands" : [
+    "triton find 'Definitely Not Existing' --all --json",
+    "triton screenshot --json"
+  ],
+  "targetConnectionState" : "connected"
+}

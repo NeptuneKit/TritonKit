@@ -1,0 +1,329 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+
+      ],
+      "artifacts" : [
+        "screenshot"
+      ],
+      "examples" : [
+        "triton screenshot --output \/tmp\/triton.png --metadata",
+        "triton screenshot --device iphone15 --output \/tmp\/sim.png --json",
+        "triton screenshot --device harmony-a --output \/tmp\/smoke.jpeg --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "server_unavailable",
+        "target_unavailable",
+        "target_not_found",
+        "ambiguous_target",
+        "artifact_write_failed",
+        "host_command_failed",
+        "validation_failed"
+      ],
+      "failureShape" : "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|ambiguous_target|artifact_write_failed|host_command_failed|validation_failed, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } }, candidates?[] }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "screenshot",
+      "nextCommands" : [
+        "triton status --json",
+        "triton evidence --output <dir.tritonevidence> --json",
+        "triton observe current --json",
+        "triton assert text-exists <text> --json",
+        "triton target resolve <selector> --json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Target id from `triton list`, or simulator UDID for iOS simulator runtime targets; commands auto-select the only connected target when omitted",
+          "name" : "--target",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Capture host-side screenshot through iOS simctl, Android adb, or Harmony hdc",
+          "name" : "--platform",
+          "required" : false,
+          "type" : "ios|android|harmony"
+        },
+        {
+          "description" : "Unified host target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current",
+          "name" : "--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Device name filter, for example iPhone 15",
+          "name" : "--name",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Runtime filter, for example iOS 26.5",
+          "name" : "--runtime",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Target state filter, for example booted or connected",
+          "name" : "--state",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Only match ready host targets",
+          "name" : "--ready",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "hdc",
+          "description" : "HDC executable path for --platform harmony",
+          "name" : "--hdc",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Output PNG path",
+          "name" : "--output",
+          "required" : true,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Print JSON metadata after writing",
+          "name" : "--metadata",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --metadata",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Image format",
+              "name" : "format",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Image width in points or pixels depending on source",
+              "name" : "width",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Image height in points or pixels depending on source",
+              "name" : "height",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Image scale",
+              "name" : "scale",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Written screenshot path",
+              "name" : "output",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Written byte count",
+              "name" : "bytes",
+              "required" : true,
+              "type" : "Int"
+            }
+          ],
+          "format" : "json",
+          "kind" : "screenshot-metadata",
+          "model" : "ScreenshotMetadataOutput",
+          "selector" : "screenshot.metadata"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether Android host artifact capture succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "android",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Android target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Written artifact path",
+              "name" : "artifact",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-artifact",
+          "model" : "HostAndroidArtifactOutput",
+          "selector" : "host.android-screenshot"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether Harmony host artifact capture succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Harmony target",
+              "name" : "target",
+              "required" : true,
+              "type" : "TKHarmonyTarget"
+            },
+            {
+              "description" : "Written artifact path",
+              "name" : "artifact",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-artifact",
+          "model" : "HostHarmonyArtifactOutput",
+          "selector" : "host.harmony-artifact"
+        }
+      ],
+      "outputFormats" : [
+        "file",
+        "json-metadata"
+      ],
+      "outputSemantics" : "Use screenshot as a visual artifact capture. Prefer --metadata\/--json for machine-readable output and pair failures with evidence for audit.",
+      "providedCapabilities" : [
+        "screenshot",
+        "host-device-screenshot",
+        "ios-screenshot",
+        "android-device-screenshot",
+        "harmony-screenshot"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "observe",
+          "command" : "triton observe current --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton assert text-exists <text> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : true,
+      "requiresTarget" : true,
+      "retryable" : false,
+      "runtimeScope" : "embedded|host-device",
+      "subcommands" : [
+
+      ],
+      "successShape" : "{ format, width, height, scale, output, bytes } when embedded runtime --metadata is used; HostDeviceArtifactOutput for --device\/--platform",
+      "summary" : "Capture current app screenshot",
+      "usageForms" : [
+
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

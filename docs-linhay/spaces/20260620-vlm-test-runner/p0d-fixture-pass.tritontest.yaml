@@ -1,0 +1,29 @@
+version: 1
+name: p0d-fixture-pass
+app:
+  bundleId: com.neptunekit.tritonkit.testfixture
+device:
+  platform: ios-simulator
+settings:
+  strict: true
+  timeoutMs: 5000
+  retry:
+    count: 0
+    intervalMs: 250
+steps:
+  - launch: {}
+  - takeScreenshot: {}
+  - assertVisible:
+      text: Fixture Login
+      source: ax
+      match: exact
+  - tap:
+      point:
+        x: 201
+        y: 289.5
+        coordinateSpace: runtime-point
+  - takeScreenshot: {}
+  - assertVisible:
+      text: Fixture Home
+      source: ax
+      match: exact

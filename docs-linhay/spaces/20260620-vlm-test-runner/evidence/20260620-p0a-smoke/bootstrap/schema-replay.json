@@ -1,0 +1,639 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+        {
+          "description" : ".tritonplan file path",
+          "name" : "<path>",
+          "required" : true,
+          "type" : "Path"
+        }
+      ],
+      "artifacts" : [
+
+      ],
+      "examples" : [
+        "triton replay login-flow.tritonplan --dry-run --json",
+        "triton replay login-flow.tritonplan --var username=alice --var password-env=TRITON_PASSWORD --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "validation_failed",
+        "server_unavailable",
+        "target_not_found",
+        "ambiguous_target",
+        "request_failed",
+        "step_failed",
+        "action_failed",
+        "timeout",
+        "artifact_write_failed"
+      ],
+      "failureShape" : "Validation\/request failures use { ok:false, error:{ code, message, hint } }; step failures return ok=false with failedStepIndex",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "replay",
+      "nextCommands" : [
+        "triton evidence --output <dir.tritonevidence> --json",
+        "triton plan inspect <path.tritonplan> --json",
+        "triton schema --command replay --json",
+        "triton target resolve <selector> --json",
+        "triton input --json --summary --strict"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Target id from `triton list`, or simulator UDID for iOS simulator runtime targets; commands auto-select the only connected target when omitted",
+          "name" : "--target",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Validate and print commands without connecting to runtime",
+          "name" : "--dry-run",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Variable assignment: key=value or key-env=ENV_NAME; repeatable",
+          "name" : "--var",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Whether the replay succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether replay validated without executing",
+              "name" : "dryRun",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Replay plan name",
+              "name" : "planName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Total step count",
+              "name" : "stepCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Executed step count",
+              "name" : "executedCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "1-based failed step index; matches steps[].index",
+              "name" : "failedStepIndex",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Stable failure code for the failed replay step",
+              "name" : "failureCode",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Structured diagnostic for the failed replay step when available",
+              "name" : "failureError",
+              "required" : false,
+              "type" : "TKCLIErrorDetail?"
+            },
+            {
+              "description" : "Primary workflow taxonomy value describing where the replay failed",
+              "name" : "failurePrimaryWorkflowCategory",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Stable error code for the failed replay step",
+              "name" : "failureError.code",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Human-readable failure message for the failed replay step",
+              "name" : "failureError.message",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Associated endpoint when the failure came from runtime transport",
+              "name" : "failureError.endpoint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Suggested diagnostic hint for the failed replay step",
+              "name" : "failureError.hint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Nearest candidate strings when the failed replay step exposes selector or text alternatives",
+              "name" : "failureError.nearestCandidates",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Command suggestions bundled directly inside the failed replay step diagnostic",
+              "name" : "failureError.suggestedCommands",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Candidate count associated with the failed replay step diagnostic",
+              "name" : "failureError.candidateCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Suggested next action when the failure exposes one",
+              "name" : "failureError.nextAction",
+              "required" : false,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "failureError.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "failureError.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "failureError.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "failureError.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "failureError.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "failureError.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "failureError.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Workflow taxonomy values directly associated with the failed step",
+              "name" : "failureWorkflowCategories",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Primary recovery taxonomy value agents should prefer first after failure",
+              "name" : "failurePrimaryRecoveryCategory",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Recovery category families directly associated with the failure code",
+              "name" : "failureRecoveryCategories",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Primary diagnostic hint agents should read first after failure",
+              "name" : "failurePrimaryHint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Primary transport or runtime endpoint agents should inspect first after failure",
+              "name" : "failurePrimaryEndpoint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Primary structured next action agents should try first after failure",
+              "name" : "failurePrimaryNextAction",
+              "required" : false,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "failurePrimaryNextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "failurePrimaryNextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "failurePrimaryNextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "failurePrimaryNextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "failurePrimaryNextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "failurePrimaryNextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "failurePrimaryNextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Primary artifact agents should inspect first after failure",
+              "name" : "failurePrimaryArtifact",
+              "required" : false,
+              "type" : "TKEvidenceArtifactSummary?"
+            },
+            {
+              "description" : "High-signal artifact summaries agents should inspect first after failure",
+              "name" : "failurePrimaryArtifacts",
+              "required" : true,
+              "type" : "[TKEvidenceArtifactSummary]"
+            },
+            {
+              "description" : "Primary suggested Triton command string agents should try first after failure",
+              "name" : "failurePrimarySuggestedCommand",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Primary recovery command agents should try first after failure",
+              "name" : "failurePrimaryRecoveryCommand",
+              "required" : false,
+              "type" : "TKCommandRecoveryCommand?"
+            },
+            {
+              "description" : "Triton command string for the primary recovery command",
+              "name" : "failurePrimaryRecoveryCommand.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Recovery category for the primary recovery command",
+              "name" : "failurePrimaryRecoveryCommand.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Structured recovery commands derived from replay failure follow-ups",
+              "name" : "recoveryCommands",
+              "required" : true,
+              "type" : "[TKCommandRecoveryCommand]"
+            },
+            {
+              "description" : "Suggested follow-up Triton command",
+              "name" : "recoveryCommands[].command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Recovery category for the follow-up command",
+              "name" : "recoveryCommands[].category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Elapsed milliseconds",
+              "name" : "elapsedMs",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Per-step replay results",
+              "name" : "steps",
+              "required" : true,
+              "type" : "[TKReplayStepResult]"
+            },
+            {
+              "description" : "1-based replay step index",
+              "name" : "steps[].index",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Replay action name",
+              "name" : "steps[].action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional replay step name",
+              "name" : "steps[].name",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Whether the step succeeded",
+              "name" : "steps[].ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether the step was only validated",
+              "name" : "steps[].dryRun",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Step elapsed milliseconds",
+              "name" : "steps[].elapsedMs",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Historical argv alias kept for replay result logging consistency",
+              "name" : "steps[].command",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Primary executable argv tokens for agents; mirrors command for replay result consistency",
+              "name" : "steps[].argv",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the step command root",
+              "name" : "steps[].category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Workflow taxonomy values directly associated with the replay step",
+              "name" : "steps[].workflowCategories",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Machine-readable step prerequisites",
+              "name" : "steps[].requires",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Expected evidence surfaces produced or consumed by the step",
+              "name" : "steps[].expectedArtifacts",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Machine-readable conditions that should stop or re-plan the replay",
+              "name" : "steps[].stopConditions",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Stable failure code for the replay step when it fails",
+              "name" : "steps[].failureCode",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Structured replay step diagnostic when the underlying failure is available",
+              "name" : "steps[].error",
+              "required" : false,
+              "type" : "TKCLIErrorDetail?"
+            },
+            {
+              "description" : "Stable error code for the replay step",
+              "name" : "steps[].error.code",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Human-readable failure message for the replay step",
+              "name" : "steps[].error.message",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Associated endpoint when the replay step failed through runtime transport",
+              "name" : "steps[].error.endpoint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Suggested diagnostic hint for the replay step",
+              "name" : "steps[].error.hint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Nearest candidate strings when the replay step diagnostic exposes selector or text alternatives",
+              "name" : "steps[].error.nearestCandidates",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Command suggestions bundled directly inside the replay step diagnostic",
+              "name" : "steps[].error.suggestedCommands",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Candidate count associated with the replay step diagnostic",
+              "name" : "steps[].error.candidateCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Suggested next action when the replay step exposes one",
+              "name" : "steps[].error.nextAction",
+              "required" : false,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "steps[].error.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "steps[].error.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "steps[].error.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "steps[].error.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "steps[].error.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "steps[].error.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "steps[].error.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Optional step message",
+              "name" : "steps[].message",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Suggested follow-up commands for replay failures or post-run inspection",
+              "name" : "suggestedCommands",
+              "required" : true,
+              "type" : "[String]"
+            }
+          ],
+          "format" : "json",
+          "kind" : "replay-result",
+          "model" : "TKReplayResult",
+          "selector" : "replay.result"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json"
+      ],
+      "outputSemantics" : "Use replay --dry-run before executing. Real replay stops at the first failed step and returns failure workflow lanes, primary diagnostic artifacts, and suggested follow-up commands before broader re-planning.",
+      "providedCapabilities" : [
+        "replay",
+        "replay-dry-run"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "archive",
+          "command" : "triton evidence --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "plan",
+          "command" : "triton plan inspect <path.tritonplan> --json"
+        },
+        {
+          "category" : "diagnose",
+          "command" : "triton schema --command replay --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        },
+        {
+          "category" : "act",
+          "command" : "triton input --json --summary --strict"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "retryable" : false,
+      "runtimeScope" : "cli+embedded",
+      "subcommands" : [
+
+      ],
+      "successShape" : "{ ok, dryRun, planName, stepCount, executedCount, failedStepIndex?, failureCode?, failureError?, failureWorkflowCategories[], failureRecoveryCategories[], failurePrimaryArtifacts[], recoveryCommands[]:{ command, category }, elapsedMs, steps[]:{ index, action, command, argv, category, requires, expectedArtifacts, stopConditions, failureCode?, error?, ... }, suggestedCommands[] }",
+      "summary" : "Replay a .tritonplan smoke-test flow",
+      "usageForms" : [
+
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

@@ -1,0 +1,10 @@
+{
+  "evidenceDir" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260621-p2b-rerun.tritonevidence",
+  "kind" : "triton.app-map.run",
+  "pathCount" : 1,
+  "runId" : "run-5bba70db-d435-4fa0-9a3f-c53d03212f1a",
+  "schemaVersion" : 1,
+  "screenCount" : 2,
+  "transitionCount" : 1,
+  "verdict" : "success"
+}

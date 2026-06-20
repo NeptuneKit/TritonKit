@@ -1,0 +1,2035 @@
+{
+  "appInfo" : {
+    "appBundleIdentifier" : "com.neptunekit.tritonkit.testfixture",
+    "appInfoIdentifier" : 1781944375,
+    "appName" : "TritonKitTestFixture",
+    "deviceDescription" : "iPhone",
+    "deviceType" : 0,
+    "osDescription" : "26.5",
+    "osMainVersion" : 26,
+    "platform" : "ios",
+    "screenHeight" : 874,
+    "screenScale" : 3,
+    "screenWidth" : 402,
+    "serverReadableVersion" : "1.0.0",
+    "serverVersion" : 7,
+    "shouldUseCache" : false,
+    "simulatorUDID" : "0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+    "swiftEnabledInLookinServer" : 1
+  },
+  "collapsedClassList" : [
+
+  ],
+  "colorAlias" : {
+
+  },
+  "controllerContext" : {
+    "activeControllerClassName" : "_TtGC7SwiftUI19UIHostingControllerGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+    "activeControllerId" : "ios:controller:26",
+    "activeControllerName" : "_TtGC7SwiftUI19UIHostingControllerGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+    "source" : "runtime-route",
+    "stack" : [
+      {
+        "className" : "_TtGC7SwiftUI19UIHostingControllerGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+        "id" : "ios:controller:26",
+        "name" : "_TtGC7SwiftUI19UIHostingControllerGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+        "oid" : 26
+      }
+    ]
+  },
+  "displayItems" : [
+    {
+      "alpha" : 1,
+      "attributesGroupList" : [
+
+      ],
+      "bounds" : [
+        [
+          0,
+          0
+        ],
+        [
+          402,
+          874
+        ]
+      ],
+      "customAttrGroupList" : [
+
+      ],
+      "doNotFetchScreenshotReason" : 0,
+      "eventHandlers" : [
+
+      ],
+      "frame" : [
+        [
+          0,
+          0
+        ],
+        [
+          402,
+          874
+        ]
+      ],
+      "indentLevel" : 0,
+      "isExpanded" : true,
+      "isHidden" : false,
+      "layerAnchorPoint" : [
+        0.5,
+        0.5
+      ],
+      "layerBorderColor" : {
+        "alpha" : 1,
+        "blue" : 0,
+        "green" : 0,
+        "red" : 0
+      },
+      "layerBorderWidth" : 0,
+      "layerContentsGravity" : "resize",
+      "layerContentsRect" : [
+        [
+          0,
+          0
+        ],
+        [
+          1,
+          1
+        ]
+      ],
+      "layerContentsScale" : 1,
+      "layerCornerRadius" : 0,
+      "layerIsHidden" : false,
+      "layerMasksToBounds" : false,
+      "layerObject" : {
+        "classChainList" : [
+          "UIWindow",
+          "UIView",
+          "UIResponder",
+          "NSObject"
+        ],
+        "ivarTraces" : [
+
+        ],
+        "memoryAddress" : "0x0000000109c62400",
+        "oid" : 2,
+        "specialTrace" : ""
+      },
+      "layerOpacity" : 1,
+      "layerPosition" : [
+        201,
+        437
+      ],
+      "layerShadowColor" : {
+        "alpha" : 1,
+        "blue" : 0,
+        "green" : 0,
+        "red" : 0
+      },
+      "layerShadowOffset" : [
+        0,
+        -3
+      ],
+      "layerShadowOpacity" : 0,
+      "layerShadowRadius" : 3,
+      "layerSublayerTransform" : [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "layerTransform" : [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "layerZPosition" : 0,
+      "noPreview" : false,
+      "preferToBeCollapsed" : false,
+      "previewZIndex" : -1,
+      "representedAsKeyWindow" : true,
+      "shouldCaptureImage" : false,
+      "subitems" : [
+        {
+          "alpha" : 1,
+          "attributesGroupList" : [
+
+          ],
+          "bounds" : [
+            [
+              0,
+              0
+            ],
+            [
+              402,
+              874
+            ]
+          ],
+          "customAttrGroupList" : [
+
+          ],
+          "doNotFetchScreenshotReason" : 0,
+          "eventHandlers" : [
+
+          ],
+          "frame" : [
+            [
+              0,
+              0
+            ],
+            [
+              402,
+              874
+            ]
+          ],
+          "indentLevel" : 1,
+          "isExpanded" : true,
+          "isHidden" : false,
+          "layerAnchorPoint" : [
+            0.5,
+            0.5
+          ],
+          "layerBorderColor" : {
+            "alpha" : 1,
+            "blue" : 0,
+            "green" : 0,
+            "red" : 0
+          },
+          "layerBorderWidth" : 0,
+          "layerContentsGravity" : "resize",
+          "layerContentsRect" : [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "layerContentsScale" : 1,
+          "layerCornerRadius" : 0,
+          "layerIsHidden" : false,
+          "layerMasksToBounds" : false,
+          "layerObject" : {
+            "classChainList" : [
+              "UITransitionView",
+              "UIView",
+              "UIResponder",
+              "NSObject"
+            ],
+            "ivarTraces" : [
+
+            ],
+            "memoryAddress" : "0x0000000109d86550",
+            "oid" : 4,
+            "specialTrace" : ""
+          },
+          "layerOpacity" : 1,
+          "layerPosition" : [
+            201,
+            437
+          ],
+          "layerShadowColor" : {
+            "alpha" : 1,
+            "blue" : 0,
+            "green" : 0,
+            "red" : 0
+          },
+          "layerShadowOffset" : [
+            0,
+            -3
+          ],
+          "layerShadowOpacity" : 0,
+          "layerShadowRadius" : 3,
+          "layerSublayerTransform" : [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "layerTransform" : [
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1,
+            0,
+            0,
+            0,
+            0,
+            1
+          ],
+          "layerZPosition" : 0,
+          "noPreview" : false,
+          "preferToBeCollapsed" : false,
+          "previewZIndex" : -1,
+          "representedAsKeyWindow" : false,
+          "shouldCaptureImage" : false,
+          "subitems" : [
+            {
+              "alpha" : 1,
+              "attributesGroupList" : [
+
+              ],
+              "bounds" : [
+                [
+                  0,
+                  0
+                ],
+                [
+                  402,
+                  874
+                ]
+              ],
+              "customAttrGroupList" : [
+
+              ],
+              "doNotFetchScreenshotReason" : 0,
+              "eventHandlers" : [
+
+              ],
+              "frame" : [
+                [
+                  0,
+                  0
+                ],
+                [
+                  402,
+                  874
+                ]
+              ],
+              "indentLevel" : 2,
+              "isExpanded" : true,
+              "isHidden" : false,
+              "layerAnchorPoint" : [
+                0.5,
+                0.5
+              ],
+              "layerBorderColor" : {
+                "alpha" : 1,
+                "blue" : 0,
+                "green" : 0,
+                "red" : 0
+              },
+              "layerBorderWidth" : 0,
+              "layerContentsGravity" : "resize",
+              "layerContentsRect" : [
+                [
+                  0,
+                  0
+                ],
+                [
+                  1,
+                  1
+                ]
+              ],
+              "layerContentsScale" : 1,
+              "layerCornerRadius" : 0,
+              "layerIsHidden" : false,
+              "layerMasksToBounds" : false,
+              "layerObject" : {
+                "classChainList" : [
+                  "UIDropShadowView",
+                  "UIView",
+                  "UIResponder",
+                  "NSObject"
+                ],
+                "ivarTraces" : [
+
+                ],
+                "memoryAddress" : "0x0000000109d87480",
+                "oid" : 6,
+                "specialTrace" : ""
+              },
+              "layerOpacity" : 1,
+              "layerPosition" : [
+                201,
+                437
+              ],
+              "layerShadowColor" : {
+                "alpha" : 1,
+                "blue" : 0,
+                "green" : 0,
+                "red" : 0
+              },
+              "layerShadowOffset" : [
+                0,
+                -3
+              ],
+              "layerShadowOpacity" : 0,
+              "layerShadowRadius" : 3,
+              "layerSublayerTransform" : [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "layerTransform" : [
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1,
+                0,
+                0,
+                0,
+                0,
+                1
+              ],
+              "layerZPosition" : 0,
+              "noPreview" : false,
+              "preferToBeCollapsed" : false,
+              "previewZIndex" : -1,
+              "representedAsKeyWindow" : false,
+              "shouldCaptureImage" : false,
+              "subitems" : [
+                {
+                  "alpha" : 1,
+                  "attributesGroupList" : [
+
+                  ],
+                  "bounds" : [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      402,
+                      874
+                    ]
+                  ],
+                  "customAttrGroupList" : [
+
+                  ],
+                  "doNotFetchScreenshotReason" : 0,
+                  "eventHandlers" : [
+
+                  ],
+                  "frame" : [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      402,
+                      874
+                    ]
+                  ],
+                  "indentLevel" : 3,
+                  "isExpanded" : false,
+                  "isHidden" : false,
+                  "layerAnchorPoint" : [
+                    0.5,
+                    0.5
+                  ],
+                  "layerBorderColor" : {
+                    "alpha" : 1,
+                    "blue" : 0,
+                    "green" : 0,
+                    "red" : 0
+                  },
+                  "layerBorderWidth" : 0,
+                  "layerContentsGravity" : "resize",
+                  "layerContentsRect" : [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      1,
+                      1
+                    ]
+                  ],
+                  "layerContentsScale" : 1,
+                  "layerCornerRadius" : 0,
+                  "layerIsHidden" : false,
+                  "layerMasksToBounds" : false,
+                  "layerObject" : {
+                    "classChainList" : [
+                      "UIDropShadowView",
+                      "UIView",
+                      "UIResponder",
+                      "NSObject"
+                    ],
+                    "ivarTraces" : [
+
+                    ],
+                    "memoryAddress" : "0x0000000109d869a0",
+                    "oid" : 7,
+                    "specialTrace" : ""
+                  },
+                  "layerOpacity" : 1,
+                  "layerPosition" : [
+                    201,
+                    437
+                  ],
+                  "layerShadowColor" : {
+                    "alpha" : 0.20000000000000001,
+                    "blue" : 0,
+                    "green" : 0,
+                    "red" : 0
+                  },
+                  "layerShadowOffset" : [
+                    0,
+                    0
+                  ],
+                  "layerShadowOpacity" : 0,
+                  "layerShadowRadius" : 2,
+                  "layerSublayerTransform" : [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                  ],
+                  "layerTransform" : [
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    1
+                  ],
+                  "layerZPosition" : 0,
+                  "noPreview" : false,
+                  "preferToBeCollapsed" : false,
+                  "previewZIndex" : -1,
+                  "representedAsKeyWindow" : false,
+                  "shouldCaptureImage" : false,
+                  "subitems" : [
+                    {
+                      "alpha" : 1,
+                      "attributesGroupList" : [
+
+                      ],
+                      "backgroundColor" : {
+                        "alpha" : 1,
+                        "blue" : 1,
+                        "green" : 1,
+                        "red" : 1
+                      },
+                      "bounds" : [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          402,
+                          874
+                        ]
+                      ],
+                      "customAttrGroupList" : [
+
+                      ],
+                      "doNotFetchScreenshotReason" : 0,
+                      "eventHandlers" : [
+
+                      ],
+                      "frame" : [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          402,
+                          874
+                        ]
+                      ],
+                      "indentLevel" : 4,
+                      "isExpanded" : false,
+                      "isHidden" : false,
+                      "layerAnchorPoint" : [
+                        0.5,
+                        0.5
+                      ],
+                      "layerBorderColor" : {
+                        "alpha" : 1,
+                        "blue" : 0,
+                        "green" : 0,
+                        "red" : 0
+                      },
+                      "layerBorderWidth" : 0,
+                      "layerContentsGravity" : "resize",
+                      "layerContentsRect" : [
+                        [
+                          0,
+                          0
+                        ],
+                        [
+                          1,
+                          1
+                        ]
+                      ],
+                      "layerContentsScale" : 1,
+                      "layerCornerRadius" : 0,
+                      "layerIsHidden" : false,
+                      "layerMasksToBounds" : false,
+                      "layerObject" : {
+                        "classChainList" : [
+                          "_TtGC7SwiftUI14_UIHostingViewGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+                          "UIView",
+                          "UIResponder",
+                          "NSObject"
+                        ],
+                        "ivarTraces" : [
+
+                        ],
+                        "memoryAddress" : "0x0000000109d87120",
+                        "oid" : 9,
+                        "specialTrace" : ""
+                      },
+                      "layerOpacity" : 1,
+                      "layerPosition" : [
+                        201,
+                        437
+                      ],
+                      "layerShadowColor" : {
+                        "alpha" : 1,
+                        "blue" : 0,
+                        "green" : 0,
+                        "red" : 0
+                      },
+                      "layerShadowOffset" : [
+                        0,
+                        -3
+                      ],
+                      "layerShadowOpacity" : 0,
+                      "layerShadowRadius" : 3,
+                      "layerSublayerTransform" : [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "layerTransform" : [
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1,
+                        0,
+                        0,
+                        0,
+                        0,
+                        1
+                      ],
+                      "layerZPosition" : 0,
+                      "noPreview" : false,
+                      "preferToBeCollapsed" : false,
+                      "previewZIndex" : -1,
+                      "representedAsKeyWindow" : false,
+                      "shouldCaptureImage" : false,
+                      "subitems" : [
+                        {
+                          "alpha" : 1,
+                          "attributesGroupList" : [
+
+                          ],
+                          "bounds" : [
+                            [
+                              0,
+                              0
+                            ],
+                            [
+                              402,
+                              874
+                            ]
+                          ],
+                          "customAttrGroupList" : [
+
+                          ],
+                          "doNotFetchScreenshotReason" : 0,
+                          "eventHandlers" : [
+
+                          ],
+                          "frame" : [
+                            [
+                              0,
+                              0
+                            ],
+                            [
+                              402,
+                              874
+                            ]
+                          ],
+                          "indentLevel" : 5,
+                          "isExpanded" : false,
+                          "isHidden" : false,
+                          "layerAnchorPoint" : [
+                            0,
+                            0
+                          ],
+                          "layerBorderColor" : {
+                            "alpha" : 1,
+                            "blue" : 0,
+                            "green" : 0,
+                            "red" : 0
+                          },
+                          "layerBorderWidth" : 0,
+                          "layerContentsGravity" : "resize",
+                          "layerContentsRect" : [
+                            [
+                              0,
+                              0
+                            ],
+                            [
+                              1,
+                              1
+                            ]
+                          ],
+                          "layerContentsScale" : 1,
+                          "layerCornerRadius" : 0,
+                          "layerIsHidden" : false,
+                          "layerMasksToBounds" : false,
+                          "layerObject" : {
+                            "classChainList" : [
+                              "_TtGC7SwiftUI21UIKitPlatformViewHostGVS_P10$1d374ce4432PlatformViewRepresentableAdaptorV20TritonKitTestFixture17FixtureUIKitPanel__",
+                              "_TtGC5UIKit22UICorePlatformViewHostGV7SwiftUIP10$1d374ce4432PlatformViewRepresentableAdaptorV20TritonKitTestFixture17FixtureUIKitPanel__",
+                              "_UIConstraintBasedLayoutHostingView",
+                              "UIView",
+                              "UIResponder",
+                              "NSObject"
+                            ],
+                            "ivarTraces" : [
+
+                            ],
+                            "memoryAddress" : "0x0000000106437630",
+                            "oid" : 11,
+                            "specialTrace" : ""
+                          },
+                          "layerOpacity" : 1,
+                          "layerPosition" : [
+                            0,
+                            0
+                          ],
+                          "layerShadowColor" : {
+                            "alpha" : 1,
+                            "blue" : 0,
+                            "green" : 0,
+                            "red" : 0
+                          },
+                          "layerShadowOffset" : [
+                            0,
+                            -3
+                          ],
+                          "layerShadowOpacity" : 0,
+                          "layerShadowRadius" : 3,
+                          "layerSublayerTransform" : [
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1
+                          ],
+                          "layerTransform" : [
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1,
+                            0,
+                            0,
+                            0,
+                            0,
+                            1
+                          ],
+                          "layerZPosition" : 0,
+                          "noPreview" : false,
+                          "preferToBeCollapsed" : false,
+                          "previewZIndex" : -1,
+                          "representedAsKeyWindow" : false,
+                          "shouldCaptureImage" : false,
+                          "subitems" : [
+                            {
+                              "alpha" : 1,
+                              "attributesGroupList" : [
+
+                              ],
+                              "backgroundColor" : {
+                                "alpha" : 1,
+                                "blue" : 1,
+                                "green" : 1,
+                                "red" : 1
+                              },
+                              "bounds" : [
+                                [
+                                  0,
+                                  0
+                                ],
+                                [
+                                  402,
+                                  874
+                                ]
+                              ],
+                              "customAttrGroupList" : [
+
+                              ],
+                              "doNotFetchScreenshotReason" : 0,
+                              "eventHandlers" : [
+
+                              ],
+                              "frame" : [
+                                [
+                                  0,
+                                  0
+                                ],
+                                [
+                                  402,
+                                  874
+                                ]
+                              ],
+                              "indentLevel" : 6,
+                              "isExpanded" : false,
+                              "isHidden" : false,
+                              "layerAnchorPoint" : [
+                                0.5,
+                                0.5
+                              ],
+                              "layerBorderColor" : {
+                                "alpha" : 1,
+                                "blue" : 0,
+                                "green" : 0,
+                                "red" : 0
+                              },
+                              "layerBorderWidth" : 0,
+                              "layerContentsGravity" : "resize",
+                              "layerContentsRect" : [
+                                [
+                                  0,
+                                  0
+                                ],
+                                [
+                                  1,
+                                  1
+                                ]
+                              ],
+                              "layerContentsScale" : 1,
+                              "layerCornerRadius" : 0,
+                              "layerIsHidden" : false,
+                              "layerMasksToBounds" : false,
+                              "layerObject" : {
+                                "classChainList" : [
+                                  "TritonKitTestFixture.FixtureUIKitView",
+                                  "UIView",
+                                  "UIResponder",
+                                  "NSObject"
+                                ],
+                                "ivarTraces" : [
+
+                                ],
+                                "memoryAddress" : "0x00000001064369d0",
+                                "oid" : 13,
+                                "specialTrace" : ""
+                              },
+                              "layerOpacity" : 1,
+                              "layerPosition" : [
+                                201,
+                                437
+                              ],
+                              "layerShadowColor" : {
+                                "alpha" : 1,
+                                "blue" : 0,
+                                "green" : 0,
+                                "red" : 0
+                              },
+                              "layerShadowOffset" : [
+                                0,
+                                -3
+                              ],
+                              "layerShadowOpacity" : 0,
+                              "layerShadowRadius" : 3,
+                              "layerSublayerTransform" : [
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1
+                              ],
+                              "layerTransform" : [
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1,
+                                0,
+                                0,
+                                0,
+                                0,
+                                1
+                              ],
+                              "layerZPosition" : 0,
+                              "noPreview" : false,
+                              "preferToBeCollapsed" : false,
+                              "previewZIndex" : -1,
+                              "representedAsKeyWindow" : false,
+                              "shouldCaptureImage" : false,
+                              "subitems" : [
+                                {
+                                  "alpha" : 1,
+                                  "attributesGroupList" : [
+
+                                  ],
+                                  "bounds" : [
+                                    [
+                                      0,
+                                      0
+                                    ],
+                                    [
+                                      354,
+                                      183
+                                    ]
+                                  ],
+                                  "customAttrGroupList" : [
+
+                                  ],
+                                  "doNotFetchScreenshotReason" : 0,
+                                  "eventHandlers" : [
+
+                                  ],
+                                  "frame" : [
+                                    [
+                                      24,
+                                      126
+                                    ],
+                                    [
+                                      354,
+                                      183
+                                    ]
+                                  ],
+                                  "indentLevel" : 7,
+                                  "isExpanded" : false,
+                                  "isHidden" : false,
+                                  "layerAnchorPoint" : [
+                                    0.5,
+                                    0.5
+                                  ],
+                                  "layerBorderColor" : {
+                                    "alpha" : 1,
+                                    "blue" : 0,
+                                    "green" : 0,
+                                    "red" : 0
+                                  },
+                                  "layerBorderWidth" : 0,
+                                  "layerContentsGravity" : "resize",
+                                  "layerContentsRect" : [
+                                    [
+                                      0,
+                                      0
+                                    ],
+                                    [
+                                      1,
+                                      1
+                                    ]
+                                  ],
+                                  "layerContentsScale" : 1,
+                                  "layerCornerRadius" : 0,
+                                  "layerIsHidden" : false,
+                                  "layerMasksToBounds" : false,
+                                  "layerObject" : {
+                                    "classChainList" : [
+                                      "UIStackView",
+                                      "UIView",
+                                      "UIResponder",
+                                      "NSObject"
+                                    ],
+                                    "ivarTraces" : [
+
+                                    ],
+                                    "memoryAddress" : "0x0000000106437420",
+                                    "oid" : 15,
+                                    "specialTrace" : ""
+                                  },
+                                  "layerOpacity" : 1,
+                                  "layerPosition" : [
+                                    201,
+                                    217.5
+                                  ],
+                                  "layerShadowColor" : {
+                                    "alpha" : 1,
+                                    "blue" : 0,
+                                    "green" : 0,
+                                    "red" : 0
+                                  },
+                                  "layerShadowOffset" : [
+                                    0,
+                                    -3
+                                  ],
+                                  "layerShadowOpacity" : 0,
+                                  "layerShadowRadius" : 3,
+                                  "layerSublayerTransform" : [
+                                    1,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    1,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    1,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ],
+                                  "layerTransform" : [
+                                    1,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    1,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    1,
+                                    0,
+                                    0,
+                                    0,
+                                    0,
+                                    1
+                                  ],
+                                  "layerZPosition" : 0,
+                                  "noPreview" : false,
+                                  "preferToBeCollapsed" : false,
+                                  "previewZIndex" : -1,
+                                  "representedAsKeyWindow" : false,
+                                  "shouldCaptureImage" : false,
+                                  "subitems" : [
+                                    {
+                                      "alpha" : 1,
+                                      "attributesGroupList" : [
+
+                                      ],
+                                      "bounds" : [
+                                        [
+                                          0,
+                                          0
+                                        ],
+                                        [
+                                          257.33333333333331,
+                                          19.333333333333332
+                                        ]
+                                      ],
+                                      "customAttrGroupList" : [
+
+                                      ],
+                                      "doNotFetchScreenshotReason" : 0,
+                                      "eventHandlers" : [
+
+                                      ],
+                                      "frame" : [
+                                        [
+                                          72.333333333333343,
+                                          126
+                                        ],
+                                        [
+                                          257.33333333333326,
+                                          19.333333333333343
+                                        ]
+                                      ],
+                                      "indentLevel" : 8,
+                                      "isExpanded" : false,
+                                      "isHidden" : false,
+                                      "layerAnchorPoint" : [
+                                        0.5,
+                                        0.5
+                                      ],
+                                      "layerBorderColor" : {
+                                        "alpha" : 1,
+                                        "blue" : 0,
+                                        "green" : 0,
+                                        "red" : 0
+                                      },
+                                      "layerBorderWidth" : 0,
+                                      "layerContentsGravity" : "left",
+                                      "layerContentsRect" : [
+                                        [
+                                          0,
+                                          0
+                                        ],
+                                        [
+                                          1,
+                                          1
+                                        ]
+                                      ],
+                                      "layerContentsScale" : 3,
+                                      "layerCornerRadius" : 0,
+                                      "layerIsHidden" : false,
+                                      "layerMasksToBounds" : false,
+                                      "layerObject" : {
+                                        "classChainList" : [
+                                          "UILabel",
+                                          "UIView",
+                                          "UIResponder",
+                                          "NSObject"
+                                        ],
+                                        "ivarTraces" : [
+
+                                        ],
+                                        "memoryAddress" : "0x0000000109e14900",
+                                        "oid" : 17,
+                                        "specialTrace" : ""
+                                      },
+                                      "layerOpacity" : 1,
+                                      "layerPosition" : [
+                                        177,
+                                        9.6666666666666661
+                                      ],
+                                      "layerShadowColor" : {
+                                        "alpha" : 1,
+                                        "blue" : 0,
+                                        "green" : 0,
+                                        "red" : 0
+                                      },
+                                      "layerShadowOffset" : [
+                                        0,
+                                        -3
+                                      ],
+                                      "layerShadowOpacity" : 0,
+                                      "layerShadowRadius" : 3,
+                                      "layerSublayerTransform" : [
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ],
+                                      "layerTransform" : [
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ],
+                                      "layerZPosition" : 0,
+                                      "noPreview" : false,
+                                      "preferToBeCollapsed" : false,
+                                      "previewZIndex" : -1,
+                                      "representedAsKeyWindow" : false,
+                                      "screenshotRef" : "009F3109-88F1-4688-AA63-265DCF48188C",
+                                      "shouldCaptureImage" : true,
+                                      "subitems" : [
+
+                                      ],
+                                      "viewObject" : {
+                                        "classChainList" : [
+                                          "UILabel",
+                                          "UIView",
+                                          "UIResponder",
+                                          "NSObject"
+                                        ],
+                                        "ivarTraces" : [
+
+                                        ],
+                                        "memoryAddress" : "0x0000000106744000",
+                                        "oid" : 16,
+                                        "specialTrace" : ""
+                                      }
+                                    },
+                                    {
+                                      "alpha" : 1,
+                                      "attributesGroupList" : [
+
+                                      ],
+                                      "bounds" : [
+                                        [
+                                          0,
+                                          0
+                                        ],
+                                        [
+                                          251.33333333333334,
+                                          50.333333333333336
+                                        ]
+                                      ],
+                                      "customAttrGroupList" : [
+
+                                      ],
+                                      "doNotFetchScreenshotReason" : 0,
+                                      "eventHandlers" : [
+
+                                      ],
+                                      "frame" : [
+                                        [
+                                          75.333333333333329,
+                                          161.33333333333334
+                                        ],
+                                        [
+                                          251.33333333333337,
+                                          50.333333333333343
+                                        ]
+                                      ],
+                                      "indentLevel" : 8,
+                                      "isExpanded" : false,
+                                      "isHidden" : false,
+                                      "layerAnchorPoint" : [
+                                        0.5,
+                                        0.5
+                                      ],
+                                      "layerBorderColor" : {
+                                        "alpha" : 1,
+                                        "blue" : 0,
+                                        "green" : 0,
+                                        "red" : 0
+                                      },
+                                      "layerBorderWidth" : 0,
+                                      "layerContentsGravity" : "left",
+                                      "layerContentsRect" : [
+                                        [
+                                          0,
+                                          0
+                                        ],
+                                        [
+                                          1,
+                                          1
+                                        ]
+                                      ],
+                                      "layerContentsScale" : 3,
+                                      "layerCornerRadius" : 0,
+                                      "layerIsHidden" : false,
+                                      "layerMasksToBounds" : false,
+                                      "layerObject" : {
+                                        "classChainList" : [
+                                          "UILabel",
+                                          "UIView",
+                                          "UIResponder",
+                                          "NSObject"
+                                        ],
+                                        "ivarTraces" : [
+
+                                        ],
+                                        "memoryAddress" : "0x0000000109e14b80",
+                                        "oid" : 19,
+                                        "specialTrace" : ""
+                                      },
+                                      "layerOpacity" : 1,
+                                      "layerPosition" : [
+                                        177,
+                                        60.500000000000014
+                                      ],
+                                      "layerShadowColor" : {
+                                        "alpha" : 1,
+                                        "blue" : 0,
+                                        "green" : 0,
+                                        "red" : 0
+                                      },
+                                      "layerShadowOffset" : [
+                                        0,
+                                        -3
+                                      ],
+                                      "layerShadowOpacity" : 0,
+                                      "layerShadowRadius" : 3,
+                                      "layerSublayerTransform" : [
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ],
+                                      "layerTransform" : [
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ],
+                                      "layerZPosition" : 0,
+                                      "noPreview" : false,
+                                      "preferToBeCollapsed" : false,
+                                      "previewZIndex" : -1,
+                                      "representedAsKeyWindow" : false,
+                                      "screenshotRef" : "8B119224-37FF-494B-9393-12E1C21A31D5",
+                                      "shouldCaptureImage" : true,
+                                      "subitems" : [
+
+                                      ],
+                                      "viewObject" : {
+                                        "classChainList" : [
+                                          "UILabel",
+                                          "UIView",
+                                          "UIResponder",
+                                          "NSObject"
+                                        ],
+                                        "ivarTraces" : [
+
+                                        ],
+                                        "memoryAddress" : "0x0000000106744380",
+                                        "oid" : 18,
+                                        "specialTrace" : ""
+                                      }
+                                    },
+                                    {
+                                      "alpha" : 1,
+                                      "attributesGroupList" : [
+
+                                      ],
+                                      "bounds" : [
+                                        [
+                                          0,
+                                          0
+                                        ],
+                                        [
+                                          187,
+                                          26.333333333333332
+                                        ]
+                                      ],
+                                      "customAttrGroupList" : [
+
+                                      ],
+                                      "doNotFetchScreenshotReason" : 0,
+                                      "eventHandlers" : [
+
+                                      ],
+                                      "frame" : [
+                                        [
+                                          107.66666666666669,
+                                          227.66666666666666
+                                        ],
+                                        [
+                                          187,
+                                          26.333333333333343
+                                        ]
+                                      ],
+                                      "indentLevel" : 8,
+                                      "isExpanded" : false,
+                                      "isHidden" : false,
+                                      "layerAnchorPoint" : [
+                                        0.5,
+                                        0.5
+                                      ],
+                                      "layerBorderColor" : {
+                                        "alpha" : 1,
+                                        "blue" : 0,
+                                        "green" : 0,
+                                        "red" : 0
+                                      },
+                                      "layerBorderWidth" : 0,
+                                      "layerContentsGravity" : "left",
+                                      "layerContentsRect" : [
+                                        [
+                                          0,
+                                          0
+                                        ],
+                                        [
+                                          1,
+                                          1
+                                        ]
+                                      ],
+                                      "layerContentsScale" : 3,
+                                      "layerCornerRadius" : 0,
+                                      "layerIsHidden" : false,
+                                      "layerMasksToBounds" : false,
+                                      "layerObject" : {
+                                        "classChainList" : [
+                                          "UILabel",
+                                          "UIView",
+                                          "UIResponder",
+                                          "NSObject"
+                                        ],
+                                        "ivarTraces" : [
+
+                                        ],
+                                        "memoryAddress" : "0x0000000109e14c00",
+                                        "oid" : 21,
+                                        "specialTrace" : ""
+                                      },
+                                      "layerOpacity" : 1,
+                                      "layerPosition" : [
+                                        177.16666666666669,
+                                        114.83333333333333
+                                      ],
+                                      "layerShadowColor" : {
+                                        "alpha" : 1,
+                                        "blue" : 0,
+                                        "green" : 0,
+                                        "red" : 0
+                                      },
+                                      "layerShadowOffset" : [
+                                        0,
+                                        -3
+                                      ],
+                                      "layerShadowOpacity" : 0,
+                                      "layerShadowRadius" : 3,
+                                      "layerSublayerTransform" : [
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ],
+                                      "layerTransform" : [
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ],
+                                      "layerZPosition" : 0,
+                                      "noPreview" : false,
+                                      "preferToBeCollapsed" : false,
+                                      "previewZIndex" : -1,
+                                      "representedAsKeyWindow" : false,
+                                      "screenshotRef" : "1DD7C7FD-1F36-40F4-A93C-7D7C6A490B7C",
+                                      "shouldCaptureImage" : true,
+                                      "subitems" : [
+
+                                      ],
+                                      "viewObject" : {
+                                        "classChainList" : [
+                                          "UILabel",
+                                          "UIView",
+                                          "UIResponder",
+                                          "NSObject"
+                                        ],
+                                        "ivarTraces" : [
+
+                                        ],
+                                        "memoryAddress" : "0x0000000106744700",
+                                        "oid" : 20,
+                                        "specialTrace" : ""
+                                      }
+                                    },
+                                    {
+                                      "alpha" : 1,
+                                      "attributesGroupList" : [
+
+                                      ],
+                                      "bounds" : [
+                                        [
+                                          0,
+                                          0
+                                        ],
+                                        [
+                                          94,
+                                          39
+                                        ]
+                                      ],
+                                      "customAttrGroupList" : [
+
+                                      ],
+                                      "doNotFetchScreenshotReason" : 0,
+                                      "eventHandlers" : [
+
+                                      ],
+                                      "frame" : [
+                                        [
+                                          154,
+                                          270
+                                        ],
+                                        [
+                                          94,
+                                          39
+                                        ]
+                                      ],
+                                      "indentLevel" : 8,
+                                      "isExpanded" : false,
+                                      "isHidden" : false,
+                                      "layerAnchorPoint" : [
+                                        0.5,
+                                        0.5
+                                      ],
+                                      "layerBorderColor" : {
+                                        "alpha" : 1,
+                                        "blue" : 0,
+                                        "green" : 0,
+                                        "red" : 0
+                                      },
+                                      "layerBorderWidth" : 0,
+                                      "layerContentsGravity" : "resize",
+                                      "layerContentsRect" : [
+                                        [
+                                          0,
+                                          0
+                                        ],
+                                        [
+                                          1,
+                                          1
+                                        ]
+                                      ],
+                                      "layerContentsScale" : 1,
+                                      "layerCornerRadius" : 0,
+                                      "layerIsHidden" : false,
+                                      "layerMasksToBounds" : false,
+                                      "layerObject" : {
+                                        "classChainList" : [
+                                          "UIButton",
+                                          "UIControl",
+                                          "UIView",
+                                          "UIResponder",
+                                          "NSObject"
+                                        ],
+                                        "ivarTraces" : [
+
+                                        ],
+                                        "memoryAddress" : "0x000000010b51f480",
+                                        "oid" : 52,
+                                        "specialTrace" : ""
+                                      },
+                                      "layerOpacity" : 1,
+                                      "layerPosition" : [
+                                        177,
+                                        163.5
+                                      ],
+                                      "layerShadowColor" : {
+                                        "alpha" : 1,
+                                        "blue" : 0,
+                                        "green" : 0,
+                                        "red" : 0
+                                      },
+                                      "layerShadowOffset" : [
+                                        0,
+                                        -3
+                                      ],
+                                      "layerShadowOpacity" : 0,
+                                      "layerShadowRadius" : 3,
+                                      "layerSublayerTransform" : [
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ],
+                                      "layerTransform" : [
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1,
+                                        0,
+                                        0,
+                                        0,
+                                        0,
+                                        1
+                                      ],
+                                      "layerZPosition" : 0,
+                                      "noPreview" : false,
+                                      "preferToBeCollapsed" : false,
+                                      "previewZIndex" : -1,
+                                      "representedAsKeyWindow" : false,
+                                      "screenshotRef" : "71CF4521-4869-4324-A4DC-23BE5F74BB19",
+                                      "shouldCaptureImage" : true,
+                                      "subitems" : [
+                                        {
+                                          "alpha" : 1,
+                                          "attributesGroupList" : [
+
+                                          ],
+                                          "bounds" : [
+                                            [
+                                              0,
+                                              0
+                                            ],
+                                            [
+                                              94,
+                                              27
+                                            ]
+                                          ],
+                                          "customAttrGroupList" : [
+
+                                          ],
+                                          "doNotFetchScreenshotReason" : 0,
+                                          "eventHandlers" : [
+
+                                          ],
+                                          "frame" : [
+                                            [
+                                              154,
+                                              276
+                                            ],
+                                            [
+                                              94,
+                                              27
+                                            ]
+                                          ],
+                                          "indentLevel" : 9,
+                                          "isExpanded" : false,
+                                          "isHidden" : false,
+                                          "layerAnchorPoint" : [
+                                            0.5,
+                                            0.5
+                                          ],
+                                          "layerBorderColor" : {
+                                            "alpha" : 1,
+                                            "blue" : 0,
+                                            "green" : 0,
+                                            "red" : 0
+                                          },
+                                          "layerBorderWidth" : 0,
+                                          "layerContentsGravity" : "resize",
+                                          "layerContentsRect" : [
+                                            [
+                                              0,
+                                              0
+                                            ],
+                                            [
+                                              1,
+                                              1
+                                            ]
+                                          ],
+                                          "layerContentsScale" : 3,
+                                          "layerCornerRadius" : 0,
+                                          "layerIsHidden" : false,
+                                          "layerMasksToBounds" : false,
+                                          "layerObject" : {
+                                            "classChainList" : [
+                                              "UIButtonLabel",
+                                              "UILabel",
+                                              "UIView",
+                                              "UIResponder",
+                                              "NSObject"
+                                            ],
+                                            "ivarTraces" : [
+
+                                            ],
+                                            "memoryAddress" : "0x000000010b40e500",
+                                            "oid" : 54,
+                                            "specialTrace" : ""
+                                          },
+                                          "layerOpacity" : 1,
+                                          "layerPosition" : [
+                                            47,
+                                            19.5
+                                          ],
+                                          "layerShadowColor" : {
+                                            "alpha" : 1,
+                                            "blue" : 0,
+                                            "green" : 0,
+                                            "red" : 0
+                                          },
+                                          "layerShadowOffset" : [
+                                            0,
+                                            -3
+                                          ],
+                                          "layerShadowOpacity" : 0,
+                                          "layerShadowRadius" : 3,
+                                          "layerSublayerTransform" : [
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            1
+                                          ],
+                                          "layerTransform" : [
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            1,
+                                            0,
+                                            0,
+                                            0,
+                                            0,
+                                            1
+                                          ],
+                                          "layerZPosition" : 0,
+                                          "noPreview" : false,
+                                          "preferToBeCollapsed" : false,
+                                          "previewZIndex" : -1,
+                                          "representedAsKeyWindow" : false,
+                                          "screenshotRef" : "54F94096-C055-40B3-A7F8-73BB3A9ADE88",
+                                          "shouldCaptureImage" : true,
+                                          "subitems" : [
+
+                                          ],
+                                          "viewObject" : {
+                                            "classChainList" : [
+                                              "UIButtonLabel",
+                                              "UILabel",
+                                              "UIView",
+                                              "UIResponder",
+                                              "NSObject"
+                                            ],
+                                            "ivarTraces" : [
+
+                                            ],
+                                            "memoryAddress" : "0x0000000106747100",
+                                            "oid" : 53,
+                                            "specialTrace" : ""
+                                          }
+                                        }
+                                      ],
+                                      "viewObject" : {
+                                        "classChainList" : [
+                                          "UIButton",
+                                          "UIControl",
+                                          "UIView",
+                                          "UIResponder",
+                                          "NSObject"
+                                        ],
+                                        "ivarTraces" : [
+
+                                        ],
+                                        "memoryAddress" : "0x0000000109eade00",
+                                        "oid" : 51,
+                                        "specialTrace" : ""
+                                      }
+                                    }
+                                  ],
+                                  "viewObject" : {
+                                    "classChainList" : [
+                                      "UIStackView",
+                                      "UIView",
+                                      "UIResponder",
+                                      "NSObject"
+                                    ],
+                                    "ivarTraces" : [
+
+                                    ],
+                                    "memoryAddress" : "0x0000000109c94700",
+                                    "oid" : 14,
+                                    "specialTrace" : ""
+                                  }
+                                }
+                              ],
+                              "viewObject" : {
+                                "classChainList" : [
+                                  "TritonKitTestFixture.FixtureUIKitView",
+                                  "UIView",
+                                  "UIResponder",
+                                  "NSObject"
+                                ],
+                                "ivarTraces" : [
+
+                                ],
+                                "memoryAddress" : "0x0000000109c94380",
+                                "oid" : 12,
+                                "specialTrace" : ""
+                              }
+                            }
+                          ],
+                          "viewObject" : {
+                            "classChainList" : [
+                              "_TtGC7SwiftUI21UIKitPlatformViewHostGVS_P10$1d374ce4432PlatformViewRepresentableAdaptorV20TritonKitTestFixture17FixtureUIKitPanel__",
+                              "_TtGC5UIKit22UICorePlatformViewHostGV7SwiftUIP10$1d374ce4432PlatformViewRepresentableAdaptorV20TritonKitTestFixture17FixtureUIKitPanel__",
+                              "_UIConstraintBasedLayoutHostingView",
+                              "UIView",
+                              "UIResponder",
+                              "NSObject"
+                            ],
+                            "ivarTraces" : [
+
+                            ],
+                            "memoryAddress" : "0x0000000109eac000",
+                            "oid" : 10,
+                            "specialTrace" : ""
+                          }
+                        }
+                      ],
+                      "viewObject" : {
+                        "classChainList" : [
+                          "_TtGC7SwiftUI14_UIHostingViewGVS_15ModifiedContentVS_7AnyViewVS_12RootModifier__",
+                          "UIView",
+                          "UIResponder",
+                          "NSObject"
+                        ],
+                        "ivarTraces" : [
+
+                        ],
+                        "memoryAddress" : "0x0000000106590400",
+                        "oid" : 8,
+                        "specialTrace" : ""
+                      }
+                    }
+                  ],
+                  "viewObject" : {
+                    "classChainList" : [
+                      "UIDropShadowView",
+                      "UIView",
+                      "UIResponder",
+                      "NSObject"
+                    ],
+                    "ivarTraces" : [
+
+                    ],
+                    "memoryAddress" : "0x0000000109dd8780",
+                    "oid" : 5,
+                    "specialTrace" : ""
+                  }
+                }
+              ],
+              "viewObject" : {
+                "classChainList" : [
+                  "UIDropShadowView",
+                  "UIView",
+                  "UIResponder",
+                  "NSObject"
+                ],
+                "ivarTraces" : [
+
+                ],
+                "memoryAddress" : "0x0000000109dd8780",
+                "oid" : 5,
+                "specialTrace" : ""
+              }
+            }
+          ],
+          "viewObject" : {
+            "classChainList" : [
+              "UITransitionView",
+              "UIView",
+              "UIResponder",
+              "NSObject"
+            ],
+            "ivarTraces" : [
+
+            ],
+            "memoryAddress" : "0x0000000109c98a00",
+            "oid" : 3,
+            "specialTrace" : ""
+          }
+        }
+      ],
+      "viewObject" : {
+        "classChainList" : [
+          "UIWindow",
+          "UIView",
+          "UIResponder",
+          "NSObject"
+        ],
+        "ivarTraces" : [
+
+        ],
+        "memoryAddress" : "0x0000000106590800",
+        "oid" : 1,
+        "specialTrace" : ""
+      }
+    }
+  ],
+  "serverVersion" : 7
+}

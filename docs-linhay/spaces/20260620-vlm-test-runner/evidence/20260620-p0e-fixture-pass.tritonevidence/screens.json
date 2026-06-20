@@ -1,0 +1,180 @@
+{
+  "kind" : "triton.screen-workspace.screens",
+  "runId" : "run-f424a0ea-6404-403d-bf02-0da360c9ab83",
+  "schemaVersion" : 1,
+  "screens" : [
+    {
+      "fingerprint" : {
+        "axTextHash" : "9dd8366eaabc10bceb70f53fd242a741b90a63095e5126c3aa7d0dd3ee7247b6",
+        "hierarchySha256" : "0361708b69efd04a469781bb98a9785f2249e253fd0442cb20dcafa97b277ae5",
+        "screenshotSha256" : "f62761381de403a456ba0abdd80a80393cae4309d773db5ce3d2fd736e897c73"
+      },
+      "firstStepIndex" : 1,
+      "lastStepIndex" : 3,
+      "observations" : [
+        {
+          "artifacts" : {
+            "ax" : "debug\/step-001-after-ax.json",
+            "hierarchy" : "debug\/step-001-after-hierarchy.json",
+            "screenshot" : "screenshots\/step-001.png"
+          },
+          "eventIndex" : 12,
+          "fingerprint" : {
+            "axTextHash" : "9dd8366eaabc10bceb70f53fd242a741b90a63095e5126c3aa7d0dd3ee7247b6",
+            "hierarchySha256" : "0361708b69efd04a469781bb98a9785f2249e253fd0442cb20dcafa97b277ae5",
+            "screenshotSha256" : "f62761381de403a456ba0abdd80a80393cae4309d773db5ce3d2fd736e897c73"
+          },
+          "phase" : "after",
+          "stepIndex" : 1,
+          "visibleTexts" : [
+            "Fixture Runtime: Connected",
+            "fixture.runtime.status",
+            "Fixture Login",
+            "fixture.login.title",
+            "Fixture Login Ready",
+            "fixture.login.ready",
+            "Go Home",
+            "fixture.login.goHome"
+          ]
+        },
+        {
+          "artifacts" : {
+            "ax" : "debug\/step-003-before-ax.json",
+            "hierarchy" : "debug\/step-003-before-hierarchy.json",
+            "screenshot" : "debug\/step-003-before.png"
+          },
+          "eventIndex" : 28,
+          "fingerprint" : {
+            "axTextHash" : "9dd8366eaabc10bceb70f53fd242a741b90a63095e5126c3aa7d0dd3ee7247b6",
+            "hierarchySha256" : "0361708b69efd04a469781bb98a9785f2249e253fd0442cb20dcafa97b277ae5",
+            "screenshotSha256" : "f62761381de403a456ba0abdd80a80393cae4309d773db5ce3d2fd736e897c73"
+          },
+          "phase" : "before",
+          "stepIndex" : 3,
+          "visibleTexts" : [
+            "Fixture Runtime: Connected",
+            "fixture.runtime.status",
+            "Fixture Login",
+            "fixture.login.title",
+            "Fixture Login Ready",
+            "fixture.login.ready",
+            "Go Home",
+            "fixture.login.goHome"
+          ]
+        }
+      ],
+      "primaryText" : "Fixture Login",
+      "screenId" : "screen-000",
+      "visibleTexts" : [
+        "Fixture Runtime: Connected",
+        "fixture.runtime.status",
+        "Fixture Login",
+        "fixture.login.title",
+        "Fixture Login Ready",
+        "fixture.login.ready",
+        "Go Home",
+        "fixture.login.goHome"
+      ]
+    },
+    {
+      "fingerprint" : {
+        "axTextHash" : "628830913f0df7f6df9ce2a78ffa337da473692a2e7fb2b4ccf7705517a31059",
+        "hierarchySha256" : "0361708b69efd04a469781bb98a9785f2249e253fd0442cb20dcafa97b277ae5",
+        "screenshotSha256" : "606bd8b345fb860cbc926105aadf2a9b9367c5a01c0fa099826051a40d95663c"
+      },
+      "firstStepIndex" : 3,
+      "lastStepIndex" : 4,
+      "observations" : [
+        {
+          "artifacts" : {
+            "ax" : "debug\/step-003-after-ax.json",
+            "hierarchy" : "debug\/step-003-after-hierarchy.json",
+            "screenshot" : "debug\/step-003-after.png"
+          },
+          "eventIndex" : 29,
+          "fingerprint" : {
+            "axTextHash" : "628830913f0df7f6df9ce2a78ffa337da473692a2e7fb2b4ccf7705517a31059",
+            "hierarchySha256" : "0361708b69efd04a469781bb98a9785f2249e253fd0442cb20dcafa97b277ae5",
+            "screenshotSha256" : "606bd8b345fb860cbc926105aadf2a9b9367c5a01c0fa099826051a40d95663c"
+          },
+          "phase" : "after",
+          "stepIndex" : 3,
+          "visibleTexts" : [
+            "Fixture Runtime: Connected",
+            "fixture.runtime.status",
+            "Fixture Home",
+            "fixture.home.title",
+            "Open Settings",
+            "fixture.home.openSettings",
+            "Open Delayed Loading",
+            "fixture.home.openDelayed",
+            "Open Dynamic List",
+            "fixture.home.openDynamicList",
+            "Open Error State",
+            "fixture.home.openError",
+            "Open Fixture Alert",
+            "fixture.home.openAlert",
+            "Back to Login",
+            "fixture.home.backLogin"
+          ]
+        },
+        {
+          "artifacts" : {
+            "ax" : "debug\/step-004-after-ax.json",
+            "hierarchy" : "debug\/step-004-after-hierarchy.json",
+            "screenshot" : "screenshots\/step-004.png"
+          },
+          "eventIndex" : 37,
+          "fingerprint" : {
+            "axTextHash" : "628830913f0df7f6df9ce2a78ffa337da473692a2e7fb2b4ccf7705517a31059",
+            "hierarchySha256" : "0361708b69efd04a469781bb98a9785f2249e253fd0442cb20dcafa97b277ae5",
+            "screenshotSha256" : "606bd8b345fb860cbc926105aadf2a9b9367c5a01c0fa099826051a40d95663c"
+          },
+          "phase" : "after",
+          "stepIndex" : 4,
+          "visibleTexts" : [
+            "Fixture Runtime: Connected",
+            "fixture.runtime.status",
+            "Fixture Home",
+            "fixture.home.title",
+            "Open Settings",
+            "fixture.home.openSettings",
+            "Open Delayed Loading",
+            "fixture.home.openDelayed",
+            "Open Dynamic List",
+            "fixture.home.openDynamicList",
+            "Open Error State",
+            "fixture.home.openError",
+            "Open Fixture Alert",
+            "fixture.home.openAlert",
+            "Back to Login",
+            "fixture.home.backLogin"
+          ]
+        }
+      ],
+      "primaryText" : "Fixture Home",
+      "screenId" : "screen-001",
+      "visibleTexts" : [
+        "Fixture Runtime: Connected",
+        "fixture.runtime.status",
+        "Fixture Home",
+        "fixture.home.title",
+        "Open Settings",
+        "fixture.home.openSettings",
+        "Open Delayed Loading",
+        "fixture.home.openDelayed",
+        "Open Dynamic List",
+        "fixture.home.openDynamicList",
+        "Open Error State",
+        "fixture.home.openError",
+        "Open Fixture Alert",
+        "fixture.home.openAlert",
+        "Back to Login",
+        "fixture.home.backLogin"
+      ]
+    }
+  ],
+  "source" : {
+    "eventsRef" : "run\/events.jsonl"
+  }
+}

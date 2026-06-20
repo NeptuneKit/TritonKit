@@ -1,0 +1,16 @@
+{
+  "bounds" : {
+    "height" : 874,
+    "width" : 402,
+    "x" : 0,
+    "y" : 0
+  },
+  "orientation" : "portrait",
+  "safeArea" : {
+    "bottom" : 34,
+    "left" : 0,
+    "right" : 0,
+    "top" : 62
+  },
+  "scale" : 3
+}

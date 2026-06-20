@@ -1,0 +1,24 @@
+{
+  "confirmed" : true,
+  "endScreenId" : "screen-2776e8450c3d",
+  "health" : {
+    "failCount" : 0,
+    "flakeCount" : 0,
+    "observedRuns" : 2,
+    "passCount" : 2
+  },
+  "kind" : "triton.app-map.path",
+  "name" : "Fixture Login to Home",
+  "pathId" : "path-fixture-login-home",
+  "replayable" : true,
+  "schemaVersion" : 1,
+  "sourceRuns" : [
+    "run-f424a0ea-6404-403d-bf02-0da360c9ab83",
+    "run-5bba70db-d435-4fa0-9a3f-c53d03212f1a"
+  ],
+  "startScreenId" : "screen-a5170de89946",
+  "status" : "observed",
+  "transitions" : [
+    "transition-127ba1264882"
+  ]
+}

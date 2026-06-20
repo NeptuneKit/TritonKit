@@ -1,0 +1,10 @@
+{
+  "evidenceDir" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260620-p0e-fixture-failure.tritonevidence",
+  "kind" : "triton.app-map.run",
+  "pathCount" : 0,
+  "runId" : "run-0f043f67-0f75-4feb-95ae-b2d305c2209e",
+  "schemaVersion" : 1,
+  "screenCount" : 1,
+  "transitionCount" : 0,
+  "verdict" : "failure"
+}

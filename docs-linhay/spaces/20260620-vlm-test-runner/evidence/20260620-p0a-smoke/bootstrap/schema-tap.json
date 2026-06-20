@@ -1,0 +1,447 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+        {
+          "description" : "Visible text, AX label, identifier, value, or option title to tap",
+          "name" : "<query>",
+          "required" : false,
+          "type" : "String"
+        }
+      ],
+      "artifacts" : [
+
+      ],
+      "examples" : [
+        "triton tap \"HTTP\"",
+        "triton tap \"HTTP\" --device booted --json",
+        "triton tap \"我的\" --platform harmony --json",
+        "triton tap \"hello\" --index 2",
+        "triton tap \"hello\" --at 240,580",
+        "triton tap \"hello\" --strategy exact",
+        "triton tap \"hello\" --within 180,0,220,500",
+        "triton tap --at 270,300",
+        "triton tap --x 270 --y 300",
+        "triton tap --oid 13",
+        "triton tap --ax-label Save"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "text_not_found",
+        "validation_failed",
+        "unsupported_capability",
+        "server_unavailable",
+        "target_not_found",
+        "ambiguous_target",
+        "request_failed"
+      ],
+      "failureShape" : "{ ok: false, error: { code, message, endpoint, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "tap",
+      "nextCommands" : [
+        "triton status --json",
+        "triton wait --text <text> --json",
+        "triton assert text-exists <text> --json",
+        "triton evidence --output <dir.tritonevidence> --json",
+        "triton target resolve <selector> --json",
+        "triton plan --format json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Runtime target selector; --device is an alias for --target and accepts target ids, iOS simulator UDIDs, booted, or the only connected target when omitted",
+          "name" : "--target\/--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Tap by Android adb input or Harmony hdc uitest using host layout text or coordinates",
+          "name" : "--platform",
+          "required" : false,
+          "type" : "android|harmony"
+        },
+        {
+          "defaultValue" : "adb",
+          "description" : "ADB executable path for --platform android",
+          "name" : "--adb",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "hdc",
+          "description" : "HDC executable path for --platform harmony",
+          "name" : "--hdc",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Window x coordinate",
+          "name" : "--x",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Window y coordinate",
+          "name" : "--y",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Coordinate selector without <query>, or query disambiguation point with <query>",
+          "name" : "--at",
+          "required" : false,
+          "type" : "x,y"
+        },
+        {
+          "description" : "Target view oid",
+          "name" : "--oid",
+          "required" : false,
+          "type" : "UInt"
+        },
+        {
+          "description" : "AX target\/view oid from `triton ax`; taps by runtime oid",
+          "name" : "--ax-oid",
+          "required" : false,
+          "type" : "UInt"
+        },
+        {
+          "description" : "Exact AX label from `triton ax`; taps by runtime oid",
+          "name" : "--ax-label",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Choose query or AX text activation target: query defaults to smart; AX selectors default to exact",
+          "name" : "--strategy",
+          "required" : false,
+          "type" : "smart|exact|ancestor"
+        },
+        {
+          "description" : "Select one query candidate by 1-based index from `triton find --all`",
+          "name" : "--index",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "description" : "Restrict query matching to window bounds",
+          "name" : "--within",
+          "required" : false,
+          "type" : "x,y,width,height"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Whether the action succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Human-readable action message",
+              "name" : "message",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Target view oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Target view class",
+              "name" : "targetClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Original matched oid",
+              "name" : "matchedOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Original matched class",
+              "name" : "matchedClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Activated target oid",
+              "name" : "activationOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Activated target class",
+              "name" : "activationClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Activation strategy",
+              "name" : "strategy",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Whether inserted text was treated as secure",
+              "name" : "secure",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Whether output text details were redacted",
+              "name" : "redacted",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Inserted text length",
+              "name" : "insertedLength",
+              "required" : false,
+              "type" : "Int?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "input-result",
+          "model" : "TKInputResult",
+          "selector" : "input.result"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the Android host tap command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "android",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Android target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Text query used for target resolution",
+              "name" : "query",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Screen x coordinate used for tap",
+              "name" : "x",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Screen y coordinate used for tap",
+              "name" : "y",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Matched Android host layout node",
+              "name" : "match",
+              "required" : false,
+              "type" : "HostAndroidTapMatch?"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostAndroidTapOutput",
+          "selector" : "host.android-tap"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the Harmony host tap command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Harmony target",
+              "name" : "target",
+              "required" : true,
+              "type" : "TKHarmonyTarget"
+            },
+            {
+              "description" : "Text query used for target resolution",
+              "name" : "query",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Screen x coordinate used for tap",
+              "name" : "x",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Screen y coordinate used for tap",
+              "name" : "y",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Matched host layout text node",
+              "name" : "match",
+              "required" : false,
+              "type" : "TKHarmonyLayoutTextMatch?"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostHarmonyTapOutput",
+          "selector" : "host.harmony-tap"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json"
+      ],
+      "outputSemantics" : "Use tap after find when targets are ambiguous. Follow successful taps with wait\/assert and capture evidence on failure.",
+      "providedCapabilities" : [
+        "tap",
+        "android-tap-text",
+        "harmony-tap-text"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton wait --text <text> --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton assert text-exists <text> --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        },
+        {
+          "category" : "plan",
+          "command" : "triton plan --format json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : true,
+      "requiresTarget" : true,
+      "retryable" : false,
+      "runtimeScope" : "embedded|host-android|host-harmony",
+      "subcommands" : [
+
+      ],
+      "successShape" : "{ ok, action, message, targetOID, targetClassName, matchedOID?, matchedClassName?, activationOID?, activationClassName?, strategy? } or HostAndroidTapOutput or HostHarmonyTapOutput",
+      "summary" : "Tap a UI target by text, coordinate, view oid, or AX node",
+      "usageForms" : [
+
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

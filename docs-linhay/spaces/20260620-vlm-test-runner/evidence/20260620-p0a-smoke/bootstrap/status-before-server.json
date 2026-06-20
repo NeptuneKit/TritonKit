@@ -1,0 +1,30 @@
+{
+  "error" : {
+    "code" : "server_unavailable",
+    "endpoint" : "http:\/\/127.0.0.1:19421\/status",
+    "hint" : "Run `triton serve --host 127.0.0.1 --port 19421` and connect the iOS app",
+    "message" : "Could not connect to the server.",
+    "nextAction" : {
+      "args" : [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421"
+      ],
+      "category" : "diagnose",
+      "command" : "serve",
+      "finalEvents" : [
+
+      ],
+      "readyEvents" : [
+
+      ],
+      "requiresLongRunningProcess" : true,
+      "terminationSignals" : [
+        "sigint",
+        "sigterm"
+      ]
+    }
+  },
+  "ok" : false
+}

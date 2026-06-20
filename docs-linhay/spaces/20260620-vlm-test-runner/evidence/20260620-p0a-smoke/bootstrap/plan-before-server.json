@@ -1,0 +1,225 @@
+{
+  "connected" : false,
+  "error" : {
+    "code" : "server_unavailable",
+    "endpoint" : "http:\/\/127.0.0.1:19421\/status",
+    "hint" : "Run `triton serve --host 127.0.0.1 --port 19421` and connect the iOS app",
+    "message" : "Could not connect to the server.",
+    "nextAction" : {
+      "args" : [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421"
+      ],
+      "category" : "diagnose",
+      "command" : "serve",
+      "finalEvents" : [
+
+      ],
+      "readyEvents" : [
+
+      ],
+      "requiresLongRunningProcess" : true,
+      "terminationSignals" : [
+        "sigint",
+        "sigterm"
+      ]
+    }
+  },
+  "goal" : "general",
+  "mode" : "bootstrap",
+  "nextStep" : "start-server",
+  "nextWorkflows" : [
+    "action",
+    "app",
+    "assert",
+    "evidence",
+    "observe",
+    "replay",
+    "route",
+    "smoke",
+    "webview-check"
+  ],
+  "ok" : false,
+  "primaryExpectedArtifact" : "stdout-json",
+  "primaryNextAction" : {
+    "args" : [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "19421"
+    ],
+    "category" : "diagnose",
+    "command" : "serve",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : true,
+    "terminationSignals" : [
+      "sigint",
+      "sigterm"
+    ]
+  },
+  "primaryNextActionSource" : "next-step-step",
+  "primaryWorkflowCategory" : "app",
+  "runtime" : "unknown",
+  "serverReachable" : false,
+  "steps" : [
+    {
+      "argv" : [
+        "triton",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421"
+      ],
+      "category" : "diagnose",
+      "command" : "triton serve --host 127.0.0.1 --port 19421",
+      "expected" : "Server listens on 127.0.0.1:19421",
+      "expectedArtifacts" : [
+        "stdout-json"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "start-server",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available"
+      ],
+      "requiresLongRunningProcess" : true,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed"
+      ],
+      "terminationSignals" : [
+        "sigint",
+        "sigterm"
+      ],
+      "title" : "Start Triton server",
+      "when" : "serverReachable == false",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "replay",
+        "route",
+        "smoke",
+        "webview-check"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "xcode",
+        "run",
+        "--json"
+      ],
+      "category" : "project",
+      "command" : "triton xcode run --json",
+      "expected" : "App launches with embedded TritonKit runtime and triton status reports connected: true",
+      "expectedArtifacts" : [
+        "stdout-json",
+        "xcode-log"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "connect-target",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available",
+        "server.reachable"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : true,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Launch an app with embedded TritonKit runtime",
+      "when" : "serverReachable == true && connected == false",
+      "workflowCategories" : [
+        "app",
+        "evidence",
+        "project",
+        "runtime",
+        "target",
+        "xcode"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "doctor",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421",
+        "--format",
+        "json"
+      ],
+      "category" : "diagnose",
+      "command" : "triton doctor --host 127.0.0.1 --port 19421 --format json",
+      "expected" : "ok=true, serverReachable=true, connected=true",
+      "expectedArtifacts" : [
+        "stdout-json"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "diagnose",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available",
+        "server.reachable"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : true,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Re-check machine-readable runtime state",
+      "when" : "after starting server and target",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "project",
+        "replay",
+        "route",
+        "runtime",
+        "smoke",
+        "target",
+        "webview-check",
+        "xcode"
+      ]
+    }
+  ],
+  "surface" : "plan"
+}

@@ -1,0 +1,280 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+        {
+          "description" : "Assertion condition",
+          "name" : "<condition>",
+          "required" : true,
+          "type" : "text-exists|text-not-exists"
+        },
+        {
+          "description" : "Visible text, label, identifier, title, or value",
+          "name" : "<text>",
+          "required" : true,
+          "type" : "String"
+        }
+      ],
+      "artifacts" : [
+
+      ],
+      "examples" : [
+        "triton assert text-exists \"Macau\" --json",
+        "triton assert text-not-exists \"Qinghai\" --within 180,120,190,500 --json",
+        "triton assert text-exists \"Macau\" --role text --count 1 --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "assertion_failed",
+        "validation_failed",
+        "server_unavailable",
+        "target_not_found",
+        "ambiguous_target",
+        "request_failed"
+      ],
+      "failureShape" : "Failed assertions return the same result with ok=false and exit non-zero; validation\/request failures use { ok:false, error:{ code, message, endpoint?, hint } }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "assert",
+      "nextCommands" : [
+        "triton status --json",
+        "triton evidence --output <dir.tritonevidence> --json",
+        "triton wait --text <text> --json",
+        "triton find <text> --all --json",
+        "triton screenshot --output <path> --metadata",
+        "triton target resolve <selector> --json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Runtime target selector; --device is an alias for --target and accepts target ids, iOS simulator UDIDs, booted, or the only connected target when omitted",
+          "name" : "--target\/--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Optional AX role filter",
+          "name" : "--role",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Require exact match count",
+          "name" : "--count",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "description" : "Require at least this many matches",
+          "name" : "--min-count",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "description" : "Require at most this many matches",
+          "name" : "--max-count",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "description" : "Restrict assertion to window bounds",
+          "name" : "--within",
+          "required" : false,
+          "type" : "x,y,width,height"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Whether the assertion passed",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "text-exists or text-not-exists",
+              "name" : "condition",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Asserted text",
+              "name" : "query",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional role filter",
+              "name" : "role",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Actual match count",
+              "name" : "count",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Exact expected match count",
+              "name" : "expectedCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Minimum match count",
+              "name" : "minCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Maximum match count",
+              "name" : "maxCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Optional bounds filter",
+              "name" : "within",
+              "required" : false,
+              "type" : "TKRect?"
+            },
+            {
+              "description" : "Matched elements",
+              "name" : "matches",
+              "required" : true,
+              "type" : "[TKWaitMatch]"
+            },
+            {
+              "description" : "Bounded observed text sample",
+              "name" : "sample",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Target connection state",
+              "name" : "targetConnectionState",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Hierarchy cache state",
+              "name" : "hierarchyCacheState",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Failure or success message",
+              "name" : "message",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Nearest observed text on failure",
+              "name" : "nearestText",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Follow-up commands on failure",
+              "name" : "suggestedCommands",
+              "required" : false,
+              "type" : "[String]?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "assert-result",
+          "model" : "TKUIAssertResult",
+          "selector" : "assert.result"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json"
+      ],
+      "outputSemantics" : "Use assert as the agent completion gate. Assertion failures return structured evidence hints and should normally be followed by evidence capture.",
+      "providedCapabilities" : [
+        "assert"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton wait --text <text> --json"
+        },
+        {
+          "category" : "discover",
+          "command" : "triton find <text> --all --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton screenshot --output <path> --metadata"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : true,
+      "requiresTarget" : true,
+      "retryable" : false,
+      "runtimeScope" : "embedded",
+      "subcommands" : [
+
+      ],
+      "successShape" : "{ ok, condition, query, role?, count, expectedCount?, minCount?, maxCount?, within?, matches[], sample[], targetConnectionState?, hierarchyCacheState?, message? }",
+      "summary" : "Assert visible UI text state for agent-driven regression",
+      "usageForms" : [
+
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

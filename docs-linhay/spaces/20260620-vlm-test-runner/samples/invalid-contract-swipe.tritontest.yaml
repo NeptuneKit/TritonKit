@@ -1,0 +1,14 @@
+version: 1
+name: invalid-swipe
+app:
+  bundleId: com.example.LoginFixture
+device:
+  platform: ios
+steps:
+  - swipe:
+      from:
+        x: 10
+        y: 20
+      to:
+        x: 10
+        y: 200

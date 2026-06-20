@@ -1,0 +1,16 @@
+{
+  "activeHierarchyAvailable" : true,
+  "appName" : "TritonKitTestFixture",
+  "bundleIdentifier" : "com.neptunekit.tritonkit.testfixture",
+  "cachedHierarchyAvailable" : true,
+  "connected" : true,
+  "deviceDescription" : "iPhone",
+  "hierarchyCacheState" : "active",
+  "id" : "triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+  "identityState" : "current",
+  "latestHierarchyAvailable" : true,
+  "osDescription" : "26.5",
+  "platform" : "ios",
+  "simulatorUDID" : "0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+  "transport" : "local-websocket"
+}

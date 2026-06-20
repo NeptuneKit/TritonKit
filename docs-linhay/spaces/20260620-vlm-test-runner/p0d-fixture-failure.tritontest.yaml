@@ -1,0 +1,19 @@
+version: 1
+name: p0d-fixture-failure
+app:
+  bundleId: com.neptunekit.tritonkit.testfixture
+device:
+  platform: ios-simulator
+settings:
+  strict: true
+  timeoutMs: 5000
+  retry:
+    count: 0
+    intervalMs: 250
+steps:
+  - launch: {}
+  - takeScreenshot: {}
+  - assertVisible:
+      text: Definitely Not Existing
+      source: ax
+      match: exact

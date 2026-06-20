@@ -1,0 +1,12 @@
+{
+  "durationMs" : 1787,
+  "endedAt" : "2026-06-20T11:18:16Z",
+  "evidenceManifestRef" : "..\/manifest.json",
+  "kind" : "triton.test.run",
+  "planRef" : "..\/normalized-plan.json",
+  "runId" : "run-f424a0ea-6404-403d-bf02-0da360c9ab83",
+  "schemaVersion" : 1,
+  "source" : "docs-linhay\/spaces\/20260620-vlm-test-runner\/p0d-fixture-pass.tritontest.yaml",
+  "startedAt" : "2026-06-20T11:18:14Z",
+  "status" : "passed"
+}

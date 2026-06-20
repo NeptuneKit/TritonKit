@@ -1,0 +1,215 @@
+{
+  "checks" : [
+    {
+      "code" : "server_reachable",
+      "id" : "server",
+      "message" : "Local Triton server responded",
+      "nextAction" : {
+        "args" : [
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "status",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "status",
+        "capabilities"
+      ],
+      "status" : "pass",
+      "workflowCategories" : [
+
+      ]
+    },
+    {
+      "code" : "target_unavailable",
+      "hint" : "Launch an app that embeds TritonKit, or run an Xcode\/app workflow that starts it.",
+      "id" : "connect-target",
+      "message" : "Triton server is reachable but no embedded runtime target is connected",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "target",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "runtime-manifest",
+        "state-app",
+        "state-scene",
+        "state-route",
+        "state-responder",
+        "snapshot",
+        "focus",
+        "set-text",
+        "select-segment",
+        "set-switch",
+        "semantic-action",
+        "ledger",
+        "observe-ios",
+        "inspect",
+        "hierarchy",
+        "nodes",
+        "node",
+        "attrs",
+        "object",
+        "export-json",
+        "export-archive",
+        "geometry",
+        "ax",
+        "hit",
+        "screenshot",
+        "wait",
+        "capture",
+        "assert",
+        "replay",
+        "tap",
+        "swipe",
+        "type",
+        "paste",
+        "clear",
+        "input"
+      ],
+      "status" : "fail",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "replay"
+      ]
+    },
+    {
+      "code" : "action_capabilities_limited",
+      "hint" : "Use capabilities to inspect per-action reason and nextAction.",
+      "id" : "action-surface",
+      "message" : "Some action capabilities are unavailable in the current environment",
+      "nextAction" : {
+        "args" : [
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "capabilities",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "tap",
+        "swipe",
+        "type",
+        "paste",
+        "clear",
+        "input",
+        "press"
+      ],
+      "status" : "fail",
+      "workflowCategories" : [
+        "action",
+        "assert",
+        "evidence"
+      ]
+    },
+    {
+      "code" : "plan_available",
+      "id" : "plan",
+      "message" : "Task planning is available",
+      "nextAction" : {
+        "args" : [
+          "--json"
+        ],
+        "category" : "plan",
+        "command" : "plan",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "plan",
+        "target-list",
+        "evidence-summary"
+      ],
+      "status" : "pass",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "replay",
+        "runtime",
+        "smoke"
+      ]
+    }
+  ],
+  "connected" : false,
+  "nextStep" : "connect-target",
+  "nextWorkflows" : [
+    "action",
+    "app",
+    "assert",
+    "evidence",
+    "observe",
+    "replay"
+  ],
+  "ok" : false,
+  "primaryCapability" : "runtime-manifest",
+  "primaryNextAction" : {
+    "args" : [
+      "list",
+      "--json"
+    ],
+    "category" : "prepare-target",
+    "command" : "target",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : false,
+    "terminationSignals" : [
+
+    ]
+  },
+  "primaryNextActionSource" : "next-step-check",
+  "primaryWorkflowCategory" : "app",
+  "runtime" : "none",
+  "serverReachable" : true,
+  "surface" : "doctor"
+}

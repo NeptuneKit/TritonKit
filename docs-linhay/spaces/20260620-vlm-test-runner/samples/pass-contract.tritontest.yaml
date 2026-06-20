@@ -1,0 +1,22 @@
+version: 1
+name: login-flow
+app:
+  bundleId: com.example.LoginFixture
+device:
+  platform: ios
+settings:
+  strict: true
+  timeoutMs: 5000
+  retry:
+    count: 0
+    intervalMs: 250
+steps:
+  - launch: {}
+  - takeScreenshot: {}
+  - tap:
+      point:
+        x: 191.5
+        y: 329.25
+        coordinateSpace: runtime-point
+  - assertVisible:
+      text: Home

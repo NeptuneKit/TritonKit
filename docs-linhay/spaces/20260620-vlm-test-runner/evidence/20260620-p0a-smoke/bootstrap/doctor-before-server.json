@@ -1,0 +1,177 @@
+{
+  "checks" : [
+    {
+      "code" : "server_unavailable",
+      "hint" : "Start the local control server, then rerun doctor.",
+      "id" : "start-server",
+      "message" : "Local Triton server is not reachable",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "relatedCapabilities" : [
+        "status",
+        "runtime-manifest",
+        "state-app",
+        "state-scene",
+        "state-route",
+        "state-responder",
+        "snapshot",
+        "app-semantic-state",
+        "app-semantic-action",
+        "media-playback",
+        "focus",
+        "set-text",
+        "select-segment",
+        "set-switch",
+        "ledger",
+        "list",
+        "inspect",
+        "hierarchy",
+        "nodes",
+        "node",
+        "attrs",
+        "object",
+        "export-json",
+        "export-archive",
+        "geometry",
+        "ax",
+        "hit",
+        "screenshot",
+        "wait",
+        "capture",
+        "assert",
+        "replay",
+        "tap",
+        "swipe",
+        "type",
+        "paste",
+        "clear",
+        "input"
+      ],
+      "status" : "fail",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "replay"
+      ]
+    },
+    {
+      "code" : "schema_available",
+      "hint" : "Run schema when an agent needs command contracts before server startup.",
+      "id" : "inspect-schema",
+      "message" : "CLI schema is available without a running server",
+      "nextAction" : {
+        "args" : [
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "schema",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "relatedCapabilities" : [
+        "schema",
+        "plan",
+        "capabilities"
+      ],
+      "status" : "pass",
+      "workflowCategories" : [
+
+      ]
+    }
+  ],
+  "connected" : false,
+  "error" : {
+    "code" : "server_unavailable",
+    "endpoint" : "http:\/\/127.0.0.1:19421\/status",
+    "hint" : "Run `triton serve --host 127.0.0.1 --port 19421` and connect the iOS app",
+    "message" : "Could not connect to the server.",
+    "nextAction" : {
+      "args" : [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421"
+      ],
+      "category" : "diagnose",
+      "command" : "serve",
+      "finalEvents" : [
+
+      ],
+      "readyEvents" : [
+
+      ],
+      "requiresLongRunningProcess" : true,
+      "terminationSignals" : [
+        "sigint",
+        "sigterm"
+      ]
+    }
+  },
+  "nextStep" : "start-server",
+  "nextWorkflows" : [
+    "action",
+    "app",
+    "assert",
+    "evidence",
+    "observe",
+    "replay"
+  ],
+  "ok" : false,
+  "primaryCapability" : "status",
+  "primaryNextAction" : {
+    "args" : [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "19421"
+    ],
+    "category" : "diagnose",
+    "command" : "serve",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : true,
+    "terminationSignals" : [
+      "sigint",
+      "sigterm"
+    ]
+  },
+  "primaryNextActionSource" : "next-step-check",
+  "primaryWorkflowCategory" : "app",
+  "runtime" : "unknown",
+  "serverReachable" : false,
+  "surface" : "doctor"
+}

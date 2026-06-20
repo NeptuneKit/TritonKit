@@ -1,0 +1,8 @@
+{
+  "error" : {
+    "code" : "validation_failed",
+    "hint" : "Run `triton schema --command replay --json` to inspect required fields",
+    "message" : "Missing replay variable: username"
+  },
+  "ok" : false
+}

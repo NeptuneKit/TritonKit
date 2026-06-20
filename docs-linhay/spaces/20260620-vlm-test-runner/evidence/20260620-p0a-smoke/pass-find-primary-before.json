@@ -1,0 +1,76 @@
+{
+  "candidates" : [
+    {
+      "className" : "UIButton",
+      "frame" : {
+        "height" : 30,
+        "width" : 53,
+        "x" : 165.33333333333334,
+        "y" : 314.3333333333333
+      },
+      "identifier" : "ComplexHarnessPrimary",
+      "index" : 1,
+      "label" : "Primary",
+      "query" : "Primary",
+      "request" : {
+        "activationStrategy" : "smart",
+        "matchedClassName" : "UIButton",
+        "matchedOID" : 122,
+        "targetOID" : 122,
+        "type" : "tap"
+      },
+      "role" : "button",
+      "source" : "ax",
+      "strategy" : "smart",
+      "targetOID" : 122,
+      "viewOID" : 122
+    },
+    {
+      "className" : "UIButtonLabel",
+      "frame" : {
+        "height" : 18,
+        "width" : 53,
+        "x" : 165.33333333333334,
+        "y" : 320.3333333333333
+      },
+      "index" : 2,
+      "label" : "Primary",
+      "layerOID" : 125,
+      "query" : "Primary",
+      "request" : {
+        "activationStrategy" : "smart",
+        "matchedClassName" : "UIButtonLabel",
+        "matchedOID" : 124,
+        "targetOID" : 124,
+        "type" : "tap"
+      },
+      "source" : "hierarchy-text",
+      "strategy" : "smart",
+      "viewOID" : 124
+    }
+  ],
+  "className" : "UIButton",
+  "frame" : {
+    "height" : 30,
+    "width" : 53,
+    "x" : 165.33333333333334,
+    "y" : 314.3333333333333
+  },
+  "identifier" : "ComplexHarnessPrimary",
+  "label" : "Primary",
+  "matchCount" : 2,
+  "matchIndex" : 1,
+  "query" : "Primary",
+  "request" : {
+    "activationStrategy" : "smart",
+    "matchedClassName" : "UIButton",
+    "matchedOID" : 122,
+    "targetOID" : 122,
+    "type" : "tap"
+  },
+  "role" : "button",
+  "source" : "ax",
+  "strategy" : "smart",
+  "targetOID" : 122,
+  "viewOID" : 122
+}

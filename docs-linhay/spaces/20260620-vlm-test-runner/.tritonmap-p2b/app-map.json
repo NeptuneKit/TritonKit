@@ -1,0 +1,13 @@
+{
+  "app" : {
+    "bundleId" : "com.neptunekit.tritonkit.testfixture",
+    "platform" : "ios-simulator"
+  },
+  "kind" : "triton.app-map",
+  "pathCount" : 1,
+  "schemaVersion" : 1,
+  "screenCount" : 4,
+  "suiteCount" : 1,
+  "transitionCount" : 2,
+  "updatedAt" : "2026-06-20T17:14:44.966Z"
+}

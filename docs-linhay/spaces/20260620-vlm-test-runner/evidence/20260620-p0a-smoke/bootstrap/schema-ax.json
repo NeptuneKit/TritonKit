@@ -1,0 +1,373 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+
+      ],
+      "artifacts" : [
+
+      ],
+      "examples" : [
+        "triton ax --format json --output \/tmp\/ax.json",
+        "triton ax --platform android --device android-a --output \/tmp\/android-window.xml --json",
+        "triton ax --platform harmony --output \/tmp\/harmony-layout.json --json",
+        "triton ax --with-hierarchy --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "server_unavailable",
+        "target_unavailable",
+        "target_not_found",
+        "ambiguous_target",
+        "runtime_unavailable",
+        "request_failed",
+        "host_command_failed",
+        "artifact_write_failed",
+        "validation_failed"
+      ],
+      "failureShape" : "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|ambiguous_target|runtime_unavailable|request_failed|host_command_failed|artifact_write_failed|validation_failed, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "ax",
+      "nextCommands" : [
+        "triton status --json",
+        "triton observe current --json",
+        "triton screenshot --output <path> --metadata",
+        "triton evidence --output <dir.tritonevidence> --json",
+        "triton target resolve <selector> --json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Target id from `triton list`, or simulator UDID for iOS simulator runtime targets; commands auto-select the only connected target when omitted",
+          "name" : "--target",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Dump Android UIAutomator XML or Harmony host-side layout",
+          "name" : "--platform",
+          "required" : false,
+          "type" : "android|harmony"
+        },
+        {
+          "description" : "Unified host target selector: alias, android:<serial>, harmony:<target>, raw id, or current",
+          "name" : "--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "adb",
+          "description" : "ADB executable path for --platform android",
+          "name" : "--adb",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "hdc",
+          "description" : "HDC executable path for --platform harmony",
+          "name" : "--hdc",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "text",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Join AX nodes to hierarchy viewObject.oid and expose layer oid\/path\/frame",
+          "name" : "--with-hierarchy",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "true",
+          "description" : "Request fresh hierarchy before joining with --with-hierarchy",
+          "name" : "--refresh\/--no-refresh",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Optional output file",
+          "name" : "--output",
+          "required" : false,
+          "type" : "Path"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "AX role",
+              "name" : "role",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Accessible label",
+              "name" : "label",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Accessible value",
+              "name" : "value",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Accessibility identifier",
+              "name" : "identifier",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Control title",
+              "name" : "title",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Window bounds in points",
+              "name" : "frame",
+              "required" : true,
+              "type" : "TKRect"
+            },
+            {
+              "description" : "Whether the node is enabled",
+              "name" : "enabled",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether the node is focused",
+              "name" : "focused",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether the node is hidden",
+              "name" : "hidden",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Preferred runtime target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "View oid when available",
+              "name" : "viewOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Layer oid when available",
+              "name" : "layerOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "UIKit or host class name",
+              "name" : "className",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Child nodes",
+              "name" : "children",
+              "required" : true,
+              "type" : "[TKAXNode]"
+            }
+          ],
+          "format" : "json",
+          "kind" : "ax-node-list",
+          "model" : "[TKAXNode]|TKAXHierarchyMapResponse",
+          "selector" : "ax.nodes"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether Android host artifact capture succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "android",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Android target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Written artifact path",
+              "name" : "artifact",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-artifact",
+          "model" : "HostAndroidArtifactOutput",
+          "selector" : "host.android-ax"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether Harmony host artifact capture succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Harmony target",
+              "name" : "target",
+              "required" : true,
+              "type" : "TKHarmonyTarget"
+            },
+            {
+              "description" : "Written artifact path",
+              "name" : "artifact",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-artifact",
+          "model" : "HostHarmonyArtifactOutput",
+          "selector" : "host.harmony-artifact"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json"
+      ],
+      "providedCapabilities" : [
+        "ax",
+        "android-ax",
+        "harmony-ax"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "observe",
+          "command" : "triton observe current --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton screenshot --output <path> --metadata"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : true,
+      "requiresTarget" : true,
+      "retryable" : false,
+      "runtimeScope" : "embedded|host-android|host-harmony",
+      "subcommands" : [
+
+      ],
+      "successShape" : "[TKAXNode] by default; TKAXHierarchyMapResponse when --with-hierarchy is used; HostAndroidArtifactOutput for --platform android; HostHarmonyArtifactOutput for --platform harmony",
+      "summary" : "Read safe actionable control index",
+      "usageForms" : [
+
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

@@ -1,0 +1,13 @@
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:53Z","type":"run.started","runId":"run-p0c-fixture-pass-001"}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:53Z","type":"step.started","runId":"run-p0c-fixture-pass-001","stepIndex":0,"stepId":"manual-000","stepType":"prepare-login"}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:54Z","type":"command.executed","runId":"run-p0c-fixture-pass-001","stepIndex":0,"command":["triton","tap","Back to Login","--target","triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC","--json"],"status":"passed","exitCode":0,"durationMs":109}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:54Z","type":"assertion.result","runId":"run-p0c-fixture-pass-001","stepIndex":0,"status":"passed","selector":{"text":{"value":"Fixture Login","match":"exact","source":"ax"}}}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:54Z","type":"step.finished","runId":"run-p0c-fixture-pass-001","stepIndex":0,"stepId":"manual-000","status":"passed","durationMs":1000}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:55Z","type":"step.started","runId":"run-p0c-fixture-pass-001","stepIndex":1,"stepId":"manual-001","stepType":"tap-home"}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:55Z","type":"command.executed","runId":"run-p0c-fixture-pass-001","stepIndex":1,"command":["triton","tap","Go Home","--target","triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC","--json"],"status":"passed","exitCode":0,"durationMs":109}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:56Z","type":"assertion.result","runId":"run-p0c-fixture-pass-001","stepIndex":1,"status":"passed","selector":{"text":{"value":"Fixture Home","match":"exact","source":"ax"}}}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:57Z","type":"artifact.created","runId":"run-p0c-fixture-pass-001","stepIndex":1,"kind":"screenshot","ref":"../screenshot.png"}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:57Z","type":"artifact.created","runId":"run-p0c-fixture-pass-001","stepIndex":1,"kind":"ax","ref":"../ax.json"}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:57Z","type":"artifact.created","runId":"run-p0c-fixture-pass-001","stepIndex":1,"kind":"hierarchy","ref":"../hierarchy.json"}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:57Z","type":"step.finished","runId":"run-p0c-fixture-pass-001","stepIndex":1,"stepId":"manual-001","status":"passed","durationMs":2000}
+{"schemaVersion":1,"timestamp":"2026-06-20T08:32:57Z","type":"run.finished","runId":"run-p0c-fixture-pass-001","status":"passed","durationMs":4000}
