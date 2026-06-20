@@ -884,6 +884,7 @@ struct HostActionOutput: Encodable {
     let stderr: String?
     let artifacts: [String]
     let screenshot: HostSimulatorScreenshotMetadata?
+    let suggestedCommands: [String]
     let note: String?
 
     init(
@@ -926,8 +927,14 @@ struct HostActionOutput: Encodable {
         self.stderr = stderr
         self.artifacts = artifacts
         self.screenshot = screenshot
+        self.suggestedCommands = [hostActionCommandString(self.hostAction.nextAction)]
         self.note = note
     }
+}
+
+private func hostActionCommandString(_ nextAction: TKCLINextAction) -> String {
+    let parts = ["triton", nextAction.command] + nextAction.args
+    return parts.joined(separator: " ")
 }
 
 struct HostArtifactCaptureOutput: Encodable {

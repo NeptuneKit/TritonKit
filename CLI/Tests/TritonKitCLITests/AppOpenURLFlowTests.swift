@@ -115,6 +115,7 @@ struct AppOpenURLFlowTests {
         #expect(output.hostAction.businessReady == false)
         #expect(output.hostAction.nextAction.command == "smoke")
         #expect(output.hostAction.nextAction.args.contains("--json"))
+        #expect(output.suggestedCommands == ["triton smoke <platform> --device <selector> --json"])
     }
 
     @Test("app open-url enhanced flow records runtime ready and snapshot summary")

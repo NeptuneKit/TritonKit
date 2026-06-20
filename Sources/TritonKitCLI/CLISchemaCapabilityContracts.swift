@@ -593,6 +593,7 @@ func hostActionOutputContract(selector: String, model: String) -> TKCommandOutpu
             ("stderr", "String?", false, "Bounded stderr sample"),
             ("artifacts", "[String]", true, "Written artifact paths"),
             ("screenshot", "HostSimulatorScreenshotMetadata?", false, "Simulator screenshot orientation and pixel metadata"),
+            ("suggestedCommands", "[String]", true, "Proof-producing follow-up commands derived from hostAction.nextAction"),
             ("note", "String?", false, "Boundary or follow-up note"),
         ])
     )
