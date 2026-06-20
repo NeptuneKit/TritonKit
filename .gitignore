@@ -20,3 +20,6 @@ screenshots/
 .swiftpm
 
 .triton
+
+xcuserdata/
+*.xcuserstate
