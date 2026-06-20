@@ -80,7 +80,7 @@ struct Status: AsyncParsableCommand {
             }
         } catch {
             if outputFormat == .json {
-                try printCLIError(error, endpoint: "/status", host: host, port: port)
+                try printCLIError(error, endpoint: "/status", host: host, port: port, surface: "status")
                 throw ExitCode.failure
             }
             printCLIErrorText(error, endpoint: "/status", host: host, port: port, language: language)

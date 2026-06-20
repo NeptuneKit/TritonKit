@@ -15,6 +15,7 @@ struct SchemaFactSourceTests {
 
         #expect(status.failureCodes.contains("server_unavailable"))
         #expect(status.failureCodes.contains("request_failed"))
+        #expect(status.failureShape?.contains("surface: status") == true)
         #expect(status.nextCommands.contains("triton serve --host 127.0.0.1 --port 19421"))
         #expect(status.nextCommands.contains("triton doctor --format json"))
         expectContract(status, selector: "status", fields: [

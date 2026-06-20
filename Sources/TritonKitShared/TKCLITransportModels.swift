@@ -378,10 +378,12 @@ public struct TKCLIErrorDetail: Codable, Equatable {
 
 public struct TKCLIErrorResponse: Codable, Equatable {
     public let ok: Bool
+    public let surface: String?
     public let error: TKCLIErrorDetail
 
-    public init(error: TKCLIErrorDetail) {
+    public init(error: TKCLIErrorDetail, surface: String? = nil) {
         self.ok = false
+        self.surface = surface
         self.error = error
     }
 }
