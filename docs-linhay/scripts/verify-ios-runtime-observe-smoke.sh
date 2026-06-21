@@ -124,8 +124,8 @@ curl -fsS "$base_url/v2/runtime/snapshot" >/dev/null
 "$triton" schema --command observe --json > "$out_dir/schema-observe.json"
 jq -e '.commands[0].providedCapabilities | index("observe-ios")' "$out_dir/schema-observe.json" >/dev/null
 
-"$triton" schema --command node --json > "$out_dir/schema-node.json"
-jq -e '.commands[0].providedCapabilities | index("node-resolve")' "$out_dir/schema-node.json" >/dev/null
+"$triton" schema --command debug --json > "$out_dir/schema-debug.json"
+jq -e '.commands[0].subcommands | map(.name) | index("node")' "$out_dir/schema-debug.json" >/dev/null
 
 "$triton" observe current --platform ios --runtime-base-url "$base_url" --json > "$out_dir/observe-current.json"
 jq -e '.ok == true and .platform == "ios" and .partial == true and (.sources[] | select(.name == "runtime-tree" and .available == true))' "$out_dir/observe-current.json" >/dev/null
@@ -135,7 +135,7 @@ jq -e '.nodes[] | select(.role == "webArea" and .candidateOnly == true and (.mis
 "$triton" observe tree --platform ios --runtime-base-url "$base_url" --max-nodes 2 --json > "$out_dir/observe-tree.json"
 jq -e '.ok == true and .platform == "ios" and (.nodes | length == 2)' "$out_dir/observe-tree.json" >/dev/null
 
-"$triton" node resolve --platform ios --runtime-base-url "$base_url" --text Submit --all --json > "$out_dir/node-resolve.json"
+"$triton" debug node resolve --platform ios --runtime-base-url "$base_url" --text Submit --all --json > "$out_dir/node-resolve.json"
 jq -e '.ok == true and .platform == "ios" and .query == "Submit" and .matchCount == 1 and .node.text == "Submit" and .node.identifier == "submitButton" and (.candidates | length == 1)' "$out_dir/node-resolve.json" >/dev/null
 
 echo "ios runtime observe smoke ok: $out_dir"

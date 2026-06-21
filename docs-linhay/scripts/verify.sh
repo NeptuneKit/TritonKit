@@ -41,33 +41,32 @@ release_cli_smoke() {
   fi
 
   "$triton" version --json >/tmp/triton-verify-version.json
-  "$triton" schema --command capture --json >/tmp/triton-verify-capture-schema.json
-  "$triton" schema --command assert --json >/tmp/triton-verify-assert-schema.json
+  "$triton" schema --command evidence --json >/tmp/triton-verify-evidence-schema.json
+  "$triton" schema --command verify --json >/tmp/triton-verify-verify-schema.json
   "$triton" schema --command app --json >/tmp/triton-verify-app-schema.json
-  "$triton" schema --command ax --json >/tmp/triton-verify-ax-schema.json
+  "$triton" schema --command debug --json >/tmp/triton-verify-debug-schema.json
   "$triton" schema --command wait --json >/tmp/triton-verify-wait-schema.json
-  "$triton" schema --command tap --json >/tmp/triton-verify-tap-schema.json
+  "$triton" schema --command act --json >/tmp/triton-verify-act-schema.json
   "$triton" schema --command screenshot --json >/tmp/triton-verify-screenshot-schema.json
   "$triton" schema --command observe --json >/tmp/triton-verify-observe-schema.json
-  "$triton" schema --command node --json >/tmp/triton-verify-node-schema.json
 
-  if "$triton" capture --include nope --output /tmp/triton-verify-nope.tritonevidence --json >/tmp/triton-verify-capture-invalid.json; then
-    echo "expected capture validation to fail" >&2
+  if "$triton" evidence capture --include nope --output /tmp/triton-verify-nope.tritonevidence --json >/tmp/triton-verify-evidence-invalid.json; then
+    echo "expected evidence capture validation to fail" >&2
     return 1
   fi
 
-  if ! grep -q '"validation_failed"' /tmp/triton-verify-capture-invalid.json; then
-    echo "capture validation did not return validation_failed" >&2
+  if ! grep -q '"validation_failed"' /tmp/triton-verify-evidence-invalid.json; then
+    echo "evidence capture validation did not return validation_failed" >&2
     return 1
   fi
 
-  if "$triton" assert text-exists Macau --within bad --json >/tmp/triton-verify-assert-invalid.json; then
-    echo "expected assert validation to fail" >&2
+  if "$triton" verify text-exists Macau --within bad --json >/tmp/triton-verify-verify-invalid.json; then
+    echo "expected verify validation to fail" >&2
     return 1
   fi
 
-  if ! grep -q '"validation_failed"' /tmp/triton-verify-assert-invalid.json; then
-    echo "assert validation did not return validation_failed" >&2
+  if ! grep -q '"validation_failed"' /tmp/triton-verify-verify-invalid.json; then
+    echo "verify validation did not return validation_failed" >&2
     return 1
   fi
 

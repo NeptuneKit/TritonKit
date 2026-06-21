@@ -192,7 +192,7 @@ struct TKRuntimeStateModelsTests {
         #expect(decoded.controls.map(\.action).contains("pause"))
         #expect(decoded.controls.map(\.action).contains("progress"))
         #expect(decoded.fallbackAdvice.contains { $0.contains("app-owned") })
-        #expect(decoded.evidenceCommands.contains("triton snapshot --include media,ax,screenshot-metadata --json"))
+        #expect(decoded.evidenceCommands.contains("triton debug snapshot --include media,ax,screenshot-metadata --json"))
     }
 
     @Test("media snapshot marks visible playback without controls as surface-only")
@@ -248,7 +248,7 @@ struct TKRuntimeStateModelsTests {
                 ),
             ],
             redaction: TKRuntimeSemanticRedaction(policy: "provider-declared", redactedPaths: ["currentURL"]),
-            evidenceCommands: ["triton snapshot --include semantic,app,scene --json"]
+            evidenceCommands: ["triton debug snapshot --include semantic,app,scene --json"]
         )
         let response = TKRuntimeSemanticStateResponse(
             capturedAt: "2026-06-08T12:00:00Z",
@@ -267,7 +267,7 @@ struct TKRuntimeStateModelsTests {
         #expect(decoded.domains.first?.schema.map(\.path).contains("elapsed") == true)
         #expect(decoded.domains.first?.actions.map(\.name) ?? [] == ["pause", "seek"])
         #expect(decoded.domains.first?.redaction.redactedPaths == ["currentURL"])
-        #expect(decoded.evidenceCommands.contains("triton snapshot --include semantic,app,scene --json"))
+        #expect(decoded.evidenceCommands.contains("triton debug snapshot --include semantic,app,scene --json"))
     }
 
     @Test("semantic snapshot keeps empty provider state explicit")
@@ -279,6 +279,6 @@ struct TKRuntimeStateModelsTests {
 
         #expect(response.domainCount == 0)
         #expect(response.warnings.contains { $0.contains("No semantic providers") })
-        #expect(response.evidenceCommands.contains("triton runtime manifest --json"))
+        #expect(response.evidenceCommands.contains("triton debug runtime manifest --json"))
     }
 }

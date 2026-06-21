@@ -91,13 +91,13 @@ struct TKReplayPlanModelsTests {
         #expect(summary.steps[0].action == "tap")
         #expect(summary.steps[0].category == "act")
         #expect(summary.steps[0].workflowCategories == ["action", "assert", "evidence"])
-        #expect(summary.steps[0].argv == ["triton", "tap", "登录", "--json"])
+        #expect(summary.steps[0].argv == ["triton", "act", "tap", "登录", "--json"])
         #expect(summary.steps[0].requires == ["cli.available", "server.reachable", "target.ready", "runtime.connected"])
         #expect(summary.steps[0].expectedArtifacts == ["stdout-json", "input-result"])
         #expect(summary.steps[0].stopConditions.contains("command.failed"))
         #expect(summary.steps[0].validationErrors.isEmpty)
 
-        #expect(summary.steps[1].argv == ["triton", "paste", "--secure", "<redacted:11>", "--json"])
+        #expect(summary.steps[1].argv == ["triton", "act", "paste", "--secure", "<redacted:11>", "--json"])
         #expect(summary.steps[2].category == "verify")
         #expect(summary.steps[2].workflowCategories == ["assert", "evidence", "observe"])
         #expect(summary.steps[2].expectedArtifacts.contains("wait-result"))
@@ -134,11 +134,11 @@ struct TKReplayPlanModelsTests {
         let summary = TKReplayPlanSummary(ok: true, path: "/tmp/network-flow.tritonplan", plan: plan)
         let inspectedStep = try #require(summary.steps.first)
         #expect(inspectedStep.argv == [
-            "triton", "evidence",
+            "triton", "evidence", "capture",
+            "--case", "network-capture",
             "--output", "/tmp/network.tritonevidence",
             "--include", "network.proxy-session",
             "--proxy-session", "/tmp/${platform}-network",
-            "--name", "network-capture",
             "--json",
         ])
         #expect(inspectedStep.expectedArtifacts == [
@@ -437,7 +437,7 @@ struct TKReplayPlanModelsTests {
         #expect(summary.steps[1].validationErrors.first?.field == "condition")
         #expect(summary.steps[1].validationErrors.first?.severity == "error")
         #expect(summary.steps[2].validationErrors.isEmpty)
-        #expect(summary.steps[2].argv == ["triton", "paste", "${username}", "--json"])
+        #expect(summary.steps[2].argv == ["triton", "act", "paste", "${username}", "--json"])
 
         let encoded = try JSONEncoder().encode(summary)
         let decoded = try JSONDecoder().decode(TKReplayPlanSummary.self, from: encoded)
@@ -535,8 +535,8 @@ struct TKReplayPlanModelsTests {
             command: replayArgv
         )
 
-        #expect(summary.steps[0].argv == ["triton", "paste", "${username}", "--json"])
-        #expect(replayArgv == ["triton", "paste", "alice", "--json"])
+        #expect(summary.steps[0].argv == ["triton", "act", "paste", "${username}", "--json"])
+        #expect(replayArgv == ["triton", "act", "paste", "alice", "--json"])
         #expect(replayResult.argv == replayArgv)
         #expect(replayResult.category == summary.steps[0].category)
         #expect(replayResult.category == replayMetadata.category)
