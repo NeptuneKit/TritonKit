@@ -6,6 +6,7 @@ struct XcodeUseOutput: Encodable {
     let action: String
     let defaultsPath: String
     let defaults: TKHostWorkspaceDefaults
+    let derivedDataCache: TKXcodeDerivedDataCacheInfo
 }
 
 struct XcodeSchemesOutput: Encodable {
@@ -24,6 +25,7 @@ struct ResolvedXcodeInvocation: Encodable {
     let sdk: String?
     let destination: String?
     let derivedDataPath: String?
+    let derivedDataCache: TKXcodeDerivedDataCacheInfo
     let simulatorUDID: String?
     let device: String?
 }

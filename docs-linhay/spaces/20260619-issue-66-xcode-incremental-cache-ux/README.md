@@ -6,7 +6,7 @@
 
 ## 目标
 
-1. `triton xcode use/status/build` 的 JSON/JSONL 输出暴露 DerivedData cache 信息。
+1. `triton xcode use/status/build/test/run/settings` 的 JSON/JSONL 输出暴露 DerivedData cache 信息。
 2. `triton schema --command xcode --json` 和 CLI help/docs 明确：保留 `.triton/DerivedData` 才能复用 Xcode incremental build；cleanup 不应默认删除它。
 3. 不改变 `wait-idle` 的等待/超时语义；它只可通过嵌套 status 继承同一份 cache 信息。
 
@@ -57,3 +57,11 @@
 - 最小实现通过 focused Swift tests。
 - 运行 `git diff --check` 与 `docs-linhay/scripts/check-docs.sh`。
 - 本地 commit，不 push、不 merge、不关闭 issue。
+
+## 验证记录
+
+- 通过：`swift test --package-path CLI --scratch-path .build/cli-issue66 --filter XcodeDiagnosticsTests`
+- 通过：`swift test --package-path CLI --scratch-path .build/cli-issue66 --filter SchemaFactSourceTests`
+- 通过：`swift test --scratch-path .build/issue66-shared --filter TKXcodeWorkflowModelsTests`
+- 待集成后运行：`git diff --check`
+- 待集成后运行：`docs-linhay/scripts/check-docs.sh`
