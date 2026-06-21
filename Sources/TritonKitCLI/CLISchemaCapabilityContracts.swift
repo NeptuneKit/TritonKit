@@ -647,6 +647,29 @@ func hostSimulatorInputOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostSimulatorMediaSeedOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-media-seed",
+        format: "json",
+        kind: "host-simulator-media-seed",
+        model: "HostSimulatorMediaSeedOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether media fixture seeding succeeded"),
+            ("action", "String", true, "sim.media.seed"),
+            ("runtimeScope", "String", true, "host-simulator"),
+            ("target", "String", true, "Simulator target selector"),
+            ("fixtureId", "String", true, "Fixture id from the media seed manifest"),
+            ("manifest", "String", true, "Manifest path used for the seed operation"),
+            ("tool", "String", true, "Host executable"),
+            ("exitCode", "Int32", true, "Host process exit code"),
+            ("sourceCommand", "String", true, "Underlying xcrun simctl addmedia command"),
+            ("artifacts", "[HostSimulatorMediaSeedArtifact]", true, "Resolved fixture files submitted to simctl"),
+            ("metadata", "HostSimulatorMediaSeedMetadata", true, "Seed manifest and file metadata"),
+            ("metadata.files[].sha256", "String?", false, "Optional file digest from manifest metadata"),
+        ])
+    )
+}
+
 func hostHarmonyTapOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.harmony-tap",

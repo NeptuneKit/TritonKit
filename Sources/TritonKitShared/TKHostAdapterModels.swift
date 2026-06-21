@@ -23,6 +23,187 @@ public struct TKHostWorkspaceDefaults: Codable, Equatable {
     }
 }
 
+public enum TKSimulatorMediaSeedManifestError: Error, Equatable, CustomStringConvertible {
+    case malformed(String)
+    case missingFixtureId
+    case emptyFiles
+    case emptyFilePath(index: Int)
+
+    public var description: String {
+        switch self {
+        case .malformed(let reason):
+            return "Invalid media seed manifest: \(reason)"
+        case .missingFixtureId:
+            return "Invalid media seed manifest: fixtureId is required"
+        case .emptyFiles:
+            return "Invalid media seed manifest: files must contain at least one media path"
+        case .emptyFilePath(let index):
+            return "Invalid media seed manifest: files[\(index)] path is empty"
+        }
+    }
+}
+
+public struct TKSimulatorMediaSeedManifestFile: Codable, Equatable {
+    public let path: String
+    public let kind: String?
+    public let sha256: String?
+
+    public init(path: String, kind: String? = nil, sha256: String? = nil) {
+        self.path = path
+        self.kind = kind
+        self.sha256 = sha256
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case path
+        case kind
+        case sha256
+    }
+
+    public init(from decoder: Decoder) throws {
+        if let container = try? decoder.singleValueContainer(),
+           let path = try? container.decode(String.self) {
+            self.init(path: path)
+            return
+        }
+
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            path: try container.decode(String.self, forKey: .path),
+            kind: try container.decodeIfPresent(String.self, forKey: .kind),
+            sha256: try container.decodeIfPresent(String.self, forKey: .sha256)
+        )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(path, forKey: .path)
+        try container.encodeIfPresent(kind, forKey: .kind)
+        try container.encodeIfPresent(sha256, forKey: .sha256)
+    }
+}
+
+public struct TKSimulatorMediaSeedResolvedFile: Codable, Equatable {
+    public let sourcePath: String
+    public let path: String
+    public let kind: String
+    public let sha256: String?
+
+    public init(sourcePath: String, path: String, kind: String, sha256: String? = nil) {
+        self.sourcePath = sourcePath
+        self.path = path
+        self.kind = kind
+        self.sha256 = sha256
+    }
+}
+
+public struct TKSimulatorMediaSeedManifest: Codable, Equatable {
+    public let schemaVersion: Int?
+    public let fixtureId: String
+    public let files: [TKSimulatorMediaSeedManifestFile]
+    public let metadata: [String: String]
+    public let manifestPath: String
+    public let resolvedFiles: [TKSimulatorMediaSeedResolvedFile]
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case fixtureId
+        case files
+        case metadata
+    }
+
+    public init(
+        schemaVersion: Int? = nil,
+        fixtureId: String,
+        files: [TKSimulatorMediaSeedManifestFile],
+        metadata: [String: String] = [:],
+        manifestPath: String,
+        resolvedFiles: [TKSimulatorMediaSeedResolvedFile]
+    ) {
+        self.schemaVersion = schemaVersion
+        self.fixtureId = fixtureId
+        self.files = files
+        self.metadata = metadata
+        self.manifestPath = manifestPath
+        self.resolvedFiles = resolvedFiles
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.init(
+            schemaVersion: try container.decodeIfPresent(Int.self, forKey: .schemaVersion),
+            fixtureId: try container.decode(String.self, forKey: .fixtureId),
+            files: try container.decode([TKSimulatorMediaSeedManifestFile].self, forKey: .files),
+            metadata: try container.decodeIfPresent([String: String].self, forKey: .metadata) ?? [:],
+            manifestPath: "",
+            resolvedFiles: []
+        )
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(schemaVersion, forKey: .schemaVersion)
+        try container.encode(fixtureId, forKey: .fixtureId)
+        try container.encode(files, forKey: .files)
+        if !metadata.isEmpty {
+            try container.encode(metadata, forKey: .metadata)
+        }
+    }
+
+    public static func parse(_ data: Data, manifestURL: URL) throws -> TKSimulatorMediaSeedManifest {
+        let decoded: TKSimulatorMediaSeedManifest
+        do {
+            decoded = try JSONDecoder().decode(TKSimulatorMediaSeedManifest.self, from: data)
+        } catch {
+            throw TKSimulatorMediaSeedManifestError.malformed(error.localizedDescription)
+        }
+
+        let fixtureId = decoded.fixtureId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !fixtureId.isEmpty else {
+            throw TKSimulatorMediaSeedManifestError.missingFixtureId
+        }
+        guard !decoded.files.isEmpty else {
+            throw TKSimulatorMediaSeedManifestError.emptyFiles
+        }
+
+        let baseURL = manifestURL.deletingLastPathComponent()
+        let resolvedFiles = try decoded.files.enumerated().map { index, file in
+            let sourcePath = file.path.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !sourcePath.isEmpty else {
+                throw TKSimulatorMediaSeedManifestError.emptyFilePath(index: index)
+            }
+            let resolvedURL = URL(fileURLWithPath: sourcePath, relativeTo: sourcePath.hasPrefix("/") ? nil : baseURL)
+            let resolvedPath = resolvedURL.standardizedFileURL.path
+            return TKSimulatorMediaSeedResolvedFile(
+                sourcePath: sourcePath,
+                path: resolvedPath,
+                kind: file.kind ?? inferredMediaKind(path: resolvedPath),
+                sha256: file.sha256
+            )
+        }
+
+        return TKSimulatorMediaSeedManifest(
+            schemaVersion: decoded.schemaVersion,
+            fixtureId: fixtureId,
+            files: decoded.files,
+            metadata: decoded.metadata,
+            manifestPath: manifestURL.standardizedFileURL.path,
+            resolvedFiles: resolvedFiles
+        )
+    }
+
+    private static func inferredMediaKind(path: String) -> String {
+        let ext = URL(fileURLWithPath: path).pathExtension.lowercased()
+        if ["jpg", "jpeg", "png", "gif", "heic", "heif", "tiff"].contains(ext) {
+            return "image"
+        }
+        if ["mov", "mp4", "m4v", "avi"].contains(ext) {
+            return "video"
+        }
+        return "media"
+    }
+}
+
 public struct TKHostCommand: Codable, Equatable {
     public let executable: String
     public let arguments: [String]
@@ -504,6 +685,17 @@ public enum TKSimctlCommand {
         }
         arguments.append(payload)
         return command(arguments, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord], stdinData: stdinData)
+    }
+
+    public static func addMedia(udid: String, files: [String]) -> TKHostCommand {
+        command(
+            ["simctl", "addmedia", udid] + files,
+            riskLevel: .automation,
+            requiredConfig: [.target, .timeout, .auditRecord],
+            defaultTimeoutSeconds: 120,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
     }
 
     public static func runtimeList(verbose: Bool = false) -> TKHostCommand {
