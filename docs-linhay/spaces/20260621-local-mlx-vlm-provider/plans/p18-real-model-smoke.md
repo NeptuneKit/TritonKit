@@ -13,6 +13,18 @@ Validate that a real local `mlx-swift-lm` vision-language model can ground a fix
 
 ## Commands
 
+TritonKit keeps the main CLI unlinked from MLX. A real model smoke must provide an executable helper through `TRITON_MLX_HELPER` or `TRITON_MLX_SWIFT_LM_HELPER`.
+
+Helper argv contract:
+
+    <helper> ground --request <request.json>
+
+The helper reads the request JSON and writes only the raw point output to stdout, for example `{"x":512,"y":734,"scale":1000}`. TritonKit parses, transforms, validates, overlays, and records evidence.
+
+Example smoke:
+
+    export TRITON_MLX_HELPER=/path/to/triton-mlx-provider
+
     triton vlm model preflight <model-path> --provider mlx-swift-lm --json
 
     triton vlm ground \
@@ -54,4 +66,4 @@ Do not commit model weights, tokenizer files, downloaded cache directories, or l
 
 ## Current Status
 
-Manual gate pending until a compatible local model/helper is available in the developer environment.
+Manual gate pending until a compatible local model/helper is available in the developer environment. The CLI-side external helper contract is implemented and covered by tests; no true model weights were present in `~/.cache/triton/mlx-models` during this run.

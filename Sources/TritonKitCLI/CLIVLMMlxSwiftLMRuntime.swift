@@ -10,6 +10,7 @@ struct TKMLXSwiftLMProvider: TKVLMProvider {
     let seed: Int
     let promptTemplate: String
     let allowModelDownload: Bool
+    let helperPath: String?
 
     func ground(image: TKVLMGroundImage, target: String) throws -> TKVLMProviderResponseArtifact {
         if (modelPath == nil || modelPath?.isEmpty == true) &&
@@ -20,7 +21,15 @@ struct TKMLXSwiftLMProvider: TKVLMProvider {
                 hint: "Pass --model-path for local fake/real model configuration or --model with --allow-model-download when downloads are intended"
             )
         }
-        let rawOutput = try fakeMLXSwiftLMRawOutput(target: target)
+        let helperMode: String
+        let rawOutput: String
+        if let helperOutput = try runMLXSwiftLMHelperIfConfigured(image: image, target: target) {
+            helperMode = "external-helper"
+            rawOutput = helperOutput
+        } else {
+            helperMode = "fake-helper"
+            rawOutput = try fakeMLXSwiftLMRawOutput(target: target)
+        }
         let parsed = try parseMLXSwiftLMGroundingOutput(rawOutput)
         return TKVLMProviderResponseArtifact(
             provider: name,
@@ -28,10 +37,128 @@ struct TKMLXSwiftLMProvider: TKVLMProvider {
             coordinateSpace: "normalized_0_1000",
             point: parsed,
             confidence: 1,
-            rationale: "deterministic P17 fake mlx-swift-lm helper; no real model loaded",
-            rawText: rawOutput
+            rationale: helperMode == "external-helper" ? "external mlx-swift-lm helper output parsed by TritonKit" : "deterministic P17 fake mlx-swift-lm helper; no real model loaded",
+            rawText: rawOutput,
+            mode: helperMode
         )
     }
+
+    private func runMLXSwiftLMHelperIfConfigured(image: TKVLMGroundImage, target: String) throws -> String? {
+        let resolvedHelper = helperPath ?? ProcessInfo.processInfo.environment["TRITON_MLX_HELPER"] ?? ProcessInfo.processInfo.environment["TRITON_MLX_SWIFT_LM_HELPER"]
+        guard let resolvedHelper, !resolvedHelper.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            return nil
+        }
+        guard FileManager.default.isExecutableFile(atPath: resolvedHelper) else {
+            throw TKVLMGroundingFailure(
+                code: "mlx_model_load_failed",
+                message: "mlx-swift-lm helper is not executable at \(resolvedHelper)",
+                hint: "Set TRITON_MLX_HELPER to an executable helper or omit it to use the deterministic fake helper"
+            )
+        }
+
+        let request = TKMLXSwiftLMHelperRequest(
+            provider: name,
+            model: model,
+            modelPath: modelPath,
+            image: image,
+            target: target,
+            maxTokens: maxTokens,
+            temperature: temperature,
+            seed: seed,
+            promptTemplate: promptTemplate,
+            allowModelDownload: allowModelDownload
+        )
+        let tempDirectory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-mlx-helper-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempDirectory) }
+        let requestURL = tempDirectory.appendingPathComponent("request.json")
+        try writeVLMJSON(request, to: requestURL)
+        return try runMLXSwiftLMHelper(path: resolvedHelper, requestURL: requestURL)
+    }
+}
+
+struct TKMLXSwiftLMHelperRequest: Codable, Equatable {
+    let schemaVersion: Int
+    let provider: String
+    let model: String?
+    let modelPath: String?
+    let image: TKVLMGroundImage
+    let target: String
+    let maxTokens: Int
+    let temperature: Double
+    let seed: Int
+    let promptTemplate: String
+    let allowModelDownload: Bool
+
+    init(
+        schemaVersion: Int = 1,
+        provider: String,
+        model: String?,
+        modelPath: String?,
+        image: TKVLMGroundImage,
+        target: String,
+        maxTokens: Int,
+        temperature: Double,
+        seed: Int,
+        promptTemplate: String,
+        allowModelDownload: Bool
+    ) {
+        self.schemaVersion = schemaVersion
+        self.provider = provider
+        self.model = model
+        self.modelPath = modelPath
+        self.image = image
+        self.target = target
+        self.maxTokens = maxTokens
+        self.temperature = temperature
+        self.seed = seed
+        self.promptTemplate = promptTemplate
+        self.allowModelDownload = allowModelDownload
+    }
+}
+
+func runMLXSwiftLMHelper(path: String, requestURL: URL, timeoutSeconds: TimeInterval = 120) throws -> String {
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: path)
+    process.arguments = ["ground", "--request", requestURL.path]
+
+    let stdout = Pipe()
+    let stderr = Pipe()
+    process.standardOutput = stdout
+    process.standardError = stderr
+
+    let semaphore = DispatchSemaphore(value: 0)
+    process.terminationHandler = { _ in semaphore.signal() }
+    do {
+        try process.run()
+    } catch {
+        throw TKVLMGroundingFailure(
+            code: "mlx_model_load_failed",
+            message: "Failed to launch mlx-swift-lm helper at \(path): \(error)",
+            hint: "Check TRITON_MLX_HELPER and executable permissions"
+        )
+    }
+
+    if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
+        process.terminate()
+        throw TKVLMGroundingFailure(
+            code: "mlx_generation_failed",
+            message: "mlx-swift-lm helper timed out after \(Int(timeoutSeconds)) seconds",
+            hint: "Use a smaller local model or inspect helper logs"
+        )
+    }
+
+    let stdoutText = String(data: stdout.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    let stderrText = String(data: stderr.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    guard process.terminationStatus == 0 else {
+        throw TKVLMGroundingFailure(
+            code: "mlx_generation_failed",
+            message: "mlx-swift-lm helper exited with status \(process.terminationStatus): \(stderrText.trimmingCharacters(in: .whitespacesAndNewlines))",
+            hint: "Inspect helper stderr and model availability"
+        )
+    }
+    return stdoutText.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
 func fakeMLXSwiftLMRawOutput(target: String) throws -> String {
@@ -180,15 +307,17 @@ func writeMLXSwiftLMArtifacts(
         to: paths.parsedPoint
     )
     try writeVLMJSON(transform, to: paths.transform)
-    try writeVLMJSON(
-        TKVLMMLXModelMetadata(
-            model: response.model,
-            modelPath: modelPath,
-            loadedAt: ISO8601DateFormatter().string(from: Date()),
-            downloadAllowed: allowModelDownload
-        ),
-        to: paths.modelMetadata
-    )
+        try writeVLMJSON(
+            TKVLMMLXModelMetadata(
+                model: response.model,
+                modelPath: modelPath,
+                loadedAt: ISO8601DateFormatter().string(from: Date()),
+                mlxSwiftLMVersion: response.mode == "external-helper" ? "external-helper" : "not-linked-p17-fake-helper",
+                downloadAllowed: allowModelDownload,
+                mode: response.mode ?? "fake-helper"
+            ),
+            to: paths.modelMetadata
+        )
 }
 
 func vlmProviderListResponse() -> TKVLMProviderListResponse {

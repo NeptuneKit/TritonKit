@@ -3,6 +3,7 @@
 ## Completed In Code
 
 - P17: `mlx-swift-lm` provider contract with deterministic fake grounding, strict parser, coordinate transform, overlay, evidence, schema, and capability exposure.
+- P18 helper contract: `TRITON_MLX_HELPER` / `TRITON_MLX_SWIFT_LM_HELPER` can point to an external `mlx-swift-lm` executable using `ground --request <request.json>` and stdout-only raw point output.
 - P19: VLM-assisted `tap.target` local model fields and explicit runner allowance plumbing.
 - P20: `triton vlm compare` with provider-level results, agreement metrics, and comparison artifacts.
 - P21: App Map VLM health projection, `triton map vlm-health`, and static viewer health summary.
@@ -10,7 +11,7 @@
 
 ## Manual Gate
 
-P18 remains a manual real-model gate. It requires a compatible local `mlx-swift-lm` VLM model and must produce human-inspectable overlay/evidence before being marked complete.
+P18 remains a manual real-model gate. It requires a compatible local `mlx-swift-lm` VLM model and helper executable, then must produce human-inspectable overlay/evidence before being marked complete. The CLI-side helper protocol is implemented; this run did not have local model weights available.
 
 ## Validation
 

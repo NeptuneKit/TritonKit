@@ -56,6 +56,7 @@ struct TKVLMProviderResponseArtifact: Codable, Equatable {
     let confidence: Double
     let rationale: String
     let rawText: String?
+    let mode: String?
 
     init(
         schemaVersion: Int = 1,
@@ -65,7 +66,8 @@ struct TKVLMProviderResponseArtifact: Codable, Equatable {
         point: TKVLMNormalizedPoint,
         confidence: Double,
         rationale: String,
-        rawText: String? = nil
+        rawText: String? = nil,
+        mode: String? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.provider = provider
@@ -75,6 +77,7 @@ struct TKVLMProviderResponseArtifact: Codable, Equatable {
         self.confidence = confidence
         self.rationale = rationale
         self.rawText = rawText
+        self.mode = mode
     }
 }
 
@@ -176,6 +179,7 @@ func groundVLMTarget(
     seed: Int = 0,
     promptTemplate: String = "gui-grounding-v1",
     allowModelDownload: Bool = false,
+    mlxHelperPath: String? = nil,
     httpTransport: TKVLMHTTPTransport? = nil
 ) throws -> TKVLMGroundResponse {
     let provider = try makeVLMProvider(
@@ -190,6 +194,7 @@ func groundVLMTarget(
         seed: seed,
         promptTemplate: promptTemplate,
         allowModelDownload: allowModelDownload,
+        mlxHelperPath: mlxHelperPath,
         httpTransport: httpTransport
     )
     let imageURL = URL(fileURLWithPath: imagePath)
@@ -316,6 +321,7 @@ func makeVLMProvider(
     seed: Int = 0,
     promptTemplate: String = "gui-grounding-v1",
     allowModelDownload: Bool = false,
+    mlxHelperPath: String? = nil,
     httpTransport: TKVLMHTTPTransport? = nil
 ) throws -> any TKVLMProvider {
     switch providerName.lowercased() {
@@ -329,7 +335,8 @@ func makeVLMProvider(
             temperature: temperature,
             seed: seed,
             promptTemplate: promptTemplate,
-            allowModelDownload: allowModelDownload
+            allowModelDownload: allowModelDownload,
+            helperPath: mlxHelperPath
         )
     case "openai-compatible":
         guard let baseURL, !baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {

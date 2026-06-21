@@ -84,6 +84,50 @@ struct VLMMlxSwiftLMProviderTests {
         #expect(metadata.mode == "fake-helper")
     }
 
+    @Test("external mlx-swift-lm helper output is parsed and recorded")
+    func externalMLXSwiftLMHelperGroundingWritesEvidence() throws {
+        let fixture = try VLMGroundingFixture()
+        try FileManager.default.createDirectory(at: fixture.output, withIntermediateDirectories: true)
+        let helper = fixture.output.appendingPathComponent("triton-mlx-provider-test-helper.sh")
+        let marker = fixture.output.appendingPathComponent("helper-request-path.txt")
+        let script = [
+            "#!/bin/sh",
+            "set -eu",
+            "if [ \"$1\" != \"ground\" ] || [ \"$2\" != \"--request\" ]; then",
+            "  echo unexpected-args >&2",
+            "  exit 64",
+            "fi",
+            "printf \"%s\" \"$3\" > \"\(marker.path)\"",
+            "python3 -c 'import json, sys; request=json.load(open(sys.argv[1])); assert request[\"provider\"] == \"mlx-swift-lm\"; assert request[\"target\"] == \"Go Home button\"; print(\"{\\\"x\\\":512,\\\"y\\\":734,\\\"scale\\\":1000}\")' \"$3\"",
+        ].joined(separator: "\n")
+        try script.write(to: helper, atomically: true, encoding: .utf8)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: helper.path)
+
+        let response = try groundVLMTarget(
+            provider: "mlx-swift-lm",
+            image: fixture.image.path,
+            target: "Go Home button",
+            coordinateContract: fixture.coordinateContract.path,
+            outputDirectory: fixture.output.path,
+            modelPath: "/tmp/triton-real-mlx-model",
+            mlxHelperPath: helper.path
+        )
+
+        #expect(response.point.normalized.x == 512)
+        #expect(response.point.normalized.y == 734)
+        #expect(FileManager.default.fileExists(atPath: marker.path))
+
+        let rawOutput = try String(contentsOfFile: try #require(response.artifacts.rawOutput), encoding: .utf8)
+        #expect(rawOutput.trimmingCharacters(in: .whitespacesAndNewlines) == #"{"x":512,"y":734,"scale":1000}"#)
+
+        let metadata = try JSONDecoder().decode(
+            TKVLMMLXModelMetadata.self,
+            from: Data(contentsOf: URL(fileURLWithPath: try #require(response.artifacts.modelMetadata)))
+        )
+        #expect(metadata.mode == "external-helper")
+        #expect(metadata.mlxSwiftLMVersion == "external-helper")
+    }
+
     @Test("mlx-swift-lm requires explicit model id or model path")
     func mlxSwiftLMRequiresModelConfiguration() throws {
         let fixture = try VLMGroundingFixture()
