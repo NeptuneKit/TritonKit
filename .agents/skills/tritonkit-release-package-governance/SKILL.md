@@ -40,6 +40,13 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 8. Commit and push `main`, then publish through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`.
 9. After release, verify GitHub Release assets, GitHub Actions success including x86_64 backfill, Homebrew upgrade, `triton version --json`, packaged `triton web --print-command --json`, and a real `triton web` HTTP smoke.
 
+## Recovery Rules
+
+- If the wrong tag was pushed but GitHub Release has not been created, cancel only that superseded release workflow, delete the mistaken local and remote tag, correct version manifests on `main`, commit, push, and publish the intended tag. Do not cancel a valid current release workflow.
+- If `release.sh` reports that GitHub Actions completed before assets were visible, treat it as a possible observation race first: inspect `gh release view v<version>`, the Release workflow jobs, checksum file, Homebrew tap commit, and installed `triton version --json` before deciding the release failed.
+- Do not move an already published tag. If a GitHub Release exists for the wrong version, stop and make an explicit maintainer decision; the default recovery is a new higher version tag, not retagging history.
+- For Homebrew validation, check the remote formula first, then run `brew update`, `brew upgrade NeptuneKit/tap/triton`, `brew test NeptuneKit/tap/triton`, and verify packaged web mode from outside the repository so a source checkout does not mask release behavior with dev mode.
+
 ## CI / Release Performance Contract
 
 - `CI` handles validation only. `v*` tag validation must stay on the contracts fast path and must not wait for Swift tests or CocoaPods lint.

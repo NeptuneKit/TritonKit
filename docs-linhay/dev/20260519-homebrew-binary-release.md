@@ -115,6 +115,19 @@ docs-linhay/scripts/release.sh 0.1.1
 
 实现注意：发布脚本查找 tag 对应的 GitHub Actions run 时，必须从 `gh run list --json headBranch,url` 返回的 URL 字符串解析 run id。不要使用 `databaseId` 配合 `gh --template` 输出，因为 GitHub CLI 模板可能把大整数转成科学计数法，导致后续 `gh run view` 404。
 
+### 发布纠偏与 false-negative 判定
+
+如果错误 tag 已推送但 GitHub Release 尚未创建，维护者可以取消该错误 tag 对应的 Release workflow，删除远端和本地错误 tag，然后在 `main` 上提交正确版本并发布正确 tag。该规则只适用于尚未生成 Release 资产的误触发；已发布的 tag 不移动，必须另行做版本决策。
+
+`release.sh` 若在 GitHub Actions 完成后仍报 “arm64 release assets were not created”，先按 observation race 处理，不要立刻重发 tag。人工完成判定需要同时满足：
+
+1. `gh release view v<version>` 可看到 `triton-macos-arm64.tar.gz`、`triton-macos-x86_64.tar.gz`、`tritonkit-skills.tar.gz` 和 `tritonkit_checksums.txt`。
+2. Release workflow 的 contracts、arm64、x86_64、package、tap update jobs 均为 success。
+3. 下载全部 release assets 后 `shasum -a 256 -c tritonkit_checksums.txt` 通过。
+4. 远端 `NeptuneKit/homebrew-tap` 的 `Formula/triton.rb` 已指向该版本和对应 checksum。
+5. `brew update && brew upgrade NeptuneKit/tap/triton && brew test NeptuneKit/tap/triton` 通过。
+6. 仓库外执行 `/opt/homebrew/bin/triton web --print-command --json` 返回 `mode=packaged`，并至少做一次 packaged `triton web` HTTP smoke。
+
 只检查发布前置条件时使用：
 
 ```bash
