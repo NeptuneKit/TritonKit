@@ -135,11 +135,13 @@ struct TKXcodeWorkflowModelsTests {
 
     @Test("xcode action progress and summary preserve streaming artifacts")
     func xcodeStreamingArtifactsRoundTrip() throws {
-        let cache = TKXcodeDerivedDataCacheState(
-            derivedDataPath: ".triton/DerivedData",
+        let cache = TKXcodeDerivedDataCacheInfo(
+            path: ".triton/DerivedData",
             exists: true,
             cacheState: "warm",
-            incrementalExpected: true
+            incrementalExpected: true,
+            cleanupPolicy: "preserve-by-default",
+            guidance: "Keep .triton/DerivedData to preserve Xcode incremental build cache; cleanup should not delete it by default."
         )
         let event = TKXcodeProgressEvent(
             event: "xcode.build.heartbeat",
@@ -149,10 +151,7 @@ struct TKXcodeWorkflowModelsTests {
             stdoutLogPath: "/tmp/triton-xcode-artifacts/case/stdout.log",
             stderrLogPath: "/tmp/triton-xcode-artifacts/case/stderr.log",
             stdoutBytes: 1_024,
-            stderrBytes: 128,
-            derivedDataPath: cache.derivedDataPath,
-            cacheState: cache.cacheState,
-            incrementalExpected: cache.incrementalExpected
+            stderrBytes: 128
         )
         let decodedEvent = try JSONDecoder().decode(TKXcodeProgressEvent.self, from: JSONEncoder().encode(event))
 
@@ -160,10 +159,6 @@ struct TKXcodeWorkflowModelsTests {
         #expect(decodedEvent.stderrLogPath == "/tmp/triton-xcode-artifacts/case/stderr.log")
         #expect(decodedEvent.stdoutBytes == 1_024)
         #expect(decodedEvent.stderrBytes == 128)
-        #expect(decodedEvent.derivedDataPath == ".triton/DerivedData")
-        #expect(decodedEvent.cacheState == "warm")
-        #expect(decodedEvent.incrementalExpected == true)
-
         let summary = TKXcodeActionSummary(
             ok: true,
             action: "xcode.test",
@@ -174,6 +169,7 @@ struct TKXcodeWorkflowModelsTests {
             sdk: "iphonesimulator",
             destination: "platform=iOS Simulator,id=SIM-1",
             derivedDataPath: "/tmp/DerivedData",
+            derivedDataCache: cache,
             resultBundlePath: "/tmp/App.xcresult",
             durationMs: 25_000,
             sourceCommand: "xcodebuild test",
@@ -210,8 +206,7 @@ struct TKXcodeWorkflowModelsTests {
                     location: "LoginTests.swift:42"
                 ),
             ],
-            xcresultNote: "Showing top 1 of 2 failures.",
-            derivedDataCache: cache
+            xcresultNote: "Showing top 1 of 2 failures."
         )
         let decodedSummary = try JSONDecoder().decode(TKXcodeActionSummary.self, from: JSONEncoder().encode(summary))
 

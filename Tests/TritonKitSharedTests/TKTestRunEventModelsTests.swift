@@ -111,13 +111,13 @@ struct TKTestRunEventModelsTests {
             _ = try TKTestRunEventLogParser().parse(Data(#"{"schemaVersion":1,"type":"run.started","timestamp":"2026-06-20T00:00:00Z"}"#.utf8))
         }
         #expect(throws: TKTestRunEventLogParseError.missingRequiredField(line: 1, field: "selector")) {
-            _ = try TKTestRunEventLogParser().parse(Data(#"{"schemaVersion":1,"type":"assertion.result","runId":"run-1","timestamp":"2026-06-20T00:00:00Z","status":"passed"}"#.utf8))
+            _ = try TKTestRunEventLogParser().parse(Data(#"{"schemaVersion":1,"type":"assertion.result","runId":"run-1","timestamp":"2026-06-20T00:00:00Z","stepIndex":1,"status":"passed"}"#.utf8))
         }
         #expect(throws: TKTestRunEventLogParseError.missingRequiredField(line: 1, field: "ref")) {
             _ = try TKTestRunEventLogParser().parse(Data(#"{"schemaVersion":1,"type":"artifact.created","runId":"run-1","timestamp":"2026-06-20T00:00:00Z","kind":"screenshot"}"#.utf8))
         }
         #expect(throws: TKTestRunEventLogParseError.missingRequiredField(line: 1, field: "failure.type")) {
-            _ = try TKTestRunEventLogParser().parse(Data(#"{"schemaVersion":1,"type":"failure.recorded","runId":"run-1","timestamp":"2026-06-20T00:00:00Z","failure":{"message":"Text not visible"}}"#.utf8))
+            _ = try TKTestRunEventLogParser().parse(Data(#"{"schemaVersion":1,"type":"failure.recorded","runId":"run-1","timestamp":"2026-06-20T00:00:00Z","stepIndex":1,"failure":{"message":"Text not visible"}}"#.utf8))
         }
         #expect(throws: TKTestRunEventLogParseError.missingRequiredField(line: 1, field: "artifacts.screenshot")) {
             _ = try TKTestRunEventLogParser().parse(Data(#"{"schemaVersion":1,"type":"observation.captured","runId":"run-1","timestamp":"2026-06-20T00:00:00Z","stepIndex":1,"phase":"after","artifacts":{"ax":"../ax.json","hierarchy":"../hierarchy.json"},"screenCandidate":{"screenshotSha256":"sha","axTextHash":"ax","hierarchySha256":"hierarchy","visibleTexts":["Fixture Login"]}}"#.utf8))

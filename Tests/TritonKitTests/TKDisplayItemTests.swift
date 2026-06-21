@@ -20,9 +20,10 @@ struct TKDisplayItemTests {
     @Test("display item encoding sanitizes non-finite geometry and layer values")
     func displayItemEncodingSanitizesNonFiniteValues() throws {
         let nan = CGFloat.nan
+        let nanFloat = Float.nan
         let infinity = CGFloat.infinity
         let item = TKDisplayItem(
-            alpha: nan,
+            alpha: nanFloat,
             frame: CGRect(x: nan, y: infinity, width: 10, height: -infinity),
             bounds: CGRect(x: 0, y: 0, width: nan, height: 20),
             layerPosition: CGPoint(x: nan, y: 12),
@@ -31,11 +32,11 @@ struct TKDisplayItemTests {
             layerTransform: [1, .nan, .infinity],
             layerSublayerTransform: [-.infinity, 1],
             layerCornerRadius: nan,
-            layerOpacity: nan,
+            layerOpacity: nanFloat,
             layerContentsScale: infinity,
             layerContentsRect: CGRect(x: nan, y: 0, width: 1, height: infinity),
             layerBorderWidth: nan,
-            layerShadowOpacity: nan,
+            layerShadowOpacity: nanFloat,
             layerShadowRadius: infinity,
             layerShadowOffset: CGSize(width: nan, height: -infinity)
         )
