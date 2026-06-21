@@ -40,8 +40,8 @@ struct RuntimeRequestTimeoutError: Error, CustomStringConvertible {
     }
 }
 
-func printCLIError(_ error: Error, endpoint: String, host: String, port: Int) throws {
-    print(try encodeJSON(cliErrorResponse(for: error, endpoint: endpoint, host: host, port: port)))
+func printCLIError(_ error: Error, endpoint: String, host: String, port: Int, surface: String? = nil) throws {
+    print(try encodeJSON(cliErrorResponse(for: error, endpoint: endpoint, host: host, port: port, surface: surface)))
 }
 
 func printCLIErrorText(_ error: Error, endpoint: String, host: String, port: Int, language: CLILanguage = effectiveLanguage(nil)) {
@@ -89,12 +89,15 @@ func failCommand(
     throw ExitCode.failure
 }
 
-func cliErrorResponse(for error: Error, endpoint: String, host: String, port: Int) -> TKCLIErrorResponse {
+func cliErrorResponse(for error: Error, endpoint: String, host: String, port: Int, surface: String? = nil) -> TKCLIErrorResponse {
     if let httpError = error as? CLIHTTPError,
        let response = httpError.response {
-        return response
+        guard response.surface == nil, let surface else {
+            return response
+        }
+        return TKCLIErrorResponse(error: response.error, surface: surface)
     }
-    return TKCLIErrorResponse(error: cliErrorDetail(for: error, endpoint: endpoint, host: host, port: port))
+    return TKCLIErrorResponse(error: cliErrorDetail(for: error, endpoint: endpoint, host: host, port: port), surface: surface)
 }
 
 func localizedErrorMessage(_ detail: TKCLIErrorDetail, language: CLILanguage) -> String {

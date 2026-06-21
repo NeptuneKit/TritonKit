@@ -110,7 +110,7 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
             examples: ["triton status --format json"],
             successShape: "{ ok, serverReachable, connected, latestHierarchyAvailable, activeHierarchyAvailable, hierarchyCacheState, targetConnectionState, targetCount, runtime }",
-            failureShape: "{ ok: false, error: { code: server_unavailable|request_failed, message, endpoint, hint, nextAction? } }",
+            failureShape: "{ ok: false, surface: status, error: { code: server_unavailable|request_failed, message, endpoint, hint, nextAction? } }",
             outputSemantics: "Use status for a direct server/runtime liveness read. If it fails with server_unavailable, start `triton serve` before retrying.",
             nextCommands: [
                 "triton serve --host 127.0.0.1 --port 19421",

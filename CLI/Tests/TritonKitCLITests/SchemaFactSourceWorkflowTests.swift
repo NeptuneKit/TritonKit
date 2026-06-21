@@ -1,3 +1,4 @@
+import Foundation
 import Testing
 import TritonKitShared
 @testable import TritonKitCLI
@@ -364,6 +365,39 @@ extension SchemaFactSourceTests {
         #expect(errorResponse.error.hint == "Run `triton schema --json` to inspect available command schemas.")
         #expect(errorResponse.error.nextAction?.command == "schema")
         #expect(errorResponse.error.nextAction?.args == ["--json"])
+    }
+
+    @Test("status unavailable JSON error preserves status surface")
+    func statusUnavailableJSONErrorPreservesStatusSurface() throws {
+        let response = cliErrorResponse(
+            for: URLError(.cannotConnectToHost),
+            endpoint: "/status",
+            host: "127.0.0.1",
+            port: 19421,
+            surface: "status"
+        )
+
+        let data = try JSONEncoder().encode(response)
+        let decoded = try JSONDecoder().decode(TKCLIErrorResponse.self, from: data)
+
+        #expect(decoded.ok == false)
+        #expect(decoded.surface == "status")
+        #expect(decoded.error.code == "server_unavailable")
+        #expect(decoded.error.nextAction?.command == "serve")
+    }
+
+    @Test("schema lookup preserves issue example command identities")
+    func schemaLookupPreservesIssueExampleCommandIdentities() throws {
+        for commandName in ["xcode", "tap"] {
+            let response = try buildSchemaResponse(command: commandName)
+            let data = try JSONEncoder().encode(response)
+            let decoded = try JSONDecoder().decode(TKCLISchemaResponse.self, from: data)
+
+            #expect(decoded.schemaVersion == 1)
+            #expect(decoded.commands.map(\.name) == [commandName])
+            #expect(decoded.commands.first?.name.isEmpty == false)
+            #expect(decoded.httpManagementAPI.isEmpty)
+        }
     }
 
     @Test("schema command filtering covers the full command inventory")
