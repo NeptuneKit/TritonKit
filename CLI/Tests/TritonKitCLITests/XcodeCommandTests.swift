@@ -5,6 +5,25 @@ import TritonKitShared
 
 @Suite
 struct XcodeCommandTests {
+    @Test("streaming xcode host command honors command timeout and returns artifact paths")
+    func streamingHostCommandHonorsCommandTimeoutAndReturnsArtifactPaths() throws {
+        let command = TKHostCommand(
+            executable: "/bin/sh",
+            arguments: ["-c", "sleep 2"],
+            defaultTimeoutSeconds: 0.05
+        )
+
+        do {
+            _ = try runXcodeHostCommand(command, event: "xcode.build", jsonl: false)
+            Issue.record("Expected xcode host command timeout")
+        } catch HostCommandRunError.timeout(let timedOutCommand, let timeoutSeconds, let stdoutLogPath, let stderrLogPath) {
+            #expect(timedOutCommand.defaultTimeoutSeconds == 0.05)
+            #expect(timeoutSeconds == 0.05)
+            #expect(stdoutLogPath?.contains("triton-xcode-artifacts") == true)
+            #expect(stderrLogPath?.contains("triton-xcode-artifacts") == true)
+        }
+    }
+
     @Test("xcode workflow commands accept real-device selector option")
     func xcodeWorkflowCommandsAcceptDeviceOption() throws {
         let settings = try XcodeSettings.parse(["--project", "App.xcodeproj", "--scheme", "App", "--device", "ios-real:abc123", "--json"])
