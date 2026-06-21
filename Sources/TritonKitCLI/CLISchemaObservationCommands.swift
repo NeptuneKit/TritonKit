@@ -931,7 +931,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 metadataJSONAlias,
             ],
             examples: ["triton screenshot --output /tmp/triton.png --metadata", "triton screenshot --device iphone15 --output /tmp/sim.png --json", "triton screenshot --device harmony-a --output /tmp/smoke.jpeg --json"],
-            successShape: "{ format, width, height, scale, output, bytes } when embedded runtime --metadata is used; HostDeviceArtifactOutput for --device/--platform",
+            successShape: "{ format, width, height, scale, output, bytes } when embedded runtime --metadata is used; HostDeviceArtifactOutput with bytes/width/height/sha256/capturedAt for --device/--platform",
             failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|ambiguous_target|artifact_write_failed|host_command_failed|validation_failed, message, hint, nextAction? }, candidates?[] }",
             outputSemantics: "Use screenshot as a visual artifact capture. Prefer --metadata/--json for machine-readable output and pair failures with evidence for audit.",
             artifacts: ["screenshot"],
@@ -941,7 +941,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton observe current --json",
                 "triton assert text-exists <text> --json",
             ],
-            outputContracts: [screenshotMetadataOutputContract(), hostAndroidArtifactOutputContract(selector: "host.android-screenshot"), hostHarmonyArtifactOutputContract()],
+            outputContracts: [screenshotMetadataOutputContract(), hostArtifactOutputContract(), hostAndroidArtifactOutputContract(selector: "host.android-screenshot"), hostHarmonyArtifactOutputContract()],
             failureCodes: ["server_unavailable", "target_unavailable", "target_not_found", "ambiguous_target", "artifact_write_failed", "host_command_failed", "validation_failed"],
             providedCapabilities: ["screenshot", "host-device-screenshot", "ios-screenshot", "android-device-screenshot", "harmony-screenshot"]
         ),

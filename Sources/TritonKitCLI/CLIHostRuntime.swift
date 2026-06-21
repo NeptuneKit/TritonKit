@@ -1,4 +1,5 @@
 import ArgumentParser
+import CryptoKit
 import Darwin
 import Foundation
 import ImageIO
@@ -585,6 +586,33 @@ func makeSimulatorScreenshotMetadata(outputPath: String) throws -> HostSimulator
         normalizationStrategy: "metadata-only",
         note: "TritonKit preserves the raw framebuffer orientation emitted by `xcrun simctl io screenshot`; compare pixelWidth/pixelHeight and simulator display state before treating this artifact as a display-normalized screenshot."
     )
+}
+
+func makeHostScreenshotArtifactMetadata(outputPath: String) throws -> HostScreenshotArtifactMetadata {
+    let data = try Data(contentsOf: URL(fileURLWithPath: outputPath), options: [.mappedIfSafe])
+    let digest = SHA256.hash(data: data)
+    let dimensions = try? readImageDimensions(path: outputPath)
+    return HostScreenshotArtifactMetadata(
+        bytes: data.count,
+        width: dimensions?.width,
+        height: dimensions?.height,
+        sha256: digest.map { String(format: "%02x", $0) }.joined(),
+        capturedAt: ISO8601DateFormatter().string(from: Date())
+    )
+}
+
+private func readImageDimensions(path: String) throws -> (width: Int, height: Int) {
+    if let png = try? readPNGDimensions(path: path) {
+        return png
+    }
+    let url = URL(fileURLWithPath: path) as CFURL
+    guard let source = CGImageSourceCreateWithURL(url, nil),
+          let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any],
+          let width = properties[kCGImagePropertyPixelWidth] as? Int,
+          let height = properties[kCGImagePropertyPixelHeight] as? Int else {
+        throw RuntimeError("Screenshot metadata could not be read: image dimensions are unavailable.")
+    }
+    return (width, height)
 }
 
 private func readPNGDimensions(path: String) throws -> (width: Int, height: Int) {

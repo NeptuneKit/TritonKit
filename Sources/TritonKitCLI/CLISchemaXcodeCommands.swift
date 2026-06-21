@@ -75,6 +75,25 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
             ],
             outputContracts: [
                 TKCommandOutputContract(
+                    selector: "xcode.status",
+                    format: "json",
+                    kind: "xcode-status",
+                    model: "XcodeProcessStatusOutput",
+                    fields: schemaFields([
+                        ("ok", "Bool", true, "Whether status collection succeeded"),
+                        ("active", "Bool", true, "Whether matching Xcode processes are active"),
+                        ("workspaceFilter", "String?", false, "Workspace/project filter used for process matching"),
+                        ("processes", "[XcodeProcessSummary]", true, "Active xcodebuild/build-service processes"),
+                        ("summary", "XcodeProcessStatusSummary", true, "Process counts"),
+                        ("sourceCommand", "String", true, "Underlying process listing command"),
+                        ("stdoutLogPath", "String?", false, "Most recent Xcode stdout artifact path when available"),
+                        ("stderrLogPath", "String?", false, "Most recent Xcode stderr artifact path when available"),
+                        ("lastOutputAt", "String?", false, "ISO-8601 timestamp for the newest stdout/stderr artifact output"),
+                        ("stdoutBytes", "Int?", false, "Most recent stdout artifact byte count"),
+                        ("stderrBytes", "Int?", false, "Most recent stderr artifact byte count"),
+                    ])
+                ),
+                TKCommandOutputContract(
                     selector: "xcode.progress",
                     format: "jsonl",
                     kind: "progress-event",

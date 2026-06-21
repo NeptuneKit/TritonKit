@@ -341,6 +341,25 @@ struct SimulatorAdvancedControlsTests {
         #expect(metadata.name == "LCD")
     }
 
+    @Test("host screenshot artifact metadata exposes bytes dimensions hash and capture time")
+    func hostScreenshotArtifactMetadataExposesAuditFields() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-host-screenshot-metadata-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let output = directory.appendingPathComponent("shot.png")
+        let png = Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lz6ERwAAAABJRU5ErkJggg==")!
+        try png.write(to: output)
+
+        let metadata = try makeHostScreenshotArtifactMetadata(outputPath: output.path)
+
+        #expect(metadata.bytes == png.count)
+        #expect(metadata.width == 1)
+        #expect(metadata.height == 1)
+        #expect(metadata.sha256.count == 64)
+        #expect(!metadata.capturedAt.isEmpty)
+    }
+
     @Test("sim screenshot schema exposes raw framebuffer orientation metadata")
     func simScreenshotSchemaExposesRawFramebufferOrientationMetadata() throws {
         let sim = try #require(commandSchemas().first { $0.name == "sim" })

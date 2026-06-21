@@ -62,7 +62,8 @@ enum XcodeProcessDiagnosticsParser {
         psOutput: String,
         workspace: String? = nil,
         derivedDataPath: String? = nil,
-        sourceCommand: String = "ps -axo pid=,comm=,etime=,args="
+        sourceCommand: String = "ps -axo pid=,comm=,etime=,args=",
+        latestLogs: XcodeArtifactLogStatus? = nil
     ) throws -> XcodeProcessStatusOutput {
         let allProcesses = psOutput
             .split(whereSeparator: \.isNewline)
@@ -88,7 +89,12 @@ enum XcodeProcessDiagnosticsParser {
             ),
             processes: filtered,
             summary: summary,
-            sourceCommand: sourceCommand
+            sourceCommand: sourceCommand,
+            stdoutLogPath: latestLogs?.stdoutLogPath,
+            stderrLogPath: latestLogs?.stderrLogPath,
+            lastOutputAt: latestLogs?.lastOutputAt,
+            stdoutBytes: latestLogs?.stdoutBytes,
+            stderrBytes: latestLogs?.stderrBytes
         )
     }
 
@@ -210,9 +216,60 @@ enum XcodeProcessDiagnosticsParser {
     }
 }
 
+func latestXcodeArtifactLogStatus(
+    artifactsRoot: URL = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("triton-xcode-artifacts", isDirectory: true),
+    fileManager: FileManager = .default
+) -> XcodeArtifactLogStatus? {
+    guard let children = try? fileManager.contentsOfDirectory(
+        at: artifactsRoot,
+        includingPropertiesForKeys: [.isDirectoryKey, .contentModificationDateKey],
+        options: [.skipsHiddenFiles]
+    ) else {
+        return nil
+    }
+
+    var best: (directory: URL, modifiedAt: Date)?
+    for child in children {
+        let values = try? child.resourceValues(forKeys: [.isDirectoryKey, .contentModificationDateKey])
+        guard values?.isDirectory == true else { continue }
+        let stdout = child.appendingPathComponent("stdout.log")
+        let stderr = child.appendingPathComponent("stderr.log")
+        guard fileManager.fileExists(atPath: stdout.path) || fileManager.fileExists(atPath: stderr.path) else { continue }
+        let modifiedAt = [logModificationDate(stdout), logModificationDate(stderr), values?.contentModificationDate]
+            .compactMap { $0 }
+            .max() ?? Date.distantPast
+        if best == nil || modifiedAt > best!.modifiedAt {
+            best = (child, modifiedAt)
+        }
+    }
+
+    guard let best else { return nil }
+    let stdout = best.directory.appendingPathComponent("stdout.log")
+    let stderr = best.directory.appendingPathComponent("stderr.log")
+    let stdoutPath = fileManager.fileExists(atPath: stdout.path) ? stdout.path : nil
+    let stderrPath = fileManager.fileExists(atPath: stderr.path) ? stderr.path : nil
+    return XcodeArtifactLogStatus(
+        stdoutLogPath: stdoutPath,
+        stderrLogPath: stderrPath,
+        lastOutputAt: ISO8601DateFormatter().string(from: best.modifiedAt),
+        stdoutBytes: stdoutPath.map { fileSize(atPath: $0) },
+        stderrBytes: stderrPath.map { fileSize(atPath: $0) }
+    )
+}
+
+private func logModificationDate(_ url: URL) -> Date? {
+    (try? url.resourceValues(forKeys: [.contentModificationDateKey]))?.contentModificationDate
+}
+
+private func fileSize(atPath path: String) -> Int {
+    let size = (try? FileManager.default.attributesOfItem(atPath: path)[.size] as? NSNumber)?.intValue
+    return size ?? 0
+}
+
 func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessStatusOutput {
     let defaults = try? loadHostWorkspaceDefaults()
     let derivedDataPath = defaults?.xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath
+    let latestLogs = latestXcodeArtifactLogStatus()
     let pgrep = TKHostCommand(
         executable: "pgrep",
         arguments: ["-f", "xcodebuild|swift-build|SwiftBuildService|XCBBuildService|xctest"],
@@ -226,7 +283,8 @@ func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessS
             psOutput: "",
             workspace: workspace,
             derivedDataPath: derivedDataPath,
-            sourceCommand: hostSourceCommand(pgrep)
+            sourceCommand: hostSourceCommand(pgrep),
+            latestLogs: latestLogs
         )
     }
     let pids = pidResult.stdout
@@ -237,7 +295,8 @@ func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessS
             psOutput: "",
             workspace: workspace,
             derivedDataPath: derivedDataPath,
-            sourceCommand: pidResult.sourceCommand
+            sourceCommand: pidResult.sourceCommand,
+            latestLogs: latestLogs
         )
     }
     let command = TKHostCommand(
@@ -250,7 +309,8 @@ func currentXcodeProcessStatus(workspace: String? = nil) throws -> XcodeProcessS
         psOutput: result.stdout,
         workspace: workspace,
         derivedDataPath: derivedDataPath,
-        sourceCommand: result.sourceCommand
+        sourceCommand: result.sourceCommand,
+        latestLogs: latestLogs
     )
 }
 

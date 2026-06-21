@@ -190,6 +190,29 @@ struct XcodeDiagnosticsTests {
         #expect(status.summary.matchingWorkspaceCount == 1)
     }
 
+    @Test("xcode status exposes latest stdout and stderr artifact log progress")
+    func statusExposesLatestArtifactLogProgress() throws {
+        let root = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("triton-xcode-status-logs-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let older = root.appendingPathComponent("1000-xcode-build-old", isDirectory: true)
+        let latest = root.appendingPathComponent("2000-xcode-build-new", isDirectory: true)
+        try FileManager.default.createDirectory(at: older, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: latest, withIntermediateDirectories: true)
+        try Data("old\n".utf8).write(to: older.appendingPathComponent("stdout.log"))
+        try Data("warning\n".utf8).write(to: latest.appendingPathComponent("stdout.log"))
+        try Data("error text\n".utf8).write(to: latest.appendingPathComponent("stderr.log"))
+
+        let logs = try #require(latestXcodeArtifactLogStatus(artifactsRoot: root))
+        let status = try XcodeProcessDiagnosticsParser.parse(psOutput: "", latestLogs: logs)
+
+        #expect(status.stdoutLogPath.map { URL(fileURLWithPath: $0).standardizedFileURL.path } == latest.appendingPathComponent("stdout.log").standardizedFileURL.path)
+        #expect(status.stderrLogPath.map { URL(fileURLWithPath: $0).standardizedFileURL.path } == latest.appendingPathComponent("stderr.log").standardizedFileURL.path)
+        #expect(status.stdoutBytes == 8)
+        #expect(status.stderrBytes == 11)
+        #expect(status.lastOutputAt != nil)
+    }
+
     @Test("wait idle reports timeout while matching workspace remains active")
     func waitIdleTimesOutWhenWorkspaceRemainsActive() async throws {
         let active = XcodeProcessStatusOutput(

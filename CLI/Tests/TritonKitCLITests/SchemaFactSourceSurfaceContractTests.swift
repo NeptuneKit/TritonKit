@@ -286,7 +286,10 @@ extension SchemaFactSourceTests {
         expectContract(screenshot, selector: "host.harmony-artifact", fields: [
             "ok", "action", "platform", "target", "artifact", "sourceCommands", "note",
         ])
-        #expect(!screenshot.outputContracts.map(\.selector).contains("host.artifact"))
+        expectContract(screenshot, selector: "host.artifact", fields: [
+            "ok", "action", "platform", "target", "selection", "artifact", "format",
+            "bytes", "width", "height", "sha256", "capturedAt", "sourceCommands", "note",
+        ])
     }
 
     @Test("host workflow schemas expose target and artifact contracts")

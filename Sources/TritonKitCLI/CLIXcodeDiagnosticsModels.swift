@@ -1,6 +1,13 @@
 import Foundation
-
 import TritonKitShared
+
+struct XcodeArtifactLogStatus: Codable, Equatable {
+    let stdoutLogPath: String?
+    let stderrLogPath: String?
+    let lastOutputAt: String?
+    let stdoutBytes: Int?
+    let stderrBytes: Int?
+}
 
 struct XcodeProcessSummary: Codable, Equatable {
     let pid: Int
@@ -31,6 +38,11 @@ struct XcodeProcessStatusOutput: Codable, Equatable {
     let processes: [XcodeProcessSummary]
     let summary: XcodeProcessStatusSummary
     let sourceCommand: String
+    let stdoutLogPath: String?
+    let stderrLogPath: String?
+    let lastOutputAt: String?
+    let stdoutBytes: Int?
+    let stderrBytes: Int?
 
     init(
         ok: Bool,
@@ -39,7 +51,12 @@ struct XcodeProcessStatusOutput: Codable, Equatable {
         derivedDataCache: TKXcodeDerivedDataCacheInfo = makeXcodeDerivedDataCacheInfo(path: nil),
         processes: [XcodeProcessSummary],
         summary: XcodeProcessStatusSummary,
-        sourceCommand: String
+        sourceCommand: String,
+        stdoutLogPath: String? = nil,
+        stderrLogPath: String? = nil,
+        lastOutputAt: String? = nil,
+        stdoutBytes: Int? = nil,
+        stderrBytes: Int? = nil
     ) {
         self.ok = ok
         self.active = active
@@ -48,6 +65,11 @@ struct XcodeProcessStatusOutput: Codable, Equatable {
         self.processes = processes
         self.summary = summary
         self.sourceCommand = sourceCommand
+        self.stdoutLogPath = stdoutLogPath
+        self.stderrLogPath = stderrLogPath
+        self.lastOutputAt = lastOutputAt
+        self.stdoutBytes = stdoutBytes
+        self.stderrBytes = stderrBytes
     }
 }
 

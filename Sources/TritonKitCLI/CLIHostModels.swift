@@ -387,6 +387,14 @@ struct HostDeviceReadyEvent: Encodable {
     }
 }
 
+struct HostScreenshotArtifactMetadata: Encodable, Equatable {
+    let bytes: Int
+    let width: Int?
+    let height: Int?
+    let sha256: String
+    let capturedAt: String
+}
+
 struct HostDeviceArtifactOutput: Encodable {
     let ok: Bool
     let action: String
@@ -395,8 +403,41 @@ struct HostDeviceArtifactOutput: Encodable {
     let selection: HostDeviceSelectionResult?
     let artifact: String
     let format: String
+    let bytes: Int
+    let width: Int?
+    let height: Int?
+    let sha256: String
+    let capturedAt: String
     let sourceCommands: [String]
     let note: String
+
+    init(
+        ok: Bool,
+        action: String,
+        platform: String,
+        target: HostDeviceTarget,
+        selection: HostDeviceSelectionResult?,
+        artifact: String,
+        format: String,
+        metadata: HostScreenshotArtifactMetadata,
+        sourceCommands: [String],
+        note: String
+    ) {
+        self.ok = ok
+        self.action = action
+        self.platform = platform
+        self.target = target
+        self.selection = selection
+        self.artifact = artifact
+        self.format = format
+        self.bytes = metadata.bytes
+        self.width = metadata.width
+        self.height = metadata.height
+        self.sha256 = metadata.sha256
+        self.capturedAt = metadata.capturedAt
+        self.sourceCommands = sourceCommands
+        self.note = note
+    }
 }
 
 struct HarmonyEmulatorStopPlan {
@@ -885,6 +926,7 @@ struct HostActionOutput: Encodable {
     let stderr: String?
     let artifacts: [String]
     let screenshot: HostSimulatorScreenshotMetadata?
+    let suggestedCommands: [String]
     let note: String?
 
     init(
@@ -927,8 +969,14 @@ struct HostActionOutput: Encodable {
         self.stderr = stderr
         self.artifacts = artifacts
         self.screenshot = screenshot
+        self.suggestedCommands = [hostActionCommandString(self.hostAction.nextAction)]
         self.note = note
     }
+}
+
+private func hostActionCommandString(_ nextAction: TKCLINextAction) -> String {
+    let parts = ["triton", nextAction.command] + nextAction.args
+    return parts.joined(separator: " ")
 }
 
 struct HostArtifactCaptureOutput: Encodable {
