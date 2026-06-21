@@ -562,9 +562,13 @@ func runStreamingHostCommand(
     process.standardError = stderr
 
     func emitProgress(_ progress: TKXcodeProgressEvent) {
-        guard jsonl, let line = try? encodeCompactJSON(progress) else { return }
+        guard let line = try? encodeCompactJSON(progress) else { return }
         printLock.lock()
-        writeJSONLLine(line)
+        if jsonl {
+            writeJSONLLine(line)
+        } else {
+            FileHandle.standardError.write(Data((line + "\n").utf8))
+        }
         printLock.unlock()
     }
 
@@ -613,6 +617,16 @@ func runStreamingHostCommand(
             _ = semaphore.wait(timeout: .now() + 2)
             stdout.fileHandleForReading.readabilityHandler = nil
             stderr.fileHandleForReading.readabilityHandler = nil
+            emitProgress(TKXcodeProgressEvent(
+                event: "\(event).summary",
+                message: "timeout after \(timeoutSeconds)s",
+                sourceCommand: hostSourceCommand(command),
+                elapsedMs: Int(Date().timeIntervalSince(startedAt) * 1000),
+                stdoutLogPath: artifactPaths.stdout.path,
+                stderrLogPath: artifactPaths.stderr.path,
+                stdoutBytes: stdoutAccumulator.snapshot().bytes,
+                stderrBytes: stderrAccumulator.snapshot().bytes
+            ))
             throw HostCommandRunError.timeout(
                 command: command,
                 timeoutSeconds: timeoutSeconds,
