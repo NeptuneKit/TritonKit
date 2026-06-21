@@ -1,0 +1,12 @@
+{
+  "durationMs" : 1490,
+  "endedAt" : "2026-06-21T00:08:44Z",
+  "evidenceManifestRef" : "..\/manifest.json",
+  "kind" : "triton.test.run",
+  "planRef" : "..\/normalized-plan.json",
+  "runId" : "run-1f45eb68-cfb9-4a0b-b204-58e481bb8049",
+  "schemaVersion" : 1,
+  "source" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260621-p10-suite-run.tritonevidence-root\/flows\/001-path-fixture-login-home.tritontest.yaml",
+  "startedAt" : "2026-06-21T00:08:42Z",
+  "status" : "passed"
+}

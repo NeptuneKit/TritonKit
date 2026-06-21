@@ -1,0 +1,33 @@
+version: 1
+name: "fixture-login-home"
+app:
+  bundleId: "com.neptunekit.tritonkit.testfixture"
+device:
+  platform: "ios-simulator"
+settings:
+  strict: true
+  timeoutMs: 5000
+  retry:
+    count: 0
+    intervalMs: 250
+steps:
+  - id: "step-000"
+    launch: {}
+  - id: "step-001"
+    takeScreenshot: {}
+  - id: "step-002"
+    assertVisible:
+      text: "Fixture Login"
+      source: "ax"
+      match: "exact"
+  - id: "step-003"
+    tap:
+      point:
+        x: 201
+        y: 289.5
+        coordinateSpace: "runtime-point"
+  - id: "step-004"
+    assertVisible:
+      text: "Fixture Home"
+      source: "ax"
+      match: "exact"

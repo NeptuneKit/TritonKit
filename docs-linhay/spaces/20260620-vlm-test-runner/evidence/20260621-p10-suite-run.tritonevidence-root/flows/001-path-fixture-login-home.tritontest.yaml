@@ -1,0 +1,20 @@
+version: 1
+name: fixture-login-home
+app:
+  bundleId: "com.neptunekit.tritonkit.testfixture"
+device:
+  platform: "ios-simulator"
+settings:
+  strict: true
+steps:
+  - launch: {}
+  - takeScreenshot: {}
+  - assertVisible:
+      text: "Fixture Login"
+  - tap:
+      point:
+        x: 201
+        y: 289.5
+        coordinateSpace: runtime-point
+  - assertVisible:
+      text: "Fixture Home"

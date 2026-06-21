@@ -1,0 +1,22 @@
+{
+  "changed" : true,
+  "fromScreenId" : "screen-f007e54d89ad",
+  "kind" : "triton.app-map.transition",
+  "replayable" : true,
+  "schemaVersion" : 1,
+  "sourceRuns" : [
+    "run-1f45eb68-cfb9-4a0b-b204-58e481bb8049"
+  ],
+  "status" : "observed",
+  "toScreenId" : "screen-d4829eaf9abb",
+  "transitionId" : "transition-ffba5b9e1531",
+  "trigger" : {
+    "point" : {
+      "coordinateSpace" : "runtime-point",
+      "x" : 201,
+      "y" : 289.5
+    },
+    "type" : "tap"
+  },
+  "triggerStepIndex" : 3
+}

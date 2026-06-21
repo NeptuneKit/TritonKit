@@ -1,0 +1,12 @@
+{
+  "confidence" : 1,
+  "coordinateSpace" : "normalized_0_1000",
+  "point" : {
+    "scale" : 1000,
+    "x" : 500,
+    "y" : 331.2356979405034
+  },
+  "provider" : "mock",
+  "rationale" : "deterministic mock provider; no network or model call",
+  "schemaVersion" : 1
+}

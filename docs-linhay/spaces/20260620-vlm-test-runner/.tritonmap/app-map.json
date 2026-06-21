@@ -6,8 +6,8 @@
   "kind" : "triton.app-map",
   "pathCount" : 1,
   "schemaVersion" : 1,
-  "screenCount" : 2,
+  "screenCount" : 4,
   "suiteCount" : 1,
-  "transitionCount" : 1,
-  "updatedAt" : "2026-06-20T12:03:44.875Z"
+  "transitionCount" : 2,
+  "updatedAt" : "2026-06-21T00:09:26.071Z"
 }

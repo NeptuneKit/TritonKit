@@ -291,8 +291,10 @@ steps:
 ## 验收门禁
 
 - `swift test --package-path CLI --filter TestValidationTests`
+- `swift test --package-path CLI --filter VLMGroundingTests`
 - `swift test --package-path CLI --filter SchemaFactSourceTests`
 - `triton test validate <fixture>.tritontest.yaml --json`
+- `triton vlm ground --provider mock --image <screenshot.png> --target <text> --coordinate-contract <coordinate-contract.json> --json`
 - `docs-linhay/scripts/check-docs.sh`
 - `git diff --check`
 
@@ -309,7 +311,7 @@ steps:
 
 ### P0B：测试 DSL 离线 validate
 
-- 新增 `.tritontest.yaml` 最小 schemaVersion 1。
+- 新增 `.tritontest.yaml` 最小 `version: 1` 输入合同；normalized plan / evidence 输出继续使用 `schemaVersion: 1`。
 - 新增 `triton test validate <path.tritontest.yaml> --json`，输出 `{ ok, normalizedPlan }`。
 - 新增 `triton test validate <path> --emit-normalized-plan --json` 和 `triton test normalize <path> --json`，成功时只输出 normalized plan。
 - 首期只支持 `launch`、`takeScreenshot`、`tap.point`、`assertVisible.text`。
@@ -407,6 +409,12 @@ steps:
 - 新增 `triton vlm ground --provider mock`。
 - 新增 overlay artifact 生成。
 - 覆盖坐标映射、错误 envelope、JSON 输出契约测试。
+- 使用 P2B 真实 rerun evidence 的 `step-003-before.png` 与 `coordinate-contract.json` 完成 CLI smoke。
+- 输出 `TKVLMGroundResponse`，包含 `point.normalized`、`point.runtimePoint`、`transform`、`artifacts.overlay/request/response`。
+- `triton schema` 与 `triton capabilities` 已暴露 `vlm` command 和 `vlm-ground-mock` capability。
+- 不接远端模型，不接 API key，不把 VLM result 接进 runner execution。
+
+当前状态：P4 已实现并通过真实 evidence smoke，详见 `plans/p4-mock-vlm-grounding-contract.md`。它只打开 provider adapter work，不打开 runner VLM step。
 
 ### P5：OpenAI-compatible point grounding
 
@@ -414,37 +422,121 @@ steps:
 - 新增 localhost provider 默认允许，remote provider 需要 `--allow-remote-vlm`。
 - 支持 UGround / SeeClick 风格 `(x,y)` 输出解析。
 - 使用 fixture HTTP server 做 TDD，不在单元测试依赖外部模型。
+- 新增 `--base-url`、`--model`、`--api-key-env`、`--allow-remote-vlm`。
+- 默认只允许 localhost / loopback provider；远端 provider 未显式授权时 fail-closed。
+- request artifact 不写 base64 screenshot，只保存 image metadata、model、redacted baseURL、target 和 redaction/network 状态。
+- response artifact 保存 provider rawText 与 parsed normalized point。
+- 已用本机临时 OpenAI-compatible fixture server 完成 CLI smoke。
+
+当前状态：P5 已实现并通过 localhost fixture server smoke，详见 `plans/p5-openai-compatible-grounding.md`。它打开真实本机 provider adapter，不打开 runner VLM step。
 
 ### P6：Maestro-like runner primitives
 
-- 支持 launch、stop、tap、input、press、swipe、assertVisible、assertNotVisible、takeScreenshot、scrollUntilVisible。
-- 第一版 selector 只承诺 text + point；id、index、childOf、containsChild、containsDescendants 后置到 primitive 和 fixture 证据稳定之后。
-- 支持 tags、flow glob、testOutputDir、executionOrder。
-- 支持 JUnit / JSON report 导出，HTML report 可后置。
+- 扩展 `triton test run` 的 deterministic primitive 范围：`launch`、`takeScreenshot`、`tap(point/runtime-point)`、`input(text)`、`press(button)`、`swipe(from/to runtime-point)`、`assertVisible(text/source=ax/match=exact)`、`assertNotVisible(text/source=ax/match=exact)`、`scrollUntilVisible(text/source=ax/match=exact)`。
+- `stop` 已进入 validate / normalize 合同，但 live embedded-runtime runner 当前返回 `stop_not_supported`，直到 host app terminate target selection 接入。
+- action primitive 继续写入 before / after `observation.captured`，保持可投影到 Screen Workspace / App Map。
+- 第一版 selector 只承诺 text + point；id、index、childOf、containsChild、containsDescendants 后置到 selector foundation。
+- 不做 tags、flow glob、`testOutputDir`、executionOrder、JUnit / JSON report、HTML report、VLM runner step 或 autonomous loop。
+
+当前状态：P6 deterministic runner primitives 已实现并通过 targeted test，详见 `plans/p6-deterministic-runner-primitives.md`。它打开后续 runner-owned launch/readiness 与 selector foundation，不打开 VLM runner execution。
 
 ### P7：VLM 与 runner 集成
 
-- `triton test run` 串起 screenshot -> VLM -> host input -> assert -> evidence。
-- 每个 VLM step 保存 before / after screenshot、request、response、overlay、step result。
-- 支持 step budget、retry budget 和失败分类。
+- `triton test run` 已支持 gated `tap(target)`：只有显式传入 `--allow-vlm` 才会执行 screenshot -> VLM grounding -> runtime-point tap -> observation evidence。
+- validate / normalize 只接受 `tap.target + grounding: vlm + provider: mock/openai-compatible`，`tap.text`、id/index/relationship selector 仍拒绝。
+- 远端 OpenAI-compatible endpoint 仍必须显式传入 `--allow-remote-vlm`，默认不会把 screenshot 发送到非 localhost provider。
+- runner 在 VLM step 写入 `vlm.grounding` event，并保存 before / after observation、redacted request、provider response 和 overlay artifact。
+- `.tritonmap` merge 会把包含 `vlm.grounding` 的同一路径标记为 `source: vlm-assisted`，不会生成 duplicate path。
+- 不做 AI assertion、VLM action provider、selector healing、suite runner、HTML/JUnit 或 autonomous loop。
 
-### P8：AI assertions / visual checks
+当前状态：P7 VLM-assisted `tap(target)` 已实现并通过 targeted test，详见 `plans/p7-vlm-assisted-tap-target.md`。它打开后续 selector foundation / suite runner / report work，但不打开默认远端 VLM 或 autonomous loop。
 
-- 支持 `assertWithAI`、`assertNoDefectsWithAI`、`extractTextWithAI`。
+### P8：Path Confirmation / Suite Semantics
+
+- `triton map merge ...` 不带 `--confirm` 时只生成 observed candidate path，不自动进入 suite。
+- `triton map merge ... --confirm` 仍可确认 path 并加入 smoke suite，用于保持 P2B export/re-run 快速闭环。
+- 新增 `triton map path confirm <dir.tritonmap> --path <pathId> --json`。
+- 新增 `triton map path unconfirm <dir.tritonmap> --path <pathId> --json`，会把该 path 从所有 suites 移除。
+- 新增 `triton map suite add-path/remove-path <dir.tritonmap> --suite smoke --path <pathId> --json`。
+- `suite add-path` 要求 path 已 confirmed 且 replayable；否则返回机器可读 `unconfirmed_path` 或 `non_replayable_path`。
+- `map health` 继续暴露 `unconfirmedPathIds`，供 agent/CI 识别 candidate path。
+
+当前状态：P8 path confirmation / suite semantics 已实现并通过 targeted test，详见 `plans/p8-path-confirmation-suite-semantics.md`。它打开 P10 suite runner，但不执行 suite。
+
+### P10：Suite Runner
+
+- 新增 `triton map suite run <dir.tritonmap> --suite <suite-id> --target <target> --evidence-root <dir> --json`。
+- suite runner 只消费 P8 confirmed + replayable path。
+- 每个 path 先通过 `export-flow` 生成 `.tritontest.yaml`，再复用现有 `triton test run` 执行。
+- 每个 path run 生成新的 `.tritonevidence`，再执行 `project-workspace` 并 merge 回同一个 `.tritonmap`。
+- 输出 `triton.app-map.suite-run-result`，包含 suite 计数、stopOnFailure 状态和 per-path result。
+- suite policy `stopOnFailure=true` 时首个失败 path 后停止。
+- 不新增 runner primitive，不做 HTTP wrapper、HTML/JUnit、parallel execution、selector healing 或 AI assertion。
+
+当前状态：P10 suite runner 已实现，并通过 targeted App Map test、schema/capability test、全量 CLI test、schema/capability CLI smoke 和真实 iOS Simulator suite run pass smoke，详见 `plans/p10-suite-runner.md`。真实 pass smoke 已生成新 evidence 并 merge 回 `.tritonmap`，map/path health 均为 `observedRuns=2/passCount=2`；failure smoke 也确认起点不满足时输出 `ok=false/failedCount=1/stoppedOnFailure=true` 和 `assert_visible_failed`。P10 完整通过后打开 P11 HTTP API Thin Wrapper。
+
+### P11：HTTP API Thin Wrapper
+
+- 在现有 `triton serve` 上新增本机 HTTP JSON route：`/v1/app-map/inspect`、`/paths`、`/screens`、`/transitions`、`/path`、`/health`、`/suite`、`/suite/run`。
+- HTTP route 只调用现有 App Map runtime 与 suite runner，不定义新业务语义，不领先 CLI。
+- `GET` routes 只读 `.tritonmap`，返回与 CLI 相同的响应模型。
+- `POST /v1/app-map/suite/run` body 映射 P10 CLI 参数，仍复用 `runTritonAppMapSuite`。
+- invalid query/body 返回 HTTP 400 `invalid_payload`；App Map runtime failure 返回 HTTP 409 机器可读错误或 `ok=false` suite-run result。
+- 不做 auth、多租户、远端 agent、SSE、HTML/JUnit、Web/Wails 或 HTTP-only 业务能力。
+
+当前状态：P11 thin HTTP wrapper 已实现并通过 live HTTP smoke，详见 `plans/p11-http-api-thin-wrapper.md`。
+
+### P12：More Runner Primitives
+
+- 新增 `tap.text` deterministic runner primitive。
+- 只支持 `source=ax` 与 `match=exact`。
+- validate / normalize 将 text tap 写入 normalized plan selector。
+- live runner 从 AX nodes 做 exact text target resolution，执行前后写入 observation。
+- 找不到目标返回 `text_not_found`，input 失败返回 `tap_failed`。
+- 不做 id/index/relationship selector、selector healing、hierarchy fallback、OCR fallback 或 VLM fallback。
+
+当前状态：P12 text tap 已实现并通过 targeted validation/execution tests，详见 `plans/p12-more-runner-primitives.md`。
+
+### P13：JSON Test Report
+
+- 新增 `triton test report <dir.tritonevidence> --json`。
+- report 离线读取 `manifest.json`、`run/run.json` 与 `run/events.jsonl`，不触发 device/runtime operation。
+- 聚合 per-step command、status、assertion、failure、artifact refs、observation、screenCandidate fingerprints、visibleTexts 与 VLM grounding。
+- summary 输出 event/step/assertion/artifact/observation/failure/screenshot/overlay 计数。
+- pass 与 failure evidence 都返回 `ok=true` 的报告；测试结果由 `summary.status` 和 `failure` 表达。
+- 不做 HTML、JUnit、App Map mutation、test re-run 或 AI visual scoring。
+
+当前状态：P13 JSON report 已实现并通过 targeted execution/schema tests 与真实 P10 evidence CLI smoke，详见 `plans/p13-json-test-report.md`。
+
+### P14：AI assertions / visual checks
+
+- 支持 mock evidence contract：`assertWithAI`、`assertNoDefectsWithAI`、`extractTextWithAI`。
 - AI step 默认 `optional: true`，显式 `optional: false` 才阻塞 Flow。
-- 支持 `assertScreenshot` 的 baseline、cropOn、threshold、diff artifact。
+- `assertScreenshot` 支持 baseline、cropOn、threshold contract；P14 execution 先做严格 SHA256 baseline 对比并写 `screenshot.diff` JSON artifact。
+- provider 当前只允许 `mock`，不做远端模型调用。
+- optional AI failure 会写 `failure.recorded`，但不阻断后续 required deterministic step。
 
-### P9：action provider
+当前状态：P14 mock AI assertion evidence contract 已实现并通过 targeted execution/schema tests，详见 `plans/p14-mock-ai-assertions.md`。
 
-- 接入 UI-TARS action parser 与 AgentCPM-GUI JSON action parser。
-- 只执行单步 primitive action。
-- 支持 `status/done`，但不开放无限循环。
+### P15：action provider
 
-### P10：Revyl-like 报告与 session-to-test
+- 新增 `triton action parse --provider <ui-tars|agentcpm-gui> --input <raw> --json`。
+- 接入 UI-TARS Thought/Action parser 与 AgentCPM-GUI JSON action parser。
+- 只输出单步 primitive `commandPreview`：tap、type、swipe、press、wait、status。
+- 坐标动作保留 `coordinateSystem=normalized_0_1000`。
+- 支持 `status/done`，但不执行动作、不调用模型、不开放无限循环。
 
-- `triton test report` 聚合截图、overlay、失败类型、状态 diff。
+当前状态：P15 offline action provider parser 已实现并通过 parser/schema tests 与 CLI smoke，详见 `plans/p15-action-provider-parser.md`。
+
+### P16：session-to-test、HTML viewer
+
+- 新增 `triton map viewer <dir.tritonmap> --output <file.html> --json`。
+- 生成单文件静态 HTML，展示 path、screen、transition 和 pass/fail summary。
+- viewer 只读 `.tritonmap`，不启动 server、不接 Web/Wails、不执行测试、不修改地图。
 - `triton test create --from-session` 从已有 evidence / plan 生成可编辑测试草稿。
 - 与 `triton evidence` / `.tritonevidence` 对齐，避免另起报告体系。
+
+当前状态：P16 static App Map viewer 与 session-to-test 均已实现并通过 targeted tests、真实 `.tritonmap` viewer smoke、真实 `.tritonevidence` create/validate smoke。详见 `plans/p16-static-app-map-viewer.md`。
 
 ## 风险与约束
 

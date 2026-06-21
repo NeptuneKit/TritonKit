@@ -1,0 +1,19 @@
+{
+  "baseURL" : "http:\/\/127.0.0.1:19455\/v1",
+  "coordinateContract" : {
+    "canonicalTapSpace" : "runtime-point",
+    "path" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260621-p2b-rerun.tritonevidence\/coordinate-contract.json"
+  },
+  "image" : {
+    "height" : 874,
+    "path" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260621-p2b-rerun.tritonevidence\/debug\/step-003-before.png",
+    "sha256" : "f62761381de403a456ba0abdd80a80393cae4309d773db5ce3d2fd736e897c73",
+    "width" : 402
+  },
+  "model" : "fixture-grounder",
+  "network" : "openai-compatible",
+  "provider" : "openai-compatible",
+  "redaction" : "target-text-only",
+  "schemaVersion" : 1,
+  "target" : "Go Home button"
+}

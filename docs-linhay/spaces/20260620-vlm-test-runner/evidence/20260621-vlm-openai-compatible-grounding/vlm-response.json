@@ -1,0 +1,14 @@
+{
+  "confidence" : 1,
+  "coordinateSpace" : "normalized_0_1000",
+  "model" : "fixture-grounder",
+  "point" : {
+    "scale" : 1000,
+    "x" : 500,
+    "y" : 331.2356979405034
+  },
+  "provider" : "openai-compatible",
+  "rationale" : "openai-compatible point grounding response parsed from choices[0].message.content",
+  "rawText" : "{\"point\":{\"x\":500,\"y\":331.2356979405034}}",
+  "schemaVersion" : 1
+}

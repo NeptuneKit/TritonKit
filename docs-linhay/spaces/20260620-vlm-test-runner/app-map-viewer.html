@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Triton App Map</title>
+  <style>
+    body{margin:0;font:14px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#1f2937;background:#f8fafc}
+    header{padding:28px 32px 16px;background:#111827;color:white}
+    main{padding:24px 32px 40px;display:grid;gap:24px}
+    h1{margin:0 0 8px;font-size:28px} h2{margin:0 0 12px;font-size:18px}
+    .meta{color:#cbd5e1}.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+    .metric{background:white;border:1px solid #e5e7eb;border-radius:8px;padding:14px}.metric strong{display:block;font-size:24px;margin-bottom:4px}
+    section{background:white;border:1px solid #e5e7eb;border-radius:8px;padding:16px;overflow-x:auto}
+    table{width:100%;border-collapse:collapse} th,td{padding:10px 8px;border-bottom:1px solid #e5e7eb;text-align:left;vertical-align:top}
+    th{color:#475569;font-size:12px;text-transform:uppercase} code{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12px}
+  </style>
+</head>
+<body>
+  <header><h1>Triton App Map</h1><div class="meta">/Users/linhey/Desktop/linhay-open-sources/TritonKit/docs-linhay/spaces/20260620-vlm-test-runner/.tritonmap</div></header>
+  <main>
+    <div class="grid">
+      <div class="metric"><strong>4</strong>screens</div>
+      <div class="metric"><strong>2</strong>transitions</div>
+      <div class="metric"><strong>1</strong>paths</div>
+      <div class="metric"><strong>2/0</strong>pass/fail</div>
+    </div>
+    <section><h2>Paths</h2><table><thead><tr><th>ID</th><th>Name</th><th>State</th><th>Replayable</th><th>Source</th><th>Pass/Fail</th></tr></thead><tbody><tr><td><code>path-fixture-login-home</code></td><td>Fixture Login to Home</td><td>confirmed</td><td>yes</td><td>deterministic</td><td>2/0</td></tr></tbody></table></section>
+    <section><h2>Screens</h2><table><thead><tr><th>ID</th><th>Primary Text</th><th>Visible Text Sample</th><th>Runs</th></tr></thead><tbody><tr><td><code>screen-7899285e3450</code></td><td>Fixture Home</td><td>Fixture Runtime: Connected | fixture.runtime.status | Fixture Home | fixture.home.title | Open Settings | fixture.home.openSettings | Open Delayed Loading | fixture.home.openDelayed</td><td>1</td></tr>
+<tr><td><code>screen-90ad31de33cc</code></td><td>Fixture Login</td><td>Fixture Runtime: Connected | fixture.runtime.status | Fixture Login | fixture.login.title | Fixture Login Ready | fixture.login.ready | Go Home | fixture.login.goHome</td><td>1</td></tr>
+<tr><td><code>screen-d4829eaf9abb</code></td><td>Fixture Home</td><td>Fixture Runtime: Connected | fixture.runtime.status | Fixture Home | fixture.home.title | Open Settings | fixture.home.openSettings | Open Delayed Loading | fixture.home.openDelayed</td><td>1</td></tr>
+<tr><td><code>screen-f007e54d89ad</code></td><td>Fixture Login</td><td>Fixture Runtime: Connected | fixture.runtime.status | Fixture Login | fixture.login.title | Fixture Login Ready | fixture.login.ready | Go Home | fixture.login.goHome</td><td>1</td></tr></tbody></table></section>
+    <section><h2>Transitions</h2><table><thead><tr><th>ID</th><th>From</th><th>To</th><th>Trigger</th><th>Point</th><th>Replayable</th></tr></thead><tbody><tr><td><code>transition-c29bf211e9c5</code></td><td><code>screen-90ad31de33cc</code></td><td><code>screen-7899285e3450</code></td><td>tap</td><td>201, 289.5 runtime-point</td><td>yes</td></tr>
+<tr><td><code>transition-ffba5b9e1531</code></td><td><code>screen-f007e54d89ad</code></td><td><code>screen-d4829eaf9abb</code></td><td>tap</td><td>201, 289.5 runtime-point</td><td>yes</td></tr></tbody></table></section>
+  </main>
+</body>
+</html>
