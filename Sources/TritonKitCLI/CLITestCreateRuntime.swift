@@ -95,6 +95,27 @@ private func appendYAML(for step: TKTestPlanStep, to lines: inout [String]) {
             if let provider = step.provider {
                 lines.append("      provider: \(yamlScalar(provider))")
             }
+            if let model = step.model {
+                lines.append("      model: \(yamlScalar(model))")
+            }
+            if let modelPath = step.modelPath {
+                lines.append("      modelPath: \(yamlScalar(modelPath))")
+            }
+            if let maxTokens = step.maxTokens {
+                lines.append("      maxTokens: \(maxTokens)")
+            }
+            if let temperature = step.temperature {
+                lines.append("      temperature: \(formatYAMLNumber(temperature))")
+            }
+            if let seed = step.seed {
+                lines.append("      seed: \(seed)")
+            }
+            if let promptTemplate = step.promptTemplate {
+                lines.append("      promptTemplate: \(yamlScalar(promptTemplate))")
+            }
+            if let allowModelDownload = step.allowModelDownload {
+                lines.append("      allowModelDownload: \(allowModelDownload ? "true" : "false")")
+            }
         } else {
             lines.append("      point:")
             lines.append("        x: 0")

@@ -1,0 +1,13 @@
+{
+  "imageHeight" : 874,
+  "imageSpace" : "image-pixel",
+  "imageWidth" : 402,
+  "inputSpace" : "normalized_0_1000",
+  "orientation" : "portrait",
+  "outputSpace" : "runtime-point",
+  "runtimeHeight" : 874,
+  "runtimeWidth" : 402,
+  "scale" : 3,
+  "schemaVersion" : 1,
+  "source" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit-worktrees\/20260621-local-mlx-vlm-provider\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260620-p0e-fixture-pass.tritonevidence\/coordinate-contract.json"
+}

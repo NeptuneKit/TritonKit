@@ -1,0 +1,18 @@
+{
+  "coordinateContract" : {
+    "canonicalTapSpace" : "runtime-point",
+    "path" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit-worktrees\/20260621-local-mlx-vlm-provider\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260620-p0e-fixture-pass.tritonevidence\/coordinate-contract.json"
+  },
+  "image" : {
+    "height" : 874,
+    "path" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit-worktrees\/20260621-local-mlx-vlm-provider\/docs-linhay\/spaces\/20260620-vlm-test-runner\/evidence\/20260620-p0a-smoke\/pass-before.png",
+    "sha256" : "2f05fafe074b86e8aee71c4de64d4f129e44c0a30112702d42ae880e7d74a09f",
+    "width" : 402
+  },
+  "model" : "mlx-community\/Qwen2-VL-2B-Instruct-4bit",
+  "network" : "local-helper",
+  "provider" : "mlx-swift-lm",
+  "redaction" : "target-text-only",
+  "schemaVersion" : 1,
+  "target" : "Fixture Login"
+}

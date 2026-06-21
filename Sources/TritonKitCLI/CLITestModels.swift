@@ -135,6 +135,13 @@ struct TKTestPlanStep: Codable, Equatable {
     let target: String?
     let grounding: String?
     let provider: String?
+    let model: String?
+    let modelPath: String?
+    let maxTokens: Int?
+    let temperature: Double?
+    let seed: Int?
+    let promptTemplate: String?
+    let allowModelDownload: Bool?
     let prompt: String?
     let baseline: String?
     let threshold: Double?
@@ -157,6 +164,13 @@ struct TKTestPlanStep: Codable, Equatable {
         target: String? = nil,
         grounding: String? = nil,
         provider: String? = nil,
+        model: String? = nil,
+        modelPath: String? = nil,
+        maxTokens: Int? = nil,
+        temperature: Double? = nil,
+        seed: Int? = nil,
+        promptTemplate: String? = nil,
+        allowModelDownload: Bool? = nil,
         prompt: String? = nil,
         baseline: String? = nil,
         threshold: Double? = nil,
@@ -178,6 +192,13 @@ struct TKTestPlanStep: Codable, Equatable {
         self.target = target
         self.grounding = grounding
         self.provider = provider
+        self.model = model
+        self.modelPath = modelPath
+        self.maxTokens = maxTokens
+        self.temperature = temperature
+        self.seed = seed
+        self.promptTemplate = promptTemplate
+        self.allowModelDownload = allowModelDownload
         self.prompt = prompt
         self.baseline = baseline
         self.threshold = threshold

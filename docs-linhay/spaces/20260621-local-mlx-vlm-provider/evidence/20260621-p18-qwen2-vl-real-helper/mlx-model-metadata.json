@@ -1,0 +1,12 @@
+{
+  "device" : "apple-silicon",
+  "downloadAllowed" : false,
+  "loadedAt" : "2026-06-21T04:52:06Z",
+  "mlxSwiftLMVersion" : "external-helper",
+  "mode" : "external-helper",
+  "model" : "mlx-community\/Qwen2-VL-2B-Instruct-4bit",
+  "modelPath" : "\/Users\/linhey\/.cache\/triton\/mlx-models\/qwen2-vl-2b-instruct-4bit",
+  "provider" : "mlx-swift-lm",
+  "quantization" : "unknown",
+  "schemaVersion" : 1
+}

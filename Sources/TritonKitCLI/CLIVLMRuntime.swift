@@ -56,6 +56,7 @@ struct TKVLMProviderResponseArtifact: Codable, Equatable {
     let confidence: Double
     let rationale: String
     let rawText: String?
+    let mode: String?
 
     init(
         schemaVersion: Int = 1,
@@ -65,7 +66,8 @@ struct TKVLMProviderResponseArtifact: Codable, Equatable {
         point: TKVLMNormalizedPoint,
         confidence: Double,
         rationale: String,
-        rawText: String? = nil
+        rawText: String? = nil,
+        mode: String? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.provider = provider
@@ -75,6 +77,7 @@ struct TKVLMProviderResponseArtifact: Codable, Equatable {
         self.confidence = confidence
         self.rationale = rationale
         self.rawText = rawText
+        self.mode = mode
     }
 }
 
@@ -168,16 +171,30 @@ func groundVLMTarget(
     outputDirectory: String?,
     baseURL: String? = nil,
     model: String? = nil,
+    modelPath: String? = nil,
     apiKeyEnv: String? = nil,
     allowRemoteVLM: Bool = false,
+    maxTokens: Int = 64,
+    temperature: Double = 0,
+    seed: Int = 0,
+    promptTemplate: String = "gui-grounding-v1",
+    allowModelDownload: Bool = false,
+    mlxHelperPath: String? = nil,
     httpTransport: TKVLMHTTPTransport? = nil
 ) throws -> TKVLMGroundResponse {
     let provider = try makeVLMProvider(
         providerName,
         baseURL: baseURL,
         model: model,
+        modelPath: modelPath,
         apiKeyEnv: apiKeyEnv,
         allowRemoteVLM: allowRemoteVLM,
+        maxTokens: maxTokens,
+        temperature: temperature,
+        seed: seed,
+        promptTemplate: promptTemplate,
+        allowModelDownload: allowModelDownload,
+        mlxHelperPath: mlxHelperPath,
         httpTransport: httpTransport
     )
     let imageURL = URL(fileURLWithPath: imagePath)
@@ -214,9 +231,10 @@ func groundVLMTarget(
 
     let outputURL = try resolveVLMOutputDirectory(outputDirectory, imageURL: imageURL)
     try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
-    let requestURL = outputURL.appendingPathComponent("vlm-request.redacted.json")
-    let responseURL = outputURL.appendingPathComponent("vlm-response.json")
-    let overlayURL = outputURL.appendingPathComponent("vlm-overlay.png")
+    let mlxArtifacts = provider.name == "mlx-swift-lm" ? mlxSwiftLMArtifactPaths(in: outputURL) : nil
+    let requestURL = mlxArtifacts?.request ?? outputURL.appendingPathComponent("vlm-request.redacted.json")
+    let responseURL = mlxArtifacts?.response ?? outputURL.appendingPathComponent("vlm-response.json")
+    let overlayURL = mlxArtifacts?.overlay ?? outputURL.appendingPathComponent("vlm-overlay.png")
 
     let contractRef = TKVLMGroundCoordinateContractRef(
         path: coordinateURL.path,
@@ -231,7 +249,7 @@ func groundVLMTarget(
         image: imageMetadata,
         coordinateContract: contractRef,
         redaction: "target-text-only",
-        network: provider.name == "mock" ? "not-used" : "openai-compatible"
+        network: vlmRequestNetwork(for: provider.name)
     )
     try writeVLMJSON(requestArtifact, to: requestURL)
     try writeVLMJSON(providerResponse, to: responseURL)
@@ -256,6 +274,16 @@ func groundVLMTarget(
         orientation: contract.runtimeGeometry.orientation,
         source: coordinateURL.path
     )
+    if let mlxArtifacts {
+        try writeMLXSwiftLMArtifacts(
+            paths: mlxArtifacts,
+            request: requestArtifact,
+            response: providerResponse,
+            transform: transform,
+            modelPath: modelPath,
+            allowModelDownload: allowModelDownload
+        )
+    }
     return TKVLMGroundResponse(
         provider: provider.name,
         model: providerResponse.model,
@@ -272,7 +300,11 @@ func groundVLMTarget(
         artifacts: TKVLMGroundArtifacts(
             overlay: overlayURL.path,
             request: requestURL.path,
-            response: responseURL.path
+            response: responseURL.path,
+            rawOutput: mlxArtifacts?.rawOutput.path,
+            parsedPoint: mlxArtifacts?.parsedPoint.path,
+            transform: mlxArtifacts?.transform.path,
+            modelMetadata: mlxArtifacts?.modelMetadata.path
         )
     )
 }
@@ -281,13 +313,31 @@ func makeVLMProvider(
     _ providerName: String,
     baseURL: String? = nil,
     model: String? = nil,
+    modelPath: String? = nil,
     apiKeyEnv: String? = nil,
     allowRemoteVLM: Bool = false,
+    maxTokens: Int = 64,
+    temperature: Double = 0,
+    seed: Int = 0,
+    promptTemplate: String = "gui-grounding-v1",
+    allowModelDownload: Bool = false,
+    mlxHelperPath: String? = nil,
     httpTransport: TKVLMHTTPTransport? = nil
 ) throws -> any TKVLMProvider {
     switch providerName.lowercased() {
     case "mock":
         return TKMockVLMProvider()
+    case "mlx-swift-lm":
+        return TKMLXSwiftLMProvider(
+            model: model,
+            modelPath: modelPath,
+            maxTokens: maxTokens,
+            temperature: temperature,
+            seed: seed,
+            promptTemplate: promptTemplate,
+            allowModelDownload: allowModelDownload,
+            helperPath: mlxHelperPath
+        )
     case "openai-compatible":
         guard let baseURL, !baseURL.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
             throw TKVLMGroundingFailure(
@@ -335,6 +385,17 @@ func makeVLMProvider(
             message: "Unsupported VLM provider \(providerName)",
             hint: "Supported providers: mock, openai-compatible"
         )
+    }
+}
+
+func vlmRequestNetwork(for provider: String) -> String {
+    switch provider {
+    case "mock":
+        return "not-used"
+    case "mlx-swift-lm":
+        return "local-helper"
+    default:
+        return "openai-compatible"
     }
 }
 

@@ -47,7 +47,9 @@ struct TKTestRunExecutionContext {
     let allowRemoteVLM: Bool
     let vlmBaseURL: String?
     let vlmModel: String?
+    let vlmModelPath: String?
     let vlmAPIKeyEnv: String?
+    let vlmAllowModelDownload: Bool
 
     init(
         evidenceDirectory: URL,
@@ -59,7 +61,9 @@ struct TKTestRunExecutionContext {
         allowRemoteVLM: Bool = false,
         vlmBaseURL: String? = nil,
         vlmModel: String? = nil,
-        vlmAPIKeyEnv: String? = nil
+        vlmModelPath: String? = nil,
+        vlmAPIKeyEnv: String? = nil,
+        vlmAllowModelDownload: Bool = false
     ) {
         self.evidenceDirectory = evidenceDirectory
         self.target = target
@@ -70,7 +74,9 @@ struct TKTestRunExecutionContext {
         self.allowRemoteVLM = allowRemoteVLM
         self.vlmBaseURL = vlmBaseURL
         self.vlmModel = vlmModel
+        self.vlmModelPath = vlmModelPath
         self.vlmAPIKeyEnv = vlmAPIKeyEnv
+        self.vlmAllowModelDownload = vlmAllowModelDownload
     }
 }
 
@@ -185,7 +191,9 @@ func runTritonTest(
     allowRemoteVLM: Bool = false,
     vlmBaseURL: String? = nil,
     vlmModel: String? = nil,
-    vlmAPIKeyEnv: String? = nil
+    vlmModelPath: String? = nil,
+    vlmAPIKeyEnv: String? = nil,
+    vlmAllowModelDownload: Bool = false
 ) async throws -> TKTestRunExecutionResponse {
     let inputURL = URL(fileURLWithPath: input)
     let yaml: String
@@ -250,7 +258,9 @@ func runTritonTest(
         allowRemoteVLM: allowRemoteVLM,
         vlmBaseURL: vlmBaseURL,
         vlmModel: vlmModel,
-        vlmAPIKeyEnv: vlmAPIKeyEnv
+        vlmModelPath: vlmModelPath,
+        vlmAPIKeyEnv: vlmAPIKeyEnv,
+        vlmAllowModelDownload: vlmAllowModelDownload
     )
 
     var finalStatus: TKTestRunStatus = .passed
@@ -757,9 +767,15 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
                 coordinateContract: context.evidenceDirectory.appendingPathComponent("coordinate-contract.json").path,
                 outputDirectory: context.evidenceDirectory.appendingPathComponent("debug/\(step.id)-vlm", isDirectory: true).path,
                 baseURL: context.vlmBaseURL,
-                model: context.vlmModel,
+                model: step.model ?? context.vlmModel,
+                modelPath: step.modelPath ?? context.vlmModelPath,
                 apiKeyEnv: context.vlmAPIKeyEnv,
-                allowRemoteVLM: context.allowRemoteVLM
+                allowRemoteVLM: context.allowRemoteVLM,
+                maxTokens: step.maxTokens ?? 64,
+                temperature: step.temperature ?? 0,
+                seed: step.seed ?? 0,
+                promptTemplate: step.promptTemplate ?? "gui-grounding-v1",
+                allowModelDownload: step.allowModelDownload ?? context.vlmAllowModelDownload
             )
         } catch let failure as TKVLMGroundingFailure {
             return .failed(
@@ -794,8 +810,10 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
             "--target", target,
             "--grounding", "vlm",
             "--provider", provider,
+            step.model.map { "--model=\($0)" },
+            step.modelPath.map { "--model-path=\($0)" },
             "--json",
-        ]
+        ].compactMap { $0 }
         let groundingOutcome = TKTestRunVLMGroundingOutcome(response: grounding)
         if inputResult.ok {
             return .passed(

@@ -145,10 +145,26 @@ public struct TKVLMGroundArtifacts: Codable, Equatable, Sendable {
     public let overlay: String
     public let request: String
     public let response: String
+    public let rawOutput: String?
+    public let parsedPoint: String?
+    public let transform: String?
+    public let modelMetadata: String?
 
-    public init(overlay: String, request: String, response: String) {
+    public init(
+        overlay: String,
+        request: String,
+        response: String,
+        rawOutput: String? = nil,
+        parsedPoint: String? = nil,
+        transform: String? = nil,
+        modelMetadata: String? = nil
+    ) {
         self.overlay = overlay
         self.request = request
         self.response = response
+        self.rawOutput = rawOutput
+        self.parsedPoint = parsedPoint
+        self.transform = transform
+        self.modelMetadata = modelMetadata
     }
 }

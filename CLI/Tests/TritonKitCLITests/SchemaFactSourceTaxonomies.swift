@@ -28,7 +28,7 @@ func capabilityEvidenceTaxonomy() -> Set<String> {
         "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
         "network-capture", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
         "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan", "tritontest-yaml",
-        "unsupported-envelope", "vlm-grounding", "vlm-overlay", "wait.result", "wait-samples", "webview-candidates",
+        "unsupported-envelope", "vlm-compare", "vlm-grounding", "vlm-model-cache", "vlm-model-metadata", "vlm-overlay", "vlm-parsed-point", "vlm-raw-output", "vlm-request", "vlm-response", "vlm-transform", "wait.result", "wait-samples", "webview-candidates",
         "webview-provider", "webview-snapshot", "xcodebuild-json", "xcresult",
     ]
 }
@@ -52,6 +52,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "app-map-suite-run-result",
         "app-map-transitions-result",
         "app-map-viewer-result",
+        "app-map-vlm-health-result",
         "action-provider-parse-result",
         "ax-node-list",
         "capability-matrix",
@@ -107,6 +108,13 @@ func outputContractKindTaxonomy() -> Set<String> {
         "test-run-result",
         "test-validation-result",
         "vlm-ground-result",
+        "vlm-compare-result",
+        "vlm-model-download-result",
+        "vlm-model-inspect-result",
+        "vlm-model-list-result",
+        "vlm-model-mutation-result",
+        "vlm-model-preflight-result",
+        "vlm-providers-result",
         "wait-result",
         "webview-bridge-call",
         "webview-candidates",
@@ -383,6 +391,9 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         if failureCode.hasPrefix("vlm_") {
             return ["archive", "diagnose", "plan"]
         }
+        if failureCode.hasPrefix("mlx_") {
+            return ["archive", "diagnose", "plan"]
+        }
         if failureCode.hasSuffix("_unsupported") {
             return ["diagnose", "plan"]
         }
@@ -437,10 +448,16 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "trace",
         "triton-plan",
         "tritontest-yaml",
+        "vlm-compare",
         "vlm-grounding",
+        "vlm-model-cache",
+        "vlm-model-metadata",
         "vlm-overlay",
+        "vlm-parsed-point",
+        "vlm-raw-output",
         "vlm-request",
         "vlm-response",
+        "vlm-transform",
         "xcode-artifacts",
     ]
 }
