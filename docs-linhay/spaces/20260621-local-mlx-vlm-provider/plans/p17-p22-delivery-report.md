@@ -11,7 +11,15 @@
 
 ## Manual Gate
 
-P18 remains a manual real-model gate. It requires a compatible local `mlx-swift-lm` VLM model and helper executable, then must produce human-inspectable overlay/evidence before being marked complete. The CLI-side helper protocol is implemented; this run did not have local model weights available.
+P18 real-model gate passed with a quality gap. A local helper built from `mlx-swift-lm` loaded `mlx-community/Qwen2-VL-2B-Instruct-4bit` from `~/.cache/triton/mlx-models/qwen2-vl-2b-instruct-4bit`, returned parseable normalized point JSON, and TritonKit generated the normal VLM evidence bundle.
+
+Evidence:
+
+- `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/cli-response.json`
+- `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/mlx-grounding-overlay.png`
+- `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/mlx-model-metadata.json`
+
+The Qwen2-VL 2B output was `{"x": 500, "y": 500, "scale": 1000}`, producing runtime point `{x: 201, y: 437}`. This is enough to prove the local MLX runtime chain, but not enough to trust grounding quality for default runner execution.
 
 ## Validation
 
@@ -35,3 +43,19 @@ Result:
 ## Helper Scaffold
 
 The external helper contract is documented at `Tools/TritonMLXProvider/README.md`. This keeps `mlx-swift-lm` and model downloader/tokenizer dependencies outside the default `triton` CLI package while preserving a stable P18 manual smoke entry.
+
+The helper is a separate SwiftPM executable package. It depends on:
+
+- `mlx-swift-lm`
+- `mlx-swift` through `mlx-swift-lm`
+- `swift-transformers`
+- `swift-huggingface`
+
+Current `mlx-swift` SwiftPM builds code dependencies but does not colocate `mlx.metallib` for this helper executable. `Tools/TritonMLXProvider/Scripts/build-mlx-metallib.sh` compiles the MLX Metal kernels and copies `mlx.metallib` next to `triton-mlx-provider`.
+
+## Next Model Baseline
+
+Qwen3-VL is now the correct forward-looking baseline. The first smoke used `Qwen2-VL-2B-Instruct-4bit` only because it is small enough for a fast manual runtime proof. Next comparison should use:
+
+- `lmstudio-community/Qwen3-VL-4B-Instruct-MLX-4bit`
+- `mlx-community/Qwen2.5-VL-3B-Instruct-4bit`

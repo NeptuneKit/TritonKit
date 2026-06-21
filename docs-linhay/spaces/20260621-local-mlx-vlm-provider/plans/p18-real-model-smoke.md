@@ -66,6 +66,78 @@ Do not commit model weights, tokenizer files, downloaded cache directories, or l
 
 ## Current Status
 
-Manual gate pending until a compatible local model/helper is available in the developer environment. The CLI-side external helper contract is implemented and covered by tests; no true model weights were present in `~/.cache/triton/mlx-models` during this run.
+Manual real-model gate passed with a quality gap.
 
-The helper contract is also documented at `Tools/TritonMLXProvider/README.md` for external helper implementation.
+The helper contract is documented at `Tools/TritonMLXProvider/README.md` for external helper implementation.
+
+## 2026-06-21 Smoke Result
+
+### Model
+
+- Provider: `mlx-swift-lm`
+- Helper: `Tools/TritonMLXProvider/.build/arm64-apple-macosx/debug/triton-mlx-provider`
+- Metal runtime: colocated `Tools/TritonMLXProvider/.build/arm64-apple-macosx/debug/mlx.metallib`
+- Model: `mlx-community/Qwen2-VL-2B-Instruct-4bit`
+- Model path: `~/.cache/triton/mlx-models/qwen2-vl-2b-instruct-4bit`
+- Model size on disk: about 1.2 GiB
+
+### Helper Build Notes
+
+`mlx-swift-lm` is pulled through SwiftPM, but the current `mlx-swift` SwiftPM package does not emit `mlx.metallib` as a colocated runtime resource for this helper executable. The helper therefore requires:
+
+    swift build --package-path Tools/TritonMLXProvider -c debug --product triton-mlx-provider
+    Tools/TritonMLXProvider/Scripts/build-mlx-metallib.sh debug
+
+The script compiles MLX Metal kernels into `mlx.metallib` and copies it next to the helper binary.
+
+### Direct Helper Smoke
+
+Command shape:
+
+    Tools/TritonMLXProvider/.build/arm64-apple-macosx/debug/triton-mlx-provider ground --request /tmp/request.json
+
+Result:
+
+    {"x": 500, "y": 500, "scale": 1000}
+
+Latency:
+
+    real 4.25s
+
+### Triton CLI Smoke
+
+Command shape:
+
+    TRITON_MLX_HELPER=$PWD/Tools/TritonMLXProvider/.build/arm64-apple-macosx/debug/triton-mlx-provider \
+      swift run --package-path CLI triton vlm ground \
+        --provider mlx-swift-lm \
+        --image docs-linhay/spaces/20260620-vlm-test-runner/evidence/20260620-p0a-smoke/pass-before.png \
+        --target "Fixture Login" \
+        --coordinate-contract docs-linhay/spaces/20260620-vlm-test-runner/evidence/20260620-p0e-fixture-pass.tritonevidence/coordinate-contract.json \
+        --model mlx-community/Qwen2-VL-2B-Instruct-4bit \
+        --model-path ~/.cache/triton/mlx-models/qwen2-vl-2b-instruct-4bit \
+        --no-model-download \
+        --output-dir docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper \
+        --json
+
+Evidence:
+
+- `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/cli-response.json`
+- `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/mlx-grounding-overlay.png`
+- `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/mlx-model-metadata.json`
+- `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/mlx-grounding-raw-output.txt`
+- `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/mlx-grounding-parsed-point.json`
+
+Parsed output:
+
+    normalized = { x = 500, y = 500, scale = 1000 }
+    runtimePoint = { x = 201, y = 437 }
+
+### Verdict
+
+- Real local MLX model execution: `pass`
+- Triton external helper integration: `pass`
+- Evidence generation: `pass`
+- Grounding quality for `Fixture Login`: `pass-with-gap`
+
+The Qwen2-VL 2B smoke proves the local inference chain, but the returned point is generic center-screen output and should not unlock default VLM-assisted runner execution. Qwen3-VL 4B 4bit should be the next baseline model for quality comparison.

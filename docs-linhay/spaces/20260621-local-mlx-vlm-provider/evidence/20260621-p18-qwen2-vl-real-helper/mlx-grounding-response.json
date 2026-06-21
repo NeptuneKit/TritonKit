@@ -1,0 +1,15 @@
+{
+  "confidence" : 1,
+  "coordinateSpace" : "normalized_0_1000",
+  "mode" : "external-helper",
+  "model" : "mlx-community\/Qwen2-VL-2B-Instruct-4bit",
+  "point" : {
+    "scale" : 1000,
+    "x" : 500,
+    "y" : 500
+  },
+  "provider" : "mlx-swift-lm",
+  "rationale" : "external mlx-swift-lm helper output parsed by TritonKit",
+  "rawText" : "{\"x\": 500, \"y\": 500, \"scale\": 1000}",
+  "schemaVersion" : 1
+}

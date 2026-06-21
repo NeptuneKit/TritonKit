@@ -78,6 +78,35 @@ The current `mlx-swift-lm` main branch is a Swift 6.1+ 3.x package. It exposes `
 
 A real helper should be developed and tested outside the main CLI package first, then pointed at TritonKit through `TRITON_MLX_HELPER` for P18 manual smoke.
 
+## Build Helper
+
+Build the helper executable with SwiftPM:
+
+    swift build --package-path Tools/TritonMLXProvider -c debug --product triton-mlx-provider
+
+The SwiftPM dependency chain brings in `mlx-swift-lm`, `mlx-swift`, `swift-transformers`, and `swift-huggingface`. The current `mlx-swift` SwiftPM package compiles the Swift/C++ code but does not emit the Metal runtime library as a package resource for this external executable. The helper therefore also needs a colocated `mlx.metallib`.
+
+Generate and copy the Metal runtime library next to the executable:
+
+    Tools/TritonMLXProvider/Scripts/build-mlx-metallib.sh debug
+
+Expected colocated files:
+
+    Tools/TritonMLXProvider/.build/arm64-apple-macosx/debug/triton-mlx-provider
+    Tools/TritonMLXProvider/.build/arm64-apple-macosx/debug/mlx.metallib
+
+Without `mlx.metallib`, MLX fails before model loading with `Failed to load the default metallib`.
+
+## Model Baseline
+
+Use `Qwen3-VL` as the forward-looking local VLM baseline. For the first P18 smoke, `mlx-community/Qwen2-VL-2B-Instruct-4bit` was used because it is materially smaller and downloads quickly enough for a manual gate.
+
+Recommended sequence:
+
+- First smoke: `mlx-community/Qwen2-VL-2B-Instruct-4bit`
+- Baseline: `lmstudio-community/Qwen3-VL-4B-Instruct-MLX-4bit`
+- Comparison candidate: `mlx-community/Qwen2.5-VL-3B-Instruct-4bit`
+
 ## P18 Manual Smoke
 
     triton vlm model preflight <model-path> --provider mlx-swift-lm --json
@@ -93,3 +122,14 @@ A real helper should be developed and tested outside the main CLI package first,
         --json
 
 The gate is complete only after a real model produces parseable output and the generated overlay is manually checked.
+
+Current local smoke result:
+
+- Model: `mlx-community/Qwen2-VL-2B-Instruct-4bit`
+- Model path: `~/.cache/triton/mlx-models/qwen2-vl-2b-instruct-4bit`
+- Image: `docs-linhay/spaces/20260620-vlm-test-runner/evidence/20260620-p0a-smoke/pass-before.png`
+- Target: `Fixture Login`
+- CLI evidence: `docs-linhay/spaces/20260621-local-mlx-vlm-provider/evidence/20260621-p18-qwen2-vl-real-helper/`
+- Raw output: `{"x": 500, "y": 500, "scale": 1000}`
+- Runtime point: `{"x": 201, "y": 437}`
+- Status: real model path passed, grounding quality remains weak and should not enable default runner execution.
