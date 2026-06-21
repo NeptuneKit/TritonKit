@@ -190,6 +190,37 @@ struct XcodeDiagnosticsTests {
         #expect(status.summary.matchingWorkspaceCount == 1)
     }
 
+    @Test("xcode status ignores unrelated SwiftPM swift-build provider processes")
+    func statusIgnoresUnrelatedSwiftBuildProviderProcesses() throws {
+        let output = """
+          333 /usr/bin/swift-build 00:30 swift-build --package-path Tools/TritonMLXProvider -c release --product triton-mlx-provider
+          444 /Applications/Xcode.app/Contents/SharedFrameworks/XCBBuildService.framework/XCBBuildService 00:10 /Applications/Xcode.app/Contents/SharedFrameworks/XCBBuildService.framework/XCBBuildService
+        """
+
+        let status = try XcodeProcessDiagnosticsParser.parse(psOutput: output)
+
+        #expect(status.active)
+        #expect(status.processes.map(\.pid) == [444])
+        #expect(status.processes.allSatisfy { $0.name != "swift-build" })
+        #expect(status.summary.xcodebuildCount == 0)
+        #expect(status.summary.buildServiceCount == 1)
+    }
+
+    @Test("xcode status is idle when only unrelated swift-build is running")
+    func statusIsIdleWhenOnlyUnrelatedSwiftBuildIsRunning() throws {
+        let output = """
+          333 /usr/bin/swift-build 00:30 swift-build --package-path Tools/TritonMLXProvider -c release --product triton-mlx-provider
+        """
+
+        let status = try XcodeProcessDiagnosticsParser.parse(psOutput: output)
+
+        #expect(!status.active)
+        #expect(status.processes.isEmpty)
+        #expect(status.summary.xcodebuildCount == 0)
+        #expect(status.summary.buildServiceCount == 0)
+        #expect(status.summary.xctestCount == 0)
+    }
+
     @Test("xcode status exposes latest stdout and stderr artifact log progress")
     func statusExposesLatestArtifactLogProgress() throws {
         let root = URL(fileURLWithPath: NSTemporaryDirectory())

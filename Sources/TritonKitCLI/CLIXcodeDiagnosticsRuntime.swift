@@ -133,12 +133,12 @@ enum XcodeProcessDiagnosticsParser {
 
     private static func isXcodeBuildRelated(_ process: XcodeProcessSummary) -> Bool {
         guard !process.commandLine.contains("grep xcodebuild") else { return false }
-        let names: Set<String> = ["xcodebuild", "swift-build", "SwiftBuildService", "XCBBuildService", "xctest"]
+        let names: Set<String> = ["xcodebuild", "SwiftBuildService", "XCBBuildService", "xctest"]
         return names.contains(process.name)
     }
 
     private static func isBuildServiceName(_ name: String) -> Bool {
-        name == "swift-build" || name == "SwiftBuildService" || name == "XCBBuildService"
+        name == "SwiftBuildService" || name == "XCBBuildService"
     }
 
     private static func argument(after flag: String, in commandLine: String) -> String? {
