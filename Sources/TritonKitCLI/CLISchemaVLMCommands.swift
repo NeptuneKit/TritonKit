@@ -13,6 +13,8 @@ func vlmCommandSchemas() -> [TKCommandSchema] {
             options: [
                 TKCommandSchemaOption(name: "ground", type: "Subcommand", description: "Ground a target phrase using mock, OpenAI-compatible, or local MLX Swift providers"),
                 TKCommandSchemaOption(name: "providers", type: "Subcommand", description: "List available VLM grounding providers"),
+                TKCommandSchemaOption(name: "compare", type: "Subcommand", description: "Compare provider grounding outputs for one screenshot and target"),
+                TKCommandSchemaOption(name: "model", type: "Subcommand", description: "Manage local MLX model cache"),
                 TKCommandSchemaOption(name: "--provider", type: "mock|openai-compatible|mlx-swift-lm", defaultValue: "mock", description: "Grounding provider"),
                 TKCommandSchemaOption(name: "--image", type: "Path", required: true, description: "Screenshot artifact path"),
                 TKCommandSchemaOption(name: "--target", type: "String", required: true, description: "Target phrase to ground"),
@@ -28,7 +30,13 @@ func vlmCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--prompt-template", type: "String", defaultValue: "gui-grounding-v1", description: "Prompt template id"),
                 TKCommandSchemaOption(name: "--allow-model-download", type: "Bool", defaultValue: "false", description: "Allow local provider model download"),
                 TKCommandSchemaOption(name: "--no-model-download", type: "Bool", defaultValue: "false", description: "Keep local provider model download disabled"),
+                TKCommandSchemaOption(name: "--agreement-threshold-points", type: "Double", defaultValue: "24", description: "Maximum runtime-point distance for compare agreement"),
                 TKCommandSchemaOption(name: "--output-dir", type: "Path", description: "Directory for overlay/request/response artifacts"),
+                TKCommandSchemaOption(name: "list", type: "Subcommand", description: "List local MLX model cache entries"),
+                TKCommandSchemaOption(name: "inspect", type: "Subcommand", description: "Inspect one local MLX model cache entry"),
+                TKCommandSchemaOption(name: "preflight", type: "Subcommand", description: "Validate local MLX model cache readiness without downloading"),
+                TKCommandSchemaOption(name: "prune", type: "Subcommand", description: "Remove incomplete local MLX model cache entries"),
+                TKCommandSchemaOption(name: "remove", type: "Subcommand", description: "Remove one explicit local MLX model cache entry"),
                 schemaFormatJSONTextOption,
                 schemaJSONAliasOption,
             ],
@@ -59,6 +67,8 @@ func vlmCommandSchemas() -> [TKCommandSchema] {
                 "triton vlm ground --provider openai-compatible --base-url http://127.0.0.1:8000/v1 --model UGround-V1-7B --image debug/step-003-after.png --target 'Go Home button' --coordinate-contract coordinate-contract.json --json",
                 "triton vlm ground --provider mlx-swift-lm --model-path ~/.cache/triton/mlx-models/gui-grounding-vlm --image debug/step-003-after.png --target 'Go Home button' --coordinate-contract coordinate-contract.json --json",
                 "triton vlm providers --json",
+                "triton vlm compare --provider mock --provider mlx-swift-lm --model-path ~/.cache/triton/mlx-models/gui-grounding-vlm --image debug/step-003-after.png --target 'Go Home button' --coordinate-contract coordinate-contract.json --json",
+                "triton vlm model preflight ~/.cache/triton/mlx-models/gui-grounding-vlm --provider mlx-swift-lm --json",
             ],
             successShape: "{ ok, provider, target, image, coordinateContract, point{ normalized, runtimePoint, coordinateSpace }, transform, artifacts{ overlay, request, response, rawOutput?, parsedPoint?, transform?, modelMetadata? } } or providers list",
             outputSemantics: "offline-only; no network, no API key, no device action; point output is runtime-point derived from coordinate-contract.json",
@@ -69,6 +79,11 @@ func vlmCommandSchemas() -> [TKCommandSchema] {
             outputContracts: [
                 vlmGroundOutputContract(),
                 vlmProvidersOutputContract(),
+                vlmCompareOutputContract(),
+                vlmModelListOutputContract(),
+                vlmModelInspectOutputContract(),
+                vlmModelPreflightOutputContract(),
+                vlmModelMutationOutputContract(),
             ],
             failureCodes: [
                 "vlm_unsupported_provider",
@@ -84,6 +99,7 @@ func vlmCommandSchemas() -> [TKCommandSchema] {
                 "mlx_generation_failed",
                 "mlx_response_empty",
                 "mlx_parse_failed",
+                "mlx_model_not_found",
                 "vlm_target_not_visible",
                 "vlm_image_not_found",
                 "vlm_image_metadata_unavailable",
@@ -144,8 +160,28 @@ func vlmCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["vlm.providers"],
                     failureCodes: []
                 ),
+                TKCommandSubcommandSchema(
+                    name: "compare",
+                    summary: "Compare mock, OpenAI-compatible, and local MLX Swift provider output for the same target",
+                    requiredOptions: ["--image", "--target", "--coordinate-contract"],
+                    optionalOptions: ["--provider", "--agreement-threshold-points", "--base-url", "--model", "--model-path", "--api-key-env", "--allow-remote-vlm", "--max-tokens", "--temperature", "--seed", "--prompt-template", "--allow-model-download", "--no-model-download", "--output-dir", "--format", "--json"],
+                    artifacts: ["vlm-grounding", "vlm-overlay", "vlm-request", "vlm-response", "vlm-compare"],
+                    nextCommands: ["triton schema --command vlm --json"],
+                    outputSelectors: ["vlm.compare"],
+                    failureCodes: ["vlm_image_not_found", "vlm_coordinate_contract_not_found", "vlm_artifact_write_failed", "vlm_overlay_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "model",
+                    summary: "List, inspect, preflight, prune, and remove local mlx-swift-lm model cache entries",
+                    requiredOptions: [],
+                    optionalOptions: ["--provider", "--format", "--json"],
+                    artifacts: ["vlm-model-cache"],
+                    nextCommands: ["triton vlm model list --provider mlx-swift-lm --json"],
+                    outputSelectors: ["vlm.model.list", "vlm.model.inspect", "vlm.model.preflight", "vlm.model.mutation"],
+                    failureCodes: ["vlm_unsupported_provider", "mlx_model_not_found"]
+                ),
             ],
-            providedCapabilities: ["vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm"]
+            providedCapabilities: ["vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm", "vlm-provider-compare", "vlm-model-cache"]
         ),
     ]
 }

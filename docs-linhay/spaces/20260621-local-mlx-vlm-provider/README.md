@@ -17,7 +17,9 @@ Build P17-P22 as a staged local VLM provider program:
 
 ## Scope
 
-P17 is the first implementation slice. It must add provider-level contracts, strict parser behavior, deterministic fake helper execution, evidence artifacts, schema/capability visibility, and tests. Real model inference and runner execution expansion stay out until P17 is stable.
+P17-P22 add the local MLX Swift VLM provider track as a controlled grounding backend. The track covers fake CI grounding, a manual real-model gate, explicit runner opt-in, provider comparison, App Map health, and local model cache governance.
+
+The first implementation keeps the main CLI free of a hard `mlx-swift-lm` package dependency. The default test path uses the deterministic fake provider contract; true model loading remains a manual gate until a local model/helper is available.
 
 ## BDD Scenarios
 
@@ -44,6 +46,38 @@ When an agent runs MLX grounding
 Then the command returns one machine-readable error envelope
 And no tap or runner action is executed.
 
+### P19 explicit runner opt-in
+
+Given a `.tritontest.yaml` step uses `tap.target` with `grounding: vlm`
+When an agent runs `triton test run` without `--allow-vlm`
+Then validation or execution fails closed
+And no tap is performed.
+
+Given `--allow-vlm` is present
+When grounding succeeds through `mlx-swift-lm`
+Then the runner taps the resolved runtime point
+And evidence includes VLM request, response, parsed point, transform, overlay, and model metadata.
+
+### P20 provider comparison
+
+Given one screenshot, coordinate contract, and target
+When an agent runs `triton vlm compare` with multiple providers
+Then each provider records an independent passed or failed result
+And the command writes comparison metrics and overlay evidence.
+
+### P21 App Map health
+
+Given run evidence contains VLM grounding events
+When an agent merges it into `.tritonmap`
+Then screens, transitions, and paths can expose provider-level `vlmHealth`
+And `triton map vlm-health` returns aggregate provider statistics.
+
+### P22 model cache
+
+Given a local MLX model cache directory
+When an agent runs `triton vlm model list|inspect|preflight|prune|remove`
+Then the command stays local, never downloads by default, and only removes ready models through explicit `remove`.
+
 ## Non-goals
 
 - No autonomous GUI loop.
@@ -55,4 +89,14 @@ And no tap or runner action is executed.
 
 ## Validation
 
-P17 must pass focused parser/evidence tests, VLM schema/capability smoke, `git diff --check`, and `docs-linhay/scripts/check-docs.sh`.
+P17-P22 default validation is fake/local-only:
+
+- `swift test --package-path CLI --filter 'VLMProviderComparisonTests|VLMModelCacheTests|AppMapVLMHealthTests|TestValidationTests|VLMMlxSwiftLM|SchemaFactSourceTests'`
+- `triton vlm providers --json`
+- `triton schema --command vlm --json`
+- `triton schema --command map --json`
+- `triton capabilities --json`
+- `git diff --check`
+- `docs-linhay/scripts/check-docs.sh`
+
+Manual real-model validation is tracked separately in `plans/p18-real-model-smoke.md` and must not become default CI.

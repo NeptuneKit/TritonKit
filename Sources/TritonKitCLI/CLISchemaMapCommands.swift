@@ -22,6 +22,7 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "path confirm <dir.tritonmap> --path <pathId>", type: "Subcommand", description: "Confirm one observed path for suite eligibility"),
                 TKCommandSchemaOption(name: "path unconfirm <dir.tritonmap> --path <pathId>", type: "Subcommand", description: "Unconfirm one path and remove it from suites"),
                 TKCommandSchemaOption(name: "health <dir.tritonmap>", type: "Subcommand", description: "Inspect run health and coverage gaps"),
+                TKCommandSchemaOption(name: "vlm-health <dir.tritonmap>", type: "Subcommand", description: "Inspect VLM provider health"),
                 TKCommandSchemaOption(name: "suite inspect <dir.tritonmap> --suite <suiteId>", type: "Subcommand", description: "Inspect one suite"),
                 TKCommandSchemaOption(name: "suite add-path <dir.tritonmap> --suite <suiteId> --path <pathId>", type: "Subcommand", description: "Add a confirmed replayable path to a suite"),
                 TKCommandSchemaOption(name: "suite remove-path <dir.tritonmap> --suite <suiteId> --path <pathId>", type: "Subcommand", description: "Remove a path from a suite"),
@@ -41,6 +42,8 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--vlm-base-url", type: "String", description: "OpenAI-compatible VLM base URL for suite run"),
                 TKCommandSchemaOption(name: "--vlm-model", type: "String", description: "OpenAI-compatible VLM model for suite run"),
                 TKCommandSchemaOption(name: "--vlm-api-key-env", type: "String", description: "Environment variable containing VLM API key for suite run"),
+                TKCommandSchemaOption(name: "--provider", type: "String", description: "Filter VLM health to one provider"),
+                TKCommandSchemaOption(name: "--screen", type: "String", description: "Filter VLM health to one screen id"),
                 TKCommandSchemaOption(name: "--out", type: "Path", description: "Output .tritontest.yaml file for export-flow"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Output HTML file for viewer"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
@@ -56,6 +59,7 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                 TKCommandUsageForm(form: "path confirm <dir.tritonmap> --path <pathId> --json", kind: "Subcommand", description: "Confirm an observed path"),
                 TKCommandUsageForm(form: "path unconfirm <dir.tritonmap> --path <pathId> --json", kind: "Subcommand", description: "Unconfirm a path and remove it from suites"),
                 TKCommandUsageForm(form: "health <dir.tritonmap> --json", kind: "Subcommand", description: "Inspect health and coverage gaps"),
+                TKCommandUsageForm(form: "vlm-health <dir.tritonmap> --provider mlx-swift-lm --json", kind: "Subcommand", description: "Inspect VLM provider health"),
                 TKCommandUsageForm(form: "suite inspect <dir.tritonmap> --suite smoke --json", kind: "Subcommand", description: "Inspect suite membership"),
                 TKCommandUsageForm(form: "suite add-path <dir.tritonmap> --suite smoke --path <pathId> --json", kind: "Subcommand", description: "Add a confirmed path to a suite"),
                 TKCommandUsageForm(form: "suite remove-path <dir.tritonmap> --suite smoke --path <pathId> --json", kind: "Subcommand", description: "Remove a path from a suite"),
@@ -73,6 +77,7 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                 "triton map path confirm .tritonmap --path path-fixture-login-home --json",
                 "triton map suite add-path .tritonmap --suite smoke --path path-fixture-login-home --json",
                 "triton map health .tritonmap --json",
+                "triton map vlm-health .tritonmap --provider mlx-swift-lm --json",
                 "triton map suite inspect .tritonmap --suite smoke --json",
                 "triton map suite run .tritonmap --suite smoke --evidence-root evidence/smoke-run --json",
                 "triton map export-flow .tritonmap --path path-fixture-login-home --out fixture-login-home.tritontest.yaml --json",
@@ -98,6 +103,7 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                 appMapTransitionsOutputContract(),
                 appMapPathShowOutputContract(),
                 appMapHealthOutputContract(),
+                appMapVLMHealthOutputContract(),
                 appMapSuiteInspectOutputContract(),
                 appMapSuiteRunOutputContract(),
                 appMapExportFlowOutputContract(),
@@ -188,6 +194,18 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                     failureCodes: ["app_map_error"]
                 ),
                 TKCommandSubcommandSchema(
+                    name: "vlm-health",
+                    summary: "Inspect VLM provider health projected from App Map evidence",
+                    optionalOptions: ["--provider", "--screen", "--format", "--json"],
+                    artifacts: ["app-map", "app-map.paths", "app-map.screens", "app-map.transitions"],
+                    nextCommands: [
+                        "triton map paths <dir.tritonmap> --json",
+                        "triton map viewer <dir.tritonmap> --output <file.html> --json",
+                    ],
+                    outputSelectors: ["app-map.vlm-health"],
+                    failureCodes: ["app_map_error"]
+                ),
+                TKCommandSubcommandSchema(
                     name: "suite",
                     summary: "Inspect, edit, and run suite membership",
                     requiredOptions: [],
@@ -228,7 +246,7 @@ func mapCommandSchemas() -> [TKCommandSchema] {
                     failureCodes: ["app_map_error"]
                 ),
             ],
-            providedCapabilities: ["app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-health", "app-map-export-flow", "app-map-viewer"]
+            providedCapabilities: ["app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-health", "app-map-vlm-health", "app-map-export-flow", "app-map-viewer"]
         ),
     ]
 }

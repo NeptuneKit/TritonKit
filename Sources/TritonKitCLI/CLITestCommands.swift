@@ -75,8 +75,12 @@ struct TestRun: AsyncParsableCommand {
     var vlmBaseURL: String?
     @Option(name: .customLong("vlm-model"), help: "OpenAI-compatible VLM model for VLM-assisted steps")
     var vlmModel: String?
+    @Option(name: .customLong("vlm-model-path"), help: "Local MLX VLM model path for VLM-assisted steps")
+    var vlmModelPath: String?
     @Option(name: .customLong("vlm-api-key-env"), help: "Environment variable containing VLM API key")
     var vlmAPIKeyEnv: String?
+    @Flag(name: .customLong("vlm-allow-model-download"), help: "Allow local VLM provider model download when explicitly requested")
+    var vlmAllowModelDownload = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
@@ -91,7 +95,9 @@ struct TestRun: AsyncParsableCommand {
             allowRemoteVLM: allowRemoteVLM,
             vlmBaseURL: vlmBaseURL,
             vlmModel: vlmModel,
+            vlmModelPath: vlmModelPath,
             vlmAPIKeyEnv: vlmAPIKeyEnv,
+            vlmAllowModelDownload: vlmAllowModelDownload,
             format: effectiveFormat(format, json: json)
         )
     }
@@ -192,7 +198,9 @@ private func runTestRunCommand(
     allowRemoteVLM: Bool = false,
     vlmBaseURL: String? = nil,
     vlmModel: String? = nil,
+    vlmModelPath: String? = nil,
     vlmAPIKeyEnv: String? = nil,
+    vlmAllowModelDownload: Bool = false,
     format: ClientOutputFormat
 ) async throws {
     do {
@@ -207,7 +215,9 @@ private func runTestRunCommand(
             allowRemoteVLM: allowRemoteVLM,
             vlmBaseURL: vlmBaseURL,
             vlmModel: vlmModel,
-            vlmAPIKeyEnv: vlmAPIKeyEnv
+            vlmModelPath: vlmModelPath,
+            vlmAPIKeyEnv: vlmAPIKeyEnv,
+            vlmAllowModelDownload: vlmAllowModelDownload
         )
         switch format {
         case .json:

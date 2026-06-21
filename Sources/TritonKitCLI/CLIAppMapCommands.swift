@@ -17,6 +17,7 @@ struct AppMap: AsyncParsableCommand {
             Suite.self,
             ExportFlow.self,
             Viewer.self,
+            VLMHealth.self,
         ]
     )
 
@@ -345,6 +346,26 @@ struct AppMap: AsyncParsableCommand {
             }
         }
     }
+
+    struct VLMHealth: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(commandName: "vlm-health", abstract: "Inspect App Map VLM provider health")
+
+        @Argument(help: "Input .tritonmap directory") var map: String
+        @Option(help: "Filter by provider id") var provider: String?
+        @Option(help: "Filter by screen id") var screen: String?
+        @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+        @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+        func run() async throws {
+            let outputFormat = effectiveFormat(format, json: json)
+            do {
+                let response = try inspectTritonAppMapVLMHealth(mapPath: map, provider: provider, screenID: screen)
+                try printAppMapVLMHealth(response, format: outputFormat)
+            } catch {
+                try failAppMap(error, outputFormat: outputFormat)
+            }
+        }
+    }
 }
 
 func failAppMap(_ error: Error, outputFormat: ClientOutputFormat) throws -> Never {
@@ -533,5 +554,17 @@ func printAppMapViewer(_ response: TKAppMapViewerResponse, format: ClientOutputF
         print("screens: \(response.screenCount)")
         print("transitions: \(response.transitionCount)")
         print("paths: \(response.pathCount)")
+    }
+}
+
+func printAppMapVLMHealth(_ response: TKAppMapVLMHealthResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(response))
+    case .text:
+        print("providers: \(response.providerCount)")
+        for provider in response.providers {
+            print("\(provider.id)\truns=\(provider.groundingRuns)\tsuccessRate=\(formatDouble(provider.successRate))")
+        }
     }
 }

@@ -119,6 +119,41 @@ struct TestValidationTests {
         #expect(plan.steps[0].provider == "mock")
     }
 
+    @Test("MLX VLM tap target preserves local model fields")
+    func mlxVLMTapTargetPreservesLocalModelFields() throws {
+        let plan = try validateTritonTestContract(
+            yaml: """
+            version: 1
+            name: mlx-tap
+            app:
+              bundleId: com.example.LoginFixture
+            device:
+              platform: ios
+            steps:
+              - tap:
+                  target: Go Home button
+                  grounding: vlm
+                  provider: mlx-swift-lm
+                  modelPath: ~/.cache/triton/mlx-models/gui-grounding-vlm
+                  maxTokens: 32
+                  temperature: 0
+                  seed: 7
+                  promptTemplate: gui-grounding-v1
+                  allowModelDownload: false
+            """,
+            inputPath: "/tmp/mlx-tap.tritontest.yaml"
+        )
+
+        let step = try #require(plan.steps.first)
+        #expect(step.provider == "mlx-swift-lm")
+        #expect(step.modelPath == "~/.cache/triton/mlx-models/gui-grounding-vlm")
+        #expect(step.maxTokens == 32)
+        #expect(step.temperature == 0)
+        #expect(step.seed == 7)
+        #expect(step.promptTemplate == "gui-grounding-v1")
+        #expect(step.allowModelDownload == false)
+    }
+
     @Test("tap text normalizes as exact AX selector")
     func tapTextNormalizesAsExactAXSelector() throws {
         let plan = try validateTritonTestContract(

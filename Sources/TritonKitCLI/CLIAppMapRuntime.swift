@@ -127,6 +127,15 @@ struct TKAppMapHealthResponse: Codable, Equatable {
     }
 }
 
+struct TKAppMapVLMHealthResponse: Codable, Equatable {
+    let ok: Bool
+    let schemaVersion: Int
+    let kind: String
+    let mapDir: String
+    let providerCount: Int
+    let providers: [TKAppMapVLMProviderSummary]
+}
+
 struct TKAppMapSuiteInspectResponse: Codable, Equatable {
     let ok: Bool
     let schemaVersion: Int
@@ -257,6 +266,7 @@ struct TKAppMapScreen: Codable, Equatable {
     let visibleTexts: [String]
     let runLocalScreenIDs: [String]
     let sourceRuns: [String]
+    let vlmHealth: TKAppMapVLMHealth?
 
     enum CodingKeys: String, CodingKey {
         case schemaVersion
@@ -267,6 +277,7 @@ struct TKAppMapScreen: Codable, Equatable {
         case visibleTexts
         case runLocalScreenIDs = "runLocalScreenIds"
         case sourceRuns
+        case vlmHealth
     }
 }
 
@@ -282,6 +293,7 @@ struct TKAppMapTransition: Codable, Equatable {
     let replayable: Bool
     let status: String
     let sourceRuns: [String]
+    let vlmHealth: TKAppMapVLMHealth?
 
     enum CodingKeys: String, CodingKey {
         case schemaVersion
@@ -295,6 +307,7 @@ struct TKAppMapTransition: Codable, Equatable {
         case replayable
         case status
         case sourceRuns
+        case vlmHealth
     }
 }
 
@@ -323,6 +336,7 @@ struct TKAppMapPath: Codable, Equatable {
     let replayable: Bool
     let sourceRuns: [String]
     let source: String
+    let vlmHealth: TKAppMapVLMHealth?
 
     enum CodingKeys: String, CodingKey {
         case schemaVersion
@@ -338,6 +352,7 @@ struct TKAppMapPath: Codable, Equatable {
         case replayable
         case sourceRuns
         case source
+        case vlmHealth
     }
 
     init(
@@ -353,7 +368,8 @@ struct TKAppMapPath: Codable, Equatable {
         health: TKAppMapHealth,
         replayable: Bool,
         sourceRuns: [String],
-        source: String = "deterministic"
+        source: String = "deterministic",
+        vlmHealth: TKAppMapVLMHealth? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.kind = kind
@@ -368,6 +384,7 @@ struct TKAppMapPath: Codable, Equatable {
         self.replayable = replayable
         self.sourceRuns = sourceRuns
         self.source = source
+        self.vlmHealth = vlmHealth
     }
 
     init(from decoder: Decoder) throws {
@@ -385,6 +402,7 @@ struct TKAppMapPath: Codable, Equatable {
         replayable = try container.decode(Bool.self, forKey: .replayable)
         sourceRuns = try container.decodeIfPresent([String].self, forKey: .sourceRuns) ?? []
         source = try container.decodeIfPresent(String.self, forKey: .source) ?? "deterministic"
+        vlmHealth = try container.decodeIfPresent(TKAppMapVLMHealth.self, forKey: .vlmHealth)
     }
 }
 
@@ -416,6 +434,32 @@ struct TKAppMapHealth: Codable, Equatable {
     let passCount: Int
     let failCount: Int
     let flakeCount: Int
+}
+
+struct TKAppMapVLMHealth: Codable, Equatable {
+    let providers: [String: TKAppMapVLMProviderHealth]
+}
+
+struct TKAppMapVLMProviderHealth: Codable, Equatable {
+    let groundingRuns: Int
+    let successCount: Int
+    let failureCount: Int
+    let targetNotVisibleCount: Int
+    let parseFailureCount: Int
+    let outOfBoundsCount: Int
+    let meanLatencyMs: Double?
+    let lastModel: String?
+    let lastSeenAt: String?
+    let targets: [String]
+}
+
+struct TKAppMapVLMProviderSummary: Codable, Equatable {
+    let id: String
+    let groundingRuns: Int
+    let successRate: Double
+    let meanLatencyMs: Double?
+    let topFailures: [String]
+    let targets: [String]
 }
 
 struct TKAppMapRunRecord: Codable, Equatable {
@@ -497,6 +541,7 @@ func mergeTritonAppMap(
     let transitions = try decodeJSON(TKScreenWorkspaceTransitionsDocument.self, from: transitionsURL)
     let normalizedPlan = readNormalizedPlan(from: evidenceRoot)
     let pathSource = appMapPathSource(evidenceRoot: evidenceRoot, manifest: manifest)
+    let runVLMHealth = appMapVLMHealth(evidenceRoot: evidenceRoot, manifest: manifest)
     let app = TKAppMapApp(
         bundleID: normalizedPlan?.app.bundleId ?? manifest.target?.bundleIdentifier ?? "unknown.bundle",
         platform: normalizedPlan?.device.platform ?? manifest.target?.osDescription ?? "unknown"
@@ -520,7 +565,8 @@ func mergeTritonAppMap(
             primaryText: existing?.primaryText ?? screen.primaryText,
             visibleTexts: unique((existing?.visibleTexts ?? []) + screen.visibleTexts),
             runLocalScreenIDs: unique((existing?.runLocalScreenIDs ?? []) + [screen.screenID]),
-            sourceRuns: unique((existing?.sourceRuns ?? []) + [runID])
+            sourceRuns: unique((existing?.sourceRuns ?? []) + [runID]),
+            vlmHealth: mergeVLMHealth(existing?.vlmHealth, runVLMHealth)
         )
         try prettyEncodedData(merged).write(to: screenURL, options: .atomic)
         screenIDs.append(mapScreenID)
@@ -560,7 +606,8 @@ func mergeTritonAppMap(
             changed: true,
             replayable: transition.trigger.replayable,
             status: "observed",
-            sourceRuns: unique((existing?.sourceRuns ?? []) + [runID])
+            sourceRuns: unique((existing?.sourceRuns ?? []) + [runID]),
+            vlmHealth: mergeVLMHealth(existing?.vlmHealth, runVLMHealth)
         )
         try prettyEncodedData(merged).write(to: transitionURL, options: .atomic)
         transitionIDs.append(transitionID)
@@ -572,7 +619,8 @@ func mergeTritonAppMap(
         runID: runID,
         verdict: manifest.run?.summary?.verdict,
         confirm: confirm,
-        source: pathSource
+        source: pathSource,
+        vlmHealth: runVLMHealth
     )
     try writeRunRecord(
         mapRoot: mapRoot,
@@ -703,7 +751,8 @@ func setTritonAppMapPathConfirmation(
         health: path.health,
         replayable: path.replayable,
         sourceRuns: path.sourceRuns,
-        source: path.source
+        source: path.source,
+        vlmHealth: path.vlmHealth
     )
     try writeMapPath(mapRoot: mapRoot, path: updated)
     if !confirmed {
@@ -738,6 +787,57 @@ func inspectTritonAppMapHealth(mapPath: String) throws -> TKAppMapHealthResponse
         unreplayablePathIDs: paths.filter { !$0.replayable }.map(\.pathID).sorted(),
         uncoveredScreenIDs: screens.map(\.screenID).filter { !pathScreenIDs.contains($0) }.sorted(),
         uncoveredTransitionIDs: transitions.map(\.transitionID).filter { !pathTransitionIDs.contains($0) }.sorted()
+    )
+}
+
+func inspectTritonAppMapVLMHealth(
+    mapPath: String,
+    provider: String? = nil,
+    screenID: String? = nil
+) throws -> TKAppMapVLMHealthResponse {
+    let mapRoot = try requireAppMapRoot(mapPath)
+    let screens = try readAllMapScreens(mapRoot: mapRoot)
+    let transitions = try readAllMapTransitions(mapRoot: mapRoot)
+    let paths = try readAllMapPaths(mapRoot: mapRoot)
+    var providers: [String: TKAppMapVLMProviderHealth] = [:]
+    let healthSources: [TKAppMapVLMHealth]
+    if let screenID {
+        healthSources = screens.filter { $0.screenID == screenID }.compactMap(\.vlmHealth)
+    } else if !paths.isEmpty {
+        healthSources = paths.compactMap(\.vlmHealth)
+    } else if !transitions.isEmpty {
+        healthSources = transitions.compactMap(\.vlmHealth)
+    } else {
+        healthSources = screens.compactMap(\.vlmHealth)
+    }
+    for health in healthSources {
+        for (id, providerHealth) in health.providers {
+            if let provider, provider != id { continue }
+            providers[id] = mergeVLMProviderHealth(providers[id], providerHealth)
+        }
+    }
+    let summaries = providers.keys.sorted().map { id -> TKAppMapVLMProviderSummary in
+        let health = providers[id]!
+        var topFailures: [String] = []
+        if health.parseFailureCount > 0 { topFailures.append("mlx_parse_failed") }
+        if health.targetNotVisibleCount > 0 { topFailures.append("vlm_target_not_visible") }
+        if health.outOfBoundsCount > 0 { topFailures.append("vlm_point_out_of_bounds") }
+        return TKAppMapVLMProviderSummary(
+            id: id,
+            groundingRuns: health.groundingRuns,
+            successRate: health.groundingRuns > 0 ? Double(health.successCount) / Double(health.groundingRuns) : 0,
+            meanLatencyMs: health.meanLatencyMs,
+            topFailures: topFailures,
+            targets: health.targets
+        )
+    }
+    return TKAppMapVLMHealthResponse(
+        ok: true,
+        schemaVersion: 1,
+        kind: "triton.app-map.vlm-health-result",
+        mapDir: mapRoot.path,
+        providerCount: summaries.count,
+        providers: summaries
     )
 }
 
@@ -1019,6 +1119,11 @@ private func renderTritonAppMapViewerHTML(
         <tr><td><code>\(htmlEscape(transition.transitionID))</code></td><td><code>\(htmlEscape(transition.fromScreenID))</code></td><td><code>\(htmlEscape(transition.toScreenID))</code></td><td>\(htmlEscape(transition.trigger.type))</td><td>\(htmlEscape(point))</td><td>\(transition.replayable ? "yes" : "no")</td></tr>
         """
     }.joined(separator: "\n")
+    let vlmRows = appMapVLMProviderSummaries(screens: screens, transitions: transitions, paths: paths).map { provider in
+        """
+        <tr><td><code>\(htmlEscape(provider.id))</code></td><td>\(provider.groundingRuns)</td><td>\(formatAppMapViewerNumber(provider.successRate))</td><td>\(provider.meanLatencyMs.map(formatAppMapViewerNumber) ?? "")</td><td>\(htmlEscape(provider.topFailures.joined(separator: ", ")))</td></tr>
+        """
+    }.joined(separator: "\n")
     return """
     <!doctype html>
     <html lang="en">
@@ -1048,12 +1153,42 @@ private func renderTritonAppMapViewerHTML(
           <div class="metric"><strong>\(inspect.health.passCount)/\(inspect.health.failCount)</strong>pass/fail</div>
         </div>
         <section><h2>Paths</h2><table><thead><tr><th>ID</th><th>Name</th><th>State</th><th>Replayable</th><th>Source</th><th>Pass/Fail</th></tr></thead><tbody>\(pathRows)</tbody></table></section>
+        <section><h2>VLM Provider Health</h2><table><thead><tr><th>Provider</th><th>Runs</th><th>Success Rate</th><th>Mean Latency Ms</th><th>Top Failures</th></tr></thead><tbody>\(vlmRows)</tbody></table></section>
         <section><h2>Screens</h2><table><thead><tr><th>ID</th><th>Primary Text</th><th>Visible Text Sample</th><th>Runs</th></tr></thead><tbody>\(screenRows)</tbody></table></section>
         <section><h2>Transitions</h2><table><thead><tr><th>ID</th><th>From</th><th>To</th><th>Trigger</th><th>Point</th><th>Replayable</th></tr></thead><tbody>\(transitionRows)</tbody></table></section>
       </main>
     </body>
     </html>
     """
+}
+
+private func appMapVLMProviderSummaries(
+    screens: [TKAppMapScreen],
+    transitions: [TKAppMapTransition],
+    paths: [TKAppMapPath]
+) -> [TKAppMapVLMProviderSummary] {
+    var providers: [String: TKAppMapVLMProviderHealth] = [:]
+    let healthSources = !paths.isEmpty ? paths.compactMap(\.vlmHealth) : (!transitions.isEmpty ? transitions.compactMap(\.vlmHealth) : screens.compactMap(\.vlmHealth))
+    for health in healthSources {
+        for (id, providerHealth) in health.providers {
+            providers[id] = mergeVLMProviderHealth(providers[id], providerHealth)
+        }
+    }
+    return providers.keys.sorted().map { id in
+        let health = providers[id]!
+        var topFailures: [String] = []
+        if health.parseFailureCount > 0 { topFailures.append("mlx_parse_failed") }
+        if health.targetNotVisibleCount > 0 { topFailures.append("vlm_target_not_visible") }
+        if health.outOfBoundsCount > 0 { topFailures.append("vlm_point_out_of_bounds") }
+        return TKAppMapVLMProviderSummary(
+            id: id,
+            groundingRuns: health.groundingRuns,
+            successRate: health.groundingRuns > 0 ? Double(health.successCount) / Double(health.groundingRuns) : 0,
+            meanLatencyMs: health.meanLatencyMs,
+            topFailures: topFailures,
+            targets: health.targets
+        )
+    }
 }
 
 private func htmlEscape(_ value: String) -> String {
@@ -1086,7 +1221,8 @@ private func writeCandidatePath(
     runID: String,
     verdict: TKEvidenceRunVerdict?,
     confirm: Bool,
-    source: String
+    source: String,
+    vlmHealth: TKAppMapVLMHealth?
 ) throws -> [String] {
     guard !transitionIDs.isEmpty else { return [] }
     let transitions = try transitionIDs.map { transitionID in
@@ -1114,7 +1250,8 @@ private func writeCandidatePath(
         health: healthUpdate.health,
         replayable: transitions.allSatisfy(\.replayable),
         sourceRuns: healthUpdate.sourceRuns,
-        source: existing?.source == "vlm-assisted" || source == "vlm-assisted" ? "vlm-assisted" : "deterministic"
+        source: existing?.source == "vlm-assisted" || source == "vlm-assisted" ? "vlm-assisted" : "deterministic",
+        vlmHealth: mergeVLMHealth(existing?.vlmHealth, vlmHealth)
     )
     try prettyEncodedData(path).write(to: pathURL, options: .atomic)
     return [pathID]
@@ -1150,6 +1287,132 @@ private func appMapPathSource(evidenceRoot: URL, manifest: TKEvidenceManifest) -
         return "deterministic"
     }
     return "vlm-assisted"
+}
+
+private func appMapVLMHealth(evidenceRoot: URL, manifest: TKEvidenceManifest) -> TKAppMapVLMHealth? {
+    let eventsPath = manifest.run?.eventsPath ?? "run/events.jsonl"
+    let eventsURL = evidenceRoot.appendingPathComponent(eventsPath)
+    guard let data = try? Data(contentsOf: eventsURL),
+          let parsed = try? TKTestRunEventLogParser().parse(data) else {
+        return nil
+    }
+    let plan = readNormalizedPlan(from: evidenceRoot)
+    let planSteps = Dictionary(uniqueKeysWithValues: (plan?.steps ?? []).map { ($0.index, $0) })
+    let durations = Dictionary(uniqueKeysWithValues: parsed.events.compactMap { event -> (Int, Int)? in
+        guard event.type == .commandExecuted, let stepIndex = event.stepIndex, let durationMs = event.durationMs else { return nil }
+        return (stepIndex, durationMs)
+    })
+    var accumulators: [String: TKAppMapVLMHealthAccumulator] = [:]
+    for event in parsed.events {
+        if event.type == .vlmGrounding, let grounding = event.vlmGrounding {
+            var acc = accumulators[grounding.provider] ?? TKAppMapVLMHealthAccumulator()
+            acc.recordSuccess(
+                target: grounding.target,
+                model: grounding.model,
+                latencyMs: event.stepIndex.flatMap { durations[$0] }.map(Double.init),
+                seenAt: event.timestamp
+            )
+            accumulators[grounding.provider] = acc
+        } else if event.type == .failureRecorded,
+                  let stepIndex = event.stepIndex,
+                  let step = planSteps[stepIndex],
+                  step.grounding == "vlm",
+                  let provider = step.provider {
+            var acc = accumulators[provider] ?? TKAppMapVLMHealthAccumulator()
+            acc.recordFailure(
+                code: event.failure?.type ?? "vlm_grounding_failed",
+                target: step.target,
+                model: step.model,
+                latencyMs: durations[stepIndex].map(Double.init),
+                seenAt: event.timestamp
+            )
+            accumulators[provider] = acc
+        }
+    }
+    guard !accumulators.isEmpty else { return nil }
+    return TKAppMapVLMHealth(providers: accumulators.mapValues(\.health))
+}
+
+private struct TKAppMapVLMHealthAccumulator {
+    var groundingRuns = 0
+    var successCount = 0
+    var failureCount = 0
+    var targetNotVisibleCount = 0
+    var parseFailureCount = 0
+    var outOfBoundsCount = 0
+    var latencyTotal: Double = 0
+    var latencyCount = 0
+    var lastModel: String?
+    var lastSeenAt: String?
+    var targets: [String] = []
+
+    mutating func recordSuccess(target: String?, model: String?, latencyMs: Double?, seenAt: String?) {
+        groundingRuns += 1
+        successCount += 1
+        recordCommon(target: target, model: model, latencyMs: latencyMs, seenAt: seenAt)
+    }
+
+    mutating func recordFailure(code: String, target: String?, model: String?, latencyMs: Double?, seenAt: String?) {
+        groundingRuns += 1
+        failureCount += 1
+        if code == "vlm_target_not_visible" { targetNotVisibleCount += 1 }
+        if code.contains("parse") || code == "mlx_response_empty" { parseFailureCount += 1 }
+        if code == "vlm_point_out_of_bounds" { outOfBoundsCount += 1 }
+        recordCommon(target: target, model: model, latencyMs: latencyMs, seenAt: seenAt)
+    }
+
+    mutating func recordCommon(target: String?, model: String?, latencyMs: Double?, seenAt: String?) {
+        if let target { targets = unique(targets + [target]) }
+        if let model { lastModel = model }
+        if let seenAt { lastSeenAt = seenAt }
+        if let latencyMs {
+            latencyTotal += latencyMs
+            latencyCount += 1
+        }
+    }
+
+    var health: TKAppMapVLMProviderHealth {
+        TKAppMapVLMProviderHealth(
+            groundingRuns: groundingRuns,
+            successCount: successCount,
+            failureCount: failureCount,
+            targetNotVisibleCount: targetNotVisibleCount,
+            parseFailureCount: parseFailureCount,
+            outOfBoundsCount: outOfBoundsCount,
+            meanLatencyMs: latencyCount > 0 ? latencyTotal / Double(latencyCount) : nil,
+            lastModel: lastModel,
+            lastSeenAt: lastSeenAt,
+            targets: targets.sorted()
+        )
+    }
+}
+
+private func mergeVLMHealth(_ existing: TKAppMapVLMHealth?, _ update: TKAppMapVLMHealth?) -> TKAppMapVLMHealth? {
+    guard let update else { return existing }
+    var providers = existing?.providers ?? [:]
+    for (provider, health) in update.providers {
+        providers[provider] = mergeVLMProviderHealth(providers[provider], health)
+    }
+    return providers.isEmpty ? nil : TKAppMapVLMHealth(providers: providers)
+}
+
+private func mergeVLMProviderHealth(_ existing: TKAppMapVLMProviderHealth?, _ update: TKAppMapVLMProviderHealth) -> TKAppMapVLMProviderHealth {
+    guard let existing else { return update }
+    let latencyCount = (existing.meanLatencyMs == nil ? 0 : existing.groundingRuns) + (update.meanLatencyMs == nil ? 0 : update.groundingRuns)
+    let latencyTotal = (existing.meanLatencyMs ?? 0) * Double(existing.meanLatencyMs == nil ? 0 : existing.groundingRuns) +
+        (update.meanLatencyMs ?? 0) * Double(update.meanLatencyMs == nil ? 0 : update.groundingRuns)
+    return TKAppMapVLMProviderHealth(
+        groundingRuns: existing.groundingRuns + update.groundingRuns,
+        successCount: existing.successCount + update.successCount,
+        failureCount: existing.failureCount + update.failureCount,
+        targetNotVisibleCount: existing.targetNotVisibleCount + update.targetNotVisibleCount,
+        parseFailureCount: existing.parseFailureCount + update.parseFailureCount,
+        outOfBoundsCount: existing.outOfBoundsCount + update.outOfBoundsCount,
+        meanLatencyMs: latencyCount > 0 ? latencyTotal / Double(latencyCount) : nil,
+        lastModel: update.lastModel ?? existing.lastModel,
+        lastSeenAt: update.lastSeenAt ?? existing.lastSeenAt,
+        targets: unique(existing.targets + update.targets).sorted()
+    )
 }
 
 private func updateSmokeSuite(_ mapRoot: URL, addPathIDs: [String]) throws {

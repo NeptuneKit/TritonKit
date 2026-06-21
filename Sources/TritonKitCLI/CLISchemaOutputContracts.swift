@@ -233,6 +233,27 @@ func appMapViewerOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func appMapVLMHealthOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.vlm-health",
+        format: "json",
+        kind: "app-map-vlm-health-result",
+        model: "TKAppMapVLMHealthResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether VLM health inspection succeeded"),
+            ("kind", "String", true, "Stable kind; triton.app-map.vlm-health-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("providerCount", "Int", true, "Number of provider summaries"),
+            ("providers", "[TKAppMapVLMProviderSummary]", true, "Provider-level VLM health summaries"),
+            ("providers[].id", "String", true, "Provider id"),
+            ("providers[].groundingRuns", "Int", true, "Observed grounding runs"),
+            ("providers[].successRate", "Double", true, "Success count divided by grounding runs"),
+            ("providers[].meanLatencyMs", "Double?", false, "Mean VLM grounding latency when available"),
+            ("providers[].topFailures", "[String]", true, "Top machine-readable failure categories"),
+        ])
+    )
+}
+
 func vlmGroundOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "vlm.ground",
@@ -307,6 +328,91 @@ func vlmProvidersOutputContract() -> TKCommandOutputContract {
             ("providers[].supports", "[String]", true, "Supported operations"),
             ("providers[].coordinateOutputs", "[String]", true, "Supported output coordinate spaces"),
             ("providers[].runnerIntegration", "TKVLMProviderRunnerIntegration?", false, "Runner integration policy"),
+        ])
+    )
+}
+
+func vlmCompareOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "vlm.compare",
+        format: "json",
+        kind: "vlm-compare-result",
+        model: "TKVLMCompareResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether comparison command completed"),
+            ("kind", "String", true, "Stable kind; triton.vlm.compare-result"),
+            ("target", "String", true, "Grounding target phrase"),
+            ("image", "TKVLMGroundImage", true, "Screenshot metadata"),
+            ("results", "[TKVLMCompareProviderResult]", true, "Per-provider status and point result"),
+            ("results[].provider", "String", true, "Provider id"),
+            ("results[].status", "String", true, "passed or failed"),
+            ("results[].runtimePoint", "TKVLMRuntimePoint?", false, "Runtime point when provider passed"),
+            ("results[].latencyMs", "Int", true, "Provider elapsed time in milliseconds"),
+            ("results[].errorCode", "String?", false, "Machine-readable provider failure code"),
+            ("agreement", "TKVLMCompareAgreement", true, "Pairwise distance agreement metrics"),
+            ("artifacts.comparisonOverlay", "String", true, "Comparison overlay PNG"),
+            ("artifacts.results", "String", true, "Persisted comparison JSON"),
+        ])
+    )
+}
+
+func vlmModelListOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "vlm.model.list",
+        format: "json",
+        kind: "vlm-model-list-result",
+        model: "TKVLMModelListResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether model listing succeeded"),
+            ("provider", "String", true, "Provider id; mlx-swift-lm"),
+            ("cacheDir", "String", true, "Resolved local model cache directory"),
+            ("models", "[TKVLMModelCacheEntry]", true, "Cached model entries"),
+            ("models[].status", "String", true, "ready or incomplete"),
+        ])
+    )
+}
+
+func vlmModelInspectOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "vlm.model.inspect",
+        format: "json",
+        kind: "vlm-model-inspect-result",
+        model: "TKVLMModelInspectResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether model inspection succeeded"),
+            ("provider", "String", true, "Provider id; mlx-swift-lm"),
+            ("model", "TKVLMModelCacheEntry", true, "Model cache metadata"),
+        ])
+    )
+}
+
+func vlmModelPreflightOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "vlm.model.preflight",
+        format: "json",
+        kind: "vlm-model-preflight-result",
+        model: "TKVLMModelPreflightResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether required preflight checks passed"),
+            ("provider", "String", true, "Provider id; mlx-swift-lm"),
+            ("modelPath", "String", true, "Resolved model path"),
+            ("checks", "[TKVLMModelPreflightCheck]", true, "Preflight check rows"),
+        ])
+    )
+}
+
+func vlmModelMutationOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "vlm.model.mutation",
+        format: "json",
+        kind: "vlm-model-mutation-result",
+        model: "TKVLMModelMutationResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether prune/remove completed"),
+            ("provider", "String", true, "Provider id; mlx-swift-lm"),
+            ("cacheDir", "String", true, "Resolved cache directory"),
+            ("removed", "[String]", true, "Removed model/cache directories"),
+            ("kept", "[String]", true, "Kept model/cache directories"),
         ])
     )
 }

@@ -264,10 +264,13 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "app-map-suite-run", supported: true),
         TKRuntimeCapability(name: "app-map-export-flow", supported: true),
         TKRuntimeCapability(name: "app-map-viewer", supported: true),
+        TKRuntimeCapability(name: "app-map-vlm-health", supported: true),
         TKRuntimeCapability(name: "vlm-provider-list", supported: true),
         TKRuntimeCapability(name: "vlm-ground-mock", supported: true),
         TKRuntimeCapability(name: "vlm-ground-openai-compatible", supported: true),
         TKRuntimeCapability(name: "vlm-ground-mlx-swift-lm", supported: true),
+        TKRuntimeCapability(name: "vlm-provider-compare", supported: true),
+        TKRuntimeCapability(name: "vlm-model-cache", supported: true),
         TKRuntimeCapability(name: "smoke-ios", supported: true),
         TKRuntimeCapability(name: "smoke-android", supported: true),
         TKRuntimeCapability(name: "smoke-harmony", supported: true),
@@ -322,7 +325,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "webview"
     case "route-current-url-assert":
         return "route"
-    case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm", "network-capture-export":
+    case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-vlm-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm", "vlm-provider-compare", "vlm-model-cache", "network-capture-export":
         return "evidence"
     case "smoke-ios", "smoke-android", "smoke-harmony":
         return "smoke"
@@ -361,7 +364,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["assert", "smoke", "evidence", "webview-check"]
     case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "network-capture-export":
         return ["evidence", "replay"]
-    case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm":
+    case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-vlm-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm", "vlm-provider-compare", "vlm-model-cache":
         return ["evidence", "test"]
     case "plan-inspect":
         return ["replay"]
@@ -578,6 +581,8 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "map", args: ["path", "confirm", "<dir.tritonmap>", "--path", "<pathId>", "--json"])
     case "app-map-health":
         return TKCLINextAction(command: "map", args: ["health", "<dir.tritonmap>", "--json"])
+    case "app-map-vlm-health":
+        return TKCLINextAction(command: "map", args: ["vlm-health", "<dir.tritonmap>", "--provider", "<provider>", "--json"])
     case "app-map-suite-inspect":
         return TKCLINextAction(command: "map", args: ["suite", "inspect", "<dir.tritonmap>", "--suite", "smoke", "--json"])
     case "app-map-suite-edit":
@@ -596,6 +601,10 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "vlm", args: ["ground", "--provider", "openai-compatible", "--base-url", "<http://127.0.0.1:8000/v1>", "--model", "<model>", "--image", "<screenshot.png>", "--target", "<target>", "--coordinate-contract", "<coordinate-contract.json>", "--json"])
     case "vlm-ground-mlx-swift-lm":
         return TKCLINextAction(command: "vlm", args: ["ground", "--provider", "mlx-swift-lm", "--model-path", "<local-model>", "--image", "<screenshot.png>", "--target", "<target>", "--coordinate-contract", "<coordinate-contract.json>", "--json"])
+    case "vlm-provider-compare":
+        return TKCLINextAction(command: "vlm", args: ["compare", "--provider", "mock", "--provider", "mlx-swift-lm", "--model-path", "<local-model>", "--image", "<screenshot.png>", "--target", "<target>", "--coordinate-contract", "<coordinate-contract.json>", "--json"])
+    case "vlm-model-cache":
+        return TKCLINextAction(command: "vlm", args: ["model", "list", "--provider", "mlx-swift-lm", "--json"])
     case "smoke-ios":
         return TKCLINextAction(command: "smoke", args: ["ios", "--device", "<device>", "--bundle-id", "<bundle-id>", "--open-url", "<url>", "--wait-text", "<text>", "--json"])
     case "smoke-android":
@@ -842,7 +851,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["evidence-bundle"]
     case "evidence-project-workspace", "evidence-project-screens":
         return ["evidence-bundle", "screen-workspace"]
-    case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-suite-inspect", "app-map-suite-edit":
+    case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-vlm-health", "app-map-suite-inspect", "app-map-suite-edit":
         return ["evidence-bundle", "screen-workspace", "app-map"]
     case "app-map-suite-run":
         return ["evidence-bundle", "screen-workspace", "app-map", "test.normalized-plan"]
@@ -858,6 +867,10 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["vlm-grounding", "vlm-overlay", "coordinate-contract", "screenshot"]
     case "vlm-ground-mlx-swift-lm":
         return ["vlm-grounding", "vlm-overlay", "vlm-request", "vlm-response", "vlm-raw-output", "vlm-parsed-point", "vlm-transform", "vlm-model-metadata", "coordinate-contract", "screenshot"]
+    case "vlm-provider-compare":
+        return ["vlm-grounding", "vlm-overlay", "vlm-compare", "coordinate-contract", "screenshot"]
+    case "vlm-model-cache":
+        return ["vlm-model-cache", "vlm-model-metadata"]
     case "network-capture-export":
         return ["network-capture", "evidence-bundle"]
     case "smoke-ios", "smoke-android", "smoke-harmony":

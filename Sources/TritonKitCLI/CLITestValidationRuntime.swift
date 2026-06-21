@@ -254,7 +254,14 @@ private func parseTestStep(
             selector: payload.selector,
             target: payload.target,
             grounding: payload.grounding,
-            provider: payload.provider
+            provider: payload.provider,
+            model: payload.model,
+            modelPath: payload.modelPath,
+            maxTokens: payload.maxTokens,
+            temperature: payload.temperature,
+            seed: payload.seed,
+            promptTemplate: payload.promptTemplate,
+            allowModelDownload: payload.allowModelDownload
         )
     case "input":
         let text = try parseInputPayload(step[stepType], path: "\(path).input")
@@ -375,10 +382,23 @@ private func parseAIProvider(_ value: Any?, path: String) throws -> String {
     return provider
 }
 
-private func parseTapPayload(_ value: Any?, path: String) throws -> (point: TKTestPlanPoint?, selector: TKTestPlanSelector?, target: String?, grounding: String?, provider: String?) {
+private func parseTapPayload(_ value: Any?, path: String) throws -> (
+    point: TKTestPlanPoint?,
+    selector: TKTestPlanSelector?,
+    target: String?,
+    grounding: String?,
+    provider: String?,
+    model: String?,
+    modelPath: String?,
+    maxTokens: Int?,
+    temperature: Double?,
+    seed: Int?,
+    promptTemplate: String?,
+    allowModelDownload: Bool?
+) {
     let payload = try mappingPayload(value, path: path)
     if let rawPoint = payload["point"] {
-        if payload["text"] != nil || payload["target"] != nil || payload["grounding"] != nil || payload["provider"] != nil {
+        if payload["text"] != nil || payload["target"] != nil || payload["grounding"] != nil || payload["provider"] != nil || payload["model"] != nil || payload["modelPath"] != nil {
             throw testValidationFailure(
                 code: "unsupported_selector",
                 message: "tap.point cannot be combined with text selector or VLM target grounding.",
@@ -386,10 +406,10 @@ private func parseTapPayload(_ value: Any?, path: String) throws -> (point: TKTe
             )
         }
         let point = try parseRuntimePoint(rawPoint, path: "\(path).point", fieldName: "tap.point")
-        return (point, nil, nil, nil, nil)
+        return (point, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
     }
     if payload["text"] != nil {
-        if payload["target"] != nil || payload["grounding"] != nil || payload["provider"] != nil {
+        if payload["target"] != nil || payload["grounding"] != nil || payload["provider"] != nil || payload["model"] != nil || payload["modelPath"] != nil {
             throw testValidationFailure(
                 code: "unsupported_selector",
                 message: "tap.text cannot be combined with VLM target grounding.",
@@ -397,7 +417,7 @@ private func parseTapPayload(_ value: Any?, path: String) throws -> (point: TKTe
             )
         }
         let selector = try parseTextAssertionPayload(value, path: path, stepType: "tap")
-        return (nil, selector, nil, nil, nil)
+        return (nil, selector, nil, nil, nil, nil, nil, nil, nil, nil, nil, nil)
     }
     if let rawTarget = payload["target"] {
         let target = try requiredNonEmptyString(rawTarget, path: "\(path).target")
@@ -411,15 +431,22 @@ private func parseTapPayload(_ value: Any?, path: String) throws -> (point: TKTe
             )
         }
         let provider = try requiredNonEmptyString(payload["provider"], path: "\(path).provider")
-        guard ["mock", "openai-compatible"].contains(provider) else {
+        guard ["mock", "openai-compatible", "mlx-swift-lm"].contains(provider) else {
             throw testValidationFailure(
                 code: "vlm_unsupported_provider",
                 message: "Unsupported VLM provider \(provider).",
                 path: "\(path).provider",
-                allowed: ["mock", "openai-compatible"]
+                allowed: ["mock", "openai-compatible", "mlx-swift-lm"]
             )
         }
-        return (nil, nil, target, grounding, provider)
+        let model = try optionalNonEmptyString(payload["model"], path: "\(path).model")
+        let modelPath = try optionalNonEmptyString(payload["modelPath"], path: "\(path).modelPath")
+        let maxTokens = try optionalPositiveInt(payload["maxTokens"], path: "\(path).maxTokens", defaultValue: 64)
+        let temperature = try optionalDouble(payload["temperature"], path: "\(path).temperature")
+        let seed = try optionalNonNegativeInt(payload["seed"], path: "\(path).seed", defaultValue: 0)
+        let promptTemplate = try optionalNonEmptyString(payload["promptTemplate"], path: "\(path).promptTemplate")
+        let allowModelDownload = try optionalBool(payload["allowModelDownload"], path: "\(path).allowModelDownload")
+        return (nil, nil, target, grounding, provider, model, modelPath, maxTokens, temperature, seed, promptTemplate, allowModelDownload)
     }
     if let unsupported = payload.keys.sorted().first {
         throw testValidationFailure(
@@ -649,6 +676,36 @@ private func optionalThreshold(_ value: Any?, path: String, defaultValue: Double
         )
     }
     return parsed
+}
+
+private func optionalDouble(_ value: Any?, path: String) throws -> Double? {
+    guard let value else { return nil }
+    if let double = value as? Double {
+        guard double.isFinite else {
+            throw testValidationFailure(code: "invalid_optional_type", message: "\(path) must be finite.", path: path)
+        }
+        return double
+    }
+    if let int = value as? Int {
+        return Double(int)
+    }
+    throw testValidationFailure(
+        code: "invalid_optional_type",
+        message: "\(path) must be a number.",
+        path: path
+    )
+}
+
+private func optionalBool(_ value: Any?, path: String) throws -> Bool? {
+    guard let value else { return nil }
+    guard let bool = value as? Bool else {
+        throw testValidationFailure(
+            code: "invalid_optional_type",
+            message: "\(path) must be a boolean.",
+            path: path
+        )
+    }
+    return bool
 }
 
 private func optionalNonNegativeInt(_ value: Any?, path: String, defaultValue: Int) throws -> Int {
