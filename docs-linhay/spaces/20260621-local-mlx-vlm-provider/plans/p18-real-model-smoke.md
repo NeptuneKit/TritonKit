@@ -67,3 +67,5 @@ Do not commit model weights, tokenizer files, downloaded cache directories, or l
 ## Current Status
 
 Manual gate pending until a compatible local model/helper is available in the developer environment. The CLI-side external helper contract is implemented and covered by tests; no true model weights were present in `~/.cache/triton/mlx-models` during this run.
+
+The helper contract is also documented at `Tools/TritonMLXProvider/README.md` for external helper implementation.

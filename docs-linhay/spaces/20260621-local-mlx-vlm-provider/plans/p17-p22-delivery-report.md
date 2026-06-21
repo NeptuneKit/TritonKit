@@ -31,3 +31,7 @@ Result:
 - No autonomous model action loop.
 - No direct execution of model-generated multi-action output.
 - HTML viewer remains static readonly.
+
+## Helper Scaffold
+
+The external helper contract is documented at `Tools/TritonMLXProvider/README.md`. This keeps `mlx-swift-lm` and model downloader/tokenizer dependencies outside the default `triton` CLI package while preserving a stable P18 manual smoke entry.
