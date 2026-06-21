@@ -99,6 +99,7 @@ struct HostDeviceTarget: Encodable, Equatable {
     let blockedReasons: [String]
     let sensitive: Bool
     let rawTarget: String
+    let rawTargetAliases: [String]
 
     init(
         platform: String,
@@ -118,7 +119,8 @@ struct HostDeviceTarget: Encodable, Equatable {
         current: Bool? = nil,
         blockedReasons: [String] = [],
         sensitive: Bool = false,
-        rawTarget: String? = nil
+        rawTarget: String? = nil,
+        rawTargetAliases: [String] = []
     ) {
         self.platform = platform
         self.id = id
@@ -138,6 +140,7 @@ struct HostDeviceTarget: Encodable, Equatable {
         self.blockedReasons = blockedReasons
         self.sensitive = sensitive
         self.rawTarget = rawTarget ?? target
+        self.rawTargetAliases = rawTargetAliases
     }
 
     enum CodingKeys: String, CodingKey {
