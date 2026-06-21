@@ -1,4 +1,4 @@
-# P17-P22 Delivery Report
+# P17-P23 Delivery Report
 
 ## Completed In Code
 
@@ -8,6 +8,7 @@
 - P20: `triton vlm compare` with provider-level results, agreement metrics, and comparison artifacts.
 - P21: App Map VLM health projection, `triton map vlm-health`, and static viewer health summary.
 - P22: `triton vlm model list|inspect|preflight|prune|remove` with local cache policy.
+- P23: `triton vlm model download <model-id>` with helper-mediated download, idempotent ready-cache behavior, and fail-closed missing-helper diagnostics.
 
 ## Manual Gate
 
@@ -35,6 +36,7 @@ Result:
 
 - No hard `mlx-swift-lm` dependency in the main CLI target.
 - No default model download.
+- No main CLI direct model downloader dependency.
 - No real-model CI.
 - No autonomous model action loop.
 - No direct execution of model-generated multi-action output.
@@ -52,6 +54,12 @@ The helper is a separate SwiftPM executable package. It depends on:
 - `swift-huggingface`
 
 Current `mlx-swift` SwiftPM builds code dependencies but does not colocate `mlx.metallib` for this helper executable. `Tools/TritonMLXProvider/Scripts/build-mlx-metallib.sh` compiles the MLX Metal kernels and copies `mlx.metallib` next to `triton-mlx-provider`.
+
+P23 extends the helper protocol with:
+
+    triton-mlx-provider download --request <request.json>
+
+The request includes `model`, `cacheDir`, `outputPath`, and `force`; helper stdout returns compact JSON with `modelPath` and optional `bytesDownloaded`.
 
 ## Next Model Baseline
 

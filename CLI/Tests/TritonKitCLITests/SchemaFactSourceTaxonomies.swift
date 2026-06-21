@@ -109,6 +109,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "test-validation-result",
         "vlm-ground-result",
         "vlm-compare-result",
+        "vlm-model-download-result",
         "vlm-model-inspect-result",
         "vlm-model-list-result",
         "vlm-model-mutation-result",

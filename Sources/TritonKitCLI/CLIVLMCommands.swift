@@ -164,8 +164,42 @@ struct VLM: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "model",
             abstract: "Manage local VLM model cache",
-            subcommands: [List.self, Inspect.self, Preflight.self, Prune.self, Remove.self]
+            subcommands: [Download.self, List.self, Inspect.self, Preflight.self, Prune.self, Remove.self]
         )
+
+        struct Download: ParsableCommand {
+            static let configuration = CommandConfiguration(commandName: "download", abstract: "Download one local VLM model through the external helper")
+            @Argument(help: "Model id, for example mlx-community/Qwen2-VL-2B-Instruct-4bit") var model: String
+            @Option(help: "Provider id") var provider = "mlx-swift-lm"
+            @Option(name: .customLong("cache-dir"), help: "Override local model cache directory") var cacheDir: String?
+            @Option(help: "External mlx-swift-lm helper path; defaults to TRITON_MLX_HELPER") var helper: String?
+            @Flag(help: "Replace an existing incomplete or ready cache directory") var force = false
+            @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+            @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+            func run() throws {
+                let outputFormat = effectiveFormat(format, json: json)
+                do {
+                    let response = try downloadVLMModel(
+                        model,
+                        provider: provider,
+                        cacheDir: cacheDir,
+                        force: force,
+                        helperPath: helper
+                    )
+                    switch outputFormat {
+                    case .json:
+                        print(try encodeJSON(response))
+                    case .text:
+                        print("ok: \(response.ok)")
+                        print("status: \(response.status)")
+                        print("path: \(response.modelPath)")
+                    }
+                } catch {
+                    try failVLMGrounding(error, outputFormat: outputFormat)
+                }
+            }
+        }
 
         struct List: ParsableCommand {
             static let configuration = CommandConfiguration(commandName: "list", abstract: "List local VLM models")

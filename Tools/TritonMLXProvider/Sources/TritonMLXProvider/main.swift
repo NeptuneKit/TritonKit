@@ -25,6 +25,20 @@ struct HelperRequest: Decodable {
     let allowModelDownload: Bool
 }
 
+struct DownloadRequest: Decodable {
+    let schemaVersion: Int
+    let provider: String
+    let model: String
+    let cacheDir: String
+    let outputPath: String
+    let force: Bool
+}
+
+struct DownloadResponse: Encodable {
+    let modelPath: String
+    let bytesDownloaded: Int64?
+}
+
 enum HelperError: LocalizedError {
     case invalidArguments
     case unsupportedCommand(String)
@@ -39,7 +53,7 @@ enum HelperError: LocalizedError {
     var errorDescription: String? {
         switch self {
         case .invalidArguments:
-            return "usage: triton-mlx-provider ground --request <request.json>"
+            return "usage: triton-mlx-provider ground|download --request <request.json>"
         case .unsupportedCommand(let command):
             return "unsupported command: \(command)"
         case .requestNotFound(let path):
@@ -146,7 +160,7 @@ struct TritonMLXProvider {
         guard let command = arguments.first else {
             throw HelperError.invalidArguments
         }
-        guard command == "ground" else {
+        guard command == "ground" || command == "download" else {
             throw HelperError.unsupportedCommand(command)
         }
         guard let requestIndex = arguments.firstIndex(of: "--request"),
@@ -158,6 +172,15 @@ struct TritonMLXProvider {
             throw HelperError.requestNotFound(requestPath)
         }
         let data = try Data(contentsOf: URL(fileURLWithPath: requestPath))
+        if command == "download" {
+            let request: DownloadRequest
+            do {
+                request = try JSONDecoder().decode(DownloadRequest.self, from: data)
+            } catch {
+                throw HelperError.invalidRequest(error.localizedDescription)
+            }
+            return try await download(request)
+        }
         let request: HelperRequest
         do {
             request = try JSONDecoder().decode(HelperRequest.self, from: data)
@@ -165,6 +188,49 @@ struct TritonMLXProvider {
             throw HelperError.invalidRequest(error.localizedDescription)
         }
         return try await ground(request)
+    }
+
+    private static func download(_ request: DownloadRequest) async throws -> String {
+        guard request.schemaVersion == 1 else {
+            throw HelperError.invalidRequest("schemaVersion must be 1")
+        }
+        guard request.provider == "mlx-swift-lm" else {
+            throw HelperError.invalidRequest("provider must be mlx-swift-lm")
+        }
+        guard let repoID = Repo.ID(rawValue: request.model) else {
+            throw HelperError.invalidRepositoryID(request.model)
+        }
+
+        let outputURL = URL(fileURLWithPath: request.outputPath, isDirectory: true)
+        if FileManager.default.fileExists(atPath: outputURL.path), request.force {
+            try FileManager.default.removeItem(at: outputURL)
+        }
+        try FileManager.default.createDirectory(
+            at: outputURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+
+        let sourceURL = try await HubClient().downloadSnapshot(
+            of: repoID,
+            revision: "main",
+            matching: ["*.json", "*.safetensors", "*.txt", "*.model", "merges.txt", "vocab.json"],
+            localFilesOnly: false,
+            progressHandler: { progress in
+                let text = "download \(request.model): \(Int(progress.fractionCompleted * 100))%\n"
+                FileHandle.standardError.write(Data(text.utf8))
+            }
+        )
+
+        if FileManager.default.fileExists(atPath: outputURL.path) {
+            try FileManager.default.removeItem(at: outputURL)
+        }
+        try FileManager.default.copyItem(at: sourceURL, to: outputURL)
+        let response = DownloadResponse(
+            modelPath: outputURL.path,
+            bytesDownloaded: directorySize(outputURL)
+        )
+        let data = try JSONEncoder().encode(response)
+        return String(data: data, encoding: .utf8) ?? "{}"
     }
 
     private static func ground(_ request: HelperRequest) async throws -> String {
@@ -241,5 +307,19 @@ struct TritonMLXProvider {
             return nil
         }
         return value
+    }
+
+    private static func directorySize(_ directory: URL) -> Int64 {
+        guard let enumerator = FileManager.default.enumerator(
+            at: directory,
+            includingPropertiesForKeys: [.fileSizeKey]
+        ) else {
+            return 0
+        }
+        var total: Int64 = 0
+        for case let url as URL in enumerator {
+            total += Int64((try? url.resourceValues(forKeys: [.fileSizeKey]).fileSize) ?? 0)
+        }
+        return total
     }
 }

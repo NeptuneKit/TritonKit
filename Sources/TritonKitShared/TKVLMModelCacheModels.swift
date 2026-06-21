@@ -72,6 +72,46 @@ public struct TKVLMModelMutationResponse: Codable, Equatable, Sendable {
     }
 }
 
+public struct TKVLMModelDownloadResponse: Codable, Equatable, Sendable {
+    public let ok: Bool
+    public let schemaVersion: Int
+    public let kind: String
+    public let provider: String
+    public let model: String
+    public let cacheDir: String
+    public let modelPath: String
+    public let status: String
+    public let downloaded: Bool
+    public let bytesDownloaded: Int64?
+    public let modelEntry: TKVLMModelCacheEntry
+
+    public init(
+        ok: Bool = true,
+        schemaVersion: Int = 1,
+        kind: String = "triton.vlm.model-download-result",
+        provider: String,
+        model: String,
+        cacheDir: String,
+        modelPath: String,
+        status: String,
+        downloaded: Bool,
+        bytesDownloaded: Int64?,
+        modelEntry: TKVLMModelCacheEntry
+    ) {
+        self.ok = ok
+        self.schemaVersion = schemaVersion
+        self.kind = kind
+        self.provider = provider
+        self.model = model
+        self.cacheDir = cacheDir
+        self.modelPath = modelPath
+        self.status = status
+        self.downloaded = downloaded
+        self.bytesDownloaded = bytesDownloaded
+        self.modelEntry = modelEntry
+    }
+}
+
 public struct TKVLMModelCacheEntry: Codable, Equatable, Sendable {
     public let id: String
     public let path: String

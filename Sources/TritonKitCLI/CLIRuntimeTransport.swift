@@ -271,6 +271,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "vlm-ground-mlx-swift-lm", supported: true),
         TKRuntimeCapability(name: "vlm-provider-compare", supported: true),
         TKRuntimeCapability(name: "vlm-model-cache", supported: true),
+        TKRuntimeCapability(name: "vlm-model-download", supported: true),
         TKRuntimeCapability(name: "smoke-ios", supported: true),
         TKRuntimeCapability(name: "smoke-android", supported: true),
         TKRuntimeCapability(name: "smoke-harmony", supported: true),
@@ -325,7 +326,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "webview"
     case "route-current-url-assert":
         return "route"
-    case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-vlm-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm", "vlm-provider-compare", "vlm-model-cache", "network-capture-export":
+    case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-vlm-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm", "vlm-provider-compare", "vlm-model-cache", "vlm-model-download", "network-capture-export":
         return "evidence"
     case "smoke-ios", "smoke-android", "smoke-harmony":
         return "smoke"
@@ -364,7 +365,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["assert", "smoke", "evidence", "webview-check"]
     case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "network-capture-export":
         return ["evidence", "replay"]
-    case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-vlm-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm", "vlm-provider-compare", "vlm-model-cache":
+    case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-vlm-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-provider-list", "vlm-ground-mock", "vlm-ground-openai-compatible", "vlm-ground-mlx-swift-lm", "vlm-provider-compare", "vlm-model-cache", "vlm-model-download":
         return ["evidence", "test"]
     case "plan-inspect":
         return ["replay"]
@@ -605,6 +606,8 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "vlm", args: ["compare", "--provider", "mock", "--provider", "mlx-swift-lm", "--model-path", "<local-model>", "--image", "<screenshot.png>", "--target", "<target>", "--coordinate-contract", "<coordinate-contract.json>", "--json"])
     case "vlm-model-cache":
         return TKCLINextAction(command: "vlm", args: ["model", "list", "--provider", "mlx-swift-lm", "--json"])
+    case "vlm-model-download":
+        return TKCLINextAction(command: "vlm", args: ["model", "download", "<model-id>", "--provider", "mlx-swift-lm", "--json"])
     case "smoke-ios":
         return TKCLINextAction(command: "smoke", args: ["ios", "--device", "<device>", "--bundle-id", "<bundle-id>", "--open-url", "<url>", "--wait-text", "<text>", "--json"])
     case "smoke-android":
@@ -869,7 +872,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["vlm-grounding", "vlm-overlay", "vlm-request", "vlm-response", "vlm-raw-output", "vlm-parsed-point", "vlm-transform", "vlm-model-metadata", "coordinate-contract", "screenshot"]
     case "vlm-provider-compare":
         return ["vlm-grounding", "vlm-overlay", "vlm-compare", "coordinate-contract", "screenshot"]
-    case "vlm-model-cache":
+    case "vlm-model-cache", "vlm-model-download":
         return ["vlm-model-cache", "vlm-model-metadata"]
     case "network-capture-export":
         return ["network-capture", "evidence-bundle"]

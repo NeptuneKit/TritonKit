@@ -417,6 +417,26 @@ func vlmModelMutationOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func vlmModelDownloadOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "vlm.model.download",
+        format: "json",
+        kind: "vlm-model-download-result",
+        model: "TKVLMModelDownloadResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether model download command completed"),
+            ("provider", "String", true, "Provider id; mlx-swift-lm"),
+            ("model", "String", true, "Requested model id"),
+            ("cacheDir", "String", true, "Resolved local model cache directory"),
+            ("modelPath", "String", true, "Resolved local model path"),
+            ("status", "String", true, "downloaded or already-ready"),
+            ("downloaded", "Bool", true, "Whether helper was invoked to download"),
+            ("bytesDownloaded", "Int64?", false, "Helper-reported downloaded or copied bytes"),
+            ("modelEntry", "TKVLMModelCacheEntry", true, "Ready cache metadata after download"),
+        ])
+    )
+}
+
 func webLaunchPlanOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "web.launch-plan",

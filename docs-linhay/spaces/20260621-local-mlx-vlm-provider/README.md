@@ -14,10 +14,11 @@ Build P17-P22 as a staged local VLM provider program:
 - P20 provider comparison
 - P21 App Map VLM health
 - P22 model cache management
+- P23 explicit model download command
 
 ## Scope
 
-P17-P22 add the local MLX Swift VLM provider track as a controlled grounding backend. The track covers fake CI grounding, a manual real-model gate, explicit runner opt-in, provider comparison, App Map health, and local model cache governance.
+P17-P23 add the local MLX Swift VLM provider track as a controlled grounding backend. The track covers fake CI grounding, a manual real-model gate, explicit runner opt-in, provider comparison, App Map health, local model cache governance, and explicit helper-mediated model download.
 
 The first implementation keeps the main CLI free of a hard `mlx-swift-lm` package dependency. The default test path uses the deterministic fake provider contract; true model loading remains a manual gate until a local model/helper is available.
 
@@ -78,6 +79,16 @@ Given a local MLX model cache directory
 When an agent runs `triton vlm model list|inspect|preflight|prune|remove`
 Then the command stays local, never downloads by default, and only removes ready models through explicit `remove`.
 
+### P23 model download
+
+Given an external MLX helper is configured
+When an agent runs `triton vlm model download <model-id> --provider mlx-swift-lm --json`
+Then the main CLI invokes the helper, writes the model into the local cache, inspects the ready entry, and returns `triton.vlm.model-download-result`.
+
+Given no helper is configured
+When an agent runs the same command
+Then it fails closed with `mlx_helper_required` and does not create a model cache entry.
+
 ## Non-goals
 
 - No autonomous GUI loop.
@@ -89,10 +100,11 @@ Then the command stays local, never downloads by default, and only removes ready
 
 ## Validation
 
-P17-P22 default validation is fake/local-only:
+P17-P23 default validation is fake/local-only:
 
 - `swift test --package-path CLI --filter 'VLMProviderComparisonTests|VLMModelCacheTests|AppMapVLMHealthTests|TestValidationTests|VLMMlxSwiftLM|SchemaFactSourceTests'`
 - `triton vlm providers --json`
+- `triton vlm model download <model-id> --helper <helper> --json`
 - `triton schema --command vlm --json`
 - `triton schema --command map --json`
 - `triton capabilities --json`

@@ -1,6 +1,96 @@
 import Foundation
 import TritonKitShared
 
+struct TKMLXModelDownloadRequest: Codable, Equatable {
+    let schemaVersion: Int
+    let provider: String
+    let model: String
+    let cacheDir: String
+    let outputPath: String
+    let force: Bool
+
+    init(schemaVersion: Int = 1, provider: String, model: String, cacheDir: String, outputPath: String, force: Bool) {
+        self.schemaVersion = schemaVersion
+        self.provider = provider
+        self.model = model
+        self.cacheDir = cacheDir
+        self.outputPath = outputPath
+        self.force = force
+    }
+}
+
+struct TKMLXModelDownloadHelperResponse: Decodable {
+    let modelPath: String?
+    let bytesDownloaded: Int64?
+}
+
+func downloadVLMModel(
+    _ model: String,
+    provider: String,
+    cacheDir: String? = nil,
+    force: Bool = false,
+    helperPath: String? = nil
+) throws -> TKVLMModelDownloadResponse {
+    try validateModelCacheProvider(provider)
+    let cache = cacheDir.map { URL(fileURLWithPath: expandTilde($0), isDirectory: true) } ?? mlxModelCacheDirectory()
+    let path = resolveModelPath(model, cache: cache)
+
+    if FileManager.default.fileExists(atPath: path.path), !force {
+        let entry = try inspectModelEntry(path, cache: cache)
+        guard entry.status != "ready" else {
+            return TKVLMModelDownloadResponse(
+                provider: provider,
+                model: model,
+                cacheDir: cache.path,
+                modelPath: path.path,
+                status: "already-ready",
+                downloaded: false,
+                bytesDownloaded: nil,
+                modelEntry: entry
+            )
+        }
+        throw TKVLMGroundingFailure(
+            code: "mlx_model_cache_exists",
+            message: "Model cache already exists but is not ready at \(path.path)",
+            hint: "Run triton vlm model prune --provider mlx-swift-lm --json or pass --force to replace it"
+        )
+    }
+
+    if force, FileManager.default.fileExists(atPath: path.path) {
+        try FileManager.default.removeItem(at: path)
+    }
+
+    let resolvedHelper = try resolveMLXSwiftLMHelper(helperPath)
+    try FileManager.default.createDirectory(at: cache, withIntermediateDirectories: true)
+    let request = TKMLXModelDownloadRequest(
+        provider: provider,
+        model: model,
+        cacheDir: cache.path,
+        outputPath: path.path,
+        force: force
+    )
+    let helperResponse = try runMLXModelDownloadHelper(path: resolvedHelper, request: request)
+    let downloadedPath = helperResponse.modelPath.map { URL(fileURLWithPath: expandTilde($0), isDirectory: true) } ?? path
+    let entry = try inspectModelEntry(downloadedPath, cache: cache)
+    guard entry.status == "ready" else {
+        throw TKVLMGroundingFailure(
+            code: "mlx_model_download_incomplete",
+            message: "Model download completed but cache is not ready at \(downloadedPath.path)",
+            hint: "Run triton vlm model preflight \(downloadedPath.path) --provider mlx-swift-lm --json"
+        )
+    }
+    return TKVLMModelDownloadResponse(
+        provider: provider,
+        model: model,
+        cacheDir: cache.path,
+        modelPath: downloadedPath.path,
+        status: "downloaded",
+        downloaded: true,
+        bytesDownloaded: helperResponse.bytesDownloaded,
+        modelEntry: entry
+    )
+}
+
 func listVLMModels(provider: String) throws -> TKVLMModelListResponse {
     try validateModelCacheProvider(provider)
     let cache = mlxModelCacheDirectory()
@@ -228,4 +318,91 @@ func expandTilde(_ path: String) -> String {
         return FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(String(path.dropFirst(2))).path
     }
     return path
+}
+
+private func resolveMLXSwiftLMHelper(_ helperPath: String?) throws -> String {
+    let resolved = helperPath ??
+        ProcessInfo.processInfo.environment["TRITON_MLX_HELPER"] ??
+        ProcessInfo.processInfo.environment["TRITON_MLX_SWIFT_LM_HELPER"]
+    guard let resolved, !resolved.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        throw TKVLMGroundingFailure(
+            code: "mlx_helper_required",
+            message: "Model download requires an external mlx-swift-lm helper",
+            hint: "Set TRITON_MLX_HELPER or pass --helper; the main triton CLI does not link downloader dependencies"
+        )
+    }
+    guard FileManager.default.isExecutableFile(atPath: resolved) else {
+        throw TKVLMGroundingFailure(
+            code: "mlx_helper_required",
+            message: "mlx-swift-lm helper is not executable at \(resolved)",
+            hint: "Build Tools/TritonMLXProvider and point --helper or TRITON_MLX_HELPER at the executable"
+        )
+    }
+    return resolved
+}
+
+private func runMLXModelDownloadHelper(
+    path: String,
+    request: TKMLXModelDownloadRequest,
+    timeoutSeconds: TimeInterval = 3600
+) throws -> TKMLXModelDownloadHelperResponse {
+    let tempDirectory = FileManager.default.temporaryDirectory
+        .appendingPathComponent("triton-mlx-download-\(UUID().uuidString)", isDirectory: true)
+    try FileManager.default.createDirectory(at: tempDirectory, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: tempDirectory) }
+    let requestURL = tempDirectory.appendingPathComponent("request.json")
+    try writeVLMJSON(request, to: requestURL)
+
+    let process = Process()
+    process.executableURL = URL(fileURLWithPath: path)
+    process.arguments = ["download", "--request", requestURL.path]
+
+    let stdout = Pipe()
+    let stderr = Pipe()
+    process.standardOutput = stdout
+    process.standardError = stderr
+
+    let semaphore = DispatchSemaphore(value: 0)
+    process.terminationHandler = { _ in semaphore.signal() }
+    do {
+        try process.run()
+    } catch {
+        throw TKVLMGroundingFailure(
+            code: "mlx_model_download_failed",
+            message: "Failed to launch mlx-swift-lm helper at \(path): \(error)",
+            hint: "Check --helper or TRITON_MLX_HELPER"
+        )
+    }
+
+    if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
+        process.terminate()
+        throw TKVLMGroundingFailure(
+            code: "mlx_model_download_failed",
+            message: "mlx-swift-lm helper download timed out after \(Int(timeoutSeconds)) seconds",
+            hint: "Use a smaller model or inspect helper logs"
+        )
+    }
+
+    let stdoutText = String(data: stdout.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    let stderrText = String(data: stderr.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+    guard process.terminationStatus == 0 else {
+        throw TKVLMGroundingFailure(
+            code: "mlx_model_download_failed",
+            message: "mlx-swift-lm helper exited with status \(process.terminationStatus): \(stderrText.trimmingCharacters(in: .whitespacesAndNewlines))",
+            hint: "Inspect helper stderr and model availability"
+        )
+    }
+    let trimmed = stdoutText.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !trimmed.isEmpty else {
+        return TKMLXModelDownloadHelperResponse(modelPath: request.outputPath, bytesDownloaded: nil)
+    }
+    guard let data = trimmed.data(using: .utf8),
+          let response = try? JSONDecoder().decode(TKMLXModelDownloadHelperResponse.self, from: data) else {
+        throw TKVLMGroundingFailure(
+            code: "mlx_model_download_failed",
+            message: "mlx-swift-lm helper returned invalid download JSON",
+            hint: "Expected { \"modelPath\": <path>, \"bytesDownloaded\": <number?> } on stdout"
+        )
+    }
+    return response
 }

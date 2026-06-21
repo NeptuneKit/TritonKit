@@ -15,6 +15,7 @@ Set one of these environment variables before running TritonKit:
 TritonKit invokes:
 
     $TRITON_MLX_HELPER ground --request <request.json>
+    $TRITON_MLX_HELPER download --request <request.json>
 
 The helper must:
 
@@ -33,6 +34,32 @@ Accepted stdout examples:
     {"error":"target_not_visible"}
 
 Do not print explanations, action lists, chain-of-thought, logs, or progress messages to stdout.
+
+## Download Contract
+
+`triton vlm model download` delegates model transfer to the same helper:
+
+    triton vlm model download mlx-community/Qwen2-VL-2B-Instruct-4bit \
+      --provider mlx-swift-lm \
+      --helper /absolute/path/to/triton-mlx-provider \
+      --json
+
+The helper receives:
+
+    {
+      "schemaVersion": 1,
+      "provider": "mlx-swift-lm",
+      "model": "mlx-community/Qwen2-VL-2B-Instruct-4bit",
+      "cacheDir": "/Users/me/.cache/triton/mlx-models",
+      "outputPath": "/Users/me/.cache/triton/mlx-models/mlx-community__Qwen2-VL-2B-Instruct-4bit",
+      "force": false
+    }
+
+The helper must download or materialize the model at `outputPath`, write progress to stderr, and write only compact JSON to stdout:
+
+    {"modelPath":"/Users/me/.cache/triton/mlx-models/mlx-community__Qwen2-VL-2B-Instruct-4bit","bytesDownloaded":123456}
+
+The main CLI then inspects the cache entry and returns `triton.vlm.model-download-result`. The main CLI still does not link downloader dependencies.
 
 ## Request Shape
 
