@@ -73,11 +73,17 @@ func resolveXcodeInvocation(
     if hasXcodeSelector(device), hasXcodeSelector(simulator) {
         throw XcodeWorkflowError.conflictingTargetSelectors
     }
-    let resolvedSDK = resolvedXcodeSDK(sdk: sdk, defaultSDK: xcode?.sdk, device: device)
     let resolvedSimulator = hasXcodeSelector(device) ? nil : simulator ?? defaults?.defaultSimulatorUDID
     let resolvedDestination = resolvedXcodeDestination(
         destination: destination,
         defaultDestination: xcode?.destination,
+        simulatorUDID: resolvedSimulator,
+        device: device
+    )
+    let resolvedSDK = resolvedXcodeSDK(
+        sdk: sdk,
+        defaultSDK: xcode?.sdk,
+        resolvedDestination: resolvedDestination,
         simulatorUDID: resolvedSimulator,
         device: device
     )
@@ -97,14 +103,23 @@ func resolveXcodeInvocation(
     )
 }
 
-func resolvedXcodeSDK(sdk: String?, defaultSDK: String?, device: String?) -> String {
+func resolvedXcodeSDK(
+    sdk: String?,
+    defaultSDK: String?,
+    resolvedDestination: String?,
+    simulatorUDID: String?,
+    device: String?
+) -> String? {
     if let sdk, !sdk.isEmpty {
         return sdk
     }
     if hasXcodeSelector(device) {
         return "iphoneos"
     }
-    return defaultSDK ?? "iphonesimulator"
+    if isSimulatorBuildDestination(resolvedDestination) || hasXcodeSelector(simulatorUDID) {
+        return nil
+    }
+    return defaultSDK
 }
 
 func resolvedXcodeDestination(
@@ -128,6 +143,11 @@ func resolvedXcodeDestination(
 private func hasXcodeSelector(_ value: String?) -> Bool {
     guard let value else { return false }
     return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+}
+
+private func isSimulatorBuildDestination(_ destination: String?) -> Bool {
+    guard let destination else { return false }
+    return destination.range(of: "platform=iOS Simulator", options: [.caseInsensitive]) != nil
 }
 
 enum XcodeWorkflowError: Error, CustomStringConvertible {
