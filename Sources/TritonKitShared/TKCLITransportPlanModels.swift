@@ -278,7 +278,7 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
             values = ["project", "xcode", "evidence"]
         case ("app", _):
             values = ["target", "app", "assert", "evidence"]
-        case ("assert", _):
+        case ("assert", _), ("verify", _):
             values = ["assert", "evidence"]
         case ("runtime", _):
             values = ["app", "runtime", "observe", "action", "assert", "evidence"]
@@ -294,9 +294,9 @@ public struct TKWorkflowPlanStep: Codable, Equatable {
             values = ["evidence", "replay"]
         case ("plan", _):
             values = allWorkflows
-        case ("geometry", _), ("ax", _), ("hit", _), ("wait", _), ("screenshot", _), ("list", _), ("inspect", _):
+        case ("observe", _), ("debug", _), ("geometry", _), ("ax", _), ("hit", _), ("wait", _), ("screenshot", _), ("list", _), ("inspect", _):
             values = ["observe", "action", "assert", "evidence"]
-        case ("input", _), ("tap", _), ("swipe", _), ("type", _), ("paste", _), ("clear", _), ("press", _):
+        case ("act", _), ("input", _), ("tap", _), ("swipe", _), ("type", _), ("paste", _), ("clear", _), ("press", _):
             values = ["action", "assert", "evidence"]
         case ("doctor", _), ("status", _), ("capabilities", _), ("schema", _):
             values = allWorkflows
@@ -570,7 +570,7 @@ public struct TKWorkflowPlanResponse: Codable, Equatable {
                 values = ["app", "observe", "action", "assert", "evidence", "replay", "route", "smoke", "webview-check"]
             case "connect-target":
                 values = ["target", "app", "runtime", "observe", "action", "assert", "evidence", "smoke", "route", "webview-check"]
-            case "geometry", "ax", "wait", "hit", "input", "screenshot", "archive":
+            case "observe-current", "observe-tree", "geometry", "ax", "wait", "verify-text", "hit", "input", "act-input", "screenshot", "archive":
                 values = ["observe", "action", "assert", "evidence"]
             default:
                 values = []
@@ -604,16 +604,24 @@ public struct TKWorkflowPlanResponse: Codable, Equatable {
             return TKCLINextAction(command: "target", args: ["use", "<selector>", "--json"])
         case "target-wait-ready":
             return TKCLINextAction(command: "target", args: ["wait-ready", "<selector>", "--json"])
+        case "observe-current":
+            return TKCLINextAction(command: "observe", args: ["current", "--json"])
+        case "observe-tree":
+            return TKCLINextAction(command: "observe", args: ["tree", "--json"])
         case "geometry":
-            return TKCLINextAction(command: "geometry", args: ["--json"])
+            return TKCLINextAction(command: "debug", args: ["geometry", "--json"])
         case "ax":
-            return TKCLINextAction(command: "ax", args: ["--json"])
+            return TKCLINextAction(command: "debug", args: ["ax", "--json"])
         case "wait", "wait-text":
             return TKCLINextAction(command: "wait", args: ["--text", "<text>", "--json"])
+        case "verify-text":
+            return TKCLINextAction(command: "verify", args: ["text-exists", "<text>", "--json"])
         case "hit":
-            return TKCLINextAction(command: "hit", args: ["--json"])
+            return TKCLINextAction(command: "debug", args: ["hit", "--json"])
+        case "act-input":
+            return TKCLINextAction(command: "act", args: ["input", "--json", "--summary", "--strict"])
         case "input":
-            return TKCLINextAction(command: "input", args: ["--json", "--summary", "--strict"])
+            return TKCLINextAction(command: "act", args: ["input", "--json", "--summary", "--strict"])
         case "screenshot":
             return TKCLINextAction(command: "screenshot", args: ["--json"])
         case "archive":

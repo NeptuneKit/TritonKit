@@ -343,15 +343,15 @@ extension SchemaFactSourceTests {
 
     @Test("schema command filtering and unknown-command diagnostics are machine-readable")
     func schemaCommandFilteringAndUnknownCommandDiagnosticsAreMachineReadable() throws {
-        let response = try buildSchemaResponse(command: "tap")
+        let response = try buildSchemaResponse(command: "act")
 
         #expect(response.schemaVersion == 1)
-        #expect(response.commands.map(\.name) == ["tap"])
+        #expect(response.commands.map(\.name) == ["act"])
         #expect(response.httpManagementAPI.isEmpty)
 
         var lookupError: SchemaCommandLookupError?
         do {
-            _ = try buildSchemaResponse(command: "not-a-command")
+            _ = try buildSchemaResponse(command: "tap")
         } catch let error as SchemaCommandLookupError {
             lookupError = error
         }
@@ -361,7 +361,7 @@ extension SchemaFactSourceTests {
 
         #expect(errorResponse.ok == false)
         #expect(errorResponse.error.code == "unknown_command_schema")
-        #expect(errorResponse.error.message.contains("not-a-command"))
+        #expect(errorResponse.error.message.contains("tap"))
         #expect(errorResponse.error.hint == "Run `triton schema --json` to inspect available command schemas.")
         #expect(errorResponse.error.nextAction?.command == "schema")
         #expect(errorResponse.error.nextAction?.args == ["--json"])
@@ -388,7 +388,7 @@ extension SchemaFactSourceTests {
 
     @Test("schema lookup preserves issue example command identities")
     func schemaLookupPreservesIssueExampleCommandIdentities() throws {
-        for commandName in ["xcode", "tap"] {
+        for commandName in ["xcode", "act"] {
             let response = try buildSchemaResponse(command: commandName)
             let data = try JSONEncoder().encode(response)
             let decoded = try JSONDecoder().decode(TKCLISchemaResponse.self, from: data)
@@ -448,20 +448,19 @@ extension SchemaFactSourceTests {
     func schemaCommandInventoryRemainsStableForAgentDiscovery() {
         let commandNames = commandSchemas().map(\.name)
 
-        #expect(commandNames.count == 59)
+        #expect(commandNames.count == 36)
         #expect(Set(commandNames).count == commandNames.count)
         #expect(commandNames == [
             "version", "serve", "web", "status", "doctor", "plan", "capabilities", "schema",
             "test",
             "target",
             "xcode", "xcresult", "xctrace", "coverage", "build",
-            "map", "vlm",
-            "runtime", "state", "snapshot", "focus", "set-text", "select-segment", "set-switch", "ledger",
+            "map", "vlm", "debug",
             "device", "sim", "app",
-            "list", "inspect", "observe", "webview", "route", "hierarchy", "nodes", "node", "attrs", "object",
-            "export", "evidence", "capture", "smoke", "assert", "record", "replay",
-            "find", "wait", "ax", "geometry", "hit", "screenshot",
-            "action", "tap", "swipe", "type", "paste", "clear", "press", "input",
+            "list", "inspect", "observe", "webview", "route",
+            "export", "evidence", "smoke", "verify", "record", "replay",
+            "wait", "screenshot",
+            "act", "action",
         ])
     }
 

@@ -2819,7 +2819,7 @@ struct DeviceCrossPlatformTests {
         #expect(smoke.examples.contains("triton smoke harmony --device harmony-a --bundle com.example.app --ability EntryAbility --open-url example://home --wait-text Ready --screenshot /tmp/smoke.jpeg --evidence /tmp/harmony.tritonevidence --json"))
     }
 
-    @Test("issue 30 Android literal app inspect and ax entrypoints parse")
+    @Test("issue 30 Android literal app inspect and debug ax entrypoints parse")
     func issue30AndroidLiteralEntrypointsParse() throws {
         _ = try TritonKitCLI.parseAsRoot([
             "app", "inspect",
@@ -2829,7 +2829,7 @@ struct DeviceCrossPlatformTests {
             "--json",
         ])
         _ = try TritonKitCLI.parseAsRoot([
-            "ax",
+            "debug", "ax",
             "--platform", "android",
             "--device", "android-a",
             "--json",
@@ -3576,7 +3576,7 @@ private func waitUntilPortAcceptsConnections(port: Int) throws {
 }
 
 private func sendProxyServeTestRequest(port: Int, path: String = "/capture") throws {
-    let fd = try connectToLocalTestPort(port)
+    let fd = try connectToLocalTestPortWithRetry(port)
     defer { close(fd) }
     let request = Data((
         "GET http://127.0.0.1:1\(path) HTTP/1.1\r\n" +
@@ -3597,7 +3597,7 @@ private func sendProxyServeTestRequest(port: Int, path: String = "/capture") thr
 }
 
 private func sendProxyServeTestRequestAndReadResponse(port: Int, path: String = "/capture") throws -> String {
-    let fd = try connectToLocalTestPort(port)
+    let fd = try connectToLocalTestPortWithRetry(port)
     defer { close(fd) }
     let request = Data((
         "GET http://127.0.0.1:1\(path) HTTP/1.1\r\n" +
@@ -3624,6 +3624,19 @@ private func sendProxyServeTestRequestAndReadResponse(port: Int, path: String = 
         response.append(buffer, count: readCount)
     }
     return String(decoding: response, as: UTF8.self)
+}
+
+private func connectToLocalTestPortWithRetry(_ port: Int) throws -> Int32 {
+    var lastError: Error?
+    for _ in 0..<50 {
+        do {
+            return try connectToLocalTestPort(port)
+        } catch {
+            lastError = error
+            Thread.sleep(forTimeInterval: 0.02)
+        }
+    }
+    throw lastError ?? POSIXError(.ETIMEDOUT)
 }
 
 private func connectToLocalTestPort(_ port: Int) throws -> Int32 {

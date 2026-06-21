@@ -27,6 +27,78 @@ extension SchemaFactSourceTests {
         #expect(missing == [])
     }
 
+    @Test("P23 command schemas expose product surface metadata")
+    func p23CommandSchemasExposeProductSurfaceMetadata() throws {
+        let schemas = commandSchemaMap()
+        let validLayers: Set<String> = ["workflow", "diagnostic", "host-adapter", "agent-support", "raw-engine"]
+        let unknownLayers = commandSchemas()
+            .filter { !validLayers.contains($0.surfaceLayer) }
+            .map { "\($0.name):\($0.surfaceLayer)" }
+            .sorted()
+
+        #expect(unknownLayers == [])
+
+        for name in ["observe", "act", "verify"] {
+            let schema = try #require(schemas[name])
+            #expect(schema.surfaceLayer == "workflow")
+            #expect(schema.deprecatedForMainPath == false)
+            #expect(schema.replacementCommand == nil)
+        }
+
+        let debug = try #require(schemas["debug"])
+        #expect(debug.surfaceLayer == "raw-engine")
+        #expect(debug.deprecatedForMainPath == false)
+        #expect(debug.replacementCommand == nil)
+        #expect(debug.subcommands.map(\.name).contains("hierarchy"))
+        #expect(debug.subcommands.map(\.name).contains("ledger"))
+
+        let retiredRoots: Set<String> = [
+            "find", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "input",
+            "assert", "capture",
+            "runtime", "state", "snapshot", "hierarchy", "nodes", "node", "attrs", "object", "geometry", "ax", "hit", "ledger",
+        ]
+        let stillExposedRetiredRoots = retiredRoots.intersection(Set(schemas.keys)).sorted()
+        #expect(stillExposedRetiredRoots == [])
+
+        let act = try #require(schemas["act"])
+        #expect(act.subcommands.map(\.name).contains("tap"))
+        #expect(act.subcommands.map(\.name).contains("type"))
+
+        let verify = try #require(schemas["verify"])
+        #expect(verify.subcommands.map(\.name).contains("text-exists"))
+
+        let evidence = try #require(schemas["evidence"])
+        #expect(evidence.subcommands.map(\.name).contains("capture"))
+
+        #expect(debug.subcommands.map(\.name).contains("geometry"))
+        #expect(debug.subcommands.map(\.name).contains("hit"))
+    }
+
+    @Test("P23 raw debug commands stay schema backed")
+    func p23RawDebugCommandsStaySchemaBacked() throws {
+        let schemas = commandSchemaMap()
+        let debug = try #require(schemas["debug"])
+        let debugSubcommands = Set(debug.subcommands.map(\.name))
+        var invalidCommands: [String] = []
+        var missingSubcommands: [String] = []
+
+        for commandName in ["runtime", "state", "snapshot", "hierarchy", "nodes", "node", "attrs", "object", "geometry", "ax", "hit", "ledger"] {
+            let rawDebugCommand = "triton debug \(commandName)"
+
+            if !isSingleTritonInvocation(rawDebugCommand) {
+                invalidCommands.append("\(commandName):\(rawDebugCommand)")
+                continue
+            }
+
+            if !debugSubcommands.contains(commandName) {
+                missingSubcommands.append("\(commandName):\(rawDebugCommand)")
+            }
+        }
+
+        #expect(invalidCommands == [])
+        #expect(missingSubcommands == [])
+    }
+
     @Test("schema output contracts expose nonempty fields")
     func schemaOutputContractsExposeNonemptyFields() {
         var missingSelectors: [String] = []

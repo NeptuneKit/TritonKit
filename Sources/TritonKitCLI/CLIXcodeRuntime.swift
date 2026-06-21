@@ -337,7 +337,7 @@ func runXcodeBuildInstallLaunch(
         stderrLogPath: launchResult.stderrLogPath,
         stdoutBytes: launchResult.stdoutBytes,
         stderrBytes: launchResult.stderrBytes,
-        note: "App launch was submitted to Simulator. Verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence."
+        note: "App launch was submitted to Simulator. Verify business readiness with `triton status`, `triton wait`, `triton verify`, screenshot, or evidence."
     )
 }
 

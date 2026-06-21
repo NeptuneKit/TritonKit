@@ -27,13 +27,14 @@ struct XcodeCommandTests {
             "--simulator", "SIM-1",
             "--env", "FEATURE_FLAG=1",
             "--env", "API_KEY=secret",
-            "--arg=--debug-route",
+            "--arg",
+            "debug-route",
             "--arg", "demo.home",
             "--jsonl"
         ])
 
         #expect(run.launchEnvironment == ["FEATURE_FLAG=1", "API_KEY=secret"])
-        #expect(run.launchArguments == ["--debug-route", "demo.home"])
+        #expect(run.launchArguments == ["debug-route", "demo.home"])
 
         let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
         #expect(xcode.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") })

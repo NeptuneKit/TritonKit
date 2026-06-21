@@ -206,10 +206,10 @@ func runHarmonySmoke(
                 message: wait.matched ? nil : "Expected text to exist: \(options.waitText)"
             ))
             guard wait.matched else {
-                return makeFail(step: "harmony.wait", code: "text_not_found", error: RuntimeError("Expected text to exist: \(options.waitText)"), hint: "Run `triton ax --platform harmony --target \(selected.target) --json` to inspect current layout text.")
+                return makeFail(step: "harmony.wait", code: "text_not_found", error: RuntimeError("Expected text to exist: \(options.waitText)"), hint: "Run `triton debug ax --platform harmony --target \(selected.target) --json` to inspect current layout text.")
             }
         } catch {
-            return makeFail(step: "harmony.wait", code: "text_not_found", error: error, hint: "Run `triton ax --platform harmony --target \(selected.target) --json` to inspect current layout text.")
+            return makeFail(step: "harmony.wait", code: "text_not_found", error: error, hint: "Run `triton debug ax --platform harmony --target \(selected.target) --json` to inspect current layout text.")
         }
 
         if let tapText = options.tapText {
@@ -228,7 +228,7 @@ func runHarmonySmoke(
                     message: tap.note
                 ))
             } catch {
-                return makeFail(step: "harmony.tap", code: "text_not_found", error: error, hint: "Run `triton ax --platform harmony --target \(selected.target) --json` to inspect tappable text.")
+                return makeFail(step: "harmony.tap", code: "text_not_found", error: error, hint: "Run `triton debug ax --platform harmony --target \(selected.target) --json` to inspect tappable text.")
             }
         }
 
@@ -258,10 +258,10 @@ func runHarmonySmoke(
                     message: wait.matched ? nil : "Expected text to exist: \(postTapWaitText)"
                 ))
                 guard wait.matched else {
-                    return makeFail(step: "harmony.post-tap-wait", code: "text_not_found", error: RuntimeError("Expected text to exist: \(postTapWaitText)"), hint: "Run `triton ax --platform harmony --target \(selected.target) --json` to inspect current layout text.")
+                    return makeFail(step: "harmony.post-tap-wait", code: "text_not_found", error: RuntimeError("Expected text to exist: \(postTapWaitText)"), hint: "Run `triton debug ax --platform harmony --target \(selected.target) --json` to inspect current layout text.")
                 }
             } catch {
-                return makeFail(step: "harmony.post-tap-wait", code: "text_not_found", error: error, hint: "Run `triton ax --platform harmony --target \(selected.target) --json` to inspect current layout text.")
+                return makeFail(step: "harmony.post-tap-wait", code: "text_not_found", error: error, hint: "Run `triton debug ax --platform harmony --target \(selected.target) --json` to inspect current layout text.")
             }
         }
 

@@ -747,7 +747,7 @@ func harmonyRouteWebViewWarnings(hasRuntimeBaseURL: Bool, hasCandidates: Bool) -
         TKWebViewDiagnosticWarning(
             code: "harmony_route_loop_detector_provider_required",
             message: "Route-loop detection requires route history plus WebView navigation history; capture an embedded provider snapshot or evidence bundle before deciding whether an init URL was intercepted.",
-            nextAction: TKCLINextAction(command: "evidence", args: ["--name", "harmony-route-loop", "--json"], category: "evidence"),
+            nextAction: TKCLINextAction(command: "evidence", args: ["capture", "--case", "harmony-route-loop", "--json"], category: "evidence"),
             source: "webview-provider"
         ),
     ]

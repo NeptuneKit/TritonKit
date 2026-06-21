@@ -555,15 +555,16 @@ public enum TKReplayStepExecution {
                 variables: variables,
                 strict: strict
             )
-            var argv = ["triton", "evidence", "--output", output, "--include", step.include ?? "status,list,version,hierarchy,ax,screenshot"]
+            var argv = ["triton", "evidence", "capture"]
+            if let name = step.name ?? planName {
+                argv += ["--case", name]
+            }
+            argv += ["--output", output, "--include", step.include ?? "status,list,version,hierarchy,ax,screenshot"]
             if let proxySession = step.proxySession {
                 argv += [
                     "--proxy-session",
                     try substituted(proxySession, variables: variables, strict: strict),
                 ]
-            }
-            if let name = step.name ?? planName {
-                argv += ["--name", name]
             }
             if let note = step.note {
                 argv += ["--note", note]
@@ -735,7 +736,7 @@ public enum TKReplayStepExecution {
             try validateCoordinatePair(step, strict: strict)
         }
 
-        var argv = ["triton", "tap"]
+        var argv = ["triton", "act", "tap"]
         if let text = step.text {
             argv.append(try substituted(text, variables: variables, strict: strict))
         } else if let x = step.x, let y = step.y {
@@ -760,12 +761,12 @@ public enum TKReplayStepExecution {
             if strict {
                 throw TKReplayStepExecutionError.missingText(action: step.action.rawValue)
             }
-            var argv = ["triton", "paste", "<text>"]
+            var argv = ["triton", "act", "paste", "<text>"]
             try appendFocusArgs(step, to: &argv, strict: strict)
             return argv + ["--json"]
         }
         let value = try substituted(rawValue, variables: variables, strict: strict)
-        var argv = ["triton", "paste"]
+        var argv = ["triton", "act", "paste"]
         if step.secure == true {
             argv += ["--secure", step.redactedValue(substitutedValue: value)]
         } else {
@@ -781,10 +782,10 @@ public enum TKReplayStepExecution {
             if strict {
                 throw TKReplayStepExecutionError.missingText(action: step.action.rawValue)
             }
-            return ["triton", "type", "--text", "<text>", "--json"]
+            return ["triton", "act", "type", "--text", "<text>", "--json"]
         }
         let value = try substituted(rawValue, variables: variables, strict: strict)
-        var argv = ["triton", "type", "--text", step.redactedValue(substitutedValue: value)]
+        var argv = ["triton", "act", "type", "--text", step.redactedValue(substitutedValue: value)]
         if step.secure == true {
             argv.append("--secure")
         }
@@ -796,7 +797,7 @@ public enum TKReplayStepExecution {
 
     private static func clearArgv(for step: TKReplayPlanStep, strict: Bool) throws -> [String] {
         try validateCoordinatePair(step, strict: strict)
-        var argv = ["triton", "clear"]
+        var argv = ["triton", "act", "clear"]
         try appendFocusArgs(step, to: &argv, strict: strict)
         return argv + ["--json"]
     }
@@ -1051,7 +1052,7 @@ public enum TKReplayStepExecution {
         } else if isDeviceProxyStop(argv) {
             values = ["stdout-json", "proxy-restore"]
         } else {
-            switch rootCommand {
+            switch replayWorkflowCommand(rootCommand: rootCommand, argv: argv) {
         case "tap", "paste", "type", "clear", "input":
             values = ["stdout-json", "input-result"]
         case "wait":
@@ -1081,7 +1082,7 @@ public enum TKReplayStepExecution {
         if isDeviceProxyCommand(argv) {
             values = ["evidence", "target"]
         } else {
-            switch rootCommand {
+            switch replayWorkflowCommand(rootCommand: rootCommand, argv: argv) {
         case "tap", "paste", "type", "clear", "input":
             values = ["action", "assert", "evidence"]
         case "wait":
@@ -1115,6 +1116,13 @@ public enum TKReplayStepExecution {
             break
         }
         return values
+    }
+
+    private static func replayWorkflowCommand(rootCommand: String, argv: [String]) -> String {
+        if rootCommand == "act", argv.count > 2 {
+            return argv[2]
+        }
+        return rootCommand
     }
 
     private static func isDeviceProxyCommand(_ argv: [String]) -> Bool {

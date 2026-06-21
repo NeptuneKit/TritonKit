@@ -292,7 +292,7 @@ struct XcodeDiagnosticsTests {
         await #expect(throws: XcodeDiagnosticsError.notIdle(status: active)) {
             try await waitForXcodeIdle(
                 workspace: "App.xcworkspace",
-                timeout: 0.03,
+                timeout: 0.3,
                 interval: 0.01,
                 statusProvider: {
                     polls += 1

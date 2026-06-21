@@ -414,9 +414,9 @@ public let TKRuntimeMediaDefaultFallbackAdvice: [String] = [
 ]
 
 public let TKRuntimeMediaDefaultEvidenceCommands: [String] = [
-    "triton snapshot --include media,ax,screenshot-metadata --json",
+    "triton debug snapshot --include media,ax,screenshot-metadata --json",
     "triton screenshot --json",
-    "triton evidence --output <dir.tritonevidence> --json",
+    "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
 ]
 
 public func TKRuntimeMediaAutomationConfidence(

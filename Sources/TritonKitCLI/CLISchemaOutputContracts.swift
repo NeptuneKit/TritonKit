@@ -31,6 +31,11 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
         fields: schemaContractFields([
             ("schemaVersion", "Int", true, "CLI schema contract version"),
             ("commands", "[TKCommandSchema]", true, "Machine-readable command contracts"),
+            ("commands[].surfaceLayer", "String", true, "P23 product surface layer: workflow, diagnostic, host-adapter, agent-support, or raw-engine"),
+            ("commands[].deprecatedForMainPath", "Bool", true, "Whether this command remains executable but should not be used as the main workflow entry"),
+            ("commands[].replacementCommand", "String?", false, "Preferred workflow command when deprecatedForMainPath is true and a replacement exists"),
+            ("commands[].rawDebugCommand", "String?", false, "Future debug-surface command shape for raw engine entries"),
+            ("commands[].surfaceRationale", "String?", false, "Short rationale for the surface-layer decision"),
         ])
     )
 }

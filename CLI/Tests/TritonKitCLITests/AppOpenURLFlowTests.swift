@@ -84,22 +84,23 @@ struct AppOpenURLFlowTests {
         let app = try #require(commandSchemas().first { $0.name == "app" })
         #expect(app.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") })
         #expect(app.options.contains { $0.name == "--arg" && $0.description.contains("launch argument") })
-        #expect(app.examples.contains("triton app launch --device iphone15 --bundle-id com.example.app --env FEATURE_FLAG=1 --arg=--debug-route --arg demo.home --json"))
+        #expect(app.examples.contains("triton app launch --device iphone15 --bundle-id com.example.app --env FEATURE_FLAG=1 --arg debug-route --arg demo.home --json"))
     }
 
-    @Test("app launch parses repeatable env and dash-prefixed arguments")
-    func appLaunchParsesRepeatableEnvAndDashPrefixedArguments() throws {
+    @Test("app launch parses repeatable env and launch arguments")
+    func appLaunchParsesRepeatableEnvAndLaunchArguments() throws {
         let launch = try HostAppLaunch.parse([
             "--simulator", "SIM-1",
             "--bundle-id", "com.example.demo",
             "--env", "FEATURE_FLAG=1",
-            "--arg=--debug-route",
+            "--arg",
+            "debug-route",
             "--arg", "demo.home",
             "--json"
         ])
 
         #expect(launch.launchEnvironment == ["FEATURE_FLAG=1"])
-        #expect(launch.launchArguments == ["--debug-route", "demo.home"])
+        #expect(launch.launchArguments == ["debug-route", "demo.home"])
     }
 
     @Test("real-device app lifecycle planner uses raw host ids but public targets stay redacted")

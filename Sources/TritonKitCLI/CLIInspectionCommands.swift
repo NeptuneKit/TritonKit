@@ -299,7 +299,7 @@ struct Node: AsyncParsableCommand {
     )
 
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
-    @Option(help: "View or layer oid from `triton nodes`") var oid: UInt?
+    @Option(help: "View or layer oid from `triton debug nodes`") var oid: UInt?
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
@@ -341,7 +341,7 @@ struct Attrs: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Fetch live attribute groups for a node layer oid")
 
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
-    @Option(help: "Layer oid from `triton nodes`") var oid: UInt
+    @Option(help: "Layer oid from `triton debug nodes`") var oid: UInt
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
@@ -369,7 +369,7 @@ struct ObjectInfo: AsyncParsableCommand {
     )
 
     @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
-    @Option(help: "Object oid from `triton nodes`") var oid: UInt
+    @Option(help: "Object oid from `triton debug nodes`") var oid: UInt
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text

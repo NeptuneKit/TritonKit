@@ -17,11 +17,11 @@ metadata:
 - CLI helper 若已经打印了机器可读错误 envelope 并通过 `ExitCode.failure` 终止，外层 catch 必须透传 `ExitCode`，不能再二次包装成另一个 `{ok:false,error:...}`。验证时要检查失败输出仍是单个合法 JSON 对象。
 - Emulator 接管当前产品边界是本机 CLI + 本机 iOS Simulator / Android Emulator / HarmonyOS DevEco Emulator；不要把该方向扩展成真机、远端 agent、设备云、Web/Wails UI、对外 HTTP 产品面或中台服务，除非另建 space 重新定边界。
 - 本机 emulator / simulator 动作必须 Triton-first：agent 在调用 `baguette`、裸 `xcrun` / `simctl`、`hdc`、`adb`、DevEco Emulator CLI、XcodeBuildMCP 或裸 `xcodebuild` 前，必须先保存 `triton status/doctor/capabilities/schema/plan` 的机器可读事实；只有 Triton 返回失败、unsupported 或 schema/capability 未覆盖时才 fallback，且报告中必须保留 Triton 命令、错误码或 unsupported 证据和 fallback 命令。
-- 真实项目回归或 issue 证据优先用 `triton evidence --name <case> --output <dir.tritonevidence> --json` 生成 manifest + artifacts；需要拆解时再单独跑 `status/list/ax/screenshot/export`。
-- 完整回归报告优先用 `triton capture --case <case> --output <dir.tritonevidence> --json`；最终 pass/fail 判断优先用 `triton assert text-exists|text-not-exists <text> --json`，重复文本用 `--within` / `--role` / `--count` 收敛。
+- 真实项目回归或 issue 证据优先用 `triton evidence capture --case <case> --output <dir.tritonevidence> --json` 生成 manifest + artifacts；需要拆解时再单独跑 `status/list/ax/screenshot/export`。
+- 完整回归报告优先用 `triton evidence capture --case <case> --output <dir.tritonevidence> --json`；最终 pass/fail 判断优先用 `triton verify text-exists|text-not-exists <text> --json`，重复文本用 `--within` / `--role` / `--count` 收敛。
 - 可复跑真实项目 smoke 优先沉淀为 `.tritonplan`：`record` 只生成模板，`plan inspect` 做离线摘要，`replay --dry-run` 先校验变量和脱敏命令，真实 `replay` 再执行并在失败步骤停止。
-- 同文案多目标点击先用 `triton find "<text>" --all` 获取候选；已知目标点位时优先用 `triton tap "<text>" --at x,y` 消歧，也可用 `--index <n>` 或 `--within x,y,width,height`。`--within` 表示区域过滤，只有一个点位时不要把 width/height 伪造成 0；默认 `tap "<text>"` 仍选择第一个候选以兼容旧脚本。
-- 面向 agent 的 action 命令 `find/tap/swipe/type/paste/clear/press` 默认输出 JSON；示例默认省略 `--json`，只在人读调试时显式使用 `--format text`。`triton type <text>` 与 `triton press <button>` 是首选入口，旧的 `triton type --text <text>` / `triton press --button <button>` 只作为兼容路径，均必须二选一。
+- 同文案多目标点击先用 `triton act find "<text>" --all --json` 获取候选；已知目标点位时优先用 `triton act tap "<text>" --at x,y --json` 消歧，也可用 `--index <n>` 或 `--within x,y,width,height`。`--within` 表示区域过滤，只有一个点位时不要把 width/height 伪造成 0。
+- 面向 agent 的 action 命令统一走 `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`，默认要求机器可读输出。旧 action root 不再作为兼容入口；raw layout / AX 排查走 `triton debug ax --json` 或 `triton debug hierarchy --json`。
 - 设备控制参考 Baguette 时，先区分 embedded TritonKit runtime 与 macOS host-side adapter：embedded runtime 只能承诺公开 UIKit API 可验证的 in-app 控制；SimulatorKit / HID / Home / App Switcher 等设备级动作必须等 host-side adapter，当前要返回明确 unsupported。
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。
 - 当前已有 `Web/` React / Vite mock 工程，但它只是可运行设计原型，不是业务控制入口或 Wails 复活；任何恢复正式 Web/Wails 产品体验的工作仍必须先新建或更新 `space` 与 BDD 场景，并优先使用 `tritonkit-web-mock-ui`。

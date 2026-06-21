@@ -3,13 +3,13 @@ import Testing
 
 @Suite
 struct CLIHelpTests {
-    @Test("action help shows action group instead of list help")
-    func actionHelpShowsActionGroupInsteadOfListHelp() throws {
-        let result = try runTritonHelp(["action", "--help"])
+    @Test("act help shows workflow action group instead of provider parse help")
+    func actHelpShowsWorkflowActionGroupInsteadOfProviderParseHelp() throws {
+        let result = try runTritonHelp(["act", "--help"])
 
         #expect(result.exitCode == 0)
         #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        #expect(result.stdout.contains("USAGE: triton action"))
+        #expect(result.stdout.contains("USAGE: triton act"))
         #expect(result.stdout.contains("tap"))
         #expect(result.stdout.contains("swipe"))
         #expect(result.stdout.contains("type"))
@@ -20,22 +20,21 @@ struct CLIHelpTests {
         #expect(!result.stdout.contains("USAGE: triton list"))
     }
 
-    @Test("top-level action command help remains available")
-    func topLevelActionCommandHelpRemainsAvailable() throws {
+    @Test("top-level tap command is not exposed after P23 surface cut")
+    func topLevelTapCommandIsNotExposedAfterP23SurfaceCut() throws {
         let result = try runTritonHelp(["tap", "--help"])
 
-        #expect(result.exitCode == 0)
-        #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        #expect(result.stdout.contains("USAGE: triton tap"))
+        #expect(result.exitCode != 0)
+        #expect(result.stderr.contains("Unknown subcommand 'tap'"))
     }
 
-    @Test("grouped action command help can drill into tap")
-    func groupedActionCommandHelpCanDrillIntoTap() throws {
-        let result = try runTritonHelp(["action", "tap", "--help"])
+    @Test("workflow act command help can drill into tap")
+    func workflowActCommandHelpCanDrillIntoTap() throws {
+        let result = try runTritonHelp(["act", "tap", "--help"])
 
         #expect(result.exitCode == 0)
         #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-        #expect(result.stdout.contains("USAGE: triton action tap"))
+        #expect(result.stdout.contains("USAGE: triton act tap"))
     }
 
     private func runTritonHelp(_ arguments: [String]) throws -> CLIHelpRunResult {

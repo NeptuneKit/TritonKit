@@ -206,6 +206,12 @@ steps:
 - 坐标：统一归一化到 `0..1000`，再映射到原图像素。
 - 解析：strict parser，只接受单点或显式 JSON；解析失败返回机器可读错误。
 
+### P1-experimental：local-mlx-helper
+
+`Tools/TritonMLXProvider/` 保留为本机 MLX / MLX Swift LM 实验 helper，用于后续验证“本地模型 backend + TritonKit VLM grounding 契约”的可行性。它当前不进入根 SwiftPM package、默认 CI、release assets 或 public skills，也不改变 `triton vlm ground` 当前正式 provider 列表。
+
+该 helper 的 stdout 已收敛到 TritonKit VLM provider response artifact 兼容形状：`schemaVersion/provider/model/coordinateSpace/point/confidence/rationale/rawText`。正式接入 CLI 前仍需要单独设计 local-helper provider contract；在此之前，TritonKit runner 仍以 `mock` 与 `openai-compatible` 为可用 provider。
+
 ### P2：uitars-action
 
 解析 UI-TARS 风格 `Thought` + `Action: click(start_box='(x,y)')`，只允许白名单 primitive action：click、type、swipe、back、home、wait、status。坐标映射必须记录 resized image metadata。

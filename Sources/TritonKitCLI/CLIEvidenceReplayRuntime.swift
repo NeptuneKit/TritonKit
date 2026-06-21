@@ -181,7 +181,7 @@ func replayProxyStateArchiveAfterFailure(
         refresh: false
     )
     let startedAt = Date()
-    var command = ["triton", "evidence", "--include", "network.proxy-session", "--json"]
+    var command = ["triton", "evidence", "capture", "--include", "network.proxy-session", "--json"]
 
     do {
         command = try replayCommand(
@@ -322,13 +322,13 @@ func replaySuggestedCommands(
     }
 
     if let query = failedStep.wait?.query, !query.isEmpty {
-        commands.append("triton find \(shellQuotedEvidencePath(query)) --all --json")
+        commands.append("triton act find \(shellQuotedEvidencePath(query)) --all --json")
     }
     if failedStep.wait != nil {
-        commands.append("triton snapshot --json")
+        commands.append("triton debug snapshot --json")
     }
     if failedStep.input != nil {
-        commands.append("triton snapshot --json")
+        commands.append("triton debug snapshot --json")
         commands.append("triton screenshot --json")
     }
     if let evidence = failedStep.evidence {
@@ -408,7 +408,7 @@ func replayFailureDetail(
             code: "timeout",
             message: timeoutError.description,
             endpoint: endpointURL(replayEndpoint(for: step.action), host: host, port: port),
-            hint: "Run `triton snapshot --json` or retry the replay step after the runtime responds again."
+            hint: "Run `triton debug snapshot --json` or retry the replay step after the runtime responds again."
         )
     }
     if isReplayArtifactWriteFailure(step: step, error: error) {
@@ -611,7 +611,7 @@ func replayStepError(
             code: "action_failed",
             message: input.message ?? "Replay input step failed",
             endpoint: endpointURL(replayEndpoint(for: step.action), host: host, port: port),
-            hint: "Run `triton input --json --summary --strict` or inspect the current UI with `triton snapshot --json`."
+            hint: "Run `triton act input --json --summary --strict` or inspect the current UI with `triton debug snapshot --json`."
         )
     }
     if let wait, !wait.ok {
@@ -629,7 +629,7 @@ func replayStepError(
             code: wait.timedOut ? "timeout" : "request_failed",
             message: message,
             endpoint: endpointURL(replayEndpoint(for: step.action), host: host, port: port),
-            hint: "Run `triton wait --format json` with a narrower condition or inspect the current UI with `triton snapshot --json`."
+            hint: "Run `triton wait --format json` with a narrower condition or inspect the current UI with `triton debug snapshot --json`."
         )
     }
     if let evidence, !evidence.ok {

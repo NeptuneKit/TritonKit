@@ -54,7 +54,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode build --device <ios-real-target> --sdk iphoneos --allow-provisioning-updates --jsonl",
                 "triton xcode test --result-bundle /tmp/App.xcresult --jsonl",
                 "triton xcode run --jsonl",
-                "triton xcode run --env FEATURE_FLAG=1 --arg=--debug-route --arg demo.home --jsonl",
+                "triton xcode run --env FEATURE_FLAG=1 --arg debug-route --arg demo.home --jsonl",
                 "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl",
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
@@ -74,7 +74,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcresult summary --path <result.xcresult> --json",
                 "triton xcresult failures --path <result.xcresult> --json",
                 "triton status --json",
-                "triton assert text-exists <text> --json",
+                "triton verify text-exists <text> --json",
             ],
             outputContracts: [
                 TKCommandOutputContract(
@@ -299,7 +299,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     finalEventKind: "xcode.run.summary",
                     artifacts: ["stdout-log", "stderr-log"],
                     retryable: true,
-                    nextCommands: ["triton status --json", "triton wait --json", "triton assert text-exists <text> --json"],
+                    nextCommands: ["triton status --json", "triton wait --json", "triton verify text-exists <text> --json"],
                     outputSelectors: ["xcode.progress", "xcode.final"],
                     failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "app_path_unresolved", "bundle_id_unresolved"]
                 ),
@@ -330,7 +330,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
             failureShape: "{ ok:false, error:{ code: result_bundle_not_found|xcresulttool_failed|xcresult_parse_failed|xcresult_output_too_large|host_command_failed, message, hint } }",
             artifacts: ["none-inline-summary"],
             retryable: true,
-            nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+            nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
             outputContracts: [
                 TKCommandOutputContract(
                     selector: "xcresult.summary",
@@ -388,7 +388,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     requiredOptions: ["--path"],
                     optionalOptions: ["--include-sensitive"],
                     retryable: true,
-                    nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+                    nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
                     outputSelectors: ["xcresult.failures"],
                     failureCodes: ["result_bundle_not_found", "xcresulttool_failed", "xcresult_parse_failed", "xcresult_output_too_large", "host_command_failed"]
                 ),
@@ -425,7 +425,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
             failureShape: "{ ok:false, error:{ code: artifact_output_rejected|xctrace_record_failed|host_command_failed, message, hint } }",
             artifacts: ["trace"],
             retryable: true,
-            nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+            nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
             outputContracts: [
                 TKCommandOutputContract(
                     selector: "xctrace.record",
@@ -459,7 +459,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     optionalOptions: ["--device", "--time-limit", "--all-processes", "--attach", "--launch", "--append-run", "--run-name", "--timeout"],
                     artifacts: ["trace"],
                     retryable: true,
-                    nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+                    nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
                     outputSelectors: ["xctrace.record"],
                     failureCodes: ["artifact_output_rejected", "xctrace_record_failed", "host_command_failed"]
                 ),
@@ -493,7 +493,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
             failureShape: "{ ok:false, error:{ code: validation_failed|artifact_output_rejected|coverage_report_failed|host_command_failed, message, hint } }",
             artifacts: ["coverage-json"],
             retryable: true,
-            nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+            nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
             outputContracts: [
                 TKCommandOutputContract(
                     selector: "coverage.report",
@@ -533,7 +533,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     optionalOptions: ["--only-targets", "--target", "--file", "--timeout"],
                     artifacts: ["coverage-json"],
                     retryable: true,
-                    nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+                    nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
                     outputSelectors: ["coverage.report"],
                     failureCodes: ["validation_failed", "artifact_output_rejected", "coverage_report_failed", "host_command_failed"]
                 ),

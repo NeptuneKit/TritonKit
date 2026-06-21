@@ -44,9 +44,9 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - use `capabilities[].group`, `requiredBy`, `nextAction`, and `evidence` to decide whether the next step is target selection, runtime connection, Xcode preparation, action execution, assertion, or evidence capture; if a schema-provided capability lacks those planning fields, treat that as a TritonKit contract bug before relying on it;
    - treat duplicate capability names in schema or capabilities output as TritonKit indexing bugs before deriving a reusable regression plan;
    - treat empty or duplicate `requiredBy` / `evidence` entries as TritonKit metadata bugs; reusable regressions need clean workflow and artifact categories;
-   - for iOS `AVPlayer` / `AVPlayerViewController` flows, run `triton snapshot --include media,ax,screenshot-metadata --json` before asserting playback; preserve `media.surfaces[]`, `media.controls[]`, `automationConfidence`, `fallbackAdvice[]`, and `evidenceCommands[]`;
+   - for iOS `AVPlayer` / `AVPlayerViewController` flows, run `triton debug snapshot --include media,ax,screenshot-metadata --json` before asserting playback; preserve `media.surfaces[]`, `media.controls[]`, `automationConfidence`, `fallbackAdvice[]`, and `evidenceCommands[]`;
    - if media `automationConfidence` is `surface-only`, treat rendered video as observation evidence only; require app-owned DEBUG overlay controls with stable accessibility identifiers before claiming pause, resume, seek, elapsed, duration, progress, or route-release control assertions;
-   - for app-domain readiness that cannot be proven from generic UI, inspect `triton runtime manifest --json` `semanticDomains[]` first, then run `triton snapshot --include semantic,app,scene --json`; preserve `semantic.domains[]`, provider `source`, `confidence`, `state`, `schema`, `actions`, `redaction`, and `evidenceCommands[]`;
+   - for app-domain readiness that cannot be proven from generic UI, inspect `triton debug runtime manifest --json` `semanticDomains[]` first, then run `triton debug snapshot --include semantic,app,scene --json`; preserve `semantic.domains[]`, provider `source`, `confidence`, `state`, `schema`, `actions`, `redaction`, and `evidenceCommands[]`;
    - treat `app-semantic-state` as provider-backed business state and `app-semantic-action` as provider action-catalog discoverability. Do not build reusable regressions around generic provider action execution until a dedicated command contract exists;
    - treat unknown `capabilities[].group` values as TritonKit taxonomy bugs; reusable regressions should only depend on the fixed groups `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `semantic`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`;
    - treat unknown `capabilities[].requiredBy` values as TritonKit workflow taxonomy bugs; reusable regressions should only depend on `action`, `app`, `assert`, `evidence`, `observe`, `project`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview-check`, and `xcode`;
@@ -66,7 +66,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - treat runtime transport failure codes without a `diagnose` recovery category as TritonKit recovery coverage bugs; reusable regressions need status/doctor/capabilities-style next steps when server, runtime, or request transport fails;
    - treat target failure codes without a `prepare-target` recovery category as TritonKit recovery coverage bugs; reusable regressions need target/device/sim/app-style next steps, preferably `triton target resolve <selector> --json`, when a selector is ambiguous, missing, offline, not ready, or unavailable;
    - treat Project / Xcode failure codes without a `project` recovery category as TritonKit recovery coverage bugs; reusable regressions need Xcode discovery/defaults next steps, preferably `triton xcode discover --path . --json`, when workspace, scheme, or Xcode idle state is missing, ambiguous, invalid, or unavailable;
-   - treat action/step failure codes without an `act` recovery category as TritonKit recovery coverage bugs; reusable regressions need executable action next steps, preferably `triton input --json --summary --strict`, when an action batch or replay step fails;
+   - treat action/step failure codes without an `act` recovery category as TritonKit recovery coverage bugs; reusable regressions need executable action next steps, preferably `triton act input --json --summary --strict`, when an action batch or replay step fails;
    - treat destructive/confirmation failure codes without a `plan` recovery category as TritonKit recovery coverage bugs; reusable regressions need planning or policy-review next steps, preferably `triton plan --format json`, when a host-side destructive command requires confirmation or policy;
    - treat unsupported failure codes without a `plan` recovery category as TritonKit recovery coverage bugs; reusable regressions need capability-boundary planning next steps, preferably `triton plan --format json`, when a runtime, WebView, provider, or action capability is unavailable or method-blocked;
    - treat missing or mismatched `capabilities[].nextAction.category` as TritonKit capability contract bugs; reusable regressions should know each capability's next-step stage without parsing command roots by hand;
@@ -107,13 +107,13 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - treat `plan-inspect` as offline `.tritonplan` summary inspection and `replay-dry-run` as offline validation only; real replay, smoke, wait, assert, and evidence capture remain separate proof steps.
    - for iOS Simulator embedded runtime, confirm `triton list --json` exposes `triton:ios-simulator:<SIMULATOR_UDID>` and `simulatorUDID`;
    - if multiple iOS Simulator runtime targets are connected, pass `--target <SIMULATOR_UDID>` or `--target triton:ios-simulator:<SIMULATOR_UDID>` for runtime commands; default `triton:local` should return `ambiguous_target`.
-   - `triton runtime manifest --json`
-   - `triton state app --json`
-   - `triton state scene --json`
-   - `triton state route --json`
-   - `triton state responder --json`
-   - `triton snapshot --include app,scene,route,ax,geometry --json`
-   - `triton ledger --limit 50 --jsonl`
+   - `triton debug runtime manifest --json`
+   - `triton debug state app --json`
+   - `triton debug state scene --json`
+   - `triton debug state route --json`
+   - `triton debug state responder --json`
+   - `triton debug snapshot --include app,scene,route,ax,geometry --json`
+   - `triton debug ledger --limit 50 --jsonl`
    - when the real app has hybrid pages, verify WebView state explicitly:
      - `triton webview list --platform ios --json`
      - `triton webview current --platform ios --json`
@@ -154,7 +154,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - build: `triton xcode build --jsonl`;
    - test: `triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl`;
    - build/install/launch: `triton xcode run --jsonl`;
-   - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
+   - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton verify`, screenshot, or evidence.
    - `xcode settings/build/test/run --jsonl` includes stdout/stderr log paths and byte counts; inspect those artifacts before waiting longer or falling back.
    - use XcodeBuildMCP only as a temporary fallback when `triton schema --command xcode --json` or `triton xcode ... --jsonl` evidence shows the needed capability is missing, unsupported, or failed with a stable error code.
 9. For HarmonyOS NEXT / DevEco Emulator validation, use Triton host-side device discovery before raw `hdc`:
@@ -176,20 +176,20 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - when validating a standalone Harmony embedded HTTP runtime before it is connected through `triton serve`, use direct runtime checks:
      - `triton device runtime-url --device harmony-a --probe-manifest --json` to prepare HDC fport and get the `baseURL`; if you already have the raw HDC target id, `--platform harmony --target <hdc-target>` is the direct explicit form;
      - the Harmony demo host-access embedded runtime default is `http://127.0.0.1:28767`; `18765` is reserved for the demo device-to-host gateway fallback path;
-     - `triton runtime manifest --runtime-base-url http://127.0.0.1:<port> --json`;
-     - `triton state route --runtime-base-url http://127.0.0.1:<port> --json`;
-     - `triton snapshot --runtime-base-url http://127.0.0.1:<port> --json`;
-     - `triton ledger --runtime-base-url http://127.0.0.1:<port> --jsonl`;
-     - `triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:<port> --json` when an app action provider is registered.
+     - `triton debug runtime manifest --runtime-base-url http://127.0.0.1:<port> --json`;
+     - `triton debug state route --runtime-base-url http://127.0.0.1:<port> --json`;
+     - `triton debug snapshot --runtime-base-url http://127.0.0.1:<port> --json`;
+     - `triton debug ledger --runtime-base-url http://127.0.0.1:<port> --jsonl`;
+     - `triton act set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:<port> --json` when an app action provider is registered.
 10. Run observation before action:
-   - prefer one-shot regression capture when a full report is needed: `triton capture --case <case> --output /tmp/<case>.tritonevidence --json`.
-   - prefer one-shot evidence when a report or issue needs attachable proof: `triton evidence --name <case> --output /tmp/<case>.tritonevidence --json`.
+   - prefer one-shot regression capture when a full report is needed: `triton evidence capture --case <case> --output /tmp/<case>.tritonevidence --json`.
+   - prefer one-shot evidence when a report or issue needs attachable proof: `triton evidence capture --case <case> --output /tmp/<case>.tritonevidence --json`.
    - inspect an existing bundle without reconnecting runtime: `triton evidence inspect /tmp/<case>.tritonevidence --json`.
    - summarize evidence before public handoff: `triton evidence summary /tmp/<case>.tritonevidence --json`.
    - use `primaryArtifacts[]` as the first inspection order; only fall back to full `artifacts[]` when those high-signal entries are insufficient.
    - write a safe handoff bundle: `triton evidence redact /tmp/<case>.tritonevidence --profile ios-private --output /tmp/<case>-redacted.tritonevidence --json`.
    - `triton geometry --json`
-   - `triton ax --json`
+   - `triton debug ax --json`
    - `triton screenshot --json --output <path>`
    - `triton export --format archive --output <path>`
 11. Execute the smallest user-flow regression with machine-readable commands:
@@ -213,14 +213,14 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - dry-run reusable flows before touching the app: `triton replay <file.tritonplan> --dry-run --var key=value --var secret-env=ENV --json`, and compare returned `steps[].argv/category/requires/expectedArtifacts/stopConditions` with inspect output;
    - treat dry-run failure on ambiguous selectors or missing text/condition as a plan authoring issue; fix the `.tritonplan` before running against the business app;
    - replay committed flows with `triton replay <file.tritonplan> --json`, keeping secure values in environment variables and using `--var <name>-env=<ENV>`;
-   - prefer action commands that are already machine-readable by default: `triton find "HTTP"`, `triton tap "HTTP"`, `triton type "hello"`, `triton paste "console"`, `triton clear`; use `--format text` only for human-readable debugging;
-   - for form flows, prefer semantic embedded actions over a `tap` plus `type` chain: `triton focus "用户名" --json`, `triton set-text "用户名" "alice" --json`, `triton set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton select-segment "协议" "HTTP" --json`, `triton set-switch "记住我" on --json`;
-   - when labels repeat, run `triton find "<text>" --all`; if a known point lies inside the intended candidate, prefer `triton tap "<text>" --at x,y`, otherwise choose `triton tap "<text>" --index <n>` or `triton tap "<text>" --within x,y,width,height`;
+   - prefer action commands that are already machine-readable by default: `triton act find "HTTP"`, `triton act tap "HTTP"`, `triton act type "hello"`, `triton act paste "console"`, `triton act clear`; use `--format text` only for human-readable debugging;
+   - for form flows, prefer semantic embedded actions over a `tap` plus `type` chain: `triton act focus "用户名" --json`, `triton act set-text "用户名" "alice" --json`, `triton act set-text "密码" "$TRITON_PASSWORD" --secure --json`, `triton act select-segment "协议" "HTTP" --json`, `triton act set-switch "记住我" on --json`;
+   - when labels repeat, run `triton act find "<text>" --all`; if a known point lies inside the intended candidate, prefer `triton act tap "<text>" --at x,y`, otherwise choose `triton act tap "<text>" --index <n>` or `triton act tap "<text>" --within x,y,width,height`;
    - when `tap` or `assert` fails, read nearest candidates / nearestText and suggestedCommands from the JSON envelope before changing the test flow;
    - when `replay` fails, read top-level `failedStepIndex`, `failureCode`, `failureError`, `failureWorkflowCategories[]`, `failureRecoveryCategories[]`, `failurePrimaryArtifacts[]`, `recoveryCommands[]`, and `suggestedCommands[]` first; then inspect the failed step `error` payload before broader step-by-step traversal or re-planning, including `wait/input/evidence` failures that only returned `ok=false`; if `failureError.nextAction` exists, expect replay recovery commands to expose the same path; prefer failures that preserve runtime/target/transport codes over generic `step_failed`;
-   - `triton type --text <text>` is the alternate flag form and must never be combined with positional `<text>`;
-   - `triton press --button <button>` is the alternate flag form; prefer positional `triton press <button>`;
-   - for batch input, use `triton input --json --summary --strict`;
+   - `triton act type --text <text>` is the alternate flag form and must never be combined with positional `<text>`;
+   - `triton act press --button <button>` is the alternate flag form; prefer positional `triton act press <button>`;
+   - for batch input, use `triton act input --json --summary --strict`;
    - when `tap`, `swipe`, `type`, or `paste` runs with `--platform harmony`, parse the host output contract selected by schema: `host.harmony-tap`, `host.harmony-swipe`, or `host.harmony-text-input`; do not assume the result shape is the embedded runtime `input.result`.
    - when `wait` runs with `--platform harmony`, parse `host.harmony-wait`; do not assume the result shape is the embedded runtime `wait.result`.
    - when `ax` or `screenshot` runs with `--platform harmony`, parse `host.harmony-artifact`; do not assume the result shape is the generic `host.artifact` device-level contract.
@@ -229,7 +229,7 @@ Real-project validation is not the same as demo smoke. Treat the business app as
    - if legacy selectors (`host.tap`, `host.swipe`, `host.text-input`, `host.wait`) appear in schema output, treat it as a host contract regression before continuing real-project replay automation.
    - when deriving actions from `triton capabilities --json`, trust only schema-aligned `nextAction` values; embedded `press` is unsupported and should not be used as proof of device-level HID control.
    - after taps, submissions, and navigation, use `triton wait --text`, `triton wait --gone`, `triton wait --idle`, or a safe `triton wait --predicate` instead of fixed sleeps;
-   - use `triton assert text-exists|text-not-exists <text> --json` for final pass/fail checks; add `--within x,y,width,height`, `--role`, or `--count` when labels repeat across headers, sidebars, and cells;
+   - use `triton verify text-exists|text-not-exists <text> --json` for final pass/fail checks; add `--within x,y,width,height`, `--role`, or `--count` when labels repeat across headers, sidebars, and cells;
    - assert expected state through `wait`, a second `ax`, `find`, `screenshot`, archive check, or a fresh `evidence` bundle.
 12. Store outputs under `/tmp` during iteration, then copy only durable screenshots or docs into the correct `docs-linhay/spaces/<space-key>/` location when the result is worth keeping.
 13. Before sharing evidence outside the real app repo, sanitize project and personal information:
@@ -392,9 +392,9 @@ triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --
 triton app install --device <hdc-target> --hap <debug-signed.hap> --json
 triton app launch --device <hdc-target> --bundle <bundle> --ability <ability> --json
 triton app open-url --device <hdc-target> --bundle <bundle> --ability <ability> '<url>' --json
-triton ax --platform harmony --target <hdc-target> --output /tmp/<case>-layout.json --json
+triton debug ax --platform harmony --target <hdc-target> --output /tmp/<case>-layout.json --json
 triton wait --platform harmony --target <hdc-target> --text '<text>' --timeout 15 --json
-triton tap '<text>' --platform harmony --target <hdc-target> --json
+triton act tap '<text>' --platform harmony --target <hdc-target> --json
 triton screenshot --device <hdc-target> --output /tmp/<case>.jpeg --json
 triton smoke harmony --device <hdc-target> --bundle <bundle> --ability <ability> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json
 ```
@@ -416,11 +416,11 @@ For a standalone Harmony embedded runtime before it is connected through `triton
 
 ```bash
 triton device runtime-url --device harmony-a --probe-manifest --json
-triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
-triton state route --runtime-base-url http://127.0.0.1:28767 --json
-triton snapshot --runtime-base-url http://127.0.0.1:28767 --json
-triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
-triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
+triton debug runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
+triton debug state route --runtime-base-url http://127.0.0.1:28767 --json
+triton debug snapshot --runtime-base-url http://127.0.0.1:28767 --json
+triton debug ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
+triton act set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
 ```
 
 For the Harmony demo, `28767` is the host-access embedded runtime port exposed through HDC `fport`; `18765` is only the demo device-to-host gateway fallback port.

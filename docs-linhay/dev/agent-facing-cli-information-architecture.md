@@ -136,7 +136,7 @@ triton target wait-ready --json
     },
     {
       "id": "assert-home",
-      "command": "triton assert text-exists Home --json",
+      "command": "triton verify text-exists Home --json",
       "argv": ["triton", "assert", "text-exists", "Home", "--json"],
       "category": "verify",
       "requires": ["cli.available", "server.reachable", "target.ready", "runtime.connected"],
@@ -243,7 +243,7 @@ Positional argument 必须进入 `argumentForms[]`，不能继续塞进 `options
 
 Replay failure surface 现在补了一层 shared model 兜底：只要 `TKReplayResult.failureError.nextAction` 存在，即使 `failureRecoveryCategories[]`、`suggestedCommands[]` 或 `recoveryCommands[]` 在旧 payload 中缺失，shared `TKReplayResult` 的默认构造和解码回填也会自动补齐相应 category 与 `triton ...` 命令。这样 agent 无论消费 CLI 当场输出、磁盘中的旧 replay 结果，还是其他调用方手工构造的结果对象，都能读到同一套恢复入口。进一步地，`nextAction` 现在也是 replay 顶层恢复面的首选路径：如果 category 或 command 已经由 failure-code family 或旧 payload 提前填进数组，shared model 与 CLI runtime 都会把它移动到第一个位置，而不是只做集合包含。当前冲突策略也进一步显式化了：只有在 `nextAction` 存在时，顶层 `failureRecoveryCategories[]` 才会把当前 `recoveryCommands[]` 真正覆盖到的 category 提到前面，而 `failureCode` family 中尚未被 recovery command 覆盖的剩余阶段保留在后面；没有 `nextAction` 的 replay failure 仍保持原始 family-first 排序。
 
-Artifact / output 类失败码必须有 `archive` category 的恢复入口。`artifact_output_rejected`、`artifact_write_failed`、`file_write_failed`、`overwrite_refused`、`xcresult_output_too_large` 这类失败通常意味着 agent 需要保存、换路径、归档或生成 evidence，而不是只做重新发现或重试。该约束由 `SchemaFactSourceTests.artifactFailureCodesExposeArchiveRecoveryCategories` 锁定；本轮补齐 `sim` 与 `record` 的 `triton evidence --output <dir.tritonevidence> --json` 恢复建议。
+Artifact / output 类失败码必须有 `archive` category 的恢复入口。`artifact_output_rejected`、`artifact_write_failed`、`file_write_failed`、`overwrite_refused`、`xcresult_output_too_large` 这类失败通常意味着 agent 需要保存、换路径、归档或生成 evidence，而不是只做重新发现或重试。该约束由 `SchemaFactSourceTests.artifactFailureCodesExposeArchiveRecoveryCategories` 锁定；本轮补齐 `sim` 与 `record` 的 `triton evidence capture --case <case> --output <dir.tritonevidence> --json` 恢复建议。
 
 Assertion / route / text-not-found 类失败码必须有 `verify` category 的恢复入口。`assertion_failed`、`route_mismatch`、`text_not_found` 这类失败说明当前验收条件未满足，agent 需要 wait/assert/route 等验证动作重新确认状态，而不是只截图、归档或重新发现元素。该约束由 `SchemaFactSourceTests.assertionFailureCodesExposeVerifyRecoveryCategories` 锁定；本轮补齐 semantic action、route、smoke、assert、find 的 verify 恢复建议。
 
@@ -253,7 +253,7 @@ Target 类失败码必须有 `prepare-target` category 的恢复入口。`ambigu
 
 Project / Xcode 类失败码必须有 `project` category 的恢复入口。`ambiguous_workspace`、`invalid_workspace_path`、`scheme_not_found`、`workspace_not_found`、`xcode_not_idle` 说明 agent 的 Xcode 工程上下文缺失、歧义或被占用，必须先回到工程发现 / 默认值配置入口。该约束由 `SchemaFactSourceTests.projectFailureCodesExposeProjectRecoveryCategories` 锁定；CLI schema fact source 会对声明这些失败码的 command / subcommand 自动补齐 `triton xcode discover --path . --json`，并保持 `nextCommands[]` 去重与 `recoveryCommands[]` 镜像。
 
-Action / step 类失败码必须有 `act` category 的恢复入口。`action_failed`、`step_failed` 说明 agent 的动作或 replay 步骤已经失败，必须能回到可执行动作入口，而不是只做诊断、归档或重新规划。该约束由 `SchemaFactSourceTests.actionFailureCodesExposeActRecoveryCategories` 锁定；CLI schema fact source 会对声明这些失败码的 command / subcommand 自动补齐 `triton input --json --summary --strict`，并保持 `nextCommands[]` 去重与 `recoveryCommands[]` 镜像。
+Action / step 类失败码必须有 `act` category 的恢复入口。`action_failed`、`step_failed` 说明 agent 的动作或 replay 步骤已经失败，必须能回到可执行动作入口，而不是只做诊断、归档或重新规划。该约束由 `SchemaFactSourceTests.actionFailureCodesExposeActRecoveryCategories` 锁定；CLI schema fact source 会对声明这些失败码的 command / subcommand 自动补齐 `triton act input --json --summary --strict`，并保持 `nextCommands[]` 去重与 `recoveryCommands[]` 镜像。
 
 Destructive / confirmation 类失败码必须有 `plan` category 的恢复入口。`confirmation_required`、`destructive_action_requires_policy` 说明 agent 碰到了需要确认、策略或 dry-run 复核的状态，必须先回到规划入口，而不是自动继续执行破坏性动作。该约束由 `SchemaFactSourceTests.destructivePolicyFailureCodesExposePlanRecoveryCategories` 锁定；CLI schema fact source 会对声明这些失败码的 command / subcommand 自动补齐 `triton plan --format json`，并保持 `nextCommands[]` 去重与 `recoveryCommands[]` 镜像。
 
@@ -368,18 +368,18 @@ Action 输出必须包含 strategy、resolved target、elapsed、redaction 和�
 
 `harmony-tap-text`、`harmony-wait-text`、`harmony-swipe`、`harmony-type-text`、`harmony-paste-text`、`harmony-press-key` 在 capabilities matrix 中也按 `action` 分组暴露，并使用 `requiredBy=action/assert/evidence`。它们是 host-side action 能力，不再归类到 `host target/app` workflow，避免 agent 规划时把动作能力误识别为设备准备步骤。
 
-### Assert
+### Verify
 
-Assert 负责给出 pass/fail，不承担证据归档。目标形态：
+Verify 负责给出 pass/fail，不承担证据归档。目标形态：
 
 ```text
-triton assert text-exists "Home" --json
-triton assert text-not-exists "Qinghai" --within 180,120,190,500 --json
-triton assert route "app://home" --json
-triton assert webview-url "https://example.invalid/home" --json
+triton verify text-exists "Home" --json
+triton verify text-not-exists "Qinghai" --within 180,120,190,500 --json
+triton route assert-current-url "app://home" --json
+triton route assert-current-url "https://example.invalid/home" --ignore-query --json
 ```
 
-Assert 失败时必须返回 `status=fail`、expected/actual、nearest evidence 和 evidence 下一步命令。
+Verify / route 失败时必须返回 `status=fail`、expected/actual、nearest evidence 和 evidence 下一步命令。
 
 ## Evidence / Replay 契约
 

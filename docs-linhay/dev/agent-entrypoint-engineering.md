@@ -49,8 +49,8 @@ TritonKit 的差异化边界保持不变：
 - `triton schema`
 - `triton device`
 - `triton app`
-- `triton capture`
-- `triton assert`
+- `triton evidence capture`
+- `triton verify`
 - `triton evidence`
 - `triton skill`
 

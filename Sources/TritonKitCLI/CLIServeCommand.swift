@@ -81,7 +81,7 @@ struct Serve: AsyncParsableCommand {
                     code: "hierarchy_unavailable",
                     message: "No hierarchy received yet",
                     endpoint: "/hierarchy/latest",
-                    hint: "Connect an app that embeds TritonKit, then request `triton hierarchy --json`",
+                    hint: "Connect an app that embeds TritonKit, then request `triton observe tree --json` or `triton debug hierarchy --json`",
                     status: .notFound
                 )
             }

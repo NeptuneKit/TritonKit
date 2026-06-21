@@ -283,11 +283,11 @@ struct ReplayCommandTests {
         #expect(archive.action == "evidence")
         #expect(archive.ok)
         #expect(archive.argv == [
-            "triton", "evidence",
+            "triton", "evidence", "capture",
+            "--case", "network-after-failure",
             "--output", output.path,
             "--include", "network.proxy-session",
             "--proxy-session", session.path,
-            "--name", "network-after-failure",
             "--note", "Replay failed; archived existing proxy session state only.",
             "--json",
         ])
@@ -318,7 +318,7 @@ struct ReplayCommandTests {
                 ok: true,
                 dryRun: false,
                 elapsedMs: 5,
-                command: ["triton", "evidence", "--output", "/tmp/login.tritonevidence", "--json"],
+                command: ["triton", "evidence", "capture", "--case", "login", "--output", "/tmp/login.tritonevidence", "--json"],
                 evidence: priorEvidence
             ),
             TKReplayStepResult(
@@ -367,12 +367,12 @@ struct ReplayCommandTests {
         #expect(failureError == nil)
         #expect(failureRecoveryCategories == ["verify"])
         #expect(commands == [
-            "triton find 'Home' --all --json",
-            "triton snapshot --json",
+            "triton act find 'Home' --all --json",
+            "triton debug snapshot --json",
             "triton evidence summary '/tmp/login.tritonevidence' --json",
             "triton evidence inspect '/tmp/login.tritonevidence' --json",
         ])
-        #expect(recovery.map(\.category) == ["discover", "observe", "archive", "archive"])
+        #expect(recovery.map(\.category) == ["act", "diagnose", "archive", "archive"])
     }
 
     @Test("replay failure helper preserves underlying error codes")
@@ -620,7 +620,7 @@ struct ReplayCommandTests {
             failedStepIndex: 1
         )
 
-        #expect(categories == ["diagnose", "observe", "archive", "prepare-target"])
+        #expect(categories == ["diagnose", "archive", "prepare-target"])
     }
 
     @Test("replay step helpers derive structured errors for non-throw failures")

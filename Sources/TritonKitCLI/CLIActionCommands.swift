@@ -45,6 +45,27 @@ enum TapStrategyOption: String, ExpressibleByArgument {
     }
 }
 
+struct Act: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "act",
+        abstract: "Execute workflow-level UI actions",
+        subcommands: [
+            Find.self,
+            Tap.self,
+            TypeText.self,
+            PasteText.self,
+            ClearText.self,
+            Swipe.self,
+            Press.self,
+            Focus.self,
+            SetText.self,
+            SelectSegment.self,
+            SetSwitch.self,
+            Input.self,
+        ]
+    )
+}
+
 struct Find: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Resolve a UI target by visible text, label, identifier, or option title")
 
@@ -251,7 +272,7 @@ struct Wait: AsyncParsableCommand {
                     try failHostValidation(
                         code: "unsupported_capability",
                         message: "Harmony host wait currently supports --text, --exists, or --gone.",
-                        hint: "Use `triton ax --platform harmony --output <path> --json` for raw layout evidence.",
+                        hint: "Use `triton debug ax --platform harmony --output <path> --json` for raw layout evidence.",
                         outputFormat: outputFormat
                     )
                 }
@@ -354,6 +375,7 @@ struct Tap: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Tap a UI target by text, coordinate, oid, or AX node")
 
     @Argument(help: "Text, label, identifier, or visible option title to tap") var query: String?
+    @Option(help: "Alternate flag form for the text query; use either positional <query> or --text") var text: String?
     @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
     @Option(name: [.long, .customLong("device")], help: "Target id from `triton list`; --device is an alias") var target: String = TKLocalTargetID
     @Option(help: "Path to adb executable") var adb: String = "adb"
@@ -364,8 +386,8 @@ struct Tap: AsyncParsableCommand {
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Option(help: "Window x coordinate in points") var x: Double?
     @Option(help: "Window y coordinate in points") var y: Double?
-    @Option(help: "View oid from `triton nodes`") var oid: UInt?
-    @Option(name: .customLong("ax-oid"), help: "AX target/view oid from `triton ax`") var axOID: UInt?
+    @Option(help: "View oid from `triton debug nodes`") var oid: UInt?
+    @Option(name: .customLong("ax-oid"), help: "AX target/view oid from `triton debug ax`") var axOID: UInt?
     @Option(name: .customLong("ax-label"), help: "Exact AX label to tap by AX target/view oid") var axLabel: String?
     @Option(help: "Optional screen/window width in points") var width: Double?
     @Option(help: "Optional screen/window height in points") var height: Double?
@@ -377,6 +399,14 @@ struct Tap: AsyncParsableCommand {
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
+        if query != nil && text != nil {
+            if outputFormat == .json {
+                try printValidationError("Provide exactly one text query: <query> or --text")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("Provide exactly one text query: <query> or --text")
+        }
+        let query = query ?? text
         let selectorCount = [
             query != nil,
             oid != nil,
@@ -500,7 +530,7 @@ struct Tap: AsyncParsableCommand {
                     try failHostValidation(
                         code: "unsupported_capability",
                         message: "Harmony host tap currently supports <query>, --x/--y, or --at.",
-                        hint: "Use `triton ax --platform harmony --output <path> --json` to inspect attributes.text and bounds.",
+                        hint: "Use `triton debug ax --platform harmony --output <path> --json` to inspect attributes.text and bounds.",
                         outputFormat: outputFormat
                     )
                 }
@@ -789,7 +819,7 @@ struct TypeText: AsyncParsableCommand {
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Option(help: "Alternate flag form for the text value; use either positional <text> or --text") var text: String?
-    @Option(help: "Optional responder oid from `triton nodes`") var oid: UInt?
+    @Option(help: "Optional responder oid from `triton debug nodes`") var oid: UInt?
     @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
     @Flag(name: .customLong("exact"), help: "Use direct UIKeyInput insertion without keyboard autocorrect") var exact = false
 
@@ -810,7 +840,7 @@ struct TypeText: AsyncParsableCommand {
                     try failHostValidation(
                         code: "unsupported_capability",
                         message: "Android host type currently targets the focused field only and does not support --oid.",
-                        hint: "Focus the field with `triton tap --platform android` first, then run `triton type --platform android <text>`.",
+                        hint: "Focus the field with `triton act tap --platform android` first, then run `triton act type --platform android <text>`.",
                         outputFormat: outputFormat
                     )
                 }
@@ -838,7 +868,7 @@ struct TypeText: AsyncParsableCommand {
                     try failHostValidation(
                         code: "unsupported_capability",
                         message: "Harmony host type currently targets the focused field only and does not support --oid.",
-                        hint: "Focus the field with `triton tap --platform harmony` first, then run `triton type --platform harmony <text>`.",
+                        hint: "Focus the field with `triton act tap --platform harmony` first, then run `triton act type --platform harmony <text>`.",
                         outputFormat: outputFormat
                     )
                 }
@@ -893,7 +923,7 @@ struct PasteText: AsyncParsableCommand {
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @Flag(name: .customLong("secure"), help: "Redact inserted text details in command output") var secure = false
-    @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
+    @Option(help: "Optional responder oid from `triton debug nodes`, `triton debug ax`, or `triton debug hit`") var oid: UInt?
     @Option(help: "Window x coordinate to focus before paste") var x: Double?
     @Option(help: "Window y coordinate to focus before paste") var y: Double?
     @Option(help: "Window point to focus before paste: x,y") var at: String?
@@ -1010,7 +1040,7 @@ struct ClearText: AsyncParsableCommand {
     @Option(help: "Server port") var port: Int = 19421
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
-    @Option(help: "Optional responder oid from `triton nodes`, `triton ax`, or `triton hit`") var oid: UInt?
+    @Option(help: "Optional responder oid from `triton debug nodes`, `triton debug ax`, or `triton debug hit`") var oid: UInt?
     @Option(help: "Window x coordinate to focus before clear") var x: Double?
     @Option(help: "Window y coordinate to focus before clear") var y: Double?
     @Option(help: "Window point to focus before clear: x,y") var at: String?

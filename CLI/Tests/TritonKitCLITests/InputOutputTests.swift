@@ -6,12 +6,12 @@ import TritonKitShared
 
 @Suite
 struct InputOutputTests {
-    @Test("root command exposes action help group before default list fallback")
-    func rootCommandExposesActionHelpGroup() throws {
-        #expect(TritonKitCLI.configuration.subcommands.contains { $0 == Action.self })
-        #expect(Action.configuration.commandName == "action")
-        #expect(Action.configuration.subcommands.contains { $0 == Tap.self })
-        #expect(Action.configuration.subcommands.contains { $0 == SetText.self })
+    @Test("root command exposes P23 act workflow group before raw engine fallbacks")
+    func rootCommandExposesP23ActWorkflowGroup() throws {
+        #expect(TritonKitCLI.configuration.subcommands.contains { $0 == Act.self })
+        #expect(Act.configuration.commandName == "act")
+        #expect(Act.configuration.subcommands.contains { $0 == Tap.self })
+        #expect(Act.configuration.subcommands.contains { $0 == SetText.self })
     }
 
     @Test("exact tap request preserves matched metadata and exact strategy")

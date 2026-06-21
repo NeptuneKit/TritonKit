@@ -427,9 +427,9 @@ func tapTargetNearestCandidates(_ candidates: [TapTargetCandidate], limit: Int =
 }
 
 func tapTargetSuggestedCommands(query: String, candidates: [TapTargetCandidate] = []) -> [String] {
-    var commands = ["triton find \(shellQuoted(query)) --all --json", "triton screenshot --json"]
+    var commands = ["triton act find \(shellQuoted(query)) --all --json", "triton screenshot --json"]
     if !candidates.isEmpty {
-        commands.insert("triton tap \(shellQuoted(query)) --index 1 --json", at: 1)
+        commands.insert("triton act tap \(shellQuoted(query)) --index 1 --json", at: 1)
     }
     return commands
 }

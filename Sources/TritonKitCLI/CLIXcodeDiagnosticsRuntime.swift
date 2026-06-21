@@ -325,7 +325,7 @@ func waitForXcodeIdle(
     var pollCount = 0
     var lastStatus: XcodeProcessStatusOutput?
     var lastTransientError: Error?
-    repeat {
+    while true {
         pollCount += 1
         let status: XcodeProcessStatusOutput
         do {
@@ -335,7 +335,7 @@ func waitForXcodeIdle(
                 throw error
             }
             lastTransientError = error
-            if Date() >= deadline {
+            if pollCount > 1 && Date() >= deadline {
                 break
             }
             try await Task.sleep(nanoseconds: UInt64(max(0.01, interval) * 1_000_000_000))
@@ -357,7 +357,7 @@ func waitForXcodeIdle(
             break
         }
         try await Task.sleep(nanoseconds: UInt64(max(0.01, interval) * 1_000_000_000))
-    } while Date() <= deadline
+    }
 
     if let lastStatus {
         throw XcodeDiagnosticsError.notIdle(status: lastStatus)

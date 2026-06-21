@@ -21,7 +21,7 @@ func capabilityWorkflowTaxonomy() -> Set<String> {
 func capabilityEvidenceTaxonomy() -> Set<String> {
     [
         "action-result", "assert.result", "bridge-call-result", "command-schema",
-        "app-map", "app-map-viewer-html", "coordinate-contract", "coverage", "evidence-bundle", "host-artifact", "host-command-json",
+        "app-map", "app-map-viewer-html", "app.structured-evidence", "coordinate-contract", "coverage", "evidence-bundle", "host-artifact", "host-command-json", "host-simulator-media-seed",
         "host-layout", "host-targets.json", "hierarchy-node", "input.result",
         "page-events", "provider-url", "route-assertion", "runtime-ax",
         "runtime-ledger", "runtime-manifest", "runtime-provider",
@@ -75,6 +75,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "host-device-selection",
         "host-device-proxy",
         "host-simulator-list",
+        "host-simulator-media-seed",
         "host-simulator-screenshot-metadata",
         "input-batch-summary",
         "input-result",
@@ -92,6 +93,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "runtime-ledger-entry",
         "runtime-manifest",
         "simulator-screenshot",
+        "xcode-status",
         "runtime-snapshot",
         "runtime-state",
         "screenshot-metadata",
@@ -143,6 +145,7 @@ func commandOutputFormatTaxonomy() -> Set<String> {
 
 func recoveryCommandRootTaxonomy() -> Set<String> {
     [
+        "act",
         "action",
         "app",
         "assert",
@@ -152,6 +155,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "capture",
         "clear",
         "coverage",
+        "debug",
         "device",
         "doctor",
         "evidence",
@@ -193,6 +197,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "target",
         "test",
         "type",
+        "verify",
         "vlm",
         "wait",
         "web",
@@ -221,6 +226,7 @@ func recoveryCommandCategoryTaxonomy() -> Set<String> {
 
 func recoveryCommandRootCategoryMap() -> [String: String] {
     [
+        "act": "act",
         "action": "act",
         "app": "prepare-target",
         "assert": "verify",
@@ -230,6 +236,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "capture": "archive",
         "clear": "act",
         "coverage": "archive",
+        "debug": "diagnose",
         "device": "prepare-target",
         "doctor": "diagnose",
         "evidence": "archive",
@@ -271,6 +278,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "target": "prepare-target",
         "test": "diagnose",
         "type": "act",
+        "verify": "verify",
         "vlm": "archive",
         "wait": "verify",
         "web": "observe",
@@ -411,6 +419,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "app-map.suites",
         "app-map.transitions",
         "app-preferences",
+        "app.structured-evidence",
         "ax",
         "build.summary",
         "coverage-json",

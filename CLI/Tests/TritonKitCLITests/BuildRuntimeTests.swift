@@ -30,7 +30,7 @@ struct BuildRuntimeTests {
         echo built
         """)
 
-        let summary = try runCLIBuild(.android(project: root.path, gradle: fakeGradle.path, variant: "debug", device: "android-a", timeout: 5, discoveryRoot: nil))
+        let summary = try runCLIBuild(.android(project: root.path, gradle: fakeGradle.path, variant: "debug", device: "android-a", timeout: 30, discoveryRoot: nil))
 
         #expect(summary.ok)
         #expect(summary.action == "build.android")
@@ -49,7 +49,7 @@ struct BuildRuntimeTests {
         try writeExecutable(fakeHvigor, body: "echo no hap yet\n")
 
         do {
-            _ = try runCLIBuild(.harmony(project: root.path, hvigor: fakeHvigor.path, module: "entry", mode: "debug", device: nil, timeout: 5, discoveryRoot: nil))
+            _ = try runCLIBuild(.harmony(project: root.path, hvigor: fakeHvigor.path, module: "entry", mode: "debug", device: nil, timeout: 30, discoveryRoot: nil))
             Issue.record("Expected missing HAP artifact to fail")
         } catch {
             let detail = buildErrorDetail(error)

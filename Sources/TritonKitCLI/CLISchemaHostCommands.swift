@@ -372,7 +372,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton plan --json",
                 "triton sim tap --simulator <udid|booted> --x <x> --y <y> --json",
                 "triton sim type --simulator <udid|booted> --text <text> --json",
-                "triton evidence --output <dir.tritonevidence> --json",
+                "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
                 "triton app launch --device <selector> --bundle-id <id> --json",
                 "triton smoke ios --device <selector> --bundle-id <id> --open-url <url> --wait-text <text> --json",
             ],
@@ -462,7 +462,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     summary: "Capture simulator framebuffer screenshot",
                     requiredOptions: ["--output"],
                     optionalOptions: ["--simulator", "--display", "--format", "--json"],
-                    nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+                    nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
                     outputSelectors: ["host.simulator-screenshot"],
                     failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "artifact_output_rejected", "validation_failed"]
                 ),
@@ -487,7 +487,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     nextCommands: [
                         "triton plan --json",
                         "triton sim screenshot --simulator <udid|booted> --output <path> --json",
-                        "triton assert text-exists <text> --json",
+                        "triton verify text-exists <text> --json",
                     ],
                     outputSelectors: ["host.simulator-input"],
                     failureCodes: ["unsupported_host_input", "unsupported_text_input", "validation_failed"]
@@ -605,7 +605,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.simulator-action"]
                 ),
                 TKCommandSubcommandSchema(
-                    name: "media seed",
+                    name: "media",
                     summary: "Add manifest-described media fixtures to a simulator photo library",
                     requiredOptions: ["--manifest"],
                     optionalOptions: ["--simulator", "--format", "--json"],
@@ -705,7 +705,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton app uninstall --device iphone15 --bundle-id com.example.app --confirm --json",
                 "triton app uninstall --device android-a --platform android --package-name com.example.app --confirm --json",
                 "triton app launch --device iphone15 --bundle-id com.example.app --json",
-                "triton app launch --device iphone15 --bundle-id com.example.app --env FEATURE_FLAG=1 --arg=--debug-route --arg demo.home --json",
+                "triton app launch --device iphone15 --bundle-id com.example.app --env FEATURE_FLAG=1 --arg debug-route --arg demo.home --json",
                 "triton app launch --platform ios --name 'iPhone 15' --bundle-id com.example.app --json",
                 "triton app launch --bundle-id com.example.app --json",
                 "triton app launch --device android-a --platform android --package-name com.example.app --json",
@@ -734,8 +734,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             nextCommands: [
                 "triton app go <url>",
                 "triton status --json",
-                "triton assert text-exists <text> --json",
-                "triton evidence --output <dir.tritonevidence> --json",
+                "triton verify text-exists <text> --json",
+                "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
             ],
             outputContracts: [
                 hostActionOutputContract(selector: "host.app-action", model: "HostActionOutput|HostAppContainerOutput|HostAppPreferenceOutput"),
