@@ -128,6 +128,8 @@ func evidenceManifestOutputContract() -> TKCommandOutputContract {
             ("createdAt", "String", true, "Creation timestamp"),
             ("output", "String", true, "Evidence bundle output path"),
             ("artifacts", "[TKEvidenceArtifact]", true, "Captured artifact records"),
+            ("artifacts[].metadata", "[String:TKJSONValue]?", false, "Optional artifact-specific machine-readable metadata"),
+            ("artifacts[].metadata.schema.sha256", "String?", false, "SHA-256 digest for an ingested artifact schema when present"),
             ("primaryArtifact", "TKEvidenceArtifactSummary?", false, "Primary artifact summary agents should inspect first"),
             ("primaryArtifacts", "[TKEvidenceArtifactSummary]", true, "High-signal artifact summaries agents should inspect first"),
             ("skipped", "[TKEvidenceSkippedArtifact]", true, "Skipped artifact records"),

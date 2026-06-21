@@ -458,6 +458,10 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "redact <path> --output <path>", type: "Subcommand", description: "Write a redacted evidence bundle for safe handoff"),
                 TKCommandSchemaOption(name: "project-workspace <path>", type: "Subcommand", description: "Offline project P0E observation.captured events into screens.json and transitions.json"),
                 TKCommandSchemaOption(name: "project-screens <path>", type: "Subcommand", description: "Backward-compatible alias for project-workspace"),
+                TKCommandSchemaOption(name: "ingest --file <path> --kind <artifact-kind>", type: "Subcommand", description: "Import a structured JSON artifact into an offline evidence bundle"),
+                TKCommandSchemaOption(name: "--file", type: "Path", description: "Input JSON artifact path for evidence ingest"),
+                TKCommandSchemaOption(name: "--kind", type: "String", description: "Artifact kind for evidence ingest, for example app.structured-evidence"),
+                TKCommandSchemaOption(name: "--schema", type: "Path", description: "Optional JSON schema path hashed into artifact metadata"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Evidence bundle directory path; capture mode requires it"),
                 TKCommandSchemaOption(name: "--include", type: "String", defaultValue: "status,list,version,hierarchy,ax,screenshot", description: "Comma-separated artifact kinds: status,list,version,hierarchy,ax,screenshot,geometry,archive,logs,host,xcode,real-device.diagnostics,host.app-action,runtime.snapshot,host.layout,build.summary,network.proxy-session"),
                 TKCommandSchemaOption(name: "--name", type: "String", description: "Scenario name stored in manifest"),
@@ -476,6 +480,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton evidence --include real-device.diagnostics,host.app-action,runtime.snapshot,host.layout,logs,build.summary --output /tmp/real-device.tritonevidence --json",
                 "triton evidence --include xcode --xcode-summary /tmp/xcode-summary.json --output /tmp/xcode.tritonevidence --json",
                 "triton evidence --include network.proxy-session --proxy-session /tmp/ios-network --output /tmp/network.tritonevidence --json",
+                "triton evidence ingest --file /tmp/app-evidence.json --kind app.structured-evidence --schema /tmp/app-evidence.schema.json --output /tmp/app.tritonevidence --json",
                 "triton evidence --name v11-login --note \"DEBUG mock disabled\" --output /tmp/login.tritonevidence --json",
                 "triton evidence inspect /tmp/login-success.tritonevidence --json",
                 "triton evidence summary /tmp/login-success.tritonevidence --json",
@@ -486,7 +491,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             successShape: "TKEvidenceManifest, TKEvidenceSummaryResponse, TKEvidenceRedactionResponse, or TKScreenWorkspaceProjectionResponse",
             failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
             outputSemantics: "Use evidence after a failed or completed run to capture auditable artifacts. Summaries, redaction, and screen projection are offline and do not require a runtime connection.",
-            artifacts: ["evidence-bundle", "manifest", "screenshots", "logs", "host-artifacts", "xcode-artifacts", "real-device.diagnostics", "host.app-action", "runtime.snapshot", "host.layout", "build.summary", "network-capture", "proxy-restore", "screen-workspace", "screen-workspace.screens", "screen-workspace.transitions"],
+            artifacts: ["evidence-bundle", "manifest", "screenshots", "logs", "host-artifacts", "xcode-artifacts", "real-device.diagnostics", "host.app-action", "runtime.snapshot", "host.layout", "build.summary", "network-capture", "proxy-restore", "app.structured-evidence", "screen-workspace", "screen-workspace.screens", "screen-workspace.transitions"],
             nextCommands: [
                 "triton status --json",
                 "triton assert text-exists <text> --json",
@@ -504,7 +509,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 evidenceScreenWorkspaceProjectionOutputContract(),
             ],
             failureCodes: ["validation_failed", "missing_observation_events", "missing_run_events", "invalid_run_events", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"],
-            providedCapabilities: ["evidence", "evidence-summary", "evidence-redact", "evidence-project-screens"]
+            providedCapabilities: ["evidence", "evidence-summary", "evidence-redact", "evidence-project-screens", "evidence-ingest"]
         ),
         TKCommandSchema(
             name: "capture",

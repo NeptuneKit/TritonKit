@@ -1,4 +1,5 @@
 import Darwin
+import ArgumentParser
 import Foundation
 import Testing
 import TritonKitShared
@@ -83,6 +84,98 @@ struct EvidenceBundleTests {
         #expect(capture.artifacts.contains("proxy-restore"))
         #expect(evidence.examples.contains { $0.contains("--xcode-summary") })
         #expect(evidence.examples.contains { $0.contains("--proxy-session") })
+    }
+
+    @Test("evidence ingest imports app structured evidence json with schema metadata")
+    func evidenceIngestImportsAppStructuredEvidenceJSONWithSchemaMetadata() async throws {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-ingest-\(UUID().uuidString)", isDirectory: true)
+        let input = temp.appendingPathComponent("app-evidence.json")
+        let schema = temp.appendingPathComponent("app-evidence.schema.json")
+        let output = temp.appendingPathComponent("app-structured.tritonevidence", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        try Data(#"{"screen":"login","fields":[{"id":"username","visible":true}]}"#.utf8)
+            .write(to: input, options: .atomic)
+        try Data(#"{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object"}"#.utf8)
+            .write(to: schema, options: .atomic)
+
+        let stdout = try await captureEvidenceCommandOutput {
+            let command = try Evidence.parse([
+                "ingest",
+                "--file", input.path,
+                "--kind", "app.structured-evidence",
+                "--schema", schema.path,
+                "--output", output.path,
+                "--name", "app-login-structured",
+                "--json",
+            ])
+            try await command.run()
+        }
+
+        let manifest = try JSONDecoder().decode(TKEvidenceManifest.self, from: Data(stdout.utf8))
+        let artifact = try #require(manifest.artifacts.first)
+        let metadata = try #require(artifact.metadata)
+
+        #expect(manifest.ok)
+        #expect(manifest.name == "app-login-structured")
+        #expect(artifact.kind == "app.structured-evidence")
+        #expect(artifact.path == "artifacts/app-structured-evidence/app-evidence.json")
+        #expect(artifact.contentType == "application/json")
+        #expect(artifact.redactionStatus == "sensitive")
+        #expect(artifact.sourceCommand == "triton evidence ingest --file \(input.path) --kind app.structured-evidence --schema \(schema.path)")
+        #expect(metadata["ingest.kind"] == .string("app.structured-evidence"))
+        #expect(metadata["schema.path"] == .string(schema.path))
+        #expect(metadata["schema.bytes"] != nil)
+        #expect(metadata["schema.sha256"] != nil)
+        #expect(manifest.primaryArtifacts.map(\.kind).first == "app.structured-evidence")
+        #expect(FileManager.default.fileExists(atPath: output.appendingPathComponent("manifest.json").path))
+        #expect(FileManager.default.fileExists(atPath: output.appendingPathComponent("artifacts/app-structured-evidence/app-evidence.json").path))
+    }
+
+    @Test("evidence ingest rejects invalid input json with validation envelope")
+    func evidenceIngestRejectsInvalidInputJSONWithValidationEnvelope() async throws {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-ingest-invalid-\(UUID().uuidString)", isDirectory: true)
+        let input = temp.appendingPathComponent("invalid.json")
+        let output = temp.appendingPathComponent("invalid.tritonevidence", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+        try FileManager.default.createDirectory(at: temp, withIntermediateDirectories: true)
+        try Data(#"{"screen":"login""#.utf8).write(to: input, options: .atomic)
+
+        let result = await captureEvidenceCommandOutputAndError {
+            let command = try Evidence.parse([
+                "ingest",
+                "--file", input.path,
+                "--kind", "app.structured-evidence",
+                "--output", output.path,
+                "--json",
+            ])
+            try await command.run()
+        }
+
+        #expect(result.error is ExitCode)
+        let envelope = try JSONDecoder().decode(TKCLIErrorResponse.self, from: Data(result.stdout.utf8))
+        #expect(envelope.ok == false)
+        #expect(envelope.error.code == "validation_failed")
+        #expect(envelope.error.message.contains("valid JSON"))
+        #expect(!FileManager.default.fileExists(atPath: output.appendingPathComponent("manifest.json").path))
+    }
+
+    @Test("schema exposes evidence ingest surface and metadata contract")
+    func schemaExposesEvidenceIngestSurfaceAndMetadataContract() throws {
+        let evidence = try #require(commandSchemas().first { $0.name == "evidence" })
+        let manifestContract = try #require(evidence.outputContracts.first { $0.selector == "evidence.manifest" })
+
+        #expect(evidence.usageForms.first { $0.form.contains("ingest --file") } != nil)
+        #expect(evidence.options.map(\.name).contains("--file"))
+        #expect(evidence.options.map(\.name).contains("--kind"))
+        #expect(evidence.options.map(\.name).contains("--schema"))
+        #expect(evidence.examples.contains { $0.contains("evidence ingest") })
+        #expect(evidence.artifacts.contains("app.structured-evidence"))
+        #expect(evidence.providedCapabilities.contains("evidence-ingest"))
+        #expect(manifestContract.fields.contains { $0.name == "artifacts[].metadata" })
+        #expect(manifestContract.fields.contains { $0.name == "artifacts[].metadata.schema.sha256" })
     }
 
     @Test("schema exposes real-device evidence taxonomy")
@@ -796,6 +889,28 @@ private func captureEvidenceCommandOutput(_ body: () async throws -> Void) async
 
     let data = pipe.fileHandleForReading.readDataToEndOfFile()
     return String(decoding: data, as: UTF8.self)
+}
+
+private func captureEvidenceCommandOutputAndError(_ body: () async throws -> Void) async -> (stdout: String, error: Error?) {
+    let pipe = Pipe()
+    let originalStdout = dup(STDOUT_FILENO)
+
+    fflush(stdout)
+    dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+    let caughtError: Error?
+    do {
+        try await body()
+        caughtError = nil
+    } catch {
+        caughtError = error
+    }
+    fflush(stdout)
+    dup2(originalStdout, STDOUT_FILENO)
+    close(originalStdout)
+    pipe.fileHandleForWriting.closeFile()
+
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    return (String(decoding: data, as: UTF8.self), caughtError)
 }
 
 private final class EvidenceTargetPropagationFakeServer {

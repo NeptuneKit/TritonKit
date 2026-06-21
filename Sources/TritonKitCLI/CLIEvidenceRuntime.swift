@@ -1,4 +1,5 @@
 import ArgumentParser
+import CryptoKit
 import Darwin
 import Foundation
 import Hummingbird
@@ -72,6 +73,98 @@ func failScreenWorkspaceProjection(_ error: TKScreenWorkspaceProjectionError, ou
         fputs("error: \(error.detail.message)\n", stderr)
     }
     throw ExitCode.failure
+}
+
+func ingestEvidenceBundle(
+    file: String,
+    kind: String,
+    schema: String?,
+    output: String,
+    name: String?,
+    note: String?
+) throws -> TKEvidenceManifest {
+    let inputURL = URL(fileURLWithPath: file)
+    let inputData: Data
+    do {
+        inputData = try Data(contentsOf: inputURL)
+        _ = try JSONSerialization.jsonObject(with: inputData)
+    } catch {
+        throw RuntimeError("--file must point to valid JSON: \(error)")
+    }
+
+    let outputURL = URL(fileURLWithPath: output)
+    try prepareEvidenceOutputDirectory(outputURL)
+
+    let sanitizedKind = sanitizedEvidencePathComponent(kind)
+    let artifactPath = "artifacts/\(sanitizedKind)/\(inputURL.lastPathComponent)"
+    let artifactURL = outputURL.appendingPathComponent(artifactPath)
+    try FileManager.default.createDirectory(
+        at: artifactURL.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    if FileManager.default.fileExists(atPath: artifactURL.path) {
+        try FileManager.default.removeItem(at: artifactURL)
+    }
+    try FileManager.default.copyItem(at: inputURL, to: artifactURL)
+
+    var metadata: [String: TKJSONValue] = [
+        "ingest.kind": .string(kind),
+        "ingest.file": .string(inputURL.path),
+        "ingest.bytes": .int(inputData.count),
+    ]
+    if let schema {
+        let schemaURL = URL(fileURLWithPath: schema)
+        let schemaData: Data
+        do {
+            schemaData = try Data(contentsOf: schemaURL)
+            _ = try JSONSerialization.jsonObject(with: schemaData)
+        } catch {
+            throw RuntimeError("--schema must point to valid JSON: \(error)")
+        }
+        metadata["schema.path"] = .string(schemaURL.path)
+        metadata["schema.bytes"] = .int(schemaData.count)
+        metadata["schema.sha256"] = .string(evidenceSHA256(schemaData))
+    }
+
+    let createdAt = ISO8601DateFormatter().string(from: Date())
+    let sourceCommand = [
+        "triton evidence ingest",
+        "--file \(file)",
+        "--kind \(kind)",
+        schema.map { "--schema \($0)" },
+    ].compactMap { $0 }.joined(separator: " ")
+    let artifact = TKEvidenceArtifact(
+        kind: kind,
+        path: artifactPath,
+        contentType: "application/json",
+        bytes: inputData.count,
+        freshness: TKEvidenceFreshness(capturedAt: createdAt, source: "cli-ingest"),
+        riskLevel: "private",
+        policy: "structured-evidence-json",
+        redactionStatus: "sensitive",
+        sourceCommand: sourceCommand,
+        metadata: metadata
+    )
+    let manifest = TKEvidenceManifest(
+        ok: true,
+        name: name,
+        note: note,
+        createdAt: createdAt,
+        output: outputURL.path,
+        artifacts: [artifact],
+        cli: TKEvidenceCLI(version: TritonKitBuildInfo.cliVersion)
+    )
+    try prettyEncodedData(manifest).write(
+        to: outputURL.appendingPathComponent("manifest.json"),
+        options: .atomic
+    )
+    return manifest
+}
+
+private func evidenceSHA256(_ data: Data) -> String {
+    SHA256.hash(data: data)
+        .map { String(format: "%02x", $0) }
+        .joined()
 }
 
 func readEvidenceManifest(from path: String) throws -> TKEvidenceManifest {

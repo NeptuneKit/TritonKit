@@ -70,6 +70,12 @@ struct Evidence: AsyncParsableCommand {
     var xcodeSummary: String?
     @Option(name: .customLong("proxy-session"), help: "Explicit device proxy session directory to import when --include contains network.proxy-session")
     var proxySession: String?
+    @Option(help: "Input JSON artifact path for `triton evidence ingest`")
+    var file: String?
+    @Option(help: "Artifact kind for `triton evidence ingest`")
+    var kind: String?
+    @Option(help: "Optional JSON schema path for `triton evidence ingest` metadata")
+    var schema: String?
     @Option(help: "Redaction profile for existing evidence bundles") var profile: String = "ios-private"
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -115,6 +121,31 @@ struct Evidence: AsyncParsableCommand {
                     try failScreenWorkspaceProjection(error, outputFormat: outputFormat)
                 } catch {
                     try failScreenWorkspaceProjection(.invalidRunEvents("\(error)"), outputFormat: outputFormat)
+                }
+                return
+            case "ingest":
+                guard let file else {
+                    try failEvidenceValidation("`triton evidence ingest` requires --file <path>", outputFormat: outputFormat)
+                }
+                guard let kind else {
+                    try failEvidenceValidation("`triton evidence ingest` requires --kind <artifact-kind>", outputFormat: outputFormat)
+                }
+                guard let output else {
+                    try failEvidenceValidation("`triton evidence ingest` requires --output <dir.tritonevidence>", outputFormat: outputFormat)
+                }
+                do {
+                    let manifest = try ingestEvidenceBundle(
+                        file: file,
+                        kind: kind,
+                        schema: schema,
+                        output: output,
+                        name: name,
+                        note: note
+                    )
+                    try printEvidenceManifest(manifest, format: outputFormat)
+                } catch {
+                    if error is ExitCode { throw error }
+                    try failEvidenceValidation("\(error)", outputFormat: outputFormat)
                 }
                 return
             default:

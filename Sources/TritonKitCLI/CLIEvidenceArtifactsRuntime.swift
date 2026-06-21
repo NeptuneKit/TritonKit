@@ -86,7 +86,7 @@ func evidenceArtifactIsSensitive(_ artifact: TKEvidenceArtifact) -> Bool {
 }
 
 func sanitizedEvidencePathComponent(_ value: String) -> String {
-    let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_."))
+    let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-_"))
     let scalars = value.unicodeScalars.map { scalar -> Character in
         allowed.contains(scalar) ? Character(scalar) : "-"
     }
@@ -125,6 +125,7 @@ func appendEvidenceArtifact(
     policy: String? = nil,
     redactionStatus: String? = nil,
     sourceCommand: String? = nil,
+    metadata: [String: TKJSONValue]? = nil,
     target: String? = nil
 ) throws {
     let fileURL = directory.appendingPathComponent(relativePath)
@@ -144,6 +145,7 @@ func appendEvidenceArtifact(
         policy: policy,
         redactionStatus: redactionStatus,
         sourceCommand: sourceCommand,
+        metadata: metadata,
         target: target
     ))
 }
