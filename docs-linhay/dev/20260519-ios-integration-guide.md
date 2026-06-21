@@ -31,7 +31,7 @@ TritonKit 需要在仓库 README 和项目级 skill 中提供 iOS 侧接入指�
 3. App 侧：优先新建独立 `TritonKitDebugBootstrap.swift`，整个文件从 `import TritonKit` 到 `TritonKit.shared.start()` / `start { config in ... }` 都包在文件级 `#if DEBUG` 内；`start` 会内部强持有默认 `TritonKitRequestHandler`，业务侧不需要自己保存 handler。
 4. 启动入口：AppDelegate、SceneDelegate 或 SwiftUI `onAppear` 只保留 `#if DEBUG` 调用点，例如 `TritonKitDebugBootstrap.start()`；不要把 TritonKit 符号散落在生产入口文件里。
 5. CLI 侧：模拟器优先 `triton serve --host 127.0.0.1 --port 19421`；真机使用 `0.0.0.0` 监听并把 `TRITON_HOST` 设为 Mac LAN IP。
-6. 验证：使用 `triton status --json`、`triton list --json`、`triton hierarchy --json`、`triton ax --json`。
+6. 验证：使用 `triton status --json`、`triton list --json`、`triton debug hierarchy --json`、`triton debug ax --json`。
 7. Release：public API 保持可编译，但 Release package build 不定义 `TRITONKIT_RUNTIME_ENABLED`，因此 `TritonKit.isRuntimeEnabled == false`，runtime 不连接、不采集、不上传、不响应控制；接入示例仍必须显式 `#if DEBUG`，不能只依赖 no-op。
 
 ## 变更位置

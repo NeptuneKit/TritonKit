@@ -6,32 +6,58 @@ extension SchemaFactSourceTests {
     @Test("execution and evidence schemas expose recovery commands and output contracts")
     func executionAndEvidenceSchemasExposeRecoveryCommandsAndOutputContracts() throws {
         let schemas = commandSchemaMap()
-        let find = try #require(schemas["find"])
+        let act = try #require(schemas["act"])
         let wait = try #require(schemas["wait"])
-        let tap = try #require(schemas["tap"])
-        let clear = try #require(schemas["clear"])
-        let press = try #require(schemas["press"])
-        let input = try #require(schemas["input"])
-        let assert = try #require(schemas["assert"])
+        let verify = try #require(schemas["verify"])
         let evidence = try #require(schemas["evidence"])
-        let capture = try #require(schemas["capture"])
         let smoke = try #require(schemas["smoke"])
         let record = try #require(schemas["record"])
         let replay = try #require(schemas["replay"])
         let connectedCapabilityNames = Set(connectedCapabilities().map(\.name))
 
-        #expect(find.failureCodes.contains("text_not_found"))
-        #expect(find.failureCodes.contains("ambiguous_target"))
-        #expect(find.nextCommands.contains("triton tap <query> --json"))
-        #expect(find.nextCommands.contains("triton screenshot --output <path> --metadata"))
-        expectContract(find, selector: "target.resolution", fields: [
+        #expect(act.failureCodes.contains("text_not_found"))
+        #expect(act.failureCodes.contains("validation_failed"))
+        #expect(act.failureCodes.contains("semantic_action_failed"))
+        #expect(act.subcommands.map(\.name).contains("find"))
+        #expect(act.subcommands.map(\.name).contains("tap"))
+        #expect(act.subcommands.map(\.name).contains("type"))
+        #expect(act.subcommands.map(\.name).contains("input"))
+        #expect(act.nextCommands.contains("triton verify text-exists <text> --json"))
+        #expect(act.nextCommands.contains("triton evidence capture --case <case> --output <dir.tritonevidence> --json"))
+        expectContract(act, selector: "target.resolution", fields: [
             "query", "source", "strategy", "request", "matchIndex", "matchCount", "candidates",
+        ])
+        expectContract(act, selector: "input.result", fields: [
+            "ok", "action", "message", "targetOID", "targetClassName",
+        ])
+        expectContract(act, selector: "input.summary", fields: [
+            "ok", "actionCount", "failedCount",
+        ])
+        expectContract(act, selector: "host.harmony-tap", fields: [
+            "ok", "action", "platform", "target", "query", "x", "y", "match",
+            "sourceCommands", "note",
+        ])
+        expectContract(act, selector: "host.harmony-swipe", fields: [
+            "ok", "action", "platform", "target", "startX", "startY", "endX", "endY",
+            "velocity", "sourceCommands", "note",
+        ])
+        expectContract(act, selector: "host.harmony-text-input", fields: [
+            "ok", "action", "platform", "target", "x", "y", "secure", "redacted",
+            "insertedLength", "sourceCommands", "note",
+        ])
+        expectContract(act, selector: "host.harmony-key-action", fields: [
+            "ok", "action", "runtimeScope", "target", "selection", "tool", "exitCode",
+            "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated",
+            "stdout", "stderr", "artifacts", "note",
+        ])
+        expectContract(act, selector: "semantic.action", fields: [
+            "ok", "action", "strategy", "targetOID", "targetClassName", "elapsedMs", "message", "error", "redaction",
         ])
 
         #expect(wait.failureCodes.contains("timeout"))
         #expect(wait.failureCodes.contains("validation_failed"))
-        #expect(wait.nextCommands.contains("triton assert text-exists <text> --json"))
-        #expect(wait.nextCommands.contains("triton evidence --output <dir.tritonevidence> --json"))
+        #expect(wait.nextCommands.contains("triton verify text-exists <text> --json"))
+        #expect(wait.nextCommands.contains("triton evidence capture --case <case> --output <dir.tritonevidence> --json"))
         expectContract(wait, selector: "wait.result", fields: [
             "ok", "matched", "condition", "timedOut", "elapsedMs", "pollCount", "lastObservedTextSample", "match",
         ])
@@ -41,75 +67,12 @@ extension SchemaFactSourceTests {
         ])
         #expect(!wait.outputContracts.map(\.selector).contains("host.wait"))
 
-        #expect(tap.failureCodes.contains("text_not_found"))
-        #expect(tap.failureCodes.contains("validation_failed"))
-        #expect(tap.nextCommands.contains("triton wait --text <text> --json"))
-        #expect(tap.nextCommands.contains("triton evidence --output <dir.tritonevidence> --json"))
-        expectContract(tap, selector: "input.result", fields: [
-            "ok", "action", "message", "targetOID", "targetClassName", "matchedOID", "activationOID", "strategy",
-        ])
-        expectContract(tap, selector: "host.harmony-tap", fields: [
-            "ok", "action", "platform", "target", "query", "x", "y", "match",
-            "sourceCommands", "note",
-        ])
-        #expect(!tap.outputContracts.map(\.selector).contains("host.tap"))
-
-        let swipe = try #require(schemas["swipe"])
-        expectContract(swipe, selector: "input.result", fields: [
-            "ok", "action", "message", "targetOID", "targetClassName",
-        ])
-        expectContract(swipe, selector: "host.harmony-swipe", fields: [
-            "ok", "action", "platform", "target", "startX", "startY", "endX", "endY",
-            "velocity", "sourceCommands", "note",
-        ])
-        #expect(!swipe.outputContracts.map(\.selector).contains("host.swipe"))
-
-        let type = try #require(schemas["type"])
-        expectContract(type, selector: "input.result", fields: [
-            "ok", "action", "message", "targetOID", "targetClassName",
-        ])
-        expectContract(type, selector: "host.harmony-text-input", fields: [
-            "ok", "action", "platform", "target", "x", "y", "secure", "redacted",
-            "insertedLength", "sourceCommands", "note",
-        ])
-        #expect(!type.outputContracts.map(\.selector).contains("host.text-input"))
-
-        let paste = try #require(schemas["paste"])
-        expectContract(paste, selector: "input.result", fields: [
-            "ok", "action", "message", "targetOID", "targetClassName",
-        ])
-        expectContract(paste, selector: "host.harmony-text-input", fields: [
-            "ok", "action", "platform", "target", "x", "y", "secure", "redacted",
-            "insertedLength", "sourceCommands", "note",
-        ])
-        #expect(!paste.outputContracts.map(\.selector).contains("host.text-input"))
-        #expect(clear.providedCapabilities.contains("clear"))
-        #expect(clear.providedCapabilities.contains("harmony-clear-text"))
-        #expect(clear.outputContracts.map(\.selector) == ["input.result"])
-        expectContract(press, selector: "host.harmony-key-action", fields: [
-            "ok", "action", "runtimeScope", "target", "selection", "tool", "exitCode",
-            "riskLevel", "sourceCommand", "stdoutTruncated", "stderrTruncated",
-            "stdout", "stderr", "artifacts", "note",
-        ])
-        #expect(!press.outputContracts.map(\.selector).contains("host.key-action"))
-
-        #expect(input.failureCodes.contains("validation_failed"))
-        #expect(input.failureCodes.contains("request_failed"))
-        #expect(input.nextCommands.contains("triton evidence --output <dir.tritonevidence> --json"))
-        #expect(input.providedCapabilities.contains("input"))
-        #expect(input.providedCapabilities.contains("tap"))
-        #expect(!input.providedCapabilities.contains("press"))
-        expectContract(input, selector: "input.result", fields: [
-            "ok", "action", "message", "targetOID", "targetClassName",
-        ])
-        expectContract(input, selector: "input.summary", fields: [
-            "ok", "actionCount", "failedCount",
-        ])
-
-        #expect(assert.failureCodes.contains("assertion_failed"))
-        #expect(assert.failureCodes.contains("validation_failed"))
-        #expect(assert.nextCommands.contains("triton evidence --output <dir.tritonevidence> --json"))
-        expectContract(assert, selector: "assert.result", fields: [
+        #expect(verify.failureCodes.contains("assertion_failed"))
+        #expect(verify.failureCodes.contains("validation_failed"))
+        #expect(verify.nextCommands.contains("triton evidence capture --case <case> --output <dir.tritonevidence> --json"))
+        #expect(verify.subcommands.map(\.name).contains("text-exists"))
+        #expect(verify.subcommands.map(\.name).contains("text-not-exists"))
+        expectContract(verify, selector: "assert.result", fields: [
             "ok", "condition", "query", "count", "matches", "sample", "nearestText", "suggestedCommands",
         ])
 
@@ -132,20 +95,12 @@ extension SchemaFactSourceTests {
             "ok", "evidenceDir", "screensRef", "transitionsRef", "screenCount", "transitionCount", "warningCount", "warnings", "error",
         ])
 
-        #expect(capture.failureCodes.contains("validation_failed"))
-        #expect(capture.artifacts.contains("evidence-bundle"))
-        #expect(capture.nextCommands.contains("triton evidence summary <dir.tritonevidence> --json"))
-        #expect(Set(capture.providedCapabilities).isSubset(of: connectedCapabilityNames))
-        expectContract(capture, selector: "evidence.manifest", fields: [
-            "ok", "formatVersion", "output", "artifacts", "primaryArtifact", "primaryArtifacts", "skipped", "target", "cli", "run", "screenWorkspace",
-        ])
-
         #expect(Set(smoke.providedCapabilities).isSubset(of: connectedCapabilityNames))
 
         #expect(Set(record.providedCapabilities).isSubset(of: connectedCapabilityNames))
 
         #expect(replay.failureCodes.contains("validation_failed"))
-        #expect(replay.nextCommands.contains("triton evidence --output <dir.tritonevidence> --json"))
+        #expect(replay.nextCommands.contains("triton evidence capture --case <case> --output <dir.tritonevidence> --json"))
         #expect(replay.nextCommands.contains("triton plan inspect <path.tritonplan> --json"))
         #expect(replay.providedCapabilities.contains("replay-dry-run"))
         #expect(Set(replay.providedCapabilities).isSubset(of: connectedCapabilityNames))
@@ -180,37 +135,33 @@ extension SchemaFactSourceTests {
     @Test("observation and runtime schemas expose diagnostic contracts")
     func observationAndRuntimeSchemasExposeDiagnosticContracts() throws {
         let schemas = commandSchemaMap()
-        let runtime = try #require(schemas["runtime"])
-        let state = try #require(schemas["state"])
-        let snapshot = try #require(schemas["snapshot"])
+        let debug = try #require(schemas["debug"])
         let observe = try #require(schemas["observe"])
         let webview = try #require(schemas["webview"])
         let route = try #require(schemas["route"])
-        let ax = try #require(schemas["ax"])
         let screenshot = try #require(schemas["screenshot"])
 
-        #expect(runtime.failureCodes.contains("server_unavailable"))
-        #expect(runtime.failureCodes.contains("target_unavailable"))
-        #expect(runtime.nextCommands.contains("triton capabilities --format json"))
-        expectContract(runtime, selector: "runtime.manifest", fields: [
+        #expect(debug.failureCodes.contains("server_unavailable"))
+        #expect(debug.failureCodes.contains("target_unavailable"))
+        #expect(debug.subcommands.map(\.name).contains("runtime"))
+        #expect(debug.subcommands.map(\.name).contains("snapshot"))
+        #expect(debug.subcommands.map(\.name).contains("ax"))
+        expectContract(debug, selector: "runtime.manifest", fields: [
             "ok", "platform", "runtime", "transport", "enabled", "sdkVersion", "buildConfiguration",
             "capabilities", "limits", "redaction",
         ])
 
-        #expect(state.failureCodes.contains("server_unavailable"))
-        #expect(state.failureCodes.contains("target_unavailable"))
-        #expect(state.nextCommands.contains("triton snapshot --json"))
-        expectContract(state, selector: "runtime.state", fields: [
+        expectContract(debug, selector: "runtime.state", fields: [
             "ok", "capturedAt", "runtime", "targetConnectionState", "app", "scenes",
             "rootController", "visibleController", "firstResponder", "warnings", "unsupported",
         ])
 
-        #expect(snapshot.failureCodes.contains("server_unavailable"))
-        #expect(snapshot.failureCodes.contains("target_unavailable"))
-        #expect(snapshot.nextCommands.contains("triton assert text-exists <text> --json"))
-        expectContract(snapshot, selector: "runtime.snapshot", fields: [
+        expectContract(debug, selector: "runtime.snapshot", fields: [
             "ok", "capturedAt", "runtime", "targetConnectionState", "include", "app", "scene",
             "route", "responder", "geometry", "ax", "screenshot", "artifacts", "skipped", "truncation",
+        ])
+        expectContract(debug, selector: "ax.nodes", fields: [
+            "role", "label", "value", "identifier", "title", "frame", "enabled", "focused",
         ])
 
         #expect(observe.failureCodes.contains("target_not_found"))
@@ -269,17 +220,10 @@ extension SchemaFactSourceTests {
             "platform", "target", "webViewID", "title", "pageSessionID", "hint",
         ])
 
-        #expect(ax.failureCodes.contains("server_unavailable"))
-        #expect(ax.failureCodes.contains("host_command_failed"))
-        expectContract(ax, selector: "host.harmony-artifact", fields: [
-            "ok", "action", "platform", "target", "artifact", "sourceCommands", "note",
-        ])
-        #expect(!ax.outputContracts.map(\.selector).contains("host.artifact"))
-
         #expect(screenshot.failureCodes.contains("server_unavailable"))
         #expect(screenshot.failureCodes.contains("artifact_write_failed"))
         #expect(screenshot.artifacts.contains("screenshot"))
-        #expect(screenshot.nextCommands.contains("triton evidence --output <dir.tritonevidence> --json"))
+        #expect(screenshot.nextCommands.contains("triton evidence capture --case <case> --output <dir.tritonevidence> --json"))
         expectContract(screenshot, selector: "screenshot.metadata", fields: [
             "format", "width", "height", "scale", "output", "bytes",
         ])
@@ -365,103 +309,78 @@ extension SchemaFactSourceTests {
         let schemas = commandSchemaMap()
         let list = try #require(schemas["list"])
         let inspect = try #require(schemas["inspect"])
-        let hierarchy = try #require(schemas["hierarchy"])
-        let nodes = try #require(schemas["nodes"])
-        let node = try #require(schemas["node"])
-        let attrs = try #require(schemas["attrs"])
-        let object = try #require(schemas["object"])
+        let debug = try #require(schemas["debug"])
         let export = try #require(schemas["export"])
-        let geometry = try #require(schemas["geometry"])
-        let hit = try #require(schemas["hit"])
-        let focus = try #require(schemas["focus"])
-        let setText = try #require(schemas["set-text"])
-        let selectSegment = try #require(schemas["select-segment"])
-        let setSwitch = try #require(schemas["set-switch"])
-        let ledger = try #require(schemas["ledger"])
+        let act = try #require(schemas["act"])
 
         #expect(list.failureCodes.contains("server_unavailable"))
         #expect(list.nextCommands.contains("triton inspect --target <id> --json"))
         expectContract(list, selector: "targets.list", fields: ["targets"])
 
         #expect(inspect.failureCodes.contains("target_not_found"))
-        #expect(inspect.nextCommands.contains("triton hierarchy --target <id> --json"))
+        #expect(inspect.nextCommands.contains("triton debug hierarchy --target <id> --json"))
         expectContract(inspect, selector: "target.summary", fields: [
             "id", "transport", "connected", "latestHierarchyAvailable",
             "appName", "bundleIdentifier", "deviceDescription", "osDescription",
         ])
 
-        #expect(hierarchy.failureCodes.contains("hierarchy_unavailable"))
-        #expect(hierarchy.artifacts.contains("hierarchy-json"))
-        #expect(hierarchy.nextCommands.contains("triton nodes --json"))
-        expectContract(hierarchy, selector: "hierarchy.info", fields: [
+        #expect(debug.failureCodes.contains("hierarchy_unavailable"))
+        #expect(debug.subcommands.map(\.name).contains("hierarchy"))
+        #expect(debug.subcommands.map(\.name).contains("nodes"))
+        #expect(debug.subcommands.map(\.name).contains("hit"))
+        #expect(debug.subcommands.map(\.name).contains("ledger"))
+        expectContract(debug, selector: "hierarchy.info", fields: [
             "displayItems", "appInfo", "serverVersion", "colorAlias", "collapsedClassList",
         ])
-        expectContract(hierarchy, selector: "hierarchy.scene", fields: [
+        expectContract(debug, selector: "hierarchy.scene", fields: [
             "platform", "rootId", "viewport", "nodes", "style", "slice", "view", "layer", "visualSources", "raw", "renderHints",
         ])
 
-        #expect(nodes.failureCodes.contains("hierarchy_unavailable"))
-        #expect(nodes.nextCommands.contains("triton node --oid <oid> --json"))
-        expectContract(nodes, selector: "hierarchy.nodes", fields: ["nodes"])
+        expectContract(debug, selector: "hierarchy.nodes", fields: ["nodes"])
 
-        #expect(node.failureCodes.contains("node_not_found"))
-        #expect(node.failureCodes.contains("ambiguous_target"))
-        #expect(node.nextCommands.contains("triton attrs --oid <layerOid> --json"))
-        expectContract(node, selector: "hierarchy.node", fields: [
+        expectContract(debug, selector: "hierarchy.node", fields: [
             "oid", "viewOid", "layerOid", "className", "depth", "frame", "hidden", "alpha",
         ])
-        expectContract(node, selector: "node.resolve", fields: [
+        expectContract(debug, selector: "node.resolve", fields: [
             "ok", "action", "platform", "query", "matchIndex", "matchCount", "node", "candidates",
         ])
 
-        #expect(attrs.failureCodes.contains("node_not_found"))
-        #expect(attrs.nextCommands.contains("triton object --oid <oid> --json"))
-        expectContract(attrs, selector: "node.attributes", fields: [
+        expectContract(debug, selector: "node.attributes", fields: [
             "identifier", "userCustomTitle", "attrSections",
         ])
 
-        #expect(object.failureCodes.contains("node_not_found"))
-        #expect(object.nextCommands.contains("triton attrs --oid <oid> --json"))
-        expectContract(object, selector: "node.object", fields: [
+        expectContract(debug, selector: "node.object", fields: [
             "oid", "memoryAddress", "classChainList", "specialTrace", "ivarTraces",
         ])
 
         #expect(export.failureCodes.contains("artifact_write_failed"))
         #expect(export.artifacts.contains("hierarchy-json"))
         #expect(export.artifacts.contains("export-archive"))
-        #expect(export.nextCommands.contains("triton evidence --output <dir.tritonevidence> --json"))
+        #expect(export.nextCommands.contains("triton evidence capture --case <case> --output <dir.tritonevidence> --json"))
         expectContract(export, selector: "export.archive", fields: [
             "schemaVersion", "exportedAt", "target", "hierarchy", "geometry", "accessibility", "screenshot",
         ])
 
-        #expect(geometry.failureCodes.contains("runtime_unavailable"))
-        #expect(geometry.nextCommands.contains("triton hit --at <x,y> --json"))
-        expectContract(geometry, selector: "geometry.current", fields: [
+        expectContract(debug, selector: "geometry.current", fields: [
             "bounds", "safeArea", "scale", "orientation",
         ])
 
-        #expect(hit.failureCodes.contains("validation_failed"))
-        #expect(hit.nextCommands.contains("triton tap <query> --at <x,y> --json"))
-        expectContract(hit, selector: "hit.result", fields: [
+        expectContract(debug, selector: "hit.result", fields: [
             "x", "y", "node", "centerX", "centerY",
         ])
 
-        for schema in [focus, setText, selectSegment, setSwitch] {
-            #expect(schema.failureCodes.contains("target_not_found"))
-            #expect(schema.failureCodes.contains("validation_failed"))
-            #expect(schema.nextCommands.contains("triton ledger --limit 20 --json"))
-            expectContract(schema, selector: "semantic.action", fields: [
-                "ok", "action", "strategy", "targetOID", "targetClassName", "elapsedMs", "message", "error", "redaction",
-            ])
-        }
+        #expect(act.subcommands.map(\.name).contains("focus"))
+        #expect(act.subcommands.map(\.name).contains("set-text"))
+        #expect(act.subcommands.map(\.name).contains("select-segment"))
+        #expect(act.subcommands.map(\.name).contains("set-switch"))
+        expectContract(act, selector: "semantic.action", fields: [
+            "ok", "action", "strategy", "targetOID", "targetClassName", "elapsedMs", "message", "error", "redaction",
+        ])
 
-        #expect(ledger.failureCodes.contains("runtime_unavailable"))
-        #expect(ledger.artifacts.contains("runtime-ledger"))
-        #expect(ledger.nextCommands.contains("triton evidence --output <dir.tritonevidence> --json"))
-        expectContract(ledger, selector: "runtime.ledger", fields: [
+        expectContract(debug, selector: "runtime.ledger", fields: [
             "ok", "entries", "limit", "count", "maxEntries",
         ])
-        expectContract(ledger, selector: "runtime.ledger-entry", fields: [
+        expectContract(debug, selector: "runtime.ledger-entry", fields: [
             "id", "timestamp", "source", "requestType", "action", "ok", "elapsedMs", "errorCode",
         ])
     }

@@ -369,7 +369,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton plan --json",
                 "triton sim tap --simulator <udid|booted> --x <x> --y <y> --json",
                 "triton sim type --simulator <udid|booted> --text <text> --json",
-                "triton evidence --output <dir.tritonevidence> --json",
+                "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
                 "triton app launch --device <selector> --bundle-id <id> --json",
                 "triton smoke ios --device <selector> --bundle-id <id> --open-url <url> --wait-text <text> --json",
             ],
@@ -457,7 +457,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     summary: "Capture simulator framebuffer screenshot",
                     requiredOptions: ["--output"],
                     optionalOptions: ["--simulator", "--display", "--format", "--json"],
-                    nextCommands: ["triton evidence --output <dir.tritonevidence> --json"],
+                    nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
                     outputSelectors: ["host.simulator-screenshot"],
                     failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "artifact_output_rejected", "validation_failed"]
                 ),
@@ -482,7 +482,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     nextCommands: [
                         "triton plan --json",
                         "triton sim screenshot --simulator <udid|booted> --output <path> --json",
-                        "triton assert text-exists <text> --json",
+                        "triton verify text-exists <text> --json",
                     ],
                     outputSelectors: ["host.simulator-input"],
                     failureCodes: ["unsupported_host_input", "unsupported_text_input", "validation_failed"]
@@ -718,8 +718,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             nextCommands: [
                 "triton app go <url>",
                 "triton status --json",
-                "triton assert text-exists <text> --json",
-                "triton evidence --output <dir.tritonevidence> --json",
+                "triton verify text-exists <text> --json",
+                "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
             ],
             outputContracts: [
                 hostActionOutputContract(selector: "host.app-action", model: "HostActionOutput|HostAppContainerOutput|HostAppPreferenceOutput"),

@@ -325,7 +325,7 @@ struct SchemaFactSourceTests {
         #expect(evidence.supported)
         #expect(evidence.group == "evidence")
         #expect(evidence.nextAction?.command == "evidence")
-        #expect(evidence.nextAction?.args == ["--output", "<dir.tritonevidence>", "--json"])
+        #expect(evidence.nextAction?.args == ["capture", "--case", "<case>", "--output", "<dir.tritonevidence>", "--json"])
         #expect(evidence.evidence == ["evidence-bundle"])
 
         let evidenceSummary = try #require(disconnected["evidence-summary"])
@@ -437,20 +437,21 @@ struct SchemaFactSourceTests {
         let tap = try #require(connected["tap"])
         #expect(tap.group == "action")
         #expect(tap.requiredBy.contains("assert"))
-        #expect(tap.nextAction?.command == "tap")
-        #expect(tap.nextAction?.args == ["<query>", "--json"])
+        #expect(tap.nextAction?.command == "act")
+        #expect(tap.nextAction?.args == ["tap", "<query>", "--json"])
         #expect(tap.evidence == ["input.result", "runtime-ledger"])
 
         let swipe = try #require(connected["swipe"])
-        #expect(swipe.nextAction?.args == ["--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"])
+        #expect(swipe.nextAction?.command == "act")
+        #expect(swipe.nextAction?.args == ["swipe", "--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"])
         #expect(swipe.evidence == ["input.result", "runtime-ledger"])
 
         let harmonyTap = try #require(connected["harmony-tap-text"])
         #expect(harmonyTap.group == "action")
         #expect(harmonyTap.requiredBy.contains("action"))
         #expect(harmonyTap.requiredBy.contains("assert"))
-        #expect(harmonyTap.nextAction?.command == "tap")
-        #expect(harmonyTap.nextAction?.args == ["<text>", "--platform", "harmony", "--json"])
+        #expect(harmonyTap.nextAction?.command == "act")
+        #expect(harmonyTap.nextAction?.args == ["tap", "<text>", "--platform", "harmony", "--json"])
         #expect(harmonyTap.evidence == ["host-command-json", "host-artifact"])
 
         let harmonyWait = try #require(connected["harmony-wait-text"])
@@ -463,41 +464,43 @@ struct SchemaFactSourceTests {
         let harmonyType = try #require(connected["harmony-type-text"])
         #expect(harmonyType.group == "action")
         #expect(harmonyType.requiredBy.contains("action"))
-        #expect(harmonyType.nextAction?.command == "type")
-        #expect(harmonyType.nextAction?.args == ["<text>", "--platform", "harmony", "--json"])
+        #expect(harmonyType.nextAction?.command == "act")
+        #expect(harmonyType.nextAction?.args == ["type", "<text>", "--platform", "harmony", "--json"])
         #expect(harmonyType.evidence == ["host-command-json", "host-artifact"])
 
         let harmonyPress = try #require(connected["harmony-press-key"])
         #expect(harmonyPress.group == "action")
         #expect(harmonyPress.requiredBy.contains("action"))
-        #expect(harmonyPress.nextAction?.command == "press")
-        #expect(harmonyPress.nextAction?.args == ["<button>", "--platform", "harmony", "--json"])
+        #expect(harmonyPress.nextAction?.command == "act")
+        #expect(harmonyPress.nextAction?.args == ["press", "<button>", "--platform", "harmony", "--json"])
         #expect(harmonyPress.evidence == ["host-command-json", "host-artifact"])
 
         let clear = try #require(connected["clear"])
-        #expect(clear.nextAction?.args == ["--at", "<x,y>", "--json"])
+        #expect(clear.nextAction?.command == "act")
+        #expect(clear.nextAction?.args == ["clear", "--at", "<x,y>", "--json"])
 
         let harmonyClear = try #require(connected["harmony-clear-text"])
         #expect(!harmonyClear.supported)
         #expect(harmonyClear.group == "action")
         #expect(harmonyClear.requiredBy.contains("action"))
-        #expect(harmonyClear.nextAction?.command == "clear")
-        #expect(harmonyClear.nextAction?.args == ["--platform", "harmony", "--json"])
+        #expect(harmonyClear.nextAction?.command == "act")
+        #expect(harmonyClear.nextAction?.args == ["clear", "--platform", "harmony", "--json"])
         #expect(harmonyClear.evidence == ["unsupported-envelope", "command-schema"])
 
         let unavailableHarmonyClear = try #require(unavailableServer["harmony-clear-text"])
-        #expect(unavailableHarmonyClear.nextAction?.command == "clear")
-        #expect(unavailableHarmonyClear.nextAction?.args == ["--platform", "harmony", "--json"])
+        #expect(unavailableHarmonyClear.nextAction?.command == "act")
+        #expect(unavailableHarmonyClear.nextAction?.args == ["clear", "--platform", "harmony", "--json"])
         #expect(unavailableHarmonyClear.nextAction?.requiresLongRunningProcess != true)
 
         let input = try #require(connected["input"])
-        #expect(input.nextAction?.args == ["--json", "--summary", "--strict"])
+        #expect(input.nextAction?.command == "act")
+        #expect(input.nextAction?.args == ["input", "--json", "--summary", "--strict"])
         #expect(input.evidence == ["input.result", "runtime-ledger"])
 
         let press = try #require(connected["press"])
         #expect(!press.supported)
         #expect(press.nextAction?.command == "schema")
-        #expect(press.nextAction?.args == ["--command", "press", "--json"])
+        #expect(press.nextAction?.args == ["--command", "act", "--json"])
         #expect(press.evidence == ["unsupported-envelope", "command-schema"])
     }
 
@@ -525,13 +528,13 @@ struct SchemaFactSourceTests {
         )
 
         let expectations: [(name: String, command: String, args: [String])] = [
-            ("harmony-tap-text", "tap", ["<text>", "--platform", "harmony", "--json"]),
+            ("harmony-tap-text", "act", ["tap", "<text>", "--platform", "harmony", "--json"]),
             ("harmony-wait-text", "wait", ["--platform", "harmony", "--text", "<text>", "--json"]),
-            ("harmony-swipe", "swipe", ["--platform", "harmony", "--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"]),
-            ("harmony-type-text", "type", ["<text>", "--platform", "harmony", "--json"]),
-            ("harmony-paste-text", "paste", ["<text>", "--platform", "harmony", "--json"]),
-            ("harmony-clear-text", "clear", ["--platform", "harmony", "--json"]),
-            ("harmony-press-key", "press", ["<button>", "--platform", "harmony", "--json"]),
+            ("harmony-swipe", "act", ["swipe", "--platform", "harmony", "--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"]),
+            ("harmony-type-text", "act", ["type", "<text>", "--platform", "harmony", "--json"]),
+            ("harmony-paste-text", "act", ["paste", "<text>", "--platform", "harmony", "--json"]),
+            ("harmony-clear-text", "act", ["clear", "--platform", "harmony", "--json"]),
+            ("harmony-press-key", "act", ["press", "<button>", "--platform", "harmony", "--json"]),
         ]
 
         for expectation in expectations {
@@ -603,7 +606,7 @@ struct SchemaFactSourceTests {
             ("observe-harmony", true, "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"]),
             ("webview-list", true, "webview", ["observe", "route", "assert", "evidence"], ["webview-candidates", "host-layout", "runtime-ax"], "webview", ["list", "--json"]),
             ("webview-current", true, "webview", ["observe", "route", "assert", "evidence"], ["webview-candidates", "host-layout", "runtime-ax"], "webview", ["current", "--json"]),
-            ("node-resolve", true, "observe", ["action", "assert", "evidence"], ["target.resolution", "surface-tree"], "node", ["resolve", "--text", "<text>", "--json"]),
+            ("node-resolve", true, "observe", ["action", "assert", "evidence"], ["target.resolution", "surface-tree"], "act", ["find", "<text>", "--json"]),
         ]
 
         for expectation in expectations {
@@ -636,9 +639,9 @@ struct SchemaFactSourceTests {
     func observeAndNodeProvidedCapabilitiesStaySchemaMatrixAligned() throws {
         let schemas = commandSchemaMap()
         let observeSchema = try #require(schemas["observe"])
-        let nodeSchema = try #require(schemas["node"])
         #expect(observeSchema.providedCapabilities == ["observe", "observe-ios", "observe-android", "observe-harmony"])
-        #expect(nodeSchema.providedCapabilities == ["node", "node-resolve"])
+        let debugSchema = try #require(schemas["debug"])
+        #expect(debugSchema.subcommands.map(\.name).contains("node"))
 
         let connected = connectedCapabilityMap()
         let disconnected = disconnectedCapabilityMap()
@@ -659,8 +662,8 @@ struct SchemaFactSourceTests {
             ("observe-ios", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, false, "observe", ["current", "--platform", "ios", "--json"], "observe", ["current", "--platform", "ios", "--json"]),
             ("observe-android", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"]),
             ("observe-harmony", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"]),
-            ("node", "observe", ["action", "assert", "evidence"], ["hierarchy-node", "surface-tree"], true, false, "node", ["--oid", "<oid>", "--json"], "status", ["--json"]),
-            ("node-resolve", "observe", ["action", "assert", "evidence"], ["target.resolution", "surface-tree"], true, true, "node", ["resolve", "--text", "<text>", "--json"], "node", ["resolve", "--text", "<text>", "--json"]),
+            ("node", "observe", ["action", "assert", "evidence"], ["hierarchy-node", "surface-tree"], true, false, "debug", ["node", "--oid", "<oid>", "--json"], "status", ["--json"]),
+            ("node-resolve", "observe", ["action", "assert", "evidence"], ["target.resolution", "surface-tree"], true, true, "act", ["find", "<text>", "--json"], "act", ["find", "<text>", "--json"]),
         ]
 
         for expectation in expectations {

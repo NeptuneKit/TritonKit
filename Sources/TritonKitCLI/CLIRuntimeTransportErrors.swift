@@ -177,7 +177,7 @@ func cliErrorDetail(for error: Error, endpoint: String, host: String, port: Int)
             code: "text_not_found",
             message: tapError.message,
             endpoint: url,
-            hint: "Run `triton find \(tapError.query.isEmpty ? "''" : "'" + tapError.query.replacingOccurrences(of: "'", with: "'\\''") + "'") --all --json` and `triton screenshot --json` to inspect the current UI.",
+            hint: "Run `triton act find \(tapError.query.isEmpty ? "''" : "'" + tapError.query.replacingOccurrences(of: "'", with: "'\\''") + "'") --all --json` and `triton screenshot --json` to inspect the current UI.",
             nearestCandidates: tapError.nearestCandidates,
             suggestedCommands: tapError.suggestedCommands,
             candidateCount: tapError.candidateCount

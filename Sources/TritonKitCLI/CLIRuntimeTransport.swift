@@ -245,6 +245,9 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "wait", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "capture", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "assert", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "verify", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "verify-text-exists", supported: connected, reason: requiresRuntime),
+        TKRuntimeCapability(name: "verify-text-not-exists", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "replay", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "evidence", supported: true),
         TKRuntimeCapability(name: "evidence-summary", supported: true),
@@ -269,6 +272,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "smoke-ios", supported: true),
         TKRuntimeCapability(name: "smoke-android", supported: true),
         TKRuntimeCapability(name: "smoke-harmony", supported: true),
+        TKRuntimeCapability(name: "act", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "tap", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "swipe", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "type", supported: connected, reason: requiresRuntime),
@@ -324,11 +328,11 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "evidence"
     case "smoke-ios", "smoke-android", "smoke-harmony":
         return "smoke"
-    case "assert":
+    case "assert", "verify", "verify-text-exists", "verify-text-not-exists":
         return "assert"
     case "plan-inspect", "replay":
         return "replay"
-    case "action-provider-parse", "tap", "swipe", "type", "paste", "clear", "input", "press", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
+    case "act", "action-provider-parse", "tap", "swipe", "type", "paste", "clear", "input", "press", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
         return "action"
     default:
         return "misc"
@@ -357,6 +361,8 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["route", "assert", "evidence", "webview-check"]
     case "route-current-url-assert":
         return ["assert", "smoke", "evidence", "webview-check"]
+    case "verify", "verify-text-exists", "verify-text-not-exists":
+        return ["assert", "evidence"]
     case "capture", "evidence", "evidence-summary", "evidence-redact", "evidence-project-workspace", "evidence-project-screens", "network-capture-export":
         return ["evidence", "replay"]
     case "app-map-merge", "app-map-inspect", "app-map-paths", "app-map-screens", "app-map-transitions", "app-map-path-show", "app-map-path-confirm", "app-map-health", "app-map-suite-inspect", "app-map-suite-edit", "app-map-suite-run", "app-map-export-flow", "app-map-viewer", "vlm-ground-mock", "vlm-ground-openai-compatible":
@@ -365,7 +371,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["replay"]
     case "smoke-ios", "smoke-android", "smoke-harmony":
         return ["smoke", "evidence", "replay"]
-    case "action-provider-parse", "tap", "swipe", "type", "paste", "clear", "input", "press", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
+    case "act", "action-provider-parse", "tap", "swipe", "type", "paste", "clear", "input", "press", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
         return ["action", "assert", "evidence"]
     default:
         return []
@@ -382,7 +388,7 @@ func runtimeCapabilityNextAction(
     if !serverReachable, runtimeCapabilityRequiresServer(name) {
         return TKCLINextAction(command: "serve", args: ["--host", host, "--port", String(port)], requiresLongRunningProcess: true)
     }
-    if !connected, ["runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "focus", "set-text", "select-segment", "set-switch", "ledger", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait", "capture", "assert", "replay", "tap", "swipe", "type", "paste", "clear", "input"].contains(name) {
+    if !connected, ["runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "focus", "set-text", "select-segment", "set-switch", "ledger", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export-json", "export-archive", "geometry", "ax", "hit", "screenshot", "wait", "capture", "assert", "verify", "verify-text-exists", "verify-text-not-exists", "replay", "act", "tap", "swipe", "type", "paste", "clear", "input"].contains(name) {
         return TKCLINextAction(command: "status", args: ["--json"])
     }
     switch name {
@@ -551,7 +557,7 @@ func runtimeCapabilityNextAction(
     case "coverage-report":
         return TKCLINextAction(command: "coverage", args: ["report", "--xcresult", "<path.xcresult>", "--json"])
     case "capture", "evidence":
-        return TKCLINextAction(command: "evidence", args: ["--output", "<dir.tritonevidence>", "--json"])
+        return TKCLINextAction(command: "evidence", args: ["capture", "--case", "<case>", "--output", "<dir.tritonevidence>", "--json"])
     case "evidence-summary":
         return TKCLINextAction(command: "evidence", args: ["summary", "<dir.tritonevidence>", "--json"])
     case "evidence-redact":
@@ -599,31 +605,31 @@ func runtimeCapabilityNextAction(
     case "replay":
         return TKCLINextAction(command: "plan", args: ["inspect", "<file.tritonplan>", "--json"])
     case "runtime-manifest":
-        return TKCLINextAction(command: "runtime", args: ["manifest", "--json"])
+        return TKCLINextAction(command: "debug", args: ["runtime", "manifest", "--json"])
     case "state-app":
-        return TKCLINextAction(command: "state", args: ["app", "--json"])
+        return TKCLINextAction(command: "debug", args: ["state", "app", "--json"])
     case "state-scene":
-        return TKCLINextAction(command: "state", args: ["scene", "--json"])
+        return TKCLINextAction(command: "debug", args: ["state", "scene", "--json"])
     case "state-route":
-        return TKCLINextAction(command: "state", args: ["route", "--json"])
+        return TKCLINextAction(command: "debug", args: ["state", "route", "--json"])
     case "state-responder":
-        return TKCLINextAction(command: "state", args: ["responder", "--json"])
+        return TKCLINextAction(command: "debug", args: ["state", "responder", "--json"])
     case "snapshot", "app-semantic-state", "media-playback":
-        return TKCLINextAction(command: "snapshot", args: ["--json"])
+        return TKCLINextAction(command: "debug", args: ["snapshot", "--json"])
     case "focus":
-        return TKCLINextAction(command: "focus", args: ["<selector>", "--json"])
+        return TKCLINextAction(command: "act", args: ["focus", "<selector>", "--json"])
     case "set-text":
-        return TKCLINextAction(command: "set-text", args: ["<selector>", "<text>", "--json"])
+        return TKCLINextAction(command: "act", args: ["set-text", "<selector>", "<text>", "--json"])
     case "select-segment":
-        return TKCLINextAction(command: "select-segment", args: ["<selector>", "<value>", "--json"])
+        return TKCLINextAction(command: "act", args: ["select-segment", "<selector>", "<value>", "--json"])
     case "set-switch":
-        return TKCLINextAction(command: "set-switch", args: ["<selector>", "<on|off|toggle>", "--json"])
+        return TKCLINextAction(command: "act", args: ["set-switch", "<selector>", "<on|off|toggle>", "--json"])
     case "semantic-action":
-        return TKCLINextAction(command: "schema", args: ["--command", "focus", "--json"])
+        return TKCLINextAction(command: "schema", args: ["--command", "act", "--json"])
     case "app-semantic-action":
-        return TKCLINextAction(command: "snapshot", args: ["--include", "semantic,app,scene", "--json"])
+        return TKCLINextAction(command: "debug", args: ["snapshot", "--include", "semantic,app,scene", "--json"])
     case "ledger":
-        return TKCLINextAction(command: "ledger", args: ["--limit", "50", "--json"])
+        return TKCLINextAction(command: "debug", args: ["ledger", "--limit", "50", "--json"])
     case "observe":
         return TKCLINextAction(command: "observe", args: ["current", "--json"])
     case "observe-ios":
@@ -633,39 +639,43 @@ func runtimeCapabilityNextAction(
     case "observe-harmony":
         return TKCLINextAction(command: "observe", args: ["tree", "--platform", "harmony", "--device", "<selector>", "--json"])
     case "hierarchy":
-        return TKCLINextAction(command: "hierarchy", args: ["--platform", "ios", "--target", "<target>", "--json"])
+        return TKCLINextAction(command: "debug", args: ["hierarchy", "--platform", "ios", "--target", "<target>", "--json"])
     case "hierarchy-scene":
-        return TKCLINextAction(command: "hierarchy", args: ["--platform", "ios", "--target", "<target>", "--json"])
+        return TKCLINextAction(command: "debug", args: ["hierarchy", "--platform", "ios", "--target", "<target>", "--json"])
     case "android-hierarchy":
-        return TKCLINextAction(command: "hierarchy", args: ["--platform", "android", "--device", "<selector>", "--json"])
+        return TKCLINextAction(command: "debug", args: ["hierarchy", "--platform", "android", "--device", "<selector>", "--json"])
     case "harmony-hierarchy":
-        return TKCLINextAction(command: "hierarchy", args: ["--platform", "harmony", "--device", "<selector>", "--json"])
+        return TKCLINextAction(command: "debug", args: ["hierarchy", "--platform", "harmony", "--device", "<selector>", "--json"])
     case "android-ax":
-        return TKCLINextAction(command: "ax", args: ["--platform", "android", "--device", "<selector>", "--json"])
+        return TKCLINextAction(command: "debug", args: ["ax", "--platform", "android", "--device", "<selector>", "--json"])
     case "android-wait-text":
         return TKCLINextAction(command: "wait", args: ["--platform", "android", "--text", "<text>", "--json"])
     case "android-tap-text":
-        return TKCLINextAction(command: "tap", args: ["<text>", "--platform", "android", "--json"])
+        return TKCLINextAction(command: "act", args: ["tap", "<text>", "--platform", "android", "--json"])
     case "android-swipe":
-        return TKCLINextAction(command: "swipe", args: ["--platform", "android", "--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"])
+        return TKCLINextAction(command: "act", args: ["swipe", "--platform", "android", "--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"])
     case "android-type-text":
-        return TKCLINextAction(command: "type", args: ["<text>", "--platform", "android", "--json"])
+        return TKCLINextAction(command: "act", args: ["type", "<text>", "--platform", "android", "--json"])
     case "android-paste-text":
-        return TKCLINextAction(command: "paste", args: ["<text>", "--platform", "android", "--json"])
+        return TKCLINextAction(command: "act", args: ["paste", "<text>", "--platform", "android", "--json"])
     case "android-press-key":
-        return TKCLINextAction(command: "press", args: ["<button>", "--platform", "android", "--json"])
+        return TKCLINextAction(command: "act", args: ["press", "<button>", "--platform", "android", "--json"])
     case "node":
-        return TKCLINextAction(command: "node", args: ["--oid", "<oid>", "--json"])
+        return TKCLINextAction(command: "debug", args: ["node", "--oid", "<oid>", "--json"])
     case "node-resolve":
-        return TKCLINextAction(command: "node", args: ["resolve", "--text", "<text>", "--json"])
+        return TKCLINextAction(command: "act", args: ["find", "<text>", "--json"])
     case "ax":
-        return TKCLINextAction(command: "ax", args: ["--json"])
+        return TKCLINextAction(command: "debug", args: ["ax", "--json"])
     case "screenshot":
         return TKCLINextAction(command: "screenshot", args: ["--output", "<path.png>", "--metadata"])
     case "wait":
         return TKCLINextAction(command: "wait", args: ["--text", "<text>", "--json"])
     case "assert":
-        return TKCLINextAction(command: "assert", args: ["text-exists", "<text>", "--json"])
+        return TKCLINextAction(command: "verify", args: ["text-exists", "<text>", "--json"])
+    case "verify", "verify-text-exists":
+        return TKCLINextAction(command: "verify", args: ["text-exists", "<text>", "--json"])
+    case "verify-text-not-exists":
+        return TKCLINextAction(command: "verify", args: ["text-not-exists", "<text>", "--json"])
     case "webview-list":
         return TKCLINextAction(command: "webview", args: ["list", "--json"])
     case "webview-current":
@@ -683,35 +693,37 @@ func runtimeCapabilityNextAction(
     case "route-current-url-assert":
         return TKCLINextAction(command: "route", args: ["assert-current-url", "<expected-url>", "--json"])
     case "tap":
-        return TKCLINextAction(command: "tap", args: ["<query>", "--json"])
+        return TKCLINextAction(command: "act", args: ["tap", "<query>", "--json"])
+    case "act":
+        return TKCLINextAction(command: "act", args: ["tap", "<text>", "--json"])
     case "swipe":
-        return TKCLINextAction(command: "swipe", args: ["--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"])
+        return TKCLINextAction(command: "act", args: ["swipe", "--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"])
     case "type":
-        return TKCLINextAction(command: "type", args: ["<text>", "--json"])
+        return TKCLINextAction(command: "act", args: ["type", "<text>", "--json"])
     case "paste":
-        return TKCLINextAction(command: "paste", args: ["<text>", "--json"])
+        return TKCLINextAction(command: "act", args: ["paste", "<text>", "--json"])
     case "harmony-tap-text":
-        return TKCLINextAction(command: "tap", args: ["<text>", "--platform", "harmony", "--json"])
+        return TKCLINextAction(command: "act", args: ["tap", "<text>", "--platform", "harmony", "--json"])
     case "harmony-wait-text":
         return TKCLINextAction(command: "wait", args: ["--platform", "harmony", "--text", "<text>", "--json"])
     case "harmony-ax":
-        return TKCLINextAction(command: "ax", args: ["--platform", "harmony", "--json"])
+        return TKCLINextAction(command: "debug", args: ["ax", "--platform", "harmony", "--json"])
     case "harmony-swipe":
-        return TKCLINextAction(command: "swipe", args: ["--platform", "harmony", "--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"])
+        return TKCLINextAction(command: "act", args: ["swipe", "--platform", "harmony", "--start-x", "<x1>", "--start-y", "<y1>", "--end-x", "<x2>", "--end-y", "<y2>", "--json"])
     case "harmony-type-text":
-        return TKCLINextAction(command: "type", args: ["<text>", "--platform", "harmony", "--json"])
+        return TKCLINextAction(command: "act", args: ["type", "<text>", "--platform", "harmony", "--json"])
     case "harmony-paste-text":
-        return TKCLINextAction(command: "paste", args: ["<text>", "--platform", "harmony", "--json"])
+        return TKCLINextAction(command: "act", args: ["paste", "<text>", "--platform", "harmony", "--json"])
     case "harmony-clear-text":
-        return TKCLINextAction(command: "clear", args: ["--platform", "harmony", "--json"])
+        return TKCLINextAction(command: "act", args: ["clear", "--platform", "harmony", "--json"])
     case "harmony-press-key":
-        return TKCLINextAction(command: "press", args: ["<button>", "--platform", "harmony", "--json"])
+        return TKCLINextAction(command: "act", args: ["press", "<button>", "--platform", "harmony", "--json"])
     case "clear":
-        return TKCLINextAction(command: "clear", args: ["--at", "<x,y>", "--json"])
+        return TKCLINextAction(command: "act", args: ["clear", "--at", "<x,y>", "--json"])
     case "input":
-        return TKCLINextAction(command: "input", args: ["--json", "--summary", "--strict"])
+        return TKCLINextAction(command: "act", args: ["input", "--json", "--summary", "--strict"])
     case "press":
-        return TKCLINextAction(command: "schema", args: ["--command", "press", "--json"])
+        return TKCLINextAction(command: "schema", args: ["--command", "act", "--json"])
     default:
         return nil
     }
@@ -750,7 +762,11 @@ func runtimeCapabilityRequiresServer(_ name: String) -> Bool {
         "wait",
         "capture",
         "assert",
+        "verify",
+        "verify-text-exists",
+        "verify-text-not-exists",
         "replay",
+        "act",
         "tap",
         "swipe",
         "type",
@@ -854,7 +870,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["smoke-summary", "evidence-bundle"]
     case "replay":
         return ["tritonplan"]
-    case "assert":
+    case "assert", "verify", "verify-text-exists", "verify-text-not-exists":
         return ["assert.result", "runtime-snapshot"]
     case "ax":
         return ["runtime-ax", "host-layout"]
@@ -862,7 +878,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["screenshot", "screenshot-metadata"]
     case "wait":
         return ["wait.result", "runtime-samples"]
-    case "tap", "swipe", "type", "paste", "clear", "input":
+    case "act", "tap", "swipe", "type", "paste", "clear", "input":
         return ["input.result", "runtime-ledger"]
     case "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key":
         return ["host-command-json", "host-artifact"]

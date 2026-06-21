@@ -113,7 +113,7 @@ for public_skill in tritonkit-dev-feedback tritonkit-emulator-cli-takeover trito
   test -f "${public_skill_root}/${public_skill}/SKILL.md" || fail "missing public skill source: ${public_skill}"
   test ! -e "${root}/.agents/skills/${public_skill}" || fail "public skill must not live in .agents/skills: ${public_skill}"
 done
-for internal_skill in tritonkit-autonomous-cruise tritonkit-host-simulator-takeover tritonkit-ops-governance tritonkit-session-skill-distill tritonkit-subagent-supervision tritonkit-xcode-workflow-takeover; do
+for internal_skill in tritonkit-autonomous-cruise tritonkit-host-simulator-takeover tritonkit-ops-governance tritonkit-subagent-supervision tritonkit-xcode-workflow-takeover; do
   test -f "${internal_skill_root}/${internal_skill}/SKILL.md" || fail "missing internal skill source: ${internal_skill}"
   test -d "${root}/.agents/skills/${internal_skill}" || fail "internal skill must live in .agents/skills: ${internal_skill}"
   test ! -L "${root}/.agents/skills/${internal_skill}" || fail "internal skill must not be a symlink: ${internal_skill}"

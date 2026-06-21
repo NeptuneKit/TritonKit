@@ -203,48 +203,48 @@ func buildWorkflowPlan(
         runtime: capabilities.runtime,
         mode: "bootstrap",
         goal: request.goal,
-        nextStep: "geometry",
+        nextStep: "observe-current",
         steps: [
             TKWorkflowPlanStep(
-                id: "geometry",
-                title: "Read screen and window geometry",
-                command: "triton geometry --host \(host) --port \(port) --format json",
+                id: "observe-current",
+                title: "Read the current visible app surface",
+                command: "triton observe current --host \(host) --port \(port) --format json",
                 requiresServer: true,
                 requiresTarget: true,
                 when: "connected == true",
-                expected: "JSON geometry response"
+                expected: "Workflow-level current surface response"
             ),
             TKWorkflowPlanStep(
-                id: "ax",
-                title: "Build actionable accessibility index",
-                command: "triton ax --host \(host) --port \(port) --format json --output /tmp/triton-ax.json",
+                id: "observe-tree",
+                title: "Read the current visible node tree",
+                command: "triton observe tree --host \(host) --port \(port) --format json",
                 requiresServer: true,
                 requiresTarget: true,
                 when: "connected == true",
-                expected: "Safe machine-readable controls"
+                expected: "Workflow-level node tree"
             ),
             TKWorkflowPlanStep(
-                id: "wait",
-                title: "Wait for asynchronous UI state",
-                command: "triton wait --host \(host) --port \(port) --text <text> --timeout 10 --format json",
+                id: "verify-text",
+                title: "Verify expected visible UI text",
+                command: "triton verify text-exists <text> --host \(host) --port \(port) --format json",
                 requiresServer: true,
                 requiresTarget: true,
                 when: "after taps, submissions, and navigation",
-                expected: "Machine-readable wait result with elapsedMs and timeout state"
+                expected: "Machine-readable verification result"
             ),
             TKWorkflowPlanStep(
                 id: "hit",
                 title: "Resolve a coordinate before acting",
-                command: "triton hit --host \(host) --port \(port) --x <x> --y <y> --format json",
+                command: "triton debug hit --host \(host) --port \(port) --x <x> --y <y> --format json",
                 requiresServer: true,
                 requiresTarget: true,
                 when: "before coordinate input",
                 expected: "Hit-test node or empty result"
             ),
                 TKWorkflowPlanStep(
-                    id: "input",
-                    title: "Execute NDJSON input actions",
-                    command: "triton input --host \(host) --port \(port) --format json --summary --strict",
+                    id: "act-input",
+                    title: "Execute NDJSON workflow actions",
+                    command: "triton act input --host \(host) --port \(port) --format json --summary --strict",
                     requiresServer: true,
                     requiresTarget: true,
                     when: "after selecting safe actions",
@@ -566,7 +566,7 @@ private func assertTextPlanStep(text: String?, host: String, port: Int) -> TKWor
         id: "assert-text",
         title: "Assert expected text",
         command: [
-            "triton", "assert", "text-exists",
+            "triton", "verify", "text-exists",
             planValue(text, "<text>"),
             "--host", host,
             "--port", String(port),
@@ -584,7 +584,8 @@ private func evidenceCapturePlanStep(evidence: String?) -> TKWorkflowPlanStep {
         id: "evidence",
         title: "Capture evidence bundle",
         command: [
-            "triton", "evidence",
+            "triton", "evidence", "capture",
+            "--case", "<case>",
             "--output", planValue(evidence, "<dir.tritonevidence>"),
             "--json",
         ].map(shellEscaped).joined(separator: " "),

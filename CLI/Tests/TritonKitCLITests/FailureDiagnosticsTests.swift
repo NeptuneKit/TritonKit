@@ -30,7 +30,7 @@ struct FailureDiagnosticsTests {
 
         #expect(result.ok == false)
         #expect(result.nearestText == ["Lottery"])
-        #expect(result.suggestedCommands?.contains("triton find 'Go to lottery' --all --json") == true)
+        #expect(result.suggestedCommands?.contains("triton act find 'Go to lottery' --all --json") == true)
     }
 
     @Test("tap target failure maps to machine-readable CLI diagnostics")
@@ -40,14 +40,14 @@ struct FailureDiagnosticsTests {
             message: "No tappable UI target matched query: Go to lottery",
             candidateCount: 0,
             nearestCandidates: ["Lottery"],
-            suggestedCommands: ["triton find 'Go to lottery' --all --json", "triton screenshot --json"]
+            suggestedCommands: ["triton act find 'Go to lottery' --all --json", "triton screenshot --json"]
         )
 
         let detail = cliErrorDetail(for: failure, endpoint: "/request", host: "127.0.0.1", port: 19421)
 
         #expect(detail.code == "text_not_found")
         #expect(detail.nearestCandidates == ["Lottery"])
-        #expect(detail.suggestedCommands == ["triton find 'Go to lottery' --all --json", "triton screenshot --json"])
+        #expect(detail.suggestedCommands == ["triton act find 'Go to lottery' --all --json", "triton screenshot --json"])
         #expect(detail.candidateCount == 0)
     }
 
@@ -105,27 +105,17 @@ struct FailureDiagnosticsTests {
     @Test("runtime-facing schemas include preserved runtime envelope failure codes")
     func runtimeFacingSchemasIncludePreservedRuntimeEnvelopeFailureCodes() throws {
         let schemas = Dictionary(uniqueKeysWithValues: commandSchemas().map { ($0.name, $0) })
-        let state = try #require(schemas["state"])
-        let snapshot = try #require(schemas["snapshot"])
-        let geometry = try #require(schemas["geometry"])
-        let hit = try #require(schemas["hit"])
-        let ledger = try #require(schemas["ledger"])
-        let focus = try #require(schemas["focus"])
-        let setText = try #require(schemas["set-text"])
+        let debug = try #require(schemas["debug"])
+        let act = try #require(schemas["act"])
 
-        for schema in [state, snapshot, geometry, hit, ledger] {
-            #expect(schema.failureCodes.contains("runtime_ui_interrupted"))
-            #expect(schema.failureCodes.contains("request_timeout"))
-            #expect(schema.failureCodes.contains("invalid_payload"))
-        }
-
-        for schema in [focus, setText] {
-            #expect(schema.failureCodes.contains("runtime_ui_interrupted"))
-            #expect(schema.failureCodes.contains("request_timeout"))
-            #expect(schema.failureCodes.contains("invalid_payload"))
-            #expect(schema.failureCodes.contains("action_not_supported"))
-            #expect(schema.failureCodes.contains("unsupported_runtime_scope"))
-        }
+        #expect(debug.failureCodes.contains("runtime_ui_interrupted"))
+        #expect(debug.failureCodes.contains("request_timeout"))
+        #expect(debug.failureCodes.contains("invalid_payload"))
+        #expect(act.failureCodes.contains("runtime_ui_interrupted"))
+        #expect(act.failureCodes.contains("request_timeout"))
+        #expect(act.failureCodes.contains("invalid_payload"))
+        #expect(act.failureCodes.contains("action_not_supported"))
+        #expect(act.failureCodes.contains("unsupported_runtime_scope"))
     }
 
     @Test("android text-not-found host failure maps to shared text_not_found code")
@@ -323,22 +313,20 @@ struct FailureDiagnosticsTests {
             ]
         )
 
-        for command in ["tap", "swipe", "type", "paste", "clear", "press"] {
-            try expectFailureCodes(
-                schemas,
-                command: command,
-                include: [
-                    "unsupported_capability",
-                    "validation_failed",
-                    "server_unavailable",
-                    "target_not_found",
-                    "ambiguous_target",
-                    "request_failed",
-                ]
-            )
-        }
+        try expectFailureCodes(
+            schemas,
+            command: "act",
+            include: [
+                "unsupported_capability",
+                "validation_failed",
+                "server_unavailable",
+                "target_not_found",
+                "ambiguous_target",
+                "request_failed",
+            ]
+        )
 
-        for command in ["evidence", "capture", "assert", "record", "replay"] {
+        for command in ["evidence", "verify", "record", "replay"] {
             try expectFailureCodes(schemas, command: command, include: ["validation_failed"])
         }
     }

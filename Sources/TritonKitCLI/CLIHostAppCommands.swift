@@ -294,7 +294,7 @@ func planHostAppOpenURL(
         if selection.target.scope == "real" {
             return try planHostAppLaunch(selection: selection, bundleID: bundleID, packageName: nil, activity: nil, bundle: nil, ability: nil, payloadURL: url, adb: adb, hdc: hdc, devicectlArtifacts: devicectlArtifacts)
         }
-        return HostAppCommandPlan(action: "app.open-url", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection), command: TKSimctlCommand.openURL(udid: selection.target.target, url: url), artifacts: [], note: hostAppSubmissionNote("app.open-url", followUp: "`triton wait`, `triton assert`, smoke, or evidence"))
+        return HostAppCommandPlan(action: "app.open-url", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection), command: TKSimctlCommand.openURL(udid: selection.target.target, url: url), artifacts: [], note: hostAppSubmissionNote("app.open-url", followUp: "`triton wait`, `triton verify`, smoke, or evidence"))
     case .android:
         return HostAppCommandPlan(action: "app.open-url", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection), command: TKAndroidADBCommand.openURL(serial: selection.target.rawTarget, url: url, packageName: packageName, executable: adb), artifacts: [], note: hostAppSubmissionNote("app.open-url", followUp: "`triton wait --platform android`, observe, screenshot, smoke, or evidence"))
     case .harmony:

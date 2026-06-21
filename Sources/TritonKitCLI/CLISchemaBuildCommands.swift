@@ -67,7 +67,7 @@ func buildCommandSchemas() -> [TKCommandSchema] {
                 "triton app install --device <selector> --scope real --platform harmony --hap <path> --json",
                 "triton smoke android --device <selector> --scope real --package <package> --wait-text <text> --json",
                 "triton smoke harmony --device <selector> --scope real --bundle <bundle> --ability <ability> --wait-text <text> --json",
-                "triton evidence --include build.summary --output <dir.tritonevidence> --json",
+                "triton evidence capture --case <case> --include build.summary --output <dir.tritonevidence> --json",
                 "triton schema --command build --json",
             ],
             outputContracts: [
@@ -94,7 +94,7 @@ func buildCommandSchemas() -> [TKCommandSchema] {
                     nextCommands: [
                         "triton xcode build --device <ios-real-target> --sdk iphoneos --jsonl",
                         "triton app install --device <ios-real-target> --scope real --platform ios --app <path.app> --json",
-                        "triton evidence --include build.summary --output <dir.tritonevidence> --json",
+                        "triton evidence capture --case <case> --include build.summary --output <dir.tritonevidence> --json",
                     ],
                     outputSelectors: ["build.progress", "build.final"],
                     failureCodes: [
@@ -129,7 +129,7 @@ func buildCommandSchemas() -> [TKCommandSchema] {
                     nextCommands: [
                         "triton app install --device <selector> --scope real --platform android --apk <path> --json",
                         "triton smoke android --device <selector> --scope real --package <package> --wait-text <text> --json",
-                        "triton evidence --include build.summary --output <dir.tritonevidence> --json",
+                        "triton evidence capture --case <case> --include build.summary --output <dir.tritonevidence> --json",
                     ],
                     outputSelectors: ["build.progress", "build.final"],
                     failureCodes: [
@@ -159,7 +159,7 @@ func buildCommandSchemas() -> [TKCommandSchema] {
                     nextCommands: [
                         "triton app install --device <selector> --scope real --platform harmony --hap <path> --json",
                         "triton smoke harmony --device <selector> --scope real --bundle <bundle> --ability <ability> --wait-text <text> --json",
-                        "triton evidence --include build.summary --output <dir.tritonevidence> --json",
+                        "triton evidence capture --case <case> --include build.summary --output <dir.tritonevidence> --json",
                     ],
                     outputSelectors: ["build.progress", "build.final"],
                     failureCodes: [

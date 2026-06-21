@@ -73,16 +73,34 @@ struct EvidenceBundleTests {
     @Test("schema exposes explicit xcode summary evidence import option")
     func schemaExposesExplicitXcodeSummaryEvidenceImportOption() throws {
         let evidence = try #require(commandSchemas().first { $0.name == "evidence" })
-        let capture = try #require(commandSchemas().first { $0.name == "capture" })
 
+        let evidenceCapture = try #require(evidence.subcommands.first { $0.name == "capture" })
+        #expect(evidenceCapture.requiredOptions.contains("--output"))
+        #expect(evidenceCapture.optionalOptions.contains("--case"))
+        #expect(!evidenceCapture.optionalOptions.contains("--name"))
+        #expect(evidenceCapture.outputSelectors.contains("evidence.manifest"))
+        #expect(evidence.examples.contains { $0.contains("evidence capture --case") })
+        #expect(commandSchemas().first { $0.name == "capture" } == nil)
         #expect(evidence.options.map { $0.name }.contains("--xcode-summary"))
-        #expect(capture.options.map { $0.name }.contains("--xcode-summary"))
         #expect(evidence.options.map { $0.name }.contains("--proxy-session"))
-        #expect(capture.options.map { $0.name }.contains("--proxy-session"))
         #expect(evidence.artifacts.contains("proxy-restore"))
-        #expect(capture.artifacts.contains("proxy-restore"))
         #expect(evidence.examples.contains { $0.contains("--xcode-summary") })
         #expect(evidence.examples.contains { $0.contains("--proxy-session") })
+    }
+
+    @Test("evidence capture root subcommand parses product surface")
+    func evidenceCaptureRootSubcommandParsesProductSurface() throws {
+        _ = try TritonKitCLI.parseAsRoot([
+            "evidence",
+            "capture",
+            "--case",
+            "login-home",
+            "--output",
+            "/tmp/login-home.tritonevidence",
+            "--include",
+            "status,list,version",
+            "--json",
+        ])
     }
 
     @Test("schema exposes real-device evidence taxonomy")
@@ -182,11 +200,10 @@ struct EvidenceBundleTests {
         #expect(try summarizeEvidenceBundle(input: root.path).sensitiveArtifactCount == 2)
     }
 
-    @Test("evidence and capture commands import proxy session from argv")
-    func evidenceAndCaptureCommandsImportProxySessionFromArgv() async throws {
+    @Test("evidence capture imports proxy session from argv")
+    func evidenceCaptureImportsProxySessionFromArgv() async throws {
         for fixture in [
             (command: "evidence", platform: "ios", target: "booted"),
-            (command: "capture", platform: "android", target: "emulator-5554"),
         ] {
             let root = FileManager.default.temporaryDirectory
                 .appendingPathComponent("evidence-proxy-argv-\(fixture.command)-\(UUID().uuidString)", isDirectory: true)
@@ -220,20 +237,12 @@ struct EvidenceBundleTests {
             let output = try await captureEvidenceCommandOutput {
                 switch fixture.command {
                 case "evidence":
-                    let command = try Evidence.parse([
+                    let command = try EvidenceCapture.parse([
                         "--include", "network.proxy-session",
                         "--proxy-session", session.path,
                         "--output", root.path,
-                        "--name", "argv-evidence",
-                        "--json",
-                    ])
-                    try await command.run()
-                case "capture":
-                    let command = try Capture.parse([
-                        "--include", "network.proxy-session",
-                        "--proxy-session", session.path,
-                        "--output", root.path,
-                        "--case", "argv-capture",
+                        "--case", "argv-evidence",
+                        "--format", "json",
                         "--json",
                     ])
                     try await command.run()
@@ -251,7 +260,7 @@ struct EvidenceBundleTests {
             #expect(captureArtifact.platform == fixture.platform)
             #expect(captureArtifact.target == fixture.target)
             #expect(captureArtifact.path == "artifacts/network/requests.ndjson")
-            #expect(manifest.primaryArtifacts.map(\.kind).first == "network-capture")
+            #expect(manifest.primaryArtifacts.map { $0.kind }.first == "network-capture")
             #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/session-state.json").path))
             #expect(FileManager.default.fileExists(atPath: root.appendingPathComponent("artifacts/network/requests.ndjson").path))
         }

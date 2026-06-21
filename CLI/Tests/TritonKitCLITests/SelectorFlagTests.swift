@@ -32,10 +32,10 @@ struct SelectorFlagTests {
     @Test("find and tap schemas expose target device selector vocabulary")
     func actionSchemasExposeDeviceAlias() throws {
         let schemas = Dictionary(uniqueKeysWithValues: commandSchemas().map { ($0.name, $0) })
-        let find = try #require(schemas["find"])
-        let tap = try #require(schemas["tap"])
+        let act = try #require(schemas["act"])
 
-        #expect(find.options.contains(where: { $0.name == "--target/--device" }))
-        #expect(tap.options.contains(where: { $0.name == "--target/--device" }))
+        #expect(act.options.contains(where: { $0.name == "--target/--device" }))
+        #expect(act.subcommands.map(\.name).contains("find"))
+        #expect(act.subcommands.map(\.name).contains("tap"))
     }
 }

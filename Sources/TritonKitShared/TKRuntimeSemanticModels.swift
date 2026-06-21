@@ -176,9 +176,9 @@ public struct TKRuntimeSemanticRedaction: Codable, Equatable {
 }
 
 public let TKRuntimeSemanticDefaultEvidenceCommands: [String] = [
-    "triton snapshot --include semantic,app,scene --json",
-    "triton runtime manifest --json",
-    "triton evidence --output <dir.tritonevidence> --json",
+    "triton debug snapshot --include semantic,app,scene --json",
+    "triton debug runtime manifest --json",
+    "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
 ]
 
 public let TKRuntimeSemanticNoProviderWarnings: [String] = [

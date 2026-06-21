@@ -536,7 +536,7 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         detail = TKCLIErrorDetail(
             code: "harmony_layout_text_not_found",
             message: "\(error)",
-            hint: "Run `triton ax --platform harmony --output <path> --json` and inspect the dumped attributes.text values."
+            hint: "Run `triton debug ax --platform harmony --output <path> --json` and inspect the dumped attributes.text values."
         )
     case HostCommandRunError.timeout(let command, _, _, _):
         detail = hostCommandTimeoutErrorDetail(command: command, message: "\(error)")

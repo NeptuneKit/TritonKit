@@ -2819,7 +2819,7 @@ struct DeviceCrossPlatformTests {
         #expect(smoke.examples.contains("triton smoke harmony --device harmony-a --bundle com.example.app --ability EntryAbility --open-url example://home --wait-text Ready --screenshot /tmp/smoke.jpeg --evidence /tmp/harmony.tritonevidence --json"))
     }
 
-    @Test("issue 30 Android literal app inspect and ax entrypoints parse")
+    @Test("issue 30 Android literal app inspect and debug ax entrypoints parse")
     func issue30AndroidLiteralEntrypointsParse() throws {
         _ = try TritonKitCLI.parseAsRoot([
             "app", "inspect",
@@ -2829,7 +2829,7 @@ struct DeviceCrossPlatformTests {
             "--json",
         ])
         _ = try TritonKitCLI.parseAsRoot([
-            "ax",
+            "debug", "ax",
             "--platform", "android",
             "--device", "android-a",
             "--json",

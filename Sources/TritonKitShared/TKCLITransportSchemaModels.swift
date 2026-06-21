@@ -183,6 +183,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
     }
 
     private static let recoveryCommandRootCategoryMap: [String: String] = [
+        "act": "act",
         "action": "act",
         "app": "prepare-target",
         "assert": "verify",
@@ -192,6 +193,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "capture": "archive",
         "clear": "act",
         "coverage": "archive",
+        "debug": "diagnose",
         "device": "prepare-target",
         "doctor": "diagnose",
         "evidence": "archive",
@@ -233,6 +235,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "target": "prepare-target",
         "test": "diagnose",
         "type": "act",
+        "verify": "verify",
         "vlm": "archive",
         "wait": "verify",
         "web": "observe",
@@ -405,6 +408,11 @@ public struct TKCommandSchema: Codable, Equatable {
     public let subcommands: [TKCommandSubcommandSchema]
     public let inputActions: [TKInputActionSchema]?
     public let providedCapabilities: [String]
+    public let surfaceLayer: String
+    public let deprecatedForMainPath: Bool
+    public let replacementCommand: String?
+    public let rawDebugCommand: String?
+    public let surfaceRationale: String?
 
     enum CodingKeys: String, CodingKey {
         case name
@@ -435,6 +443,11 @@ public struct TKCommandSchema: Codable, Equatable {
         case subcommands
         case inputActions
         case providedCapabilities
+        case surfaceLayer
+        case deprecatedForMainPath
+        case replacementCommand
+        case rawDebugCommand
+        case surfaceRationale
     }
 
     public init(
@@ -465,7 +478,12 @@ public struct TKCommandSchema: Codable, Equatable {
         failureCodes: [String] = [],
         subcommands: [TKCommandSubcommandSchema] = [],
         inputActions: [TKInputActionSchema]? = nil,
-        providedCapabilities: [String] = []
+        providedCapabilities: [String] = [],
+        surfaceLayer: String = "workflow",
+        deprecatedForMainPath: Bool = false,
+        replacementCommand: String? = nil,
+        rawDebugCommand: String? = nil,
+        surfaceRationale: String? = nil
     ) {
         self.name = name
         self.summary = summary
@@ -497,6 +515,11 @@ public struct TKCommandSchema: Codable, Equatable {
         self.subcommands = subcommands
         self.inputActions = inputActions
         self.providedCapabilities = providedCapabilities
+        self.surfaceLayer = surfaceLayer
+        self.deprecatedForMainPath = deprecatedForMainPath
+        self.replacementCommand = replacementCommand
+        self.rawDebugCommand = rawDebugCommand
+        self.surfaceRationale = surfaceRationale
     }
 
     public init(from decoder: any Decoder) throws {
@@ -529,7 +552,12 @@ public struct TKCommandSchema: Codable, Equatable {
             failureCodes: try container.decodeIfPresent([String].self, forKey: .failureCodes) ?? [],
             subcommands: try container.decodeIfPresent([TKCommandSubcommandSchema].self, forKey: .subcommands) ?? [],
             inputActions: try container.decodeIfPresent([TKInputActionSchema].self, forKey: .inputActions),
-            providedCapabilities: try container.decodeIfPresent([String].self, forKey: .providedCapabilities) ?? []
+            providedCapabilities: try container.decodeIfPresent([String].self, forKey: .providedCapabilities) ?? [],
+            surfaceLayer: try container.decodeIfPresent(String.self, forKey: .surfaceLayer) ?? "workflow",
+            deprecatedForMainPath: try container.decodeIfPresent(Bool.self, forKey: .deprecatedForMainPath) ?? false,
+            replacementCommand: try container.decodeIfPresent(String.self, forKey: .replacementCommand),
+            rawDebugCommand: try container.decodeIfPresent(String.self, forKey: .rawDebugCommand),
+            surfaceRationale: try container.decodeIfPresent(String.self, forKey: .surfaceRationale)
         )
     }
 

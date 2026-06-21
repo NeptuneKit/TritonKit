@@ -82,7 +82,7 @@ For iOS / Android break-glass runner execution with `--output <dir>`, also persi
 
 `device proxy export --session` responses should expose export summary fields directly on `NetworkProxySession`: `requestCount`, `eventCount`, `failureCount`, `redaction`, and `truncation`. Treat `eventCount=0` as "artifact exists but no observed proxy serve events yet", `requestCount=0` as "no successful `proxy.serve.request` events yet", `failureCount>0` as capture/proxy failures such as `proxy.serve.connection-failed`, and `redaction=headers-names-only` as metadata-only capture. Route `proxy_artifact_write_failed` through an archive recovery path when the session capture is missing, unreadable, or cannot be written to the requested output.
 
-When archiving network takeover evidence, use `triton evidence --include network.proxy-session --proxy-session <dir> --output <dir.tritonevidence> --json` or `triton capture --include network.proxy-session --proxy-session <dir> --output <dir.tritonevidence> --json`. This import path reads `<dir>/session-state.json`, validates the `triton.proxy.session.v1` schema, copies the declared `network-capture` artifact into `artifacts/network/requests.ndjson`, and marks both artifacts as sensitive. If `<dir>/restore-failure.json`, a declared `proxy-restore` artifact, or the `restoreSnapshotPath` sibling restore failure file exists, the same import path copies it to `artifacts/network/restore-failure.json` as sensitive `proxy-restore` evidence with policy `proxy-restore-failure-recovery`. Treat `network-capture` as the primary traffic artifact and `proxy-restore` as recovery context; still require `proxy.serve.request` events before claiming traffic was observed, and never treat `proxy-restore` as proof that platform proxy restore succeeded. If the declared capture artifact is missing or unreadable, preserve `network.proxy-session`, import `proxy-restore` when present, and skip only `network-capture` so the archive still retains proxy configuration and recovery context.
+When archiving network takeover evidence, use `triton evidence capture --case <case> --include network.proxy-session --proxy-session <dir> --output <dir.tritonevidence> --json`. This import path reads `<dir>/session-state.json`, validates the `triton.proxy.session.v1` schema, copies the declared `network-capture` artifact into `artifacts/network/requests.ndjson`, and marks both artifacts as sensitive. If `<dir>/restore-failure.json`, a declared `proxy-restore` artifact, or the `restoreSnapshotPath` sibling restore failure file exists, the same import path copies it to `artifacts/network/restore-failure.json` as sensitive `proxy-restore` evidence with policy `proxy-restore-failure-recovery`. Treat `network-capture` as the primary traffic artifact and `proxy-restore` as recovery context; still require `proxy.serve.request` events before claiming traffic was observed, and never treat `proxy-restore` as proof that platform proxy restore succeeded. If the declared capture artifact is missing or unreadable, preserve `network.proxy-session`, import `proxy-restore` when present, and skip only `network-capture` so the archive still retains proxy configuration and recovery context.
 
 When a reusable `.tritonplan` needs to archive a proxy session, use an `evidence` step with `include: "network.proxy-session"` and `proxySession: "<dir>"`. `triton plan inspect <file.tritonplan> --json` and `triton replay <file.tritonplan> --dry-run --json` must preserve `--proxy-session` in `steps[].argv` and expose `network.proxy-session` plus `network-capture` in `expectedArtifacts[]`. Real replay may then import that existing session into `.tritonevidence`. If a real replay fails before that evidence step, it should stop later business actions/assertions but still execute a proxy-only archive from the later `network.proxy-session` evidence step, so the failure keeps proxy state without starting a listener or mutating platform proxy settings.
 
@@ -244,7 +244,7 @@ Target failures must expose a target-preparation recovery path. If emulator, sim
 
 Project and Xcode failures must expose a project recovery path. If build, test, run, xcresult, xctrace, coverage, smoke, or app launch flows report `ambiguous_workspace`, `invalid_workspace_path`, `scheme_not_found`, `workspace_not_found`, or `xcode_not_idle`, `recoveryCommands[]` should include a `project` category such as `triton xcode discover --path . --json` so the agent can rediscover workspace/project/scheme context before retrying.
 
-Action and replay step failures must expose an action recovery path. If emulator, runtime, smoke, replay, or batch input flows report `action_failed` or `step_failed`, `recoveryCommands[]` should include an `act` category such as `triton input --json --summary --strict` so the agent can return to an executable action surface with a strict summary gate.
+Action and replay step failures must expose an action recovery path. If emulator, runtime, smoke, replay, or batch input flows report `action_failed` or `step_failed`, `recoveryCommands[]` should include an `act` category such as `triton act input --json --summary --strict` so the agent can return to an executable action surface with a strict summary gate.
 
 Destructive and confirmation failures must expose a planning recovery path. If simulator, emulator, app lifecycle, runtime maintenance, or host-state commands report `confirmation_required` or `destructive_action_requires_policy`, `recoveryCommands[]` should include a `plan` category such as `triton plan --format json` so the agent can return to a policy-aware planning step before executing a destructive command.
 
@@ -373,10 +373,10 @@ triton smoke harmony --device harmony-a --bundle <bundle> --ability <ability> --
 triton observe current --device harmony-a --json
 triton observe tree --device harmony-a --json
 triton node resolve --device harmony-a --text "登录" --json
-triton tap "登录" --platform harmony --device harmony-a --json
+triton act tap "登录" --platform harmony --device harmony-a --json
 triton swipe --platform harmony --device harmony-a --start-x 350 --start-y 900 --end-x 350 --end-y 300 --json
-triton type "hello" --platform harmony --device harmony-a --json
-triton paste "hello" --platform harmony --device harmony-a --json
+triton act type "hello" --platform harmony --device harmony-a --json
+triton act paste "hello" --platform harmony --device harmony-a --json
 ```
 
 `device list --platform harmony` may include `targets[].appName`, `targets[].bundleIdentifier`, `targets[].identityState`, and `targets[].current`. These fields are optional host facts, not app lifecycle proof; continue to verify business state with `app inspect/launch`, `observe`, `wait`, `assert`, screenshot, or evidence commands.
@@ -389,19 +389,19 @@ Standalone Harmony embedded HTTP runtime:
 triton device runtime-url --device harmony-a --probe-manifest --json
 # Compatibility path:
 triton device runtime-url --platform harmony --target <hdc-target> --probe-manifest --json
-triton runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
-triton state route --runtime-base-url http://127.0.0.1:28767 --json
-triton snapshot --runtime-base-url http://127.0.0.1:28767 --json
-triton ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
-triton set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
+triton debug runtime manifest --runtime-base-url http://127.0.0.1:28767 --json
+triton debug state route --runtime-base-url http://127.0.0.1:28767 --json
+triton debug snapshot --runtime-base-url http://127.0.0.1:28767 --json
+triton debug ledger --runtime-base-url http://127.0.0.1:28767 --jsonl
+triton act set-text "密码" "$TRITON_PASSWORD" --secure --runtime-base-url http://127.0.0.1:28767 --json
 ```
 
 iOS embedded runtime observation:
 
 ```bash
 triton list --json
-triton ax --target triton:ios-simulator:<SIMULATOR_UDID> --json
-triton tap "登录" --target <SIMULATOR_UDID> --json
+triton debug ax --target triton:ios-simulator:<SIMULATOR_UDID> --json
+triton act tap "登录" --target <SIMULATOR_UDID> --json
 triton observe current --platform ios --json
 triton observe tree --platform ios --runtime-base-url <baseURL> --json
 triton node resolve --platform ios --text "登录" --json

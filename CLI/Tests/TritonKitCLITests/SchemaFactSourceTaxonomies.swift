@@ -135,6 +135,7 @@ func commandOutputFormatTaxonomy() -> Set<String> {
 
 func recoveryCommandRootTaxonomy() -> Set<String> {
     [
+        "act",
         "action",
         "app",
         "assert",
@@ -144,6 +145,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "capture",
         "clear",
         "coverage",
+        "debug",
         "device",
         "doctor",
         "evidence",
@@ -185,6 +187,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "target",
         "test",
         "type",
+        "verify",
         "vlm",
         "wait",
         "web",
@@ -213,6 +216,7 @@ func recoveryCommandCategoryTaxonomy() -> Set<String> {
 
 func recoveryCommandRootCategoryMap() -> [String: String] {
     [
+        "act": "act",
         "action": "act",
         "app": "prepare-target",
         "assert": "verify",
@@ -222,6 +226,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "capture": "archive",
         "clear": "act",
         "coverage": "archive",
+        "debug": "diagnose",
         "device": "prepare-target",
         "doctor": "diagnose",
         "evidence": "archive",
@@ -263,6 +268,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "target": "prepare-target",
         "test": "diagnose",
         "type": "act",
+        "verify": "verify",
         "vlm": "archive",
         "wait": "verify",
         "web": "observe",

@@ -167,7 +167,7 @@ public func TKUIAssertFailureMessage(request: TKUIAssertRequest, count: Int) -> 
 }
 
 public func TKUIAssertSuggestedCommands(request: TKUIAssertRequest) -> [String] {
-    var commands = ["triton find \(shellQuoted(request.query)) --all --json", "triton screenshot --json"]
+    var commands = ["triton act find \(shellQuoted(request.query)) --all --json", "triton screenshot --json"]
     if let role = request.role {
         commands[0] += " --role \(shellQuoted(role))"
     }
