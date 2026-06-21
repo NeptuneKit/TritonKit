@@ -28,7 +28,7 @@ func capabilityEvidenceTaxonomy() -> Set<String> {
         "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
         "network-capture", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
         "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan", "tritontest-yaml",
-        "unsupported-envelope", "vlm-grounding", "vlm-overlay", "wait.result", "wait-samples", "webview-candidates",
+        "unsupported-envelope", "vlm-grounding", "vlm-model-metadata", "vlm-overlay", "vlm-parsed-point", "vlm-raw-output", "vlm-request", "vlm-response", "vlm-transform", "wait.result", "wait-samples", "webview-candidates",
         "webview-provider", "webview-snapshot", "xcodebuild-json", "xcresult",
     ]
 }
@@ -107,6 +107,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "test-run-result",
         "test-validation-result",
         "vlm-ground-result",
+        "vlm-providers-result",
         "wait-result",
         "webview-bridge-call",
         "webview-candidates",
@@ -383,6 +384,9 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         if failureCode.hasPrefix("vlm_") {
             return ["archive", "diagnose", "plan"]
         }
+        if failureCode.hasPrefix("mlx_") {
+            return ["archive", "diagnose", "plan"]
+        }
         if failureCode.hasSuffix("_unsupported") {
             return ["diagnose", "plan"]
         }
@@ -438,9 +442,13 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "triton-plan",
         "tritontest-yaml",
         "vlm-grounding",
+        "vlm-model-metadata",
         "vlm-overlay",
+        "vlm-parsed-point",
+        "vlm-raw-output",
         "vlm-request",
         "vlm-response",
+        "vlm-transform",
         "xcode-artifacts",
     ]
 }

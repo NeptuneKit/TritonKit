@@ -8,6 +8,7 @@ struct VLM: AsyncParsableCommand {
         abstract: "Offline VLM grounding utilities for evidence artifacts",
         subcommands: [
             Ground.self,
+            Providers.self,
         ]
     )
 
@@ -22,9 +23,16 @@ struct VLM: AsyncParsableCommand {
         @Option(help: "Target phrase to ground") var target: String
         @Option(name: .customLong("coordinate-contract"), help: "P0E coordinate-contract.json path") var coordinateContract: String
         @Option(name: .customLong("base-url"), help: "OpenAI-compatible /v1 base URL") var baseURL: String?
-        @Option(help: "OpenAI-compatible model name") var model: String?
+        @Option(help: "Provider model id") var model: String?
+        @Option(name: .customLong("model-path"), help: "Local mlx-swift-lm model path") var modelPath: String?
         @Option(name: .customLong("api-key-env"), help: "Environment variable containing provider API key") var apiKeyEnv: String?
         @Flag(name: .customLong("allow-remote-vlm"), help: "Allow non-localhost VLM provider requests") var allowRemoteVLM = false
+        @Option(name: .customLong("max-tokens"), help: "Maximum provider output tokens") var maxTokens = 64
+        @Option(help: "Provider sampling temperature") var temperature: Double = 0
+        @Option(help: "Provider seed") var seed = 0
+        @Option(name: .customLong("prompt-template"), help: "Prompt template id") var promptTemplate = "gui-grounding-v1"
+        @Flag(name: .customLong("allow-model-download"), help: "Allow local provider model download") var allowModelDownload = false
+        @Flag(name: .customLong("no-model-download"), help: "Keep model download disabled") var noModelDownload = false
         @Option(name: .customLong("output-dir"), help: "Directory for overlay/request/response artifacts") var outputDir: String?
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
@@ -40,8 +48,14 @@ struct VLM: AsyncParsableCommand {
                     outputDirectory: outputDir,
                     baseURL: baseURL,
                     model: model,
+                    modelPath: modelPath,
                     apiKeyEnv: apiKeyEnv,
-                    allowRemoteVLM: allowRemoteVLM
+                    allowRemoteVLM: allowRemoteVLM,
+                    maxTokens: maxTokens,
+                    temperature: temperature,
+                    seed: seed,
+                    promptTemplate: promptTemplate,
+                    allowModelDownload: allowModelDownload && !noModelDownload
                 )
                 switch outputFormat {
                 case .json:
@@ -55,6 +69,28 @@ struct VLM: AsyncParsableCommand {
                 }
             } catch {
                 try failVLMGrounding(error, outputFormat: outputFormat)
+            }
+        }
+    }
+
+    struct Providers: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "providers",
+            abstract: "List VLM grounding providers"
+        )
+
+        @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+        @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+        func run() throws {
+            let response = vlmProviderListResponse()
+            switch effectiveFormat(format, json: json) {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                for provider in response.providers {
+                    print("\(provider.id)\t\(provider.kind)\t\(provider.status)")
+                }
             }
         }
     }

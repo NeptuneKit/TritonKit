@@ -243,8 +243,8 @@ func vlmGroundOutputContract() -> TKCommandOutputContract {
             ("ok", "Bool", true, "Whether mock VLM grounding succeeded"),
             ("schemaVersion", "Int", true, "Grounding response schema version"),
             ("kind", "String", true, "Stable kind; triton.vlm.ground-result"),
-            ("provider", "String", true, "Grounding provider; mock or openai-compatible"),
-            ("model", "String?", false, "Provider model for OpenAI-compatible grounding"),
+            ("provider", "String", true, "Grounding provider; mock, openai-compatible, or mlx-swift-lm"),
+            ("model", "String?", false, "Provider model for OpenAI-compatible or local MLX grounding"),
             ("baseURL", "String?", false, "Redacted OpenAI-compatible base URL when configured"),
             ("target", "String", true, "Target phrase grounded against the screenshot"),
             ("image", "TKVLMGroundImage", true, "Screenshot metadata"),
@@ -279,6 +279,34 @@ func vlmGroundOutputContract() -> TKCommandOutputContract {
             ("artifacts.overlay", "String", true, "Overlay PNG path"),
             ("artifacts.request", "String", true, "Redacted request JSON path"),
             ("artifacts.response", "String", true, "Provider response JSON path"),
+            ("artifacts.rawOutput", "String?", false, "MLX raw output text path"),
+            ("artifacts.parsedPoint", "String?", false, "MLX parsed point JSON path"),
+            ("artifacts.transform", "String?", false, "MLX coordinate transform JSON path"),
+            ("artifacts.modelMetadata", "String?", false, "MLX model metadata JSON path"),
+        ])
+    )
+}
+
+func vlmProvidersOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "vlm.providers",
+        format: "json",
+        kind: "vlm-providers-result",
+        model: "TKVLMProviderListResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether provider listing succeeded"),
+            ("schemaVersion", "Int", true, "Provider list schema version"),
+            ("kind", "String", true, "Stable kind; triton.vlm.providers-result"),
+            ("providers", "[TKVLMProviderDescriptor]", true, "Provider descriptors"),
+            ("providers[].id", "String", true, "Provider id"),
+            ("providers[].kind", "String", true, "Provider kind"),
+            ("providers[].status", "String", true, "Provider stability status"),
+            ("providers[].requiresNetwork", "Bool", true, "Whether provider requires network"),
+            ("providers[].requiresModel", "Bool", true, "Whether provider requires model config"),
+            ("providers[].defaultEnabledInCI", "Bool", true, "Whether provider is enabled in default CI"),
+            ("providers[].supports", "[String]", true, "Supported operations"),
+            ("providers[].coordinateOutputs", "[String]", true, "Supported output coordinate spaces"),
+            ("providers[].runnerIntegration", "TKVLMProviderRunnerIntegration?", false, "Runner integration policy"),
         ])
     )
 }
