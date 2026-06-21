@@ -1,6 +1,7 @@
 import Foundation
 import Testing
 @testable import TritonKitCLI
+import TritonKitShared
 
 @Suite("P1-P2 app map test path graph")
 struct AppMapPathGraphTests {
@@ -107,6 +108,32 @@ struct AppMapPathGraphTests {
         #expect(plan.steps[4].selector?.text == "Fixture Home")
     }
 
+    @Test("viewer exports static HTML from app map")
+    func viewerExportsStaticHTMLFromAppMap() throws {
+        let fixture = try ScreenWorkspaceProjectionFixture()
+        try fixture.writePassEvidence()
+        let mapURL = fixture.root.appendingPathComponent(".tritonmap", isDirectory: true)
+        _ = try mergeTritonAppMap(
+            evidencePath: fixture.evidence.path,
+            into: mapURL.path,
+            confirm: true
+        )
+
+        let output = fixture.root.appendingPathComponent("app-map.html")
+        let viewer = try exportTritonAppMapViewer(mapPath: mapURL.path, output: output.path)
+
+        #expect(viewer.ok)
+        #expect(viewer.screenCount == 2)
+        #expect(viewer.transitionCount == 1)
+        #expect(viewer.pathCount == 1)
+        #expect(FileManager.default.fileExists(atPath: output.path))
+        let html = try String(contentsOf: output, encoding: .utf8)
+        #expect(html.contains("Triton App Map"))
+        #expect(html.contains("path-fixture-login-home"))
+        #expect(html.contains("Fixture Login"))
+        #expect(html.contains("Fixture Home"))
+    }
+
     @Test("merge re-run evidence updates path health without duplicate paths")
     func mergeRerunEvidenceUpdatesPathHealth() throws {
         let first = try ScreenWorkspaceProjectionFixture(runID: "run-first-pass")
@@ -164,6 +191,129 @@ struct AppMapPathGraphTests {
         #expect(unchangedPath.health.failCount == 0)
     }
 
+    @Test("path confirmation and suite membership stay explicit")
+    func pathConfirmationAndSuiteMembershipStayExplicit() throws {
+        let fixture = try ScreenWorkspaceProjectionFixture(runID: "run-candidate-pass")
+        try fixture.writePassEvidence()
+        let mapURL = fixture.root.appendingPathComponent(".tritonmap", isDirectory: true)
+        _ = try mergeTritonAppMap(
+            evidencePath: fixture.evidence.path,
+            into: mapURL.path,
+            confirm: false
+        )
+
+        let candidatePaths = try listTritonAppMapPaths(mapPath: mapURL.path)
+        let candidate = try #require(candidatePaths.paths.first)
+        #expect(candidate.pathID == "path-fixture-login-home")
+        #expect(candidate.confirmed == false)
+
+        let initialSuite = try inspectTritonAppMapSuite(mapPath: mapURL.path, suiteID: "smoke")
+        #expect(initialSuite.suite.paths.isEmpty)
+
+        do {
+            _ = try addTritonAppMapSuitePath(mapPath: mapURL.path, suiteID: "smoke", pathID: candidate.pathID)
+            Issue.record("unconfirmed path should not be suite-eligible")
+        } catch TKAppMapError.unconfirmedPath(let pathID) {
+            #expect(pathID == candidate.pathID)
+        }
+
+        let confirm = try setTritonAppMapPathConfirmation(mapPath: mapURL.path, pathID: candidate.pathID, confirmed: true)
+        #expect(confirm.path.confirmed)
+        let suiteAfterConfirmOnly = try inspectTritonAppMapSuite(mapPath: mapURL.path, suiteID: "smoke")
+        #expect(suiteAfterConfirmOnly.suite.paths.isEmpty)
+
+        let add = try addTritonAppMapSuitePath(mapPath: mapURL.path, suiteID: "smoke", pathID: candidate.pathID)
+        #expect(add.suite.paths == [candidate.pathID])
+        #expect(add.paths.map(\.pathID) == [candidate.pathID])
+
+        let remove = try removeTritonAppMapSuitePath(mapPath: mapURL.path, suiteID: "smoke", pathID: candidate.pathID)
+        #expect(remove.suite.paths.isEmpty)
+
+        _ = try addTritonAppMapSuitePath(mapPath: mapURL.path, suiteID: "smoke", pathID: candidate.pathID)
+        let unconfirm = try setTritonAppMapPathConfirmation(mapPath: mapURL.path, pathID: candidate.pathID, confirmed: false)
+        #expect(unconfirm.path.confirmed == false)
+        let finalSuite = try inspectTritonAppMapSuite(mapPath: mapURL.path, suiteID: "smoke")
+        #expect(finalSuite.suite.paths.isEmpty)
+    }
+
+    @Test("suite runner exports runs projects and merges path evidence")
+    func suiteRunnerExportsRunsProjectsAndMergesPathEvidence() async throws {
+        let fixture = try ScreenWorkspaceProjectionFixture(runID: "run-suite-seed-pass")
+        try fixture.writePassEvidence()
+        let mapURL = fixture.root.appendingPathComponent(".tritonmap", isDirectory: true)
+        _ = try mergeTritonAppMap(
+            evidencePath: fixture.evidence.path,
+            into: mapURL.path,
+            confirm: true
+        )
+
+        let evidenceRoot = fixture.root.appendingPathComponent("suite-run", isDirectory: true)
+        let result = try await runTritonAppMapSuite(
+            mapPath: mapURL.path,
+            suiteID: "smoke",
+            evidenceRoot: evidenceRoot.path,
+            target: "fixture-target",
+            host: "127.0.0.1",
+            port: 19421,
+            executor: FakeSuiteRunExecutor()
+        )
+
+        #expect(result.ok)
+        #expect(result.status == "passed")
+        #expect(result.pathCount == 1)
+        #expect(result.passedCount == 1)
+        #expect(result.failedCount == 0)
+        let pathResult = try #require(result.results.first)
+        #expect(pathResult.pathID == "path-fixture-login-home")
+        #expect(FileManager.default.fileExists(atPath: pathResult.flow))
+        #expect(FileManager.default.fileExists(atPath: URL(fileURLWithPath: pathResult.evidenceDir).appendingPathComponent("run/events.jsonl").path))
+        #expect(FileManager.default.fileExists(atPath: URL(fileURLWithPath: pathResult.evidenceDir).appendingPathComponent("screens.json").path))
+        #expect(FileManager.default.fileExists(atPath: URL(fileURLWithPath: pathResult.evidenceDir).appendingPathComponent("transitions.json").path))
+
+        let inspect = try inspectTritonAppMap(mapPath: mapURL.path)
+        #expect(inspect.health.observedRuns == 2)
+        #expect(inspect.health.passCount == 2)
+        let paths = try listTritonAppMapPaths(mapPath: mapURL.path)
+        let path = try #require(paths.paths.first)
+        #expect(path.health.observedRuns == 2)
+        #expect(path.health.passCount == 2)
+    }
+
+    @Test("VLM-assisted evidence marks merged path source")
+    func vlmAssistedEvidenceMarksMergedPathSource() throws {
+        let deterministic = try ScreenWorkspaceProjectionFixture(runID: "run-deterministic-pass")
+        try deterministic.writePassEvidence()
+        let mapURL = deterministic.root.appendingPathComponent(".tritonmap", isDirectory: true)
+        _ = try mergeTritonAppMap(
+            evidencePath: deterministic.evidence.path,
+            into: mapURL.path,
+            confirm: true
+        )
+
+        let initialPaths = try listTritonAppMapPaths(mapPath: mapURL.path)
+        let initialPath = try #require(initialPaths.paths.first)
+        #expect(initialPath.source == "deterministic")
+        #expect(initialPath.health.observedRuns == 1)
+        #expect(initialPath.health.passCount == 1)
+
+        let vlm = try ScreenWorkspaceProjectionFixture(runID: "run-vlm-assisted-pass")
+        try vlm.writeVLMPassEvidence()
+        let merge = try mergeTritonAppMap(
+            evidencePath: vlm.evidence.path,
+            into: mapURL.path,
+            confirm: true
+        )
+
+        #expect(merge.pathIDs == ["path-fixture-login-home"])
+        let paths = try listTritonAppMapPaths(mapPath: mapURL.path)
+        let path = try #require(paths.paths.first)
+        #expect(paths.pathCount == 1)
+        #expect(path.pathID == "path-fixture-login-home")
+        #expect(path.source == "vlm-assisted")
+        #expect(path.health.observedRuns == 2)
+        #expect(path.health.passCount == 2)
+    }
+
     @Test("map inspect operations expose screens transitions path suite and health gaps")
     func mapInspectOperationsExposeGraphAssets() throws {
         let fixture = try ScreenWorkspaceProjectionFixture(runID: "run-inspect-pass")
@@ -199,5 +349,67 @@ struct AppMapPathGraphTests {
         #expect(health.failingPathIDs.isEmpty)
         #expect(health.uncoveredScreenIDs.isEmpty)
         #expect(health.uncoveredTransitionIDs.isEmpty)
+    }
+}
+
+private final class FakeSuiteRunExecutor: TKTestRunPrimitiveExecutor {
+    func execute(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        switch step.type {
+        case "launch":
+            return .passed(command: ["triton", "list", "--json"])
+        case "takeScreenshot":
+            return .passed(
+                command: ["triton", "screenshot", "--json"],
+                observations: [observation(runID: context.runID, stepIndex: step.index, phase: "after", text: "Fixture Login")]
+            )
+        case "assertVisible":
+            let text = step.selector?.text ?? ""
+            return .passed(
+                command: ["triton", "assert", "text-exists", text, "--json"],
+                assertion: TKTestRunAssertionOutcome(
+                    status: .passed,
+                    selector: TKTestRunSelector(text: TKTestRunTextSelector(value: text, match: "exact", source: "ax"))
+                )
+            )
+        case "tap":
+            return .passed(
+                command: ["triton", "tap", "--json"],
+                observations: [
+                    observation(runID: context.runID, stepIndex: step.index, phase: "before", text: "Fixture Login"),
+                    observation(runID: context.runID, stepIndex: step.index, phase: "after", text: "Fixture Home", changed: true),
+                ]
+            )
+        default:
+            throw TKTestRunPrimitiveError(type: "unsupported_step", message: "Unexpected suite step: \(step.type)")
+        }
+    }
+
+    private func observation(
+        runID: String,
+        stepIndex: Int,
+        phase: String,
+        text: String,
+        changed: Bool? = nil
+    ) -> TKTestRunObservationOutcome {
+        let slug = text.replacingOccurrences(of: " ", with: "-").lowercased()
+        return TKTestRunObservationOutcome(
+            phase: phase,
+            artifacts: TKTestRunObservationArtifacts(
+                screenshot: "../debug/step-\(String(format: "%03d", stepIndex))-\(phase).png",
+                ax: "../debug/step-\(String(format: "%03d", stepIndex))-\(phase)-ax.json",
+                hierarchy: "../debug/step-\(String(format: "%03d", stepIndex))-\(phase)-hierarchy.json"
+            ),
+            screenCandidate: TKTestRunScreenCandidate(
+                screenshotSha256: "screenshot-\(slug)",
+                axTextHash: "ax-\(slug)",
+                hierarchySha256: "hierarchy-\(slug)",
+                visibleTexts: ["fixture.runtime.status", text, text == "Fixture Login" ? "Go Home" : "Back to Login"]
+            ),
+            changed: changed
+        )
     }
 }

@@ -64,7 +64,7 @@ func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
         kind: "test-normalized-plan",
         model: "TKTestNormalizedPlan",
         fields: schemaContractFields([
-            ("schemaVersion", "Int", true, "Normalized plan schema version; always 1 for P0B"),
+            ("schemaVersion", "Int", true, "Normalized plan schema version; always 1"),
             ("kind", "String", true, "Stable kind; triton.test.normalized-plan"),
             ("name", "String", true, "Test case name from the input YAML"),
             ("app", "TKTestPlanApp", true, "Target app metadata"),
@@ -81,17 +81,32 @@ func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
             ("steps[].index", "Int", true, "0-based step index"),
             ("steps[].id", "String", true, "Stable step id, generated as step-000 when omitted"),
             ("steps[].kind", "String", true, "Step kind: action, observation, or assertion"),
-            ("steps[].type", "String", true, "Step type: launch, takeScreenshot, tap, or assertVisible"),
+            ("steps[].type", "String", true, "Step type: launch, stop, takeScreenshot, tap, input, press, swipe, assertVisible, assertNotVisible, scrollUntilVisible, assertWithAI, assertNoDefectsWithAI, extractTextWithAI, or assertScreenshot"),
             ("steps[].optional", "Bool", true, "Whether failure of this step is optional"),
             ("steps[].timeoutMs", "Int?", false, "Step timeout override"),
             ("steps[].point", "TKTestPlanPoint?", false, "Runtime point for tap steps"),
             ("steps[].point.x", "Double?", false, "Runtime point x coordinate"),
             ("steps[].point.y", "Double?", false, "Runtime point y coordinate"),
             ("steps[].point.coordinateSpace", "String?", false, "Coordinate space; runtime-point"),
-            ("steps[].selector", "TKTestPlanSelector?", false, "AX text selector for assertVisible"),
+            ("steps[].endPoint", "TKTestPlanPoint?", false, "Runtime end point for swipe steps"),
+            ("steps[].endPoint.x", "Double?", false, "Runtime end point x coordinate"),
+            ("steps[].endPoint.y", "Double?", false, "Runtime end point y coordinate"),
+            ("steps[].endPoint.coordinateSpace", "String?", false, "Coordinate space; runtime-point"),
+            ("steps[].selector", "TKTestPlanSelector?", false, "AX text selector for assertVisible/assertNotVisible/scrollUntilVisible"),
             ("steps[].selector.text", "String?", false, "Exact visible text"),
             ("steps[].selector.match", "String?", false, "Match mode; exact"),
             ("steps[].selector.source", "String?", false, "Observation source; ax"),
+            ("steps[].text", "String?", false, "Text payload for input steps"),
+            ("steps[].button", "String?", false, "Button/key payload for press steps"),
+            ("steps[].direction", "String?", false, "Scroll direction for scrollUntilVisible: down, up, left, or right"),
+            ("steps[].maxScrolls", "Int?", false, "Maximum scroll attempts for scrollUntilVisible"),
+            ("steps[].target", "String?", false, "VLM-assisted tap target phrase when tap uses grounding=vlm"),
+            ("steps[].grounding", "String?", false, "Grounding mode for experimental target taps; vlm"),
+            ("steps[].provider", "String?", false, "VLM provider for experimental target taps; mock or openai-compatible"),
+            ("steps[].prompt", "String?", false, "Prompt for P14 mock AI assertion/extraction steps"),
+            ("steps[].baseline", "String?", false, "Baseline screenshot path for assertScreenshot"),
+            ("steps[].threshold", "Double?", false, "Normalized threshold for assertScreenshot contract; P14 execution uses strict hash comparison"),
+            ("steps[].cropOn", "String?", false, "Optional crop label for future screenshot diff projection"),
         ])
     )
 }
@@ -103,20 +118,167 @@ func testRunOutputContract() -> TKCommandOutputContract {
         kind: "test-run-result",
         model: "TKTestRunExecutionResponse",
         fields: schemaContractFields([
-            ("ok", "Bool", true, "Whether all executed P0E minimal steps passed"),
+            ("ok", "Bool", true, "Whether all executed deterministic steps passed"),
             ("schemaVersion", "Int", true, "Runner response schema version; always 1"),
             ("kind", "String", true, "Stable kind; triton.test.run-result"),
             ("input", "String", true, "Input .tritontest.yaml path"),
             ("evidenceDir", "String", true, "Output .tritonevidence directory"),
-            ("normalizedPlan", "TKTestNormalizedPlan", true, "P0B normalized plan reused before execution"),
+            ("normalizedPlan", "TKTestNormalizedPlan", true, "Normalized plan reused before execution"),
             ("run", "TKTestRunMetadata", true, "Run metadata saved to run/run.json"),
             ("summary", "TKTestRunEventSummary", true, "Parsed summary of run/events.jsonl"),
-            ("summary.observationCount", "Int", true, "Count of P0E observation.captured events"),
+            ("summary.observationCount", "Int", true, "Count of observation.captured events"),
             ("run.planRef", "String?", false, "Reference to normalized-plan.json from run/run.json"),
             ("failedStepIndex", "Int?", false, "0-based failed step index when ok is false"),
             ("failure", "TKTestRunFailure?", false, "Machine-readable failure with selector and artifactRefs"),
             ("failure.artifactRefs", "[String]?", false, "Relative refs to assertion, screenshot, AX, or hierarchy evidence on failure"),
-            ("evidence artifacts", "[TKEvidenceArtifact]", false, "manifest.json includes coordinate.contract, run events, normalized plan, and captured observation artifacts"),
+            ("evidence artifacts", "[TKEvidenceArtifact]", false, "manifest.json includes coordinate.contract, run events, normalized plan, captured observation artifacts, and explicit VLM grounding artifacts when enabled"),
+        ])
+    )
+}
+
+func testReportOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.report",
+        format: "json",
+        kind: "test-report",
+        model: "TKTestReportResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the report was generated from evidence"),
+            ("schemaVersion", "Int", true, "Report schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.report"),
+            ("evidenceDir", "String", true, "Resolved .tritonevidence directory"),
+            ("run", "TKTestReportRun?", false, "Run metadata read from run/run.json when present"),
+            ("summary.status", "TKTestRunStatus?", false, "Final run status from run.finished or run/run.json"),
+            ("summary.eventCount", "Int", true, "Total run event count"),
+            ("summary.stepCount", "Int", true, "Executed step count"),
+            ("summary.assertionCount", "Int", true, "Assertion result count"),
+            ("summary.artifactCount", "Int", true, "artifact.created event count"),
+            ("summary.observationCount", "Int", true, "observation.captured event count"),
+            ("summary.failureCount", "Int", true, "failure.recorded event count"),
+            ("summary.screenshotCount", "Int", true, "Unique screenshot refs from artifacts and observations"),
+            ("summary.overlayCount", "Int", true, "VLM overlay artifact count"),
+            ("failure", "TKTestRunFailure?", false, "First machine-readable failure, when the test run failed"),
+            ("steps", "[TKTestReportStep]", true, "Per-step event projection with commands, assertions, observations, artifacts, and VLM grounding"),
+            ("steps[].observations[].screenCandidate", "TKTestRunScreenCandidate", false, "Observation fingerprint and visibleTexts for state-diff inspection"),
+            ("artifacts", "[TKTestReportArtifact]", true, "Deduplicated artifact.created refs"),
+            ("suggestedCommands", "[String]", true, "Follow-up evidence commands"),
+        ])
+    )
+}
+
+func testCreateOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.create",
+        format: "json",
+        kind: "test-create-result",
+        model: "TKTestCreateResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the .tritontest.yaml draft was created"),
+            ("schemaVersion", "Int", true, "Create response schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.create-result"),
+            ("input", "String", true, "Resolved input .tritonevidence directory"),
+            ("output", "String", true, "Written .tritontest.yaml path"),
+            ("source", "String", true, "Evidence source used for projection; normalized-plan.json"),
+            ("name", "String", true, "Generated test name"),
+            ("stepCount", "Int", true, "Number of generated test steps"),
+            ("validation", "TKTestValidationResponse", true, "Validation result for the generated YAML"),
+            ("suggestedCommands", "[String]", true, "Follow-up validate/run commands"),
+        ])
+    )
+}
+
+func actionProviderParseOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "action.provider.parse",
+        format: "json",
+        kind: "action-provider-parse-result",
+        model: "TKActionProviderParseResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the provider output parsed"),
+            ("schemaVersion", "Int", true, "Parse response schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.action-provider.parse-result"),
+            ("provider", "String", true, "Provider parser: ui-tars or agentcpm-gui"),
+            ("sourceFormat", "String", true, "Provider source format"),
+            ("primitive", "String", true, "Mapped Triton primitive preview: tap, type, swipe, press, wait, or status"),
+            ("action", "String", true, "Original provider action name"),
+            ("coordinateSystem", "String?", false, "Coordinate system for point actions; normalized_0_1000"),
+            ("point", "TKActionProviderPoint?", false, "Start/tap point"),
+            ("endPoint", "TKActionProviderPoint?", false, "End point for swipe"),
+            ("text", "String?", false, "Text payload for type"),
+            ("key", "String?", false, "Key/button payload for press"),
+            ("status", "String?", false, "Status payload for wait/done"),
+            ("commandPreview", "[String]", true, "Non-executed Triton primitive command preview"),
+        ])
+    )
+}
+
+func appMapViewerOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.viewer",
+        format: "json",
+        kind: "app-map-viewer-result",
+        model: "TKAppMapViewerResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the static viewer was written"),
+            ("schemaVersion", "Int", true, "Viewer response schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.app-map.viewer-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("output", "String", true, "Output HTML file path"),
+            ("bytes", "Int", true, "Written byte count"),
+            ("screenCount", "Int", true, "Number of screens included"),
+            ("transitionCount", "Int", true, "Number of transitions included"),
+            ("pathCount", "Int", true, "Number of paths included"),
+            ("suiteCount", "Int", true, "Number of suites in the map"),
+        ])
+    )
+}
+
+func vlmGroundOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "vlm.ground",
+        format: "json",
+        kind: "vlm-ground-result",
+        model: "TKVLMGroundResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether mock VLM grounding succeeded"),
+            ("schemaVersion", "Int", true, "Grounding response schema version"),
+            ("kind", "String", true, "Stable kind; triton.vlm.ground-result"),
+            ("provider", "String", true, "Grounding provider; mock or openai-compatible"),
+            ("model", "String?", false, "Provider model for OpenAI-compatible grounding"),
+            ("baseURL", "String?", false, "Redacted OpenAI-compatible base URL when configured"),
+            ("target", "String", true, "Target phrase grounded against the screenshot"),
+            ("image", "TKVLMGroundImage", true, "Screenshot metadata"),
+            ("image.path", "String", true, "Screenshot path"),
+            ("image.width", "Double", true, "Screenshot pixel width"),
+            ("image.height", "Double", true, "Screenshot pixel height"),
+            ("image.sha256", "String", true, "Screenshot SHA-256"),
+            ("coordinateContract", "TKVLMGroundCoordinateContractRef", true, "Coordinate contract reference"),
+            ("coordinateContract.path", "String", true, "coordinate-contract.json path"),
+            ("coordinateContract.canonicalTapSpace", "String", true, "Canonical tap coordinate space; runtime-point"),
+            ("point", "TKVLMGroundPoint", true, "Grounded point in normalized and runtime spaces"),
+            ("point.normalized", "TKVLMNormalizedPoint", true, "Provider point in normalized_0_1000"),
+            ("point.normalized.x", "Double", true, "Normalized x coordinate"),
+            ("point.normalized.y", "Double", true, "Normalized y coordinate"),
+            ("point.normalized.scale", "Double", true, "Normalized coordinate scale"),
+            ("point.runtimePoint", "TKVLMRuntimePoint", true, "Converted runtime-point"),
+            ("point.runtimePoint.x", "Double", true, "Runtime x point"),
+            ("point.runtimePoint.y", "Double", true, "Runtime y point"),
+            ("point.coordinateSpace", "String", true, "Output coordinate space; runtime-point"),
+            ("transform", "TKVLMCoordinateTransform", true, "Coordinate transform metadata"),
+            ("transform.inputSpace", "String", true, "Provider coordinate space"),
+            ("transform.imageSpace", "String", true, "Intermediate image coordinate space"),
+            ("transform.outputSpace", "String", true, "Output coordinate space"),
+            ("transform.imageWidth", "Double", true, "Image width used for transform"),
+            ("transform.imageHeight", "Double", true, "Image height used for transform"),
+            ("transform.runtimeWidth", "Double", true, "Runtime geometry width"),
+            ("transform.runtimeHeight", "Double", true, "Runtime geometry height"),
+            ("transform.scale", "Double", true, "Runtime display scale from coordinate contract"),
+            ("transform.orientation", "String", true, "Runtime orientation from coordinate contract"),
+            ("transform.source", "String", true, "Coordinate contract path"),
+            ("artifacts", "TKVLMGroundArtifacts", true, "Grounding artifacts"),
+            ("artifacts.overlay", "String", true, "Overlay PNG path"),
+            ("artifacts.request", "String", true, "Redacted request JSON path"),
+            ("artifacts.response", "String", true, "Provider response JSON path"),
         ])
     )
 }

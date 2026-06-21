@@ -11,6 +11,49 @@ func actionCommandSchemas() -> [TKCommandSchema] {
 
     return [
         TKCommandSchema(
+            name: "action",
+            summary: "Parse external GUI-agent action provider output into a Triton primitive preview",
+            requiresServer: false,
+            requiresTarget: false,
+            runtimeScope: "offline",
+            outputFormats: jsonText,
+            options: [
+                TKCommandSchemaOption(name: "parse", type: "Subcommand", description: "Parse one UI-TARS or AgentCPM-GUI action without executing it"),
+                TKCommandSchemaOption(name: "--provider", type: "ui-tars|agentcpm-gui", required: true, description: "Provider output format"),
+                TKCommandSchemaOption(name: "--input", type: "String", required: true, description: "Raw provider action output"),
+                formatJSONText,
+                jsonAlias,
+            ],
+            usageForms: [
+                TKCommandUsageForm(form: "parse --provider ui-tars --input <text> --json", kind: "Subcommand", description: "Parse UI-TARS Thought/Action text into a primitive preview"),
+                TKCommandUsageForm(form: "parse --provider agentcpm-gui --input <json> --json", kind: "Subcommand", description: "Parse AgentCPM-GUI JSON action into a primitive preview"),
+            ],
+            examples: [
+                #"triton action parse --provider ui-tars --input "Action: click(start_box='(500,330)')" --json"#,
+                #"triton action parse --provider agentcpm-gui --input '{"action":"POINT","point":[500,330]}' --json"#,
+            ],
+            successShape: "TKActionProviderParseResponse with primitive, coordinateSystem, point/endPoint/text/key/status, and commandPreview",
+            failureShape: "{ ok:false, error:{ code:\"action_provider_parse_failed\", message, hint } }",
+            outputSemantics: "Offline parser only. It does not execute device actions, does not call a model, and does not start an autonomous loop.",
+            nextCommands: [
+                "triton test validate <path.tritontest.yaml> --json",
+                "triton status --json",
+            ],
+            outputContracts: [actionProviderParseOutputContract()],
+            failureCodes: ["action_provider_parse_failed"],
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "parse",
+                    summary: "Parse one external action into a Triton primitive preview",
+                    requiredOptions: ["--provider", "--input"],
+                    optionalOptions: ["--format", "--json"],
+                    outputSelectors: ["action.provider.parse"],
+                    failureCodes: ["action_provider_parse_failed"]
+                ),
+            ],
+            providedCapabilities: ["action-provider-parse"]
+        ),
+        TKCommandSchema(
             name: "tap",
             summary: "Tap a UI target by text, coordinate, view oid, or AX node",
             requiresServer: true,

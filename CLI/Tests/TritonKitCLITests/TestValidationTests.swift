@@ -48,7 +48,7 @@ struct TestValidationTests {
 
     @Test("unsupported tritontest step emits machine readable validation error")
     func unsupportedStepEmitsMachineReadableValidationError() throws {
-        let url = try writeTemporaryContract(name: "swipe", contents: invalidSwipeYAML())
+        let url = try writeTemporaryContract(name: "drag", contents: invalidDragYAML())
         defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
 
         let result = try runTriton(["test", "validate", url.path, "--json"])
@@ -63,8 +63,123 @@ struct TestValidationTests {
         #expect(response.ok == false)
         #expect(response.error.type == "validation_error")
         #expect(response.error.code == "unsupported_step")
-        #expect(response.error.path == "$.steps[0].swipe")
-        #expect(response.error.allowed == ["launch", "takeScreenshot", "tap", "assertVisible"])
+        #expect(response.error.path == "$.steps[0].drag")
+        #expect(response.error.allowed == tritonTestSupportedSteps)
+    }
+
+    @Test("P6 deterministic steps normalize into explicit primitive fields")
+    func deterministicStepsNormalizeIntoPrimitiveFields() throws {
+        let plan = try validateTritonTestContract(
+            yaml: deterministicContractYAML(),
+            inputPath: "/tmp/p6.tritontest.yaml"
+        )
+
+        #expect(plan.steps.map(\.type) == [
+            "launch",
+            "input",
+            "press",
+            "swipe",
+            "assertNotVisible",
+            "scrollUntilVisible",
+            "stop",
+        ])
+        #expect(plan.steps[1].text == "hello")
+        #expect(plan.steps[2].button == "home")
+        #expect(plan.steps[3].point?.x == 20)
+        #expect(plan.steps[3].endPoint?.y == 120)
+        #expect(plan.steps[4].selector?.text == "Spinner")
+        #expect(plan.steps[5].selector?.text == "Checkout")
+        #expect(plan.steps[5].direction == "down")
+        #expect(plan.steps[5].maxScrolls == 3)
+    }
+
+    @Test("VLM-assisted tap target normalizes only with explicit grounding metadata")
+    func vlmAssistedTapTargetNormalizes() throws {
+        let plan = try validateTritonTestContract(
+            yaml: """
+            version: 1
+            name: vlm-tap
+            app:
+              bundleId: com.example.LoginFixture
+            device:
+              platform: ios
+            steps:
+              - tap:
+                  target: Go Home button
+                  grounding: vlm
+                  provider: mock
+            """,
+            inputPath: "/tmp/vlm-tap.tritontest.yaml"
+        )
+
+        #expect(plan.steps[0].type == "tap")
+        #expect(plan.steps[0].point == nil)
+        #expect(plan.steps[0].target == "Go Home button")
+        #expect(plan.steps[0].grounding == "vlm")
+        #expect(plan.steps[0].provider == "mock")
+    }
+
+    @Test("tap text normalizes as exact AX selector")
+    func tapTextNormalizesAsExactAXSelector() throws {
+        let plan = try validateTritonTestContract(
+            yaml: """
+            version: 1
+            name: tap-text
+            app:
+              bundleId: com.example.LoginFixture
+            device:
+              platform: ios
+            steps:
+              - tap:
+                  text: Go Home
+                  source: ax
+                  match: exact
+            """,
+            inputPath: "/tmp/tap-text.tritontest.yaml"
+        )
+
+        #expect(plan.steps[0].type == "tap")
+        #expect(plan.steps[0].point == nil)
+        #expect(plan.steps[0].target == nil)
+        #expect(plan.steps[0].selector?.text == "Go Home")
+        #expect(plan.steps[0].selector?.source == "ax")
+        #expect(plan.steps[0].selector?.match == "exact")
+    }
+
+    @Test("P14 AI steps normalize as optional mock evidence steps")
+    func aiStepsNormalizeAsOptionalMockEvidenceSteps() throws {
+        let plan = try validateTritonTestContract(
+            yaml: """
+            version: 1
+            name: ai-checks
+            app:
+              bundleId: com.example.LoginFixture
+            device:
+              platform: ios
+            steps:
+              - assertWithAI:
+                  prompt: Login screen has a primary action
+                  provider: mock
+              - assertNoDefectsWithAI: {}
+              - extractTextWithAI: {}
+              - assertScreenshot:
+                  baseline: /tmp/baseline.png
+                  threshold: 0
+                  cropOn: full
+            """,
+            inputPath: "/tmp/ai-checks.tritontest.yaml"
+        )
+
+        #expect(plan.steps.map(\.type) == ["assertWithAI", "assertNoDefectsWithAI", "extractTextWithAI", "assertScreenshot"])
+        #expect(plan.steps[0].optional == true)
+        #expect(plan.steps[0].provider == "mock")
+        #expect(plan.steps[0].prompt == "Login screen has a primary action")
+        #expect(plan.steps[1].optional == true)
+        #expect(plan.steps[2].optional == true)
+        #expect(plan.steps[3].optional == false)
+        #expect(plan.steps[3].baseline == "/tmp/baseline.png")
+        #expect(plan.steps[3].threshold == 0)
+        #expect(plan.steps[3].cropOn == "full")
     }
 
     @Test("invalid tap point reports invalid_point with JSON path")
@@ -137,22 +252,24 @@ struct TestValidationTests {
         #expect(failure?.detail.path == "$.app.bundleId")
     }
 
-    @Test("test command schema exposes P0D minimal run contract")
-    func testCommandSchemaExposesP0DMinimalRunContract() throws {
+    @Test("test command schema exposes deterministic run contract")
+    func testCommandSchemaExposesDeterministicRunContract() throws {
         let schema = try #require(commandSchemas().first { $0.name == "test" })
         let validate = try #require(schema.subcommands.first { $0.name == "validate" })
         let run = try #require(schema.subcommands.first { $0.name == "run" })
 
         #expect(schema.requiresServer == false)
         #expect(schema.requiresTarget == false)
-        #expect(schema.runtimeScope == "offline for validate/normalize; runtime target required for run")
-        #expect(schema.providedCapabilities == ["test-validate", "test-normalized-plan", "test-run-minimal"])
+        #expect(schema.runtimeScope == "offline for validate/normalize/report/create; runtime target required for run")
+        #expect(schema.providedCapabilities == ["test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session"])
         #expect(schema.failureCodes.contains("unsupported_step"))
         #expect(validate.requiredOptions == ["<path.tritontest.yaml>"])
         #expect(validate.outputSelectors == ["test.validation", "test.normalized-plan"])
         #expect(run.requiredOptions == ["<path.tritontest.yaml>", "--evidence-dir"])
         #expect(run.outputSelectors == ["test.run-result", "test.validation", "test.normalized-plan"])
         #expect(schema.outputContracts.contains { $0.selector == "test.run-result" })
+        #expect(schema.outputContracts.contains { $0.selector == "test.report" })
+        #expect(schema.outputContracts.contains { $0.selector == "test.create" })
     }
 
     private func validContractYAML() -> String {
@@ -182,16 +299,51 @@ struct TestValidationTests {
         """
     }
 
-    private func invalidSwipeYAML() -> String {
+    private func deterministicContractYAML() -> String {
         """
         version: 1
-        name: invalid-swipe
+        name: p6-deterministic
         app:
           bundleId: com.example.LoginFixture
         device:
           platform: ios
         steps:
+          - launch: {}
+          - input:
+              text: hello
+          - press:
+              button: home
           - swipe:
+              from:
+                x: 20
+                y: 200
+                coordinateSpace: runtime-point
+              to:
+                x: 20
+                y: 120
+                coordinateSpace: runtime-point
+          - assertNotVisible:
+              text: Spinner
+              source: ax
+              match: exact
+          - scrollUntilVisible:
+              text: Checkout
+              direction: down
+              maxScrolls: 3
+          - stop: {}
+        """
+    }
+
+    private func invalidDragYAML() -> String {
+        """
+        version: 1
+        name: invalid-drag
+        app:
+          bundleId: com.example.LoginFixture
+        device:
+          platform: ios
+        steps:
+          - drag:
               from:
                 x: 10
                 y: 20

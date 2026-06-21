@@ -375,11 +375,11 @@ extension SchemaFactSourceTests {
             "observe": ["observe", "list", "inspect", "hierarchy", "nodes", "node", "attrs", "object", "export", "geometry", "ax", "screenshot", "hit", "wait", "status", "serve"],
             "webview": ["webview"],
             "route": ["route"],
-            "evidence": ["evidence", "map", "device", "status", "serve"],
+            "evidence": ["evidence", "map", "vlm", "device", "status", "serve"],
             "assert": ["assert", "status", "serve"],
             "replay": ["plan", "status", "serve"],
             "smoke": ["smoke"],
-            "action": ["tap", "swipe", "type", "paste", "clear", "press", "input", "wait", "schema", "status", "serve"],
+            "action": ["action", "tap", "swipe", "type", "paste", "clear", "press", "input", "wait", "schema", "status", "serve"],
             "test": ["test", "schema"],
             "xcode": ["xcode", "xcresult", "xctrace", "coverage"],
         ]
@@ -540,6 +540,8 @@ extension SchemaFactSourceTests {
             "evidence-redact": ["<safe.tritonevidence>"],
             "network-capture-export": ["<path.har|path.ndjson>"],
             "screenshot": ["<path.png>"],
+            "app-map-viewer": ["<file.html>"],
+            "test-create-from-session": ["<path.tritontest.yaml>"],
         ]
 
         var unknownOutputCapabilities: [String] = []

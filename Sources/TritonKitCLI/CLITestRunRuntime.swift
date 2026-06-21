@@ -43,6 +43,39 @@ struct TKTestRunExecutionContext {
     let host: String
     let port: Int
     let runID: String
+    let allowVLM: Bool
+    let allowRemoteVLM: Bool
+    let vlmBaseURL: String?
+    let vlmModel: String?
+    let vlmAPIKeyEnv: String?
+
+    init(
+        evidenceDirectory: URL,
+        target: String,
+        host: String,
+        port: Int,
+        runID: String,
+        allowVLM: Bool = false,
+        allowRemoteVLM: Bool = false,
+        vlmBaseURL: String? = nil,
+        vlmModel: String? = nil,
+        vlmAPIKeyEnv: String? = nil
+    ) {
+        self.evidenceDirectory = evidenceDirectory
+        self.target = target
+        self.host = host
+        self.port = port
+        self.runID = runID
+        self.allowVLM = allowVLM
+        self.allowRemoteVLM = allowRemoteVLM
+        self.vlmBaseURL = vlmBaseURL
+        self.vlmModel = vlmModel
+        self.vlmAPIKeyEnv = vlmAPIKeyEnv
+    }
+}
+
+struct TKTestRunVLMGroundingOutcome: Equatable {
+    let response: TKVLMGroundResponse
 }
 
 struct TKTestRunAssertionOutcome: Equatable {
@@ -79,6 +112,7 @@ struct TKTestRunPrimitiveOutcome: Equatable {
     let durationMs: Int
     let artifacts: [TKEvidenceArtifact]
     let observations: [TKTestRunObservationOutcome]
+    let vlmGroundings: [TKTestRunVLMGroundingOutcome]
     let assertion: TKTestRunAssertionOutcome?
     let failure: TKTestRunFailure?
 
@@ -87,6 +121,7 @@ struct TKTestRunPrimitiveOutcome: Equatable {
         durationMs: Int = 0,
         artifacts: [TKEvidenceArtifact] = [],
         observations: [TKTestRunObservationOutcome] = [],
+        vlmGroundings: [TKTestRunVLMGroundingOutcome] = [],
         assertion: TKTestRunAssertionOutcome? = nil
     ) -> TKTestRunPrimitiveOutcome {
         TKTestRunPrimitiveOutcome(
@@ -96,6 +131,7 @@ struct TKTestRunPrimitiveOutcome: Equatable {
             durationMs: durationMs,
             artifacts: artifacts,
             observations: observations,
+            vlmGroundings: vlmGroundings,
             assertion: assertion,
             failure: nil
         )
@@ -108,7 +144,8 @@ struct TKTestRunPrimitiveOutcome: Equatable {
         failure: TKTestRunFailure,
         assertion: TKTestRunAssertionOutcome? = nil,
         artifacts: [TKEvidenceArtifact] = [],
-        observations: [TKTestRunObservationOutcome] = []
+        observations: [TKTestRunObservationOutcome] = [],
+        vlmGroundings: [TKTestRunVLMGroundingOutcome] = []
     ) -> TKTestRunPrimitiveOutcome {
         TKTestRunPrimitiveOutcome(
             command: command,
@@ -117,6 +154,7 @@ struct TKTestRunPrimitiveOutcome: Equatable {
             durationMs: durationMs,
             artifacts: artifacts,
             observations: observations,
+            vlmGroundings: vlmGroundings,
             assertion: assertion,
             failure: failure
         )
@@ -142,7 +180,12 @@ func runTritonTest(
     target: String,
     host: String,
     port: Int,
-    executor: TKTestRunPrimitiveExecutor
+    executor: TKTestRunPrimitiveExecutor,
+    allowVLM: Bool = false,
+    allowRemoteVLM: Bool = false,
+    vlmBaseURL: String? = nil,
+    vlmModel: String? = nil,
+    vlmAPIKeyEnv: String? = nil
 ) async throws -> TKTestRunExecutionResponse {
     let inputURL = URL(fileURLWithPath: input)
     let yaml: String
@@ -202,7 +245,12 @@ func runTritonTest(
         target: target,
         host: host,
         port: port,
-        runID: runID
+        runID: runID,
+        allowVLM: allowVLM,
+        allowRemoteVLM: allowRemoteVLM,
+        vlmBaseURL: vlmBaseURL,
+        vlmModel: vlmModel,
+        vlmAPIKeyEnv: vlmAPIKeyEnv
     )
 
     var finalStatus: TKTestRunStatus = .passed
@@ -272,6 +320,15 @@ func runTritonTest(
             ))
         }
 
+        for grounding in outcome.vlmGroundings {
+            try writer.append(.vlmGrounding(
+                runID: runID,
+                stepIndex: step.index,
+                grounding: grounding.response,
+                timestamp: testRunTimestamp()
+            ))
+        }
+
         if let assertion = outcome.assertion {
             try writer.append(.assertionResult(
                 runID: runID,
@@ -283,17 +340,13 @@ func runTritonTest(
         }
 
         if outcome.status != .passed {
-            finalStatus = outcome.status
-            failedStepIndex = step.index
-            finalFailure = normalizedFailure(outcome.failure, artifacts: stepArtifacts)
-            if let finalFailure {
-                try writer.append(.failureRecorded(
-                    runID: runID,
-                    stepIndex: step.index,
-                    failure: finalFailure,
-                    timestamp: testRunTimestamp()
-                ))
-            }
+            let stepFailure = normalizedFailure(outcome.failure, artifacts: stepArtifacts)
+            try writer.append(.failureRecorded(
+                runID: runID,
+                stepIndex: step.index,
+                failure: stepFailure,
+                timestamp: testRunTimestamp()
+            ))
             try writer.append(.stepFinished(
                 runID: runID,
                 stepIndex: step.index,
@@ -302,6 +355,12 @@ func runTritonTest(
                 durationMs: testRunElapsedMilliseconds(since: stepStart),
                 timestamp: testRunTimestamp()
             ))
+            if step.optional {
+                continue
+            }
+            finalStatus = outcome.status
+            failedStepIndex = step.index
+            finalFailure = stepFailure
             break
         }
 
@@ -383,14 +442,30 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         switch step.type {
         case "launch":
             return try await executeLaunch(plan: plan, context: context)
+        case "stop":
+            return try await executeStop(step: step, plan: plan, context: context)
         case "takeScreenshot":
             return try await executeScreenshot(step: step, plan: plan, context: context)
         case "tap":
             return try await executeTap(step: step, plan: plan, context: context)
+        case "input":
+            return try await executeInput(step: step, plan: plan, context: context)
+        case "press":
+            return try await executePress(step: step, plan: plan, context: context)
+        case "swipe":
+            return try await executeSwipe(step: step, plan: plan, context: context)
         case "assertVisible":
-            return try await executeAssertVisible(step: step, plan: plan, context: context)
+            return try await executeAssertVisible(step: step, plan: plan, context: context, expectedVisible: true)
+        case "assertNotVisible":
+            return try await executeAssertVisible(step: step, plan: plan, context: context, expectedVisible: false)
+        case "scrollUntilVisible":
+            return try await executeScrollUntilVisible(step: step, plan: plan, context: context)
+        case "assertWithAI", "assertNoDefectsWithAI", "extractTextWithAI":
+            return try await executeMockAIStep(step: step, plan: plan, context: context)
+        case "assertScreenshot":
+            return try await executeAssertScreenshot(step: step, plan: plan, context: context)
         default:
-            throw TKTestRunPrimitiveError(type: "unsupported_step", message: "Unsupported P0D runner step: \(step.type)")
+            throw TKTestRunPrimitiveError(type: "unsupported_step", message: "Unsupported runner step: \(step.type)")
         }
     }
 
@@ -421,6 +496,34 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
                     target: summary.id
                 )
             ]
+        )
+    }
+
+    private func executeStop(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        let started = Date()
+        let runtime = try await resolveRuntime(plan: plan, context: context)
+        let observation = try? await captureObservation(
+            step: step,
+            phase: "before",
+            runtime: runtime,
+            context: context,
+            screenshotPath: "debug/\(step.id)-before.png",
+            metadataPath: "debug/\(step.id)-before-screenshot.json",
+            axPath: "debug/\(step.id)-before-ax.json",
+            hierarchyPath: "debug/\(step.id)-before-hierarchy.json"
+        )
+        return .failed(
+            command: ["triton", "app", "terminate", "--bundle-id", plan.app.bundleId, "--json"],
+            durationMs: testRunElapsedMilliseconds(since: started),
+            failure: TKTestRunFailure(
+                type: "stop_not_supported",
+                message: "test run stop requires host app terminate target selection; embedded runtime-only execution cannot safely terminate the app yet"
+            ),
+            observations: observation.map { [$0] } ?? []
         )
     }
 
@@ -455,6 +558,12 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         plan: TKTestNormalizedPlan,
         context: TKTestRunExecutionContext
     ) async throws -> TKTestRunPrimitiveOutcome {
+        if step.point == nil, step.target != nil {
+            return try await executeVLMTap(step: step, plan: plan, context: context)
+        }
+        if step.point == nil, step.selector != nil {
+            return try await executeTextTap(step: step, plan: plan, context: context)
+        }
         guard let point = step.point else {
             throw TKTestRunPrimitiveError(type: "invalid_step", message: "tap requires point/runtime-point coordinates")
         }
@@ -511,13 +620,465 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         )
     }
 
-    private func executeAssertVisible(
+    private func executeTextTap(
         step: TKTestPlanStep,
         plan: TKTestNormalizedPlan,
         context: TKTestRunExecutionContext
     ) async throws -> TKTestRunPrimitiveOutcome {
+        guard let selector = step.selector else {
+            throw TKTestRunPrimitiveError(type: "invalid_step", message: "tap.text requires text selector")
+        }
+        guard selector.source == "ax", selector.match == "exact" else {
+            throw TKTestRunPrimitiveError(type: "unsupported_selector", message: "tap.text only supports source=ax and match=exact")
+        }
+
+        let started = Date()
+        let runtime = try await resolveRuntime(plan: plan, context: context)
+        let runSelector = TKTestRunSelector(text: TKTestRunTextSelector(value: selector.text, match: selector.match, source: selector.source))
+        let before = try await captureObservation(
+            step: step,
+            phase: "before",
+            runtime: runtime,
+            context: context,
+            screenshotPath: "debug/\(step.id)-before.png",
+            metadataPath: "debug/\(step.id)-before-screenshot.json",
+            axPath: "debug/\(step.id)-before-ax.json",
+            hierarchyPath: "debug/\(step.id)-before-hierarchy.json"
+        )
+
+        let command = [
+            "triton", "tap",
+            selector.text,
+            "--target", runtime.summary.id,
+            "--json",
+        ]
+
+        let inputRequest: TKInputRequest
+        do {
+            let accessibilityData = try await runtime.client.request(type: "accessibility")
+            let axNodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
+            guard let node = selectAXNodesByQuery(axNodes, query: selector.text, includeValue: false).first else {
+                throw TKTapTargetResolutionFailure(
+                    query: selector.text,
+                    message: "No exact AX text target matched query: \(selector.text)",
+                    candidateCount: 0,
+                    nearestCandidates: [],
+                    suggestedCommands: tapTargetSuggestedCommands(query: selector.text)
+                )
+            }
+            inputRequest = tapRequest(
+                for: node,
+                width: nil,
+                height: nil,
+                duration: nil,
+                activationStrategy: .smart
+            )
+        } catch let failure as TKTapTargetResolutionFailure {
+            return .failed(
+                command: command,
+                durationMs: testRunElapsedMilliseconds(since: started),
+                failure: TKTestRunFailure(type: "text_not_found", message: failure.message, selector: runSelector),
+                observations: [before]
+            )
+        }
+
+        let result = try await executeInputRequest(inputRequest, client: runtime.client)
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        var after = try await captureObservation(
+            step: step,
+            phase: "after",
+            runtime: runtime,
+            context: context,
+            screenshotPath: "debug/\(step.id)-after.png",
+            metadataPath: "debug/\(step.id)-after-screenshot.json",
+            axPath: "debug/\(step.id)-after-ax.json",
+            hierarchyPath: "debug/\(step.id)-after-hierarchy.json"
+        )
+        after = after.withChanged(before.screenCandidate != after.screenCandidate)
+
+        if result.ok {
+            return .passed(
+                command: command,
+                durationMs: testRunElapsedMilliseconds(since: started),
+                observations: [before, after]
+            )
+        }
+        return .failed(
+            command: command,
+            durationMs: testRunElapsedMilliseconds(since: started),
+            failure: TKTestRunFailure(
+                type: "tap_failed",
+                message: result.message ?? result.error?.message ?? "Runtime tap text command failed",
+                selector: runSelector
+            ),
+            observations: [before, after]
+        )
+    }
+
+    private func executeVLMTap(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        guard let target = step.target, step.grounding == "vlm" else {
+            throw TKTestRunPrimitiveError(type: "invalid_step", message: "tap.target requires grounding=vlm")
+        }
+        guard context.allowVLM else {
+            return .failed(
+                command: ["triton", "test", "run", "tap", "--target", target, "--grounding", "vlm"],
+                failure: TKTestRunFailure(
+                    type: "vlm_step_not_allowed",
+                    message: "VLM-assisted tap(target) requires --allow-vlm"
+                )
+            )
+        }
+
+        let started = Date()
+        let runtime = try await resolveRuntime(plan: plan, context: context)
+        let beforeScreenshotPath = "debug/\(step.id)-before.png"
+        let before = try await captureObservation(
+            step: step,
+            phase: "before",
+            runtime: runtime,
+            context: context,
+            screenshotPath: beforeScreenshotPath,
+            metadataPath: "debug/\(step.id)-before-screenshot.json",
+            axPath: "debug/\(step.id)-before-ax.json",
+            hierarchyPath: "debug/\(step.id)-before-hierarchy.json"
+        )
+
+        let provider = step.provider ?? "mock"
+        let grounding: TKVLMGroundResponse
+        do {
+            grounding = try groundVLMTarget(
+                provider: provider,
+                image: context.evidenceDirectory.appendingPathComponent(beforeScreenshotPath).path,
+                target: target,
+                coordinateContract: context.evidenceDirectory.appendingPathComponent("coordinate-contract.json").path,
+                outputDirectory: context.evidenceDirectory.appendingPathComponent("debug/\(step.id)-vlm", isDirectory: true).path,
+                baseURL: context.vlmBaseURL,
+                model: context.vlmModel,
+                apiKeyEnv: context.vlmAPIKeyEnv,
+                allowRemoteVLM: context.allowRemoteVLM
+            )
+        } catch let failure as TKVLMGroundingFailure {
+            return .failed(
+                command: ["triton", "vlm", "ground", "--provider", provider, "--target", target, "--json"],
+                durationMs: testRunElapsedMilliseconds(since: started),
+                failure: TKTestRunFailure(type: failure.code, message: failure.message),
+                observations: [before]
+            )
+        }
+
+        let point = grounding.point.runtimePoint
+        let inputResult = try await executeInputRequest(
+            .tap(x: point.x, y: point.y, targetOID: nil, width: nil, height: nil, duration: nil),
+            client: runtime.client
+        )
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        var after = try await captureObservation(
+            step: step,
+            phase: "after",
+            runtime: runtime,
+            context: context,
+            screenshotPath: "debug/\(step.id)-after.png",
+            metadataPath: "debug/\(step.id)-after-screenshot.json",
+            axPath: "debug/\(step.id)-after-ax.json",
+            hierarchyPath: "debug/\(step.id)-after-hierarchy.json"
+        )
+        after = after.withChanged(before.screenCandidate != after.screenCandidate)
+
+        let vlmArtifacts = testRunVLMArtifacts(from: grounding, evidenceDirectory: context.evidenceDirectory, target: runtime.summary.id)
+        let command = [
+            "triton", "test", "run", "tap",
+            "--target", target,
+            "--grounding", "vlm",
+            "--provider", provider,
+            "--json",
+        ]
+        let groundingOutcome = TKTestRunVLMGroundingOutcome(response: grounding)
+        if inputResult.ok {
+            return .passed(
+                command: command,
+                durationMs: testRunElapsedMilliseconds(since: started),
+                artifacts: vlmArtifacts,
+                observations: [before, after],
+                vlmGroundings: [groundingOutcome]
+            )
+        }
+        return .failed(
+            command: command,
+            durationMs: testRunElapsedMilliseconds(since: started),
+            failure: TKTestRunFailure(
+                type: "tap_failed",
+                message: inputResult.message ?? inputResult.error?.message ?? "Runtime tap command failed after VLM grounding",
+                artifactRefs: vlmArtifacts.map { testRunEventRef(for: $0.path) }
+            ),
+            artifacts: vlmArtifacts,
+            observations: [before, after],
+            vlmGroundings: [groundingOutcome]
+        )
+    }
+
+    private func executeInput(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        guard let text = step.text else {
+            throw TKTestRunPrimitiveError(type: "invalid_step", message: "input requires text")
+        }
+        return try await executeInputActionWithObservations(
+            step: step,
+            plan: plan,
+            context: context,
+            input: .typeText(text),
+            command: ["triton", "type", text, "--json"],
+            failureType: "input_failed"
+        )
+    }
+
+    private func executePress(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        guard let button = step.button else {
+            throw TKTestRunPrimitiveError(type: "invalid_step", message: "press requires button")
+        }
+        return try await executeInputActionWithObservations(
+            step: step,
+            plan: plan,
+            context: context,
+            input: .press(button: button),
+            command: ["triton", "press", button, "--json"],
+            failureType: "press_failed"
+        )
+    }
+
+    private func executeSwipe(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        guard let from = step.point, let to = step.endPoint else {
+            throw TKTestRunPrimitiveError(type: "invalid_step", message: "swipe requires from/to runtime-point coordinates")
+        }
+        return try await executeInputActionWithObservations(
+            step: step,
+            plan: plan,
+            context: context,
+            input: .swipe(startX: from.x, startY: from.y, endX: to.x, endY: to.y),
+            command: [
+                "triton", "swipe",
+                "--from-x", formatTestRunNumber(from.x),
+                "--from-y", formatTestRunNumber(from.y),
+                "--to-x", formatTestRunNumber(to.x),
+                "--to-y", formatTestRunNumber(to.y),
+                "--json",
+            ],
+            failureType: "swipe_failed"
+        )
+    }
+
+    private func executeInputActionWithObservations(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext,
+        input: TKInputRequest,
+        command: [String],
+        failureType: String
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        let started = Date()
+        let runtime = try await resolveRuntime(plan: plan, context: context)
+        let before = try await captureObservation(
+            step: step,
+            phase: "before",
+            runtime: runtime,
+            context: context,
+            screenshotPath: "debug/\(step.id)-before.png",
+            metadataPath: "debug/\(step.id)-before-screenshot.json",
+            axPath: "debug/\(step.id)-before-ax.json",
+            hierarchyPath: "debug/\(step.id)-before-hierarchy.json"
+        )
+        let result = try await executeInputRequest(input, client: runtime.client)
+        try? await Task.sleep(nanoseconds: 150_000_000)
+        var after = try await captureObservation(
+            step: step,
+            phase: "after",
+            runtime: runtime,
+            context: context,
+            screenshotPath: "debug/\(step.id)-after.png",
+            metadataPath: "debug/\(step.id)-after-screenshot.json",
+            axPath: "debug/\(step.id)-after-ax.json",
+            hierarchyPath: "debug/\(step.id)-after-hierarchy.json"
+        )
+        after = after.withChanged(before.screenCandidate != after.screenCandidate)
+        if result.ok {
+            return .passed(
+                command: command,
+                durationMs: testRunElapsedMilliseconds(since: started),
+                observations: [before, after]
+            )
+        }
+        return .failed(
+            command: command,
+            durationMs: testRunElapsedMilliseconds(since: started),
+            failure: TKTestRunFailure(
+                type: failureType,
+                message: result.message ?? result.error?.message ?? "Runtime input command failed"
+            ),
+            observations: [before, after]
+        )
+    }
+
+    private func executeMockAIStep(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        let started = Date()
+        let runtime = try await resolveRuntime(plan: plan, context: context)
+        let observation = try await captureObservation(
+            step: step,
+            phase: "after",
+            runtime: runtime,
+            context: context,
+            screenshotPath: "debug/\(step.id)-ai.png",
+            metadataPath: "debug/\(step.id)-ai-screenshot.json",
+            axPath: "debug/\(step.id)-ai-ax.json",
+            hierarchyPath: "debug/\(step.id)-ai-hierarchy.json"
+        )
+        let extractedText = step.type == "extractTextWithAI"
+            ? observation.screenCandidate.visibleTexts.joined(separator: "\n")
+            : nil
+        let result = TKTestAIResult(
+            provider: step.provider ?? "mock",
+            stepType: step.type,
+            status: .passed,
+            prompt: step.prompt,
+            extractedText: extractedText,
+            screenshot: observation.artifacts.screenshot,
+            note: "mock provider uses captured AX visibleTexts and does not call a remote model"
+        )
+        let resultPath = "debug/\(step.id)-ai-result.json"
+        try writeTestRunArtifact(
+            try prettyEncodedData(result),
+            relativePath: resultPath,
+            evidenceDirectory: context.evidenceDirectory
+        )
+        let artifact = TKEvidenceArtifact(
+            kind: step.type == "extractTextWithAI" ? "ai.extraction" : "ai.assertion",
+            path: resultPath,
+            contentType: "application/json",
+            target: runtime.summary.id
+        )
+        let assertion: TKTestRunAssertionOutcome?
+        if step.type == "extractTextWithAI" {
+            assertion = nil
+        } else {
+            assertion = TKTestRunAssertionOutcome(
+                status: .passed,
+                selector: TKTestRunSelector(text: TKTestRunTextSelector(value: step.prompt ?? step.type, match: "exact", source: "ai"))
+            )
+        }
+        return .passed(
+            command: ["triton", "test", "run", step.type, "--provider", step.provider ?? "mock", "--json"],
+            durationMs: testRunElapsedMilliseconds(since: started),
+            artifacts: [artifact],
+            observations: [observation],
+            assertion: assertion
+        )
+    }
+
+    private func executeAssertScreenshot(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        guard let baseline = step.baseline else {
+            throw TKTestRunPrimitiveError(type: "invalid_step", message: "assertScreenshot requires baseline")
+        }
+        let started = Date()
+        let runtime = try await resolveRuntime(plan: plan, context: context)
+        let observation = try await captureObservation(
+            step: step,
+            phase: "after",
+            runtime: runtime,
+            context: context,
+            screenshotPath: "debug/\(step.id)-assert-screenshot.png",
+            metadataPath: "debug/\(step.id)-assert-screenshot.json",
+            axPath: "debug/\(step.id)-assert-screenshot-ax.json",
+            hierarchyPath: "debug/\(step.id)-assert-screenshot-hierarchy.json"
+        )
+        let selector = TKTestRunSelector(text: TKTestRunTextSelector(value: baseline, match: "exact", source: "screenshot"))
+        let command = ["triton", "test", "run", "assertScreenshot", "--baseline", baseline, "--json"]
+        let baselineURL = URL(fileURLWithPath: baseline)
+        guard FileManager.default.fileExists(atPath: baselineURL.path) else {
+            let failure = TKTestRunFailure(
+                type: "assert_screenshot_baseline_missing",
+                message: "Baseline screenshot does not exist: \(baseline)",
+                selector: selector,
+                artifactRefs: observation.evidenceArtifacts.map { testRunEventRef(for: $0.path) }
+            )
+            return .failed(
+                command: command,
+                durationMs: testRunElapsedMilliseconds(since: started),
+                failure: failure,
+                assertion: TKTestRunAssertionOutcome(status: .failed, selector: selector),
+                observations: [observation]
+            )
+        }
+        let baselineHash = try testRunSHA256(Data(contentsOf: baselineURL))
+        let passed = baselineHash == observation.screenCandidate.screenshotSha256
+        let result = TKTestAIResult(
+            provider: "deterministic",
+            stepType: step.type,
+            status: passed ? .passed : .failed,
+            prompt: "baseline=\(baseline); threshold=\(step.threshold ?? 0); cropOn=\(step.cropOn ?? "")",
+            screenshot: observation.artifacts.screenshot,
+            note: passed ? "screenshot SHA256 matched baseline" : "screenshot SHA256 did not match baseline; pixel threshold diff is not implemented in P14"
+        )
+        let resultPath = "debug/\(step.id)-assert-screenshot-result.json"
+        try writeTestRunArtifact(
+            try prettyEncodedData(result),
+            relativePath: resultPath,
+            evidenceDirectory: context.evidenceDirectory
+        )
+        let resultArtifact = TKEvidenceArtifact(kind: "screenshot.diff", path: resultPath, contentType: "application/json", target: runtime.summary.id)
+        let assertion = TKTestRunAssertionOutcome(status: passed ? .passed : .failed, selector: selector)
+        if passed {
+            return .passed(
+                command: command,
+                durationMs: testRunElapsedMilliseconds(since: started),
+                artifacts: [resultArtifact],
+                observations: [observation],
+                assertion: assertion
+            )
+        }
+        return .failed(
+            command: command,
+            durationMs: testRunElapsedMilliseconds(since: started),
+            failure: TKTestRunFailure(
+                type: "assert_screenshot_failed",
+                message: "Screenshot hash did not match baseline \(baseline)",
+                selector: selector,
+                artifactRefs: ([resultArtifact] + observation.evidenceArtifacts).map { testRunEventRef(for: $0.path) }
+            ),
+            assertion: assertion,
+            artifacts: [resultArtifact],
+            observations: [observation]
+        )
+    }
+
+    private func executeAssertVisible(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext,
+        expectedVisible: Bool
+    ) async throws -> TKTestRunPrimitiveOutcome {
         guard let testSelector = step.selector else {
-            throw TKTestRunPrimitiveError(type: "invalid_step", message: "assertVisible requires text selector")
+            throw TKTestRunPrimitiveError(type: "invalid_step", message: "\(step.type) requires text selector")
         }
         let started = Date()
         let runtime = try await resolveRuntime(plan: plan, context: context)
@@ -531,13 +1092,14 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
             targetConnectionState: status.targetConnectionState,
             hierarchyCacheState: status.hierarchyCacheState
         )
+        let passed = expectedVisible ? result.ok : !result.ok
         let selector = TKTestRunSelector(text: TKTestRunTextSelector(
             value: testSelector.text,
             match: testSelector.match,
             source: testSelector.source
         ))
         let assertion = TKTestRunAssertionOutcome(
-            status: result.ok ? .passed : .failed,
+            status: passed ? .passed : .failed,
             selector: selector
         )
         let command = [
@@ -545,7 +1107,7 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
             "--target", runtime.summary.id,
             "--json",
         ]
-        if result.ok {
+        if passed {
             return .passed(command: command, durationMs: testRunElapsedMilliseconds(since: started), assertion: assertion)
         }
 
@@ -574,8 +1136,10 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         let artifacts = [assertArtifact] + observation.evidenceArtifacts
 
         let failure = TKTestRunFailure(
-            type: "assert_visible_failed",
-            message: result.message ?? "AX exact text not visible: \(testSelector.text)",
+            type: expectedVisible ? "assert_visible_failed" : "assert_not_visible_failed",
+            message: expectedVisible
+                ? (result.message ?? "AX exact text not visible: \(testSelector.text)")
+                : "AX exact text was visible: \(testSelector.text)",
             selector: selector,
             artifactRefs: artifacts.map { testRunEventRef(for: $0.path) }
         )
@@ -587,6 +1151,95 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
             artifacts: [assertArtifact],
             observations: [observation]
         )
+    }
+
+    private func executeScrollUntilVisible(
+        step: TKTestPlanStep,
+        plan: TKTestNormalizedPlan,
+        context: TKTestRunExecutionContext
+    ) async throws -> TKTestRunPrimitiveOutcome {
+        guard let selector = step.selector else {
+            throw TKTestRunPrimitiveError(type: "invalid_step", message: "scrollUntilVisible requires text selector")
+        }
+        let started = Date()
+        let runtime = try await resolveRuntime(plan: plan, context: context)
+        let maxScrolls = step.maxScrolls ?? 5
+        let geometryData = try await runtime.client.request(type: "geometry")
+        let geometry = try JSONDecoder().decode(TKGeometryResponse.self, from: geometryData)
+        var observations: [TKTestRunObservationOutcome] = []
+        let command = [
+            "triton", "wait", selector.text,
+            "--source", selector.source,
+            "--match", selector.match,
+            "--json",
+        ]
+        for attempt in 0...maxScrolls {
+            let observation = try await captureObservation(
+                step: step,
+                phase: attempt == 0 ? "before" : "after",
+                runtime: runtime,
+                context: context,
+                screenshotPath: "debug/\(step.id)-scroll-\(attempt).png",
+                metadataPath: "debug/\(step.id)-scroll-\(attempt)-screenshot.json",
+                axPath: "debug/\(step.id)-scroll-\(attempt)-ax.json",
+                hierarchyPath: "debug/\(step.id)-scroll-\(attempt)-hierarchy.json"
+            )
+            observations.append(observation)
+            if observation.screenCandidate.visibleTexts.contains(selector.text) {
+                return .passed(
+                    command: command,
+                    durationMs: testRunElapsedMilliseconds(since: started),
+                    observations: observations,
+                    assertion: TKTestRunAssertionOutcome(
+                        status: .passed,
+                        selector: TKTestRunSelector(text: TKTestRunTextSelector(value: selector.text, match: selector.match, source: selector.source))
+                    )
+                )
+            }
+            guard attempt < maxScrolls else { break }
+            let swipe = makeScrollInput(direction: step.direction ?? "down", geometry: geometry)
+            let inputResult = try await executeInputRequest(swipe, client: runtime.client)
+            guard inputResult.ok else {
+                return .failed(
+                    command: command,
+                    durationMs: testRunElapsedMilliseconds(since: started),
+                    failure: TKTestRunFailure(
+                        type: "scroll_until_visible_failed",
+                        message: inputResult.message ?? inputResult.error?.message ?? "Runtime scroll command failed"
+                    ),
+                    observations: observations
+                )
+            }
+            try? await Task.sleep(nanoseconds: 150_000_000)
+        }
+        let runSelector = TKTestRunSelector(text: TKTestRunTextSelector(value: selector.text, match: selector.match, source: selector.source))
+        return .failed(
+            command: command,
+            durationMs: testRunElapsedMilliseconds(since: started),
+            failure: TKTestRunFailure(
+                type: "scroll_until_visible_failed",
+                message: "AX exact text not visible after \(maxScrolls) scrolls: \(selector.text)",
+                selector: runSelector,
+                artifactRefs: observations.flatMap(\.evidenceArtifacts).map { testRunEventRef(for: $0.path) }
+            ),
+            assertion: TKTestRunAssertionOutcome(status: .failed, selector: runSelector),
+            observations: observations
+        )
+    }
+
+    private func makeScrollInput(direction: String, geometry: TKGeometryResponse) -> TKInputRequest {
+        let width = max(1, geometry.bounds.width)
+        let height = max(1, geometry.bounds.height)
+        switch direction {
+        case "up":
+            return .swipe(startX: width * 0.5, startY: height * 0.35, endX: width * 0.5, endY: height * 0.75)
+        case "left":
+            return .swipe(startX: width * 0.35, startY: height * 0.5, endX: width * 0.75, endY: height * 0.5)
+        case "right":
+            return .swipe(startX: width * 0.75, startY: height * 0.5, endX: width * 0.35, endY: height * 0.5)
+        default:
+            return .swipe(startX: width * 0.5, startY: height * 0.75, endX: width * 0.5, endY: height * 0.35)
+        }
     }
 
     private func resolveRuntime(
@@ -909,6 +1562,53 @@ private func testRunSHA256(_ data: Data) -> String {
 
 private func testRunArtifactKey(_ artifact: TKEvidenceArtifact) -> String {
     "\(artifact.kind)\u{0}\(artifact.path)"
+}
+
+private func testRunVLMArtifacts(
+    from grounding: TKVLMGroundResponse,
+    evidenceDirectory: URL,
+    target: String
+) -> [TKEvidenceArtifact] {
+    [
+        TKEvidenceArtifact(
+            kind: "vlm.overlay",
+            path: testRunRelativePath(grounding.artifacts.overlay, evidenceDirectory: evidenceDirectory),
+            contentType: "image/png",
+            bytes: testRunFileSize(grounding.artifacts.overlay),
+            target: target
+        ),
+        TKEvidenceArtifact(
+            kind: "vlm.request",
+            path: testRunRelativePath(grounding.artifacts.request, evidenceDirectory: evidenceDirectory),
+            contentType: "application/json",
+            bytes: testRunFileSize(grounding.artifacts.request),
+            target: target
+        ),
+        TKEvidenceArtifact(
+            kind: "vlm.response",
+            path: testRunRelativePath(grounding.artifacts.response, evidenceDirectory: evidenceDirectory),
+            contentType: "application/json",
+            bytes: testRunFileSize(grounding.artifacts.response),
+            target: target
+        ),
+    ]
+}
+
+private func testRunRelativePath(_ path: String, evidenceDirectory: URL) -> String {
+    let evidencePath = evidenceDirectory.standardizedFileURL.path
+    let artifactPath = URL(fileURLWithPath: path).standardizedFileURL.path
+    guard artifactPath.hasPrefix(evidencePath + "/") else {
+        return path
+    }
+    return String(artifactPath.dropFirst(evidencePath.count + 1))
+}
+
+private func testRunFileSize(_ path: String) -> Int? {
+    guard let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+          let size = attributes[.size] as? NSNumber else {
+        return nil
+    }
+    return size.intValue
 }
 
 private extension TKTestRunObservationOutcome {

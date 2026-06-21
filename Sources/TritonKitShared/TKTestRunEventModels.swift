@@ -80,6 +80,7 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
     public static let artifactCreated = Self(rawValue: "artifact.created")
     public static let assertionResult = Self(rawValue: "assertion.result")
     public static let observationCaptured = Self(rawValue: "observation.captured")
+    public static let vlmGrounding = Self(rawValue: "vlm.grounding")
     public static let stepFinished = Self(rawValue: "step.finished")
     public static let runFinished = Self(rawValue: "run.finished")
     public static let failureRecorded = Self(rawValue: "failure.recorded")
@@ -95,6 +96,7 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
         "artifact.created",
         "assertion.result",
         "observation.captured",
+        "vlm.grounding",
         "step.finished",
         "run.finished",
         "failure.recorded",
@@ -207,6 +209,7 @@ public struct TKTestRunEvent: Codable, Equatable, Sendable {
     public let artifacts: TKTestRunObservationArtifacts?
     public let screenCandidate: TKTestRunScreenCandidate?
     public let changed: Bool?
+    public let vlmGrounding: TKVLMGroundResponse?
 
     public init(
         schemaVersion: Int = 1,
@@ -228,7 +231,8 @@ public struct TKTestRunEvent: Codable, Equatable, Sendable {
         phase: String? = nil,
         artifacts: TKTestRunObservationArtifacts? = nil,
         screenCandidate: TKTestRunScreenCandidate? = nil,
-        changed: Bool? = nil
+        changed: Bool? = nil,
+        vlmGrounding: TKVLMGroundResponse? = nil
     ) {
         self.schemaVersion = schemaVersion
         self.type = type
@@ -250,6 +254,7 @@ public struct TKTestRunEvent: Codable, Equatable, Sendable {
         self.artifacts = artifacts
         self.screenCandidate = screenCandidate
         self.changed = changed
+        self.vlmGrounding = vlmGrounding
     }
 
     enum CodingKeys: String, CodingKey {
@@ -273,6 +278,7 @@ public struct TKTestRunEvent: Codable, Equatable, Sendable {
         case artifacts
         case screenCandidate
         case changed
+        case vlmGrounding
     }
 
     public static func runStarted(runID: String, timestamp: String) -> Self {
@@ -371,6 +377,21 @@ public struct TKTestRunEvent: Codable, Equatable, Sendable {
             artifacts: artifacts,
             screenCandidate: screenCandidate,
             changed: changed
+        )
+    }
+
+    public static func vlmGrounding(
+        runID: String,
+        stepIndex: Int,
+        grounding: TKVLMGroundResponse,
+        timestamp: String
+    ) -> Self {
+        Self(
+            type: .vlmGrounding,
+            runID: runID,
+            timestamp: timestamp,
+            stepIndex: stepIndex,
+            vlmGrounding: grounding
         )
     }
 
@@ -582,6 +603,11 @@ public struct TKTestRunEventLogParser: Sendable {
             try requireNonEmpty(screenCandidate.screenshotSha256, "screenCandidate.screenshotSha256", lineNumber)
             try requireNonEmpty(screenCandidate.axTextHash, "screenCandidate.axTextHash", lineNumber)
             try requireNonEmpty(screenCandidate.hierarchySha256, "screenCandidate.hierarchySha256", lineNumber)
+        case .vlmGrounding:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            let grounding = try require(event.vlmGrounding, "vlmGrounding", lineNumber)
+            try requireNonEmpty(grounding.provider, "vlmGrounding.provider", lineNumber)
+            try requireNonEmpty(grounding.target, "vlmGrounding.target", lineNumber)
         case .stepFinished:
             try require(event.stepIndex, "stepIndex", lineNumber)
             try require(event.stepID, "stepId", lineNumber)

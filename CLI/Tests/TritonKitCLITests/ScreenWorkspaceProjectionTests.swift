@@ -142,6 +142,24 @@ struct ScreenWorkspaceProjectionFixture {
         ])
     }
 
+    func writeVLMPassEvidence() throws {
+        try writeManifest(status: .completed, verdict: .success, eventCount: 11, observationCount: 3)
+        try writeNormalizedPlan(includeTap: true)
+        try writeEvents([
+            .runStarted(runID: runID, timestamp: "2026-06-20T00:00:00Z"),
+            .stepStarted(runID: runID, stepIndex: 1, stepID: "step-001", stepType: "takeScreenshot", timestamp: "2026-06-20T00:00:01Z"),
+            observation(stepIndex: 1, phase: "after", text: "Fixture Login"),
+            .stepFinished(runID: runID, stepIndex: 1, stepID: "step-001", status: .passed, durationMs: 10, timestamp: "2026-06-20T00:00:02Z"),
+            .stepStarted(runID: runID, stepIndex: 2, stepID: "step-002", stepType: "tap", timestamp: "2026-06-20T00:00:03Z"),
+            .commandExecuted(runID: runID, stepIndex: 2, command: ["triton", "test", "run", "tap", "--target", "Go Home button", "--grounding", "vlm", "--provider", "mock", "--json"], status: .passed, exitCode: 0, durationMs: 5, timestamp: "2026-06-20T00:00:04Z"),
+            observation(stepIndex: 2, phase: "before", text: "Fixture Login"),
+            .vlmGrounding(runID: runID, stepIndex: 2, grounding: vlmGrounding(), timestamp: "2026-06-20T00:00:04Z"),
+            observation(stepIndex: 2, phase: "after", text: "Fixture Home", changed: true),
+            .stepFinished(runID: runID, stepIndex: 2, stepID: "step-002", status: .passed, durationMs: 20, timestamp: "2026-06-20T00:00:05Z"),
+            .runFinished(runID: runID, status: .passed, durationMs: 30, timestamp: "2026-06-20T00:00:06Z"),
+        ])
+    }
+
     func writeFailureEvidence() throws {
         try writeManifest(status: .completed, verdict: .failure, eventCount: 5, observationCount: 1)
         try writeNormalizedPlan(includeTap: false)
@@ -244,6 +262,37 @@ struct ScreenWorkspaceProjectionFixture {
             ),
             changed: changed,
             timestamp: "2026-06-20T00:00:04Z"
+        )
+    }
+
+    private func vlmGrounding() -> TKVLMGroundResponse {
+        TKVLMGroundResponse(
+            provider: "mock",
+            target: "Go Home button",
+            image: TKVLMGroundImage(path: "debug/step-002-before.png", width: 402, height: 874, sha256: "image-sha"),
+            coordinateContract: TKVLMGroundCoordinateContractRef(path: "coordinate-contract.json", canonicalTapSpace: "runtime-point"),
+            point: TKVLMGroundPoint(
+                normalized: TKVLMNormalizedPoint(x: 500, y: 331.2356979405034),
+                runtimePoint: TKVLMRuntimePoint(x: 201, y: 289.5),
+                coordinateSpace: "runtime-point"
+            ),
+            transform: TKVLMCoordinateTransform(
+                inputSpace: "normalized_0_1000",
+                imageSpace: "image-pixel",
+                outputSpace: "runtime-point",
+                imageWidth: 402,
+                imageHeight: 874,
+                runtimeWidth: 402,
+                runtimeHeight: 874,
+                scale: 3,
+                orientation: "portrait",
+                source: "coordinate-contract.json"
+            ),
+            artifacts: TKVLMGroundArtifacts(
+                overlay: "debug/step-002-vlm/vlm-overlay.png",
+                request: "debug/step-002-vlm/vlm-request.redacted.json",
+                response: "debug/step-002-vlm/vlm-response.json"
+            )
         )
     }
 }

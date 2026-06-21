@@ -15,6 +15,7 @@ func commandSchemas() -> [TKCommandSchema] {
         + xcodeCommandSchemas()
         + buildCommandSchemas()
         + mapCommandSchemas()
+        + vlmCommandSchemas()
         + runtimeCommandSchemas()
         + hostCommandSchemas()
         + observationCommandSchemas()

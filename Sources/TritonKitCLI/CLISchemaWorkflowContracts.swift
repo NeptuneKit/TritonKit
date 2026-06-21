@@ -345,6 +345,29 @@ func appMapSuiteInspectOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func appMapSuiteRunOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "app-map.suite-run",
+        format: "json",
+        kind: "app-map-suite-run-result",
+        model: "TKAppMapSuiteRunResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether all suite paths passed"),
+            ("schemaVersion", "Int", true, "Response schema version"),
+            ("kind", "String", true, "Stable kind; triton.app-map.suite-run-result"),
+            ("mapDir", "String", true, "Input .tritonmap directory"),
+            ("suiteId", "String", true, "Executed suite id"),
+            ("evidenceRoot", "String", true, "Directory containing exported flows and .tritonevidence bundles"),
+            ("status", "String", true, "passed or failed"),
+            ("pathCount", "Int", true, "Executed path count"),
+            ("passedCount", "Int", true, "Passing path count"),
+            ("failedCount", "Int", true, "Failing path count"),
+            ("stoppedOnFailure", "Bool", true, "Whether suite policy stopped execution after a failure"),
+            ("results", "[TKAppMapSuiteRunPathResult]", true, "Per-path run results"),
+        ])
+    )
+}
+
 func appMapExportFlowOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "app-map.export-flow",

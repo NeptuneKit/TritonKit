@@ -173,13 +173,17 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["artifact_write_failed", "file_write_failed", "artifact_output_rejected"].contains(failureCode) {
             categories.append("archive")
         }
-        if failureCode == "app_map_error" {
+        if failureCode == "app_map_error" || failureCode == "unconfirmed_path" || failureCode == "non_replayable_path" {
             categories.append(contentsOf: ["archive", "plan"])
+        }
+        if failureCode.hasPrefix("ai_") {
+            categories.append(contentsOf: ["archive", "diagnose", "plan"])
         }
         return categories
     }
 
     private static let recoveryCommandRootCategoryMap: [String: String] = [
+        "action": "act",
         "app": "prepare-target",
         "assert": "verify",
         "attrs": "observe",
@@ -229,6 +233,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "target": "prepare-target",
         "test": "diagnose",
         "type": "act",
+        "vlm": "archive",
         "wait": "verify",
         "web": "observe",
         "webview": "observe",

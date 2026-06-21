@@ -112,6 +112,121 @@ struct Serve: AsyncParsableCommand {
             return jsonResponse(WebDeviceTargetsResponse(targets: webDeviceTargets(runtimeTargets: runtimeTargets, hostTargets: hostTargets)))
         }
 
+        router.get("/v1/app-map/inspect") { request, _ -> Response in
+            guard let map = queryParameter("map", from: request) else {
+                return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/inspect")
+            }
+            do {
+                return jsonResponse(try inspectTritonAppMap(mapPath: map))
+            } catch {
+                return jsonError(detail: appMapHTTPErrorDetail(error, endpoint: "/v1/app-map/inspect"), status: .conflict)
+            }
+        }
+
+        router.get("/v1/app-map/paths") { request, _ -> Response in
+            guard let map = queryParameter("map", from: request) else {
+                return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/paths")
+            }
+            do {
+                return jsonResponse(try listTritonAppMapPaths(mapPath: map))
+            } catch {
+                return jsonError(detail: appMapHTTPErrorDetail(error, endpoint: "/v1/app-map/paths"), status: .conflict)
+            }
+        }
+
+        router.get("/v1/app-map/screens") { request, _ -> Response in
+            guard let map = queryParameter("map", from: request) else {
+                return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/screens")
+            }
+            do {
+                return jsonResponse(try listTritonAppMapScreens(mapPath: map))
+            } catch {
+                return jsonError(detail: appMapHTTPErrorDetail(error, endpoint: "/v1/app-map/screens"), status: .conflict)
+            }
+        }
+
+        router.get("/v1/app-map/transitions") { request, _ -> Response in
+            guard let map = queryParameter("map", from: request) else {
+                return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/transitions")
+            }
+            do {
+                return jsonResponse(try listTritonAppMapTransitions(mapPath: map))
+            } catch {
+                return jsonError(detail: appMapHTTPErrorDetail(error, endpoint: "/v1/app-map/transitions"), status: .conflict)
+            }
+        }
+
+        router.get("/v1/app-map/path") { request, _ -> Response in
+            guard let map = queryParameter("map", from: request) else {
+                return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/path")
+            }
+            guard let path = queryParameter("path", from: request) else {
+                return missingAppMapHTTPParameter("path", endpoint: "/v1/app-map/path")
+            }
+            do {
+                return jsonResponse(try showTritonAppMapPath(mapPath: map, pathID: path))
+            } catch {
+                return jsonError(detail: appMapHTTPErrorDetail(error, endpoint: "/v1/app-map/path"), status: .conflict)
+            }
+        }
+
+        router.get("/v1/app-map/health") { request, _ -> Response in
+            guard let map = queryParameter("map", from: request) else {
+                return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/health")
+            }
+            do {
+                return jsonResponse(try inspectTritonAppMapHealth(mapPath: map))
+            } catch {
+                return jsonError(detail: appMapHTTPErrorDetail(error, endpoint: "/v1/app-map/health"), status: .conflict)
+            }
+        }
+
+        router.get("/v1/app-map/suite") { request, _ -> Response in
+            guard let map = queryParameter("map", from: request) else {
+                return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/suite")
+            }
+            let suite = queryParameter("suite", from: request) ?? "smoke"
+            do {
+                return jsonResponse(try inspectTritonAppMapSuite(mapPath: map, suiteID: suite))
+            } catch {
+                return jsonError(detail: appMapHTTPErrorDetail(error, endpoint: "/v1/app-map/suite"), status: .conflict)
+            }
+        }
+
+        router.post("/v1/app-map/suite/run") { request, _ -> Response in
+            let bodyData = try await requestBodyData(from: request)
+            guard let body = try? JSONDecoder().decode(TKAppMapSuiteRunHTTPRequest.self, from: bodyData),
+                  !body.map.isEmpty,
+                  !body.evidenceRoot.isEmpty else {
+                return jsonError(
+                    code: "invalid_payload",
+                    message: "Unsupported app map suite run payload",
+                    endpoint: "/v1/app-map/suite/run",
+                    hint: "Send JSON with map and evidenceRoot fields; suite defaults to smoke.",
+                    status: .badRequest
+                )
+            }
+            do {
+                let response = try await runTritonAppMapSuite(
+                    mapPath: body.map,
+                    suiteID: body.suite ?? "smoke",
+                    evidenceRoot: body.evidenceRoot,
+                    target: body.target ?? TKLocalTargetID,
+                    host: body.host ?? host,
+                    port: body.port ?? port,
+                    allowVLM: body.allowVLM ?? false,
+                    allowRemoteVLM: body.allowRemoteVLM ?? false,
+                    vlmBaseURL: body.vlmBaseURL,
+                    vlmModel: body.vlmModel,
+                    vlmAPIKeyEnv: body.vlmAPIKeyEnv,
+                    executor: TKLiveTestRunPrimitiveExecutor()
+                )
+                return jsonResponse(response, status: response.ok ? .ok : .conflict)
+            } catch {
+                return jsonError(detail: appMapHTTPErrorDetail(error, endpoint: "/v1/app-map/suite/run"), status: .conflict)
+            }
+        }
+
         router.get("/web/geometry") { request, _ -> Response in
             if let target = queryTarget(from: request), parseWebHostTargetID(target) != nil {
                 do {
@@ -616,6 +731,51 @@ struct Serve: AsyncParsableCommand {
 
 private func queryTarget(from request: Request) -> String? {
     request.uri.queryParameters["target"].map(String.init)
+}
+
+private struct TKAppMapSuiteRunHTTPRequest: Decodable {
+    let map: String
+    let suite: String?
+    let evidenceRoot: String
+    let target: String?
+    let host: String?
+    let port: Int?
+    let allowVLM: Bool?
+    let allowRemoteVLM: Bool?
+    let vlmBaseURL: String?
+    let vlmModel: String?
+    let vlmAPIKeyEnv: String?
+}
+
+private func queryParameter(_ name: String, from request: Request) -> String? {
+    request.uri.queryParameters[Substring(name)].map(String.init)?.removingPercentEncoding
+}
+
+private func requestBodyData(from request: Request) async throws -> Data {
+    var bodyData = Data()
+    for try await chunk in request.body {
+        bodyData.append(Data(buffer: chunk))
+    }
+    return bodyData
+}
+
+private func missingAppMapHTTPParameter(_ name: String, endpoint: String) -> Response {
+    jsonError(
+        code: "invalid_payload",
+        message: "Missing required query parameter: \(name)",
+        endpoint: endpoint,
+        hint: "Pass \(name)=... in the query string.",
+        status: .badRequest
+    )
+}
+
+private func appMapHTTPErrorDetail(_ error: Error, endpoint: String) -> TKCLIErrorDetail {
+    TKCLIErrorDetail(
+        code: appMapFailureCode(error),
+        message: "\(error)",
+        endpoint: endpoint,
+        hint: "Run `triton schema --command map --json` to inspect App Map commands"
+    )
 }
 
 // MARK: - Client Commands

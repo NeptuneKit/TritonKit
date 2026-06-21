@@ -16,6 +16,7 @@ struct AppMap: AsyncParsableCommand {
             Health.self,
             Suite.self,
             ExportFlow.self,
+            Viewer.self,
         ]
     )
 
@@ -114,8 +115,8 @@ struct AppMap: AsyncParsableCommand {
     struct Path: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "path",
-            abstract: "Inspect one App Map path",
-            subcommands: [Show.self]
+            abstract: "Inspect and manage App Map paths",
+            subcommands: [Show.self, Confirm.self, Unconfirm.self]
         )
 
         struct Show: AsyncParsableCommand {
@@ -131,6 +132,44 @@ struct AppMap: AsyncParsableCommand {
                 do {
                     let response = try showTritonAppMapPath(mapPath: map, pathID: path)
                     try printAppMapPathShow(response, format: outputFormat)
+                } catch {
+                    try failAppMap(error, outputFormat: outputFormat)
+                }
+            }
+        }
+
+        struct Confirm: AsyncParsableCommand {
+            static let configuration = CommandConfiguration(abstract: "Confirm one path for suite eligibility")
+
+            @Argument(help: "Input .tritonmap directory") var map: String
+            @Option(help: "Path id to confirm") var path: String
+            @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+            @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+            func run() async throws {
+                let outputFormat = effectiveFormat(format, json: json)
+                do {
+                    let response = try setTritonAppMapPathConfirmation(mapPath: map, pathID: path, confirmed: true)
+                    try printAppMapPathMutation(response, format: outputFormat)
+                } catch {
+                    try failAppMap(error, outputFormat: outputFormat)
+                }
+            }
+        }
+
+        struct Unconfirm: AsyncParsableCommand {
+            static let configuration = CommandConfiguration(abstract: "Unconfirm one path and remove it from suites")
+
+            @Argument(help: "Input .tritonmap directory") var map: String
+            @Option(help: "Path id to unconfirm") var path: String
+            @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+            @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+            func run() async throws {
+                let outputFormat = effectiveFormat(format, json: json)
+                do {
+                    let response = try setTritonAppMapPathConfirmation(mapPath: map, pathID: path, confirmed: false)
+                    try printAppMapPathMutation(response, format: outputFormat)
                 } catch {
                     try failAppMap(error, outputFormat: outputFormat)
                 }
@@ -160,7 +199,7 @@ struct AppMap: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "suite",
             abstract: "Inspect App Map suites",
-            subcommands: [Inspect.self]
+            subcommands: [Inspect.self, AddPath.self, RemovePath.self, Run.self]
         )
 
         struct Inspect: AsyncParsableCommand {
@@ -177,6 +216,91 @@ struct AppMap: AsyncParsableCommand {
                     let response = try inspectTritonAppMapSuite(mapPath: map, suiteID: suite)
                     try printAppMapSuiteInspect(response, format: outputFormat)
                 } catch {
+                    try failAppMap(error, outputFormat: outputFormat)
+                }
+            }
+        }
+
+        struct AddPath: AsyncParsableCommand {
+            static let configuration = CommandConfiguration(commandName: "add-path", abstract: "Add a confirmed path to a suite")
+
+            @Argument(help: "Input .tritonmap directory") var map: String
+            @Option(help: "Suite id") var suite: String = "smoke"
+            @Option(help: "Path id to add") var path: String
+            @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+            @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+            func run() async throws {
+                let outputFormat = effectiveFormat(format, json: json)
+                do {
+                    let response = try addTritonAppMapSuitePath(mapPath: map, suiteID: suite, pathID: path)
+                    try printAppMapSuiteMutation(response, format: outputFormat)
+                } catch {
+                    try failAppMap(error, outputFormat: outputFormat)
+                }
+            }
+        }
+
+        struct RemovePath: AsyncParsableCommand {
+            static let configuration = CommandConfiguration(commandName: "remove-path", abstract: "Remove a path from a suite")
+
+            @Argument(help: "Input .tritonmap directory") var map: String
+            @Option(help: "Suite id") var suite: String = "smoke"
+            @Option(help: "Path id to remove") var path: String
+            @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+            @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+            func run() async throws {
+                let outputFormat = effectiveFormat(format, json: json)
+                do {
+                    let response = try removeTritonAppMapSuitePath(mapPath: map, suiteID: suite, pathID: path)
+                    try printAppMapSuiteMutation(response, format: outputFormat)
+                } catch {
+                    try failAppMap(error, outputFormat: outputFormat)
+                }
+            }
+        }
+
+        struct Run: AsyncParsableCommand {
+            static let configuration = CommandConfiguration(commandName: "run", abstract: "Run all paths in a suite and merge evidence back into the map")
+
+            @Argument(help: "Input .tritonmap directory") var map: String
+            @Option(help: "Suite id") var suite: String = "smoke"
+            @Option(name: .customLong("evidence-root"), help: "Directory where suite run flows and .tritonevidence bundles are written") var evidenceRoot: String
+            @Option(help: "Runtime target id. Defaults to local target resolution.") var target: String = TKLocalTargetID
+            @Option(help: "Triton HTTP host") var host: String = "127.0.0.1"
+            @Option(help: "Triton HTTP port") var port: Int = 19421
+            @Flag(name: .customLong("allow-vlm"), help: "Allow experimental VLM-assisted test steps") var allowVLM = false
+            @Flag(name: .customLong("allow-remote-vlm"), help: "Allow remote VLM provider calls that may send screenshots off-host") var allowRemoteVLM = false
+            @Option(name: .customLong("vlm-base-url"), help: "OpenAI-compatible VLM base URL for VLM-assisted steps") var vlmBaseURL: String?
+            @Option(name: .customLong("vlm-model"), help: "OpenAI-compatible VLM model for VLM-assisted steps") var vlmModel: String?
+            @Option(name: .customLong("vlm-api-key-env"), help: "Environment variable containing VLM API key") var vlmAPIKeyEnv: String?
+            @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+            @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+            func run() async throws {
+                let outputFormat = effectiveFormat(format, json: json)
+                do {
+                    let response = try await runTritonAppMapSuite(
+                        mapPath: map,
+                        suiteID: suite,
+                        evidenceRoot: evidenceRoot,
+                        target: target,
+                        host: host,
+                        port: port,
+                        allowVLM: allowVLM,
+                        allowRemoteVLM: allowRemoteVLM,
+                        vlmBaseURL: vlmBaseURL,
+                        vlmModel: vlmModel,
+                        vlmAPIKeyEnv: vlmAPIKeyEnv,
+                        executor: TKLiveTestRunPrimitiveExecutor()
+                    )
+                    try printAppMapSuiteRun(response, format: outputFormat)
+                    if !response.ok {
+                        throw ExitCode.failure
+                    }
+                } catch {
+                    if error is ExitCode { throw error }
                     try failAppMap(error, outputFormat: outputFormat)
                 }
             }
@@ -202,14 +326,34 @@ struct AppMap: AsyncParsableCommand {
             }
         }
     }
+
+    struct Viewer: AsyncParsableCommand {
+        static let configuration = CommandConfiguration(commandName: "viewer", abstract: "Export a static HTML viewer for a .tritonmap directory")
+
+        @Argument(help: "Input .tritonmap directory") var map: String
+        @Option(help: "Output HTML file") var output: String
+        @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+        @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+        func run() async throws {
+            let outputFormat = effectiveFormat(format, json: json)
+            do {
+                let response = try exportTritonAppMapViewer(mapPath: map, output: output)
+                try printAppMapViewer(response, format: outputFormat)
+            } catch {
+                try failAppMap(error, outputFormat: outputFormat)
+            }
+        }
+    }
 }
 
 func failAppMap(_ error: Error, outputFormat: ClientOutputFormat) throws -> Never {
     let message = "\(error)"
+    let code = appMapFailureCode(error)
     switch outputFormat {
     case .json:
         let response = TKCLIErrorResponse(error: TKCLIErrorDetail(
-            code: "app_map_error",
+            code: code,
             message: message,
             hint: "Run `triton schema --command map --json` to inspect App Map commands"
         ))
@@ -218,6 +362,17 @@ func failAppMap(_ error: Error, outputFormat: ClientOutputFormat) throws -> Neve
         fputs("error: \(message)\n", stderr)
     }
     throw ExitCode.failure
+}
+
+func appMapFailureCode(_ error: Error) -> String {
+    switch error {
+    case TKAppMapError.unconfirmedPath(_):
+        return "unconfirmed_path"
+    case TKAppMapError.nonReplayablePath(_):
+        return "non_replayable_path"
+    default:
+        return "app_map_error"
+    }
 }
 
 func printAppMapMerge(_ response: TKAppMapMergeResponse, format: ClientOutputFormat) throws {
@@ -295,6 +450,17 @@ func printAppMapPathShow(_ response: TKAppMapPathShowResponse, format: ClientOut
     }
 }
 
+func printAppMapPathMutation(_ response: TKAppMapPathMutationResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(response))
+    case .text:
+        print("ok: \(response.ok)")
+        print("path: \(response.path.pathID)")
+        print("confirmed: \(response.path.confirmed)")
+    }
+}
+
 func printAppMapHealth(_ response: TKAppMapHealthResponse, format: ClientOutputFormat) throws {
     switch format {
     case .json:
@@ -320,6 +486,32 @@ func printAppMapSuiteInspect(_ response: TKAppMapSuiteInspectResponse, format: C
     }
 }
 
+func printAppMapSuiteMutation(_ response: TKAppMapSuiteMutationResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(response))
+    case .text:
+        print("ok: \(response.ok)")
+        print("suite: \(response.suite.suiteID)")
+        print("paths: \(response.paths.count)")
+    }
+}
+
+func printAppMapSuiteRun(_ response: TKAppMapSuiteRunResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(response))
+    case .text:
+        print("ok: \(response.ok)")
+        print("suite: \(response.suiteID)")
+        print("status: \(response.status)")
+        print("paths: \(response.pathCount)")
+        print("passed: \(response.passedCount)")
+        print("failed: \(response.failedCount)")
+        print("evidenceRoot: \(response.evidenceRoot)")
+    }
+}
+
 func printAppMapExportFlow(_ response: TKAppMapExportFlowResponse, format: ClientOutputFormat) throws {
     switch format {
     case .json:
@@ -328,5 +520,18 @@ func printAppMapExportFlow(_ response: TKAppMapExportFlowResponse, format: Clien
         print("ok: \(response.ok)")
         print("output: \(response.output)")
         print("steps: \(response.stepCount)")
+    }
+}
+
+func printAppMapViewer(_ response: TKAppMapViewerResponse, format: ClientOutputFormat) throws {
+    switch format {
+    case .json:
+        print(try encodeJSON(response))
+    case .text:
+        print("ok: \(response.ok)")
+        print("output: \(response.output)")
+        print("screens: \(response.screenCount)")
+        print("transitions: \(response.transitionCount)")
+        print("paths: \(response.pathCount)")
     }
 }

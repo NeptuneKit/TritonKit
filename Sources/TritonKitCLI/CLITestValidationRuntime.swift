@@ -1,7 +1,22 @@
 import Foundation
 import Yams
 
-let tritonTestSupportedSteps = ["launch", "takeScreenshot", "tap", "assertVisible"]
+let tritonTestSupportedSteps = [
+    "launch",
+    "stop",
+    "takeScreenshot",
+    "tap",
+    "input",
+    "press",
+    "swipe",
+    "assertVisible",
+    "assertNotVisible",
+    "scrollUntilVisible",
+    "assertWithAI",
+    "assertNoDefectsWithAI",
+    "extractTextWithAI",
+    "assertScreenshot",
+]
 
 func validateTritonTestContract(yaml: String, inputPath: String) throws -> TKTestNormalizedPlan {
     let parsed: Any?
@@ -27,7 +42,7 @@ func validateTritonTestContract(yaml: String, inputPath: String) throws -> TKTes
     guard version == 1 else {
         throw testValidationFailure(
             code: "unsupported_schema_version",
-            message: "Only .tritontest.yaml version 1 is supported in P0B.",
+            message: "Only .tritontest.yaml version 1 is supported.",
             path: "$.version",
             allowed: ["1"]
         )
@@ -198,7 +213,7 @@ private func parseTestStep(
     guard tritonTestSupportedSteps.contains(stepType) else {
         throw testValidationFailure(
             code: "unsupported_step",
-            message: "\(stepType) is not supported by the P0B validate-only contract.",
+            message: "\(stepType) is not supported by the test contract.",
             path: "\(path).\(stepType)",
             allowed: tritonTestSupportedSteps
         )
@@ -213,26 +228,79 @@ private func parseTestStep(
         )
     }
 
-    let optional = try parseStepOptional(step["optional"], path: "\(path).optional")
+    let optional = try parseStepOptional(step["optional"], path: "\(path).optional", defaultValue: defaultOptional(for: stepType))
     let timeoutMs = try parseStepTimeout(step["timeoutMs"], path: "\(path).timeoutMs")
 
     switch stepType {
     case "launch":
         _ = try mappingPayload(step[stepType], path: "\(path).launch")
         return TKTestPlanStep(index: index, id: id, kind: "action", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil)
+    case "stop":
+        _ = try mappingPayload(step[stepType], path: "\(path).stop")
+        return TKTestPlanStep(index: index, id: id, kind: "action", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil)
     case "takeScreenshot":
         _ = try mappingPayload(step[stepType], path: "\(path).takeScreenshot")
         return TKTestPlanStep(index: index, id: id, kind: "observation", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil)
     case "tap":
-        let point = try parseTapPayload(step[stepType], path: "\(path).tap")
-        return TKTestPlanStep(index: index, id: id, kind: "action", type: stepType, optional: optional, timeoutMs: timeoutMs, point: point, selector: nil)
+        let payload = try parseTapPayload(step[stepType], path: "\(path).tap")
+        return TKTestPlanStep(
+            index: index,
+            id: id,
+            kind: "action",
+            type: stepType,
+            optional: optional,
+            timeoutMs: timeoutMs,
+            point: payload.point,
+            selector: payload.selector,
+            target: payload.target,
+            grounding: payload.grounding,
+            provider: payload.provider
+        )
+    case "input":
+        let text = try parseInputPayload(step[stepType], path: "\(path).input")
+        return TKTestPlanStep(index: index, id: id, kind: "action", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil, text: text)
+    case "press":
+        let button = try parsePressPayload(step[stepType], path: "\(path).press")
+        return TKTestPlanStep(index: index, id: id, kind: "action", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil, button: button)
+    case "swipe":
+        let points = try parseSwipePayload(step[stepType], path: "\(path).swipe")
+        return TKTestPlanStep(index: index, id: id, kind: "action", type: stepType, optional: optional, timeoutMs: timeoutMs, point: points.from, endPoint: points.to, selector: nil)
     case "assertVisible":
         let selector = try parseAssertVisiblePayload(step[stepType], path: "\(path).assertVisible")
         return TKTestPlanStep(index: index, id: id, kind: "assertion", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: selector)
+    case "assertNotVisible":
+        let selector = try parseTextAssertionPayload(step[stepType], path: "\(path).assertNotVisible", stepType: "assertNotVisible")
+        return TKTestPlanStep(index: index, id: id, kind: "assertion", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: selector)
+    case "scrollUntilVisible":
+        let payload = try parseScrollUntilVisiblePayload(step[stepType], path: "\(path).scrollUntilVisible")
+        return TKTestPlanStep(
+            index: index,
+            id: id,
+            kind: "action",
+            type: stepType,
+            optional: optional,
+            timeoutMs: timeoutMs,
+            point: nil,
+            selector: payload.selector,
+            direction: payload.direction,
+            maxScrolls: payload.maxScrolls
+        )
+    case "assertWithAI":
+        let payload = try parseAIStepPayload(step[stepType], path: "\(path).assertWithAI", requiresPrompt: true)
+        return TKTestPlanStep(index: index, id: id, kind: "assertion", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil, provider: payload.provider, prompt: payload.prompt)
+    case "assertNoDefectsWithAI":
+        let payload = try parseAIStepPayload(step[stepType], path: "\(path).assertNoDefectsWithAI", requiresPrompt: false)
+        return TKTestPlanStep(index: index, id: id, kind: "assertion", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil, provider: payload.provider, prompt: payload.prompt)
+    case "extractTextWithAI":
+        let payload = try parseAIStepPayload(step[stepType], path: "\(path).extractTextWithAI", requiresPrompt: false)
+        return TKTestPlanStep(index: index, id: id, kind: "observation", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil, provider: payload.provider, prompt: payload.prompt)
+    case "assertScreenshot":
+        let payload = try parseAssertScreenshotPayload(step[stepType], path: "\(path).assertScreenshot")
+        return TKTestPlanStep(index: index, id: id, kind: "assertion", type: stepType, optional: optional, timeoutMs: timeoutMs, point: nil, selector: nil, baseline: payload.baseline, threshold: payload.threshold, cropOn: payload.cropOn)
     default:
         throw testValidationFailure(
             code: "unsupported_step",
-            message: "\(stepType) is not supported by the P0B validate-only contract.",
+            message: "\(stepType) is not supported by the test contract.",
             path: "\(path).\(stepType)",
             allowed: tritonTestSupportedSteps
         )
@@ -246,8 +314,12 @@ private func parseStepID(_ value: Any?, index: Int, path: String) throws -> Stri
     return try requiredNonEmptyString(value, path: path)
 }
 
-private func parseStepOptional(_ value: Any?, path: String) throws -> Bool {
-    guard let value else { return false }
+private func defaultOptional(for stepType: String) -> Bool {
+    ["assertWithAI", "assertNoDefectsWithAI", "extractTextWithAI"].contains(stepType)
+}
+
+private func parseStepOptional(_ value: Any?, path: String, defaultValue: Bool) throws -> Bool {
+    guard let value else { return defaultValue }
     guard let optional = value as? Bool else {
         throw testValidationFailure(
             code: "invalid_optional_type",
@@ -263,38 +335,144 @@ private func parseStepTimeout(_ value: Any?, path: String) throws -> Int? {
     return try positiveInt(value, path: path)
 }
 
-private func parseTapPayload(_ value: Any?, path: String) throws -> TKTestPlanPoint {
+private func parseAIStepPayload(_ value: Any?, path: String, requiresPrompt: Bool) throws -> (provider: String, prompt: String?) {
     let payload = try mappingPayload(value, path: path)
-    guard let rawPoint = payload["point"] else {
-        if let unsupported = payload.keys.sorted().first {
-            throw testValidationFailure(
-                code: "unsupported_selector",
-                message: "tap only supports point selectors in P0B.",
-                path: "\(path).\(unsupported)"
-            )
-        }
+    let prompt: String?
+    if let rawPrompt = payload["prompt"] {
+        prompt = try requiredNonEmptyString(rawPrompt, path: "\(path).prompt")
+    } else if requiresPrompt {
         throw testValidationFailure(
             code: "missing_required_field",
-            message: "tap.point is required.",
-            path: "\(path).point"
+            message: "\(path).prompt is required.",
+            path: "\(path).prompt"
+        )
+    } else {
+        prompt = nil
+    }
+    let provider = try parseAIProvider(payload["provider"], path: "\(path).provider")
+    return (provider, prompt)
+}
+
+private func parseAssertScreenshotPayload(_ value: Any?, path: String) throws -> (baseline: String, threshold: Double, cropOn: String?) {
+    let payload = try mappingPayload(value, path: path)
+    let baseline = try requiredNonEmptyString(payload["baseline"], path: "\(path).baseline")
+    let threshold = try optionalThreshold(payload["threshold"], path: "\(path).threshold", defaultValue: 0.0)
+    let cropOn = try optionalNonEmptyString(payload["cropOn"], path: "\(path).cropOn")
+    return (baseline, threshold, cropOn)
+}
+
+private func parseAIProvider(_ value: Any?, path: String) throws -> String {
+    guard let value else { return "mock" }
+    let provider = try requiredNonEmptyString(value, path: path)
+    guard provider == "mock" else {
+        throw testValidationFailure(
+            code: "ai_unsupported_provider",
+            message: "P14 AI test steps only support provider=mock.",
+            path: path,
+            allowed: ["mock"]
         )
     }
-    guard let point = rawPoint as? [String: Any] else {
+    return provider
+}
+
+private func parseTapPayload(_ value: Any?, path: String) throws -> (point: TKTestPlanPoint?, selector: TKTestPlanSelector?, target: String?, grounding: String?, provider: String?) {
+    let payload = try mappingPayload(value, path: path)
+    if let rawPoint = payload["point"] {
+        if payload["text"] != nil || payload["target"] != nil || payload["grounding"] != nil || payload["provider"] != nil {
+            throw testValidationFailure(
+                code: "unsupported_selector",
+                message: "tap.point cannot be combined with text selector or VLM target grounding.",
+                path: path
+            )
+        }
+        let point = try parseRuntimePoint(rawPoint, path: "\(path).point", fieldName: "tap.point")
+        return (point, nil, nil, nil, nil)
+    }
+    if payload["text"] != nil {
+        if payload["target"] != nil || payload["grounding"] != nil || payload["provider"] != nil {
+            throw testValidationFailure(
+                code: "unsupported_selector",
+                message: "tap.text cannot be combined with VLM target grounding.",
+                path: path
+            )
+        }
+        let selector = try parseTextAssertionPayload(value, path: path, stepType: "tap")
+        return (nil, selector, nil, nil, nil)
+    }
+    if let rawTarget = payload["target"] {
+        let target = try requiredNonEmptyString(rawTarget, path: "\(path).target")
+        let grounding = try requiredNonEmptyString(payload["grounding"], path: "\(path).grounding")
+        guard grounding == "vlm" else {
+            throw testValidationFailure(
+                code: "unsupported_grounding",
+                message: "tap.target only supports grounding=vlm.",
+                path: "\(path).grounding",
+                allowed: ["vlm"]
+            )
+        }
+        let provider = try requiredNonEmptyString(payload["provider"], path: "\(path).provider")
+        guard ["mock", "openai-compatible"].contains(provider) else {
+            throw testValidationFailure(
+                code: "vlm_unsupported_provider",
+                message: "Unsupported VLM provider \(provider).",
+                path: "\(path).provider",
+                allowed: ["mock", "openai-compatible"]
+            )
+        }
+        return (nil, nil, target, grounding, provider)
+    }
+    if let unsupported = payload.keys.sorted().first {
+        throw testValidationFailure(
+            code: "unsupported_selector",
+            message: "tap only supports point selectors, exact AX text selectors, or explicit VLM target grounding.",
+            path: "\(path).\(unsupported)"
+        )
+    }
+    throw testValidationFailure(
+        code: "missing_required_field",
+        message: "tap.point, tap.text, or tap.target is required.",
+        path: "\(path).point"
+    )
+}
+
+private func parseSwipePayload(_ value: Any?, path: String) throws -> (from: TKTestPlanPoint, to: TKTestPlanPoint) {
+    let payload = try mappingPayload(value, path: path)
+    guard let rawFrom = payload["from"] else {
+        throw testValidationFailure(
+            code: "missing_required_field",
+            message: "swipe.from is required.",
+            path: "\(path).from"
+        )
+    }
+    guard let rawTo = payload["to"] else {
+        throw testValidationFailure(
+            code: "missing_required_field",
+            message: "swipe.to is required.",
+            path: "\(path).to"
+        )
+    }
+    let from = try parseRuntimePoint(rawFrom, path: "\(path).from", fieldName: "swipe.from")
+    let to = try parseRuntimePoint(rawTo, path: "\(path).to", fieldName: "swipe.to")
+    return (from, to)
+}
+
+private func parseRuntimePoint(_ value: Any?, path: String, fieldName: String) throws -> TKTestPlanPoint {
+    guard let point = value as? [String: Any] else {
         throw testValidationFailure(
             code: "invalid_point",
-            message: "tap.point must be a mapping with x, y, and coordinateSpace.",
-            path: "\(path).point"
+            message: "\(fieldName) must be a mapping with x, y, and coordinateSpace.",
+            path: path
         )
     }
 
-    let x = try requiredNonNegativeDouble(point["x"], path: "\(path).point.x")
-    let y = try requiredNonNegativeDouble(point["y"], path: "\(path).point.y")
+    let x = try requiredNonNegativeDouble(point["x"], path: "\(path).x")
+    let y = try requiredNonNegativeDouble(point["y"], path: "\(path).y")
     let coordinateSpace = point["coordinateSpace"] as? String
     guard coordinateSpace == "runtime-point" else {
         throw testValidationFailure(
             code: "unsupported_coordinate_space",
-            message: "tap.point.coordinateSpace must be runtime-point.",
-            path: "\(path).point.coordinateSpace",
+            message: "\(fieldName).coordinateSpace must be runtime-point.",
+            path: "\(path).coordinateSpace",
             allowed: ["runtime-point"]
         )
     }
@@ -302,23 +480,103 @@ private func parseTapPayload(_ value: Any?, path: String) throws -> TKTestPlanPo
 }
 
 private func parseAssertVisiblePayload(_ value: Any?, path: String) throws -> TKTestPlanSelector {
+    try parseTextAssertionPayload(value, path: path, stepType: "assertVisible")
+}
+
+private func parseTextAssertionPayload(_ value: Any?, path: String, stepType: String) throws -> TKTestPlanSelector {
     let payload = try mappingPayload(value, path: path)
     guard let rawText = payload["text"] else {
         if let unsupported = payload.keys.sorted().first {
             throw testValidationFailure(
                 code: "unsupported_selector",
-                message: "assertVisible only supports text selectors in P0B.",
+                message: "\(stepType) only supports text selectors.",
                 path: "\(path).\(unsupported)"
             )
         }
         throw testValidationFailure(
             code: "missing_required_field",
-            message: "assertVisible.text is required.",
+            message: "\(stepType).text is required.",
             path: "\(path).text"
         )
     }
     let text = try requiredNonEmptyString(rawText, path: "\(path).text")
-    return TKTestPlanSelector(text: text, match: "exact", source: "ax")
+    let match = try parseSelectorMatch(payload["match"], path: "\(path).match")
+    let source = try parseSelectorSource(payload["source"], path: "\(path).source")
+    return TKTestPlanSelector(text: text, match: match, source: source)
+}
+
+private func parseInputPayload(_ value: Any?, path: String) throws -> String {
+    let payload = try mappingPayload(value, path: path)
+    guard let rawText = payload["text"] else {
+        throw testValidationFailure(
+            code: "missing_required_field",
+            message: "input.text is required.",
+            path: "\(path).text"
+        )
+    }
+    return try requiredNonEmptyString(rawText, path: "\(path).text")
+}
+
+private func parsePressPayload(_ value: Any?, path: String) throws -> String {
+    let payload = try mappingPayload(value, path: path)
+    let rawButton = payload["button"] ?? payload["key"]
+    guard let rawButton else {
+        throw testValidationFailure(
+            code: "missing_required_field",
+            message: "press.button is required.",
+            path: "\(path).button"
+        )
+    }
+    return try requiredNonEmptyString(rawButton, path: "\(path).button")
+}
+
+private func parseScrollUntilVisiblePayload(_ value: Any?, path: String) throws -> (selector: TKTestPlanSelector, direction: String, maxScrolls: Int) {
+    let payload = try mappingPayload(value, path: path)
+    let selector = try parseTextAssertionPayload(value, path: path, stepType: "scrollUntilVisible")
+    let direction: String
+    if let rawDirection = payload["direction"] {
+        direction = try requiredNonEmptyString(rawDirection, path: "\(path).direction")
+    } else {
+        direction = "down"
+    }
+    guard ["down", "up", "left", "right"].contains(direction) else {
+        throw testValidationFailure(
+            code: "unsupported_direction",
+            message: "scrollUntilVisible.direction must be down, up, left, or right.",
+            path: "\(path).direction",
+            allowed: ["down", "up", "left", "right"]
+        )
+    }
+    let maxScrolls = try optionalPositiveInt(payload["maxScrolls"], path: "\(path).maxScrolls", defaultValue: 5)
+    return (selector, direction, maxScrolls)
+}
+
+private func parseSelectorMatch(_ value: Any?, path: String) throws -> String {
+    guard let value else { return "exact" }
+    let match = try requiredNonEmptyString(value, path: path)
+    guard match == "exact" else {
+        throw testValidationFailure(
+            code: "unsupported_selector",
+            message: "Only exact text match is supported.",
+            path: path,
+            allowed: ["exact"]
+        )
+    }
+    return match
+}
+
+private func parseSelectorSource(_ value: Any?, path: String) throws -> String {
+    guard let value else { return "ax" }
+    let source = try requiredNonEmptyString(value, path: path)
+    guard source == "ax" else {
+        throw testValidationFailure(
+            code: "unsupported_selector",
+            message: "Only ax text observation source is supported.",
+            path: path,
+            allowed: ["ax"]
+        )
+    }
+    return source
 }
 
 private func mappingPayload(_ value: Any?, path: String) throws -> [String: Any] {
@@ -362,6 +620,35 @@ private func requiredInt(_ value: Any?, path: String) throws -> Int {
 private func optionalPositiveInt(_ value: Any?, path: String, defaultValue: Int) throws -> Int {
     guard let value else { return defaultValue }
     return try positiveInt(value, path: path)
+}
+
+private func optionalNonEmptyString(_ value: Any?, path: String) throws -> String? {
+    guard let value else { return nil }
+    return try requiredNonEmptyString(value, path: path)
+}
+
+private func optionalThreshold(_ value: Any?, path: String, defaultValue: Double) throws -> Double {
+    guard let value else { return defaultValue }
+    let parsed: Double
+    if let double = value as? Double {
+        parsed = double
+    } else if let int = value as? Int {
+        parsed = Double(int)
+    } else {
+        throw testValidationFailure(
+            code: "invalid_threshold",
+            message: "\(path) must be a number between 0 and 1.",
+            path: path
+        )
+    }
+    guard parsed.isFinite, parsed >= 0, parsed <= 1 else {
+        throw testValidationFailure(
+            code: "invalid_threshold",
+            message: "\(path) must be between 0 and 1.",
+            path: path
+        )
+    }
+    return parsed
 }
 
 private func optionalNonNegativeInt(_ value: Any?, path: String, defaultValue: Int) throws -> Int {

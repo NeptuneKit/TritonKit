@@ -21,14 +21,14 @@ func capabilityWorkflowTaxonomy() -> Set<String> {
 func capabilityEvidenceTaxonomy() -> Set<String> {
     [
         "action-result", "assert.result", "bridge-call-result", "command-schema",
-        "app-map", "coverage", "evidence-bundle", "host-artifact", "host-command-json",
+        "app-map", "app-map-viewer-html", "coordinate-contract", "coverage", "evidence-bundle", "host-artifact", "host-command-json",
         "host-layout", "host-targets.json", "hierarchy-node", "input.result",
         "page-events", "provider-url", "route-assertion", "runtime-ax",
         "runtime-ledger", "runtime-manifest", "runtime-provider",
         "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
         "network-capture", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
-        "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan",
-        "unsupported-envelope", "wait.result", "wait-samples", "webview-candidates",
+        "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan", "tritontest-yaml",
+        "unsupported-envelope", "vlm-grounding", "vlm-overlay", "wait.result", "wait-samples", "webview-candidates",
         "webview-provider", "webview-snapshot", "xcodebuild-json", "xcresult",
     ]
 }
@@ -49,7 +49,10 @@ func outputContractKindTaxonomy() -> Set<String> {
         "app-map-paths-result",
         "app-map-screens-result",
         "app-map-suite-inspect-result",
+        "app-map-suite-run-result",
         "app-map-transitions-result",
+        "app-map-viewer-result",
+        "action-provider-parse-result",
         "ax-node-list",
         "capability-matrix",
         "command-schema-list",
@@ -99,8 +102,11 @@ func outputContractKindTaxonomy() -> Set<String> {
         "target-resolution",
         "target-summary",
         "test-normalized-plan",
+        "test-create-result",
+        "test-report",
         "test-run-result",
         "test-validation-result",
+        "vlm-ground-result",
         "wait-result",
         "webview-bridge-call",
         "webview-candidates",
@@ -129,6 +135,7 @@ func commandOutputFormatTaxonomy() -> Set<String> {
 
 func recoveryCommandRootTaxonomy() -> Set<String> {
     [
+        "action",
         "app",
         "assert",
         "attrs",
@@ -178,6 +185,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "target",
         "test",
         "type",
+        "vlm",
         "wait",
         "web",
         "webview",
@@ -205,6 +213,7 @@ func recoveryCommandCategoryTaxonomy() -> Set<String> {
 
 func recoveryCommandRootCategoryMap() -> [String: String] {
     [
+        "action": "act",
         "app": "prepare-target",
         "assert": "verify",
         "attrs": "observe",
@@ -254,6 +263,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "target": "prepare-target",
         "test": "diagnose",
         "type": "act",
+        "vlm": "archive",
         "wait": "verify",
         "web": "observe",
         "webview": "observe",
@@ -273,7 +283,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["verify", "observe", "archive"]
     case "artifact_write_failed", "file_write_failed", "overwrite_refused":
         return ["archive", "diagnose"]
-    case "app_map_error":
+    case "app_map_error", "unconfirmed_path", "non_replayable_path":
         return ["archive", "plan", "diagnose"]
     case "action_failed", "step_failed":
         return ["act", "observe", "verify", "archive"]
@@ -306,6 +316,9 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
     default:
         if failureCode.hasPrefix("ambiguous_") {
             return ["discover", "observe", "prepare-target", "diagnose"]
+        }
+        if failureCode.hasPrefix("ai_") {
+            return ["archive", "diagnose", "plan"]
         }
         if failureCode.hasPrefix("invalid_") {
             return ["diagnose", "project", "plan"]
@@ -367,6 +380,9 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         if failureCode.hasPrefix("unsupported_") {
             return ["diagnose", "plan"]
         }
+        if failureCode.hasPrefix("vlm_") {
+            return ["archive", "diagnose", "plan"]
+        }
         if failureCode.hasSuffix("_unsupported") {
             return ["diagnose", "plan"]
         }
@@ -378,6 +394,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
     [
         "app-container",
         "app-map",
+        "app-map-viewer-html",
         "app-map.paths",
         "app-map.screens",
         "app-map.suites",
@@ -386,6 +403,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "ax",
         "build.summary",
         "coverage-json",
+        "coordinate-contract",
         "evidence-bundle",
         "export-archive",
         "geometry",
@@ -419,6 +437,10 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "trace",
         "triton-plan",
         "tritontest-yaml",
+        "vlm-grounding",
+        "vlm-overlay",
+        "vlm-request",
+        "vlm-response",
         "xcode-artifacts",
     ]
 }

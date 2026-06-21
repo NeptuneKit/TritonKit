@@ -414,20 +414,20 @@ extension SchemaFactSourceTests {
     func schemaCommandInventoryRemainsStableForAgentDiscovery() {
         let commandNames = commandSchemas().map(\.name)
 
-        #expect(commandNames.count == 57)
+        #expect(commandNames.count == 59)
         #expect(Set(commandNames).count == commandNames.count)
         #expect(commandNames == [
             "version", "serve", "web", "status", "doctor", "plan", "capabilities", "schema",
             "test",
             "target",
             "xcode", "xcresult", "xctrace", "coverage", "build",
-            "map",
+            "map", "vlm",
             "runtime", "state", "snapshot", "focus", "set-text", "select-segment", "set-switch", "ledger",
             "device", "sim", "app",
             "list", "inspect", "observe", "webview", "route", "hierarchy", "nodes", "node", "attrs", "object",
             "export", "evidence", "capture", "smoke", "assert", "record", "replay",
             "find", "wait", "ax", "geometry", "hit", "screenshot",
-            "tap", "swipe", "type", "paste", "clear", "press", "input",
+            "action", "tap", "swipe", "type", "paste", "clear", "press", "input",
         ])
     }
 
