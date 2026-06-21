@@ -207,6 +207,8 @@ public struct TKSimulatorMediaSeedManifest: Codable, Equatable {
 public struct TKHostCommand: Codable, Equatable {
     public let executable: String
     public let arguments: [String]
+    public let environment: [String: String]
+    public let redactedEnvironmentKeys: Set<String>
     public let riskLevel: TKHostRiskLevel
     public let requiredConfig: Set<TKHostRequiredConfig>
     public let defaultTimeoutSeconds: Double
@@ -217,6 +219,8 @@ public struct TKHostCommand: Codable, Equatable {
     public init(
         executable: String = "xcrun",
         arguments: [String],
+        environment: [String: String] = [:],
+        redactedEnvironmentKeys: Set<String> = [],
         riskLevel: TKHostRiskLevel = .readonly,
         requiredConfig: Set<TKHostRequiredConfig> = [.timeout],
         defaultTimeoutSeconds: Double = 30,
@@ -226,6 +230,8 @@ public struct TKHostCommand: Codable, Equatable {
     ) {
         self.executable = executable
         self.arguments = arguments
+        self.environment = environment
+        self.redactedEnvironmentKeys = redactedEnvironmentKeys
         self.riskLevel = riskLevel
         self.requiredConfig = requiredConfig
         self.defaultTimeoutSeconds = defaultTimeoutSeconds
@@ -253,6 +259,8 @@ public struct TKHostCommand: Codable, Equatable {
         return TKHostCommand(
             executable: executable,
             arguments: arguments,
+            environment: environment,
+            redactedEnvironmentKeys: redactedEnvironmentKeys,
             riskLevel: riskLevel,
             requiredConfig: requiredConfig,
             defaultTimeoutSeconds: timeoutSeconds,
@@ -345,6 +353,8 @@ public struct TKHostExecutionPolicy: Codable, Equatable {
 public enum TKSimctlCommand {
     private static func command(
         _ arguments: [String],
+        environment: [String: String] = [:],
+        redactedEnvironmentKeys: Set<String> = [],
         riskLevel: TKHostRiskLevel = .readonly,
         requiredConfig: Set<TKHostRequiredConfig> = [.timeout],
         defaultTimeoutSeconds: Double = 30,
@@ -354,6 +364,8 @@ public enum TKSimctlCommand {
     ) -> TKHostCommand {
         TKHostCommand(
             arguments: arguments,
+            environment: environment,
+            redactedEnvironmentKeys: redactedEnvironmentKeys,
             riskLevel: riskLevel,
             requiredConfig: requiredConfig,
             defaultTimeoutSeconds: defaultTimeoutSeconds,
@@ -536,8 +548,24 @@ public enum TKSimctlCommand {
         command(["simctl", "uninstall", udid, bundleID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
-    public static func launchApp(udid: String, bundleID: String) -> TKHostCommand {
-        command(["simctl", "launch", udid, bundleID], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    public static func launchApp(
+        udid: String,
+        bundleID: String,
+        environment: [String: String] = [:],
+        arguments appArguments: [String] = []
+    ) -> TKHostCommand {
+        let simctlEnvironment = Dictionary(
+            uniqueKeysWithValues: environment.map { key, value in
+                ("SIMCTL_CHILD_\(key)", value)
+            }
+        )
+        return command(
+            ["simctl", "launch", udid, bundleID] + appArguments,
+            environment: simctlEnvironment,
+            redactedEnvironmentKeys: Set(simctlEnvironment.keys),
+            riskLevel: .automation,
+            requiredConfig: [.target, .timeout, .auditRecord]
+        )
     }
 
     public static func terminateApp(udid: String, bundleID: String) -> TKHostCommand {

@@ -1,3 +1,4 @@
+import ArgumentParser
 import Foundation
 import Testing
 import TritonKitShared
@@ -5,6 +6,102 @@ import TritonKitShared
 
 @Suite
 struct AppOpenURLFlowTests {
+    @Test("iOS simulator app launch accepts redacted env and app arguments")
+    func iosSimulatorAppLaunchAcceptsRedactedEnvAndArguments() throws {
+        let simulator = HostDeviceSelectionResult(
+            platform: .ios,
+            target: HostDeviceTarget(
+                platform: "ios",
+                id: "sim:SIM-1",
+                target: "SIM-1",
+                state: "Booted",
+                ready: true,
+                source: "simctl",
+                name: "iPhone 15",
+                runtime: "iOS 26.5",
+                transport: nil,
+                scope: "simulator",
+                kind: "simulator",
+                rawTarget: "SIM-1"
+            ),
+            selector: "SIM-1",
+            source: .explicit,
+            filters: HostDeviceSelectionFilters(request: HostDeviceSelectionRequest(device: "SIM-1", platform: .ios, scope: .simulator))
+        )
+
+        let plan = try planHostAppLaunch(
+            selection: simulator,
+            bundleID: "com.example.demo",
+            packageName: nil,
+            activity: nil,
+            bundle: nil,
+            ability: nil,
+            payloadURL: nil,
+            launchEnvironment: try parseLaunchEnvironment([
+                "OVERLOADED_OPENAI_COMPATIBLE_API_KEY=secret-value",
+                "OVERLOADED_OPENAI_COMPATIBLE_MODEL=mock-llm"
+            ]),
+            launchArguments: ["--overloaded-debug-route", "photos.search-provider-settings"],
+            adb: "adb",
+            hdc: "hdc",
+            devicectlArtifacts: nil
+        )
+
+        #expect(plan.command.argv == [
+            "simctl",
+            "launch",
+            "SIM-1",
+            "com.example.demo",
+            "--overloaded-debug-route",
+            "photos.search-provider-settings"
+        ])
+        #expect(plan.command.environment["SIMCTL_CHILD_OVERLOADED_OPENAI_COMPATIBLE_API_KEY"] == "secret-value")
+        #expect(plan.command.environment["SIMCTL_CHILD_OVERLOADED_OPENAI_COMPATIBLE_MODEL"] == "mock-llm")
+        #expect(plan.command.redactedEnvironmentKeys == [
+            "SIMCTL_CHILD_OVERLOADED_OPENAI_COMPATIBLE_API_KEY",
+            "SIMCTL_CHILD_OVERLOADED_OPENAI_COMPATIBLE_MODEL"
+        ])
+
+        let sourceCommand = hostSourceCommand(plan.command)
+        #expect(sourceCommand.contains("SIMCTL_CHILD_OVERLOADED_OPENAI_COMPATIBLE_API_KEY=<redacted>"))
+        #expect(sourceCommand.contains("SIMCTL_CHILD_OVERLOADED_OPENAI_COMPATIBLE_MODEL=<redacted>"))
+        #expect(sourceCommand.contains("secret-value") == false)
+        #expect(sourceCommand.contains("mock-llm") == false)
+        #expect(sourceCommand.contains("--overloaded-debug-route"))
+        #expect(sourceCommand.contains("photos.search-provider-settings"))
+    }
+
+    @Test("launch environment rejects invalid keys before host execution")
+    func launchEnvironmentRejectsInvalidKeys() throws {
+        #expect(throws: ValidationError.self) {
+            _ = try parseLaunchEnvironment(["1BAD=value"])
+        }
+        #expect(try parseLaunchEnvironment(["GOOD_KEY=value"]) == ["GOOD_KEY": "value"])
+    }
+
+    @Test("app schema exposes launch env and argument options")
+    func appSchemaExposesLaunchEnvAndArgumentOptions() throws {
+        let app = try #require(commandSchemas().first { $0.name == "app" })
+        #expect(app.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") })
+        #expect(app.options.contains { $0.name == "--arg" && $0.description.contains("launch argument") })
+        #expect(app.examples.contains("triton app launch --device iphone15 --bundle-id com.example.app --env FEATURE_FLAG=1 --arg=--debug-route --arg demo.home --json"))
+    }
+
+    @Test("app launch parses repeatable env and dash-prefixed arguments")
+    func appLaunchParsesRepeatableEnvAndDashPrefixedArguments() throws {
+        let launch = try HostAppLaunch.parse([
+            "--simulator", "SIM-1",
+            "--bundle-id", "com.example.demo",
+            "--env", "FEATURE_FLAG=1",
+            "--arg=--debug-route",
+            "--arg", "demo.home",
+            "--json"
+        ])
+
+        #expect(launch.launchEnvironment == ["FEATURE_FLAG=1"])
+        #expect(launch.launchArguments == ["--debug-route", "demo.home"])
+    }
+
     @Test("real-device app lifecycle planner uses raw host ids but public targets stay redacted")
     func realDeviceAppLifecyclePlannerUsesRawHostIDsAndRedactedTargets() throws {
         let ios = HostDeviceSelectionResult(

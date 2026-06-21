@@ -19,6 +19,30 @@ struct XcodeCommandTests {
         #expect(run.device == "ios-real:abc123")
     }
 
+    @Test("xcode run accepts launch env and app arguments")
+    func xcodeRunAcceptsLaunchEnvAndAppArguments() throws {
+        let run = try XcodeRun.parse([
+            "--project", "App.xcodeproj",
+            "--scheme", "App",
+            "--simulator", "SIM-1",
+            "--env", "FEATURE_FLAG=1",
+            "--env", "API_KEY=secret",
+            "--arg=--debug-route",
+            "--arg", "demo.home",
+            "--jsonl"
+        ])
+
+        #expect(run.launchEnvironment == ["FEATURE_FLAG=1", "API_KEY=secret"])
+        #expect(run.launchArguments == ["--debug-route", "demo.home"])
+
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        #expect(xcode.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") })
+        #expect(xcode.options.contains { $0.name == "--arg" && $0.description.contains("launch argument") })
+        let runSchema = try #require(xcode.subcommands.first { $0.name == "run" })
+        #expect(runSchema.optionalOptions.contains("--env"))
+        #expect(runSchema.optionalOptions.contains("--arg"))
+    }
+
     @Test("xcode real-device selector resolves iphoneos and generic iOS destination")
     func xcodeDeviceSelectorResolvesRealDeviceBuildTarget() throws {
         let sdk = resolvedXcodeSDK(

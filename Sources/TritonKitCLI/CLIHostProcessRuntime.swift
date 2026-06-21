@@ -85,6 +85,13 @@ private func hostCommandHasSemanticFailure(_ command: TKHostCommand, result: Hos
 }
 
 private func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) {
+    if !command.environment.isEmpty {
+        var environment = ProcessInfo.processInfo.environment
+        for (key, value) in command.environment {
+            environment[key] = value
+        }
+        process.environment = environment
+    }
     if command.executable.contains("/") {
         process.executableURL = URL(fileURLWithPath: command.executable)
         process.arguments = command.processArguments
@@ -236,16 +243,7 @@ func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: S
     try prepareHostArtifactOutputPath(outputPath)
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()
-    if command.executable.contains("/") {
-        process.executableURL = URL(fileURLWithPath: command.executable)
-        process.arguments = command.processArguments
-    } else if command.executable == "xcrun" {
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
-        process.arguments = command.processArguments
-    } else {
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = [command.executable] + command.processArguments
-    }
+    configureHostProcessExecutable(process, command: command)
 
     let stdout = Pipe()
     let stderr = Pipe()
@@ -334,7 +332,11 @@ func truncatedData(_ data: Data, maximumBytes: Int? = 1_048_576) -> (data: Data,
 }
 
 func hostSourceCommand(_ command: TKHostCommand) -> String {
-    ([command.executable] + command.arguments).map(shellEscaped).joined(separator: " ")
+    let environment = command.environment.keys.sorted().map { key in
+        let value = command.redactedEnvironmentKeys.contains(key) ? "<redacted>" : (command.environment[key] ?? "")
+        return "\(key)=\(shellEscaped(value))"
+    }
+    return (environment + ([command.executable] + command.arguments).map(shellEscaped)).joined(separator: " ")
 }
 
 func shellEscaped(_ value: String) -> String {

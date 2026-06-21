@@ -34,6 +34,8 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--simulator", type: "String", description: "Simulator UDID; also used to synthesize destination"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Real-device selector from `triton device`; real-device builds use sdk=iphoneos and a device destination"),
                 TKCommandSchemaOption(name: "--derived-data-path", type: "Path", defaultValue: ".triton/DerivedData", description: "Repo-local DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default"),
+                TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS Simulator app launch environment for xcode run; values are passed as SIMCTL_CHILD_* and redacted in sourceCommand"),
+                TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable iOS Simulator app launch argument for xcode run"),
                 TKCommandSchemaOption(name: "--allow-provisioning-updates", type: "Bool", defaultValue: "false", description: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices"),
                 TKCommandSchemaOption(name: "--result-bundle", type: "Path", description: "Result bundle path for test"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", description: "Command timeout in seconds for large workspaces"),
@@ -52,6 +54,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode build --device <ios-real-target> --sdk iphoneos --allow-provisioning-updates --jsonl",
                 "triton xcode test --result-bundle /tmp/App.xcresult --jsonl",
                 "triton xcode run --jsonl",
+                "triton xcode run --env FEATURE_FLAG=1 --arg=--debug-route --arg demo.home --jsonl",
                 "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl",
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
@@ -240,7 +243,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "build",
                     summary: "Run xcodebuild build and emit bounded JSONL progress",
-                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--timeout", "--jsonl"],
+                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--env", "--arg", "--timeout", "--jsonl"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
@@ -283,7 +286,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "run",
                     summary: "Build, install, and launch on a selected simulator or real device without claiming business readiness",
-                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--timeout", "--jsonl"],
+                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--env", "--arg", "--timeout", "--jsonl"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
