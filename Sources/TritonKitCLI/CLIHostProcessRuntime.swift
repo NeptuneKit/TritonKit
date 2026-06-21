@@ -73,6 +73,17 @@ func prepareHostArtifactOutputPath(_ path: String) throws {
     }
 }
 
+private func hostCommandHasSemanticFailure(_ command: TKHostCommand, result: HostProcessResult) -> Bool {
+    let executableName = URL(fileURLWithPath: command.executable).lastPathComponent
+    guard executableName == "hdc" else {
+        return false
+    }
+    let combinedOutput = [result.stdout, result.stderr]
+        .joined(separator: "\n")
+        .lowercased()
+    return combinedOutput.contains("[fail]")
+}
+
 private func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) {
     if command.executable.contains("/") {
         process.executableURL = URL(fileURLWithPath: command.executable)
@@ -215,7 +226,7 @@ func runHostCommand(
         stdoutBytes: stdoutRead.bytes,
         stderrBytes: stderrRead.bytes
     )
-    if result.exitCode != 0 {
+    if result.exitCode != 0 || hostCommandHasSemanticFailure(command, result: result) {
         throw HostCommandRunError.nonZeroExit(command: command, result: result)
     }
     return result
@@ -305,7 +316,7 @@ func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: S
         stdoutBytes: stdoutBytes,
         stderrBytes: stderrRead.bytes
     )
-    if result.exitCode != 0 {
+    if result.exitCode != 0 || hostCommandHasSemanticFailure(command, result: result) {
         try? FileManager.default.removeItem(atPath: outputPath)
         throw HostCommandRunError.nonZeroExit(command: command, result: result)
     }

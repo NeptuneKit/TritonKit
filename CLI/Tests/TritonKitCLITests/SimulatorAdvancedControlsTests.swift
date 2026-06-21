@@ -134,6 +134,31 @@ struct SimulatorAdvancedControlsTests {
         #expect(result.stdoutTruncated)
     }
 
+    @Test("host command treats HDC fail marker on stdout as failure even with zero exit")
+    func runHostCommandTreatsHDCFailMarkerOnStdoutAsFailure() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-fake-hdc-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let fakeHdc = directory.appendingPathComponent("hdc")
+        try Data("""
+        #!/bin/sh
+        printf '[Fail]Not match target founded, check connect-key please\\n'
+        exit 0
+        """.utf8).write(to: fakeHdc)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fakeHdc.path)
+        let command = TKHarmonyHDCCommand.appLaunch(
+            target: "harmony-real:redacted",
+            bundleName: "com.example.demo",
+            abilityName: "EntryAbility",
+            executable: fakeHdc.path
+        )
+
+        #expect(throws: HostCommandRunError.self) {
+            try runHostCommand(command)
+        }
+    }
+
     @Test("host command timeout terminates process and leaves later commands usable")
     func runHostCommandTimeoutCleansUpProcess() throws {
         let command = TKHostCommand(
