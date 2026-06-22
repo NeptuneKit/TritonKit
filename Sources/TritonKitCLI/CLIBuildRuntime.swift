@@ -22,22 +22,54 @@ func planCLIBuild(_ request: CLIBuildRequest) throws -> CLIBuildPlan {
             timeout: timeout ?? 600,
             discoveryRoot: discoveryRoot
         )
-    case .harmony(let project, let hvigor, let module, let mode, let device, let timeout, let discoveryRoot):
+    case .harmony(
+        let project,
+        let hvigor,
+        let module,
+        let mode,
+        let device,
+        let timeout,
+        let discoveryRoot,
+        let node,
+        let javaHome,
+        let devecoSdkHome,
+        let product,
+        let task,
+        let noDaemon
+    ):
         let projectRoot = try validateBuildProject(project)
-        let executable = try resolveBuildTool(explicit: hvigor, wrapperName: "hvigorw", fallbackName: "hvigor", project: projectRoot, platform: "harmony")
+        let nodeExecutable = try node.map {
+            try resolveBuildTool(explicit: $0, wrapperName: "node", fallbackName: "node", project: projectRoot, platform: "harmony")
+        }
+        let executable = try resolveHarmonyBuildExecutable(
+            hvigor: hvigor,
+            node: nodeExecutable,
+            project: projectRoot
+        )
+        let environment = harmonyBuildEnvironment(javaHome: javaHome, devecoSdkHome: devecoSdkHome)
+        let arguments = harmonyBuildArguments(
+            hvigor: executable.hvigor,
+            node: nodeExecutable,
+            module: module,
+            mode: mode,
+            product: product,
+            task: task,
+            noDaemon: noDaemon
+        )
         return CLIBuildPlan(
             platform: "harmony",
             action: "build.harmony",
             project: projectRoot,
-            executable: executable,
-            arguments: ["--mode", "\(module)@\(mode)", "assembleHap"],
+            executable: executable.executable,
+            arguments: arguments,
             workingDirectory: projectRoot,
             variant: nil,
             module: module,
             mode: mode,
             device: device,
             timeout: timeout ?? 600,
-            discoveryRoot: discoveryRoot
+            discoveryRoot: discoveryRoot,
+            environment: environment
         )
     }
 }
@@ -333,6 +365,86 @@ private func resolveBuildTool(explicit: String?, wrapperName: String, fallbackNa
     return fallbackName
 }
 
+private func resolveHarmonyBuildExecutable(hvigor: String?, node: String?, project: String) throws -> (executable: String, hvigor: String?) {
+    guard let node else {
+        let executable = try resolveBuildTool(
+            explicit: hvigor,
+            wrapperName: "hvigorw",
+            fallbackName: "hvigor",
+            project: project,
+            platform: "harmony"
+        )
+        return (executable, nil)
+    }
+
+    guard let hvigor, !hvigor.isEmpty else {
+        throw CLIBuildError.toolNotFound(platform: "harmony", tool: "hvigor.js", project: project)
+    }
+    if hvigor.contains("/") {
+        let path = URL(fileURLWithPath: hvigor, relativeTo: URL(fileURLWithPath: project)).standardizedFileURL.path
+        guard FileManager.default.fileExists(atPath: path) else {
+            throw CLIBuildError.toolNotFound(platform: "harmony", tool: hvigor, project: project)
+        }
+        return (node, path)
+    }
+    guard findExecutableOnPATH(hvigor) != nil else {
+        throw CLIBuildError.toolNotFound(platform: "harmony", tool: hvigor, project: project)
+    }
+    return (node, hvigor)
+}
+
+private func harmonyBuildArguments(
+    hvigor: String?,
+    node: String?,
+    module: String,
+    mode: String,
+    product: String?,
+    task: String?,
+    noDaemon: Bool
+) -> [String] {
+    guard node != nil || task != nil || product != nil || noDaemon else {
+        return ["--mode", "\(module)@\(mode)", "assembleHap"]
+    }
+
+    let taskName = trimmedBuildValue(task) ?? "assembleHap"
+    var arguments: [String] = []
+    if let hvigor {
+        arguments.append(hvigor)
+    }
+    arguments.append(taskName)
+    if noDaemon {
+        arguments.append("--no-daemon")
+    }
+    if taskName == "assembleApp" || product != nil {
+        arguments.append(contentsOf: [
+            "-p",
+            "product=\(trimmedBuildValue(product) ?? "default")",
+            "-p",
+            "buildMode=\(mode)",
+        ])
+    }
+    return arguments
+}
+
+private func trimmedBuildValue(_ value: String?) -> String? {
+    guard let value else { return nil }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : trimmed
+}
+
+private func harmonyBuildEnvironment(javaHome: String?, devecoSdkHome: String?) -> [String: String] {
+    var environment: [String: String] = [:]
+    if let javaHome = javaHome?.trimmingCharacters(in: .whitespacesAndNewlines), !javaHome.isEmpty {
+        environment["JAVA_HOME"] = javaHome
+        let currentPath = ProcessInfo.processInfo.environment["PATH"] ?? ""
+        environment["PATH"] = currentPath.isEmpty ? "\(javaHome)/bin" : "\(javaHome)/bin:\(currentPath)"
+    }
+    if let devecoSdkHome = devecoSdkHome?.trimmingCharacters(in: .whitespacesAndNewlines), !devecoSdkHome.isEmpty {
+        environment["DEVECO_SDK_HOME"] = devecoSdkHome
+    }
+    return environment
+}
+
 private func findExecutableOnPATH(_ name: String) -> String? {
     ProcessInfo.processInfo.environment["PATH"]?
         .split(separator: ":")
@@ -370,6 +482,13 @@ private func runBuildProcess(plan: CLIBuildPlan, logs: CLIBuildLogPaths) throws 
         process.arguments = [plan.executable] + plan.arguments
     }
     process.currentDirectoryURL = URL(fileURLWithPath: plan.workingDirectory)
+    if !plan.environment.isEmpty {
+        var environment = ProcessInfo.processInfo.environment
+        for (key, value) in plan.environment {
+            environment[key] = value
+        }
+        process.environment = environment
+    }
 
     let stdout = Pipe()
     let stderr = Pipe()
@@ -691,7 +810,7 @@ private func buildPlatformName(request: CLIBuildRequest?) -> String {
 private func buildProjectName(request: CLIBuildRequest?) -> String {
     switch request {
     case .android(let project, _, _, _, _, _): return project
-    case .harmony(let project, _, _, _, _, _, _): return project
+    case .harmony(let project, _, _, _, _, _, _, _, _, _, _, _, _): return project
     case nil: return ""
     }
 }

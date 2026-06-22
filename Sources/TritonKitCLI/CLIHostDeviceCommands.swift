@@ -917,6 +917,9 @@ struct DeviceStart: AsyncParsableCommand {
                     stdoutLogPath: stdoutLog,
                     stderrLogPath: stderrLog
                 )
+                if platform == .harmony, let detached {
+                    try failIfHarmonyLicenseAgreementBlocked(detached, outputFormat: outputFormat)
+                }
             }
             let nextAction = TKCLINextAction(
                 command: "device",
@@ -952,6 +955,35 @@ struct DeviceStart: AsyncParsableCommand {
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
         }
+    }
+
+    private func failIfHarmonyLicenseAgreementBlocked(
+        _ detached: HostDetachedProcessResult,
+        outputFormat: ClientOutputFormat
+    ) throws {
+        guard detached.stdoutLogPath != nil || detached.stderrLogPath != nil else {
+            return
+        }
+        Thread.sleep(forTimeInterval: 0.3)
+        let stdout = detached.stdoutLogPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) } ?? ""
+        let stderr = detached.stderrLogPath.flatMap { try? String(contentsOfFile: $0, encoding: .utf8) } ?? ""
+        guard harmonyEmulatorLicenseAgreementDetected(stdout: stdout, stderr: stderr) else {
+            return
+        }
+        let detail = harmonyEmulatorLicenseAgreementErrorDetail(
+            stdoutLogPath: detached.stdoutLogPath,
+            stderrLogPath: detached.stderrLogPath
+        )
+        switch outputFormat {
+        case .json:
+            print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+        case .text:
+            print(detail.message)
+            if let hint = detail.hint {
+                print("hint: \(hint)")
+            }
+        }
+        throw ExitCode.failure
     }
 
     private func makePlan() throws -> HostDeviceStartPlan {

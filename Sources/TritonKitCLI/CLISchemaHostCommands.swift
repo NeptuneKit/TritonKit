@@ -161,7 +161,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --confirm --json",
             ],
             successShape: "{ ok, platform, tools[]?, targets[]?, defaultTarget?, target?, defaultsPath?, ready?, artifact?, baseURL?, manifest?, hvd?, launchdLabel?, launchdDomain?, planOnly?, started?, pid?, nextAction?, sourceCommand?, sourceCommands?[] }",
-            failureShape: "{ ok:false, error:{ code: ambiguous_target|target_offline|device_not_ready|host_action_failed, message, hint } }",
+            failureShape: "{ ok:false, error:{ code: ambiguous_target|target_offline|device_not_ready|emulator_license_agreement_required|harmony_emulator_stop_failed|host_action_failed, message, hint } }",
             outputSemantics: "Use device as the host target fact source before simulator, Harmony, app, screenshot, or smoke actions. Prefer aliases and current target to avoid repeated disambiguation.",
             jsonlEvents: [
                 "proxy.serve.ready",
@@ -202,6 +202,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "runtime_not_connected",
                 "host_command_timeout",
                 "host_action_failed",
+                "emulator_license_agreement_required",
+                "harmony_emulator_stop_failed",
                 "unsupported_host_action",
                 "unsupported_capability",
                 "devicectl_not_found",

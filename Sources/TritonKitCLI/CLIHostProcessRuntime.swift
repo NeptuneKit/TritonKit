@@ -614,7 +614,10 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         let isADB = command.executable == "adb" || command.executable.hasSuffix("/adb")
         let stderr = result.stderr.lowercased()
         let simctlSubcommand = command.arguments.dropFirst().first
-        if command.executable == "xcodebuild" {
+        if isHarmonyEmulatorStopFailureCommand(command) {
+            code = "harmony_emulator_stop_failed"
+            hint = "Check the Harmony HVD name/path, DevEco Emulator process, and launchd label/domain. If no Triton launchd job exists, retry with --skip-launchd, then verify with triton device list --platform harmony --json."
+        } else if command.executable == "xcodebuild" {
             code = "xcodebuild_failed"
             hint = "Inspect the xcodebuild output, verify workspace/project, scheme, destination, signing, and DerivedData path."
         } else if isADB && (result.exitCode == 127 || stderr.contains("no such file") || stderr.contains("not found")) {
@@ -793,6 +796,48 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         if let hint = detail.hint { print("hint: \(hint)") }
     }
     throw ExitCode.failure
+}
+
+func hostCommandNonZeroExitErrorDetail(command: TKHostCommand, result: HostProcessResult) -> TKCLIErrorDetail {
+    if isHarmonyEmulatorStopFailureCommand(command) {
+        return TKCLIErrorDetail(
+            code: "harmony_emulator_stop_failed",
+            message: hostProcessFailureMessage(result),
+            hint: "Check the Harmony HVD name/path, DevEco Emulator process, and launchd label/domain. If no Triton launchd job exists, retry with --skip-launchd, then verify with triton device list --platform harmony --json.",
+            nextAction: TKCLINextAction(
+                command: "device",
+                args: ["list", "--platform", "harmony", "--json"],
+                category: "diagnose"
+            )
+        )
+    }
+    return TKCLIErrorDetail(
+        code: "host_action_failed",
+        message: hostProcessFailureMessage(result),
+        hint: "Check the host tool availability and retry with explicit target parameters."
+    )
+}
+
+private func hostProcessFailureMessage(_ result: HostProcessResult) -> String {
+    let stderr = result.stderr.trimmingCharacters(in: .whitespacesAndNewlines)
+    if !stderr.isEmpty {
+        return stderr
+    }
+    let stdout = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+    if !stdout.isEmpty {
+        return stdout
+    }
+    return "Host command exited \(result.exitCode)"
+}
+
+private func isHarmonyEmulatorStopFailureCommand(_ command: TKHostCommand) -> Bool {
+    if command.executable == "launchctl" {
+        return command.arguments.contains { $0.contains("triton-harmony-emulator") }
+    }
+    let executable = URL(fileURLWithPath: command.executable).lastPathComponent.lowercased()
+    return executable == "emulator"
+        && command.arguments.contains("-stop")
+        && command.arguments.contains("-path")
 }
 
 func failHostUnsupportedCapability(

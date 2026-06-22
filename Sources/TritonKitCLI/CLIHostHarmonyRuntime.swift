@@ -33,6 +33,31 @@ func harmonyEmulatorStopCommand(hvd: String, deployedPath: String, emulator: Str
     )
 }
 
+func harmonyEmulatorLicenseAgreementDetected(stdout: String, stderr: String) -> Bool {
+    let output = [stdout, stderr].joined(separator: "\n").lowercased()
+    return output.contains("please agree to the agreement first")
+        || output.contains("confirm whether agree")
+        || output.contains("agree to the above agreement")
+}
+
+func harmonyEmulatorLicenseAgreementErrorDetail(stdoutLogPath: String?, stderrLogPath: String?) -> TKCLIErrorDetail {
+    let artifacts = [
+        stdoutLogPath.map { "stdout: \($0)" },
+        stderrLogPath.map { "stderr: \($0)" },
+    ].compactMap { $0 }.joined(separator: "; ")
+    let artifactHint = artifacts.isEmpty ? "" : " Logs: \(artifacts)."
+    return TKCLIErrorDetail(
+        code: "emulator_license_agreement_required",
+        message: "DevEco Emulator requires first-run license agreement before Triton can report the emulator as started.",
+        hint: "Open DevEco Emulator once and accept the license agreement interactively, then rerun triton device start --platform harmony --json.\(artifactHint)",
+        nextAction: TKCLINextAction(
+            command: "device",
+            args: ["start", "--platform", "harmony", "--json"],
+            category: "retry"
+        )
+    )
+}
+
 func androidEmulatorStartCommand(
     avd: String,
     emulator: String,
