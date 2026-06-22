@@ -11,6 +11,7 @@ import TritonKitShared
 func commandSchemas() -> [TKCommandSchema] {
     let schemas = bootstrapCommandSchemas()
         + testCommandSchemas()
+        + updateCommandSchemas()
         + targetCommandSchemas()
         + xcodeCommandSchemas()
         + buildCommandSchemas()
@@ -169,7 +170,7 @@ private let commandSurfaceMetadata: [String: CommandSurfaceMetadata] = {
         rationale: "Explicit P23 raw/debug surface for low-level engine inspection"
     )
 
-    for name in ["doctor", "schema", "capabilities", "plan", "target", "app", "observe", "act", "verify", "evidence", "test", "xcode", "build", "wait", "screenshot"] {
+    for name in ["doctor", "schema", "capabilities", "plan", "target", "app", "observe", "act", "verify", "evidence", "test", "update", "xcode", "build", "wait", "screenshot"] {
         workflow(name, rationale: "P23 workflow surface")
     }
     for name in ["status", "serve"] {

@@ -17,6 +17,22 @@ Use this public skill to update a user's TritonKit installation. Keep CLI, publi
 
 ## Update The CLI
 
+When \`triton update\` is available, prefer the CLI-managed flow first because it emits a machine-readable plan and keeps Homebrew/manual install boundaries explicit:
+
+\`\`\`sh
+triton update --check --json
+triton update --dry-run --json
+triton update --yes --json
+\`\`\`
+
+For a pinned release:
+
+\`\`\`sh
+triton update --version v0.1.24 --yes --json
+\`\`\`
+
+For Homebrew-managed installs, \`triton update\` must use Homebrew and must not overwrite the Cellar binary directly.
+
 Prefer Homebrew:
 
 ```sh
@@ -40,6 +56,14 @@ triton web --print-command --json
 The Web launch plan should report `mode=packaged` for a released Homebrew install.
 
 ## Update Public Skills
+
+When \`triton update\` is available and the agent skills directory is known, prefer:
+
+\`\`\`sh
+triton update --include-skills --skills-dir "$AGENT_SKILLS_DIR" --yes --json
+\`\`\`
+
+This downloads \`tritonkit-skills.tar.gz\` from the same release as the CLI and replaces the installed \`TritonKit.skills/\` bundle.
 
 1. Download `tritonkit-skills.tar.gz` from the same GitHub Release as the CLI.
 2. Locate the user's configured agent skills directory. For Codex this is usually under the configured `CODEX_HOME` skills directory; if the path is not known, ask the user or inspect the local agent configuration.

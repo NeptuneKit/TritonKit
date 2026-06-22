@@ -40,6 +40,46 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func updatePlanOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "update.plan",
+        format: "json",
+        kind: "cli-update-plan",
+        model: "CLIUpdateResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether update planning or execution completed"),
+            ("currentVersion", "String", true, "Current running TritonKit CLI version"),
+            ("latestVersion", "String?", false, "Latest or requested release version without the v prefix"),
+            ("targetVersion", "String?", false, "Target release version without the v prefix"),
+            ("releaseTag", "String?", false, "Target release tag such as v0.1.24"),
+            ("updateAvailable", "Bool", true, "Whether the target version is newer than the current version"),
+            ("checkOnly", "Bool", true, "Whether the command only checked update status"),
+            ("dryRun", "Bool", true, "Whether the command printed a plan without mutating files"),
+            ("requiresConfirmation", "Bool", true, "Whether rerun with --yes is required before mutation"),
+            ("updated", "Bool", true, "Whether the CLI update action completed"),
+            ("skillsUpdated", "Bool", true, "Whether the public skills bundle update completed"),
+            ("installSource", "String", true, "Detected install source: homebrew, manual, sourceCheckout, or unknown"),
+            ("currentExecutable", "String", true, "Path to the active triton executable"),
+            ("repository", "String", true, "GitHub owner/name repository used for release lookup"),
+            ("assetName", "String?", false, "Architecture-specific CLI release asset name"),
+            ("checksumManifestName", "String?", false, "Release checksum manifest asset name"),
+            ("actions", "[CLIUpdateAction]", true, "Ordered update plan actions"),
+            ("actions[].id", "String", true, "Stable action id"),
+            ("actions[].kind", "String", true, "Stable action kind"),
+            ("actions[].description", "String", true, "Human-readable action description"),
+            ("actions[].command", "String?", false, "Host command executable when action is command-backed"),
+            ("actions[].args", "[String]", true, "Host command arguments when action is command-backed"),
+            ("actions[].path", "String?", false, "Relevant local path for file mutation actions"),
+            ("actions[].destructive", "Bool", true, "Whether the action mutates local files or package state"),
+            ("manualInstructions", "[String]", true, "Manual follow-up notes when automatic update is not appropriate"),
+            ("error", "CLIUpdateErrorDetail?", false, "Machine-readable error detail when ok is false"),
+            ("error.code", "String?", false, "Stable update failure code"),
+            ("error.message", "String?", false, "Human-readable failure summary"),
+            ("error.hint", "String?", false, "Suggested recovery step"),
+        ])
+    )
+}
+
 func testValidationOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.validation",

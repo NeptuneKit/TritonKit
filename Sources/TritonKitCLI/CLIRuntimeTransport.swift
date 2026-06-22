@@ -79,6 +79,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
     let requiresWebViewProvider = connected ? nil : "Requires WebView provider metadata from embedded runtime or --runtime-base-url"
     let capabilities: [TKRuntimeCapability] = [
         TKRuntimeCapability(name: "version", supported: true),
+        TKRuntimeCapability(name: "cli-update", supported: true),
         TKRuntimeCapability(name: "plan", supported: true),
         TKRuntimeCapability(name: "plan-inspect", supported: true),
         TKRuntimeCapability(name: "record", supported: true),
@@ -313,7 +314,7 @@ func enrichRuntimeCapability(
 
 func runtimeCapabilityGroup(for name: String) -> String {
     switch name {
-    case "version", "plan", "record", "replay-dry-run", "web-device-hub", "schema", "status", "doctor", "capabilities":
+    case "version", "cli-update", "plan", "record", "replay-dry-run", "web-device-hub", "schema", "status", "doctor", "capabilities":
         return "bootstrap"
     case "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session":
         return "test"
@@ -350,6 +351,8 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
     switch name {
     case "web-device-hub":
         return ["observe", "evidence"]
+    case "cli-update":
+        return ["runtime"]
     case "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session":
         return ["test"]
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
@@ -401,6 +404,8 @@ func runtimeCapabilityNextAction(
     switch name {
     case "web-device-hub":
         return TKCLINextAction(command: "web", args: ["--print-command", "--json"], requiresLongRunningProcess: false)
+    case "cli-update":
+        return TKCLINextAction(command: "update", args: ["--check", "--json"], requiresLongRunningProcess: false)
     case "test-validate":
         return TKCLINextAction(command: "test", args: ["validate", "<path.tritontest.yaml>", "--json"])
     case "test-normalized-plan":
@@ -799,7 +804,7 @@ func runtimeCapabilityRequiresServer(_ name: String) -> Bool {
 
 func runtimeCapabilityEvidence(for name: String) -> [String] {
     switch name {
-    case "version", "schema", "status", "doctor", "capabilities", "plan":
+    case "version", "cli-update", "schema", "status", "doctor", "capabilities", "plan":
         return ["stdout-json", "command-schema"]
     case "test-validate", "test-normalized-plan":
         return ["stdout-json", "command-schema", "test.normalized-plan"]

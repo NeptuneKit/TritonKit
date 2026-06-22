@@ -235,6 +235,8 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "target": "prepare-target",
         "test": "diagnose",
         "type": "act",
+        "update": "diagnose",
+        "version": "diagnose",
         "verify": "verify",
         "vlm": "archive",
         "wait": "verify",
