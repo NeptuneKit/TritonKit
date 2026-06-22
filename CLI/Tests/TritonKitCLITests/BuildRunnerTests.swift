@@ -35,6 +35,41 @@ struct BuildRunnerTests {
         #expect(plan.device == "harmony-phone")
     }
 
+    @Test("Harmony build planner supports DevEco assembleApp through node and explicit SDK environment")
+    func harmonyPlannerSupportsDevEcoAssembleAppThroughNodeAndExplicitSDKEnvironment() throws {
+        let project = try makeTemporaryProject()
+        let node = project.appendingPathComponent("deveco-node")
+        let hvigor = project.appendingPathComponent("hvigor.js")
+        try writeExecutable(node, body: "exit 0\n")
+        try writeExecutable(hvigor, body: "exit 0\n")
+
+        let plan = try planCLIBuild(.harmony(
+            project: project.path,
+            hvigor: hvigor.path,
+            module: "entry",
+            mode: "debug",
+            device: nil,
+            timeout: nil,
+            discoveryRoot: nil,
+            node: node.path,
+            javaHome: "/Applications/DevEco-Studio.app/Contents/jbr/Contents/Home",
+            devecoSdkHome: "/Applications/DevEco-Studio.app/Contents/sdk",
+            product: "default",
+            task: "assembleApp",
+            noDaemon: true
+        ))
+
+        #expect(plan.platform == "harmony")
+        #expect(plan.executable == node.path)
+        #expect(plan.arguments == [hvigor.path, "assembleApp", "--no-daemon", "-p", "product=default", "-p", "buildMode=debug"])
+        #expect(plan.environment["JAVA_HOME"] == "/Applications/DevEco-Studio.app/Contents/jbr/Contents/Home")
+        #expect(plan.environment["DEVECO_SDK_HOME"] == "/Applications/DevEco-Studio.app/Contents/sdk")
+        #expect(plan.environment["PATH"]?.hasPrefix("/Applications/DevEco-Studio.app/Contents/jbr/Contents/Home/bin:") == true)
+        #expect(plan.sourceCommand.contains("JAVA_HOME="))
+        #expect(plan.sourceCommand.contains("DEVECO_SDK_HOME="))
+        #expect(plan.sourceCommand.contains("assembleApp"))
+    }
+
     @Test("missing project and tool failures map to stable codes")
     func missingProjectAndToolFailuresMapToStableCodes() throws {
         let missingProject = URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent(UUID().uuidString)

@@ -2738,6 +2738,34 @@ struct DeviceCrossPlatformTests {
         ])
     }
 
+    @Test("Harmony emulator license agreement output is classified as structured blocker")
+    func harmonyEmulatorLicenseAgreementOutputIsClassifiedAsStructuredBlocker() {
+        let stdout = "Please read carefully and confirm whether agree to the above agreement? (y/N):\n"
+        let stderr = "Unable to start the emulator\nPlease agree to the agreement first.\n"
+
+        #expect(harmonyEmulatorLicenseAgreementDetected(stdout: stdout, stderr: stderr))
+        let detail = harmonyEmulatorLicenseAgreementErrorDetail(stdoutLogPath: "/tmp/emulator-stdout.log", stderrLogPath: "/tmp/emulator-stderr.log")
+        #expect(detail.code == "emulator_license_agreement_required")
+        let hint = detail.hint ?? ""
+        #expect(hint.contains("DevEco Emulator") == true)
+        #expect(hint.lowercased().contains("xcode") == false)
+    }
+
+    @Test("Harmony launchctl stop failure uses Harmony-specific recovery hint")
+    func harmonyLaunchctlStopFailureUsesHarmonySpecificRecoveryHint() {
+        let command = harmonyLaunchctlPrintCommand(domain: "gui/501", label: "triton-harmony-emulator")
+        let result = failedHostProcessResult(command, stderr: "Bad request. Could not find service \\\"triton-harmony-emulator\\\" in domain for user gui: 501")
+
+        let detail = hostCommandNonZeroExitErrorDetail(command: command, result: result)
+
+        #expect(detail.code == "harmony_emulator_stop_failed")
+        let hint = detail.hint ?? ""
+        #expect(hint.contains("Harmony") == true)
+        #expect(hint.contains("DevEco") == true)
+        #expect(hint.lowercased().contains("simctl") == false)
+        #expect(hint.lowercased().contains("xcode") == false)
+    }
+
     @Test("Harmony emulator stop requires explicit confirmation")
     func harmonyEmulatorStopRequiresConfirmation() {
         #expect(throws: HostDeviceSelectionError.self) {

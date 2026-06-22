@@ -3,7 +3,21 @@ import TritonKitShared
 
 enum CLIBuildRequest {
     case android(project: String, gradle: String?, variant: String, device: String?, timeout: Double?, discoveryRoot: String?)
-    case harmony(project: String, hvigor: String?, module: String, mode: String, device: String?, timeout: Double?, discoveryRoot: String?)
+    case harmony(
+        project: String,
+        hvigor: String?,
+        module: String,
+        mode: String,
+        device: String?,
+        timeout: Double?,
+        discoveryRoot: String?,
+        node: String? = nil,
+        javaHome: String? = nil,
+        devecoSdkHome: String? = nil,
+        product: String? = nil,
+        task: String? = nil,
+        noDaemon: Bool = false
+    )
 }
 
 struct CLIBuildPlan: Equatable {
@@ -19,9 +33,43 @@ struct CLIBuildPlan: Equatable {
     let device: String?
     let timeout: Double
     let discoveryRoot: String?
+    let environment: [String: String]
+
+    init(
+        platform: String,
+        action: String,
+        project: String,
+        executable: String,
+        arguments: [String],
+        workingDirectory: String,
+        variant: String?,
+        module: String?,
+        mode: String?,
+        device: String?,
+        timeout: Double,
+        discoveryRoot: String?,
+        environment: [String: String] = [:]
+    ) {
+        self.platform = platform
+        self.action = action
+        self.project = project
+        self.executable = executable
+        self.arguments = arguments
+        self.workingDirectory = workingDirectory
+        self.variant = variant
+        self.module = module
+        self.mode = mode
+        self.device = device
+        self.timeout = timeout
+        self.discoveryRoot = discoveryRoot
+        self.environment = environment
+    }
 
     var sourceCommand: String {
-        ([executable] + arguments).map(shellEscaped).joined(separator: " ")
+        let environmentPrefix = environment
+            .sorted { $0.key < $1.key }
+            .map { "\($0.key)=\(shellEscaped($0.value))" }
+        return (environmentPrefix + ([executable] + arguments).map(shellEscaped)).joined(separator: " ")
     }
 }
 

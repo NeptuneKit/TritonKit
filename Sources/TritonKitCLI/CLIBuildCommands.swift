@@ -89,6 +89,12 @@ struct BuildHarmony: AsyncParsableCommand {
 
     @Option(help: "Harmony project root") var project: String
     @Option(help: "hvigor or hvigorw executable") var hvigor: String?
+    @Option(help: "Node executable used to run DevEco hvigor.js") var node: String?
+    @Option(help: "JAVA_HOME used for DevEco JBR") var javaHome: String?
+    @Option(help: "DEVECO_SDK_HOME used for Harmony SDK discovery") var devecoSdkHome: String?
+    @Option(help: "DevEco product name passed as -p product=<name>") var product: String?
+    @Option(help: "Harmony hvigor task, for example assembleHap or assembleApp") var task: String?
+    @Flag(help: "Pass --no-daemon to hvigor") var noDaemon = false
     @Option(help: "Harmony module name") var module: String = "entry"
     @Option(help: "Harmony build mode") var mode: String = "debug"
     @Option(help: "Optional real-device selector used only for nextAction") var device: String?
@@ -99,7 +105,21 @@ struct BuildHarmony: AsyncParsableCommand {
     @Option(help: "Output format: json or text") var format: ClientOutputFormat = .json
 
     func run() async throws {
-        let request = CLIBuildRequest.harmony(project: project, hvigor: hvigor, module: module, mode: mode, device: device, timeout: timeout, discoveryRoot: output)
+        let request = CLIBuildRequest.harmony(
+            project: project,
+            hvigor: hvigor,
+            module: module,
+            mode: mode,
+            device: device,
+            timeout: timeout,
+            discoveryRoot: output,
+            node: node,
+            javaHome: javaHome,
+            devecoSdkHome: devecoSdkHome,
+            product: product,
+            task: task,
+            noDaemon: noDaemon
+        )
         try runBuildCommand(request: request, jsonl: jsonl, outputFormat: effectiveFormat(format, json: json))
     }
 }
