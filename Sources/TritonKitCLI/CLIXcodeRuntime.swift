@@ -202,7 +202,7 @@ func runXcodeBuild(
     return TKXcodeActionSummary(
         ok: ok,
         action: "xcode.build",
-        failureCode: ok ? nil : "xcodebuild_failed",
+        failureCode: xcodeBuildFailureCode(ok: ok, diagnostics: diagnostics),
         workspace: invocation.workspace,
         project: invocation.project,
         scheme: invocation.scheme,
@@ -241,10 +241,13 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         resultBundlePath: resultBundlePath
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl, allowNonZeroExit: true)
+    let diagnostics = xcodeBuildOutputDiagnostics(result)
+    let ok = result.exitCode == 0
     let resultDetails = xcodeTestResultBundleDetails(resultBundlePath: resultBundlePath)
     return TKXcodeActionSummary(
-        ok: result.exitCode == 0,
+        ok: ok,
         action: "xcode.test",
+        failureCode: xcodeBuildFailureCode(ok: ok, diagnostics: diagnostics),
         workspace: invocation.workspace,
         project: invocation.project,
         scheme: invocation.scheme,
@@ -268,6 +271,7 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         testResultSummary: resultDetails.summary,
         topFailures: resultDetails.topFailures,
         xcresultNote: resultDetails.note,
+        xcodeDiagnostics: diagnostics,
         note: "Test command finished. Use `triton xcresult summary --path <result.xcresult> --json` or `triton xcresult failures --path <result.xcresult> --json` for structured result parsing."
     )
 }
@@ -289,7 +293,35 @@ func runXcodeBuildInstallLaunch(
     guard let simulator = invocation.simulatorUDID, !simulator.isEmpty else {
         throw XcodeWorkflowError.simulatorRequired
     }
-    let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: false)
+    let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: true)
+    guard buildSummary.ok else {
+        return TKXcodeActionSummary(
+            ok: false,
+            action: "xcode.run",
+            failureCode: buildSummary.failureCode,
+            workspace: invocation.workspace,
+            project: invocation.project,
+            scheme: invocation.scheme,
+            configuration: invocation.configuration,
+            sdk: invocation.sdk,
+            destination: invocation.destination,
+            derivedDataPath: invocation.derivedDataPath,
+            derivedDataCache: invocation.derivedDataCache,
+            simulatorUDID: simulator,
+            device: invocation.device,
+            durationMs: buildSummary.durationMs,
+            sourceCommand: buildSummary.sourceCommand,
+            exitCode: buildSummary.exitCode,
+            stdoutTruncated: buildSummary.stdoutTruncated,
+            stderrTruncated: buildSummary.stderrTruncated,
+            stdoutLogPath: buildSummary.stdoutLogPath,
+            stderrLogPath: buildSummary.stderrLogPath,
+            stdoutBytes: buildSummary.stdoutBytes,
+            stderrBytes: buildSummary.stderrBytes,
+            xcodeDiagnostics: buildSummary.xcodeDiagnostics,
+            note: "Run build phase failed. Inspect xcodeDiagnostics first, then stdout/stderr artifacts if needed."
+        )
+    }
     let product = try resolveBuiltAppProduct(
         invocation: invocation,
         timeout: timeout,
@@ -424,6 +456,14 @@ func xcodeBuildOutputDiagnostics(_ result: HostProcessResult) -> [TKXcodeOutputD
         return nil
     }
     return [diagnostic]
+}
+
+func xcodeBuildFailureCode(ok: Bool, diagnostics: [TKXcodeOutputDiagnostic]?) -> String? {
+    guard !ok else { return nil }
+    if diagnostics?.contains(where: { $0.kind == "swift-macro-plugin-malformed-response" }) == true {
+        return "swift_macro_plugin_malformed_response"
+    }
+    return "xcodebuild_failed"
 }
 
 func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool, allowNonZeroExit: Bool = false) throws -> (HostProcessResult, Int) {

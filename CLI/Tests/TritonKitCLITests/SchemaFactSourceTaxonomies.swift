@@ -317,6 +317,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "archive"]
     case "provisioning_profile_missing":
         return ["diagnose", "project"]
+    case "swift_macro_plugin_malformed_response":
+        return ["diagnose", "project", "archive"]
     case "validation_error", "validation_failed", "unknown_command_schema", "unknown_step", "duplicate_step_id":
         return ["diagnose", "plan", "discover", "observe", "archive"]
     case "web_port_in_use":
