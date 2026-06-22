@@ -47,6 +47,41 @@ struct XcodeDiagnosticsTests {
         #expect(diagnostic.nextAction.category == "recover")
     }
 
+    @Test("xcodebuild Swift macro malformed response output is parsed into actionable diagnostics")
+    func parsesSwiftMacroMalformedResponseDiagnostics() throws {
+        let output = """
+        /repo/App/AppNavigator.swift:89:17: error: external macro implementation type 'NavigatorMacros.RoutePlaceholdMacro' could not be found for macro 'Route(_:redirect:)'; '/repo/.triton/DerivedData/Build/Products/Debug-iphonesimulator/NavigatorMacros' produced malformed response
+        /repo/App/AppNavigator.swift:89:17: error: external macro implementation type 'NavigatorMacros.RouteMacro' could not be found for macro 'Route(_:redirect:)'; '/repo/.triton/DerivedData/Build/Products/Debug-iphonesimulator/NavigatorMacros' produced malformed response
+        ** BUILD FAILED **
+        """
+
+        let diagnostic = try #require(XcodeBuildOutputDiagnosticsParser.parse(stdout: "", stderr: output))
+
+        #expect(diagnostic.kind == "swift-macro-plugin-malformed-response")
+        #expect(diagnostic.matchCount == 2)
+        #expect(diagnostic.samples.count == 2)
+        #expect(diagnostic.samples[0].path == "/repo/.triton/DerivedData/Build/Products/Debug-iphonesimulator/NavigatorMacros")
+        #expect(diagnostic.samples[0].message.contains("NavigatorMacros.RoutePlaceholdMacro"))
+        #expect(diagnostic.recovery.contains("Swift macro"))
+        #expect(diagnostic.recovery.contains("--derived-data-path"))
+        #expect(diagnostic.recovery.contains("<fresh-derived-data-path>"))
+        #expect(diagnostic.nextAction.command == "xcode")
+        #expect(diagnostic.nextAction.args == ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"])
+        #expect(diagnostic.nextAction.category == "recover")
+    }
+
+    @Test("xcodebuild Swift macro malformed response maps to specialized failure code")
+    func swiftMacroMalformedResponseMapsToSpecializedFailureCode() throws {
+        let output = """
+        /repo/App/AppNavigator.swift:89:17: error: external macro implementation type 'NavigatorMacros.RouteMacro' could not be found for macro 'Route(_:redirect:)'; '/repo/.triton/DerivedData/Build/Products/Debug-iphonesimulator/NavigatorMacros' produced malformed response
+        """
+        let diagnostic = try #require(XcodeBuildOutputDiagnosticsParser.parse(stdout: output, stderr: ""))
+
+        #expect(xcodeBuildFailureCode(ok: false, diagnostics: [diagnostic]) == "swift_macro_plugin_malformed_response")
+        #expect(xcodeBuildFailureCode(ok: false, diagnostics: nil) == "xcodebuild_failed")
+        #expect(xcodeBuildFailureCode(ok: true, diagnostics: [diagnostic]) == nil)
+    }
+
     @Test("xcodebuild stale DerivedData diagnostics are exposed on action summaries")
     func actionSummaryCarriesStaleDerivedDataDiagnostics() throws {
         let output = """

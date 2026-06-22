@@ -18,9 +18,16 @@ enum XcodeBuildOutputDiagnosticsParser {
             .joined(separator: "\n")
         guard !combined.isEmpty else { return nil }
 
-        let samples = combined
+        let lines = combined
             .split(whereSeparator: \.isNewline)
-            .compactMap { parseStaleDerivedDataLine(String($0)) }
+            .map { String($0) }
+
+        if let diagnostic = parseSwiftMacroMalformedResponse(lines: lines, maximumSamples: maximumSamples) {
+            return diagnostic
+        }
+
+        let samples = lines
+            .compactMap(parseStaleDerivedDataLine)
         guard !samples.isEmpty else { return nil }
 
         return TKXcodeOutputDiagnostic(
@@ -35,6 +42,52 @@ enum XcodeBuildOutputDiagnosticsParser {
                 category: "recover"
             )
         )
+    }
+
+    private static func parseSwiftMacroMalformedResponse(
+        lines: [String],
+        maximumSamples: Int
+    ) -> TKXcodeOutputDiagnostic? {
+        let samples = lines.compactMap(parseSwiftMacroMalformedResponseLine)
+        guard !samples.isEmpty else { return nil }
+
+        return TKXcodeOutputDiagnostic(
+            kind: "swift-macro-plugin-malformed-response",
+            message: "xcodebuild reported a Swift macro plugin executable that produced a malformed response.",
+            matchCount: samples.count,
+            samples: Array(samples.prefix(maximumSamples)),
+            recovery: "Swift macro plugin execution failed with a malformed response. Retry the Xcode action with a fresh --derived-data-path outside the current repo-local cache, for example --derived-data-path <fresh-derived-data-path>. If the same scheme builds through Xcode-managed DerivedData, keep the Triton stdout/stderr artifacts and use triton app install/launch with the successful .app as a temporary workaround.",
+            nextAction: TKCLINextAction(
+                command: "xcode",
+                args: ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"],
+                category: "recover"
+            )
+        )
+    }
+
+    private static func parseSwiftMacroMalformedResponseLine(_ line: String) -> TKXcodeOutputDiagnosticSample? {
+        guard line.contains("external macro implementation type"),
+              line.contains("could not be found for macro"),
+              line.contains("produced malformed response") else {
+            return nil
+        }
+        guard let path = quotedPath(before: " produced malformed response", in: line) else {
+            return nil
+        }
+        return TKXcodeOutputDiagnosticSample(
+            path: path,
+            message: line.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+    }
+
+    private static func quotedPath(before marker: String, in line: String) -> String? {
+        guard let markerRange = line.range(of: marker) else { return nil }
+        let prefix = line[..<markerRange.lowerBound]
+        guard let closeQuote = prefix.lastIndex(of: "'") else { return nil }
+        let beforeClose = prefix[..<closeQuote]
+        guard let openQuote = beforeClose.lastIndex(of: "'") else { return nil }
+        let path = String(beforeClose[beforeClose.index(after: openQuote)...])
+        return path.isEmpty ? nil : path
     }
 
     private static func parseStaleDerivedDataLine(_ line: String) -> TKXcodeOutputDiagnosticSample? {

@@ -87,6 +87,7 @@ struct SchemaFactSourceTests {
         #expect(derivedDataOption.defaultValue == ".triton/DerivedData")
         #expect(derivedDataOption.description.contains("incremental"))
         #expect(derivedDataOption.description.contains("cleanup"))
+        #expect(derivedDataOption.description.contains("Swift macro"))
 
         expectContract(xcode, selector: "xcode.final", fields: [
             "derivedDataPath",
@@ -97,7 +98,12 @@ struct SchemaFactSourceTests {
             "derivedDataCache.incrementalExpected",
             "derivedDataCache.cleanupPolicy",
             "derivedDataCache.guidance",
+            "xcodeDiagnostics",
         ])
+
+        #expect(xcode.failureCodes.contains("swift_macro_plugin_malformed_response"))
+        #expect(xcode.failureShape?.contains("swift_macro_plugin_malformed_response") == true)
+        #expect(xcode.outputContracts.first { $0.selector == "xcode.final" }?.fields.first { $0.name == "xcodeDiagnostics" }?.description.contains("Swift macro") == true)
     }
 
     @Test("doctor response exposes ordered recovery checks")
