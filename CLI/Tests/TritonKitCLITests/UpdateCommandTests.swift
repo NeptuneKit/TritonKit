@@ -67,6 +67,43 @@ struct UpdateCommandTests {
         #expect(plan.requiresConfirmation == false)
     }
 
+    @Test("homebrew update without explicit version does not require GitHub latest")
+    func homebrewUpdateWithoutExplicitVersionDoesNotRequireGitHubLatest() async throws {
+        let root = try temporaryUpdateDirectory()
+        let cellarBin = root
+            .appendingPathComponent("Homebrew", isDirectory: true)
+            .appendingPathComponent("Cellar", isDirectory: true)
+            .appendingPathComponent("triton", isDirectory: true)
+            .appendingPathComponent("0.1.0", isDirectory: true)
+            .appendingPathComponent("bin", isDirectory: true)
+            .appendingPathComponent("triton")
+        try FileManager.default.createDirectory(at: cellarBin.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data().write(to: cellarBin)
+
+        let plan = try await runCLIUpdate(
+            requestedVersion: nil,
+            currentExecutable: cellarBin.path,
+            architecture: "arm64",
+            checkOnly: true,
+            dryRun: false,
+            confirm: false,
+            includeSkills: false,
+            skillsDirectory: nil,
+            repository: "NeptuneKit/TritonKit",
+            latestReleaseTagResolver: { _ in
+                throw CLIUpdateErrorDetail(
+                    code: "unexpected_latest_resolution",
+                    message: "Homebrew update should not require GitHub latest resolution.",
+                    hint: nil
+                )
+            }
+        )
+
+        #expect(plan.installSource == .homebrew)
+        #expect(plan.releaseTag == nil)
+        #expect(plan.actions.map(\.kind) == [.homebrewUpdate, .homebrewUpgrade])
+    }
+
     @Test("manual install source requires explicit confirmation for mutating update")
     func manualInstallSourceRequiresExplicitConfirmationForMutatingUpdate() throws {
         let plan = try makeCLIUpdatePlan(

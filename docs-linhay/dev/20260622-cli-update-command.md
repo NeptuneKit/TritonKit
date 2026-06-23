@@ -30,6 +30,7 @@ brew upgrade neptunekit/tap/triton
 ```
 
 不得直接覆盖 Homebrew Cellar 管理的 binary。
+未显式传 `--version` 且不更新 skills 时，Homebrew 来源不得依赖 GitHub `/releases/latest` API；版本解析交给 `brew update` / `brew upgrade`，避免 GitHub API 限流阻断 Homebrew 更新路径。
 
 手动 tarball 来源执行：
 
@@ -43,5 +44,6 @@ brew upgrade neptunekit/tap/triton
 ## 验证
 
 - `swift test --package-path CLI --scratch-path .build/cli --filter UpdateCommandTests`
+- `.build/cli/arm64-apple-macosx/debug/triton update --check --current-executable /opt/homebrew/Cellar/triton/0.2.2/bin/triton --json`
 - `.build/cli/arm64-apple-macosx/debug/triton update --check --version v0.1.1 --current-executable /usr/local/bin/triton --json`
 - `.build/cli/arm64-apple-macosx/debug/triton schema --command update --json`

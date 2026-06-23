@@ -34,7 +34,7 @@ func makeCLIUpdatePlan(
     var actions: [CLIUpdateAction] = []
     var manualInstructions: [String] = []
 
-    if requestedVersion == nil {
+    if requestedVersion == nil && installSource != .homebrew && installSource != .sourceCheckout {
         actions.append(CLIUpdateAction(
             id: "resolve-release",
             kind: .resolveRelease,
@@ -243,13 +243,22 @@ func runCLIUpdate(
     confirm: Bool,
     includeSkills: Bool,
     skillsDirectory: String?,
-    repository: String
+    repository: String,
+    latestReleaseTagResolver: ((String) async throws -> String) = fetchLatestTritonReleaseTag
 ) async throws -> CLIUpdateResponse {
+    let installSource = detectCLIUpdateInstallSource(
+        currentExecutable: currentExecutable,
+        environment: ProcessInfo.processInfo.environment
+    )
     let releaseTarget: (tag: String?, version: String?)
     if let requestedVersion {
         releaseTarget = normalizedReleaseTarget(requestedVersion)
+    } else if installSource == .homebrew && !includeSkills {
+        releaseTarget = (nil, nil)
+    } else if installSource == .sourceCheckout {
+        releaseTarget = (nil, nil)
     } else {
-        let tag = try await fetchLatestTritonReleaseTag(repository: repository)
+        let tag = try await latestReleaseTagResolver(repository)
         releaseTarget = normalizedReleaseTarget(tag)
     }
     let plan = try makeCLIUpdatePlan(
