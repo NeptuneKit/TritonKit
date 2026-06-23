@@ -133,7 +133,6 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "ios-device-wait-ready", supported: true),
         TKRuntimeCapability(name: "ios-device-screenshot", supported: true),
         TKRuntimeCapability(name: "ios-screenshot", supported: true),
-        TKRuntimeCapability(name: "ios-simulator-host-tap", supported: true),
         TKRuntimeCapability(name: "ios-simulator-host-type", supported: true),
         TKRuntimeCapability(name: "android-device", supported: true),
         TKRuntimeCapability(name: "android-device-doctor", supported: true),
@@ -464,8 +463,6 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "device", args: ["wait-ready", "<selector>", "--platform", "android", "--json"])
     case "android-device-screenshot":
         return TKCLINextAction(command: "device", args: ["screenshot", "--platform", "android", "--device", "<selector>", "--output", "<path>", "--json"])
-    case "ios-simulator-host-tap":
-        return TKCLINextAction(command: "sim", args: ["tap", "--simulator", "<udid|booted>", "--x", "<x>", "--y", "<y>", "--json"])
     case "ios-simulator-host-type":
         return TKCLINextAction(command: "sim", args: ["type", "--simulator", "<udid|booted>", "--text", "<text>", "--json"])
     case "device-proxy-ios":
@@ -828,7 +825,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["runtime-provider", "action-result", "runtime-ledger"]
     case "ledger":
         return ["runtime-ledger"]
-    case "ios-simulator-host-tap", "ios-simulator-host-type":
+    case "ios-simulator-host-type":
         return ["unsupported-envelope", "command-schema"]
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-wait-ready", "android-device-screenshot", "android-ax", "android-hierarchy", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-hierarchy", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "host-app", "ios-real-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-info":
         return ["host-command-json", "host-artifact"]

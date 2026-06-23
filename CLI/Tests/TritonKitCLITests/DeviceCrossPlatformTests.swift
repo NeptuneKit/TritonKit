@@ -3226,6 +3226,43 @@ struct DeviceCrossPlatformTests {
         #expect(harmony.source == "hdc")
     }
 
+    @Test("host app install accepts Harmony device-list emitted ids")
+    func hostAppInstallAcceptsHarmonyDeviceListEmittedIDs() throws {
+        let target = HostDeviceTarget(
+            platform: "harmony",
+            id: "harmony:127.0.0.1:10100",
+            target: "127.0.0.1:10100",
+            state: "Connected",
+            ready: true,
+            source: "hdc",
+            name: nil,
+            runtime: nil,
+            transport: "TCP",
+            scope: "emulator",
+            kind: "emulator",
+            rawTarget: "127.0.0.1:10100"
+        )
+
+        let selection = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(device: "harmony:127.0.0.1:10100", platform: .harmony),
+            candidates: [.harmony: [target]],
+            aliases: .empty
+        )
+        let plan = try planHostAppInstall(
+            selection: selection,
+            app: nil,
+            apk: nil,
+            hap: "/tmp/Demo.hap",
+            adb: "adb",
+            hdc: "hdc",
+            devicectlArtifacts: nil
+        )
+
+        #expect(selection.target.rawTarget == "127.0.0.1:10100")
+        #expect(plan.command.argv == ["-t", "127.0.0.1:10100", "install", "-r", "/tmp/Demo.hap"])
+        #expect(plan.target == "harmony:127.0.0.1:10100")
+    }
+
     @Test("host device selector prefers explicit matches and unique ready candidates")
     func hostDeviceSelectorPrefersExplicitMatchesAndUniqueReadyCandidates() {
         let first = HostDeviceTarget(

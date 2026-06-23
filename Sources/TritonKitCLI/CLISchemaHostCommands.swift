@@ -265,7 +265,6 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress with --wait"),
                 TKCommandSchemaOption(name: "shutdown <udid|booted>", type: "Subcommand", description: "Shutdown a simulator"),
                 TKCommandSchemaOption(name: "screenshot --output <path>", type: "Subcommand", description: "Capture simulator framebuffer screenshot"),
-                TKCommandSchemaOption(name: "tap --x <x> --y <y>", type: "Subcommand", description: "Reserved host-side simulator coordinate tap entry; currently returns unsupported_host_input"),
                 TKCommandSchemaOption(name: "type --text <ascii-text>", type: "Subcommand", description: "Reserved host-side simulator text entry; currently returns unsupported_host_input after ASCII validation"),
                 TKCommandSchemaOption(name: "record --output <path.mov> --duration <seconds>", type: "Subcommand", description: "Record a simulator video"),
                 TKCommandSchemaOption(name: "logs --output <path.log> --duration <seconds>", type: "Subcommand", description: "Capture bounded simulator OSLog stream output"),
@@ -316,8 +315,6 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "media seed --manifest <path>", type: "Subcommand", description: "Add manifest-described media fixtures to a simulator photo library"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted target selector"),
                 TKCommandSchemaOption(name: "--manifest", type: "Path", description: "Media seed manifest JSON path"),
-                TKCommandSchemaOption(name: "--x", type: "Int", description: "Simulator x coordinate for host-side tap"),
-                TKCommandSchemaOption(name: "--y", type: "Int", description: "Simulator y coordinate for host-side tap"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "ASCII text for host-side simulator type"),
                 TKCommandSchemaOption(name: "--display", type: "String", description: "CoreSimulator display selector for screenshot or video, for example internal, external, screen id, or display UUID"),
                 TKCommandSchemaOption(name: "--output", type: "Path", description: "Artifact output path for screenshot, record, logs, or diagnose"),
@@ -344,7 +341,6 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
                 "triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl",
                 "triton sim screenshot --simulator booted --output /tmp/sim.png --json",
-                "triton sim tap --simulator booted --x 200 --y 400 --json",
                 "triton sim type --simulator booted --text http://127.0.0.1:8000 --json",
                 "triton sim record --simulator booted --output /tmp/sim.mov --duration 10 --json",
                 "triton sim logs --simulator booted --output /tmp/sim.ndjson --duration 5 --style ndjson --json",
@@ -364,15 +360,14 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim personalization scan-and-personalize --json",
                 "triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.tap|sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim tap/type are reserved host input entries, but the current public simctl io contract exposes no stable tap or keyboard type primitive, so they return unsupported_host_input rather than pretending host input succeeded.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim type remains a reserved host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
                 "triton device use <sim-target-id> --json",
                 "triton plan --json",
-                "triton sim tap --simulator <udid|booted> --x <x> --y <y> --json",
                 "triton sim type --simulator <udid|booted> --text <text> --json",
                 "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
                 "triton app launch --device <selector> --bundle-id <id> --json",
@@ -467,19 +462,6 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     nextCommands: ["triton evidence capture --case <case> --output <dir.tritonevidence> --json"],
                     outputSelectors: ["host.simulator-screenshot"],
                     failureCodes: ["host_command_failed", "host_command_timeout", "simulator_not_found", "artifact_output_rejected", "validation_failed"]
-                ),
-                TKCommandSubcommandSchema(
-                    name: "tap",
-                    summary: "Reserved host-side simulator coordinate tap entry; currently unsupported by public simctl io",
-                    requiredOptions: ["--x", "--y"],
-                    optionalOptions: ["--simulator", "--format", "--json"],
-                    nextCommands: [
-                        "triton plan --json",
-                        "triton sim screenshot --simulator <udid|booted> --output <path> --json",
-                        "triton wait --text <text> --json",
-                    ],
-                    outputSelectors: ["host.simulator-input"],
-                    failureCodes: ["unsupported_host_input", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "type",
@@ -615,7 +597,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     failureCodes: ["media_seed_manifest_invalid", "host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
                 ),
             ],
-            providedCapabilities: ["host-simulator", "ios-simulator-host-tap", "ios-simulator-host-type", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
+            providedCapabilities: ["host-simulator", "ios-simulator-host-type", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
         ),
         TKCommandSchema(
             name: "app",

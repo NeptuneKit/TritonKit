@@ -3,7 +3,11 @@ import Foundation
 import TritonKitShared
 
 struct SimTap: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "tap", abstract: "Tap host-side simulator coordinates")
+    static let configuration = CommandConfiguration(
+        commandName: "tap",
+        abstract: "Tap host-side simulator coordinates",
+        shouldDisplay: false
+    )
 
     @Option(help: "Simulator UDID or booted") var simulator: String = "booted"
     @Option(help: "Screen x coordinate in simulator points") var x: Int
