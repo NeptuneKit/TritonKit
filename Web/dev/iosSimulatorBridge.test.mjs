@@ -1215,6 +1215,77 @@ process.stdout.write(${JSON.stringify(JSON.stringify(legacyPayload))});
   assert.ok(body.scene.nodes.some((node) => node.type === "UILabel"));
 });
 
+test("falls back to a matching iOS simulator runtime target when simulator UDID scene lookup fails", async () => {
+  const legacyPayload = {
+    appInfo: { screenWidth: 402, screenHeight: 874 },
+    displayItems: [
+      {
+        indentLevel: 0,
+        frame: [[0, 0], [402, 874]],
+        alpha: 1,
+        isHidden: false,
+        layerObject: { oid: 2, classChainList: ["UIWindow", "UIView"] },
+        subitems: [],
+      },
+    ],
+  };
+  const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.join(" ") === "list --json") {
+  process.stdout.write(JSON.stringify({ targets: [{ id: "triton:local", platform: "ios", connected: true, simulatorUDID: "AAAA-BBBB" }] }));
+  process.exit(0);
+}
+if (args.includes("--platform")) {
+  process.stdout.write(JSON.stringify({ ok: false, error: { code: "target_not_found", message: "Target not found: AAAA-BBBB" } }));
+  process.exit(1);
+}
+if (args.includes("--target") && args[args.indexOf("--target") + 1] === "triton:local") {
+  process.stdout.write(${JSON.stringify(JSON.stringify(legacyPayload))});
+  process.exit(0);
+}
+process.stderr.write("unexpected args: " + args.join(" "));
+process.exit(2);
+`);
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "POST",
+    url: "/web/host-hierarchy?platform=ios&target=AAAA-BBBB",
+  });
+
+  assert.equal(response.statusCode, 200);
+  const body = JSON.parse(response.body);
+  assert.equal(body.ok, true);
+  assert.equal(body.source.command, "triton debug hierarchy --target triton:local --json");
+  assert.equal(body.scene.rootId, "ios:runtime:2");
+});
+
+test("does not map a simulator host target to an unrelated iOS runtime fallback", async () => {
+  const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.join(" ") === "list --json") {
+  process.stdout.write(JSON.stringify({ targets: [{ id: "triton:connection:3", platform: "ios", connected: true }] }));
+  process.exit(0);
+}
+if (args.includes("--platform")) {
+  process.stdout.write(JSON.stringify({ ok: false, error: { code: "target_not_found", message: "Target not found: AAAA-BBBB" } }));
+  process.exit(1);
+}
+process.stderr.write("unexpected args: " + args.join(" "));
+process.exit(2);
+`);
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "POST",
+    url: "/web/host-hierarchy?platform=ios&target=AAAA-BBBB&scope=simulator&kind=simulator",
+  });
+
+  assert.equal(response.statusCode, 409);
+  const body = JSON.parse(response.body);
+  assert.equal(body.ok, false);
+  assert.equal(body.error.code, "web_host_hierarchy_failed");
+  assert.match(body.error.message, /No connected iOS App runtime target matched host target AAAA-BBBB/);
+});
+
 test("hydrates legacy iOS screenshotRef into hierarchy node slice data URLs", async () => {
   const nodePng = pngBytes(12, 8);
   const dataServer = await createFakeRuntimeDataServer({

@@ -579,7 +579,12 @@ button {
 }
 
 .view-tree-panel .ant-tree-treenode {
+  align-items: flex-start;
   width: 100%;
+}
+
+.view-tree-panel .ant-tree-switcher {
+  flex: 0 0 auto;
 }
 
 .view-tree-panel .ant-tree-node-content-wrapper {
@@ -587,6 +592,12 @@ button {
   width: 100%;
   padding: 0;
   background: transparent;
+}
+
+.view-tree-panel .ant-tree-title {
+  display: block;
+  min-width: 0;
+  white-space: normal;
 }
 
 .view-tree-panel .ant-tree-node-content-wrapper:hover,
@@ -598,7 +609,36 @@ button {
   min-width: 0;
   min-height: 0;
   overflow: auto;
-  padding: 14px 0 16px;
+  padding: 8px 0 16px;
+}
+
+.view-tree-status {
+  margin: 10px 12px 0;
+  padding: 8px 10px;
+  border: 1px solid rgba(94, 234, 212, 0.2);
+  border-radius: 10px;
+  background: rgba(94, 234, 212, 0.08);
+  color: #baf7eb;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.view-tree-status.is-stale {
+  border-color: rgba(216, 168, 111, 0.24);
+  background: rgba(216, 168, 111, 0.1);
+  color: #ffd8a8;
+}
+
+.view-tree-status strong,
+.view-tree-status small {
+  display: block;
+}
+
+.view-tree-status small {
+  margin-top: 5px;
+  color: inherit;
+  opacity: 0.78;
+  overflow-wrap: anywhere;
 }
 
 .view-tree-empty {
@@ -607,6 +647,19 @@ button {
   font-size: 12px;
   font-weight: 750;
   line-height: 1.45;
+}
+
+.view-tree-empty p {
+  margin: 0;
+}
+
+.view-tree-empty small {
+  display: block;
+  margin-top: 8px;
+  color: #d8a86f;
+  font-size: 11px;
+  font-weight: 650;
+  overflow-wrap: anywhere;
 }
 
 .view-tree-row {
@@ -635,6 +688,8 @@ button {
   display: grid;
   min-width: 0;
   gap: 2px;
+  overflow: visible;
+  white-space: normal;
 }
 
 .view-tree-row strong {
@@ -1080,9 +1135,25 @@ button {
   white-space: normal;
 }
 
+.controller-shell-badge em {
+  display: block;
+  margin-top: 2px;
+  color: rgba(245, 245, 245, 0.66);
+  font-size: 10px;
+  font-style: normal;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
+}
+
 .controller-shell-badge.is-fallback {
   border-color: rgba(255, 204, 102, 0.34);
   background: rgba(24, 20, 12, 0.78);
+}
+
+.controller-shell-badge.is-stale {
+  border-color: rgba(216, 168, 111, 0.38);
+  background: rgba(30, 22, 12, 0.82);
 }
 
 .device-screen {

@@ -920,6 +920,32 @@ private func makeWebHostScreenshotBridgeResponse(
     )
 }
 
+func makeWebHostHierarchyBridgeCommand(
+    tritonBin: String,
+    platform: String,
+    target: String,
+    output: String
+) -> WebLaunchCommand {
+    WebLaunchCommand(executable: tritonBin, arguments: [
+        "debug", "hierarchy",
+        "--platform", platform,
+        "--target", target,
+        "--json",
+        "--output", output,
+    ])
+}
+
+private func makeWebHostHierarchyBridgeResponse(tritonBin: String, platform: String, target: String) throws -> TKHostHierarchyResponse {
+    let output = FileManager.default.temporaryDirectory
+        .appendingPathComponent("triton-web-host-hierarchy-\(UUID().uuidString).json")
+        .path
+    defer { try? FileManager.default.removeItem(atPath: output) }
+    let command = makeWebHostHierarchyBridgeCommand(tritonBin: tritonBin, platform: platform, target: target, output: output)
+    try runWebProcess(command, environment: [:], currentDirectory: FileManager.default.currentDirectoryPath)
+    let data = try Data(contentsOf: URL(fileURLWithPath: output))
+    return try JSONDecoder().decode(TKHostHierarchyResponse.self, from: data)
+}
+
 private func makeWebHostInputBridgeResponse(
     platform: String,
     target: String,
@@ -1027,6 +1053,21 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
             return jsonResponse(try await makeWebHostScreenshotBridgeResponse(platform: platform, target: target, scope: scope, kind: kind, source: source))
         } catch {
             return jsonError(code: "web_host_screenshot_failed", message: "\(error)", endpoint: "/web/host-screenshot", status: .conflict)
+        }
+    }
+    router.get("/web/host-hierarchy") { request, _ -> Response in
+        let platform = request.uri.queryParameters.get("platform") ?? ""
+        let target = request.uri.queryParameters.get("target") ?? ""
+        guard [HostDevicePlatform.ios.rawValue, HostDevicePlatform.android.rawValue, HostDevicePlatform.harmony.rawValue].contains(platform) else {
+            return jsonError(code: "web_host_hierarchy_platform_not_supported", message: "Readonly host hierarchy is not available for platform: \(platform)", endpoint: "/web/host-hierarchy", status: .notImplemented)
+        }
+        guard !target.isEmpty else {
+            return jsonError(code: "invalid_query", message: "target is required.", endpoint: "/web/host-hierarchy", status: .badRequest)
+        }
+        do {
+            return jsonResponse(try makeWebHostHierarchyBridgeResponse(tritonBin: plan.tritonBin, platform: platform, target: target))
+        } catch {
+            return jsonError(code: "web_host_hierarchy_failed", message: "\(error)", endpoint: "/web/host-hierarchy", status: .conflict)
         }
     }
     router.get("/web/ios-simulator/screenshot") { request, _ -> Response in

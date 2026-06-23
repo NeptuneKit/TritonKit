@@ -143,6 +143,7 @@ type HierarchyCacheEntry = {
   loading: boolean;
   error?: string;
   scene?: HierarchyScene;
+  stale?: boolean;
 };
 
 type HierarchyNodeHotEditDraft = {
@@ -619,7 +620,7 @@ export function App() {
       const scene = await fetchHostHierarchy(target);
       setHierarchyById((entries) => ({
         ...entries,
-        [target.id]: { loading: false, scene },
+        [target.id]: { loading: false, scene, stale: false },
       }));
     } catch (error) {
       setHierarchyById((entries) => ({
@@ -627,6 +628,8 @@ export function App() {
         [target.id]: {
           loading: false,
           error: error instanceof Error ? error.message : String(error),
+          scene: entries[target.id]?.scene,
+          stale: Boolean(entries[target.id]?.scene),
         },
       }));
       throw error;
@@ -1248,6 +1251,7 @@ export function App() {
           <DeviceCanvas
             target={selectedWithScreenshot}
             hierarchyScene={selectedHierarchy?.scene}
+            hierarchyStale={Boolean(selectedHierarchy?.scene && (selectedHierarchy.stale || selectedHierarchy.error))}
             selectedHierarchyNode={selectedHierarchyNode}
             selectedHierarchyNodeDraft={selectedHierarchyNodeDraft}
             screenshotError={screenshotError}

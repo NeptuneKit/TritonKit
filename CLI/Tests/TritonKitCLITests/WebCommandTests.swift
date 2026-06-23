@@ -317,6 +317,25 @@ struct WebCommandTests {
         #expect(target.nextAction?.code == "start_debug_app")
     }
 
+    @Test("packaged web host hierarchy bridge uses debug hierarchy CLI contract")
+    func packagedWebHostHierarchyBridgeUsesDebugHierarchyCLIContract() {
+        let command = makeWebHostHierarchyBridgeCommand(
+            tritonBin: "/tmp/triton",
+            platform: "ios",
+            target: "60667794-96F8-40E6-8664-85538EC4663E",
+            output: "/tmp/hierarchy.json"
+        )
+
+        #expect(command.executable == "/tmp/triton")
+        #expect(command.arguments == [
+            "debug", "hierarchy",
+            "--platform", "ios",
+            "--target", "60667794-96F8-40E6-8664-85538EC4663E",
+            "--json",
+            "--output", "/tmp/hierarchy.json",
+        ])
+    }
+
     @Test("packaged web missing static root renders browser readable diagnostic")
     func packagedWebMissingStaticRootRendersBrowserReadableDiagnostic() throws {
         let missingWeb = try temporaryDirectory().appendingPathComponent("web", isDirectory: true)

@@ -17,7 +17,7 @@ after(async () => {
   await viteServer.close();
 });
 
-test("fetchHostTargets prefers target registry and keeps real-device runtime_not_found visible", async () => {
+test("fetchHostTargets prefers target registry, hides host_offline, and keeps real-device runtime_not_found visible", async () => {
   const calls = [];
   const restore = installFetch(async (input, init) => {
     const url = new URL(resolveRequestURL(input), "http://127.0.0.1:34127");
@@ -85,6 +85,29 @@ test("fetchHostTargets prefers target registry and keeps real-device runtime_not
               severity: "info",
             },
           ],
+        },
+        {
+          id: "host:ios:OFFLINE-SIM",
+          platform: "ios",
+          kind: "simulator",
+          host: {
+            target: "OFFLINE-SIM",
+            name: "Offline iPhone",
+            runtime: "iOS 26.5",
+            scope: "simulator",
+            kind: "simulator",
+            source: "simctl",
+            state: "Shutdown",
+            ready: false,
+            transport: "simctl",
+          },
+          runtime: null,
+          mirror: { state: "host_offline" },
+          diagnosis: {
+            code: "host_offline",
+            message: "Host target is not online.",
+            severity: "info",
+          },
         },
       ],
     });

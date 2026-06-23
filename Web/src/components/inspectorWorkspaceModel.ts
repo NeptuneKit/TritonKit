@@ -98,6 +98,7 @@ export type HierarchyCacheEntry = {
   loading: boolean;
   error?: string;
   scene?: HierarchyScene;
+  stale?: boolean;
 };
 
 export type HierarchyNodeHotEditDraft = {

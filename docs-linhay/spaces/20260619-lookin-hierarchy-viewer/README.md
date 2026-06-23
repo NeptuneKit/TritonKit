@@ -751,3 +751,105 @@ Lookin 的关键价值不是单张截图，而是把 view hierarchy、节点几�
 - 验收场景：
   - Given 当前处于实时模式且打开 `view-tree`，When App 页面从 `FirstViewController` 切到 `SecondViewController`，Then 壳上方 controller 标签自动更新为 `SecondViewController`。
   - Given 当前处于快照模式，When App 页面变化，Then 不自动刷新 hierarchy，直到用户点击手动刷新。
+
+## 2026-06-23 target registry 隐藏离线 host target
+
+- 用户指出 `http://127.0.0.1:34127/?target=host:ios:<UDID>` 会显示不在线的设备。
+- 根因：Web 数据层优先消费 `/web/target-registry` 后直接映射全部 registry targets，未像旧 `/web/host-targets` 分支一样过滤不可用 host target，导致 `mirror.state=host_offline` 进入左侧设备列表。
+- 需求边界：
+  - `host_offline` registry target 不出现在 Web Device Hub 的可选设备列表。
+  - `runtime_not_found` 的 ready 真机仍保留显示，用于提示启动已集成 TritonKit 的 Debug App。
+  - 不改变 CLI / HTTP registry DTO，也不新增 Web 控制入口。
+- 验收场景：
+  - Given `/web/target-registry` 同时返回 `ready`、`runtime_not_found` 与 `host_offline`，When Web 读取 host targets，Then 只暴露前两类 target。
+  - Given URL query 指向已离线 target，When registry 刷新后该 target 被过滤，Then Web 自动回落到第一个可见 target。
+- 验证：
+  - 先补失败测试 `fetchHostTargets prefers target registry, hides host_offline, and keeps real-device runtime_not_found visible`，确认修复前返回 3 个 target。
+  - 修复后同测试通过。
+
+## 2026-06-23 packaged triton web 支持 host hierarchy bridge
+
+- 用户复现 `http://127.0.0.1:34127/?target=host:ios:60667794-96F8-40E6-8664-85538EC4663E&panel=view-tree` 仍不显示视图树。
+- 当前事实：34127 由 `triton` packaged web server 监听，不是 Vite dev server；packaged server 已提供 `/web/target-registry`，但缺少 `/web/host-hierarchy`，导致视图树请求返回 404。
+- 需求边界：
+  - packaged `triton web` 增加只读 `GET /web/host-hierarchy` bridge。
+  - bridge 复用已有 `triton debug hierarchy --platform <platform> --target <target> --json` 契约，不在 Web 层新增业务控制能力。
+  - 不修改 AntD / React 视图树组件；前端继续消费 `TKHostHierarchyResponse.scene`。
+  - iOS Simulator 是当前验收目标；Android / Harmony 保持同一 CLI hierarchy 契约路径。
+- 验收场景：
+  - Given packaged `triton web` 被打开且 URL 包含 `panel=view-tree`，When 前端请求 `/web/host-hierarchy?platform=ios&target=<booted-simulator>&scope=simulator&kind=simulator`，Then 返回 `TKHostHierarchyResponse` JSON 而不是 404。
+  - Given platform 或 target 缺失，Then bridge 返回机器可读错误，不落到静态资源 fallback。
+- 当前现场复核：
+  - `lsof -nP -iTCP:34127 -sTCP:LISTEN` 显示当前 34127 由旧 `triton` packaged web 进程监听；该旧进程仍需重启后才包含新 route。
+  - 新编译 CLI 执行 `triton debug hierarchy --platform ios --target 60667794-96F8-40E6-8664-85538EC4663E --json` 返回 `target_not_found`；`triton list --json` 当前 targets 为空，说明该 booted simulator 没有已连接的 embedded App runtime hierarchy target。
+  - 因此 packaged route 修复只解决 404；若 App runtime 未连接，Web 仍应显示 hierarchy 错误/空态，而不是实际视图树。
+- 验证：
+  - 先补失败测试 `packaged web host hierarchy bridge uses debug hierarchy CLI contract`，确认 helper 缺失。
+  - 修复后 `swift test --package-path CLI --scratch-path .build/cli-web-hierarchy --filter WebCommandTests` 通过，21/21。
+
+## 2026-06-23 Web 重启统一脚本
+
+- 用户要求提供统一脚本重启当前 Web。
+- 复用并扩展既有 `docs-linhay/scripts/start-web-with-triton.sh`，新增 `--restart`、`--host`、`--port`。
+- 默认流程：构建 debug `triton` CLI；按需安装 Web 依赖；若传 `--restart`，对指定端口当前 listener 发送 SIGTERM 并等待端口释放；随后以 `TRITONKIT_TRITON_BIN=<built-triton>` 启动 Vite dev server。
+- 使用方式：`docs-linhay/scripts/start-web-with-triton.sh --restart`。
+- 边界：脚本只重启 Web dev server，不启动 App runtime；视图树仍需要 `triton list --json` 能看到已连接 runtime target。
+- 验证：`bash -n docs-linhay/scripts/start-web-with-triton.sh` 与 `docs-linhay/scripts/start-web-with-triton.sh --help` 通过。
+
+## 2026-06-23 视图树 runtime 连接状态显式化
+
+- 用户继续复现 `?target=host:ios:60667794-96F8-40E6-8664-85538EC4663E&panel=view-tree` 没有视图树。
+- Triton-first 现场事实：
+  - `.build/web-dev-cli/debug/triton status --json` 返回 `targetCount=0`、`connected=false`、`activeHierarchyAvailable=false`。
+  - `.build/web-dev-cli/debug/triton doctor --json` 返回 `target_unavailable`，提示本机 server 可达但没有 embedded runtime target 连接。
+  - `.build/web-dev-cli/debug/triton debug hierarchy --platform ios --target 60667794-96F8-40E6-8664-85538EC4663E --json` 返回 `target_not_found`。
+- 结论：该 simulator host target 是 Booted/ready，但这只证明宿主模拟器在线；当前没有已启动并连接 TritonKit 的 Debug App runtime，因此无法产出 UIKit 视图树。
+- 修复：
+  - Vite bridge 在 scene mode 以 simulator UDID 失败时，legacy hierarchy fallback 会解析唯一 connected iOS runtime target；避免已有 `triton:local` 时仍拿 host UDID 查询 runtime。
+  - Web 左侧 view-tree 错误态直接展示 bridge 错误正文，不再只把错误放在 `title` 里，避免用户看到“空树”但不知道原因。
+  - `start-web-with-triton.sh --restart` 改为停止旧 Vite listener 所在 process group，避免只杀子进程后 npm 父进程重新拉起旧 server。
+- 验证：
+  - `node --test --test-name-pattern='only connected iOS runtime target|falls back to legacy iOS runtime hierarchy when scene mode cannot resolve' dev/iosSimulatorBridge.test.mjs` 通过。
+  - `npm run build` 通过。
+  - `swift test --package-path CLI --scratch-path .build/cli-web-hierarchy --filter WebCommandTests` 通过，21/21。
+  - `docs-linhay/scripts/start-web-with-triton.sh --restart` 已成功停止旧 PID 并启动 Vite dev server。
+
+## 2026-06-23 Overloaded-v2 实项目联调
+
+- 用户指定 `/Users/linhey/Desktop/FlowUp-Libs/Overloaded-v2/` 进行联调。
+- 只读发现：
+  - `triton xcode discover --path /Users/linhey/Desktop/FlowUp-Libs/Overloaded-v2/iOS/Overloaded --json` 发现单一 project：`Overloaded.xcodeproj`。
+  - `triton xcode schemes --project ... --json` 包含 `Overloaded` scheme。
+- 执行联调：
+  - `triton xcode run --project .../Overloaded.xcodeproj --scheme Overloaded --configuration Debug --simulator 60667794-96F8-40E6-8664-85538EC4663E --timeout 600 --jsonl` 构建、安装、启动成功。
+  - 构建产物 bundle id：`overloaded.cn.debug`。
+  - App launch PID：`32417`。
+- 视图树验证：
+  - `triton status --json` 返回 `connected=true`、`targetCount=2`、`activeHierarchyAvailable=true`。
+  - `triton list --json` 包含 `triton:ios-simulator:60667794-96F8-40E6-8664-85538EC4663E`，App 为 `Overloaded`。
+  - `/web/host-hierarchy?platform=ios&target=60667794-96F8-40E6-8664-85538EC4663E&scope=simulator&kind=simulator` 返回 `ok=true`，节点数 108，active controller 为 `Overloaded.FilesViewController`。
+- 注意：本次发现 `triton xcode run` 的 build 阶段 sourceCommand 使用了 workspace/default simulator `1B360513-22E7-46DB-A942-198EE522C6DC`，但 install/launch summary 使用了显式传入的 `60667794-96F8-40E6-8664-85538EC4663E`；后续需要单独排查 build destination 与 run simulator 选择不一致的问题。
+
+## 2026-06-23 视图树离线缓存与文本可读性
+
+- 用户指出关闭 App 后 view-tree 仍显示，且标签仍标成实时；同时视图树区域文本被截断，无法查看。
+- 需求边界：
+  - App runtime 断开后，已有 hierarchy 可以作为缓存继续展示，但 UI 必须明确标为缓存/离线，不能继续声称实时。
+  - 如果刷新 hierarchy 失败，应保留最后一次成功 scene 作为缓存态，避免直接丢失诊断上下文。
+  - view-tree 节点文本必须可完整查看；优先用 CSS 换行与 title，不改 CLI / HTTP hierarchy DTO。
+  - 不新增 Web 控制入口，不改变 runtime / host API。
+- 验收场景：
+  - Given Web 已拿到一次实时 hierarchy，When App 被关闭且后续 hierarchy refresh 失败，Then view-tree 仍可展示最后一次成功 scene，但面板提示为缓存/离线，不显示实时标签。
+  - Given view-tree 节点类名或名称很长，When 在左侧视图树查看，Then 文本可换行或通过 title 完整查看，不被单行截断到不可读。
+- 实现：
+  - hierarchy refresh 失败时保留上一份成功 `scene`，同时标记 `stale=true` 并展示错误。
+  - controller shell badge 在 hierarchy stale 时显示 `缓存`，view-tree 面板显示 `缓存视图层级`。
+  - iOS simulator host target 的 legacy runtime fallback 不再用“唯一 connected runtime”猜测归属；必须匹配 `simulatorUDID` 或 runtime id，避免 App 关闭后把 `triton:connection:*` 残留连接误认为该 simulator 的实时树。
+  - AntD Tree wrapper 增加换行规则，节点文本允许完整换行显示。
+- 真实浏览器验证：
+  - 重新启动 `overloaded.cn.debug` 后，页面显示 `实时视图层级`，controller badge 为 `FilesViewController实时`。
+  - `triton app terminate --bundle-id overloaded.cn.debug --simulator 60667794-96F8-40E6-8664-85538EC4663E --json` 后，页面保留树并显示 `缓存视图层级`，controller badge 为 `FilesViewController缓存`。
+- 验证：
+  - `node --test --test-name-pattern='matching iOS simulator runtime target|unrelated iOS runtime fallback|legacy iOS runtime hierarchy when scene mode cannot resolve' dev/iosSimulatorBridge.test.mjs` 通过。
+  - `node --test --test-name-pattern='keeps view-tree labels readable' dev/appFallbackDom.test.mjs` 通过。
+  - `npm run build` 通过。

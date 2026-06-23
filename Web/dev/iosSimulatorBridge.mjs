@@ -467,7 +467,6 @@ async function resolveIOSRuntimeMirrorTarget(tritonPath, hostTarget, options = {
     return runtimeSimulatorUDID === simulatorUDID || runtimeID === hostTarget || runtimeID.endsWith(simulatorUDID);
   });
   if (simulatorTarget) return String(simulatorTarget.id);
-  if (runtimeTargets.length === 1) return String(runtimeTargets[0].id);
   throw new Error(`No connected iOS App runtime target matched host target ${hostTarget}. Available: ${describeRuntimeTargets(runtimeTargets)}.`);
 }
 
@@ -628,10 +627,12 @@ async function captureHostHierarchy(tritonPath, platform, target, method = "GET"
     payload = await runTritonJSON(tritonPath, args);
   } catch (error) {
     if (platform === "ios" && shouldFallbackToLegacyIosHierarchy(error)) {
-      const legacyPayload = await runTritonJSON(tritonPath, ["debug", "hierarchy", "--target", hierarchyTarget, "--json"]);
+      const legacyTarget = await resolveLegacyIosHierarchyTarget(tritonPath, target, options, hierarchyTarget);
+      const legacyPayload = await runTritonJSON(tritonPath, ["debug", "hierarchy", "--target", legacyTarget, "--json"]);
       return attachHierarchyCaptureControl(
         await mapLegacyIosHierarchyToHostResponse(legacyPayload, target, {
           runtimeDataBaseURL: options.runtimeDataBaseURL || defaultRuntimeDataBaseURL,
+          commandTarget: legacyTarget,
         }),
         method,
         target
@@ -647,6 +648,18 @@ async function captureHostHierarchy(tritonPath, platform, target, method = "GET"
     method,
     target
   );
+}
+
+async function resolveLegacyIosHierarchyTarget(tritonPath, target, options, fallbackTarget) {
+  try {
+    return await resolveIOSRuntimeMirrorTarget(tritonPath, target, options);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (message.includes("No connected iOS App runtime target matched host target")) {
+      throw error;
+    }
+    return fallbackTarget;
+  }
 }
 
 function shouldFallbackToLegacyIosHierarchy(error) {
@@ -719,7 +732,7 @@ async function mapLegacyIosHierarchyToHostResponse(payload, target, options = {}
     ok: true,
     capturedAt: new Date().toISOString(),
     source: {
-      command: `triton debug hierarchy --target ${target} --json`,
+      command: `triton debug hierarchy --target ${options.commandTarget ?? target} --json`,
       runtimeScope: "runtime-tree",
       readonly: true,
     },

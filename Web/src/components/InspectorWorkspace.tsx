@@ -360,6 +360,7 @@ function ViewTreePanel({
   onSelectHierarchyNode: (nodeId: string | null) => void;
 }) {
   const hierarchyScene = hierarchy?.scene;
+  const isStale = Boolean(hierarchyScene && (hierarchy?.stale || hierarchy?.error));
   const treeNodes = useMemo(() => (hierarchyScene ? viewTreeNodesForScene(hierarchyScene) : []), [hierarchyScene]);
   const defaultSelection = hierarchyScene ? defaultViewTreeSelection(hierarchyScene) : null;
   const selectedNode = selectedHierarchyNode ?? defaultSelection;
@@ -403,22 +404,29 @@ function ViewTreePanel({
 
   return (
     <Card className="sidebar-panel view-tree-panel" aria-label="视图层级面板" size="small">
-      {hierarchy?.loading ? (
+      {hierarchy?.loading && !hierarchyScene ? (
         <p className="view-tree-empty">正在读取实时视图层级...</p>
-      ) : hierarchy?.error ? (
-        <p className="view-tree-empty" title={hierarchy.error}>
-          未拿到实时视图层级
-        </p>
-      ) : hierarchyScene ? (
-        <div className="view-tree-list" aria-label={`${selected.appName} 视图层级`}>
-          <Tree
-            blockNode
-            expandedKeys={hierarchyScene.nodes.map((node) => node.id)}
-            selectedKeys={selectedNode ? [selectedNode] : []}
-            treeData={treeData}
-            onSelect={(keys) => onSelectHierarchyNode(String(keys[0] ?? ""))}
-          />
+      ) : hierarchy?.error && !hierarchyScene ? (
+        <div className="view-tree-empty" title={hierarchy.error}>
+          <p>未拿到实时视图层级</p>
+          <small>{hierarchy.error}</small>
         </div>
+      ) : hierarchyScene ? (
+        <>
+          <div className={`view-tree-status ${isStale ? "is-stale" : ""}`} title={hierarchy?.error}>
+            <strong>{isStale ? "缓存视图层级" : hierarchy?.loading ? "正在刷新实时视图层级" : "实时视图层级"}</strong>
+            {hierarchy?.error ? <small>{hierarchy.error}</small> : null}
+          </div>
+          <div className="view-tree-list" aria-label={`${selected.appName} 视图层级`}>
+            <Tree
+              blockNode
+              expandedKeys={hierarchyScene.nodes.map((node) => node.id)}
+              selectedKeys={selectedNode ? [selectedNode] : []}
+              treeData={treeData}
+              onSelect={(keys) => onSelectHierarchyNode(String(keys[0] ?? ""))}
+            />
+          </div>
+        </>
       ) : (
         <p className="view-tree-empty">暂无实时视图层级</p>
       )}
@@ -475,6 +483,7 @@ function ViewTreeRow({
 export function DeviceCanvas({
   target,
   hierarchyScene,
+  hierarchyStale,
   selectedHierarchyNode,
   selectedHierarchyNodeDraft,
   screenshotError,
@@ -491,6 +500,7 @@ export function DeviceCanvas({
 }: {
   target: DeviceTarget;
   hierarchyScene?: HierarchyScene;
+  hierarchyStale?: boolean;
   selectedHierarchyNode: string | null;
   selectedHierarchyNodeDraft?: HierarchyNodeHotEditDraft;
   screenshotError?: string;
@@ -736,10 +746,11 @@ export function DeviceCanvas({
       <div className="device-stage" aria-label="设备镜像区域">
         {hierarchyScene?.platform === "ios" ? (
           <div
-            className={`controller-shell-badge ${controllerBadge?.isFallback ? "is-fallback" : ""}`}
+            className={`controller-shell-badge ${controllerBadge?.isFallback ? "is-fallback" : ""} ${hierarchyStale ? "is-stale" : ""}`}
             title={controllerBadge?.stack.length ? controllerBadge.stack.join(" > ") : controllerBadge?.className ?? "UIViewController 未暴露"}
           >
             <strong>{controllerBadge?.name ?? "未暴露"}</strong>
+            <em>{hierarchyStale ? "缓存" : "实时"}</em>
           </div>
         ) : null}
         <div

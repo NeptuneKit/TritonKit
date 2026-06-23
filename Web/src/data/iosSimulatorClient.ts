@@ -26,7 +26,7 @@ export async function fetchHostTargets(): Promise<{
   const registry = await fetchTargetRegistryIfAvailable();
   if (registry) {
     return {
-      targets: registry.targets.map(mapRegistryTargetToDeviceTarget),
+      targets: registry.targets.filter(shouldExposeRegistryTarget).map(mapRegistryTargetToDeviceTarget),
       capturedAt: new Date().toISOString(),
       sourceCommands: ["triton serve /web/target-registry"],
       commandOutputs: [],
@@ -407,6 +407,10 @@ function registryTargetStatus(entry: WebTargetRegistryEntry) {
   if (entry.mirror.state === "ready") return "ready" as const;
   if (entry.mirror.state === "host_offline") return "busy" as const;
   return "limited" as const;
+}
+
+function shouldExposeRegistryTarget(entry: WebTargetRegistryEntry) {
+  return entry.mirror.state !== "host_offline";
 }
 
 function registryTargetSelectorFromID(id: string) {
