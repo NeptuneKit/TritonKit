@@ -234,6 +234,113 @@ struct Serve: AsyncParsableCommand {
             }
         }
 
+        router.post("/v1/test-recorder/sessions") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/sessions"
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPSessionCreate(body: bodyData))
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/v1/test-recorder/sessions/:sessionId/events") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/sessions/{sessionId}/events"
+            guard let sessionID = testRecorderHTTPSessionID(from: request, terminalComponent: "events") else {
+                return jsonError(
+                    code: "invalid_session_id",
+                    message: "Missing or invalid test recorder session id.",
+                    endpoint: endpoint,
+                    hint: "Use POST /v1/test-recorder/sessions/{sessionId}/events with the sessionId returned by session create.",
+                    status: .badRequest
+                )
+            }
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPEvent(sessionID: sessionID, body: bodyData))
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/v1/test-recorder/sessions/:sessionId/stop") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/sessions/{sessionId}/stop"
+            guard let sessionID = testRecorderHTTPSessionID(from: request, terminalComponent: "stop") else {
+                return jsonError(
+                    code: "invalid_session_id",
+                    message: "Missing or invalid test recorder session id.",
+                    endpoint: endpoint,
+                    hint: "Use POST /v1/test-recorder/sessions/{sessionId}/stop with the sessionId returned by session create.",
+                    status: .badRequest
+                )
+            }
+            do {
+                return jsonResponse(try handleTestRecorderHTTPSessionStop(sessionID: sessionID))
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/v1/test-recorder/cases/inspect") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/cases/inspect"
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPInspect(body: bodyData))
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/v1/test-recorder/cases/compile") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/cases/compile"
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPCompile(body: bodyData))
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/v1/test-recorder/cases/proposals") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/cases/proposals"
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPProposals(body: bodyData))
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/v1/test-recorder/cases/match-page") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/cases/match-page"
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPMatchPage(body: bodyData))
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/v1/test-recorder/cases/replay-dry-run") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/cases/replay-dry-run"
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPReplayDryRun(body: bodyData))
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/v1/test-recorder/cases/replay") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/cases/replay"
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPReplay(body: bodyData), status: .ok)
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
         router.get("/web/geometry") { request, _ -> Response in
             if let target = queryTarget(from: request), parseWebHostTargetID(target) != nil {
                 do {
@@ -794,6 +901,46 @@ private func appMapHTTPErrorDetail(_ error: Error, endpoint: String) -> TKCLIErr
         endpoint: endpoint,
         hint: "Run `triton schema --command map --json` to inspect App Map commands"
     )
+}
+
+private func testRecorderHTTPSessionID(from request: Request, terminalComponent: String) -> String? {
+    let components = request.uri.path
+        .split(separator: "/", omittingEmptySubsequences: true)
+        .map(String.init)
+    guard components.count == 5,
+          components[0] == "v1",
+          components[1] == "test-recorder",
+          components[2] == "sessions",
+          components[4] == terminalComponent else {
+        return nil
+    }
+    return components[3].removingPercentEncoding
+}
+
+private func testRecorderHTTPErrorResponse(_ error: Error, endpoint: String) -> Response {
+    if let failure = error as? TKTestRecorderValidationFailure {
+        return jsonResponse(TKTestRecorderValidationFailureResponse(failure), status: testRecorderHTTPStatus(for: failure))
+    }
+    return jsonError(
+        code: "test_recorder_request_failed",
+        message: "\(error)",
+        endpoint: endpoint,
+        hint: "Run triton schema --command testrec --json to inspect Test Recorder HTTP-equivalent contracts.",
+        status: .conflict
+    )
+}
+
+private func testRecorderHTTPStatus(for failure: TKTestRecorderValidationFailure) -> HTTPResponse.Status {
+    switch failure.detail.code {
+    case "invalid_json", "invalid_payload", "invalid_session_id", "unsupported_event_kind", "dry_run_required":
+        .badRequest
+    case "session_not_found":
+        .notFound
+    case "session_not_recording":
+        .conflict
+    default:
+        .conflict
+    }
 }
 
 // MARK: - Client Commands

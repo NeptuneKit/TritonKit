@@ -380,7 +380,7 @@ extension SchemaFactSourceTests {
             "replay": ["plan", "status", "serve"],
             "smoke": ["smoke"],
             "action": ["act", "action", "tap", "swipe", "type", "paste", "clear", "press", "input", "wait", "schema", "status", "serve"],
-            "test": ["test", "schema"],
+            "test": ["test", "testrec", "schema"],
             "xcode": ["xcode", "xcresult", "xctrace", "coverage"],
         ]
 
@@ -543,6 +543,7 @@ extension SchemaFactSourceTests {
             "screenshot": ["<path.png>"],
             "app-map-viewer": ["<file.html>"],
             "test-create-from-session": ["<path.tritontest.yaml>"],
+            "testrec-session-start": ["<case.tritontestcase>"],
         ]
 
         var unknownOutputCapabilities: [String] = []

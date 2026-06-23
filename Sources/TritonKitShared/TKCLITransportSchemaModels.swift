@@ -234,6 +234,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "tap": "act",
         "target": "prepare-target",
         "test": "diagnose",
+        "testrec": "diagnose",
         "type": "act",
         "update": "diagnose",
         "version": "diagnose",

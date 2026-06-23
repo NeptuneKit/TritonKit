@@ -78,6 +78,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             Capabilities.self,
             Schema.self,
             TestCommand.self,
+            TestRecorderCommand.self,
             Update.self,
             ActionProvider.self,
             Target.self,

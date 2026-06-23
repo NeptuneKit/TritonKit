@@ -20,14 +20,14 @@ func capabilityWorkflowTaxonomy() -> Set<String> {
 
 func capabilityEvidenceTaxonomy() -> Set<String> {
     [
-        "action-result", "assert.result", "bridge-call-result", "command-schema",
-        "app-map", "app-map-viewer-html", "app.structured-evidence", "coordinate-contract", "coverage", "evidence-bundle", "host-artifact", "host-command-json", "host-simulator-media-seed",
+        "action-map", "action-result", "assert.result", "bridge-call-result", "command-schema",
+        "app-map", "app-map-viewer-html", "app.structured-evidence", "compile-proposals", "compiled-contract", "coordinate-contract", "coverage", "evidence-bundle", "host-artifact", "host-command-json", "host-simulator-media-seed",
         "host-layout", "host-targets.json", "hierarchy-node", "input.result",
-        "page-events", "provider-url", "route-assertion", "runtime-ax",
+        "page-events", "page-fingerprint-match", "page-map", "provider-url", "route-assertion", "runtime-ax",
         "runtime-ledger", "runtime-manifest", "runtime-provider",
         "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
-        "network-capture", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
-        "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan", "tritontest-yaml",
+        "network-capture", "network-fixture", "network-map", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
+        "contract-capabilities", "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan", "tritontest-yaml", "tritontestcase",
         "unsupported-envelope", "vlm-compare", "vlm-grounding", "vlm-model-cache", "vlm-model-metadata", "vlm-overlay", "vlm-parsed-point", "vlm-raw-output", "vlm-request", "vlm-response", "vlm-transform", "wait.result", "wait-samples", "webview-candidates",
         "webview-provider", "webview-snapshot", "xcodebuild-json", "xcresult",
     ]
@@ -107,6 +107,15 @@ func outputContractKindTaxonomy() -> Set<String> {
         "target-summary",
         "test-normalized-plan",
         "test-create-result",
+        "testrec-compile",
+        "testrec-event",
+        "testrec-inspect",
+        "testrec-page-fingerprint-match",
+        "testrec-proposals-inspect",
+        "testrec-replay-dry-run",
+        "testrec-replay-result",
+        "testrec-session-start",
+        "testrec-session-stop",
         "test-report",
         "test-run-result",
         "test-validation-result",
@@ -197,6 +206,7 @@ func recoveryCommandRootTaxonomy() -> Set<String> {
         "tap",
         "target",
         "test",
+        "testrec",
         "type",
         "update",
         "version",
@@ -280,6 +290,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
         "tap": "act",
         "target": "prepare-target",
         "test": "diagnose",
+        "testrec": "diagnose",
         "type": "act",
         "update": "diagnose",
         "version": "diagnose",
@@ -324,7 +335,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "project"]
     case "swift_macro_plugin_malformed_response":
         return ["diagnose", "project", "archive"]
-    case "validation_error", "validation_failed", "unknown_command_schema", "unknown_step", "duplicate_step_id":
+    case "validation_error", "validation_failed", "unknown_command_schema", "unknown_step", "duplicate_step_id", "session_not_recording":
         return ["diagnose", "plan", "discover", "observe", "archive"]
     case "web_port_in_use":
         return ["diagnose", "plan"]
@@ -427,8 +438,12 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "app-map.transitions",
         "app-preferences",
         "app.structured-evidence",
+        "action-map",
         "ax",
         "build.summary",
+        "compile-proposals",
+        "compiled-contract",
+        "contract-capabilities",
         "coverage-json",
         "coordinate-contract",
         "evidence-bundle",
@@ -443,7 +458,10 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "logs",
         "manifest",
         "network-capture",
+        "network-fixture",
+        "network-map",
         "none-inline-summary",
+        "page-map",
         "proxy-restore",
         "result-bundle",
         "real-device.diagnostics",
@@ -464,6 +482,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "trace",
         "triton-plan",
         "tritontest-yaml",
+        "tritontestcase",
         "vlm-compare",
         "vlm-grounding",
         "vlm-model-cache",

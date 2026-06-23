@@ -94,6 +94,15 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "test-run-ai-mock", supported: true),
         TKRuntimeCapability(name: "test-report", supported: true),
         TKRuntimeCapability(name: "test-create-from-session", supported: true),
+        TKRuntimeCapability(name: "testrec-session-start", supported: true),
+        TKRuntimeCapability(name: "testrec-event-ingest", supported: true),
+        TKRuntimeCapability(name: "testrec-session-stop", supported: true),
+        TKRuntimeCapability(name: "testrec-inspect", supported: true),
+        TKRuntimeCapability(name: "testrec-compile", supported: true),
+        TKRuntimeCapability(name: "testrec-proposals-inspect", supported: true),
+        TKRuntimeCapability(name: "testrec-page-match", supported: true),
+        TKRuntimeCapability(name: "testrec-replay-dry-run", supported: true),
+        TKRuntimeCapability(name: "testrec-replay-local-simulated", supported: true),
         TKRuntimeCapability(name: "action-provider-parse", supported: true),
         TKRuntimeCapability(name: "status", supported: true),
         TKRuntimeCapability(name: "doctor", supported: true),
@@ -316,7 +325,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
     switch name {
     case "version", "cli-update", "plan", "record", "replay-dry-run", "web-device-hub", "schema", "status", "doctor", "capabilities":
         return "bootstrap"
-    case "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session":
+    case "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated":
         return "test"
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
         return "target"
@@ -353,7 +362,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["observe", "evidence"]
     case "cli-update":
         return ["runtime"]
-    case "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session":
+    case "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session", "testrec-session-start", "testrec-event-ingest", "testrec-session-stop", "testrec-inspect", "testrec-compile", "testrec-proposals-inspect", "testrec-page-match", "testrec-replay-dry-run", "testrec-replay-local-simulated":
         return ["test"]
     case "target-list", "target-use", "target-current", "target-resolve", "target-wait-ready":
         return ["app", "runtime", "observe", "action", "assert", "evidence", "smoke"]
@@ -420,6 +429,24 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "test", args: ["report", "<dir.tritonevidence>", "--json"])
     case "test-create-from-session":
         return TKCLINextAction(command: "test", args: ["create", "--from-session", "<dir.tritonevidence>", "--output", "<path.tritontest.yaml>", "--json"])
+    case "testrec-session-start":
+        return TKCLINextAction(command: "testrec", args: ["start", "--platform", "ios", "--case", "<name>", "--output", "<case.tritontestcase>", "--json"])
+    case "testrec-event-ingest":
+        return TKCLINextAction(command: "testrec", args: ["event", "--session", "<session-id>", "--kind", "action", "--payload-json", "<json>", "--json"])
+    case "testrec-session-stop":
+        return TKCLINextAction(command: "testrec", args: ["stop", "--session", "<session-id>", "--json"])
+    case "testrec-inspect":
+        return TKCLINextAction(command: "testrec", args: ["inspect", "<case.tritontestcase>", "--json"])
+    case "testrec-compile":
+        return TKCLINextAction(command: "testrec", args: ["compile", "<case.tritontestcase>", "--json"])
+    case "testrec-proposals-inspect":
+        return TKCLINextAction(command: "testrec", args: ["proposals", "<case.tritontestcase>", "--json"])
+    case "testrec-page-match":
+        return TKCLINextAction(command: "testrec", args: ["match-page", "<case.tritontestcase>", "--page", "<page>", "--candidate-json", "<json>", "--json"])
+    case "testrec-replay-dry-run":
+        return TKCLINextAction(command: "testrec", args: ["replay", "<case.tritontestcase>", "--platform", "android", "--dry-run", "--json"])
+    case "testrec-replay-local-simulated":
+        return TKCLINextAction(command: "testrec", args: ["replay", "<case.tritontestcase>", "--platform", "android", "--executor", "local-simulated", "--target-fingerprints-json", "<json>", "--evidence-dir", "<dir.tritonevidence>", "--json"])
     case "action-provider-parse":
         return TKCLINextAction(command: "action", args: ["parse", "--provider", "ui-tars", "--input", "<provider-output>", "--json"])
     case "plan":
@@ -816,6 +843,24 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["stdout-json", "command-schema", "evidence-bundle"]
     case "test-create-from-session":
         return ["stdout-json", "command-schema", "evidence-bundle", "test.normalized-plan", "tritontest-yaml"]
+    case "testrec-session-start":
+        return ["stdout-json", "command-schema", "tritontestcase", "contract-capabilities"]
+    case "testrec-event-ingest":
+        return ["stdout-json", "command-schema", "tritontestcase", "page-events", "network-capture"]
+    case "testrec-session-stop":
+        return ["stdout-json", "command-schema", "tritontestcase", "contract-capabilities"]
+    case "testrec-inspect":
+        return ["stdout-json", "command-schema", "tritontestcase", "contract-capabilities"]
+    case "testrec-compile":
+        return ["stdout-json", "command-schema", "tritontestcase", "contract-capabilities", "compiled-contract", "compile-proposals"]
+    case "testrec-proposals-inspect":
+        return ["stdout-json", "command-schema", "tritontestcase", "compile-proposals"]
+    case "testrec-page-match":
+        return ["stdout-json", "command-schema", "tritontestcase", "compiled-contract", "page-fingerprint-match"]
+    case "testrec-replay-dry-run":
+        return ["stdout-json", "command-schema", "tritontestcase", "contract-capabilities"]
+    case "testrec-replay-local-simulated":
+        return ["stdout-json", "command-schema", "tritontestcase", "compiled-contract", "action-map", "page-fingerprint-match", "evidence-bundle"]
     case "action-provider-parse":
         return ["stdout-json", "command-schema"]
     case "web-device-hub":
