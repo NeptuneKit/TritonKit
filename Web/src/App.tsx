@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type ChangeEvent, type ClipboardEvent, type CSSProperties, type KeyboardEvent, type PointerEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
+import { ConfigProvider, Layout, theme as antTheme } from "antd";
 import {
   Activity,
   Braces,
@@ -7,7 +8,6 @@ import {
   DatabaseZap,
   Gauge,
   Info,
-  Keyboard,
   Minus,
   Network,
   PanelLeft,
@@ -20,9 +20,21 @@ import {
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { HostBridgeNotice } from "./components/HostBridgeNotice";
-import { logs, networkEvents } from "./data/mockData";
+import {
+  DeviceCanvas,
+  DeviceHubToolbar,
+  DevtoolsTabs,
+  Inspector,
+  LogStrip,
+  NetworkStrip,
+  SettingsPage,
+  TargetNavigator,
+  type DeviceCanvasTapInput,
+} from "./components/InspectorWorkspace";
+import { hierarchyScenes, logs, networkEvents, targets as mockTargets } from "./data/mockData";
 import { describeHostBridgePresentation } from "./data/hostBridgePresentation";
-import { fetchHostHierarchy, fetchHostLogs, fetchHostScreenshot, fetchHostTargets, type HostInputResponse, sendHostInput } from "./data/iosSimulatorClient";
+import { resolveEvidenceSources } from "./data/hierarchyMaterialPolicy";
+import { fetchHostHierarchy, fetchHostLogs, fetchHostScreenshot, fetchHostTargets, sendHostInput } from "./data/iosSimulatorClient";
 import type {
   BridgeCommandOutput,
   DeviceFrameOrientation,
@@ -95,136 +107,10 @@ type LivePreviewState = {
   status: "live" | "error";
 };
 
-type InputActivity = {
-  status: "dispatching" | "refreshing";
-  label: string;
-};
-
-type ReadonlyGestureIntent =
-  | {
-      action: "tap";
-      platform: DeviceTarget["platform"];
-      target: string;
-      x: number;
-      y: number;
-      width?: number;
-      height?: number;
-    }
-  | {
-      action: "longPress";
-      platform: DeviceTarget["platform"];
-      target: string;
-      x: number;
-      y: number;
-      width?: number;
-      height?: number;
-      duration: number;
-    }
-  | {
-      action: "swipe";
-      platform: DeviceTarget["platform"];
-      target: string;
-      startX: number;
-      startY: number;
-      endX: number;
-      endY: number;
-      width?: number;
-      height?: number;
-      duration?: number;
-    }
-  | {
-      action: "pinch";
-      platform: DeviceTarget["platform"];
-      target: string;
-      centerX: number;
-      centerY: number;
-      startDistance: number;
-      endDistance: number;
-      scale: number;
-      width?: number;
-      height?: number;
-      duration?: number;
-    };
-
-type ReadonlyTextIntent =
-  | {
-      action: "type";
-      text: string;
-    }
-  | {
-      action: "paste";
-      text: string;
-    }
-  | {
-      action: "deleteBackward";
-    };
-
-type ReadonlyInputIntent = ReadonlyGestureIntent | ReadonlyTextIntent;
-
-type GesturePoint = {
-  x: number;
-  y: number;
-  xPercent: number;
-  yPercent: number;
-};
-
-type SingleGestureState = {
-  pointerId: number;
-  start: GesturePoint;
-  startedAt: number;
-  longPressDispatched: boolean;
-};
-
-type PinchSnapshot = {
-  centerX: number;
-  centerY: number;
-  centerXPercent: number;
-  centerYPercent: number;
-  distance: number;
-};
-
-type PinchGestureState = {
-  start: PinchSnapshot;
-  startedAt: number;
-  dispatched: boolean;
-};
-
-type GesturePreview =
-  | {
-      kind: "tap";
-      xPercent: number;
-      yPercent: number;
-    }
-  | {
-      kind: "longPress";
-      xPercent: number;
-      yPercent: number;
-    }
-  | {
-      kind: "swipe";
-      startXPercent: number;
-      startYPercent: number;
-      endXPercent: number;
-      endYPercent: number;
-      distance: number;
-    }
-  | {
-      kind: "pinch";
-      centerXPercent: number;
-      centerYPercent: number;
-      startDistance: number;
-      endDistance: number;
-      scale: number;
-    };
-
-type KeyboardRelayState = {
-  xPercent: number;
-  yPercent: number;
-};
-
 type SidebarPanel = "devices" | "view-tree";
-type DevtoolsPanel = "config" | "network" | "logs" | "settings";
+type DevtoolsPanel = "config" | "network" | "logs";
 type DisplayLanguage = "zh-CN" | "en-US";
+type AppRoute = "inspect" | "settings";
 
 type ViewTreeNode = {
   id: string;
@@ -270,8 +156,6 @@ type HierarchyNodeHotEditDraft = {
 const previewFpsMin = 1;
 const previewFpsMax = 60;
 const liveHierarchyRefreshIntervalMs = 1000;
-const longPressThresholdMs = 520;
-const tapDistanceThreshold = 18;
 const emptyTargetId = "__no-host-target__";
 const displayLanguageStorageKey = "tritonkit.web.displayLanguage";
 
@@ -555,6 +439,49 @@ function writeDisplayLanguagePreference(language: DisplayLanguage) {
   }
 }
 
+function readAppRoute(): AppRoute {
+  if (typeof window === "undefined") return "inspect";
+  return window.location.pathname === "/settings" ? "settings" : "inspect";
+}
+
+function currentInspectURL() {
+  if (typeof window === "undefined") return "/inspect";
+  const path = window.location.pathname === "/settings" ? "/inspect" : window.location.pathname || "/inspect";
+  return `${path}${window.location.search}${window.location.hash}`;
+}
+
+function readInspectorDemoMode() {
+  if (typeof window === "undefined") return false;
+  return new URL(window.location.href).searchParams.get("__tritonkit_inspector_demo") === "1";
+}
+
+function readonlyInspectorDemoTargets(): DeviceTarget[] {
+  return mockTargets.map((target) => ({
+    ...target,
+    readonly: true,
+    canInput: false,
+    canScreenshot: false,
+    realSource: undefined,
+    targetSelector: target.id,
+    transport: "readonly fixture",
+    lastAction: "Observed runtime evidence",
+    actionResult: "ok",
+    proxyLabel: target.proxyMode === "mock" ? "Mock evidence" : target.proxyLabel,
+  }));
+}
+
+function readonlyInspectorDemoHierarchyById(targets: DeviceTarget[]): Record<string, HierarchyCacheEntry> {
+  return Object.fromEntries(
+    targets.map((target) => [
+      target.id,
+      {
+        loading: false,
+        scene: hierarchyScenes[target.platform],
+      },
+    ])
+  );
+}
+
 function readDeviceHubRoute(): DeviceHubRouteState {
   if (typeof window === "undefined") return {};
   const params = new URL(window.location.href).searchParams;
@@ -596,6 +523,9 @@ function writeDeviceHubRoute(route: Required<Pick<DeviceHubRouteState, "targetId
 
 export function App() {
   const initialRoute = useMemo(() => readDeviceHubRoute(), []);
+  const [appRoute, setAppRoute] = useState<AppRoute>(() => readAppRoute());
+  const [lastInspectURL, setLastInspectURL] = useState(() => currentInspectURL());
+  const isInspectorDemo = useMemo(() => readInspectorDemoMode(), []);
   const [selectedId, setSelectedId] = useState(initialRoute.targetId ?? "");
   const [hostTargets, setHostTargets] = useState<DeviceTarget[]>([]);
   const [targetSearch, setTargetSearch] = useState("");
@@ -624,7 +554,7 @@ export function App() {
   const [previewFpsById, setPreviewFpsById] = useState<Record<string, number>>({});
   const [snapshotModeByTargetId, setSnapshotModeByTargetId] = useState<Record<string, boolean>>({});
   const [snapshotRefreshingByTargetId, setSnapshotRefreshingByTargetId] = useState<Record<string, boolean>>({});
-  const [inputActivityById, setInputActivityById] = useState<Record<string, InputActivity | undefined>>({});
+  const [inputDispatchingByTargetId, setInputDispatchingByTargetId] = useState<Record<string, boolean>>({});
   const [screenshotError, setScreenshotError] = useState<string | undefined>();
   const pageTargets = hostTargets;
   const filteredTargets = useMemo(() => filterTargetsBySearch(pageTargets, targetSearch), [pageTargets, targetSearch]);
@@ -661,7 +591,6 @@ export function App() {
     [lastActionById, screenshotById, selected, selectedPreviewFps]
   );
   const selectedLivePreview = livePreviewById[selected.id];
-  const selectedInputActivity = inputActivityById[selected.id];
   const isSelectedSnapshotMode = snapshotModeByTargetId[selected.id] ?? false;
   const isSelectedSnapshotRefreshing = snapshotRefreshingByTargetId[selected.id] ?? false;
   const selectedEvents = useMemo(
@@ -706,6 +635,9 @@ export function App() {
 
   useEffect(() => {
     const handlePopState = () => {
+      const nextAppRoute = readAppRoute();
+      setAppRoute(nextAppRoute);
+      if (nextAppRoute !== "inspect") return;
       const route = readDeviceHubRoute();
       if (route.targetId) {
         setSelectedId(route.targetId);
@@ -721,13 +653,14 @@ export function App() {
   }, []);
 
   useEffect(() => {
+    if (appRoute !== "inspect") return;
     if (selected.id === emptyTargetId) return;
     writeDeviceHubRoute({
       targetId: selected.id,
       panel: sidebarPanel,
       nodeId: selectedHierarchyNode ?? undefined,
     });
-  }, [selected.id, selectedHierarchyNode, sidebarPanel]);
+  }, [appRoute, selected.id, selectedHierarchyNode, sidebarPanel]);
 
   useEffect(() => {
     writeDisplayLanguagePreference(displayLanguage);
@@ -804,6 +737,48 @@ export function App() {
   useEffect(() => {
     let cancelled = false;
     const initialSelectedId = selectedId;
+    if (appRoute !== "inspect") {
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (isInspectorDemo) {
+      const demoTargets = readonlyInspectorDemoTargets();
+      const firstSelected = demoTargets.find((target) => target.id === initialSelectedId) ?? demoTargets[0];
+      setHostTargets(demoTargets);
+      setBridge({
+        loading: false,
+        capturedAt: new Date().toISOString(),
+        sourceCommands: [
+          "triton status --json",
+          "triton capabilities --json",
+          "triton hierarchy --json",
+          "triton evidence --json",
+        ],
+      });
+      setBridgeOutputs([
+        {
+          id: "inspector-demo-trace",
+          platform: "host",
+          command: "triton inspector demo fixture --readonly",
+          ok: true,
+          exitCode: 0,
+          stdout: "readonly Inspect Session fixture loaded",
+          stderr: "",
+        },
+      ]);
+      setHierarchyById(readonlyInspectorDemoHierarchyById(demoTargets));
+      setSidebarPanel("view-tree");
+      setSelectedId(firstSelected.id);
+      const firstScene = hierarchyScenes[firstSelected.platform];
+      const initialNodeId = initialRoute.nodeId && firstScene.nodes.some((node) => node.id === initialRoute.nodeId)
+        ? initialRoute.nodeId
+        : firstScene.rootId;
+      setSelectedHierarchyNode(initialNodeId);
+      return () => {
+        cancelled = true;
+      };
+    }
     fetchHostTargets()
       .then((result) => {
         if (cancelled) return;
@@ -829,10 +804,23 @@ export function App() {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [appRoute, isInspectorDemo]);
+
+  const openSettingsPage = () => {
+    const inspectURL = currentInspectURL();
+    setLastInspectURL(inspectURL);
+    window.history.pushState(null, "", "/settings");
+    setAppRoute("settings");
+  };
+
+  const openInspectSession = () => {
+    const nextURL = lastInspectURL && !lastInspectURL.startsWith("/settings") ? lastInspectURL : "/inspect";
+    window.history.pushState(null, "", nextURL);
+    setAppRoute("inspect");
+  };
 
   useEffect(() => {
-    if (!(selected.realSource === "ios-simulator" && selected.readonly)) {
+    if (selected.realSource !== "ios-simulator") {
       return;
     }
     if (hostLogsById[selected.id]) {
@@ -1003,12 +991,6 @@ export function App() {
       ...current,
       [selected.id]: enabled,
     }));
-    if (enabled) {
-      setInputActivityById((current) => ({
-        ...current,
-        [selected.id]: undefined,
-      }));
-    }
   };
 
   const refreshSelectedSnapshot = async () => {
@@ -1057,6 +1039,83 @@ export function App() {
     }
   };
 
+  const handleCanvasTap = async (target: DeviceTarget, input: DeviceCanvasTapInput) => {
+    if (!target.canInput || target.readonly || !(target.targetSelector ?? target.udid ?? target.id)) {
+      return;
+    }
+    const tapLabel = "tap x=" + input.x + " y=" + input.y;
+    setInputDispatchingByTargetId((current) => ({
+      ...current,
+      [target.id]: true,
+    }));
+    setLastActionById((current) => ({
+      ...current,
+      [target.id]: {
+        lastAction: "Dispatching " + tapLabel,
+        actionResult: "warning",
+      },
+    }));
+    setInteractionLogs((current) => [makeLog("info", "input " + target.id + " " + tapLabel), ...current]);
+
+    try {
+      const result = await sendHostInput(target, {
+        type: "tap",
+        x: input.x,
+        y: input.y,
+        width: input.width,
+        height: input.height,
+      });
+      const ok = result.ok !== false;
+      const message = result.message || (ok ? "Tap submitted" : "Tap failed");
+      setLastActionById((current) => ({
+        ...current,
+        [target.id]: {
+          lastAction: message,
+          actionResult: ok ? "ok" : "failed",
+        },
+      }));
+      setInteractionLogs((current) => [makeLog(ok ? "info" : "error", "input result " + target.id + " " + tapLabel + " · " + message), ...current]);
+      await refreshScreenshot(target, { live: true });
+      if (target.realSource && (sidebarPanel === "view-tree" || hierarchyById[target.id]?.scene)) {
+        try {
+          const scene = await fetchHostHierarchy(target);
+          setHierarchyById((entries) => ({
+            ...entries,
+            [target.id]: { loading: false, scene },
+          }));
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          setInteractionLogs((current) => [makeLog("warn", "hierarchy refresh after tap failed " + message), ...current]);
+        }
+      }
+      if (target.platform === "ios") {
+        fetchHostLogs(target)
+          .then((result) => {
+            setHostLogsById((current) => ({
+              ...current,
+              [target.id]: result.entries,
+            }));
+          })
+          .catch(() => {});
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setLastActionById((current) => ({
+        ...current,
+        [target.id]: {
+          lastAction: message,
+          actionResult: "failed",
+        },
+      }));
+      setInteractionLogs((current) => [makeLog("error", "input failed " + target.id + " " + tapLabel + " · " + message), ...current]);
+    } finally {
+      setInputDispatchingByTargetId((current) => ({
+        ...current,
+        [target.id]: false,
+      }));
+    }
+  };
+
   const updateSelectedHierarchyNodeDraft = (patch: HierarchyNodeHotEditDraft) => {
     if (!selectedHierarchyNodeData || !selectedHierarchyNode) return;
     setHierarchyNodeDraftsByTargetId((current) => {
@@ -1089,160 +1148,60 @@ export function App() {
     });
   };
 
-  const handleInput = async (input: ReadonlyInputIntent): Promise<HostInputResponse | null> => {
-    const activityTargetId = selected.id;
-    const detail = describeInputIntent(input);
-    if (!selected.canInput) {
-      setLastActionById((current) => ({
-        ...current,
-        [activityTargetId]: {
-          lastAction: "Input not available for " + input.action + " " + detail,
-          actionResult: "warning",
-        },
-      }));
-      setInteractionLogs((current) => [
-        makeLog("warn", "input unavailable " + input.action + " " + detail),
-        ...current,
-      ]);
-      return null;
-    }
-
-    setInputActivityById((current) => ({
-      ...current,
-      [activityTargetId]: {
-        status: "dispatching",
-        label: `dispatching ${input.action}`,
-      },
-    }));
-    setLastActionById((current) => ({
-      ...current,
-      [activityTargetId]: {
-        lastAction: "Dispatching " + input.action + " " + detail,
-        actionResult: "ok",
-      },
-    }));
-    try {
-      const payload = inputPayload(input);
-      const result = await sendHostInput(selected, payload);
-      setInteractionLogs((current) => [
-        makeLog(result.ok ? "info" : "warn", `runtime input ${input.action} ${result.message ?? (result.ok ? "ok" : "failed")}`),
-        ...current,
-      ]);
-      setLastActionById((current) => ({
-        ...current,
-        [activityTargetId]: {
-          lastAction: result.message ?? `Runtime ${input.action} submitted`,
-          actionResult: result.ok ? "ok" : "warning",
-        },
-      }));
-      setInputActivityById((current) => ({
-        ...current,
-        [activityTargetId]: {
-          status: "refreshing",
-          label: "refreshing App screen",
-        },
-      }));
-      await refreshScreenshot(selected);
-      return result;
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      setInteractionLogs((current) => [makeLog("error", `runtime input failed ${message}`), ...current]);
-      setLastActionById((current) => ({
-        ...current,
-        [activityTargetId]: {
-          lastAction: `Input failed: ${message}`,
-          actionResult: "failed",
-        },
-      }));
-      return null;
-    } finally {
-      setInputActivityById((current) => ({
-        ...current,
-        [activityTargetId]: undefined,
-      }));
-    }
-  };
-
-  function describeInputIntent(input: ReadonlyInputIntent) {
-    if (input.action === "tap") {
-      return Math.round(input.x) + "," + Math.round(input.y);
-    }
-    if (input.action === "longPress") {
-      return Math.round(input.x) + "," + Math.round(input.y) + " " + input.duration.toFixed(2) + "s";
-    }
-    if (input.action === "swipe") {
-      return Math.round(input.startX) + "," + Math.round(input.startY) + " -> " + Math.round(input.endX) + "," + Math.round(input.endY);
-    }
-    if (input.action === "pinch") {
-      return Math.round(input.centerX) + "," + Math.round(input.centerY) + " scale " + input.scale.toFixed(2);
-    }
-    if (input.action === "deleteBackward") {
-      return "1 char";
-    }
-    return input.text.length + " chars";
-  }
-
-  function inputPayload(input: ReadonlyInputIntent) {
-    if (input.action === "tap") {
-      return {
-        type: "tap",
-        x: input.x,
-        y: input.y,
-        width: input.width,
-        height: input.height,
-      };
-    }
-    if (input.action === "longPress") {
-      return {
-        type: "longPress",
-        x: input.x,
-        y: input.y,
-        width: input.width,
-        height: input.height,
-        duration: input.duration,
-      };
-    }
-    if (input.action === "swipe") {
-      return {
-        type: "swipe",
-        startX: input.startX,
-        startY: input.startY,
-        endX: input.endX,
-        endY: input.endY,
-        width: input.width,
-        height: input.height,
-        duration: input.duration,
-      };
-    }
-    if (input.action === "pinch") {
-      return {
-        type: "pinch",
-        centerX: input.centerX,
-        centerY: input.centerY,
-        startDistance: input.startDistance,
-        endDistance: input.endDistance,
-        scale: input.scale,
-        width: input.width,
-        height: input.height,
-        duration: input.duration,
-      };
-    }
-    if (input.action === "deleteBackward") {
-      return {
-        type: "deleteBackward",
-      };
-    }
-    return {
-      type: input.action,
-      text: input.text,
-    };
+  if (appRoute === "settings") {
+    return (
+      <SettingsPage
+        language={displayLanguage}
+        onBack={openInspectSession}
+        onLanguageChange={setDisplayLanguage}
+      />
+    );
   }
 
   return (
+    <ConfigProvider
+      theme={{
+        algorithm: antTheme.darkAlgorithm,
+        token: {
+          colorPrimary: "#1677FF",
+          colorSuccess: "#52C41A",
+          colorWarning: "#FAAD14",
+          colorError: "#FF4D4F",
+          colorBgBase: "#242424",
+          colorBgLayout: "#2b2b2b",
+          colorBgContainer: "#353535",
+          colorBgElevated: "#3a3a3a",
+          colorBorder: "#4a4a4a",
+          colorBorderSecondary: "#404040",
+          colorText: "#F5F5F5",
+          colorTextSecondary: "#BFBFBF",
+          colorTextTertiary: "#8C8C8C",
+          borderRadius: 6,
+          fontSize: 14,
+          wireframe: false,
+        },
+        components: {
+          Card: {
+            borderRadiusLG: 8,
+            colorBgContainer: "#353535",
+            colorBorderSecondary: "#4a4a4a",
+          },
+          Tabs: {
+            itemColor: "#BFBFBF",
+            itemSelectedColor: "#69B1FF",
+            inkBarColor: "#1677FF",
+          },
+          Tree: {
+            nodeHoverBg: "#3f3f3f",
+            nodeSelectedBg: "#E6F4FF",
+          },
+        },
+      }}
+    >
     <main className="device-hub-shell">
-      <section
+      <Layout
         className="device-hub-window"
-        aria-label="TritonKit 设备中心原型"
+        aria-label="Triton Inspector Inspect Session"
       >
         <DeviceHubToolbar
           target={selectedWithScreenshot}
@@ -1254,6 +1213,7 @@ export function App() {
           isTargetMenuOpen={isToolbarTargetMenuOpen}
           onToggleSidebar={() => setIsSidebarVisible((current) => !current)}
           onToggleDevtools={() => setIsDevtoolsVisible((current) => !current)}
+          onOpenSettings={openSettingsPage}
           onRefresh={handleRefreshAll}
           onToggleTargetMenu={() => setIsToolbarTargetMenuOpen((current) => !current)}
           onCloseTargetMenu={() => setIsToolbarTargetMenuOpen(false)}
@@ -1262,7 +1222,7 @@ export function App() {
             setIsToolbarTargetMenuOpen(false);
           }}
         />
-        <section
+        <Layout
           className={[
             "hub-body",
             isSidebarVisible ? "" : "is-sidebar-hidden",
@@ -1292,15 +1252,15 @@ export function App() {
             selectedHierarchyNodeDraft={selectedHierarchyNodeDraft}
             screenshotError={screenshotError}
             livePreview={selectedLivePreview}
-            inputActivity={selectedInputActivity}
             isSnapshotMode={isSelectedSnapshotMode}
             isSnapshotRefreshing={isSelectedSnapshotRefreshing}
             isDiscoveringHostTargets={isDiscoveringHostTargets}
+            isInputDispatching={inputDispatchingByTargetId[selectedWithScreenshot.id] ?? false}
             onPreviewFpsChange={handlePreviewFpsChange}
             onSnapshotModeChange={setSelectedSnapshotMode}
             onSnapshotRefresh={refreshSelectedSnapshot}
             onSelectHierarchyNode={setSelectedHierarchyNode}
-            onInput={handleInput}
+            onTap={handleCanvasTap}
           />
           {isDevtoolsVisible ? (
             <aside className="hub-devtools" aria-label="右侧开发者工具">
@@ -1332,18 +1292,13 @@ export function App() {
                   language={displayLanguage}
                   entries={selectedLogs}
                 />
-                <SettingsPanel
-                  id="settings-panel"
-                  hidden={activeDevtoolsPanel !== "settings"}
-                  language={displayLanguage}
-                  onLanguageChange={setDisplayLanguage}
-                />
               </div>
             </aside>
           ) : null}
-        </section>
-      </section>
+        </Layout>
+      </Layout>
     </main>
+    </ConfigProvider>
   );
 }
 
@@ -1594,1712 +1549,4 @@ function localizeStatusLabel(label: string) {
     Unknown: "未知",
   };
   return labels[label] ?? label;
-}
-
-function DeviceHubToolbar({
-  target,
-  targets,
-  bridgeSubtitle,
-  isSidebarVisible,
-  isDevtoolsVisible,
-  isRefreshing,
-  isTargetMenuOpen,
-  onToggleSidebar,
-  onToggleDevtools,
-  onRefresh,
-  onToggleTargetMenu,
-  onCloseTargetMenu,
-  onSelectTarget,
-}: {
-  target: DeviceTarget;
-  targets: DeviceTarget[];
-  bridgeSubtitle: string;
-  isSidebarVisible: boolean;
-  isDevtoolsVisible: boolean;
-  isRefreshing: boolean;
-  isTargetMenuOpen: boolean;
-  onToggleSidebar: () => void;
-  onToggleDevtools: () => void;
-  onRefresh: () => void;
-  onToggleTargetMenu: () => void;
-  onCloseTargetMenu: () => void;
-  onSelectTarget: (targetId: string) => void;
-}) {
-  const menuRef = useRef<HTMLDivElement | null>(null);
-  const toolbarSubtitle = bridgeSubtitle === "Readonly host targets" ? target.os : bridgeSubtitle;
-
-  useEffect(() => {
-    if (!isTargetMenuOpen) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (event.target instanceof Node && menuRef.current?.contains(event.target)) {
-        return;
-      }
-      onCloseTargetMenu();
-    };
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onCloseTargetMenu();
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isTargetMenuOpen, onCloseTargetMenu]);
-
-  return (
-    <header className="hub-toolbar">
-      <IconTool
-        label={isSidebarVisible ? "收起侧边栏" : "展开侧边栏"}
-        icon={PanelLeft}
-        variant="solo"
-        className={isSidebarVisible ? "is-active" : ""}
-        onClick={onToggleSidebar}
-      />
-
-      <div className="toolbar-title-shell" ref={menuRef}>
-        <button
-          className="toolbar-title"
-          type="button"
-          aria-label="切换设备"
-          aria-haspopup="listbox"
-          aria-expanded={isTargetMenuOpen}
-          onClick={onToggleTargetMenu}
-        >
-          <strong>{target.name}</strong>
-          <span>{toolbarSubtitle}</span>
-          <ChevronDown size={14} aria-hidden="true" />
-        </button>
-        {isTargetMenuOpen ? (
-          <div className="toolbar-target-menu" role="listbox" aria-label="切换设备">
-            {targets.map((candidate) => (
-              <button
-                key={candidate.id}
-                className="toolbar-target-option"
-                type="button"
-                role="option"
-                aria-selected={candidate.id === target.id}
-                onClick={() => onSelectTarget(candidate.id)}
-              >
-                <strong>{candidate.name}</strong>
-                <span>{candidate.appName}</span>
-                <em>
-                  {platformLabel[candidate.platform]} · {candidate.os}
-                </em>
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      <div className="toolbar-cluster inspector-tools" aria-label="检查器工具">
-        <IconTool
-          label={isDevtoolsVisible ? "收起右侧面板" : "展开右侧面板"}
-          icon={PanelRight}
-          className={isDevtoolsVisible ? "is-active" : ""}
-          onClick={onToggleDevtools}
-        />
-        <IconTool
-          label={isRefreshing ? "正在刷新全局数据" : "刷新全局数据"}
-          icon={RefreshCw}
-          className={isRefreshing ? "is-spinning" : ""}
-          disabled={isRefreshing}
-          onClick={onRefresh}
-        />
-      </div>
-    </header>
-  );
-}
-
-function IconTool({
-  label,
-  icon: Icon,
-  variant,
-  className,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  icon: LucideIcon;
-  variant?: "solo";
-  className?: string;
-  disabled?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <button
-      className={`icon-tool ${variant === "solo" ? "is-solo" : ""} ${className ?? ""}`}
-      type="button"
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      onClick={onClick}
-    >
-      <Icon size={17} strokeWidth={2.2} />
-    </button>
-  );
-}
-
-function TargetNavigator({
-  selected,
-  targets: visibleTargets,
-  hierarchy,
-  activePanel,
-  searchValue,
-  isSearching,
-  onSearchChange,
-  onPanelChange,
-  onSelect,
-  selectedHierarchyNode,
-  onSelectHierarchyNode,
-}: {
-  selected: DeviceTarget;
-  targets: DeviceTarget[];
-  hierarchy?: HierarchyCacheEntry;
-  activePanel: SidebarPanel;
-  searchValue: string;
-  isSearching: boolean;
-  onSearchChange: (value: string) => void;
-  onPanelChange: (panel: SidebarPanel) => void;
-  onSelect: (id: string) => void;
-  selectedHierarchyNode: string | null;
-  onSelectHierarchyNode: (nodeId: string | null) => void;
-}) {
-  return (
-    <aside className="hub-sidebar" aria-label="设备">
-      <label className="sidebar-search">
-        <Search size={16} />
-        <input
-          placeholder="搜索"
-          value={searchValue}
-          onChange={(event) => onSearchChange(event.target.value)}
-        />
-      </label>
-
-      <div className="sidebar-panel-switch" role="tablist" aria-label="侧边面板">
-        <button
-          className={activePanel === "devices" ? "is-active" : ""}
-          type="button"
-          role="tab"
-          aria-selected={activePanel === "devices"}
-          onClick={() => onPanelChange("devices")}
-        >
-          设备
-        </button>
-        <button
-          className={activePanel === "view-tree" ? "is-active" : ""}
-          type="button"
-          role="tab"
-          aria-selected={activePanel === "view-tree"}
-          onClick={() => onPanelChange("view-tree")}
-        >
-          视图树
-        </button>
-      </div>
-
-      {activePanel === "devices" ? (
-        <DeviceListPanel selected={selected} targets={visibleTargets} isSearching={isSearching} onSelect={onSelect} />
-      ) : (
-        <ViewTreePanel
-          selected={selected}
-          hierarchy={hierarchy}
-          selectedHierarchyNode={selectedHierarchyNode}
-          onSelectHierarchyNode={onSelectHierarchyNode}
-        />
-      )}
-    </aside>
-  );
-}
-
-function DeviceListPanel({
-  selected,
-  targets: visibleTargets,
-  isSearching,
-  onSelect,
-}: {
-  selected: DeviceTarget;
-  targets: DeviceTarget[];
-  isSearching: boolean;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <section className="sidebar-panel" aria-label="设备列表面板">
-      <div className="sidebar-section-title">运行中</div>
-      <div className="device-list">
-        {visibleTargets.map((target) => {
-          const appLabel = target.appName || "前台 App 未识别";
-          const detailLabel = appLabel;
-
-          return (
-            <button
-              className={`device-row ${target.id === selected.id ? "is-selected" : ""}`}
-              key={target.id}
-              onClick={() => onSelect(target.id)}
-              type="button"
-            >
-              <span className="device-row-copy">
-                <strong>{target.name}</strong>
-                <span title={detailLabel}>{detailLabel}</span>
-              </span>
-              <span className="device-row-meta">
-                <span className="device-platform-badge" style={{ color: target.accent }}>
-                  {platformLabel[target.platform]}
-                </span>
-                <span className="device-version">{target.os.replace(/^[A-Za-z ]+/, "")}</span>
-              </span>
-            </button>
-          );
-        })}
-
-        {visibleTargets.length === 0 ? (
-          <p className="empty-devices">{isSearching ? "未找到匹配 target" : "暂无运行中的设备"}</p>
-        ) : null}
-      </div>
-    </section>
-  );
-}
-
-function ViewTreePanel({
-  selected,
-  hierarchy,
-  selectedHierarchyNode,
-  onSelectHierarchyNode,
-}: {
-  selected: DeviceTarget;
-  hierarchy?: HierarchyCacheEntry;
-  selectedHierarchyNode: string | null;
-  onSelectHierarchyNode: (nodeId: string | null) => void;
-}) {
-  const hierarchyScene = hierarchy?.scene;
-  const treeNodes = useMemo(() => (hierarchyScene ? viewTreeNodesForScene(hierarchyScene) : []), [hierarchyScene]);
-  const defaultSelection = hierarchyScene ? defaultViewTreeSelection(hierarchyScene) : null;
-  const selectedNode = selectedHierarchyNode ?? defaultSelection;
-
-  return (
-    <section className="sidebar-panel view-tree-panel" aria-label="视图层级面板">
-      {hierarchy?.loading ? (
-        <p className="view-tree-empty">正在读取实时视图层级...</p>
-      ) : hierarchy?.error ? (
-        <p className="view-tree-empty" title={hierarchy.error}>
-          未拿到实时视图层级
-        </p>
-      ) : hierarchyScene ? (
-        <div className="view-tree-list" role="tree" aria-label={`${selected.appName} 视图层级`}>
-          {treeNodes.map((node) => (
-            <ViewTreeRow key={node.id} node={node} depth={0} selectedNode={selectedNode} onSelect={onSelectHierarchyNode} />
-          ))}
-        </div>
-      ) : (
-        <p className="view-tree-empty">暂无实时视图层级</p>
-      )}
-    </section>
-  );
-}
-
-function ViewTreeRow({
-  node,
-  depth,
-  selectedNode,
-  onSelect,
-}: {
-  node: ViewTreeNode;
-  depth: number;
-  selectedNode: string | null;
-  onSelect: (id: string) => void;
-}) {
-  const hasChildren = Boolean(node.children?.length);
-  const displayType = readableViewTreeLabel(node.type);
-  const displayName = readableViewTreeName(displayType, node.name ? readableViewTreeLabel(node.name) : null);
-  const fullLabel = [node.type, node.name].filter(Boolean).join(" ");
-
-  return (
-    <>
-      <button
-        className={`view-tree-row ${selectedNode === node.id ? "is-selected" : ""}`}
-        style={{ "--tree-depth": depth } as CSSProperties}
-        type="button"
-        role="treeitem"
-        aria-level={depth + 1}
-        aria-selected={selectedNode === node.id}
-        aria-expanded={hasChildren ? true : undefined}
-        data-node-id={node.id}
-        onClick={() => onSelect(node.id)}
-      >
-        <span className="tree-disclosure">{hasChildren ? "▾" : "·"}</span>
-        <span className="tree-node-copy" title={fullLabel}>
-          <strong>{displayType}</strong>
-          {displayName ? <span>{displayName}</span> : null}
-        </span>
-      </button>
-      {node.children?.length ? (
-        <div className="view-tree-group" role="group">
-          {node.children.map((child) => (
-            <ViewTreeRow key={child.id} node={child} depth={depth + 1} selectedNode={selectedNode} onSelect={onSelect} />
-          ))}
-        </div>
-      ) : null}
-    </>
-  );
-}
-
-function DeviceCanvas({
-  target,
-  hierarchyScene,
-  selectedHierarchyNode,
-  selectedHierarchyNodeDraft,
-  screenshotError,
-  livePreview,
-  inputActivity,
-  isSnapshotMode,
-  isSnapshotRefreshing,
-  isDiscoveringHostTargets,
-  onPreviewFpsChange,
-  onSnapshotModeChange,
-  onSnapshotRefresh,
-  onSelectHierarchyNode,
-  onInput,
-}: {
-  target: DeviceTarget;
-  hierarchyScene?: HierarchyScene;
-  selectedHierarchyNode: string | null;
-  selectedHierarchyNodeDraft?: HierarchyNodeHotEditDraft;
-  screenshotError?: string;
-  livePreview?: LivePreviewState;
-  inputActivity?: InputActivity;
-  isSnapshotMode: boolean;
-  isSnapshotRefreshing: boolean;
-  isDiscoveringHostTargets: boolean;
-  onPreviewFpsChange: (fps: number) => void;
-  onSnapshotModeChange: (enabled: boolean) => void;
-  onSnapshotRefresh: () => Promise<void>;
-  onSelectHierarchyNode: (nodeId: string | null) => void;
-  onInput: (input: ReadonlyInputIntent) => Promise<HostInputResponse | null>;
-}) {
-  const screenRef = useRef<HTMLDivElement | null>(null);
-  const keyboardRelayRef = useRef<HTMLInputElement | null>(null);
-  const keyboardRelayValue = useRef("");
-  const previewControlRef = useRef<HTMLDivElement | null>(null);
-  const activeGesturePointers = useRef<Map<number, GesturePoint>>(new Map());
-  const singleGesture = useRef<SingleGestureState | null>(null);
-  const pinchGesture = useRef<PinchGestureState | null>(null);
-  const gestureClearTimer = useRef<number | undefined>(undefined);
-  const longPressPreviewTimer = useRef<number | undefined>(undefined);
-  const [gesturePreview, setGesturePreview] = useState<GesturePreview | null>(null);
-  const [keyboardRelay, setKeyboardRelay] = useState<KeyboardRelayState | null>(null);
-  const [keyboardRelayText, setKeyboardRelayText] = useState("");
-  const [isPreviewFpsOpen, setIsPreviewFpsOpen] = useState(false);
-  const selectedNodeHighlight = hierarchyScene ? viewNodeHighlightForScene(hierarchyScene, selectedHierarchyNode, selectedHierarchyNodeDraft) : null;
-  const controllerBadge = resolveControllerShellBadge(hierarchyScene, selectedHierarchyNode);
-  const orientation = target.frameOrientation ?? "landscape";
-  const aspectRatio =
-    target.screenshotPixelWidth && target.screenshotPixelHeight
-      ? `${target.screenshotPixelWidth} / ${target.screenshotPixelHeight}`
-      : undefined;
-  const frameStyle =
-    target.screenshotPixelWidth && target.screenshotPixelHeight
-      ? {
-          "--screen-aspect-ratio": aspectRatio,
-        } as CSSProperties
-      : undefined;
-  const orientationLabel =
-    target.screenshotPixelWidth && target.screenshotPixelHeight
-      ? `${orientation} ${target.screenshotPixelWidth} x ${target.screenshotPixelHeight}`
-      : target.realSource
-        ? `${orientation} placeholder`
-        : orientation;
-  const canSendInput = Boolean(
-    !isSnapshotMode &&
-    target.realSource &&
-      target.canInput &&
-      target.screenshotDataUrl &&
-      target.targetSelector &&
-      target.screenshotPixelWidth &&
-      target.screenshotPixelHeight
-  );
-  const isWaitingForRealScreenshot = Boolean(target.realSource && target.canScreenshot && !target.screenshotDataUrl);
-  const pendingScreenshotState = screenshotPendingState(target, screenshotError);
-  const canSelectSnapshotNode = Boolean(isSnapshotMode && hierarchyScene);
-
-  useEffect(() => {
-    return () => {
-      if (gestureClearTimer.current) {
-        window.clearTimeout(gestureClearTimer.current);
-      }
-      if (longPressPreviewTimer.current) {
-        window.clearTimeout(longPressPreviewTimer.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    setIsPreviewFpsOpen(false);
-    setKeyboardRelay(null);
-    setKeyboardRelayText("");
-    keyboardRelayValue.current = "";
-  }, [target.id]);
-
-  useEffect(() => {
-    if (!keyboardRelay) return;
-    keyboardRelayRef.current?.focus({ preventScroll: true });
-  }, [keyboardRelay]);
-
-  useEffect(() => {
-    if (!isPreviewFpsOpen) return;
-
-    const handlePointerDownOutside = (event: globalThis.PointerEvent) => {
-      const targetNode = event.target;
-      if (targetNode instanceof Node && previewControlRef.current?.contains(targetNode)) {
-        return;
-      }
-      setIsPreviewFpsOpen(false);
-    };
-
-    window.addEventListener("pointerdown", handlePointerDownOutside);
-    return () => {
-      window.removeEventListener("pointerdown", handlePointerDownOutside);
-    };
-  }, [isPreviewFpsOpen]);
-
-  useEffect(() => {
-    if (isSnapshotMode) {
-      setIsPreviewFpsOpen(false);
-      setKeyboardRelay(null);
-    }
-  }, [isSnapshotMode]);
-
-  const clearGesturePreviewSoon = () => {
-    if (gestureClearTimer.current) {
-      window.clearTimeout(gestureClearTimer.current);
-    }
-    gestureClearTimer.current = window.setTimeout(() => {
-      setGesturePreview(null);
-    }, 620);
-  };
-
-  const clearLongPressPreviewTimer = () => {
-    if (longPressPreviewTimer.current) {
-      window.clearTimeout(longPressPreviewTimer.current);
-      longPressPreviewTimer.current = undefined;
-    }
-  };
-
-  const mapPointer = (event: PointerEvent<HTMLDivElement>) => {
-    const screen = screenRef.current;
-    if (!screen || !target.screenshotPixelWidth || !target.screenshotPixelHeight) return null;
-    const rect = screen.getBoundingClientRect();
-    const x = Math.max(0, Math.min(target.screenshotPixelWidth, ((event.clientX - rect.left) / rect.width) * target.screenshotPixelWidth));
-    const y = Math.max(0, Math.min(target.screenshotPixelHeight, ((event.clientY - rect.top) / rect.height) * target.screenshotPixelHeight));
-    const xPercent = Math.max(0, Math.min(100, ((event.clientX - rect.left) / rect.width) * 100));
-    const yPercent = Math.max(0, Math.min(100, ((event.clientY - rect.top) / rect.height) * 100));
-    return { x, y, xPercent, yPercent };
-  };
-
-  const pinchSnapshot = (points: GesturePoint[]): PinchSnapshot | null => {
-    if (points.length < 2) return null;
-    const [first, second] = points;
-    return {
-      centerX: (first.x + second.x) / 2,
-      centerY: (first.y + second.y) / 2,
-      centerXPercent: (first.xPercent + second.xPercent) / 2,
-      centerYPercent: (first.yPercent + second.yPercent) / 2,
-      distance: Math.hypot(second.x - first.x, second.y - first.y),
-    };
-  };
-
-  const updatePinchPreview = (current: PinchSnapshot) => {
-    const start = pinchGesture.current?.start ?? current;
-    const scale = start.distance > 0 ? current.distance / start.distance : 1;
-    setGesturePreview({
-      kind: "pinch",
-      centerXPercent: current.centerXPercent,
-      centerYPercent: current.centerYPercent,
-      startDistance: start.distance,
-      endDistance: current.distance,
-      scale,
-    });
-  };
-
-  const handlePinchCommand = (scale: number) => {
-    if (!canSendInput || !target.targetSelector || !target.screenshotPixelWidth || !target.screenshotPixelHeight) return;
-    const minDimension = Math.min(target.screenshotPixelWidth, target.screenshotPixelHeight);
-    const startDistance = Math.max(48, Math.min(150, minDimension * 0.22));
-    const endDistance = startDistance * scale;
-    const centerX = target.screenshotPixelWidth / 2;
-    const centerY = target.screenshotPixelHeight / 2;
-    setGesturePreview({
-      kind: "pinch",
-      centerXPercent: 50,
-      centerYPercent: 50,
-      startDistance,
-      endDistance,
-      scale,
-    });
-    clearGesturePreviewSoon();
-    onInput({
-      action: "pinch",
-      platform: target.platform,
-      target: target.targetSelector,
-      centerX: roundedGestureValue(centerX),
-      centerY: roundedGestureValue(centerY),
-      startDistance: roundedGestureValue(startDistance),
-      endDistance: roundedGestureValue(endDistance),
-      scale,
-      width: target.screenshotPixelWidth,
-      height: target.screenshotPixelHeight,
-      duration: 0.25,
-    });
-  };
-
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    if (isSnapshotMode) {
-      screenRef.current?.focus({ preventScroll: true });
-      const start = mapPointer(event);
-      if (!start || !hierarchyScene) return;
-      const hitNode = hierarchyNodeAtPoint(hierarchyScene, start.xPercent, start.yPercent);
-      if (hitNode) {
-        onSelectHierarchyNode(hitNode.id);
-      }
-      return;
-    }
-    if (!canSendInput) return;
-    screenRef.current?.focus({ preventScroll: true });
-    const start = mapPointer(event);
-    if (!start) return;
-    activeGesturePointers.current.set(event.pointerId, start);
-    if (start) {
-      if (gestureClearTimer.current) {
-        window.clearTimeout(gestureClearTimer.current);
-      }
-      if (activeGesturePointers.current.size === 1) {
-        singleGesture.current = {
-          pointerId: event.pointerId,
-          start,
-          startedAt: Date.now(),
-          longPressDispatched: false,
-        };
-        pinchGesture.current = null;
-        setGesturePreview({
-          kind: "tap",
-          xPercent: start.xPercent,
-          yPercent: start.yPercent,
-        });
-        clearLongPressPreviewTimer();
-        longPressPreviewTimer.current = window.setTimeout(() => {
-          const single = singleGesture.current;
-          const current = activeGesturePointers.current.get(event.pointerId);
-          if (!single || !current || single.longPressDispatched || !target.targetSelector) return;
-          const distance = Math.hypot(current.x - single.start.x, current.y - single.start.y);
-          if (distance >= tapDistanceThreshold) return;
-          single.longPressDispatched = true;
-          longPressPreviewTimer.current = undefined;
-          setKeyboardRelay(null);
-          setKeyboardRelayText("");
-          keyboardRelayValue.current = "";
-          setGesturePreview({
-            kind: "longPress",
-            xPercent: single.start.xPercent,
-            yPercent: single.start.yPercent,
-          });
-          void onInput({
-            action: "longPress",
-            platform: target.platform,
-            target: target.targetSelector,
-            x: roundedGestureValue(single.start.x),
-            y: roundedGestureValue(single.start.y),
-            width: target.screenshotPixelWidth ?? undefined,
-            height: target.screenshotPixelHeight ?? undefined,
-            duration: roundedGestureValue(longPressThresholdMs / 1000),
-          });
-        }, longPressThresholdMs);
-      } else {
-        clearLongPressPreviewTimer();
-        setKeyboardRelay(null);
-        setKeyboardRelayText("");
-        keyboardRelayValue.current = "";
-        singleGesture.current = null;
-        const current = pinchSnapshot(Array.from(activeGesturePointers.current.values()).slice(0, 2));
-        if (current) {
-          pinchGesture.current = {
-            start: pinchGesture.current?.start ?? current,
-            startedAt: Date.now(),
-            dispatched: false,
-          };
-          updatePinchPreview(current);
-        }
-      }
-    }
-    try {
-      event.currentTarget.setPointerCapture(event.pointerId);
-    } catch {
-      // Synthetic pointer events used by browser smoke tests may not have an active pointer.
-    }
-  };
-
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (isSnapshotMode) return;
-    if (!canSendInput) return;
-    const current = mapPointer(event);
-    if (!current) return;
-    if (activeGesturePointers.current.has(event.pointerId)) {
-      activeGesturePointers.current.set(event.pointerId, current);
-    }
-    if (activeGesturePointers.current.size >= 2) {
-      clearLongPressPreviewTimer();
-      const pinch = pinchSnapshot(Array.from(activeGesturePointers.current.values()).slice(0, 2));
-      if (!pinch) return;
-      if (!pinchGesture.current) {
-        pinchGesture.current = { start: pinch, startedAt: Date.now(), dispatched: false };
-      }
-      updatePinchPreview(pinch);
-      return;
-    }
-    const start = singleGesture.current?.start;
-    if (!start || singleGesture.current?.longPressDispatched) return;
-    const distance = Math.hypot(current.x - start.x, current.y - start.y);
-    if (distance < 10) {
-      if (Date.now() - (singleGesture.current?.startedAt ?? 0) < longPressThresholdMs) {
-        setGesturePreview({
-          kind: "tap",
-          xPercent: current.xPercent,
-          yPercent: current.yPercent,
-        });
-      }
-      return;
-    }
-    clearLongPressPreviewTimer();
-    setGesturePreview({
-      kind: "swipe",
-      startXPercent: start.xPercent,
-      startYPercent: start.yPercent,
-      endXPercent: current.xPercent,
-      endYPercent: current.yPercent,
-      distance,
-    });
-  };
-
-  const handlePointerCancel = () => {
-    activeGesturePointers.current.clear();
-    singleGesture.current = null;
-    pinchGesture.current = null;
-    clearLongPressPreviewTimer();
-    clearGesturePreviewSoon();
-  };
-
-  const handlePointerUp = (event: PointerEvent<HTMLDivElement>) => {
-    if (isSnapshotMode) return;
-    if (!canSendInput || !target.targetSelector) return;
-    const end = mapPointer(event);
-    if (end && activeGesturePointers.current.has(event.pointerId)) {
-      activeGesturePointers.current.set(event.pointerId, end);
-    }
-    if (activeGesturePointers.current.size >= 2 && pinchGesture.current && !pinchGesture.current.dispatched) {
-      const current = pinchSnapshot(Array.from(activeGesturePointers.current.values()).slice(0, 2));
-      if (current) {
-        const start = pinchGesture.current.start;
-        const scale = start.distance > 0 ? current.distance / start.distance : 1;
-        pinchGesture.current.dispatched = true;
-        setGesturePreview({
-          kind: "pinch",
-          centerXPercent: current.centerXPercent,
-          centerYPercent: current.centerYPercent,
-          startDistance: start.distance,
-          endDistance: current.distance,
-          scale,
-        });
-        clearGesturePreviewSoon();
-        onInput({
-          action: "pinch",
-          platform: target.platform,
-          target: target.targetSelector,
-          centerX: roundedGestureValue(current.centerX),
-          centerY: roundedGestureValue(current.centerY),
-          startDistance: roundedGestureValue(start.distance),
-          endDistance: roundedGestureValue(current.distance),
-          scale: roundedGestureValue(scale),
-          width: target.screenshotPixelWidth ?? undefined,
-          height: target.screenshotPixelHeight ?? undefined,
-          duration: 0.25,
-        });
-      }
-      activeGesturePointers.current.clear();
-      singleGesture.current = null;
-      pinchGesture.current = null;
-      clearLongPressPreviewTimer();
-      return;
-    }
-
-    const start = singleGesture.current?.start;
-    const startedAt = singleGesture.current?.startedAt ?? Date.now();
-    const longPressDispatched = singleGesture.current?.longPressDispatched ?? false;
-    activeGesturePointers.current.delete(event.pointerId);
-    singleGesture.current = null;
-    clearLongPressPreviewTimer();
-    if (!start || !end) return;
-    if (longPressDispatched) {
-      clearGesturePreviewSoon();
-      return;
-    }
-    const distance = Math.hypot(end.x - start.x, end.y - start.y);
-    if (distance < tapDistanceThreshold) {
-      setKeyboardRelay(null);
-      setKeyboardRelayText("");
-      keyboardRelayValue.current = "";
-      clearGesturePreviewSoon();
-      const duration = (Date.now() - startedAt) / 1000;
-      if (duration >= longPressThresholdMs / 1000) {
-        setGesturePreview({
-          kind: "longPress",
-          xPercent: start.xPercent,
-          yPercent: start.yPercent,
-        });
-        void onInput({
-          action: "longPress",
-          platform: target.platform,
-          target: target.targetSelector,
-          x: roundedGestureValue(start.x),
-          y: roundedGestureValue(start.y),
-          width: target.screenshotPixelWidth ?? undefined,
-          height: target.screenshotPixelHeight ?? undefined,
-          duration: roundedGestureValue(Math.max(duration, longPressThresholdMs / 1000)),
-        });
-        return;
-      }
-      setGesturePreview({
-        kind: "tap",
-        xPercent: start.xPercent,
-        yPercent: start.yPercent,
-      });
-      void onInput({
-        action: "tap",
-        platform: target.platform,
-        target: target.targetSelector,
-        x: start.x,
-        y: start.y,
-        width: target.screenshotPixelWidth ?? undefined,
-        height: target.screenshotPixelHeight ?? undefined,
-      }).then((result) => {
-        if (!shouldShowKeyboardRelay(result)) return;
-        setKeyboardRelay({
-          xPercent: start.xPercent,
-          yPercent: start.yPercent,
-        });
-      });
-      return;
-    }
-    setGesturePreview({
-      kind: "swipe",
-      startXPercent: start.xPercent,
-      startYPercent: start.yPercent,
-      endXPercent: end.xPercent,
-      endYPercent: end.yPercent,
-      distance,
-    });
-    clearGesturePreviewSoon();
-    onInput({
-      action: "swipe",
-      platform: target.platform,
-      target: target.targetSelector,
-      startX: start.x,
-      startY: start.y,
-      endX: end.x,
-      endY: end.y,
-      width: target.screenshotPixelWidth ?? undefined,
-      height: target.screenshotPixelHeight ?? undefined,
-      duration: 0.25,
-    });
-  };
-
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (!canSendInput) return;
-    if (event.metaKey || event.ctrlKey || event.altKey) return;
-    if (event.key === "Backspace" || event.key === "Delete") {
-      event.preventDefault();
-      onInput({ action: "deleteBackward" });
-      return;
-    }
-    if (event.key.length !== 1) return;
-    event.preventDefault();
-    onInput({ action: "type", text: event.key });
-  };
-
-  const handlePaste = (event: ClipboardEvent<HTMLDivElement>) => {
-    if (!canSendInput) return;
-    const text = event.clipboardData.getData("text");
-    if (!text) return;
-    event.preventDefault();
-    onInput({ action: "paste", text });
-  };
-
-  const setRelayText = (text: string) => {
-    keyboardRelayValue.current = text;
-    setKeyboardRelayText(text);
-  };
-
-  const handleRelayChange = (event: ChangeEvent<HTMLInputElement>) => {
-    if (!canSendInput) return;
-    const next = event.currentTarget.value;
-    const previous = keyboardRelayValue.current;
-    setRelayText(next);
-
-    if (next === previous) return;
-    if (next.startsWith(previous)) {
-      const inserted = next.slice(previous.length);
-      if (inserted) {
-        onInput({ action: "type", text: inserted });
-      }
-      return;
-    }
-
-    if (previous.startsWith(next)) {
-      const deletedCount = previous.length - next.length;
-      for (let index = 0; index < deletedCount; index += 1) {
-        onInput({ action: "deleteBackward" });
-      }
-      return;
-    }
-
-    const deletedCount = previous.length;
-    for (let index = 0; index < deletedCount; index += 1) {
-      onInput({ action: "deleteBackward" });
-    }
-    if (next) {
-      onInput({ action: "type", text: next });
-    }
-  };
-
-  const handleRelayKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
-    if (!canSendInput) return;
-    if (event.key === "Escape") {
-      event.preventDefault();
-      setKeyboardRelay(null);
-      return;
-    }
-    if ((event.key === "Backspace" || event.key === "Delete") && keyboardRelayValue.current.length === 0) {
-      event.preventDefault();
-      onInput({ action: "deleteBackward" });
-    }
-  };
-
-  const handleRelayPaste = (event: ClipboardEvent<HTMLInputElement>) => {
-    if (!canSendInput) return;
-    const text = event.clipboardData.getData("text");
-    if (!text) return;
-    event.preventDefault();
-
-    const input = event.currentTarget;
-    const selectionStart = input.selectionStart ?? keyboardRelayValue.current.length;
-    const selectionEnd = input.selectionEnd ?? selectionStart;
-    const next = keyboardRelayValue.current.slice(0, selectionStart) + text + keyboardRelayValue.current.slice(selectionEnd);
-    setRelayText(next);
-    onInput({ action: "paste", text });
-  };
-
-  const shouldShowKeyboardRelay = (result: HostInputResponse | null) => {
-    if (!result?.ok) return false;
-    const classNames = [result.targetClassName, result.matchedClassName, result.activationClassName].filter(Boolean) as string[];
-    return classNames.some((className) => isEditableInputClassName(className));
-  };
-
-  if (isDiscoveringHostTargets) {
-    return (
-      <section className="hub-canvas" aria-label="设备画布">
-        <div className="device-discovery-pending" role="status" aria-live="polite">
-          <span />
-          <strong>正在发现本机设备</strong>
-          <em>triton sim list · triton device list</em>
-        </div>
-      </section>
-    );
-  }
-
-  return (
-    <section className={`hub-canvas ${isSnapshotMode ? "tool-snapshot" : "tool-point"}`} aria-label="设备画布">
-      {target.realSource && target.canScreenshot ? (
-        <div className={`live-preview-control ${isPreviewFpsOpen ? "is-open" : ""} ${isSnapshotMode ? "is-snapshot" : ""}`} ref={previewControlRef}>
-          <div className="canvas-mode-switch" aria-label="设备画布模式">
-            <button
-              className={!isSnapshotMode ? "is-active" : ""}
-              type="button"
-              aria-pressed={!isSnapshotMode}
-              onClick={() => onSnapshotModeChange(false)}
-            >
-              实时
-            </button>
-            <button
-              className={isSnapshotMode ? "is-active" : ""}
-              type="button"
-              aria-pressed={isSnapshotMode}
-              onClick={() => onSnapshotModeChange(true)}
-            >
-              快照
-            </button>
-          </div>
-          {isSnapshotMode ? (
-            <button
-              className="snapshot-refresh-button"
-              type="button"
-              aria-label="手动刷新快照"
-              disabled={isSnapshotRefreshing}
-              onClick={() => {
-                void onSnapshotRefresh();
-              }}
-            >
-              <RefreshCw size={13} />
-              <span>{isSnapshotRefreshing ? "刷新中" : "刷新"}</span>
-            </button>
-          ) : target.screenshotDataUrl ? (
-            <button
-              className={`live-preview-badge ${livePreview?.status === "error" ? "is-error" : ""}`}
-              type="button"
-              aria-label={isPreviewFpsOpen ? "收起实时预览帧率控制" : "展开实时预览帧率控制"}
-              aria-expanded={isPreviewFpsOpen}
-              onClick={() => setIsPreviewFpsOpen((current) => !current)}
-            >
-              <span />
-              <strong>{livePreview?.status === "error" ? "流已暂停" : "实时"}</strong>
-              <em>{target.fps} fps</em>
-            </button>
-          ) : null}
-          {!isSnapshotMode && target.realSource && target.canInput ? (
-            <div className="pinch-command-group" aria-label="捏合手势">
-              <button
-                type="button"
-                aria-label="发送缩小捏合"
-                disabled={!canSendInput}
-                onClick={() => handlePinchCommand(0.5)}
-              >
-                <Minus size={13} />
-              </button>
-              <button
-                type="button"
-                aria-label="发送放大捏合"
-                disabled={!canSendInput}
-                onClick={() => handlePinchCommand(2)}
-              >
-                <Plus size={13} />
-              </button>
-            </div>
-          ) : null}
-          {!isSnapshotMode && isPreviewFpsOpen ? (
-            <>
-            <label className="preview-fps-control">
-              <span>刷新率</span>
-              <input
-                type="range"
-                min={previewFpsMin}
-                max={previewFpsMax}
-                step="1"
-                value={target.fps}
-                aria-label="调整实时预览帧率"
-                onChange={(event) => onPreviewFpsChange(Number(event.currentTarget.value))}
-              />
-            </label>
-            <div className="preview-fps-stepper" aria-label="实时预览帧率步进">
-              <button
-                type="button"
-                aria-label="降低实时预览帧率"
-                disabled={target.fps <= previewFpsMin}
-                onClick={() => onPreviewFpsChange(target.fps - 1)}
-              >
-                <Minus size={13} />
-              </button>
-              <button
-                type="button"
-                aria-label="提高实时预览帧率"
-                disabled={target.fps >= previewFpsMax}
-                onClick={() => onPreviewFpsChange(target.fps + 1)}
-              >
-                <Plus size={13} />
-              </button>
-            </div>
-            </>
-          ) : null}
-        </div>
-      ) : null}
-
-      <div className="device-stage" aria-label="设备镜像区域">
-        {hierarchyScene?.platform === "ios" ? (
-          <div
-            className={`controller-shell-badge ${controllerBadge?.isFallback ? "is-fallback" : ""}`}
-            title={controllerBadge?.stack.length ? controllerBadge.stack.join(" > ") : controllerBadge?.className ?? "UIViewController 未暴露"}
-          >
-            <strong>{controllerBadge?.name ?? "未暴露"}</strong>
-          </div>
-        ) : null}
-        <div
-          className={`device-frame orientation-${orientation} ${aspectRatio ? "has-real-frame" : ""}`}
-          style={frameStyle}
-        >
-          <div className="device-side left" />
-          <div className="device-side top" />
-          <div className="device-side bottom" />
-          <div
-            className={`device-screen orientation-${orientation} ${target.screenshotTone} ${isSnapshotMode ? "tool-snapshot" : "tool-point"} ${canSendInput || canSelectSnapshotNode ? "is-interactive" : ""}`}
-            aria-label={isSnapshotMode ? "设备画面，当前工具 快照选节点" : "设备画面，当前工具 点选"}
-            tabIndex={canSendInput || canSelectSnapshotNode ? 0 : undefined}
-            onPointerDown={handlePointerDown}
-            onPointerMove={handlePointerMove}
-            onPointerUp={handlePointerUp}
-            onPointerCancel={handlePointerCancel}
-            onKeyDown={handleKeyDown}
-            onPaste={handlePaste}
-            ref={screenRef}
-          >
-              {target.screenshotDataUrl ? (
-                <img className="real-screenshot" src={target.screenshotDataUrl} alt={`${target.name} 截图`} />
-              ) : isWaitingForRealScreenshot ? (
-                <div className={`real-screenshot-pending ${pendingScreenshotState.kind === "error" ? "is-error" : ""}`} role="status" aria-live="polite">
-                  {pendingScreenshotState.kind === "error" ? <Info size={28} /> : <span />}
-                  <strong>{pendingScreenshotState.title}</strong>
-                  <em>{pendingScreenshotState.detail}</em>
-                  {pendingScreenshotState.command ? <code>{pendingScreenshotState.command}</code> : null}
-                </div>
-              ) : (
-                <>
-                  <div className="screen-island" />
-                  <div className="screen-hero">
-                    <span>目标</span>
-                    <strong>{target.appName}</strong>
-                    <button type="button">{target.realSource ? localizeStatusLabel(target.statusLabel) : "检查"}</button>
-                  </div>
-                  <div className="screen-content">
-                    <div>
-                      <h2>{targetKindLabel(target)}</h2>
-                      <p>{target.device}</p>
-                    </div>
-                    <div className="screen-card-row">
-                      <ScreenMini label="帧" value={target.screenSize} />
-                      <ScreenMini label="方向" value={orientationLabel} />
-                      <ScreenMini label="传输" value={target.transport} />
-                    </div>
-                  </div>
-                </>
-              )}
-              {selectedNodeHighlight ? (
-                <div
-                  className={`view-node-highlight ${selectedNodeHighlight.isHiddenDraft ? "is-hidden-draft" : ""}`}
-                  data-node-id={selectedNodeHighlight.node.id}
-                  data-node-type={selectedNodeHighlight.node.type}
-                  data-hot-hidden={selectedNodeHighlight.isHiddenDraft ? "true" : "false"}
-                  aria-label={`选中视图区域 ${selectedNodeHighlight.node.type}${selectedNodeHighlight.node.name ? ` ${selectedNodeHighlight.node.name}` : ""}`}
-                  style={selectedNodeHighlight.style}
-                />
-              ) : null}
-              {gesturePreview ? <GestureOverlay gesture={gesturePreview} /> : null}
-              {inputActivity ? <InputActivityBadge activity={inputActivity} /> : null}
-              {keyboardRelay ? (
-                <label
-                  className="keyboard-relay"
-                  style={{
-                    "--relay-x": `${keyboardRelay.xPercent}%`,
-                    "--relay-y": `${keyboardRelay.yPercent}%`,
-                  } as CSSProperties}
-                >
-                  <Keyboard size={13} />
-                  <input
-                    ref={keyboardRelayRef}
-                    value={keyboardRelayText}
-                    aria-label="设备键盘输入"
-                    autoCapitalize="none"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    spellCheck={false}
-                    inputMode="text"
-                    placeholder="输入到设备"
-                    onChange={handleRelayChange}
-                    onKeyDown={handleRelayKeyDown}
-                    onPaste={handleRelayPaste}
-                  />
-                </label>
-              ) : null}
-          </div>
-        </div>
-      </div>
-      {screenshotError ? <p className="canvas-error">{screenshotError}</p> : null}
-    </section>
-  );
-}
-
-function screenshotPendingState(target: DeviceTarget, screenshotError?: string) {
-  const isIOSRuntimeMirror = target.platform === "ios" && target.scope === "real" && target.screenshotSource === "runtime";
-  if (screenshotError && isIOSRuntimeMirror) {
-    const serverUnavailable = screenshotError.includes("server_unavailable") || screenshotError.includes("app_runtime_unavailable");
-    return {
-      kind: "error" as const,
-      title: serverUnavailable ? "App runtime 未连接" : "实时画面不可用",
-      detail: serverUnavailable
-        ? "真机实时画面依赖 Debug App 内嵌 TritonKit runtime。"
-        : conciseBridgeError(screenshotError),
-      command: serverUnavailable ? "triton serve --host 127.0.0.1 --port 19421" : undefined,
-    };
-  }
-
-  return {
-    kind: "loading" as const,
-    title: "正在获取实时画面",
-    detail: target.transport,
-    command: undefined,
-  };
-}
-
-function conciseBridgeError(error: string) {
-  const firstLine = error.split("\n").map((line) => line.trim()).find(Boolean) ?? error;
-  return firstLine.length > 96 ? `${firstLine.slice(0, 93)}...` : firstLine;
-}
-
-function ScreenMini({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="screen-mini">
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function isEditableInputClassName(className: string) {
-  return /(TextField|TextView|SearchBarTextField|TextInput|SecureText)/i.test(className);
-}
-
-function roundedGestureValue(value: number) {
-  return Number(value.toFixed(3));
-}
-
-function GestureOverlay({ gesture }: { gesture: GesturePreview }) {
-  if (gesture.kind === "tap" || gesture.kind === "longPress") {
-    return (
-      <div
-        className={`gesture-touch ${gesture.kind === "longPress" ? "is-long-press" : "is-tap"}`}
-        style={{
-          "--gesture-x": `${gesture.xPercent}%`,
-          "--gesture-y": `${gesture.yPercent}%`,
-        } as CSSProperties}
-      />
-    );
-  }
-
-  if (gesture.kind === "pinch") {
-    const startDiameter = Math.max(22, Math.min(160, gesture.startDistance * 0.18));
-    const endDiameter = Math.max(28, Math.min(190, gesture.endDistance * 0.18));
-    return (
-      <div
-        className="gesture-pinch"
-        aria-hidden="true"
-        style={{
-          "--gesture-x": `${gesture.centerXPercent}%`,
-          "--gesture-y": `${gesture.centerYPercent}%`,
-          "--pinch-start": `${startDiameter}px`,
-          "--pinch-end": `${endDiameter}px`,
-        } as CSSProperties}
-      >
-        <span />
-        <strong>{gesture.scale >= 1 ? "zoom" : "pinch"}</strong>
-      </div>
-    );
-  }
-
-  const deltaX = gesture.endXPercent - gesture.startXPercent;
-  const deltaY = gesture.endYPercent - gesture.startYPercent;
-  const angle = Math.atan2(deltaY, deltaX) * (180 / Math.PI);
-  const length = Math.max(16, Math.hypot(deltaX, deltaY));
-
-  return (
-    <div className="gesture-swipe" aria-hidden="true">
-      <div
-        className="gesture-trail"
-        style={{
-          "--gesture-x": `${gesture.startXPercent}%`,
-          "--gesture-y": `${gesture.startYPercent}%`,
-          "--gesture-angle": `${angle}deg`,
-          "--gesture-length": `${length}%`,
-        } as CSSProperties}
-      />
-      <div
-        className="gesture-touch is-start"
-        style={{
-          "--gesture-x": `${gesture.startXPercent}%`,
-          "--gesture-y": `${gesture.startYPercent}%`,
-        } as CSSProperties}
-      />
-      <div
-        className="gesture-touch is-end"
-        style={{
-          "--gesture-x": `${gesture.endXPercent}%`,
-          "--gesture-y": `${gesture.endYPercent}%`,
-        } as CSSProperties}
-      />
-    </div>
-  );
-}
-
-function InputActivityBadge({ activity }: { activity: InputActivity }) {
-  return (
-    <div className={`input-activity-badge is-${activity.status}`} role="status" aria-live="polite">
-      <span />
-      <strong>{activity.label}</strong>
-    </div>
-  );
-}
-
-function Inspector({
-  hidden,
-  target,
-  events,
-  bridge,
-  selectedNode,
-  selectedNodeDraft,
-  onSelectedNodeDraftChange,
-  onSelectedNodeDraftReset,
-}: {
-  hidden?: boolean;
-  target: DeviceTarget;
-  events: NetworkEvent[];
-  bridge: BridgeState;
-  selectedNode: HierarchyLayerNode | null;
-  selectedNodeDraft?: HierarchyNodeHotEditDraft;
-  onSelectedNodeDraftChange: (patch: HierarchyNodeHotEditDraft) => void;
-  onSelectedNodeDraftReset: () => void;
-}) {
-  const errorCount = events.filter((event) => event.status >= 400).length;
-
-  return (
-    <aside className="hub-inspector" aria-label="检查器" hidden={hidden}>
-      <section className="app-tile" aria-label="当前应用">
-        <div className="app-icon">
-          <Activity size={18} />
-        </div>
-        <div>
-          <strong>{target.appName}</strong>
-          <span>{target.bundleId}</span>
-        </div>
-        <em>{localizeStatusLabel(target.statusLabel)}</em>
-      </section>
-
-      <div className="metric-stack">
-        <Metric icon={Gauge} label="帧率" value={target.fps.toString()} />
-        <Metric icon={Clock3} label="延迟" value={`${target.latencyMs} 毫秒`} />
-        <Metric icon={Braces} label="AX 节点" value={target.hierarchyNodes.toString()} />
-        <Metric icon={DatabaseZap} label="HTTP 错误" value={errorCount.toString()} />
-      </div>
-
-      <SelectedNodeHotEditPanel
-        node={selectedNode}
-        draft={selectedNodeDraft}
-        onDraftChange={onSelectedNodeDraftChange}
-        onReset={onSelectedNodeDraftReset}
-      />
-
-      <dl className="inspector-details">
-        <div>
-          <dt>设备</dt>
-          <dd>{target.device}</dd>
-        </div>
-        {target.udid ? (
-          <div>
-            <dt>UDID</dt>
-            <dd>{target.udid}</dd>
-          </div>
-        ) : null}
-        <div>
-          <dt>传输</dt>
-          <dd>{target.transport}</dd>
-        </div>
-        <div>
-          <dt>来源</dt>
-          <dd>{target.realSource ? bridge.sourceCommands.join(" · ") || target.transport : target.proxyLabel}</dd>
-        </div>
-      </dl>
-
-      <div className="inspector-footer">
-        <Search size={15} />
-        <span>过滤</span>
-        <strong>开发者</strong>
-        <ChevronDown size={14} />
-      </div>
-    </aside>
-  );
-}
-
-function SelectedNodeHotEditPanel({
-  node,
-  draft,
-  onDraftChange,
-  onReset,
-}: {
-  node: HierarchyLayerNode | null;
-  draft?: HierarchyNodeHotEditDraft;
-  onDraftChange: (patch: HierarchyNodeHotEditDraft) => void;
-  onReset: () => void;
-}) {
-  if (!node) {
-    return (
-      <section className="selected-node-panel is-empty" aria-label="选中视图节点">
-        <div className="selected-node-heading">
-          <strong>选中视图节点</strong>
-          <span>在左侧视图树中选择节点后显示配置</span>
-        </div>
-      </section>
-    );
-  }
-
-  const frame = resolveHotEditFrame(node, draft);
-  const opacity = resolveHotEditOpacity(node, draft);
-  const cornerRadius = resolveHotEditCornerRadius(node, draft);
-  const backgroundColor = resolveHotEditBackgroundColor(node, draft);
-  const hidden = resolveHotEditHidden(node, draft);
-  const hasDraft = hasHierarchyNodeDraft(draft);
-  const nodeName = node.name ? readableViewTreeLabel(node.name) : "";
-  const typeLabel = readableViewTreeLabel(node.type);
-
-  return (
-    <section className="selected-node-panel" aria-label="选中视图节点">
-      <div className="selected-node-heading">
-        <div>
-          <strong>{typeLabel}</strong>
-          {nodeName ? <span>{nodeName}</span> : null}
-        </div>
-        <em>{hasDraft ? "本地热修改预览" : "Runtime DTO"}</em>
-      </div>
-
-      <dl className="selected-node-summary">
-        <div>
-          <dt>ID</dt>
-          <dd>{node.id}</dd>
-        </div>
-        <div>
-          <dt>Frame</dt>
-          <dd>{`${formatInspectorNumber(frame.x)}, ${formatInspectorNumber(frame.y)}, ${formatInspectorNumber(frame.width)} x ${formatInspectorNumber(frame.height)}`}</dd>
-        </div>
-        <div>
-          <dt>Depth</dt>
-          <dd>{node.depth}</dd>
-        </div>
-        <div>
-          <dt>State</dt>
-          <dd>{hidden ? "隐藏" : node.interactive ? "可交互" : "可见"}</dd>
-        </div>
-      </dl>
-
-      <div className="hot-edit-grid" aria-label="热修改预览">
-        <HotEditNumber
-          label="X"
-          value={frame.x}
-          onChange={(value) => onDraftChange({ frame: { x: value } })}
-        />
-        <HotEditNumber
-          label="Y"
-          value={frame.y}
-          onChange={(value) => onDraftChange({ frame: { y: value } })}
-        />
-        <HotEditNumber
-          label="Width"
-          min={1}
-          value={frame.width}
-          onChange={(value) => onDraftChange({ frame: { width: Math.max(1, value) } })}
-        />
-        <HotEditNumber
-          label="Height"
-          min={1}
-          value={frame.height}
-          onChange={(value) => onDraftChange({ frame: { height: Math.max(1, value) } })}
-        />
-        <HotEditNumber
-          label="Opacity"
-          max={1}
-          min={0}
-          step={0.05}
-          value={opacity}
-          onChange={(value) => onDraftChange({ opacity: Math.max(0, Math.min(1, value)) })}
-        />
-        <HotEditNumber
-          label="Radius"
-          min={0}
-          value={cornerRadius}
-          onChange={(value) => onDraftChange({ cornerRadius: Math.max(0, value) })}
-        />
-        <label className="hot-edit-control">
-          <span>Color</span>
-          <input
-            aria-label="修改选中节点背景色"
-            type="color"
-            value={normalizeColorInput(backgroundColor)}
-            onChange={(event) => onDraftChange({ backgroundColor: event.currentTarget.value })}
-          />
-        </label>
-        <label className="hot-edit-toggle">
-          <input
-            aria-label="隐藏选中节点预览"
-            checked={hidden}
-            type="checkbox"
-            onChange={(event) => onDraftChange({ hidden: event.currentTarget.checked })}
-          />
-          <span>Hidden</span>
-        </label>
-      </div>
-
-      <div className="hot-edit-footer">
-        <span>本地预览，未写回 App runtime</span>
-        <button type="button" disabled={!hasDraft} onClick={onReset}>重置</button>
-      </div>
-    </section>
-  );
-}
-
-function HotEditNumber({
-  label,
-  max,
-  min,
-  step = 1,
-  value,
-  onChange,
-}: {
-  label: string;
-  max?: number;
-  min?: number;
-  step?: number;
-  value: number;
-  onChange: (value: number) => void;
-}) {
-  return (
-    <label className="hot-edit-control">
-      <span>{label}</span>
-      <input
-        aria-label={`修改选中节点 ${label}`}
-        max={max}
-        min={min}
-        step={step}
-        type="number"
-        value={formatInputNumber(value)}
-        onChange={(event) => {
-          const next = Number(event.currentTarget.value);
-          if (Number.isFinite(next)) {
-            onChange(next);
-          }
-        }}
-      />
-    </label>
-  );
-}
-
-function hasHierarchyNodeDraft(draft?: HierarchyNodeHotEditDraft) {
-  if (!draft) return false;
-  if (draft.frame && Object.keys(draft.frame).length > 0) return true;
-  return draft.opacity !== undefined || draft.cornerRadius !== undefined || draft.backgroundColor !== undefined || draft.hidden !== undefined;
-}
-
-function formatInspectorNumber(value: number) {
-  return Number.isInteger(value) ? value.toString() : value.toFixed(2);
-}
-
-function formatInputNumber(value: number) {
-  return Number.isInteger(value) ? value.toString() : Number(value.toFixed(3)).toString();
-}
-
-function normalizeColorInput(value: string) {
-  const trimmed = value.trim();
-  if (/^#[0-9a-f]{6}$/i.test(trimmed)) return trimmed;
-  if (/^#[0-9a-f]{3}$/i.test(trimmed)) {
-    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
-  }
-  return "#64d26a";
-}
-
-function DevtoolsTabs({
-  activePanel,
-  language,
-  onSelectPanel,
-}: {
-  activePanel: DevtoolsPanel;
-  language: DisplayLanguage;
-  onSelectPanel: (panel: DevtoolsPanel) => void;
-}) {
-  const tabs: Array<{ id: DevtoolsPanel; label: string }> = [
-    { id: "config", label: language === "zh-CN" ? "配置" : "Config" },
-    { id: "network", label: language === "zh-CN" ? "网络" : "Network" },
-    { id: "logs", label: language === "zh-CN" ? "日志" : "Logs" },
-    { id: "settings", label: language === "zh-CN" ? "设置" : "Settings" },
-  ];
-
-  return (
-    <div className="inspector-tabs" role="tablist" aria-label={language === "zh-CN" ? "右侧工具分区" : "Right-side tool sections"}>
-      {tabs.map((tab) => (
-        <button
-          key={tab.id}
-          className={activePanel === tab.id ? "is-active" : ""}
-          type="button"
-          role="tab"
-          aria-selected={activePanel === tab.id}
-          onClick={() => onSelectPanel(tab.id)}
-        >
-          {tab.label}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-function Metric({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="metric">
-      <Icon size={16} />
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
-}
-
-function SettingsPanel({
-  id,
-  hidden,
-  language,
-  onLanguageChange,
-}: {
-  id?: string;
-  hidden?: boolean;
-  language: DisplayLanguage;
-  onLanguageChange: (language: DisplayLanguage) => void;
-}) {
-  const isChinese = language === "zh-CN";
-
-  return (
-    <section
-      id={id}
-      className="settings-panel"
-      role={id ? "tabpanel" : undefined}
-      aria-label={isChinese ? "设置" : "Settings"}
-      hidden={hidden}
-    >
-      <div className="settings-heading">
-        <Settings2 size={17} />
-        <div>
-          <strong>{isChinese ? "设置" : "Settings"}</strong>
-          <span>{isChinese ? "仅影响本机 Web 展示偏好" : "Local Web display preferences only"}</span>
-        </div>
-      </div>
-
-      <div className="settings-group">
-        <div className="settings-copy">
-          <strong>{isChinese ? "语言偏好" : "Language preference"}</strong>
-          <span>
-            {isChinese
-              ? "用于右侧工具区标签、日志和展示层格式化；不改变 CLI / HTTP 机器可读契约。"
-              : "Used for right-side tool labels, logs, and display formatting. CLI / HTTP contracts remain unchanged."}
-          </span>
-        </div>
-
-        <div className="language-options" role="radiogroup" aria-label={isChinese ? "语言偏好" : "Language preference"}>
-          {displayLanguageOptions.map((option) => (
-            <label className={language === option.id ? "is-selected" : ""} key={option.id}>
-              <input
-                checked={language === option.id}
-                name="display-language"
-                onChange={() => onLanguageChange(option.id)}
-                type="radio"
-                value={option.id}
-              />
-              <span>
-                <strong>{option.label}</strong>
-                <em>{option.detail}</em>
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
-
-      <p className="settings-footnote">
-        {isChinese
-          ? "偏好保存在当前浏览器的 localStorage，刷新页面后继续生效。"
-          : "The preference is stored in this browser's localStorage and survives refreshes."}
-      </p>
-    </section>
-  );
-}
-
-function NetworkStrip({
-  id,
-  hidden,
-  language,
-  events,
-}: {
-  id?: string;
-  hidden?: boolean;
-  language: DisplayLanguage;
-  events: NetworkEvent[];
-}) {
-  return (
-    <section
-      id={id}
-      className="evidence-strip"
-      role={id ? "tabpanel" : undefined}
-      aria-label={language === "zh-CN" ? "网络证据" : "Network evidence"}
-      hidden={hidden}
-    >
-      <div className="strip-heading">
-        <Network size={16} />
-        <strong>{language === "zh-CN" ? "网络" : "Network"}</strong>
-      </div>
-      <div className="network-rows">
-        {events.map((event) => (
-          <div className="network-row" key={event.id}>
-            <span className="method">{event.method}</span>
-            <span className="path">{event.path}</span>
-            <span className={event.status >= 400 ? "code is-error" : "code"}>{event.status}</span>
-            <span>{event.latencyMs} 毫秒</span>
-            <span>{modeLabel[language][event.mode]}</span>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function LogStrip({
-  id,
-  hidden,
-  language,
-  entries,
-}: {
-  id?: string;
-  hidden?: boolean;
-  language: DisplayLanguage;
-  entries: LogEntry[];
-}) {
-  return (
-    <section
-      id={id}
-      className="evidence-strip log-strip"
-      role={id ? "tabpanel" : undefined}
-      aria-label={language === "zh-CN" ? "运行日志" : "Runtime logs"}
-      hidden={hidden}
-    >
-      <div className="strip-heading">
-        <TerminalSquare size={16} />
-        <strong>{language === "zh-CN" ? "日志" : "Logs"}</strong>
-      </div>
-      <div className="log-rows">
-        {entries.map((entry) => {
-          const localized = localizeLogEntry(entry, language);
-          return (
-            <div className={`log-row log-${entry.level}`} key={entry.id} title={localized.originalMessage}>
-              <span className="log-time">{localized.timeLabel}</span>
-              <strong>{localized.levelLabel}</strong>
-              <em>{localized.sourceLabel}</em>
-              <p>{localized.messageLabel}</p>
-            </div>
-          );
-        })}
-      </div>
-    </section>
-  );
 }

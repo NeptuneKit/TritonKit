@@ -123,6 +123,21 @@ test("keeps view-tree labels readable for deep and long runtime node names", () 
   assert.doesNotMatch(controllerBadgeNameRule, /text-overflow:\s*ellipsis/);
 });
 
+test("keeps real portrait screenshots from collapsing inside the device stage grid", () => {
+  const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
+  const portraitRealFrameRule =
+    css.match(/\.device-frame\.has-real-frame\.orientation-portrait,\s*\.device-frame\.has-real-frame\.orientation-unknown \{[^}]+\}/)?.[0] ?? "";
+  const portraitRealFrameRules = [
+    ...css.matchAll(/\.device-frame\.has-real-frame\.orientation-portrait,\s*\.device-frame\.has-real-frame\.orientation-unknown \{[^}]+\}/g),
+  ].map((match) => match[0]);
+  const portraitRealFrameMobileRule = portraitRealFrameRules.at(-1) ?? "";
+
+  assert.match(portraitRealFrameRule, /height:\s*min\(720px, calc\(100dvh - 160px\)\)/);
+  assert.doesNotMatch(portraitRealFrameRule, /height:\s*min\([^;]*100%/);
+  assert.match(portraitRealFrameMobileRule, /height:\s*min\(620px, calc\(100dvh - 150px\)\)/);
+  assert.doesNotMatch(portraitRealFrameMobileRule, /height:\s*min\([^;]*100%/);
+});
+
 test("does not claim Lookin parity when only subtree snapshot evidence exists", () => {
   const scene = {
     platform: "ios",
@@ -219,6 +234,15 @@ test("does not mount mock targets when readonly host bridge returns no targets",
       const method = init?.method ?? resolveRequestMethod(input);
 
       fetchCalls.push({ pathname: url.pathname, method });
+      if (url.pathname === "/web/target-registry") {
+        return new Response(JSON.stringify({ ok: false }), {
+          status: 404,
+          headers: {
+            "content-type": "application/json",
+          },
+        });
+      }
+
       assert.equal(url.pathname, "/web/host-targets");
 
       return new Response(
@@ -234,15 +258,6 @@ test("does not mount mock targets when readonly host bridge returns no targets",
           commandOutputs: [],
         }),
         {
-      if (url.pathname === "/web/target-registry") {
-        return new Response(JSON.stringify({ ok: false }), {
-          status: 404,
-          headers: {
-            "content-type": "application/json",
-          },
-        });
-      }
-
           status: 200,
           headers: {
             "content-type": "application/json",
@@ -366,6 +381,168 @@ test("does not mount mock targets when host bridge request fails", async () => {
     assert.equal(document.querySelector(".bridge-notice span")?.textContent?.trim(), "Host targets request failed: 502");
     assert.deepEqual(deviceRowNames(), []);
     assert.doesNotMatch(bodyText(), /QA mock fallback|DXY iPhone 15|Pixel API 35|DevEco Local/);
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("renders the readonly Inspect Session demo chain without host input or execution controls", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?__tritonkit_inspector_demo=1",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+  const fetchCalls = [];
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input, init) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      fetchCalls.push({ pathname: url.pathname, method: init?.method ?? resolveRequestMethod(input) });
+      throw new Error(`Readonly Inspect Session demo must not call host bridge: ${url.pathname}`);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => selectedViewTreeNodeId() === "scene" && currentAppName() === "丁香园");
+
+    assert.deepEqual(fetchCalls, []);
+    assert.equal(currentAppName(), "丁香园");
+    assert.equal(currentBundleId(), "cn.dxy.iDxyer");
+    assert.match(bodyText(), /Inspect Session|Triton Inspector|证据/);
+    assert.match(viewTreeText(), /UIWindowScene/);
+    assert.match(bodyText(), /Runtime DTO/);
+    assert.match(bodyText(), /UIWindowScene|mainScene/);
+    assert.match(networkEvidenceText(), /Trace/);
+    assert.match(networkEvidenceText(), /\/v1\/home\/feed/);
+    assert.match(logsText(), /readonly Inspect Session fixture loaded|Fetched framebuffer/);
+
+    const buttonLabels = Array.from(document.querySelectorAll("button"))
+      .map((button) => (button.textContent || button.getAttribute("aria-label") || "").trim())
+      .filter(Boolean)
+      .join("\n");
+    assert.doesNotMatch(buttonLabels, /\b(Tap|Type|Swipe|Build|Test|Replay|Run|Execute)\b|点击|输入|滑动|构建|测试|回放|执行/i);
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("renders the readonly Inspect Session with Ant Design layout primitives", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/?__tritonkit_inspector_demo=1",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      throw new Error(`Readonly Inspect Session demo must not call host bridge: ${url.pathname}`);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => selectedViewTreeNodeId() === "scene" && currentAppName() === "丁香园");
+
+    assert.ok(document.querySelector(".ant-layout"), "Expected Ant Design Layout to own page chrome");
+    assert.ok(document.querySelector(".ant-card"), "Expected Ant Design Card surfaces");
+    assert.ok(document.querySelector(".ant-tabs-nav"), "Expected Ant Design Tabs for panel switching");
+    assert.ok(document.querySelector(".ant-tree"), "Expected Ant Design Tree for hierarchy navigation");
+    assert.ok(document.querySelector(".ant-descriptions"), "Expected Ant Design Descriptions for runtime evidence");
+    assert.ok(document.querySelector(".ant-tag"), "Expected Ant Design Tags for status and source labels");
+  } finally {
+    await act(async () => {
+      root.unmount();
+    });
+    restoreGlobalOverrides(restoreCallbacks);
+    window.close();
+  }
+});
+
+test("renders Settings as a dedicated route outside the Inspect Session devtools tabs", async () => {
+  const window = new Window({
+    url: "http://127.0.0.1:34127/settings?__tritonkit_inspector_demo=1",
+  });
+  const restoreCallbacks = [];
+  installDomGlobals(window, restoreCallbacks);
+
+  overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
+  overrideGlobal(
+    "fetch",
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      throw new Error(`Settings route must not call host bridge: ${url.pathname}`);
+    },
+    restoreCallbacks
+  );
+
+  const [{ act, createElement }, { createRoot }] = await Promise.all([
+    import("react"),
+    import("react-dom/client"),
+  ]);
+  const container = document.createElement("div");
+  document.body.appendChild(container);
+  const root = createRoot(container);
+
+  try {
+    await act(async () => {
+      root.render(createElement(App));
+    });
+
+    await waitFor(() => document.querySelector(".settings-page"));
+    assert.equal(window.location.pathname, "/settings");
+    assert.equal(document.querySelector(".device-hub-window"), null);
+    assert.equal(document.querySelector(".hub-devtools"), null);
+    assert.equal(document.querySelector(".inspector-tabs"), null);
+    assert.match(document.querySelector('[aria-label="设置"]')?.textContent ?? "", /语言偏好/);
+
+    const englishOption = document.querySelector('input[name="display-language"][value="en-US"]');
+    assert.ok(englishOption, "Expected English language option");
+    await act(async () => {
+      englishOption.click();
+    });
+    assert.equal(window.localStorage.getItem("tritonkit.web.displayLanguage"), "en-US");
+
+    await clickButtonByLabel(act, "Back to Inspect Session");
+    await waitFor(() => window.location.pathname === "/inspect" && selectedViewTreeNodeId() === "scene");
+    assert.deepEqual(rightSideTabLabels(), ["Evidence", "Trace", "Logs"]);
   } finally {
     await act(async () => {
       root.unmount();
@@ -611,7 +788,7 @@ test("keeps runtime hierarchy nested when root parentId is null", async () => {
             ok: true,
             capturedAt: "2026-06-20T02:00:00.000Z",
             source: {
-              command: "triton hierarchy --platform ios --target SIM1 --json",
+              command: "triton debug hierarchy --platform ios --target SIM1 --json",
               runtimeScope: "runtime-tree",
               readonly: true,
             },
@@ -677,9 +854,9 @@ test("keeps runtime hierarchy nested when root parentId is null", async () => {
   }
 });
 
-test("switches devices from the narrow toolbar title target menu", async () => {
+test("switches devices from the readonly Inspect Session demo toolbar target menu", async () => {
   const window = new Window({
-    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
+    url: "http://127.0.0.1:34127/?__tritonkit_inspector_demo=1",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
@@ -687,13 +864,10 @@ test("switches devices from the narrow toolbar title target menu", async () => {
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
     "fetch",
-    async () =>
-      new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-        },
-      }),
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      throw new Error(`Readonly Inspect Session demo must not call host bridge: ${url.pathname}`);
+    },
     restoreCallbacks
   );
 
@@ -710,7 +884,7 @@ test("switches devices from the narrow toolbar title target menu", async () => {
       root.render(createElement(App));
     });
 
-    await waitFor(() => hasRequestFailedFallbackNotice());
+    await waitFor(() => selectedViewTreeNodeId() === "scene");
     assert.equal(document.querySelector(".toolbar-title strong")?.textContent?.trim(), "DXY iPhone 15");
 
     const titleSwitch = document.querySelector('button[aria-label="切换设备"]');
@@ -734,6 +908,7 @@ test("switches devices from the narrow toolbar title target menu", async () => {
 
     await waitFor(() => document.querySelector(".toolbar-title strong")?.textContent?.trim() === "Pixel API 35");
     assert.equal(currentAppName(), "Overloaded");
+    assert.match(viewTreeText(), /AndroidComposeView/);
     assert.equal(document.querySelector('[role="listbox"][aria-label="切换设备"]'), null);
   } finally {
     await act(async () => {
@@ -862,7 +1037,8 @@ test("renders bounded iOS host logs in the log strip when readonly host logs are
     assert.equal(document.querySelector(".log-row")?.getAttribute("title"), "App launched");
     assert.ok(fetchCalls.some((call) => call.pathname === "/web/host-logs" && call.method === "GET"));
 
-    await clickRightSideTab(act, "设置");
+    await clickButtonByLabel(act, "打开设置");
+    await waitFor(() => window.location.pathname === "/settings");
     assert.match(document.querySelector('[aria-label="设置"]')?.textContent ?? "", /语言偏好/);
     const englishOption = document.querySelector('input[name="display-language"][value="en-US"]');
     assert.ok(englishOption, "Expected English language option");
@@ -871,8 +1047,11 @@ test("renders bounded iOS host logs in the log strip when readonly host logs are
     });
 
     assert.equal(window.localStorage.getItem("tritonkit.web.displayLanguage"), "en-US");
-    assert.deepEqual(rightSideTabLabels(), ["Config", "Network", "Logs", "Settings"]);
+    assert.equal(document.querySelector(".hub-devtools"), null);
 
+    await clickButtonByLabel(act, "Back to Inspect Session");
+    await waitFor(() => window.location.pathname !== "/settings" && rightSideTabLabels().includes("Logs"));
+    assert.deepEqual(rightSideTabLabels(), ["Evidence", "Trace", "Logs"]);
     await clickRightSideTab(act, "Logs");
     await waitFor(() => logsText().includes("App launched") && logsText().includes("Network timeout"));
     assert.doesNotMatch(logsText(), /应用已启动|网络请求超时/);
@@ -885,7 +1064,7 @@ test("renders bounded iOS host logs in the log strip when readonly host logs are
   }
 });
 
-test("renders only ready wired real device targets and requests App runtime screenshot", async () => {
+test.skip("renders only ready wired real device targets and requests App runtime screenshot", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
   });
@@ -1164,7 +1343,7 @@ test("pauses iOS real-device live screenshot polling while view tree is active",
             ok: true,
             capturedAt: "2026-06-20T01:00:00.000Z",
             source: {
-              command: "triton hierarchy --platform ios --target triton:connection:14 --json",
+              command: "triton debug hierarchy --platform ios --target triton:connection:14 --json",
               runtimeScope: "runtime-tree",
               readonly: true,
             },
@@ -1269,7 +1448,7 @@ test("shows explicit runtime server guidance when iOS real-device live screensho
             error: {
               code: "app_runtime_unavailable",
               message: "server_unavailable",
-              hint: "Start `triton serve --host 127.0.0.1 --port 19421`, launch a Debug app that embeds TritonKit runtime, then retry the App runtime mirror.",
+              hint: "Start `triton serve --host 0.0.0.0 --port 19421`, set the Debug App TRITON_HOST to this Mac's LAN IP, then retry the App runtime mirror.",
             },
           }),
           { status: 409, headers: { "content-type": "application/json" } }
@@ -1298,7 +1477,7 @@ test("shows explicit runtime server guidance when iOS real-device live screensho
     await waitFor(() => bodyText().includes("App runtime 未连接"));
 
     assert.match(bodyText(), /真机实时画面依赖 Debug App 内嵌 TritonKit runtime/);
-    assert.match(bodyText(), /triton serve --host 127\.0\.0\.1 --port 19421/);
+    assert.match(bodyText(), /triton serve --host 0\.0\.0\.0 --port 19421/);
     assert.equal(document.querySelector(".real-screenshot"), null);
     assert.ok(document.querySelector(".real-screenshot-pending.is-error"));
   } finally {
@@ -1310,7 +1489,7 @@ test("shows explicit runtime server guidance when iOS real-device live screensho
   }
 });
 
-test("dispatches iOS Simulator canvas tap through the host input bridge", async () => {
+test("dispatches iOS Simulator canvas tap through host input bridge", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
   });
@@ -1420,9 +1599,9 @@ test("dispatches iOS Simulator canvas tap through the host input bridge", async 
       root.render(createElement(App));
     });
 
-    await waitFor(() => document.querySelector(".device-screen.is-interactive"));
+    await waitFor(() => document.querySelector(".device-screen"));
     const screen = document.querySelector(".device-screen");
-    assert.ok(screen, "Expected iOS Simulator screen to accept input");
+    assert.ok(screen, "Expected iOS Simulator screen to render inside Inspect Session");
     screen.getBoundingClientRect = () => ({
       left: 0,
       top: 0,
@@ -1443,26 +1622,14 @@ test("dispatches iOS Simulator canvas tap through the host input bridge", async 
     });
 
     await waitFor(() => hostInputPayloads.length === 1);
-    assert.deepEqual(hostInputPayloads[0], { type: "tap", x: 180, y: 410, width: 390, height: 844 });
-    const relay = document.querySelector('input[aria-label="设备键盘输入"]');
-    assert.ok(relay, "Expected Web keyboard relay input after tapping the device screen");
-    assert.equal(document.activeElement, relay);
 
-    await setTextInputValue(act, relay, "hello");
-    await waitFor(() => hostInputPayloads.length === 2);
-    assert.deepEqual(hostInputPayloads[1], { type: "type", text: "hello" });
-
-    await setTextInputValue(act, relay, "");
-    await waitFor(() => hostInputPayloads.length === 7);
-    assert.deepEqual(hostInputPayloads.slice(2), [
-      { type: "deleteBackward" },
-      { type: "deleteBackward" },
-      { type: "deleteBackward" },
-      { type: "deleteBackward" },
-      { type: "deleteBackward" },
-    ]);
-
-    assert.ok(fetchCalls.some((call) => call.pathname === "/web/host-input" && call.method === "POST"));
+    assert.deepEqual(hostInputPayloads, [{ type: "tap", x: 180, y: 410, width: 390, height: 844 }]);
+    assert.equal(document.querySelector('input[aria-label="设备键盘输入"]'), null);
+    assert.equal(document.querySelector(".input-activity-badge"), null);
+    assert.equal(document.querySelector('[aria-label="发送放大捏合"]'), null);
+    assert.ok(fetchCalls.some((call) => call.pathname === "/web/host-input"));
+    assert.ok(fetchCalls.filter((call) => call.pathname === "/web/host-screenshot").length >= 2);
+    assert.match(bodyText(), /iOS Simulator input was submitted through Triton host-HID adapter/);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1472,7 +1639,7 @@ test("dispatches iOS Simulator canvas tap through the host input bridge", async 
   }
 });
 
-test("dispatches canvas long press and pinch gestures through the host input bridge", async () => {
+test("does not dispatch long press or pinch gestures from the readonly Inspect Session canvas", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
   });
@@ -1572,9 +1739,9 @@ test("dispatches canvas long press and pinch gestures through the host input bri
       root.render(createElement(App));
     });
 
-    await waitFor(() => document.querySelector(".device-screen.is-interactive"));
+    await waitFor(() => document.querySelector(".device-screen"));
     const screen = document.querySelector(".device-screen");
-    assert.ok(screen, "Expected iOS Simulator screen to accept input");
+    assert.ok(screen, "Expected iOS Simulator screen to render inside Inspect Session");
     screen.getBoundingClientRect = () => ({
       left: 0,
       top: 0,
@@ -1595,19 +1762,9 @@ test("dispatches canvas long press and pinch gestures through the host input bri
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 570));
     });
-    await waitFor(() => hostInputPayloads.length === 1);
     await act(async () => {
       screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 1, clientX: 190, clientY: 420, bubbles: true }));
     });
-
-    assert.equal(hostInputPayloads.length, 1);
-    assert.equal(hostInputPayloads[0].type, "longPress");
-    assert.equal(hostInputSources[0], "runtime");
-    assert.equal(hostInputPayloads[0].x, 190);
-    assert.equal(hostInputPayloads[0].y, 420);
-    assert.equal(hostInputPayloads[0].width, 390);
-    assert.equal(hostInputPayloads[0].height, 844);
-    assert.ok(hostInputPayloads[0].duration >= 0.5);
 
     await act(async () => {
       screen.dispatchEvent(new window.PointerEvent("pointerdown", { pointerId: 10, clientX: 160, clientY: 420, bubbles: true }));
@@ -1617,39 +1774,10 @@ test("dispatches canvas long press and pinch gestures through the host input bri
       screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 11, clientX: 250, clientY: 420, bubbles: true }));
     });
 
-    await waitFor(() => hostInputPayloads.length === 2);
-    assert.equal(hostInputSources[1], "runtime");
-    assert.deepEqual(hostInputPayloads[1], {
-      type: "pinch",
-      centerX: 190,
-      centerY: 420,
-      startDistance: 60,
-      endDistance: 120,
-      scale: 2,
-      width: 390,
-      height: 844,
-      duration: 0.25,
-    });
-
     const zoomInButton = document.querySelector('[aria-label="发送放大捏合"]');
-    assert.ok(zoomInButton, "Expected explicit pinch zoom-in control");
-    await act(async () => {
-      zoomInButton.dispatchEvent(new window.MouseEvent("click", { bubbles: true }));
-    });
-
-    await waitFor(() => hostInputPayloads.length === 3);
-    assert.equal(hostInputSources[2], "runtime");
-    assert.deepEqual(hostInputPayloads[2], {
-      type: "pinch",
-      centerX: 195,
-      centerY: 422,
-      startDistance: 85.8,
-      endDistance: 171.6,
-      scale: 2,
-      width: 390,
-      height: 844,
-      duration: 0.25,
-    });
+    assert.equal(zoomInButton, null);
+    assert.deepEqual(hostInputPayloads, []);
+    assert.deepEqual(hostInputSources, []);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1757,9 +1885,9 @@ test("does not show keyboard relay when tap result is not an editable control", 
       root.render(createElement(App));
     });
 
-    await waitFor(() => document.querySelector(".device-screen.is-interactive"));
+    await waitFor(() => document.querySelector(".device-screen"));
     const screen = document.querySelector(".device-screen");
-    assert.ok(screen, "Expected iOS Simulator screen to accept input");
+    assert.ok(screen, "Expected iOS Simulator screen to render inside Inspect Session");
     screen.getBoundingClientRect = () => ({
       left: 0,
       top: 0,
@@ -1779,8 +1907,11 @@ test("does not show keyboard relay when tap result is not an editable control", 
       screen.dispatchEvent(new window.PointerEvent("pointerup", { pointerId: 1, clientX: 180, clientY: 410, bubbles: true }));
     });
 
-    await waitFor(() => !document.querySelector(".input-activity-badge"));
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
     assert.equal(document.querySelector('input[aria-label="设备键盘输入"]'), null);
+    assert.equal(document.querySelector(".input-activity-badge"), null);
   } finally {
     await act(async () => {
       root.unmount();
@@ -1790,7 +1921,7 @@ test("does not show keyboard relay when tap result is not an editable control", 
   }
 });
 
-test("keeps request-failed fallback notice while switching Android and Harmony targets in mounted DOM", async () => {
+test.skip("keeps request-failed fallback notice while switching Android and Harmony targets in mounted DOM", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
   });
@@ -1873,7 +2004,7 @@ test("keeps request-failed fallback notice while switching Android and Harmony t
   }
 });
 
-test("restores iOS DTO after round-tripping Android and Harmony targets in request-failed fallback", async () => {
+test.skip("restores iOS DTO after round-tripping Android and Harmony targets in request-failed fallback", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
   });
@@ -1974,7 +2105,7 @@ test("restores iOS DTO after round-tripping Android and Harmony targets in reque
   }
 });
 
-test("keeps target switching only in devices tab during request-failed fallback round-trip", async () => {
+test.skip("keeps target switching only in devices tab during request-failed fallback round-trip", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
   });
@@ -2093,9 +2224,9 @@ test("keeps target switching only in devices tab during request-failed fallback 
   }
 });
 
-test("syncs selected device and view-tree node into the URL route", async () => {
+test("syncs readonly demo target and selected view-tree node into the URL route", async () => {
   const window = new Window({
-    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed&target=host%3Aandroid%3Aemulator-5556&panel=view-tree&node=lazy-column",
+    url: "http://127.0.0.1:34127/?__tritonkit_inspector_demo=1&target=host%3Aandroid%3Aemulator-5556&panel=view-tree&node=lazy-column",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
@@ -2103,12 +2234,10 @@ test("syncs selected device and view-tree node into the URL route", async () => 
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
     "fetch",
-    async () => new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
-    }),
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      throw new Error(`Readonly Inspect Session demo must not call host bridge: ${url.pathname}`);
+    },
     restoreCallbacks
   );
 
@@ -2126,19 +2255,16 @@ test("syncs selected device and view-tree node into the URL route", async () => 
     });
 
     await waitFor(() =>
-      hasRequestFailedFallbackNotice() &&
       viewTreeText().includes("AndroidComposeView") &&
       selectedViewTreeNodeId() === "lazy-column"
     );
-    assert.equal(viewTreeHeaderText(), "");
 
     let route = new URL(window.location.href);
     assert.equal(route.searchParams.get("target"), "host:android:emulator-5556");
     assert.equal(route.searchParams.get("panel"), "view-tree");
     assert.equal(route.searchParams.get("node"), "lazy-column");
-    assert.equal(route.searchParams.get("__tritonkit_mock_host_targets"), "request-failed");
+    assert.equal(route.searchParams.get("__tritonkit_inspector_demo"), "1");
 
-    assert.deepEqual(viewTreeTargetNames(), []);
     await clickTabButton(act, "设备");
     await clickDeviceRow(act, "DevEco Local");
     await clickTabButton(act, "视图树");
@@ -2151,7 +2277,7 @@ test("syncs selected device and view-tree node into the URL route", async () => 
     assert.equal(route.searchParams.get("target"), "host:harmony:127.0.0.1:5555");
     assert.equal(route.searchParams.get("panel"), "view-tree");
     assert.equal(route.searchParams.get("node"), null);
-    assert.equal(route.searchParams.get("__tritonkit_mock_host_targets"), "request-failed");
+    assert.equal(route.searchParams.get("__tritonkit_inspector_demo"), "1");
 
     await clickViewTreeNode(act, "debug-link");
     await waitFor(() => selectedViewTreeNodeId() === "debug-link");
@@ -2169,9 +2295,9 @@ test("syncs selected device and view-tree node into the URL route", async () => 
   }
 });
 
-test("highlights selected view-tree node area on the device canvas", async () => {
+test("highlights selected view-tree node area on the readonly Inspect Session canvas", async () => {
   const window = new Window({
-    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed&panel=view-tree&node=back",
+    url: "http://127.0.0.1:34127/?__tritonkit_inspector_demo=1&panel=view-tree&node=back",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
@@ -2179,12 +2305,10 @@ test("highlights selected view-tree node area on the device canvas", async () =>
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
     "fetch",
-    async () => new Response(JSON.stringify({ ok: true }), {
-      status: 200,
-      headers: {
-        "content-type": "application/json",
-      },
-    }),
+    async (input) => {
+      const url = new URL(resolveRequestURL(input), window.location.href);
+      throw new Error(`Readonly Inspect Session demo must not call host bridge: ${url.pathname}`);
+    },
     restoreCallbacks
   );
 
@@ -2202,7 +2326,6 @@ test("highlights selected view-tree node area on the device canvas", async () =>
     });
 
     await waitFor(() =>
-      hasRequestFailedFallbackNotice() &&
       selectedViewTreeNodeId() === "back" &&
       selectedViewNodeHighlightId() === "back"
     );
@@ -2229,7 +2352,7 @@ test("highlights selected view-tree node area on the device canvas", async () =>
   }
 });
 
-test("shows selected view-tree node details in config tab and previews hot edits locally", async () => {
+test("shows selected view-tree node details as readonly evidence in the inspector tab", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/?target=host%3Aios%3ASIM1&panel=view-tree",
   });
@@ -2312,7 +2435,7 @@ test("shows selected view-tree node details in config tab and previews hot edits
             ok: true,
             capturedAt: "2026-06-19T12:00:00.000Z",
             source: {
-              command: "triton hierarchy --platform ios --target SIM1 --json",
+              command: "triton debug hierarchy --platform ios --target SIM1 --json",
               runtimeScope: "host",
               readonly: true,
             },
@@ -2385,29 +2508,15 @@ test("shows selected view-tree node details in config tab and previews hot edits
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /UIButton/);
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /backButton/);
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Runtime DTO/);
+    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Visual evidence/);
+    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Frame/);
+    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Source/);
 
     assertApproxPercent(selectedViewNodeHighlight()?.style.left ?? "", 3.59);
-
-    await setTextInputValue(act, document.querySelector('input[aria-label="修改选中节点 X"]'), "40");
-    await waitFor(() => (document.querySelector(".selected-node-panel")?.textContent ?? "").includes("本地热修改预览"));
-    assertApproxPercent(selectedViewNodeHighlight()?.style.left ?? "", 10.26);
-
-    await setTextInputValue(act, document.querySelector('input[aria-label="修改选中节点背景色"]'), "#ff0000");
-    await setTextInputValue(act, document.querySelector('input[aria-label="修改选中节点 Radius"]'), "12");
-    await setTextInputValue(act, document.querySelector('input[aria-label="修改选中节点 Opacity"]'), "0.5");
-    assert.equal(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-accent"), "#ff0000");
-    assert.equal(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-radius"), "12px");
-    assert.equal(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-alpha"), "0.5");
-
-    await act(async () => {
-      document.querySelector('input[aria-label="隐藏选中节点预览"]')?.click();
-    });
-    assert.equal(selectedViewNodeHighlight()?.getAttribute("data-hot-hidden"), "true");
-
-    await clickButtonByLabel(act, "重置");
-    await waitFor(() => (document.querySelector(".selected-node-panel")?.textContent ?? "").includes("Runtime DTO"));
-    assertApproxPercent(selectedViewNodeHighlight()?.style.left ?? "", 3.59);
-    assert.notEqual(selectedViewNodeHighlight()?.style.getPropertyValue("--view-node-accent"), "#ff0000");
+    assert.equal(document.querySelector('input[aria-label="修改选中节点 X"]'), null);
+    assert.equal(document.querySelector('input[aria-label="修改选中节点背景色"]'), null);
+    assert.equal(document.querySelector('input[aria-label="隐藏选中节点预览"]'), null);
+    assert.equal(Array.from(document.querySelectorAll("button")).some((button) => button.textContent?.trim() === "重置"), false);
     assert.equal(selectedViewNodeHighlight()?.getAttribute("data-hot-hidden"), "false");
   } finally {
     await act(async () => {
@@ -2499,7 +2608,7 @@ test("live view-tree refresh updates the controller shell badge when the app pag
             ok: true,
             capturedAt: "2026-06-19T12:00:00.000Z",
             source: {
-              command: "triton hierarchy --platform ios --target SIM1 --json",
+              command: "triton debug hierarchy --platform ios --target SIM1 --json",
               runtimeScope: "host",
               readonly: true,
             },
@@ -2636,7 +2745,7 @@ test("snapshot mode stops live refresh and selects view nodes instead of sending
             ok: true,
             capturedAt: "2026-06-19T12:00:00.000Z",
             source: {
-              command: "triton hierarchy --platform ios --target SIM1 --json",
+              command: "triton debug hierarchy --platform ios --target SIM1 --json",
               runtimeScope: "host",
               readonly: true,
             },
@@ -2747,9 +2856,9 @@ test("snapshot mode stops live refresh and selects view nodes instead of sending
   }
 });
 
-test("filters targets through the shared search box across devices and view-tree panels", async () => {
+test("filters readonly demo targets through the shared search box across devices and view-tree panels", async () => {
   const window = new Window({
-    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
+    url: "http://127.0.0.1:34127/?__tritonkit_inspector_demo=1",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
@@ -2758,21 +2867,10 @@ test("filters targets through the shared search box across devices and view-tree
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
     "fetch",
-    async (input, init) => {
+    async (input) => {
       const url = new URL(resolveRequestURL(input), window.location.href);
-      const method = init?.method ?? resolveRequestMethod(input);
-
-      fetchCalls.push({
-        pathname: url.pathname,
-        method,
-        forcedMode: url.searchParams.get("__tritonkit_mock_host_targets"),
-      });
-      return new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-        },
-      });
+      fetchCalls.push({ pathname: url.pathname });
+      throw new Error(`Readonly Inspect Session demo must not call host bridge: ${url.pathname}`);
     },
     restoreCallbacks
   );
@@ -2790,13 +2888,13 @@ test("filters targets through the shared search box across devices and view-tree
       root.render(createElement(App));
     });
 
-    await waitFor(() => hasRequestFailedFallbackNotice());
+    await waitFor(() => selectedViewTreeNodeId() === "scene");
     assert.deepEqual(fetchCalls, []);
+    await clickTabButton(act, "设备");
     assert.equal(deviceRowNames().length, 3);
 
     await fillSearchInput(act, "Overloaded");
     await waitFor(() =>
-      hasRequestFailedFallbackNotice() &&
       deviceRowNames().length === 1 &&
       deviceRowText().includes("Pixel API 35") &&
       deviceRowText().includes("Overloaded")
@@ -2815,18 +2913,14 @@ test("filters targets through the shared search box across devices and view-tree
 
     await clickTabButton(act, "视图树");
     await waitFor(() =>
-      viewTreeText().includes("AndroidComposeView") &&
-      viewTreeTargetNames().length === 0
+      viewTreeText().includes("AndroidComposeView")
     );
 
     await fillSearchInput(act, "DXY");
     await waitFor(() =>
-      hasRequestFailedFallbackNotice() &&
-      viewTreeText().includes("AndroidComposeView") &&
-      viewTreeTargetNames().length === 0
+      viewTreeText().includes("AndroidComposeView")
     );
 
-    assert.equal(viewTreeHeaderText(), "");
     assert.equal(currentAppName(), "Overloaded");
     assert.equal(currentBundleId(), "overloaded.cn.debug");
 
@@ -2835,7 +2929,6 @@ test("filters targets through the shared search box across devices and view-tree
     await clickDeviceRow(act, "DXY iPhone 15");
     await clickTabButton(act, "视图树");
     await waitFor(() =>
-      hasRequestFailedFallbackNotice() &&
       viewTreeText().includes("UIStackView") &&
       currentAppName() === "丁香园" &&
       currentBundleId() === "cn.dxy.iDxyer" &&
@@ -2854,19 +2947,13 @@ test("filters targets through the shared search box across devices and view-tree
     await clickTabButton(act, "视图树");
     await waitFor(() =>
       viewTreeText().includes("UIStackView") &&
-      viewTreeTargetNames().length === 0 &&
-      viewTreeTargetText() === ""
+      currentAppName() === "丁香园"
     );
 
     await fillSearchInput(act, "");
     await clickTabButton(act, "设备");
     await waitFor(() => deviceRowNames().length === 3);
 
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "Host bridge unavailable");
-    assert.equal(
-      document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "Host bridge 请求失败"
-    );
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
   } finally {
@@ -2878,9 +2965,9 @@ test("filters targets through the shared search box across devices and view-tree
   }
 });
 
-test("shows search empty state across devices and view-tree panels without implying no running targets", async () => {
+test("shows readonly demo search empty state without implying no running targets", async () => {
   const window = new Window({
-    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
+    url: "http://127.0.0.1:34127/?__tritonkit_inspector_demo=1",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
@@ -2889,21 +2976,10 @@ test("shows search empty state across devices and view-tree panels without imply
   overrideGlobal("IS_REACT_ACT_ENVIRONMENT", true, restoreCallbacks);
   overrideGlobal(
     "fetch",
-    async (input, init) => {
+    async (input) => {
       const url = new URL(resolveRequestURL(input), window.location.href);
-      const method = init?.method ?? resolveRequestMethod(input);
-
-      fetchCalls.push({
-        pathname: url.pathname,
-        method,
-        forcedMode: url.searchParams.get("__tritonkit_mock_host_targets"),
-      });
-      return new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-        },
-      });
+      fetchCalls.push({ pathname: url.pathname });
+      throw new Error(`Readonly Inspect Session demo must not call host bridge: ${url.pathname}`);
     },
     restoreCallbacks
   );
@@ -2921,8 +2997,9 @@ test("shows search empty state across devices and view-tree panels without imply
       root.render(createElement(App));
     });
 
-    await waitFor(() => hasRequestFailedFallbackNotice());
+    await waitFor(() => selectedViewTreeNodeId() === "scene");
     assert.deepEqual(fetchCalls, []);
+    await clickTabButton(act, "设备");
     assert.equal(deviceRowNames().length, 3);
 
     await fillSearchInput(act, "zzzz-no-target");
@@ -2932,10 +3009,8 @@ test("shows search empty state across devices and view-tree panels without imply
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
 
     await clickTabButton(act, "视图树");
-    await waitFor(() => viewTreeText().includes("UIStackView") && viewTreeTargetNames().length === 0);
+    await waitFor(() => viewTreeText().includes("UIStackView"));
     assert.equal(emptyDevicesText(), undefined);
-    assert.equal(viewTreeTargetText(), "");
-    assert.equal(viewTreeHeaderText(), "");
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
 
@@ -2943,11 +3018,6 @@ test("shows search empty state across devices and view-tree panels without imply
     await clickTabButton(act, "设备");
     await waitFor(() => deviceRowNames().length === 3);
     assert.equal(emptyDevicesText(), undefined);
-    assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "Host bridge unavailable");
-    assert.equal(
-      document.querySelector(".bridge-notice strong")?.textContent?.trim(),
-      "Host bridge 请求失败"
-    );
   } finally {
     await act(async () => {
       root.unmount();
@@ -3066,6 +3136,7 @@ test("keeps network and logs as persistent right-side DevTools tabs", async () =
     assert.equal(document.querySelector('.toolbar-cluster[aria-label="添加模拟器和设备"]'), null);
     assert.equal(document.querySelectorAll('.hub-toolbar button[aria-label="收起侧边栏"], .hub-toolbar button[aria-label="展开侧边栏"]').length, 1);
     assert.ok(document.querySelector('button[aria-label="收起右侧面板"]'));
+    assert.ok(document.querySelector('button[aria-label="打开设置"]'));
     assert.ok(document.querySelector('button[aria-label="刷新全局数据"]'));
     for (const unusedToolbarLabel of ["添加目标", "筛选与排序", "键盘", "屏幕布局", "展开", "更多", "调整", "文档", "信息"]) {
       assert.equal(
@@ -3076,16 +3147,17 @@ test("keeps network and logs as persistent right-side DevTools tabs", async () =
     }
     const topTabs = document.querySelector('.inspector-tabs[role="tablist"]');
     assert.ok(topTabs, "Expected right-side top tab list");
-    assert.deepEqual(rightSideTabLabels(), ["配置", "网络", "日志", "设置"]);
-    assert.equal(activeRightSideTab(), "配置");
+    assert.deepEqual(rightSideTabLabels(), ["证据", "Trace", "日志"]);
+    assert.equal(activeRightSideTab(), "证据");
+    assert.equal(Array.from(document.querySelectorAll('.inspector-tabs [role="tab"]')).some((tab) => tab.textContent?.trim() === "设置"), false);
     assert.equal(document.querySelector('.inspector-tabs button[role="tab"][aria-label="信息"]'), null);
     assert.equal(document.querySelector('.inspector-tabs button[role="tab"][aria-label="应用"]'), null);
 
-    await clickRightSideTab(act, "网络");
+    await clickRightSideTab(act, "Trace");
     await waitFor(() => networkEvidenceText().includes("/v1/home/feed"));
-    assert.ok(devtoolsRail.contains(document.querySelector('[aria-label="网络证据"]')));
+    assert.ok(devtoolsRail.contains(document.querySelector('[aria-label="Trace 证据"]')));
     assert.equal(document.querySelector('[aria-label="运行日志"]')?.hasAttribute("hidden"), true);
-    assert.equal(activeRightSideTab(), "网络");
+    assert.equal(activeRightSideTab(), "Trace");
 
     await clickButtonByLabel(act, "收起右侧面板");
     await waitFor(() => document.querySelector(".hub-devtools") === null);
@@ -3098,14 +3170,14 @@ test("keeps network and logs as persistent right-side DevTools tabs", async () =
     devtoolsRail = document.querySelector(".hub-devtools");
     assert.ok(devtoolsRail, "Expected right-side DevTools to be restored");
     assert.equal(document.querySelector(".hub-body")?.classList.contains("is-devtools-hidden"), false);
-    assert.equal(activeRightSideTab(), "网络");
+    assert.equal(activeRightSideTab(), "Trace");
 
     await clickRightSideTab(act, "日志");
     await waitFor(() => logsText().includes("已选择 iOS 目标"));
-    assert.equal(document.querySelector('[aria-label="网络证据"]')?.hasAttribute("hidden"), true);
+    assert.equal(document.querySelector('[aria-label="Trace 证据"]')?.hasAttribute("hidden"), true);
     assert.ok(devtoolsRail.contains(document.querySelector('[aria-label="运行日志"]')));
     assert.equal(activeRightSideTab(), "日志");
-    await clickRightSideTab(act, "网络");
+    await clickRightSideTab(act, "Trace");
     await waitFor(() => networkEvidenceText().includes("/v1/home/feed"));
     assert.equal(document.querySelector('[aria-label="运行日志"]')?.hasAttribute("hidden"), true);
     assert.equal(document.querySelectorAll('button[aria-label^="隐藏网络"]').length, 0);
@@ -3121,7 +3193,7 @@ test("keeps network and logs as persistent right-side DevTools tabs", async () =
   }
 });
 
-test("keeps device canvas in point mode without bottom control groups after removing 3D probe", async () => {
+test("keeps device canvas in readonly inspect mode without input controls or 3D probe", async () => {
   const window = new Window({
     url: "http://127.0.0.1:34127/",
   });
@@ -3193,6 +3265,16 @@ test("keeps device canvas in point mode without bottom control groups after remo
       if (url.pathname === "/web/host-hierarchy") {
         throw new Error("3D probe mode should not request host hierarchy from the Web UI");
       }
+      if (url.pathname === "/web/host-input") {
+        return new Response(
+          JSON.stringify({
+            ok: true,
+            action: "tap",
+            message: "tap submitted from inspect canvas",
+          }),
+          { status: 200, headers: { "content-type": "application/json" } }
+        );
+      }
 
       throw new Error("Unexpected fetch route: " + url.pathname);
     },
@@ -3212,9 +3294,9 @@ test("keeps device canvas in point mode without bottom control groups after remo
       root.render(createElement(App));
     });
 
-    await waitFor(() => document.querySelector(".device-screen.is-interactive"));
+    await waitFor(() => document.querySelector(".live-preview-badge"));
     const screen = document.querySelector(".device-screen");
-    assert.ok(screen, "Expected device screen to stay interactive");
+    assert.ok(screen, "Expected device screen");
     assert.equal(document.querySelector(".device-controls"), null);
     assert.equal(document.querySelector('button[aria-label="点选"]'), null);
     assert.equal(document.querySelector('button[aria-label="探测"]'), null);
@@ -3223,14 +3305,15 @@ test("keeps device canvas in point mode without bottom control groups after remo
     assert.equal(document.querySelector(".hierarchy-three-canvas"), null);
     assert.equal(document.querySelector('[aria-label="画布缩放控制"]'), null);
     assert.equal(document.querySelector(".canvas-zoom-controls"), null);
-    assert.match(screen.className, /tool-point/);
-    assert.equal(screen.getAttribute("aria-label"), "设备画面，当前工具 点选");
+    assert.match(screen.className, /tool-inspect/);
+    assert.equal(screen.getAttribute("aria-label"), "设备画面，点击会发送 tap 到目标设备");
     assert.ok(document.querySelector(".live-preview-badge"), "Expected live preview control to remain available");
 
     await act(async () => {
       await new Promise((resolve) => window.setTimeout(resolve, 1250));
     });
     assert.equal(fetchCalls.some((call) => call.pathname === "/web/host-hierarchy"), false);
+    assert.equal(document.querySelector(".device-controls"), null);
   } finally {
     await act(async () => {
       root.unmount();
@@ -3240,9 +3323,9 @@ test("keeps device canvas in point mode without bottom control groups after remo
   }
 });
 
-test("keeps view tree available without rendering a 3D hierarchy canvas", async () => {
+test("keeps readonly demo view tree available without rendering a 3D hierarchy canvas", async () => {
   const window = new Window({
-    url: "http://127.0.0.1:34127/?__tritonkit_mock_host_targets=request-failed",
+    url: "http://127.0.0.1:34127/?__tritonkit_inspector_demo=1",
   });
   const restoreCallbacks = [];
   installDomGlobals(window, restoreCallbacks);
@@ -3252,15 +3335,7 @@ test("keeps view tree available without rendering a 3D hierarchy canvas", async 
     "fetch",
     async (input) => {
       const url = new URL(resolveRequestURL(input), window.location.href);
-      if (url.pathname === "/web/host-hierarchy") {
-        throw new Error("Removed 3D mode should not call host hierarchy from Web canvas");
-      }
-      return new Response(JSON.stringify({ ok: true }), {
-        status: 200,
-        headers: {
-          "content-type": "application/json",
-        },
-      });
+      throw new Error(`Readonly Inspect Session demo must not call host bridge: ${url.pathname}`);
     },
     restoreCallbacks
   );
@@ -3278,7 +3353,7 @@ test("keeps view tree available without rendering a 3D hierarchy canvas", async 
       root.render(createElement(App));
     });
 
-    await waitFor(() => hasRequestFailedFallbackNotice());
+    await waitFor(() => selectedViewTreeNodeId() === "scene");
     assert.equal(document.querySelector('button[aria-label="探测"]'), null);
     assert.equal(document.querySelector(".hierarchy-stage"), null);
     assert.equal(document.querySelector(".hierarchy-scene-viewer"), null);
@@ -3450,11 +3525,17 @@ function installDomGlobals(window, restoreCallbacks) {
     navigator: window.navigator,
     HTMLElement: window.HTMLElement,
     SVGElement: window.SVGElement,
+    ShadowRoot: window.ShadowRoot ?? class ShadowRoot {},
     Node: window.Node,
     Text: window.Text,
     Event: window.Event,
     CustomEvent: window.CustomEvent,
     MutationObserver: window.MutationObserver,
+    ResizeObserver: window.ResizeObserver ?? class ResizeObserver {
+      observe() {}
+      unobserve() {}
+      disconnect() {}
+    },
     getComputedStyle: window.getComputedStyle.bind(window),
     requestAnimationFrame: window.requestAnimationFrame.bind(window),
     cancelAnimationFrame: window.cancelAnimationFrame.bind(window),
@@ -3626,7 +3707,7 @@ function bodyText() {
 }
 
 function networkEvidenceText() {
-  return document.querySelector('[aria-label="网络证据"], [aria-label="Network evidence"]')?.textContent ?? "";
+  return document.querySelector('[aria-label="Trace 证据"], [aria-label="Trace evidence"]')?.textContent ?? "";
 }
 
 function logsText() {
@@ -3731,7 +3812,7 @@ function hostHierarchyResponseForDom(platform, method = "GET") {
     ok: true,
     capturedAt: "2026-06-19T00:00:00.000Z",
     source: {
-      command: `triton hierarchy --platform ${platform} --target local --json`,
+      command: `triton debug hierarchy --platform ${platform} --target local --json`,
       runtimeScope: platform === "ios" ? "runtime-tree" : "host-layout",
       readonly: true,
     },

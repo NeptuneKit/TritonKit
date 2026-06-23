@@ -622,13 +622,13 @@ async function captureHostLogs(tritonPath, target) {
 async function captureHostHierarchy(tritonPath, platform, target, method = "GET", options = {}) {
   const runtimeMirror = isIOSRuntimeMirror(platform, options);
   const hierarchyTarget = runtimeMirror ? await resolveIOSRuntimeMirrorTarget(tritonPath, target, options) : target;
-  const args = ["hierarchy", "--platform", platform, "--target", hierarchyTarget, "--json"];
+  const args = ["debug", "hierarchy", "--platform", platform, "--target", hierarchyTarget, "--json"];
   let payload;
   try {
     payload = await runTritonJSON(tritonPath, args);
   } catch (error) {
     if (platform === "ios" && shouldFallbackToLegacyIosHierarchy(error)) {
-      const legacyPayload = await runTritonJSON(tritonPath, ["hierarchy", "--target", hierarchyTarget, "--json"]);
+      const legacyPayload = await runTritonJSON(tritonPath, ["debug", "hierarchy", "--target", hierarchyTarget, "--json"]);
       return attachHierarchyCaptureControl(
         await mapLegacyIosHierarchyToHostResponse(legacyPayload, target, {
           runtimeDataBaseURL: options.runtimeDataBaseURL || defaultRuntimeDataBaseURL,
@@ -640,7 +640,7 @@ async function captureHostHierarchy(tritonPath, platform, target, method = "GET"
     throw error;
   }
   if (!payload || payload.ok !== true || !payload.scene) {
-    throw new Error("triton hierarchy did not return a valid HostHierarchyResponse scene");
+    throw new Error("triton debug hierarchy did not return a valid HostHierarchyResponse scene");
   }
   return attachHierarchyCaptureControl(
     await hydrateHierarchySceneNodeSlices(payload, options.runtimeDataBaseURL || defaultRuntimeDataBaseURL),
@@ -719,7 +719,7 @@ async function mapLegacyIosHierarchyToHostResponse(payload, target, options = {}
     ok: true,
     capturedAt: new Date().toISOString(),
     source: {
-      command: `triton hierarchy --target ${target} --json`,
+      command: `triton debug hierarchy --target ${target} --json`,
       runtimeScope: "runtime-tree",
       readonly: true,
     },

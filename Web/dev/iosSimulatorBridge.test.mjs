@@ -797,7 +797,7 @@ test("serves readonly Lookin-style hierarchy scenes for iOS Android and Harmony 
         ok: true,
         capturedAt: "2026-06-19T00:00:00.000Z",
         source: {
-          command: `triton hierarchy --platform ${platform} --target ${target} --json`,
+          command: `triton debug hierarchy --platform ${platform} --target ${target} --json`,
           runtimeScope: platform === "ios" ? "runtime-tree" : "host-layout",
           readonly: true,
         },
@@ -843,7 +843,7 @@ test("serves readonly Lookin-style hierarchy scenes for iOS Android and Harmony 
 
     const body = JSON.parse(response.body);
     assert.equal(body.ok, true);
-    assert.equal(body.source.command, `triton hierarchy --platform ${platform} --target ${target} --json`);
+    assert.equal(body.source.command, `triton debug hierarchy --platform ${platform} --target ${target} --json`);
     assert.equal(body.source.runtimeScope, platform === "ios" ? "runtime-tree" : "host-layout");
     assert.equal(body.source.readonly, true);
     assert.equal(body.scene.platform, platform);
@@ -879,7 +879,7 @@ if (args.join(" ") === "list --json") {
   }));
   process.exit(0);
 }
-if (args.join(" ") !== "hierarchy --platform ios --target triton:connection:42 --json") {
+if (args.join(" ") !== "debug hierarchy --platform ios --target triton:connection:42 --json") {
   process.stderr.write("unexpected args: " + args.join(" "));
   process.exit(64);
 }
@@ -887,7 +887,7 @@ process.stdout.write(JSON.stringify({
   ok: true,
   capturedAt: "2026-06-19T00:00:00.000Z",
   source: {
-    command: "triton hierarchy --platform ios --target triton:connection:42 --json",
+    command: "triton debug hierarchy --platform ios --target triton:connection:42 --json",
     runtimeScope: "runtime-tree",
     readonly: true
   },
@@ -919,7 +919,7 @@ process.stdout.write(JSON.stringify({
   assert.equal(response.statusCode, 200);
   const body = JSON.parse(response.body);
   assert.equal(body.ok, true);
-  assert.equal(body.source.command, "triton hierarchy --platform ios --target triton:connection:42 --json");
+  assert.equal(body.source.command, "triton debug hierarchy --platform ios --target triton:connection:42 --json");
   assert.equal(body.scene.viewport.width, 428);
 });
 
@@ -966,7 +966,7 @@ test("exposes explicit Web hierarchy capture control through POST without mutati
       ok: true,
       capturedAt: "2026-06-19T00:00:00.000Z",
       source: {
-        command: "triton hierarchy --platform ios --target AAAA-BBBB --json",
+        command: "triton debug hierarchy --platform ios --target AAAA-BBBB --json",
         runtimeScope: "runtime-tree",
         readonly: true,
       },
@@ -1006,7 +1006,7 @@ test("exposes explicit Web hierarchy capture control through POST without mutati
     readonly: true,
     mutatesApp: false,
   });
-  assert.equal(body.source.command, "triton hierarchy --platform ios --target AAAA-BBBB --json");
+  assert.equal(body.source.command, "triton debug hierarchy --platform ios --target AAAA-BBBB --json");
 });
 
 test("hydrates platform hierarchy scene dataRef slices into data URLs", async () => {
@@ -1020,7 +1020,7 @@ test("hydrates platform hierarchy scene dataRef slices into data URLs", async ()
         ok: true,
         capturedAt: "2026-06-19T01:00:00Z",
         source: {
-          command: "triton hierarchy --platform ios --target AAAA-BBBB --json",
+          command: "triton debug hierarchy --platform ios --target AAAA-BBBB --json",
           runtimeScope: "runtime-tree",
           readonly: true,
         },
@@ -1152,7 +1152,7 @@ process.stdout.write(${JSON.stringify(JSON.stringify(legacyPayload))});
   assert.equal(response.statusCode, 200);
   const body = JSON.parse(response.body);
   assert.equal(body.ok, true);
-  assert.equal(body.source.command, "triton hierarchy --target AAAA-BBBB --json");
+  assert.equal(body.source.command, "triton debug hierarchy --target AAAA-BBBB --json");
   assert.equal(body.source.runtimeScope, "runtime-tree");
   assert.equal(body.scene.platform, "ios");
   assert.equal(body.scene.viewport.width, 402);
@@ -1211,7 +1211,7 @@ process.stdout.write(${JSON.stringify(JSON.stringify(legacyPayload))});
   assert.equal(response.statusCode, 200);
   const body = JSON.parse(response.body);
   assert.equal(body.ok, true);
-  assert.equal(body.source.command, "triton hierarchy --target AAAA-BBBB --json");
+  assert.equal(body.source.command, "triton debug hierarchy --target AAAA-BBBB --json");
   assert.ok(body.scene.nodes.some((node) => node.type === "UILabel"));
 });
 

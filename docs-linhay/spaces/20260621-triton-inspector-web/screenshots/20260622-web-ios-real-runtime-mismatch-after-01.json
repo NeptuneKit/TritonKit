@@ -1,0 +1,7 @@
+{
+  "canvasError": "app_runtime_unavailable · No connected iOS real-device App runtime target matched host target ios-real:7a9d976cc4d4. Available iOS runtime targets: triton:ios-simulator:1B360513-22E7-46DB-A942-198EE522C6DC. · Start `triton serve --host 127.0.0.1 --port 19421`, launch a Debug app that embeds TritonKit runtime, then retry the App runtime mirror.",
+  "details": "设备iPhoneUDIDios-real:7a9d976cc4d4最近动作ok: Ready for App runtime mirror传输triton device list --platform ios --scope real --json来源triton sim list --json · triton device list --platform ios --scope real --json · triton device list --platform android --scope emulator --json · triton device list --platform android --scope real --json · triton device list --platform harmony --scope emulator --json · trito",
+  "hasRealScreenshot": false,
+  "pending": "App runtime 未连接真机实时画面依赖 Debug App 内嵌 TritonKit runtime。triton serve --host 127.0.0.1 --port 19421",
+  "url": "http://127.0.0.1:34127/?target=ios-real%3A7a9d976cc4d4"
+}
