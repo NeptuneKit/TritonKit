@@ -251,6 +251,23 @@ extension SchemaFactSourceTests {
         #expect(taskPlan.primaryNextActionSource == "next-step-step")
         #expect(taskPlan.nextWorkflows.contains("smoke"))
 
+        let disconnectedOpenURLPlan = buildWorkflowPlan(
+            capabilities: disconnected,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "open-url",
+                device: "iphone15",
+                url: "myapp://detail",
+                text: "Ready",
+                evidence: "/tmp/open-url.tritonevidence"
+            )
+        )
+        #expect(disconnectedOpenURLPlan.mode == "bootstrap")
+        #expect(disconnectedOpenURLPlan.primaryNextAction?.command == "serve")
+        #expect(disconnectedOpenURLPlan.steps.map(\.id) == ["start-server", "connect-target", "diagnose"])
+        #expect(disconnectedOpenURLPlan.afterRecoverySteps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence"])
+
         let hostOnlyProxyPlan = buildWorkflowPlan(
             capabilities: disconnected,
             host: "127.0.0.1",

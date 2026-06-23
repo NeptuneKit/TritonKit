@@ -62,7 +62,7 @@ struct SchemaFactSourceTests {
         #expect(plan.usageForms.contains(where: { $0.form == "webview-check" }))
         expectContract(plan, selector: "plan.next-steps", fields: [
             "ok", "serverReachable", "connected", "runtime", "surface", "mode", "goal", "nextStep", "nextWorkflows", "primaryWorkflowCategory", "primaryExpectedArtifact", "primaryNextAction", "primaryNextActionSource",
-            "primaryNextAction.command", "primaryNextAction.args", "primaryNextAction.category", "primaryNextAction.requiresLongRunningProcess", "steps", "error",
+            "primaryNextAction.command", "primaryNextAction.args", "primaryNextAction.category", "primaryNextAction.requiresLongRunningProcess", "steps", "afterRecoverySteps", "error",
             "steps[].id", "steps[].command", "steps[].argv", "steps[].category", "steps[].workflowCategories", "steps[].requires",
             "steps[].expectedArtifacts", "steps[].stopConditions",
         ])

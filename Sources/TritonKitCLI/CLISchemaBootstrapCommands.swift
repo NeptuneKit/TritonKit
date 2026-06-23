@@ -188,7 +188,7 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
                 "triton plan network-proxy --platform android --device emulator-5554 --proxy 127.0.0.1:19431 --mode throttle --throttle-ms 250 --output /tmp/proxy-session --certificate /tmp/triton-proxy-ca.cer --audit-record ticket-123 --evidence /tmp/proxy.tritonevidence --json",
                 "triton plan inspect login-flow.tritonplan --json",
             ],
-            successShape: "{ ok, serverReachable, connected, runtime, goal?, nextStep, steps[], error? } or { ok, path, schemaVersion, name, variables, stepCount, actions, target?, steps[] }",
+            successShape: "{ ok, serverReachable, connected, runtime, goal?, nextStep, steps[], afterRecoverySteps[], error? } or { ok, path, schemaVersion, name, variables, stepCount, actions, target?, steps[] }",
             failureShape: "{ ok: false, error: { code: server_unavailable|target_unavailable|request_failed|validation_failed, message, endpoint, hint, nextAction? } }",
             outputSemantics: "Use plan for recommended command sequences and as the Triton-first fallback gate before raw emulator/simulator tools. It does not execute actions; agents must run the returned commands explicitly and preserve Triton failure, unsupported, or missing-schema evidence before falling back.",
             nextCommands: [

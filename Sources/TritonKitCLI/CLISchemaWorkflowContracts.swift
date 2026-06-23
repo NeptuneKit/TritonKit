@@ -22,6 +22,7 @@ func planNextStepsOutputContract() -> TKCommandOutputContract {
             ("primaryNextAction", "TKCLINextAction?", false, "Primary structured command agents should execute next from this plan"),
             ("primaryNextActionSource", "String?", false, "Machine-readable provenance for why this plan selected the primary next action"),
             ("steps", "[TKCLIPlanStep]", true, "Recommended commands and expected outcomes"),
+            ("afterRecoverySteps", "[TKCLIPlanStep]", true, "Goal-specific commands to run after bootstrap recovery succeeds"),
             ("steps[].id", "String", true, "Stable step identifier"),
             ("steps[].command", "String", true, "Human-readable Triton invocation for logging or copy/paste"),
             ("steps[].argv", "[String]", true, "Primary executable argv tokens for agents; avoids shell-string parsing"),

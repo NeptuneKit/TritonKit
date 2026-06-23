@@ -209,6 +209,8 @@ struct SimulatorAdvancedControlsTests {
         #expect(usageForms.contains(where: { $0.hasPrefix("erase ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("upgrade ") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("personalization ") }))
+        #expect(optionNames.contains("tap --x <x> --y <y>") == false)
+        #expect(sim.subcommands.contains { $0.name == "tap" } == false)
         #expect(optionNames.contains("--display"))
         #expect(optionNames.contains("--manifest"))
         #expect(sim.providedCapabilities.contains("host-simulator"))
