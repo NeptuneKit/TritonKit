@@ -99,12 +99,14 @@ func buildWorkflowPlan(
     }
 
     if !capabilities.serverReachable {
-        let afterRecoverySteps = request.goal == "general" ? [] : buildTaskWorkflowPlan(
-            capabilities: capabilities,
-            host: host,
-            port: port,
-            request: request
-        ).steps
+        let afterRecoverySteps = request.goal == "general"
+            ? []
+            : buildTaskWorkflowPlan(
+                capabilities: capabilities,
+                host: host,
+                port: port,
+                request: request
+            ).steps
         return TKWorkflowPlanResponse(
             ok: false,
             serverReachable: false,
