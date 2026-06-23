@@ -1,5 +1,7 @@
 import SwiftUI
+#if DEBUG
 import TritonKit
+#endif
 import UIKit
 import WebKit
 
@@ -56,7 +58,7 @@ final class DemoModel: ObservableObject {
     #endif
 
     init() {
-        let endpoint = TritonKitStartPayload.environment()
+        let endpoint = demoEndpoint()
         host = endpoint.host
         port = String(endpoint.port)
         #if DEBUG
@@ -70,7 +72,7 @@ final class DemoModel: ObservableObject {
     }
 
     func autoConnect() {
-        let endpoint = TritonKitStartPayload.environment()
+        let endpoint = demoEndpoint()
         host = endpoint.host
         port = String(endpoint.port)
         connect(host: endpoint.host, port: endpoint.port)
@@ -106,6 +108,20 @@ final class DemoModel: ObservableObject {
         let entry = "[\(Date().formatted(.dateTime.hour().minute().second()))] \(msg)"
         DispatchQueue.main.async { self.log.append(entry) }
     }
+}
+
+private struct DemoEndpoint {
+    let host: String
+    let port: UInt16
+}
+
+private func demoEndpoint() -> DemoEndpoint {
+    #if DEBUG
+    let endpoint = TritonKitStartPayload.environment()
+    return DemoEndpoint(host: endpoint.host, port: endpoint.port)
+    #else
+    return DemoEndpoint(host: "127.0.0.1", port: 19421)
+    #endif
 }
 
 struct ContentView: View {
