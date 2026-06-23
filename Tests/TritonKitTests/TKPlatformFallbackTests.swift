@@ -34,13 +34,53 @@ struct TKPlatformFallbackTests {
         ])
         let fallbackPayload = TritonKitStartPayload.environment([
             "TRITON_PORT": "not-a-port"
-        ])
+        ], bundleInfo: nil, bonjourResolver: { nil })
+        let bundledPayload = TritonKitStartPayload.environment(
+            [:],
+            bundleInfo: [
+                "TritonKitDefaultHost": "192.168.1.30",
+                "TritonKitDefaultPort": "19424",
+            ],
+            bonjourResolver: { .device("bonjour.local", port: 19426) }
+        )
+        let environmentWins = TritonKitStartPayload.environment(
+            [
+                "TRITON_HOST": "192.168.1.40",
+                "TRITON_PORT": "19425",
+            ],
+            bundleInfo: [
+                "TritonKitDefaultHost": "192.168.1.30",
+                "TritonKitDefaultPort": "19424",
+            ],
+            bonjourResolver: { .device("bonjour.local", port: 19426) }
+        )
+        let bonjourPayload = TritonKitStartPayload.environment(
+            [:],
+            bundleInfo: nil,
+            bonjourResolver: { .device("bonjour.local", port: 19426) }
+        )
+        let unresolvedBuildSettingsPayload = TritonKitStartPayload.environment(
+            [:],
+            bundleInfo: [
+                "TritonKitDefaultHost": "$(TRITONKIT_DEFAULT_HOST)",
+                "TritonKitDefaultPort": "$(TRITONKIT_DEFAULT_PORT)",
+            ],
+            bonjourResolver: { .device("bonjour.local", port: 19426) }
+        )
 
         #expect(payload.host == "192.168.1.20")
         #expect(payload.port == 19422)
         #expect(payload.dataURL == URL(string: "http://192.168.1.20:19422"))
         #expect(fallbackPayload.host == "127.0.0.1")
         #expect(fallbackPayload.port == 19421)
+        #expect(bundledPayload.host == "192.168.1.30")
+        #expect(bundledPayload.port == 19424)
+        #expect(environmentWins.host == "192.168.1.40")
+        #expect(environmentWins.port == 19425)
+        #expect(bonjourPayload.host == "bonjour.local")
+        #expect(bonjourPayload.port == 19426)
+        #expect(unresolvedBuildSettingsPayload.host == "bonjour.local")
+        #expect(unresolvedBuildSettingsPayload.port == 19426)
     }
 
     @Test("endpoint conveniences describe local environment and device targets")

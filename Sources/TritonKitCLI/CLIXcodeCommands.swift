@@ -365,8 +365,8 @@ struct XcodeRun: AsyncParsableCommand {
     @Option(help: "Simulator UDID") var simulator: String?
     @Option(help: "Real-device selector used to build, install, and launch through devicectl") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
-    @Option(name: .customLong("env"), help: "iOS simulator launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []
-    @Option(name: .customLong("arg"), help: "Argument passed to the launched iOS simulator app; repeat for multiple arguments") var launchArguments: [String] = []
+    @Option(name: .customLong("env"), help: "iOS app launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []
+    @Option(name: .customLong("arg"), help: "Argument passed to the launched iOS app; repeat for multiple arguments") var launchArguments: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
     @Flag(help: "Alias for --format json") var json = false

@@ -234,6 +234,15 @@ test("does not mount mock targets when readonly host bridge returns no targets",
           commandOutputs: [],
         }),
         {
+      if (url.pathname === "/web/target-registry") {
+        return new Response(JSON.stringify({ ok: false }), {
+          status: 404,
+          headers: {
+            "content-type": "application/json",
+          },
+        });
+      }
+
           status: 200,
           headers: {
             "content-type": "application/json",
@@ -271,7 +280,10 @@ test("does not mount mock targets when readonly host bridge returns no targets",
       );
     });
 
-    assert.deepEqual(fetchCalls, [{ pathname: "/web/host-targets", method: "GET" }]);
+    assert.deepEqual(fetchCalls, [
+      { pathname: "/web/target-registry", method: "GET" },
+      { pathname: "/web/host-targets", method: "GET" },
+    ]);
     assert.equal(document.querySelector(".toolbar-title span")?.textContent?.trim(), "No host targets");
     assert.equal(
       document.querySelector(".bridge-notice strong")?.textContent?.trim(),

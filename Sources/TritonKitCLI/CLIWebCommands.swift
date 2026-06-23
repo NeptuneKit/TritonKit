@@ -21,6 +21,15 @@ struct Web: AsyncParsableCommand {
     @Option(help: "Web Device Hub port")
     var port: Int = 34127
 
+    @Flag(help: "Only discover iOS Simulator targets; disables real-device USB and LAN discovery.")
+    var simulatorOnly = false
+
+    @Flag(name: .customLong("no-usb"), help: "Disable USB real-device runtime tunnel discovery.")
+    var noUSB = false
+
+    @Flag(name: .customLong("no-lan"), help: "Disable LAN / Bonjour runtime discovery.")
+    var noLAN = false
+
     @Option(name: .customLong("bundled-web-root"), help: .hidden)
     var bundledWebRoot: String?
 
@@ -63,10 +72,11 @@ struct Web: AsyncParsableCommand {
                 port: port,
                 installMode: installMode,
                 environment: ProcessInfo.processInfo.environment,
-                explicitBundledWebRoot: bundledWebRoot
+                explicitBundledWebRoot: bundledWebRoot,
+                discoveryOptions: WebAutoDiscoveryOptions(simulatorOnly: simulatorOnly, usb: !noUSB, lan: !noLAN)
             )
 
-            if printCommand {
+            if printCommand || outputFormat == .json {
                 switch outputFormat {
                 case .json:
                     print(try encodeJSON(plan))

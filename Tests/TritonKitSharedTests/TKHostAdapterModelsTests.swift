@@ -37,7 +37,19 @@ struct TKHostAdapterModelsTests {
         #expect(TKDevicectlCommand.deviceInfoDetails(identifier: "00008110", jsonOutput: "/tmp/details.json", logOutput: "/tmp/details.log").argv == ["devicectl", "device", "info", "details", "--device", "00008110", "--json-output", "/tmp/details.json", "--log-output", "/tmp/details.log"])
         #expect(TKDevicectlCommand.deviceInfoApps(identifier: "00008110", jsonOutput: "/tmp/apps.json", logOutput: "/tmp/apps.log").argv == ["devicectl", "device", "info", "apps", "--device", "00008110", "--json-output", "/tmp/apps.json", "--log-output", "/tmp/apps.log"])
         #expect(TKDevicectlCommand.installApp(identifier: "00008110", appPath: "/tmp/Demo.app", jsonOutput: "/tmp/install.json", logOutput: "/tmp/install.log").argv == ["devicectl", "device", "install", "app", "--device", "00008110", "/tmp/Demo.app", "--json-output", "/tmp/install.json", "--log-output", "/tmp/install.log"])
-        #expect(TKDevicectlCommand.launchApp(identifier: "00008110", bundleID: "com.example.demo", payloadURL: "demo://ready", terminateExisting: true, jsonOutput: "/tmp/launch.json", logOutput: "/tmp/launch.log").argv == ["devicectl", "device", "process", "launch", "--device", "00008110", "--terminate-existing", "--payload-url", "demo://ready", "com.example.demo", "--json-output", "/tmp/launch.json", "--log-output", "/tmp/launch.log"])
+        #expect(TKDevicectlCommand.launchApp(identifier: "00008110", bundleID: "com.example.demo", payloadURL: "demo://ready", terminateExisting: true, jsonOutput: "/tmp/launch.json", logOutput: "/tmp/launch.log").argv == ["devicectl", "device", "process", "launch", "--device", "00008110", "--terminate-existing", "--payload-url", "demo://ready", "--json-output", "/tmp/launch.json", "--log-output", "/tmp/launch.log", "com.example.demo"])
+        let launchWithEnv = TKDevicectlCommand.launchApp(
+            identifier: "00008110",
+            bundleID: "com.example.demo",
+            environment: ["TRITON_HOST": "192.168.1.2", "TRITON_PORT": "19431"],
+            arguments: ["debug-route"],
+            jsonOutput: "/tmp/launch.json",
+            logOutput: "/tmp/launch.log"
+        )
+        #expect(launchWithEnv.argv == ["devicectl", "device", "process", "launch", "--device", "00008110", "--json-output", "/tmp/launch.json", "--log-output", "/tmp/launch.log", "com.example.demo", "debug-route"])
+        #expect(launchWithEnv.environment["DEVICECTL_CHILD_TRITON_HOST"] == "192.168.1.2")
+        #expect(launchWithEnv.environment["DEVICECTL_CHILD_TRITON_PORT"] == "19431")
+        #expect(launchWithEnv.redactedEnvironmentKeys == Set(["DEVICECTL_CHILD_TRITON_HOST", "DEVICECTL_CHILD_TRITON_PORT"]))
         #expect(TKDevicectlCommand.terminateApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/terminate.json", logOutput: "/tmp/terminate.log").argv == ["devicectl", "device", "process", "terminate", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/terminate.json", "--log-output", "/tmp/terminate.log"])
         #expect(TKDevicectlCommand.uninstallApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/uninstall.json", logOutput: "/tmp/uninstall.log").argv == ["devicectl", "device", "uninstall", "app", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/uninstall.json", "--log-output", "/tmp/uninstall.log"])
     }

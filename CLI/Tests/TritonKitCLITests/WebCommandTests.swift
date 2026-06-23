@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite
@@ -33,6 +34,49 @@ struct WebCommandTests {
             "--port", "34127",
         ])
         #expect(plan.environment["TRITONKIT_TRITON_BIN"] == "/tmp/triton")
+    }
+
+    @Test("web command defaults to automatic simulator and real device discovery")
+    func webCommandDefaultsToAutomaticSimulatorAndRealDeviceDiscovery() throws {
+        let repo = try temporaryRepoWithWeb(nodeModules: true)
+        let plan = try makeWebLaunchPlan(
+            explicitRoot: repo.path,
+            currentDirectory: repo.path,
+            explicitTritonBin: "/tmp/triton",
+            currentExecutable: "/usr/local/bin/triton",
+            host: "127.0.0.1",
+            port: 34127,
+            installMode: .auto,
+            environment: [:]
+        )
+
+        #expect(plan.discovery.simulator == "auto")
+        #expect(plan.discovery.realDevice == "auto")
+        #expect(plan.discovery.transportPriority == ["usb", "bonjour", "manual"])
+        #expect(plan.discovery.registry == "serve-owned")
+        #expect(plan.discovery.targetRegistryEndpoint == "http://127.0.0.1:19421/web/target-registry")
+        #expect(plan.discovery.managedServeHost == "0.0.0.0")
+        #expect(plan.environment["TRITONKIT_WEB_MANAGED_SERVE_HOST"] == "0.0.0.0")
+    }
+
+    @Test("web command escape hatches narrow automatic discovery")
+    func webCommandEscapeHatchesNarrowAutomaticDiscovery() throws {
+        let repo = try temporaryRepoWithWeb(nodeModules: true)
+        let plan = try makeWebLaunchPlan(
+            explicitRoot: repo.path,
+            currentDirectory: repo.path,
+            explicitTritonBin: "/tmp/triton",
+            currentExecutable: "/usr/local/bin/triton",
+            host: "127.0.0.1",
+            port: 34127,
+            installMode: .auto,
+            environment: [:],
+            discoveryOptions: WebAutoDiscoveryOptions(simulatorOnly: true, usb: false, lan: false)
+        )
+
+        #expect(plan.discovery.simulator == "auto")
+        #expect(plan.discovery.realDevice == "disabled")
+        #expect(plan.discovery.transportPriority == ["manual"])
     }
 
     @Test("web command falls back to bundled static dist beside current executable")
@@ -248,6 +292,31 @@ struct WebCommandTests {
         #expect(String(data: css.data, encoding: .utf8) == "body{}")
     }
 
+    @Test("packaged web target registry bridge uses unified registry DTO")
+    func packagedWebTargetRegistryBridgeUsesUnifiedRegistryDTO() throws {
+        let host = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:73f725dfa795",
+            target: "ios-real:73f725dfa795",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "iPhone",
+            runtime: "iOS 26.5",
+            transport: "wired",
+            scope: "real",
+            kind: "real-device"
+        )
+
+        let registry = makeWebTargetRegistryBridgeResponse(runtimeTargets: [], hostTargets: [host], usbTunnelAdapterAvailable: false)
+        let target = try #require(registry.targets.first)
+
+        #expect(registry.action == "web.target-registry")
+        #expect(target.id == "ios-real:73f725dfa795")
+        #expect(target.mirror.state == .runtimeNotFound)
+        #expect(target.nextAction?.code == "start_debug_app")
+    }
+
     @Test("packaged web missing static root renders browser readable diagnostic")
     func packagedWebMissingStaticRootRendersBrowserReadableDiagnostic() throws {
         let missingWeb = try temporaryDirectory().appendingPathComponent("web", isDirectory: true)
@@ -350,6 +419,13 @@ struct WebCommandTests {
         #expect(schema?.examples.contains("triton web --print-command --json") == true)
         #expect(schema?.failureCodes.contains("web_root_not_found") == true)
         #expect(schema?.failureCodes.contains("web_port_in_use") == true)
+        #expect(schema?.options.map(\.name).contains("--simulator-only") == true)
+        #expect(schema?.options.map(\.name).contains("--no-usb") == true)
+        #expect(schema?.successShape?.contains("targetRegistryEndpoint") == true)
+        #expect(schema?.successShape?.contains("managedServeHost") == true)
+        let launchPlanContract = schema?.outputContracts.first { $0.selector == "web.launch-plan" }
+        let hasManagedServeHostField = launchPlanContract?.fields.contains(where: { $0.name == "discovery.managedServeHost" })
+        #expect(hasManagedServeHostField == true)
         #expect(schema?.subcommands.map(\.name).contains("status") == true)
         #expect(schema?.subcommands.map(\.name).contains("doctor") == true)
         #expect(schema?.outputContracts.contains { $0.selector == "web.status" } == true)

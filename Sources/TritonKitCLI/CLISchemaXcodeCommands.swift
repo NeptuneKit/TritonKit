@@ -34,7 +34,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--simulator", type: "String", description: "Simulator UDID; also used to synthesize destination"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Real-device selector from `triton device`; real-device builds use sdk=iphoneos and a device destination"),
                 TKCommandSchemaOption(name: "--derived-data-path", type: "Path", defaultValue: ".triton/DerivedData", description: "Repo-local DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default; use a fresh path to recover Swift macro plugin malformed-response failures"),
-                TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS Simulator app launch environment for xcode run; values are passed as SIMCTL_CHILD_* and redacted in sourceCommand"),
+                TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS app launch environment for xcode run; values are passed as SIMCTL_CHILD_* on Simulator or DEVICECTL_CHILD_* on real devices and redacted in sourceCommand"),
                 TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable iOS Simulator app launch argument for xcode run"),
                 TKCommandSchemaOption(name: "--allow-provisioning-updates", type: "Bool", defaultValue: "false", description: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices"),
                 TKCommandSchemaOption(name: "--result-bundle", type: "Path", description: "Result bundle path for test"),

@@ -9,6 +9,8 @@ import type {
   HostWebTarget,
   IosSimulatorScreenshotResponse,
   IosSimulatorTargetsResponse,
+  WebTargetRegistryEntry,
+  WebTargetRegistryResponse,
 } from "../types";
 
 export async function fetchHostTargets(): Promise<{
@@ -20,6 +22,17 @@ export async function fetchHostTargets(): Promise<{
   if (resolveForcedHostTargetsMode() === "request-failed") {
     throw new Error("Host targets request failed: 502");
   }
+
+  const registry = await fetchTargetRegistryIfAvailable();
+  if (registry) {
+    return {
+      targets: registry.targets.map(mapRegistryTargetToDeviceTarget),
+      capturedAt: new Date().toISOString(),
+      sourceCommands: ["triton serve /web/target-registry"],
+      commandOutputs: [],
+    };
+  }
+
   const response = await fetch(resolveHostTargetsRequestPath(), { cache: "no-store" });
   if (!response.ok) {
     throw new Error(`Host targets request failed: ${response.status}`);
@@ -31,6 +44,19 @@ export async function fetchHostTargets(): Promise<{
     sourceCommands: payload.source.commands,
     commandOutputs: payload.commandOutputs,
   };
+}
+
+async function fetchTargetRegistryIfAvailable() {
+  try {
+    const response = await fetch(resolveTargetRegistryRequestPath(), { cache: "no-store" });
+    if (!response.ok) {
+      return null;
+    }
+    const payload = (await response.json()) as WebTargetRegistryResponse;
+    return Array.isArray(payload.targets) ? payload : null;
+  } catch {
+    return null;
+  }
 }
 
 export async function fetchIosSimulatorTargets(): Promise<{
@@ -227,9 +253,9 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
       fps: isRealDevice ? 1 : 1,
       latencyMs: 0,
       proxyMode: "off",
-      proxyLabel: "Readonly host state",
+      proxyLabel: "Host state",
       hierarchyNodes: 0,
-      lastAction: isRealDevice ? "Ready for App runtime mirror" : "Ready for readonly screenshot",
+      lastAction: isRealDevice ? "Ready for App runtime mirror" : "Ready for screenshot and tap",
       actionResult: target.ready ? "ok" : "warning",
       accent: target.ready ? "#64d26a" : "#f59e0b",
       Icon: Smartphone,
@@ -244,7 +270,7 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
       canInput: target.ready,
       screenshotSource: isRealDevice ? "runtime" : "host",
       frameOrientation: "portrait",
-      readonly: true,
+      readonly: !target.ready,
     };
   }
 
@@ -268,7 +294,7 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
     proxyMode: "off",
     proxyLabel: isRealDevice ? "Host real device target" : "Host emulator target",
     hierarchyNodes: 0,
-    lastAction: isRealDevice ? "Real device listed by readonly Triton discovery" : "Ready for readonly screenshot",
+    lastAction: isRealDevice ? "Real device listed by readonly Triton discovery" : "Ready for screenshot and tap",
     actionResult: target.ready ? "ok" : "warning",
     accent: target.ready ? (isAndroid ? "#32d583" : "#cc3d5a") : "#f59e0b",
     Icon: isAndroid ? MonitorSmartphone : TabletSmartphone,
@@ -284,8 +310,136 @@ function mapHostTargetToDeviceTarget(target: HostWebTarget): DeviceTarget {
     canInput: !isRealDevice && target.ready,
     screenshotSource: "host",
     frameOrientation: "portrait",
-    readonly: true,
+    readonly: !target.ready,
   };
+}
+
+function mapRegistryTargetToDeviceTarget(entry: WebTargetRegistryEntry): DeviceTarget {
+  const host = entry.host ?? undefined;
+  const runtime = entry.runtime ?? undefined;
+  const isRealDevice = entry.kind === "real-device" || host?.scope === "real" || entry.id.startsWith("ios-real:");
+  const isSimulator = entry.kind === "simulator" || host?.scope === "simulator";
+  const ready = entry.mirror.state === "ready";
+  const status = registryTargetStatus(entry);
+  const hostTarget = host?.target ?? registryTargetSelectorFromID(entry.id);
+  const capabilities = new Set(runtime?.capabilities ?? []);
+  const canScreenshot = ready && (isSimulator || capabilities.has("screenshot"));
+  const canInput = ready && (isSimulator || capabilities.has("input"));
+  const displayName = normalizeHostIdentity(host?.name) ?? registryTargetFallbackName(entry, hostTarget);
+  const appName = normalizeHostIdentity(runtime?.appBundleId) ?? registryTargetAppName(entry, displayName);
+
+  if (entry.platform === "ios") {
+    return {
+      id: entry.id,
+      name: displayName,
+      platform: "ios",
+      device: displayName,
+      appName,
+      bundleId: normalizeHostIdentity(runtime?.appBundleId) ?? formatUnknownTargetIdentity(hostTarget ?? entry.id),
+      os: normalizeHostIdentity(host?.runtime) ?? (isSimulator ? "iOS Simulator" : "iOS"),
+      status,
+      statusLabel: entry.mirror.state,
+      transport: runtime?.transport ?? host?.transport ?? host?.source ?? "target-registry",
+      screenshotTone: "ios-screen",
+      screenSize: canScreenshot ? (isRealDevice ? "App runtime framebuffer" : "Awaiting framebuffer") : entry.mirror.state,
+      fps: canScreenshot ? 1 : 0,
+      latencyMs: 0,
+      proxyMode: "off",
+      proxyLabel: "Readonly target registry",
+      hierarchyNodes: 0,
+      lastAction: entry.nextAction?.title ?? (ready ? "Ready for mirror" : entry.diagnosis?.message ?? "Target not ready"),
+      actionResult: ready ? "ok" : "warning",
+      accent: ready ? "#64d26a" : entry.mirror.state === "host_offline" ? "#94a3b8" : "#f59e0b",
+      Icon: Smartphone,
+      realSource: isRealDevice ? "ios-real-device" : "ios-simulator",
+      scope: host?.scope ?? (isRealDevice ? "real" : isSimulator ? "simulator" : undefined),
+      kind: host?.kind ?? entry.kind,
+      targetSelector: hostTarget ?? entry.id,
+      udid: hostTarget ?? entry.id,
+      blockedReasons: registryTargetBlockedReasons(entry),
+      canScreenshot,
+      canInput,
+      screenshotSource: isRealDevice ? "runtime" : "host",
+      frameOrientation: "portrait",
+      readonly: !canInput,
+    };
+  }
+
+  const isAndroid = entry.platform === "android";
+  return {
+    id: entry.id,
+    name: displayName,
+    platform: entry.platform,
+    device: hostTarget ?? displayName,
+    appName,
+    bundleId: normalizeHostIdentity(runtime?.appBundleId) ?? formatUnknownTargetIdentity(hostTarget ?? entry.id),
+    os: normalizeHostIdentity(host?.runtime) ?? (isAndroid ? "Android" : "Harmony"),
+    status,
+    statusLabel: entry.mirror.state,
+    transport: runtime?.transport ?? host?.transport ?? host?.source ?? "target-registry",
+    screenshotTone: isAndroid ? "android-screen" : "harmony-screen",
+    screenSize: canScreenshot ? "Awaiting framebuffer" : entry.mirror.state,
+    fps: canScreenshot ? 1 : 0,
+    latencyMs: 0,
+    proxyMode: "off",
+    proxyLabel: "Readonly target registry",
+    hierarchyNodes: 0,
+    lastAction: entry.nextAction?.title ?? (ready ? "Ready for mirror" : entry.diagnosis?.message ?? "Target not ready"),
+    actionResult: ready ? "ok" : "warning",
+    accent: ready ? (isAndroid ? "#32d583" : "#cc3d5a") : "#f59e0b",
+    Icon: isAndroid ? MonitorSmartphone : TabletSmartphone,
+    realSource: isRealDevice
+      ? isAndroid ? "android-real-device" : "harmony-real-device"
+      : isAndroid ? "android-emulator" : "harmony-emulator",
+    scope: host?.scope ?? (isRealDevice ? "real" : "emulator"),
+    kind: host?.kind ?? entry.kind,
+    targetSelector: hostTarget ?? entry.id,
+    blockedReasons: registryTargetBlockedReasons(entry),
+    canScreenshot,
+    canInput,
+    screenshotSource: "host",
+    frameOrientation: "portrait",
+    readonly: !canInput,
+  };
+}
+
+function registryTargetStatus(entry: WebTargetRegistryEntry) {
+  if (entry.mirror.state === "ready") return "ready" as const;
+  if (entry.mirror.state === "host_offline") return "busy" as const;
+  return "limited" as const;
+}
+
+function registryTargetSelectorFromID(id: string) {
+  const hostPrefix = id.match(/^host:[^:]+:(.+)$/);
+  return hostPrefix?.[1] ?? id;
+}
+
+function registryTargetFallbackName(entry: WebTargetRegistryEntry, selector?: string) {
+  if (entry.kind === "embedded-runtime") {
+    return normalizeHostIdentity(entry.runtime?.appBundleId) ?? entry.runtime?.id ?? entry.id;
+  }
+  return selector ?? entry.id;
+}
+
+function registryTargetAppName(entry: WebTargetRegistryEntry, displayName: string) {
+  if (entry.mirror.state === "runtime_not_found") {
+    return entry.nextAction?.title ?? "启动 Debug App";
+  }
+  if (entry.mirror.state === "mirror_unavailable") {
+    return "Mirror capability unavailable";
+  }
+  return displayName;
+}
+
+function registryTargetBlockedReasons(entry: WebTargetRegistryEntry) {
+  return [
+    entry.diagnosis?.code,
+    entry.diagnosis?.message,
+    ...(entry.transportDiagnostics ?? []).flatMap((diagnosis) => [diagnosis.code, diagnosis.message]),
+    entry.nextAction?.command,
+  ].filter(
+    (value): value is string => Boolean(value)
+  );
 }
 
 function isHostRealDevice(target: HostWebTarget) {
@@ -328,6 +482,10 @@ function normalizeHostIdentity(value?: string | null) {
 
 function resolveHostTargetsRequestPath() {
   return "/web/host-targets";
+}
+
+function resolveTargetRegistryRequestPath() {
+  return "/web/target-registry";
 }
 
 function resolveForcedHostTargetsMode() {

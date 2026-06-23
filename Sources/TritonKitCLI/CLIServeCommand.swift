@@ -112,6 +112,13 @@ struct Serve: AsyncParsableCommand {
             return jsonResponse(WebDeviceTargetsResponse(targets: webDeviceTargets(runtimeTargets: runtimeTargets, hostTargets: hostTargets)))
         }
 
+        router.get("/web/target-registry") { _, _ -> Response in
+            let runtimeTargets = state.summaries()
+            webHostTargetCache.refreshIfNeeded()
+            let hostTargets = webHostTargetCache.cachedTargets()
+            return jsonResponse(makeWebTargetRegistry(runtimeTargets: runtimeTargets, hostTargets: hostTargets))
+        }
+
         router.get("/v1/app-map/inspect") { request, _ -> Response in
             guard let map = queryParameter("map", from: request) else {
                 return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/inspect")
@@ -689,6 +696,10 @@ struct Serve: AsyncParsableCommand {
         log("[tritonkit] Command: POST http://\(host):\(port)/command")
         log("[tritonkit] Commands: h[ierarchy] | a[ppinfo] | p[ing] | q[uit]")
         webHostTargetCache.refreshIfNeeded()
+        let bonjourService = publishTritonBonjourService(port: port)
+        if bonjourService != nil {
+            log("[tritonkit] Bonjour: _tritonkit-server._tcp.local:\(port)")
+        }
 
         // Stdin
         Task {
@@ -727,6 +738,13 @@ struct Serve: AsyncParsableCommand {
 
         do { try await app.run() } catch { log("[tritonkit] Error: \(error)"); throw error }
     }
+}
+
+private func publishTritonBonjourService(port: Int) -> NetService? {
+    guard port > 0 && port <= Int(Int32.max) else { return nil }
+    let service = NetService(domain: "local.", type: "_tritonkit-server._tcp.", name: "TritonKit", port: Int32(port))
+    service.publish()
+    return service
 }
 
 private func queryTarget(from request: Request) -> String? {

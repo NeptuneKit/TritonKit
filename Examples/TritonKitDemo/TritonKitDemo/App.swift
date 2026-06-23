@@ -1,4 +1,5 @@
 import SwiftUI
+import TritonKit
 import UIKit
 import WebKit
 
@@ -45,8 +46,8 @@ enum DemoScenario: String, CaseIterable, Identifiable {
 
 final class DemoModel: ObservableObject {
     @Published var status = "Disconnected"
-    @Published var host = Bundle.main.tritonKitDefaultHost
-    @Published var port = "19421"
+    @Published var host: String
+    @Published var port: String
     @Published var scenario: DemoScenario = .overview
     @Published var log: [String] = []
 
@@ -55,6 +56,9 @@ final class DemoModel: ObservableObject {
     #endif
 
     init() {
+        let endpoint = TritonKitStartPayload.environment()
+        host = endpoint.host
+        port = String(endpoint.port)
         #if DEBUG
         runtime.onStatusChange = { [weak self] status in
             self?.status = status
@@ -66,7 +70,10 @@ final class DemoModel: ObservableObject {
     }
 
     func autoConnect() {
-        connect()
+        let endpoint = TritonKitStartPayload.environment()
+        host = endpoint.host
+        port = String(endpoint.port)
+        connect(host: endpoint.host, port: endpoint.port)
     }
 
     func connect() {
@@ -74,9 +81,12 @@ final class DemoModel: ObservableObject {
             addLog("Invalid port: \(port)")
             return
         }
+        connect(host: host, port: portNum)
+    }
 
+    private func connect(host: String, port: UInt16) {
         #if DEBUG
-        runtime.connect(host: host, port: portNum)
+        runtime.connect(host: host, port: port)
         #else
         status = "Disabled"
         addLog("TritonKit runtime is DEBUG-only")
@@ -95,17 +105,6 @@ final class DemoModel: ObservableObject {
     private func addLog(_ msg: String) {
         let entry = "[\(Date().formatted(.dateTime.hour().minute().second()))] \(msg)"
         DispatchQueue.main.async { self.log.append(entry) }
-    }
-}
-
-private extension Bundle {
-    var tritonKitDefaultHost: String {
-        let value = object(forInfoDictionaryKey: "TritonKitDefaultHost") as? String
-        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        if trimmed.isEmpty || trimmed == "$(TRITONKIT_DEFAULT_HOST)" {
-            return "127.0.0.1"
-        }
-        return trimmed
     }
 }
 

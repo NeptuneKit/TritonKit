@@ -252,11 +252,17 @@ func planHostAppLaunch(
         let command: TKHostCommand
         let artifacts: [String]
         if selection.target.scope == "real" {
-            if !launchEnvironment.isEmpty || !launchArguments.isEmpty {
-                throw ValidationError("iOS real-device launch env/args are not supported yet; use an iOS Simulator target.")
-            }
             let devicectlArtifacts = try devicectlArtifacts ?? freshDevicectlArtifactPaths(action: payloadURL == nil ? "app-launch" : "app-open-url")
-            command = TKDevicectlCommand.launchApp(identifier: selection.target.rawTarget, bundleID: bundleID, payloadURL: payloadURL, jsonOutput: devicectlArtifacts.json, logOutput: devicectlArtifacts.log)
+            command = TKDevicectlCommand.launchApp(
+                identifier: selection.target.rawTarget,
+                bundleID: bundleID,
+                payloadURL: payloadURL,
+                terminateExisting: payloadURL == nil,
+                environment: launchEnvironment,
+                arguments: launchArguments,
+                jsonOutput: devicectlArtifacts.json,
+                logOutput: devicectlArtifacts.log
+            )
             artifacts = [devicectlArtifacts.json, devicectlArtifacts.log]
         } else if let payloadURL {
             if !launchEnvironment.isEmpty || !launchArguments.isEmpty {
@@ -822,7 +828,7 @@ struct HostAppUninstall: AsyncParsableCommand {
 }
 
 struct HostAppLaunch: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "launch", abstract: "Launch an installed simulator app")
+    static let configuration = CommandConfiguration(commandName: "launch", abstract: "Launch an installed simulator or real-device app")
 
     @Option(help: "Platform adapter: ios, android, or harmony") var platform: HostAppPlatform?
     @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope?
@@ -838,8 +844,8 @@ struct HostAppLaunch: AsyncParsableCommand {
     @Option(help: "Harmony bundle name") var bundle: String?
     @Option(help: "Harmony ability name") var ability: String?
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
-    @Option(name: .customLong("env"), help: "iOS simulator launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []
-    @Option(name: .customLong("arg"), help: "Argument passed to the launched iOS simulator app; repeat for multiple arguments") var launchArguments: [String] = []
+    @Option(name: .customLong("env"), help: "iOS app launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []
+    @Option(name: .customLong("arg"), help: "Argument passed to the launched iOS app; repeat for multiple arguments") var launchArguments: [String] = []
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Flag(help: "Alias for --format json") var json = false

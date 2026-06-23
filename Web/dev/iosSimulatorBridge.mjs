@@ -9,8 +9,13 @@ import { tmpdir } from "node:os";
 
 const bridgeRoot = resolve(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const defaultHostInputBaseURL = "http://127.0.0.1:19421";
+const defaultManagedTritonServeHost = process.env.TRITONKIT_WEB_MANAGED_SERVE_HOST || "0.0.0.0";
 const defaultRuntimeDataBaseURL = "http://127.0.0.1:19421";
 let managedTritonServeProcess;
+
+export function getManagedTritonServeBindHost() {
+  return defaultManagedTritonServeHost;
+}
 
 export function mapTritonSimListToWebTargets(payload) {
   if (!payload || !Array.isArray(payload.simulators)) {
@@ -155,6 +160,24 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         return;
       }
 
+      if (url.pathname === "/web/target-registry") {
+        try {
+          await ensureTritonServe(tritonPath, hostInputBaseURL);
+          const upstream = await fetch(new URL("/web/target-registry", hostInputBaseURL));
+          const payload = await upstream.json();
+          sendJSON(res, upstream.status, payload);
+        } catch (error) {
+          sendJSON(res, 502, {
+            ok: false,
+            error: {
+              code: "web_target_registry_unavailable",
+              message: String(error?.message ?? error),
+            },
+          });
+        }
+        return;
+      }
+
       if (url.pathname === "/web/host-logs") {
         const platform = url.searchParams.get("platform") || "ios";
         const target = url.searchParams.get("target") || "booted";
@@ -202,13 +225,7 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         try {
           sendJSON(res, 200, await captureHostHierarchy(tritonPath, platform, target, req.method ?? "GET", { runtimeDataBaseURL, scope, kind, source, target }));
         } catch (error) {
-          sendJSON(res, 409, {
-            ok: false,
-            error: {
-              code: "web_host_hierarchy_failed",
-              message: error instanceof Error ? error.message : String(error),
-            },
-          });
+          sendJSON(res, 409, webHostRuntimeError(platform, { scope, kind, source, target }, error, "hierarchy"));
         }
         return;
       }
@@ -440,11 +457,7 @@ async function resolveIOSRuntimeMirrorTarget(tritonPath, hostTarget, options = {
     if (realTargets.length > 1) {
       throw new Error(`Multiple connected iOS real-device App runtime targets are available: ${describeRuntimeTargets(realTargets)}.`);
     }
-    const activeRuntimeTarget = runtimeTargets.find((target) =>
-      target.activeHierarchyAvailable === true || target.latestHierarchyAvailable === true
-    );
-    if (activeRuntimeTarget) return String(activeRuntimeTarget.id);
-    throw new Error(`No connected iOS real-device App runtime target matched host target ${hostTarget}.`);
+    throw new Error(`No connected iOS real-device App runtime target matched host target ${hostTarget}. Available iOS runtime targets: ${describeRuntimeTargets(runtimeTargets)}.`);
   }
 
   const simulatorUDID = String(hostTarget ?? "").replace(/^sim:/, "");
@@ -476,7 +489,7 @@ function webHostRuntimeError(platform, options, error, action) {
       code: runtimeMirror ? "app_runtime_unavailable" : `web_host_${action}_failed`,
       message: error instanceof Error ? error.message : String(error),
       hint: runtimeMirror
-        ? "Start `triton serve --host 127.0.0.1 --port 19421`, launch a Debug app that embeds TritonKit runtime, then retry the App runtime mirror."
+        ? "Start `triton serve --host 0.0.0.0 --port 19421`, set the Debug App TRITON_HOST to this Mac's LAN IP, then retry the App runtime mirror."
         : "Verify the selected host target is ready and the platform screenshot/input command is supported.",
     },
   };
@@ -543,7 +556,7 @@ async function ensureTritonServe(tritonPath, baseURL) {
     managedTritonServeProcess = spawn(tritonPath, [
       "serve",
       "--host",
-      url.hostname,
+      defaultManagedTritonServeHost,
       "--port",
       String(url.port || 19421),
     ], {

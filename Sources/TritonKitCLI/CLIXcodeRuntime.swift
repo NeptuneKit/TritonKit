@@ -284,10 +284,13 @@ func runXcodeBuildInstallLaunch(
     timeout: Double? = nil
 ) throws -> TKXcodeActionSummary {
     if hasXcodeSelector(invocation.device) {
-        if !launchEnvironment.isEmpty || !launchArguments.isEmpty {
-            throw ValidationError("xcode run launch env/args are only supported for iOS Simulator targets.")
-        }
-        return try runXcodeRealDeviceBuildInstallLaunch(invocation: invocation, jsonl: jsonl, timeout: timeout)
+        return try runXcodeRealDeviceBuildInstallLaunch(
+            invocation: invocation,
+            launchEnvironment: launchEnvironment,
+            launchArguments: launchArguments,
+            jsonl: jsonl,
+            timeout: timeout
+        )
     }
 
     guard let simulator = invocation.simulatorUDID, !simulator.isEmpty else {
@@ -373,7 +376,13 @@ func runXcodeBuildInstallLaunch(
     )
 }
 
-func runXcodeRealDeviceBuildInstallLaunch(invocation: ResolvedXcodeInvocation, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+func runXcodeRealDeviceBuildInstallLaunch(
+    invocation: ResolvedXcodeInvocation,
+    launchEnvironment: [String: String] = [:],
+    launchArguments: [String] = [],
+    jsonl: Bool,
+    timeout: Double? = nil
+) throws -> TKXcodeActionSummary {
     guard let device = invocation.device, !device.isEmpty else {
         throw XcodeWorkflowError.simulatorRequired
     }
@@ -418,6 +427,8 @@ func runXcodeRealDeviceBuildInstallLaunch(invocation: ResolvedXcodeInvocation, j
         bundle: nil,
         ability: nil,
         payloadURL: nil,
+        launchEnvironment: launchEnvironment,
+        launchArguments: launchArguments,
         adb: "adb",
         hdc: "hdc",
         devicectlArtifacts: nil

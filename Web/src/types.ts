@@ -265,6 +265,65 @@ export type HostTargetsResponse = {
   commandOutputs: BridgeCommandOutput[];
 };
 
+export type WebTargetMirrorState =
+  | "host_offline"
+  | "runtime_not_found"
+  | "mirror_unavailable"
+  | "ready";
+
+export type WebTargetRegistryHost = {
+  target?: string;
+  name?: string | null;
+  runtime?: string | null;
+  scope?: string | null;
+  kind?: string | null;
+  source: string;
+  state: string;
+  ready: boolean;
+  transport?: string | null;
+};
+
+export type WebTargetRegistryRuntime = {
+  id: string;
+  state: string;
+  transport: string;
+  baseURL?: string | null;
+  appBundleId?: string | null;
+  capabilities: string[];
+};
+
+export type WebTargetRegistryEntry = {
+  id: string;
+  platform: DevicePlatform;
+  kind: string;
+  host?: WebTargetRegistryHost | null;
+  runtime?: WebTargetRegistryRuntime | null;
+  mirror: {
+    state: WebTargetMirrorState;
+  };
+  diagnosis?: {
+    code: string;
+    message: string;
+    severity: string;
+  } | null;
+  nextAction?: {
+    code: string;
+    title: string;
+    command?: string | null;
+  } | null;
+  transportDiagnostics?: {
+    code: string;
+    message: string;
+    severity: string;
+  }[];
+};
+
+export type WebTargetRegistryResponse = {
+  ok: boolean;
+  action: "web.target-registry" | string;
+  targets: WebTargetRegistryEntry[];
+};
+
 export type HostTargetLogsResponse = {
   ok: boolean;
   capturedAt: string;

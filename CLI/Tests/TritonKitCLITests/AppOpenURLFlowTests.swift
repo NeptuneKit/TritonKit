@@ -6,8 +6,8 @@ import TritonKitShared
 
 @Suite
 struct AppOpenURLFlowTests {
-    @Test("iOS simulator app launch accepts redacted env and app arguments")
-    func iosSimulatorAppLaunchAcceptsRedactedEnvAndArguments() throws {
+    @Test("iOS app launch accepts redacted env and app arguments")
+    func iosAppLaunchAcceptsRedactedEnvAndArguments() throws {
         let simulator = HostDeviceSelectionResult(
             platform: .ios,
             target: HostDeviceTarget(
@@ -69,6 +69,49 @@ struct AppOpenURLFlowTests {
         #expect(sourceCommand.contains("mock-llm") == false)
         #expect(sourceCommand.contains("--overloaded-debug-route"))
         #expect(sourceCommand.contains("photos.search-provider-settings"))
+
+        let realDevice = HostDeviceSelectionResult(
+            platform: .ios,
+            target: HostDeviceTarget(
+                platform: "ios",
+                id: "ios-real:abc123",
+                target: "ios-real:abc123",
+                state: "connected",
+                ready: true,
+                source: "devicectl",
+                name: "Lin iPhone",
+                runtime: "iOS 26.5",
+                transport: "localNetwork",
+                scope: "real",
+                kind: "real-device",
+                rawTarget: "00008110-001C195E0A10801E"
+            ),
+            selector: "ios-real:abc123",
+            source: .explicit,
+            filters: HostDeviceSelectionFilters(request: HostDeviceSelectionRequest(device: "ios-real:abc123", platform: .ios, scope: .real))
+        )
+        let realPlan = try planHostAppLaunch(
+            selection: realDevice,
+            bundleID: "com.example.demo",
+            packageName: nil,
+            activity: nil,
+            bundle: nil,
+            ability: nil,
+            payloadURL: nil,
+            launchEnvironment: ["TRITON_HOST": "192.168.1.2", "TRITON_PORT": "19431"],
+            launchArguments: ["debug-route"],
+            adb: "adb",
+            hdc: "hdc",
+            devicectlArtifacts: ("/tmp/launch.json", "/tmp/launch.log")
+        )
+        #expect(realPlan.command.argv.contains("00008110-001C195E0A10801E"))
+        #expect(realPlan.command.argv.contains("ios-real:abc123") == false)
+        #expect(realPlan.command.argv.contains("debug-route"))
+        #expect(realPlan.command.environment["DEVICECTL_CHILD_TRITON_HOST"] == "192.168.1.2")
+        #expect(realPlan.command.environment["DEVICECTL_CHILD_TRITON_PORT"] == "19431")
+        let realSourceCommand = hostSourceCommand(realPlan.command)
+        #expect(realSourceCommand.contains("DEVICECTL_CHILD_TRITON_HOST=<redacted>"))
+        #expect(realSourceCommand.contains("192.168.1.2") == false)
     }
 
     @Test("launch environment rejects invalid keys before host execution")
@@ -82,7 +125,8 @@ struct AppOpenURLFlowTests {
     @Test("app schema exposes launch env and argument options")
     func appSchemaExposesLaunchEnvAndArgumentOptions() throws {
         let app = try #require(commandSchemas().first { $0.name == "app" })
-        #expect(app.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") })
+        #expect(app.usageForms.contains { $0.form == "launch --bundle-id <id>" && $0.description.contains("simulator or real-device") })
+        #expect(app.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") && $0.description.contains("DEVICECTL_CHILD") })
         #expect(app.options.contains { $0.name == "--arg" && $0.description.contains("launch argument") })
         #expect(app.examples.contains("triton app launch --device iphone15 --bundle-id com.example.app --env FEATURE_FLAG=1 --arg debug-route --arg demo.home --json"))
     }

@@ -100,7 +100,7 @@ func parseWebHostTargetID(_ id: String) -> WebHostTargetID? {
 func webHostDeviceScope(for platform: HostDevicePlatform) -> HostDeviceScope {
     switch platform {
     case .ios:
-        return .simulator
+        return .all
     case .android, .harmony:
         return .emulator
     }
@@ -169,6 +169,92 @@ func webDeviceTargets(runtimeTargets: [TKTargetSummary], hostTargets: [HostDevic
         }
 
     return (hostSummaries + runtimeSummaries).sorted(by: webDeviceTargetSort)
+}
+
+func makeWebTargetRegistry(
+    runtimeTargets: [TKTargetSummary],
+    hostTargets: [HostDeviceTarget],
+    usbTunnelAdapterAvailable: Bool = webIOSTunnelAdapterAvailable()
+) -> TKWebTargetRegistryResponse {
+    var matchedRuntimeIDs = Set<String>()
+    let readyRealHosts = hostTargets.filter {
+        $0.platform == HostDevicePlatform.ios.rawValue && $0.scope == HostDeviceScope.real.rawValue && $0.ready
+    }
+    let realRuntimeTargets = runtimeTargets.filter {
+        $0.platform == HostDevicePlatform.ios.rawValue && $0.connected && $0.simulatorUDID == nil
+    }
+    let hostEntries = hostTargets.map { host -> TKWebTargetRegistryEntry in
+        let ambiguousRuntimeCandidates = webAmbiguousRuntimeCandidates(
+            host: host,
+            readyRealHostCount: readyRealHosts.count,
+            realRuntimeTargets: realRuntimeTargets
+        )
+        let runtime = ambiguousRuntimeCandidates.isEmpty
+            ? matchingRuntimeTargetForRegistry(host: host, runtimeTargets: runtimeTargets, readyRealHostCount: readyRealHosts.count)
+            : nil
+        if let runtime {
+            matchedRuntimeIDs.insert(runtime.id)
+        }
+        let hostStatus = TKWebTargetHost(
+            target: host.target,
+            name: host.name,
+            runtime: host.runtime,
+            scope: host.scope,
+            kind: host.kind,
+            source: host.source,
+            state: host.state,
+            ready: host.ready,
+            transport: host.transport ?? host.source
+        )
+        let runtimeStatus = runtime.map(webTargetRuntime)
+        let mirror = webTargetMirror(host: host, runtime: runtime, ambiguousRuntimeCandidates: ambiguousRuntimeCandidates)
+        return TKWebTargetRegistryEntry(
+            id: webTargetRegistryID(for: host),
+            platform: host.platform,
+            kind: host.kind ?? host.scope ?? "host-target",
+            host: hostStatus,
+            runtime: runtimeStatus,
+            mirror: TKWebTargetMirror(state: mirror.state),
+            diagnosis: mirror.diagnosis,
+            nextAction: mirror.nextAction,
+            transportDiagnostics: webTargetTransportDiagnostics(host: host, usbTunnelAdapterAvailable: usbTunnelAdapterAvailable)
+        )
+    }
+
+    let runtimeEntries = runtimeTargets
+        .filter { !matchedRuntimeIDs.contains($0.id) }
+        .map { runtime in
+            let mirrorState: TKWebTargetMirrorState = runtime.latestHierarchyAvailable ? .ready : .mirrorUnavailable
+            return TKWebTargetRegistryEntry(
+                id: runtime.id,
+                platform: runtime.platform,
+                kind: "embedded-runtime",
+                runtime: webTargetRuntime(runtime),
+                mirror: TKWebTargetMirror(state: mirrorState),
+                diagnosis: mirrorState == .ready ? nil : TKWebTargetDiagnosis(
+                    code: .mirrorCapabilityUnavailable,
+                    message: "Runtime is connected but mirror capabilities are unavailable."
+                ),
+                nextAction: mirrorState == .ready ? nil : TKWebTargetNextAction(
+                    code: "inspect_runtime_capabilities",
+                    title: "检查 Debug App runtime capabilities"
+                )
+            )
+        }
+
+    return TKWebTargetRegistryResponse(targets: (hostEntries + runtimeEntries).sorted(by: webTargetRegistrySort))
+}
+
+func webIOSTunnelAdapterAvailable(path: String? = ProcessInfo.processInfo.environment["PATH"]) -> Bool {
+    guard let path, !path.isEmpty else { return false }
+    let fileManager = FileManager.default
+    return path
+        .split(separator: ":")
+        .map(String.init)
+        .contains { directory in
+            let iproxy = URL(fileURLWithPath: directory).appendingPathComponent("iproxy").path
+            return fileManager.isExecutableFile(atPath: iproxy)
+        }
 }
 
 func resolveWebHostDeviceTarget(_ id: String, hdc: String = "hdc", adb: String = "adb") throws -> (platform: HostDevicePlatform, target: HostDeviceTarget) {
@@ -317,6 +403,139 @@ private func matchingRuntimeTarget(for host: HostDeviceTarget, runtimeTargets: [
         }
         return runtime.id == host.id || runtime.id.hasSuffix(host.target) || runtime.deviceDescription == host.name
     }
+}
+
+private func matchingRuntimeTargetForRegistry(
+    host: HostDeviceTarget,
+    runtimeTargets: [TKTargetSummary],
+    readyRealHostCount: Int
+) -> TKTargetSummary? {
+    runtimeTargets.first { runtime in
+        guard runtime.platform == host.platform, runtime.connected else { return false }
+        if host.platform == HostDevicePlatform.ios.rawValue, host.scope == HostDeviceScope.real.rawValue {
+            let realRuntimeTargets = runtimeTargets.filter {
+                $0.platform == HostDevicePlatform.ios.rawValue && $0.connected && $0.simulatorUDID == nil
+            }
+            return readyRealHostCount == 1 && realRuntimeTargets.count == 1 && runtime.simulatorUDID == nil
+                || runtime.simulatorUDID == nil && (runtime.id.hasSuffix(host.id) || runtime.id.hasSuffix(host.target))
+        }
+        return matchingRuntimeTarget(for: host, runtimeTargets: [runtime]) != nil
+    }
+}
+
+private func webAmbiguousRuntimeCandidates(
+    host: HostDeviceTarget,
+    readyRealHostCount: Int,
+    realRuntimeTargets: [TKTargetSummary]
+) -> [String] {
+    guard host.platform == HostDevicePlatform.ios.rawValue,
+          host.scope == HostDeviceScope.real.rawValue,
+          host.ready,
+          readyRealHostCount > 1,
+          !realRuntimeTargets.isEmpty else {
+        return []
+    }
+    let directlyMatched = realRuntimeTargets.contains {
+        $0.id.hasSuffix(host.id) || $0.id.hasSuffix(host.target)
+    }
+    return directlyMatched ? [] : realRuntimeTargets.map(\.id).sorted()
+}
+
+private func webTargetRegistryID(for host: HostDeviceTarget) -> String {
+    if host.scope == HostDeviceScope.real.rawValue {
+        return host.id
+    }
+    return webHostDeviceTargetID(host)
+}
+
+private func webTargetRuntime(_ runtime: TKTargetSummary) -> TKWebTargetRuntime {
+    TKWebTargetRuntime(
+        id: runtime.id,
+        state: runtime.connected ? "connected" : "disconnected",
+        transport: runtime.transport,
+        appBundleId: runtime.bundleIdentifier,
+        capabilities: runtime.latestHierarchyAvailable ? ["screenshot", "hierarchy"] : []
+    )
+}
+
+private func webTargetMirror(
+    host: HostDeviceTarget,
+    runtime: TKTargetSummary?,
+    ambiguousRuntimeCandidates: [String] = []
+) -> (state: TKWebTargetMirrorState, diagnosis: TKWebTargetDiagnosis?, nextAction: TKWebTargetNextAction?) {
+    guard host.ready else {
+        return (
+            .hostOffline,
+            TKWebTargetDiagnosis(code: .runtimeNotFound, message: "Host target is not ready."),
+            TKWebTargetNextAction(code: "connect_host_target", title: "连接或解锁设备")
+        )
+    }
+    if host.scope != HostDeviceScope.real.rawValue && host.kind != "real-device" {
+        return (.ready, nil, nil)
+    }
+    if !ambiguousRuntimeCandidates.isEmpty {
+        return (
+            .runtimeNotFound,
+            TKWebTargetDiagnosis(
+                code: .ambiguousRuntimeTarget,
+                message: "Multiple ready iOS real devices exist and runtime target cannot be uniquely associated: \(ambiguousRuntimeCandidates.joined(separator: ", "))."
+            ),
+            TKWebTargetNextAction(code: "select_runtime_target", title: "手动选择真机 runtime 关联")
+        )
+    }
+    guard let runtime else {
+        return (
+            .runtimeNotFound,
+            TKWebTargetDiagnosis(code: .runtimeNotFound, message: "Host target is ready but no Debug App runtime is connected."),
+            TKWebTargetNextAction(code: "start_debug_app", title: "启动已集成 TritonKit 的 Debug App")
+        )
+    }
+    guard runtime.latestHierarchyAvailable else {
+        return (
+            .mirrorUnavailable,
+            TKWebTargetDiagnosis(code: .mirrorCapabilityUnavailable, message: "Runtime is connected but screenshot or hierarchy is unavailable."),
+            TKWebTargetNextAction(code: "inspect_runtime_capabilities", title: "检查 Debug App runtime capabilities")
+        )
+    }
+    return (.ready, nil, nil)
+}
+
+private func webTargetTransportDiagnostics(
+    host: HostDeviceTarget,
+    usbTunnelAdapterAvailable: Bool
+) -> [TKWebTargetDiagnosis] {
+    guard host.platform == HostDevicePlatform.ios.rawValue,
+          host.scope == HostDeviceScope.real.rawValue,
+          host.ready else {
+        return []
+    }
+    let transport = host.transport?.lowercased() ?? ""
+    guard transport == "wired" || transport == "usb" else {
+        return []
+    }
+    guard !usbTunnelAdapterAvailable else {
+        return []
+    }
+    return [
+        TKWebTargetDiagnosis(
+            code: .iosUSBTunnelUnavailable,
+            message: "No supported iOS USB tunnel adapter was found on PATH.",
+            severity: "info"
+        )
+    ]
+}
+
+private func webTargetRegistrySort(_ lhs: TKWebTargetRegistryEntry, _ rhs: TKWebTargetRegistryEntry) -> Bool {
+    let platformOrder = ["ios": 0, "android": 1, "harmony": 2]
+    let leftPlatform = platformOrder[lhs.platform] ?? 99
+    let rightPlatform = platformOrder[rhs.platform] ?? 99
+    if leftPlatform != rightPlatform {
+        return leftPlatform < rightPlatform
+    }
+    if lhs.mirror.state != rhs.mirror.state {
+        return lhs.mirror.state == .ready
+    }
+    return lhs.id < rhs.id
 }
 
 private func webDeviceTargetSort(_ lhs: WebDeviceTargetSummary, _ rhs: WebDeviceTargetSummary) -> Bool {

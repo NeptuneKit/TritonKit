@@ -37,10 +37,20 @@ public struct TritonKitStartPayload: Equatable {
     public static func environment(
         _ environment: [String: String] = ProcessInfo.processInfo.environment,
         defaultHost: String = "127.0.0.1",
-        defaultPort: UInt16 = 19421
+        defaultPort: UInt16 = 19421,
+        bundleInfo: [String: Any]? = Bundle.main.infoDictionary,
+        bonjourResolver: () -> Self? = { Self.bonjour(timeout: 0.15) }
     ) -> Self {
-        let host = environment["TRITON_HOST"] ?? defaultHost
-        let port = environment["TRITON_PORT"].flatMap(UInt16.init) ?? defaultPort
+        let bundleHost = Self.bundleString("TritonKitDefaultHost", in: bundleInfo)
+        let discovered = environment["TRITON_HOST"] == nil && bundleHost == nil ? bonjourResolver() : nil
+        let host = environment["TRITON_HOST"]
+            ?? bundleHost
+            ?? discovered?.host
+            ?? defaultHost
+        let port = environment["TRITON_PORT"].flatMap(UInt16.init)
+            ?? Self.bundlePort("TritonKitDefaultPort", in: bundleInfo)
+            ?? discovered?.port
+            ?? defaultPort
         return Self(host: host, port: port)
     }
 
@@ -52,10 +62,73 @@ public struct TritonKitStartPayload: Equatable {
         Self(host: host, port: port)
     }
 
+    public static func bonjour(timeout: TimeInterval = 0.15) -> Self? {
+        #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+        TritonKitBonjourResolver().resolve(timeout: timeout)
+        #else
+        nil
+        #endif
+    }
+
     private static func defaultDataURL(host: String, port: UInt16) -> URL? {
         URL(string: "http://\(host):\(port)")
     }
+
+    private static func bundleString(_ key: String, in bundleInfo: [String: Any]?) -> String? {
+        let value = (bundleInfo?[key] as? String)?.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value?.hasPrefix("$(") == true, value?.hasSuffix(")") == true {
+            return nil
+        }
+        return value?.isEmpty == false ? value : nil
+    }
+
+    private static func bundlePort(_ key: String, in bundleInfo: [String: Any]?) -> UInt16? {
+        if let number = bundleInfo?[key] as? NSNumber {
+            return UInt16(exactly: number)
+        }
+        return bundleString(key, in: bundleInfo).flatMap(UInt16.init)
+    }
 }
+
+#if os(macOS) || os(iOS) || os(tvOS) || os(watchOS) || os(visionOS)
+private final class TritonKitBonjourResolver: NSObject, NetServiceBrowserDelegate, NetServiceDelegate {
+    private let browser = NetServiceBrowser()
+    private var services: [NetService] = []
+    private var endpoint: TritonKitStartPayload?
+    private var resolved = false
+
+    func resolve(timeout: TimeInterval) -> TritonKitStartPayload? {
+        guard timeout > 0 else { return nil }
+        browser.delegate = self
+        browser.searchForServices(ofType: "_tritonkit-server._tcp.", inDomain: "local.")
+        let deadline = Date().addingTimeInterval(timeout)
+        while !resolved && Date() < deadline {
+            RunLoop.current.run(mode: .default, before: min(deadline, Date().addingTimeInterval(0.02)))
+        }
+        browser.stop()
+        return endpoint
+    }
+
+    func netServiceBrowser(_ browser: NetServiceBrowser, didFind service: NetService, moreComing: Bool) {
+        services.append(service)
+        service.delegate = self
+        service.resolve(withTimeout: 0.1)
+    }
+
+    func netServiceDidResolveAddress(_ sender: NetService) {
+        guard endpoint == nil, let hostName = sender.hostName, sender.port > 0, let port = UInt16(exactly: sender.port) else {
+            return
+        }
+        endpoint = .device(hostName.trimmingCharacters(in: CharacterSet(charactersIn: ".")), port: port)
+        resolved = true
+        browser.stop()
+    }
+
+    func netServiceBrowser(_ browser: NetServiceBrowser, didNotSearch errorDict: [String: NSNumber]) {
+        resolved = true
+    }
+}
+#endif
 
 public class TritonKit {
     public enum ConnectionState {

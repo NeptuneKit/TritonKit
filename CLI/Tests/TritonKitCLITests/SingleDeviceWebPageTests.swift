@@ -153,6 +153,152 @@ struct SingleDeviceWebPageTests {
         #expect(targets.first { $0.platform == "harmony" }?.source == "host")
     }
 
+    @Test("web target registry includes ready iOS real device without simulator fallback")
+    func webTargetRegistryIncludesReadyIOSRealDeviceWithoutSimulatorFallback() throws {
+        let simulatorRuntime = TKTargetSummary(
+            id: "triton:ios-simulator:SIM-1",
+            connected: true,
+            latestHierarchyAvailable: true,
+            appName: "Simulator App",
+            simulatorUDID: "SIM-1",
+            platform: "ios"
+        )
+        let realHost = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:73f725dfa795",
+            target: "ios-real:73f725dfa795",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "iPhone",
+            runtime: "iOS 26.5",
+            transport: "wired",
+            scope: "real",
+            kind: "real-device"
+        )
+
+        let registry = makeWebTargetRegistry(
+            runtimeTargets: [simulatorRuntime],
+            hostTargets: [realHost],
+            usbTunnelAdapterAvailable: false
+        )
+        let target = try #require(registry.targets.first { $0.id == "ios-real:73f725dfa795" })
+
+        #expect(target.host?.target == "ios-real:73f725dfa795")
+        #expect(target.host?.name == "iPhone")
+        #expect(target.host?.runtime == "iOS 26.5")
+        #expect(target.host?.scope == "real")
+        #expect(target.host?.transport == "wired")
+        #expect(target.runtime == nil)
+        #expect(target.mirror.state == .runtimeNotFound)
+        #expect(target.diagnosis?.code == .runtimeNotFound)
+        #expect(target.nextAction?.code == "start_debug_app")
+        #expect(target.transportDiagnostics.map(\.code) == [.iosUSBTunnelUnavailable])
+    }
+
+    @Test("web target registry omits USB tunnel diagnostic when adapter exists")
+    func webTargetRegistryOmitsUSBTunnelDiagnosticWhenAdapterExists() throws {
+        let realHost = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:73f725dfa795",
+            target: "ios-real:73f725dfa795",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "iPhone",
+            runtime: "iOS 26.5",
+            transport: "wired",
+            scope: "real",
+            kind: "real-device"
+        )
+
+        let registry = makeWebTargetRegistry(
+            runtimeTargets: [],
+            hostTargets: [realHost],
+            usbTunnelAdapterAvailable: true
+        )
+        let target = try #require(registry.targets.first { $0.id == "ios-real:73f725dfa795" })
+
+        #expect(target.transportDiagnostics.isEmpty)
+    }
+
+    @Test("web iOS tunnel adapter detection checks PATH for iproxy")
+    func webIOSTunnelAdapterDetectionChecksPathForIproxy() {
+        #expect(webIOSTunnelAdapterAvailable(path: "/definitely/missing") == false)
+    }
+
+    @Test("web target registry keeps ready simulator independent from app runtime")
+    func webTargetRegistryKeepsReadySimulatorIndependentFromAppRuntime() throws {
+        let host = HostDeviceTarget(
+            platform: "ios",
+            id: "triton:ios-simulator:SIM-1",
+            target: "SIM-1",
+            state: "Booted",
+            ready: true,
+            source: "simctl",
+            name: "iPhone 17",
+            runtime: "iOS 26.5",
+            transport: nil,
+            scope: "simulator",
+            kind: "simulator"
+        )
+
+        let registry = makeWebTargetRegistry(runtimeTargets: [], hostTargets: [host])
+        let target = try #require(registry.targets.first { $0.id == "host:ios:SIM-1" })
+
+        #expect(target.mirror.state == .ready)
+        #expect(target.diagnosis == nil)
+        #expect(target.nextAction == nil)
+        #expect(target.host?.target == "SIM-1")
+    }
+
+    @Test("web target registry marks real-device runtime ambiguous across multiple ready hosts")
+    func webTargetRegistryMarksRealDeviceRuntimeAmbiguousAcrossMultipleReadyHosts() throws {
+        let runtime = TKTargetSummary(
+            id: "triton:ios-real:session-1",
+            connected: true,
+            latestHierarchyAvailable: true,
+            appName: "Real App",
+            bundleIdentifier: "cn.example.real",
+            platform: "ios"
+        )
+        let first = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:first",
+            target: "ios-real:first",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "iPhone A",
+            runtime: "iOS 26.5",
+            transport: "wired",
+            scope: "real",
+            kind: "real-device"
+        )
+        let second = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:second",
+            target: "ios-real:second",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "iPhone B",
+            runtime: "iOS 26.5",
+            transport: "wired",
+            scope: "real",
+            kind: "real-device"
+        )
+
+        let registry = makeWebTargetRegistry(runtimeTargets: [runtime], hostTargets: [first, second])
+        let realHosts = registry.targets.filter { $0.kind == "real-device" }
+
+        #expect(realHosts.count == 2)
+        #expect(realHosts.allSatisfy { $0.runtime == nil })
+        #expect(realHosts.allSatisfy { $0.diagnosis?.code == .ambiguousRuntimeTarget })
+        #expect(realHosts.allSatisfy { $0.nextAction?.code == "select_runtime_target" })
+        #expect(registry.targets.contains { $0.id == "triton:ios-real:session-1" && $0.kind == "embedded-runtime" })
+    }
+
     @Test("web host target ids are parseable")
     func webHostTargetIDsAreParseable() throws {
         let parsed = try #require(parseWebHostTargetID("host:android:emulator-5554"))

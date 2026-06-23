@@ -86,9 +86,31 @@ struct WebLaunchPlan: Codable, Equatable {
     let port: Int
     let url: String
     let readonly: Bool
+    let discovery: WebAutoDiscoveryPlan
     let installCommand: WebLaunchCommand?
     let command: WebLaunchCommand
     let environment: [String: String]
+}
+
+struct WebAutoDiscoveryOptions: Equatable {
+    let simulatorOnly: Bool
+    let usb: Bool
+    let lan: Bool
+
+    init(simulatorOnly: Bool = false, usb: Bool = true, lan: Bool = true) {
+        self.simulatorOnly = simulatorOnly
+        self.usb = usb
+        self.lan = lan
+    }
+}
+
+struct WebAutoDiscoveryPlan: Codable, Equatable {
+    let simulator: String
+    let realDevice: String
+    let transportPriority: [String]
+    let registry: String
+    let targetRegistryEndpoint: String
+    let managedServeHost: String
 }
 
 struct WebServiceProbe: Codable, Equatable {
@@ -215,16 +237,19 @@ func makeWebLaunchPlan(
     port: Int,
     installMode: WebDependencyInstallMode,
     environment: [String: String],
-    explicitBundledWebRoot: String? = nil
+    explicitBundledWebRoot: String? = nil,
+    discoveryOptions: WebAutoDiscoveryOptions = WebAutoDiscoveryOptions()
 ) throws -> WebLaunchPlan {
     let tritonBin = explicitTritonBin ?? environment["TRITONKIT_TRITON_BIN"] ?? currentExecutable
+    let discovery = makeWebAutoDiscoveryPlan(options: discoveryOptions)
     if let roots = discoverWebRoots(explicitRoot: explicitRoot, currentDirectory: currentDirectory) {
         return try makeDevWebLaunchPlan(
             roots: roots,
             tritonBin: tritonBin,
             host: host,
             port: port,
-            installMode: installMode
+            installMode: installMode,
+            discovery: discovery
         )
     }
 
@@ -249,7 +274,27 @@ func makeWebLaunchPlan(
         tritonBin: tritonBin,
         currentExecutable: currentExecutable,
         host: host,
-        port: port
+        port: port,
+        discovery: discovery
+    )
+}
+
+func makeWebAutoDiscoveryPlan(options: WebAutoDiscoveryOptions) -> WebAutoDiscoveryPlan {
+    var priority: [String] = []
+    if !options.simulatorOnly && options.usb {
+        priority.append("usb")
+    }
+    if !options.simulatorOnly && options.lan {
+        priority.append("bonjour")
+    }
+    priority.append("manual")
+    return WebAutoDiscoveryPlan(
+        simulator: "auto",
+        realDevice: options.simulatorOnly ? "disabled" : "auto",
+        transportPriority: priority,
+        registry: "serve-owned",
+        targetRegistryEndpoint: "http://127.0.0.1:19421/web/target-registry",
+        managedServeHost: "0.0.0.0"
     )
 }
 
@@ -258,7 +303,8 @@ private func makeDevWebLaunchPlan(
     tritonBin: String,
     host: String,
     port: Int,
-    installMode: WebDependencyInstallMode
+    installMode: WebDependencyInstallMode,
+    discovery: WebAutoDiscoveryPlan
 ) throws -> WebLaunchPlan {
     let nodeModules = roots.webRoot.appendingPathComponent("node_modules", isDirectory: true)
     let shouldInstall = switch installMode {
@@ -292,9 +338,13 @@ private func makeDevWebLaunchPlan(
         port: port,
         url: "http://\(host):\(port)/",
         readonly: true,
+        discovery: discovery,
         installCommand: installCommand,
         command: command,
-        environment: ["TRITONKIT_TRITON_BIN": tritonBin]
+        environment: [
+            "TRITONKIT_TRITON_BIN": tritonBin,
+            "TRITONKIT_WEB_MANAGED_SERVE_HOST": discovery.managedServeHost,
+        ]
     )
 }
 
@@ -303,7 +353,8 @@ private func makePackagedWebLaunchPlan(
     tritonBin: String,
     currentExecutable: String,
     host: String,
-    port: Int
+    port: Int,
+    discovery: WebAutoDiscoveryPlan
 ) -> WebLaunchPlan {
     let command = WebLaunchCommand(executable: currentExecutable, arguments: [
         "web",
@@ -324,9 +375,13 @@ private func makePackagedWebLaunchPlan(
         port: port,
         url: "http://\(host):\(port)/",
         readonly: true,
+        discovery: discovery,
         installCommand: nil,
         command: command,
-        environment: ["TRITONKIT_TRITON_BIN": tritonBin]
+        environment: [
+            "TRITONKIT_TRITON_BIN": tritonBin,
+            "TRITONKIT_WEB_MANAGED_SERVE_HOST": discovery.managedServeHost,
+        ]
     )
 }
 
@@ -339,6 +394,8 @@ func renderWebLaunchPlanText(_ plan: WebLaunchPlan) -> String {
         "bundledWebRoot: \(plan.bundledWebRoot ?? "n/a")",
         "tritonBin: \(plan.tritonBin)",
         "readonly: \(plan.readonly)",
+        "discovery: simulator=\(plan.discovery.simulator) realDevice=\(plan.discovery.realDevice) transport=\(plan.discovery.transportPriority.joined(separator: ",")) managedServeHost=\(plan.discovery.managedServeHost)",
+        "targetRegistryEndpoint: \(plan.discovery.targetRegistryEndpoint)",
     ]
     if let installCommand = plan.installCommand {
         lines.append("install: \(installCommand.display)")
@@ -733,6 +790,26 @@ private func makeWebHostTargetsBridgeResponse(hdc: String = "hdc", adb: String =
     )
 }
 
+func makeWebTargetRegistryBridgeResponse(
+    runtimeTargets: [TKTargetSummary],
+    hostTargets: [HostDeviceTarget],
+    usbTunnelAdapterAvailable: Bool = webIOSTunnelAdapterAvailable()
+) -> TKWebTargetRegistryResponse {
+    makeWebTargetRegistry(
+        runtimeTargets: runtimeTargets,
+        hostTargets: hostTargets,
+        usbTunnelAdapterAvailable: usbTunnelAdapterAvailable
+    )
+}
+
+private func makePackagedWebTargetRegistryBridgeResponse() async -> TKWebTargetRegistryResponse {
+    let runtimeTargets = ((try? await TritonKitHTTPClient(host: "127.0.0.1", port: 19421).getJSON("/targets")) as TKTargetsResponse?)?.targets ?? []
+    return makeWebTargetRegistryBridgeResponse(
+        runtimeTargets: runtimeTargets,
+        hostTargets: discoverWebHostDeviceTargets()
+    )
+}
+
 private func webHostTargetDiscoveryPlans() -> [WebHostTargetDiscoveryPlan] {
     [
         WebHostTargetDiscoveryPlan(platform: .ios, scope: .simulator, command: "triton sim list --json"),
@@ -930,6 +1007,9 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
     }
     router.get("/web/host-targets") { _, _ -> Response in
         jsonResponse(makeWebHostTargetsBridgeResponse())
+    }
+    router.get("/web/target-registry") { _, _ -> Response in
+        jsonResponse(await makePackagedWebTargetRegistryBridgeResponse())
     }
     router.get("/web/ios-simulator/targets") { _, _ -> Response in
         jsonResponse(makeWebIOSSimulatorTargetsBridgeResponse())

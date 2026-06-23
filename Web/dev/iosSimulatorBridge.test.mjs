@@ -10,10 +10,15 @@ import { HostBridgeNotice } from "../src/components/HostBridgeNotice.ts";
 import { describeHostBridgePresentation } from "../src/data/hostBridgePresentation.ts";
 import {
   createIosSimulatorBridgeMiddleware,
+  getManagedTritonServeBindHost,
   mapTritonHostCapturesToWebTargets,
   mapTritonDeviceListToWebTargets,
   mapTritonSimListToWebTargets,
 } from "./iosSimulatorBridge.mjs";
+
+test("managed Triton serve binds all interfaces for real-device Debug runtime access", () => {
+  assert.equal(getManagedTritonServeBindHost(), "0.0.0.0");
+});
 
 test("maps triton sim list output into readonly Web iOS targets", () => {
   const result = mapTritonSimListToWebTargets({
@@ -569,6 +574,49 @@ test("proxies iOS Simulator Web input through triton serve host target route", a
   }
 });
 
+test("target registry route reuses managed Triton serve after readiness probe", async () => {
+  const received = [];
+  const server = await createFakeHostInputServer(received, {
+    ok: true,
+    action: "web.target-registry",
+    targets: [],
+  });
+  const middleware = createIosSimulatorBridgeMiddleware({
+    tritonPath: process.execPath,
+    hostInputBaseURL: server.baseURL,
+  });
+
+  try {
+    const response = await invokeMiddleware(middleware, {
+      method: "GET",
+      url: "/web/target-registry",
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.deepEqual(JSON.parse(response.body), {
+      ok: true,
+      action: "web.target-registry",
+      targets: [],
+    });
+    assert.deepEqual(received, [
+      {
+        method: "GET",
+        pathname: "/health",
+        target: null,
+        body: {},
+      },
+      {
+        method: "GET",
+        pathname: "/web/target-registry",
+        target: null,
+        body: {},
+      },
+    ]);
+  } finally {
+    await server.close();
+  }
+});
+
 test("dispatches iOS Simulator runtime long press through matched App runtime", async () => {
   const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
 const args = process.argv.slice(2);
@@ -682,6 +730,40 @@ process.stdout.write(JSON.stringify({
   assert.equal(body.pixelWidth, 12);
   assert.equal(body.pixelHeight, 8);
   assert.match(body.dataUrl, /^data:image\/png;base64,/);
+});
+
+test("rejects iOS real-device screenshot when only simulator runtime is connected", async () => {
+  const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.join(" ") === "list --json") {
+  process.stdout.write(JSON.stringify({
+    targets: [
+      {
+        id: "triton:ios-simulator:SIM-UDID",
+        platform: "ios",
+        connected: true,
+        simulatorUDID: "SIM-UDID",
+        activeHierarchyAvailable: true
+      }
+    ]
+  }));
+  process.exit(0);
+}
+process.stderr.write("unexpected args: " + args.join(" "));
+process.exit(64);
+`);
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "GET",
+    url: "/web/host-screenshot?platform=ios&target=ios-real%3A7a9d976cc4d4&scope=real&kind=real-device&source=runtime",
+  });
+
+  assert.equal(response.statusCode, 409);
+  const body = JSON.parse(response.body);
+  assert.equal(body.ok, false);
+  assert.equal(body.error.code, "app_runtime_unavailable");
+  assert.match(body.error.message, /No connected iOS real-device App runtime target matched host target ios-real:7a9d976cc4d4/);
+  assert.match(body.error.message, /triton:ios-simulator:SIM-UDID/);
 });
 
 test("forces /web/host-targets failure for dev browser fallback smoke", async () => {
@@ -841,7 +923,7 @@ process.stdout.write(JSON.stringify({
   assert.equal(body.scene.viewport.width, 428);
 });
 
-test("falls back to active iOS runtime hierarchy when real-device identity is transient", async () => {
+test("rejects iOS real-device hierarchy when only simulator runtime is connected", async () => {
   const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
 const args = process.argv.slice(2);
 if (args.join(" ") === "list --json") {
@@ -861,36 +943,8 @@ if (args.join(" ") === "list --json") {
   }));
   process.exit(0);
 }
-if (args.join(" ") !== "hierarchy --platform ios --target triton:ios-simulator:SIM-UDID --json") {
-  process.stderr.write("unexpected args: " + args.join(" "));
-  process.exit(64);
-}
-process.stdout.write(JSON.stringify({
-  ok: true,
-  capturedAt: "2026-06-20T00:00:00.000Z",
-  source: {
-    command: "triton hierarchy --platform ios --target triton:ios-simulator:SIM-UDID --json",
-    runtimeScope: "runtime-tree",
-    readonly: true
-  },
-  scene: {
-    platform: "ios",
-    rootId: "root",
-    viewport: { width: 402, height: 874 },
-    nodes: [
-      {
-        id: "root",
-        type: "UIWindow",
-        name: "keyWindow",
-        frame: { x: 0, y: 0, width: 402, height: 874 },
-        depth: 0,
-        visible: true,
-        interactive: false,
-        color: "#6ea8ff"
-      }
-    ]
-  }
-}));
+process.stderr.write("unexpected args: " + args.join(" "));
+process.exit(64);
 `);
   const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
   const response = await invokeMiddleware(middleware, {
@@ -898,11 +952,12 @@ process.stdout.write(JSON.stringify({
     url: "/web/host-hierarchy?platform=ios&target=ios-real%3A7a9d976cc4d4&scope=real&kind=real-device&source=runtime",
   });
 
-  assert.equal(response.statusCode, 200);
+  assert.equal(response.statusCode, 409);
   const body = JSON.parse(response.body);
-  assert.equal(body.ok, true);
-  assert.equal(body.source.command, "triton hierarchy --platform ios --target triton:ios-simulator:SIM-UDID --json");
-  assert.equal(body.scene.viewport.width, 402);
+  assert.equal(body.ok, false);
+  assert.equal(body.error.code, "app_runtime_unavailable");
+  assert.match(body.error.message, /No connected iOS real-device App runtime target matched host target ios-real:7a9d976cc4d4/);
+  assert.match(body.error.message, /triton:ios-simulator:SIM-UDID/);
 });
 
 test("exposes explicit Web hierarchy capture control through POST without mutating the app", async () => {

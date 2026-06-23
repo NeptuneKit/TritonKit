@@ -7,10 +7,14 @@ public enum TKDevicectlCommand {
         requiredConfig: Set<TKHostRequiredConfig> = [.timeout],
         defaultTimeoutSeconds: Double = 30,
         capturesArtifacts: Bool = true,
-        sensitiveOutput: Bool = true
+        sensitiveOutput: Bool = true,
+        environment: [String: String] = [:],
+        redactedEnvironmentKeys: Set<String> = []
     ) -> TKHostCommand {
         TKHostCommand(
             arguments: arguments,
+            environment: environment,
+            redactedEnvironmentKeys: redactedEnvironmentKeys,
             riskLevel: riskLevel,
             requiredConfig: requiredConfig,
             defaultTimeoutSeconds: defaultTimeoutSeconds,
@@ -50,6 +54,8 @@ public enum TKDevicectlCommand {
         payloadURL: String? = nil,
         terminateExisting: Bool = false,
         startStopped: Bool = false,
+        environment: [String: String] = [:],
+        arguments appArguments: [String] = [],
         jsonOutput: String,
         logOutput: String
     ) -> TKHostCommand {
@@ -63,13 +69,19 @@ public enum TKDevicectlCommand {
         if let payloadURL {
             arguments += ["--payload-url", payloadURL]
         }
-        arguments.append(bundleID)
         arguments += artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput)
+        arguments.append(bundleID)
+        arguments += appArguments
+        let childEnvironment = environment.reduce(into: [String: String]()) { result, pair in
+            result["DEVICECTL_CHILD_\(pair.key)"] = pair.value
+        }
         return command(
             arguments,
             riskLevel: .automation,
             requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
-            defaultTimeoutSeconds: 60
+            defaultTimeoutSeconds: 60,
+            environment: childEnvironment,
+            redactedEnvironmentKeys: Set(childEnvironment.keys)
         )
     }
 

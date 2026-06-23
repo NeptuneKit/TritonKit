@@ -43,7 +43,7 @@ struct XcodeCommandTests {
         let run = try XcodeRun.parse([
             "--project", "App.xcodeproj",
             "--scheme", "App",
-            "--simulator", "SIM-1",
+            "--device", "ios-real:abc123",
             "--env", "FEATURE_FLAG=1",
             "--env", "API_KEY=secret",
             "--arg",
@@ -56,7 +56,7 @@ struct XcodeCommandTests {
         #expect(run.launchArguments == ["debug-route", "demo.home"])
 
         let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
-        #expect(xcode.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") })
+        #expect(xcode.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") && $0.description.contains("DEVICECTL_CHILD") })
         #expect(xcode.options.contains { $0.name == "--arg" && $0.description.contains("launch argument") })
         let runSchema = try #require(xcode.subcommands.first { $0.name == "run" })
         #expect(runSchema.optionalOptions.contains("--env"))
