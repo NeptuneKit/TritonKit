@@ -898,7 +898,11 @@ struct TKTestRecorderMatrixTargetResult: Codable, Equatable {
         self.stepResultCount = 0
         self.evidenceDir = nil
         self.blockers = plan.blockers
-        self.suggestedCommand = "triton testrec replay \(plan.path) --platform \(target.platform) --dry-run --json"
+        var command = "triton testrec replay \(shellQuotedEvidencePath(plan.path)) --platform \(target.platform)"
+        if let device = target.device {
+            command += " --device \(shellQuotedEvidencePath(device))"
+        }
+        self.suggestedCommand = command + " --dry-run --json"
     }
 
     init(target: TKTestRecorderMatrixTarget, run: TKTestRecorderReplayRunResponse, evidenceDir: String?) {
@@ -914,7 +918,15 @@ struct TKTestRecorderMatrixTargetResult: Codable, Equatable {
         self.stepResultCount = run.steps.count
         self.evidenceDir = evidenceDir
         self.blockers = run.blockers
-        self.suggestedCommand = "triton testrec replay \(run.path) --platform \(target.platform) --executor \(run.executor) --json"
+        var command = "triton testrec replay \(shellQuotedEvidencePath(run.path)) --platform \(target.platform)"
+        if let device = target.device {
+            command += " --device \(shellQuotedEvidencePath(device))"
+        }
+        command += " --executor \(run.executor)"
+        if let evidenceDir {
+            command += " --evidence-dir \(shellQuotedEvidencePath(evidenceDir))"
+        }
+        self.suggestedCommand = command + " --json"
     }
 }
 
