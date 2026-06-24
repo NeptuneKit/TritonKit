@@ -53,6 +53,7 @@ struct TestRecorderContractTests {
             "sessionId",
             "casePath",
             "manifest",
+            "manifest.tritonKitVersion",
             "manifest.redactionStatus",
             "manifest.truncationStatus",
             "capabilities",
@@ -86,6 +87,7 @@ struct TestRecorderContractTests {
             "path",
             "manifest",
             "manifest.name",
+            "manifest.tritonKitVersion",
             "manifest.redactionStatus",
             "manifest.truncationStatus",
             "capabilities",
@@ -302,6 +304,7 @@ struct TestRecorderContractTests {
         #expect(started.casePath == caseURL.path)
         #expect(started.manifest.name == "login-flow")
         #expect(started.manifest.sourcePlatform == "ios")
+        #expect(started.manifest.tritonKitVersion == TritonKitBuildInfo.cliVersion)
         #expect(started.manifest.redactionStatus == "pending")
         #expect(started.manifest.truncationStatus == "not-truncated")
         #expect(action.kind == "triton.testrec.event")
@@ -503,6 +506,7 @@ struct TestRecorderContractTests {
         #expect(response.ok == true)
         #expect(response.kind == "triton.testrec.inspect")
         #expect(response.manifest.name == "login-flow")
+        #expect(response.manifest.tritonKitVersion == "unknown")
         #expect(response.manifest.redactionStatus == "pending")
         #expect(response.manifest.truncationStatus == "not-truncated")
         #expect(response.capabilities.actions == ["tap", "type", "scroll"])

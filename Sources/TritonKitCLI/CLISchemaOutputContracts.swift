@@ -98,7 +98,6 @@ func testValidationOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.normalized-plan",
@@ -152,7 +151,6 @@ func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func testRunOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.run-result",
@@ -244,6 +242,7 @@ func testRecorderSessionStartOutputContract() -> TKCommandOutputContract {
             ("manifest", "TKTestRecorderManifest?", false, "Written manifest.json payload"),
             ("manifest.name", "String?", false, "Test case name"),
             ("manifest.sourcePlatform", "String?", false, "Source platform being recorded"),
+            ("manifest.tritonKitVersion", "String?", false, "TritonKit CLI version that created the case, or unknown for hand-written manifests"),
             ("manifest.redactionStatus", "String?", false, "Redaction lifecycle status, default pending before compile review"),
             ("manifest.truncationStatus", "String?", false, "Raw stream truncation status, default not-truncated"),
             ("capabilities", "TKTestRecorderContractCapabilities?", false, "Written contract-capabilities.json payload"),
@@ -320,6 +319,7 @@ func testRecorderInspectOutputContract() -> TKCommandOutputContract {
             ("manifest", "TKTestRecorderManifest?", false, "Decoded manifest.json"),
             ("manifest.name", "String?", false, "Test case name"),
             ("manifest.sourcePlatform", "String?", false, "Source platform that produced the contract"),
+            ("manifest.tritonKitVersion", "String?", false, "TritonKit CLI version that created the case, or unknown for hand-written manifests"),
             ("manifest.redactionStatus", "String?", false, "Redaction lifecycle status, default pending before compile review"),
             ("manifest.truncationStatus", "String?", false, "Raw stream truncation status, default not-truncated"),
             ("capabilities", "TKTestRecorderContractCapabilities?", false, "Decoded contract-capabilities.json"),

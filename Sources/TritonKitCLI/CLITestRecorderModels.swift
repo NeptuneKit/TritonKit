@@ -6,14 +6,16 @@ struct TKTestRecorderManifest: Codable, Equatable {
     let kind: String
     let name: String
     let sourcePlatform: String?
+    let tritonKitVersion: String
     let redactionStatus: String
     let truncationStatus: String
 
-    init(schemaVersion: Int, kind: String, name: String, sourcePlatform: String?, redactionStatus: String = "pending", truncationStatus: String = "not-truncated") {
+    init(schemaVersion: Int, kind: String, name: String, sourcePlatform: String?, tritonKitVersion: String = "unknown", redactionStatus: String = "pending", truncationStatus: String = "not-truncated") {
         self.schemaVersion = schemaVersion
         self.kind = kind
         self.name = name
         self.sourcePlatform = sourcePlatform
+        self.tritonKitVersion = tritonKitVersion
         self.redactionStatus = redactionStatus
         self.truncationStatus = truncationStatus
     }
@@ -24,6 +26,7 @@ struct TKTestRecorderManifest: Codable, Equatable {
         self.kind = try container.decode(String.self, forKey: .kind)
         self.name = try container.decode(String.self, forKey: .name)
         self.sourcePlatform = try container.decodeIfPresent(String.self, forKey: .sourcePlatform)
+        self.tritonKitVersion = try container.decodeIfPresent(String.self, forKey: .tritonKitVersion) ?? "unknown"
         self.redactionStatus = try container.decodeIfPresent(String.self, forKey: .redactionStatus) ?? "pending"
         self.truncationStatus = try container.decodeIfPresent(String.self, forKey: .truncationStatus) ?? "not-truncated"
     }

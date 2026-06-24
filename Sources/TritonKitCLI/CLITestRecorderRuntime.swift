@@ -27,7 +27,8 @@ func startTritonTestRecorderSession(caseName: String, sourcePlatform: String, ou
         schemaVersion: 1,
         kind: "triton.testcase.v1",
         name: caseName,
-        sourcePlatform: sourcePlatform
+        sourcePlatform: sourcePlatform,
+        tritonKitVersion: TritonKitBuildInfo.cliVersion
     )
     let capabilities = TKTestRecorderContractCapabilities(
         schemaVersion: 1,
