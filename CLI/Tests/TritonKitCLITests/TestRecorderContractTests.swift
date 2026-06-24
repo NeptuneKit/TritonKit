@@ -1342,6 +1342,12 @@ struct TestRecorderContractTests {
         #expect(manifest.artifacts.contains {
             $0.kind == "testrec.network.fixture" && $0.path == "network/fixtures/n1.json" && $0.redactionStatus == "redacted"
         })
+        let summary = try summarizeEvidenceBundle(input: evidenceURL.path)
+        #expect(summary.ok == true)
+        #expect(summary.run?.summary?.verdict == .success)
+        #expect(summary.run?.summary?.stepCount == response.steps.count)
+        #expect(summary.artifacts.map(\.path).contains("run/replay-result.json"))
+        #expect(summary.artifacts.map(\.path).contains("network/fixtures/n1.json"))
         let targetFingerprints = try String(contentsOf: evidenceURL.appendingPathComponent("pages/target-fingerprints.json"), encoding: .utf8)
         #expect(targetFingerprints.contains(#""kind" : "triton.testrec.target-fingerprints""#))
         #expect(targetFingerprints.contains(#""hash" : "abc123""#))
