@@ -187,7 +187,7 @@ Scenario: redaction gate
 
 1. Add `local-device` dry-run executor profile acceptance tests for target requirement fields. Covered by `codex/20260625-testrec-local-device-profile` regression.
 2. Add `local-device` non-dry-run fail-closed test that returns `target_not_found` without device action. Covered by `codex/20260625-testrec-local-device-target-gate` regression.
-3. Add evidence writer parity for blocked local-device runs.
+3. Add evidence writer parity for blocked local-device runs. Covered by `codex/20260625-testrec-local-device-evidence` regression.
 4. Add one platform only after Triton action / observation schema proves enough capability.
 5. Add more actions only after each action has one evidence-backed acceptance test.
 

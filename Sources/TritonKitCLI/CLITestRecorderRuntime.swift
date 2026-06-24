@@ -290,7 +290,8 @@ func handleTestRecorderHTTPReplay(body: Data) throws -> TKTestRecorderReplayRunR
         return try replayTritonTestCaseLocalDevice(
             path: request.path,
             platform: request.platform,
-            device: request.device
+            device: request.device,
+            evidenceDirectory: request.evidenceDir
         )
     }
     _ = try validateTestRecorderReplayExecutor(request.executor)
