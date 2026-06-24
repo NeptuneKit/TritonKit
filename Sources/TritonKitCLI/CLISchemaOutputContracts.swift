@@ -514,7 +514,7 @@ func testRecorderReplayRunOutputContract() -> TKCommandOutputContract {
             ("contractRef.byteCount", "Int?", false, "Compiled contract byte count"),
             ("contractRef.digestAlgorithm", "String?", false, "Digest algorithm used for contractRef.digest, currently fnv1a64"),
             ("contractRef.digest", "String?", false, "Deterministic digest of compiled-contract.json bytes"),
-            ("evidenceDir", "String?", false, "Optional .tritonevidence directory written by local-simulated replay"),
+            ("evidenceDir", "String?", false, "Optional .tritonevidence directory written by replay"),
             ("artifactRefs", "[String]?", false, "Evidence artifact refs written under evidenceDir"),
             ("execution", "TKTestRecorderReplayExecutionSummary?", false, "Executor boundary summary proving whether replay executed real device/model/network side effects"),
             ("execution.mode", "String?", false, "Execution mode, offline-simulated or device-execution"),

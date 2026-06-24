@@ -80,7 +80,7 @@ func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: 
     return response
 }
 
-func replayTritonTestCaseLocalDevice(path: String, platform: String, device: String?) throws -> TKTestRecorderReplayRunResponse {
+func replayTritonTestCaseLocalDevice(path: String, platform: String, device: String?, evidenceDirectory: String? = nil) throws -> TKTestRecorderReplayRunResponse {
     let plan = try replayTritonTestCaseDryRun(path: path, platform: platform, device: device)
     let trimmedDevice = device?.trimmingCharacters(in: .whitespacesAndNewlines)
     let targetName = trimmedDevice?.isEmpty == false ? trimmedDevice! : platform
@@ -128,14 +128,29 @@ func replayTritonTestCaseLocalDevice(path: String, platform: String, device: Str
             stopConditions: step.stopConditions
         )
     }
-    return TKTestRecorderReplayRunResponse(
+    let artifactRefs = testRecorderReplayArtifactRefs(
+        evidenceDirectory: evidenceDirectory,
+        targetFingerprints: nil,
+        networkResults: []
+    )
+    let response = TKTestRecorderReplayRunResponse(
         plan: plan,
         executor: testRecorderLocalDeviceExecutor,
+        evidenceDir: evidenceDirectory,
+        artifactRefs: artifactRefs,
         pageResults: pageResults,
         steps: steps,
         blockers: blockers,
         execution: .localDeviceBlocked()
     )
+    if let evidenceDirectory {
+        try writeTestRecorderReplayEvidence(
+            response: response,
+            evidenceDirectory: evidenceDirectory,
+            targetFingerprints: nil
+        )
+    }
+    return response
 }
 
 private func testRecorderReplayArtifactRefs(evidenceDirectory: String?, targetFingerprints: [TKJSONValue]?, networkResults: [TKTestRecorderReplayNetworkResult]) -> [String] {
@@ -521,7 +536,7 @@ private func writeTestRecorderReplayEvidence(response: TKTestRecorderReplayRunRe
     let manifest = TKEvidenceManifest(
         ok: response.ok,
         name: "triton-testrec-replay",
-        note: "local-simulated executor; no device commands executed",
+        note: "\(response.executor) executor; deviceCommandsExecuted=\(response.execution.deviceCommandsExecuted)",
         createdAt: timestamp,
         output: evidenceURL.path,
         artifacts: artifacts,

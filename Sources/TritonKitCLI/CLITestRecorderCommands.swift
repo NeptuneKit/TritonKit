@@ -347,7 +347,7 @@ private func runTestRecorderReplayCommand(input: String, platform: String, devic
         if !dryRun {
             let response: TKTestRecorderReplayRunResponse
             if executor?.trimmingCharacters(in: .whitespacesAndNewlines) == testRecorderLocalDeviceExecutor {
-                response = try replayTritonTestCaseLocalDevice(path: input, platform: platform, device: device)
+                response = try replayTritonTestCaseLocalDevice(path: input, platform: platform, device: device, evidenceDirectory: evidenceDir)
             } else {
                 _ = try validateTestRecorderReplayExecutor(executor)
                 let targetFingerprints = try decodeTestRecorderTargetFingerprintsJSON(targetFingerprintsJSON)

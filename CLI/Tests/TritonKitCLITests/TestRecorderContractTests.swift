@@ -1351,6 +1351,7 @@ struct TestRecorderContractTests {
     func replayLocalDeviceBlocksWhenTargetIsNotResolved() throws {
         let caseURL = try makeTemporaryCaseDirectory()
         defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        let evidenceURL = caseURL.deletingLastPathComponent().appendingPathComponent("local-device-blocked.tritonevidence", isDirectory: true)
         try writeValidManifest(to: caseURL)
         try writeValidCapabilities(to: caseURL)
         try writeRawStreams(to: caseURL)
@@ -1359,7 +1360,8 @@ struct TestRecorderContractTests {
         let response = try replayTritonTestCaseLocalDevice(
             path: caseURL.path,
             platform: "android",
-            device: "missing-emulator"
+            device: "missing-emulator",
+            evidenceDirectory: evidenceURL.path
         )
 
         #expect(response.ok == false)
@@ -1386,6 +1388,36 @@ struct TestRecorderContractTests {
         #expect(response.steps.allSatisfy { $0.deviceCommandExecuted == false })
         #expect(response.steps.allSatisfy { $0.failure?.code == "target_not_found" })
         #expect(response.pageResults.map(\.status) == ["not-run"])
+        #expect(response.evidenceDir == evidenceURL.path)
+        #expect(response.artifactRefs == ["run/replay-result.json", "run/events.jsonl", "run/run.json"])
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("manifest.json").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("run/replay-result.json").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("run/events.jsonl").path))
+        let manifest = try JSONDecoder().decode(
+            TKEvidenceManifest.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("manifest.json"))
+        )
+        let runMetadata = try JSONDecoder().decode(
+            TKTestRunMetadata.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("run/run.json"))
+        )
+        #expect(manifest.ok == false)
+        #expect(manifest.run?.eventsPath == "run/events.jsonl")
+        #expect(manifest.run?.eventCount == response.evidenceSummary.expectedEventCount)
+        #expect(manifest.run?.summary?.runID == runMetadata.runID)
+        #expect(manifest.run?.summary?.verdict == .blocked)
+        #expect(manifest.run?.summary?.stepCount == response.steps.count)
+        #expect(manifest.run?.summary?.frictionCount == response.blockers.count)
+        let result = try JSONDecoder().decode(
+            TKTestRecorderReplayRunResponse.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("run/replay-result.json"))
+        )
+        #expect(result.executor == "local-device")
+        #expect(result.blockers.map(\.code).contains("target_not_found"))
+        let events = try String(contentsOf: evidenceURL.appendingPathComponent("run/events.jsonl"), encoding: .utf8)
+        #expect(events.contains(#""event":"testrec.replay.finished""#))
+        #expect(events.contains(#""failureCode":"target_not_found""#))
+        #expect(events.contains("target_not_found"))
     }
 
     @Test("replay local simulated executor produces replay result without device commands")
