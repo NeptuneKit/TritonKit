@@ -1253,6 +1253,32 @@ struct TestRecorderContractTests {
         #expect(events.contains("matched"))
     }
 
+    @Test("replay local simulated rejects missing network fixture artifact")
+    func replayLocalSimulatedRejectsMissingNetworkFixtureArtifact() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        let evidenceURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-testrec-evidence-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        defer { try? FileManager.default.removeItem(at: evidenceURL) }
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try writeRawStreamsWithSensitiveNetworkBody(to: caseURL)
+        _ = try compileTritonTestCase(path: caseURL.path, writeContract: true)
+        try FileManager.default.removeItem(at: caseURL.appendingPathComponent("network/fixtures/n1.json"))
+
+        let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
+            _ = try replayTritonTestCaseLocalSimulated(
+                path: caseURL.path,
+                platform: "android",
+                device: nil,
+                evidenceDirectory: evidenceURL.path
+            )
+        }
+
+        #expect(failure?.detail.code == "missing_network_fixture")
+        #expect(failure?.detail.path == "network/fixtures/n1.json")
+    }
+
     @Test("replay local simulated blocks when target fingerprint does not match")
     func replayLocalSimulatedBlocksWhenTargetFingerprintDoesNotMatch() throws {
         let caseURL = try makeTemporaryCaseDirectory()
