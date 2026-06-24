@@ -1202,10 +1202,14 @@ struct TestRecorderContractTests {
         #expect(response.executor == "local-simulated")
         #expect(response.evidenceRoot == evidenceRoot.path)
         #expect(response.passedCount == 2)
+        let androidEvidence = evidenceRoot.appendingPathComponent("android-emulator-a", isDirectory: true).path
+        let harmonyEvidence = evidenceRoot.appendingPathComponent("harmony-dev-a", isDirectory: true).path
         #expect(response.results.map(\.evidenceDir) == [
-            evidenceRoot.appendingPathComponent("android-emulator-a", isDirectory: true).path,
-            evidenceRoot.appendingPathComponent("harmony-dev-a", isDirectory: true).path,
+            androidEvidence,
+            harmonyEvidence,
         ])
+        #expect(response.suggestedCommands.contains("triton evidence summary \(shellQuotedEvidencePath(androidEvidence)) --json"))
+        #expect(response.suggestedCommands.contains("triton evidence summary \(shellQuotedEvidencePath(harmonyEvidence)) --json"))
         #expect(FileManager.default.fileExists(atPath: evidenceRoot.appendingPathComponent("android-emulator-a/run/replay-result.json").path))
         #expect(FileManager.default.fileExists(atPath: evidenceRoot.appendingPathComponent("harmony-dev-a/run/events.jsonl").path))
     }

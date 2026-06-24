@@ -946,7 +946,9 @@ struct TKTestRecorderMatrixResponse: Codable, Equatable {
         self.blockedCount = results.filter { $0.status == "blocked" }.count
         self.status = blockedCount == 0 ? (executor == nil ? "ready" : "passed") : "blocked"
         self.results = results
-        self.suggestedCommands = ["triton testrec matrix \(path) --targets \(targets) --json"]
+        var suggestedCommands = ["triton testrec matrix \(path) --targets \(targets) --json"]
+        suggestedCommands += results.compactMap(\.evidenceDir).map { "triton evidence summary \(shellQuotedEvidencePath($0)) --json" }
+        self.suggestedCommands = suggestedCommands
     }
 }
 
