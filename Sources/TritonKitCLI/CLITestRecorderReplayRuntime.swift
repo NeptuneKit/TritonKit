@@ -95,6 +95,51 @@ private func testRecorderReplayArtifactRefs(evidenceDirectory: String?, targetFi
     return refs
 }
 
+func matrixTritonTestCase(path: String, targets: String, executor: String?, targetFingerprints: [TKJSONValue]?) throws -> TKTestRecorderMatrixResponse {
+    let parsedTargets = try parseTestRecorderMatrixTargets(targets)
+    let resolvedExecutor = try executor.map { try validateTestRecorderReplayExecutor($0) }
+    let results: [TKTestRecorderMatrixTargetResult] = try parsedTargets.map { target in
+        if resolvedExecutor != nil {
+            let run = try replayTritonTestCaseLocalSimulated(
+                path: path,
+                platform: target.platform,
+                device: target.device,
+                targetFingerprints: targetFingerprints
+            )
+            return TKTestRecorderMatrixTargetResult(target: target, run: run)
+        }
+        let plan = try replayTritonTestCaseDryRun(path: path, platform: target.platform, device: target.device)
+        return TKTestRecorderMatrixTargetResult(target: target, plan: plan)
+    }
+    return TKTestRecorderMatrixResponse(path: URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL.path, targets: targets, executor: resolvedExecutor, results: results)
+}
+
+private func parseTestRecorderMatrixTargets(_ targets: String) throws -> [TKTestRecorderMatrixTarget] {
+    let parts = targets.split(separator: ",").map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+    guard !parts.isEmpty else {
+        throw testRecorderValidationFailure(
+            code: "missing_matrix_targets",
+            message: "testrec matrix requires at least one target.",
+            path: "--targets",
+            hint: "Pass --targets ios:sim-a,android:emu-a or a comma-separated platform list."
+        )
+    }
+    return try parts.map { raw in
+        let pieces = raw.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false).map(String.init)
+        let platform = (pieces.first ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !platform.isEmpty else {
+            throw testRecorderValidationFailure(
+                code: "invalid_matrix_target",
+                message: "Matrix target \(raw) is missing a platform.",
+                path: "--targets",
+                hint: "Use platform or platform:device, for example android:emulator-a."
+            )
+        }
+        let device = pieces.count > 1 ? pieces[1].trimmingCharacters(in: .whitespacesAndNewlines) : nil
+        return TKTestRecorderMatrixTarget(raw: raw, platform: platform, device: device?.isEmpty == true ? nil : device)
+    }
+}
+
 func decodeTestRecorderTargetFingerprintsJSON(_ targetFingerprintsJSON: String?) throws -> [TKJSONValue]? {
     guard let targetFingerprintsJSON,
           !targetFingerprintsJSON.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty

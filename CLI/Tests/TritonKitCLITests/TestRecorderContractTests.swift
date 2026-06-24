@@ -18,6 +18,7 @@ struct TestRecorderContractTests {
         #expect(schema.subcommands.map(\.name).contains("proposals"))
         #expect(schema.subcommands.map(\.name).contains("match-page"))
         #expect(schema.subcommands.map(\.name).contains("replay"))
+        #expect(schema.subcommands.map(\.name).contains("matrix"))
         #expect(schema.providedCapabilities.contains("testrec-session-start"))
         #expect(schema.providedCapabilities.contains("testrec-event-ingest"))
         #expect(schema.providedCapabilities.contains("testrec-session-stop"))
@@ -27,6 +28,7 @@ struct TestRecorderContractTests {
         #expect(schema.providedCapabilities.contains("testrec-page-match"))
         #expect(schema.providedCapabilities.contains("testrec-replay-dry-run"))
         #expect(schema.providedCapabilities.contains("testrec-replay-local-simulated"))
+        #expect(schema.providedCapabilities.contains("testrec-matrix"))
         #expect(schema.artifacts.contains("tritontestcase"))
         #expect(schema.artifacts.contains("compiled-contract"))
         #expect(schema.artifacts.contains("action-map"))
@@ -46,6 +48,7 @@ struct TestRecorderContractTests {
         #expect(schema.usageForms.contains { $0.form == "match-page <case.tritontestcase> --page <page> --candidate-json <json> --json" })
         #expect(schema.usageForms.contains { $0.form == "replay <case.tritontestcase> --platform <platform> --dry-run --json" })
         #expect(schema.usageForms.contains { $0.form == "replay <case.tritontestcase> --platform <platform> --executor local-simulated --target-fingerprints-json <json> --evidence-dir <dir.tritonevidence> --json" })
+        #expect(schema.usageForms.contains { $0.form == "matrix <case.tritontestcase> --targets ios:sim-a,android:emu-a --json" })
         expectContract(schema, selector: "testrec.session-start", fields: [
             "ok",
             "schemaVersion",
@@ -256,6 +259,27 @@ struct TestRecorderContractTests {
             "steps[].failure.artifactRefs",
             "steps[].failure.recoveryCommands",
             "blockers",
+            "suggestedCommands",
+        ])
+        expectContract(schema, selector: "testrec.matrix", fields: [
+            "ok",
+            "schemaVersion",
+            "kind",
+            "path",
+            "executor",
+            "status",
+            "targetCount",
+            "readyCount",
+            "passedCount",
+            "blockedCount",
+            "results",
+            "results[].target",
+            "results[].platform",
+            "results[].device",
+            "results[].status",
+            "results[].dryRun",
+            "results[].plannedStepCount",
+            "results[].blockers",
             "suggestedCommands",
         ])
 
@@ -1101,6 +1125,40 @@ struct TestRecorderContractTests {
         #expect(response.plannedSteps[1].argv == ["triton", "act", "type", "alice", "--platform", "android", "--device", "emulator-a", "--json"])
         #expect(response.plannedSteps[0].workflowCategories == ["action", "evidence"])
         #expect(response.blockers.isEmpty)
+    }
+
+    @Test("matrix fans out dry-run plans across targets without device commands")
+    func matrixFansOutDryRunPlansAcrossTargetsWithoutDeviceCommands() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try writeRawStreams(to: caseURL)
+        _ = try compileTritonTestCase(path: caseURL.path, writeContract: true)
+
+        let response = try matrixTritonTestCase(
+            path: caseURL.path,
+            targets: "android:emulator-a,harmony:dev-a",
+            executor: nil,
+            targetFingerprints: nil
+        )
+
+        #expect(response.ok == true)
+        #expect(response.kind == "triton.testrec.matrix")
+        #expect(response.executor == nil)
+        #expect(response.status == "ready")
+        #expect(response.targetCount == 2)
+        #expect(response.readyCount == 2)
+        #expect(response.passedCount == 0)
+        #expect(response.blockedCount == 0)
+        #expect(response.results.map(\.target) == ["android:emulator-a", "harmony:dev-a"])
+        #expect(response.results.map(\.platform) == ["android", "harmony"])
+        #expect(response.results.map(\.device) == ["emulator-a", "dev-a"])
+        #expect(response.results.allSatisfy { $0.dryRun })
+        #expect(response.results.allSatisfy { $0.plannedStepCount == 2 })
+        #expect(response.results.allSatisfy { $0.pageCheckCount == 1 })
+        #expect(response.results.allSatisfy { $0.blockers.isEmpty })
+        #expect(response.suggestedCommands == ["triton testrec matrix \(caseURL.path) --targets android:emulator-a,harmony:dev-a --json"])
     }
 
     @Test("replay requires dry run until executor is implemented")

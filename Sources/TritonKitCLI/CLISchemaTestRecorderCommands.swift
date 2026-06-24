@@ -9,7 +9,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
             requiresServer: false,
             requiresTarget: false,
             requiresHierarchy: false,
-            runtimeScope: "offline explicit-event recording, inspect, compile, proposals, page fingerprint match, replay dry-run, and local-simulated replay",
+            runtimeScope: "offline explicit-event recording, inspect, compile, proposals, page fingerprint match, replay dry-run, local-simulated replay, and replay matrix",
             exitCodeOnFailure: 1,
             outputFormats: ["json", "text"],
             options: [
@@ -21,6 +21,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "proposals <case.tritontestcase>", type: "Subcommand", description: "Read compile-proposals.jsonl without applying changes"),
                 TKCommandSchemaOption(name: "match-page <case.tritontestcase> --page <page> --candidate-json <json>", type: "Subcommand", description: "Score a target-side page fingerprint against a compiled page contract"),
                 TKCommandSchemaOption(name: "replay <case.tritontestcase>", type: "Subcommand", description: "Plan replay from a .tritontestcase package, or run the offline local-simulated executor"),
+                TKCommandSchemaOption(name: "matrix <case.tritontestcase> --targets <targets>", type: "Subcommand", description: "Build a multi-target dry-run or local-simulated replay matrix"),
                 TKCommandSchemaOption(name: "--case", type: "String", description: "Recorded test case name for testrec start"),
                 TKCommandSchemaOption(name: "--session", type: "String", description: "Session id returned by testrec start"),
                 TKCommandSchemaOption(name: "--kind", type: "String", description: "Explicit event kind for testrec event"),
@@ -34,6 +35,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--executor", type: "String", description: "Replay executor; current offline value is local-simulated"),
                 TKCommandSchemaOption(name: "--evidence-dir", type: "Path", description: "Optional .tritonevidence output directory for local-simulated replay"),
                 TKCommandSchemaOption(name: "--target-fingerprints-json", type: "JSON", description: "Optional target-side page fingerprint object, array, or {pages:[...]} for local-simulated replay"),
+                TKCommandSchemaOption(name: "--targets", type: "String", description: "Comma-separated matrix targets, using platform or platform:device"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 schemaJSONAliasOption,
             ],
@@ -47,6 +49,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 TKCommandUsageForm(form: "match-page <case.tritontestcase> --page <page> --candidate-json <json> --json", kind: "Subcommand", description: "Score a target-side page fingerprint using the compiled deterministic match policy"),
                 TKCommandUsageForm(form: "replay <case.tritontestcase> --platform <platform> --dry-run --json", kind: "Subcommand", description: "Build a replay plan from compiled-contract.json without executing device actions"),
                 TKCommandUsageForm(form: "replay <case.tritontestcase> --platform <platform> --executor local-simulated --target-fingerprints-json <json> --evidence-dir <dir.tritonevidence> --json", kind: "Subcommand", description: "Execute the compiled contract through the offline local-simulated replay executor, score target page fingerprints, and write .tritonevidence"),
+                TKCommandUsageForm(form: "matrix <case.tritontestcase> --targets ios:sim-a,android:emu-a --json", kind: "Subcommand", description: "Fan out the compiled contract into per-target dry-run plans without executing device actions"),
             ],
             argumentForms: [
                 TKCommandArgumentForm(name: "<case.tritontestcase>", type: "Path", required: true, description: "Input or output .tritontestcase directory package"),
@@ -62,9 +65,9 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 "triton testrec replay ./login.tritontestcase --platform android --dry-run --json",
                 #"triton testrec replay ./login.tritontestcase --platform android --executor local-simulated --target-fingerprints-json '{"pages":[{"pageId":"login","route":"login","hash":"abc"}]}' --evidence-dir ./login.tritonevidence --json"#,
             ],
-            successShape: "TKTestRecorderSessionStartResponse, TKTestRecorderEventResponse, TKTestRecorderSessionStopResponse, TKTestRecorderInspectResponse, TKTestRecorderCompileResponse, TKTestRecorderProposalsResponse, TKTestRecorderFingerprintMatchResponse, TKTestRecorderReplayDryRunResponse, or TKTestRecorderReplayRunResponse with manifest, contract capabilities, artifact presence, proposals, page match evidence, warnings/blockers, planned steps/results, and suggested next commands.",
+            successShape: "TKTestRecorderSessionStartResponse, TKTestRecorderEventResponse, TKTestRecorderSessionStopResponse, TKTestRecorderInspectResponse, TKTestRecorderCompileResponse, TKTestRecorderProposalsResponse, TKTestRecorderFingerprintMatchResponse, TKTestRecorderReplayDryRunResponse, TKTestRecorderReplayRunResponse, or TKTestRecorderMatrixResponse with manifest, contract capabilities, artifact presence, proposals, page match evidence, warnings/blockers, planned steps/results, and suggested next commands.",
             failureShape: "{ ok:false, error:{ type:\"validation_error\", message, path, code, hint? } }",
-            outputSemantics: "testrec start/event/stop provide an explicit-event source recording MVP without global input listeners. inspect, compile, proposals, match-page, replay dry-run, and local-simulated replay are offline-only. Inspect verifies the .tritontestcase directory package has manifest.json and contract-capabilities.json, reports unsupported action/page/network capabilities without treating them as pass, and does not execute device actions. Compile performs deterministic preflight over optional raw streams, writes compiled-contract.json when inputs are complete, and does not call LLM/VLM. match-page scores a target-side VLM-style page fingerprint with deterministic evidence and no LLM decision authority. Replay with --dry-run emits a plan/blockers; replay with --executor local-simulated consumes that plan and returns replay-result evidence without executing device commands.",
+            outputSemantics: "testrec start/event/stop provide an explicit-event source recording MVP without global input listeners. inspect, compile, proposals, match-page, replay dry-run, local-simulated replay, and replay matrix are offline-only. Inspect verifies the .tritontestcase directory package has manifest.json and contract-capabilities.json, reports unsupported action/page/network capabilities without treating them as pass, and does not execute device actions. Compile performs deterministic preflight over optional raw streams, writes compiled-contract.json when inputs are complete, and does not call LLM/VLM. match-page scores a target-side VLM-style page fingerprint with deterministic evidence and no LLM decision authority. Replay with --dry-run emits a plan/blockers; replay with --executor local-simulated consumes that plan and returns replay-result evidence without executing device commands. Matrix fans out the same replay contracts across multiple platform:device targets without introducing a real device executor.",
             artifacts: [
                 "tritontestcase",
                 "contract-capabilities",
@@ -86,6 +89,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 "triton testrec match-page <case.tritontestcase> --page <page> --candidate-json <json> --json",
                 "triton testrec replay <case.tritontestcase> --platform <platform> --dry-run --json",
                 "triton testrec replay <case.tritontestcase> --platform <platform> --executor local-simulated --target-fingerprints-json <json> --evidence-dir <dir.tritonevidence> --json",
+                "triton testrec matrix <case.tritontestcase> --targets ios:sim-a,android:emu-a --json",
             ],
             outputContracts: [
                 testRecorderSessionStartOutputContract(),
@@ -97,6 +101,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 testRecorderPageMatchOutputContract(),
                 testRecorderReplayDryRunOutputContract(),
                 testRecorderReplayRunOutputContract(),
+                testRecorderMatrixOutputContract(),
             ],
             failureCodes: [
                 "validation_failed",
@@ -106,6 +111,8 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 "unsupported_schema_version",
                 "dry_run_required",
                 "unsupported_replay_executor",
+                "missing_matrix_targets",
+                "invalid_matrix_target",
                 "invalid_session_id",
                 "session_not_found",
                 "session_not_recording",
@@ -240,6 +247,26 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                     ]
                 ),
                 TKCommandSubcommandSchema(
+                    name: "matrix",
+                    summary: "Build a multi-target .tritontestcase replay matrix",
+                    requiredOptions: ["<case.tritontestcase>", "--targets"],
+                    optionalOptions: ["--executor", "--target-fingerprints-json", "--format", "--json"],
+                    nextCommands: [
+                        "triton testrec compile <case.tritontestcase> --json",
+                    ],
+                    outputSelectors: ["testrec.matrix"],
+                    failureCodes: [
+                        "validation_failed",
+                        "missing_required_file",
+                        "invalid_json",
+                        "invalid_case_directory",
+                        "unsupported_schema_version",
+                        "missing_matrix_targets",
+                        "invalid_matrix_target",
+                        "unsupported_replay_executor",
+                    ]
+                ),
+                TKCommandSubcommandSchema(
                     name: "replay",
                     summary: "Plan or locally simulate a .tritontestcase replay",
                     requiredOptions: ["<case.tritontestcase>", "--platform"],
@@ -271,6 +298,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 "testrec-page-match",
                 "testrec-replay-dry-run",
                 "testrec-replay-local-simulated",
+                "testrec-matrix",
             ]
         ),
     ]

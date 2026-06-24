@@ -26,3 +26,36 @@ func testRecorderProposalsOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
+
+func testRecorderMatrixOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "testrec.matrix",
+        format: "json",
+        kind: "testrec-matrix",
+        model: "TKTestRecorderMatrixResponse|TKTestRecorderValidationFailureResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether every matrix target is ready or passed"),
+            ("schemaVersion", "Int?", false, "Matrix response schema version for ok responses"),
+            ("kind", "String?", false, "Stable response kind; triton.testrec.matrix when ok"),
+            ("path", "String?", false, "Resolved .tritontestcase directory path"),
+            ("executor", "String?", false, "Executor used for every target; null means dry-run matrix"),
+            ("status", "String?", false, "Aggregated matrix status: ready, passed, or blocked"),
+            ("targetCount", "Int?", false, "Number of matrix targets"),
+            ("readyCount", "Int?", false, "Number of dry-run targets ready for replay"),
+            ("passedCount", "Int?", false, "Number of local-simulated targets passed"),
+            ("blockedCount", "Int?", false, "Number of blocked targets"),
+            ("results", "[TKTestRecorderMatrixTargetResult]?", false, "Per-target replay plan or local-simulated summary"),
+            ("results[].target", "String?", false, "Original platform[:device] target selector"),
+            ("results[].platform", "String?", false, "Target platform"),
+            ("results[].device", "String?", false, "Optional target device selector"),
+            ("results[].status", "String?", false, "Per-target status: ready, passed, or blocked"),
+            ("results[].dryRun", "Bool?", false, "Whether this target only planned replay"),
+            ("results[].plannedStepCount", "Int?", false, "Planned or simulated step count"),
+            ("results[].blockers", "[TKTestRecorderReplayBlocker]?", false, "Per-target blockers"),
+            ("suggestedCommands", "[String]?", false, "Executable follow-up commands"),
+            ("error", "TKTestRecorderValidationErrorDetail?", false, "Machine-readable validation failure when ok is false"),
+            ("error.code", "String?", false, "Stable validation error code"),
+            ("error.path", "String?", false, "Rejected file or field path"),
+        ])
+    )
+}

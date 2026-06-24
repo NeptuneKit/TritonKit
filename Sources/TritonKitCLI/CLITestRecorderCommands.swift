@@ -14,6 +14,7 @@ struct TestRecorderCommand: AsyncParsableCommand {
             TestRecorderProposals.self,
             TestRecorderMatchPage.self,
             TestRecorderReplay.self,
+            TestRecorderMatrix.self,
         ]
     )
 }
@@ -132,6 +133,30 @@ struct TestRecorderReplay: ParsableCommand {
             dryRun: dryRun,
             executor: executor,
             evidenceDir: evidenceDir,
+            targetFingerprintsJSON: targetFingerprintsJSON,
+            format: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct TestRecorderMatrix: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "matrix",
+        abstract: "Build a multi-target .tritontestcase replay matrix"
+    )
+
+    @Argument(help: ".tritontestcase directory path") var input: String
+    @Option(help: "Comma-separated targets: ios:sim-a,android:emu-a,harmony:dev-a") var targets: String
+    @Option(help: "Optional executor; current offline value is local-simulated. Omit for dry-run matrix.") var executor: String?
+    @Option(name: .customLong("target-fingerprints-json"), help: "Optional target-side page fingerprint object, array, or {pages:[...]} for local-simulated matrix") var targetFingerprintsJSON: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() throws {
+        try runTestRecorderMatrixCommand(
+            input: input,
+            targets: targets,
+            executor: executor,
             targetFingerprintsJSON: targetFingerprintsJSON,
             format: effectiveFormat(format, json: json)
         )
@@ -359,6 +384,37 @@ private func runTestRecorderReplayCommand(input: String, platform: String, devic
             if !response.blockers.isEmpty {
                 print("blockers: \(response.blockers.map { $0.code }.joined(separator: ","))")
             }
+        }
+    } catch let failure as TKTestRecorderValidationFailure {
+        switch format {
+        case .json:
+            print(try encodeJSON(TKTestRecorderValidationFailureResponse(failure)))
+        case .text:
+            print("\(failure.detail.code): \(failure.detail.path): \(failure.detail.message)")
+        }
+        throw ExitCode.failure
+    }
+}
+
+private func runTestRecorderMatrixCommand(input: String, targets: String, executor: String?, targetFingerprintsJSON: String?, format: ClientOutputFormat) throws {
+    do {
+        let targetFingerprints = try decodeTestRecorderTargetFingerprintsJSON(targetFingerprintsJSON)
+        let response = try matrixTritonTestCase(
+            path: input,
+            targets: targets,
+            executor: executor,
+            targetFingerprints: targetFingerprints
+        )
+        switch format {
+        case .json:
+            print(try encodeJSON(response))
+        case .text:
+            print("ok: \(response.ok)")
+            print("status: \(response.status)")
+            print("targets: \(response.targetCount)")
+            print("ready: \(response.readyCount)")
+            print("passed: \(response.passedCount)")
+            print("blocked: \(response.blockedCount)")
         }
     } catch let failure as TKTestRecorderValidationFailure {
         switch format {

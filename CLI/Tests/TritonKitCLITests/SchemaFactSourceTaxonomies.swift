@@ -110,6 +110,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "testrec-compile",
         "testrec-event",
         "testrec-inspect",
+        "testrec-matrix",
         "testrec-page-fingerprint-match",
         "testrec-proposals-inspect",
         "testrec-replay-dry-run",
