@@ -296,6 +296,30 @@ func handleTestRecorderHTTPReplay(body: Data) throws -> TKTestRecorderReplayRunR
     )
 }
 
+func handleTestRecorderHTTPMatrix(body: Data) throws -> TKTestRecorderMatrixResponse {
+    let request = try decodeTestRecorderHTTPJSON(
+        TKTestRecorderHTTPMatrixRequest.self,
+        from: body,
+        endpoint: "/v1/test-recorder/cases/matrix"
+    )
+    guard !request.path.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+          !request.targets.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+    else {
+        throw testRecorderValidationFailure(
+            code: "invalid_payload",
+            message: "Test recorder matrix payload requires path and targets.",
+            path: "$",
+            hint: "Send JSON like {\"path\":\"/tmp/login.tritontestcase\",\"targets\":\"ios:sim-a,android:emu-a\"}."
+        )
+    }
+    return try matrixTritonTestCase(
+        path: request.path,
+        targets: request.targets,
+        executor: request.executor,
+        targetFingerprints: testRecorderTargetFingerprintCandidates(from: request.targetFingerprints)
+    )
+}
+
 func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse {
     let fileManager = FileManager.default
     let caseURL = URL(fileURLWithPath: path)

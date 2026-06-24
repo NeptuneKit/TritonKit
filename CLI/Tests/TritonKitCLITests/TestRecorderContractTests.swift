@@ -453,6 +453,9 @@ struct TestRecorderContractTests {
         let run = try handleTestRecorderHTTPReplay(body: Data("""
         {"path":"\(caseURL.path)","platform":"android","device":"emulator-a","executor":"local-simulated","evidenceDir":"\(evidenceURL.path)","targetFingerprints":{"pages":[{"pageId":"login","route":"login","kind":"mock","hash":"abc123"}]}}
         """.utf8))
+        let matrix = try handleTestRecorderHTTPMatrix(body: Data("""
+        {"path":"\(caseURL.path)","targets":"android:emulator-a,harmony:dev-a"}
+        """.utf8))
 
         #expect(inspected.kind == "triton.testrec.inspect")
         #expect(compiled.kind == "triton.testrec.compile")
@@ -475,6 +478,11 @@ struct TestRecorderContractTests {
         #expect(run.networkResults[0].artifactRefs == ["network/fixtures/n1.json"])
         #expect(run.artifactRefs.contains("pages/target-fingerprints.json"))
         #expect(run.artifactRefs.contains("network/fixtures/n1.json"))
+        #expect(matrix.kind == "triton.testrec.matrix")
+        #expect(matrix.status == "ready")
+        #expect(matrix.targetCount == 2)
+        #expect(matrix.results.map(\.target) == ["android:emulator-a", "harmony:dev-a"])
+        #expect(matrix.results.allSatisfy { $0.dryRun })
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("pages/target-fingerprints.json").path))
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("network/fixtures/n1.json").path))
         let httpManifest = try JSONDecoder().decode(
