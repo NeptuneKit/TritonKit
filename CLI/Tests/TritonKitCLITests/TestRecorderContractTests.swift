@@ -455,6 +455,9 @@ struct TestRecorderContractTests {
         let run = try handleTestRecorderHTTPReplay(body: Data("""
         {"path":"\(caseURL.path)","platform":"android","device":"emulator-a","executor":"local-simulated","evidenceDir":"\(evidenceURL.path)","targetFingerprints":{"pages":[{"pageId":"login","route":"login","kind":"mock","hash":"abc123"}]}}
         """.utf8))
+        let localDeviceRun = try handleTestRecorderHTTPReplay(body: Data("""
+        {"path":"\(caseURL.path)","platform":"android","device":"missing-emulator","executor":"local-device"}
+        """.utf8))
         let matrix = try handleTestRecorderHTTPMatrix(body: Data("""
         {"path":"\(caseURL.path)","targets":"android:emulator-a,harmony:dev-a"}
         """.utf8))
@@ -480,6 +483,10 @@ struct TestRecorderContractTests {
         #expect(run.networkResults[0].artifactRefs == ["network/fixtures/n1.json"])
         #expect(run.artifactRefs.contains("pages/target-fingerprints.json"))
         #expect(run.artifactRefs.contains("network/fixtures/n1.json"))
+        #expect(localDeviceRun.ok == false)
+        #expect(localDeviceRun.executor == "local-device")
+        #expect(localDeviceRun.blockers.map(\.code).contains("target_not_found"))
+        #expect(localDeviceRun.steps.allSatisfy { $0.deviceCommandExecuted == false })
         #expect(matrix.kind == "triton.testrec.matrix")
         #expect(matrix.status == "ready")
         #expect(matrix.targetCount == 2)
@@ -550,8 +557,8 @@ struct TestRecorderContractTests {
         #expect(failure?.detail.path == "$.dryRun")
     }
 
-    @Test("HTTP replay requires local simulated executor")
-    func httpReplayRequiresLocalSimulatedExecutor() throws {
+    @Test("HTTP replay rejects unknown executor")
+    func httpReplayRejectsUnknownExecutor() throws {
         let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
             _ = try handleTestRecorderHTTPReplay(body: Data("""
             {"path":"/tmp/login.tritontestcase","platform":"android","executor":"device"}
@@ -1330,14 +1337,55 @@ struct TestRecorderContractTests {
         #expect(FileManager.default.fileExists(atPath: evidenceRoot.appendingPathComponent("harmony-dev-a/run/events.jsonl").path))
     }
 
-    @Test("replay requires dry run until executor is implemented")
-    func replayRequiresDryRunUntilExecutorExists() throws {
+    @Test("replay without executor requires dry run")
+    func replayWithoutExecutorRequiresDryRun() throws {
         let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
             _ = try replayTritonTestCase(path: "/tmp/missing.tritontestcase", platform: "android", device: nil, dryRun: false)
         }
 
         #expect(failure?.detail.code == "dry_run_required")
         #expect(failure?.detail.path == "--dry-run")
+    }
+
+    @Test("replay local device blocks when target is not resolved")
+    func replayLocalDeviceBlocksWhenTargetIsNotResolved() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try writeRawStreams(to: caseURL)
+        _ = try compileTritonTestCase(path: caseURL.path, writeContract: true)
+
+        let response = try replayTritonTestCaseLocalDevice(
+            path: caseURL.path,
+            platform: "android",
+            device: "missing-emulator"
+        )
+
+        #expect(response.ok == false)
+        #expect(response.kind == "triton.testrec.replay-result")
+        #expect(response.dryRun == false)
+        #expect(response.executor == "local-device")
+        #expect(response.platform == "android")
+        #expect(response.device == "missing-emulator")
+        #expect(response.status == "blocked")
+        #expect(response.execution.mode == "device-execution")
+        #expect(response.execution.requiresDevice == true)
+        #expect(response.execution.deviceCommandsExecuted == false)
+        #expect(response.execution.llmUsed == false)
+        #expect(response.execution.vlmUsed == false)
+        #expect(response.execution.networkPolicyMode == "not-applied")
+        #expect(response.execution.executorRequirements.contains {
+            $0.name == "live-target-device" && $0.required && $0.status == "missing" && $0.evidence.contains("target_not_found")
+        })
+        #expect(response.execution.evidence.contains("target_not_found"))
+        #expect(response.blockers.contains {
+            $0.code == "target_not_found" && $0.path == "--device"
+        })
+        #expect(response.steps.map(\.status) == ["not-run", "not-run"])
+        #expect(response.steps.allSatisfy { $0.deviceCommandExecuted == false })
+        #expect(response.steps.allSatisfy { $0.failure?.code == "target_not_found" })
+        #expect(response.pageResults.map(\.status) == ["not-run"])
     }
 
     @Test("replay local simulated executor produces replay result without device commands")

@@ -286,6 +286,13 @@ func handleTestRecorderHTTPReplay(body: Data) throws -> TKTestRecorderReplayRunR
             hint: "Send dryRun=false or omit dryRun when using /v1/test-recorder/cases/replay."
         )
     }
+    if request.executor?.trimmingCharacters(in: .whitespacesAndNewlines) == testRecorderLocalDeviceExecutor {
+        return try replayTritonTestCaseLocalDevice(
+            path: request.path,
+            platform: request.platform,
+            device: request.device
+        )
+    }
     _ = try validateTestRecorderReplayExecutor(request.executor)
     return try replayTritonTestCaseLocalSimulated(
         path: request.path,
