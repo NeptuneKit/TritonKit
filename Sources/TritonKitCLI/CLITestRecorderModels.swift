@@ -151,6 +151,13 @@ struct TKTestRecorderHTTPReplayRequest: Codable, Equatable {
     let targetFingerprints: TKJSONValue?
 }
 
+struct TKTestRecorderHTTPMatrixRequest: Codable, Equatable {
+    let path: String
+    let targets: String
+    let executor: String?
+    let targetFingerprints: TKJSONValue?
+}
+
 struct TKTestRecorderHTTPPageMatchRequest: Codable, Equatable {
     let path: String
     let page: String

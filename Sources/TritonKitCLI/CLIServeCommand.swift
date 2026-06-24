@@ -341,6 +341,16 @@ struct Serve: AsyncParsableCommand {
             }
         }
 
+        router.post("/v1/test-recorder/cases/matrix") { request, _ -> Response in
+            let endpoint = "/v1/test-recorder/cases/matrix"
+            let bodyData = try await requestBodyData(from: request)
+            do {
+                return jsonResponse(try handleTestRecorderHTTPMatrix(body: bodyData), status: .ok)
+            } catch {
+                return testRecorderHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
         router.get("/web/geometry") { request, _ -> Response in
             if let target = queryTarget(from: request), parseWebHostTargetID(target) != nil {
                 do {
