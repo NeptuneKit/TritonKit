@@ -140,6 +140,9 @@ struct TKTestRecorderArtifact: Codable, Equatable {
     let path: String
     let required: Bool
     let present: Bool
+    let byteCount: Int?
+    let digestAlgorithm: String?
+    let digest: String?
 }
 
 struct TKTestRecorderLifecycle: Codable, Equatable {

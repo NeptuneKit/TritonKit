@@ -608,11 +608,28 @@ private func testRecorderArtifacts(in caseURL: URL, fileManager: FileManager) ->
         ("page-snapshots", "pages/snapshots.jsonl", false),
     ]
     return known.map { item in
-        TKTestRecorderArtifact(
+        let artifactURL = caseURL.appendingPathComponent(item.path)
+        guard fileManager.fileExists(atPath: artifactURL.path),
+              let data = try? Data(contentsOf: artifactURL)
+        else {
+            return TKTestRecorderArtifact(
+                kind: item.kind,
+                path: item.path,
+                required: item.required,
+                present: false,
+                byteCount: nil,
+                digestAlgorithm: nil,
+                digest: nil
+            )
+        }
+        return TKTestRecorderArtifact(
             kind: item.kind,
             path: item.path,
             required: item.required,
-            present: fileManager.fileExists(atPath: caseURL.appendingPathComponent(item.path).path)
+            present: true,
+            byteCount: data.count,
+            digestAlgorithm: "fnv1a64",
+            digest: fnv1a64Hex(data)
         )
     }
 }

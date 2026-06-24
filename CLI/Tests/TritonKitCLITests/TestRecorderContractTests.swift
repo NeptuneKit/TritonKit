@@ -93,6 +93,9 @@ struct TestRecorderContractTests {
             "lifecycle.health",
             "unsupportedCapabilities",
             "artifacts",
+            "artifacts[].byteCount",
+            "artifacts[].digestAlgorithm",
+            "artifacts[].digest",
         ])
         expectContract(schema, selector: "testrec.compile", fields: [
             "ok",
@@ -501,8 +504,19 @@ struct TestRecorderContractTests {
         #expect(response.lifecycle.stage == "raw")
         #expect(response.lifecycle.health == "needs-compile")
         #expect(response.suggestedCommands == ["triton schema --command testrec --json"])
-        #expect(response.artifacts.contains { $0.kind == "manifest" && $0.path == "manifest.json" })
-        #expect(response.artifacts.contains { $0.kind == "contract-capabilities" && $0.path == "contract-capabilities.json" })
+        let manifestArtifact = try #require(response.artifacts.first { $0.kind == "manifest" && $0.path == "manifest.json" })
+        let capabilitiesArtifact = try #require(response.artifacts.first { $0.kind == "contract-capabilities" && $0.path == "contract-capabilities.json" })
+        let compiledArtifact = try #require(response.artifacts.first { $0.kind == "compiled-contract" && $0.path == "compiled-contract.json" })
+        #expect(manifestArtifact.byteCount ?? 0 > 0)
+        #expect(manifestArtifact.digestAlgorithm == "fnv1a64")
+        #expect(manifestArtifact.digest?.isEmpty == false)
+        #expect(capabilitiesArtifact.byteCount ?? 0 > 0)
+        #expect(capabilitiesArtifact.digestAlgorithm == "fnv1a64")
+        #expect(capabilitiesArtifact.digest?.isEmpty == false)
+        #expect(compiledArtifact.present == false)
+        #expect(compiledArtifact.byteCount == nil)
+        #expect(compiledArtifact.digestAlgorithm == nil)
+        #expect(compiledArtifact.digest == nil)
     }
 
     @Test("inspect reports lifecycle stage for compiled and proposed cases")
