@@ -21,7 +21,6 @@ func statusOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func schemaCommandsOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "schema.commands",
@@ -39,7 +38,6 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func updatePlanOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "update.plan",
@@ -79,7 +77,6 @@ func updatePlanOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func testValidationOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.validation",
@@ -101,7 +98,6 @@ func testValidationOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.normalized-plan",
@@ -155,7 +151,6 @@ func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func testRunOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.run-result",
@@ -180,7 +175,6 @@ func testRunOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func testReportOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.report",
@@ -210,7 +204,6 @@ func testReportOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func testCreateOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.create",
@@ -247,6 +240,10 @@ func testRecorderSessionStartOutputContract() -> TKCommandOutputContract {
             ("manifest", "TKTestRecorderManifest?", false, "Written manifest.json payload"),
             ("manifest.name", "String?", false, "Test case name"),
             ("manifest.sourcePlatform", "String?", false, "Source platform being recorded"),
+            ("manifest.tritonKitVersion", "String?", false, "TritonKit CLI version that created the case, or unknown for hand-written manifests"),
+            ("manifest.capabilitiesRef", "String?", false, "Relative capabilities file path inside the .tritontestcase package; default contract-capabilities.json"),
+            ("manifest.redactionStatus", "String?", false, "Redaction lifecycle status, default pending before compile review"),
+            ("manifest.truncationStatus", "String?", false, "Raw stream truncation status, default not-truncated"),
             ("capabilities", "TKTestRecorderContractCapabilities?", false, "Written contract-capabilities.json payload"),
             ("capabilities.actions", "[String]?", false, "Action capabilities enabled for the case"),
             ("capabilities.pages", "[String]?", false, "Page capabilities enabled for the case"),
@@ -321,6 +318,10 @@ func testRecorderInspectOutputContract() -> TKCommandOutputContract {
             ("manifest", "TKTestRecorderManifest?", false, "Decoded manifest.json"),
             ("manifest.name", "String?", false, "Test case name"),
             ("manifest.sourcePlatform", "String?", false, "Source platform that produced the contract"),
+            ("manifest.tritonKitVersion", "String?", false, "TritonKit CLI version that created the case, or unknown for hand-written manifests"),
+            ("manifest.capabilitiesRef", "String?", false, "Relative capabilities file path inside the .tritontestcase package; default contract-capabilities.json"),
+            ("manifest.redactionStatus", "String?", false, "Redaction lifecycle status, default pending before compile review"),
+            ("manifest.truncationStatus", "String?", false, "Raw stream truncation status, default not-truncated"),
             ("capabilities", "TKTestRecorderContractCapabilities?", false, "Decoded contract-capabilities.json"),
             ("capabilities.actions", "[String]?", false, "Action contract capabilities such as tap, type, and scroll"),
             ("capabilities.pages", "[String]?", false, "Page contract capabilities such as route, ax, and fingerprint"),
@@ -338,6 +339,9 @@ func testRecorderInspectOutputContract() -> TKCommandOutputContract {
             ("artifacts[].path", "String?", false, "Artifact path relative to the case package"),
             ("artifacts[].required", "Bool?", false, "Whether the artifact is required for P0 inspect"),
             ("artifacts[].present", "Bool?", false, "Whether the artifact exists"),
+            ("artifacts[].byteCount", "Int?", false, "File byte count when the artifact exists"),
+            ("artifacts[].digestAlgorithm", "String?", false, "Digest algorithm for artifacts[].digest; currently fnv1a64"),
+            ("artifacts[].digest", "String?", false, "Deterministic artifact file digest when present"),
             ("suggestedCommands", "[String]?", false, "Current executable follow-up commands; inspect only exposes schema until compile/replay are implemented"),
             ("error", "TKTestRecorderValidationErrorDetail?", false, "Machine-readable validation failure when ok is false"),
             ("error.code", "String?", false, "Stable validation error code"),
@@ -532,6 +536,10 @@ func testRecorderReplayRunOutputContract() -> TKCommandOutputContract {
             ("evidenceSummary.pageEventCount", "Int?", false, "Expected page event count"),
             ("evidenceSummary.networkEventCount", "Int?", false, "Expected network event count"),
             ("evidenceSummary.stepEventCount", "Int?", false, "Expected step event count"),
+            ("evidenceSummary.artifactRefCount", "Int?", false, "Unique top-level replay artifactRefs count"),
+            ("evidenceSummary.pageArtifactRefCount", "Int?", false, "Total page result artifactRefs count"),
+            ("evidenceSummary.networkArtifactRefCount", "Int?", false, "Total network result artifactRefs count"),
+            ("evidenceSummary.stepArtifactRefCount", "Int?", false, "Total step and step failure artifactRefs count"),
             ("evidenceSummary.blockerCount", "Int?", false, "Replay blocker count"),
             ("evidenceSummary.statusConsistent", "Bool?", false, "Whether status and blockers are internally consistent"),
             ("pageResults", "[TKTestRecorderReplayPageResult]?", false, "Page checkpoint results from the executor"),
@@ -542,6 +550,7 @@ func testRecorderReplayRunOutputContract() -> TKCommandOutputContract {
             ("pageResults[].matchScore", "Double?", false, "Deterministic target fingerprint match score when target fingerprints are supplied"),
             ("pageResults[].matchDecision", "String?", false, "Deterministic target fingerprint match decision when target fingerprints are supplied"),
             ("pageResults[].sourcePath", "String?", false, "Source compiled-contract.json fingerprint reference"),
+            ("pageResults[].artifactRefs", "[String]?", false, "Page-level evidence artifacts referenced by the replay projection, including target fingerprints when supplied"),
             ("pageResults[].evidence", "[String]?", false, "Evidence tags explaining how this page checkpoint was handled"),
             ("pageResults[].expectedArtifacts", "[String]?", false, "Evidence surfaces expected from a real executor"),
             ("networkResults", "[TKTestRecorderReplayNetworkResult]?", false, "Network map rule projections consumed by local-simulated replay"),
@@ -620,32 +629,6 @@ func testRecorderPageMatchOutputContract() -> TKCommandOutputContract {
             ("evidence", "[String]?", false, "Compact evidence trail for replay diagnostics"),
             ("llmUsed", "Bool?", false, "Whether an LLM was called; false in P0 deterministic matching"),
             ("llmDecisionAuthority", "Bool?", false, "Whether LLM had decision authority; false in P0"),
-            ("suggestedCommands", "[String]?", false, "Current executable follow-up commands"),
-            ("error", "TKTestRecorderValidationErrorDetail?", false, "Machine-readable validation failure when ok is false"),
-            ("error.code", "String?", false, "Stable validation error code"),
-            ("error.path", "String?", false, "Rejected file or field path"),
-        ])
-    )
-}
-
-func testRecorderProposalsOutputContract() -> TKCommandOutputContract {
-    TKCommandOutputContract(
-        selector: "testrec.proposals",
-        format: "json",
-        kind: "testrec-proposals-inspect",
-        model: "TKTestRecorderProposalsResponse|TKTestRecorderValidationFailureResponse",
-        fields: schemaContractFields([
-            ("ok", "Bool", true, "Whether compile proposals were read without validation errors"),
-            ("schemaVersion", "Int?", false, "Proposals response schema version for ok responses"),
-            ("kind", "String?", false, "Stable response kind; triton.testrec.proposals when ok"),
-            ("path", "String?", false, "Resolved .tritontestcase directory path"),
-            ("proposalCount", "Int?", false, "Number of proposals read from compile-proposals.jsonl"),
-            ("proposals", "[TKTestRecorderCompileProposal]?", false, "Compile proposals read without applying them"),
-            ("proposals[].proposalKind", "String?", false, "Proposal family such as contract.redaction"),
-            ("proposals[].findingCode", "String?", false, "Finding code that produced the proposal"),
-            ("proposals[].sourcePath", "String?", false, "Source artifact path associated with the proposal"),
-            ("proposals[].status", "String?", false, "Proposal status; proposed for P0"),
-            ("proposals[].suggestedChange", "String?", false, "Human-readable suggested change"),
             ("suggestedCommands", "[String]?", false, "Current executable follow-up commands"),
             ("error", "TKTestRecorderValidationErrorDetail?", false, "Machine-readable validation failure when ok is false"),
             ("error.code", "String?", false, "Stable validation error code"),

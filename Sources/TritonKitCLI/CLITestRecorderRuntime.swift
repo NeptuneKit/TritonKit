@@ -27,7 +27,9 @@ func startTritonTestRecorderSession(caseName: String, sourcePlatform: String, ou
         schemaVersion: 1,
         kind: "triton.testcase.v1",
         name: caseName,
-        sourcePlatform: sourcePlatform
+        sourcePlatform: sourcePlatform,
+        tritonKitVersion: TritonKitBuildInfo.cliVersion,
+        capabilitiesRef: "contract-capabilities.json"
     )
     let capabilities = TKTestRecorderContractCapabilities(
         schemaVersion: 1,
@@ -308,7 +310,6 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
     }
 
     let manifestURL = caseURL.appendingPathComponent("manifest.json")
-    let capabilitiesURL = caseURL.appendingPathComponent("contract-capabilities.json")
     guard fileManager.fileExists(atPath: manifestURL.path) else {
         throw testRecorderValidationFailure(
             code: "missing_required_file",
@@ -317,26 +318,12 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
             hint: "Add manifest.json to the .tritontestcase package."
         )
     }
-    guard fileManager.fileExists(atPath: capabilitiesURL.path) else {
-        throw testRecorderValidationFailure(
-            code: "missing_required_file",
-            message: "Missing contract-capabilities.json.",
-            path: "contract-capabilities.json",
-            hint: "Add contract-capabilities.json with actions/pages/network capability arrays."
-        )
-    }
 
     let manifest: TKTestRecorderManifest = try decodeTestRecorderJSON(
         TKTestRecorderManifest.self,
         from: manifestURL,
         path: "manifest.json"
     )
-    let capabilities: TKTestRecorderContractCapabilities = try decodeTestRecorderJSON(
-        TKTestRecorderContractCapabilities.self,
-        from: capabilitiesURL,
-        path: "contract-capabilities.json"
-    )
-
     guard manifest.schemaVersion == 1 else {
         throw testRecorderValidationFailure(
             code: "unsupported_schema_version",
@@ -345,17 +332,31 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
             hint: "Use schemaVersion 1."
         )
     }
+    let capabilitiesURL = try testRecorderCapabilitiesURL(caseURL: caseURL, manifest: manifest)
+    guard fileManager.fileExists(atPath: capabilitiesURL.path) else {
+        throw testRecorderValidationFailure(
+            code: "missing_required_file",
+            message: "Missing \(manifest.capabilitiesRef).",
+            path: manifest.capabilitiesRef,
+            hint: "Add the capabilities file referenced by manifest.json.capabilitiesRef with actions/pages/network capability arrays."
+        )
+    }
+    let capabilities: TKTestRecorderContractCapabilities = try decodeTestRecorderJSON(
+        TKTestRecorderContractCapabilities.self,
+        from: capabilitiesURL,
+        path: manifest.capabilitiesRef
+    )
     guard capabilities.schemaVersion == 1 else {
         throw testRecorderValidationFailure(
             code: "unsupported_schema_version",
             message: "Unsupported contract-capabilities schemaVersion \(capabilities.schemaVersion).",
-            path: "contract-capabilities.json.schemaVersion",
+            path: "\(manifest.capabilitiesRef).schemaVersion",
             hint: "Use schemaVersion 1."
         )
     }
 
     let unsupported = unsupportedCapabilities(in: capabilities)
-    let artifacts = testRecorderArtifacts(in: caseURL, fileManager: fileManager)
+    let artifacts = testRecorderArtifacts(in: caseURL, capabilitiesPath: manifest.capabilitiesRef, fileManager: fileManager)
     return TKTestRecorderInspectResponse(
         path: caseURL.path,
         manifest: manifest,
@@ -363,6 +364,19 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
         unsupportedCapabilities: unsupported,
         artifacts: artifacts
     )
+}
+
+private func testRecorderCapabilitiesURL(caseURL: URL, manifest: TKTestRecorderManifest) throws -> URL {
+    let ref = manifest.capabilitiesRef.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !ref.isEmpty, ref.hasPrefix("/") == false, ref.split(separator: "/").contains("..") == false else {
+        throw testRecorderValidationFailure(
+            code: "invalid_capabilities_ref",
+            message: "manifest.json.capabilitiesRef must be a relative path inside the .tritontestcase package.",
+            path: "manifest.json.capabilitiesRef",
+            hint: "Use a relative path such as contract-capabilities.json."
+        )
+    }
+    return caseURL.appendingPathComponent(ref)
 }
 
 func compileTritonTestCase(path: String, writeContract: Bool = false, outputPath: String? = nil) throws -> TKTestRecorderCompileResponse {
@@ -591,10 +605,10 @@ private func unsupportedCapabilities(in capabilities: TKTestRecorderContractCapa
     return unsupported
 }
 
-private func testRecorderArtifacts(in caseURL: URL, fileManager: FileManager) -> [TKTestRecorderArtifact] {
+private func testRecorderArtifacts(in caseURL: URL, capabilitiesPath: String = "contract-capabilities.json", fileManager: FileManager) -> [TKTestRecorderArtifact] {
     let known: [(kind: String, path: String, required: Bool)] = [
         ("manifest", "manifest.json", true),
-        ("contract-capabilities", "contract-capabilities.json", true),
+        ("contract-capabilities", capabilitiesPath, true),
         ("actions", "actions.jsonl", false),
         ("action-map", "actions/action-map.json", false),
         ("assertions", "assertions.json", false),
@@ -608,11 +622,28 @@ private func testRecorderArtifacts(in caseURL: URL, fileManager: FileManager) ->
         ("page-snapshots", "pages/snapshots.jsonl", false),
     ]
     return known.map { item in
-        TKTestRecorderArtifact(
+        let artifactURL = caseURL.appendingPathComponent(item.path)
+        guard fileManager.fileExists(atPath: artifactURL.path),
+              let data = try? Data(contentsOf: artifactURL)
+        else {
+            return TKTestRecorderArtifact(
+                kind: item.kind,
+                path: item.path,
+                required: item.required,
+                present: false,
+                byteCount: nil,
+                digestAlgorithm: nil,
+                digest: nil
+            )
+        }
+        return TKTestRecorderArtifact(
             kind: item.kind,
             path: item.path,
             required: item.required,
-            present: fileManager.fileExists(atPath: caseURL.appendingPathComponent(item.path).path)
+            present: true,
+            byteCount: data.count,
+            digestAlgorithm: "fnv1a64",
+            digest: fnv1a64Hex(data)
         )
     }
 }
@@ -882,11 +913,19 @@ private func readCompiledActions(from url: URL) throws -> [TKTestRecorderCompile
             sourceEventID: object["id"] as? String,
             action: action,
             sourcePath: "actions.jsonl:\(offset + 1)",
-            targetText: compiledActionTargetText(from: object),
-            inputText: action == "type" || action == "paste" ? replayInputText(from: object) : nil
+            targetText: compiledActionTargetText(action: action, object: object),
+            inputText: compiledActionInputText(action: action, object: object)
         ))
     }
     return actions
+}
+
+private func compiledActionInputText(action: String, object: [String: Any]) -> String? {
+    guard action == "type" || action == "paste" else {
+        return nil
+    }
+    let input = replayInputText(from: object)
+    return testRecorderLooksSensitive(input) ? nil : input
 }
 
 private func readCompiledNetworkRequests(from url: URL) throws -> [TKTestRecorderCompiledNetworkRequest] {
@@ -929,7 +968,7 @@ private func readCompiledPageFingerprints(from url: URL) throws -> [TKTestRecord
     }
 }
 
-private func readTestRecorderJSONLines(from url: URL, relativePath: String) throws -> [(index: Int, sourcePath: String, object: [String: Any])] {
+func readTestRecorderJSONLines(from url: URL, relativePath: String) throws -> [(index: Int, sourcePath: String, object: [String: Any])] {
     guard let data = try? Data(contentsOf: url),
           let content = String(data: data, encoding: .utf8)
     else {
@@ -948,7 +987,7 @@ private func readTestRecorderJSONLines(from url: URL, relativePath: String) thro
     return rows
 }
 
-private func stringValue(_ object: [String: Any], _ key: String) -> String? {
+func stringValue(_ object: [String: Any], _ key: String) -> String? {
     if let value = object[key] as? String, !value.isEmpty {
         return value
     }
@@ -959,7 +998,7 @@ private func stringValue(_ object: [String: Any], _ key: String) -> String? {
     return nil
 }
 
-private func intValue(_ object: [String: Any], keys: [String]) -> Int? {
+func intValue(_ object: [String: Any], keys: [String]) -> Int? {
     for key in keys {
         if let value = object[key] as? Int {
             return value
@@ -1220,7 +1259,7 @@ private func replayTargetText(from object: [String: Any]) -> String {
     return "<target>"
 }
 
-private func compiledActionTargetText(from object: [String: Any]) -> String {
+private func compiledActionTargetText(action: String, object: [String: Any]) -> String {
     if let target = object["target"] as? [String: Any] {
         for key in ["label", "text", "name", "accessibilityLabel"] {
             if let value = target[key] as? String, !value.isEmpty {
@@ -1231,7 +1270,7 @@ private func compiledActionTargetText(from object: [String: Any]) -> String {
     if let label = object["label"] as? String, !label.isEmpty {
         return label
     }
-    if let text = object["text"] as? String, !text.isEmpty {
+    if action != "type" && action != "paste", let text = object["text"] as? String, !text.isEmpty {
         return text
     }
     return "<target>"
@@ -1286,6 +1325,13 @@ private func replayBlockers(compile: TKTestRecorderCompileResponse, plannedSteps
             message: warning.message
         ))
     }
+    if let finding = compile.compiledContract?.qualityFindings.first(where: { $0.proposalKind == "contract.redaction" }) {
+        blockers.append(TKTestRecorderReplayBlocker(
+            code: "redaction_review_required",
+            path: finding.path,
+            message: "Replay requires redaction review before executing a contract with privacy findings."
+        ))
+    }
     for step in plannedSteps where step.status == "unsupported" {
         blockers.append(TKTestRecorderReplayBlocker(
             code: "unsupported_action",
@@ -1318,104 +1364,6 @@ private func replayCompileBlockers(compile: TKTestRecorderCompileResponse) -> [T
         }
 }
 
-private func compileQualityFindings(caseURL: URL) throws -> [TKTestRecorderQualityFinding] {
-    var findings: [TKTestRecorderQualityFinding] = []
-    let actionRows = try readTestRecorderJSONLines(
-        from: caseURL.appendingPathComponent("actions.jsonl"),
-        relativePath: "actions.jsonl"
-    )
-    for row in actionRows {
-        let action = stringValue(row.object, "kind") ?? stringValue(row.object, "type") ?? stringValue(row.object, "action") ?? "unknown"
-        let inputText = stringValue(row.object, "text")
-            ?? stringValue(row.object, "value")
-            ?? stringValue(row.object, "input")
-        if let inputText, looksSensitive(inputText) {
-            findings.append(TKTestRecorderQualityFinding(
-                code: "privacy_candidate",
-                path: row.sourcePath,
-                severity: "review",
-                message: "Action input looks like private or user-specific data and should be redacted before replay.",
-                proposalKind: "contract.redaction"
-            ))
-        }
-        if let selector = actionSelector(in: row.object), isWeakSelector(selector) {
-            findings.append(TKTestRecorderQualityFinding(
-                code: "weak_selector",
-                path: row.sourcePath,
-                severity: "review",
-                message: "Action target uses a weak selector; prefer role, label, accessibility id, or page fingerprint evidence.",
-                proposalKind: "contract.selector"
-            ))
-        }
-        if action == "wait", fixedWaitDurationMs(in: row.object) != nil {
-            findings.append(TKTestRecorderQualityFinding(
-                code: "fixed_wait",
-                path: row.sourcePath,
-                severity: "review",
-                message: "Action uses a fixed wait; prefer waiting for page, network, or UI evidence.",
-                proposalKind: "contract.wait"
-            ))
-        }
-    }
-
-    let networkRows = try readTestRecorderJSONLines(
-        from: caseURL.appendingPathComponent("network/capture.ndjson"),
-        relativePath: "network/capture.ndjson"
-    )
-    for row in networkRows {
-        guard let url = stringValue(row.object, "url"), isTransientNetworkURL(url) else {
-            continue
-        }
-        findings.append(TKTestRecorderQualityFinding(
-            code: "transient_network_request",
-            path: row.sourcePath,
-            severity: "review",
-            message: "Network request looks transient or analytics-like and should not become a hard replay dependency.",
-            proposalKind: "contract.network"
-        ))
-    }
-    return findings
-}
-
-private func actionSelector(in object: [String: Any]) -> String? {
-    if let selector = stringValue(object, "selector") {
-        return selector
-    }
-    if let target = object["target"] as? [String: Any] {
-        return stringValue(target, "selector")
-            ?? stringValue(target, "css")
-            ?? stringValue(target, "xpath")
-    }
-    return nil
-}
-
-private func fixedWaitDurationMs(in object: [String: Any]) -> Int? {
-    intValue(object, keys: ["durationMs", "timeoutMs", "ms"])
-}
-
-private func looksSensitive(_ value: String) -> Bool {
-    let lowercased = value.lowercased()
-    if lowercased.contains("password") || lowercased.contains("token") || lowercased.contains("secret") {
-        return true
-    }
-    if value.range(of: #"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}"#, options: [.regularExpression, .caseInsensitive]) != nil {
-        return true
-    }
-    if value.range(of: #"\b\d{11,}\b"#, options: .regularExpression) != nil {
-        return true
-    }
-    return false
-}
-
-private func isWeakSelector(_ selector: String) -> Bool {
-    let lowercased = selector.lowercased()
-    return lowercased.contains("nth-child")
-        || lowercased.contains("/html/")
-        || lowercased == "#input"
-        || lowercased == "input"
-        || lowercased == "button"
-}
-
 func isTransientNetworkURL(_ url: String) -> Bool {
     let lowercased = url.lowercased()
     return lowercased.contains("analytics")
@@ -1424,56 +1372,6 @@ func isTransientNetworkURL(_ url: String) -> Bool {
         || lowercased.contains("tracking")
         || lowercased.contains("session=")
         || lowercased.contains("cachebuster")
-}
-
-private func compileWarnings(inspect: TKTestRecorderInspectResponse, summary: TKTestRecorderCompileSummary, qualityFindings: [TKTestRecorderQualityFinding]) -> [TKTestRecorderCompileWarning] {
-    var warnings: [TKTestRecorderCompileWarning] = []
-    if summary.actionEventCount == 0 {
-        warnings.append(TKTestRecorderCompileWarning(
-            code: "missing_actions",
-            path: "actions.jsonl",
-            message: "No action events were found; compile can only produce a preflight summary."
-        ))
-    }
-    if summary.pageRouteEventCount == 0 && summary.pageFingerprintCount == 0 {
-        warnings.append(TKTestRecorderCompileWarning(
-            code: "missing_page_events",
-            path: "pages/",
-            message: "No route events or page fingerprints were found; replay page matching will need review."
-        ))
-    }
-    if summary.networkEventCount == 0 && !inspect.artifacts.contains(where: { $0.kind == "network-map" && $0.present }) {
-        warnings.append(TKTestRecorderCompileWarning(
-            code: "missing_network_capture",
-            path: "network/",
-            message: "No network capture or map rules were found; replay will run without a network contract."
-        ))
-    }
-    warnings.append(contentsOf: inspect.unsupportedCapabilities.map {
-        TKTestRecorderCompileWarning(
-            code: "unsupported_capability",
-            path: "contract-capabilities.json.\($0.domain)",
-            message: "Capability '\($0.name)' is not supported by the current compiler preflight."
-        )
-    })
-    warnings.append(contentsOf: qualityFindings.map {
-        TKTestRecorderCompileWarning(
-            code: $0.code,
-            path: $0.path,
-            message: $0.message
-        )
-    })
-    return warnings
-}
-
-func compileStatus(summary: TKTestRecorderCompileSummary, warnings: [TKTestRecorderCompileWarning]) -> String {
-    if warnings.contains(where: { $0.code == "missing_actions" || $0.code == "missing_page_events" }) {
-        return "needs-input"
-    }
-    if warnings.contains(where: { $0.code == "unsupported_capability" }) {
-        return "needs-review"
-    }
-    return "compiled"
 }
 
 func testRecorderValidationFailure(code: String, message: String, path: String, hint: String? = nil) -> TKTestRecorderValidationFailure {

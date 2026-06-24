@@ -53,6 +53,10 @@ struct TestRecorderContractTests {
             "sessionId",
             "casePath",
             "manifest",
+            "manifest.tritonKitVersion",
+            "manifest.capabilitiesRef",
+            "manifest.redactionStatus",
+            "manifest.truncationStatus",
             "capabilities",
             "suggestedCommands",
         ])
@@ -84,6 +88,10 @@ struct TestRecorderContractTests {
             "path",
             "manifest",
             "manifest.name",
+            "manifest.tritonKitVersion",
+            "manifest.capabilitiesRef",
+            "manifest.redactionStatus",
+            "manifest.truncationStatus",
             "capabilities",
             "capabilities.actions",
             "capabilities.pages",
@@ -93,6 +101,9 @@ struct TestRecorderContractTests {
             "lifecycle.health",
             "unsupportedCapabilities",
             "artifacts",
+            "artifacts[].byteCount",
+            "artifacts[].digestAlgorithm",
+            "artifacts[].digest",
         ])
         expectContract(schema, selector: "testrec.compile", fields: [
             "ok",
@@ -216,12 +227,17 @@ struct TestRecorderContractTests {
             "evidenceSummary.pageEventCount",
             "evidenceSummary.networkEventCount",
             "evidenceSummary.stepEventCount",
+            "evidenceSummary.artifactRefCount",
+            "evidenceSummary.pageArtifactRefCount",
+            "evidenceSummary.networkArtifactRefCount",
+            "evidenceSummary.stepArtifactRefCount",
             "evidenceSummary.blockerCount",
             "evidenceSummary.statusConsistent",
             "pageResults",
             "pageResults[].status",
             "pageResults[].matchScore",
             "pageResults[].matchDecision",
+            "pageResults[].artifactRefs",
             "pageResults[].evidence",
             "networkResults",
             "networkResults[].strategy",
@@ -242,6 +258,10 @@ struct TestRecorderContractTests {
             "blockers",
             "suggestedCommands",
         ])
+
+        let inspectContract = try #require(schema.outputContracts.first { $0.selector == "testrec.inspect" })
+        let capabilitiesRef = try #require(inspectContract.fields.first { $0.name == "manifest.capabilitiesRef" })
+        #expect(capabilitiesRef.description.contains("inside the .tritontestcase package"))
 
         let dryRunContract = try #require(schema.outputContracts.first { $0.selector == "testrec.replay-dry-run" })
         let dryRunRequirementStatus = try #require(dryRunContract.fields.first { $0.name == "executorProfiles[].requirements[].status" })
@@ -290,6 +310,10 @@ struct TestRecorderContractTests {
         #expect(started.casePath == caseURL.path)
         #expect(started.manifest.name == "login-flow")
         #expect(started.manifest.sourcePlatform == "ios")
+        #expect(started.manifest.tritonKitVersion == TritonKitBuildInfo.cliVersion)
+        #expect(started.manifest.capabilitiesRef == "contract-capabilities.json")
+        #expect(started.manifest.redactionStatus == "pending")
+        #expect(started.manifest.truncationStatus == "not-truncated")
         #expect(action.kind == "triton.testrec.event")
         #expect(action.eventKind == "action")
         #expect(action.eventPath == "actions.jsonl")
@@ -422,8 +446,31 @@ struct TestRecorderContractTests {
         #expect(run.executor == "local-simulated")
         #expect(run.steps.map(\.status) == ["simulated-passed", "simulated-passed"])
         #expect(run.pageResults[0].matchDecision == "matched")
+        #expect(run.pageResults[0].artifactRefs == ["pages/target-fingerprints.json"])
         #expect(run.networkResults[0].fixturePath == "network/fixtures/n1.json")
         #expect(run.networkResults[0].artifactRefs == ["network/fixtures/n1.json"])
+        #expect(run.artifactRefs.contains("pages/target-fingerprints.json"))
+        #expect(run.artifactRefs.contains("network/fixtures/n1.json"))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("pages/target-fingerprints.json").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("network/fixtures/n1.json").path))
+        let httpManifest = try JSONDecoder().decode(
+            TKEvidenceManifest.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("manifest.json"))
+        )
+        let httpRunMetadata = try JSONDecoder().decode(
+            TKTestRunMetadata.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("run/run.json"))
+        )
+        #expect(httpManifest.run?.summary?.runID == httpRunMetadata.runID)
+        #expect(httpManifest.run?.summary?.verdict == .success)
+        #expect(httpManifest.run?.summary?.stepCount == run.steps.count)
+        #expect(httpManifest.run?.summary?.frictionCount == run.blockers.count)
+        #expect(httpManifest.artifacts.contains {
+            $0.kind == "testrec.page.target-fingerprints" && $0.path == "pages/target-fingerprints.json"
+        })
+        #expect(httpManifest.artifacts.contains {
+            $0.kind == "testrec.network.fixture" && $0.path == "network/fixtures/n1.json"
+        })
         let events = try String(contentsOf: evidenceURL.appendingPathComponent("run/events.jsonl"), encoding: .utf8)
         #expect(events.contains(#""event":"testrec.replay.network""#))
         #expect(events.contains(#"network\/fixtures\/n1.json"#))
@@ -466,6 +513,10 @@ struct TestRecorderContractTests {
         #expect(response.ok == true)
         #expect(response.kind == "triton.testrec.inspect")
         #expect(response.manifest.name == "login-flow")
+        #expect(response.manifest.tritonKitVersion == "unknown")
+        #expect(response.manifest.capabilitiesRef == "contract-capabilities.json")
+        #expect(response.manifest.redactionStatus == "pending")
+        #expect(response.manifest.truncationStatus == "not-truncated")
         #expect(response.capabilities.actions == ["tap", "type", "scroll"])
         #expect(response.capabilities.pages == ["route", "ax", "fingerprint"])
         #expect(response.capabilities.network == ["fixture", "passthrough"])
@@ -473,8 +524,121 @@ struct TestRecorderContractTests {
         #expect(response.lifecycle.stage == "raw")
         #expect(response.lifecycle.health == "needs-compile")
         #expect(response.suggestedCommands == ["triton schema --command testrec --json"])
-        #expect(response.artifacts.contains { $0.kind == "manifest" && $0.path == "manifest.json" })
-        #expect(response.artifacts.contains { $0.kind == "contract-capabilities" && $0.path == "contract-capabilities.json" })
+        let manifestArtifact = try #require(response.artifacts.first { $0.kind == "manifest" && $0.path == "manifest.json" })
+        let capabilitiesArtifact = try #require(response.artifacts.first { $0.kind == "contract-capabilities" && $0.path == "contract-capabilities.json" })
+        let compiledArtifact = try #require(response.artifacts.first { $0.kind == "compiled-contract" && $0.path == "compiled-contract.json" })
+        #expect(manifestArtifact.byteCount ?? 0 > 0)
+        #expect(manifestArtifact.digestAlgorithm == "fnv1a64")
+        #expect(manifestArtifact.digest?.isEmpty == false)
+        #expect(capabilitiesArtifact.byteCount ?? 0 > 0)
+        #expect(capabilitiesArtifact.digestAlgorithm == "fnv1a64")
+        #expect(capabilitiesArtifact.digest?.isEmpty == false)
+        #expect(compiledArtifact.present == false)
+        #expect(compiledArtifact.byteCount == nil)
+        #expect(compiledArtifact.digestAlgorithm == nil)
+        #expect(compiledArtifact.digest == nil)
+    }
+
+    @Test("inspect reads capabilities from manifest capabilitiesRef")
+    func inspectReadsCapabilitiesFromManifestCapabilitiesRef() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try """
+        {
+          "schemaVersion": 1,
+          "kind": "triton.testcase.v1",
+          "name": "custom-capabilities",
+          "sourcePlatform": "ios",
+          "capabilitiesRef": "contracts/caps.json"
+        }
+        """.write(to: caseURL.appendingPathComponent("manifest.json"), atomically: true, encoding: .utf8)
+        let contractsURL = caseURL.appendingPathComponent("contracts", isDirectory: true)
+        try FileManager.default.createDirectory(at: contractsURL, withIntermediateDirectories: true)
+        try """
+        {
+          "schemaVersion": 1,
+          "actions": ["tap"],
+          "pages": ["route"],
+          "network": ["passthrough"]
+        }
+        """.write(to: contractsURL.appendingPathComponent("caps.json"), atomically: true, encoding: .utf8)
+
+        let response = try inspectTritonTestCase(path: caseURL.path)
+
+        #expect(response.manifest.capabilitiesRef == "contracts/caps.json")
+        #expect(response.capabilities.actions == ["tap"])
+        #expect(response.capabilities.pages == ["route"])
+        #expect(response.capabilities.network == ["passthrough"])
+        #expect(response.artifacts.first { $0.kind == "contract-capabilities" }?.path == "contracts/caps.json")
+        #expect(response.artifacts.first { $0.path == "contracts/caps.json" }?.present == true)
+    }
+
+    @Test("inspect rejects capabilitiesRef outside case package")
+    func inspectRejectsCapabilitiesRefOutsideCasePackage() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try """
+        {
+          "schemaVersion": 1,
+          "kind": "triton.testcase.v1",
+          "name": "bad-capabilities-ref",
+          "sourcePlatform": "ios",
+          "capabilitiesRef": "../contract-capabilities.json"
+        }
+        """.write(to: caseURL.appendingPathComponent("manifest.json"), atomically: true, encoding: .utf8)
+
+        let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
+            _ = try inspectTritonTestCase(path: caseURL.path)
+        }
+
+        #expect(failure?.detail.code == "invalid_capabilities_ref")
+        #expect(failure?.detail.path == "manifest.json.capabilitiesRef")
+    }
+
+    @Test("inspect rejects invalid manifest JSON with validation envelope")
+    func inspectRejectsInvalidManifestJSON() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try "{".write(to: caseURL.appendingPathComponent("manifest.json"), atomically: true, encoding: .utf8)
+        try writeValidCapabilities(to: caseURL)
+
+        let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
+            _ = try inspectTritonTestCase(path: caseURL.path)
+        }
+
+        #expect(failure?.detail.code == "invalid_json")
+        #expect(failure?.detail.path == "manifest.json")
+        #expect(failure?.detail.hint?.contains(".tritontestcase v1 schema") == true)
+    }
+
+    @Test("inspect reports hand written contract artifacts with identity")
+    func inspectReportsHandWrittenContractArtifacts() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try FileManager.default.createDirectory(at: caseURL.appendingPathComponent("actions"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: caseURL.appendingPathComponent("network"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: caseURL.appendingPathComponent("pages"), withIntermediateDirectories: true)
+        try #"{"kind":"tap","target":{"label":"Login"}}"#
+            .write(to: caseURL.appendingPathComponent("actions.jsonl"), atomically: true, encoding: .utf8)
+        try #"{"assertions":[{"kind":"text-exists","text":"Home"}]}"#
+            .write(to: caseURL.appendingPathComponent("assertions.json"), atomically: true, encoding: .utf8)
+        try #"{"rules":[{"id":"login","strategy":"mock-candidate"}]}"#
+            .write(to: caseURL.appendingPathComponent("network/map-rules.json"), atomically: true, encoding: .utf8)
+        try #"{"pages":[{"pageId":"login","route":"/login"}]}"#
+            .write(to: caseURL.appendingPathComponent("pages/page-map.json"), atomically: true, encoding: .utf8)
+
+        let response = try inspectTritonTestCase(path: caseURL.path)
+        let artifacts = Dictionary(uniqueKeysWithValues: response.artifacts.map { ($0.kind, $0) })
+
+        for kind in ["actions", "assertions", "network-map", "page-map"] {
+            let artifact = try #require(artifacts[kind])
+            #expect(artifact.present == true)
+            #expect(artifact.byteCount ?? 0 > 0)
+            #expect(artifact.digestAlgorithm == "fnv1a64")
+            #expect(artifact.digest?.isEmpty == false)
+        }
     }
 
     @Test("inspect reports lifecycle stage for compiled and proposed cases")
@@ -777,6 +941,9 @@ struct TestRecorderContractTests {
         let findingCodes = decoded.qualityFindings.map(\.code)
         let proposals = try readCompileProposals(from: caseURL)
         let proposalKinds = proposals.map(\.proposalKind)
+        let compiledContent = try String(contentsOf: caseURL.appendingPathComponent("compiled-contract.json"), encoding: .utf8)
+        let replay = try replayTritonTestCaseDryRun(path: caseURL.path, platform: "android", device: nil)
+        let simulatedReplay = try replayTritonTestCaseLocalSimulated(path: caseURL.path, platform: "android", device: nil)
         let networkMap = try JSONDecoder().decode(
             TKTestRecorderNetworkMap.self,
             from: Data(contentsOf: caseURL.appendingPathComponent("network/map-rules.json"))
@@ -795,6 +962,14 @@ struct TestRecorderContractTests {
         #expect(findingCodes.contains("weak_selector"))
         #expect(findingCodes.contains("fixed_wait"))
         #expect(proposalKinds.contains("contract.redaction"))
+        #expect(decoded.actions[0].inputText == nil)
+        #expect(compiledContent.contains("secret@example.com") == false)
+        #expect(replay.plannedSteps.flatMap(\.argv).contains("secret@example.com") == false)
+        #expect(replay.status == "blocked")
+        #expect(replay.blockers.map(\.code).contains("redaction_review_required"))
+        #expect(simulatedReplay.status == "blocked")
+        #expect(simulatedReplay.blockers.map(\.code).contains("redaction_review_required"))
+        #expect(simulatedReplay.steps.allSatisfy { $0.status == "not-run" })
         #expect(proposalKinds.contains("contract.network"))
         #expect(proposalKinds.contains("contract.selector"))
         #expect(proposalKinds.contains("contract.wait"))
@@ -973,7 +1148,13 @@ struct TestRecorderContractTests {
         #expect(contractRef.digestAlgorithm == "fnv1a64")
         #expect(!contractRef.digest.isEmpty)
         #expect(response.evidenceDir == evidenceURL.path)
-        #expect(response.artifactRefs == ["run/replay-result.json", "run/events.jsonl", "run/run.json"])
+        #expect(response.artifactRefs == [
+            "run/replay-result.json",
+            "run/events.jsonl",
+            "run/run.json",
+            "pages/target-fingerprints.json",
+            "network/fixtures/n1.json",
+        ])
         #expect(response.execution.mode == "offline-simulated")
         #expect(response.execution.requiresDevice == false)
         #expect(response.execution.deviceCommandsExecuted == false)
@@ -999,12 +1180,17 @@ struct TestRecorderContractTests {
         #expect(response.evidenceSummary.pageEventCount == 1)
         #expect(response.evidenceSummary.networkEventCount == 1)
         #expect(response.evidenceSummary.stepEventCount == 2)
+        #expect(response.evidenceSummary.artifactRefCount == 5)
+        #expect(response.evidenceSummary.pageArtifactRefCount == 1)
+        #expect(response.evidenceSummary.networkArtifactRefCount == 1)
+        #expect(response.evidenceSummary.stepArtifactRefCount == 0)
         #expect(response.evidenceSummary.blockerCount == 0)
         #expect(response.evidenceSummary.statusConsistent == true)
         #expect(response.pageResults.count == 1)
         #expect(response.pageResults[0].status == "matched")
         #expect(response.pageResults[0].matchDecision == "matched")
         #expect(response.pageResults[0].matchScore == 1.0)
+        #expect(response.pageResults[0].artifactRefs == ["pages/target-fingerprints.json"])
         #expect(response.pageResults[0].evidence.contains("llm:unused"))
         #expect(response.networkResults.count == 1)
         #expect(response.networkResults[0].status == "simulated-mock-candidate")
@@ -1025,26 +1211,72 @@ struct TestRecorderContractTests {
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("manifest.json").path))
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("run/replay-result.json").path))
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("run/events.jsonl").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("pages/target-fingerprints.json").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("network/fixtures/n1.json").path))
         let manifest = try JSONDecoder().decode(
             TKEvidenceManifest.self,
             from: Data(contentsOf: evidenceURL.appendingPathComponent("manifest.json"))
         )
+        let runMetadata = try JSONDecoder().decode(
+            TKTestRunMetadata.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("run/run.json"))
+        )
         #expect(manifest.ok == true)
         #expect(manifest.run?.eventsPath == "run/events.jsonl")
         #expect(manifest.run?.eventCount == response.evidenceSummary.expectedEventCount)
+        #expect(manifest.run?.summary?.runID == runMetadata.runID)
+        #expect(manifest.run?.summary?.verdict == .success)
+        #expect(manifest.run?.summary?.stepCount == response.steps.count)
+        #expect(manifest.run?.summary?.frictionCount == response.blockers.count)
         #expect(manifest.artifacts.map(\.path).contains("run/replay-result.json"))
+        #expect(manifest.artifacts.contains {
+            $0.kind == "testrec.page.target-fingerprints" && $0.path == "pages/target-fingerprints.json"
+        })
+        #expect(manifest.artifacts.contains {
+            $0.kind == "testrec.network.fixture" && $0.path == "network/fixtures/n1.json" && $0.redactionStatus == "redacted"
+        })
+        let targetFingerprints = try String(contentsOf: evidenceURL.appendingPathComponent("pages/target-fingerprints.json"), encoding: .utf8)
+        #expect(targetFingerprints.contains(#""kind" : "triton.testrec.target-fingerprints""#))
+        #expect(targetFingerprints.contains(#""hash" : "abc123""#))
         let events = try String(contentsOf: evidenceURL.appendingPathComponent("run/events.jsonl"), encoding: .utf8)
         #expect(events.contains("testrec.replay.step"))
         #expect(events.contains("testrec.replay.network"))
         #expect(events.contains("testrec.replay.finished"))
         #expect(events.contains(#""category":"step""#))
         #expect(events.contains(#""category":"network""#))
+        #expect(events.contains(#"pages\/target-fingerprints.json"#))
         #expect(events.contains(#"network\/fixtures\/n1.json"#))
         #expect(events.contains(#""contractRef""#))
         #expect(events.contains(contractRef.digest))
         #expect(events.contains(#""subjectID":"a1""#))
         #expect(events.contains(#""timestamp":"#))
         #expect(events.contains("matched"))
+    }
+
+    @Test("replay local simulated rejects missing network fixture artifact")
+    func replayLocalSimulatedRejectsMissingNetworkFixtureArtifact() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        let evidenceURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-testrec-evidence-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        defer { try? FileManager.default.removeItem(at: evidenceURL) }
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try writeRawStreamsWithSensitiveNetworkBody(to: caseURL)
+        _ = try compileTritonTestCase(path: caseURL.path, writeContract: true)
+        try FileManager.default.removeItem(at: caseURL.appendingPathComponent("network/fixtures/n1.json"))
+
+        let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
+            _ = try replayTritonTestCaseLocalSimulated(
+                path: caseURL.path,
+                platform: "android",
+                device: nil,
+                evidenceDirectory: evidenceURL.path
+            )
+        }
+
+        #expect(failure?.detail.code == "missing_network_fixture")
+        #expect(failure?.detail.path == "network/fixtures/n1.json")
     }
 
     @Test("replay local simulated blocks when target fingerprint does not match")

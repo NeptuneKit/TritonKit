@@ -2,6 +2,7 @@ import Foundation
 import TritonKitShared
 
 let testRecorderLocalSimulatedExecutor = "local-simulated"
+private let testRecorderTargetFingerprintsArtifactPath = "pages/target-fingerprints.json"
 
 func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: String?, evidenceDirectory: String? = nil, targetFingerprints: [TKJSONValue]? = nil) throws -> TKTestRecorderReplayRunResponse {
     let plan = try replayTritonTestCaseDryRun(path: path, platform: platform, device: device)
@@ -10,6 +11,7 @@ func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: 
     let networkResults = try replayNetworkResults(casePath: plan.path)
     var blockers = plan.blockers
     blockers.append(contentsOf: replayPageMatchBlockers(pageMatches))
+    let pageArtifactRefs = targetFingerprints?.isEmpty == false ? [testRecorderTargetFingerprintsArtifactPath] : []
     let pageResults: [TKTestRecorderReplayPageResult] = plan.pageChecks.map { check in
         let match = pageMatches[check.index]
         return TKTestRecorderReplayPageResult(
@@ -20,6 +22,7 @@ func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: 
             matchScore: match?.score,
             matchDecision: match?.decision,
             sourcePath: check.sourcePath,
+            artifactRefs: pageArtifactRefs,
             evidence: match?.evidence ?? [
                 "compiled-contract",
                 "page-fingerprint-contract",
@@ -51,11 +54,11 @@ func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: 
             stopConditions: step.stopConditions
         )
     }
-    let artifactRefs = evidenceDirectory == nil ? [] : [
-        "run/replay-result.json",
-        "run/events.jsonl",
-        "run/run.json",
-    ]
+    let artifactRefs = testRecorderReplayArtifactRefs(
+        evidenceDirectory: evidenceDirectory,
+        targetFingerprints: targetFingerprints,
+        networkResults: networkResults
+    )
     let response = TKTestRecorderReplayRunResponse(
         plan: plan,
         executor: executor,
@@ -67,9 +70,29 @@ func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: 
         blockers: blockers
     )
     if let evidenceDirectory {
-        try writeTestRecorderReplayEvidence(response: response, evidenceDirectory: evidenceDirectory)
+        try writeTestRecorderReplayEvidence(
+            response: response,
+            evidenceDirectory: evidenceDirectory,
+            targetFingerprints: targetFingerprints
+        )
     }
     return response
+}
+
+private func testRecorderReplayArtifactRefs(evidenceDirectory: String?, targetFingerprints: [TKJSONValue]?, networkResults: [TKTestRecorderReplayNetworkResult]) -> [String] {
+    guard evidenceDirectory != nil else { return [] }
+    var refs = [
+        "run/replay-result.json",
+        "run/events.jsonl",
+        "run/run.json",
+    ]
+    if let targetFingerprints, !targetFingerprints.isEmpty {
+        refs.append(testRecorderTargetFingerprintsArtifactPath)
+    }
+    for artifactRef in networkResults.flatMap(\.artifactRefs) where !refs.contains(artifactRef) {
+        refs.append(artifactRef)
+    }
+    return refs
 }
 
 func decodeTestRecorderTargetFingerprintsJSON(_ targetFingerprintsJSON: String?) throws -> [TKJSONValue]? {
@@ -147,6 +170,26 @@ private struct TKTestRecorderReplayEvidenceEvent: Codable, Equatable {
     let evidence: [String]
 }
 
+private struct TKTestRecorderReplayTargetFingerprintsArtifact: Codable, Equatable {
+    let schemaVersion: Int
+    let kind: String
+    let source: String
+    let modelCallsExecuted: Bool
+    let llmUsed: Bool
+    let vlmUsed: Bool
+    let fingerprints: [TKJSONValue]
+
+    init(fingerprints: [TKJSONValue]) {
+        self.schemaVersion = 1
+        self.kind = "triton.testrec.target-fingerprints"
+        self.source = "caller-provided"
+        self.modelCallsExecuted = false
+        self.llmUsed = false
+        self.vlmUsed = false
+        self.fingerprints = fingerprints
+    }
+}
+
 private func replayNetworkResults(casePath: String) throws -> [TKTestRecorderReplayNetworkResult] {
     let mapURL = URL(fileURLWithPath: casePath, isDirectory: true).appendingPathComponent("network/map-rules.json")
     guard FileManager.default.fileExists(atPath: mapURL.path) else {
@@ -215,7 +258,7 @@ private func replayPageMatchBlockers(_ matches: [Int: TKTestRecorderFingerprintM
     }
 }
 
-private func writeTestRecorderReplayEvidence(response: TKTestRecorderReplayRunResponse, evidenceDirectory: String) throws {
+private func writeTestRecorderReplayEvidence(response: TKTestRecorderReplayRunResponse, evidenceDirectory: String, targetFingerprints: [TKJSONValue]?) throws {
     let evidenceURL = URL(fileURLWithPath: evidenceDirectory, isDirectory: true)
     let runURL = evidenceURL.appendingPathComponent("run", isDirectory: true)
     try FileManager.default.createDirectory(at: runURL, withIntermediateDirectories: true)
@@ -270,7 +313,7 @@ private func writeTestRecorderReplayEvidence(response: TKTestRecorderReplayRunRe
             route: page.route,
             networkID: nil,
             strategy: nil,
-            artifactRefs: nil,
+            artifactRefs: page.artifactRefs,
             failureCode: nil,
             evidence: page.evidence
         )
@@ -347,11 +390,22 @@ private func writeTestRecorderReplayEvidence(response: TKTestRecorderReplayRunRe
     try eventData.write(to: runURL.appendingPathComponent("events.jsonl"), options: Data.WritingOptions.atomic)
 
     let contractMetadata = testRecorderContractRefMetadata(response.contractRef)
+    let targetFingerprintArtifact = try writeTestRecorderReplayTargetFingerprintsArtifact(
+        targetFingerprints: targetFingerprints,
+        evidenceURL: evidenceURL,
+        contractMetadata: contractMetadata
+    )
+    let fixtureArtifacts = try writeTestRecorderReplayNetworkFixtureArtifacts(
+        response: response,
+        evidenceURL: evidenceURL,
+        contractMetadata: contractMetadata
+    )
+    let targetFingerprintArtifacts = targetFingerprintArtifact.map { [$0] } ?? []
     let artifacts = [
         TKEvidenceArtifact(kind: "testrec.replay.result", path: "run/replay-result.json", contentType: "application/json", bytes: resultData.count, metadata: contractMetadata),
         TKEvidenceArtifact(kind: "testrec.replay.events", path: "run/events.jsonl", contentType: "application/jsonl", bytes: eventData.count, metadata: contractMetadata),
         TKEvidenceArtifact(kind: "testrec.replay.run", path: "run/run.json", contentType: "application/json", bytes: runData.count, metadata: contractMetadata),
-    ]
+    ] + targetFingerprintArtifacts + fixtureArtifacts
     let manifest = TKEvidenceManifest(
         ok: response.ok,
         name: "triton-testrec-replay",
@@ -365,10 +419,95 @@ private func writeTestRecorderReplayEvidence(response: TKTestRecorderReplayRunRe
             metaPath: "run/run.json",
             eventCount: events.count,
             observationCount: 0,
-            status: .completed
+            status: .completed,
+            summary: TKEvidenceRunSummary(
+                runID: runID,
+                verdict: response.ok ? .success : .blocked,
+                frictionCount: response.blockers.count,
+                stepCount: response.steps.count
+            )
         )
     )
     try prettyEncodedData(manifest).write(to: evidenceURL.appendingPathComponent("manifest.json"), options: .atomic)
+}
+
+private func writeTestRecorderReplayTargetFingerprintsArtifact(
+    targetFingerprints: [TKJSONValue]?,
+    evidenceURL: URL,
+    contractMetadata: [String: TKJSONValue]?
+) throws -> TKEvidenceArtifact? {
+    guard let targetFingerprints, !targetFingerprints.isEmpty else { return nil }
+    let artifact = TKTestRecorderReplayTargetFingerprintsArtifact(fingerprints: targetFingerprints)
+    let data = try prettyEncodedData(artifact)
+    let targetURL = evidenceURL.appendingPathComponent(testRecorderTargetFingerprintsArtifactPath)
+    try FileManager.default.createDirectory(
+        at: targetURL.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    try data.write(to: targetURL, options: .atomic)
+
+    var metadata = contractMetadata ?? [:]
+    metadata["source"] = .string("caller-provided")
+    metadata["fingerprintCount"] = .int(targetFingerprints.count)
+    metadata["modelCallsExecuted"] = .bool(false)
+    return TKEvidenceArtifact(
+        kind: "testrec.page.target-fingerprints",
+        path: testRecorderTargetFingerprintsArtifactPath,
+        contentType: "application/json",
+        bytes: data.count,
+        metadata: metadata
+    )
+}
+
+private func writeTestRecorderReplayNetworkFixtureArtifacts(
+    response: TKTestRecorderReplayRunResponse,
+    evidenceURL: URL,
+    contractMetadata: [String: TKJSONValue]?
+) throws -> [TKEvidenceArtifact] {
+    let caseURL = URL(fileURLWithPath: response.path, isDirectory: true)
+    var artifacts: [TKEvidenceArtifact] = []
+    var seenPaths = Set<String>()
+    for network in response.networkResults {
+        guard let fixturePath = network.fixturePath,
+              !fixturePath.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+              seenPaths.insert(fixturePath).inserted
+        else {
+            continue
+        }
+
+        let sourceURL = caseURL.appendingPathComponent(fixturePath)
+        guard FileManager.default.fileExists(atPath: sourceURL.path) else {
+            throw testRecorderValidationFailure(
+                code: "missing_network_fixture",
+                message: "Replay evidence references missing network fixture '\(fixturePath)'.",
+                path: fixturePath,
+                hint: "Run triton testrec compile <case.tritontestcase> --json again before replay."
+            )
+        }
+
+        let fixtureData = try Data(contentsOf: sourceURL)
+        let targetURL = evidenceURL.appendingPathComponent(fixturePath)
+        try FileManager.default.createDirectory(
+            at: targetURL.deletingLastPathComponent(),
+            withIntermediateDirectories: true
+        )
+        try fixtureData.write(to: targetURL, options: .atomic)
+
+        var metadata = contractMetadata ?? [:]
+        metadata["sourceCasePath"] = .string(response.path)
+        metadata["sourceArtifactPath"] = .string(fixturePath)
+        metadata["networkID"] = .string(network.id)
+        metadata["networkSourcePath"] = .string(network.sourcePath)
+        artifacts.append(TKEvidenceArtifact(
+            kind: "testrec.network.fixture",
+            path: fixturePath,
+            contentType: "application/json",
+            bytes: fixtureData.count,
+            redactionStatus: network.redactionRequired ? "redacted" : "not-required",
+            metadata: metadata
+        ))
+    }
+    return artifacts
 }
 
 private func testRecorderContractRefMetadata(_ contractRef: TKTestRecorderReplayContractRef?) -> [String: TKJSONValue]? {

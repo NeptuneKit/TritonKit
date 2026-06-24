@@ -6,6 +6,33 @@ struct TKTestRecorderManifest: Codable, Equatable {
     let kind: String
     let name: String
     let sourcePlatform: String?
+    let tritonKitVersion: String
+    let capabilitiesRef: String
+    let redactionStatus: String
+    let truncationStatus: String
+
+    init(schemaVersion: Int, kind: String, name: String, sourcePlatform: String?, tritonKitVersion: String = "unknown", capabilitiesRef: String = "contract-capabilities.json", redactionStatus: String = "pending", truncationStatus: String = "not-truncated") {
+        self.schemaVersion = schemaVersion
+        self.kind = kind
+        self.name = name
+        self.sourcePlatform = sourcePlatform
+        self.tritonKitVersion = tritonKitVersion
+        self.capabilitiesRef = capabilitiesRef
+        self.redactionStatus = redactionStatus
+        self.truncationStatus = truncationStatus
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        self.kind = try container.decode(String.self, forKey: .kind)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.sourcePlatform = try container.decodeIfPresent(String.self, forKey: .sourcePlatform)
+        self.tritonKitVersion = try container.decodeIfPresent(String.self, forKey: .tritonKitVersion) ?? "unknown"
+        self.capabilitiesRef = try container.decodeIfPresent(String.self, forKey: .capabilitiesRef) ?? "contract-capabilities.json"
+        self.redactionStatus = try container.decodeIfPresent(String.self, forKey: .redactionStatus) ?? "pending"
+        self.truncationStatus = try container.decodeIfPresent(String.self, forKey: .truncationStatus) ?? "not-truncated"
+    }
 }
 
 struct TKTestRecorderContractCapabilities: Codable, Equatable {
@@ -140,6 +167,9 @@ struct TKTestRecorderArtifact: Codable, Equatable {
     let path: String
     let required: Bool
     let present: Bool
+    let byteCount: Int?
+    let digestAlgorithm: String?
+    let digest: String?
 }
 
 struct TKTestRecorderLifecycle: Codable, Equatable {
@@ -609,6 +639,7 @@ struct TKTestRecorderReplayPageResult: Codable, Equatable {
     let matchScore: Double?
     let matchDecision: String?
     let sourcePath: String
+    let artifactRefs: [String]
     let evidence: [String]
     let expectedArtifacts: [String]
 }
@@ -738,13 +769,23 @@ struct TKTestRecorderReplayEvidenceSummary: Codable, Equatable {
     let pageEventCount: Int
     let networkEventCount: Int
     let stepEventCount: Int
+    let artifactRefCount: Int
+    let pageArtifactRefCount: Int
+    let networkArtifactRefCount: Int
+    let stepArtifactRefCount: Int
     let blockerCount: Int
     let statusConsistent: Bool
 
-    init(status: String, pageResults: [TKTestRecorderReplayPageResult], networkResults: [TKTestRecorderReplayNetworkResult], steps: [TKTestRecorderReplayStepResult], blockers: [TKTestRecorderReplayBlocker]) {
+    init(status: String, artifactRefs: [String], pageResults: [TKTestRecorderReplayPageResult], networkResults: [TKTestRecorderReplayNetworkResult], steps: [TKTestRecorderReplayStepResult], blockers: [TKTestRecorderReplayBlocker]) {
         self.pageEventCount = pageResults.count
         self.networkEventCount = networkResults.count
         self.stepEventCount = steps.count
+        self.artifactRefCount = Set(artifactRefs).count
+        self.pageArtifactRefCount = pageResults.reduce(0) { $0 + $1.artifactRefs.count }
+        self.networkArtifactRefCount = networkResults.reduce(0) { $0 + $1.artifactRefs.count }
+        self.stepArtifactRefCount = steps.reduce(0) { partial, step in
+            partial + step.artifactRefs.count + (step.failure?.artifactRefs.count ?? 0)
+        }
         self.blockerCount = blockers.count
         self.expectedEventCount = 2 + pageResults.count + networkResults.count + steps.count
         self.statusConsistent = (status == "passed" && blockers.isEmpty) || (status == "blocked" && !blockers.isEmpty)
@@ -798,6 +839,7 @@ struct TKTestRecorderReplayRunResponse: Codable, Equatable {
         )
         self.evidenceSummary = TKTestRecorderReplayEvidenceSummary(
             status: self.status,
+            artifactRefs: artifactRefs,
             pageResults: pageResults,
             networkResults: networkResults,
             steps: steps,
