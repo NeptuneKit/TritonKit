@@ -95,23 +95,31 @@ private func testRecorderReplayArtifactRefs(evidenceDirectory: String?, targetFi
     return refs
 }
 
-func matrixTritonTestCase(path: String, targets: String, executor: String?, targetFingerprints: [TKJSONValue]?) throws -> TKTestRecorderMatrixResponse {
+func matrixTritonTestCase(path: String, targets: String, executor: String?, evidenceRoot: String? = nil, targetFingerprints: [TKJSONValue]?) throws -> TKTestRecorderMatrixResponse {
     let parsedTargets = try parseTestRecorderMatrixTargets(targets)
     let resolvedExecutor = try executor.map { try validateTestRecorderReplayExecutor($0) }
     let results: [TKTestRecorderMatrixTargetResult] = try parsedTargets.map { target in
         if resolvedExecutor != nil {
+            let evidenceDirectory = testRecorderMatrixEvidenceDirectory(root: evidenceRoot, target: target)
             let run = try replayTritonTestCaseLocalSimulated(
                 path: path,
                 platform: target.platform,
                 device: target.device,
+                evidenceDirectory: evidenceDirectory,
                 targetFingerprints: targetFingerprints
             )
-            return TKTestRecorderMatrixTargetResult(target: target, run: run)
+            return TKTestRecorderMatrixTargetResult(target: target, run: run, evidenceDir: evidenceDirectory)
         }
         let plan = try replayTritonTestCaseDryRun(path: path, platform: target.platform, device: target.device)
         return TKTestRecorderMatrixTargetResult(target: target, plan: plan)
     }
-    return TKTestRecorderMatrixResponse(path: URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL.path, targets: targets, executor: resolvedExecutor, results: results)
+    return TKTestRecorderMatrixResponse(path: URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL.path, targets: targets, executor: resolvedExecutor, evidenceRoot: evidenceRoot, results: results)
+}
+
+private func testRecorderMatrixEvidenceDirectory(root: String?, target: TKTestRecorderMatrixTarget) -> String? {
+    guard let root, !root.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return nil }
+    let name = target.raw.replacingOccurrences(of: ":", with: "-").replacingOccurrences(of: "/", with: "-")
+    return URL(fileURLWithPath: root, isDirectory: true).appendingPathComponent(name, isDirectory: true).path
 }
 
 private func parseTestRecorderMatrixTargets(_ targets: String) throws -> [TKTestRecorderMatrixTarget] {

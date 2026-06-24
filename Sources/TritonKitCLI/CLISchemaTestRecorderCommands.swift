@@ -34,6 +34,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--dry-run", type: "Bool", defaultValue: "false", description: "Build replay plan without execution"),
                 TKCommandSchemaOption(name: "--executor", type: "String", description: "Replay executor; current offline value is local-simulated"),
                 TKCommandSchemaOption(name: "--evidence-dir", type: "Path", description: "Optional .tritonevidence output directory for local-simulated replay"),
+                TKCommandSchemaOption(name: "--evidence-root", type: "Path", description: "Optional root directory for per-target local-simulated matrix evidence bundles"),
                 TKCommandSchemaOption(name: "--target-fingerprints-json", type: "JSON", description: "Optional target-side page fingerprint object, array, or {pages:[...]} for local-simulated replay"),
                 TKCommandSchemaOption(name: "--targets", type: "String", description: "Comma-separated matrix targets, using platform or platform:device"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
@@ -50,6 +51,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 TKCommandUsageForm(form: "replay <case.tritontestcase> --platform <platform> --dry-run --json", kind: "Subcommand", description: "Build a replay plan from compiled-contract.json without executing device actions"),
                 TKCommandUsageForm(form: "replay <case.tritontestcase> --platform <platform> --executor local-simulated --target-fingerprints-json <json> --evidence-dir <dir.tritonevidence> --json", kind: "Subcommand", description: "Execute the compiled contract through the offline local-simulated replay executor, score target page fingerprints, and write .tritonevidence"),
                 TKCommandUsageForm(form: "matrix <case.tritontestcase> --targets ios:sim-a,android:emu-a --json", kind: "Subcommand", description: "Fan out the compiled contract into per-target dry-run plans without executing device actions"),
+                TKCommandUsageForm(form: "matrix <case.tritontestcase> --targets ios:sim-a,android:emu-a --executor local-simulated --evidence-root <dir> --json", kind: "Subcommand", description: "Run the offline local-simulated matrix and write one evidence bundle per target"),
             ],
             argumentForms: [
                 TKCommandArgumentForm(name: "<case.tritontestcase>", type: "Path", required: true, description: "Input or output .tritontestcase directory package"),
@@ -250,7 +252,7 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                     name: "matrix",
                     summary: "Build a multi-target .tritontestcase replay matrix",
                     requiredOptions: ["<case.tritontestcase>", "--targets"],
-                    optionalOptions: ["--executor", "--target-fingerprints-json", "--format", "--json"],
+                    optionalOptions: ["--executor", "--evidence-root", "--target-fingerprints-json", "--format", "--json"],
                     nextCommands: [
                         "triton testrec compile <case.tritontestcase> --json",
                     ],

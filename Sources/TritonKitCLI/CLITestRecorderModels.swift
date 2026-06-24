@@ -155,6 +155,7 @@ struct TKTestRecorderHTTPMatrixRequest: Codable, Equatable {
     let path: String
     let targets: String
     let executor: String?
+    let evidenceRoot: String?
     let targetFingerprints: TKJSONValue?
 }
 
@@ -880,6 +881,7 @@ struct TKTestRecorderMatrixTargetResult: Codable, Equatable {
     let pageCheckCount: Int
     let networkResultCount: Int
     let stepResultCount: Int
+    let evidenceDir: String?
     let blockers: [TKTestRecorderReplayBlocker]
     let suggestedCommand: String
 
@@ -894,11 +896,12 @@ struct TKTestRecorderMatrixTargetResult: Codable, Equatable {
         self.pageCheckCount = plan.pageChecks.count
         self.networkResultCount = 0
         self.stepResultCount = 0
+        self.evidenceDir = nil
         self.blockers = plan.blockers
         self.suggestedCommand = "triton testrec replay \(plan.path) --platform \(target.platform) --dry-run --json"
     }
 
-    init(target: TKTestRecorderMatrixTarget, run: TKTestRecorderReplayRunResponse) {
+    init(target: TKTestRecorderMatrixTarget, run: TKTestRecorderReplayRunResponse, evidenceDir: String?) {
         self.target = target.raw
         self.platform = target.platform
         self.device = target.device
@@ -909,6 +912,7 @@ struct TKTestRecorderMatrixTargetResult: Codable, Equatable {
         self.pageCheckCount = run.pageResults.count
         self.networkResultCount = run.networkResults.count
         self.stepResultCount = run.steps.count
+        self.evidenceDir = evidenceDir
         self.blockers = run.blockers
         self.suggestedCommand = "triton testrec replay \(run.path) --platform \(target.platform) --executor \(run.executor) --json"
     }
@@ -920,6 +924,7 @@ struct TKTestRecorderMatrixResponse: Codable, Equatable {
     let kind: String
     let path: String
     let executor: String?
+    let evidenceRoot: String?
     let status: String
     let targetCount: Int
     let readyCount: Int
@@ -928,12 +933,13 @@ struct TKTestRecorderMatrixResponse: Codable, Equatable {
     let results: [TKTestRecorderMatrixTargetResult]
     let suggestedCommands: [String]
 
-    init(path: String, targets: String, executor: String?, results: [TKTestRecorderMatrixTargetResult]) {
+    init(path: String, targets: String, executor: String?, evidenceRoot: String?, results: [TKTestRecorderMatrixTargetResult]) {
         self.ok = results.allSatisfy { ["ready", "passed"].contains($0.status) }
         self.schemaVersion = 1
         self.kind = "triton.testrec.matrix"
         self.path = path
         self.executor = executor
+        self.evidenceRoot = evidenceRoot
         self.targetCount = results.count
         self.readyCount = results.filter { $0.status == "ready" }.count
         self.passedCount = results.filter { $0.status == "passed" }.count

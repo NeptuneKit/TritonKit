@@ -267,6 +267,7 @@ struct TestRecorderContractTests {
             "kind",
             "path",
             "executor",
+            "evidenceRoot",
             "status",
             "targetCount",
             "readyCount",
@@ -279,6 +280,7 @@ struct TestRecorderContractTests {
             "results[].status",
             "results[].dryRun",
             "results[].plannedStepCount",
+            "results[].evidenceDir",
             "results[].blockers",
             "suggestedCommands",
         ])
@@ -1167,6 +1169,45 @@ struct TestRecorderContractTests {
         #expect(response.results.allSatisfy { $0.pageCheckCount == 1 })
         #expect(response.results.allSatisfy { $0.blockers.isEmpty })
         #expect(response.suggestedCommands == ["triton testrec matrix \(caseURL.path) --targets android:emulator-a,harmony:dev-a --json"])
+    }
+
+
+    @Test("matrix local simulated writes per target evidence bundles")
+    func matrixLocalSimulatedWritesPerTargetEvidenceBundles() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        let evidenceRoot = caseURL.deletingLastPathComponent().appendingPathComponent("matrix-evidence", isDirectory: true)
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try writeRawStreams(to: caseURL)
+        _ = try compileTritonTestCase(path: caseURL.path, writeContract: true)
+
+        let response = try matrixTritonTestCase(
+            path: caseURL.path,
+            targets: "android:emulator-a,harmony:dev-a",
+            executor: "local-simulated",
+            evidenceRoot: evidenceRoot.path,
+            targetFingerprints: [
+                try TKJSONValue.fromJSONObject([
+                    "pageId": "login",
+                    "route": "login",
+                    "kind": "mock",
+                    "hash": "abc123",
+                ]),
+            ]
+        )
+
+        #expect(response.ok == true)
+        #expect(response.status == "passed")
+        #expect(response.executor == "local-simulated")
+        #expect(response.evidenceRoot == evidenceRoot.path)
+        #expect(response.passedCount == 2)
+        #expect(response.results.map(\.evidenceDir) == [
+            evidenceRoot.appendingPathComponent("android-emulator-a", isDirectory: true).path,
+            evidenceRoot.appendingPathComponent("harmony-dev-a", isDirectory: true).path,
+        ])
+        #expect(FileManager.default.fileExists(atPath: evidenceRoot.appendingPathComponent("android-emulator-a/run/replay-result.json").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceRoot.appendingPathComponent("harmony-dev-a/run/events.jsonl").path))
     }
 
     @Test("replay requires dry run until executor is implemented")
