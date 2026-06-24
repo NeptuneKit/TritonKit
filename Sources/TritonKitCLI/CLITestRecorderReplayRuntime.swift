@@ -2,6 +2,7 @@ import Foundation
 import TritonKitShared
 
 let testRecorderLocalSimulatedExecutor = "local-simulated"
+let testRecorderLocalDeviceExecutor = "local-device"
 private let testRecorderTargetFingerprintsArtifactPath = "pages/target-fingerprints.json"
 
 func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: String?, evidenceDirectory: String? = nil, targetFingerprints: [TKJSONValue]? = nil) throws -> TKTestRecorderReplayRunResponse {
@@ -77,6 +78,64 @@ func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: 
         )
     }
     return response
+}
+
+func replayTritonTestCaseLocalDevice(path: String, platform: String, device: String?) throws -> TKTestRecorderReplayRunResponse {
+    let plan = try replayTritonTestCaseDryRun(path: path, platform: platform, device: device)
+    let trimmedDevice = device?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let targetName = trimmedDevice?.isEmpty == false ? trimmedDevice! : platform
+    let blocker = TKTestRecorderReplayBlocker(
+        code: "target_not_found",
+        path: "--device",
+        message: "local-device executor cannot resolve target \(targetName) yet; no device action was executed."
+    )
+    let blockers = plan.blockers + [blocker]
+    let pageResults = plan.pageChecks.map { check in
+        TKTestRecorderReplayPageResult(
+            index: check.index,
+            pageId: check.pageId,
+            route: check.route,
+            status: "not-run",
+            matchScore: nil,
+            matchDecision: nil,
+            sourcePath: check.sourcePath,
+            artifactRefs: [],
+            evidence: ["compiled-contract", "target_not_found", "no-observation-captured"],
+            expectedArtifacts: check.expectedArtifacts
+        )
+    }
+    let steps = plan.plannedSteps.map { step in
+        TKTestRecorderReplayStepResult(
+            index: step.index,
+            sourceEventID: step.sourceEventID,
+            action: step.action,
+            status: "not-run",
+            sourcePath: step.sourcePath,
+            command: step.command,
+            argv: step.argv,
+            deviceCommandExecuted: false,
+            artifactRefs: [],
+            evidence: ["compiled-contract", "target_not_found", "no-device-command-executed"],
+            failure: TKTestRecorderReplayStepFailure(
+                code: "target_not_found",
+                message: "Target was not resolved; device action was not executed.",
+                path: "--device",
+                artifactRefs: [],
+                recoveryCommands: ["triton status --json", "triton doctor --json"],
+                retryable: true
+            ),
+            expectedArtifacts: step.expectedArtifacts,
+            stopConditions: step.stopConditions
+        )
+    }
+    return TKTestRecorderReplayRunResponse(
+        plan: plan,
+        executor: testRecorderLocalDeviceExecutor,
+        pageResults: pageResults,
+        steps: steps,
+        blockers: blockers,
+        execution: .localDeviceBlocked()
+    )
 }
 
 private func testRecorderReplayArtifactRefs(evidenceDirectory: String?, targetFingerprints: [TKJSONValue]?, networkResults: [TKTestRecorderReplayNetworkResult]) -> [String] {

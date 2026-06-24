@@ -704,6 +704,34 @@ struct TKTestRecorderReplayExecutionSummary: Codable, Equatable {
     let executorRequirements: [TKTestRecorderReplayExecutorRequirement]
     let evidence: [String]
 
+    static func localDeviceBlocked() -> TKTestRecorderReplayExecutionSummary {
+        TKTestRecorderReplayExecutionSummary(
+            mode: "device-execution",
+            executor: "local-device",
+            requiresDevice: true,
+            deviceCommandsExecuted: false,
+            llmUsed: false,
+            vlmUsed: false,
+            networkPolicyMode: "not-applied",
+            stepStatusTaxonomy: ["executed", "failed", "skipped", "blocked", "not-run"],
+            executorRequirements: [
+                TKTestRecorderReplayExecutorRequirement(name: "compiled-contract", required: true, status: "satisfied", evidence: ["compiled-contract"]),
+                TKTestRecorderReplayExecutorRequirement(name: "live-target-device", required: true, status: "missing", evidence: ["target_not_found", "target-readiness:not-wired"]),
+                TKTestRecorderReplayExecutorRequirement(name: "device-action-execution", required: true, status: "missing", evidence: ["act-runner:not-wired", "no-device-command-executed"]),
+                TKTestRecorderReplayExecutorRequirement(name: "evidence-artifact-capture", required: true, status: "missing", evidence: ["artifact-writer:not-wired"]),
+                TKTestRecorderReplayExecutorRequirement(name: "network-policy-application", required: true, status: "missing", evidence: ["network-policy:not-wired"]),
+            ],
+            evidence: [
+                "compiled-contract",
+                "target_not_found",
+                "no-device-command-executed",
+                "llm:unused",
+                "vlm:unused",
+                "network-policy:not-applied",
+            ]
+        )
+    }
+
     static func localSimulated(executor: String, hasNetworkResults: Bool, writesEvidence: Bool) -> TKTestRecorderReplayExecutionSummary {
         TKTestRecorderReplayExecutionSummary(
             mode: "offline-simulated",
@@ -824,7 +852,7 @@ struct TKTestRecorderReplayRunResponse: Codable, Equatable {
     let blockers: [TKTestRecorderReplayBlocker]
     let suggestedCommands: [String]
 
-    init(plan: TKTestRecorderReplayDryRunResponse, executor: String, evidenceDir: String? = nil, artifactRefs: [String] = [], pageResults: [TKTestRecorderReplayPageResult], networkResults: [TKTestRecorderReplayNetworkResult] = [], steps: [TKTestRecorderReplayStepResult], blockers: [TKTestRecorderReplayBlocker]) {
+    init(plan: TKTestRecorderReplayDryRunResponse, executor: String, evidenceDir: String? = nil, artifactRefs: [String] = [], pageResults: [TKTestRecorderReplayPageResult], networkResults: [TKTestRecorderReplayNetworkResult] = [], steps: [TKTestRecorderReplayStepResult], blockers: [TKTestRecorderReplayBlocker], execution: TKTestRecorderReplayExecutionSummary? = nil) {
         self.ok = blockers.isEmpty
         self.schemaVersion = 1
         self.kind = "triton.testrec.replay-result"
@@ -840,7 +868,7 @@ struct TKTestRecorderReplayRunResponse: Codable, Equatable {
         self.contractRef = plan.contractRef
         self.evidenceDir = evidenceDir
         self.artifactRefs = artifactRefs
-        self.execution = .localSimulated(
+        self.execution = execution ?? .localSimulated(
             executor: executor,
             hasNetworkResults: !networkResults.isEmpty,
             writesEvidence: !artifactRefs.isEmpty

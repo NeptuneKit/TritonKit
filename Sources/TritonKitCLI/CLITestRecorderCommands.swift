@@ -345,9 +345,14 @@ private func runTestRecorderCompileCommand(input: String, output: String?, forma
 private func runTestRecorderReplayCommand(input: String, platform: String, device: String?, dryRun: Bool, executor: String?, evidenceDir: String?, targetFingerprintsJSON: String?, format: ClientOutputFormat) throws {
     do {
         if !dryRun {
-            _ = try validateTestRecorderReplayExecutor(executor)
-            let targetFingerprints = try decodeTestRecorderTargetFingerprintsJSON(targetFingerprintsJSON)
-            let response = try replayTritonTestCaseLocalSimulated(path: input, platform: platform, device: device, evidenceDirectory: evidenceDir, targetFingerprints: targetFingerprints)
+            let response: TKTestRecorderReplayRunResponse
+            if executor?.trimmingCharacters(in: .whitespacesAndNewlines) == testRecorderLocalDeviceExecutor {
+                response = try replayTritonTestCaseLocalDevice(path: input, platform: platform, device: device)
+            } else {
+                _ = try validateTestRecorderReplayExecutor(executor)
+                let targetFingerprints = try decodeTestRecorderTargetFingerprintsJSON(targetFingerprintsJSON)
+                response = try replayTritonTestCaseLocalSimulated(path: input, platform: platform, device: device, evidenceDirectory: evidenceDir, targetFingerprints: targetFingerprints)
+            }
             switch format {
             case .json:
                 print(try encodeJSON(response))
