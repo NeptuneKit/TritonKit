@@ -1179,10 +1179,32 @@ struct TestRecorderContractTests {
         #expect(response.pageChecks[0].stopConditions == ["page_not_matched", "page_needs_review", "page_match_conflict"])
         #expect(response.executorProfiles.map(\.id) == ["local-simulated", "local-device"])
         #expect(response.executorProfiles[0].status == "available")
-        #expect(response.executorProfiles[1].status == "unsupported")
-        #expect(response.executorProfiles[1].requirements.contains {
-            $0.name == "live-target-device" && $0.required && $0.status == "missing"
-        })
+        let localDevice = response.executorProfiles[1]
+        #expect(localDevice.status == "unsupported")
+        #expect(localDevice.mode == "device-execution")
+        #expect(localDevice.nextCommand == "triton schema --command testrec --json")
+        #expect(localDevice.requirements.map(\.name) == [
+            "compiled-contract",
+            "live-target-device",
+            "device-action-execution",
+            "evidence-artifact-capture",
+            "network-policy-application",
+        ])
+        #expect(localDevice.requirements.map(\.required) == [true, true, true, true, true])
+        #expect(localDevice.requirements.map(\.status) == [
+            "satisfied",
+            "missing",
+            "missing",
+            "missing",
+            "missing",
+        ])
+        #expect(localDevice.requirements.map(\.evidence) == [
+            ["compiled-contract"],
+            ["target-readiness:not-wired"],
+            ["act-runner:not-wired"],
+            ["artifact-writer:not-wired"],
+            ["network-policy:not-wired"],
+        ])
         #expect(response.plannedSteps.map(\.action) == ["tap", "type"])
         #expect(response.plannedSteps.allSatisfy { $0.status == "planned" })
         #expect(response.plannedSteps[0].sourcePath == "compiled-contract.json:actions[0]")
