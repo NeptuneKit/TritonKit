@@ -1448,10 +1448,11 @@ struct TestRecorderContractTests {
         #expect(response.steps.allSatisfy { $0.failure?.code == "target_not_found" })
         #expect(response.pageResults.map(\.status) == ["not-run"])
         #expect(response.evidenceDir == evidenceURL.path)
-        #expect(response.artifactRefs == ["run/replay-result.json", "run/events.jsonl", "run/run.json"])
+        #expect(response.artifactRefs == ["run/replay-result.json", "run/events.jsonl", "run/run.json", "target/target-resolution.json"])
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("manifest.json").path))
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("run/replay-result.json").path))
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("run/events.jsonl").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("target/target-resolution.json").path))
         let manifest = try JSONDecoder().decode(
             TKEvidenceManifest.self,
             from: Data(contentsOf: evidenceURL.appendingPathComponent("manifest.json"))
@@ -1467,6 +1468,18 @@ struct TestRecorderContractTests {
         #expect(manifest.run?.summary?.verdict == .blocked)
         #expect(manifest.run?.summary?.stepCount == response.steps.count)
         #expect(manifest.run?.summary?.frictionCount == response.blockers.count)
+        #expect(manifest.artifacts.contains { $0.kind == "testrec.target.resolution" && $0.path == "target/target-resolution.json" })
+        let targetResolution = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: evidenceURL.appendingPathComponent("target/target-resolution.json"))
+        ) as? [String: Any]
+        #expect(targetResolution?["status"] as? String == "not-found")
+        #expect(targetResolution?["failureCode"] as? String == "target_not_found")
+        #expect(targetResolution?["platform"] as? String == "android")
+        #expect(targetResolution?["device"] as? String == "missing-emulator")
+        #expect(targetResolution?["commandsExecuted"] as? Bool == false)
+        let sourceCommands = targetResolution?["sourceCommands"] as? [String] ?? []
+        #expect(sourceCommands.contains("triton status --json"))
+        #expect(sourceCommands.contains("triton target resolve missing-emulator --platform android --json"))
         let result = try JSONDecoder().decode(
             TKTestRecorderReplayRunResponse.self,
             from: Data(contentsOf: evidenceURL.appendingPathComponent("run/replay-result.json"))
