@@ -310,7 +310,6 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
     }
 
     let manifestURL = caseURL.appendingPathComponent("manifest.json")
-    let capabilitiesURL = caseURL.appendingPathComponent("contract-capabilities.json")
     guard fileManager.fileExists(atPath: manifestURL.path) else {
         throw testRecorderValidationFailure(
             code: "missing_required_file",
@@ -319,26 +318,12 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
             hint: "Add manifest.json to the .tritontestcase package."
         )
     }
-    guard fileManager.fileExists(atPath: capabilitiesURL.path) else {
-        throw testRecorderValidationFailure(
-            code: "missing_required_file",
-            message: "Missing contract-capabilities.json.",
-            path: "contract-capabilities.json",
-            hint: "Add contract-capabilities.json with actions/pages/network capability arrays."
-        )
-    }
 
     let manifest: TKTestRecorderManifest = try decodeTestRecorderJSON(
         TKTestRecorderManifest.self,
         from: manifestURL,
         path: "manifest.json"
     )
-    let capabilities: TKTestRecorderContractCapabilities = try decodeTestRecorderJSON(
-        TKTestRecorderContractCapabilities.self,
-        from: capabilitiesURL,
-        path: "contract-capabilities.json"
-    )
-
     guard manifest.schemaVersion == 1 else {
         throw testRecorderValidationFailure(
             code: "unsupported_schema_version",
@@ -347,11 +332,25 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
             hint: "Use schemaVersion 1."
         )
     }
+    let capabilitiesURL = try testRecorderCapabilitiesURL(caseURL: caseURL, manifest: manifest)
+    guard fileManager.fileExists(atPath: capabilitiesURL.path) else {
+        throw testRecorderValidationFailure(
+            code: "missing_required_file",
+            message: "Missing \(manifest.capabilitiesRef).",
+            path: manifest.capabilitiesRef,
+            hint: "Add the capabilities file referenced by manifest.json.capabilitiesRef with actions/pages/network capability arrays."
+        )
+    }
+    let capabilities: TKTestRecorderContractCapabilities = try decodeTestRecorderJSON(
+        TKTestRecorderContractCapabilities.self,
+        from: capabilitiesURL,
+        path: manifest.capabilitiesRef
+    )
     guard capabilities.schemaVersion == 1 else {
         throw testRecorderValidationFailure(
             code: "unsupported_schema_version",
             message: "Unsupported contract-capabilities schemaVersion \(capabilities.schemaVersion).",
-            path: "contract-capabilities.json.schemaVersion",
+            path: "\(manifest.capabilitiesRef).schemaVersion",
             hint: "Use schemaVersion 1."
         )
     }
@@ -365,6 +364,19 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
         unsupportedCapabilities: unsupported,
         artifacts: artifacts
     )
+}
+
+private func testRecorderCapabilitiesURL(caseURL: URL, manifest: TKTestRecorderManifest) throws -> URL {
+    let ref = manifest.capabilitiesRef.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !ref.isEmpty, ref.hasPrefix("/") == false, ref.split(separator: "/").contains("..") == false else {
+        throw testRecorderValidationFailure(
+            code: "invalid_capabilities_ref",
+            message: "manifest.json.capabilitiesRef must be a relative path inside the .tritontestcase package.",
+            path: "manifest.json.capabilitiesRef",
+            hint: "Use a relative path such as contract-capabilities.json."
+        )
+    }
+    return caseURL.appendingPathComponent(ref)
 }
 
 func compileTritonTestCase(path: String, writeContract: Bool = false, outputPath: String? = nil) throws -> TKTestRecorderCompileResponse {

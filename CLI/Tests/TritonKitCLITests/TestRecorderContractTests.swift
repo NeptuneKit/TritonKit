@@ -535,6 +535,38 @@ struct TestRecorderContractTests {
         #expect(compiledArtifact.digest == nil)
     }
 
+    @Test("inspect reads capabilities from manifest capabilitiesRef")
+    func inspectReadsCapabilitiesFromManifestCapabilitiesRef() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try """
+        {
+          "schemaVersion": 1,
+          "kind": "triton.testcase.v1",
+          "name": "custom-capabilities",
+          "sourcePlatform": "ios",
+          "capabilitiesRef": "contracts/caps.json"
+        }
+        """.write(to: caseURL.appendingPathComponent("manifest.json"), atomically: true, encoding: .utf8)
+        let contractsURL = caseURL.appendingPathComponent("contracts", isDirectory: true)
+        try FileManager.default.createDirectory(at: contractsURL, withIntermediateDirectories: true)
+        try """
+        {
+          "schemaVersion": 1,
+          "actions": ["tap"],
+          "pages": ["route"],
+          "network": ["passthrough"]
+        }
+        """.write(to: contractsURL.appendingPathComponent("caps.json"), atomically: true, encoding: .utf8)
+
+        let response = try inspectTritonTestCase(path: caseURL.path)
+
+        #expect(response.manifest.capabilitiesRef == "contracts/caps.json")
+        #expect(response.capabilities.actions == ["tap"])
+        #expect(response.capabilities.pages == ["route"])
+        #expect(response.capabilities.network == ["passthrough"])
+    }
+
     @Test("inspect rejects invalid manifest JSON with validation envelope")
     func inspectRejectsInvalidManifestJSON() throws {
         let caseURL = try makeTemporaryCaseDirectory()
