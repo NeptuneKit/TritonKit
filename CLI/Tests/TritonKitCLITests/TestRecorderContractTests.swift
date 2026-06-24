@@ -1197,6 +1197,40 @@ struct TestRecorderContractTests {
     }
 
 
+    @Test("matrix blocks unsupported capabilities instead of counting them as ready")
+    func matrixBlocksUnsupportedCapabilitiesInsteadOfCountingThemAsReady() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try writeValidManifest(to: caseURL)
+        try """
+        {
+          "schemaVersion": 1,
+          "actions": ["tap", "drag"],
+          "pages": ["route", "fingerprint"],
+          "network": ["fixture"]
+        }
+        """.write(to: caseURL.appendingPathComponent("contract-capabilities.json"), atomically: true, encoding: .utf8)
+        try writeRawStreams(to: caseURL)
+        _ = try compileTritonTestCase(path: caseURL.path, writeContract: true)
+
+        let response = try matrixTritonTestCase(
+            path: caseURL.path,
+            targets: "android:emulator-a,harmony:dev-a",
+            executor: nil,
+            targetFingerprints: nil
+        )
+
+        #expect(response.ok == false)
+        #expect(response.status == "blocked")
+        #expect(response.readyCount == 0)
+        #expect(response.passedCount == 0)
+        #expect(response.blockedCount == 2)
+        #expect(response.results.allSatisfy { $0.status == "blocked" })
+        #expect(response.results.allSatisfy {
+            $0.blockers.contains { $0.code == "unsupported_capability" && $0.path == "contract-capabilities.json.actions" }
+        })
+    }
+
     @Test("matrix local simulated writes per target evidence bundles")
     func matrixLocalSimulatedWritesPerTargetEvidenceBundles() throws {
         let caseURL = try makeTemporaryCaseDirectory()
