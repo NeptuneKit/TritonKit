@@ -1311,6 +1311,13 @@ private func replayBlockers(compile: TKTestRecorderCompileResponse, plannedSteps
             message: warning.message
         ))
     }
+    if let finding = compile.compiledContract?.qualityFindings.first(where: { $0.proposalKind == "contract.redaction" }) {
+        blockers.append(TKTestRecorderReplayBlocker(
+            code: "redaction_review_required",
+            path: finding.path,
+            message: "Replay requires redaction review before executing a contract with privacy findings."
+        ))
+    }
     for step in plannedSteps where step.status == "unsupported" {
         blockers.append(TKTestRecorderReplayBlocker(
             code: "unsupported_action",

@@ -896,6 +896,8 @@ struct TestRecorderContractTests {
         #expect(decoded.actions[0].inputText == nil)
         #expect(compiledContent.contains("secret@example.com") == false)
         #expect(replay.plannedSteps.flatMap(\.argv).contains("secret@example.com") == false)
+        #expect(replay.status == "blocked")
+        #expect(replay.blockers.map(\.code).contains("redaction_review_required"))
         #expect(proposalKinds.contains("contract.network"))
         #expect(proposalKinds.contains("contract.selector"))
         #expect(proposalKinds.contains("contract.wait"))
