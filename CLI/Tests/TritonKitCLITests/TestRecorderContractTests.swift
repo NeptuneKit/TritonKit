@@ -565,6 +565,8 @@ struct TestRecorderContractTests {
         #expect(response.capabilities.actions == ["tap"])
         #expect(response.capabilities.pages == ["route"])
         #expect(response.capabilities.network == ["passthrough"])
+        #expect(response.artifacts.first { $0.kind == "contract-capabilities" }?.path == "contracts/caps.json")
+        #expect(response.artifacts.first { $0.path == "contracts/caps.json" }?.present == true)
     }
 
     @Test("inspect rejects invalid manifest JSON with validation envelope")

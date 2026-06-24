@@ -356,7 +356,7 @@ func inspectTritonTestCase(path: String) throws -> TKTestRecorderInspectResponse
     }
 
     let unsupported = unsupportedCapabilities(in: capabilities)
-    let artifacts = testRecorderArtifacts(in: caseURL, fileManager: fileManager)
+    let artifacts = testRecorderArtifacts(in: caseURL, capabilitiesPath: manifest.capabilitiesRef, fileManager: fileManager)
     return TKTestRecorderInspectResponse(
         path: caseURL.path,
         manifest: manifest,
@@ -605,10 +605,10 @@ private func unsupportedCapabilities(in capabilities: TKTestRecorderContractCapa
     return unsupported
 }
 
-private func testRecorderArtifacts(in caseURL: URL, fileManager: FileManager) -> [TKTestRecorderArtifact] {
+private func testRecorderArtifacts(in caseURL: URL, capabilitiesPath: String = "contract-capabilities.json", fileManager: FileManager) -> [TKTestRecorderArtifact] {
     let known: [(kind: String, path: String, required: Bool)] = [
         ("manifest", "manifest.json", true),
-        ("contract-capabilities", "contract-capabilities.json", true),
+        ("contract-capabilities", capabilitiesPath, true),
         ("actions", "actions.jsonl", false),
         ("action-map", "actions/action-map.json", false),
         ("assertions", "assertions.json", false),
