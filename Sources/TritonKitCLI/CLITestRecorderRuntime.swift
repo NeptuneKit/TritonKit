@@ -316,6 +316,7 @@ func handleTestRecorderHTTPMatrix(body: Data) throws -> TKTestRecorderMatrixResp
         path: request.path,
         targets: request.targets,
         executor: request.executor,
+        evidenceRoot: request.evidenceRoot,
         targetFingerprints: testRecorderTargetFingerprintCandidates(from: request.targetFingerprints)
     )
 }

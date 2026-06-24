@@ -149,6 +149,7 @@ struct TestRecorderMatrix: ParsableCommand {
     @Option(help: "Comma-separated targets: ios:sim-a,android:emu-a,harmony:dev-a") var targets: String
     @Option(help: "Optional executor; current offline value is local-simulated. Omit for dry-run matrix.") var executor: String?
     @Option(name: .customLong("target-fingerprints-json"), help: "Optional target-side page fingerprint object, array, or {pages:[...]} for local-simulated matrix") var targetFingerprintsJSON: String?
+    @Option(name: .customLong("evidence-root"), help: "Optional root directory for per-target local-simulated evidence bundles") var evidenceRoot: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
@@ -157,6 +158,7 @@ struct TestRecorderMatrix: ParsableCommand {
             input: input,
             targets: targets,
             executor: executor,
+            evidenceRoot: evidenceRoot,
             targetFingerprintsJSON: targetFingerprintsJSON,
             format: effectiveFormat(format, json: json)
         )
@@ -396,13 +398,14 @@ private func runTestRecorderReplayCommand(input: String, platform: String, devic
     }
 }
 
-private func runTestRecorderMatrixCommand(input: String, targets: String, executor: String?, targetFingerprintsJSON: String?, format: ClientOutputFormat) throws {
+private func runTestRecorderMatrixCommand(input: String, targets: String, executor: String?, evidenceRoot: String?, targetFingerprintsJSON: String?, format: ClientOutputFormat) throws {
     do {
         let targetFingerprints = try decodeTestRecorderTargetFingerprintsJSON(targetFingerprintsJSON)
         let response = try matrixTritonTestCase(
             path: input,
             targets: targets,
             executor: executor,
+            evidenceRoot: evidenceRoot,
             targetFingerprints: targetFingerprints
         )
         switch format {
