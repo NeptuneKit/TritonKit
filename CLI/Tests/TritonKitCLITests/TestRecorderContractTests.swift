@@ -1168,6 +1168,8 @@ struct TestRecorderContractTests {
         #expect(response.results.allSatisfy { $0.plannedStepCount == 2 })
         #expect(response.results.allSatisfy { $0.pageCheckCount == 1 })
         #expect(response.results.allSatisfy { $0.blockers.isEmpty })
+        #expect(response.results[0].suggestedCommand == "triton testrec replay \(shellQuotedEvidencePath(caseURL.path)) --platform android --device 'emulator-a' --dry-run --json")
+        #expect(response.results[1].suggestedCommand == "triton testrec replay \(shellQuotedEvidencePath(caseURL.path)) --platform harmony --device 'dev-a' --dry-run --json")
         #expect(response.suggestedCommands == ["triton testrec matrix \(caseURL.path) --targets android:emulator-a,harmony:dev-a --json"])
     }
 
@@ -1208,6 +1210,8 @@ struct TestRecorderContractTests {
             androidEvidence,
             harmonyEvidence,
         ])
+        #expect(response.results[0].suggestedCommand == "triton testrec replay \(shellQuotedEvidencePath(caseURL.path)) --platform android --device 'emulator-a' --executor local-simulated --evidence-dir \(shellQuotedEvidencePath(androidEvidence)) --json")
+        #expect(response.results[1].suggestedCommand == "triton testrec replay \(shellQuotedEvidencePath(caseURL.path)) --platform harmony --device 'dev-a' --executor local-simulated --evidence-dir \(shellQuotedEvidencePath(harmonyEvidence)) --json")
         #expect(response.suggestedCommands.contains("triton evidence summary \(shellQuotedEvidencePath(androidEvidence)) --json"))
         #expect(response.suggestedCommands.contains("triton evidence summary \(shellQuotedEvidencePath(harmonyEvidence)) --json"))
         #expect(FileManager.default.fileExists(atPath: evidenceRoot.appendingPathComponent("android-emulator-a/run/replay-result.json").path))
