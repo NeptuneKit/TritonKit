@@ -189,7 +189,7 @@ Scenario: redaction gate
 2. Add `local-device` non-dry-run fail-closed test that returns `target_not_found` without device action. Covered by `codex/20260625-testrec-local-device-target-gate` regression.
 3. Add evidence writer parity for blocked local-device runs. Covered by `codex/20260625-testrec-local-device-evidence` regression.
 4. Add schema readiness gate before target discovery, so `local-device` returns `target_capability_missing` when Triton action / observation schema cannot express the requested platform. Covered by `codex/20260625-testrec-local-device-readiness` regression.
-5. Add one platform only after Triton action / observation schema proves enough capability.
+5. Add one platform only after Triton action / observation schema proves enough capability. Android schema-ready evidence is covered by `codex/20260625-testrec-android-schema-ready`; target discovery still fail-closes as `target_not_found` and no device action executes.
 6. Add more actions only after each action has one evidence-backed acceptance test.
 
 ## Stop rule

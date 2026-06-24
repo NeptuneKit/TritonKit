@@ -179,6 +179,7 @@ private func testRecorderLocalDeviceBlockReason(plan: TKTestRecorderReplayDryRun
         )
     }
 
+    let schemaReadyEvidence = testRecorderLocalDeviceSchemaReadyEvidence(platform: platform)
     let trimmedDevice = device?.trimmingCharacters(in: .whitespacesAndNewlines)
     let targetName = trimmedDevice?.isEmpty == false ? trimmedDevice! : platform
     let blocker = TKTestRecorderReplayBlocker(
@@ -189,14 +190,22 @@ private func testRecorderLocalDeviceBlockReason(plan: TKTestRecorderReplayDryRun
     return TKTestRecorderLocalDeviceBlockReason(
         blocker: blocker,
         failureMessage: "Target was not resolved; device action was not executed.",
-        pageEvidence: ["compiled-contract", "target_not_found", "no-observation-captured"],
-        stepEvidence: ["compiled-contract", "target_not_found", "no-device-command-executed"],
+        pageEvidence: ["compiled-contract", "target_not_found", "no-observation-captured"] + schemaReadyEvidence,
+        stepEvidence: ["compiled-contract", "target_not_found", "no-device-command-executed"] + schemaReadyEvidence,
         liveTargetStatus: "missing",
         liveTargetEvidence: ["target_not_found", "target-readiness:not-wired"],
-        deviceActionEvidence: ["act-runner:not-wired", "no-device-command-executed"],
+        deviceActionEvidence: ["act-runner:not-wired", "no-device-command-executed"] + schemaReadyEvidence,
         recoveryCommands: ["triton status --json", "triton doctor --json"],
         retryable: true
     )
+}
+
+private func testRecorderLocalDeviceSchemaReadyEvidence(platform: String) -> [String] {
+    let normalizedPlatform = platform.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    return [
+        "observe-schema:platform-\(normalizedPlatform)-ready",
+        "act-schema:platform-\(normalizedPlatform)-ready",
+    ]
 }
 
 private func testRecorderLocalDeviceSchemaBlocker(plan: TKTestRecorderReplayDryRunResponse, platform: String) -> TKTestRecorderReplayBlocker? {
