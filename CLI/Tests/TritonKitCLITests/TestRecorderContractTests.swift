@@ -259,6 +259,10 @@ struct TestRecorderContractTests {
             "suggestedCommands",
         ])
 
+        let inspectContract = try #require(schema.outputContracts.first { $0.selector == "testrec.inspect" })
+        let capabilitiesRef = try #require(inspectContract.fields.first { $0.name == "manifest.capabilitiesRef" })
+        #expect(capabilitiesRef.description.contains("inside the .tritontestcase package"))
+
         let dryRunContract = try #require(schema.outputContracts.first { $0.selector == "testrec.replay-dry-run" })
         let dryRunRequirementStatus = try #require(dryRunContract.fields.first { $0.name == "executorProfiles[].requirements[].status" })
         for status in ["satisfied", "missing", "optional", "not-required", "simulated", "not-present", "not-requested"] {
