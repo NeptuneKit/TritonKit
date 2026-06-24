@@ -102,7 +102,7 @@ Exclude：
 - HTTP replay 与 CLI replay 已共同覆盖 `manifest.run.summary` parity：`POST /v1/test-recorder/cases/replay` 写出的 evidence bundle 同样校验 `runID / verdict / stepCount / frictionCount`，避免本机 HTTP 管理 API 与 CLI 在证据合同上分叉。
 - replay result 的 `execution.executorRequirements[]` 已拆出 executor capability requirements：当前 `local-simulated` 明确 `compiled-contract=satisfied`、`live-target-device=not-required`、`device-action-execution=not-required`、`network-policy-application=simulated`、`evidence-artifact-capture=satisfied/not-requested`；请求未实现的 `local-device` executor 会返回 `unsupported_replay_executor`，hint 中保留 `live-target-device`、`device-action-execution`、`evidence-artifact-capture` 和 `network-policy-application`，让 agent 知道真实设备回放还缺哪些能力。
 - 已把 `testrec-session-start` / `testrec-event-ingest` / `testrec-session-stop` / `testrec-inspect` / `testrec-compile` / `testrec-proposals-inspect` / `testrec-page-match` / `testrec-replay-dry-run` / `testrec-replay-local-simulated` 接入 `triton schema --command testrec --json` 与 capabilities matrix，agent 可以通过 schema / capabilities 发现该能力。
-- 已验证 unsupported capability 只进入 `unsupportedCapabilities`，不被当成 pass。
+- 已验证 unsupported capability 只进入 `unsupportedCapabilities`，不被当成 pass；并补充 matrix 回归，证明带 unsupported capability 的合同在 dry-run fan-out 中保持 `blocked`，不会计入 `readyCount` / `passedCount`。
 - 尚未实现系统级动作监听、完整合同 compiler、真实 VLM fingerprint 生成、LLM / VLM proposals 与真实设备 `testrec replay` 执行；当前 non-dry-run 只允许 `--executor local-simulated`，Network fixture 只生成脱敏 artifact，不应用到真实网络层。
 
 ## 验收标准
