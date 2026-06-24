@@ -569,6 +569,28 @@ struct TestRecorderContractTests {
         #expect(response.artifacts.first { $0.path == "contracts/caps.json" }?.present == true)
     }
 
+    @Test("inspect rejects capabilitiesRef outside case package")
+    func inspectRejectsCapabilitiesRefOutsideCasePackage() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try """
+        {
+          "schemaVersion": 1,
+          "kind": "triton.testcase.v1",
+          "name": "bad-capabilities-ref",
+          "sourcePlatform": "ios",
+          "capabilitiesRef": "../contract-capabilities.json"
+        }
+        """.write(to: caseURL.appendingPathComponent("manifest.json"), atomically: true, encoding: .utf8)
+
+        let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
+            _ = try inspectTritonTestCase(path: caseURL.path)
+        }
+
+        #expect(failure?.detail.code == "invalid_capabilities_ref")
+        #expect(failure?.detail.path == "manifest.json.capabilitiesRef")
+    }
+
     @Test("inspect rejects invalid manifest JSON with validation envelope")
     func inspectRejectsInvalidManifestJSON() throws {
         let caseURL = try makeTemporaryCaseDirectory()
