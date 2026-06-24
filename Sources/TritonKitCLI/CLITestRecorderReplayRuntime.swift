@@ -82,14 +82,8 @@ func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: 
 
 func replayTritonTestCaseLocalDevice(path: String, platform: String, device: String?, evidenceDirectory: String? = nil) throws -> TKTestRecorderReplayRunResponse {
     let plan = try replayTritonTestCaseDryRun(path: path, platform: platform, device: device)
-    let trimmedDevice = device?.trimmingCharacters(in: .whitespacesAndNewlines)
-    let targetName = trimmedDevice?.isEmpty == false ? trimmedDevice! : platform
-    let blocker = TKTestRecorderReplayBlocker(
-        code: "target_not_found",
-        path: "--device",
-        message: "local-device executor cannot resolve target \(targetName) yet; no device action was executed."
-    )
-    let blockers = plan.blockers + [blocker]
+    let reason = testRecorderLocalDeviceBlockReason(plan: plan, platform: platform, device: device)
+    let blockers = plan.blockers + [reason.blocker]
     let pageResults = plan.pageChecks.map { check in
         TKTestRecorderReplayPageResult(
             index: check.index,
@@ -100,7 +94,7 @@ func replayTritonTestCaseLocalDevice(path: String, platform: String, device: Str
             matchDecision: nil,
             sourcePath: check.sourcePath,
             artifactRefs: [],
-            evidence: ["compiled-contract", "target_not_found", "no-observation-captured"],
+            evidence: reason.pageEvidence,
             expectedArtifacts: check.expectedArtifacts
         )
     }
@@ -115,14 +109,14 @@ func replayTritonTestCaseLocalDevice(path: String, platform: String, device: Str
             argv: step.argv,
             deviceCommandExecuted: false,
             artifactRefs: [],
-            evidence: ["compiled-contract", "target_not_found", "no-device-command-executed"],
+            evidence: reason.stepEvidence,
             failure: TKTestRecorderReplayStepFailure(
-                code: "target_not_found",
-                message: "Target was not resolved; device action was not executed.",
-                path: "--device",
+                code: reason.blocker.code,
+                message: reason.failureMessage,
+                path: reason.blocker.path,
                 artifactRefs: [],
-                recoveryCommands: ["triton status --json", "triton doctor --json"],
-                retryable: true
+                recoveryCommands: reason.recoveryCommands,
+                retryable: reason.retryable
             ),
             expectedArtifacts: step.expectedArtifacts,
             stopConditions: step.stopConditions
@@ -141,7 +135,12 @@ func replayTritonTestCaseLocalDevice(path: String, platform: String, device: Str
         pageResults: pageResults,
         steps: steps,
         blockers: blockers,
-        execution: .localDeviceBlocked()
+        execution: .localDeviceBlocked(
+            failureCode: reason.blocker.code,
+            liveTargetStatus: reason.liveTargetStatus,
+            liveTargetEvidence: reason.liveTargetEvidence,
+            deviceActionEvidence: reason.deviceActionEvidence
+        )
     )
     if let evidenceDirectory {
         try writeTestRecorderReplayEvidence(
@@ -151,6 +150,100 @@ func replayTritonTestCaseLocalDevice(path: String, platform: String, device: Str
         )
     }
     return response
+}
+
+private struct TKTestRecorderLocalDeviceBlockReason {
+    let blocker: TKTestRecorderReplayBlocker
+    let failureMessage: String
+    let pageEvidence: [String]
+    let stepEvidence: [String]
+    let liveTargetStatus: String
+    let liveTargetEvidence: [String]
+    let deviceActionEvidence: [String]
+    let recoveryCommands: [String]
+    let retryable: Bool
+}
+
+private func testRecorderLocalDeviceBlockReason(plan: TKTestRecorderReplayDryRunResponse, platform: String, device: String?) -> TKTestRecorderLocalDeviceBlockReason {
+    if let schemaBlocker = testRecorderLocalDeviceSchemaBlocker(plan: plan, platform: platform) {
+        return TKTestRecorderLocalDeviceBlockReason(
+            blocker: schemaBlocker,
+            failureMessage: "Triton schema does not expose the action or observation capability required for local-device replay.",
+            pageEvidence: ["compiled-contract", "target_capability_missing", "no-observation-captured"],
+            stepEvidence: ["compiled-contract", "target_capability_missing", "no-device-command-executed"],
+            liveTargetStatus: "not-requested",
+            liveTargetEvidence: ["blocked-before-target-resolve"],
+            deviceActionEvidence: ["target_capability_missing", "act-schema:not-ready"],
+            recoveryCommands: ["triton schema --command act --json", "triton schema --command observe --json"],
+            retryable: false
+        )
+    }
+
+    let trimmedDevice = device?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let targetName = trimmedDevice?.isEmpty == false ? trimmedDevice! : platform
+    let blocker = TKTestRecorderReplayBlocker(
+        code: "target_not_found",
+        path: "--device",
+        message: "local-device executor cannot resolve target \(targetName) yet; no device action was executed."
+    )
+    return TKTestRecorderLocalDeviceBlockReason(
+        blocker: blocker,
+        failureMessage: "Target was not resolved; device action was not executed.",
+        pageEvidence: ["compiled-contract", "target_not_found", "no-observation-captured"],
+        stepEvidence: ["compiled-contract", "target_not_found", "no-device-command-executed"],
+        liveTargetStatus: "missing",
+        liveTargetEvidence: ["target_not_found", "target-readiness:not-wired"],
+        deviceActionEvidence: ["act-runner:not-wired", "no-device-command-executed"],
+        recoveryCommands: ["triton status --json", "triton doctor --json"],
+        retryable: true
+    )
+}
+
+private func testRecorderLocalDeviceSchemaBlocker(plan: TKTestRecorderReplayDryRunResponse, platform: String) -> TKTestRecorderReplayBlocker? {
+    let normalizedPlatform = platform.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    let schemas = Dictionary(uniqueKeysWithValues: commandSchemas().map { ($0.name, $0) })
+
+    guard let observe = schemas["observe"] else {
+        return TKTestRecorderReplayBlocker(
+            code: "target_capability_missing",
+            path: "triton.schema.observe",
+            message: "local-device executor requires triton observe schema before target resolution."
+        )
+    }
+    if !observe.providedCapabilities.contains("observe-\(normalizedPlatform)") {
+        return TKTestRecorderReplayBlocker(
+            code: "target_capability_missing",
+            path: "triton.schema.observe",
+            message: "local-device executor requires observe capability for \(normalizedPlatform)."
+        )
+    }
+
+    guard let act = schemas["act"] else {
+        return TKTestRecorderReplayBlocker(
+            code: "target_capability_missing",
+            path: "triton.schema.act",
+            message: "local-device executor requires triton act schema before action execution."
+        )
+    }
+    let supportedActions = Set(act.subcommands.map { $0.name })
+    let plannedActions = plan.plannedSteps.map { $0.action }
+    if let missingAction = plannedActions.first(where: { !supportedActions.contains($0) }) {
+        return TKTestRecorderReplayBlocker(
+            code: "target_capability_missing",
+            path: "triton.schema.act",
+            message: "local-device executor requires triton act \(missingAction) schema before action execution."
+        )
+    }
+    let platformOptionType = act.options.first { $0.name == "--platform" }?.type ?? ""
+    let platformTypes = platformOptionType.split(separator: "|").map { String($0).lowercased() }
+    if !platformTypes.contains(normalizedPlatform) {
+        return TKTestRecorderReplayBlocker(
+            code: "target_capability_missing",
+            path: "triton.schema.act",
+            message: "local-device executor requires triton act --platform \(normalizedPlatform) support before action execution."
+        )
+    }
+    return nil
 }
 
 private func testRecorderReplayArtifactRefs(evidenceDirectory: String?, targetFingerprints: [TKJSONValue]?, networkResults: [TKTestRecorderReplayNetworkResult]) -> [String] {
@@ -421,7 +514,7 @@ private func writeTestRecorderReplayEvidence(response: TKTestRecorderReplayRunRe
             strategy: nil,
             artifactRefs: nil,
             failureCode: nil,
-            evidence: ["local-simulated", "compiled-contract"]
+            evidence: [response.executor, "compiled-contract"]
         ),
     ]
     events.append(contentsOf: response.pageResults.map { page in

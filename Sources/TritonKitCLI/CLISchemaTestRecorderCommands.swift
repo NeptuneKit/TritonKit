@@ -113,6 +113,8 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                 "unsupported_schema_version",
                 "dry_run_required",
                 "unsupported_replay_executor",
+                "target_not_found",
+                "target_capability_missing",
                 "missing_matrix_targets",
                 "invalid_matrix_target",
                 "invalid_session_id",
@@ -287,6 +289,8 @@ func testRecorderCommandSchemas() -> [TKCommandSchema] {
                         "unsupported_schema_version",
                         "dry_run_required",
                         "unsupported_replay_executor",
+                        "target_not_found",
+                        "target_capability_missing",
                     ]
                 ),
             ],
