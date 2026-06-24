@@ -17,8 +17,8 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
    - swift-only：只跑 Swift tests、CLI release build 与 release/homebrew contract checks，跳过 CocoaPods lint；适用于 `Sources/TritonKitCLI/`、`CLI/Package.swift`、`CLI/Package.resolved`、`Tests/`、`Package.swift`、`Package.resolved`。
    - contracts-only：只跑 release/homebrew/CI contract checks；适用于 `.github/workflows/` 与发布、版本、Homebrew、CI 分类相关脚本。
    - podkit-only：跑 Swift tests、`TritonKit.podspec` lint 与 contract checks；适用于 `Sources/TritonKit/` 与 `TritonKit.podspec`。
-   - full：运行 Swift tests、两个 CocoaPods spec、Homebrew formula template、版本脚本和 release automation 契约；适用于 Shared models、`TritonKitShared.podspec`、未分类脚本和 fixtures。
-6. CI 中保留名为 `Validate` 的聚合 job；full validate 内部拆成 `Validate Swift Tests`、`Validate Podspec (TritonKitShared)`、`Validate Podspec (TritonKit)` 与 `Validate Contracts` 并行执行，降低 wall-clock 等待时间，同时保持分支保护只需依赖稳定的 `Validate`。`podkit-only` 只运行 `Validate Podspec (TritonKit)`，不运行 Shared podspec lint。`docs` 与 `contracts` 短路径的实际检查直接在 `Classify Validate Scope` job 内完成，避免额外启动一个 Ubuntu job。
+   - full：运行 Swift tests、`TritonKit.podspec` lint、Homebrew formula template、版本脚本和 release automation 契约；适用于未分类脚本和 fixtures。
+6. CI 中保留名为 `Validate` 的聚合 job；full validate 内部拆成 `Validate Swift Tests`、`Validate Podspec (TritonKit)` 与 `Validate Contracts` 并行执行，降低 wall-clock 等待时间，同时保持分支保护只需依赖稳定的 `Validate`。`docs` 与 `contracts` 短路径的实际检查直接在 `Classify Validate Scope` job 内完成，避免额外启动一个 Ubuntu job。
 7. `Validate Swift Tests` 使用 `actions/cache@v4` 缓存 `.build` 与 SwiftPM dependency cache，cache key 基于根 package 与 `CLI/` package 的 manifest / resolved 文件。
 8. CLI build 执行 `swift build --package-path CLI --scratch-path .build/cli -c release --product triton`，根 `Package.swift` 只保留 iOS embedded SDK 依赖边界。
 9. 按架构打包 CLI，发布顺序为 arm64 先发、x86_64 后补；x86_64 使用 SwiftPM `--triple x86_64-apple-macosx14.0` 在 arm64 macOS runner 上交叉编译，并用 `file` 校验产物架构：
@@ -35,7 +35,7 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
    - `tritonkit-skills.tar.gz`，顶层包含 `TritonKit.skills/`，其内包含 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression` 与 `tritonkit-update`
 13. 所有包先作为 workflow artifact 上传；tag 发布时 arm64 包与 skill 包先作为 GitHub Release asset 上传，x86_64 包成功后再补传。
 14. arm64 发布完成后触发 Homebrew tap 更新 workflow；x86_64 后补完成后再次触发 tap 更新，让 Intel formula 分支拿到 checksum。
-15. 整体发布必须先同步所有对外包入口版本：`TritonKit.podspec`、`TritonKitShared.podspec`、`Web/package.json` 与 `Web/package-lock.json` 都必须等于 release tag 版本；`release.sh` 在打 tag 前通过 `verify-release-package-versions.sh` 强制校验。
+15. 整体发布必须先同步所有对外包入口版本：`TritonKit.podspec`、`Web/package.json` 与 `Web/package-lock.json` 都必须等于 release tag 版本；`release.sh` 在打 tag 前通过 `verify-release-package-versions.sh` 强制校验。
 16. Release workflow 的 arm64 与 x86_64 build job 使用 `actions/cache@v4` 缓存 SwiftPM dependency/build 输出；cache key 分别包含 `release-cli-arm64` 与 `release-cli-x86_64`，避免为了 Intel 产物回退到慢 Intel runner。
 
 Skill 源码分层约束：release packaging 只能读取 `TritonKit.skills/`。`.agents/skills/` 只存放 repo 维护、治理、实现和监督用 skill，不进入 `tritonkit-skills.tar.gz`，也不作为 release packaging 源。
@@ -89,9 +89,9 @@ brew upgrade triton
 - CI docs/skill-only fast path 使用 `docs-linhay/scripts/verify.sh --ci-docs`；只允许 README、AGENTS、docs/memory/references/screenshots、`TritonKit.skills/` 与 `.agents/skills/` 进入 fast path，`Sources/`、`Tests/`、podspec、workflow、`docs-linhay/scripts/` 和 fixtures 默认触发 full validate。
 - 本地运行 `docs-linhay/scripts/verify-ci-validate-mode.sh` 验证 fast/full 分类边界。
 - Swift-only fast path 会跳过 CocoaPods lint，只允许 CLI target、tests 和 SwiftPM manifest/lockfile；iOS runtime 与 Shared model 改动仍触发 full validate。
-- Contract-only fast path 会跳过 macOS Swift 和 CocoaPods job，只验证 CI/release/Homebrew 脚本契约；`v*` tag 固定走该路径，让 release asset packaging 尽快启动。podkit-only 会跳过 `TritonKitShared.podspec` lint，只保留 `TritonKit.podspec` lint。
+- Contract-only fast path 会跳过 macOS Swift 和 CocoaPods job，只验证 CI/release/Homebrew 脚本契约；`v*` tag 固定走该路径，让 release asset packaging 尽快启动。podkit-only 只保留 `TritonKit.podspec` lint。
 - Docs-only 与 contract-only fast path 不再单独启动 `Validate Docs` / `Validate Contracts` job；它们复用分类 job 的 checkout 与 runner，聚合 `Validate` 只负责检查 `Classify Validate Scope` 成功。
-- Full validate 在 CI 中并行运行 Swift tests、两个 podspec lint 与 release/homebrew 契约检查；本地仍可用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
+- Full validate 在 CI 中并行运行 Swift tests、`TritonKit.podspec` lint 与 release/homebrew 契约检查；本地仍可用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。
 - 运行 `docs-linhay/scripts/verify-skill-package.sh`，验证 `package-public-skills.py` 生成的 `tritonkit-skills.tar.gz` 顶层包含 `TritonKit.skills/`、三个 public skills、版本 stamp 和 `BUILD_INFO.json`，并验证安装脚本会删除旧三个独立目录。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。

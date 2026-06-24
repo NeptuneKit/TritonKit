@@ -1,5 +1,7 @@
 import Foundation
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
+#endif
 #if canImport(Darwin)
 import Darwin
 #elseif canImport(Glibc)

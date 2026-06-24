@@ -16,7 +16,7 @@ A whole TritonKit release means these public package surfaces are aligned to the
 - CLI binary release assets and `triton version --json` output, stamped by CI from the `v*` tag.
 - Bundled Web asset inside the CLI tarballs and Homebrew install.
 - Public skill bundle `tritonkit-skills.tar.gz`, stamped by CI from the `v*` tag.
-- iOS embedded SDK CocoaPods specs: `TritonKit.podspec` and `TritonKitShared.podspec`.
+- iOS embedded SDK CocoaPods spec: `TritonKit.podspec`.
 - Web package manifests: `Web/package.json` and `Web/package-lock.json`.
 
 SwiftPM has no version field in `Package.swift`; consumers update by resolving the Git tag. Do not add a package version field to SwiftPM manifests.
@@ -25,7 +25,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 
 1. Pick the next tag. If a tag has already been published, never move it; create the next patch release.
 2. Before changing versions, run `docs-linhay/scripts/verify-release-package-versions.sh <version>` to prove the current manifests would fail for the target.
-3. Update `TritonKit.podspec`, `TritonKitShared.podspec`, `Web/package.json`, and `Web/package-lock.json`.
+3. Update `TritonKit.podspec`, `Web/package.json`, and `Web/package-lock.json`.
 4. Do not manually edit `Sources/TritonKitCLI/CLIBuildInfo.swift` for a release version. CI writes `TritonKitBuildInfo.cliVersion` during release builds.
 5. Run focused validation:
    - `docs-linhay/scripts/verify-release-package-versions.sh <version>`
@@ -33,8 +33,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
    - `git diff --check`
    - `docs-linhay/scripts/check-docs.sh`
    - `npm --prefix Web run build`
-   - `pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests`
-   - `pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests`
+   - `pod lib lint TritonKit.podspec --allow-warnings --skip-tests`
 6. Run release preflight with Xcode simulator checks disabled only when the local environment does not need that coverage: `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local`.
 7. Update `docs-linhay/dev/` and `docs-linhay/memory/YYYY-MM-DD.md` for release contract changes.
 8. Commit and push `main`, then publish through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`.

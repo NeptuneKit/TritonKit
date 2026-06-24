@@ -51,9 +51,7 @@ expect_mode podkit Sources/TritonKit/TritonKit.swift
 expect_mode podkit TritonKit.podspec
 expect_mode podkit Sources/TritonKit/TritonKit.swift Sources/TritonKitCLI/TritonKitCLI.swift
 
-expect_mode full Sources/TritonKitShared/TKCLITransportModels.swift
-expect_mode full TritonKitShared.podspec
-expect_mode full TritonKitShared.podspec TritonKit.podspec
+expect_mode podkit Sources/TritonKitShared/TKCLITransportModels.swift
 expect_mode full docs-linhay/scripts/verify.sh
 expect_mode full fixtures/harmony-collector-smoke/oh-package.json5
 

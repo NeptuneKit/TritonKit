@@ -1,5 +1,7 @@
 import Foundation
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
+#endif
 
 enum TKRuntimeCapabilityGate {
     static func disabledResponse(for message: TKMessage, configuration: TritonKit.Configuration) -> TKMessage? {

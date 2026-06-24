@@ -98,7 +98,7 @@ pod repo update
 pod install
 ```
 
-The app Podfile should depend on `TritonKit` only, with Debug-only configuration. Do not ask users to add `TritonKitShared` directly; `TritonKit.podspec` resolves it transitively.
+The app Podfile should depend on `TritonKit` only, with Debug-only configuration. Do not ask users to add any sibling TritonKit pod.
 
 ## Report Back
 

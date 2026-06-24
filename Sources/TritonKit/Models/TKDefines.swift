@@ -1,7 +1,10 @@
 import Foundation
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
+#endif
 
 // These types are re-exported from TritonKitShared for convenience
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
 @_exported import enum TritonKitShared.TKRequestType
 @_exported import enum TritonKitShared.TKJSONValue
 @_exported import struct TritonKitShared.TKMessage
@@ -13,6 +16,7 @@ import TritonKitShared
 @_exported import struct TritonKitShared.TKRuntimeSemanticRedaction
 @_exported import struct TritonKitShared.TKRuntimeSemanticStateField
 @_exported import struct TritonKitShared.TKRuntimeSemanticStateResponse
+#endif
 
 // MARK: - iOS-specific Enums
 

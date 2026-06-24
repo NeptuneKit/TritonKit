@@ -14,6 +14,7 @@
 JSON 输出模型为 `CLIUpdateResponse`，关键字段包括：
 
 - `currentVersion` / `targetVersion` / `releaseTag`
+- `updateAvailable`：仅表示已解析出的目标版本高于当前版本；没有明确 `targetVersion` 的 Homebrew plan 不能用该字段表达“存在可执行 update action”
 - `installSource`：`homebrew`、`manual`、`sourceCheckout` 或 `unknown`
 - `actions[]`：有序更新计划，标记每步是否 destructive
 - `requiresConfirmation`：需要 `--yes` 时为 true
@@ -31,6 +32,7 @@ brew upgrade neptunekit/tap/triton
 
 不得直接覆盖 Homebrew Cellar 管理的 binary。
 未显式传 `--version` 且不更新 skills 时，Homebrew 来源不得依赖 GitHub `/releases/latest` API；版本解析交给 `brew update` / `brew upgrade`，避免 GitHub API 限流阻断 Homebrew 更新路径。
+这种情况下 `targetVersion` / `releaseTag` 保持为空，`updateAvailable=false`；agents 应读取 `actions[]` 判断可执行的 Homebrew 维护动作，而不是把 `updateAvailable` 当作 action availability。
 
 手动 tarball 来源执行：
 

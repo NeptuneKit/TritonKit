@@ -113,10 +113,16 @@ if 'define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))' not in pa
 
 if "OTHER_SWIFT_FLAGS[config=Debug]" not in podspec_text or "TRITONKIT_RUNTIME_ENABLED" not in podspec_text:
     fail("TritonKit.podspec must define TRITONKIT_RUNTIME_ENABLED for the TritonKit pod target Debug configuration")
+if "TRITONKIT_COCOAPODS_SINGLE_POD" not in podspec_text:
+    fail("TritonKit.podspec must define TRITONKIT_COCOAPODS_SINGLE_POD for single-pod CocoaPods compilation")
 if re.search(r"['\"]OTHER_SWIFT_FLAGS['\"]\s*=>\s*['\"][^'\"]*TRITONKIT_RUNTIME_ENABLED", podspec_text):
     fail("TritonKit.podspec must not define TRITONKIT_RUNTIME_ENABLED through unscoped OTHER_SWIFT_FLAGS")
 if re.search(r"OTHER_SWIFT_FLAGS\[config=Release\].*TRITONKIT_RUNTIME_ENABLED", podspec_text):
     fail("TritonKit.podspec must not define TRITONKIT_RUNTIME_ENABLED for Release configuration")
+if re.search(r"s\.dependency\s+['\"]TritonKitShared['\"]", podspec_text):
+    fail("TritonKit.podspec must not expose TritonKitShared as a CocoaPods dependency")
+if "Sources/TritonKitShared/**/*.swift" not in podspec_text:
+    fail("TritonKit.podspec must include shared sources directly for single-pod CocoaPods installs")
 
 if "public static var isRuntimeEnabled" not in runtime_text:
     fail("Sources/TritonKit/TritonKit.swift must expose isRuntimeEnabled")

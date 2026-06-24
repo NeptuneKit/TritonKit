@@ -39,7 +39,7 @@ enum XcodeBuildOutputDiagnosticsParser {
             nextAction: TKCLINextAction(
                 command: "xcode",
                 args: ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"],
-                category: "recover"
+                category: "project"
             )
         )
     }
@@ -56,11 +56,11 @@ enum XcodeBuildOutputDiagnosticsParser {
             message: "xcodebuild reported a Swift macro plugin executable that produced a malformed response.",
             matchCount: samples.count,
             samples: Array(samples.prefix(maximumSamples)),
-            recovery: "Swift macro plugin execution failed with a malformed response. Retry the Xcode action with a fresh --derived-data-path outside the current repo-local cache, for example --derived-data-path <fresh-derived-data-path>. If the same scheme builds through Xcode-managed DerivedData, keep the Triton stdout/stderr artifacts and use triton app install/launch with the successful .app as a temporary workaround.",
+            recovery: "Swift macro plugin execution failed with a malformed response. Avoid repeating fresh DerivedData retries after the same failure reproduces; inspect active Xcode build/plugin state with triton xcode status --json, preserve the Triton stdout/stderr artifacts, verify the macro plugin executable path, host architecture, Xcode/toolchain version, plugin trust state, and package plugin build logs. If the same scheme builds through Xcode-managed DerivedData, use triton app install/launch with the successful .app as a temporary workaround.",
             nextAction: TKCLINextAction(
                 command: "xcode",
-                args: ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"],
-                category: "recover"
+                args: ["status", "--json"],
+                category: "project"
             )
         )
     }

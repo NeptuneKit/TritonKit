@@ -153,8 +153,7 @@ case "$mode" in
     run_step "Swift tests" swift test
     run_step "Release CLI build" swift build --package-path "$root/CLI" --scratch-path "$root/.build/cli" -c release --product triton
     run_step "Install CocoaPods if needed" ensure_cocoapods
-    run_step "Validate TritonKitShared podspec" pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests
-    run_step "Validate TritonKit podspec" pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
+    run_step "Validate TritonKit podspec" pod lib lint TritonKit.podspec --allow-warnings --skip-tests
     run_step "Validate Homebrew formula template" "$root/docs-linhay/scripts/verify-homebrew-formula.sh"
     run_step "Validate version stamping scripts" "$root/docs-linhay/scripts/verify-version-stamping.sh"
     run_step "Validate skill package script" "$root/docs-linhay/scripts/verify-skill-package.sh"

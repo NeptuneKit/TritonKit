@@ -27,7 +27,7 @@ func makeCLIUpdatePlan(
     let target = normalizedReleaseTarget(requestedVersion)
     let installSource = detectCLIUpdateInstallSource(currentExecutable: currentExecutable, environment: environment)
     let assetName = cliUpdateAssetName(forArchitecture: architecture)
-    let updateAvailable = target.version.map { versionIsNewer($0, than: currentVersion) } ?? true
+    let updateAvailable = target.version.map { versionIsNewer($0, than: currentVersion) } ?? false
     let checksumManifestName = "tritonkit_checksums.txt"
     let mutating = !checkOnly && !dryRun
     let requiresConfirmation = mutating && !confirm && updateAvailable
@@ -274,7 +274,8 @@ func runCLIUpdate(
         repository: repository,
         environment: ProcessInfo.processInfo.environment
     )
-    if plan.checkOnly || plan.dryRun || !plan.updateAvailable {
+    let canRunUntargetedHomebrewUpdate = plan.installSource == .homebrew && plan.releaseTag == nil
+    if plan.checkOnly || plan.dryRun || (!plan.updateAvailable && !canRunUntargetedHomebrewUpdate) {
         return plan
     }
     if includeSkills && skillsDirectory == nil {

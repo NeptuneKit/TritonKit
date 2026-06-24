@@ -86,6 +86,9 @@ is_podkit_path() {
     Sources/TritonKit/*)
       return 0
       ;;
+    Sources/TritonKitShared/*)
+      return 0
+      ;;
     *)
       return 1
       ;;

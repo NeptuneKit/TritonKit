@@ -51,13 +51,15 @@ grep -q 'classify-validate:' "${ci_workflow}" || fail "ci workflow must classify
 grep -q 'Validate docs and skills' "${ci_workflow}" || fail "ci workflow must keep an in-classifier docs/skill-only validate path"
 grep -q 'Validate short-path contracts' "${ci_workflow}" || fail "ci workflow must keep an in-classifier contract-only validate path"
 grep -q 'validate-swift:' "${ci_workflow}" || fail "ci workflow must split Swift tests into an independent validate job"
-grep -q 'validate-podspec-shared:' "${ci_workflow}" || fail "ci workflow must split TritonKitShared podspec lint into an independent validate job"
 grep -q 'validate-podspec-kit:' "${ci_workflow}" || fail "ci workflow must split TritonKit podspec lint into an independent validate job"
 grep -q 'validate-contracts:' "${ci_workflow}" || fail "ci workflow must split release/homebrew contract checks into an independent validate job"
 grep -q 'name: Validate' "${ci_workflow}" || fail "ci workflow must keep a stable Validate aggregator job"
 grep -q "mode == 'swift'" "${ci_workflow}" || fail "ci workflow must support a swift-only validate mode"
 grep -q "mode == 'contracts'" "${ci_workflow}" || fail "ci workflow must support a contract-only validate mode"
 grep -q "mode == 'podkit'" "${ci_workflow}" || fail "ci workflow must support a TritonKit-only podspec validate mode"
+if grep -q 'TritonKitShared[.]podspec' "${ci_workflow}"; then
+  fail "ci workflow must not validate or require a public TritonKitShared podspec"
+fi
 grep -q 'actions/cache@v4' "${ci_workflow}" || fail "ci workflow must cache SwiftPM dependencies/build products"
 grep -q 'verify-spm-dependency-boundary[.]sh' "${ci_workflow}" || fail "ci workflow must validate the SwiftPM iOS/CLI dependency boundary"
 grep -q 'swift build --package-path CLI --scratch-path [.]build/cli -c release --product triton' "${ci_workflow}" \

@@ -1,5 +1,7 @@
 import Foundation
+#if !TRITONKIT_COCOAPODS_SINGLE_POD
 import TritonKitShared
+#endif
 
 public class TritonKitRequestHandler: TritonKitDelegate {
     public weak var kit: TritonKit?

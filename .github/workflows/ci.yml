@@ -86,25 +86,6 @@ jobs:
       - name: CLI release build
         run: swift build --package-path CLI --scratch-path .build/cli -c release --product triton
 
-  validate-podspec-shared:
-    name: Validate Podspec (TritonKitShared)
-    needs: classify-validate
-    if: needs.classify-validate.outputs.mode == 'full'
-    runs-on: macos-latest
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Install CocoaPods if needed
-        run: |
-          if ! command -v pod >/dev/null 2>&1; then
-            sudo gem install cocoapods --no-document
-          fi
-
-      - name: Validate podspec
-        run: pod lib lint TritonKitShared.podspec --allow-warnings --skip-tests
-
   validate-podspec-kit:
     name: Validate Podspec (TritonKit)
     needs: classify-validate
@@ -122,7 +103,7 @@ jobs:
           fi
 
       - name: Validate podspec
-        run: pod lib lint TritonKit.podspec --include-podspecs=TritonKitShared.podspec --allow-warnings --skip-tests
+        run: pod lib lint TritonKit.podspec --allow-warnings --skip-tests
 
   validate-contracts:
     name: Validate Contracts
@@ -153,7 +134,6 @@ jobs:
     needs:
       - classify-validate
       - validate-swift
-      - validate-podspec-shared
       - validate-podspec-kit
       - validate-contracts
     if: always()
@@ -168,7 +148,6 @@ jobs:
           echo "validate mode: ${mode}"
           echo "classify: ${{ needs.classify-validate.result }}"
           echo "swift: ${{ needs.validate-swift.result }}"
-          echo "podspec-shared: ${{ needs.validate-podspec-shared.result }}"
           echo "podspec-kit: ${{ needs.validate-podspec-kit.result }}"
           echo "contracts: ${{ needs.validate-contracts.result }}"
 
@@ -182,7 +161,6 @@ jobs:
               ;;
             full)
               [[ "${{ needs.validate-swift.result }}" == "success" ]] || exit 1
-              [[ "${{ needs.validate-podspec-shared.result }}" == "success" ]] || exit 1
               [[ "${{ needs.validate-podspec-kit.result }}" == "success" ]] || exit 1
               [[ "${{ needs.validate-contracts.result }}" == "success" ]] || exit 1
               ;;

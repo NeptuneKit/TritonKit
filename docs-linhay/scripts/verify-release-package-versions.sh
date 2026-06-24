@@ -36,8 +36,7 @@ rescue Errno::ENOENT
 end
 
 {
-  "TritonKit.podspec" => File.join(root, "TritonKit.podspec"),
-  "TritonKitShared.podspec" => File.join(root, "TritonKitShared.podspec")
+  "TritonKit.podspec" => File.join(root, "TritonKit.podspec")
 }.each do |label, path|
   text = read(path)
   match = text.match(/^\s*s\.version\s*=\s*['"]([^'"]+)['"]/)

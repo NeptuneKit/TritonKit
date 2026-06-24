@@ -44,7 +44,7 @@ struct XcodeDiagnosticsTests {
         #expect(diagnostic.recovery.contains(".triton/DerivedData"))
         #expect(diagnostic.nextAction.command == "xcode")
         #expect(diagnostic.nextAction.args == ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"])
-        #expect(diagnostic.nextAction.category == "recover")
+        #expect(diagnostic.nextAction.category == "project")
     }
 
     @Test("xcodebuild Swift macro malformed response output is parsed into actionable diagnostics")
@@ -63,11 +63,12 @@ struct XcodeDiagnosticsTests {
         #expect(diagnostic.samples[0].path == "/repo/.triton/DerivedData/Build/Products/Debug-iphonesimulator/NavigatorMacros")
         #expect(diagnostic.samples[0].message.contains("NavigatorMacros.RoutePlaceholdMacro"))
         #expect(diagnostic.recovery.contains("Swift macro"))
-        #expect(diagnostic.recovery.contains("--derived-data-path"))
-        #expect(diagnostic.recovery.contains("<fresh-derived-data-path>"))
+        #expect(diagnostic.recovery.contains("repeating fresh DerivedData retries"))
+        #expect(diagnostic.recovery.contains("macro plugin executable"))
+        #expect(diagnostic.recovery.contains("triton xcode status --json"))
         #expect(diagnostic.nextAction.command == "xcode")
-        #expect(diagnostic.nextAction.args == ["build", "--derived-data-path", "<fresh-derived-data-path>", "--jsonl"])
-        #expect(diagnostic.nextAction.category == "recover")
+        #expect(diagnostic.nextAction.args == ["status", "--json"])
+        #expect(diagnostic.nextAction.category == "project")
     }
 
     @Test("xcodebuild Swift macro malformed response maps to specialized failure code")

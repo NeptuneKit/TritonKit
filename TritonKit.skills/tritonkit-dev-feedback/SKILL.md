@@ -270,11 +270,11 @@ SwiftPM:
 https://github.com/NeptuneKit/TritonKit.git
 ```
 
-Add only the `TritonKit` product to the iOS app target. `TritonKitShared` is an internal shared-contract target pulled in transitively; app integrations should not select or import it directly. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the package runtime guard.
+Add only the `TritonKit` product to the iOS app target. App integrations should not select or import internal TritonKit targets directly. Keep every app-side source file that imports or starts TritonKit behind `#if DEBUG`; do not rely only on the package runtime guard.
 
 SwiftPM supports configuration-scoped build settings, so TritonKit defines `TRITONKIT_RUNTIME_ENABLED` only for Debug package builds and keeps the embedded runtime no-op in Release. SwiftPM / Xcode package product dependencies still do not have a CocoaPods-style `:configurations => ['Debug']` switch: the package product may remain attached to the target even though the runtime is disabled. If the production Release target must not link TritonKit at all, create a separate Debug-only app target or scheme and attach the `TritonKit` product only to that target.
 
-CocoaPods during development, restricted to Debug configurations. Do not add `TritonKitShared` explicitly; `TritonKit` resolves it transitively. The `TritonKit` podspec defines `TRITONKIT_RUNTIME_ENABLED` for the pod target Debug configuration, so do not ask users to add custom app-target `OTHER_SWIFT_FLAGS` for that macro.
+CocoaPods during development, restricted to Debug configurations. Add only the `TritonKit` pod; do not add sibling TritonKit pods. The `TritonKit` podspec defines `TRITONKIT_RUNTIME_ENABLED` for the pod target Debug configuration, so do not ask users to add custom app-target `OTHER_SWIFT_FLAGS` for that macro.
 
 ```ruby
 target 'YourApp' do

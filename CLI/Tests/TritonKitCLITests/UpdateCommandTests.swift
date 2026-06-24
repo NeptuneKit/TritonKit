@@ -101,6 +101,10 @@ struct UpdateCommandTests {
 
         #expect(plan.installSource == .homebrew)
         #expect(plan.releaseTag == nil)
+        #expect(plan.latestVersion == nil)
+        #expect(plan.targetVersion == nil)
+        #expect(plan.updateAvailable == false)
+        #expect(plan.requiresConfirmation == false)
         #expect(plan.actions.map(\.kind) == [.homebrewUpdate, .homebrewUpgrade])
     }
 
