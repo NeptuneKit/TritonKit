@@ -1013,7 +1013,9 @@ struct TKTestRecorderFingerprintMatchResponse: Codable, Equatable {
         self.llmUsed = false
         self.llmDecisionAuthority = policy.llmDecisionAuthority
         self.suggestedCommands = [
-            "triton testrec compile \(path) --json",
+            "triton testrec inspect \(shellQuotedEvidencePath(path)) --json",
+            "triton testrec proposals \(shellQuotedEvidencePath(path)) --json",
+            "triton testrec compile \(shellQuotedEvidencePath(path)) --json",
         ]
     }
 }
