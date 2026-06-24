@@ -21,7 +21,6 @@ func statusOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func schemaCommandsOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "schema.commands",
@@ -39,7 +38,6 @@ func schemaCommandsOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func updatePlanOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "update.plan",
@@ -79,7 +77,6 @@ func updatePlanOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
-
 func testValidationOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.validation",
@@ -247,6 +244,8 @@ func testRecorderSessionStartOutputContract() -> TKCommandOutputContract {
             ("manifest", "TKTestRecorderManifest?", false, "Written manifest.json payload"),
             ("manifest.name", "String?", false, "Test case name"),
             ("manifest.sourcePlatform", "String?", false, "Source platform being recorded"),
+            ("manifest.redactionStatus", "String?", false, "Redaction lifecycle status, default pending before compile review"),
+            ("manifest.truncationStatus", "String?", false, "Raw stream truncation status, default not-truncated"),
             ("capabilities", "TKTestRecorderContractCapabilities?", false, "Written contract-capabilities.json payload"),
             ("capabilities.actions", "[String]?", false, "Action capabilities enabled for the case"),
             ("capabilities.pages", "[String]?", false, "Page capabilities enabled for the case"),
@@ -321,6 +320,8 @@ func testRecorderInspectOutputContract() -> TKCommandOutputContract {
             ("manifest", "TKTestRecorderManifest?", false, "Decoded manifest.json"),
             ("manifest.name", "String?", false, "Test case name"),
             ("manifest.sourcePlatform", "String?", false, "Source platform that produced the contract"),
+            ("manifest.redactionStatus", "String?", false, "Redaction lifecycle status, default pending before compile review"),
+            ("manifest.truncationStatus", "String?", false, "Raw stream truncation status, default not-truncated"),
             ("capabilities", "TKTestRecorderContractCapabilities?", false, "Decoded contract-capabilities.json"),
             ("capabilities.actions", "[String]?", false, "Action contract capabilities such as tap, type, and scroll"),
             ("capabilities.pages", "[String]?", false, "Page contract capabilities such as route, ax, and fingerprint"),

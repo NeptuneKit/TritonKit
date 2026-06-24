@@ -6,6 +6,27 @@ struct TKTestRecorderManifest: Codable, Equatable {
     let kind: String
     let name: String
     let sourcePlatform: String?
+    let redactionStatus: String
+    let truncationStatus: String
+
+    init(schemaVersion: Int, kind: String, name: String, sourcePlatform: String?, redactionStatus: String = "pending", truncationStatus: String = "not-truncated") {
+        self.schemaVersion = schemaVersion
+        self.kind = kind
+        self.name = name
+        self.sourcePlatform = sourcePlatform
+        self.redactionStatus = redactionStatus
+        self.truncationStatus = truncationStatus
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        self.kind = try container.decode(String.self, forKey: .kind)
+        self.name = try container.decode(String.self, forKey: .name)
+        self.sourcePlatform = try container.decodeIfPresent(String.self, forKey: .sourcePlatform)
+        self.redactionStatus = try container.decodeIfPresent(String.self, forKey: .redactionStatus) ?? "pending"
+        self.truncationStatus = try container.decodeIfPresent(String.self, forKey: .truncationStatus) ?? "not-truncated"
+    }
 }
 
 struct TKTestRecorderContractCapabilities: Codable, Equatable {
