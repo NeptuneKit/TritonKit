@@ -704,7 +704,12 @@ struct TKTestRecorderReplayExecutionSummary: Codable, Equatable {
     let executorRequirements: [TKTestRecorderReplayExecutorRequirement]
     let evidence: [String]
 
-    static func localDeviceBlocked() -> TKTestRecorderReplayExecutionSummary {
+    static func localDeviceBlocked(
+        failureCode: String = "target_not_found",
+        liveTargetStatus: String = "missing",
+        liveTargetEvidence: [String] = ["target_not_found", "target-readiness:not-wired"],
+        deviceActionEvidence: [String] = ["act-runner:not-wired", "no-device-command-executed"]
+    ) -> TKTestRecorderReplayExecutionSummary {
         TKTestRecorderReplayExecutionSummary(
             mode: "device-execution",
             executor: "local-device",
@@ -716,14 +721,14 @@ struct TKTestRecorderReplayExecutionSummary: Codable, Equatable {
             stepStatusTaxonomy: ["executed", "failed", "skipped", "blocked", "not-run"],
             executorRequirements: [
                 TKTestRecorderReplayExecutorRequirement(name: "compiled-contract", required: true, status: "satisfied", evidence: ["compiled-contract"]),
-                TKTestRecorderReplayExecutorRequirement(name: "live-target-device", required: true, status: "missing", evidence: ["target_not_found", "target-readiness:not-wired"]),
-                TKTestRecorderReplayExecutorRequirement(name: "device-action-execution", required: true, status: "missing", evidence: ["act-runner:not-wired", "no-device-command-executed"]),
+                TKTestRecorderReplayExecutorRequirement(name: "live-target-device", required: true, status: liveTargetStatus, evidence: liveTargetEvidence),
+                TKTestRecorderReplayExecutorRequirement(name: "device-action-execution", required: true, status: "missing", evidence: deviceActionEvidence),
                 TKTestRecorderReplayExecutorRequirement(name: "evidence-artifact-capture", required: true, status: "missing", evidence: ["artifact-writer:not-wired"]),
                 TKTestRecorderReplayExecutorRequirement(name: "network-policy-application", required: true, status: "missing", evidence: ["network-policy:not-wired"]),
             ],
             evidence: [
                 "compiled-contract",
-                "target_not_found",
+                failureCode,
                 "no-device-command-executed",
                 "llm:unused",
                 "vlm:unused",
