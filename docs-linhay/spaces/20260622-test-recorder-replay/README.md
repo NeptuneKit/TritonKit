@@ -22,6 +22,7 @@
 - [Product Requirements v01](./plans/20260622-product-requirements-v01.md)：竞品观察、测试合同、LLM / VLM 编译、VLM 页面指纹、CLI / HTTP route、Web 信息架构、BDD、验收标准。
 - [P0 Contract Handoff v01](./plans/20260625-p0-contract-handoff-v01.md)：早期 P0 合同交接记录，保留历史上下文。
 - [P0 Current Baseline v02](./plans/20260625-p0-contract-current-baseline-v02.md)：当前 `origin/main` 上的 P0 合同实现基线、证据边界、刻意缺口和下一步最小切片。
+- [P1 Real Executor Design v01](./plans/20260625-p1-real-executor-design-v01.md)：未来 `local-device` executor 的 target discovery、动作执行、证据采集、网络边界和破坏性策略设计门。
 
 ## 产品范围
 
