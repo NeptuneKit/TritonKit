@@ -47,6 +47,12 @@ Out of scope for this P0 remains unchanged: system-level action recording, real 
 - No runtime-core extraction; Action Map / Page Map / Network Map remain Test Recorder internals.
 - No network fixture application to a live proxy.
 
+## Integration status
+
+- `git merge-tree --write-tree origin/main HEAD` passed with exit 0, so the feature branch is clean against latest `origin/main`.
+- The main checkout at `/Users/linhey/Desktop/linhay-open-sources/TritonKit` was not merged because it is dirty, `main...origin/main` is `ahead 1, behind 2`, and several uncommitted files overlap this branch.
+- Do not merge into that checkout until its unrelated local edits are committed, stashed, or moved to their own worktree.
+
 ## Next smallest useful step
 
 If continuing this branch, prefer merge / PR preparation over adding product surface. The next implementation work should be a separate slice only if it closes one of the deliberate gaps above.
