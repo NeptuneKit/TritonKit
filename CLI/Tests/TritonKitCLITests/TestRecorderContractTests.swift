@@ -1431,10 +1431,18 @@ struct TestRecorderContractTests {
         #expect(response.execution.executorRequirements.contains {
             $0.name == "live-target-device" && $0.required && $0.status == "missing" && $0.evidence.contains("target_not_found")
         })
+        #expect(response.execution.executorRequirements.contains {
+            $0.name == "device-action-execution"
+                && $0.required
+                && $0.status == "missing"
+                && $0.evidence.contains("observe-schema:platform-android-ready")
+                && $0.evidence.contains("act-schema:platform-android-ready")
+        })
         #expect(response.execution.evidence.contains("target_not_found"))
         #expect(response.blockers.contains {
             $0.code == "target_not_found" && $0.path == "--device"
         })
+        #expect(response.blockers.map(\.code).contains("target_capability_missing") == false)
         #expect(response.steps.map(\.status) == ["not-run", "not-run"])
         #expect(response.steps.allSatisfy { $0.deviceCommandExecuted == false })
         #expect(response.steps.allSatisfy { $0.failure?.code == "target_not_found" })
@@ -1469,6 +1477,8 @@ struct TestRecorderContractTests {
         #expect(events.contains(#""event":"testrec.replay.finished""#))
         #expect(events.contains(#""failureCode":"target_not_found""#))
         #expect(events.contains("target_not_found"))
+        #expect(events.contains("observe-schema:platform-android-ready"))
+        #expect(events.contains("act-schema:platform-android-ready"))
     }
 
     @Test("replay local simulated executor produces replay result without device commands")
