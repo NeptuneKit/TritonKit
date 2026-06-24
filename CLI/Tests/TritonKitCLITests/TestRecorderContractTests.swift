@@ -978,6 +978,18 @@ struct TestRecorderContractTests {
         let compiledContent = try String(contentsOf: caseURL.appendingPathComponent("compiled-contract.json"), encoding: .utf8)
         let replay = try replayTritonTestCaseDryRun(path: caseURL.path, platform: "android", device: nil)
         let simulatedReplay = try replayTritonTestCaseLocalSimulated(path: caseURL.path, platform: "android", device: nil)
+        let matrix = try matrixTritonTestCase(
+            path: caseURL.path,
+            targets: "android:emulator-a,harmony:dev-a",
+            executor: nil,
+            targetFingerprints: nil
+        )
+        let simulatedMatrix = try matrixTritonTestCase(
+            path: caseURL.path,
+            targets: "android:emulator-a,harmony:dev-a",
+            executor: "local-simulated",
+            targetFingerprints: nil
+        )
         let networkMap = try JSONDecoder().decode(
             TKTestRecorderNetworkMap.self,
             from: Data(contentsOf: caseURL.appendingPathComponent("network/map-rules.json"))
@@ -1004,6 +1016,12 @@ struct TestRecorderContractTests {
         #expect(simulatedReplay.status == "blocked")
         #expect(simulatedReplay.blockers.map(\.code).contains("redaction_review_required"))
         #expect(simulatedReplay.steps.allSatisfy { $0.status == "not-run" })
+        #expect(matrix.status == "blocked")
+        #expect(matrix.blockedCount == 2)
+        #expect(matrix.results.allSatisfy { $0.blockers.map(\.code).contains("redaction_review_required") })
+        #expect(simulatedMatrix.status == "blocked")
+        #expect(simulatedMatrix.blockedCount == 2)
+        #expect(simulatedMatrix.results.allSatisfy { $0.blockers.map(\.code).contains("redaction_review_required") })
         #expect(proposalKinds.contains("contract.network"))
         #expect(proposalKinds.contains("contract.selector"))
         #expect(proposalKinds.contains("contract.wait"))
