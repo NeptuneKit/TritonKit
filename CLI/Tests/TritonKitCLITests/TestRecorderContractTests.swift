@@ -946,6 +946,11 @@ struct TestRecorderContractTests {
         #expect(response.score == 1.0)
         #expect(response.decision == "matched")
         #expect(response.llmUsed == false)
+        #expect(response.suggestedCommands == [
+            "triton testrec inspect \(shellQuotedEvidencePath(caseURL.path)) --json",
+            "triton testrec proposals \(shellQuotedEvidencePath(caseURL.path)) --json",
+            "triton testrec compile \(shellQuotedEvidencePath(caseURL.path)) --json",
+        ])
     }
 
     @Test("compile reports needs input when raw streams are absent")
