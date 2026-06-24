@@ -609,6 +609,7 @@ struct TKTestRecorderReplayPageResult: Codable, Equatable {
     let matchScore: Double?
     let matchDecision: String?
     let sourcePath: String
+    let artifactRefs: [String]
     let evidence: [String]
     let expectedArtifacts: [String]
 }
@@ -738,13 +739,23 @@ struct TKTestRecorderReplayEvidenceSummary: Codable, Equatable {
     let pageEventCount: Int
     let networkEventCount: Int
     let stepEventCount: Int
+    let artifactRefCount: Int
+    let pageArtifactRefCount: Int
+    let networkArtifactRefCount: Int
+    let stepArtifactRefCount: Int
     let blockerCount: Int
     let statusConsistent: Bool
 
-    init(status: String, pageResults: [TKTestRecorderReplayPageResult], networkResults: [TKTestRecorderReplayNetworkResult], steps: [TKTestRecorderReplayStepResult], blockers: [TKTestRecorderReplayBlocker]) {
+    init(status: String, artifactRefs: [String], pageResults: [TKTestRecorderReplayPageResult], networkResults: [TKTestRecorderReplayNetworkResult], steps: [TKTestRecorderReplayStepResult], blockers: [TKTestRecorderReplayBlocker]) {
         self.pageEventCount = pageResults.count
         self.networkEventCount = networkResults.count
         self.stepEventCount = steps.count
+        self.artifactRefCount = Set(artifactRefs).count
+        self.pageArtifactRefCount = pageResults.reduce(0) { $0 + $1.artifactRefs.count }
+        self.networkArtifactRefCount = networkResults.reduce(0) { $0 + $1.artifactRefs.count }
+        self.stepArtifactRefCount = steps.reduce(0) { partial, step in
+            partial + step.artifactRefs.count + (step.failure?.artifactRefs.count ?? 0)
+        }
         self.blockerCount = blockers.count
         self.expectedEventCount = 2 + pageResults.count + networkResults.count + steps.count
         self.statusConsistent = (status == "passed" && blockers.isEmpty) || (status == "blocked" && !blockers.isEmpty)
@@ -798,6 +809,7 @@ struct TKTestRecorderReplayRunResponse: Codable, Equatable {
         )
         self.evidenceSummary = TKTestRecorderReplayEvidenceSummary(
             status: self.status,
+            artifactRefs: artifactRefs,
             pageResults: pageResults,
             networkResults: networkResults,
             steps: steps,

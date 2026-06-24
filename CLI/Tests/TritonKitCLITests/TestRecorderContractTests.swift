@@ -216,12 +216,17 @@ struct TestRecorderContractTests {
             "evidenceSummary.pageEventCount",
             "evidenceSummary.networkEventCount",
             "evidenceSummary.stepEventCount",
+            "evidenceSummary.artifactRefCount",
+            "evidenceSummary.pageArtifactRefCount",
+            "evidenceSummary.networkArtifactRefCount",
+            "evidenceSummary.stepArtifactRefCount",
             "evidenceSummary.blockerCount",
             "evidenceSummary.statusConsistent",
             "pageResults",
             "pageResults[].status",
             "pageResults[].matchScore",
             "pageResults[].matchDecision",
+            "pageResults[].artifactRefs",
             "pageResults[].evidence",
             "networkResults",
             "networkResults[].strategy",
@@ -422,8 +427,31 @@ struct TestRecorderContractTests {
         #expect(run.executor == "local-simulated")
         #expect(run.steps.map(\.status) == ["simulated-passed", "simulated-passed"])
         #expect(run.pageResults[0].matchDecision == "matched")
+        #expect(run.pageResults[0].artifactRefs == ["pages/target-fingerprints.json"])
         #expect(run.networkResults[0].fixturePath == "network/fixtures/n1.json")
         #expect(run.networkResults[0].artifactRefs == ["network/fixtures/n1.json"])
+        #expect(run.artifactRefs.contains("pages/target-fingerprints.json"))
+        #expect(run.artifactRefs.contains("network/fixtures/n1.json"))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("pages/target-fingerprints.json").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("network/fixtures/n1.json").path))
+        let httpManifest = try JSONDecoder().decode(
+            TKEvidenceManifest.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("manifest.json"))
+        )
+        let httpRunMetadata = try JSONDecoder().decode(
+            TKTestRunMetadata.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("run/run.json"))
+        )
+        #expect(httpManifest.run?.summary?.runID == httpRunMetadata.runID)
+        #expect(httpManifest.run?.summary?.verdict == .success)
+        #expect(httpManifest.run?.summary?.stepCount == run.steps.count)
+        #expect(httpManifest.run?.summary?.frictionCount == run.blockers.count)
+        #expect(httpManifest.artifacts.contains {
+            $0.kind == "testrec.page.target-fingerprints" && $0.path == "pages/target-fingerprints.json"
+        })
+        #expect(httpManifest.artifacts.contains {
+            $0.kind == "testrec.network.fixture" && $0.path == "network/fixtures/n1.json"
+        })
         let events = try String(contentsOf: evidenceURL.appendingPathComponent("run/events.jsonl"), encoding: .utf8)
         #expect(events.contains(#""event":"testrec.replay.network""#))
         #expect(events.contains(#"network\/fixtures\/n1.json"#))
@@ -973,7 +1001,13 @@ struct TestRecorderContractTests {
         #expect(contractRef.digestAlgorithm == "fnv1a64")
         #expect(!contractRef.digest.isEmpty)
         #expect(response.evidenceDir == evidenceURL.path)
-        #expect(response.artifactRefs == ["run/replay-result.json", "run/events.jsonl", "run/run.json"])
+        #expect(response.artifactRefs == [
+            "run/replay-result.json",
+            "run/events.jsonl",
+            "run/run.json",
+            "pages/target-fingerprints.json",
+            "network/fixtures/n1.json",
+        ])
         #expect(response.execution.mode == "offline-simulated")
         #expect(response.execution.requiresDevice == false)
         #expect(response.execution.deviceCommandsExecuted == false)
@@ -999,12 +1033,17 @@ struct TestRecorderContractTests {
         #expect(response.evidenceSummary.pageEventCount == 1)
         #expect(response.evidenceSummary.networkEventCount == 1)
         #expect(response.evidenceSummary.stepEventCount == 2)
+        #expect(response.evidenceSummary.artifactRefCount == 5)
+        #expect(response.evidenceSummary.pageArtifactRefCount == 1)
+        #expect(response.evidenceSummary.networkArtifactRefCount == 1)
+        #expect(response.evidenceSummary.stepArtifactRefCount == 0)
         #expect(response.evidenceSummary.blockerCount == 0)
         #expect(response.evidenceSummary.statusConsistent == true)
         #expect(response.pageResults.count == 1)
         #expect(response.pageResults[0].status == "matched")
         #expect(response.pageResults[0].matchDecision == "matched")
         #expect(response.pageResults[0].matchScore == 1.0)
+        #expect(response.pageResults[0].artifactRefs == ["pages/target-fingerprints.json"])
         #expect(response.pageResults[0].evidence.contains("llm:unused"))
         #expect(response.networkResults.count == 1)
         #expect(response.networkResults[0].status == "simulated-mock-candidate")
@@ -1025,20 +1064,40 @@ struct TestRecorderContractTests {
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("manifest.json").path))
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("run/replay-result.json").path))
         #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("run/events.jsonl").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("pages/target-fingerprints.json").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceURL.appendingPathComponent("network/fixtures/n1.json").path))
         let manifest = try JSONDecoder().decode(
             TKEvidenceManifest.self,
             from: Data(contentsOf: evidenceURL.appendingPathComponent("manifest.json"))
         )
+        let runMetadata = try JSONDecoder().decode(
+            TKTestRunMetadata.self,
+            from: Data(contentsOf: evidenceURL.appendingPathComponent("run/run.json"))
+        )
         #expect(manifest.ok == true)
         #expect(manifest.run?.eventsPath == "run/events.jsonl")
         #expect(manifest.run?.eventCount == response.evidenceSummary.expectedEventCount)
+        #expect(manifest.run?.summary?.runID == runMetadata.runID)
+        #expect(manifest.run?.summary?.verdict == .success)
+        #expect(manifest.run?.summary?.stepCount == response.steps.count)
+        #expect(manifest.run?.summary?.frictionCount == response.blockers.count)
         #expect(manifest.artifacts.map(\.path).contains("run/replay-result.json"))
+        #expect(manifest.artifacts.contains {
+            $0.kind == "testrec.page.target-fingerprints" && $0.path == "pages/target-fingerprints.json"
+        })
+        #expect(manifest.artifacts.contains {
+            $0.kind == "testrec.network.fixture" && $0.path == "network/fixtures/n1.json" && $0.redactionStatus == "redacted"
+        })
+        let targetFingerprints = try String(contentsOf: evidenceURL.appendingPathComponent("pages/target-fingerprints.json"), encoding: .utf8)
+        #expect(targetFingerprints.contains(#""kind" : "triton.testrec.target-fingerprints""#))
+        #expect(targetFingerprints.contains(#""hash" : "abc123""#))
         let events = try String(contentsOf: evidenceURL.appendingPathComponent("run/events.jsonl"), encoding: .utf8)
         #expect(events.contains("testrec.replay.step"))
         #expect(events.contains("testrec.replay.network"))
         #expect(events.contains("testrec.replay.finished"))
         #expect(events.contains(#""category":"step""#))
         #expect(events.contains(#""category":"network""#))
+        #expect(events.contains(#"pages\/target-fingerprints.json"#))
         #expect(events.contains(#"network\/fixtures\/n1.json"#))
         #expect(events.contains(#""contractRef""#))
         #expect(events.contains(contractRef.digest))

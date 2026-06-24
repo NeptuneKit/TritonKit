@@ -532,6 +532,10 @@ func testRecorderReplayRunOutputContract() -> TKCommandOutputContract {
             ("evidenceSummary.pageEventCount", "Int?", false, "Expected page event count"),
             ("evidenceSummary.networkEventCount", "Int?", false, "Expected network event count"),
             ("evidenceSummary.stepEventCount", "Int?", false, "Expected step event count"),
+            ("evidenceSummary.artifactRefCount", "Int?", false, "Unique top-level replay artifactRefs count"),
+            ("evidenceSummary.pageArtifactRefCount", "Int?", false, "Total page result artifactRefs count"),
+            ("evidenceSummary.networkArtifactRefCount", "Int?", false, "Total network result artifactRefs count"),
+            ("evidenceSummary.stepArtifactRefCount", "Int?", false, "Total step and step failure artifactRefs count"),
             ("evidenceSummary.blockerCount", "Int?", false, "Replay blocker count"),
             ("evidenceSummary.statusConsistent", "Bool?", false, "Whether status and blockers are internally consistent"),
             ("pageResults", "[TKTestRecorderReplayPageResult]?", false, "Page checkpoint results from the executor"),
@@ -542,6 +546,7 @@ func testRecorderReplayRunOutputContract() -> TKCommandOutputContract {
             ("pageResults[].matchScore", "Double?", false, "Deterministic target fingerprint match score when target fingerprints are supplied"),
             ("pageResults[].matchDecision", "String?", false, "Deterministic target fingerprint match decision when target fingerprints are supplied"),
             ("pageResults[].sourcePath", "String?", false, "Source compiled-contract.json fingerprint reference"),
+            ("pageResults[].artifactRefs", "[String]?", false, "Page-level evidence artifacts referenced by the replay projection, including target fingerprints when supplied"),
             ("pageResults[].evidence", "[String]?", false, "Evidence tags explaining how this page checkpoint was handled"),
             ("pageResults[].expectedArtifacts", "[String]?", false, "Evidence surfaces expected from a real executor"),
             ("networkResults", "[TKTestRecorderReplayNetworkResult]?", false, "Network map rule projections consumed by local-simulated replay"),
@@ -620,32 +625,6 @@ func testRecorderPageMatchOutputContract() -> TKCommandOutputContract {
             ("evidence", "[String]?", false, "Compact evidence trail for replay diagnostics"),
             ("llmUsed", "Bool?", false, "Whether an LLM was called; false in P0 deterministic matching"),
             ("llmDecisionAuthority", "Bool?", false, "Whether LLM had decision authority; false in P0"),
-            ("suggestedCommands", "[String]?", false, "Current executable follow-up commands"),
-            ("error", "TKTestRecorderValidationErrorDetail?", false, "Machine-readable validation failure when ok is false"),
-            ("error.code", "String?", false, "Stable validation error code"),
-            ("error.path", "String?", false, "Rejected file or field path"),
-        ])
-    )
-}
-
-func testRecorderProposalsOutputContract() -> TKCommandOutputContract {
-    TKCommandOutputContract(
-        selector: "testrec.proposals",
-        format: "json",
-        kind: "testrec-proposals-inspect",
-        model: "TKTestRecorderProposalsResponse|TKTestRecorderValidationFailureResponse",
-        fields: schemaContractFields([
-            ("ok", "Bool", true, "Whether compile proposals were read without validation errors"),
-            ("schemaVersion", "Int?", false, "Proposals response schema version for ok responses"),
-            ("kind", "String?", false, "Stable response kind; triton.testrec.proposals when ok"),
-            ("path", "String?", false, "Resolved .tritontestcase directory path"),
-            ("proposalCount", "Int?", false, "Number of proposals read from compile-proposals.jsonl"),
-            ("proposals", "[TKTestRecorderCompileProposal]?", false, "Compile proposals read without applying them"),
-            ("proposals[].proposalKind", "String?", false, "Proposal family such as contract.redaction"),
-            ("proposals[].findingCode", "String?", false, "Finding code that produced the proposal"),
-            ("proposals[].sourcePath", "String?", false, "Source artifact path associated with the proposal"),
-            ("proposals[].status", "String?", false, "Proposal status; proposed for P0"),
-            ("proposals[].suggestedChange", "String?", false, "Human-readable suggested change"),
             ("suggestedCommands", "[String]?", false, "Current executable follow-up commands"),
             ("error", "TKTestRecorderValidationErrorDetail?", false, "Machine-readable validation failure when ok is false"),
             ("error.code", "String?", false, "Stable validation error code"),
