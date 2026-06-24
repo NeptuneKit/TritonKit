@@ -899,11 +899,19 @@ private func readCompiledActions(from url: URL) throws -> [TKTestRecorderCompile
             sourceEventID: object["id"] as? String,
             action: action,
             sourcePath: "actions.jsonl:\(offset + 1)",
-            targetText: compiledActionTargetText(from: object),
-            inputText: action == "type" || action == "paste" ? replayInputText(from: object) : nil
+            targetText: compiledActionTargetText(action: action, object: object),
+            inputText: compiledActionInputText(action: action, object: object)
         ))
     }
     return actions
+}
+
+private func compiledActionInputText(action: String, object: [String: Any]) -> String? {
+    guard action == "type" || action == "paste" else {
+        return nil
+    }
+    let input = replayInputText(from: object)
+    return testRecorderLooksSensitive(input) ? nil : input
 }
 
 private func readCompiledNetworkRequests(from url: URL) throws -> [TKTestRecorderCompiledNetworkRequest] {
@@ -1237,7 +1245,7 @@ private func replayTargetText(from object: [String: Any]) -> String {
     return "<target>"
 }
 
-private func compiledActionTargetText(from object: [String: Any]) -> String {
+private func compiledActionTargetText(action: String, object: [String: Any]) -> String {
     if let target = object["target"] as? [String: Any] {
         for key in ["label", "text", "name", "accessibilityLabel"] {
             if let value = target[key] as? String, !value.isEmpty {
@@ -1248,7 +1256,7 @@ private func compiledActionTargetText(from object: [String: Any]) -> String {
     if let label = object["label"] as? String, !label.isEmpty {
         return label
     }
-    if let text = object["text"] as? String, !text.isEmpty {
+    if action != "type" && action != "paste", let text = object["text"] as? String, !text.isEmpty {
         return text
     }
     return "<target>"

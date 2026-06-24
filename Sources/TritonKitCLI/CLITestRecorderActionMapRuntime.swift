@@ -27,7 +27,7 @@ func buildActionMap(from contract: TKTestRecorderCompiledContract) -> TKTestReco
         schemaVersion: 1,
         kind: "triton.testrec.action-map",
         rules: contract.actions.map { action in
-            let redactionRequired = action.inputText.map(actionMapLooksSensitive) ?? false
+            let redactionRequired = action.inputText.map(testRecorderLooksSensitive) ?? false
             let hasTarget = action.targetText?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
             let supported = actionMapSupportedActions.contains(action.action)
             return TKTestRecorderActionMapRule(
@@ -73,18 +73,4 @@ private func actionMapEvidence(action: TKTestRecorderCompiledAction, hasTarget: 
         evidence.append(redactionRequired ? "input-redaction-required" : "input-text")
     }
     return evidence
-}
-
-private func actionMapLooksSensitive(_ value: String) -> Bool {
-    let lowercased = value.lowercased()
-    if lowercased.contains("password") || lowercased.contains("token") || lowercased.contains("secret") {
-        return true
-    }
-    if value.range(of: #"[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}"#, options: [.regularExpression, .caseInsensitive]) != nil {
-        return true
-    }
-    if value.range(of: #"\b\d{11,}\b"#, options: .regularExpression) != nil {
-        return true
-    }
-    return false
 }

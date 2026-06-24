@@ -11,7 +11,7 @@ func compileQualityFindings(caseURL: URL) throws -> [TKTestRecorderQualityFindin
         let inputText = stringValue(row.object, "text")
             ?? stringValue(row.object, "value")
             ?? stringValue(row.object, "input")
-        if let inputText, looksSensitive(inputText) {
+        if let inputText, testRecorderLooksSensitive(inputText) {
             findings.append(TKTestRecorderQualityFinding(
                 code: "privacy_candidate",
                 path: row.sourcePath,
@@ -125,7 +125,7 @@ private func fixedWaitDurationMs(in object: [String: Any]) -> Int? {
     intValue(object, keys: ["durationMs", "timeoutMs", "ms"])
 }
 
-private func looksSensitive(_ value: String) -> Bool {
+func testRecorderLooksSensitive(_ value: String) -> Bool {
     let lowercased = value.lowercased()
     if lowercased.contains("password") || lowercased.contains("token") || lowercased.contains("secret") {
         return true

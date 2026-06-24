@@ -873,6 +873,8 @@ struct TestRecorderContractTests {
         let findingCodes = decoded.qualityFindings.map(\.code)
         let proposals = try readCompileProposals(from: caseURL)
         let proposalKinds = proposals.map(\.proposalKind)
+        let compiledContent = try String(contentsOf: caseURL.appendingPathComponent("compiled-contract.json"), encoding: .utf8)
+        let replay = try replayTritonTestCaseDryRun(path: caseURL.path, platform: "android", device: nil)
         let networkMap = try JSONDecoder().decode(
             TKTestRecorderNetworkMap.self,
             from: Data(contentsOf: caseURL.appendingPathComponent("network/map-rules.json"))
@@ -891,6 +893,9 @@ struct TestRecorderContractTests {
         #expect(findingCodes.contains("weak_selector"))
         #expect(findingCodes.contains("fixed_wait"))
         #expect(proposalKinds.contains("contract.redaction"))
+        #expect(decoded.actions[0].inputText == nil)
+        #expect(compiledContent.contains("secret@example.com") == false)
+        #expect(replay.plannedSteps.flatMap(\.argv).contains("secret@example.com") == false)
         #expect(proposalKinds.contains("contract.network"))
         #expect(proposalKinds.contains("contract.selector"))
         #expect(proposalKinds.contains("contract.wait"))
