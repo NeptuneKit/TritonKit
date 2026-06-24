@@ -4,6 +4,7 @@ import TritonKitShared
 let testRecorderLocalSimulatedExecutor = "local-simulated"
 let testRecorderLocalDeviceExecutor = "local-device"
 private let testRecorderTargetFingerprintsArtifactPath = "pages/target-fingerprints.json"
+private let testRecorderTargetResolutionArtifactPath = "target/target-resolution.json"
 
 func replayTritonTestCaseLocalSimulated(path: String, platform: String, device: String?, evidenceDirectory: String? = nil, targetFingerprints: [TKJSONValue]? = nil) throws -> TKTestRecorderReplayRunResponse {
     let plan = try replayTritonTestCaseDryRun(path: path, platform: platform, device: device)
@@ -122,11 +123,14 @@ func replayTritonTestCaseLocalDevice(path: String, platform: String, device: Str
             stopConditions: step.stopConditions
         )
     }
-    let artifactRefs = testRecorderReplayArtifactRefs(
+    var artifactRefs = testRecorderReplayArtifactRefs(
         evidenceDirectory: evidenceDirectory,
         targetFingerprints: nil,
         networkResults: []
     )
+    for artifactRef in reason.artifactRefs where !artifactRefs.contains(artifactRef) {
+        artifactRefs.append(artifactRef)
+    }
     let response = TKTestRecorderReplayRunResponse(
         plan: plan,
         executor: testRecorderLocalDeviceExecutor,
@@ -162,6 +166,7 @@ private struct TKTestRecorderLocalDeviceBlockReason {
     let deviceActionEvidence: [String]
     let recoveryCommands: [String]
     let retryable: Bool
+    let artifactRefs: [String]
 }
 
 private func testRecorderLocalDeviceBlockReason(plan: TKTestRecorderReplayDryRunResponse, platform: String, device: String?) -> TKTestRecorderLocalDeviceBlockReason {
@@ -175,7 +180,8 @@ private func testRecorderLocalDeviceBlockReason(plan: TKTestRecorderReplayDryRun
             liveTargetEvidence: ["blocked-before-target-resolve"],
             deviceActionEvidence: ["target_capability_missing", "act-schema:not-ready"],
             recoveryCommands: ["triton schema --command act --json", "triton schema --command observe --json"],
-            retryable: false
+            retryable: false,
+            artifactRefs: []
         )
     }
 
@@ -196,7 +202,8 @@ private func testRecorderLocalDeviceBlockReason(plan: TKTestRecorderReplayDryRun
         liveTargetEvidence: ["target_not_found", "target-readiness:not-wired"],
         deviceActionEvidence: ["act-runner:not-wired", "no-device-command-executed"] + schemaReadyEvidence,
         recoveryCommands: ["triton status --json", "triton doctor --json"],
-        retryable: true
+        retryable: true,
+        artifactRefs: [testRecorderTargetResolutionArtifactPath]
     )
 }
 
@@ -419,6 +426,41 @@ private struct TKTestRecorderReplayTargetFingerprintsArtifact: Codable, Equatabl
     }
 }
 
+private struct TKTestRecorderTargetResolutionArtifact: Codable, Equatable {
+    let schemaVersion: Int
+    let kind: String
+    let executor: String
+    let platform: String
+    let device: String?
+    let status: String
+    let failureCode: String
+    let commandsExecuted: Bool
+    let sourceCommands: [String]
+    let evidence: [String]
+
+    init(
+        executor: String,
+        platform: String,
+        device: String?,
+        status: String,
+        failureCode: String,
+        commandsExecuted: Bool,
+        sourceCommands: [String],
+        evidence: [String]
+    ) {
+        self.schemaVersion = 1
+        self.kind = "triton.testrec.target-resolution"
+        self.executor = executor
+        self.platform = platform
+        self.device = device
+        self.status = status
+        self.failureCode = failureCode
+        self.commandsExecuted = commandsExecuted
+        self.sourceCommands = sourceCommands
+        self.evidence = evidence
+    }
+}
+
 private func replayNetworkResults(casePath: String) throws -> [TKTestRecorderReplayNetworkResult] {
     let mapURL = URL(fileURLWithPath: casePath, isDirectory: true).appendingPathComponent("network/map-rules.json")
     guard FileManager.default.fileExists(atPath: mapURL.path) else {
@@ -624,17 +666,23 @@ private func writeTestRecorderReplayEvidence(response: TKTestRecorderReplayRunRe
         evidenceURL: evidenceURL,
         contractMetadata: contractMetadata
     )
+    let targetResolutionArtifact = try writeTestRecorderReplayTargetResolutionArtifact(
+        response: response,
+        evidenceURL: evidenceURL,
+        contractMetadata: contractMetadata
+    )
     let fixtureArtifacts = try writeTestRecorderReplayNetworkFixtureArtifacts(
         response: response,
         evidenceURL: evidenceURL,
         contractMetadata: contractMetadata
     )
     let targetFingerprintArtifacts = targetFingerprintArtifact.map { [$0] } ?? []
+    let targetResolutionArtifacts = targetResolutionArtifact.map { [$0] } ?? []
     let artifacts = [
         TKEvidenceArtifact(kind: "testrec.replay.result", path: "run/replay-result.json", contentType: "application/json", bytes: resultData.count, metadata: contractMetadata),
         TKEvidenceArtifact(kind: "testrec.replay.events", path: "run/events.jsonl", contentType: "application/jsonl", bytes: eventData.count, metadata: contractMetadata),
         TKEvidenceArtifact(kind: "testrec.replay.run", path: "run/run.json", contentType: "application/json", bytes: runData.count, metadata: contractMetadata),
-    ] + targetFingerprintArtifacts + fixtureArtifacts
+    ] + targetFingerprintArtifacts + targetResolutionArtifacts + fixtureArtifacts
     let manifest = TKEvidenceManifest(
         ok: response.ok,
         name: "triton-testrec-replay",
@@ -685,6 +733,68 @@ private func writeTestRecorderReplayTargetFingerprintsArtifact(
         contentType: "application/json",
         bytes: data.count,
         metadata: metadata
+    )
+}
+
+private func writeTestRecorderReplayTargetResolutionArtifact(
+    response: TKTestRecorderReplayRunResponse,
+    evidenceURL: URL,
+    contractMetadata: [String: TKJSONValue]?
+) throws -> TKEvidenceArtifact? {
+    guard response.artifactRefs.contains(testRecorderTargetResolutionArtifactPath) else { return nil }
+
+    let selector = response.device?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
+        ? response.device!
+        : response.platform
+    let failureCode = response.blockers.first(where: { $0.code == "target_not_found" })?.code
+        ?? response.blockers.first?.code
+        ?? "target_not_found"
+    let sourceCommands = [
+        "triton status --json",
+        "triton doctor --json",
+        "triton capabilities --json",
+        "triton schema --command target --json",
+        "triton target resolve \(selector) --platform \(response.platform) --json",
+    ]
+    let artifact = TKTestRecorderTargetResolutionArtifact(
+        executor: response.executor,
+        platform: response.platform,
+        device: response.device,
+        status: "not-found",
+        failureCode: failureCode,
+        commandsExecuted: false,
+        sourceCommands: sourceCommands,
+        evidence: [
+            "target_not_found",
+            "target-discovery:not-executed",
+            "triton-first-target-discovery",
+        ]
+    )
+    let data = try prettyEncodedData(artifact)
+    let targetURL = evidenceURL.appendingPathComponent(testRecorderTargetResolutionArtifactPath)
+    try FileManager.default.createDirectory(
+        at: targetURL.deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    try data.write(to: targetURL, options: .atomic)
+
+    var metadata = contractMetadata ?? [:]
+    metadata["source"] = .string("planned-target-discovery")
+    metadata["commandsExecuted"] = .bool(false)
+    metadata["platform"] = .string(response.platform)
+    if let device = response.device {
+        metadata["device"] = .string(device)
+    }
+    metadata["failureCode"] = .string(failureCode)
+    return TKEvidenceArtifact(
+        kind: "testrec.target.resolution",
+        path: testRecorderTargetResolutionArtifactPath,
+        contentType: "application/json",
+        bytes: data.count,
+        platform: response.platform,
+        sourceCommand: "triton target resolve \(selector) --platform \(response.platform) --json",
+        metadata: metadata,
+        target: selector
     )
 }
 
