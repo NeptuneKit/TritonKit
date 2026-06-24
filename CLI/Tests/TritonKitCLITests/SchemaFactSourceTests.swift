@@ -235,6 +235,22 @@ struct SchemaFactSourceTests {
         #expect(evidence.artifacts.contains("build.summary"))
     }
 
+    @Test("app schema exposes host app subcommands used by plans")
+    func appSchemaExposesHostAppSubcommandsUsedByPlans() throws {
+        let app = try #require(commandSchemaMap()["app"])
+        let subcommands = Dictionary(uniqueKeysWithValues: app.subcommands.map { ($0.name, $0) })
+
+        #expect(Set(subcommands.keys).isSuperset(of: [
+            "list", "info", "inspect", "install", "uninstall", "launch",
+            "terminate", "go", "open-url", "container", "prefs",
+        ]))
+        #expect(app.argumentForms.map(\.name).contains("<url>"))
+        #expect(subcommands["go"]?.requiredOptions == ["<url>"])
+        #expect(subcommands["go"]?.outputSelectors == ["host.app-open-url"])
+        #expect(subcommands["open-url"]?.requiredOptions == ["<url>"])
+        #expect(subcommands["open-url"]?.outputSelectors == ["host.app-open-url"])
+    }
+
     @Test("build schemas expose real-device build contracts")
     func buildSchemasExposeRealDeviceBuildContracts() throws {
         let schemas = commandSchemaMap()

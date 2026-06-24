@@ -377,7 +377,8 @@ func buildTaskWorkflowPlan(
                     requiresServer: true,
                     requiresTarget: true,
                     when: "target is ready and URL/deep link is known",
-                    expected: "Host action succeeds and optional runtime snapshot summarizes app state"
+                    expected: "Host action succeeds and optional runtime snapshot summarizes app state",
+                    requires: ["cli.available", "server.reachable", "target.ready"]
                 ),
                 waitTextPlanStep(text: request.text, host: host, port: port),
                 assertTextPlanStep(text: request.text, host: host, port: port),

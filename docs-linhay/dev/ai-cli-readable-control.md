@@ -469,3 +469,5 @@ Round 175 新增文本参数占位符门禁：`nextAction` 的 `--text`、`--wai
 模拟器测试门禁现已固定入口为 `docs-linhay/scripts/verify-simulator-gate.sh`：`quick` 模式默认执行 simulator 相关单测 + selector/platform/text 三条 schema 门禁 + iOS runtime observe smoke；`full` 模式在此基础上增加 iOS WebView harness 回归。后续轮询提交前按该门禁主动校验。
 
 Round 175 新增文本参数占位符门禁：`nextAction` 中 `--text`、`--wait-text` 和 `assert text-exists` 的文本 operand 统一固定为 `<text>`。这让 agent 在 wait/assert/smoke/webview/node-resolve 等文本驱动路径上复用同一变量绑定，不再维护别名映射。
+
+Round 178 修复 app open-url 规划的 schema 可发现性：`triton app go <url>` 与 `triton app open-url <url>` 已进入 `app.subcommands[]`，并显式声明 `<url>` argument form 与 `host.app-open-url` output selector。`plan open-url` 中 host-side `app-open-url` 步骤不再预设 `runtime.connected`，runtime 连接只作为后续 wait/assert/evidence 验证前置。Capability taxonomy 的公开说明同步包含 `test` group / workflow lane，避免 `test-validate` 这类能力被 agent 误判为未知分组。

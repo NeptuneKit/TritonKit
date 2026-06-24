@@ -74,6 +74,8 @@ extension SchemaFactSourceTests {
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("triton app go") == true)
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--wait-ready") == false)
         #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.command.contains("--json") == false)
+        #expect(openURL.steps.first(where: { $0.id == "app-open-url" })?.requires == ["cli.available", "server.reachable", "target.ready"])
+        #expect(openURL.steps.first(where: { $0.id == "wait-text" })?.requires.contains("runtime.connected") == true)
 
         let webview = buildWorkflowPlan(
             capabilities: capabilities,

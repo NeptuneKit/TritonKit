@@ -675,6 +675,11 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
             ],
+            argumentForms: [
+                TKCommandArgumentForm(name: "<url>", type: "String", required: true, description: "Deep link, universal link, or platform URL to open"),
+                TKCommandArgumentForm(name: "<key>", type: "String", required: true, description: "Preference key for app prefs get/set"),
+                TKCommandArgumentForm(name: "<json-value>", type: "JSON", required: true, description: "Property-list compatible JSON value for app prefs set"),
+            ],
             examples: [
                 "triton app list --device iphone15 --user-only --json",
                 "triton app info --device iphone15 --bundle-id com.example.app --json",
@@ -773,6 +778,84 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "preference_key_not_found",
                 "destructive_action_requires_policy",
                 "validation_failed",
+            ],
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "list",
+                    summary: "List installed simulator, emulator, or real-device apps",
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--user-only", "--format", "--json"],
+                    outputSelectors: ["host.app-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "info",
+                    summary: "Show installed app metadata",
+                    oneOfRequiredOptions: [["--bundle-id"], ["--package-name"], ["--bundle"]],
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--format", "--json"],
+                    outputSelectors: ["host.android-app-inspect"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "inspect",
+                    summary: "Inspect Android or Harmony app metadata",
+                    oneOfRequiredOptions: [["--package-name"], ["--bundle"]],
+                    optionalOptions: ["--platform", "--device", "--scope", "--target", "--hdc", "--format", "--json"],
+                    outputSelectors: ["host.android-app-inspect"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "install",
+                    summary: "Install an iOS .app, Android APK, or Harmony HAP",
+                    oneOfRequiredOptions: [["--app"], ["--apk"], ["--hap"]],
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--format", "--json"],
+                    outputSelectors: ["host.app-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "uninstall",
+                    summary: "Uninstall an app after explicit confirmation",
+                    oneOfRequiredOptions: [["--bundle-id"], ["--package-name"], ["--bundle"]],
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--confirm", "--format", "--json"],
+                    outputSelectors: ["host.app-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "launch",
+                    summary: "Launch an installed app",
+                    oneOfRequiredOptions: [["--bundle-id"], ["--package-name"], ["--bundle"]],
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--activity", "--ability", "--env", "--arg", "--format", "--json"],
+                    outputSelectors: ["host.app-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "terminate",
+                    summary: "Terminate a running app",
+                    oneOfRequiredOptions: [["--bundle-id"], ["--package-name"], ["--bundle"]],
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--format", "--json"],
+                    outputSelectors: ["host.app-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "go",
+                    summary: "Open an iOS URL, wait for runtime readiness, and return a snapshot",
+                    requiredOptions: ["<url>"],
+                    optionalOptions: ["--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--runtime-target", "--snapshot-include", "--max-ax-nodes", "--host", "--port", "--timeout", "--interval", "--format", "--json"],
+                    outputSelectors: ["host.app-open-url"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "open-url",
+                    summary: "Submit a URL through host-side app tooling",
+                    requiredOptions: ["<url>"],
+                    optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--name", "--runtime", "--state", "--ready", "--bundle-id", "--package-name", "--bundle", "--ability", "--target", "--hdc", "--runtime-target", "--wait-ready", "--snapshot", "--snapshot-include", "--max-ax-nodes", "--host", "--port", "--timeout", "--interval", "--format", "--json"],
+                    outputSelectors: ["host.app-open-url"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "container",
+                    summary: "Print an app container path",
+                    requiredOptions: ["--bundle-id"],
+                    optionalOptions: ["--device", "--scope", "--simulator", "--kind", "--format", "--json"],
+                    outputSelectors: ["host.app-action"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "prefs",
+                    summary: "Dump, read, or set simulator app preferences",
+                    requiredOptions: ["--bundle-id"],
+                    optionalOptions: ["<key>", "<json-value>", "--device", "--scope", "--simulator", "--type", "--base64", "--hex", "--format", "--json"],
+                    outputSelectors: ["host.app-action"]
+                ),
             ],
             providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]
         ),

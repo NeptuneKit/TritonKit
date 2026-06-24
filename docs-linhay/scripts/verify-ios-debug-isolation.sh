@@ -12,13 +12,15 @@ bootstrap="$root/Examples/TritonKitDemo/TritonKitDemo/TritonKitDebugBootstrap.sw
 app_entry="$root/Examples/TritonKitDemo/TritonKitDemo/App.swift"
 runtime="$root/Sources/TritonKit/TritonKit.swift"
 package_manifest="$root/Package.swift"
+podspec="$root/TritonKit.podspec"
 
 test -f "$bootstrap" || fail "missing Demo app debug bootstrap file"
 test -f "$app_entry" || fail "missing Demo app entry file"
 test -f "$runtime" || fail "missing TritonKit runtime source"
 test -f "$package_manifest" || fail "missing Package.swift"
+test -f "$podspec" || fail "missing TritonKit.podspec"
 
-python3 - "$bootstrap" "$app_entry" "$runtime" "$package_manifest" <<'PY'
+python3 - "$bootstrap" "$app_entry" "$runtime" "$package_manifest" "$podspec" <<'PY'
 import pathlib
 import re
 import sys
@@ -27,6 +29,7 @@ bootstrap = pathlib.Path(sys.argv[1])
 app_entry = pathlib.Path(sys.argv[2])
 runtime = pathlib.Path(sys.argv[3])
 package_manifest = pathlib.Path(sys.argv[4])
+podspec = pathlib.Path(sys.argv[5])
 root = runtime.parents[2]
 
 failures: list[str] = []
@@ -89,6 +92,7 @@ for needle in ("import TritonKit", "TritonKit.shared", "TritonKitDebugBootstrap"
 # Package-level Release no-op remains the second safety net; it does not replace app-side isolation.
 runtime_text = runtime.read_text()
 package_text = package_manifest.read_text()
+podspec_text = podspec.read_text()
 readme = root / "README.md"
 public_skills = [
     root / "TritonKit.skills/tritonkit-dev-feedback/SKILL.md",
@@ -106,6 +110,13 @@ for doc in [readme, *public_skills]:
 
 if 'define("TRITONKIT_RUNTIME_ENABLED", .when(configuration: .debug))' not in package_text:
     fail("Package.swift must define TRITONKIT_RUNTIME_ENABLED for the TritonKit target in Debug configuration")
+
+if "OTHER_SWIFT_FLAGS[config=Debug]" not in podspec_text or "TRITONKIT_RUNTIME_ENABLED" not in podspec_text:
+    fail("TritonKit.podspec must define TRITONKIT_RUNTIME_ENABLED for the TritonKit pod target Debug configuration")
+if re.search(r"['\"]OTHER_SWIFT_FLAGS['\"]\s*=>\s*['\"][^'\"]*TRITONKIT_RUNTIME_ENABLED", podspec_text):
+    fail("TritonKit.podspec must not define TRITONKIT_RUNTIME_ENABLED through unscoped OTHER_SWIFT_FLAGS")
+if re.search(r"OTHER_SWIFT_FLAGS\[config=Release\].*TRITONKIT_RUNTIME_ENABLED", podspec_text):
+    fail("TritonKit.podspec must not define TRITONKIT_RUNTIME_ENABLED for Release configuration")
 
 if "public static var isRuntimeEnabled" not in runtime_text:
     fail("Sources/TritonKit/TritonKit.swift must expose isRuntimeEnabled")

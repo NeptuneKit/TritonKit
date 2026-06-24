@@ -12,6 +12,9 @@ Pod::Spec.new do |s|
   s.source = { :git => 'https://github.com/NeptuneKit/TritonKit.git', :tag => "v#{s.version}" }
   s.ios.deployment_target = '13.0'
   s.swift_version = '5.9'
+  s.pod_target_xcconfig = {
+    'OTHER_SWIFT_FLAGS[config=Debug]' => '$(inherited) -D TRITONKIT_RUNTIME_ENABLED'
+  }
   s.source_files = 'Sources/TritonKit/**/*.swift'
   s.frameworks = 'Foundation', 'UIKit', 'CoreGraphics'
   s.dependency 'TritonKitShared', s.version.to_s

@@ -176,9 +176,9 @@ Plan steps should expose executable `argv` arrays. Emulator takeover agents shou
 
 Replay dry-run should reject statically invalid emulator smoke steps before touching a runtime: multiple `tap` selectors, multiple `wait` conditions, missing `paste/type` text, and missing `wait` condition are validation failures.
 
-Capability groups must stay in the fixed agent taxonomy: `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview`, and `xcode`. Do not create near-duplicate groups or fall back to `misc` for new emulator, host, app, or evidence capabilities.
+Capability groups must stay in the fixed agent taxonomy: `action`, `assert`, `bootstrap`, `evidence`, `host`, `observe`, `replay`, `route`, `runtime`, `smoke`, `target`, `test`, `webview`, and `xcode`. Do not create near-duplicate groups or fall back to `misc` for new emulator, host, app, test, or evidence capabilities.
 
-Capability `requiredBy` values must stay in the fixed workflow taxonomy: `action`, `app`, `assert`, `evidence`, `observe`, `project`, `replay`, `route`, `runtime`, `smoke`, `target`, `webview-check`, and `xcode`. Add a new workflow category only when it changes agent planning behavior, and update schema tests, docs, and public skills in the same slice.
+Capability `requiredBy` values must stay in the fixed workflow taxonomy: `action`, `app`, `assert`, `evidence`, `observe`, `project`, `replay`, `route`, `runtime`, `smoke`, `target`, `test`, `webview-check`, and `xcode`. Add a new workflow category only when it changes agent planning behavior, and update schema tests, docs, and public skills in the same slice.
 
 Capability `evidence` values must stay in the fixed artifact taxonomy. For emulator takeover, new evidence names must correspond to real host command JSON, host artifacts, screenshots, host layout, runtime AX/snapshot/ledger, WebView provider output, input results, evidence bundles, smoke summaries, or replay plans; do not use prose labels as evidence identifiers.
 

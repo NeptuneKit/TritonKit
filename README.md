@@ -87,7 +87,7 @@ For command-line package manifests:
 
 #### CocoaPods
 
-During development, point CocoaPods at the repository and restrict the TritonKit pod to Debug configurations. Do not add `TritonKitShared` explicitly; the `TritonKit` podspec resolves the matching shared-contract pod transitively.
+During development, point CocoaPods at the repository and restrict the TritonKit pod to Debug configurations. Do not add `TritonKitShared` explicitly; the `TritonKit` podspec resolves the matching shared-contract pod transitively. The podspec defines `TRITONKIT_RUNTIME_ENABLED` for the TritonKit pod target only in Debug builds, so the app target should not need custom `OTHER_SWIFT_FLAGS` for this macro.
 
 ```ruby
 target 'YourApp' do
@@ -306,7 +306,7 @@ If your app blocks cleartext development traffic through App Transport Security,
 
 ### 5. iOS Runtime Boundary
 
-`TritonKit.isRuntimeEnabled` is `true` only when the package build defines `TRITONKIT_RUNTIME_ENABLED` (the default Debug package configuration). In Release package builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
+`TritonKit.isRuntimeEnabled` is `true` only when the package manager build defines `TRITONKIT_RUNTIME_ENABLED` (SwiftPM Debug package configuration, or the TritonKit CocoaPods pod target Debug configuration). In Release package builds the public API remains compileable, but the embedded runtime does not connect, collect hierarchy, upload data, or respond to control messages. App-side integration files should still be explicitly wrapped in `#if DEBUG` so production entry points do not import or start TritonKit.
 
 ### 6. WebView Observation
 
