@@ -882,6 +882,11 @@ struct TestRecorderContractTests {
         #expect(response.evidence.contains("llm:unused"))
         #expect(response.llmUsed == false)
         #expect(response.llmDecisionAuthority == false)
+        #expect(response.suggestedCommands == [
+            "triton testrec inspect \(shellQuotedEvidencePath(caseURL.path)) --json",
+            "triton testrec proposals \(shellQuotedEvidencePath(caseURL.path)) --json",
+            "triton testrec compile \(shellQuotedEvidencePath(caseURL.path)) --json",
+        ])
     }
 
     @Test("match page downgrades weak candidate to not matched")

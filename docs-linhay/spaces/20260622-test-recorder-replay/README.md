@@ -20,6 +20,8 @@
 ## 文档索引
 
 - [Product Requirements v01](./plans/20260622-product-requirements-v01.md)：竞品观察、测试合同、LLM / VLM 编译、VLM 页面指纹、CLI / HTTP route、Web 信息架构、BDD、验收标准。
+- [P0 Contract Handoff v01](./plans/20260625-p0-contract-handoff-v01.md)：早期 P0 合同交接记录，保留历史上下文。
+- [P0 Current Baseline v02](./plans/20260625-p0-contract-current-baseline-v02.md)：当前 `origin/main` 上的 P0 合同实现基线、证据边界、刻意缺口和下一步最小切片。
 
 ## 产品范围
 
@@ -74,7 +76,7 @@ Exclude：
 - compile 已新增 deterministic Action Map 产物：当存在 `actions.jsonl` 时写出 `actions/action-map.json`，按 source action 生成 semantic target、strategy、review / redaction flags 与 evidence；该文件是后续跨端 replay executor 的动作映射输入，当前不执行设备动作，也不让 LLM 直接改写 action contract。
 - compile 已新增 deterministic Page Map 产物：当存在 page route 或 fingerprint 时写出 `pages/page-map.json`，按 route / pageId 合并页面身份，记录 `routeSourcePath`、`fingerprintSourcePath`、`fingerprintHash` 与 evidence 列表；该文件面向只读 Inspector / agent 消费，不定义 Web 控制面。
 - compiled contract 已包含 page fingerprint match policy：`scorer=deterministic-fingerprint-matcher-v1`，阈值为 `matched=0.82`、`assistedMatched=0.70`、`needsReview=0.55`；`llmDecisionAuthority=false`，明确 LLM 只能解释边界样本和生成 alias/proposal，不能直接判定页面匹配 pass/fail。
-- 已新增 `triton testrec match-page <case.tritontestcase> --page <page> --candidate-json <json> --json`：读取 `compiled-contract.json` 中的 source page fingerprint，用 deterministic matcher 对 target-side candidate fingerprint 评分，输出 `score`、`decision`、component evidence、`llmUsed=false` 和 `llmDecisionAuthority=false`；当前只做 page-level matching evidence，不执行真实回放，也不调用 LLM/VLM。
+- 已新增 `triton testrec match-page <case.tritontestcase> --page <page> --candidate-json <json> --json`：读取 `compiled-contract.json` 中的 source page fingerprint，用 deterministic matcher 对 target-side candidate fingerprint 评分，输出 `score`、`decision`、component evidence、`llmUsed=false` 和 `llmDecisionAuthority=false`；`suggestedCommands[]` 指向 `inspect`、`proposals`、`compile` 三条只读审查命令；当前只做 page-level matching evidence，不执行真实回放，也不调用 LLM/VLM。
 - compile 已新增 deterministic Network Map 产物：当存在 `network/capture.ndjson` 时写出 `network/map-rules.json`；普通业务请求先标记为 `mock-candidate` 且 `redactionRequired=true`，偶发/analytics 请求标记为 `passthrough` 且 `nonBlocking=true`；当业务请求带 response body 时，会写出 `network/fixtures/<id>.json` 脱敏 fixture，并通过 rule.fixturePath 引用。 `compiled-contract.json` 不编码原始 response body。
 - compile 已新增 deterministic quality findings：对隐私候选值、偶发/analytics 网络请求、弱 selector、固定等待输出 warning，并写入 `compiledContract.qualityFindings[]`；后续 LLM / VLM proposals 只在这些机器可读发现基础上辅助生成候选修复，不直接决定 pass / fail。
 - compile 已阻断敏感 action 输入进入合同：当 `type` / `paste` 输入命中隐私候选时，`compiled-contract.json.actions[].inputText` 保持为空，dry-run replay argv 使用占位输入而不是原文；隐私事实只通过 `qualityFindings` / proposal 要求 review。
