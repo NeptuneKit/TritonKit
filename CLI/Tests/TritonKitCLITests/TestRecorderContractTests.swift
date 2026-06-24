@@ -510,6 +510,34 @@ struct TestRecorderContractTests {
         #expect(events.contains(#"network\/fixtures\/n1.json"#))
     }
 
+
+    @Test("HTTP matrix local simulated writes per target evidence bundles")
+    func httpMatrixLocalSimulatedWritesPerTargetEvidenceBundles() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        let evidenceRoot = caseURL.deletingLastPathComponent().appendingPathComponent("http-matrix-evidence", isDirectory: true)
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try writeRawStreams(to: caseURL)
+        _ = try compileTritonTestCase(path: caseURL.path, writeContract: true)
+
+        let response = try handleTestRecorderHTTPMatrix(body: Data("""
+        {"path":"\(caseURL.path)","targets":"android:emulator-a,harmony:dev-a","executor":"local-simulated","evidenceRoot":"\(evidenceRoot.path)","targetFingerprints":{"pages":[{"pageId":"login","route":"login","kind":"mock","hash":"abc123"}]}}
+        """.utf8))
+
+        #expect(response.status == "passed")
+        #expect(response.executor == "local-simulated")
+        #expect(response.evidenceRoot == evidenceRoot.path)
+        #expect(response.passedCount == 2)
+        let androidEvidence = evidenceRoot.appendingPathComponent("android-emulator-a", isDirectory: true).path
+        let harmonyEvidence = evidenceRoot.appendingPathComponent("harmony-dev-a", isDirectory: true).path
+        #expect(response.results.map(\.evidenceDir) == [androidEvidence, harmonyEvidence])
+        #expect(response.suggestedCommands.contains("triton evidence summary \(shellQuotedEvidencePath(androidEvidence)) --json"))
+        #expect(response.suggestedCommands.contains("triton evidence summary \(shellQuotedEvidencePath(harmonyEvidence)) --json"))
+        #expect(FileManager.default.fileExists(atPath: evidenceRoot.appendingPathComponent("android-emulator-a/run/replay-result.json").path))
+        #expect(FileManager.default.fileExists(atPath: evidenceRoot.appendingPathComponent("harmony-dev-a/run/events.jsonl").path))
+    }
+
     @Test("HTTP replay rejects non dry run execution")
     func httpReplayRejectsNonDryRunExecution() throws {
         let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
