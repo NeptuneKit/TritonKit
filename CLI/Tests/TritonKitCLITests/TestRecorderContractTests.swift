@@ -519,6 +519,52 @@ struct TestRecorderContractTests {
         #expect(compiledArtifact.digest == nil)
     }
 
+    @Test("inspect rejects invalid manifest JSON with validation envelope")
+    func inspectRejectsInvalidManifestJSON() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try "{".write(to: caseURL.appendingPathComponent("manifest.json"), atomically: true, encoding: .utf8)
+        try writeValidCapabilities(to: caseURL)
+
+        let failure = #expect(throws: TKTestRecorderValidationFailure.self) {
+            _ = try inspectTritonTestCase(path: caseURL.path)
+        }
+
+        #expect(failure?.detail.code == "invalid_json")
+        #expect(failure?.detail.path == "manifest.json")
+        #expect(failure?.detail.hint?.contains(".tritontestcase v1 schema") == true)
+    }
+
+    @Test("inspect reports hand written contract artifacts with identity")
+    func inspectReportsHandWrittenContractArtifacts() throws {
+        let caseURL = try makeTemporaryCaseDirectory()
+        defer { try? FileManager.default.removeItem(at: caseURL.deletingLastPathComponent()) }
+        try writeValidManifest(to: caseURL)
+        try writeValidCapabilities(to: caseURL)
+        try FileManager.default.createDirectory(at: caseURL.appendingPathComponent("actions"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: caseURL.appendingPathComponent("network"), withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: caseURL.appendingPathComponent("pages"), withIntermediateDirectories: true)
+        try #"{"kind":"tap","target":{"label":"Login"}}"#
+            .write(to: caseURL.appendingPathComponent("actions.jsonl"), atomically: true, encoding: .utf8)
+        try #"{"assertions":[{"kind":"text-exists","text":"Home"}]}"#
+            .write(to: caseURL.appendingPathComponent("assertions.json"), atomically: true, encoding: .utf8)
+        try #"{"rules":[{"id":"login","strategy":"mock-candidate"}]}"#
+            .write(to: caseURL.appendingPathComponent("network/map-rules.json"), atomically: true, encoding: .utf8)
+        try #"{"pages":[{"pageId":"login","route":"/login"}]}"#
+            .write(to: caseURL.appendingPathComponent("pages/page-map.json"), atomically: true, encoding: .utf8)
+
+        let response = try inspectTritonTestCase(path: caseURL.path)
+        let artifacts = Dictionary(uniqueKeysWithValues: response.artifacts.map { ($0.kind, $0) })
+
+        for kind in ["actions", "assertions", "network-map", "page-map"] {
+            let artifact = try #require(artifacts[kind])
+            #expect(artifact.present == true)
+            #expect(artifact.byteCount ?? 0 > 0)
+            #expect(artifact.digestAlgorithm == "fnv1a64")
+            #expect(artifact.digest?.isEmpty == false)
+        }
+    }
+
     @Test("inspect reports lifecycle stage for compiled and proposed cases")
     func inspectReportsLifecycleStageForCompiledAndProposedCases() throws {
         let compiledCaseURL = try makeTemporaryCaseDirectory()
