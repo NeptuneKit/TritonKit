@@ -883,6 +883,7 @@ struct TestRecorderContractTests {
         let proposalKinds = proposals.map(\.proposalKind)
         let compiledContent = try String(contentsOf: caseURL.appendingPathComponent("compiled-contract.json"), encoding: .utf8)
         let replay = try replayTritonTestCaseDryRun(path: caseURL.path, platform: "android", device: nil)
+        let simulatedReplay = try replayTritonTestCaseLocalSimulated(path: caseURL.path, platform: "android", device: nil)
         let networkMap = try JSONDecoder().decode(
             TKTestRecorderNetworkMap.self,
             from: Data(contentsOf: caseURL.appendingPathComponent("network/map-rules.json"))
@@ -906,6 +907,9 @@ struct TestRecorderContractTests {
         #expect(replay.plannedSteps.flatMap(\.argv).contains("secret@example.com") == false)
         #expect(replay.status == "blocked")
         #expect(replay.blockers.map(\.code).contains("redaction_review_required"))
+        #expect(simulatedReplay.status == "blocked")
+        #expect(simulatedReplay.blockers.map(\.code).contains("redaction_review_required"))
+        #expect(simulatedReplay.steps.allSatisfy { $0.status == "not-run" })
         #expect(proposalKinds.contains("contract.network"))
         #expect(proposalKinds.contains("contract.selector"))
         #expect(proposalKinds.contains("contract.wait"))
