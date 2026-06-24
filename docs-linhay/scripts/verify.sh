@@ -3,6 +3,8 @@ set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 mode="${1:---local}"
+export CLANG_MODULE_CACHE_PATH="${CLANG_MODULE_CACHE_PATH:-$root/.build/clang-module-cache}"
+mkdir -p "$CLANG_MODULE_CACHE_PATH"
 
 usage() {
   cat <<'USAGE'
@@ -24,6 +26,10 @@ run_step() {
   shift
   echo "==> ${name}"
   "$@"
+}
+
+swift_tests() {
+  env TRITON_HOST=127.0.0.1 TRITON_PORT=19421 swift test --disable-sandbox
 }
 
 ensure_cocoapods() {
@@ -135,7 +141,7 @@ case "$mode" in
   --local)
     run_step "SwiftPM dependency boundary" "$root/docs-linhay/scripts/verify-spm-dependency-boundary.sh"
     run_step "iOS DEBUG isolation" "$root/docs-linhay/scripts/verify-ios-debug-isolation.sh"
-    run_step "Swift tests" swift test
+    run_step "Swift tests" swift_tests
     run_step "Release CLI build" swift build --package-path "$root/CLI" --scratch-path "$root/.build/cli" -c release --product triton
     run_step "Release CLI smoke" release_cli_smoke
     run_step "Harmony host smoke" env TRITON_BIN="$root/.build/cli/release/triton" "$root/docs-linhay/scripts/verify-harmony-host-smoke.sh"
@@ -150,7 +156,7 @@ case "$mode" in
     run_step "Validate CI scope classifier" "$root/docs-linhay/scripts/verify-ci-validate-mode.sh"
     run_step "SwiftPM dependency boundary" "$root/docs-linhay/scripts/verify-spm-dependency-boundary.sh"
     run_step "iOS DEBUG isolation" "$root/docs-linhay/scripts/verify-ios-debug-isolation.sh"
-    run_step "Swift tests" swift test
+    run_step "Swift tests" swift_tests
     run_step "Release CLI build" swift build --package-path "$root/CLI" --scratch-path "$root/.build/cli" -c release --product triton
     run_step "Install CocoaPods if needed" ensure_cocoapods
     run_step "Validate TritonKit podspec" pod lib lint TritonKit.podspec --allow-warnings --skip-tests
