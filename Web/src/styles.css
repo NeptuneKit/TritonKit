@@ -405,86 +405,8 @@ button {
   max-width: min(228px, calc(100% - 36px));
 }
 
-.live-preview-control.is-open {
-  width: min(228px, calc(100% - 36px));
-}
-
 .live-preview-control.is-snapshot {
   width: auto;
-}
-
-.canvas-mode-switch {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-  height: 24px;
-  padding: 2px;
-  border-radius: 999px;
-  background: rgba(36, 36, 36, 0.72);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-}
-
-.canvas-mode-switch button {
-  height: 20px;
-  min-width: 38px;
-  border: 0;
-  border-radius: 999px;
-  background: transparent;
-  color: #cfcfcf;
-  font-size: 11px;
-  font-weight: 800;
-}
-
-.canvas-mode-switch button.is-active {
-  background: rgba(255, 255, 255, 0.16);
-  color: #ffffff;
-}
-
-.live-preview-badge {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  height: 24px;
-  padding: 0 9px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(36, 36, 36, 0.72);
-  color: #e8f8ea;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-}
-
-.live-preview-badge span {
-  width: 7px;
-  height: 7px;
-  border-radius: 999px;
-  background: #64d26a;
-  box-shadow: 0 0 0 4px rgba(100, 210, 106, 0.16);
-}
-
-.live-preview-badge strong,
-.live-preview-badge em {
-  font-size: 11px;
-  line-height: 1;
-}
-
-.live-preview-badge strong {
-  font-weight: 800;
-}
-
-.live-preview-badge em {
-  color: #b7c8ba;
-  font-style: normal;
-}
-
-.live-preview-badge.is-error {
-  color: #ffe0e0;
-}
-
-.live-preview-badge.is-error span {
-  background: #e55560;
-  box-shadow: 0 0 0 4px rgba(229, 85, 96, 0.16);
 }
 
 .snapshot-refresh-button {
@@ -509,63 +431,6 @@ button {
 
 .tool-snapshot .device-screen.is-interactive {
   cursor: cell;
-}
-
-.preview-fps-control {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
-  width: 100%;
-  min-width: 0;
-  min-height: 28px;
-  padding: 5px 8px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 999px;
-  background: rgba(36, 36, 36, 0.68);
-  color: #d7d7d7;
-  backdrop-filter: blur(12px);
-}
-
-.preview-fps-control span {
-  color: #e7e7e7;
-  font-size: 11px;
-  font-weight: 700;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.preview-fps-control input {
-  width: 100%;
-  min-width: 0;
-  accent-color: #64d26a;
-}
-
-.preview-fps-stepper {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-}
-
-.preview-fps-stepper button {
-  display: grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 999px;
-  background: rgba(36, 36, 36, 0.72);
-  color: #f0f0f0;
-  backdrop-filter: blur(12px);
-}
-
-.preview-fps-stepper button:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.13);
-}
-
-.preview-fps-stepper button:disabled {
-  cursor: default;
-  opacity: 0.48;
 }
 
 .pinch-command-group {
@@ -772,53 +637,10 @@ button {
 }
 
 .controller-shell-badge {
-  position: relative;
+  position: absolute;
+  top: 8px;
+  left: 8px;
   z-index: 6;
-  display: block;
-  max-width: min(520px, calc(100% - 36px));
-  min-height: 0;
-  padding: 5px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  border-radius: 8px;
-  background: rgba(18, 18, 18, 0.74);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.34);
-  color: #f5f5f5;
-  cursor: text;
-  pointer-events: auto;
-  user-select: text;
-}
-
-.controller-shell-badge strong {
-  display: block;
-  min-width: 0;
-  max-width: 100%;
-  color: #ffffff;
-  font-size: 12px;
-  line-height: 1.16;
-  overflow-wrap: anywhere;
-  text-align: center;
-  white-space: normal;
-}
-
-.controller-shell-badge em {
-  display: block;
-  margin-top: 2px;
-  color: rgba(245, 245, 245, 0.66);
-  font-size: 10px;
-  font-style: normal;
-  font-weight: 900;
-  letter-spacing: 0.08em;
-  text-align: center;
-}
-
-.controller-shell-badge.is-fallback {
-  border-color: rgba(255, 204, 102, 0.34);
-  background: rgba(24, 20, 12, 0.78);
-}
-
-.controller-shell-badge.is-stale {
-  border-color: rgba(216, 168, 111, 0.38);
-  background: rgba(30, 22, 12, 0.82);
 }
 
 .device-screen {
@@ -986,40 +808,8 @@ button {
   left: 50%;
   bottom: 12px;
   z-index: 5;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  max-width: calc(100% - 32px);
-  height: 28px;
-  padding: 0 10px;
-  border-radius: 999px;
-  background: rgba(20, 20, 20, 0.68);
-  color: #ffffff;
-  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.24);
-  backdrop-filter: blur(12px);
   pointer-events: none;
   transform: translateX(-50%);
-}
-
-.input-activity-badge span {
-  width: 8px;
-  height: 8px;
-  border-radius: 999px;
-  background: #66d476;
-  box-shadow: 0 0 0 4px rgba(102, 212, 118, 0.16);
-}
-
-.input-activity-badge.is-dispatching span {
-  background: #7eb1ff;
-  box-shadow: 0 0 0 4px rgba(126, 177, 255, 0.18);
-}
-
-.input-activity-badge strong {
-  overflow: hidden;
-  font-size: 11px;
-  line-height: 1;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .keyboard-relay {
@@ -1109,67 +899,7 @@ button {
   inset: 0;
   display: grid;
   place-items: center;
-  align-content: center;
-  gap: 10px;
-  min-width: 0;
   padding: 28px;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0)),
-    #161616;
-  color: #f2f2f2;
-  text-align: center;
-}
-
-.real-screenshot-pending span {
-  width: 28px;
-  height: 28px;
-  border: 3px solid rgba(255, 255, 255, 0.22);
-  border-top-color: #ffffff;
-  border-radius: 999px;
-  animation: pending-spin 0.9s linear infinite;
-}
-
-.real-screenshot-pending.is-error svg {
-  color: #ffcb66;
-}
-
-.real-screenshot-pending strong {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 14px;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.real-screenshot-pending em {
-  max-width: min(100%, 260px);
-  overflow: hidden;
-  color: #a9a9a9;
-  font-size: 11px;
-  font-style: normal;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.real-screenshot-pending.is-error em {
-  white-space: normal;
-}
-
-.real-screenshot-pending code {
-  max-width: min(100%, 280px);
-  overflow: hidden;
-  padding: 5px 7px;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 6px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #f7f7f7;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 10px;
-  line-height: 1.35;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 @keyframes pending-spin {
@@ -1255,33 +985,6 @@ button {
     linear-gradient(115deg, rgba(204, 61, 90, 0.96), rgba(255, 143, 71, 0.68) 34%, transparent 58%),
     linear-gradient(160deg, transparent 28%, rgba(126, 83, 220, 0.9) 54%, rgba(255, 255, 255, 0.72)),
     #cc3d5a;
-}
-
-.screen-hero span {
-  font-size: 12px;
-  font-weight: 800;
-  opacity: 0.9;
-}
-
-.screen-hero strong {
-  max-width: 100%;
-  overflow: hidden;
-  font-size: 23px;
-  line-height: 1.05;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.screen-hero button {
-  min-width: 88px;
-  height: 28px;
-  margin-top: 5px;
-  border: 0;
-  border-radius: 999px;
-  background: #7467ff;
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 800;
 }
 
 .screen-content {
