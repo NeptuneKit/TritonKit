@@ -1267,13 +1267,7 @@ export function App() {
               <div className="devtools-panel-stack">
                 <Inspector
                   hidden={activeDevtoolsPanel !== "config"}
-                  target={selectedWithScreenshot}
-                  events={selectedEvents}
-                  bridge={bridge}
                   selectedNode={selectedHierarchyNodeData}
-                  selectedNodeDraft={selectedHierarchyNodeDraft}
-                  onSelectedNodeDraftChange={updateSelectedHierarchyNodeDraft}
-                  onSelectedNodeDraftReset={resetSelectedHierarchyNodeDraft}
                 />
                 <NetworkStrip
                   id="network-evidence-panel"

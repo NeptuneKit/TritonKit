@@ -1160,82 +1160,6 @@ button {
   border-radius: 6px 6px 0 0;
 }
 
-.app-tile {
-  min-height: 76px;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: #363636;
-}
-
-.app-tile .ant-card-body {
-  display: grid;
-  grid-template-columns: 36px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 12px;
-}
-
-.app-icon {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #a5a5a5;
-}
-
-.app-tile strong,
-.app-tile span {
-  display: block;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.app-tile strong {
-  color: #f2f2f2;
-  font-size: 13px;
-}
-
-.app-tile span,
-.app-tile em {
-  color: #bcbcbc;
-  font-size: 11px;
-  font-style: normal;
-}
-
-.metric-stack {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px;
-}
-
-.metric {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  min-height: 74px;
-  padding: 10px;
-  border-radius: 8px;
-  background: rgba(255, 255, 255, 0.06);
-  color: #d6d6d6;
-}
-
-.metric span,
-.inspector-details dt {
-  color: #b7b7b7;
-  font-size: 11px;
-}
-
-.metric strong {
-  overflow: hidden;
-  color: #f6f6f6;
-  font-size: 18px;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .selected-node-panel {
   display: grid;
   gap: 10px;
@@ -1499,35 +1423,6 @@ button {
 
 .settings-footnote {
   margin: 0;
-}
-
-.inspector-details {
-  min-height: 0;
-  margin: 0;
-  overflow: hidden;
-}
-
-.inspector-details.ant-descriptions {
-  display: block;
-}
-
-.inspector-details div {
-  display: grid;
-  gap: 4px;
-  min-width: 0;
-  padding-bottom: 12px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.inspector-details dd {
-  min-width: 0;
-  margin: 0;
-  overflow: hidden;
-  color: #eeeeee;
-  font-size: 12px;
-  font-weight: 800;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .evidence-strip {

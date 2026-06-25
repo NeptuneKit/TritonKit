@@ -1,78 +1,24 @@
 import { Card, Descriptions, Tag } from "antd";
-import { Activity, Braces, Clock3, DatabaseZap, Gauge } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
 import { resolveEvidenceSources } from "../data/hierarchyMaterialPolicy";
 import {
-  localizeStatusLabel,
   readableViewTreeLabel,
-  type BridgeState,
   type HierarchyNodeHotEditDraft,
 } from "./inspectorWorkspaceModel";
 import type {
-  DeviceTarget,
   HierarchyLayerNode,
-  NetworkEvent,
 } from "../types";
 
 export function Inspector({
   hidden,
-  target,
-  events,
-  bridge,
   selectedNode,
-  selectedNodeDraft,
-  onSelectedNodeDraftChange,
-  onSelectedNodeDraftReset,
 }: {
   hidden?: boolean;
-  target: DeviceTarget;
-  events: NetworkEvent[];
-  bridge: BridgeState;
   selectedNode: HierarchyLayerNode | null;
-  selectedNodeDraft?: HierarchyNodeHotEditDraft;
-  onSelectedNodeDraftChange: (patch: HierarchyNodeHotEditDraft) => void;
-  onSelectedNodeDraftReset: () => void;
 }) {
-  const errorCount = events.filter((event) => event.status >= 400).length;
-
   return (
     <aside className="hub-inspector" aria-label="检查器" hidden={hidden}>
-      <Card className="app-tile" aria-label="当前应用" size="small">
-        <div className="app-icon">
-          <Activity size={18} />
-        </div>
-        <div>
-          <strong>{target.appName}</strong>
-          <span>{target.bundleId}</span>
-        </div>
-        <Tag color={target.actionResult === "failed" ? "red" : target.actionResult === "warning" ? "gold" : "blue"}>
-          {localizeStatusLabel(target.statusLabel)}
-        </Tag>
-      </Card>
-
-      <div className="metric-stack">
-        <Metric icon={Gauge} label="帧率" value={target.fps.toString()} />
-        <Metric icon={Clock3} label="延迟" value={`${target.latencyMs} 毫秒`} />
-        <Metric icon={Braces} label="AX 节点" value={target.hierarchyNodes.toString()} />
-        <Metric icon={DatabaseZap} label="HTTP 错误" value={errorCount.toString()} />
-      </div>
-
       <SelectedNodeEvidencePanel
         node={selectedNode}
-      />
-
-      <Descriptions
-        className="inspector-details"
-        column={1}
-        size="small"
-        bordered
-        items={[
-          { key: "device", label: "设备", children: target.device },
-          ...(target.udid ? [{ key: "udid", label: "UDID", children: target.udid }] : []),
-          { key: "action", label: "最近动作", children: `${target.actionResult}: ${target.lastAction}` },
-          { key: "transport", label: "传输", children: target.transport },
-          { key: "source", label: "来源", children: target.realSource ? bridge.sourceCommands.join(" · ") || target.transport : target.proxyLabel },
-        ]}
       />
     </aside>
   );
@@ -149,22 +95,4 @@ function SelectedNodeEvidencePanel({
 
 function formatInspectorNumber(value: number) {
   return Number.isInteger(value) ? value.toString() : value.toFixed(2);
-}
-
-function Metric({
-  icon: Icon,
-  label,
-  value,
-}: {
-  icon: LucideIcon;
-  label: string;
-  value: string;
-}) {
-  return (
-    <div className="metric">
-      <Icon size={16} />
-      <span>{label}</span>
-      <strong>{value}</strong>
-    </div>
-  );
 }
