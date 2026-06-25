@@ -67,7 +67,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Restore SwiftPM cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             .build
@@ -268,7 +268,7 @@ jobs:
           )
 
       - name: Upload CLI artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: triton-cli-arm64
           path: |
@@ -362,7 +362,7 @@ jobs:
           )
 
       - name: Upload CLI artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: triton-cli-x86_64
           path: |
@@ -379,7 +379,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Download CLI artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: triton-cli-arm64
           path: dist
@@ -485,7 +485,7 @@ jobs:
           fi
 
       - name: Upload workflow artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: tritonkit-release-assets
           path: dist/*
@@ -526,7 +526,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Download x86_64 CLI artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: triton-cli-x86_64
           path: dist

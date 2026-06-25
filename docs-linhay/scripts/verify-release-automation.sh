@@ -60,7 +60,10 @@ grep -q "mode == 'podkit'" "${ci_workflow}" || fail "ci workflow must support a 
 if grep -q 'TritonKitShared[.]podspec' "${ci_workflow}"; then
   fail "ci workflow must not validate or require a public TritonKitShared podspec"
 fi
-grep -q 'actions/cache@v4' "${ci_workflow}" || fail "ci workflow must cache SwiftPM dependencies/build products"
+grep -q 'actions/cache@v5' "${ci_workflow}" || fail "ci workflow must cache SwiftPM dependencies/build products with the Node 24 cache action"
+if grep -Eq 'actions/(cache|upload-artifact|download-artifact)@v4' "${ci_workflow}" "${release_workflow}"; then
+  fail "release workflows must not use Node 20 cache/artifact actions"
+fi
 grep -q 'verify-spm-dependency-boundary[.]sh' "${ci_workflow}" || fail "ci workflow must validate the SwiftPM iOS/CLI dependency boundary"
 grep -q 'swift build --package-path CLI --scratch-path [.]build/cli -c release --product triton' "${ci_workflow}" \
   || fail "ci workflow must build the CLI from CLI/Package.swift"
@@ -153,8 +156,8 @@ if grep -q 'macos-15-intel' "${release_workflow}"; then
 fi
 grep -Fq -- '--triple x86_64-apple-macosx14.0' "${release_workflow}" \
   || fail "release workflow must cross-compile x86_64 through SwiftPM --triple"
-grep -Fq 'actions/cache@v4' "${release_workflow}" \
-  || fail "release workflow must cache SwiftPM dependencies and build outputs"
+grep -Fq 'actions/cache@v5' "${release_workflow}" \
+  || fail "release workflow must cache SwiftPM dependencies and build outputs with the Node 24 cache action"
 grep -Fq 'release-cli-arm64' "${release_workflow}" \
   || fail "release workflow must keep a dedicated arm64 CLI cache key"
 grep -Fq 'release-cli-x86_64' "${release_workflow}" \
