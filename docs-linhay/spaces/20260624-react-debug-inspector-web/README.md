@@ -11,8 +11,8 @@ Web dev server `http://127.0.0.1:34127/` 已能渲染 Triton Inspector，但开�
 
 ## 范围
 
-- 只接入 `react-dev-inspector`、`@react-dev-inspector/vite-plugin` 与 `@react-dev-inspector/babel-plugin` 到 `Web/src/main.tsx` / `Web/vite.config.ts`。
-- Vite middleware 负责打开编辑器，Babel 插件负责注入 React element source 信息。
+- 只接入 `@linhey/react-debug-inspector` 到 `Web/src/main.tsx` / `Web/vite.config.ts`。
+- Vite 插件负责注入 `data-debug`，`initInspector()` 负责右下角 🎯 按钮和浏览器端交互。
 - 只作为 dev server 辅助能力；不新增业务 UI、不新增后端控制入口。
 
 ## 不做
@@ -28,8 +28,8 @@ Web dev server `http://127.0.0.1:34127/` 已能渲染 Triton Inspector，但开�
 Given 开发者启动 `Web/` Vite dev server
 When 打开 `http://127.0.0.1:34127/?target=<host-target>`
 Then Triton Inspector 页面仍正常渲染
-And 右下角显示 `React Inspector` 快捷按钮
-And React inspector dev overlay 可通过快捷按钮或默认快捷键响应组件定位操作。
+And 右下角显示 React Debug Inspector 的 🎯 快捷按钮
+And React inspector dev overlay 可通过快捷按钮响应组件定位操作。
 
 ### 场景 2：生产构建不受影响
 

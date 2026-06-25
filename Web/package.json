@@ -19,11 +19,9 @@
     "vite": "^7.0.0"
   },
   "devDependencies": {
-    "@react-dev-inspector/babel-plugin": "^2.0.1",
-    "@react-dev-inspector/vite-plugin": "^2.0.1",
+    "@linhey/react-debug-inspector": "^1.2.5",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",
-    "happy-dom": "^20.10.3",
-    "react-dev-inspector": "^2.0.1"
+    "happy-dom": "^20.10.3"
   }
 }
