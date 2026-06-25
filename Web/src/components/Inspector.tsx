@@ -1,5 +1,5 @@
 import { Card, Descriptions, Tag } from "antd";
-import { Activity, Braces, ChevronDown, Clock3, DatabaseZap, Gauge, Search } from "lucide-react";
+import { Activity, Braces, Clock3, DatabaseZap, Gauge } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { resolveEvidenceSources } from "../data/hierarchyMaterialPolicy";
 import {
@@ -74,13 +74,6 @@ export function Inspector({
           { key: "source", label: "来源", children: target.realSource ? bridge.sourceCommands.join(" · ") || target.transport : target.proxyLabel },
         ]}
       />
-
-      <div className="inspector-footer">
-        <Search size={15} />
-        <span>过滤</span>
-        <strong>开发者</strong>
-        <ChevronDown size={14} />
-      </div>
     </aside>
   );
 }

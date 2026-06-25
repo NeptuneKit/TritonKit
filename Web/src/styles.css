@@ -1530,24 +1530,6 @@ button {
   white-space: nowrap;
 }
 
-.inspector-footer {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
-  align-items: center;
-  gap: 8px;
-  min-height: 42px;
-  margin: 0 -12px;
-  padding: 0 14px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  color: #c5c5c5;
-  background: #343434;
-  font-size: 12px;
-}
-
-.inspector-footer strong {
-  color: #f3f3f3;
-}
-
 .evidence-strip {
   display: grid;
   grid-template-rows: auto 1fr;
