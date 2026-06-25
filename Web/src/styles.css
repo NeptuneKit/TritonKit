@@ -34,14 +34,14 @@ button {
 .device-hub-shell {
   display: grid;
   min-height: 100vh;
-  padding: 22px;
+  padding: 8px;
   background: #050505;
 }
 
 .device-hub-window {
   display: flex;
   width: min(100%, 1480px);
-  height: calc(100vh - 44px);
+  height: calc(100vh - 16px);
   min-height: 640px;
   margin: auto;
   overflow: hidden;
@@ -1940,11 +1940,11 @@ button {
 
 @media (max-width: 1180px) {
   .device-hub-shell {
-    padding: 12px;
+    padding: 6px;
   }
 
   .device-hub-window {
-    min-height: calc(100vh - 24px);
+    min-height: calc(100vh - 12px);
   }
 
   .hub-toolbar-vertical {
