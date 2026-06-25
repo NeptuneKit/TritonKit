@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from "react";
-import { Button, Card, Descriptions, Input, Tabs, Tag, Tree } from "antd";
+import { DownOutlined } from "@ant-design/icons";
+import { Button, Card, Descriptions, Dropdown, InputNumber, Segmented, Slider, Space, Tabs, Tag, Table, Tree } from "antd";
 import type { DataNode } from "antd/es/tree";
 import {
   Activity,
@@ -9,11 +10,10 @@ import {
   DatabaseZap,
   Gauge,
   Info,
-  Minus,
+  MonitorSmartphone,
   Network,
   PanelLeft,
   PanelRight,
-  Plus,
   RefreshCw,
   Search,
   Settings2,
@@ -27,6 +27,7 @@ import {
   hierarchyNodeAtPoint,
   localizeLogEntry,
   localizeStatusLabel,
+  logLevelLabel,
   modeLabel,
   platformLabel,
   platformName,
@@ -44,7 +45,6 @@ import {
   type HierarchyCacheEntry,
   type HierarchyNodeHotEditDraft,
   type LivePreviewState,
-  type SidebarPanel,
   type ViewTreeNode,
 } from "./inspectorWorkspaceModel";
 import type {
@@ -105,378 +105,170 @@ export function DeviceHubToolbar({
   onCloseTargetMenu: () => void;
   onSelectTarget: (targetId: string) => void;
 }) {
-  const menuRef = useRef<HTMLDivElement | null>(null);
   const toolbarSubtitle = bridgeSubtitle === "Readonly host targets" ? target.os : bridgeSubtitle;
 
-  useEffect(() => {
-    if (!isTargetMenuOpen) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      if (event.target instanceof Node && menuRef.current?.contains(event.target)) {
-        return;
-      }
-      onCloseTargetMenu();
-    };
-    const handleKeyDown = (event: globalThis.KeyboardEvent) => {
-      if (event.key === "Escape") {
-        onCloseTargetMenu();
-      }
-    };
-
-    document.addEventListener("mousedown", handlePointerDown);
-    document.addEventListener("keydown", handleKeyDown);
-    return () => {
-      document.removeEventListener("mousedown", handlePointerDown);
-      document.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [isTargetMenuOpen, onCloseTargetMenu]);
-
   return (
-    <header className="hub-toolbar">
-      <IconTool
-        label={isSidebarVisible ? "收起侧边栏" : "展开侧边栏"}
-        icon={PanelLeft}
-        variant="solo"
-        className={isSidebarVisible ? "is-active" : ""}
-        onClick={onToggleSidebar}
-      />
-
-      <div className="toolbar-title-shell" ref={menuRef}>
-        <button
-          className="toolbar-title"
-          type="button"
-          aria-label="切换设备"
-          aria-haspopup="listbox"
-          aria-expanded={isTargetMenuOpen}
-          onClick={onToggleTargetMenu}
+    <aside className="hub-toolbar-vertical" aria-label="工具栏">
+      <Space direction="vertical" size={4} align="center">
+        <Dropdown
+          menu={{
+            items: targets.map((candidate) => ({
+              key: candidate.id,
+              label: (
+                <div className="toolbar-target-option">
+                  <strong>{candidate.name}</strong>
+                  <span>{candidate.appName}</span>
+                  <em>
+                    {platformLabel[candidate.platform]} · {candidate.os}
+                  </em>
+                </div>
+              ),
+              onClick: () => onSelectTarget(candidate.id),
+            })),
+          }}
+          trigger={["click"]}
+          open={isTargetMenuOpen}
+          onOpenChange={(open) => open ? onToggleTargetMenu() : onCloseTargetMenu()}
+          placement="bottomLeft"
         >
-          <strong>{target.name}</strong>
-          <span>{toolbarSubtitle}</span>
-          <ChevronDown size={14} aria-hidden="true" />
-        </button>
-        {isTargetMenuOpen ? (
-          <div className="toolbar-target-menu" role="listbox" aria-label="切换设备">
-            {targets.map((candidate) => (
-              <button
-                key={candidate.id}
-                className="toolbar-target-option"
-                type="button"
-                role="option"
-                aria-selected={candidate.id === target.id}
-                onClick={() => onSelectTarget(candidate.id)}
-              >
-                <strong>{candidate.name}</strong>
-                <span>{candidate.appName}</span>
-                <em>
-                  {platformLabel[candidate.platform]} · {candidate.os}
-                </em>
-              </button>
-            ))}
-          </div>
-        ) : null}
-      </div>
+          <Button
+            className="toolbar-target-trigger"
+            type="text"
+            shape="circle"
+            aria-label="切换设备"
+            title={target.name}
+            icon={<MonitorSmartphone size={17} strokeWidth={2.2} />}
+          />
+        </Dropdown>
 
-      <div className="toolbar-cluster inspector-tools" aria-label="检查器工具">
-        <IconTool
-          label={isDevtoolsVisible ? "收起右侧面板" : "展开右侧面板"}
-          icon={PanelRight}
-          className={isDevtoolsVisible ? "is-active" : ""}
+        <div className="toolbar-divider" />
+
+        <Button
+          className={`icon-tool ${isSidebarVisible ? "is-active" : ""}`}
+          type="text"
+          shape="circle"
+          aria-label={isSidebarVisible ? "收起侧边栏" : "展开侧边栏"}
+          title={isSidebarVisible ? "收起侧边栏" : "展开侧边栏"}
+          icon={<PanelLeft size={17} strokeWidth={2.2} />}
+          onClick={onToggleSidebar}
+        />
+        <Button
+          className={`icon-tool ${isDevtoolsVisible ? "is-active" : ""}`}
+          type="text"
+          shape="circle"
+          aria-label={isDevtoolsVisible ? "收起右侧面板" : "展开右侧面板"}
+          title={isDevtoolsVisible ? "收起右侧面板" : "展开右侧面板"}
+          icon={<PanelRight size={17} strokeWidth={2.2} />}
           onClick={onToggleDevtools}
         />
-        <IconTool
-          label="打开设置"
-          icon={Settings2}
+
+        <div className="toolbar-divider" />
+
+        <Button
+          className="icon-tool"
+          type="text"
+          shape="circle"
+          aria-label="打开设置"
+          title="打开设置"
+          icon={<Settings2 size={17} strokeWidth={2.2} />}
           onClick={onOpenSettings}
         />
-        <IconTool
-          label={isRefreshing ? "正在刷新全局数据" : "刷新全局数据"}
-          icon={RefreshCw}
-          className={isRefreshing ? "is-spinning" : ""}
+        <Button
+          className={`icon-tool ${isRefreshing ? "is-spinning" : ""}`}
+          type="text"
+          shape="circle"
+          aria-label={isRefreshing ? "正在刷新全局数据" : "刷新全局数据"}
+          title={isRefreshing ? "正在刷新全局数据" : "刷新全局数据"}
           disabled={isRefreshing}
+          icon={<RefreshCw size={17} strokeWidth={2.2} />}
           onClick={onRefresh}
         />
-      </div>
-    </header>
-  );
-}
-
-function IconTool({
-  label,
-  icon: Icon,
-  variant,
-  className,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  icon: LucideIcon;
-  variant?: "solo";
-  className?: string;
-  disabled?: boolean;
-  onClick?: () => void;
-}) {
-  return (
-    <Button
-      className={`icon-tool ${variant === "solo" ? "is-solo" : ""} ${className ?? ""}`}
-      aria-label={label}
-      title={label}
-      disabled={disabled}
-      type="text"
-      shape="circle"
-      icon={<Icon size={17} strokeWidth={2.2} />}
-      onClick={onClick}
-    />
-  );
-}
-
-export function TargetNavigator({
-  selected,
-  targets: visibleTargets,
-  hierarchy,
-  activePanel,
-  searchValue,
-  isSearching,
-  onSearchChange,
-  onPanelChange,
-  onSelect,
-  selectedHierarchyNode,
-  onSelectHierarchyNode,
-}: {
-  selected: DeviceTarget;
-  targets: DeviceTarget[];
-  hierarchy?: HierarchyCacheEntry;
-  activePanel: SidebarPanel;
-  searchValue: string;
-  isSearching: boolean;
-  onSearchChange: (value: string) => void;
-  onPanelChange: (panel: SidebarPanel) => void;
-  onSelect: (id: string) => void;
-  selectedHierarchyNode: string | null;
-  onSelectHierarchyNode: (nodeId: string | null) => void;
-}) {
-  return (
-    <aside className="hub-sidebar" aria-label="设备">
-      <Input
-        className="sidebar-search"
-        prefix={<Search size={16} />}
-        placeholder="搜索"
-        value={searchValue}
-        allowClear
-        onInput={(event) => onSearchChange((event.target as HTMLInputElement).value)}
-        onChange={(event) => onSearchChange(event.target.value)}
-      />
-
-      <div className="sidebar-panel-switch" role="tablist" aria-label="侧边面板">
-        <button
-          className={activePanel === "devices" ? "is-active" : ""}
-          type="button"
-          role="tab"
-          aria-selected={activePanel === "devices"}
-          onClick={() => onPanelChange("devices")}
-        >
-          设备
-        </button>
-        <button
-          className={activePanel === "view-tree" ? "is-active" : ""}
-          type="button"
-          role="tab"
-          aria-selected={activePanel === "view-tree"}
-          onClick={() => onPanelChange("view-tree")}
-        >
-          视图树
-        </button>
-      </div>
-
-      {activePanel === "devices" ? (
-        <DeviceListPanel selected={selected} targets={visibleTargets} isSearching={isSearching} onSelect={onSelect} />
-      ) : (
-        <ViewTreePanel
-          selected={selected}
-          hierarchy={hierarchy}
-          selectedHierarchyNode={selectedHierarchyNode}
-          onSelectHierarchyNode={onSelectHierarchyNode}
-        />
-      )}
+      </Space>
     </aside>
   );
 }
 
-function DeviceListPanel({
-  selected,
-  targets: visibleTargets,
-  isSearching,
-  onSelect,
-}: {
-  selected: DeviceTarget;
-  targets: DeviceTarget[];
-  isSearching: boolean;
-  onSelect: (id: string) => void;
-}) {
-  return (
-    <Card className="sidebar-panel" aria-label="设备列表面板" size="small" title="运行中">
-      <div className="device-list ant-list">
-        {visibleTargets.map((target) => {
-          const appLabel = target.appName || "前台 App 未识别";
-          const detailLabel = appLabel;
-
-          return (
-            <div className="ant-list-item" key={target.id}>
-              <button
-                className={`device-row ${target.id === selected.id ? "is-selected" : ""}`}
-                onClick={() => onSelect(target.id)}
-                type="button"
-              >
-                <span className="device-row-copy">
-                  <strong>{target.name}</strong>
-                  <span title={detailLabel}>{detailLabel}</span>
-                </span>
-                <span className="device-row-meta">
-                  <Tag className="device-platform-badge" color="blue">
-                    {platformLabel[target.platform]}
-                  </Tag>
-                  <span className="device-version">{target.os.replace(/^[A-Za-z ]+/, "")}</span>
-                </span>
-              </button>
-            </div>
-          );
-        })}
-        {visibleTargets.length === 0 ? (
-          <p className="empty-devices">{isSearching ? "未找到匹配 target" : "暂无运行中的设备"}</p>
-        ) : null}
-      </div>
-    </Card>
-  );
-}
-
-function ViewTreePanel({
-  selected,
+export function TargetNavigator({
   hierarchy,
   selectedHierarchyNode,
   onSelectHierarchyNode,
 }: {
-  selected: DeviceTarget;
+  hierarchy?: HierarchyCacheEntry;
+  selectedHierarchyNode: string | null;
+  onSelectHierarchyNode: (nodeId: string | null) => void;
+}) {
+  return (
+    <aside className="hub-sidebar" aria-label="视图层级">
+      <ViewTreePanel
+        hierarchy={hierarchy}
+        selectedHierarchyNode={selectedHierarchyNode}
+        onSelectHierarchyNode={onSelectHierarchyNode}
+      />
+    </aside>
+  );
+}
+
+function ViewTreePanel({
+  hierarchy,
+  selectedHierarchyNode,
+  onSelectHierarchyNode,
+}: {
   hierarchy?: HierarchyCacheEntry;
   selectedHierarchyNode: string | null;
   onSelectHierarchyNode: (nodeId: string | null) => void;
 }) {
   const hierarchyScene = hierarchy?.scene;
-  const isStale = Boolean(hierarchyScene && (hierarchy?.stale || hierarchy?.error));
   const treeNodes = useMemo(() => (hierarchyScene ? viewTreeNodesForScene(hierarchyScene) : []), [hierarchyScene]);
   const defaultSelection = hierarchyScene ? defaultViewTreeSelection(hierarchyScene) : null;
   const selectedNode = selectedHierarchyNode ?? defaultSelection;
   const treeData = useMemo<DataNode[]>(() => {
-    const toTreeData = (node: ViewTreeNode, depth: number): DataNode => {
-      const hasChildren = Boolean(node.children?.length);
+    const toTreeData = (node: ViewTreeNode): DataNode => {
       const displayType = readableViewTreeLabel(node.type);
       const displayName = readableViewTreeName(displayType, node.name ? readableViewTreeLabel(node.name) : null);
-      const fullLabel = [node.type, node.name].filter(Boolean).join(" ");
+      const title = displayName ? `${displayType} ${displayName}` : displayType;
 
       return {
         key: node.id,
-        title: (
-          <button
-            className={`view-tree-row ${selectedNode === node.id ? "is-selected" : ""}`}
-            style={{ "--tree-depth": depth } as CSSProperties}
-            type="button"
-            role="treeitem"
-            aria-level={depth + 1}
-            aria-selected={selectedNode === node.id}
-            aria-expanded={hasChildren ? true : undefined}
-            data-node-id={node.id}
-            onClick={(event) => {
-              event.stopPropagation();
-              onSelectHierarchyNode(node.id);
-            }}
-          >
-            <span className="tree-disclosure">{hasChildren ? "▾" : "·"}</span>
-            <span className="tree-node-copy" title={fullLabel}>
-              <strong>{displayType}</strong>
-              {displayName ? <span>{displayName}</span> : null}
-            </span>
-          </button>
-        ),
-        children: node.children?.map((child) => toTreeData(child, depth + 1)),
+        title,
+        children: node.children?.map((child) => toTreeData(child)),
       };
     };
 
-    return treeNodes.map((node) => toTreeData(node, 0));
-  }, [onSelectHierarchyNode, selectedNode, treeNodes]);
+    return treeNodes.map((node) => toTreeData(node));
+  }, [treeNodes]);
+
+  if (hierarchy?.loading && !hierarchyScene) {
+    return <p className="view-tree-empty">加载中...</p>;
+  }
+
+  if (hierarchy?.error && !hierarchyScene) {
+    return (
+      <div className="view-tree-empty" title={hierarchy.error}>
+        <p>加载失败</p>
+        <small>{hierarchy.error}</small>
+      </div>
+    );
+  }
+
+  if (!hierarchyScene) {
+    return <p className="view-tree-empty">暂无数据</p>;
+  }
 
   return (
-    <Card className="sidebar-panel view-tree-panel" aria-label="视图层级面板" size="small">
-      {hierarchy?.loading && !hierarchyScene ? (
-        <p className="view-tree-empty">正在读取实时视图层级...</p>
-      ) : hierarchy?.error && !hierarchyScene ? (
-        <div className="view-tree-empty" title={hierarchy.error}>
-          <p>未拿到实时视图层级</p>
-          <small>{hierarchy.error}</small>
-        </div>
-      ) : hierarchyScene ? (
-        <>
-          <div className={`view-tree-status ${isStale ? "is-stale" : ""}`} title={hierarchy?.error}>
-            <strong>{isStale ? "缓存视图层级" : hierarchy?.loading ? "正在刷新实时视图层级" : "实时视图层级"}</strong>
-            {hierarchy?.error ? <small>{hierarchy.error}</small> : null}
-          </div>
-          <div className="view-tree-list" aria-label={`${selected.appName} 视图层级`}>
-            <Tree
-              blockNode
-              expandedKeys={hierarchyScene.nodes.map((node) => node.id)}
-              selectedKeys={selectedNode ? [selectedNode] : []}
-              treeData={treeData}
-              onSelect={(keys) => onSelectHierarchyNode(String(keys[0] ?? ""))}
-            />
-          </div>
-        </>
-      ) : (
-        <p className="view-tree-empty">暂无实时视图层级</p>
+    <Tree
+      className="view-tree"
+      showLine
+      blockNode
+      defaultExpandAll
+      selectedKeys={selectedNode ? [selectedNode] : []}
+      treeData={treeData}
+      switcherIcon={({ expanded }) => (
+        <DownOutlined
+          style={{ transform: `rotate(${expanded ? 0 : -90}deg)`, transition: "transform 0.3s" }}
+        />
       )}
-    </Card>
-  );
-}
-
-function ViewTreeRow({
-  node,
-  depth,
-  selectedNode,
-  onSelect,
-}: {
-  node: ViewTreeNode;
-  depth: number;
-  selectedNode: string | null;
-  onSelect: (id: string) => void;
-}) {
-  const hasChildren = Boolean(node.children?.length);
-  const displayType = readableViewTreeLabel(node.type);
-  const displayName = readableViewTreeName(displayType, node.name ? readableViewTreeLabel(node.name) : null);
-  const fullLabel = [node.type, node.name].filter(Boolean).join(" ");
-
-  return (
-    <>
-      <button
-        className={`view-tree-row ${selectedNode === node.id ? "is-selected" : ""}`}
-        style={{ "--tree-depth": depth } as CSSProperties}
-        type="button"
-        role="treeitem"
-        aria-level={depth + 1}
-        aria-selected={selectedNode === node.id}
-        aria-expanded={hasChildren ? true : undefined}
-        data-node-id={node.id}
-        onClick={() => onSelect(node.id)}
-      >
-        <span className="tree-disclosure">{hasChildren ? "▾" : "·"}</span>
-        <span className="tree-node-copy" title={fullLabel}>
-          <strong>{displayType}</strong>
-          {displayName ? <span>{displayName}</span> : null}
-        </span>
-      </button>
-      {node.children?.length ? (
-        <div className="view-tree-group" role="group">
-          {node.children.map((child) => (
-            <ViewTreeRow key={child.id} node={child} depth={depth + 1} selectedNode={selectedNode} onSelect={onSelect} />
-          ))}
-        </div>
-      ) : null}
-    </>
+      onSelect={(keys) => onSelectHierarchyNode(String(keys[0] ?? ""))}
+    />
   );
 }
 
@@ -662,83 +454,58 @@ export function DeviceCanvas({
     <section className="hub-canvas tool-inspect" aria-label="Inspect Session 设备画布">
       {target.realSource && target.canScreenshot ? (
         <div className={`live-preview-control ${isPreviewFpsOpen ? "is-open" : ""} ${isSnapshotMode ? "is-snapshot" : ""}`} ref={previewControlRef}>
-          <div className="canvas-mode-switch" aria-label="设备画布模式">
-            <button
-              className={!isSnapshotMode ? "is-active" : ""}
-              type="button"
-              aria-pressed={!isSnapshotMode}
-              onClick={() => onSnapshotModeChange(false)}
-            >
-              实时
-            </button>
-            <button
-              className={isSnapshotMode ? "is-active" : ""}
-              type="button"
-              aria-pressed={isSnapshotMode}
-              onClick={() => onSnapshotModeChange(true)}
-            >
-              快照
-            </button>
-          </div>
+          <Segmented
+            size="small"
+            options={[
+              { label: "实时", value: false },
+              { label: "快照", value: true },
+            ]}
+            value={isSnapshotMode}
+            onChange={(value) => onSnapshotModeChange(Boolean(value))}
+          />
           {isSnapshotMode ? (
-            <button
-              className="snapshot-refresh-button"
-              type="button"
-              aria-label="手动刷新快照"
-              disabled={isSnapshotRefreshing}
+            <Button
+              size="small"
+              icon={<RefreshCw size={13} />}
+              loading={isSnapshotRefreshing}
               onClick={() => {
                 void onSnapshotRefresh();
               }}
             >
-              <RefreshCw size={13} />
-              <span>{isSnapshotRefreshing ? "刷新中" : "刷新"}</span>
-            </button>
+              {isSnapshotRefreshing ? "刷新中" : "刷新"}
+            </Button>
           ) : target.screenshotDataUrl ? (
-            <button
-              className={`live-preview-badge ${livePreview?.status === "error" ? "is-error" : ""}`}
-              type="button"
-              aria-label={isPreviewFpsOpen ? "收起实时预览帧率控制" : "展开实时预览帧率控制"}
-              aria-expanded={isPreviewFpsOpen}
+            <Button
+              size="small"
+              type={livePreview?.status === "error" ? "default" : "primary"}
               onClick={() => setIsPreviewFpsOpen((current) => !current)}
             >
-              <span />
-              <strong>{livePreview?.status === "error" ? "流已暂停" : "实时"}</strong>
-              <em>{target.fps} fps</em>
-            </button>
+              <Tag color={livePreview?.status === "error" ? "error" : "success"} style={{ marginRight: 4 }}>
+                {livePreview?.status === "error" ? "流已暂停" : "实时"}
+              </Tag>
+              {target.fps} fps
+            </Button>
           ) : null}
           {!isSnapshotMode && isPreviewFpsOpen ? (
-            <>
-            <label className="preview-fps-control">
+            <div className="preview-fps-controls">
               <span>刷新率</span>
-              <input
-                type="range"
+              <Slider
                 min={previewFpsMin}
                 max={previewFpsMax}
-                step="1"
                 value={target.fps}
-                aria-label="调整实时预览帧率"
-                onChange={(event) => onPreviewFpsChange(Number(event.currentTarget.value))}
+                onChange={(value) => onPreviewFpsChange(value)}
+                style={{ width: 120 }}
               />
-            </label>
-            <div className="preview-fps-stepper" aria-label="实时预览帧率步进">
-              <button
-                type="button"
-                aria-label="降低实时预览帧率"
-                disabled={target.fps <= previewFpsMin}
-                onClick={() => onPreviewFpsChange(target.fps - 1)}
-              >
-                <Minus size={13} />
-              </button>
-              <button
-                type="button"
-                aria-label="提高实时预览帧率"
-                disabled={target.fps >= previewFpsMax}
-                onClick={() => onPreviewFpsChange(target.fps + 1)}
-              >
-                <Plus size={13} />
-              </button>
+              <InputNumber
+                size="small"
+                min={previewFpsMin}
+                max={previewFpsMax}
+                value={target.fps}
+                onChange={(value) => { if (value !== null) onPreviewFpsChange(value); }}
+                addonAfter="fps"
+                style={{ width: 100 }}
+              />
             </div>
-            </>
           ) : null}
         </div>
       ) : null}
@@ -785,7 +552,9 @@ export function DeviceCanvas({
                   <div className="screen-hero">
                     <span>目标</span>
                     <strong>{target.appName}</strong>
-                    <button type="button">{target.realSource ? localizeStatusLabel(target.statusLabel) : "检查"}</button>
+                    <Button size="small" type="primary">
+                      {target.realSource ? localizeStatusLabel(target.statusLabel) : "检查"}
+                    </Button>
                   </div>
                   <div className="screen-content">
                     <div>
@@ -1018,16 +787,15 @@ function HotEditNumber({
   return (
     <label className="hot-edit-control">
       <span>{label}</span>
-      <input
+      <InputNumber
+        size="small"
         aria-label={`修改选中节点 ${label}`}
         max={max}
         min={min}
         step={step}
-        type="number"
-        value={formatInputNumber(value)}
-        onChange={(event) => {
-          const next = Number(event.currentTarget.value);
-          if (Number.isFinite(next)) {
+        value={value}
+        onChange={(next) => {
+          if (next !== null && Number.isFinite(next)) {
             onChange(next);
           }
         }}
@@ -1119,14 +887,12 @@ export function SettingsPage({
     <main className="settings-page-shell">
       <section className="settings-page" aria-label={isChinese ? "设置" : "Settings"}>
         <div className="settings-page-topbar">
-          <button
-            aria-label={isChinese ? "返回 Inspect Session" : "Back to Inspect Session"}
-            className="settings-back-button"
-            type="button"
+          <Button
+            type="link"
             onClick={onBack}
           >
             ← {isChinese ? "返回 Inspect Session" : "Back to Inspect Session"}
-          </button>
+          </Button>
           <span>{isChinese ? "Web 本地偏好" : "Local Web preferences"}</span>
         </div>
 
@@ -1148,23 +914,19 @@ export function SettingsPage({
             </span>
           </div>
 
-          <div className="language-options" role="radiogroup" aria-label={isChinese ? "语言偏好" : "Language preference"}>
-            {displayLanguageOptions.map((option) => (
-              <label className={language === option.id ? "is-selected" : ""} key={option.id}>
-                <input
-                  checked={language === option.id}
-                  name="display-language"
-                  onChange={() => onLanguageChange(option.id)}
-                  type="radio"
-                  value={option.id}
-                />
-                <span>
+          <Segmented
+            options={displayLanguageOptions.map((option) => ({
+              label: (
+                <div>
                   <strong>{option.label}</strong>
-                  <em>{option.detail}</em>
-                </span>
-              </label>
-            ))}
-          </div>
+                  <div style={{ fontSize: 12, color: '#8C8C8C' }}>{option.detail}</div>
+                </div>
+              ),
+              value: option.id,
+            }))}
+            value={language}
+            onChange={(value) => onLanguageChange(value as DisplayLanguage)}
+          />
         </div>
 
         <p className="settings-footnote">
@@ -1188,6 +950,44 @@ export function NetworkStrip({
   language: DisplayLanguage;
   events: NetworkEvent[];
 }) {
+  const columns = [
+    {
+      title: "Method",
+      dataIndex: "method",
+      key: "method",
+      width: 70,
+    },
+    {
+      title: "Path",
+      dataIndex: "path",
+      key: "path",
+      ellipsis: true,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      width: 70,
+      render: (status: number) => (
+        <Tag color={status >= 400 ? "error" : "success"}>{status}</Tag>
+      ),
+    },
+    {
+      title: "Latency",
+      dataIndex: "latencyMs",
+      key: "latencyMs",
+      width: 90,
+      render: (latencyMs: number) => `${latencyMs} ms`,
+    },
+    {
+      title: "Mode",
+      dataIndex: "mode",
+      key: "mode",
+      width: 80,
+      render: (mode: NetworkEvent["mode"]) => modeLabel[language][mode],
+    },
+  ];
+
   return (
     <section
       id={id}
@@ -1200,17 +1000,14 @@ export function NetworkStrip({
         <Network size={16} />
         <strong>Trace</strong>
       </div>
-      <div className="network-rows">
-        {events.map((event) => (
-          <div className="network-row" key={event.id}>
-            <span className="method">{event.method}</span>
-            <span className="path">{event.path}</span>
-            <span className={event.status >= 400 ? "code is-error" : "code"}>{event.status}</span>
-            <span>{event.latencyMs} 毫秒</span>
-            <span>{modeLabel[language][event.mode]}</span>
-          </div>
-        ))}
-      </div>
+      <Table
+        dataSource={events}
+        columns={columns}
+        rowKey="id"
+        size="small"
+        pagination={false}
+        scroll={{ y: 400 }}
+      />
     </section>
   );
 }
@@ -1226,6 +1023,48 @@ export function LogStrip({
   language: DisplayLanguage;
   entries: LogEntry[];
 }) {
+  const columns = [
+    {
+      title: "Time",
+      dataIndex: "time",
+      key: "time",
+      width: 80,
+      render: (_: unknown, record: LogEntry) => {
+        const localized = localizeLogEntry(record, language);
+        return localized.timeLabel;
+      },
+    },
+    {
+      title: "Level",
+      dataIndex: "level",
+      key: "level",
+      width: 60,
+      render: (level: LogEntry["level"]) => (
+        <Tag color={level === "error" ? "error" : level === "warn" ? "warning" : "default"}>
+          {logLevelLabel[language][level]}
+        </Tag>
+      ),
+    },
+    {
+      title: "Source",
+      key: "source",
+      width: 80,
+      render: (_: unknown, record: LogEntry) => {
+        const localized = localizeLogEntry(record, language);
+        return localized.sourceLabel;
+      },
+    },
+    {
+      title: "Message",
+      key: "message",
+      ellipsis: true,
+      render: (_: unknown, record: LogEntry) => {
+        const localized = localizeLogEntry(record, language);
+        return <span title={localized.originalMessage}>{localized.messageLabel}</span>;
+      },
+    },
+  ];
+
   return (
     <section
       id={id}
@@ -1238,19 +1077,14 @@ export function LogStrip({
         <TerminalSquare size={16} />
         <strong>{language === "zh-CN" ? "日志" : "Logs"}</strong>
       </div>
-      <div className="log-rows">
-        {entries.map((entry) => {
-          const localized = localizeLogEntry(entry, language);
-          return (
-            <div className={`log-row log-${entry.level}`} key={entry.id} title={localized.originalMessage}>
-              <span className="log-time">{localized.timeLabel}</span>
-              <strong>{localized.levelLabel}</strong>
-              <em>{localized.sourceLabel}</em>
-              <p>{localized.messageLabel}</p>
-            </div>
-          );
-        })}
-      </div>
+      <Table
+        dataSource={entries}
+        columns={columns}
+        rowKey="id"
+        size="small"
+        pagination={false}
+        scroll={{ y: 400 }}
+      />
     </section>
   );
 }

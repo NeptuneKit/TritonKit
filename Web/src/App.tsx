@@ -679,17 +679,15 @@ export function App() {
   }, [selectedHierarchy?.scene, selectedHierarchyNode]);
 
   useEffect(() => {
-    if (sidebarPanel !== "view-tree") return;
     if (selected.id === emptyTargetId || !(selected.targetSelector ?? selected.udid ?? selected.id)) return;
     if (hierarchyById[selected.id]) return;
 
     void refreshHierarchy(selected).catch(() => {
       // Error state is stored in hierarchy cache for the panel to render.
     });
-  }, [hierarchyById, hierarchyReloadKey, refreshHierarchy, selected, sidebarPanel]);
+  }, [hierarchyById, hierarchyReloadKey, refreshHierarchy, selected]);
 
   useEffect(() => {
-    if (sidebarPanel !== "view-tree") return;
     if (!selected.realSource || selected.id === emptyTargetId || !(selected.targetSelector ?? selected.udid ?? selected.id)) return;
     if (isSelectedSnapshotMode) return;
 
@@ -719,7 +717,7 @@ export function App() {
         window.clearTimeout(timer);
       }
     };
-  }, [isSelectedSnapshotMode, refreshHierarchy, selected, sidebarPanel]);
+  }, [isSelectedSnapshotMode, refreshHierarchy, selected]);
 
   const loadHostTargets = async (preferredSelectedId: string) => {
     const result = await fetchHostTargets();
@@ -1204,6 +1202,7 @@ export function App() {
     <main className="device-hub-shell">
       <Layout
         className="device-hub-window"
+        hasSider
         aria-label="Triton Inspector Inspect Session"
       >
         <DeviceHubToolbar
@@ -1235,15 +1234,7 @@ export function App() {
           {bridgePresentation.notice ? <HostBridgeNotice notice={bridgePresentation.notice} /> : null}
           {isSidebarVisible ? (
             <TargetNavigator
-              selected={selectedWithScreenshot}
-              targets={filteredTargets}
               hierarchy={selectedHierarchy}
-              activePanel={sidebarPanel}
-              searchValue={targetSearch}
-              isSearching={targetSearch.trim().length > 0}
-              onSearchChange={setTargetSearch}
-              onPanelChange={setSidebarPanel}
-              onSelect={setSelectedId}
               selectedHierarchyNode={selectedHierarchyNode}
               onSelectHierarchyNode={setSelectedHierarchyNode}
             />

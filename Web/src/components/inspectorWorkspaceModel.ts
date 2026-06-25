@@ -35,7 +35,7 @@ export const modeLabel: Record<DisplayLanguage, Record<NetworkEvent["mode"], str
   },
 };
 
-const logLevelLabel: Record<DisplayLanguage, Record<LogEntry["level"], string>> = {
+export const logLevelLabel: Record<DisplayLanguage, Record<LogEntry["level"], string>> = {
   "zh-CN": {
     info: "信息",
     warn: "警告",
