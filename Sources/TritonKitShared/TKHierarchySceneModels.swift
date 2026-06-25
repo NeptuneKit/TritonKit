@@ -199,12 +199,14 @@ public struct TKHierarchyNodeRawInfo: Codable, Equatable {
     public let source: String?
     public let role: String?
     public let identifier: String?
+    public let classHierarchy: [String]?
 
-    public init(platform: String, source: String? = nil, role: String? = nil, identifier: String? = nil) {
+    public init(platform: String, source: String? = nil, role: String? = nil, identifier: String? = nil, classHierarchy: [String]? = nil) {
         self.platform = platform
         self.source = source
         self.role = role
         self.identifier = identifier
+        self.classHierarchy = classHierarchy
     }
 }
 

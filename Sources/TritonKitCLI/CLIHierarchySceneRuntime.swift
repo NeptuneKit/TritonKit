@@ -184,7 +184,8 @@ private func appendLegacyIosHierarchyNode(
                 platform: "ios",
                 source: "runtime-tree",
                 role: "UIViewController",
-                identifier: String(controller.oid)
+                identifier: String(controller.oid),
+                classHierarchy: controller.classChainList
             ),
             renderHints: TKHierarchyNodeRenderHints(
                 preferredMode: "structure",
@@ -222,7 +223,8 @@ private func appendLegacyIosHierarchyNode(
             platform: "ios",
             source: "runtime-tree",
             role: type,
-            identifier: item.screenshotRef
+            identifier: item.screenshotRef,
+            classHierarchy: legacyIosHierarchyClassChain(item)
         ),
         renderHints: legacyIosHierarchyRenderHints(type: type, frame: frame, viewport: viewport, slice: slice)
     ))
@@ -315,6 +317,12 @@ private func legacyIosHierarchyClassName(_ item: TKDisplayItem) -> String {
         ?? item.viewObject?.classChainList.first
         ?? item.hostViewControllerObject?.classChainList.first
         ?? "UIView"
+}
+
+private func legacyIosHierarchyClassChain(_ item: TKDisplayItem) -> [String]? {
+    item.layerObject?.classChainList
+        ?? item.viewObject?.classChainList
+        ?? item.hostViewControllerObject?.classChainList
 }
 
 private func legacyIosHierarchyNodeName(type: String, oid: UInt, item: TKDisplayItem) -> String {

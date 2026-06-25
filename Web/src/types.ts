@@ -119,6 +119,7 @@ export type HierarchyLayerNode = {
     source?: string;
     role?: string;
     identifier?: string;
+    classHierarchy?: string[];
   };
   renderHints?: {
     preferredMode?: "slice" | "style" | "fallback" | "wireframe" | string;

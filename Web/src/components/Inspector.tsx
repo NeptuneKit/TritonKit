@@ -1,4 +1,5 @@
-import { Card, Descriptions, Tag } from "antd";
+import { Card, Descriptions, Tag, Tree } from "antd";
+import type { DataNode } from "antd/es/tree";
 import { resolveEvidenceSources } from "../data/hierarchyMaterialPolicy";
 import {
   readableViewTreeLabel,
@@ -46,6 +47,8 @@ function SelectedNodeEvidencePanel({
   const nodeName = node.name ? readableViewTreeLabel(node.name) : "";
   const typeLabel = readableViewTreeLabel(node.type);
 
+  const classHierarchy = node.raw?.classHierarchy ?? [];
+
   return (
     <Card className="selected-node-panel" aria-label="选中视图节点" size="small">
       <div className="selected-node-heading">
@@ -55,6 +58,29 @@ function SelectedNodeEvidencePanel({
         </div>
         <Tag color="blue">Runtime DTO</Tag>
       </div>
+
+      <div className="node-identity">
+        <div className="node-identity-row">
+          <span className="node-identity-label">类名</span>
+          <code className="node-identity-value">{node.type}</code>
+        </div>
+        <div className="node-identity-row">
+          <span className="node-identity-label">变量名</span>
+          <code className="node-identity-value">{node.name || "未命名"}</code>
+        </div>
+      </div>
+
+      {classHierarchy.length > 0 ? (
+        <div className="node-parent-tree">
+          <span className="node-parent-label">类继承</span>
+          <Tree
+            className="parent-hierarchy-tree"
+            showLine
+            defaultExpandAll
+            treeData={buildClassHierarchyTree(classHierarchy, node.type)}
+          />
+        </div>
+      ) : null}
 
       <Descriptions
         className="selected-node-summary"
@@ -95,4 +121,30 @@ function SelectedNodeEvidencePanel({
 
 function formatInspectorNumber(value: number) {
   return Number.isInteger(value) ? value.toString() : value.toFixed(2);
+}
+
+function buildClassHierarchyTree(classHierarchy: string[], currentType: string): DataNode[] {
+  if (classHierarchy.length === 0) return [];
+
+  const buildTree = (classes: string[], depth: number): DataNode | null => {
+    if (classes.length === 0) return null;
+
+    const [current, ...rest] = classes;
+    const isCurrent = current === currentType;
+    const child = buildTree(rest, depth + 1);
+
+    return {
+      key: `${current}-${depth}`,
+      title: (
+        <span className={isCurrent ? "parent-node-current" : ""}>
+          {current}
+          {isCurrent ? <Tag color="blue" style={{ marginLeft: 4 }}>当前</Tag> : null}
+        </span>
+      ),
+      children: child ? [child] : undefined,
+    };
+  };
+
+  const root = buildTree(classHierarchy, 0);
+  return root ? [root] : [];
 }
