@@ -180,6 +180,7 @@ fi
 echo "==> Start Web dev server"
 echo "TRITONKIT_TRITON_BIN=$triton_bin"
 echo "URL: http://${host}:${port}/"
+echo "React Inspector: click the bottom-right button or press Ctrl+Shift+Command+C in the browser"
 
 if (( ${#extra_vite_args[@]} > 0 )); then
   exec env TRITONKIT_TRITON_BIN="$triton_bin" npm --prefix "$root/Web" run dev -- --host "$host" --port "$port" "${extra_vite_args[@]}"
