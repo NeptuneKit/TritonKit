@@ -154,15 +154,15 @@ export function readableViewTreeLabel(value: string): string {
   }
   const swiftName = swiftNames.at(-1);
   if (swiftName && swiftName.length >= 3) {
-    return `${swiftName}${suffix}`;
+    return swiftName;
   }
 
   const namespaceIndex = withoutSuffix.lastIndexOf(".");
   if (namespaceIndex >= 0 && namespaceIndex < withoutSuffix.length - 1) {
-    return `${withoutSuffix.slice(namespaceIndex + 1)}${suffix}`;
+    return withoutSuffix.slice(namespaceIndex + 1);
   }
 
-  return value;
+  return withoutSuffix || value;
 }
 
 export function readableViewTreeName(typeLabel: string, nameLabel: string | null): string | null {
