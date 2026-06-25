@@ -49,6 +49,12 @@ triton version --json
 
 维护 README、项目级 skill 或真实项目回归文档时，凡是指导用户手动更新现有 `triton` 可执行文件，都必须使用上述模式，或明确要求先停止正在运行的 `triton serve`。
 
+## CLI-managed update runtime
+
+`triton update` 执行 host command 时，相对命令必须通过 PATH 解析；例如 Homebrew action 使用 `/usr/bin/env brew ...`，不能把 `brew` 当成当前工作目录下的 `./brew`。
+
+未显式传 `--version` 的 public skills 更新需要先解析 latest release。优先读取 GitHub `/releases/latest` 跳转后的 `/releases/tag/vX.Y.Z`，再回退 GitHub API；API fallback 失败时错误信息必须包含 HTTP status 或响应解析失败类型，便于区分网络、API、限流和格式问题。
+
 公式名：`triton`
 
 安装命令：

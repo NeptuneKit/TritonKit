@@ -342,12 +342,34 @@ func runCLIUpdate(
 }
 
 private func fetchLatestTritonReleaseTag(repository: String) async throws -> String {
+    let latestURL = URL(string: "https://github.com/\(repository)/releases/latest")!
+    let (_, latestResponse) = try await URLSession.shared.data(from: latestURL)
+    if let tag = githubLatestReleaseTag(from: latestResponse.url ?? latestURL) {
+        return tag
+    }
+
     let url = URL(string: "https://api.github.com/repos/\(repository)/releases/latest")!
     let (data, response) = try await URLSession.shared.data(from: url)
-    guard (response as? HTTPURLResponse)?.statusCode == 200 else {
-        throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "GitHub latest release request failed.", hint: "Pass --version vX.Y.Z or check network access.")
+    guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+        let status = (response as? HTTPURLResponse).map { String($0.statusCode) } ?? "unknown"
+        throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "GitHub latest release request failed with HTTP status \(status).", hint: "Pass --version vX.Y.Z or check GitHub API access/rate limits.")
     }
-    return try JSONDecoder().decode(GitHubLatestReleaseResponse.self, from: data).tagName
+    do {
+        return try JSONDecoder().decode(GitHubLatestReleaseResponse.self, from: data).tagName
+    } catch {
+        throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "GitHub latest release response did not contain tag_name.", hint: "Pass --version vX.Y.Z or verify the release API response.")
+    }
+}
+
+func githubLatestReleaseTag(from url: URL) -> String? {
+    let components = url.pathComponents
+    guard
+        let tagIndex = components.lastIndex(of: "tag"),
+        components.indices.contains(components.index(after: tagIndex))
+    else {
+        return nil
+    }
+    return components[components.index(after: tagIndex)]
 }
 
 private func installManualCLIUpdate(plan: CLIUpdateResponse, tag: String, repository: String) async throws {
@@ -438,10 +460,18 @@ private func runProcess(_ executable: String, _ arguments: [String]) throws {
     _ = try captureProcess(executable, arguments)
 }
 
+func makeCLIUpdateProcessLaunch(executable: String, arguments: [String]) -> (executable: String, arguments: [String]) {
+    guard !executable.contains("/") else {
+        return (executable, arguments)
+    }
+    return ("/usr/bin/env", [executable] + arguments)
+}
+
 private func captureProcess(_ executable: String, _ arguments: [String]) throws -> String {
+    let launch = makeCLIUpdateProcessLaunch(executable: executable, arguments: arguments)
     let process = Process()
-    process.executableURL = URL(fileURLWithPath: executable)
-    process.arguments = arguments
+    process.executableURL = URL(fileURLWithPath: launch.executable)
+    process.arguments = launch.arguments
     let stdout = Pipe()
     let stderr = Pipe()
     process.standardOutput = stdout

@@ -108,6 +108,21 @@ struct UpdateCommandTests {
         #expect(plan.actions.map(\.kind) == [.homebrewUpdate, .homebrewUpgrade])
     }
 
+    @Test("relative host command launches through env instead of cwd path")
+    func relativeHostCommandLaunchesThroughEnvInsteadOfCwdPath() {
+        let launch = makeCLIUpdateProcessLaunch(executable: "brew", arguments: ["update"])
+
+        #expect(launch.executable == "/usr/bin/env")
+        #expect(launch.arguments == ["brew", "update"])
+    }
+
+    @Test("github latest release redirect URL resolves tag")
+    func githubLatestReleaseRedirectURLResolvesTag() throws {
+        let url = try #require(URL(string: "https://github.com/NeptuneKit/TritonKit/releases/tag/v0.2.5"))
+
+        #expect(githubLatestReleaseTag(from: url) == "v0.2.5")
+    }
+
     @Test("manual install source requires explicit confirmation for mutating update")
     func manualInstallSourceRequiresExplicitConfirmationForMutatingUpdate() throws {
         let plan = try makeCLIUpdatePlan(
