@@ -1,0 +1,84 @@
+# Host-side device and emulator evidence
+
+Use this for host-side iOS Simulator, Android Emulator, HarmonyOS / DevEco Emulator, Web Device Hub, install/launch/readiness/screenshot flows, and cases that do not require an embedded runtime.
+
+## Triton-first rule
+
+Before raw `xcrun` / `simctl`, `adb`, `hdc`, DevEco CLI, XcodeBuildMCP, or raw `xcodebuild`, capture Triton evidence:
+
+```bash
+triton status --json
+triton doctor --json
+triton capabilities --json
+triton schema --json
+triton schema --command <command> --json
+triton plan --json
+```
+
+Fallback reports must include the Triton command, error code, unsupported result, or missing schema/capability proof.
+
+## iOS Simulator host-side checks
+
+```bash
+triton sim list --json
+triton device alias set iphone15 --platform ios --target <udid> --json
+triton sim use <udid> --json
+triton sim boot <udid> --wait --jsonl
+triton sim screenshot --simulator booted --output /tmp/<case>-sim.png --json
+triton app list --device iphone15 --user-only --json
+triton app info --device iphone15 --bundle-id <bundle-id> --json
+triton app install --device iphone15 --app <path.app> --json
+triton app launch --device iphone15 --bundle-id <bundle-id> --json
+triton app terminate --device iphone15 --bundle-id <bundle-id> --json
+triton app open-url "<url>" --device iphone15 --wait-ready --snapshot --json
+triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json
+triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json
+```
+
+Destructive commands such as uninstall, erase, runtime delete, dyld-cache remove, or pairing changes must show `--dry-run` or `--confirm` behavior in the report.
+
+## Harmony host-side checks
+
+```bash
+triton device doctor --platform harmony --json
+triton device list --platform harmony --json
+triton device alias set harmony-a --platform harmony --target <hdc-target> --json
+triton device wait-ready --device harmony-a --json
+triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json
+triton app install --device harmony-a --hap <debug-signed.hap> --json
+triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json
+triton app open-url --device harmony-a --bundle <bundle> --ability <ability> "<url>" --json
+triton debug ax --platform harmony --target <hdc-target> --output /tmp/<case>-layout.json --json
+triton wait --platform harmony --target <hdc-target> --text "<text>" --timeout 15 --json
+triton act tap "<text>" --platform harmony --target <hdc-target> --json
+triton screenshot --device harmony-a --output /tmp/<case>.jpeg --json
+```
+
+When `device list` reports `identityState=unknown` or `unsupported`, preserve that boundary; do not fabricate app identity from emulator labels. Multiple connected HDC targets should produce `ambiguous_target` until `--device` or `--target` is supplied.
+
+For Harmony host output contracts, parse `host.harmony-artifact`, `host.harmony-tap`, `host.harmony-swipe`, `host.harmony-text-input`, `host.harmony-key-action`, and `host.harmony-wait`. Treat legacy selectors such as `host.tap` or `host.wait` as schema regressions.
+
+## Android host-side checks
+
+```bash
+triton device doctor --platform android --json
+triton device list --platform android --json
+triton device alias set android-a --platform android --target <adb-serial> --json
+triton device wait-ready --device android-a --json
+triton app inspect --platform android --device android-a --bundle <package> --json
+triton app install --platform android --device android-a --apk <debug.apk> --json
+triton app launch --platform android --device android-a --package-name <package> --json
+triton app open-url --platform android --device android-a --package-name <package> "<url>" --json
+triton debug ax --platform android --device android-a --output /tmp/<case>-window.xml --json
+triton wait --platform android --device android-a --text "<text>" --timeout 15 --json
+```
+
+## Web Device Hub
+
+For Web Device Hub launch/discovery feedback:
+
+```bash
+triton web --print-command --json
+```
+
+Preserve `mode`, `repoRoot`, `webRoot`, `bundledWebRoot`, `tritonBin`, `url`, `installCommand`, and `command`. Web is a local readonly launcher, not the business-control surface.

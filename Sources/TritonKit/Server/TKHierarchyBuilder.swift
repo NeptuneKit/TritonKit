@@ -54,6 +54,7 @@ public enum TKHierarchyBuilder {
         let isKeyWindow: Bool
         let bgCGColor: CGColor?
         let classChain: [String]
+        let hostViewController: UIViewController?
         let vcClassChain: [String]?
         let layerPosition: CGPoint
         let layerAnchorPoint: CGPoint
@@ -102,7 +103,8 @@ public enum TKHierarchyBuilder {
             )
         }
 
-        let vcChain: [String]? = view.tk_hostViewController.map { vc in
+        let hostViewController = view.tk_hostViewController
+        let vcChain: [String]? = hostViewController.map { vc in
             var chain: [String] = []
             var cls: AnyClass = type(of: vc)
             while true {
@@ -141,6 +143,7 @@ public enum TKHierarchyBuilder {
             isKeyWindow: (view as? UIWindow)?.isKeyWindow ?? false,
             bgCGColor: layer.backgroundColor,
             classChain: view.tk_classChain,
+            hostViewController: hostViewController,
             vcClassChain: vcChain,
             layerPosition: layer.position,
             layerAnchorPoint: layer.anchorPoint,
@@ -230,7 +233,7 @@ public enum TKHierarchyBuilder {
         )
 
         var vcObj: TKObject? = nil
-        if let vc = data.view?.tk_hostViewController, let vcChain = data.vcClassChain {
+        if let vc = data.hostViewController, let vcChain = data.vcClassChain {
             let oid = registry.register(vc)
             vcObj = TKObject(oid: oid, memoryAddress: "\(Unmanaged.passUnretained(vc).toOpaque())", classChainList: vcChain)
         }

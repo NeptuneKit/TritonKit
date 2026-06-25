@@ -23,3 +23,9 @@ TritonKit 仍处开发阶段，外部使用者在试用、接入、评估或自�
 
 - 使用 `$skill-creator` 的 `init_skill.py` 初始化 skill。
 - 使用临时 venv 安装 `PyYAML` 后运行 `quick_validate.py TritonKit.skills/tritonkit-dev-feedback`，结果为 `Skill is valid!`。
+
+## 2026-06-25 渐进加载拆分
+
+- GitHub issue #118 已处理：`TritonKit.skills/tritonkit-dev-feedback/SKILL.md` 从 605 行收缩到 44 行，只保留原则、快速 workflow、reference route table 和全局脱敏边界。
+- 详细规则移动到 `references/`：`issue-filing.md`、`evidence-ios-runtime.md`、`evidence-host-devices.md`、`schema-contract-feedback.md`、`app-integration-ios.md`、`app-integration-harmony.md`。
+- `docs-linhay/scripts/verify-skill-package.sh` 新增门禁：打包后的顶层 `SKILL.md` 必须不超过 150 行，并且六个 routed references 必须进入 `tritonkit-skills.tar.gz`。

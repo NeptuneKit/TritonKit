@@ -26,6 +26,24 @@ for skill_name in tritonkit-dev-feedback tritonkit-emulator-cli-takeover tritonk
   grep -q '^  version: 9.8.7-dev+abcdef0$' "${tmp_dir}/${skill_name}.skill.md"
 done
 
+dev_feedback_lines="$(wc -l < "${tmp_dir}/tritonkit-dev-feedback.skill.md")"
+if [ "${dev_feedback_lines}" -gt 150 ]; then
+  echo "tritonkit-dev-feedback/SKILL.md should stay routed and under 150 lines, got ${dev_feedback_lines}" >&2
+  exit 1
+fi
+
+for reference in \
+  issue-filing \
+  evidence-ios-runtime \
+  evidence-host-devices \
+  schema-contract-feedback \
+  app-integration-ios \
+  app-integration-harmony
+do
+  grep -q "^TritonKit[.]skills/tritonkit-dev-feedback/references/${reference}[.]md$" "${tmp_dir}/contents.txt"
+  grep -q "references/${reference}.md" "${tmp_dir}/tritonkit-dev-feedback.skill.md"
+done
+
 if grep -q '[.]DS_Store' "${tmp_dir}/contents.txt"; then
   echo "skill package should not contain .DS_Store" >&2
   exit 1

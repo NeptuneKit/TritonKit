@@ -100,6 +100,8 @@ public_skills = [
 ]
 for doc in [readme, *public_skills]:
     text = doc.read_text()
+    if doc.name == "SKILL.md" and doc.parent.name == "tritonkit-dev-feedback":
+        text += "\n" + (doc.parent / "references/app-integration-ios.md").read_text()
     for needle in ("TRITONKIT_RUNTIME_ENABLED", "startIfEnabled", "--triton-enabled", "TRITON_ENABLED", "#if DEBUG"):
         if needle not in text:
             fail(f"{doc.relative_to(root)} must document recommended opt-in DEBUG bootstrap with {needle}")
