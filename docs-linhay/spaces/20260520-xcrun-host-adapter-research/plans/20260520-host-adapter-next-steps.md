@@ -11,6 +11,23 @@
 3. 再接入 `.tritonplan` step：`open-url`、`prefs-get`、`privacy`、`location`。
 4. 最后处理长生命周期命令：`logs stream`、`xctrace record`。
 
+## 下期候选需求池
+
+### serve-sim 参考吸收
+
+- 来源：`https://github.com/EvanBacon/serve-sim`，本地快照：`docs-linhay/references/serve-sim/`，HEAD：`f94d57c`。
+- 候选能力：
+  1. Simulator streaming helper lifecycle：start/list/status/stop 的 JSON contract，作为本机预览或 evidence 辅助，不作为 Web/Wails 业务入口。
+  2. 归一化坐标动作：借鉴 `tap` 优先于 begin/end gesture 的设计，把 `0..1` 坐标、edge gesture、button、rotate 纳入 `triton act` / `triton sim` schema。
+  3. 权限准备：补齐 `sim permissions grant|revoke|reset|list`，重点评估通知权限这类 `simctl privacy` 覆盖不足的场景。
+  4. 日志与 AX 辅助证据：评估 `/ax`、foreground、stream config、log forwarding 是否能映射为 Triton evidence artifact。
+  5. Camera injection：仅进入后续独立设计候选，先评估 Debug-only 边界、DYLD injection 风险、macOS 版本和 arm64 限制。
+- 不做：
+  1. 不引入 Node/npm 作为 `triton` CLI 默认运行依赖。
+  2. 不复制 Web preview / `/.sim/exec` host shell endpoint。
+  3. 不把远端 tunnel 或无认证 LAN 控制作为默认产品面。
+  4. 不把 camera injection 并入 host adapter P0。
+
 ## 测试门禁
 
 - CLI 参数解析和 schema 必须有单元测试。

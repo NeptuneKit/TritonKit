@@ -21,10 +21,13 @@
 
 - GitHub issue：`https://github.com/NeptuneKit/TritonKit/issues/11`
 - 后续主需求：`docs-linhay/spaces/20260520-simulator-takeover/README.md`
+- 新增参考：`docs-linhay/references/serve-sim/`，EvanBacon/serve-sim，本地快照 `f94d57c`
 
 ## 当前定位
 
 本 space 是 simulator takeover 的前置调研，不再作为独立并行方案推进。这里保留 `xcrun`、`simctl`、`devicectl`、`xcdevice`、`xctrace`、`xcresulttool` 和 `SKProcessRunner` 的调研结论；具体需求分期、target 模型、CLI 契约、plan/evidence 扩展和测试策略以后以 `20260520-simulator-takeover` space 为准。
+
+`serve-sim` 作为下期参考项目进入需求池：只吸收 host-side Simulator streaming、normalized input、permission、camera injection 和 agent skill 的能力设计；不复制其 Web preview 作为业务控制入口，不引入 npm runtime 作为 Triton CLI 的默认依赖。
 
 ## 本机环境
 
