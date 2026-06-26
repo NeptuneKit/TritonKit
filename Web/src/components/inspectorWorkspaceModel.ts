@@ -77,6 +77,7 @@ export type ViewTreeNode = {
   id: string;
   type: string;
   name?: string;
+  depth: number;
   children?: ViewTreeNode[];
 };
 
@@ -126,18 +127,19 @@ export function viewTreeNodesForScene(scene: HierarchyScene): ViewTreeNode[] {
     nodesByParent.set(parentId, siblings);
   }
 
-  const buildNode = (node: HierarchyLayerNode): ViewTreeNode => ({
+  const buildNode = (node: HierarchyLayerNode, depth: number): ViewTreeNode => ({
     id: node.id,
     type: node.type,
     name: node.name,
-    children: nodesByParent.get(node.id)?.map(buildNode),
+    depth,
+    children: nodesByParent.get(node.id)?.map((child) => buildNode(child, depth + 1)),
   });
 
-  return (nodesByParent.get(undefined) ?? []).map(buildNode);
+  return (nodesByParent.get(undefined) ?? []).map((node) => buildNode(node, 0));
 }
 
 export function defaultViewTreeSelection(scene: HierarchyScene): string {
-  return scene.nodes.find((node) => node.interactive && node.depth >= 3)?.id ?? scene.rootId;
+  return scene.rootId;
 }
 
 export function readableViewTreeLabel(value: string): string {
@@ -245,6 +247,69 @@ export function hierarchyNodeAtPoint(scene: HierarchyScene, xPercent: number, yP
     })
     .sort((first, second) => second.depth - first.depth)
     .at(0) ?? null;
+}
+
+export function hierarchyNodesAtPoint(scene: HierarchyScene, xPercent: number, yPercent: number): HierarchyLayerNode[] {
+  const x = (xPercent / 100) * scene.viewport.width;
+  const y = (yPercent / 100) * scene.viewport.height;
+  return scene.nodes
+    .filter((node) => {
+      if (!node.visible) return false;
+      if (node.frame.width <= 0 || node.frame.height <= 0) return false;
+      return x >= node.frame.x &&
+        x <= node.frame.x + node.frame.width &&
+        y >= node.frame.y &&
+        y <= node.frame.y + node.frame.height;
+    })
+    .sort((first, second) => second.depth - first.depth);
+}
+
+export function cycleHierarchyNodeAtPoint(
+  scene: HierarchyScene,
+  xPercent: number,
+  yPercent: number,
+  currentNodeId: string | null
+): HierarchyLayerNode | null {
+  const allNodesAtPoint = hierarchyNodesAtPoint(scene, xPercent, yPercent);
+  if (allNodesAtPoint.length === 0) return null;
+
+  if (!currentNodeId) {
+    return allNodesAtPoint[0];
+  }
+
+  const currentNode = scene.nodes.find((n) => n.id === currentNodeId);
+  if (!currentNode) {
+    return allNodesAtPoint[0];
+  }
+  if (!allNodesAtPoint.some((n) => n.id === currentNode.id)) {
+    return allNodesAtPoint[0];
+  }
+
+  const nodesById = new Map(scene.nodes.map((n) => [n.id, n]));
+  const isDescendantOfCurrent = (node: HierarchyLayerNode) => {
+    let parent = node.parentId ? nodesById.get(node.parentId) : undefined;
+    while (parent) {
+      if (parent.id === currentNode.id) return true;
+      parent = parent.parentId ? nodesById.get(parent.parentId) : undefined;
+    }
+    return false;
+  };
+
+  const descendantOfCurrent = allNodesAtPoint.find((n) => n.id !== currentNode.id && isDescendantOfCurrent(n));
+  if (descendantOfCurrent) {
+    return descendantOfCurrent;
+  }
+
+  let parent = currentNode.parentId ? nodesById.get(currentNode.parentId) : undefined;
+  while (parent) {
+    const siblingsAtPoint = allNodesAtPoint.filter((n) => n.parentId === parent!.id && n.id !== currentNode.id);
+    if (siblingsAtPoint.length > 0) {
+      return siblingsAtPoint[0];
+    }
+    parent = parent.parentId ? nodesById.get(parent.parentId) : undefined;
+  }
+
+  return allNodesAtPoint[0];
 }
 
 export function resolveControllerShellBadge(scene: HierarchyScene | undefined, selectedNodeId: string | null): ControllerShellBadge | null {

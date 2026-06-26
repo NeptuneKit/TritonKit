@@ -74,6 +74,7 @@ export function TargetNavigator({
           placeholder="搜索节点"
           allowClear
           value={searchValue}
+          onInput={(e) => setSearchValue(e.currentTarget.value)}
           onChange={(e) => setSearchValue(e.target.value)}
         />
       </div>
@@ -134,7 +135,17 @@ function ViewTreePanel({
 
       const displayType = readableViewTreeLabel(node.type);
       const displayName = readableViewTreeName(displayType, node.name ? readableViewTreeLabel(node.name) : null);
-      const title = displayName ? `${displayType} ${displayName}` : displayType;
+      const title = (
+        <span
+          className={`view-tree-row ${node.id === selectedNode ? "is-selected" : ""}`}
+          data-node-id={node.id}
+          aria-level={node.depth + 1}
+          style={{ "--tree-depth": node.depth } as CSSProperties}
+        >
+          <strong>{displayType}</strong>
+          {displayName ? <span>{displayName}</span> : null}
+        </span>
+      );
 
       const children = node.children
         ?.map((child) => toTreeData(child))
@@ -164,7 +175,7 @@ function ViewTreePanel({
     }
 
     return { treeData: filteredData, expandedKeys: expanded };
-  }, [treeNodes, normalizedSearch, hierarchyScene]);
+  }, [treeNodes, normalizedSearch, hierarchyScene, selectedNode]);
 
   if (hierarchy?.loading && !hierarchyScene) {
     return <p className="view-tree-empty">加载中...</p>;
@@ -173,7 +184,7 @@ function ViewTreePanel({
   if (hierarchy?.error && !hierarchyScene) {
     return (
       <div className="view-tree-empty" title={hierarchy.error}>
-        <p>加载失败</p>
+        <p>未拿到实时视图层级</p>
         <small>{hierarchy.error}</small>
       </div>
     );

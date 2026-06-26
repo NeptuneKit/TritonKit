@@ -24,13 +24,11 @@ import {
   DeviceCanvas,
   DeviceHubToolbar,
   DevtoolsTabs,
-  Inspector,
-  LogStrip,
-  NetworkStrip,
   SettingsPage,
   TargetNavigator,
   type DeviceCanvasTapInput,
 } from "./components/InspectorWorkspace";
+import { DevtoolsPanelContent } from "./components/DevtoolsPanel";
 import { hierarchyScenes, logs, networkEvents, targets as mockTargets } from "./data/mockData";
 import { describeHostBridgePresentation } from "./data/hostBridgePresentation";
 import { resolveEvidenceSources } from "./data/hierarchyMaterialPolicy";
@@ -537,6 +535,42 @@ export function App() {
   const [displayLanguage, setDisplayLanguage] = useState<DisplayLanguage>(() => readDisplayLanguagePreference());
   const [isSidebarVisible, setIsSidebarVisible] = useState(true);
   const [isDevtoolsVisible, setIsDevtoolsVisible] = useState(true);
+  const [devtoolsWidth, setDevtoolsWidth] = useState(372);
+  const devtoolsDragging = useRef(false);
+  const devtoolsStartX = useRef(0);
+  const devtoolsStartWidth = useRef(0);
+
+  const handleDevtoolsDragStart = useCallback((e: React.MouseEvent) => {
+    devtoolsDragging.current = true;
+    devtoolsStartX.current = e.clientX;
+    devtoolsStartWidth.current = devtoolsWidth;
+    document.body.style.cursor = "col-resize";
+    document.body.style.userSelect = "none";
+  }, [devtoolsWidth]);
+
+  useEffect(() => {
+    const handleDragMove = (e: MouseEvent) => {
+      if (!devtoolsDragging.current) return;
+      const delta = e.clientX - devtoolsStartX.current;
+      const newWidth = Math.max(280, Math.min(600, devtoolsStartWidth.current - delta));
+      setDevtoolsWidth(newWidth);
+    };
+
+    const handleDragEnd = () => {
+      if (devtoolsDragging.current) {
+        devtoolsDragging.current = false;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+      }
+    };
+
+    document.addEventListener("mousemove", handleDragMove);
+    document.addEventListener("mouseup", handleDragEnd);
+    return () => {
+      document.removeEventListener("mousemove", handleDragMove);
+      document.removeEventListener("mouseup", handleDragEnd);
+    };
+  }, []);
   const [sidebarPanel, setSidebarPanel] = useState<SidebarPanel>(initialRoute.panel ?? (initialRoute.nodeId ? "view-tree" : "devices"));
   const [isToolbarTargetMenuOpen, setIsToolbarTargetMenuOpen] = useState(false);
   const [selectedHierarchyNode, setSelectedHierarchyNode] = useState<string | null>(initialRoute.nodeId ?? null);
@@ -1149,6 +1183,16 @@ export function App() {
     });
   };
 
+  const handleLayoutChange = (nodeId: string, field: string, value: number) => {
+    if (!selectedHierarchyNode || selectedHierarchyNode !== nodeId) return;
+    const [section, prop] = field.split(".");
+    if (section === "frame" && (prop === "x" || prop === "y" || prop === "width" || prop === "height")) {
+      updateSelectedHierarchyNodeDraft({
+        frame: { [prop]: value },
+      });
+    }
+  };
+
   if (appRoute === "settings") {
     return (
       <SettingsPage
@@ -1258,30 +1302,25 @@ export function App() {
             onTap={handleCanvasTap}
           />
           {isDevtoolsVisible ? (
-            <aside className="hub-devtools" aria-label="右侧开发者工具">
+            <aside className="hub-devtools" aria-label="右侧开发者工具" style={{ width: devtoolsWidth } as React.CSSProperties}>
+              <div
+                className="devtools-resize-handle"
+                onMouseDown={handleDevtoolsDragStart}
+              />
               <DevtoolsTabs
                 activePanel={activeDevtoolsPanel}
                 language={displayLanguage}
                 onSelectPanel={setActiveDevtoolsPanel}
               />
-              <div className="devtools-panel-stack">
-                <Inspector
-                  hidden={activeDevtoolsPanel !== "config"}
-                  selectedNode={selectedHierarchyNodeData}
-                />
-                <NetworkStrip
-                  id="network-evidence-panel"
-                  hidden={activeDevtoolsPanel !== "network"}
-                  language={displayLanguage}
-                  events={selectedEvents}
-                />
-                <LogStrip
-                  id="logs-evidence-panel"
-                  hidden={activeDevtoolsPanel !== "logs"}
-                  language={displayLanguage}
-                  entries={selectedLogs}
-                />
-              </div>
+              <DevtoolsPanelContent
+                activePanel={activeDevtoolsPanel}
+                language={displayLanguage}
+                selectedNode={selectedHierarchyNodeData}
+                selectedNodeDraft={selectedHierarchyNodeDraft}
+                events={selectedEvents}
+                logs={selectedLogs}
+                onLayoutChange={handleLayoutChange}
+              />
             </aside>
           ) : null}
         </Layout>

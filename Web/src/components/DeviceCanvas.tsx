@@ -2,7 +2,8 @@ import { useMemo, useRef, type CSSProperties, type PointerEvent } from "react";
 import { Alert, Button, InputNumber, Segmented, Tag, Typography } from "antd";
 import { RefreshCw } from "lucide-react";
 import {
-  hierarchyNodeAtPoint,
+  cycleHierarchyNodeAtPoint,
+  hierarchyNodesAtPoint,
   localizeStatusLabel,
   previewFpsMax,
   previewFpsMin,
@@ -121,6 +122,17 @@ export function DeviceCanvas({
     screenRef.current?.focus({ preventScroll: true });
     const start = mapPointer(event);
     if (!start) return;
+    if (canDispatchTap && hierarchyScene && selectedHierarchyNode) {
+      const isInsideSelectedNode = hierarchyNodesAtPoint(hierarchyScene, start.xPercent, start.yPercent)
+        .some((node) => node.id === selectedHierarchyNode);
+      if (isInsideSelectedNode) {
+        const hitNode = cycleHierarchyNodeAtPoint(hierarchyScene, start.xPercent, start.yPercent, selectedHierarchyNode);
+        if (hitNode && hitNode.id !== selectedHierarchyNode) {
+          onSelectHierarchyNode(hitNode.id);
+          return;
+        }
+      }
+    }
     if (canDispatchTap) {
       tapCandidateRef.current = {
         pointerId: event.pointerId,
@@ -131,7 +143,7 @@ export function DeviceCanvas({
       return;
     }
     if (hierarchyScene) {
-      const hitNode = hierarchyNodeAtPoint(hierarchyScene, start.xPercent, start.yPercent);
+      const hitNode = cycleHierarchyNodeAtPoint(hierarchyScene, start.xPercent, start.yPercent, selectedHierarchyNode);
       if (hitNode) {
         onSelectHierarchyNode(hitNode.id);
       }
@@ -188,6 +200,10 @@ export function DeviceCanvas({
 
   return (
     <section className="hub-canvas tool-inspect" aria-label="Inspect Session 设备画布">
+      <div className="app-tile" hidden>
+        <strong>{target.appName}</strong>
+        <span>{target.bundleId}</span>
+      </div>
       {target.realSource && target.canScreenshot ? (
         <div className={`live-preview-control ${isSnapshotMode ? "is-snapshot" : ""}`} ref={previewControlRef}>
           <Segmented
@@ -201,6 +217,7 @@ export function DeviceCanvas({
           />
           {isSnapshotMode ? (
             <Button
+              className="snapshot-refresh-button"
               size="small"
               icon={<RefreshCw size={13} />}
               loading={isSnapshotRefreshing}
@@ -210,17 +227,18 @@ export function DeviceCanvas({
             >
               {isSnapshotRefreshing ? "刷新中" : "刷新"}
             </Button>
-          ) : target.screenshotDataUrl ? (
+          ) : (
             <InputNumber
+              aria-label="调整实时预览帧率"
               size="small"
               min={previewFpsMin}
               max={previewFpsMax}
               value={target.fps}
               onChange={(value) => { if (value !== null) onPreviewFpsChange(value); }}
-              addonAfter="fps"
+              suffix="fps"
               style={{ width: 100 }}
             />
-          ) : null}
+          )}
         </div>
       ) : null}
 
@@ -254,11 +272,11 @@ export function DeviceCanvas({
               {target.screenshotDataUrl ? (
                 <img className="real-screenshot" src={target.screenshotDataUrl} alt={`${target.name} 截图`} />
               ) : isWaitingForRealScreenshot ? (
-                <div className="real-screenshot-pending" role="status" aria-live="polite">
+                <div className={`real-screenshot-pending is-${pendingScreenshotState.kind}`} role="status" aria-live="polite">
                   <Alert
                     type={pendingScreenshotState.kind === "error" ? "error" : "info"}
                     showIcon
-                    message={pendingScreenshotState.title}
+                    title={pendingScreenshotState.title}
                     description={
                       <>
                         <Typography.Text type="secondary">{pendingScreenshotState.detail}</Typography.Text>
@@ -315,7 +333,7 @@ export function DeviceCanvas({
           className="canvas-error"
           type="error"
           showIcon
-          message={screenshotError}
+          title={screenshotError}
           closable
         />
       ) : null}

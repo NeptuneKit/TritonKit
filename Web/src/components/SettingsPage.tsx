@@ -44,6 +44,17 @@ export function SettingsPage({
             </span>
           </div>
 
+          {displayLanguageOptions.map((option) => (
+            <input
+              key={option.id}
+              hidden
+              type="radio"
+              name="display-language"
+              value={option.id}
+              checked={language === option.id}
+              onChange={() => onLanguageChange(option.id)}
+            />
+          ))}
           <Segmented
             options={displayLanguageOptions.map((option) => ({
               label: (

@@ -40,9 +40,8 @@ button {
 
 .device-hub-window {
   display: flex;
-  width: min(100%, 1480px);
+  width: 100%;
   height: calc(100vh - 16px);
-  min-height: 640px;
   margin: auto;
   overflow: hidden;
   border: 1px solid #555555;
@@ -99,6 +98,7 @@ button {
 
 /* Vertical toolbar */
 .hub-toolbar-vertical {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -108,7 +108,11 @@ button {
   padding: 8px 0;
   border-right: 1px solid rgba(255, 255, 255, 0.06);
   background: #343434;
-  overflow-y: auto;
+  overflow: visible;
+}
+
+.toolbar-target-switcher {
+  position: relative;
 }
 
 .hub-toolbar-vertical .toolbar-divider {
@@ -135,8 +139,8 @@ button {
 
 .toolbar-target-menu {
   position: absolute;
-  top: calc(100% + 10px);
-  left: 8px;
+  top: 0;
+  left: calc(100% + 8px);
   z-index: 40;
   width: min(330px, calc(100vw - 24px));
   padding: 8px;
@@ -209,7 +213,7 @@ button {
 
 .hub-body {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) 372px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   grid-auto-rows: auto minmax(0, 1fr);
   flex: 1;
   min-width: 0;
@@ -218,7 +222,7 @@ button {
 }
 
 .hub-body.is-sidebar-hidden {
-  grid-template-columns: minmax(0, 1fr) 372px;
+  grid-template-columns: minmax(0, 1fr) auto;
 }
 
 .hub-body.is-devtools-hidden {
@@ -234,6 +238,8 @@ button {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   flex: 0 0 auto;
+  min-width: 180px;
+  max-width: 500px;
   min-height: 0;
   padding: 12px 0;
   overflow: hidden;
@@ -243,8 +249,8 @@ button {
 .sidebar-resize-handle {
   position: absolute;
   top: 0;
-  right: -3px;
-  width: 6px;
+  right: -4px;
+  width: 8px;
   height: 100%;
   cursor: col-resize;
   background: transparent;
@@ -339,6 +345,7 @@ button {
 }
 
 .view-tree .ant-tree-treenode {
+  align-items: flex-start;
   padding: 0;
   line-height: 20px;
 }
@@ -369,6 +376,33 @@ button {
 
 .view-tree .ant-tree-title {
   font-size: 12px;
+  white-space: normal;
+}
+
+.view-tree-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  column-gap: 4px;
+  padding-left: clamp(0px, var(--tree-depth) * 14px, 112px);
+}
+
+.view-tree-row strong {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.view-tree-row span {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.tree-node-copy {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.view-tree-status.is-stale {
+  background: rgba(216, 168, 111, 0.1);
 }
 
 .view-tree .ant-tree-show-line .ant-tree-indent-unit::before {
@@ -641,6 +675,28 @@ button {
   top: 8px;
   left: 8px;
   z-index: 6;
+  pointer-events: auto;
+  user-select: text;
+}
+
+.controller-shell-badge strong,
+.controller-shell-badge em {
+  overflow-wrap: anywhere;
+  font-style: normal;
+  white-space: normal;
+}
+
+.controller-shell-badge strong {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.controller-shell-badge em {
+  font-style: normal;
+}
+
+.controller-shell-badge.is-stale {
+  background: rgba(30, 22, 12, 0.82);
 }
 
 .device-screen {
@@ -1082,26 +1138,46 @@ button {
   position: relative;
   display: grid;
   grid-template-rows: auto minmax(0, 1fr);
-  min-width: 0;
+  flex: 0 0 auto;
+  min-width: 280px;
+  max-width: 600px;
   min-height: 0;
-  overflow: hidden;
-  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 0;
   background: #2d2d2d;
+}
+
+.devtools-resize-handle {
+  position: absolute;
+  top: 0;
+  left: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  transition: background 0.15s;
+  z-index: 10;
+}
+
+.devtools-resize-handle:hover,
+.devtools-resize-handle:active {
+  background: rgba(22, 119, 255, 0.5);
 }
 
 .hub-inspector {
   position: relative;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 13px;
   min-width: 0;
   min-height: 0;
-  overflow-y: auto;
   padding: 12px;
   background: #2d2d2d;
 }
 
 .devtools-panel-stack {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
   min-width: 0;
   min-height: 0;
   overflow: hidden;
@@ -1128,11 +1204,8 @@ button {
 .inspector-tabs {
   display: block;
   height: auto;
-  margin: 12px 12px 10px;
+  margin: 0;
   padding: 0;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  background: #383838;
 }
 
 .inspector-tabs.ant-tabs .ant-tabs-nav {
@@ -1160,11 +1233,14 @@ button {
 }
 
 .selected-node-panel {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+  flex: 1;
   min-width: 0;
-  border-color: rgba(255, 255, 255, 0.08);
-  background: #363636;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
 }
 
 .node-identity {
@@ -1196,32 +1272,16 @@ button {
   word-break: break-all;
 }
 
-.node-parent-tree {
-  display: grid;
-  gap: 4px;
+.node-identity-hierarchy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+  white-space: normal;
 }
 
-.node-parent-label {
+.hierarchy-arrow {
   color: #8C8C8C;
-  font-size: 11px;
-}
-
-.parent-hierarchy-tree .ant-tree-treenode {
-  padding: 1px 0;
-}
-
-.parent-hierarchy-tree .ant-tree-node-content-wrapper {
-  padding: 1px 4px;
-  border-radius: 4px;
-  font-size: 11px;
-}
-
-.parent-hierarchy-tree .ant-tree-node-content-wrapper:hover {
-  background: rgba(255, 255, 255, 0.08);
-}
-
-.parent-hierarchy-tree .ant-tree-title {
-  font-family: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
 }
 
 .parent-node-current {
@@ -1240,6 +1300,55 @@ button {
 .selected-node-panel.is-empty {
   min-height: 68px;
   align-content: center;
+}
+
+.layout-info {
+  display: grid;
+  gap: 8px;
+}
+
+.layout-info-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.layout-info-header strong {
+  color: #F5F5F5;
+  font-size: 12px;
+}
+
+.layout-info-section {
+  display: grid;
+  gap: 4px;
+}
+
+.layout-info-section-label {
+  color: #8C8C8C;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.layout-info-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+}
+
+.layout-input {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.layout-input-label {
+  min-width: 12px;
+  color: #8C8C8C;
+  font-size: 10px;
+}
+
+.layout-input .ant-input-number {
+  font-size: 11px;
 }
 
 .selected-node-heading {
@@ -1596,11 +1705,11 @@ button {
   }
 
   .hub-body {
-    grid-template-columns: auto minmax(0, 1fr) 304px;
+    grid-template-columns: auto minmax(0, 1fr) auto;
   }
 
   .hub-body.is-sidebar-hidden {
-    grid-template-columns: minmax(0, 1fr) 304px;
+    grid-template-columns: minmax(0, 1fr) auto;
   }
 
   .hub-body.is-devtools-hidden {

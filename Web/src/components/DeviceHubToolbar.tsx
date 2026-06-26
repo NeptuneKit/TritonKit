@@ -1,4 +1,4 @@
-import { Button, Dropdown, Space } from "antd";
+import { Button, Space } from "antd";
 import { MonitorSmartphone, PanelLeft, PanelRight, RefreshCw, Settings2 } from "lucide-react";
 import { platformLabel } from "./inspectorWorkspaceModel";
 import type { DeviceTarget } from "../types";
@@ -38,28 +38,12 @@ export function DeviceHubToolbar({
 
   return (
     <aside className="hub-toolbar-vertical" aria-label="工具栏">
-      <Space direction="vertical" size={4} align="center">
-        <Dropdown
-          menu={{
-            items: targets.map((candidate) => ({
-              key: candidate.id,
-              label: (
-                <div className="toolbar-target-option">
-                  <strong>{candidate.name}</strong>
-                  <span>{candidate.appName}</span>
-                  <em>
-                    {platformLabel[candidate.platform]} · {candidate.os}
-                  </em>
-                </div>
-              ),
-              onClick: () => onSelectTarget(candidate.id),
-            })),
-          }}
-          trigger={["click"]}
-          open={isTargetMenuOpen}
-          onOpenChange={(open) => open ? onToggleTargetMenu() : onCloseTargetMenu()}
-          placement="bottomLeft"
-        >
+      <div className="toolbar-title" hidden>
+        <strong>{target.name}</strong>
+        <span>{toolbarSubtitle}</span>
+      </div>
+      <Space orientation="vertical" size={4} align="center">
+        <div className="toolbar-target-switcher">
           <Button
             className="toolbar-target-trigger"
             type="text"
@@ -67,8 +51,32 @@ export function DeviceHubToolbar({
             aria-label="切换设备"
             title={target.name}
             icon={<MonitorSmartphone size={17} strokeWidth={2.2} />}
+            onClick={onToggleTargetMenu}
           />
-        </Dropdown>
+          {isTargetMenuOpen ? (
+            <div className="toolbar-target-menu" role="listbox" aria-label="切换设备">
+              {targets.map((candidate) => (
+                <button
+                  key={candidate.id}
+                  type="button"
+                  className="toolbar-target-option"
+                  role="option"
+                  aria-selected={candidate.id === target.id}
+                  onClick={() => {
+                    onSelectTarget(candidate.id);
+                    onCloseTargetMenu();
+                  }}
+                >
+                  <strong>{candidate.name}</strong>
+                  <span>{candidate.appName}</span>
+                  <em>
+                    {platformLabel[candidate.platform]} · {candidate.os}
+                  </em>
+                </button>
+              ))}
+            </div>
+          ) : null}
+        </div>
 
         <div className="toolbar-divider" />
 

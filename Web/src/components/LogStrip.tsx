@@ -71,8 +71,12 @@ export function LogStrip({
       <Table
         dataSource={entries}
         columns={columns}
-        rowKey="id"
-        size="small"
+      rowKey="id"
+      onRow={(record) => ({
+        className: "log-row",
+        title: localizeLogEntry(record, language).originalMessage,
+      })}
+      size="small"
         pagination={false}
         scroll={{ y: 400 }}
       />

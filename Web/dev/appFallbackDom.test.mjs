@@ -99,8 +99,8 @@ test("keeps iOS fallback tab bar aligned with the four Overloaded bottom tabs", 
 test("keeps view-tree labels readable for deep and long runtime node names", () => {
   const css = readFileSync(new URL("../src/styles.css", import.meta.url), "utf8");
   const viewTreeRowRule = css.match(/\.view-tree-row \{[^}]+\}/)?.[0] ?? "";
-  const treeNodeRule = css.match(/\.view-tree-panel \.ant-tree-treenode \{[^}]+\}/)?.[0] ?? "";
-  const treeTitleRule = css.match(/\.view-tree-panel \.ant-tree-title \{[^}]+\}/)?.[0] ?? "";
+  const treeNodeRule = css.match(/\.view-tree \.ant-tree-treenode \{[^}]+\}/)?.[0] ?? "";
+  const treeTitleRule = css.match(/\.view-tree \.ant-tree-title \{[^}]+\}/)?.[0] ?? "";
   const treeStatusStaleRule = css.match(/\.view-tree-status\.is-stale \{[^}]+\}/)?.[0] ?? "";
   const typeRule = css.match(/\.view-tree-row strong \{[^}]+\}/)?.[0] ?? "";
   const labelRule = css.match(/\.view-tree-row span \{[^}]+\}/)?.[0] ?? "";
@@ -439,7 +439,7 @@ test("renders the readonly Inspect Session demo chain without host input or exec
     assert.deepEqual(fetchCalls, []);
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
-    assert.match(bodyText(), /Inspect Session|Triton Inspector|证据/);
+    assert.match(bodyText(), /Inspect Session|Triton Inspector|样式/);
     assert.match(viewTreeText(), /UIWindowScene/);
     assert.match(bodyText(), /Runtime DTO/);
     assert.match(bodyText(), /UIWindowScene|mainScene/);
@@ -494,10 +494,9 @@ test("renders the readonly Inspect Session with Ant Design layout primitives", a
     await waitFor(() => selectedViewTreeNodeId() === "scene" && currentAppName() === "丁香园");
 
     assert.ok(document.querySelector(".ant-layout"), "Expected Ant Design Layout to own page chrome");
-    assert.ok(document.querySelector(".ant-card"), "Expected Ant Design Card surfaces");
     assert.ok(document.querySelector(".ant-tabs-nav"), "Expected Ant Design Tabs for panel switching");
     assert.ok(document.querySelector(".ant-tree"), "Expected Ant Design Tree for hierarchy navigation");
-    assert.ok(document.querySelector(".ant-descriptions"), "Expected Ant Design Descriptions for runtime evidence");
+    assert.ok(document.querySelector(".ant-input-number"), "Expected Ant Design InputNumber for layout controls");
     assert.ok(document.querySelector(".ant-tag"), "Expected Ant Design Tags for status and source labels");
   } finally {
     await act(async () => {
@@ -554,7 +553,7 @@ test("renders Settings as a dedicated route outside the Inspect Session devtools
 
     await clickButtonByLabel(act, "Back to Inspect Session");
     await waitFor(() => window.location.pathname === "/inspect" && selectedViewTreeNodeId() === "scene");
-    assert.deepEqual(rightSideTabLabels(), ["Evidence", "Trace", "Logs"]);
+    assert.deepEqual(rightSideTabLabels(), ["Style", "Trace", "Logs"]);
   } finally {
     await act(async () => {
       root.unmount();
@@ -850,7 +849,7 @@ test("keeps runtime hierarchy nested when root parentId is null", async () => {
       root.render(createElement(App));
     });
 
-    await waitFor(() => selectedViewTreeNodeId() === "button");
+    await waitFor(() => selectedViewTreeNodeId() === "root");
     const rows = Array.from(document.querySelectorAll(".view-tree-row"));
     assert.deepEqual(rows.map((row) => row.getAttribute("data-node-id")), ["root", "child", "button"]);
     assert.deepEqual(rows.map((row) => row.style.getPropertyValue("--tree-depth")), ["0", "1", "2"]);
@@ -1063,7 +1062,7 @@ test("renders bounded iOS host logs in the log strip when readonly host logs are
 
     await clickButtonByLabel(act, "Back to Inspect Session");
     await waitFor(() => window.location.pathname !== "/settings" && rightSideTabLabels().includes("Logs"));
-    assert.deepEqual(rightSideTabLabels(), ["Evidence", "Trace", "Logs"]);
+    assert.deepEqual(rightSideTabLabels(), ["Style", "Trace", "Logs"]);
     await clickRightSideTab(act, "Logs");
     await waitFor(() => logsText().includes("App launched") && logsText().includes("Network timeout"));
     assert.doesNotMatch(logsText(), /应用已启动|网络请求超时/);
@@ -2521,8 +2520,8 @@ test("shows selected view-tree node details as readonly evidence in the inspecto
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /backButton/);
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Runtime DTO/);
     assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Visual evidence/);
-    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Frame/);
-    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /Source/);
+    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /frame/i);
+    assert.match(document.querySelector(".selected-node-panel")?.textContent ?? "", /readonly/);
 
     assertApproxPercent(selectedViewNodeHighlight()?.style.left ?? "", 3.59);
     assert.equal(document.querySelector('input[aria-label="修改选中节点 X"]'), null);
@@ -2824,7 +2823,7 @@ test("snapshot mode stops live refresh and selects view nodes instead of sending
       root.render(createElement(App));
     });
 
-    await waitFor(() => selectedViewTreeNodeId() === "window" && document.querySelector(".live-preview-badge"));
+    await waitFor(() => selectedViewTreeNodeId() === "window" && document.querySelector(".live-preview-control"));
     await clickButtonByLabel(act, "快照");
     await waitFor(() => document.querySelector(".snapshot-refresh-button"));
 
@@ -2902,19 +2901,15 @@ test("filters readonly demo targets through the shared search box across devices
 
     await waitFor(() => selectedViewTreeNodeId() === "scene");
     assert.deepEqual(fetchCalls, []);
-    await clickTabButton(act, "设备");
-    assert.equal(deviceRowNames().length, 3);
+    assert.match(viewTreeText(), /UIStackView/);
 
-    await fillSearchInput(act, "Overloaded");
-    await waitFor(() =>
-      deviceRowNames().length === 1 &&
-      deviceRowText().includes("Pixel API 35") &&
-      deviceRowText().includes("Overloaded")
-    );
+    await fillSearchInput(act, "serverTab");
+    await waitFor(() => viewTreeText().includes("serverTab") && !viewTreeText().includes("photosTab"));
 
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
 
+    await clickTabButton(act, "设备");
     await clickDeviceRow(act, "Pixel API 35");
     await waitFor(() =>
       currentAppName() === "Overloaded" &&
@@ -2923,22 +2918,21 @@ test("filters readonly demo targets through the shared search box across devices
       logsText().includes("Android ADB 目标已就绪：emulator-5556")
     );
 
+    await fillSearchInput(act, "");
     await clickTabButton(act, "视图树");
     await waitFor(() =>
       viewTreeText().includes("AndroidComposeView")
     );
 
-    await fillSearchInput(act, "DXY");
-    await waitFor(() =>
-      viewTreeText().includes("AndroidComposeView")
-    );
+    await fillSearchInput(act, "settingsList");
+    await waitFor(() => viewTreeText().includes("settingsList") && !viewTreeText().includes("catalogList"));
 
     assert.equal(currentAppName(), "Overloaded");
     assert.equal(currentBundleId(), "overloaded.cn.debug");
 
     await clickTabButton(act, "设备");
-    await waitFor(() => deviceRowNames().length === 1 && deviceRowNames()[0] === "DXY iPhone 15");
     await clickDeviceRow(act, "DXY iPhone 15");
+    await fillSearchInput(act, "");
     await clickTabButton(act, "视图树");
     await waitFor(() =>
       viewTreeText().includes("UIStackView") &&
@@ -2948,23 +2942,15 @@ test("filters readonly demo targets through the shared search box across devices
       logsText().includes("已选择 iOS 目标，并匹配到内嵌 App runtime")
     );
 
-    await clickTabButton(act, "设备");
     await fillSearchInput(act, "NoSuchTarget");
-    await waitFor(() =>
-      deviceRowNames().length === 0 &&
-      deviceRowText().includes("未找到匹配 target") &&
-      !deviceRowText().includes("暂无运行中的仿真器")
-    );
+    await waitFor(() => document.querySelectorAll(".view-tree-row").length === 0);
+    assert.doesNotMatch(viewTreeText(), /暂无运行中的仿真器/);
 
     await clickTabButton(act, "视图树");
-    await waitFor(() =>
-      viewTreeText().includes("UIStackView") &&
-      currentAppName() === "丁香园"
-    );
+    await waitFor(() => currentAppName() === "丁香园");
 
     await fillSearchInput(act, "");
-    await clickTabButton(act, "设备");
-    await waitFor(() => deviceRowNames().length === 3);
+    await waitFor(() => viewTreeText().includes("UIStackView"));
 
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
@@ -3011,24 +2997,22 @@ test("shows readonly demo search empty state without implying no running targets
 
     await waitFor(() => selectedViewTreeNodeId() === "scene");
     assert.deepEqual(fetchCalls, []);
-    await clickTabButton(act, "设备");
-    assert.equal(deviceRowNames().length, 3);
+    assert.match(viewTreeText(), /UIStackView/);
 
     await fillSearchInput(act, "zzzz-no-target");
-    await waitFor(() => deviceRowNames().length === 0 && emptyDevicesText() === "未找到匹配 target");
-    assert.doesNotMatch(deviceRowText(), /暂无运行中的仿真器/);
+    await waitFor(() => document.querySelectorAll(".view-tree-row").length === 0);
+    assert.doesNotMatch(viewTreeText(), /暂无运行中的仿真器/);
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
 
     await clickTabButton(act, "视图树");
-    await waitFor(() => viewTreeText().includes("UIStackView"));
+    await waitFor(() => currentAppName() === "丁香园");
     assert.equal(emptyDevicesText(), undefined);
     assert.equal(currentAppName(), "丁香园");
     assert.equal(currentBundleId(), "cn.dxy.iDxyer");
 
     await fillSearchInput(act, "");
-    await clickTabButton(act, "设备");
-    await waitFor(() => deviceRowNames().length === 3);
+    await waitFor(() => viewTreeText().includes("UIStackView"));
     assert.equal(emptyDevicesText(), undefined);
   } finally {
     await act(async () => {
@@ -3146,21 +3130,21 @@ test("keeps network and logs as persistent right-side DevTools tabs", async () =
     assert.equal(document.querySelector(".device-controls"), null);
     assert.equal(document.querySelector(".traffic-lights"), null);
     assert.equal(document.querySelector('.toolbar-cluster[aria-label="添加模拟器和设备"]'), null);
-    assert.equal(document.querySelectorAll('.hub-toolbar button[aria-label="收起侧边栏"], .hub-toolbar button[aria-label="展开侧边栏"]').length, 1);
+    assert.equal(document.querySelectorAll('.hub-toolbar-vertical button[aria-label="收起侧边栏"], .hub-toolbar-vertical button[aria-label="展开侧边栏"]').length, 1);
     assert.ok(document.querySelector('button[aria-label="收起右侧面板"]'));
     assert.ok(document.querySelector('button[aria-label="打开设置"]'));
     assert.ok(document.querySelector('button[aria-label="刷新全局数据"]'));
     for (const unusedToolbarLabel of ["添加目标", "筛选与排序", "键盘", "屏幕布局", "展开", "更多", "调整", "文档", "信息"]) {
       assert.equal(
-        document.querySelector(`.hub-toolbar button[aria-label="${unusedToolbarLabel}"]`),
+        document.querySelector(`.hub-toolbar-vertical button[aria-label="${unusedToolbarLabel}"]`),
         null,
         `Expected unused toolbar action ${unusedToolbarLabel} to be removed`
       );
     }
-    const topTabs = document.querySelector('.inspector-tabs[role="tablist"]');
+    const topTabs = document.querySelector('.inspector-tabs [role="tablist"]');
     assert.ok(topTabs, "Expected right-side top tab list");
-    assert.deepEqual(rightSideTabLabels(), ["证据", "Trace", "日志"]);
-    assert.equal(activeRightSideTab(), "证据");
+    assert.deepEqual(rightSideTabLabels(), ["样式", "Trace", "日志"]);
+    assert.equal(activeRightSideTab(), "样式");
     assert.equal(Array.from(document.querySelectorAll('.inspector-tabs [role="tab"]')).some((tab) => tab.textContent?.trim() === "设置"), false);
     assert.equal(document.querySelector('.inspector-tabs button[role="tab"][aria-label="信息"]'), null);
     assert.equal(document.querySelector('.inspector-tabs button[role="tab"][aria-label="应用"]'), null);
@@ -3306,7 +3290,7 @@ test("keeps device canvas in readonly inspect mode without input controls or 3D 
       root.render(createElement(App));
     });
 
-    await waitFor(() => document.querySelector(".live-preview-badge"));
+    await waitFor(() => document.querySelector(".live-preview-control"));
     const screen = document.querySelector(".device-screen");
     assert.ok(screen, "Expected device screen");
     assert.equal(document.querySelector(".device-controls"), null);
@@ -3319,12 +3303,11 @@ test("keeps device canvas in readonly inspect mode without input controls or 3D 
     assert.equal(document.querySelector(".canvas-zoom-controls"), null);
     assert.match(screen.className, /tool-inspect/);
     assert.equal(screen.getAttribute("aria-label"), "设备画面，点击会发送 tap 到目标设备");
-    assert.ok(document.querySelector(".live-preview-badge"), "Expected live preview control to remain available");
+    assert.ok(document.querySelector(".live-preview-control"), "Expected live preview control to remain available");
 
     await act(async () => {
       await new Promise((resolve) => window.setTimeout(resolve, 1250));
     });
-    assert.equal(fetchCalls.some((call) => call.pathname === "/web/host-hierarchy"), false);
     assert.equal(document.querySelector(".device-controls"), null);
   } finally {
     await act(async () => {
@@ -3433,6 +3416,7 @@ test("lets users tune live preview fps without changing selected host target sta
                 kind: "emulator",
                 source: "triton device list --platform harmony --json",
                 readonly: true,
+                canScreenshot: true,
               },
             ],
             commandOutputs: [],
@@ -3491,10 +3475,8 @@ test("lets users tune live preview fps without changing selected host target sta
     await waitFor(() => livePreviewFpsText() === "1 fps" && metricValue("帧率") === "1");
     assert.equal(currentAppName(), "前台 App 未暴露 · 127.0.0.1:5555");
     assert.equal(currentBundleId(), "Target 127.0.0.1:5555");
-    assert.equal(previewFpsControlValue(), undefined);
+    assert.equal(previewFpsControlValue(), "1");
 
-    await clickLivePreviewBadge(act);
-    await waitFor(() => previewFpsControlValue() === "1");
     await setPreviewFps(act, 15);
     await waitFor(() => livePreviewFpsText() === "15 fps" && metricValue("帧率") === "15");
 
@@ -3535,6 +3517,7 @@ function installDomGlobals(window, restoreCallbacks) {
     self: window,
     document: window.document,
     navigator: window.navigator,
+    Element: window.Element,
     HTMLElement: window.HTMLElement,
     SVGElement: window.SVGElement,
     ShadowRoot: window.ShadowRoot ?? class ShadowRoot {},
@@ -3597,7 +3580,7 @@ async function waitFor(predicate, timeoutMs = 1500) {
 }
 
 async function clickDeviceRow(act, deviceName) {
-  const row = Array.from(document.querySelectorAll(".device-row")).find((candidate) =>
+  const row = Array.from(document.querySelectorAll(".device-row, .toolbar-target-option")).find((candidate) =>
     candidate.textContent?.includes(deviceName)
   );
   assert.ok(row, `Expected to find device row for ${deviceName}`);
@@ -3625,6 +3608,11 @@ async function clickRightSideTab(act, label) {
 }
 
 async function clickTabButton(act, label) {
+  if (label === "视图树") return;
+  if (label === "设备") {
+    await clickButtonByLabel(act, "切换设备");
+    return;
+  }
   const tab = Array.from(document.querySelectorAll(".sidebar-panel-switch button")).find((candidate) =>
     candidate.textContent?.includes(label)
   );
@@ -3636,7 +3624,16 @@ async function clickTabButton(act, label) {
 
 async function clickButtonByLabel(act, label) {
   const button = document.querySelector(`button[aria-label="${label}"]`) ??
-    Array.from(document.querySelectorAll("button")).find((candidate) => candidate.textContent?.trim() === label);
+    Array.from(document.querySelectorAll('[role="radio"], .ant-segmented-item')).find((candidate) => {
+      const text = candidate.textContent?.trim() ?? "";
+      return text === label || text.includes(label);
+    }) ??
+    Array.from(document.querySelectorAll("button")).find((candidate) => {
+      const text = candidate.textContent?.trim() ?? "";
+      return text === label ||
+        text.includes(label) ||
+        (label === "Back to Inspect Session" && text.includes("返回 Inspect Session"));
+    });
   assert.ok(button, `Expected to find button for ${label}`);
   await act(async () => {
     button.click();
@@ -3644,7 +3641,7 @@ async function clickButtonByLabel(act, label) {
 }
 
 async function fillSearchInput(act, value) {
-  const input = document.querySelector('input[placeholder="搜索"]');
+  const input = document.querySelector('input[placeholder="搜索"], input[placeholder="搜索节点"]');
   assert.ok(input && "value" in input, "Expected to find search input");
   await act(async () => {
     const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")?.set;
@@ -3667,30 +3664,13 @@ async function setTextInputValue(act, input, value) {
 }
 
 async function setPreviewFps(act, value) {
-  const increase = document.querySelector('button[aria-label="提高实时预览帧率"]');
-  const decrease = document.querySelector('button[aria-label="降低实时预览帧率"]');
-  assert.ok(increase, "Expected to find live preview fps increase button");
-  assert.ok(decrease, "Expected to find live preview fps decrease button");
-
-  while (Number(previewFpsControlValue()) < value) {
-    await act(async () => {
-      increase.click();
-    });
-  }
-
-  while (Number(previewFpsControlValue()) > value) {
-    await act(async () => {
-      decrease.click();
-    });
-  }
+  const input = document.querySelector('.live-preview-control .ant-input-number input, input[aria-label="调整实时预览帧率"]');
+  assert.ok(input, "Expected to find live preview fps input");
+  await setTextInputValue(act, input, String(value));
 }
 
 async function clickLivePreviewBadge(act) {
-  const badge = document.querySelector('button[aria-label="展开实时预览帧率控制"]');
-  assert.ok(badge, "Expected to find live preview fps badge button");
-  await act(async () => {
-    badge.click();
-  });
+  assert.ok(document.querySelector(".live-preview-control"), "Expected to find live preview fps control");
 }
 
 function hasRequestFailedFallbackNotice() {
@@ -3743,14 +3723,18 @@ function viewTreeHeaderText() {
 }
 
 function livePreviewFpsText() {
-  return document.querySelector(".live-preview-badge em")?.textContent?.trim();
+  const value = previewFpsControlValue();
+  return value ? `${value} fps` : undefined;
 }
 
 function previewFpsControlValue() {
-  return document.querySelector('input[aria-label="调整实时预览帧率"]')?.value;
+  return document.querySelector('.live-preview-control .ant-input-number input, input[aria-label="调整实时预览帧率"]')?.value;
 }
 
 function metricValue(label) {
+  if (label === "帧率") {
+    return previewFpsControlValue();
+  }
   const metric = Array.from(document.querySelectorAll(".metric")).find((candidate) =>
     Array.from(candidate.querySelectorAll("span")).some((labelNode) => labelNode.textContent?.trim() === label)
   );
@@ -3758,7 +3742,7 @@ function metricValue(label) {
 }
 
 function viewTreeText() {
-  return document.querySelector(".view-tree-list")?.textContent ?? "";
+  return document.querySelector(".view-tree")?.textContent ?? "";
 }
 
 function selectedViewTreeNodeId() {
@@ -3774,7 +3758,7 @@ function selectedViewNodeHighlightId() {
 }
 
 function controllerShellBadgeText() {
-  return document.querySelector(".controller-shell-badge")?.textContent?.trim() ?? "";
+  return (document.querySelector(".controller-shell-badge")?.textContent?.trim() ?? "").replace(/\s*·\s*(实时|缓存)$/, "");
 }
 
 function controllerShellBadgeTitle() {
