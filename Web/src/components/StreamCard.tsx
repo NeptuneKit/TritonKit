@@ -18,6 +18,7 @@ export function StreamCard() {
   const [targets,   setTargets]       = useState<SimTarget[]>([]);
   const [selectedUdid, setSelectedUdid] = useState<string | null>(null);
   const [fps,    setFps]              = useState(0);
+  const [targetFps, setTargetFps]     = useState(15);
   const [refreshing, setRefreshing]   = useState(false);
 
   const frameCount    = useRef(0);
@@ -107,6 +108,19 @@ export function StreamCard() {
           options={targets.map((t) => ({ value: t.udid, label: `${t.name} · ${t.runtime}` }))}
           notFoundContent={<span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>未发现可用模拟器</span>}
         />
+        <Select
+          size="small"
+          style={{ width: 80 }}
+          value={targetFps}
+          onChange={setTargetFps}
+          options={[
+            { value: 1, label: "1 FPS" },
+            { value: 5, label: "5 FPS" },
+            { value: 15, label: "15 FPS" },
+            { value: 30, label: "30 FPS" },
+            { value: 60, label: "60 FPS" },
+          ]}
+        />
         <button className="stream-icon-btn" title="刷新设备列表" onClick={handleRefresh}>
           <RefreshCw size={10} className={refreshing ? "spin" : ""} />
         </button>
@@ -117,7 +131,7 @@ export function StreamCard() {
         {connected && selectedUdid ? (
           /* MJPEG 流：直接将 src 指向 /web/ios-simulator/mjpeg，浏览器原生处理长连接 */
           <img
-            src={`/web/ios-simulator/mjpeg?udid=${selectedUdid}&t=${connectTime}`}
+            src={`/web/ios-simulator/mjpeg?udid=${selectedUdid}&fps=${targetFps}&t=${connectTime}`}
             alt="live simulator stream"
             onLoad={handleImgLoad}
             style={{

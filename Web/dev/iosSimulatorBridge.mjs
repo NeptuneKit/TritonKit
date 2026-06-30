@@ -319,6 +319,9 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
       if (url.pathname === "/web/ios-simulator/mjpeg") {
         const udid = url.searchParams.get("udid") || "booted";
         const simulator = udid === "booted" ? "booted" : udid;
+        const requestedFps = parseInt(url.searchParams.get("fps") || "15", 10);
+        const fps = Math.min(60, Math.max(1, requestedFps));
+        const targetInterval = Math.round(1000 / fps);
 
         res.writeHead(200, {
           "Content-Type": "multipart/x-mixed-replace; boundary=tritonboundary",
@@ -338,6 +341,7 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         const pushFrame = async () => {
           if (!active || inFlight) return;
           inFlight = true;
+          let isFastChannel = false;
 
           try {
             let buffer;
@@ -352,6 +356,7 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
                 // 必须验证返回内容，如果是 JSON 报错，坚决不能作为图片数据写入流中
                 if (contentType.includes("image")) {
                   buffer = Buffer.from(await fastRes.arrayBuffer());
+                  isFastChannel = true;
                 }
               }
             } catch (e) {
@@ -393,8 +398,9 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
           } finally {
             inFlight = false;
             if (active) {
-              // 关键修正：给底层的 simctl screenshot 留出至少 1200ms 的排空时间，彻底杜绝并发竞态
-              setTimeout(pushFrame, 1200);
+              // 关键修正：若是极速通道，使用请求的目标帧率时间间隔；若是 slow fallback (simctl)，强行保留 1200ms 的排空时间，杜绝并发竞态。
+              const nextDelay = isFastChannel ? targetInterval : 1200;
+              setTimeout(pushFrame, nextDelay);
             }
           }
         };
