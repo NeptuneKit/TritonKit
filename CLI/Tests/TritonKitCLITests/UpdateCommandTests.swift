@@ -108,6 +108,70 @@ struct UpdateCommandTests {
         #expect(plan.actions.map(\.kind) == [.homebrewUpdate, .homebrewUpgrade])
     }
 
+    @Test("include skills installs bundle even when cli is already target version")
+    func includeSkillsInstallsBundleEvenWhenCLIIsAlreadyTargetVersion() async throws {
+        let root = try temporaryUpdateDirectory()
+        let cellarBin = root
+            .appendingPathComponent("Homebrew", isDirectory: true)
+            .appendingPathComponent("Cellar", isDirectory: true)
+            .appendingPathComponent("triton", isDirectory: true)
+            .appendingPathComponent(TritonKitBuildInfo.cliVersion, isDirectory: true)
+            .appendingPathComponent("bin", isDirectory: true)
+            .appendingPathComponent("triton")
+        let skillsDirectory = root.appendingPathComponent("skills", isDirectory: true)
+        try FileManager.default.createDirectory(at: cellarBin.deletingLastPathComponent(), withIntermediateDirectories: true)
+        try Data().write(to: cellarBin)
+
+        let installer = SkillsBundleInstallerSpy()
+        let result = try await runCLIUpdate(
+            requestedVersion: "v\(TritonKitBuildInfo.cliVersion)",
+            currentExecutable: cellarBin.path,
+            architecture: "arm64",
+            checkOnly: false,
+            dryRun: false,
+            confirm: true,
+            includeSkills: true,
+            skillsDirectory: skillsDirectory.path,
+            repository: "NeptuneKit/TritonKit",
+            skillsBundleInstaller: { repository, tag, skillsDirectory in
+                await installer.install(repository: repository, tag: tag, skillsDirectory: skillsDirectory)
+            }
+        )
+
+        #expect(result.ok)
+        #expect(result.updateAvailable == false)
+        #expect(result.updated == false)
+        #expect(result.skillsUpdated == true)
+        #expect(await installer.calls == [
+            SkillsBundleInstallerSpy.Call(
+                repository: "NeptuneKit/TritonKit",
+                tag: "v\(TritonKitBuildInfo.cliVersion)",
+                skillsDirectory: skillsDirectory.path
+            )
+        ])
+    }
+
+    @Test("include skills requires confirmation even when cli is already target version")
+    func includeSkillsRequiresConfirmationEvenWhenCLIIsAlreadyTargetVersion() throws {
+        let plan = try makeCLIUpdatePlan(
+            currentVersion: "0.2.5",
+            requestedVersion: "v0.2.5",
+            currentExecutable: "/opt/homebrew/Cellar/triton/0.2.5/bin/triton",
+            architecture: "arm64",
+            checkOnly: false,
+            dryRun: false,
+            confirm: false,
+            includeSkills: true,
+            skillsDirectory: "/tmp/agent-skills",
+            repository: "NeptuneKit/TritonKit",
+            environment: [:]
+        )
+
+        #expect(plan.updateAvailable == false)
+        #expect(plan.requiresConfirmation == true)
+        #expect(plan.actions.contains(where: { $0.kind == .installSkillsBundle }))
+    }
+
     @Test("relative host command launches through env instead of cwd path")
     func relativeHostCommandLaunchesThroughEnvInsteadOfCwdPath() {
         let launch = makeCLIUpdateProcessLaunch(executable: "brew", arguments: ["update"])
@@ -189,4 +253,18 @@ private func temporaryUpdateDirectory() throws -> URL {
         .appendingPathComponent("triton-update-command-tests-\(UUID().uuidString)", isDirectory: true)
     try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
     return url
+}
+
+private actor SkillsBundleInstallerSpy {
+    struct Call: Equatable {
+        let repository: String
+        let tag: String
+        let skillsDirectory: String
+    }
+
+    private(set) var calls: [Call] = []
+
+    func install(repository: String, tag: String, skillsDirectory: String) {
+        calls.append(Call(repository: repository, tag: tag, skillsDirectory: skillsDirectory))
+    }
 }

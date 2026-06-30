@@ -63,7 +63,7 @@ When `triton update` is available and the agent skills directory is known, prefe
 triton update --include-skills --skills-dir "$AGENT_SKILLS_DIR" --yes --json
 ```
 
-This downloads `tritonkit-skills.tar.gz` from the same release as the CLI and replaces the installed `TritonKit.skills/` bundle.
+This downloads `tritonkit-skills.tar.gz` from the selected release and replaces the installed `TritonKit.skills/` bundle. It should still update skills when the CLI binary is already at the selected version; verify `skillsUpdated=true` in the JSON response.
 
 1. Download `tritonkit-skills.tar.gz` from the same GitHub Release as the CLI.
 2. Locate the user's configured agent skills directory. For Codex this is usually under the configured `CODEX_HOME` skills directory; if the path is not known, ask the user or inspect the local agent configuration.

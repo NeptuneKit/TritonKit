@@ -9,7 +9,7 @@
 - `triton update --check --json`：只检查并输出计划，不修改本机。
 - `triton update --dry-run --json`：输出计划，不执行任何 destructive action。
 - `triton update --version vX.Y.Z --yes --json`：更新到指定 release。
-- `triton update --include-skills --skills-dir <dir> --yes --json`：在 CLI 更新后同步 public `TritonKit.skills/` bundle。
+- `triton update --include-skills --skills-dir <dir> --yes --json`：同步 public `TritonKit.skills/` bundle；即使 CLI binary 已经是目标版本，也应执行 skills bundle 安装。
 
 JSON 输出模型为 `CLIUpdateResponse`，关键字段包括：
 
@@ -18,7 +18,7 @@ JSON 输出模型为 `CLIUpdateResponse`，关键字段包括：
 - `installSource`：`homebrew`、`manual`、`sourceCheckout` 或 `unknown`
 - `actions[]`：有序更新计划，标记每步是否 destructive
 - `requiresConfirmation`：需要 `--yes` 时为 true
-- `updated` / `skillsUpdated`
+- `updated` / `skillsUpdated`：`updated` 表示 CLI binary 更新是否执行，`skillsUpdated` 表示 public skills bundle 安装是否完成。
 - `error.code`：失败时的稳定错误码
 
 ## 安装来源边界
@@ -42,6 +42,8 @@ brew upgrade neptunekit/tap/triton
 4. 解压并替换当前 `triton` binary。
 
 源码 checkout build 来源返回 `source_checkout_update_unsupported`，提示使用本地 SwiftPM release build。
+
+`--include-skills` 是独立 destructive action。真实执行时必须传 `--yes`；若 CLI 已经是目标版本，命令仍应下载并替换同 release 的 `tritonkit-skills.tar.gz`，成功时返回 `updated=false`、`skillsUpdated=true`。
 
 ## 验证
 

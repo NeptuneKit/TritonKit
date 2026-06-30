@@ -30,7 +30,7 @@ func makeCLIUpdatePlan(
     let updateAvailable = target.version.map { versionIsNewer($0, than: currentVersion) } ?? false
     let checksumManifestName = "tritonkit_checksums.txt"
     let mutating = !checkOnly && !dryRun
-    let requiresConfirmation = mutating && !confirm && updateAvailable
+    let requiresConfirmation = mutating && !confirm && (updateAvailable || includeSkills)
     var actions: [CLIUpdateAction] = []
     var manualInstructions: [String] = []
 
@@ -244,7 +244,8 @@ func runCLIUpdate(
     includeSkills: Bool,
     skillsDirectory: String?,
     repository: String,
-    latestReleaseTagResolver: ((String) async throws -> String) = fetchLatestTritonReleaseTag
+    latestReleaseTagResolver: ((String) async throws -> String) = fetchLatestTritonReleaseTag,
+    skillsBundleInstaller: ((String, String, String) async throws -> Void) = installSkillsBundle
 ) async throws -> CLIUpdateResponse {
     let installSource = detectCLIUpdateInstallSource(
         currentExecutable: currentExecutable,
@@ -275,7 +276,7 @@ func runCLIUpdate(
         environment: ProcessInfo.processInfo.environment
     )
     let canRunUntargetedHomebrewUpdate = plan.installSource == .homebrew && plan.releaseTag == nil
-    if plan.checkOnly || plan.dryRun || (!plan.updateAvailable && !canRunUntargetedHomebrewUpdate) {
+    if plan.checkOnly || plan.dryRun || (!plan.updateAvailable && !canRunUntargetedHomebrewUpdate && !includeSkills) {
         return plan
     }
     if includeSkills && skillsDirectory == nil {
@@ -289,21 +290,25 @@ func runCLIUpdate(
         )
     }
 
-    switch plan.installSource {
-    case .homebrew:
-        try runProcess("brew", ["update"])
-        try runProcess("brew", ["upgrade", "neptunekit/tap/triton"])
-    case .manual, .unknown:
-        guard let tag = plan.releaseTag else {
-            throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve release tag.", hint: "Pass --version vX.Y.Z explicitly.")
+    var cliUpdated = false
+    if plan.updateAvailable || canRunUntargetedHomebrewUpdate {
+        switch plan.installSource {
+        case .homebrew:
+            try runProcess("brew", ["update"])
+            try runProcess("brew", ["upgrade", "neptunekit/tap/triton"])
+        case .manual, .unknown:
+            guard let tag = plan.releaseTag else {
+                throw CLIUpdateErrorDetail(code: "release_resolution_failed", message: "Unable to resolve release tag.", hint: "Pass --version vX.Y.Z explicitly.")
+            }
+            try await installManualCLIUpdate(plan: plan, tag: tag, repository: repository)
+        case .sourceCheckout:
+            throw CLIUpdateErrorDetail(
+                code: "source_checkout_update_unsupported",
+                message: "The active triton binary appears to be built from a source checkout.",
+                hint: "Use swift build --package-path CLI --scratch-path .build/cli -c release --product triton."
+            )
         }
-        try await installManualCLIUpdate(plan: plan, tag: tag, repository: repository)
-    case .sourceCheckout:
-        throw CLIUpdateErrorDetail(
-            code: "source_checkout_update_unsupported",
-            message: "The active triton binary appears to be built from a source checkout.",
-            hint: "Use swift build --package-path CLI --scratch-path .build/cli -c release --product triton."
-        )
+        cliUpdated = true
     }
 
     var skillsUpdated = false
@@ -314,7 +319,7 @@ func runCLIUpdate(
         guard let skillsDirectory else {
             throw CLIUpdateErrorDetail(code: "skills_dir_required", message: "--include-skills requires --skills-dir.", hint: "Pass the agent skills root directory.")
         }
-        try await installSkillsBundle(repository: repository, tag: tag, skillsDirectory: skillsDirectory)
+        try await skillsBundleInstaller(repository, tag, skillsDirectory)
         skillsUpdated = true
     }
 
@@ -328,7 +333,7 @@ func runCLIUpdate(
         checkOnly: plan.checkOnly,
         dryRun: plan.dryRun,
         requiresConfirmation: false,
-        updated: true,
+        updated: cliUpdated,
         skillsUpdated: skillsUpdated,
         installSource: plan.installSource,
         currentExecutable: plan.currentExecutable,
