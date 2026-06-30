@@ -124,6 +124,94 @@ function isRealDeviceRuntimeVisible(target, platform, runtimeTargets = []) {
   });
 }
 
+const simulatorFrameCache = new Map(); // key: udid -> { buffer, contentType, lastFetchTime, activeListeners: Set, loopActive }
+
+function startSimulatorGrabLoop(tritonPath, simulator) {
+  let cache = simulatorFrameCache.get(simulator);
+  if (!cache) {
+    cache = {
+      buffer: null,
+      contentType: "image/png",
+      lastFetchTime: 0,
+      activeListeners: new Set(),
+      loopActive: false
+    };
+    simulatorFrameCache.set(simulator, cache);
+  }
+
+  if (cache.loopActive) return;
+  cache.loopActive = true;
+
+  const grabFrame = async () => {
+    if (!cache.loopActive || cache.activeListeners.size === 0) {
+      cache.loopActive = false;
+      return;
+    }
+
+    let isFastChannel = false;
+    let newBuffer = null;
+    let newContentType = "image/png";
+
+    try {
+      // 优先从已启动的 Swift 19421 端口极速拿图
+      const fastRes = await fetch(
+        `http://127.0.0.1:19421/web/screenshot?target=host:ios:${simulator}&t=${Date.now()}`,
+        { signal: AbortSignal.timeout(3000) }
+      );
+      if (fastRes.ok) {
+        const contentType = fastRes.headers.get("content-type") || "";
+        if (contentType.includes("image")) {
+          newBuffer = Buffer.from(await fastRes.arrayBuffer());
+          newContentType = contentType;
+          isFastChannel = true;
+        }
+      }
+    } catch (e) {
+      // Swift server off
+    }
+
+    // Fallback: 慢速 simctl 进程截图
+    if (!newBuffer && cache.loopActive && cache.activeListeners.size > 0) {
+      const outputDir = join(tmpdir(), `tritonkit-web-grab-${randomUUID()}`);
+      const outputPath = join(outputDir, "frame.png");
+      await mkdir(outputDir, { recursive: true });
+      try {
+        await runTritonJSON(tritonPath, [
+          "sim",
+          "screenshot",
+          "--simulator",
+          simulator,
+          "--output",
+          outputPath,
+          "--json",
+        ]);
+        newBuffer = await readFile(outputPath);
+        newContentType = "image/png";
+      } catch (e) {
+        // ignore
+      } finally {
+        await rm(outputDir, { recursive: true, force: true });
+      }
+    }
+
+    if (newBuffer) {
+      cache.buffer = newBuffer;
+      cache.contentType = newContentType;
+      cache.lastFetchTime = Date.now();
+    }
+
+    if (cache.loopActive && cache.activeListeners.size > 0) {
+      // 极速通道轮询间隔为 15ms（相当于极限 60 FPS）；慢速通道保留 1200ms 以避免死锁
+      const delay = isFastChannel ? 15 : 1200;
+      setTimeout(grabFrame, delay);
+    } else {
+      cache.loopActive = false;
+    }
+  };
+
+  grabFrame();
+}
+
 export function createIosSimulatorBridgeMiddleware(options = {}) {
   const root = options.root ? resolve(options.root) : bridgeRoot;
   const tritonPath = options.tritonPath ? resolve(options.tritonPath) : resolveTritonBinary(root);
@@ -331,77 +419,52 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
           "Access-Control-Allow-Origin": "*",
         });
 
+        // 获取或初始化缓存
+        let cache = simulatorFrameCache.get(simulator);
+        if (!cache) {
+          cache = {
+            buffer: null,
+            contentType: "image/png",
+            lastFetchTime: 0,
+            activeListeners: new Set(),
+            loopActive: false
+          };
+          simulatorFrameCache.set(simulator, cache);
+        }
+
+        const listenerId = randomUUID();
+        cache.activeListeners.add(listenerId);
+        startSimulatorGrabLoop(tritonPath, simulator);
+
         let active = true;
-        let inFlight = false; // 互斥锁，绝对防止并发重叠导致 simctl 死锁
+        let lastSentTime = 0;
 
         req.on("close", () => {
           active = false;
+          if (cache) {
+            cache.activeListeners.delete(listenerId);
+          }
         });
 
-        const pushFrame = async () => {
-          if (!active || inFlight) return;
-          inFlight = true;
-          let isFastChannel = false;
+        const pushFrame = () => {
+          if (!active) return;
 
-          try {
-            let buffer;
-            // 优先从已启动的 Swift 19421 端口极速拿图，加上时间戳以强制刷新并引入5秒超时保护
+          // 直接读取内存中的画面缓存
+          if (cache.buffer && cache.lastFetchTime > lastSentTime) {
             try {
-              const fastRes = await fetch(
-                `http://127.0.0.1:19421/web/screenshot?target=host:ios:${simulator}&t=${Date.now()}`,
-                { signal: AbortSignal.timeout(5000) }
-              );
-              if (fastRes.ok) {
-                const contentType = fastRes.headers.get("content-type") || "";
-                // 必须验证返回内容，如果是 JSON 报错，坚决不能作为图片数据写入流中
-                if (contentType.includes("image")) {
-                  buffer = Buffer.from(await fastRes.arrayBuffer());
-                  isFastChannel = true;
-                }
-              }
-            } catch (e) {
-              // Swift server off
-            }
-
-            // Fallback
-            if (!buffer && active) {
-              const outputDir = join(tmpdir(), `tritonkit-web-mjpeg-${randomUUID()}`);
-              const outputPath = join(outputDir, "frame.png");
-              await mkdir(outputDir, { recursive: true });
-              try {
-                await runTritonJSON(tritonPath, [
-                  "sim",
-                  "screenshot",
-                  "--simulator",
-                  simulator,
-                  "--output",
-                  outputPath,
-                  "--json",
-                ]);
-                buffer = await readFile(outputPath);
-              } catch (e) {
-                // ignore fallback error
-              } finally {
-                await rm(outputDir, { recursive: true, force: true });
-              }
-            }
-
-            if (buffer && active) {
               res.write("--tritonboundary\r\n");
-              res.write("Content-Type: image/png\r\n");
-              res.write(`Content-Length: ${buffer.length}\r\n\r\n`);
-              res.write(buffer);
+              res.write(`Content-Type: ${cache.contentType}\r\n`);
+              res.write(`Content-Length: ${cache.buffer.length}\r\n\r\n`);
+              res.write(cache.buffer);
               res.write("\r\n");
+              lastSentTime = cache.lastFetchTime;
+            } catch (err) {
+              // ignore
             }
-          } catch (err) {
-            // 忽略单帧异常
-          } finally {
-            inFlight = false;
-            if (active) {
-              // 关键修正：若是极速通道，使用请求的目标帧率时间间隔；若是 slow fallback (simctl)，强行保留 1200ms 的排空时间，杜绝并发竞态。
-              const nextDelay = isFastChannel ? targetInterval : 1200;
-              setTimeout(pushFrame, nextDelay);
-            }
+          }
+
+          if (active) {
+            setTimeout(pushFrame, targetInterval);
           }
         };
 
