@@ -265,6 +265,145 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         return;
       }
 
+      // Raw PNG endpoint — 优先通过本地运行 of 19421 Swift 控制台直接拉取，省去每次起二进制进程的开销
+      if (url.pathname === "/web/ios-simulator/frame") {
+        const udid = url.searchParams.get("udid") || "booted";
+        const simulator = udid === "booted" ? "booted" : udid;
+        try {
+          // 尝试极速代理到 19421 端口并打破 HTTP 缓存
+          const fastRes = await fetch(`http://127.0.0.1:19421/web/screenshot?target=host:ios:${simulator}&t=${Date.now()}`);
+          if (fastRes.ok) {
+            const buffer = Buffer.from(await fastRes.arrayBuffer());
+            res.writeHead(200, {
+              "Content-Type": "image/png",
+              "Content-Length": buffer.length,
+              "Cache-Control": "no-store",
+              "Access-Control-Allow-Origin": "*",
+            });
+            res.end(buffer);
+            return;
+          }
+        } catch (e) {
+          // Serve 不通时走 Slow fallback
+        }
+
+        // Slow fallback: 通过进程截图
+        const outputDir = join(tmpdir(), `tritonkit-web-frame-${randomUUID()}`);
+        const outputPath = join(outputDir, "frame.png");
+        await mkdir(outputDir, { recursive: true });
+        try {
+          await runTritonJSON(tritonPath, [
+            "sim",
+            "screenshot",
+            "--simulator",
+            simulator,
+            "--output",
+            outputPath,
+            "--json",
+          ]);
+          const image = await readFile(outputPath);
+          res.writeHead(200, {
+            "Content-Type": "image/png",
+            "Content-Length": image.length,
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Origin": "*",
+          });
+          res.end(image);
+        } finally {
+          await rm(outputDir, { recursive: true, force: true });
+        }
+        return;
+      }
+
+      // MJPEG Multipart 视频流 — 游戏/云游戏级别的极速流式推送
+      if (url.pathname === "/web/ios-simulator/mjpeg") {
+        const udid = url.searchParams.get("udid") || "booted";
+        const simulator = udid === "booted" ? "booted" : udid;
+
+        res.writeHead(200, {
+          "Content-Type": "multipart/x-mixed-replace; boundary=tritonboundary",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Connection": "close",
+          "Pragma": "no-cache",
+          "Access-Control-Allow-Origin": "*",
+        });
+
+        let active = true;
+        let inFlight = false; // 互斥锁，绝对防止并发重叠导致 simctl 死锁
+
+        req.on("close", () => {
+          active = false;
+        });
+
+        const pushFrame = async () => {
+          if (!active || inFlight) return;
+          inFlight = true;
+
+          try {
+            let buffer;
+            // 优先从已启动的 Swift 19421 端口极速拿图，加上时间戳以强制刷新并引入5秒超时保护
+            try {
+              const fastRes = await fetch(
+                `http://127.0.0.1:19421/web/screenshot?target=host:ios:${simulator}&t=${Date.now()}`,
+                { signal: AbortSignal.timeout(5000) }
+              );
+              if (fastRes.ok) {
+                const contentType = fastRes.headers.get("content-type") || "";
+                // 必须验证返回内容，如果是 JSON 报错，坚决不能作为图片数据写入流中
+                if (contentType.includes("image")) {
+                  buffer = Buffer.from(await fastRes.arrayBuffer());
+                }
+              }
+            } catch (e) {
+              // Swift server off
+            }
+
+            // Fallback
+            if (!buffer && active) {
+              const outputDir = join(tmpdir(), `tritonkit-web-mjpeg-${randomUUID()}`);
+              const outputPath = join(outputDir, "frame.png");
+              await mkdir(outputDir, { recursive: true });
+              try {
+                await runTritonJSON(tritonPath, [
+                  "sim",
+                  "screenshot",
+                  "--simulator",
+                  simulator,
+                  "--output",
+                  outputPath,
+                  "--json",
+                ]);
+                buffer = await readFile(outputPath);
+              } catch (e) {
+                // ignore fallback error
+              } finally {
+                await rm(outputDir, { recursive: true, force: true });
+              }
+            }
+
+            if (buffer && active) {
+              res.write("--tritonboundary\r\n");
+              res.write("Content-Type: image/png\r\n");
+              res.write(`Content-Length: ${buffer.length}\r\n\r\n`);
+              res.write(buffer);
+              res.write("\r\n");
+            }
+          } catch (err) {
+            // 忽略单帧异常
+          } finally {
+            inFlight = false;
+            if (active) {
+              // 关键修正：给底层的 simctl screenshot 留出至少 1200ms 的排空时间，彻底杜绝并发竞态
+              setTimeout(pushFrame, 1200);
+            }
+          }
+        };
+
+        pushFrame();
+        return;
+      }
+
+
       if (url.pathname === "/web/host-screenshot") {
         const platform = url.searchParams.get("platform") || "ios";
         const target = url.searchParams.get("target") || "booted";
