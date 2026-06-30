@@ -1,6 +1,6 @@
 Pod::Spec.new do |s|
   s.name = 'TritonKit'
-  s.version = '0.2.5'
+  s.version = '0.2.6'
   s.summary = 'Embedded debug runtime for TritonKit iOS view inspection.'
   s.description = 'TritonKit embeds a DEBUG-only runtime in an iOS app so the Triton CLI can inspect hierarchy, accessibility, geometry, screenshots, and supported in-app controls during development.'
   s.homepage = 'https://github.com/NeptuneKit/TritonKit'
