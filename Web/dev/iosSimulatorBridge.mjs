@@ -124,7 +124,7 @@ function isRealDeviceRuntimeVisible(target, platform, runtimeTargets = []) {
   });
 }
 
-const simulatorFrameCache = new Map(); // key: udid -> { buffer, contentType, lastFetchTime, activeListeners: Set, loopActive }
+const simulatorFrameCache = new Map(); // key: udid -> { buffer, contentType, lastFetchTime, activeListeners: Map, loopActive }
 
 function startSimulatorGrabLoop(tritonPath, simulator) {
   let cache = simulatorFrameCache.get(simulator);
@@ -133,7 +133,7 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
       buffer: null,
       contentType: "image/png",
       lastFetchTime: 0,
-      activeListeners: new Set(),
+      activeListeners: new Map(),
       loopActive: false
     };
     simulatorFrameCache.set(simulator, cache);
@@ -211,8 +211,10 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
     }
 
     if (cache.loopActive && cache.activeListeners.size > 0) {
-      // 极速通道轮询间隔为 15ms（相当于极限 60 FPS）；慢速通道保留 1200ms 以避免死锁
-      const delay = isFastChannel ? 15 : 1200;
+      const maxFps = Math.max(...cache.activeListeners.values(), 15);
+      // 动态抓图延迟：高帧率下（>=60fps）无等待或极低等待（2ms）抓取，否则为目标频率间隔的一半
+      const fastDelay = maxFps >= 60 ? 2 : Math.max(0, Math.round(1000 / (maxFps * 2)));
+      const delay = isFastChannel ? fastDelay : 1200;
       setTimeout(grabFrame, delay);
     } else {
       cache.loopActive = false;
@@ -418,7 +420,7 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         const udid = url.searchParams.get("udid") || "booted";
         const simulator = udid === "booted" ? "booted" : udid;
         const requestedFps = parseInt(url.searchParams.get("fps") || "15", 10);
-        const fps = Math.min(60, Math.max(1, requestedFps));
+        const fps = Math.min(120, Math.max(1, requestedFps));
         const targetInterval = Math.round(1000 / fps);
 
         // 建立连接前，首先确保后台服务被拉起
@@ -443,14 +445,14 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
             buffer: null,
             contentType: "image/png",
             lastFetchTime: 0,
-            activeListeners: new Set(),
+            activeListeners: new Map(),
             loopActive: false
           };
           simulatorFrameCache.set(simulator, cache);
         }
 
         const listenerId = randomUUID();
-        cache.activeListeners.add(listenerId);
+        cache.activeListeners.set(listenerId, requestedFps);
         startSimulatorGrabLoop(tritonPath, simulator);
 
         let active = true;

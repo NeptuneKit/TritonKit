@@ -110,7 +110,7 @@ export function StreamCard() {
         />
         <Select
           size="small"
-          style={{ width: 80 }}
+          style={{ width: 90 }}
           value={targetFps}
           onChange={setTargetFps}
           options={[
@@ -119,6 +119,7 @@ export function StreamCard() {
             { value: 15, label: "15 FPS" },
             { value: 30, label: "30 FPS" },
             { value: 60, label: "60 FPS" },
+            { value: 120, label: "120 FPS" },
           ]}
         />
         <button className="stream-icon-btn" title="刷新设备列表" onClick={handleRefresh}>
