@@ -564,7 +564,9 @@ struct Serve: AsyncParsableCommand {
                         status: .internalServerError
                     )
                 }
-                return Response(status: .ok, headers: [.contentType: "image/png"],
+                let format = screenshot.format.lowercased()
+                let contentType = format == "png" ? "image/png" : "image/jpeg"
+                return Response(status: .ok, headers: [.contentType: contentType],
                                 body: .init(byteBuffer: ByteBuffer(data: imageData)))
             } catch {
                 if let timeout = error as? RuntimeRequestTimeoutError {
