@@ -28,6 +28,18 @@ struct TKRuntimeInputActionsTests {
     }
 
     @MainActor
+    @Test("UIControl target collection normalizes Objective-C sets without Swift Set bridging")
+    func controlTargetCollectionNormalizesObjectiveCSets() {
+        let target = ControlEventRecorder()
+        let values = normalizedControlTargets(from: NSSet(array: [target, NSNull()]))
+
+        #expect(values.count == 2)
+        #expect(values.contains { ($0 as AnyObject?) === target })
+        #expect(values.contains { $0 == nil })
+        #expect(normalizedControlTargets(from: NSObject()).isEmpty)
+    }
+
+    @MainActor
     @Test("UISlider swipe sets value from end coordinate")
     func sliderSwipeSetsValueFromEndCoordinate() {
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))

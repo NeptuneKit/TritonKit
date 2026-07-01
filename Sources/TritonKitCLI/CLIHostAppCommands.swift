@@ -223,10 +223,13 @@ func planHostAppInstall(
         }
         return HostAppCommandPlan(action: "app.install", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection), command: TKAndroidADBCommand.installAPK(serial: selection.target.rawTarget, apkPath: apk, executable: adb), artifacts: [apk], note: hostAppSubmissionNote("app.install", followUp: "`triton app list --platform android`, launch + wait/assert, or evidence"))
     case .harmony:
-        guard let hap else {
-            throw ValidationError("Harmony app install requires --hap.")
+        if let hap {
+            return HostAppCommandPlan(action: "app.install", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection), command: TKHarmonyHDCCommand.installHap(target: selection.target.rawTarget, hapPath: hap, executable: hdc), artifacts: [hap], note: hostAppSubmissionNote("app.install", followUp: "`triton app info --platform harmony`, launch + wait/assert, or evidence"))
         }
-        return HostAppCommandPlan(action: "app.install", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection), command: TKHarmonyHDCCommand.installHap(target: selection.target.rawTarget, hapPath: hap, executable: hdc), artifacts: [hap], note: hostAppSubmissionNote("app.install", followUp: "`triton app info --platform harmony`, launch + wait/assert, or evidence"))
+        guard let app else {
+            throw ValidationError("Harmony app install requires --hap or --app.")
+        }
+        return HostAppCommandPlan(action: "app.install", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection), command: TKHarmonyHDCCommand.installAppArchive(target: selection.target.rawTarget, appPath: app, executable: hdc), artifacts: [app], note: hostAppSubmissionNote("app.install", followUp: "`triton app info --platform harmony`, launch + wait/assert, or evidence"))
     }
 }
 
@@ -725,7 +728,7 @@ struct HostAppInstall: AsyncParsableCommand {
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
     @Flag(help: "Only match ready targets") var ready = false
-    @Option(help: "Path to .app bundle") var app: String?
+    @Option(help: "Path to iOS .app bundle or Harmony signed .app archive") var app: String?
     @Option(help: "Path to Android .apk package") var apk: String?
     @Option(help: "Path to Harmony .hap package") var hap: String?
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?

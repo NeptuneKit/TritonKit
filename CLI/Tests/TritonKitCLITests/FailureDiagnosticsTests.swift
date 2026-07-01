@@ -130,10 +130,10 @@ struct FailureDiagnosticsTests {
 
     @Test("host validation errors stay validation_failed")
     func hostValidationErrorsStayValidationFailed() throws {
-        let detail = hostValidationErrorDetail(ValidationError("Harmony app install requires --hap."))
+        let detail = hostValidationErrorDetail(ValidationError("Harmony app install requires --hap or --app."))
 
         #expect(detail.code == "validation_failed")
-        #expect(detail.message == "Harmony app install requires --hap.")
+        #expect(detail.message == "Harmony app install requires --hap or --app.")
     }
 
     @Test("host-facing schemas cover failHostCommand error codes")

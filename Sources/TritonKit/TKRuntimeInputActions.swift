@@ -830,10 +830,24 @@ func preferredTapDispatch(for control: UIControl) -> (event: UIControl.Event, ev
 
 @MainActor
 func targetActions(for control: UIControl, event: UIControl.Event) -> [(target: Any?, action: Selector)] {
-    control.allTargets.flatMap { target in
+    normalizedControlTargets(from: control.perform(#selector(getter: UIControl.allTargets))?.takeUnretainedValue()).flatMap { target in
         (control.actions(forTarget: target, forControlEvent: event) ?? []).map { action in
-            (target: target is NSNull ? nil : target, action: Selector(action))
+            (target: target, action: Selector(action))
         }
+    }
+}
+
+func normalizedControlTargets(from object: Any?) -> [Any?] {
+    let values: [Any]
+    if let set = object as? NSSet {
+        values = set.allObjects
+    } else if let array = object as? NSArray {
+        values = array.map { $0 }
+    } else {
+        return []
+    }
+    return values.map { value in
+        value is NSNull ? nil : value
     }
 }
 

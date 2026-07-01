@@ -2824,6 +2824,7 @@ struct DeviceCrossPlatformTests {
         #expect(app.examples.contains("triton app launch --device android-a --platform android --package-name com.example.app --json"))
         #expect(app.examples.contains("triton app open-url example://debug --device android-a --platform android --package-name com.example.app --json"))
         #expect(app.examples.contains("triton app install --device harmony-a --hap /tmp/Demo.hap --json"))
+        #expect(app.examples.contains("triton app install --platform harmony --device harmony-a --app /tmp/Signed.app --json"))
         #expect(app.examples.contains("triton app info --device <ios-real-target> --platform ios --scope real --bundle-id com.example.app --json"))
         #expect(app.examples.contains("triton app list --device <android-real-target> --platform android --scope real --user-only --json"))
         #expect(app.examples.contains("triton app terminate --device <harmony-real-target> --platform harmony --scope real --bundle com.example.app --json"))
@@ -3261,6 +3262,42 @@ struct DeviceCrossPlatformTests {
         #expect(selection.target.rawTarget == "127.0.0.1:10100")
         #expect(plan.command.argv == ["-t", "127.0.0.1:10100", "install", "-r", "/tmp/Demo.hap"])
         #expect(plan.target == "harmony:127.0.0.1:10100")
+    }
+
+    @Test("host app install accepts Harmony signed app archives")
+    func hostAppInstallAcceptsHarmonySignedAppArchives() throws {
+        let target = HostDeviceTarget(
+            platform: "harmony",
+            id: "harmony:127.0.0.1:10100",
+            target: "127.0.0.1:10100",
+            state: "Connected",
+            ready: true,
+            source: "hdc",
+            name: nil,
+            runtime: nil,
+            transport: "TCP",
+            scope: "emulator",
+            kind: "emulator",
+            rawTarget: "127.0.0.1:10100"
+        )
+
+        let selection = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(device: "harmony:127.0.0.1:10100", platform: .harmony),
+            candidates: [.harmony: [target]],
+            aliases: .empty
+        )
+        let plan = try planHostAppInstall(
+            selection: selection,
+            app: "/tmp/Signed.app",
+            apk: nil,
+            hap: nil,
+            adb: "adb",
+            hdc: "hdc",
+            devicectlArtifacts: nil
+        )
+
+        #expect(plan.command.argv == ["-t", "127.0.0.1:10100", "install", "/tmp/Signed.app"])
+        #expect(plan.artifacts == ["/tmp/Signed.app"])
     }
 
     @Test("host device selector prefers explicit matches and unique ready candidates")

@@ -43,6 +43,10 @@ public enum TKHarmonyHDCCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "install", "-r", hapPath], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
+    public static func installAppArchive(target: String, appPath: String, executable: String = "hdc") -> TKHostCommand {
+        TKHostCommand(executable: executable, arguments: ["-t", target, "install", appPath], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
     public static func forceStop(target: String, bundleName: String, executable: String = "hdc") -> TKHostCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "aa", "force-stop", bundleName], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
