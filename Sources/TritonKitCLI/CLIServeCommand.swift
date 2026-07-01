@@ -585,6 +585,74 @@ struct Serve: AsyncParsableCommand {
             }
         }
 
+        router.get("/web/ios-simulator/framebuffer") { request, _ -> Response in
+            guard let target = queryParameter("target", from: request) ?? queryParameter("udid", from: request) else {
+                return jsonError(
+                    code: "missing_parameter",
+                    message: "Missing target or udid parameter",
+                    endpoint: "/web/ios-simulator/framebuffer",
+                    status: .badRequest
+                )
+            }
+
+            let udid: String
+            if target.hasPrefix("host:ios:") {
+                let parts = target.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
+                if parts.count == 3 {
+                    udid = String(parts[2])
+                } else {
+                    udid = target
+                }
+            } else {
+                udid = target
+            }
+
+            _ = CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid)
+
+            let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 60
+            let fps = min(120, max(1, requestedFps))
+            let targetInterval = Double(1000 / fps) / 1000.0
+
+            let boundary = "tritonboundary"
+            let headers: HTTPFields = [
+                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
+                .cacheControl: "no-cache, no-store, must-revalidate",
+                .connection: "close"
+            ]
+
+            let responseBody = ResponseBody { writer in
+                defer {
+                    CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: udid)
+                }
+
+                while true {
+                    if let jpegData = CLIHostSimulatorFramebufferService.shared.getLatestFrame(udid: udid) {
+                        var headerStr = "--\(boundary)\r\n"
+                        headerStr += "Content-Type: image/jpeg\r\n"
+                        headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
+
+                        var buffer = ByteBuffer()
+                        buffer.writeString(headerStr)
+                        buffer.writeBytes(jpegData)
+                        buffer.writeString("\r\n")
+
+                        do {
+                            try await writer.write(buffer)
+                        } catch {
+                            break
+                        }
+                    }
+
+                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
+                }
+
+                try? await writer.finish(nil)
+            }
+
+            return Response(status: .ok, headers: headers, body: responseBody)
+        }
+
+
         router.post("/command") { request, _ -> Response in
             var bodyData = Data()
             for try await chunk in request.body {

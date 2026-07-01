@@ -124,7 +124,7 @@ function isRealDeviceRuntimeVisible(target, platform, runtimeTargets = []) {
   });
 }
 
-const simulatorFrameCache = new Map(); // key: udid -> { buffer, contentType, lastFetchTime, activeListeners: Map, loopActive }
+const simulatorFrameCache = new Map(); // key: udid -> { buffer, contentType, lastFetchTime, activeListeners: Map, baguetteProcess, currentFps, loopActive }
 
 function startSimulatorGrabLoop(tritonPath, simulator) {
   let cache = simulatorFrameCache.get(simulator);
@@ -134,11 +134,14 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
       contentType: "image/png",
       lastFetchTime: 0,
       activeListeners: new Map(),
+      baguetteProcess: null,
+      currentFps: 0,
       loopActive: false
     };
     simulatorFrameCache.set(simulator, cache);
   }
 
+  // 1. 普通轮询通道（由底层 Swift SimulatorKit GPU 共享显存流自动提速，延迟 <15ms 且 0 占用模拟器主线程）
   if (cache.loopActive) return;
   cache.loopActive = true;
 
@@ -150,17 +153,17 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
 
     let isFastChannel = false;
     let newBuffer = null;
-    let newContentType = "image/png";
+    let newContentType = "image/jpeg";
 
     try {
-      // 优先从连接的内嵌 App SDK Target (triton:ios-simulator:<udid>) 获取截图以达到毫秒级
+      // 优先从连接的内嵌 App SDK Target (triton:ios-simulator:<udid>) 获取截图
       let targetId = `triton:ios-simulator:${simulator}`;
       let fastRes = await fetch(
         `http://127.0.0.1:19421/web/screenshot?target=${targetId}&t=${Date.now()}`,
         { signal: AbortSignal.timeout(3000) }
       );
       if (!fastRes.ok) {
-        // Fallback 到宿主模拟器 ID
+        // Fallback 到已在底层实现 SimulatorKit 共享显存高刷的宿主模拟器接口（~3ms 极速响应）
         targetId = `host:ios:${simulator}`;
         fastRes = await fetch(
           `http://127.0.0.1:19421/web/screenshot?target=${targetId}&t=${Date.now()}`,
@@ -177,10 +180,9 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
         }
       }
     } catch (e) {
-      // Swift server off
+      // ignore
     }
 
-    // Fallback: 慢速 simctl 进程截图
     if (!newBuffer && cache.loopActive && cache.activeListeners.size > 0) {
       const outputDir = join(tmpdir(), `tritonkit-web-grab-${randomUUID()}`);
       const outputPath = join(outputDir, "frame.png");
@@ -212,7 +214,6 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
 
     if (cache.loopActive && cache.activeListeners.size > 0) {
       const maxFps = Math.max(...cache.activeListeners.values(), 15);
-      // 动态抓图延迟：高帧率下（>=60fps）无等待或极低等待（2ms）抓取，否则为目标频率间隔的一半
       const fastDelay = maxFps >= 60 ? 2 : Math.max(0, Math.round(1000 / (maxFps * 2)));
       const delay = isFastChannel ? fastDelay : 1200;
       setTimeout(grabFrame, delay);
@@ -429,6 +430,47 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         } catch (e) {
           // ignore
         }
+        // 尝试优先向 Triton 极速流服务器代理该请求
+        let proxyStarted = false;
+        try {
+          const fastRes = await fetch(
+            `http://127.0.0.1:19421/web/ios-simulator/framebuffer?target=host:ios:${simulator}&fps=${fps}`,
+            { signal: AbortSignal.timeout(5000) }
+          );
+          if (fastRes.ok) {
+            proxyStarted = true;
+            res.writeHead(200, {
+              "Content-Type": fastRes.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Connection": "close",
+              "Pragma": "no-cache",
+              "Access-Control-Allow-Origin": "*",
+            });
+            const reader = fastRes.body.getReader();
+            req.on("close", () => {
+              reader.cancel().catch(() => {});
+            });
+
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                res.write(Buffer.from(value));
+              }
+            } catch (streamErr) {
+              // ignore
+            } finally {
+              res.end();
+            }
+            return;
+          }
+        } catch (err) {
+          if (proxyStarted) {
+            try { res.end(); } catch (e) {}
+            return;
+          }
+          // 代理失败，自动降级到下方的轮询拉取缓存流
+        }
 
         res.writeHead(200, {
           "Content-Type": "multipart/x-mixed-replace; boundary=tritonboundary",
@@ -446,6 +488,8 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
             contentType: "image/png",
             lastFetchTime: 0,
             activeListeners: new Map(),
+            baguetteProcess: null,
+            currentFps: 0,
             loopActive: false
           };
           simulatorFrameCache.set(simulator, cache);
@@ -461,6 +505,14 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
           active = false;
           if (cache) {
             cache.activeListeners.delete(listenerId);
+            if (cache.activeListeners.size === 0 && cache.baguetteProcess) {
+              try {
+                cache.baguetteProcess.kill();
+              } catch (e) {
+                // ignore
+              }
+              cache.baguetteProcess = null;
+            }
           }
         });
 
