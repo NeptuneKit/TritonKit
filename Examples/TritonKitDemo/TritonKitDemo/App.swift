@@ -131,6 +131,23 @@ struct ContentView: View {
         VStack(spacing: 16) {
             Text("TritonKit Demo").font(.largeTitle).bold()
 
+            TimelineView(.animation) { timelineContext in
+                let timeString: String = {
+                    let formatter = DateFormatter()
+                    formatter.dateFormat = "HH:mm:ss.SSS"
+                    return formatter.string(from: timelineContext.date)
+                }()
+                Text(timeString)
+                    .font(.system(.title3, design: .monospaced))
+                    .foregroundColor(.blue)
+                    .bold()
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(.secondarySystemFill))
+                    .cornerRadius(6)
+                    .accessibilityIdentifier("DemoTimerLabel")
+            }
+
             Text("Status: \(model.status)")
                 .foregroundColor(model.status == "Connected" ? .green : .orange)
                 .font(.headline)

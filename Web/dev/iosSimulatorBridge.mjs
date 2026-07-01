@@ -153,11 +153,21 @@ function startSimulatorGrabLoop(tritonPath, simulator) {
     let newContentType = "image/png";
 
     try {
-      // 优先从已启动的 Swift 19421 端口极速拿图
-      const fastRes = await fetch(
-        `http://127.0.0.1:19421/web/screenshot?target=host:ios:${simulator}&t=${Date.now()}`,
+      // 优先从连接的内嵌 App SDK Target (triton:ios-simulator:<udid>) 获取截图以达到毫秒级
+      let targetId = `triton:ios-simulator:${simulator}`;
+      let fastRes = await fetch(
+        `http://127.0.0.1:19421/web/screenshot?target=${targetId}&t=${Date.now()}`,
         { signal: AbortSignal.timeout(3000) }
       );
+      if (!fastRes.ok) {
+        // Fallback 到宿主模拟器 ID
+        targetId = `host:ios:${simulator}`;
+        fastRes = await fetch(
+          `http://127.0.0.1:19421/web/screenshot?target=${targetId}&t=${Date.now()}`,
+          { signal: AbortSignal.timeout(3000) }
+        );
+      }
+
       if (fastRes.ok) {
         const contentType = fastRes.headers.get("content-type") || "";
         if (contentType.includes("image")) {
@@ -411,6 +421,13 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         const fps = Math.min(60, Math.max(1, requestedFps));
         const targetInterval = Math.round(1000 / fps);
 
+        // 建立连接前，首先确保后台服务被拉起
+        try {
+          await ensureTritonServe(tritonPath, hostInputBaseURL);
+        } catch (e) {
+          // ignore
+        }
+
         res.writeHead(200, {
           "Content-Type": "multipart/x-mixed-replace; boundary=tritonboundary",
           "Cache-Control": "no-cache, no-store, must-revalidate",
@@ -437,7 +454,6 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         startSimulatorGrabLoop(tritonPath, simulator);
 
         let active = true;
-        let lastSentTime = 0;
 
         req.on("close", () => {
           active = false;
@@ -449,15 +465,14 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         const pushFrame = () => {
           if (!active) return;
 
-          // 直接读取内存中的画面缓存
-          if (cache.buffer && cache.lastFetchTime > lastSentTime) {
+          // 硬刷新模式：只要缓存有图，按设定频率发送，确保网络采样完美匹配目标 FPS
+          if (cache.buffer) {
             try {
               res.write("--tritonboundary\r\n");
               res.write(`Content-Type: ${cache.contentType}\r\n`);
               res.write(`Content-Length: ${cache.buffer.length}\r\n\r\n`);
               res.write(cache.buffer);
               res.write("\r\n");
-              lastSentTime = cache.lastFetchTime;
             } catch (err) {
               // ignore
             }
