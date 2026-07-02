@@ -93,7 +93,6 @@ export function StreamCard() {
 
     return () => {
       clearInterval(interval);
-      setConnected(false);
     };
   }, [connected, fetchTargets]);
 
