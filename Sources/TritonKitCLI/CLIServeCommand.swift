@@ -670,7 +670,14 @@ struct Serve: AsyncParsableCommand {
                 )
             }
 
-            _ = CLIAndroidFramebufferService.shared.startStreaming(serial: serial)
+            let resolvedSerial: String
+            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: serial), hdc: "hdc", adb: "adb") {
+                resolvedSerial = selection.target.rawTarget
+            } else {
+                resolvedSerial = serial
+            }
+
+            _ = CLIAndroidFramebufferService.shared.startStreaming(serial: resolvedSerial)
 
             let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 30
             let fps = min(30, max(1, requestedFps))
@@ -685,13 +692,13 @@ struct Serve: AsyncParsableCommand {
 
             let responseBody = ResponseBody { writer in
                 defer {
-                    CLIAndroidFramebufferService.shared.stopStreaming(serial: serial)
+                    CLIAndroidFramebufferService.shared.stopStreaming(serial: resolvedSerial)
                 }
 
                 var lastSentVersion: UInt64 = 0
                 var lastWriteTime = Date().timeIntervalSince1970
                 while true {
-                    if let (jpegData, version) = CLIAndroidFramebufferService.shared.getLatestFrameWithVersion(serial: serial) {
+                    if let (jpegData, version) = CLIAndroidFramebufferService.shared.getLatestFrameWithVersion(serial: resolvedSerial) {
                         let now = Date().timeIntervalSince1970
                         if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
                             lastSentVersion = version
@@ -733,7 +740,14 @@ struct Serve: AsyncParsableCommand {
                 )
             }
 
-            _ = CLIHarmonyFramebufferService.shared.startStreaming(target: target)
+            let resolvedTarget: String
+            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: target), hdc: "hdc", adb: "adb") {
+                resolvedTarget = selection.target.rawTarget
+            } else {
+                resolvedTarget = target
+            }
+
+            _ = CLIHarmonyFramebufferService.shared.startStreaming(target: resolvedTarget)
 
             let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 15
             let fps = min(15, max(1, requestedFps))
@@ -748,13 +762,13 @@ struct Serve: AsyncParsableCommand {
 
             let responseBody = ResponseBody { writer in
                 defer {
-                    CLIHarmonyFramebufferService.shared.stopStreaming(target: target)
+                    CLIHarmonyFramebufferService.shared.stopStreaming(target: resolvedTarget)
                 }
 
                 var lastSentVersion: UInt64 = 0
                 var lastWriteTime = Date().timeIntervalSince1970
                 while true {
-                    if let (jpegData, version) = CLIHarmonyFramebufferService.shared.getLatestFrameWithVersion(target: target) {
+                    if let (jpegData, version) = CLIHarmonyFramebufferService.shared.getLatestFrameWithVersion(target: resolvedTarget) {
                         let now = Date().timeIntervalSince1970
                         if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
                             lastSentVersion = version
