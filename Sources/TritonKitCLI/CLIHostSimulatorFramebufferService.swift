@@ -385,8 +385,10 @@ final class FramebufferSession: @unchecked Sendable {
         ]
         if let data = self.ciContext.jpegRepresentation(of: ciImage, colorSpace: colorSpace, options: options) {
             self.lock.lock()
-            self.latestJPEGData = data
-            self.latestFrameVersion += 1
+            if data != self.latestJPEGData {
+                self.latestJPEGData = data
+                self.latestFrameVersion += 1
+            }
             self.lock.unlock()
         }
     }
