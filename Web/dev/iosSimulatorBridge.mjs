@@ -94,6 +94,9 @@ function shouldExposeHostDeviceTarget(target, platform, runtimeTargets = []) {
   const scope = String(target.scope ?? "");
   const kind = String(target.kind ?? "");
   if (scope === "real" || kind === "real-device") {
+    if (platform === "android" || platform === "harmony") {
+      return Boolean(target.ready);
+    }
     return Boolean(target.ready) && (
       hasDirectRealDeviceConnection(target) ||
       isRealDeviceRuntimeVisible(target, platform, runtimeTargets)
@@ -421,27 +424,31 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         const serial = url.searchParams.get("udid") || url.searchParams.get("serial") || "emulator-5554";
         const requestedFps = parseInt(url.searchParams.get("fps") || "15", 10);
         const fps = Math.min(30, Math.max(1, requestedFps));
+        console.log(`[PROXY] Starting Android MJPEG stream proxy for serial: ${serial}, fps: ${fps}`);
 
         try {
           await ensureTritonServe(tritonPath, hostInputBaseURL);
-        } catch (e) {}
+        } catch (e) {
+          console.error(`[PROXY] ensureTritonServe failed: ${e.message}`);
+        }
 
         let proxyStarted = false;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
           if (!proxyStarted) {
+            console.warn(`[PROXY] Android stream proxy request timed out for serial: ${serial}`);
             controller.abort();
           }
         }, 5000);
 
         try {
-          const fastRes = await fetch(
-            `http://127.0.0.1:19421/web/android/framebuffer?target=${serial}&fps=${fps}`,
-            { signal: controller.signal }
-          );
+          const fetchUrl = `http://127.0.0.1:19421/web/android/framebuffer?target=${serial}&fps=${fps}`;
+          console.log(`[PROXY] Fetching from upstream: ${fetchUrl}`);
+          const fastRes = await fetch(fetchUrl, { signal: controller.signal });
           clearTimeout(timeoutId);
 
           if (fastRes.ok) {
+            console.log(`[PROXY] Upstream connected for Android serial: ${serial}. Piping response...`);
             proxyStarted = true;
             res.writeHead(200, {
               "Content-Type": fastRes.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
@@ -452,22 +459,30 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
             });
             const reader = fastRes.body.getReader();
             req.on("close", () => {
+              console.log(`[PROXY] Client connection closed for Android serial: ${serial}`);
               reader.cancel().catch(() => {});
             });
 
             try {
               while (true) {
                 const { done, value } = await reader.read();
-                if (done) break;
+                if (done) {
+                  console.log(`[PROXY] Upstream stream finished for Android serial: ${serial}`);
+                  break;
+                }
                 res.write(Buffer.from(value));
               }
             } catch (streamErr) {
+              console.error(`[PROXY] Stream piping error for Android serial: ${serial}: ${streamErr.message}`);
             } finally {
               res.end();
             }
             return;
+          } else {
+            console.error(`[PROXY] Upstream returned non-ok status: ${fastRes.status} ${fastRes.statusText}`);
           }
         } catch (err) {
+          console.error(`[PROXY] Fetch exception for Android serial: ${serial}: ${err.message}`);
           if (proxyStarted) {
             try { res.end(); } catch (e) {}
             return;
@@ -483,27 +498,31 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         const target = url.searchParams.get("udid") || url.searchParams.get("serial") || "booted";
         const requestedFps = parseInt(url.searchParams.get("fps") || "10", 10);
         const fps = Math.min(15, Math.max(1, requestedFps));
+        console.log(`[PROXY] Starting Harmony MJPEG stream proxy for target: ${target}, fps: ${fps}`);
 
         try {
           await ensureTritonServe(tritonPath, hostInputBaseURL);
-        } catch (e) {}
+        } catch (e) {
+          console.error(`[PROXY] ensureTritonServe failed for Harmony: ${e.message}`);
+        }
 
         let proxyStarted = false;
         const controller = new AbortController();
         const timeoutId = setTimeout(() => {
           if (!proxyStarted) {
+            console.warn(`[PROXY] Harmony stream proxy request timed out for target: ${target}`);
             controller.abort();
           }
         }, 5000);
 
         try {
-          const fastRes = await fetch(
-            `http://127.0.0.1:19421/web/harmony/framebuffer?target=${target}&fps=${fps}`,
-            { signal: controller.signal }
-          );
+          const fetchUrl = `http://127.0.0.1:19421/web/harmony/framebuffer?target=${target}&fps=${fps}`;
+          console.log(`[PROXY] Fetching from upstream Harmony: ${fetchUrl}`);
+          const fastRes = await fetch(fetchUrl, { signal: controller.signal });
           clearTimeout(timeoutId);
 
           if (fastRes.ok) {
+            console.log(`[PROXY] Upstream connected for Harmony target: ${target}. Piping response...`);
             proxyStarted = true;
             res.writeHead(200, {
               "Content-Type": fastRes.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
@@ -514,22 +533,30 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
             });
             const reader = fastRes.body.getReader();
             req.on("close", () => {
+              console.log(`[PROXY] Client connection closed for Harmony target: ${target}`);
               reader.cancel().catch(() => {});
             });
 
             try {
               while (true) {
                 const { done, value } = await reader.read();
-                if (done) break;
+                if (done) {
+                  console.log(`[PROXY] Upstream stream finished for Harmony target: ${target}`);
+                  break;
+                }
                 res.write(Buffer.from(value));
               }
             } catch (streamErr) {
+              console.error(`[PROXY] Stream piping error for Harmony target: ${target}: ${streamErr.message}`);
             } finally {
               res.end();
             }
             return;
+          } else {
+            console.error(`[PROXY] Upstream returned non-ok status for Harmony: ${fastRes.status} ${fastRes.statusText}`);
           }
         } catch (err) {
+          console.error(`[PROXY] Fetch exception for Harmony target: ${target}: ${err.message}`);
           if (proxyStarted) {
             try { res.end(); } catch (e) {}
             return;

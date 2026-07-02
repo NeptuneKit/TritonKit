@@ -13,6 +13,21 @@ enum TKHarmonyRuntimeDefaults {
 @main
 struct TritonKitEntry {
     static func main() async {
+        // Auto-complete system PATH environment variable to locate adb and hdc under dev environment
+        let env = ProcessInfo.processInfo.environment
+        let currentPath = env["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin"
+        let home = env["HOME"] ?? ""
+
+        var extraPaths = ["/usr/local/bin", "/opt/homebrew/bin"]
+        if !home.isEmpty {
+            extraPaths.append("\(home)/Library/Android/sdk/platform-tools")
+            extraPaths.append("\(home)/harmonyOS-command-line-tools/bin")
+            extraPaths.append("\(home)/Library/Huawei/Sdk/openharmony/12/toolchains")
+        }
+
+        let newPath = ([currentPath] + extraPaths).joined(separator: ":")
+        setenv("PATH", newPath, 1)
+
         if let retiredRoot = retiredRootInvocation() {
             writeStandardError(
                 """

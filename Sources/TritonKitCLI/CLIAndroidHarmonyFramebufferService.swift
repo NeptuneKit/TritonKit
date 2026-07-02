@@ -121,15 +121,21 @@ final class AndroidSession: @unchecked Sendable {
             }
 
             let pipe = Pipe()
+            let errorPipe = Pipe()
             process.standardOutput = pipe
-            process.standardError = Pipe()
-
+            process.standardError = errorPipe
             do {
                 try process.run()
                 let stdoutData = try pipe.fileHandleForReading.readToEnd() ?? Data()
+                let stderrData = try errorPipe.fileHandleForReading.readToEnd() ?? Data()
                 process.waitUntilExit()
 
-                if process.terminationStatus == 0 && !stdoutData.isEmpty {
+                if process.terminationStatus != 0 {
+                    let errStr = String(data: stderrData, encoding: .utf8) ?? ""
+                    print("[TritonCLI][AndroidError] adb exited with code \(process.terminationStatus): \(errStr)")
+                } else if stdoutData.isEmpty {
+                    print("[TritonCLI][AndroidError] adb output was empty")
+                } else {
                     if let jpegData = convertPNGToJPEG(pngData: stdoutData) {
                         lock.lock()
                         if jpegData != latestJPEGData {
@@ -138,10 +144,12 @@ final class AndroidSession: @unchecked Sendable {
                             lastSuccessTime = Date().timeIntervalSince1970
                         }
                         lock.unlock()
+                    } else {
+                        print("[TritonCLI][AndroidError] convertPNGToJPEG failed for data length: \(stdoutData.count)")
                     }
                 }
             } catch {
-                // Ignore loop execution errors
+                print("[TritonCLI][AndroidError] Failed to run adb process: \(error.localizedDescription)")
             }
 
             let elapsed = Date().timeIntervalSince1970 - startTime

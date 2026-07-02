@@ -671,13 +671,17 @@ struct Serve: AsyncParsableCommand {
             }
 
             let resolvedSerial: String
-            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: serial), hdc: "hdc", adb: "adb") {
+            let adbPath = findAdbExecutable()
+            let hdcPath = findHdcExecutable()
+            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: serial), hdc: hdcPath, adb: adbPath) {
                 resolvedSerial = selection.target.rawTarget
+            } else if serial.hasPrefix("android-real:") {
+                resolvedSerial = String(serial.dropFirst("android-real:".count))
             } else {
                 resolvedSerial = serial
             }
 
-            _ = CLIAndroidFramebufferService.shared.startStreaming(serial: resolvedSerial)
+            _ = CLIAndroidFramebufferService.shared.startStreaming(serial: resolvedSerial, adbPath: adbPath)
 
             let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 30
             let fps = min(30, max(1, requestedFps))
@@ -741,13 +745,17 @@ struct Serve: AsyncParsableCommand {
             }
 
             let resolvedTarget: String
-            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: target), hdc: "hdc", adb: "adb") {
+            let adbPath = findAdbExecutable()
+            let hdcPath = findHdcExecutable()
+            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: target), hdc: hdcPath, adb: adbPath) {
                 resolvedTarget = selection.target.rawTarget
+            } else if target.hasPrefix("harmony-real:") {
+                resolvedTarget = String(target.dropFirst("harmony-real:".count))
             } else {
                 resolvedTarget = target
             }
 
-            _ = CLIHarmonyFramebufferService.shared.startStreaming(target: resolvedTarget)
+            _ = CLIHarmonyFramebufferService.shared.startStreaming(target: resolvedTarget, hdcPath: hdcPath)
 
             let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 15
             let fps = min(15, max(1, requestedFps))
@@ -1169,6 +1177,54 @@ private func testRecorderHTTPStatus(for failure: TKTestRecorderValidationFailure
     default:
         .conflict
     }
+}
+
+private func findAdbExecutable() -> String {
+    let env = ProcessInfo.processInfo.environment
+    let home = env["HOME"] ?? ""
+    if !home.isEmpty {
+        let path1 = "\(home)/Library/Android/sdk/platform-tools/adb"
+        if FileManager.default.fileExists(atPath: path1) {
+            return path1
+        }
+    }
+    if let pathVar = env["PATH"] {
+        for dir in pathVar.split(separator: ":") {
+            let fullPath = "\(dir)/adb"
+            if FileManager.default.fileExists(atPath: fullPath) {
+                return fullPath
+            }
+        }
+    }
+    return "adb"
+}
+
+private func findHdcExecutable() -> String {
+    let env = ProcessInfo.processInfo.environment
+    let home = env["HOME"] ?? ""
+    if !home.isEmpty {
+        let path1 = "\(home)/harmonyOS-command-line-tools/bin/hdc"
+        if FileManager.default.fileExists(atPath: path1) {
+            return path1
+        }
+        let path2 = "\(home)/Library/Huawei/Sdk/openharmony/12/toolchains/hdc"
+        if FileManager.default.fileExists(atPath: path2) {
+            return path2
+        }
+        let path3 = "\(home)/Library/Huawei/Sdk/openharmony/11/toolchains/hdc"
+        if FileManager.default.fileExists(atPath: path3) {
+            return path3
+        }
+    }
+    if let pathVar = env["PATH"] {
+        for dir in pathVar.split(separator: ":") {
+            let fullPath = "\(dir)/hdc"
+            if FileManager.default.fileExists(atPath: fullPath) {
+                return fullPath
+            }
+        }
+    }
+    return "hdc"
 }
 
 // MARK: - Client Commands

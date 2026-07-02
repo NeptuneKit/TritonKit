@@ -23,6 +23,7 @@ export function StreamCard() {
 
   const frameCount    = useRef(0);
   const lastFpsTs     = useRef(Date.now());
+  const hasConnectedRef = useRef(false);
 
   // ── 获取设备列表 ───────────────────────────────────────────────
   const fetchTargets = useCallback(async () => {
@@ -36,25 +37,28 @@ export function StreamCard() {
         setTargets(booted);
         if (booted.length > 0) {
           const firstUdid = booted[0].target;
-          if (!selectedUdid) {
-            setSelectedUdid(firstUdid);
+          setSelectedUdid((prev) => {
+            if (!prev) return firstUdid;
+            return prev;
+          });
+          // 仅在首次加载且未连接时自动连接到第一个已启动的模拟器
+          if (!hasConnectedRef.current) {
+            setConnected(true);
+            setConnectTime(Date.now());
+            hasConnectedRef.current = true;
           }
-          // 自动连接到第一个已启动的模拟器
-          setConnected(true);
-          setConnectTime((prev) => prev || Date.now());
         }
       }
     } catch { /* 静默失败 */ }
-  }, [selectedUdid]);
+  }, []);
 
   // ── 连接 / 断开 ────────────────────────────────────────────────
   const handleConnect = useCallback(async () => {
     if (!selectedUdid) { message.warning("请先选择一个活跃的调试设备"); return; }
-    await fetchTargets();
     setConnectTime(Date.now());
     setConnected(true);
     message.success("画面流已成功连接（实时流模式）");
-  }, [selectedUdid, fetchTargets]);
+  }, [selectedUdid]);
 
   const handleDisconnect = useCallback(() => {
     setConnected(false);
@@ -82,7 +86,9 @@ export function StreamCard() {
 
   // ── 初始化 ─────────────────────────────────────────────────────
   useEffect(() => {
-    fetchTargets();
+    if (!connected) {
+      fetchTargets();
+    }
 
     // 未连接时每 3 秒轮询检测一次可用设备以实现无感直连
     const interval = setInterval(() => {
