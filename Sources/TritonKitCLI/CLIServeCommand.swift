@@ -625,21 +625,29 @@ struct Serve: AsyncParsableCommand {
                     CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: udid)
                 }
 
+                var lastSentVersion: UInt64 = 0
+                var lastWriteTime = Date().timeIntervalSince1970
                 while true {
-                    if let jpegData = CLIHostSimulatorFramebufferService.shared.getLatestFrame(udid: udid) {
-                        var headerStr = "--\(boundary)\r\n"
-                        headerStr += "Content-Type: image/jpeg\r\n"
-                        headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
+                    if let (jpegData, version) = CLIHostSimulatorFramebufferService.shared.getLatestFrameWithVersion(udid: udid) {
+                        let now = Date().timeIntervalSince1970
+                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
+                            lastSentVersion = version
+                            lastWriteTime = now
 
-                        var buffer = ByteBuffer()
-                        buffer.writeString(headerStr)
-                        buffer.writeBytes(jpegData)
-                        buffer.writeString("\r\n")
+                            var headerStr = "--\(boundary)\r\n"
+                            headerStr += "Content-Type: image/jpeg\r\n"
+                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
 
-                        do {
-                            try await writer.write(buffer)
-                        } catch {
-                            break
+                            var buffer = ByteBuffer()
+                            buffer.writeString(headerStr)
+                            buffer.writeBytes(jpegData)
+                            buffer.writeString("\r\n")
+
+                            do {
+                                try await writer.write(buffer)
+                            } catch {
+                                break
+                            }
                         }
                     }
 

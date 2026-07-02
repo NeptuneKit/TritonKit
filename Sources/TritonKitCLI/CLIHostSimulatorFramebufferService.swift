@@ -10,19 +10,19 @@ actor FramebufferActor {
 
 final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
     static let shared = CLIHostSimulatorFramebufferService()
-    
+
     private let lock = NSLock()
     private var isFrameworksLoaded = false
     private var activeSessions = [String: FramebufferSession]()
     private var sessionRefCount = [String: Int]()
-    
+
     private init() {}
-    
+
     func loadPrivateFrameworks() -> Bool {
         lock.lock()
         defer { lock.unlock() }
         if isFrameworksLoaded { return true }
-        
+
         // 动态加载 CoreSimulator (自适应路径搜索)
         let developerDir = "/Applications/Xcode.app/Contents/Developer"
         let coreSimulatorPaths = [
@@ -30,7 +30,7 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
             "\(developerDir)/Library/PrivateFrameworks/CoreSimulator.framework/CoreSimulator",
             "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/CoreSimulator"
         ]
-        
+
         var coreSimulatorLoaded = false
         for path in coreSimulatorPaths {
             if dlopen(path, RTLD_LAZY) != nil {
@@ -40,19 +40,19 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
                 break
             }
         }
-        
+
         guard coreSimulatorLoaded else {
             print("[TritonCLI] Failed to load CoreSimulator.framework from all locations")
             fflush(stdout)
             return false
         }
-        
+
         // 动态加载 SimulatorKit (自适应路径搜索)
         let simulatorKitPaths = [
             "\(developerDir)/Library/PrivateFrameworks/SimulatorKit.framework/Versions/A/SimulatorKit",
             "\(developerDir)/Library/PrivateFrameworks/SimulatorKit.framework/SimulatorKit"
         ]
-        
+
         var simulatorKitLoaded = false
         for path in simulatorKitPaths {
             if dlopen(path, RTLD_LAZY) != nil {
@@ -62,22 +62,22 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
                 break
             }
         }
-        
+
         guard simulatorKitLoaded else {
             print("[TritonCLI] Failed to load SimulatorKit.framework from all locations")
             fflush(stdout)
             return false
         }
-        
+
         isFrameworksLoaded = true
         print("[TritonCLI] SimulatorKit and CoreSimulator frameworks loaded successfully.")
         fflush(stdout)
         return true
     }
-    
+
     func startStreaming(udid: String) -> Bool {
         guard loadPrivateFrameworks() else { return false }
-        
+
         lock.lock()
         sessionRefCount[udid, default: 0] += 1
         if activeSessions[udid] != nil {
@@ -85,13 +85,13 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
             return true // 已经在线
         }
         lock.unlock()
-        
+
         guard let simServiceContextClass = NSClassFromString("SimServiceContext") else {
             print("[TritonCLI] Class SimServiceContext not found")
             fflush(stdout)
             return false
         }
-        
+
         if let screenAdapterClass = NSClassFromString("SimulatorKit.SimDeviceScreenAdapter") {
             if let metaClass: AnyClass = object_getClass(screenAdapterClass) {
                 var count: UInt32 = 0
@@ -115,43 +115,43 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
             print("[TritonCLI] Class SimulatorKit.SimDeviceScreenAdapter not found")
         }
         fflush(stdout)
-        
+
         let simServiceContextClassObj = simServiceContextClass as AnyObject
         let sharedContextSelector = Selector("sharedServiceContextForDeveloperDir:error:")
-        
+
         guard class_getClassMethod(simServiceContextClass, sharedContextSelector) != nil else {
             print("[TritonCLI] Method sharedServiceContextForDeveloperDir:error: not found")
             fflush(stdout)
             return false
         }
-        
+
         guard let contextUnmanaged = simServiceContextClassObj.perform(sharedContextSelector, with: nil, with: nil) else {
             print("[TritonCLI] Failed to create shared SimServiceContext")
             fflush(stdout)
             return false
         }
         let context = contextUnmanaged.takeUnretainedValue()
-        
+
         let defaultDeviceSetSelector = Selector("defaultDeviceSetWithError:")
         guard context.responds(to: defaultDeviceSetSelector) else {
             print("[TritonCLI] Method defaultDeviceSetWithError: not found on SimServiceContext")
             fflush(stdout)
             return false
         }
-        
+
         guard let deviceSetUnmanaged = context.perform(defaultDeviceSetSelector, with: nil) else {
             print("[TritonCLI] Failed to get defaultDeviceSet from SimServiceContext")
             fflush(stdout)
             return false
         }
         let actualDeviceSet = deviceSetUnmanaged.takeUnretainedValue()
-        
+
         guard let devicesArray = actualDeviceSet.value(forKey: "devices") as? [AnyObject] else {
             print("[TritonCLI] Failed to read devices array from SimDeviceSet")
             fflush(stdout)
             return false
         }
-        
+
         var targetDevice: AnyObject? = nil
         for device in devicesArray {
             if let deviceUDIDValue = device.value(forKey: "UDID") {
@@ -162,13 +162,13 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
                 }
             }
         }
-        
+
         guard let simDevice = targetDevice else {
             print("[TritonCLI] Simulator with UDID \(udid) not found in devices list")
             fflush(stdout)
             return false
         }
-        
+
         // 创建我们的 Framebuffer 接收代理并启动
         let session = FramebufferSession(udid: udid)
         guard session.start(simDevice: simDevice) else {
@@ -176,16 +176,16 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
             fflush(stdout)
             return false
         }
-        
+
         lock.lock()
         activeSessions[udid] = session
         lock.unlock()
-        
+
         print("[TritonCLI] Started host framebuffer streaming for \(udid)")
         fflush(stdout)
         return true
     }
-    
+
     func stopStreaming(udid: String) {
         lock.lock()
         if let count = sessionRefCount[udid] {
@@ -199,45 +199,53 @@ final class CLIHostSimulatorFramebufferService: @unchecked Sendable {
         sessionRefCount.removeValue(forKey: udid)
         let session = activeSessions.removeValue(forKey: udid)
         lock.unlock()
-        
+
         guard let actualSession = session else { return }
         actualSession.stop()
         print("[TritonCLI] Stopped host framebuffer streaming for \(udid)")
         fflush(stdout)
     }
-    
+
     func getLatestFrame(udid: String) -> Data? {
         lock.lock()
         let session = activeSessions[udid]
         lock.unlock()
-        return session?.getLatestJPEGData()
+        return session?.getLatestFrameWithVersion()?.0
+    }
+
+    func getLatestFrameWithVersion(udid: String) -> (Data, UInt64)? {
+        lock.lock()
+        let session = activeSessions[udid]
+        lock.unlock()
+        return session?.getLatestFrameWithVersion()
     }
 }
 
 // ─── 帧捕获会话 ───
 final class FramebufferSession: @unchecked Sendable {
     let udid: String
-    
+
     private let ciContext = CIContext(options: [CIContextOption.useSoftwareRenderer: false])
     private let queue = DispatchQueue(label: "com.neptunekit.tritonkit.framebuffer-encoding", qos: .userInteractive)
-    
-    private let lock = NSLock()
+
+    let lock = NSLock()
     private var latestJPEGData: Data?
-    
+    private var latestFrameVersion: UInt64 = 0
+
     private var descriptors: [AnyObject] = []
     private var callbackUUIDs: [ObjectIdentifier: NSUUID] = [:]
-    
+
     private var frameBlock: (@convention(block) () -> Void)?
     private var surfacesBlock: (@convention(block) () -> Void)?
     private var propertiesBlock: (@convention(block) () -> Void)?
-    
+
     init(udid: String) {
         self.udid = udid
     }
-    
+
     func start(simDevice: AnyObject) -> Bool {
         let device = simDevice as! NSObject
-        
+
         let ioSel = NSSelectorFromString("io")
         guard let imp = class_getMethodImplementation(type(of: device), ioSel) else {
             print("[TritonCLI] Failed to get io implementation from device")
@@ -251,24 +259,24 @@ final class FramebufferSession: @unchecked Sendable {
             return false
         }
         let io = ioVal as! NSObject
-        
+
         // Update IO ports
         let updateIOPortsSel = NSSelectorFromString("updateIOPorts")
         if let updateImp = class_getMethodImplementation(type(of: io), updateIOPortsSel) {
             typealias UpdateFn = @convention(c) (AnyObject, Selector) -> Void
             unsafeBitCast(updateImp, to: UpdateFn.self)(io, updateIOPortsSel)
         }
-        
+
         guard let ports = io.value(forKey: "deviceIOPorts") as? [NSObject] else {
             print("[TritonCLI] No deviceIOPorts found")
             fflush(stdout)
             return false
         }
-        
+
         let pidSel = NSSelectorFromString("portIdentifier")
         let descSel = NSSelectorFromString("descriptor")
         let surfSel = NSSelectorFromString("framebufferSurface")
-        
+
         var candidates: [NSObject] = []
         for port in ports {
             if port.responds(to: pidSel) {
@@ -287,20 +295,20 @@ final class FramebufferSession: @unchecked Sendable {
                 }
             }
         }
-        
+
         guard !candidates.isEmpty else {
             print("[TritonCLI] No display descriptors found on device")
             fflush(stdout)
             return false
         }
-        
+
         self.descriptors = candidates
-        
+
         // Register callbacks
         let regSel = NSSelectorFromString(
             "registerScreenCallbacksWithUUID:callbackQueue:frameCallback:surfacesChangedCallback:propertiesChangedCallback:"
         )
-        
+
         let frame: @convention(block) () -> Void = { [weak self] in
             self?.queue.async { self?.captureLatest() }
         }
@@ -308,24 +316,24 @@ final class FramebufferSession: @unchecked Sendable {
             self?.queue.async { self?.captureLatest() }
         }
         let props: @convention(block) () -> Void = {}
-        
+
         self.frameBlock = frame
         self.surfacesBlock = surfaces
         self.propertiesBlock = props
-        
+
         for desc in candidates {
             if desc.responds(to: regSel) {
                 let uuid = NSUUID()
                 callbackUUIDs[ObjectIdentifier(desc)] = uuid
-                
+
                 guard let imp = class_getMethodImplementation(type(of: desc), regSel) else {
                     continue
                 }
-                
+
                 typealias Fn = @convention(c) (
                     AnyObject, Selector, AnyObject, AnyObject, AnyObject, AnyObject, AnyObject
                 ) -> Void
-                
+
                 unsafeBitCast(imp, to: Fn.self)(
                     desc, regSel,
                     uuid, queue as AnyObject,
@@ -333,15 +341,15 @@ final class FramebufferSession: @unchecked Sendable {
                 )
             }
         }
-        
+
         // Trigger initial capture
         queue.async { [weak self] in
             self?.captureLatest()
         }
-        
+
         return true
     }
-    
+
     private func captureLatest() {
         let surfSel = NSSelectorFromString("framebufferSurface")
         var best: IOSurface?
@@ -360,16 +368,16 @@ final class FramebufferSession: @unchecked Sendable {
             processFrame(surface: best)
         }
     }
-    
+
     private var hasPrintedFirstFrame = false
-    
+
     func processFrame(surface: IOSurfaceRef) {
         if !hasPrintedFirstFrame {
             hasPrintedFirstFrame = true
             print("[TritonCLI] Successfully captured the first IOSurface framebuffer frame from Simulator!")
             fflush(stdout)
         }
-        
+
         let ciImage = CIImage(ioSurface: surface)
         let colorSpace = CGColorSpaceCreateDeviceRGB()
         let options: [CIImageRepresentationOption: Any] = [
@@ -378,16 +386,20 @@ final class FramebufferSession: @unchecked Sendable {
         if let data = self.ciContext.jpegRepresentation(of: ciImage, colorSpace: colorSpace, options: options) {
             self.lock.lock()
             self.latestJPEGData = data
+            self.latestFrameVersion += 1
             self.lock.unlock()
         }
     }
-    
-    func getLatestJPEGData() -> Data? {
+
+    func getLatestFrameWithVersion() -> (Data, UInt64)? {
         lock.lock()
         defer { lock.unlock() }
-        return latestJPEGData
+        if let data = latestJPEGData {
+            return (data, latestFrameVersion)
+        }
+        return nil
     }
-    
+
     func stop() {
         let unregSel = NSSelectorFromString("unregisterScreenCallbacksWithUUID:")
         for desc in descriptors {
