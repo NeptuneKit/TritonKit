@@ -416,6 +416,130 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         return;
       }
 
+      // Android MJPEG 流代理
+      if (url.pathname === "/web/android/mjpeg") {
+        const serial = url.searchParams.get("udid") || url.searchParams.get("serial") || "emulator-5554";
+        const requestedFps = parseInt(url.searchParams.get("fps") || "15", 10);
+        const fps = Math.min(30, Math.max(1, requestedFps));
+
+        try {
+          await ensureTritonServe(tritonPath, hostInputBaseURL);
+        } catch (e) {}
+
+        let proxyStarted = false;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          if (!proxyStarted) {
+            controller.abort();
+          }
+        }, 5000);
+
+        try {
+          const fastRes = await fetch(
+            `http://127.0.0.1:19421/web/android/framebuffer?target=${serial}&fps=${fps}`,
+            { signal: controller.signal }
+          );
+          clearTimeout(timeoutId);
+
+          if (fastRes.ok) {
+            proxyStarted = true;
+            res.writeHead(200, {
+              "Content-Type": fastRes.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Connection": "close",
+              "Pragma": "no-cache",
+              "Access-Control-Allow-Origin": "*",
+            });
+            const reader = fastRes.body.getReader();
+            req.on("close", () => {
+              reader.cancel().catch(() => {});
+            });
+
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                res.write(Buffer.from(value));
+              }
+            } catch (streamErr) {
+            } finally {
+              res.end();
+            }
+            return;
+          }
+        } catch (err) {
+          if (proxyStarted) {
+            try { res.end(); } catch (e) {}
+            return;
+          }
+        }
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Android stream proxy failed");
+        return;
+      }
+
+      // Harmony MJPEG 流代理
+      if (url.pathname === "/web/harmony/mjpeg") {
+        const target = url.searchParams.get("udid") || url.searchParams.get("serial") || "booted";
+        const requestedFps = parseInt(url.searchParams.get("fps") || "10", 10);
+        const fps = Math.min(15, Math.max(1, requestedFps));
+
+        try {
+          await ensureTritonServe(tritonPath, hostInputBaseURL);
+        } catch (e) {}
+
+        let proxyStarted = false;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          if (!proxyStarted) {
+            controller.abort();
+          }
+        }, 5000);
+
+        try {
+          const fastRes = await fetch(
+            `http://127.0.0.1:19421/web/harmony/framebuffer?target=${target}&fps=${fps}`,
+            { signal: controller.signal }
+          );
+          clearTimeout(timeoutId);
+
+          if (fastRes.ok) {
+            proxyStarted = true;
+            res.writeHead(200, {
+              "Content-Type": fastRes.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Connection": "close",
+              "Pragma": "no-cache",
+              "Access-Control-Allow-Origin": "*",
+            });
+            const reader = fastRes.body.getReader();
+            req.on("close", () => {
+              reader.cancel().catch(() => {});
+            });
+
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                res.write(Buffer.from(value));
+              }
+            } catch (streamErr) {
+            } finally {
+              res.end();
+            }
+            return;
+          }
+        } catch (err) {
+          if (proxyStarted) {
+            try { res.end(); } catch (e) {}
+            return;
+          }
+        }
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Harmony stream proxy failed");
+        return;
+      }
+
       // MJPEG Multipart 视频流 — 游戏/云游戏级别的极速流式推送
       if (url.pathname === "/web/ios-simulator/mjpeg") {
         const udid = url.searchParams.get("udid") || "booted";

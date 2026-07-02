@@ -5,11 +5,11 @@ import { Smartphone, Wifi, WifiOff, RefreshCw } from "lucide-react";
 // ── 类型 ───────────────────────────────────────────────────────
 interface SimTarget {
   id: string;
-  udid: string;
+  target: string;
   name: string;
-  runtime: string;
-  isBooted: boolean;
-  canScreenshot: boolean;
+  platform: "ios" | "android" | "harmony";
+  ready: boolean;
+  runtime?: string;
 }
 
 export function StreamCard() {
@@ -27,15 +27,15 @@ export function StreamCard() {
   // ── 获取设备列表 ───────────────────────────────────────────────
   const fetchTargets = useCallback(async () => {
     try {
-      const res  = await fetch("/web/ios-simulator/targets");
+      const res  = await fetch("/web/host-targets");
       const data = await res.json();
-      if (data.ok) {
-        const booted: SimTarget[] = (data.simulators ?? []).filter(
-          (s: SimTarget) => s.isBooted && s.canScreenshot
+      if (data.ok || data.targets) {
+        const booted: SimTarget[] = (data.targets ?? []).filter(
+          (s: SimTarget) => s.ready
         );
         setTargets(booted);
         if (booted.length > 0) {
-          const firstUdid = booted[0].udid;
+          const firstUdid = booted[0].target;
           if (!selectedUdid) {
             setSelectedUdid(firstUdid);
           }
@@ -49,7 +49,7 @@ export function StreamCard() {
 
   // ── 连接 / 断开 ────────────────────────────────────────────────
   const handleConnect = useCallback(async () => {
-    if (!selectedUdid) { message.warning("请先选择一个已启动的模拟器"); return; }
+    if (!selectedUdid) { message.warning("请先选择一个活跃的调试设备"); return; }
     await fetchTargets();
     setConnectTime(Date.now());
     setConnected(true);
@@ -96,6 +96,20 @@ export function StreamCard() {
     };
   }, [connected, fetchTargets]);
 
+  const selectedTarget = targets.find((t) => t.target === selectedUdid);
+  const platform = selectedTarget?.platform ?? "ios";
+
+  let streamUrl = "";
+  if (connected && selectedUdid) {
+    if (platform === "android") {
+      streamUrl = `/web/android/mjpeg?udid=${selectedUdid}&fps=${targetFps}&t=${connectTime}`;
+    } else if (platform === "harmony") {
+      streamUrl = `/web/harmony/mjpeg?udid=${selectedUdid}&fps=${targetFps}&t=${connectTime}`;
+    } else {
+      streamUrl = `/web/ios-simulator/mjpeg?udid=${selectedUdid}&fps=${targetFps}&t=${connectTime}`;
+    }
+  }
+
   return (
     <div className="stream-card">
       {/* ── Header ── */}
@@ -117,11 +131,11 @@ export function StreamCard() {
         <Select
           size="small"
           style={{ flex: 1 }}
-          placeholder="选择模拟器..."
+          placeholder="选择调试设备..."
           value={selectedUdid}
           onChange={setSelectedUdid}
-          options={targets.map((t) => ({ value: t.udid, label: `${t.name} · ${t.runtime}` }))}
-          notFoundContent={<span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>未发现可用模拟器</span>}
+          options={targets.map((t) => ({ value: t.target, label: `[${t.platform.toUpperCase()}] ${t.name}` }))}
+          notFoundContent={<span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>未发现可用设备</span>}
         />
         <Select
           size="small"
@@ -145,9 +159,8 @@ export function StreamCard() {
       {/* ── 画面视口 ── */}
       <div className="stream-viewport">
         {connected && selectedUdid ? (
-          /* MJPEG 流：直接将 src 指向 /web/ios-simulator/mjpeg，浏览器原生处理长连接 */
           <img
-            src={`/web/ios-simulator/mjpeg?udid=${selectedUdid}&fps=${targetFps}&t=${connectTime}`}
+            src={streamUrl}
             alt="live simulator stream"
             onLoad={handleImgLoad}
             style={{

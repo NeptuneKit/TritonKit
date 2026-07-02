@@ -660,6 +660,132 @@ struct Serve: AsyncParsableCommand {
             return Response(status: .ok, headers: headers, body: responseBody)
         }
 
+        router.get("/web/android/framebuffer") { request, _ -> Response in
+            guard let serial = queryParameter("target", from: request) ?? queryParameter("serial", from: request) ?? queryParameter("udid", from: request) else {
+                return jsonError(
+                    code: "missing_parameter",
+                    message: "Missing target, serial, or udid parameter",
+                    endpoint: "/web/android/framebuffer",
+                    status: .badRequest
+                )
+            }
+
+            _ = CLIAndroidFramebufferService.shared.startStreaming(serial: serial)
+
+            let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 30
+            let fps = min(30, max(1, requestedFps))
+            let targetInterval = Double(1000 / fps) / 1000.0
+
+            let boundary = "tritonboundary"
+            let headers: HTTPFields = [
+                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
+                .cacheControl: "no-cache, no-store, must-revalidate",
+                .connection: "close"
+            ]
+
+            let responseBody = ResponseBody { writer in
+                defer {
+                    CLIAndroidFramebufferService.shared.stopStreaming(serial: serial)
+                }
+
+                var lastSentVersion: UInt64 = 0
+                var lastWriteTime = Date().timeIntervalSince1970
+                while true {
+                    if let (jpegData, version) = CLIAndroidFramebufferService.shared.getLatestFrameWithVersion(serial: serial) {
+                        let now = Date().timeIntervalSince1970
+                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
+                            lastSentVersion = version
+                            lastWriteTime = now
+
+                            var headerStr = "--\(boundary)\r\n"
+                            headerStr += "Content-Type: image/jpeg\r\n"
+                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
+
+                            var buffer = ByteBuffer()
+                            buffer.writeString(headerStr)
+                            buffer.writeBytes(jpegData)
+                            buffer.writeString("\r\n")
+
+                            do {
+                                try await writer.write(buffer)
+                            } catch {
+                                break
+                            }
+                        }
+                    }
+
+                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
+                }
+
+                try? await writer.finish(nil)
+            }
+
+            return Response(status: .ok, headers: headers, body: responseBody)
+        }
+
+        router.get("/web/harmony/framebuffer") { request, _ -> Response in
+            guard let target = queryParameter("target", from: request) ?? queryParameter("serial", from: request) ?? queryParameter("udid", from: request) else {
+                return jsonError(
+                    code: "missing_parameter",
+                    message: "Missing target, serial, or udid parameter",
+                    endpoint: "/web/harmony/framebuffer",
+                    status: .badRequest
+                )
+            }
+
+            _ = CLIHarmonyFramebufferService.shared.startStreaming(target: target)
+
+            let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 15
+            let fps = min(15, max(1, requestedFps))
+            let targetInterval = Double(1000 / fps) / 1000.0
+
+            let boundary = "tritonboundary"
+            let headers: HTTPFields = [
+                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
+                .cacheControl: "no-cache, no-store, must-revalidate",
+                .connection: "close"
+            ]
+
+            let responseBody = ResponseBody { writer in
+                defer {
+                    CLIHarmonyFramebufferService.shared.stopStreaming(target: target)
+                }
+
+                var lastSentVersion: UInt64 = 0
+                var lastWriteTime = Date().timeIntervalSince1970
+                while true {
+                    if let (jpegData, version) = CLIHarmonyFramebufferService.shared.getLatestFrameWithVersion(target: target) {
+                        let now = Date().timeIntervalSince1970
+                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
+                            lastSentVersion = version
+                            lastWriteTime = now
+
+                            var headerStr = "--\(boundary)\r\n"
+                            headerStr += "Content-Type: image/jpeg\r\n"
+                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
+
+                            var buffer = ByteBuffer()
+                            buffer.writeString(headerStr)
+                            buffer.writeBytes(jpegData)
+                            buffer.writeString("\r\n")
+
+                            do {
+                                try await writer.write(buffer)
+                            } catch {
+                                break
+                            }
+                        }
+                    }
+
+                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
+                }
+
+                try? await writer.finish(nil)
+            }
+
+            return Response(status: .ok, headers: headers, body: responseBody)
+        }
+
 
         router.post("/command") { request, _ -> Response in
             var bodyData = Data()
