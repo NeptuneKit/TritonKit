@@ -34,8 +34,14 @@ export function StreamCard() {
           (s: SimTarget) => s.isBooted && s.canScreenshot
         );
         setTargets(booted);
-        if (booted.length > 0 && !selectedUdid) {
-          setSelectedUdid(booted[0].udid);
+        if (booted.length > 0) {
+          const firstUdid = booted[0].udid;
+          if (!selectedUdid) {
+            setSelectedUdid(firstUdid);
+          }
+          // 自动连接到第一个已启动的模拟器
+          setConnected(true);
+          setConnectTime((prev) => prev || Date.now());
         }
       }
     } catch { /* 静默失败 */ }
