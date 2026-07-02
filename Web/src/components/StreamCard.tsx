@@ -83,9 +83,19 @@ export function StreamCard() {
   // ── 初始化 ─────────────────────────────────────────────────────
   useEffect(() => {
     fetchTargets();
-    return () => setConnected(false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
+    // 未连接时每 3 秒轮询检测一次可用设备以实现无感直连
+    const interval = setInterval(() => {
+      if (!connected) {
+        fetchTargets();
+      }
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      setConnected(false);
+    };
+  }, [connected, fetchTargets]);
 
   return (
     <div className="stream-card">
