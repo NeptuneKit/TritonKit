@@ -432,11 +432,20 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         }
         // 尝试优先向 Triton 极速流服务器代理该请求
         let proxyStarted = false;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          if (!proxyStarted) {
+            controller.abort();
+          }
+        }, 5000);
+
         try {
           const fastRes = await fetch(
             `http://127.0.0.1:19421/web/ios-simulator/framebuffer?target=host:ios:${simulator}&fps=${fps}`,
-            { signal: AbortSignal.timeout(5000) }
+            { signal: controller.signal }
           );
+          clearTimeout(timeoutId);
+
           if (fastRes.ok) {
             proxyStarted = true;
             res.writeHead(200, {
