@@ -8,8 +8,112 @@ struct Device: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "device",
         abstract: "Discover and inspect host-side devices and emulators",
-        subcommands: [DeviceDoctor.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStart.self, DeviceStop.self]
+        subcommands: [DeviceDoctor.self, DeviceBridge.self, DeviceProxy.self, DeviceList.self, DeviceAlias.self, DeviceUse.self, DeviceCurrent.self, DeviceResolve.self, DeviceWaitReady.self, DeviceScreenshot.self, DeviceRuntimeURL.self, DeviceStart.self, DeviceStop.self]
     )
+}
+
+struct DeviceBridge: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "bridge",
+        abstract: "Inspect Android Emulator strong-control bridge contract",
+        subcommands: [DeviceBridgeStatus.self, DeviceBridgeProbe.self, DeviceBridgeInstall.self, DeviceBridgeForward.self]
+    )
+}
+
+struct DeviceBridgeStatus: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "status", abstract: "Return the Android bridge status probe plan")
+
+    @Option(help: "Platform adapter, currently android only") var platform: HostDevicePlatform = .android
+    @Option(help: "Android adb serial or alias") var device: String
+    @Option(help: "ADB executable path") var adb: String = "adb"
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printHostDeviceBridgeOutput(
+            makeAndroidBridgeStatusOutput(platform: platform, device: device, adb: adb, runner: { command in try runHostCommand(command) }),
+            outputFormat: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct DeviceBridgeProbe: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "probe", abstract: "Return the Android bridge local HTTP probe plan")
+
+    @Option(help: "Platform adapter, currently android only") var platform: HostDevicePlatform = .android
+    @Option(help: "Android adb serial or alias") var device: String
+    @Option(help: "Local forwarded bridge port") var localPort: Int = 19422
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printHostDeviceBridgeOutput(
+            makeAndroidBridgeProbeOutput(platform: platform, device: device, localPort: localPort, runner: { command in try runHostCommand(command) }),
+            outputFormat: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct DeviceBridgeInstall: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "install", abstract: "Plan Android bridge APK installation")
+
+    @Option(help: "Platform adapter, currently android only") var platform: HostDevicePlatform = .android
+    @Option(help: "Android adb serial or alias") var device: String
+    @Option(help: "Path to Triton Android bridge APK") var apk: String
+    @Option(help: "ADB executable path") var adb: String = "adb"
+    @Flag(help: "Confirm reviewed bridge mutation") var confirm = false
+    @Option(help: "Audit record id required for bridge mutation") var auditRecord: String?
+    @Flag(help: "Execute the bridge command runner after confirmation") var executeRunner = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printHostDeviceBridgeOutput(
+            makeAndroidBridgeInstallOutput(
+                platform: platform,
+                device: device,
+                apkPath: apk,
+                adb: adb,
+                confirm: confirm,
+                auditRecord: auditRecord,
+                executeRunner: executeRunner,
+                runner: { command in try runHostCommand(command) }
+            ),
+            outputFormat: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct DeviceBridgeForward: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "forward", abstract: "Plan Android bridge adb port forwarding")
+
+    @Option(help: "Platform adapter, currently android only") var platform: HostDevicePlatform = .android
+    @Option(help: "Android adb serial or alias") var device: String
+    @Option(help: "ADB executable path") var adb: String = "adb"
+    @Option(help: "Local forwarded bridge port") var localPort: Int = 19422
+    @Option(help: "Remote bridge service port") var remotePort: Int = 8080
+    @Flag(help: "Confirm reviewed bridge mutation") var confirm = false
+    @Option(help: "Audit record id required for bridge mutation") var auditRecord: String?
+    @Flag(help: "Execute the bridge command runner after confirmation") var executeRunner = false
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        try printHostDeviceBridgeOutput(
+            makeAndroidBridgeForwardOutput(
+                platform: platform,
+                device: device,
+                adb: adb,
+                localPort: localPort,
+                remotePort: remotePort,
+                confirm: confirm,
+                auditRecord: auditRecord,
+                executeRunner: executeRunner,
+                runner: { command in try runHostCommand(command) }
+            ),
+            outputFormat: effectiveFormat(format, json: json)
+        )
+    }
 }
 
 struct DeviceProxy: AsyncParsableCommand {
@@ -384,6 +488,314 @@ func printNetworkProxySession(_ session: NetworkProxySession, outputFormat: Clie
     }
 }
 
+let androidBridgePackageName = "jp.lycorp.tritonkit.bridge"
+
+func androidBridgeAuthToken(from stdout: String) -> String? {
+    for line in stdout.components(separatedBy: .newlines) {
+        guard let range = line.range(of: "result=") else { continue }
+        let raw = line[range.upperBound...].trimmingCharacters(in: .whitespacesAndNewlines)
+        guard
+            let data = raw.data(using: .utf8),
+            let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+            let token = object["result"] as? String,
+            !token.isEmpty
+        else { continue }
+        return token
+    }
+    return nil
+}
+
+func makeAndroidBridgeStatusOutput(platform: HostDevicePlatform, device: String, adb: String = "adb", runner: HostDeviceCommandRunner? = nil) -> HostDeviceBridgeOutput {
+    let packageCommand = TKHostCommand(executable: adb, arguments: ["-s", device, "shell", "pm", "path", androidBridgePackageName])
+    let tokenCommand = TKHostCommand(executable: adb, arguments: ["-s", device, "shell", "content", "query", "--uri", "content://\(androidBridgePackageName)/auth_token"], sensitiveOutput: true)
+    guard let runner else {
+        return makeAndroidBridgeOutput(
+            action: "bridge.status",
+            platform: platform,
+            device: device,
+            sourceCommands: [hostSourceCommand(packageCommand), hostSourceCommand(tokenCommand)],
+            limitations: ["android_bridge_contract_only:not_executed"]
+        )
+    }
+    var sourceCommands: [String] = []
+    var installed = false
+    var authTokenAvailable = false
+    do {
+        let packageResult = try runner(packageCommand)
+        sourceCommands.append(packageResult.sourceCommand)
+        installed = packageResult.stdout.contains("package:")
+    } catch {
+        sourceCommands.append(hostSourceCommand(packageCommand))
+    }
+    do {
+        let tokenResult = try runner(tokenCommand)
+        sourceCommands.append(tokenResult.sourceCommand)
+        authTokenAvailable = androidBridgeAuthToken(from: tokenResult.stdout) != nil
+    } catch {
+        sourceCommands.append(hostSourceCommand(tokenCommand))
+    }
+    return makeAndroidBridgeOutput(
+        action: "bridge.status",
+        platform: platform,
+        device: device,
+        sourceCommands: sourceCommands,
+        limitations: [
+            installed ? nil : "android_bridge_not_installed",
+            authTokenAvailable ? nil : "android_bridge_auth_token_missing",
+        ].compactMap { $0 },
+        installed: installed,
+        authTokenAvailable: authTokenAvailable,
+        error: installed && authTokenAvailable ? nil : TKCLIErrorDetail(
+            code: installed ? "android_bridge_auth_token_missing" : "android_bridge_not_installed",
+            message: installed ? "Android bridge auth token is not available." : "Android bridge package is not installed.",
+            hint: "Run `triton device bridge install --platform android --device \(device) --apk <apk> --confirm --audit-record <id> --execute-runner --json`."
+        )
+    )
+}
+
+func makeAndroidBridgeProbeOutput(platform: HostDevicePlatform, device: String, localPort: Int = 19422, runner: HostDeviceCommandRunner? = nil) -> HostDeviceBridgeOutput {
+    let endpoint = "http://127.0.0.1:\(localPort)"
+    let command = TKHostCommand(executable: "/usr/bin/curl", arguments: ["-fsS", "--max-time", "3", "\(endpoint)/ping"])
+    guard let runner else {
+        return makeAndroidBridgeOutput(
+            action: "bridge.probe",
+            platform: platform,
+            device: device,
+            localEndpoint: endpoint,
+            sourceCommands: ["GET \(endpoint)/ping"],
+            limitations: ["android_bridge_contract_only:not_executed"]
+        )
+    }
+    do {
+        let result = try runner(command)
+        return makeAndroidBridgeOutput(
+            action: "bridge.probe",
+            platform: platform,
+            device: device,
+            localEndpoint: endpoint,
+            sourceCommands: [result.sourceCommand],
+            limitations: [],
+            probeReachable: true,
+            responseSummary: String(result.stdout.prefix(240))
+        )
+    } catch {
+        return makeAndroidBridgeOutput(
+            action: "bridge.probe",
+            platform: platform,
+            device: device,
+            localEndpoint: endpoint,
+            sourceCommands: [hostSourceCommand(command)],
+            limitations: ["android_bridge_probe_unreachable"],
+            probeReachable: false,
+            error: TKCLIErrorDetail(
+                code: "android_bridge_probe_failed",
+                message: "Android bridge /ping probe failed: \(error)",
+                hint: "Confirm the bridge AccessibilityService is enabled and `triton device bridge forward` has run."
+            )
+        )
+    }
+}
+
+func makeAndroidBridgeInstallOutput(
+    platform: HostDevicePlatform,
+    device: String,
+    apkPath: String,
+    adb: String = "adb",
+    confirm: Bool,
+    auditRecord: String?,
+    executeRunner: Bool,
+    runner: HostDeviceCommandRunner? = nil
+) -> HostDeviceBridgeOutput {
+    let command = TKAndroidADBCommand.installAPK(serial: device, apkPath: apkPath, executable: adb)
+    return makeAndroidBridgeMutationOutput(
+        action: "bridge.install",
+        platform: platform,
+        device: device,
+        apkPath: apkPath,
+        command: command,
+        confirm: confirm,
+        auditRecord: auditRecord,
+        executeRunner: executeRunner,
+        runner: runner,
+        failureCode: "android_bridge_install_failed"
+    )
+}
+
+func makeAndroidBridgeForwardOutput(
+    platform: HostDevicePlatform,
+    device: String,
+    adb: String = "adb",
+    localPort: Int = 19422,
+    remotePort: Int = 8080,
+    confirm: Bool,
+    auditRecord: String?,
+    executeRunner: Bool,
+    runner: HostDeviceCommandRunner? = nil
+) -> HostDeviceBridgeOutput {
+    let command = TKHostCommand(
+        executable: adb,
+        arguments: ["-s", device, "forward", "tcp:\(localPort)", "tcp:\(remotePort)"],
+        riskLevel: .automation,
+        requiredConfig: [.target, .timeout, .auditRecord]
+    )
+    return makeAndroidBridgeMutationOutput(
+        action: "bridge.forward",
+        platform: platform,
+        device: device,
+        localEndpoint: "http://127.0.0.1:\(localPort)",
+        remoteEndpoint: "tcp:\(remotePort)",
+        command: command,
+        confirm: confirm,
+        auditRecord: auditRecord,
+        executeRunner: executeRunner,
+        runner: runner,
+        failureCode: "android_bridge_forward_failed"
+    )
+}
+
+private func makeAndroidBridgeMutationOutput(
+    action: String,
+    platform: HostDevicePlatform,
+    device: String,
+    apkPath: String? = nil,
+    localEndpoint: String? = nil,
+    remoteEndpoint: String? = nil,
+    command: TKHostCommand,
+    confirm: Bool,
+    auditRecord: String?,
+    executeRunner: Bool,
+    runner: HostDeviceCommandRunner?,
+    failureCode: String
+) -> HostDeviceBridgeOutput {
+    let sourceCommands = [hostSourceCommand(command)]
+    guard confirm, let auditRecord, !auditRecord.isEmpty, executeRunner else {
+        return makeAndroidBridgeOutput(
+            action: action,
+            platform: platform,
+            device: device,
+            apkPath: apkPath,
+            localEndpoint: localEndpoint,
+            remoteEndpoint: remoteEndpoint,
+            sourceCommands: sourceCommands,
+            limitations: [
+                "android_bridge_execution_policy_required:confirm=\(confirm)",
+                "android_bridge_execution_policy_required:executeRunner=\(executeRunner)",
+            ],
+            error: TKCLIErrorDetail(
+                code: "destructive_action_requires_policy",
+                message: "Android bridge mutation requires --confirm, --audit-record, and --execute-runner.",
+                hint: "Inspect this command ledger first, then rerun with explicit audit metadata."
+            )
+        )
+    }
+    if let runner {
+        do {
+            let result = try runner(command)
+            return makeAndroidBridgeOutput(
+                action: action,
+                platform: platform,
+                device: device,
+                apkPath: apkPath,
+                localEndpoint: localEndpoint,
+                remoteEndpoint: remoteEndpoint,
+                sourceCommands: [result.sourceCommand],
+                limitations: ["android_bridge_runner_executed:auditRecord=\(auditRecord)"]
+            )
+        } catch {
+            return makeAndroidBridgeOutput(
+                action: action,
+                platform: platform,
+                device: device,
+                apkPath: apkPath,
+                localEndpoint: localEndpoint,
+                remoteEndpoint: remoteEndpoint,
+                sourceCommands: sourceCommands,
+                limitations: ["android_bridge_runner_failed:auditRecord=\(auditRecord)"],
+                error: TKCLIErrorDetail(
+                    code: failureCode,
+                    message: "Android bridge command failed: \(error)",
+                    hint: "Run `triton device doctor --platform android --json` and confirm the emulator is online."
+                )
+            )
+        }
+    }
+    return makeAndroidBridgeOutput(
+        action: action,
+        platform: platform,
+        device: device,
+        apkPath: apkPath,
+        localEndpoint: localEndpoint,
+        remoteEndpoint: remoteEndpoint,
+        sourceCommands: sourceCommands,
+        limitations: ["android_bridge_runner_not_configured:not_executed", "android_bridge_execution_policy_accepted:auditRecord=\(auditRecord)"],
+        error: TKCLIErrorDetail(
+            code: "android_bridge_runner_not_configured",
+            message: "Android bridge runner is not wired yet.",
+            hint: "Implement the helper APK and runner in the Android bridge milestone before executing this mutation."
+        )
+    )
+}
+
+private func makeAndroidBridgeOutput(
+    action: String,
+    platform: HostDevicePlatform,
+    device: String,
+    apkPath: String? = nil,
+    localEndpoint: String? = nil,
+    remoteEndpoint: String? = nil,
+    sourceCommands: [String],
+    limitations: [String],
+    installed: Bool? = nil,
+    authTokenAvailable: Bool? = nil,
+    probeReachable: Bool? = nil,
+    responseSummary: String? = nil,
+    error: TKCLIErrorDetail? = nil
+) -> HostDeviceBridgeOutput {
+    let unsupportedPlatform = platform != .android
+    let resolvedError = unsupportedPlatform
+        ? TKCLIErrorDetail(
+            code: "unsupported_capability",
+            message: "Android bridge commands only support --platform android.",
+            hint: "Use existing iOS host probes or Harmony runtime commands for other platforms."
+        )
+        : error
+    return HostDeviceBridgeOutput(
+        ok: resolvedError == nil,
+        surface: "host.device-bridge",
+        action: action,
+        platform: platform.rawValue,
+        device: device,
+        packageName: androidBridgePackageName,
+        apkPath: apkPath,
+        localEndpoint: localEndpoint,
+        remoteEndpoint: remoteEndpoint,
+        planOnly: true,
+        installed: installed,
+        authTokenAvailable: authTokenAvailable,
+        probeReachable: probeReachable,
+        responseSummary: responseSummary,
+        limitations: unsupportedPlatform ? limitations + ["android_bridge_platform_only"] : limitations,
+        sourceCommands: sourceCommands,
+        error: resolvedError,
+        nextAction: TKCLINextAction(command: "device", args: ["bridge", "status", "--platform", "android", "--device", device, "--json"], category: "diagnose")
+    )
+}
+
+func printHostDeviceBridgeOutput(_ output: HostDeviceBridgeOutput, outputFormat: ClientOutputFormat) throws {
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(output))
+    case .text:
+        print("\(output.platform)\t\(output.action)\tdevice=\(output.device)\tplanOnly=\(output.planOnly)")
+        for command in output.sourceCommands {
+            print("command\t\(command)")
+        }
+    }
+    if !output.ok {
+        throw ExitCode.failure
+    }
+}
+
 struct DeviceDoctor: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "doctor", abstract: "Probe platform host tools")
 
@@ -403,6 +815,7 @@ struct DeviceDoctor: AsyncParsableCommand {
             let simctlProbe = probeHostTool(name: "simctl", command: TKHostCommand(executable: "xcrun", arguments: ["simctl", "help"]))
             let devicectlProbe = probeHostTool(name: "devicectl", command: TKHostCommand(executable: "xcrun", arguments: ["devicectl", "--help"]))
             let xcodebuildProbe = probeHostTool(name: "xcodebuild", command: TKHostCommand(executable: "xcodebuild", arguments: ["-version"]))
+            let idbProbe = probeHostTool(name: "idb", command: TKHostCommand(executable: "idb", arguments: ["--version"]))
             let tools: [HostToolProbeOutput]
             let ok: Bool
             if scope == .real {
@@ -419,7 +832,8 @@ struct DeviceDoctor: AsyncParsableCommand {
                 ok: ok,
                 platform: platform.rawValue,
                 tools: tools,
-                capabilities: ["device.list", "device.use", "device.wait-ready", "device.screenshot", "ios.simctl-targets", "ios.real-device", "ios.devicectl"],
+                capabilities: ["device.list", "device.use", "device.wait-ready", "device.screenshot", "ios.simctl-targets", "ios.real-device", "ios.devicectl", "ios-host-ax", "ios-host-hid"],
+                strongControl: iosStrongControlProbes(idbProbe: idbProbe),
                 artifactsSaved: false
             )
         case .harmony:
@@ -432,6 +846,7 @@ struct DeviceDoctor: AsyncParsableCommand {
                 platform: platform.rawValue,
                 tools: [hdcProbe] + Array(emulatorProbe.map { [$0] } ?? []),
                 capabilities: ["device.list", "device.use", "device.wait-ready", "device.runtime-url", "device.screenshot", "harmony.hdc-targets"],
+                strongControl: [],
                 artifactsSaved: false
             )
         case .android:
@@ -444,6 +859,7 @@ struct DeviceDoctor: AsyncParsableCommand {
                 platform: platform.rawValue,
                 tools: [adbProbe] + Array(emulatorProbe.map { [$0] } ?? []),
                 capabilities: ["device.list", "device.use", "device.wait-ready", "device.screenshot", "android.adb-targets", "android.real-device", "android.emulator-scope"],
+                strongControl: [],
                 artifactsSaved: false
             )
         }
@@ -455,6 +871,23 @@ struct DeviceDoctor: AsyncParsableCommand {
                 print("\(tool.name)\t\(tool.available ? "available" : "unavailable")\t\(tool.path)")
             }
         }
+    }
+}
+
+func iosStrongControlProbes(idbProbe: HostToolProbeOutput) -> [TKHostStrongControlCapability] {
+    ["ios-host-ax", "ios-host-hid"].map { name in
+        TKHostStrongControlCapability(
+            name: name,
+            platform: "ios",
+            runtimeScope: "host-simulator",
+            available: idbProbe.available,
+            reason: idbProbe.available ? nil : "idb_not_available",
+            dependency: "idb/FBSimulatorControl",
+            limitations: ["private_framework_dependency", "simulator_only", "xcode_version_coupled"],
+            fallbackCapability: "embedded-runtime-or-public-simctl",
+            sourceCommand: idbProbe.sourceCommand,
+            nextAction: idbProbe.available ? nil : TKCLINextAction(command: "device", args: ["doctor", "--platform", "ios", "--json"], category: "diagnose")
+        )
     }
 }
 
@@ -767,6 +1200,7 @@ struct DeviceScreenshot: AsyncParsableCommand {
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Output image path") var output: String
+    @Option(help: "Host command timeout in seconds") var timeout: Double?
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -781,7 +1215,7 @@ struct DeviceScreenshot: AsyncParsableCommand {
                 hdc: hdc,
                 adb: adb
             )
-            let artifact = try captureHostDeviceScreenshot(platform: selection.platform, target: selection.target, selection: selection, hdc: hdc, adb: adb, output: output)
+            let artifact = try captureHostDeviceScreenshot(platform: selection.platform, target: selection.target, selection: selection, hdc: hdc, adb: adb, output: output, timeout: timeout)
             switch outputFormat {
             case .json:
                 print(try encodeJSON(artifact))

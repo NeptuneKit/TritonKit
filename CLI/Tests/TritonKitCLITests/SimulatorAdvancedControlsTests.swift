@@ -175,6 +175,67 @@ struct SimulatorAdvancedControlsTests {
         #expect(result.stdout == "ok\n")
     }
 
+    @Test("simctl diagnose uses current output and data-container flags")
+    func simctlDiagnoseUsesCurrentFlags() {
+        let command = TKSimctlCommand.diagnose(
+            output: "/tmp/sim-diagnostics",
+            timeout: 180,
+            noArchive: true,
+            allLogs: true,
+            dataContainers: true,
+            udids: ["SIM-1"]
+        )
+
+        #expect(command.arguments == [
+            "simctl", "diagnose",
+            "--timeout=180.0",
+            "--output=/tmp/sim-diagnostics",
+            "--no-archive",
+            "--all-logs",
+            "--data-container",
+            "--udid=SIM-1",
+        ])
+        #expect(command.defaultTimeoutSeconds == 180)
+    }
+
+    @Test("sim create builds schema-backed simctl create command")
+    func simCreateBuildsSimctlCreateCommand() {
+        let command = TKSimctlCommand.createDevice(
+            name: "Codex iPhone",
+            deviceTypeIdentifier: "com.apple.CoreSimulator.SimDeviceType.iPhone-16",
+            runtimeIdentifier: "com.apple.CoreSimulator.SimRuntime.iOS-26-0"
+        )
+
+        #expect(command.arguments == [
+            "simctl", "create",
+            "Codex iPhone",
+            "com.apple.CoreSimulator.SimDeviceType.iPhone-16",
+            "com.apple.CoreSimulator.SimRuntime.iOS-26-0",
+        ])
+        #expect(command.riskLevel == .automation)
+    }
+
+    @Test("host command timeout override is reusable for install and screenshot")
+    func hostCommandTimeoutOverrideIsReusable() {
+        let install = TKSimctlCommand.installApp(udid: "SIM-1", appPath: "/tmp/Demo.app").withTimeout(180)
+        let screenshot = TKSimctlCommand.screenshot(udid: "SIM-1", output: "/tmp/sim.png").withTimeout(180)
+
+        #expect(install.defaultTimeoutSeconds == 180)
+        #expect(screenshot.defaultTimeoutSeconds == 180)
+    }
+
+    @Test("shutdown simulator wait-ready error exposes boot next action")
+    func shutdownSimulatorWaitReadyErrorExposesBootNextAction() {
+        let detail = simulatorNotBootedErrorDetail(
+            target: "SIM-1",
+            message: "\(HostCommandRunError.simulatorNotBooted(target: "SIM-1", state: "Shutdown"))"
+        )
+
+        #expect(detail.code == "simulator_not_booted")
+        #expect(detail.nextAction?.command == "sim")
+        #expect(detail.nextAction?.args == ["boot", "SIM-1", "--wait", "--jsonl"])
+    }
+
     @Test("sim schema exposes advanced simulator maintenance commands")
     func simSchemaExposesAdvancedCommands() throws {
         let sim = try #require(commandSchemas().first { $0.name == "sim" })
@@ -192,6 +253,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(usageForms.contains(where: { $0.hasPrefix("logs") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("diagnose") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("logverbose") }))
+        #expect(usageForms.contains(where: { $0.hasPrefix("create") }))
         #expect(usageForms.contains("proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir>"))
         #expect(usageForms.contains("proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir> --plan-only"))
         #expect(usageForms.contains("proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir> --confirm --audit-record <id> --execute-runner"))
@@ -212,6 +274,8 @@ struct SimulatorAdvancedControlsTests {
         #expect(optionNames.contains("tap --x <x> --y <y>") == false)
         #expect(sim.subcommands.contains { $0.name == "tap" } == false)
         #expect(optionNames.contains("--display"))
+        #expect(optionNames.contains("--device-type"))
+        #expect(optionNames.contains("--data-container"))
         #expect(optionNames.contains("--manifest"))
         #expect(sim.providedCapabilities.contains("host-simulator"))
         #expect(sim.providedCapabilities.contains("sim-video"))
@@ -233,6 +297,8 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.examples.contains("triton sim proxy start --simulator booted --mode record --output /tmp/ios-network --confirm --audit-record ticket-123 --execute-runner --json"))
         #expect(sim.examples.contains("triton sim proxy stop --simulator booted --restore --plan-only --json"))
         #expect(sim.examples.contains("triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json"))
+        #expect(sim.examples.contains("triton sim create 'Codex iPhone' --device-type com.apple.CoreSimulator.SimDeviceType.iPhone-16 --runtime com.apple.CoreSimulator.SimRuntime.iOS-26-0 --json"))
+        #expect(sim.subcommands.first { $0.name == "create" }?.requiredOptions == ["<name>", "--device-type", "--runtime"])
     }
 
     @Test("sim proxy alias reuses the host device proxy output contract")

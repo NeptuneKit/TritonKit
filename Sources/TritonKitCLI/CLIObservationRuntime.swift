@@ -4,6 +4,54 @@ import TritonKitShared
 
 typealias AndroidObserveHostRunner = (TKHostCommand) throws -> HostProcessResult
 
+private struct AndroidBridgeTreeEnvelope: Decodable {
+    let status: String
+    let result: AndroidBridgeNode
+}
+
+private struct AndroidBridgeNode: Decodable {
+    let resourceId: String?
+    let uniqueId: String?
+    let packageName: String?
+    let className: String?
+    let text: String?
+    let contentDescription: String?
+    let boundsInScreen: AndroidBridgeBounds?
+    let clickable: Bool?
+    let scrollable: Bool?
+    let focused: Bool?
+    let enabled: Bool?
+    let visibleToUser: Bool?
+    let children: [AndroidBridgeNode]?
+
+    enum CodingKeys: String, CodingKey {
+        case resourceId
+        case uniqueId
+        case packageName = "package"
+        case className
+        case text
+        case contentDescription
+        case boundsInScreen
+        case clickable
+        case scrollable
+        case focused
+        case enabled
+        case visibleToUser
+        case children
+    }
+}
+
+private struct AndroidBridgeBounds: Decodable {
+    let left: Double
+    let top: Double
+    let right: Double
+    let bottom: Double
+
+    var rect: TKRect {
+        TKRect(x: left, y: top, width: max(0, right - left), height: max(0, bottom - top))
+    }
+}
+
 func runObserve(
     action: String,
     platform: ObservationPlatform,
@@ -156,6 +204,10 @@ func observeAndroid(
     output: String?,
     runner: AndroidObserveHostRunner = { command in try runHostCommand(command) }
 ) throws -> ObserveOutput {
+    if let bridge = try? observeAndroidBridge(action: action, selected: selected, output: output, runner: runner) {
+        return bridge
+    }
+
     let remotePath = "/sdcard/window_dump.xml"
     let dumpCommand = TKAndroidADBCommand.uiautomatorDump(serial: selected.rawTarget, remotePath: remotePath, executable: adb)
     let dumpResult = try runner(dumpCommand)
@@ -216,6 +268,67 @@ func observeAndroid(
         artifacts: [artifactPath],
         sourceCommands: sourceCommands,
         note: "Android P0 observe uses host-side UIAutomator XML. WebView DOM, JavaScript, and embedded runtime fusion remain unavailable."
+    )
+}
+
+private func observeAndroidBridge(
+    action: String,
+    selected: HostDeviceTarget,
+    output: String?,
+    runner: AndroidObserveHostRunner
+) throws -> ObserveOutput {
+    let endpoint = "http://127.0.0.1:19422"
+    let tokenCommand = TKHostCommand(executable: "adb", arguments: ["-s", selected.rawTarget, "shell", "content", "query", "--uri", "content://\(androidBridgePackageName)/auth_token"], sensitiveOutput: true)
+    let tokenResult = try runner(tokenCommand)
+    guard let token = androidBridgeAuthToken(from: tokenResult.stdout) else {
+        throw RuntimeError("Android bridge auth token is not available.")
+    }
+    let treeCommand = TKHostCommand(executable: "/usr/bin/curl", arguments: ["-fsS", "--max-time", "5", "-H", "Authorization: Bearer \(token)", "\(endpoint)/a11y_tree_full?filter=true"], sensitiveOutput: true)
+    let treeResult = try runner(treeCommand)
+    guard treeResult.exitCode == 0 else {
+        throw HostCommandRunError.nonZeroExit(command: treeCommand, result: treeResult)
+    }
+    let envelope = try JSONDecoder().decode(AndroidBridgeTreeEnvelope.self, from: treeResult.stdoutData)
+    guard envelope.status == "success" else {
+        throw RuntimeError("Android bridge tree returned status=\(envelope.status).")
+    }
+
+    let artifactPath = output ?? defaultAndroidBridgeObserveArtifactPath(serial: selected.id)
+    try FileManager.default.createDirectory(
+        at: URL(fileURLWithPath: artifactPath).deletingLastPathComponent(),
+        withIntermediateDirectories: true
+    )
+    try treeResult.stdoutData.write(to: URL(fileURLWithPath: artifactPath), options: .atomic)
+
+    let sourceCommands = [
+        tokenResult.sourceCommand,
+        "/usr/bin/curl -fsS --max-time 5 -H 'Authorization: Bearer <redacted>' \(endpoint)/a11y_tree_full?filter=true",
+    ]
+    let source = ObserveSourceOutput(
+        name: "android-bridge",
+        available: true,
+        reason: nil,
+        artifact: artifactPath,
+        sourceCommands: sourceCommands
+    )
+    return ObserveOutput(
+        ok: true,
+        action: action,
+        platform: "android",
+        capturedAt: ISO8601DateFormatter().string(from: Date()),
+        partial: true,
+        target: selected.id,
+        primarySource: source,
+        sources: [
+            source,
+            ObserveSourceOutput(name: "host-layout", available: false, reason: "UIAutomator fallback was not used because Android bridge tree is available", artifact: nil, sourceCommands: []),
+            ObserveSourceOutput(name: "runtime-tree", available: false, reason: "Android embedded runtime fusion is not available in P0", artifact: nil, sourceCommands: []),
+            ObserveSourceOutput(name: "webview-provider", available: false, reason: "provider not registered", artifact: nil, sourceCommands: []),
+        ],
+        nodes: observeNodes(fromAndroidBridge: envelope.result),
+        artifacts: [artifactPath],
+        sourceCommands: sourceCommands,
+        note: "Android observe used the TritonKit bridge AccessibilityService tree; WebView DOM and semantic runtime actions still require a provider."
     )
 }
 
@@ -377,6 +490,66 @@ func observeNode(fromAndroid node: TKAndroidUIAutomatorNodeSummary, index: Int) 
     )
 }
 
+private func observeNodes(fromAndroidBridge root: AndroidBridgeNode) -> [ObserveNodeOutput] {
+    var result: [ObserveNodeOutput] = []
+
+    func visit(_ node: AndroidBridgeNode, path: String) {
+        result.append(observeNode(fromAndroidBridge: node, path: path))
+        for (offset, child) in (node.children ?? []).enumerated() {
+            visit(child, path: "\(path).\(offset)")
+        }
+    }
+
+    visit(root, path: "0")
+    return result
+}
+
+private func observeNode(fromAndroidBridge node: AndroidBridgeNode, path: String) -> ObserveNodeOutput {
+    let role = node.className
+    let text = [node.text, node.contentDescription].compactMap { cleanBridgeString($0) }.first
+    let identifier = cleanBridgeString(node.resourceId) ?? cleanBridgeString(node.uniqueId)
+    let webCandidate = isWebCandidate(
+        role: role,
+        className: role,
+        identifier: identifier,
+        text: text
+    )
+    var capabilities: [String] = []
+    if node.visibleToUser != false && node.enabled != false {
+        capabilities.append("visible")
+    }
+    if node.clickable == true, node.boundsInScreen != nil {
+        capabilities.append("tap")
+    }
+    if node.scrollable == true {
+        capabilities.append("scroll")
+    }
+    let missing = webCandidate
+        ? ["webview.url", "webview.dom", "webview.bridge-call", "semantic-action"]
+        : ["semantic-action"]
+    return ObserveNodeOutput(
+        nodeID: "android-bridge:\(node.uniqueId ?? node.resourceId ?? path)",
+        source: "android-bridge",
+        role: role,
+        text: text,
+        identifier: identifier,
+        frame: node.boundsInScreen?.rect,
+        enabled: node.enabled,
+        focused: node.focused,
+        hidden: node.visibleToUser.map { !$0 },
+        candidateOnly: webCandidate,
+        confidence: webCandidate ? 0.78 : 0.9,
+        capabilities: capabilities,
+        missingCapabilities: missing
+    )
+}
+
+private func cleanBridgeString(_ value: String?) -> String? {
+    guard let value else { return nil }
+    let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : trimmed
+}
+
 func isWebCandidate(role: String?, className: String?, identifier: String? = nil, text: String? = nil) -> Bool {
     webViewCandidateScore(role: role, className: className, identifier: identifier, text: text) != nil
 }
@@ -509,6 +682,12 @@ func resolveAndroidNode(
 private func defaultAndroidObserveArtifactPath(serial: String) -> String {
     FileManager.default.temporaryDirectory
         .appendingPathComponent("triton-android-\(serial)-window.xml")
+        .path
+}
+
+private func defaultAndroidBridgeObserveArtifactPath(serial: String) -> String {
+    FileManager.default.temporaryDirectory
+        .appendingPathComponent("triton-android-\(serial)-bridge-tree.json")
         .path
 }
 

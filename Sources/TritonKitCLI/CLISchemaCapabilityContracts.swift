@@ -485,6 +485,35 @@ func hostDeviceProxyOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostDeviceBridgeOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.device-bridge",
+        format: "json",
+        kind: "host-device-bridge",
+        model: "HostDeviceBridgeOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the Android bridge request is executable at this milestone"),
+            ("surface", "String", true, "Stable response surface, host.device-bridge"),
+            ("action", "String", true, "Bridge action: bridge.status, bridge.probe, bridge.install, or bridge.forward"),
+            ("platform", "String", true, "android for supported bridge commands"),
+            ("device", "String", true, "Android adb serial or selector supplied by the caller"),
+            ("packageName", "String", true, "Android helper package, jp.lycorp.tritonkit.bridge"),
+            ("apkPath", "String?", false, "APK path for bridge.install"),
+            ("localEndpoint", "String?", false, "Forwarded local bridge endpoint"),
+            ("remoteEndpoint", "String?", false, "Remote bridge endpoint on the emulator"),
+            ("planOnly", "Bool", true, "Current M0 bridge contract is plan-only and does not mutate adb state"),
+            ("installed", "Bool?", false, "Whether adb reports the bridge package as installed"),
+            ("authTokenAvailable", "Bool?", false, "Whether the shell-gated ContentProvider returned an auth token without exposing it"),
+            ("probeReachable", "Bool?", false, "Whether local /ping responded through adb forward"),
+            ("responseSummary", "String?", false, "Short non-sensitive /ping response summary"),
+            ("limitations", "[String]", true, "Contract, policy, or runner limitations"),
+            ("sourceCommands", "[String]", true, "Underlying adb/curl command ledger"),
+            ("error", "TKCLIErrorDetail?", false, "Structured bridge failure detail"),
+            ("nextAction", "TKCLINextAction?", false, "Suggested follow-up command"),
+        ])
+    )
+}
+
 func hostDeviceProxyServeOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.device-proxy-serve",

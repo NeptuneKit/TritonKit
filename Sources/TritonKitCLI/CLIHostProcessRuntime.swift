@@ -370,6 +370,15 @@ func hostCommandTimeoutErrorDetail(command: TKHostCommand, message: String) -> T
     )
 }
 
+func simulatorNotBootedErrorDetail(target: String, message: String) -> TKCLIErrorDetail {
+    TKCLIErrorDetail(
+        code: "simulator_not_booted",
+        message: message,
+        hint: "Boot the simulator, then rerun wait-ready.",
+        nextAction: TKCLINextAction(command: "sim", args: ["boot", target, "--wait", "--jsonl"], category: "act")
+    )
+}
+
 private func iosDevicectlErrorMapping(stderr: String) -> (code: String, hint: String) {
     let lowercased = stderr.lowercased()
     if lowercased.contains("unable to find utility") || lowercased.contains("devicectl") && lowercased.contains("not found") {
@@ -539,6 +548,8 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: "Check target readiness with `triton device wait-ready`, boot the simulator/emulator if needed, or select a ready target."
         )
+    case HostCommandRunError.simulatorNotBooted(let target, _):
+        detail = simulatorNotBootedErrorDetail(target: target, message: "\(error)")
     case HostCommandRunError.layoutPathNotFound:
         detail = TKCLIErrorDetail(
             code: "harmony_layout_path_not_found",

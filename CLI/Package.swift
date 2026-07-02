@@ -24,6 +24,9 @@ let package = Package(
                 .product(name: "HummingbirdWebSocket", package: "hummingbird-websocket"),
                 .product(name: "ArgumentParser", package: "swift-argument-parser"),
                 .product(name: "Yams", package: "Yams"),
+            ],
+            resources: [
+                .process("Resources"),
             ]
         ),
         .testTarget(

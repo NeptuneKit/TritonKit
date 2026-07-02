@@ -13,10 +13,15 @@ struct DeviceCrossPlatformTests {
         let optionNames = device.options.map(\.name)
         let usageForms = device.usageForms.map(\.form)
         let outputSelectors = Set(device.outputContracts.map(\.selector))
+        let bridgeFields = try #require(device.outputContracts.first { $0.selector == "host.device-bridge" }?.fields.map(\.name))
         let proxyFields = try #require(device.outputContracts.first { $0.selector == "host.device-proxy" }?.fields.map(\.name))
         let proxyServeFields = try #require(device.outputContracts.first { $0.selector == "host.device-proxy-serve" }?.fields.map(\.name))
 
         #expect(usageForms.contains("doctor --platform ios|android|harmony"))
+        #expect(usageForms.contains("bridge status --platform android --device <selector>"))
+        #expect(usageForms.contains("bridge probe --platform android --device <selector>"))
+        #expect(usageForms.contains("bridge install --platform android --device <selector> --apk <path.apk> --confirm --audit-record <id> --execute-runner"))
+        #expect(usageForms.contains("bridge forward --platform android --device <selector> --confirm --audit-record <id> --execute-runner"))
         #expect(usageForms.contains("proxy doctor --platform ios|android|harmony"))
         #expect(usageForms.contains("proxy cert doctor --platform ios|android|harmony"))
         #expect(usageForms.contains("proxy cert plan --platform ios|android|harmony --device <selector> --certificate <path.cer>"))
@@ -58,6 +63,9 @@ struct DeviceCrossPlatformTests {
         #expect(optionNames.contains("--execute-runner"))
         #expect(optionNames.contains("--session"))
         #expect(optionNames.contains("--certificate"))
+        #expect(optionNames.contains("--apk"))
+        #expect(optionNames.contains("bridge --local-port"))
+        #expect(optionNames.contains("bridge --remote-port"))
         #expect(optionNames.contains("--jsonl"))
         #expect(optionNames.contains("--throttle-ms"))
         #expect(optionNames.contains("--policy-rules"))
@@ -72,6 +80,8 @@ struct DeviceCrossPlatformTests {
         #expect(device.examples.contains("triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --confirm --json"))
         #expect(device.examples.contains("triton device start --platform android --avd Dxyer_API_34 --headless --gpu swiftshader_indirect --plan-only --json"))
         #expect(device.examples.contains("triton device start --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --hdc-port 10100 --plan-only --json"))
+        #expect(device.examples.contains("triton device bridge status --platform android --device emulator-5554 --json"))
+        #expect(device.examples.contains("triton device bridge install --platform android --device emulator-5554 --apk /tmp/triton-bridge.apk --confirm --audit-record ticket-123 --execute-runner --json"))
         #expect(device.examples.contains("triton device proxy doctor --platform ios --json"))
         #expect(device.examples.contains("triton device proxy cert doctor --platform ios --json"))
         #expect(device.examples.contains("triton device proxy cert plan --platform android --device emulator-5554 --certificate /tmp/triton-proxy-ca.cer --json"))
@@ -104,13 +114,25 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("device-use"))
         #expect(device.providedCapabilities.contains("device-wait-ready"))
         #expect(device.providedCapabilities.contains("device-screenshot"))
+        #expect(device.successShape?.contains("strongControl[]") == true)
+        #expect(device.providedCapabilities.contains("ios-host-ax"))
+        #expect(device.providedCapabilities.contains("ios-host-hid"))
         #expect(device.providedCapabilities.contains("android-device"))
         #expect(device.providedCapabilities.contains("android-device-list"))
         #expect(device.providedCapabilities.contains("android-device-start"))
         #expect(device.providedCapabilities.contains("android-device-wait-ready"))
         #expect(device.providedCapabilities.contains("android-device-screenshot"))
+        #expect(device.providedCapabilities.contains("android-bridge"))
+        #expect(device.providedCapabilities.contains("android-bridge-install"))
+        #expect(device.providedCapabilities.contains("android-bridge-forward"))
         #expect(device.failureCodes.contains("android_debugging_disabled"))
         #expect(device.failureCodes.contains("android_package_manager_unavailable"))
+        #expect(device.failureCodes.contains("android_bridge_not_installed"))
+        #expect(device.failureCodes.contains("android_bridge_auth_token_missing"))
+        #expect(device.failureCodes.contains("android_bridge_runner_not_configured"))
+        #expect(device.failureCodes.contains("android_bridge_install_failed"))
+        #expect(device.failureCodes.contains("android_bridge_forward_failed"))
+        #expect(device.failureCodes.contains("android_bridge_probe_failed"))
         #expect(device.providedCapabilities.contains("harmony-device-list"))
         #expect(device.providedCapabilities.contains("harmony-device-start"))
         #expect(device.providedCapabilities.contains("harmony-foreground-app-identity"))
@@ -135,8 +157,16 @@ struct DeviceCrossPlatformTests {
         #expect(device.failureCodes.contains("proxy_start_failed"))
         #expect(device.failureCodes.contains("proxy_restore_failed"))
         #expect(device.failureCodes.contains("proxy_artifact_write_failed"))
+        #expect(outputSelectors.contains("host.device-bridge"))
         #expect(outputSelectors.contains("host.device-proxy"))
         #expect(outputSelectors.contains("host.device-proxy-serve"))
+        #expect(bridgeFields.contains("packageName"))
+        #expect(bridgeFields.contains("sourceCommands"))
+        #expect(bridgeFields.contains("planOnly"))
+        #expect(bridgeFields.contains("installed"))
+        #expect(bridgeFields.contains("authTokenAvailable"))
+        #expect(bridgeFields.contains("probeReachable"))
+        #expect(bridgeFields.contains("error"))
         #expect(proxyFields.contains("redaction"))
         #expect(proxyFields.contains("requestCount"))
         #expect(proxyFields.contains("truncation"))
@@ -148,6 +178,114 @@ struct DeviceCrossPlatformTests {
         #expect(proxyServeFields.contains("policyRuleId"))
         #expect(proxyServeFields.contains("eventCount"))
         #expect(proxyServeFields.contains("failureCount"))
+    }
+
+    @Test("iOS device doctor reports optional idb private-framework strong-control probes")
+    func iosDeviceDoctorReportsIDBStrongControlProbes() throws {
+        let unavailable = HostToolProbeOutput(
+            name: "idb",
+            path: "idb",
+            available: false,
+            versionSummary: nil,
+            error: "not found",
+            sourceCommand: "idb --version"
+        )
+        let unavailableProbes = iosStrongControlProbes(idbProbe: unavailable)
+
+        #expect(unavailableProbes.map(\.name) == ["ios-host-ax", "ios-host-hid"])
+        #expect(unavailableProbes.allSatisfy { !$0.available })
+        #expect(unavailableProbes.allSatisfy { $0.reason == "idb_not_available" })
+        #expect(unavailableProbes.allSatisfy { $0.dependency == "idb/FBSimulatorControl" })
+        #expect(unavailableProbes.allSatisfy { $0.limitations.contains("private_framework_dependency") })
+        #expect(unavailableProbes.allSatisfy { $0.limitations.contains("simulator_only") })
+        #expect(unavailableProbes.allSatisfy { $0.fallbackCapability == "embedded-runtime-or-public-simctl" })
+        #expect(unavailableProbes.allSatisfy { $0.nextAction?.args == ["doctor", "--platform", "ios", "--json"] })
+
+        let available = HostToolProbeOutput(
+            name: "idb",
+            path: "/opt/homebrew/bin/idb",
+            available: true,
+            versionSummary: "1.1.7",
+            error: nil,
+            sourceCommand: "/opt/homebrew/bin/idb --version"
+        )
+        let availableProbes = iosStrongControlProbes(idbProbe: available)
+
+        #expect(availableProbes.allSatisfy { $0.available })
+        #expect(availableProbes.allSatisfy { $0.reason == nil })
+        #expect(availableProbes.allSatisfy { $0.nextAction == nil })
+        #expect(availableProbes.allSatisfy { $0.sourceCommand == "/opt/homebrew/bin/idb --version" })
+    }
+
+    @Test("Android bridge contract returns plan-only ledgers before APK runner exists")
+    func androidBridgeContractReturnsPlanOnlyLedgers() throws {
+        let status = makeAndroidBridgeStatusOutput(platform: .android, device: "emulator-5554")
+        #expect(status.ok)
+        #expect(status.surface == "host.device-bridge")
+        #expect(status.action == "bridge.status")
+        #expect(status.packageName == "jp.lycorp.tritonkit.bridge")
+        #expect(status.planOnly)
+        #expect(status.sourceCommands.contains("adb -s emulator-5554 shell pm path jp.lycorp.tritonkit.bridge"))
+        #expect(status.limitations.contains("android_bridge_contract_only:not_executed"))
+
+        let realStatus = makeAndroidBridgeStatusOutput(
+            platform: .android,
+            device: "emulator-5554",
+            runner: { command in
+                if command.arguments.contains("pm") {
+                    return successfulHostProcessResult(command, stdout: "package:/data/app/jp.lycorp.tritonkit.bridge/base.apk\n")
+                }
+                return successfulHostProcessResult(command, stdout: "Row: 0 result={\"status\":\"success\",\"result\":\"redacted\"}\n")
+            }
+        )
+        #expect(realStatus.ok)
+        #expect(realStatus.installed == true)
+        #expect(realStatus.authTokenAvailable == true)
+
+        let reachableProbe = makeAndroidBridgeProbeOutput(
+            platform: .android,
+            device: "emulator-5554",
+            runner: { command in successfulHostProcessResult(command, stdout: "{\"status\":\"success\",\"result\":\"pong\"}") }
+        )
+        #expect(reachableProbe.ok)
+        #expect(reachableProbe.probeReachable == true)
+        #expect(reachableProbe.responseSummary?.contains("pong") == true)
+
+        let missingPolicy = makeAndroidBridgeInstallOutput(
+            platform: .android,
+            device: "emulator-5554",
+            apkPath: "/tmp/triton-bridge.apk",
+            confirm: false,
+            auditRecord: nil,
+            executeRunner: false
+        )
+        #expect(!missingPolicy.ok)
+        #expect(missingPolicy.error?.code == "destructive_action_requires_policy")
+        #expect(missingPolicy.sourceCommands == ["adb -s emulator-5554 install -r /tmp/triton-bridge.apk"])
+
+        let acceptedButNotImplemented = makeAndroidBridgeForwardOutput(
+            platform: .android,
+            device: "emulator-5554",
+            confirm: true,
+            auditRecord: "ticket-123",
+            executeRunner: true
+        )
+        #expect(!acceptedButNotImplemented.ok)
+        #expect(acceptedButNotImplemented.error?.code == "android_bridge_runner_not_configured")
+        #expect(acceptedButNotImplemented.localEndpoint == "http://127.0.0.1:19422")
+        #expect(acceptedButNotImplemented.sourceCommands == ["adb -s emulator-5554 forward tcp:19422 tcp:8080"])
+
+        let executed = makeAndroidBridgeForwardOutput(
+            platform: .android,
+            device: "emulator-5554",
+            confirm: true,
+            auditRecord: "ticket-123",
+            executeRunner: true,
+            runner: { command in successfulHostProcessResult(command) }
+        )
+        #expect(executed.ok)
+        #expect(executed.error == nil)
+        #expect(executed.limitations.contains("android_bridge_runner_executed:auditRecord=ticket-123"))
     }
 
     @Test("device proxy capabilities expose three-platform network takeover metadata")

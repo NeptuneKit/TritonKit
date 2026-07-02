@@ -76,19 +76,29 @@ func androidTapMatch(from node: TKAndroidUIAutomatorNodeSummary) -> HostAndroidT
     )
 }
 
+func androidTapMatch(from node: ObserveNodeOutput) -> HostAndroidTapMatch {
+    HostAndroidTapMatch(
+        text: node.text,
+        identifier: node.identifier,
+        label: nil,
+        role: node.role,
+        bounds: node.frame
+    )
+}
+
 func observeAndroidTextMatch(
     selected: HostDeviceTarget,
     query: String,
     adb: String
 ) throws -> (HostAndroidTapMatch?, [String]) {
-    let (nodes, commands) = try observeAndroidNodes(selected: selected, adb: adb)
+    let output = try observeAndroid(action: "observe.tree", selected: selected, adb: adb, output: nil)
     let lowered = query.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-    let match = nodes.first { node in
-        [node.text, node.contentDescription, node.resourceID].compactMap { $0 }.contains {
+    let match = output.nodes.first { node in
+        [node.text, node.identifier].compactMap { $0 }.contains {
             $0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current).contains(lowered)
         }
     }.map(androidTapMatch(from:))
-    return (match, commands)
+    return (match, output.sourceCommands)
 }
 
 func resolveAndroidTapQuery(
@@ -96,16 +106,16 @@ func resolveAndroidTapQuery(
     query: String,
     adb: String
 ) throws -> AndroidTapResolution {
-    let (nodes, sourceCommands) = try observeAndroidNodes(selected: selected, adb: adb)
+    let output = try observeAndroid(action: "observe.tree", selected: selected, adb: adb, output: nil)
     let lowered = query.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current)
-    guard let node = nodes.first(where: { node in
-        [node.text, node.contentDescription, node.resourceID].compactMap { $0 }.contains {
+    guard let node = output.nodes.first(where: { node in
+        [node.text, node.identifier].compactMap { $0 }.contains {
             $0.folding(options: [.caseInsensitive, .diacriticInsensitive], locale: .current).contains(lowered)
         }
     }) else {
         throw HostCommandRunError.layoutTextNotFound(query)
     }
-    guard let bounds = node.bounds else {
+    guard let bounds = node.frame else {
         throw RuntimeError("Android host tap matched \(query) but the node has no bounds.")
     }
     let x = Int((bounds.x + (bounds.width / 2)).rounded())
@@ -114,6 +124,6 @@ func resolveAndroidTapQuery(
         x: x,
         y: y,
         match: androidTapMatch(from: node),
-        sourceCommands: sourceCommands
+        sourceCommands: output.sourceCommands
     )
 }

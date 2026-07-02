@@ -114,6 +114,7 @@ struct Sim: AsyncParsableCommand {
         subcommands: [
             SimList.self,
             SimUse.self,
+            SimCreate.self,
             SimBoot.self,
             SimShutdown.self,
             SimPair.self,
@@ -354,6 +355,42 @@ struct SimUse: AsyncParsableCommand {
     }
 }
 
+struct SimCreate: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(commandName: "create", abstract: "Create a simulator")
+
+    @Argument(help: "Simulator name") var name: String
+    @Option(name: .customLong("device-type"), help: "CoreSimulator device type identifier") var deviceType: String
+    @Option(name: .customLong("runtime"), help: "CoreSimulator runtime identifier") var runtime: String
+    @Flag(help: "Alias for --format json") var json = false
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let command = TKSimctlCommand.createDevice(name: name, deviceTypeIdentifier: deviceType, runtimeIdentifier: runtime)
+            let result = try runHostCommand(command)
+            let udid = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+            let output = HostSimulatorCreateOutput(
+                ok: true,
+                action: "sim.create",
+                name: name,
+                udid: udid,
+                deviceTypeIdentifier: deviceType,
+                runtimeIdentifier: runtime,
+                sourceCommand: result.sourceCommand
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(output))
+            case .text:
+                print(udid)
+            }
+        } catch {
+            try failHostCommand(error, outputFormat: outputFormat)
+        }
+    }
+}
+
 struct SimBoot: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "boot", abstract: "Boot a simulator")
 
@@ -529,7 +566,7 @@ struct SimDiagnose: AsyncParsableCommand {
     @Option(name: .customLong("timeout"), help: "Timeout in seconds") var timeout: Double = 300
     @Flag(name: .customLong("no-archive"), help: "Do not archive collected diagnostics") var noArchive = false
     @Flag(name: .customLong("all-logs"), help: "Include all device logs") var allLogs = false
-    @Flag(name: .customLong("data-containers"), help: "Include booted device data containers") var dataContainers = false
+    @Flag(name: .customLong("data-container"), help: "Include booted device data containers") var dataContainers = false
     @Option(name: .customLong("udid"), help: "Simulator UDID to include in the diagnostics bundle") var udids: [String] = []
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json

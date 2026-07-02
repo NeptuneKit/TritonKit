@@ -333,7 +333,29 @@ struct HostDeviceDoctorOutput: Encodable {
     let platform: String
     let tools: [HostToolProbeOutput]
     let capabilities: [String]
+    let strongControl: [TKHostStrongControlCapability]
     let artifactsSaved: Bool
+}
+
+struct HostDeviceBridgeOutput: Encodable, Equatable {
+    let ok: Bool
+    let surface: String
+    let action: String
+    let platform: String
+    let device: String
+    let packageName: String
+    let apkPath: String?
+    let localEndpoint: String?
+    let remoteEndpoint: String?
+    let planOnly: Bool
+    let installed: Bool?
+    let authTokenAvailable: Bool?
+    let probeReachable: Bool?
+    let responseSummary: String?
+    let limitations: [String]
+    let sourceCommands: [String]
+    let error: TKCLIErrorDetail?
+    let nextAction: TKCLINextAction?
 }
 
 struct HostDeviceListOutput: Encodable {
@@ -853,6 +875,7 @@ enum HostCommandRunError: Error, CustomStringConvertible {
     case timeout(command: TKHostCommand, timeoutSeconds: Double, stdoutLogPath: String?, stderrLogPath: String?)
     case nonZeroExit(command: TKHostCommand, result: HostProcessResult)
     case deviceNotReady(target: String, timeoutSeconds: Double)
+    case simulatorNotBooted(target: String, state: String)
     case layoutPathNotFound
     case layoutTextNotFound(String)
     case missingPreferences(path: String)
@@ -870,6 +893,8 @@ enum HostCommandRunError: Error, CustomStringConvertible {
             ].compactMap { $0 }.joined(separator: "\n")
         case .deviceNotReady(let target, let timeoutSeconds):
             "Host device target \(target) was not ready after \(timeoutSeconds)s"
+        case .simulatorNotBooted(let target, let state):
+            "iOS simulator \(target) is \(state), not Booted"
         case .nonZeroExit(_, let result):
             hostCommandNonZeroExitDescription(result)
         case .missingPreferences(let path):
@@ -939,6 +964,16 @@ struct HostSimulatorUseOutput: Encodable {
     let action: String
     let simulator: TKHostSimulatorTarget
     let defaultsPath: String
+}
+
+struct HostSimulatorCreateOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let name: String
+    let udid: String
+    let deviceTypeIdentifier: String
+    let runtimeIdentifier: String
+    let sourceCommand: String
 }
 
 struct HostSimulatorReadyEvent: Encodable {

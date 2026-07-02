@@ -631,6 +631,9 @@ func waitForHostDeviceReady(
                 if currentTarget.ready {
                     return event
                 }
+                if currentTarget.state.lowercased() != "booted" {
+                    throw HostCommandRunError.simulatorNotBooted(target: currentTarget.target, state: currentTarget.state)
+                }
             }
         case .harmony:
             let listResult = try runHostCommand(TKHarmonyHDCCommand.listTargets(executable: hdc))

@@ -734,6 +734,7 @@ struct HostAppInstall: AsyncParsableCommand {
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Path to adb executable") var adb: String = "adb"
+    @Option(help: "Host command timeout in seconds") var timeout: Double?
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -760,7 +761,7 @@ struct HostAppInstall: AsyncParsableCommand {
                 runtimeScope: plan.runtimeScope,
                 target: plan.target,
                 selection: selection,
-                command: plan.command,
+                command: plan.command.withTimeout(timeout),
                 outputFormat: outputFormat,
                 artifacts: plan.artifacts,
                 note: plan.note
@@ -874,6 +875,14 @@ struct HostAppLaunch: AsyncParsableCommand {
             )
             switch hostAppPlatform(from: selection.platform) {
         case .ios:
+            var environment = try parseLaunchEnvironment(launchEnvironment)
+            if selection.target.scope != "real", let bundleID {
+                environment = try simCameraLaunchEnvironment(
+                    bundleID: bundleID,
+                    baseEnvironment: environment,
+                    workspace: FileManager.default.currentDirectoryPath
+                )
+            }
             let plan = try planHostAppLaunch(
                 selection: selection,
                 bundleID: bundleID,
@@ -882,7 +891,7 @@ struct HostAppLaunch: AsyncParsableCommand {
                 bundle: nil,
                 ability: nil,
                 payloadURL: nil,
-                launchEnvironment: try parseLaunchEnvironment(launchEnvironment),
+                launchEnvironment: environment,
                 launchArguments: launchArguments,
                 adb: adb,
                 hdc: hdc,

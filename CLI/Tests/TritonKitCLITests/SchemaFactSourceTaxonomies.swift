@@ -72,6 +72,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "host-app-open-url-flow",
         "host-artifact",
         "host-device-list",
+        "host-device-bridge",
         "host-device-ready",
         "host-device-selection",
         "host-device-proxy",
@@ -308,7 +309,7 @@ func recoveryCommandRootCategoryMap() -> [String: String] {
 
 func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
     switch failureCode {
-    case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_found", "target_not_found", "target_unavailable":
+    case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_booted", "simulator_not_found", "target_not_found", "target_unavailable":
         return ["discover", "prepare-target", "diagnose"]
     case "ambiguous_workspace", "invalid_workspace_path", "scheme_not_found", "workspace_not_found", "xcode_not_idle":
         return ["project", "diagnose"]
@@ -330,6 +331,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "prepare-target"]
     case "debug_runtime_disabled":
         return ["diagnose", "prepare-target", "observe"]
+    case "android_bridge_not_installed", "android_bridge_runner_not_configured":
+        return ["diagnose", "prepare-target", "plan"]
     case "devicectl_json_missing":
         return ["diagnose", "archive"]
     case "provisioning_profile_missing":

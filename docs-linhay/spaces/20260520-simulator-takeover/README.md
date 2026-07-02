@@ -117,6 +117,17 @@ TritonKit 需要从单一 `triton:local` 扩展为可绑定的多层 target：
 - When 执行 `triton app terminate --bundle-id <id> --json`
 - Then 返回终止结果
 
+### 场景三补充：为指定 App 启用 Simulator 相机注入
+
+- Given 当前 workspace 已执行 `triton camera build-hook --json` 或 `triton camera on --bundle-id <id> --json`
+- And 当前 host 已执行 `triton camera serve --socket /tmp/tritonkit-sim-camera.sock --json`
+- When 执行 `triton app launch --bundle-id <id> --json`
+- Then Triton 只为该 bundle 的 iOS Simulator 启动命令注入 `DYLD_INSERT_LIBRARIES` 和 `TRITON_SIM_CAMERA_SOCKET`
+- And 输出中的 `sourceCommand` 对注入环境值保持脱敏
+- And `camera serve` 通过 Unix socket 输出协议 v2 的 BGRA frame stream
+- And App 内通过 `AVCaptureDevice` 发现 Triton fake camera，`AVCaptureVideoDataOutput` delegate 与 `AVCaptureVideoPreviewLayer` 可接收同一帧源
+- And 未启用的 bundle、真机、Android 和 Harmony App 不受影响
+
 ### 场景四：通过 deep link 准备业务状态
 
 - Given 目标 App 已安装并响应调试 deep link
@@ -264,6 +275,13 @@ P4 默认不进入真实业务回归命令推荐；所有破坏性命令必须�
 - host UI automation 不等于 runtime input：所有结果必须标记 `runtimeScope`。
 - `.xcappdata`、erase、uninstall、keychain reset、runtime delete 等破坏状态：必须显式确认。
 - XcodeBuildMCP 能力面很广：TritonKit 首期只实现直接服务真实回归的命令，不追求一次性覆盖全部开发工作流。
+
+## 2026-07-02 线上 issue 修复
+
+- #124：`app install` 与 `device screenshot` 暴露 `--timeout`，统一覆盖 host command timeout。
+- #125：新增 `sim create <name> --device-type <id> --runtime <id>`，schema 可发现。
+- #126：Shutdown iOS Simulator 的 `device wait-ready` 返回 `simulator_not_booted` 与 boot nextAction。
+- #127：`sim diagnose --output` 按当前 `simctl diagnose` argv 生成，不再返回 usage。
 
 ## 完成定义
 

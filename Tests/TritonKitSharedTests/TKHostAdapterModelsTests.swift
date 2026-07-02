@@ -160,7 +160,7 @@ struct TKHostAdapterModelsTests {
 
     @Test("simctl command builder emits advanced simulator maintenance argv")
     func simctlCommandBuilderAdvancedArgv() {
-        #expect(TKSimctlCommand.diagnose(output: "/tmp/sim-diagnostics", timeout: 15, noArchive: true, allLogs: true, dataContainers: true, udids: ["U1", "U2"]).argv == ["simctl", "diagnose", "--timeout", "15.0", "--output", "/tmp/sim-diagnostics", "--no-archive", "--all-logs", "--data-containers", "--udid", "U1", "--udid", "U2"])
+        #expect(TKSimctlCommand.diagnose(output: "/tmp/sim-diagnostics", timeout: 15, noArchive: true, allLogs: true, dataContainers: true, udids: ["U1", "U2"]).argv == ["simctl", "diagnose", "--timeout=15.0", "--output=/tmp/sim-diagnostics", "--no-archive", "--all-logs", "--data-container", "--udid=U1", "--udid=U2"])
         #expect(TKSimctlCommand.recordVideo(udid: "U", output: "/tmp/sim.mov", codec: "hevc", display: "internal", mask: "black", force: true, defaultTimeoutSeconds: 90).argv == ["simctl", "io", "U", "recordVideo", "--codec=hevc", "--display=internal", "--mask=black", "--force", "/tmp/sim.mov"])
         #expect(TKSimctlCommand.logStream(udid: "U", duration: 5, style: "ndjson", level: "debug", predicate: "subsystem == \"com.example.app\"", source: true, type: "log").argv == ["simctl", "spawn", "U", "log", "stream", "--style", "ndjson", "--timeout", "5", "--level", "debug", "--predicate", "subsystem == \"com.example.app\"", "--source", "--type", "log"])
         #expect(TKSimctlCommand.logVerbose(udid: "U", enabled: true).argv == ["simctl", "logverbose", "U", "enable"])

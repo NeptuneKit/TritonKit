@@ -107,6 +107,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             Screenshot.self,
             Device.self,
             Sim.self,
+            Camera.self,
             HostApp.self,
         ]
     )

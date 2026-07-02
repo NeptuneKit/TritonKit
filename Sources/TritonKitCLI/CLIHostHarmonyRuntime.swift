@@ -314,16 +314,17 @@ func dumpHarmonyLayout(
 func captureHarmonyScreenshot(
     selected: TKHarmonyTarget,
     hdc: String,
-    output: String
+    output: String,
+    timeout: Double? = nil
 ) throws -> (remotePath: String, sourceCommands: [String]) {
     try ensureParentDirectory(for: output)
     let remotePath = remoteHarmonyArtifactPath(prefix: "triton-smoke", extension: "jpeg")
-    let screenshotResult = try runHostCommand(TKHarmonyHDCCommand.screenshot(target: selected.target, remotePath: remotePath, executable: hdc))
-    let recvResult = try runHostCommand(TKHarmonyHDCCommand.recvFile(target: selected.target, remotePath: remotePath, localPath: output, executable: hdc))
+    let screenshotResult = try runHostCommand(TKHarmonyHDCCommand.screenshot(target: selected.target, remotePath: remotePath, executable: hdc).withTimeout(timeout))
+    let recvResult = try runHostCommand(TKHarmonyHDCCommand.recvFile(target: selected.target, remotePath: remotePath, localPath: output, executable: hdc).withTimeout(timeout))
     return (remotePath, [screenshotResult.sourceCommand, recvResult.sourceCommand])
 }
 
-func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDeviceTarget, selection: HostDeviceSelectionResult? = nil, hdc: String, adb: String = "adb", output: String) throws -> HostDeviceArtifactOutput {
+func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDeviceTarget, selection: HostDeviceSelectionResult? = nil, hdc: String, adb: String = "adb", output: String, timeout: Double? = nil) throws -> HostDeviceArtifactOutput {
     guard target.ready else {
         if platform == .android {
             if target.blockedReasons.contains("unauthorized") {
@@ -341,7 +342,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
     switch platform {
     case .ios:
         try prepareHostArtifactOutputPath(output)
-        let result = try runHostCommand(TKSimctlCommand.screenshot(udid: target.target, output: output))
+        let result = try runHostCommand(TKSimctlCommand.screenshot(udid: target.target, output: output).withTimeout(timeout))
         return HostDeviceArtifactOutput(
             ok: true,
             action: "screenshot",
@@ -355,7 +356,7 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
             note: "Host-side iOS simulator screenshot was written."
         )
     case .harmony:
-        let capture = try captureHarmonyScreenshot(selected: harmonyTarget(from: target), hdc: hdc, output: output)
+        let capture = try captureHarmonyScreenshot(selected: harmonyTarget(from: target), hdc: hdc, output: output, timeout: timeout)
         return HostDeviceArtifactOutput(
             ok: true,
             action: "screenshot",
@@ -371,8 +372,8 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
     case .android:
         try prepareHostArtifactOutputPath(output)
         let remotePath = "/sdcard/triton-screenshot-\(UUID().uuidString).png"
-        let screenshotResult = try runHostCommand(TKAndroidADBCommand.screenshotToFile(serial: target.rawTarget, remotePath: remotePath, executable: adb))
-        let pullResult = try runHostCommand(TKAndroidADBCommand.pullFile(serial: target.rawTarget, remotePath: remotePath, localPath: output, executable: adb))
+        let screenshotResult = try runHostCommand(TKAndroidADBCommand.screenshotToFile(serial: target.rawTarget, remotePath: remotePath, executable: adb).withTimeout(timeout))
+        let pullResult = try runHostCommand(TKAndroidADBCommand.pullFile(serial: target.rawTarget, remotePath: remotePath, localPath: output, executable: adb).withTimeout(timeout))
         _ = try? runHostCommand(TKAndroidADBCommand.removeFile(serial: target.rawTarget, remotePath: remotePath, executable: adb))
         return HostDeviceArtifactOutput(
             ok: true,

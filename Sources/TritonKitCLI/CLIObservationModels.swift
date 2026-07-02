@@ -75,7 +75,7 @@ struct ObserveOutput: Encodable {
 
     private static func defaultPrimarySource(from sources: [ObserveSourceOutput]) -> ObserveSourceOutput? {
         let available = sources.filter(\.available)
-        let priority = ["runtime-tree", "host-layout", "webview-provider"]
+        let priority = ["runtime-tree", "android-bridge", "host-layout", "webview-provider"]
 
         for name in priority {
             if let source = available.first(where: { $0.name == name }) {

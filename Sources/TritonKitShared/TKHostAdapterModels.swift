@@ -389,10 +389,10 @@ public enum TKSimctlCommand {
     ) -> TKHostCommand {
         var arguments = ["simctl", "diagnose"]
         if let timeout {
-            arguments += ["--timeout", "\(timeout)"]
+            arguments.append("--timeout=\(timeout)")
         }
         if let output {
-            arguments += ["--output", output]
+            arguments.append("--output=\(output)")
         }
         if noArchive {
             arguments.append("--no-archive")
@@ -401,12 +401,16 @@ public enum TKSimctlCommand {
             arguments.append("--all-logs")
         }
         if dataContainers {
-            arguments.append("--data-containers")
+            arguments.append("--data-container")
         }
         for udid in udids {
-            arguments += ["--udid", udid]
+            arguments.append("--udid=\(udid)")
         }
         return command(arguments, riskLevel: .diagnostic, requiredConfig: [.timeout, .auditRecord], defaultTimeoutSeconds: timeout ?? 300, capturesArtifacts: output != nil, sensitiveOutput: true)
+    }
+
+    public static func createDevice(name: String, deviceTypeIdentifier: String, runtimeIdentifier: String) -> TKHostCommand {
+        command(["simctl", "create", name, deviceTypeIdentifier, runtimeIdentifier], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
     public static func recordVideo(
