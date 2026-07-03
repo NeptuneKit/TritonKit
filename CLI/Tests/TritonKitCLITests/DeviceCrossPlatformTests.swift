@@ -2963,6 +2963,8 @@ struct DeviceCrossPlatformTests {
         #expect(app.examples.contains("triton app open-url example://debug --device android-a --platform android --package-name com.example.app --json"))
         #expect(app.examples.contains("triton app install --device harmony-a --hap /tmp/Demo.hap --json"))
         #expect(app.examples.contains("triton app install --platform harmony --device harmony-a --app /tmp/Signed.app --json"))
+        #expect(app.examples.contains("triton app uninstall --platform harmony --target 127.0.0.1:10100 --bundle-id com.example.app --confirm --json"))
+        #expect(app.examples.contains("triton app uninstall --platform harmony --device harmony-a --bundle com.example.app --confirm --json"))
         #expect(app.examples.contains("triton app info --device <ios-real-target> --platform ios --scope real --bundle-id com.example.app --json"))
         #expect(app.examples.contains("triton app list --device <android-real-target> --platform android --scope real --user-only --json"))
         #expect(app.examples.contains("triton app terminate --device <harmony-real-target> --platform harmony --scope real --bundle com.example.app --json"))
@@ -2999,6 +3001,34 @@ struct DeviceCrossPlatformTests {
             "debug", "ax",
             "--platform", "android",
             "--device", "android-a",
+            "--json",
+        ])
+    }
+
+    @Test("issue 129 app uninstall parses Harmony bundle and Android package identifiers")
+    func issue129AppUninstallParsesHarmonyBundleAndAndroidPackageIdentifiers() throws {
+        _ = try TritonKitCLI.parseAsRoot([
+            "app", "uninstall",
+            "--platform", "harmony",
+            "--target", "127.0.0.1:10100",
+            "--bundle", "com.example.app",
+            "--confirm",
+            "--json",
+        ])
+        _ = try TritonKitCLI.parseAsRoot([
+            "app", "uninstall",
+            "--platform", "harmony",
+            "--device", "harmony:127.0.0.1:10100",
+            "--bundle-id", "com.example.app",
+            "--confirm",
+            "--json",
+        ])
+        _ = try TritonKitCLI.parseAsRoot([
+            "app", "uninstall",
+            "--platform", "android",
+            "--device", "android:emulator-5554",
+            "--package-name", "com.example.app",
+            "--confirm",
             "--json",
         ])
     }
@@ -3467,6 +3497,42 @@ struct DeviceCrossPlatformTests {
             #expect(result.stdout.contains("failed to install bundle"))
             #expect(result.stdout.contains("code:9568332"))
         }
+    }
+
+    @Test("host app uninstall supports Harmony bm uninstall")
+    func hostAppUninstallSupportsHarmonyBMUninstall() throws {
+        let target = HostDeviceTarget(
+            platform: "harmony",
+            id: "harmony:127.0.0.1:10100",
+            target: "127.0.0.1:10100",
+            state: "Connected",
+            ready: true,
+            source: "hdc",
+            name: nil,
+            runtime: nil,
+            transport: "TCP",
+            scope: "emulator",
+            kind: "emulator",
+            rawTarget: "127.0.0.1:10100"
+        )
+        let selection = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(device: "harmony:127.0.0.1:10100", platform: .harmony),
+            candidates: [.harmony: [target]],
+            aliases: .empty
+        )
+
+        let plan = try planHostAppUninstall(
+            selection: selection,
+            bundleID: "com.example.demo",
+            adb: "adb",
+            hdc: "hdc",
+            devicectlArtifacts: nil
+        )
+
+        #expect(plan.action == "app.uninstall")
+        #expect(plan.runtimeScope == "host-harmony")
+        #expect(plan.target == "harmony:127.0.0.1:10100/app:com.example.demo")
+        #expect(plan.command.argv == ["-t", "127.0.0.1:10100", "shell", "bm", "uninstall", "-n", "com.example.demo"])
     }
 
     @Test("host device selector prefers explicit matches and unique ready candidates")
