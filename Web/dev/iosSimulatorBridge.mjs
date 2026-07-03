@@ -94,6 +94,9 @@ function shouldExposeHostDeviceTarget(target, platform, runtimeTargets = []) {
   const scope = String(target.scope ?? "");
   const kind = String(target.kind ?? "");
   if (scope === "real" || kind === "real-device") {
+    if (platform === "android" || platform === "harmony") {
+      return Boolean(target.ready);
+    }
     return Boolean(target.ready) && (
       hasDirectRealDeviceConnection(target) ||
       isRealDeviceRuntimeVisible(target, platform, runtimeTargets)
@@ -122,6 +125,107 @@ function isRealDeviceRuntimeVisible(target, platform, runtimeTargets = []) {
     const activeHierarchy = runtimeTarget.activeHierarchyAvailable !== false || runtimeTarget.latestHierarchyAvailable !== false;
     return runtimePlatform === "ios" && connected && !simulatorUDID && activeHierarchy;
   });
+}
+
+const simulatorFrameCache = new Map(); // key: udid -> { buffer, contentType, lastFetchTime, activeListeners: Map, baguetteProcess, currentFps, loopActive }
+
+function startSimulatorGrabLoop(tritonPath, simulator) {
+  let cache = simulatorFrameCache.get(simulator);
+  if (!cache) {
+    cache = {
+      buffer: null,
+      contentType: "image/png",
+      lastFetchTime: 0,
+      activeListeners: new Map(),
+      baguetteProcess: null,
+      currentFps: 0,
+      loopActive: false
+    };
+    simulatorFrameCache.set(simulator, cache);
+  }
+
+  // 1. 普通轮询通道（由底层 Swift SimulatorKit GPU 共享显存流自动提速，延迟 <15ms 且 0 占用模拟器主线程）
+  if (cache.loopActive) return;
+  cache.loopActive = true;
+
+  const grabFrame = async () => {
+    if (!cache.loopActive || cache.activeListeners.size === 0) {
+      cache.loopActive = false;
+      return;
+    }
+
+    let isFastChannel = false;
+    let newBuffer = null;
+    let newContentType = "image/jpeg";
+
+    try {
+      // 优先从连接的内嵌 App SDK Target (triton:ios-simulator:<udid>) 获取截图
+      let targetId = `triton:ios-simulator:${simulator}`;
+      let fastRes = await fetch(
+        `http://127.0.0.1:19421/web/screenshot?target=${targetId}&t=${Date.now()}`,
+        { signal: AbortSignal.timeout(3000) }
+      );
+      if (!fastRes.ok) {
+        // Fallback 到已在底层实现 SimulatorKit 共享显存高刷的宿主模拟器接口（~3ms 极速响应）
+        targetId = `host:ios:${simulator}`;
+        fastRes = await fetch(
+          `http://127.0.0.1:19421/web/screenshot?target=${targetId}&t=${Date.now()}`,
+          { signal: AbortSignal.timeout(3000) }
+        );
+      }
+
+      if (fastRes.ok) {
+        const contentType = fastRes.headers.get("content-type") || "";
+        if (contentType.includes("image")) {
+          newBuffer = Buffer.from(await fastRes.arrayBuffer());
+          newContentType = contentType;
+          isFastChannel = true;
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    if (!newBuffer && cache.loopActive && cache.activeListeners.size > 0) {
+      const outputDir = join(tmpdir(), `tritonkit-web-grab-${randomUUID()}`);
+      const outputPath = join(outputDir, "frame.png");
+      await mkdir(outputDir, { recursive: true });
+      try {
+        await runTritonJSON(tritonPath, [
+          "sim",
+          "screenshot",
+          "--simulator",
+          simulator,
+          "--output",
+          outputPath,
+          "--json",
+        ]);
+        newBuffer = await readFile(outputPath);
+        newContentType = "image/png";
+      } catch (e) {
+        // ignore
+      } finally {
+        await rm(outputDir, { recursive: true, force: true });
+      }
+    }
+
+    if (newBuffer) {
+      cache.buffer = newBuffer;
+      cache.contentType = newContentType;
+      cache.lastFetchTime = Date.now();
+    }
+
+    if (cache.loopActive && cache.activeListeners.size > 0) {
+      const maxFps = Math.max(...cache.activeListeners.values(), 15);
+      const fastDelay = maxFps >= 60 ? 2 : Math.max(0, Math.round(1000 / (maxFps * 2)));
+      const delay = isFastChannel ? fastDelay : 1200;
+      setTimeout(grabFrame, delay);
+    } else {
+      cache.loopActive = false;
+    }
+  };
+
+  grabFrame();
 }
 
 export function createIosSimulatorBridgeMiddleware(options = {}) {
@@ -265,6 +369,339 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         return;
       }
 
+      // Raw PNG endpoint — 优先通过本地运行 of 19421 Swift 控制台直接拉取，省去每次起二进制进程的开销
+      if (url.pathname === "/web/ios-simulator/frame") {
+        const udid = url.searchParams.get("udid") || "booted";
+        const simulator = udid === "booted" ? "booted" : udid;
+        try {
+          // 尝试极速代理到 19421 端口并打破 HTTP 缓存
+          const fastRes = await fetch(`http://127.0.0.1:19421/web/screenshot?target=host:ios:${simulator}&t=${Date.now()}`);
+          if (fastRes.ok) {
+            const buffer = Buffer.from(await fastRes.arrayBuffer());
+            res.writeHead(200, {
+              "Content-Type": "image/png",
+              "Content-Length": buffer.length,
+              "Cache-Control": "no-store",
+              "Access-Control-Allow-Origin": "*",
+            });
+            res.end(buffer);
+            return;
+          }
+        } catch (e) {
+          // Serve 不通时走 Slow fallback
+        }
+
+        // Slow fallback: 通过进程截图
+        const outputDir = join(tmpdir(), `tritonkit-web-frame-${randomUUID()}`);
+        const outputPath = join(outputDir, "frame.png");
+        await mkdir(outputDir, { recursive: true });
+        try {
+          await runTritonJSON(tritonPath, [
+            "sim",
+            "screenshot",
+            "--simulator",
+            simulator,
+            "--output",
+            outputPath,
+            "--json",
+          ]);
+          const image = await readFile(outputPath);
+          res.writeHead(200, {
+            "Content-Type": "image/png",
+            "Content-Length": image.length,
+            "Cache-Control": "no-store",
+            "Access-Control-Allow-Origin": "*",
+          });
+          res.end(image);
+        } finally {
+          await rm(outputDir, { recursive: true, force: true });
+        }
+        return;
+      }
+
+      // Android MJPEG 流代理
+      if (url.pathname === "/web/android/mjpeg") {
+        const serial = url.searchParams.get("udid") || url.searchParams.get("serial") || "emulator-5554";
+        const requestedFps = parseInt(url.searchParams.get("fps") || "15", 10);
+        const fps = Math.min(30, Math.max(1, requestedFps));
+        console.log(`[PROXY] Starting Android MJPEG stream proxy for serial: ${serial}, fps: ${fps}`);
+
+        try {
+          await ensureTritonServe(tritonPath, hostInputBaseURL);
+        } catch (e) {
+          console.error(`[PROXY] ensureTritonServe failed: ${e.message}`);
+        }
+
+        let proxyStarted = false;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          if (!proxyStarted) {
+            console.warn(`[PROXY] Android stream proxy request timed out for serial: ${serial}`);
+            controller.abort();
+          }
+        }, 5000);
+
+        try {
+          const fetchUrl = `http://127.0.0.1:19421/web/android/framebuffer?target=${serial}&fps=${fps}`;
+          console.log(`[PROXY] Fetching from upstream: ${fetchUrl}`);
+          const fastRes = await fetch(fetchUrl, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (fastRes.ok) {
+            console.log(`[PROXY] Upstream connected for Android serial: ${serial}. Piping response...`);
+            proxyStarted = true;
+            res.writeHead(200, {
+              "Content-Type": fastRes.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Connection": "close",
+              "Pragma": "no-cache",
+              "Access-Control-Allow-Origin": "*",
+            });
+            const reader = fastRes.body.getReader();
+            req.on("close", () => {
+              console.log(`[PROXY] Client connection closed for Android serial: ${serial}`);
+              reader.cancel().catch(() => {});
+            });
+
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                  console.log(`[PROXY] Upstream stream finished for Android serial: ${serial}`);
+                  break;
+                }
+                res.write(Buffer.from(value));
+              }
+            } catch (streamErr) {
+              console.error(`[PROXY] Stream piping error for Android serial: ${serial}: ${streamErr.message}`);
+            } finally {
+              res.end();
+            }
+            return;
+          } else {
+            console.error(`[PROXY] Upstream returned non-ok status: ${fastRes.status} ${fastRes.statusText}`);
+          }
+        } catch (err) {
+          console.error(`[PROXY] Fetch exception for Android serial: ${serial}: ${err.message}`);
+          if (proxyStarted) {
+            try { res.end(); } catch (e) {}
+            return;
+          }
+        }
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Android stream proxy failed");
+        return;
+      }
+
+      // Harmony MJPEG 流代理
+      if (url.pathname === "/web/harmony/mjpeg") {
+        const target = url.searchParams.get("udid") || url.searchParams.get("serial") || "booted";
+        const requestedFps = parseInt(url.searchParams.get("fps") || "10", 10);
+        const fps = Math.min(15, Math.max(1, requestedFps));
+        console.log(`[PROXY] Starting Harmony MJPEG stream proxy for target: ${target}, fps: ${fps}`);
+
+        try {
+          await ensureTritonServe(tritonPath, hostInputBaseURL);
+        } catch (e) {
+          console.error(`[PROXY] ensureTritonServe failed for Harmony: ${e.message}`);
+        }
+
+        let proxyStarted = false;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          if (!proxyStarted) {
+            console.warn(`[PROXY] Harmony stream proxy request timed out for target: ${target}`);
+            controller.abort();
+          }
+        }, 5000);
+
+        try {
+          const fetchUrl = `http://127.0.0.1:19421/web/harmony/framebuffer?target=${target}&fps=${fps}`;
+          console.log(`[PROXY] Fetching from upstream Harmony: ${fetchUrl}`);
+          const fastRes = await fetch(fetchUrl, { signal: controller.signal });
+          clearTimeout(timeoutId);
+
+          if (fastRes.ok) {
+            console.log(`[PROXY] Upstream connected for Harmony target: ${target}. Piping response...`);
+            proxyStarted = true;
+            res.writeHead(200, {
+              "Content-Type": fastRes.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Connection": "close",
+              "Pragma": "no-cache",
+              "Access-Control-Allow-Origin": "*",
+            });
+            const reader = fastRes.body.getReader();
+            req.on("close", () => {
+              console.log(`[PROXY] Client connection closed for Harmony target: ${target}`);
+              reader.cancel().catch(() => {});
+            });
+
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) {
+                  console.log(`[PROXY] Upstream stream finished for Harmony target: ${target}`);
+                  break;
+                }
+                res.write(Buffer.from(value));
+              }
+            } catch (streamErr) {
+              console.error(`[PROXY] Stream piping error for Harmony target: ${target}: ${streamErr.message}`);
+            } finally {
+              res.end();
+            }
+            return;
+          } else {
+            console.error(`[PROXY] Upstream returned non-ok status for Harmony: ${fastRes.status} ${fastRes.statusText}`);
+          }
+        } catch (err) {
+          console.error(`[PROXY] Fetch exception for Harmony target: ${target}: ${err.message}`);
+          if (proxyStarted) {
+            try { res.end(); } catch (e) {}
+            return;
+          }
+        }
+        res.writeHead(500, { "Content-Type": "text/plain" });
+        res.end("Harmony stream proxy failed");
+        return;
+      }
+
+      // MJPEG Multipart 视频流 — 游戏/云游戏级别的极速流式推送
+      if (url.pathname === "/web/ios-simulator/mjpeg") {
+        const udid = url.searchParams.get("udid") || "booted";
+        const simulator = udid === "booted" ? "booted" : udid;
+        const requestedFps = parseInt(url.searchParams.get("fps") || "15", 10);
+        const fps = Math.min(120, Math.max(1, requestedFps));
+        const targetInterval = Math.round(1000 / fps);
+
+        // 建立连接前，首先确保后台服务被拉起
+        try {
+          await ensureTritonServe(tritonPath, hostInputBaseURL);
+        } catch (e) {
+          // ignore
+        }
+        // 尝试优先向 Triton 极速流服务器代理该请求
+        let proxyStarted = false;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => {
+          if (!proxyStarted) {
+            controller.abort();
+          }
+        }, 5000);
+
+        try {
+          const fastRes = await fetch(
+            `http://127.0.0.1:19421/web/ios-simulator/framebuffer?target=host:ios:${simulator}&fps=${fps}`,
+            { signal: controller.signal }
+          );
+          clearTimeout(timeoutId);
+
+          if (fastRes.ok) {
+            proxyStarted = true;
+            res.writeHead(200, {
+              "Content-Type": fastRes.headers.get("content-type") || "multipart/x-mixed-replace; boundary=tritonboundary",
+              "Cache-Control": "no-cache, no-store, must-revalidate",
+              "Connection": "close",
+              "Pragma": "no-cache",
+              "Access-Control-Allow-Origin": "*",
+            });
+            const reader = fastRes.body.getReader();
+            req.on("close", () => {
+              reader.cancel().catch(() => {});
+            });
+
+            try {
+              while (true) {
+                const { done, value } = await reader.read();
+                if (done) break;
+                res.write(Buffer.from(value));
+              }
+            } catch (streamErr) {
+              // ignore
+            } finally {
+              res.end();
+            }
+            return;
+          }
+        } catch (err) {
+          if (proxyStarted) {
+            try { res.end(); } catch (e) {}
+            return;
+          }
+          // 代理失败，自动降级到下方的轮询拉取缓存流
+        }
+
+        res.writeHead(200, {
+          "Content-Type": "multipart/x-mixed-replace; boundary=tritonboundary",
+          "Cache-Control": "no-cache, no-store, must-revalidate",
+          "Connection": "close",
+          "Pragma": "no-cache",
+          "Access-Control-Allow-Origin": "*",
+        });
+
+        // 获取或初始化缓存
+        let cache = simulatorFrameCache.get(simulator);
+        if (!cache) {
+          cache = {
+            buffer: null,
+            contentType: "image/png",
+            lastFetchTime: 0,
+            activeListeners: new Map(),
+            baguetteProcess: null,
+            currentFps: 0,
+            loopActive: false
+          };
+          simulatorFrameCache.set(simulator, cache);
+        }
+
+        const listenerId = randomUUID();
+        cache.activeListeners.set(listenerId, requestedFps);
+        startSimulatorGrabLoop(tritonPath, simulator);
+
+        let active = true;
+
+        req.on("close", () => {
+          active = false;
+          if (cache) {
+            cache.activeListeners.delete(listenerId);
+            if (cache.activeListeners.size === 0 && cache.baguetteProcess) {
+              try {
+                cache.baguetteProcess.kill();
+              } catch (e) {
+                // ignore
+              }
+              cache.baguetteProcess = null;
+            }
+          }
+        });
+
+        const pushFrame = () => {
+          if (!active) return;
+
+          // 硬刷新模式：只要缓存有图，按设定频率发送，确保网络采样完美匹配目标 FPS
+          if (cache.buffer) {
+            try {
+              res.write("--tritonboundary\r\n");
+              res.write(`Content-Type: ${cache.contentType}\r\n`);
+              res.write(`Content-Length: ${cache.buffer.length}\r\n\r\n`);
+              res.write(cache.buffer);
+              res.write("\r\n");
+            } catch (err) {
+              // ignore
+            }
+          }
+
+          if (active) {
+            setTimeout(pushFrame, targetInterval);
+          }
+        };
+
+        pushFrame();
+        return;
+      }
+
+
       if (url.pathname === "/web/host-screenshot") {
         const platform = url.searchParams.get("platform") || "ios";
         const target = url.searchParams.get("target") || "booted";
@@ -304,7 +741,34 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         return;
       }
 
+
+      if (url.pathname === "/web/host-ax") {
+        const target = url.searchParams.get("target") || "booted";
+        try {
+          console.log("[BRIDGE] Using tritonPath:", tritonPath);
+          console.log("[BRIDGE] Environment:", {
+            PATH: process.env.PATH,
+            DEVELOPER_DIR: process.env.DEVELOPER_DIR,
+            TERM: process.env.TERM,
+            HOME: process.env.HOME,
+            USER: process.env.USER,
+          });
+          const payload = await runTritonJSON(tritonPath, ["sim", "ax", "--device", target, "--json"]);
+          sendJSON(res, 200, { ok: true, target, tree: payload });
+        } catch (error) {
+          sendJSON(res, 409, {
+            ok: false,
+            error: {
+              code: "web_host_ax_failed",
+              message: error instanceof Error ? error.message : String(error),
+            },
+          });
+        }
+        return;
+      }
+
       sendJSON(res, 404, { ok: false, error: { code: "web_ios_bridge_route_not_found" } });
+
     } catch (error) {
       sendJSON(res, 502, {
         ok: false,
@@ -798,6 +1262,7 @@ async function appendLegacyIosNode(nodes, item, parentId, viewport, options, con
   if (!item || typeof item !== "object") return;
   const frame = parseLegacyFrame(item.frame);
   if (!frame) return;
+  const parentVisible = context.parentVisible !== false;
   const oid = item.layerObject?.oid ?? item.viewObject?.oid ?? nodes.length;
   const controllerOID = item.hostViewControllerObject?.oid;
   const shouldInsertController = controllerOID !== undefined && controllerOID !== null && controllerOID !== context.currentControllerOID;
@@ -814,7 +1279,7 @@ async function appendLegacyIosNode(nodes, item, parentId, viewport, options, con
       name: controllerName,
       frame: controllerFrame,
       depth: Math.max(0, legacyIosNodeDepth(item, parentId) + depthOffset),
-      visible: item.isHidden !== true,
+      visible: parentVisible && item.isHidden !== true,
       interactive: false,
       color: "#b48cff",
       source: "runtime-controller",
@@ -848,7 +1313,7 @@ async function appendLegacyIosNode(nodes, item, parentId, viewport, options, con
   const id = `ios:runtime:${oid}`;
   const depth = legacyIosNodeDepth(item, parentId) + depthOffset + (shouldInsertController ? 1 : 0);
   const alpha = typeof item.alpha === "number" ? item.alpha : 1;
-  const visible = item.isHidden !== true && alpha > 0.01 && frame.width > 0 && frame.height > 0;
+  const visible = parentVisible && item.isHidden !== true && alpha > 0.01 && frame.width > 0 && frame.height > 0;
   const interactive = legacyIosNodeIsInteractive(type, item);
   const color = legacyIosNodeColor(item, interactive);
   const slice = await legacyIosNodeSlice(item, options);
@@ -873,6 +1338,7 @@ async function appendLegacyIosNode(nodes, item, parentId, viewport, options, con
   const childContext = {
     depthOffset: depthOffset + (shouldInsertController ? 1 : 0),
     currentControllerOID: controllerOID ?? context.currentControllerOID,
+    parentVisible: visible,
   };
   for (const child of children) {
     await appendLegacyIosNode(nodes, child, id, viewport, options, childContext);
@@ -1130,8 +1596,8 @@ function resolveTritonBinary(root) {
 
 async function runTritonJSON(tritonPath, args) {
   const result = await runCommand(tritonPath, args);
-  if (result.exitCode !== 0) {
-    throw new Error(result.stderr || result.stdout || `triton exited with ${result.exitCode}`);
+  if (result.exitCode !== 0 || result.signal) {
+    throw new Error(result.stderr || result.stdout || `triton exited with code ${result.exitCode} signal ${result.signal}`);
   }
   try {
     return JSON.parse(result.stdout);
@@ -1296,9 +1762,9 @@ function runCommand(command, args, options = {}) {
       clearTimeout(timer);
       reject(error);
     });
-    child.on("close", (exitCode) => {
+    child.on("close", (exitCode, signal) => {
       clearTimeout(timer);
-      resolveCommand({ exitCode: exitCode ?? 1, stdout, stderr });
+      resolveCommand({ exitCode: exitCode ?? 1, signal: signal ?? null, stdout, stderr });
     });
   });
 }

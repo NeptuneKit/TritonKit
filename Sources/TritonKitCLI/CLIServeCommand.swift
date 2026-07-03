@@ -564,7 +564,9 @@ struct Serve: AsyncParsableCommand {
                         status: .internalServerError
                     )
                 }
-                return Response(status: .ok, headers: [.contentType: "image/png"],
+                let format = screenshot.format.lowercased()
+                let contentType = format == "png" ? "image/png" : "image/jpeg"
+                return Response(status: .ok, headers: [.contentType: contentType],
                                 body: .init(byteBuffer: ByteBuffer(data: imageData)))
             } catch {
                 if let timeout = error as? RuntimeRequestTimeoutError {
@@ -582,6 +584,230 @@ struct Serve: AsyncParsableCommand {
                 )
             }
         }
+
+        router.get("/web/ios-simulator/framebuffer") { request, _ -> Response in
+            guard let target = queryParameter("target", from: request) ?? queryParameter("udid", from: request) else {
+                return jsonError(
+                    code: "missing_parameter",
+                    message: "Missing target or udid parameter",
+                    endpoint: "/web/ios-simulator/framebuffer",
+                    status: .badRequest
+                )
+            }
+
+            let udid: String
+            if target.hasPrefix("host:ios:") {
+                let parts = target.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
+                if parts.count == 3 {
+                    udid = String(parts[2])
+                } else {
+                    udid = target
+                }
+            } else {
+                udid = target
+            }
+
+            _ = CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid)
+
+            let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 60
+            let fps = min(120, max(1, requestedFps))
+            let targetInterval = Double(1000 / fps) / 1000.0
+
+            let boundary = "tritonboundary"
+            let headers: HTTPFields = [
+                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
+                .cacheControl: "no-cache, no-store, must-revalidate",
+                .connection: "close"
+            ]
+
+            let responseBody = ResponseBody { writer in
+                defer {
+                    CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: udid)
+                }
+
+                var lastSentVersion: UInt64 = 0
+                var lastWriteTime = Date().timeIntervalSince1970
+                while true {
+                    if let (jpegData, version) = CLIHostSimulatorFramebufferService.shared.getLatestFrameWithVersion(udid: udid) {
+                        let now = Date().timeIntervalSince1970
+                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
+                            lastSentVersion = version
+                            lastWriteTime = now
+
+                            var headerStr = "--\(boundary)\r\n"
+                            headerStr += "Content-Type: image/jpeg\r\n"
+                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
+
+                            var buffer = ByteBuffer()
+                            buffer.writeString(headerStr)
+                            buffer.writeBytes(jpegData)
+                            buffer.writeString("\r\n")
+
+                            do {
+                                try await writer.write(buffer)
+                            } catch {
+                                break
+                            }
+                        }
+                    }
+
+                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
+                }
+
+                try? await writer.finish(nil)
+            }
+
+            return Response(status: .ok, headers: headers, body: responseBody)
+        }
+
+        router.get("/web/android/framebuffer") { request, _ -> Response in
+            guard let serial = queryParameter("target", from: request) ?? queryParameter("serial", from: request) ?? queryParameter("udid", from: request) else {
+                return jsonError(
+                    code: "missing_parameter",
+                    message: "Missing target, serial, or udid parameter",
+                    endpoint: "/web/android/framebuffer",
+                    status: .badRequest
+                )
+            }
+
+            let resolvedSerial: String
+            let adbPath = findAdbExecutable()
+            let hdcPath = findHdcExecutable()
+            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: serial), hdc: hdcPath, adb: adbPath) {
+                resolvedSerial = selection.target.rawTarget
+            } else if serial.hasPrefix("android-real:") {
+                resolvedSerial = String(serial.dropFirst("android-real:".count))
+            } else {
+                resolvedSerial = serial
+            }
+
+            _ = CLIAndroidFramebufferService.shared.startStreaming(serial: resolvedSerial, adbPath: adbPath)
+
+            let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 30
+            let fps = min(30, max(1, requestedFps))
+            let targetInterval = Double(1000 / fps) / 1000.0
+
+            let boundary = "tritonboundary"
+            let headers: HTTPFields = [
+                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
+                .cacheControl: "no-cache, no-store, must-revalidate",
+                .connection: "close"
+            ]
+
+            let responseBody = ResponseBody { writer in
+                defer {
+                    CLIAndroidFramebufferService.shared.stopStreaming(serial: resolvedSerial)
+                }
+
+                var lastSentVersion: UInt64 = 0
+                var lastWriteTime = Date().timeIntervalSince1970
+                while true {
+                    if let (jpegData, version) = CLIAndroidFramebufferService.shared.getLatestFrameWithVersion(serial: resolvedSerial) {
+                        let now = Date().timeIntervalSince1970
+                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
+                            lastSentVersion = version
+                            lastWriteTime = now
+
+                            var headerStr = "--\(boundary)\r\n"
+                            headerStr += "Content-Type: image/jpeg\r\n"
+                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
+
+                            var buffer = ByteBuffer()
+                            buffer.writeString(headerStr)
+                            buffer.writeBytes(jpegData)
+                            buffer.writeString("\r\n")
+
+                            do {
+                                try await writer.write(buffer)
+                            } catch {
+                                break
+                            }
+                        }
+                    }
+
+                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
+                }
+
+                try? await writer.finish(nil)
+            }
+
+            return Response(status: .ok, headers: headers, body: responseBody)
+        }
+
+        router.get("/web/harmony/framebuffer") { request, _ -> Response in
+            guard let target = queryParameter("target", from: request) ?? queryParameter("serial", from: request) ?? queryParameter("udid", from: request) else {
+                return jsonError(
+                    code: "missing_parameter",
+                    message: "Missing target, serial, or udid parameter",
+                    endpoint: "/web/harmony/framebuffer",
+                    status: .badRequest
+                )
+            }
+
+            let resolvedTarget: String
+            let adbPath = findAdbExecutable()
+            let hdcPath = findHdcExecutable()
+            if let selection = try? resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: target), hdc: hdcPath, adb: adbPath) {
+                resolvedTarget = selection.target.rawTarget
+            } else if target.hasPrefix("harmony-real:") {
+                resolvedTarget = String(target.dropFirst("harmony-real:".count))
+            } else {
+                resolvedTarget = target
+            }
+
+            _ = CLIHarmonyFramebufferService.shared.startStreaming(target: resolvedTarget, hdcPath: hdcPath)
+
+            let requestedFps = queryParameter("fps", from: request).flatMap(Int.init) ?? 15
+            let fps = min(15, max(1, requestedFps))
+            let targetInterval = Double(1000 / fps) / 1000.0
+
+            let boundary = "tritonboundary"
+            let headers: HTTPFields = [
+                .contentType: "multipart/x-mixed-replace; boundary=\(boundary)",
+                .cacheControl: "no-cache, no-store, must-revalidate",
+                .connection: "close"
+            ]
+
+            let responseBody = ResponseBody { writer in
+                defer {
+                    CLIHarmonyFramebufferService.shared.stopStreaming(target: resolvedTarget)
+                }
+
+                var lastSentVersion: UInt64 = 0
+                var lastWriteTime = Date().timeIntervalSince1970
+                while true {
+                    if let (jpegData, version) = CLIHarmonyFramebufferService.shared.getLatestFrameWithVersion(target: resolvedTarget) {
+                        let now = Date().timeIntervalSince1970
+                        if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
+                            lastSentVersion = version
+                            lastWriteTime = now
+
+                            var headerStr = "--\(boundary)\r\n"
+                            headerStr += "Content-Type: image/jpeg\r\n"
+                            headerStr += "Content-Length: \(jpegData.count)\r\n\r\n"
+
+                            var buffer = ByteBuffer()
+                            buffer.writeString(headerStr)
+                            buffer.writeBytes(jpegData)
+                            buffer.writeString("\r\n")
+
+                            do {
+                                try await writer.write(buffer)
+                            } catch {
+                                break
+                            }
+                        }
+                    }
+
+                    try await Task.sleep(nanoseconds: UInt64(targetInterval * 1_000_000_000))
+                }
+
+                try? await writer.finish(nil)
+            }
+
+            return Response(status: .ok, headers: headers, body: responseBody)
+        }
+
 
         router.post("/command") { request, _ -> Response in
             var bodyData = Data()
@@ -951,6 +1177,54 @@ private func testRecorderHTTPStatus(for failure: TKTestRecorderValidationFailure
     default:
         .conflict
     }
+}
+
+private func findAdbExecutable() -> String {
+    let env = ProcessInfo.processInfo.environment
+    let home = env["HOME"] ?? ""
+    if !home.isEmpty {
+        let path1 = "\(home)/Library/Android/sdk/platform-tools/adb"
+        if FileManager.default.fileExists(atPath: path1) {
+            return path1
+        }
+    }
+    if let pathVar = env["PATH"] {
+        for dir in pathVar.split(separator: ":") {
+            let fullPath = "\(dir)/adb"
+            if FileManager.default.fileExists(atPath: fullPath) {
+                return fullPath
+            }
+        }
+    }
+    return "adb"
+}
+
+private func findHdcExecutable() -> String {
+    let env = ProcessInfo.processInfo.environment
+    let home = env["HOME"] ?? ""
+    if !home.isEmpty {
+        let path1 = "\(home)/harmonyOS-command-line-tools/bin/hdc"
+        if FileManager.default.fileExists(atPath: path1) {
+            return path1
+        }
+        let path2 = "\(home)/Library/Huawei/Sdk/openharmony/12/toolchains/hdc"
+        if FileManager.default.fileExists(atPath: path2) {
+            return path2
+        }
+        let path3 = "\(home)/Library/Huawei/Sdk/openharmony/11/toolchains/hdc"
+        if FileManager.default.fileExists(atPath: path3) {
+            return path3
+        }
+    }
+    if let pathVar = env["PATH"] {
+        for dir in pathVar.split(separator: ":") {
+            let fullPath = "\(dir)/hdc"
+            if FileManager.default.fileExists(atPath: fullPath) {
+                return fullPath
+            }
+        }
+    }
+    return "hdc"
 }
 
 // MARK: - Client Commands

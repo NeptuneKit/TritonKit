@@ -291,7 +291,45 @@ func captureWebHostDeviceScreenshot(id: String, hdc: String = "hdc", adb: String
 }
 
 func captureWebHostDeviceScreenshotPayload(id: String, hdc: String = "hdc", adb: String = "adb") throws -> WebHostDeviceScreenshot {
+    // 快速通道：对于 iOS 宿主模拟器，直接从 ID 中提取 UDID 并命显存高刷，绕过同步执行子进程检索
+    if id.hasPrefix("host:ios:") {
+        let parts = id.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false)
+        if parts.count == 3 {
+            let udid = String(parts[2])
+            print("[TritonCLI] Entered fast-path for host:ios with UDID: \(udid)")
+            fflush(stdout)
+            _ = CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid)
+            if let jpegData = CLIHostSimulatorFramebufferService.shared.getLatestFrame(udid: udid) {
+                print("[TritonCLI] Hit framebuffer cache! Returning fast screenshot.")
+                fflush(stdout)
+                return WebHostDeviceScreenshot(
+                    data: jpegData,
+                    contentType: "image/jpeg",
+                    width: 1290,
+                    height: 2796
+                )
+            } else {
+                print("[TritonCLI] Framebuffer cache was nil, falling back to slow resolve path.")
+                fflush(stdout)
+            }
+        }
+    }
+
     let resolved = try resolveWebHostDeviceTarget(id, hdc: hdc, adb: adb)
+
+    if resolved.platform == .ios {
+        let udid = resolved.target.rawTarget
+        _ = CLIHostSimulatorFramebufferService.shared.startStreaming(udid: udid)
+        if let jpegData = CLIHostSimulatorFramebufferService.shared.getLatestFrame(udid: udid) {
+            return WebHostDeviceScreenshot(
+                data: jpegData,
+                contentType: "image/jpeg",
+                width: 1290,
+                height: 2796
+            )
+        }
+    }
+
     let output = FileManager.default.temporaryDirectory
         .appendingPathComponent("triton-web-device-\(UUID().uuidString).\(webHostDeviceScreenshotFileExtension(for: resolved.platform))")
         .path
