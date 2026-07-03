@@ -261,6 +261,7 @@ private func explicitHostDeviceMatch(selector: String, candidates: [HostDeviceTa
     return candidates.first {
         $0.id == normalizedSelector
             || $0.target == normalizedSelector
+            || $0.name == normalizedSelector
             || $0.rawTarget == normalizedSelector
             || $0.rawTargetAliases.contains(normalizedSelector)
     }

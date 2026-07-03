@@ -132,14 +132,61 @@ func buildSchemaResponse(command: String?) throws -> TKCLISchemaResponse {
     let commands = commandSchemas()
     let filtered: [TKCommandSchema]
     if let command {
-        filtered = commands.filter { $0.name == command }
-        guard !filtered.isEmpty else {
+        if let schema = commands.first(where: { $0.name == command }) {
+            filtered = [schema]
+        } else if let schema = schemaForNestedCommand(command, commands: commands) {
+            filtered = [schema]
+        } else {
             throw SchemaCommandLookupError(command: command)
         }
     } else {
         filtered = commands
     }
     return TKCLISchemaResponse(commands: filtered)
+}
+
+private func schemaForNestedCommand(_ command: String, commands: [TKCommandSchema]) -> TKCommandSchema? {
+    let parts = command.split(separator: " ").map(String.init)
+    guard parts.count == 2,
+          let schema = commands.first(where: { $0.name == parts[0] }),
+          let subcommand = schema.subcommands.first(where: { $0.name == parts[1] }) else {
+        return nil
+    }
+    return TKCommandSchema(
+        name: schema.name,
+        summary: schema.summary,
+        requiresServer: schema.requiresServer,
+        requiresTarget: schema.requiresTarget,
+        requiresHierarchy: schema.requiresHierarchy,
+        runtimeScope: schema.runtimeScope,
+        exitCodeOnFailure: schema.exitCodeOnFailure,
+        outputFormats: schema.outputFormats,
+        options: schema.options,
+        usageForms: schema.usageForms,
+        argumentForms: schema.argumentForms,
+        examples: schema.examples,
+        successShape: schema.successShape,
+        failureShape: schema.failureShape,
+        outputSemantics: schema.outputSemantics,
+        requiredOptions: schema.requiredOptions,
+        inheritsDefaultsFrom: schema.inheritsDefaultsFrom,
+        jsonlEvents: schema.jsonlEvents,
+        finalEventKind: schema.finalEventKind,
+        artifacts: schema.artifacts,
+        retryable: schema.retryable,
+        nextCommands: schema.nextCommands,
+        recoveryCommands: schema.recoveryCommands,
+        outputContracts: schema.outputContracts,
+        failureCodes: schema.failureCodes,
+        subcommands: [subcommand],
+        inputActions: schema.inputActions,
+        providedCapabilities: schema.providedCapabilities,
+        surfaceLayer: schema.surfaceLayer,
+        deprecatedForMainPath: schema.deprecatedForMainPath,
+        replacementCommand: schema.replacementCommand,
+        rawDebugCommand: schema.rawDebugCommand,
+        surfaceRationale: schema.surfaceRationale
+    )
 }
 
 func schemaUnknownCommandErrorResponse(_ error: SchemaCommandLookupError) -> TKCLIErrorResponse {
@@ -154,7 +201,7 @@ func schemaUnknownCommandErrorResponse(_ error: SchemaCommandLookupError) -> TKC
 struct Schema: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Print machine-readable command schemas and examples")
 
-    @Option(help: "Command name to filter, for example tap or export") var command: String?
+    @Option(help: "Command name to filter, for example tap, export, or 'xcode run'") var command: String?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @OptionGroup var localization: LocalizationOptions

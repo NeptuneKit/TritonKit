@@ -223,7 +223,7 @@ Positional argument 必须进入 `argumentForms[]`，不能继续塞进 `options
 
 每个 schema example 必须恰好包含一个可抽取的 `triton` invocation。example 可以包含 `printf`、shell pipeline 或 stdin 准备步骤，但不能在同一条样本里混入多个 `triton` 调用，否则 agent 会误把多步 shell 流程当成单步 argv 样本；该约束由 `SchemaFactSourceTests.schemaExamplesContainOneTritonInvocationForAgentReuse` 锁定。
 
-`triton schema --command <name> --json` 必须能过滤出每一个已注册命令，并且只返回该命令的 schema。agent 应该可以先全量读取 inventory，再按需读取单个命令契约，避免每次规划都处理完整 schema。
+`triton schema --command <name> --json` 必须能过滤出每一个已注册命令，并且只返回该命令的 schema；`<name>` 支持一层嵌套子命令 selector，例如 `xcode run`，返回父命令 schema envelope 并把 `subcommands[]` 收窄到对应子命令。agent 应该可以先全量读取 inventory，再按需读取单个命令或子命令契约，避免每次规划都处理完整 schema。
 
 `nextCommands[]` 也是 schema 的恢复契约，必须自洽：每条 `triton ...` 建议中的根命令、子命令和 `--flag` 都必须能被同一份 `commandSchemas()` 解释；该约束由 `SchemaFactSourceTests.schemaNextCommandsStayAlignedWithCommandSchemas` 锁定。
 

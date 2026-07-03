@@ -177,6 +177,7 @@ P0 最小 `triton xcode` 入口已落地：
 6. `xctrace record` 和 `coverage report` 已先落为 artifact 型契约：Triton 只返回 artifact path、bytes 或 source command 摘要，不把大型 `.trace` / coverage JSON 当作 inline 输出；coverage artifact 写入不应被 stdout sample 截断。
 7. `xcode test --result-bundle ...` 的最终 summary 会默认脱敏内联 `testResultSummary` 与 `topFailures`；测试失败时输出 `ok:false` summary 并以非 0 退出，仍保留 stdout/stderr 与 `.xcresult` artifact 供后续深挖。
 8. `xcresult` summary/failures 已落地，并对大输出使用不截断读取；attachments、coverage 语义汇总和 evidence 深度整合仍在后续切片，不在本次内宣称完成。
+9. `schema --command` 支持 `xcode run` 这类一层嵌套 selector，返回父命令 schema envelope 并把 `subcommands[]` 收窄到目标子命令；`xcode run --device` 的真机 selector 支持按 `device list` 返回的 `name` 精确匹配。
 
 ### P0：Xcode workflow 最小闭环
 

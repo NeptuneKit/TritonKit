@@ -419,6 +419,17 @@ extension SchemaFactSourceTests {
         }
     }
 
+    @Test("schema lookup supports nested command selectors")
+    func schemaLookupSupportsNestedCommandSelectors() throws {
+        let response = try buildSchemaResponse(command: "xcode run")
+
+        let xcode = try #require(response.commands.first)
+        #expect(response.commands.map(\.name) == ["xcode"])
+        #expect(xcode.subcommands.map(\.name) == ["run"])
+        #expect(xcode.subcommands.first?.optionalOptions.contains("--device") == true)
+        #expect(response.httpManagementAPI.isEmpty)
+    }
+
     @Test("schema command filtering covers the full command inventory")
     func schemaCommandFilteringCoversTheFullCommandInventory() throws {
         for commandName in commandSchemas().map(\.name) {

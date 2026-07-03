@@ -3301,6 +3301,36 @@ struct DeviceCrossPlatformTests {
         #expect(resolved.source == .explicit)
     }
 
+    @Test("host device selector resolves iOS real devices by listed name")
+    func hostDeviceSelectorResolvesIOSRealDevicesByListedName() throws {
+        let ready = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:abc123",
+            target: "ios-real:abc123",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "iPhone (2)",
+            runtime: "iOS 26.5",
+            transport: "usb",
+            scope: "real",
+            kind: "real-device",
+            blockedReasons: [],
+            rawTarget: "COREDEVICE-IDENTIFIER"
+        )
+
+        let resolved = try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(device: "iPhone (2)", platform: .ios, ready: true),
+            candidates: [.ios: [ready]],
+            aliases: .empty
+        )
+
+        #expect(resolved.platform == .ios)
+        #expect(resolved.target == ready)
+        #expect(resolved.source == .explicit)
+        #expect(resolved.selector == "iPhone (2)")
+    }
+
     @Test("host device selector resolves iOS real devices by raw identifier and UDID aliases")
     func hostDeviceSelectorResolvesIOSRealDevicesByRawIdentifierAndUDIDAliases() throws {
         let ready = HostDeviceTarget(
