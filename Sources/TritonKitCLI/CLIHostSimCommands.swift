@@ -138,6 +138,7 @@ struct Sim: AsyncParsableCommand {
             SimPush.self,
             SimMedia.self,
             SimPersonalization.self,
+            SimAX.self,
         ]
     )
 }
