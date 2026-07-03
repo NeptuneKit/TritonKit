@@ -25,8 +25,11 @@ struct SchemaFactSourceTests {
 
         #expect(doctor.failureCodes.contains("server_unavailable"))
         #expect(doctor.failureCodes.contains("target_unavailable"))
+        #expect(doctor.options.map(\.name).contains("--platform"))
+        #expect(doctor.examples.contains("triton doctor --platform harmony --json"))
         #expect(doctor.nextCommands.contains("triton capabilities --format json"))
         #expect(doctor.nextCommands.contains("triton plan --format json"))
+        _ = try TritonKitCLI.parseAsRoot(["doctor", "--platform", "harmony", "--json"])
         expectContract(doctor, selector: "doctor", fields: [
             "ok", "serverReachable", "connected", "runtime", "surface", "nextStep", "nextWorkflows", "primaryCapability", "primaryWorkflowCategory", "primaryNextAction", "primaryNextActionSource",
             "primaryNextAction.command", "primaryNextAction.args", "primaryNextAction.category", "primaryNextAction.requiresLongRunningProcess", "checks",
@@ -153,19 +156,40 @@ struct SchemaFactSourceTests {
             port: 19421
         )
 
-        #expect(connected.nextStep == "action-surface")
+        #expect(connected.nextStep == "host-device")
         #expect(connected.surface == "doctor")
-        #expect(connected.nextWorkflows == ["action", "assert", "evidence"])
-        #expect(connected.primaryCapability == "press")
-        #expect(connected.primaryWorkflowCategory == "action")
-        #expect(connected.primaryNextAction?.command == "capabilities")
+        #expect(connected.nextWorkflows == ["app", "evidence", "smoke", "target"])
+        #expect(connected.primaryCapability == "host-device")
+        #expect(connected.primaryWorkflowCategory == "app")
+        #expect(connected.primaryNextAction?.command == "device")
+        #expect(connected.primaryNextAction?.args == ["list", "--json"])
         #expect(connected.primaryNextActionSource == "next-step-check")
         #expect(connected.checks.map(\.id).contains("server"))
         #expect(connected.checks.map(\.id).contains("target"))
         #expect(connected.checks.map(\.id).contains("runtime"))
+        #expect(connected.checks.map(\.id).contains("host-device"))
         #expect(connected.checks.first(where: { $0.id == "action-surface" })?.status == "warn")
         #expect(connected.checks.first(where: { $0.id == "action-surface" })?.relatedCapabilities == ["press"])
         #expect(connected.checks.first(where: { $0.id == "action-surface" })?.workflowCategories == ["action", "assert", "evidence"])
+
+        let harmony = buildDoctorResponse(
+            capabilities: TKCapabilitiesResponse(
+                ok: true,
+                serverReachable: true,
+                connected: true,
+                latestHierarchyAvailable: true,
+                targetCount: 1,
+                runtime: "embedded",
+                capabilities: runtimeCapabilities(host: "127.0.0.1", port: 19421, serverReachable: true, connected: true)
+            ),
+            host: "127.0.0.1",
+            port: 19421,
+            platform: .harmony
+        )
+
+        #expect(harmony.nextStep == "host-device")
+        #expect(harmony.primaryNextAction?.command == "device")
+        #expect(harmony.primaryNextAction?.args == ["list", "--platform", "harmony", "--json"])
     }
 
     @Test("target schemas expose discovery and readiness contracts")

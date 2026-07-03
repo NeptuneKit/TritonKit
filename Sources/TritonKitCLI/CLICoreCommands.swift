@@ -94,12 +94,13 @@ struct Doctor: AsyncParsableCommand {
 
     @Option(help: "Server host") var host: String = "127.0.0.1"
     @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Host-side device platform scope: ios, android, or harmony") var platform: HostDevicePlatform?
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
     @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
     @OptionGroup var localization: LocalizationOptions
 
     func run() async throws {
-        let response = await buildDoctor(host: host, port: port)
+        let response = await buildDoctor(host: host, port: port, platform: platform)
         try printDoctor(response, format: effectiveFormat(format, json: json), language: effectiveLanguage(localization.language))
     }
 }
