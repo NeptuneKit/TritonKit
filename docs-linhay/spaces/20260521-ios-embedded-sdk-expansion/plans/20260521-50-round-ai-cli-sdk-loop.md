@@ -27,10 +27,10 @@
 | 03 | 解释 | AI 需要区分 embedded 能力和 host-side 能力 | `triton capabilities --json` 增加 `runtimeScope=embedded|host-side|unsupported` | 调研现有 command schema 字段是否足够，不足则新增 capability taxonomy | research-first | 进入 S0 |
 | 04 | 解释 | AI 调用系统级动作时必须得到明确拒绝 | `triton press home --json` 返回 `unsupported_runtime_scope` 和 host-side hint | 调研现有 `press` unsupported envelope 是否要从 input result 升级为统一 error code | test-now | `verify-intent-cli-smoke.sh` 覆盖 press 基线；新增能力另写 schema 测试 |
 | 05 | 复盘 | AI 需要知道 CLI 发出的每条 SDK request | `triton ledger --limit 100 --jsonl`；数据含 request type、source command、elapsedMs、result/error | 调研 ring buffer 存储位置、隐私字段、内存上限 | research-first | 进入 S4 |
-| 06 | 观察 | AI 需要知道 App 身份和构建信息 | `triton state app --json`；数据含 bundle id、display name、version/build、locale、uptime | 调研 `Bundle`、`ProcessInfo`、`Locale`、memory footprint 公开 API | research-first | 进入 S1 |
-| 07 | 观察 | AI 需要知道当前 scene/window | `triton state scene --json`；数据含 activationState、keyWindow、safeArea、orientation、window count | 调研 iOS 13+ scene API、多窗口、screen scale、安全区 | research-first | 进入 S1 |
-| 08 | 观察 | AI 需要知道当前页面位置 | `triton state route --json`；数据含 top controller、presented stack、navigation title、selected tab | 调研 UINavigationController、UITabBarController、UISplitViewController、UIHostingController 边界 | research-first | 进入 S1 |
-| 09 | 观察 | AI 要知道输入焦点在哪里 | `triton state responder --json`；数据含 firstResponder oid/class/frame/text traits | 调研 first responder 遍历、secure text、editable 状态 | research-first | 进入 S1 |
+| 06 | 观察 | AI 需要知道 App 身份和构建信息 | `triton debug state app --json`；数据含 bundle id、display name、version/build、locale、uptime | 调研 `Bundle`、`ProcessInfo`、`Locale`、memory footprint 公开 API | research-first | 进入 S1 |
+| 07 | 观察 | AI 需要知道当前 scene/window | `triton debug state scene --json`；数据含 activationState、keyWindow、safeArea、orientation、window count | 调研 iOS 13+ scene API、多窗口、screen scale、安全区 | research-first | 进入 S1 |
+| 08 | 观察 | AI 需要知道当前页面位置 | `triton debug state route --json`；数据含 top controller、presented stack、navigation title、selected tab | 调研 UINavigationController、UITabBarController、UISplitViewController、UIHostingController 边界 | research-first | 进入 S1 |
+| 09 | 观察 | AI 要知道输入焦点在哪里 | `triton debug state responder --json`；数据含 firstResponder oid/class/frame/text traits | 调研 first responder 遍历、secure text、editable 状态 | research-first | 进入 S1 |
 | 10 | 解释 | AI 点击失败时要知道目标是否 disabled | `triton attrs --oid <oid> --groups control --json`；数据含 enabled/selected/highlighted/actions | 调研 UIControl state、target/actions 安全输出边界 | research-first | 进入 S1 |
 | 11 | 解释 | AI 填表前要知道输入框属性 | `triton attrs --groups text --json`；数据含 text length、placeholder、secure、keyboardType、returnKeyType | 调研 UITextField/UITextView 公开 API 与 redaction | research-first | 进入 S1 |
 | 12 | 解释 | AI 需要知道 segment 可选项 | `triton attrs --groups control --json`；数据含 segment titles、selectedSegmentIndex | 调研 UISegmentedControl title/image/null title 边界 | research-first | 进入 S1 |
@@ -38,7 +38,7 @@
 | 14 | 解释 | AI 需要知道 slider/stepper 范围 | `triton attrs --groups control --json`；数据含 min/max/value/step | 调研 UISlider/UIStepper value API 和浮点格式 | research-first | 进入 S1/S3 |
 | 15 | 解释 | AI 需要知道 scroll 是否还能滚动 | `triton attrs --groups scroll --json`；数据含 contentSize/contentOffset/insets/canScroll | 调研 UIScrollView adjustedContentInset、方向判断、分页 | research-first | 进入 S1/S3 |
 | 16 | 观察 | AI 需要表格/列表可见 cell 摘要 | `triton attrs --groups collection --json`；数据含 visible index paths、cell text summary | 调研 UITableView/UICollectionView 公开 API，避免私有 cell 内省 | research-first | 进入 P1 |
-| 17 | 观察 | AI 需要 App 内弹窗状态 | `triton state route --include-alerts --json`；数据含 UIAlertController title/actions | 调研只处理 App 内 UIAlertController，系统权限弹窗继续 unsupported | research-first | 进入 P1 |
+| 17 | 观察 | AI 需要 App 内弹窗状态 | `triton debug state route --include-alerts --json`；数据含 UIAlertController title/actions | 调研只处理 App 内 UIAlertController，系统权限弹窗继续 unsupported | research-first | 进入 P1 |
 | 18 | 观察 | AI 需要一次最小快照 | `triton snapshot --include app,scene,route,ax,geometry --json` | 调研 snapshot DTO、include 参数、各 artifact capturedAt | research-first | 进入 S2 |
 | 19 | 观察 | AI 需要截图元数据但不一定要图片 | `triton snapshot --include screenshot-metadata --json` | 调研 screenshot dataRef/base64 与 metadata-only 的边界 | research-first | 进入 S2 |
 | 20 | 解释 | AI 要知道快照是否过期 | snapshot 每个 artifact 带 `freshness`、cache state、target connection state | 调研现有 evidence freshness 复用方式 | research-first | 进入 S2/S4 |

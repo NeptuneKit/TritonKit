@@ -673,9 +673,9 @@ jq -e '.commands[0].options[] | select(.name == "<button>")' "$out_dir/schema-pr
 "$triton" schema --command runtime > "$out_dir/schema-runtime.json"
 jq -e '.commands[0].providedCapabilities[] == "runtime-manifest" and .commands[0].runtimeScope == "embedded"' "$out_dir/schema-runtime.json" >/dev/null
 "$triton" schema --command state > "$out_dir/schema-state.json"
-jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "state-route")) and (.commands[0].examples[] | select(. == "triton state responder --json"))' "$out_dir/schema-state.json" >/dev/null
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "state-route")) and (.commands[0].examples[] | select(. == "triton debug state responder --json"))' "$out_dir/schema-state.json" >/dev/null
 "$triton" schema --command snapshot > "$out_dir/schema-snapshot.json"
-jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "snapshot")) and (.commands[0].examples[] | select(. == "triton snapshot --include app,scene,route,ax,geometry --json"))' "$out_dir/schema-snapshot.json" >/dev/null
+jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "snapshot")) and (.commands[0].examples[] | select(. == "triton debug snapshot --include app,scene,route,ax,geometry --json"))' "$out_dir/schema-snapshot.json" >/dev/null
 "$triton" schema --command focus > "$out_dir/schema-focus.json"
 jq -e '.commands[0].runtimeScope == "embedded" and (.commands[0].providedCapabilities[] | select(. == "focus")) and (.commands[0].options[] | select(.name == "<selector>"))' "$out_dir/schema-focus.json" >/dev/null
 "$triton" schema --command set-text > "$out_dir/schema-set-text.json"

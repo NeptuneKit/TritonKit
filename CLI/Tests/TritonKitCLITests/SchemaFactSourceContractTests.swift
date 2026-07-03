@@ -27,6 +27,23 @@ extension SchemaFactSourceTests {
         #expect(missing == [])
     }
 
+    @Test("schema examples do not recommend retired root commands")
+    func schemaExamplesDoNotRecommendRetiredRootCommands() {
+        let retiredRoots: Set<String> = ["state", "runtime", "snapshot", "hierarchy", "nodes", "node", "attrs", "object", "geometry", "ax", "hit", "ledger"]
+        let invalidExamples = commandSchemas()
+            .flatMap { schema in schema.examples.map { (schema.name, $0) } }
+            .compactMap { schemaName, example -> String? in
+                let parts = example.split(whereSeparator: \.isWhitespace)
+                guard parts.count > 1, parts[0] == "triton" else {
+                    return nil
+                }
+                return retiredRoots.contains(String(parts[1])) ? "\(schemaName): \(example)" : nil
+            }
+            .sorted()
+
+        #expect(invalidExamples == [])
+    }
+
     @Test("P23 command schemas expose product surface metadata")
     func p23CommandSchemasExposeProductSurfaceMetadata() throws {
         let schemas = commandSchemaMap()

@@ -103,10 +103,10 @@
 ## 推荐 DTO / 命令 shape
 
 ```bash
-triton state app --json
-triton state scene --json
-triton state route --json
-triton state responder --json
+triton debug state app --json
+triton debug state scene --json
+triton debug state route --json
+triton debug state responder --json
 ```
 
 四类响应都包含：

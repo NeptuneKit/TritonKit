@@ -28,6 +28,16 @@ struct CLIHelpTests {
         #expect(result.stderr.contains("Unknown subcommand 'tap'"))
     }
 
+    @Test("retired state root suggests current debug and observation commands")
+    func retiredStateRootSuggestsCurrentDebugAndObservationCommands() throws {
+        let result = try runTritonHelp(["state", "route", "--json"])
+
+        #expect(result.exitCode != 0)
+        #expect(result.stderr.contains("Unknown subcommand 'state'"))
+        #expect(result.stderr.contains("triton debug state route --json"))
+        #expect(result.stderr.contains("triton observe current --json"))
+    }
+
     @Test("workflow act command help can drill into tap")
     func workflowActCommandHelpCanDrillIntoTap() throws {
         let result = try runTritonHelp(["act", "tap", "--help"])
