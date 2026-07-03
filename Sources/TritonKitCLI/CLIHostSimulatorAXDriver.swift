@@ -22,14 +22,16 @@ enum AXElementReader {
         if let n = obj.value(forKey: key) as? NSNumber { return n.boolValue }
         return fallback
     }
-    static func frame(of element: NSObject) -> CGRect {
+    static func frame(of element: NSObject?) -> CGRect {
+        guard let element = element else { return .zero }
         let sel = NSSelectorFromString("accessibilityFrame")
         guard element.responds(to: sel),
               let imp = class_getMethodImplementation(type(of: element), sel) else { return .zero }
         typealias Fn = @convention(c) (AnyObject, Selector) -> CGRect
         return unsafeBitCast(imp, to: Fn.self)(element, sel)
     }
-    static func children(of element: NSObject) -> [NSObject] {
+    static func children(of element: NSObject?) -> [NSObject] {
+        guard let element = element else { return [] }
         guard let raw = element.value(forKey: "accessibilityChildren") else { return [] }
         if let arr = raw as? [NSObject] { return arr }
         return []
@@ -72,37 +74,76 @@ class AXPTranslatorAccessibility {
         self.udid = udid
     }
     
+    private static let coreSimLoaded: Bool = {
+        // Try both known locations for CoreSimulator.framework
+        let candidates = [
+            "/Library/Developer/PrivateFrameworks/CoreSimulator.framework/CoreSimulator",
+            "/Applications/Xcode.app/Contents/SharedFrameworks/CoreSimulator.framework/CoreSimulator",
+            "/Applications/Xcode.app/Contents/Developer/Library/PrivateFrameworks/CoreSimulator.framework/CoreSimulator",
+        ]
+        for path in candidates {
+            if dlopen(path, RTLD_NOW | RTLD_GLOBAL) != nil { return true }
+        }
+        return false
+    }()
+
     private func resolveDevice() -> NSObject? {
-        _ = CLIHostSimulatorFramebufferService.shared
-        guard let simServiceContextClass = NSClassFromString("SimServiceContext") else { return nil }
-        let sharedContextSelector = NSSelectorFromString("sharedServiceContextForDeveloperDir:error:")
-        guard let metaCls = object_getClass(simServiceContextClass),
-              class_respondsToSelector(metaCls, sharedContextSelector) else { return nil }
-        
-        let developerDir = "/Applications/Xcode.app/Contents/Developer"
-        
-        typealias Fn = @convention(c) (AnyClass, Selector, NSString, UnsafeMutableRawPointer?) -> Unmanaged<AnyObject>?
-        let imp = class_getMethodImplementation(metaCls, sharedContextSelector)
-        guard let contextUnmanaged = unsafeBitCast(imp, to: Fn.self)(simServiceContextClass, sharedContextSelector, developerDir as NSString, nil) else { return nil }
-        let context = contextUnmanaged.takeUnretainedValue()
-        
-        let defaultDeviceSetSelector = NSSelectorFromString("defaultDeviceSetWithError:")
-        guard context.responds(to: defaultDeviceSetSelector) else { return nil }
-        guard let deviceSetUnmanaged = context.perform(defaultDeviceSetSelector, with: nil) else { return nil }
-        let actualDeviceSet = deviceSetUnmanaged.takeUnretainedValue()
-        
-        guard let devicesArray = actualDeviceSet.value(forKey: "devices") as? [AnyObject] else { return nil }
-        
-        for device in devicesArray {
-            if let deviceUDIDValue = device.value(forKey: "UDID") {
-                let deviceUDIDStr = "\(deviceUDIDValue)".uppercased()
-                if deviceUDIDStr == udid.uppercased() {
-                    return device as? NSObject
+        _ = Self.coreSimLoaded
+
+        // Method 1: SimDeviceSet.defaultSetWithError (no dev dir needed)
+        if let simDeviceSetClass = NSClassFromString("SimDeviceSet") {
+            let sel = NSSelectorFromString("defaultSetWithError:")
+            if let metaCls = object_getClass(simDeviceSetClass),
+               class_respondsToSelector(metaCls, sel) {
+                typealias Fn = @convention(c) (AnyClass, Selector, UnsafeMutableRawPointer?) -> Unmanaged<AnyObject>?
+                let imp = class_getMethodImplementation(metaCls, sel)
+                if let setUnmanaged = unsafeBitCast(imp, to: Fn.self)(simDeviceSetClass, sel, nil) {
+                    let deviceSet = setUnmanaged.takeUnretainedValue()
+                    if let devicesArray = (deviceSet as AnyObject).value(forKey: "devices") as? [AnyObject] {
+                        for device in devicesArray {
+                            if let val = device.value(forKey: "UDID") {
+                                if "\(val)".uppercased() == udid.uppercased() {
+                                    return device as? NSObject
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
+
+        // Method 2: SimServiceContext (Xcode-style)
+        if let simServiceContextClass = NSClassFromString("SimServiceContext") {
+            let sharedContextSelector = NSSelectorFromString("sharedServiceContextForDeveloperDir:error:")
+            if let metaCls = object_getClass(simServiceContextClass),
+               class_respondsToSelector(metaCls, sharedContextSelector) {
+                let developerDir = ProcessInfo.processInfo.environment["DEVELOPER_DIR"]
+                    ?? "/Applications/Xcode.app/Contents/Developer"
+                typealias Fn = @convention(c) (AnyClass, Selector, NSString, UnsafeMutableRawPointer?) -> Unmanaged<AnyObject>?
+                let imp = class_getMethodImplementation(metaCls, sharedContextSelector)
+                if let contextUnmanaged = unsafeBitCast(imp, to: Fn.self)(simServiceContextClass, sharedContextSelector, developerDir as NSString, nil) {
+                    let context = contextUnmanaged.takeUnretainedValue()
+                    let defaultDeviceSetSelector = NSSelectorFromString("defaultDeviceSetWithError:")
+                    if (context as AnyObject).responds(to: defaultDeviceSetSelector),
+                       let deviceSetUnmanaged = (context as AnyObject).perform(defaultDeviceSetSelector, with: nil) {
+                        let actualDeviceSet = deviceSetUnmanaged.takeUnretainedValue()
+                        if let devicesArray = (actualDeviceSet as AnyObject).value(forKey: "devices") as? [AnyObject] {
+                            for device in devicesArray {
+                                if let val = device.value(forKey: "UDID") {
+                                    if "\(val)".uppercased() == udid.uppercased() {
+                                        return device as? NSObject
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         return nil
     }
+
 
     func describeAll() throws -> TKAXNode? {
         return try fetchTree(hitTest: nil)
@@ -218,9 +259,8 @@ class AXPTranslatorAccessibility {
 
     private static func macPlatformElement(translator: NSObject, translation: NSObject) -> NSObject? {
         let sel = NSSelectorFromString("macPlatformElementFromTranslation:")
-        guard translator.responds(to: sel), let imp = class_getMethodImplementation(type(of: translator), sel) else { return nil }
-        typealias Fn = @convention(c) (AnyObject, Selector, AnyObject) -> AnyObject?
-        return unsafeBitCast(imp, to: Fn.self)(translator, sel, translation) as? NSObject
+        guard translator.responds(to: sel) else { return nil }
+        return translator.perform(sel, with: translation)?.takeUnretainedValue() as? NSObject
     }
 
     private static func objectAtPoint(translator: NSObject, point: CGPoint, displayId: UInt32, token: String) -> NSObject? {
@@ -298,63 +338,152 @@ class AXPTranslatorAccessibility {
     }
 }
 
-// MARK: - TokenDispatcher
-@objc(AXPTranslatorTokenDispatcher)
-protocol TokenDispatcherObjCProtocol {
-    func accessibilityTranslationDelegateBridgeCallbackWithToken(_ token: String) -> @convention(block) (NSObject, @escaping @convention(block) (NSObject?, Error?) -> Void) -> Void
+struct SwiftBlock {
+    let isa: UnsafeRawPointer
+    let flags: Int32
+    let reserved: Int32
+    let invoke: UnsafeRawPointer
+    let descriptor: UnsafeRawPointer
 }
 
-final class TokenDispatcher: NSObject, TokenDispatcherObjCProtocol {
+struct BlockDescriptor {
+    let reserved: Int
+    let size: Int
+    let copy: UnsafeRawPointer?
+    let dispose: UnsafeRawPointer?
+    let signature: UnsafePointer<CChar>?
+    let layout: UnsafePointer<CChar>?
+}
+
+private var descriptor = BlockDescriptor(
+    reserved: 0,
+    size: MemoryLayout<SwiftBlock>.size,
+    copy: nil,
+    dispose: nil,
+    signature: nil,
+    layout: nil
+)
+
+private let invokeFunc: @convention(c) (UnsafeRawPointer, UnsafeRawPointer?, UnsafeRawPointer?, UInt64, UnsafeRawPointer?) -> UnsafeRawPointer? = { block, request, token, displayId, completionObj in
+    
+    let dispatcher = AXPTranslatorAccessibility.sharedDispatcher
+    let entry = dispatcher.queue.sync {
+        dispatcher.entries.values.first { $0.deadline > Date() }
+    }
+    
+    guard let entry = entry else {
+        return nil
+    }
+
+    let sel1 = NSSelectorFromString("sendAccessibilityRequestAsync:withCompletion:")
+    let sel2 = NSSelectorFromString("sendAccessibilityRequestAsync:completionQueue:completionHandler:")
+    // Use UnsafeRawPointer to avoid Swift ARC auto-retain/release on parameters
+    typealias SwiftCompletionBlock = @convention(block) (UnsafeRawPointer?, UnsafeRawPointer?) -> Void
+
+    guard let sym = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "objc_msgSend") else {
+        print("[TritonKit] failed to find objc_msgSend")
+        return nil
+    }
+
+    guard let retainSym = dlsym(UnsafeMutableRawPointer(bitPattern: -2), "objc_retain") else {
+        print("[TritonKit] failed to find objc_retain")
+        return nil
+    }
+
+    guard let requestPtr = request else {
+        print("[TritonKit] request is nil")
+        return nil
+    }
+    let requestObj = unsafeBitCast(requestPtr, to: AnyObject.self)
+
+    // Store a +1 retained pointer so the caller (AXPTranslator) can safely retain it again
+    let resultStorage = UnsafeMutablePointer<UnsafeRawPointer?>.allocate(capacity: 1)
+    resultStorage.pointee = nil
+    let semaphore = DispatchSemaphore(value: 0)
+    
+    // Manually retain the result to balance the caller's retain
+    typealias ObjcRetainFn = @convention(c) (UnsafeRawPointer) -> UnsafeRawPointer
+    let objcRetain = unsafeBitCast(retainSym, to: ObjcRetainFn.self)
+    
+    let completionBlock: SwiftCompletionBlock = { result, error in
+        if let result = result {
+            // Manually retain so the object stays alive past this block scope
+            let retained = objcRetain(result)
+            resultStorage.pointee = retained
+        }
+        semaphore.signal()
+    }
+
+    if entry.device.responds(to: sel1) {
+        typealias MsgSendFn = @convention(c) (AnyObject, Selector, AnyObject, SwiftCompletionBlock) -> Void
+        let msgSend = unsafeBitCast(sym, to: MsgSendFn.self)
+        msgSend(entry.device, sel1, requestObj, completionBlock)
+        semaphore.wait()
+    } else if entry.device.responds(to: sel2) {
+        typealias MsgSendFn = @convention(c) (AnyObject, Selector, AnyObject, DispatchQueue, SwiftCompletionBlock) -> Void
+        let msgSend = unsafeBitCast(sym, to: MsgSendFn.self)
+        msgSend(entry.device, sel2, requestObj, DispatchQueue.global(qos: .userInteractive), completionBlock)
+        semaphore.wait()
+    }
+    
+    let finalResult = resultStorage.pointee
+    resultStorage.deallocate()
+    return finalResult
+}
+
+private var globalBlock: SwiftBlock = {
+    let handle = dlopen(nil, RTLD_NOW)
+    let isaSym = dlsym(handle, "_NSConcreteGlobalBlock")!
+    return SwiftBlock(
+        isa: isaSym,
+        flags: 0x30000000,
+        reserved: 0,
+        invoke: unsafeBitCast(invokeFunc, to: UnsafeRawPointer.self),
+        descriptor: UnsafeRawPointer(&descriptor)
+    )
+}()
+
+private let bridgeCallbackImp: @convention(c) (AnyObject, Selector, AnyObject) -> UnsafeRawPointer = { selfObj, selector, token in
+    return withUnsafePointer(to: &globalBlock) { UnsafeRawPointer($0) }
+}
+
+final class TokenDispatcher: NSObject {
     struct Entry {
         let device: NSObject
         let deadline: Date
     }
 
-    private let queue = DispatchQueue(label: "TritonKit.AXPTokenDispatcher", qos: .userInteractive)
-    private var entries: [String: Entry] = [:]
+    fileprivate let queue = DispatchQueue(label: "TritonKit.AXPTokenDispatcher", qos: .userInteractive)
+    fileprivate var entries: [String: Entry] = [:]
+    fileprivate var semaphores: [String: DispatchSemaphore] = [:]
+
+    override init() {
+        super.init()
+        let sel = NSSelectorFromString("accessibilityTranslationDelegateBridgeCallbackWithToken:")
+        let imp = unsafeBitCast(bridgeCallbackImp, to: IMP.self)
+        class_addMethod(TokenDispatcher.self, sel, imp, "@@:@")
+    }
 
     func register(device: NSObject, token: String, deadline: Date) {
         queue.sync {
             entries[token] = Entry(device: device, deadline: deadline)
-            entries = entries.filter { $0.value.deadline > Date() }
         }
     }
 
     func unregister(token: String) {
-        queue.sync { _ = entries.removeValue(forKey: token) }
+        queue.sync {
+            entries.removeValue(forKey: token)
+            semaphores.removeValue(forKey: token)
+        }
     }
 
-    @objc dynamic func accessibilityTranslationDelegateBridgeCallbackWithToken(_ token: String) -> @convention(block) (NSObject, @escaping @convention(block) (NSObject?, Error?) -> Void) -> Void {
-        return { [weak self] request, completion in
-            guard let self = self else {
-                completion(nil, NSError(domain: "TritonKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "Dispatcher deallocated"]))
-                return
-            }
-            
-            let entry: Entry? = self.queue.sync {
-                guard let e = self.entries[token], e.deadline > Date() else { return nil }
-                return e
-            }
-            guard let entry = entry else {
-                completion(nil, NSError(domain: "TritonKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "No active TokenDispatcher entry"]))
-                return
-            }
-
-            let sel = NSSelectorFromString("sendAccessibilityRequestAsync:withCompletion:")
-            guard entry.device.responds(to: sel), let imp = class_getMethodImplementation(type(of: entry.device), sel) else {
-                completion(nil, NSError(domain: "TritonKit", code: -1, userInfo: [NSLocalizedDescriptionKey: "SimDevice missing sendAccessibilityRequestAsync"]))
-                return
-            }
-
-            typealias WrappedCompletion = @convention(block) (NSObject?, Error?) -> Void
-            typealias Fn = @convention(c) (AnyObject, Selector, AnyObject, WrappedCompletion) -> Void
-            
-            let completionBlock: WrappedCompletion = { result, error in
-                completion(result, error)
-            }
-            
-            unsafeBitCast(imp, to: Fn.self)(entry.device, sel, request, completionBlock)
-        }
+    /// Called by AXPTranslator to convert a Mac-screen-space frame to the
+    /// simulator's coordinate space. We return the frame unchanged here and
+    /// let our own AXFrameTransform handle the iOS point-space mapping later.
+    @objc func accessibilityTranslationConvertPlatformFrameToSystem(
+        _ frame: CGRect, withToken token: String
+    ) -> CGRect {
+        return frame
     }
 }
 
