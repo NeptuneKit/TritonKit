@@ -114,10 +114,10 @@ P0 只使用 UIKit、Foundation、ProcessInfo、Bundle、UIAccessibility 这类�
 ```bash
 triton runtime manifest --target triton:local --json
 triton snapshot --target triton:local --include app,scene,route,ax,geometry,screenshot-metadata --json
-triton state app --target triton:local --json
-triton state scene --target triton:local --json
-triton state route --target triton:local --json
-triton state responder --target triton:local --json
+triton debug state app --target triton:local --json
+triton debug state scene --target triton:local --json
+triton debug state route --target triton:local --json
+triton debug state responder --target triton:local --json
 triton attrs --target triton:local --oid <oid> --groups accessibility,responder,control,text,scroll --json
 triton ledger --target triton:local --limit 100 --jsonl
 ```
@@ -166,7 +166,7 @@ triton wait-idle --timeout 2 --json
 ### 场景 3：agent 能解释当前页面位置
 
 - Given App 位于嵌套 UINavigationController、UITabBarController 或 presented controller 下
-- When 执行 `triton state route --json`
+- When 执行 `triton debug state route --json`
 - Then 输出 top controller、presented stack、navigation titles、selected tab 和可见 controller class
 - And 不依赖 SwiftUI 私有类型反射作为业务语义来源
 

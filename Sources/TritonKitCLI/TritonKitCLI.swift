@@ -34,6 +34,7 @@ struct TritonKitEntry {
                 Error: Unknown subcommand '\(retiredRoot)'
                 Usage: triton <subcommand>
                   See 'triton --help' for available product commands.
+                \(retiredRootHint(retiredRoot))
 
                 """
             )
@@ -72,6 +73,11 @@ struct TritonKitEntry {
             return helpTarget
         }
         return nil
+    }
+
+    private static func retiredRootHint(_ root: String) -> String {
+        guard root == "state" else { return "" }
+        return "Hint: use `triton debug state route --json` for raw route diagnostics, or `triton observe current --json` for the workflow observation entry."
     }
 
     private static func writeStandardError(_ message: String) {
