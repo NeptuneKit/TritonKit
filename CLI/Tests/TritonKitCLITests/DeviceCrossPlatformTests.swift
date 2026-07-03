@@ -64,8 +64,8 @@ struct DeviceCrossPlatformTests {
         #expect(optionNames.contains("--session"))
         #expect(optionNames.contains("--certificate"))
         #expect(optionNames.contains("--apk"))
-        #expect(optionNames.contains("bridge --local-port"))
-        #expect(optionNames.contains("bridge --remote-port"))
+        #expect(optionNames.contains("--local-port"))
+        #expect(optionNames.contains("--remote-port"))
         #expect(optionNames.contains("--jsonl"))
         #expect(optionNames.contains("--throttle-ms"))
         #expect(optionNames.contains("--policy-rules"))
@@ -3436,6 +3436,37 @@ struct DeviceCrossPlatformTests {
 
         #expect(plan.command.argv == ["-t", "127.0.0.1:10100", "install", "/tmp/Signed.app"])
         #expect(plan.artifacts == ["/tmp/Signed.app"])
+    }
+
+    @Test("Harmony app install treats HDC stdout failure as command failure")
+    func harmonyAppInstallTreatsHDCStdoutFailureAsCommandFailure() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-fake-hdc-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let hdc = directory.appendingPathComponent("hdc").path
+        let script = """
+        #!/bin/sh
+        printf '%s\\n' '[Info]App install path:/tmp/Demo.hap msg:error: failed to install bundle. code:9568332 error: install sign info inconsistent.'
+        printf '%s\\n' 'AppMod finish'
+        exit 0
+        """
+        try script.write(toFile: hdc, atomically: true, encoding: .utf8)
+        chmod(hdc, S_IRWXU)
+
+        let command = TKHarmonyHDCCommand.installHap(
+            target: "127.0.0.1:10100",
+            hapPath: "/tmp/Demo.hap",
+            executable: hdc
+        )
+
+        do {
+            _ = try runHostCommand(command)
+            #expect(Bool(false), "HDC install semantic failure should throw even when process exits 0")
+        } catch HostCommandRunError.nonZeroExit(_, let result) {
+            #expect(result.exitCode == 0)
+            #expect(result.stdout.contains("failed to install bundle"))
+            #expect(result.stdout.contains("code:9568332"))
+        }
     }
 
     @Test("host device selector prefers explicit matches and unique ready candidates")

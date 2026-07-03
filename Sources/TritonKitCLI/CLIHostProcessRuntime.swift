@@ -81,7 +81,15 @@ private func hostCommandHasSemanticFailure(_ command: TKHostCommand, result: Hos
     let combinedOutput = [result.stdout, result.stderr]
         .joined(separator: "\n")
         .lowercased()
-    return combinedOutput.contains("[fail]")
+    if combinedOutput.contains("[fail]") {
+        return true
+    }
+    guard command.arguments.contains("install") else {
+        return false
+    }
+    return combinedOutput.contains("msg:error:")
+        || combinedOutput.contains("failed to install bundle")
+        || combinedOutput.contains("install failed")
 }
 
 private func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) {
