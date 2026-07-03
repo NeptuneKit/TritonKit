@@ -249,6 +249,9 @@ struct SchemaFactSourceTests {
         #expect(subcommands["go"]?.outputSelectors == ["host.app-open-url"])
         #expect(subcommands["open-url"]?.requiredOptions == ["<url>"])
         #expect(subcommands["open-url"]?.outputSelectors == ["host.app-open-url"])
+        #expect(subcommands["uninstall"]?.oneOfRequiredOptions.contains(["--bundle"]) == true)
+        #expect(subcommands["uninstall"]?.optionalOptions.contains("--target") == true)
+        #expect(subcommands["uninstall"]?.optionalOptions.contains("--hdc") == true)
     }
 
     @Test("build schemas expose real-device build contracts")

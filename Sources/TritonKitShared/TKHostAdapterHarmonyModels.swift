@@ -51,6 +51,10 @@ public enum TKHarmonyHDCCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "aa", "force-stop", bundleName], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }
 
+    public static func uninstallBundle(target: String, bundleName: String, executable: String = "hdc") -> TKHostCommand {
+        TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "bm", "uninstall", "-n", bundleName], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
     public static func appOpenURL(target: String, bundleName: String, abilityName: String, url: String, executable: String = "hdc") -> TKHostCommand {
         TKHostCommand(executable: executable, arguments: ["-t", target, "shell", "aa", "start", "-a", abilityName, "-b", bundleName, "-U", url], riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
     }

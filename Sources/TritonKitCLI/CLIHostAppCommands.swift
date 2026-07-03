@@ -394,6 +394,7 @@ func planHostAppUninstall(
     selection: HostDeviceSelectionResult,
     bundleID: String,
     adb: String,
+    hdc: String,
     devicectlArtifacts: (json: String, log: String)?
 ) throws -> HostAppCommandPlan {
     switch selection.platform {
@@ -412,7 +413,7 @@ func planHostAppUninstall(
     case .android:
         return HostAppCommandPlan(action: "app.uninstall", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection, appID: bundleID), command: TKAndroidADBCommand.uninstall(serial: selection.target.rawTarget, packageName: bundleID, executable: adb), artifacts: [], note: "Host action was submitted for app.uninstall after --confirm; verify removal with app list or evidence.")
     case .harmony:
-        throw ValidationError("Harmony uninstall is not exposed in P1; destructive uninstall remains unsupported until a stable hdc/bm contract is selected.")
+        return HostAppCommandPlan(action: "app.uninstall", runtimeScope: hostAppRuntimeScope(selection: selection), target: hostAppPublicTarget(selection: selection, appID: bundleID), command: TKHarmonyHDCCommand.uninstallBundle(target: selection.target.rawTarget, bundleName: bundleID, executable: hdc), artifacts: [], note: "Host action was submitted for app.uninstall after --confirm; verify removal with app info/list, reinstall, or evidence.")
     }
 }
 
@@ -775,16 +776,20 @@ struct HostAppInstall: AsyncParsableCommand {
 struct HostAppUninstall: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "uninstall", abstract: "Uninstall an app from a simulator or emulator")
 
-    @Option(help: "Platform adapter: ios or android") var platform: HostAppPlatform?
+    @Option(help: "Platform adapter: ios, android, or harmony") var platform: HostAppPlatform?
     @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope?
-    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, raw id, booted, or current") var device: String?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
     @Option(help: "Explicit iOS simulator selector: UDID or booted") var simulator: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted") var state: String?
     @Flag(help: "Only match ready targets") var ready = false
-    @Option(help: "App bundle identifier or Android package name") var bundleID: String
+    @Option(name: .customLong("bundle-id"), help: "iOS app bundle identifier, or cross-platform app id fallback") var bundleID: String?
+    @Option(help: "Android package name") var packageName: String?
+    @Option(help: "Harmony bundle name") var bundle: String?
+    @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Path to adb executable") var adb: String = "adb"
+    @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Flag(help: "Confirm uninstalling the app from the target") var confirm = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
@@ -800,21 +805,39 @@ struct HostAppUninstall: AsyncParsableCommand {
             )
         }
         do {
-            let effectivePlatform = platform ?? .ios
+            let effectivePlatform = platform ?? (packageName != nil ? .android : (bundle != nil ? .harmony : .ios))
+            let appID: String
+            switch effectivePlatform {
+            case .ios:
+                guard let bundleID else {
+                    throw ValidationError("iOS app uninstall requires --bundle-id.")
+                }
+                appID = bundleID
+            case .android:
+                guard let packageID = packageName ?? bundleID else {
+                    throw ValidationError("Android app uninstall requires --package-name.")
+                }
+                appID = packageID
+            case .harmony:
+                guard let bundleName = bundle ?? bundleID else {
+                    throw ValidationError("Harmony app uninstall requires --bundle or --bundle-id.")
+                }
+                appID = bundleName
+            }
             let selection = try resolveHostAppDeviceSelection(
                 device: device,
                 platform: effectivePlatform,
                 defaultPlatform: nil,
                 scope: scope,
                 simulator: simulator,
-                target: nil,
+                target: target,
                 name: name,
                 runtime: runtime,
                 state: state,
                 ready: ready,
-                hdc: "hdc"
+                hdc: hdc
             )
-            let plan = try planHostAppUninstall(selection: selection, bundleID: bundleID, adb: adb, devicectlArtifacts: nil)
+            let plan = try planHostAppUninstall(selection: selection, bundleID: appID, adb: adb, hdc: hdc, devicectlArtifacts: nil)
             try runSimpleHostCommand(
                 action: plan.action,
                 runtimeScope: plan.runtimeScope,
