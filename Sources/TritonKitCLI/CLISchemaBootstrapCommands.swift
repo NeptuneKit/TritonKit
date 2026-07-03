@@ -132,10 +132,18 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             runtimeScope: "cli",
             exitCodeOnFailure: 0,
             outputFormats: jsonText,
-            options: hostPort + [TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"), jsonAlias, languageOption],
-            examples: ["triton doctor --format json"],
+            options: hostPort + [
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Host-side device platform scope for primary nextAction ranking"),
+                TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "text", description: "Output format"),
+                jsonAlias,
+                languageOption,
+            ],
+            examples: [
+                "triton doctor --format json",
+                "triton doctor --platform harmony --json",
+            ],
             successShape: "{ ok, serverReachable, connected, runtime, nextStep, checks[], error? }",
-            outputSemantics: "Use doctor before planning or after a failed command to get ordered diagnostic checks, stable codes, hints, nextAction, and related capabilities.",
+            outputSemantics: "Use doctor before planning or after a failed command to get ordered diagnostic checks, stable codes, hints, nextAction, and related capabilities. Use --platform for host-side device workflows so primaryNextAction points at device list for that platform instead of unrelated embedded-runtime diagnostics.",
             nextCommands: [
                 "triton capabilities --format json",
                 "triton plan --format json",

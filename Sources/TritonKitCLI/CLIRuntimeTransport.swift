@@ -1051,13 +1051,15 @@ func printCapabilities(_ response: TKCapabilitiesResponse, format: ClientOutputF
     }
 }
 
-func buildDoctor(host: String, port: Int) async -> TKDoctorResponse {
-    buildDoctorResponse(capabilities: await buildCapabilities(host: host, port: port), host: host, port: port)
+func buildDoctor(host: String, port: Int, platform: HostDevicePlatform? = nil) async -> TKDoctorResponse {
+    buildDoctorResponse(capabilities: await buildCapabilities(host: host, port: port), host: host, port: port, platform: platform)
 }
 
-func buildDoctorResponse(capabilities: TKCapabilitiesResponse, host: String, port: Int) -> TKDoctorResponse {
-    let checks = doctorChecks(capabilities: capabilities, host: host, port: port)
-    let nextCheck = checks.first(where: { $0.status == "fail" || $0.status == "warn" })
+func buildDoctorResponse(capabilities: TKCapabilitiesResponse, host: String, port: Int, platform: HostDevicePlatform? = nil) -> TKDoctorResponse {
+    let checks = doctorChecks(capabilities: capabilities, host: host, port: port, platform: platform)
+    let nextCheck = checks.first(where: { $0.status == "fail" })
+        ?? checks.first(where: { $0.id == "host-device" })
+        ?? checks.first(where: { $0.status == "warn" })
     let nextStep = nextCheck?.id ?? "ready"
     return TKDoctorResponse(
         ok: capabilities.ok && checks.allSatisfy { $0.status != "fail" },
@@ -1071,7 +1073,7 @@ func buildDoctorResponse(capabilities: TKCapabilitiesResponse, host: String, por
     )
 }
 
-private func doctorChecks(capabilities: TKCapabilitiesResponse, host: String, port: Int) -> [TKDoctorCheck] {
+private func doctorChecks(capabilities: TKCapabilitiesResponse, host: String, port: Int, platform: HostDevicePlatform?) -> [TKDoctorCheck] {
     if !capabilities.serverReachable {
         let startServerRelatedCapabilities = capabilities.capabilities.filter { $0.nextAction?.command == "serve" }.map(\.name)
         return [
@@ -1147,6 +1149,18 @@ private func doctorChecks(capabilities: TKCapabilitiesResponse, host: String, po
         ))
     }
 
+    let hostDeviceCapabilities = hostDeviceDoctorCapabilities(platform: platform)
+    checks.append(TKDoctorCheck(
+        id: "host-device",
+        status: "pass",
+        code: "host_device_available",
+        message: platform.map { "Host-side \($0.rawValue) device workflows are available" } ?? "Host-side device workflows are available",
+        hint: "Use device list/doctor before falling back to raw platform tools.",
+        nextAction: hostDeviceDoctorNextAction(platform: platform),
+        relatedCapabilities: hostDeviceCapabilities,
+        workflowCategories: workflowCategoriesForCapabilities(hostDeviceCapabilities, in: capabilities.capabilities)
+    ))
+
     let unsupportedActionNames = capabilities.capabilities
         .filter { $0.group == "action" && !$0.supported && !isInformationalHarmonyActionBoundary($0) }
         .map(\.name)
@@ -1175,6 +1189,26 @@ private func doctorChecks(capabilities: TKCapabilitiesResponse, host: String, po
     ))
 
     return checks
+}
+
+private func hostDeviceDoctorCapabilities(platform: HostDevicePlatform?) -> [String] {
+    switch platform {
+    case .ios:
+        return ["host-device", "ios-device", "ios-device-list"]
+    case .android:
+        return ["host-device", "android-device", "android-device-list", "android-device-doctor"]
+    case .harmony:
+        return ["host-device", "harmony-device", "harmony-device-list", "harmony-device-doctor"]
+    case nil:
+        return ["host-device", "device-list", "ios-device-list", "android-device-list", "harmony-device-list"]
+    }
+}
+
+private func hostDeviceDoctorNextAction(platform: HostDevicePlatform?) -> TKCLINextAction {
+    if let platform {
+        return TKCLINextAction(command: "device", args: ["list", "--platform", platform.rawValue, "--json"])
+    }
+    return TKCLINextAction(command: "device", args: ["list", "--json"])
 }
 
 private func isInformationalHarmonyActionBoundary(_ capability: TKRuntimeCapability) -> Bool {
