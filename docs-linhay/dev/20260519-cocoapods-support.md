@@ -38,10 +38,11 @@ TritonKit 需要支持业务 App 通过 CocoaPods 引入 embedded runtime，同�
 2. `TritonKit.podspec` 同时包含 `Sources/TritonKit/**/*.swift` 与 `Sources/TritonKitShared/**/*.swift`，不依赖 sibling pod。
 3. CocoaPods 不打包 `Sources/TritonKitCLI`；SwiftPM 根 `Package.swift` 也不声明 CLI executable 与 CLI-only package dependencies，避免把 macOS CLI / Hummingbird / ArgumentParser 依赖带入业务 App。
 4. `TritonKit.podspec` 通过 `pod_target_xcconfig` 只给 Debug 配置追加 `OTHER_SWIFT_FLAGS[config=Debug] = $(inherited) -D TRITONKIT_RUNTIME_ENABLED`；不要要求业务 App target 自行设置该宏。
-5. README 与 public skill 中的用户 Podfile 示例只允许显式添加 `pod 'TritonKit'`，并加 `:configurations => ['Debug']`；不得要求用户手写 sibling TritonKit pod。
-6. 业务 App 侧推荐将全部 TritonKit 启动代码放入独立 `TritonKitDebugBootstrap.swift`，并用文件级 `#if DEBUG` 包住 `import TritonKit` 和 `TritonKit.shared.start()` / `start { config in ... }` 调用。
-7. podspec 版本必须跟随整体 release tag。发布前 `docs-linhay/scripts/release.sh <version>` 会校验 `TritonKit.podspec`、`Web/package.json` 与 `Web/package-lock.json` 均等于同一个版本，避免只发布 CLI/Web 而漏掉端内包入口。
-8. 当前项目仍处开发阶段，podspec license metadata 使用 `Custom`，正式发布前应补齐稳定 license 文件与发布策略。
+5. `TritonKit.podspec` 为 CocoaPods pod target 设置 `ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING = NO`，避免无 AppIntents surface 的 pod target 在 Xcode 26.6 simulator build 中进入会失败的 metadata processor 路径；SwiftPM 行为不由该 podspec 设置改变。
+6. README 与 public skill 中的用户 Podfile 示例只允许显式添加 `pod 'TritonKit'`，并加 `:configurations => ['Debug']`；不得要求用户手写 sibling TritonKit pod。
+7. 业务 App 侧推荐将全部 TritonKit 启动代码放入独立 `TritonKitDebugBootstrap.swift`，并用文件级 `#if DEBUG` 包住 `import TritonKit` 和 `TritonKit.shared.start()` / `start { config in ... }` 调用。
+8. podspec 版本必须跟随整体 release tag。发布前 `docs-linhay/scripts/release.sh <version>` 会校验 `TritonKit.podspec`、`Web/package.json` 与 `Web/package-lock.json` 均等于同一个版本，避免只发布 CLI/Web 而漏掉端内包入口。
+9. 当前项目仍处开发阶段，podspec license metadata 使用 `Custom`，正式发布前应补齐稳定 license 文件与发布策略。
 
 ## 验证命令
 

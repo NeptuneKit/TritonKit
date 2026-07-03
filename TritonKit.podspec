@@ -13,6 +13,7 @@ Pod::Spec.new do |s|
   s.ios.deployment_target = '13.0'
   s.swift_version = '5.9'
   s.pod_target_xcconfig = {
+    'ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING' => 'NO',
     'OTHER_SWIFT_FLAGS' => '$(inherited) -D TRITONKIT_COCOAPODS_SINGLE_POD',
     'OTHER_SWIFT_FLAGS[config=Debug]' => '$(inherited) -D TRITONKIT_COCOAPODS_SINGLE_POD -D TRITONKIT_RUNTIME_ENABLED'
   }

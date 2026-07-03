@@ -117,6 +117,8 @@ if "OTHER_SWIFT_FLAGS[config=Debug]" not in podspec_text or "TRITONKIT_RUNTIME_E
     fail("TritonKit.podspec must define TRITONKIT_RUNTIME_ENABLED for the TritonKit pod target Debug configuration")
 if "TRITONKIT_COCOAPODS_SINGLE_POD" not in podspec_text:
     fail("TritonKit.podspec must define TRITONKIT_COCOAPODS_SINGLE_POD for single-pod CocoaPods compilation")
+if "ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING" not in podspec_text or re.search(r"ENABLE_APPINTENTS_DEPLOYMENT_AWARE_PROCESSING['\"]\s*=>\s*['\"]NO", podspec_text) is None:
+    fail("TritonKit.podspec must disable AppIntents deployment-aware processing for the CocoaPods pod target")
 if re.search(r"['\"]OTHER_SWIFT_FLAGS['\"]\s*=>\s*['\"][^'\"]*TRITONKIT_RUNTIME_ENABLED", podspec_text):
     fail("TritonKit.podspec must not define TRITONKIT_RUNTIME_ENABLED through unscoped OTHER_SWIFT_FLAGS")
 if re.search(r"OTHER_SWIFT_FLAGS\[config=Release\].*TRITONKIT_RUNTIME_ENABLED", podspec_text):
