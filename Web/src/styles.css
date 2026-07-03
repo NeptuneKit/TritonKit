@@ -592,3 +592,74 @@ body {
   background: rgba(22,119,255,0.1);
   color: #1677ff;
 }
+
+/* ============ Bento Card (Generic Cards) ============ */
+.bento-card {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(12, 17, 30, 0.65);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  overflow: hidden;
+}
+
+.bento-card .ant-card-body {
+  flex: 1;
+  min-height: 0;
+  padding: 0 !important;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fix InspectorCard content wrapper */
+.card-content-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Generic Card Layout inside Bento Cards */
+.card-content-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.card-body {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+  font-size: 12px;
+  color: rgba(255,255,255,0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.card-actions {
+  padding: 12px;
+  border-top: 1px solid rgba(255,255,255,0.1);
+  background: rgba(0,0,0,0.15);
+  flex-shrink: 0;
+}
+
+/* Custom Tree Indentation Override */
+.ant-tree .ant-tree-indent-unit {
+  width: 14px !important;
+}
+.ant-tree .ant-tree-treenode {
+  padding: 0 !important;
+}
+.ant-tree .ant-tree-node-content-wrapper {
+  min-height: 18px !important;
+  line-height: 18px !important;
+}
+.ant-tree .ant-tree-switcher {
+  width: 14px !important;
+  height: 18px !important;
+  line-height: 18px !important;
+}

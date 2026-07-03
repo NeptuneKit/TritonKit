@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { ConfigProvider, theme } from "antd";
 import { StreamCard } from "./components/StreamCard";
 import { XcodeCard } from "./components/XcodeCard";
@@ -26,6 +26,7 @@ import {
   Rows,
   X
 } from "lucide-react";
+import { AppContextProvider } from "./AppContext";
 import "./styles.css";
 
 // ─── 布局树类型 ──────────────────────────────────────────────────────────────
@@ -63,10 +64,36 @@ let _id = 0;
 function nextId() {
   return String(++_id);
 }
+function setMaxId(root: LayoutNode) {
+  const parseId = (id: string) => parseInt(id, 10) || 0;
+  if (root.kind === "leaf") {
+    _id = Math.max(_id, parseId(root.id));
+  } else {
+    _id = Math.max(_id, parseId(root.id));
+    setMaxId(root.first);
+    setMaxId(root.second);
+  }
+}
 
-// ─── 初始状态：StreamCard 独占全屏 ───────────────────────────────────────────
+// ─── 初始状态：优先从 localStorage 加载，否则 StreamCard 独占全屏 ───────────────────────────
 function makeInitialRoot(): LayoutNode {
   return { kind: "leaf", id: nextId(), card: "stream" };
+}
+
+function loadInitialRoot(): LayoutNode {
+  try {
+    const saved = localStorage.getItem("triton-layout");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object' && parsed.id) {
+        setMaxId(parsed as LayoutNode);
+        return parsed as LayoutNode;
+      }
+    }
+  } catch (e) {
+    console.error("Failed to parse saved layout", e);
+  }
+  return makeInitialRoot();
 }
 
 // ─── 工具：按 ID 更新树中某个节点 ────────────────────────────────────────────
@@ -130,9 +157,9 @@ const CARD_CONFIGS: CardConfig[] = [
 ];
 
 // ─── 渲染卡片内容 ─────────────────────────────────────────────────────────────
-function renderCardContent(card: CardType): React.ReactNode {
+function renderCardContent(card: CardType, nodeId: string): React.ReactNode {
   switch (card) {
-    case "stream":    return <StreamCard />;
+    case "stream":    return <StreamCard nodeId={nodeId} />;
     case "xcode":     return <XcodeCard />;
     case "vlm":       return <VlmCard />;
     case "target":    return <TargetCard />;
@@ -141,7 +168,7 @@ function renderCardContent(card: CardType): React.ReactNode {
     case "simulator":  return <SimulatorCard />;
     case "recorder":   return <RecorderCard />;
     case "hdc":        return <HdcCard />;
-    case "inspector":  return <InspectorCard />;
+    case "inspector":  return <InspectorCard nodeId={nodeId} />;
   }
 }
 
@@ -208,7 +235,7 @@ function NodeRenderer({
               onUnload={() => onUnload(node.id)}
               onClose={isRoot ? undefined : () => onClose(node.id)}
             />
-            {renderCardContent(node.card!)}
+            {renderCardContent(node.card!, node.id)}
           </div>
         ) : (
           /* 空插槽：精美的大网格列表，点击可挑选卡片 */
@@ -325,7 +352,11 @@ function NodeRenderer({
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [root, setRoot] = useState<LayoutNode>(makeInitialRoot);
+  const [root, setRoot] = useState<LayoutNode>(loadInitialRoot);
+
+  useEffect(() => {
+    localStorage.setItem("triton-layout", JSON.stringify(root));
+  }, [root]);
 
   const handleSplit = useCallback((id: string, dir: "v" | "h") => {
     setRoot((prev) => splitLeaf(prev, id, dir));
@@ -367,48 +398,50 @@ export default function App() {
   }, []);
 
   return (
-    <ConfigProvider
-      theme={{
-        algorithm: theme.darkAlgorithm,
-        token: {
-          colorPrimary: "#1677ff",
-          colorSuccess: "#52c41a",
-          colorWarning: "#faad14",
-          colorError: "#ff4d4f",
-          borderRadius: 8,
-          fontSize: 12,
-        },
-      }}
-    >
-      <div className="triton-app">
-        {/* ── Header ── */}
-        <header className="triton-header">
-          <div className="header-brand">
-            <span className="header-logo">TRITON</span>
-            <div className="header-divider" />
-            <span className="header-subtitle">开发者控制台</span>
-          </div>
-          <div className="header-meta">
-            <div className="status-pill">
-              <div className="status-dot" />
-              服务运行中 · 127.0.0.1:19421
+    <AppContextProvider layoutRoot={root}>
+      <ConfigProvider
+        theme={{
+          algorithm: theme.darkAlgorithm,
+          token: {
+            colorPrimary: "#1677ff",
+            colorSuccess: "#52c41a",
+            colorWarning: "#faad14",
+            colorError: "#ff4d4f",
+            borderRadius: 8,
+            fontSize: 12,
+          },
+        }}
+      >
+        <div className="triton-app">
+          {/* ── Header ── */}
+          <header className="triton-header">
+            <div className="header-brand">
+              <span className="header-logo">TRITON</span>
+              <div className="header-divider" />
+              <span className="header-subtitle">开发者控制台</span>
             </div>
-          </div>
-        </header>
+            <div className="header-meta">
+              <div className="status-pill">
+                <div className="status-dot" />
+                服务运行中 · 127.0.0.1:19421
+              </div>
+            </div>
+          </header>
 
-        {/* ── Canvas ── */}
-        <div className="canvas-root">
-          <NodeRenderer
-            node={root}
-            onSplit={handleSplit}
-            onClose={handleClose}
-            onUnload={handleUnload}
-            onSelectCard={handleSelectCard}
-            onDividerDrag={handleDividerDrag}
-            isRoot={true}
-          />
+          {/* ── Canvas ── */}
+          <div className="canvas-root">
+            <NodeRenderer
+              node={root}
+              onSplit={handleSplit}
+              onClose={handleClose}
+              onUnload={handleUnload}
+              onSelectCard={handleSelectCard}
+              onDividerDrag={handleDividerDrag}
+              isRoot={true}
+            />
+          </div>
         </div>
-      </div>
-    </ConfigProvider>
+      </ConfigProvider>
+    </AppContextProvider>
   );
 }

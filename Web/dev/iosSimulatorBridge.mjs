@@ -741,7 +741,34 @@ export function createIosSimulatorBridgeMiddleware(options = {}) {
         return;
       }
 
+
+      if (url.pathname === "/web/host-ax") {
+        const target = url.searchParams.get("target") || "booted";
+        try {
+          console.log("[BRIDGE] Using tritonPath:", tritonPath);
+          console.log("[BRIDGE] Environment:", {
+            PATH: process.env.PATH,
+            DEVELOPER_DIR: process.env.DEVELOPER_DIR,
+            TERM: process.env.TERM,
+            HOME: process.env.HOME,
+            USER: process.env.USER,
+          });
+          const payload = await runTritonJSON(tritonPath, ["sim", "ax", "--device", target, "--json"]);
+          sendJSON(res, 200, { ok: true, target, tree: payload });
+        } catch (error) {
+          sendJSON(res, 409, {
+            ok: false,
+            error: {
+              code: "web_host_ax_failed",
+              message: error instanceof Error ? error.message : String(error),
+            },
+          });
+        }
+        return;
+      }
+
       sendJSON(res, 404, { ok: false, error: { code: "web_ios_bridge_route_not_found" } });
+
     } catch (error) {
       sendJSON(res, 502, {
         ok: false,
@@ -1235,6 +1262,7 @@ async function appendLegacyIosNode(nodes, item, parentId, viewport, options, con
   if (!item || typeof item !== "object") return;
   const frame = parseLegacyFrame(item.frame);
   if (!frame) return;
+  const parentVisible = context.parentVisible !== false;
   const oid = item.layerObject?.oid ?? item.viewObject?.oid ?? nodes.length;
   const controllerOID = item.hostViewControllerObject?.oid;
   const shouldInsertController = controllerOID !== undefined && controllerOID !== null && controllerOID !== context.currentControllerOID;
@@ -1251,7 +1279,7 @@ async function appendLegacyIosNode(nodes, item, parentId, viewport, options, con
       name: controllerName,
       frame: controllerFrame,
       depth: Math.max(0, legacyIosNodeDepth(item, parentId) + depthOffset),
-      visible: item.isHidden !== true,
+      visible: parentVisible && item.isHidden !== true,
       interactive: false,
       color: "#b48cff",
       source: "runtime-controller",
@@ -1285,7 +1313,7 @@ async function appendLegacyIosNode(nodes, item, parentId, viewport, options, con
   const id = `ios:runtime:${oid}`;
   const depth = legacyIosNodeDepth(item, parentId) + depthOffset + (shouldInsertController ? 1 : 0);
   const alpha = typeof item.alpha === "number" ? item.alpha : 1;
-  const visible = item.isHidden !== true && alpha > 0.01 && frame.width > 0 && frame.height > 0;
+  const visible = parentVisible && item.isHidden !== true && alpha > 0.01 && frame.width > 0 && frame.height > 0;
   const interactive = legacyIosNodeIsInteractive(type, item);
   const color = legacyIosNodeColor(item, interactive);
   const slice = await legacyIosNodeSlice(item, options);
@@ -1310,6 +1338,7 @@ async function appendLegacyIosNode(nodes, item, parentId, viewport, options, con
   const childContext = {
     depthOffset: depthOffset + (shouldInsertController ? 1 : 0),
     currentControllerOID: controllerOID ?? context.currentControllerOID,
+    parentVisible: visible,
   };
   for (const child of children) {
     await appendLegacyIosNode(nodes, child, id, viewport, options, childContext);
@@ -1567,8 +1596,8 @@ function resolveTritonBinary(root) {
 
 async function runTritonJSON(tritonPath, args) {
   const result = await runCommand(tritonPath, args);
-  if (result.exitCode !== 0) {
-    throw new Error(result.stderr || result.stdout || `triton exited with ${result.exitCode}`);
+  if (result.exitCode !== 0 || result.signal) {
+    throw new Error(result.stderr || result.stdout || `triton exited with code ${result.exitCode} signal ${result.signal}`);
   }
   try {
     return JSON.parse(result.stdout);
@@ -1733,9 +1762,9 @@ function runCommand(command, args, options = {}) {
       clearTimeout(timer);
       reject(error);
     });
-    child.on("close", (exitCode) => {
+    child.on("close", (exitCode, signal) => {
       clearTimeout(timer);
-      resolveCommand({ exitCode: exitCode ?? 1, stdout, stderr });
+      resolveCommand({ exitCode: exitCode ?? 1, signal: signal ?? null, stdout, stderr });
     });
   });
 }
