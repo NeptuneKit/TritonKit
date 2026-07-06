@@ -1,75 +1,35 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Card, Tag, Flex, Button, message, Select, Tabs, Tree, Spin, Checkbox, Modal } from "antd";
 import { Maximize2, Search, RefreshCw } from "lucide-react";
 import { useAppContext } from "../AppContext";
-import type { LayoutNode } from "../layoutModel";
-import { filterEffectivelyVisibleNodes } from "../hierarchyVisibility";
+import { deriveAxTree, deriveViewTree, findSelectedNode, type HierarchyTreeNode } from "../inspect/hierarchyDerive";
+import { changedHierarchyTreeNodeIds, snapshotHierarchyTree } from "../inspect/treeUpdateHighlight";
 import { getInspectorTreeTabs } from "../inspectorTreeTabs";
 
-function findPath(node: LayoutNode, targetId: string, path: string[] = []): string[] | null {
-  if (node.kind === "leaf") {
-    return node.id === targetId ? path : null;
-  }
-  const left = findPath(node.first, targetId, [...path, "L"]);
-  if (left) return left;
-  const right = findPath(node.second, targetId, [...path, "R"]);
-  return right;
-}
+const EMPTY_HIERARCHY_NODES: any[] = [];
+type InspectorTreeKind = "view" | "ax";
 
-function getDistance(root: LayoutNode, id1: string, id2: string): number {
-  const path1 = findPath(root, id1);
-  const path2 = findPath(root, id2);
-  if (!path1 || !path2) return 999;
-  let i = 0;
-  while (i < path1.length && i < path2.length && path1[i] === path2[i]) {
-    i++;
-  }
-  return (path1.length - i) + (path2.length - i);
+function emptyUpdatedTreeNodeIds(): Record<InspectorTreeKind, Set<string>> {
+  return { view: new Set(), ax: new Set() };
 }
 
 export function InspectorCard({ nodeId }: { nodeId: string }) {
   const {
-    activeStreams,
-    focusedNodeId,
-    layoutRoot,
-    selectedNodeId,
-    setSelectedNodeId,
-    hoveredNodeId,
-    setHoveredNodeId,
-    hierarchyScenes,
-    setHierarchyScene,
-    fetchHierarchy: globalFetchHierarchy
+    inspectTargets,
+    resolveInspectSlotTarget,
+    getInspectSession,
+    refreshInspectSession,
+    setInspectOverlayMode,
+    selectInspectNode,
+    hoverInspectNode,
+    setFocusedInspectTarget,
+    bindInspectSlot,
   } = useAppContext();
-  const [selectedUdid, setSelectedUdid] = useState<string | null>(null);
-
-  // 自动关联设备逻辑：优先选择激活（聚焦）的卡片，其次选择布局树上距离最近的卡片
-  useEffect(() => {
-    if (activeStreams.length === 0) {
-      setSelectedUdid(null);
-      return;
-    }
-
-    const focusedStream = activeStreams.find((s) => s.nodeId === focusedNodeId);
-    if (focusedStream) {
-      setSelectedUdid(focusedStream.udid);
-      return;
-    }
-
-    if (layoutRoot && !selectedUdid) {
-      let minDistance = 9999;
-      let closestUdid = activeStreams[0].udid;
-      for (const s of activeStreams) {
-        const d = getDistance(layoutRoot, nodeId, s.nodeId);
-        if (d < minDistance) {
-          minDistance = d;
-          closestUdid = s.udid;
-        }
-      }
-      setSelectedUdid(closestUdid);
-    }
-  }, [activeStreams, focusedNodeId, layoutRoot, nodeId, selectedUdid]);
-
-  const currentStream = activeStreams.find((s) => s.udid === selectedUdid);
+  const [bindingMode, setBindingMode] = useState<"follow" | "pinned">("follow");
+  const currentTarget = resolveInspectSlotTarget(nodeId);
+  const currentSession = getInspectSession(currentTarget?.key);
+  const selectedNodeId = currentSession?.selectedNodeId ?? null;
+  const flatNodes = currentSession?.scene?.nodes ?? EMPTY_HIERARCHY_NODES;
 
   const [selectedNodeData, setSelectedNodeData] = useState<{
     className: string;
@@ -81,20 +41,26 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
-  const [liveViewTreeData, setLiveViewTreeData] = useState<any[]>([]);
-  const [liveAxTreeData, setLiveAxTreeData] = useState<any[]>([]);
+  const [liveViewTreeData, setLiveViewTreeData] = useState<HierarchyTreeNode[]>([]);
+  const [liveAxTreeData, setLiveAxTreeData] = useState<HierarchyTreeNode[]>([]);
   const [liveTreeNodes, setLiveTreeNodes] = useState<any[]>([]);
+  const [updatedTreeNodeIds, setUpdatedTreeNodeIds] = useState(emptyUpdatedTreeNodeIds);
   const [simplify, setSimplify] = useState(true);
+  const previousTreeSnapshotsRef = useRef<Record<InspectorTreeKind, Map<string, string>>>({
+    view: new Map(),
+    ax: new Map(),
+  });
+  const previousTargetKeyRef = useRef<string | null>(null);
+  const clearHighlightTimerRef = useRef<number | null>(null);
 
   // ─── 双向选择联动：根据选中的全局 selectedNodeId 查找并渲染当前节点属性 ─────────────────────
   useEffect(() => {
-    if (!currentStream) {
+    if (!currentTarget) {
       setSelectedNodeData(null);
       setSelectedNodeDetails(null);
       return;
     }
-    const nodes = filterEffectivelyVisibleNodes(hierarchyScenes[currentStream.udid] || []);
-    const matchedNode = nodes.find(n => n.id === selectedNodeId);
+    const matchedNode = findSelectedNode(flatNodes, selectedNodeId);
     if (matchedNode) {
       const identifier = matchedNode.view?.accessibilityIdentifier || "";
       const axText = matchedNode.view?.accessibilityLabel || matchedNode.style?.text || "";
@@ -112,44 +78,96 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
       setSelectedNodeData(null);
       setSelectedNodeDetails(null);
     }
-  }, [selectedNodeId, currentStream, hierarchyScenes]);
+  }, [selectedNodeId, currentTarget, flatNodes]);
 
   useEffect(() => {
     setDetailsModalOpen(false);
   }, [selectedNodeId]);
 
+  useEffect(() => {
+    if (bindingMode === "follow") {
+      bindInspectSlot(nodeId, { mode: "followWorkbenchFocus" });
+    } else if (currentTarget) {
+      bindInspectSlot(nodeId, { mode: "pinnedTarget", targetKey: currentTarget.key });
+    }
+  }, [bindingMode, bindInspectSlot, currentTarget, nodeId]);
+
+  useEffect(() => () => {
+    if (clearHighlightTimerRef.current !== null) {
+      window.clearTimeout(clearHighlightTimerRef.current);
+    }
+  }, []);
+
   // ─── 响应式树结构计算：监听 hierarchyScenes 并在更新时重新映射视图树 ─────────────────────
   useEffect(() => {
-    if (!currentStream) {
+    if (!currentTarget) {
       setLiveTreeNodes([]);
       setLiveViewTreeData([]);
       setLiveAxTreeData([]);
+      previousTreeSnapshotsRef.current = { view: new Map(), ax: new Map() };
+      previousTargetKeyRef.current = null;
+      setUpdatedTreeNodeIds(emptyUpdatedTreeNodeIds());
       return;
     }
-    const flatNodes = filterEffectivelyVisibleNodes(hierarchyScenes[currentStream.udid] || []);
     setLiveTreeNodes(flatNodes);
     if (!flatNodes || flatNodes.length === 0) {
       setLiveViewTreeData([]);
       setLiveAxTreeData([]);
+      previousTreeSnapshotsRef.current = { view: new Map(), ax: new Map() };
+      previousTargetKeyRef.current = currentTarget.key;
+      setUpdatedTreeNodeIds(emptyUpdatedTreeNodeIds());
       return;
     }
 
-    const nodeMap: { [id: string]: any } = {};
+    const viewTree = deriveViewTree(flatNodes, { simplify });
+    const axTree = deriveAxTree(flatNodes);
+    const nextSnapshots = {
+      view: snapshotHierarchyTree(viewTree),
+      ax: snapshotHierarchyTree(axTree),
+    };
+    const targetChanged = previousTargetKeyRef.current !== currentTarget.key;
+    const previousSnapshots = targetChanged
+      ? { view: new Map<string, string>(), ax: new Map<string, string>() }
+      : previousTreeSnapshotsRef.current;
+    const nextUpdatedTreeNodeIds = {
+      view: changedHierarchyTreeNodeIds(previousSnapshots.view, nextSnapshots.view),
+      ax: changedHierarchyTreeNodeIds(previousSnapshots.ax, nextSnapshots.ax),
+    };
 
-    // 1. Map flat nodes to TreeNode structure
-    flatNodes.forEach((node: any) => {
+    previousTreeSnapshotsRef.current = nextSnapshots;
+    previousTargetKeyRef.current = currentTarget.key;
+    setLiveViewTreeData(viewTree);
+    setLiveAxTreeData(axTree);
+
+    if (nextUpdatedTreeNodeIds.view.size === 0 && nextUpdatedTreeNodeIds.ax.size === 0) {
+      return;
+    }
+
+    setUpdatedTreeNodeIds(nextUpdatedTreeNodeIds);
+    if (clearHighlightTimerRef.current !== null) {
+      window.clearTimeout(clearHighlightTimerRef.current);
+    }
+    clearHighlightTimerRef.current = window.setTimeout(() => {
+      setUpdatedTreeNodeIds(emptyUpdatedTreeNodeIds());
+      clearHighlightTimerRef.current = null;
+    }, 1000);
+  }, [flatNodes, currentTarget, simplify]);
+
+  const buildTreeData = useCallback((nodes: HierarchyTreeNode[], treeKind: InspectorTreeKind): any[] => {
+    const highlightedNodeIds = updatedTreeNodeIds[treeKind];
+    const mapTreeNode = (node: HierarchyTreeNode): any => {
       const identifier = node.view?.accessibilityIdentifier || "";
       const axText = node.view?.accessibilityLabel || node.style?.text || "";
       const frameStr = node.frame
         ? `(${node.frame.x.toFixed(0)}, ${node.frame.y.toFixed(0)}) ${node.frame.width.toFixed(0)}x${node.frame.height.toFixed(0)}`
         : "--";
 
-      nodeMap[node.id] = {
+      return {
         title: (
           <span
-            onMouseEnter={() => setHoveredNodeId(node.id)}
-            onMouseLeave={() => setHoveredNodeId(null)}
-            style={{ display: "inline-block", width: "100%" }}
+            onMouseEnter={() => currentTarget?.key && hoverInspectNode(currentTarget.key, node.id)}
+            onMouseLeave={() => currentTarget?.key && hoverInspectNode(currentTarget.key, null)}
+            className={`inspect-tree-node-title${highlightedNodeIds.has(node.id) ? " is-updated" : ""}`}
           >
             {node.type || node.className || 'Unknown'}
             {axText ? ` "${axText}"` : ''}
@@ -165,71 +183,23 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
         },
         parentId: node.parentId,
         interactive: node.interactive || false,
-        children: []
+        children: node.children.map(mapTreeNode)
       };
-    });
-
-    // 2. Link children to parents
-    const roots: any[] = [];
-    flatNodes.forEach((node: any) => {
-      const treeNode = nodeMap[node.id];
-      if (!treeNode) return;
-      if (treeNode.parentId && nodeMap[treeNode.parentId]) {
-        nodeMap[treeNode.parentId].children.push(treeNode);
-      } else {
-        roots.push(treeNode);
-      }
-    });
-
-    // 3. Filter AX tree by collapsing non-AX nodes and lifting children
-    const filterAx = (nodes: any[]): any[] => {
-      const result: any[] = [];
-      nodes.forEach((n) => {
-        const hasAx = n.nodeData.axText !== "" || n.nodeData.identifier !== "" || n.interactive;
-        const filteredChildren = filterAx(n.children);
-        if (hasAx) {
-          result.push({
-            ...n,
-            children: filteredChildren
-          });
-        } else {
-          result.push(...filteredChildren);
-        }
-      });
-      return result;
     };
 
-    // 4. Simplify View Tree helper (collapse single-child noise containers)
-    const filterSimplify = (nodes: any[]): any[] => {
-      const result: any[] = [];
-      const noiseClasses = [
-        "UIView", "UITransitionView", "UIDropShadowView",
-        "UILayoutContainerView", "UIViewControllerWrapperView",
-        "WKCompositingView", "WKScrollView", "WKContentView"
-      ];
+    return nodes.map(mapTreeNode);
+  }, [currentTarget, hoverInspectNode, updatedTreeNodeIds]);
 
-      nodes.forEach((n) => {
-        const simplifiedChildren = filterSimplify(n.children);
-        const isNoiseClass = noiseClasses.includes(n.nodeData.className);
-        const hasNoTextOrId = !n.nodeData.axText && !n.nodeData.identifier;
+  const viewTreeData = useMemo(
+    () => buildTreeData(liveViewTreeData, "view"),
+    [buildTreeData, liveViewTreeData]
+  );
+  const axTreeData = useMemo(
+    () => buildTreeData(liveAxTreeData, "ax"),
+    [buildTreeData, liveAxTreeData]
+  );
 
-        if (isNoiseClass && hasNoTextOrId && simplifiedChildren.length === 1) {
-          result.push(simplifiedChildren[0]);
-        } else {
-          result.push({
-            ...n,
-            children: simplifiedChildren
-          });
-        }
-      });
-      return result;
-    };
-
-    setLiveViewTreeData(simplify ? filterSimplify(roots) : roots);
-    setLiveAxTreeData(filterAx(roots));
-  }, [hierarchyScenes, currentStream, simplify, setHoveredNodeId]);
-
-  const treeTabs = getInspectorTreeTabs(currentStream?.platform, liveTreeNodes, liveTreeNodes.length > 0);
+  const treeTabs = getInspectorTreeTabs(currentTarget?.platform, liveTreeNodes, liveTreeNodes.length > 0);
   const renderTree = (treeData: any[], emptyText: string, description?: string) => (
     <>
       {description && (
@@ -244,25 +214,37 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
   );
 
   const fetchHierarchy = useCallback(async () => {
-    if (!currentStream) return;
+    if (!currentTarget) return;
     setLoading(true);
     try {
-      await globalFetchHierarchy(currentStream.udid, currentStream.platform);
+      await refreshInspectSession(currentTarget.key, "manualRefresh");
     } catch (err) {
       console.error(err);
       message.error(`无法拉取实时视图树 (请确保后端已支持)`);
     } finally {
       setLoading(false);
     }
-  }, [currentStream, globalFetchHierarchy]);
+  }, [currentTarget, refreshInspectSession]);
 
   useEffect(() => {
     fetchHierarchy();
   }, [fetchHierarchy]);
 
   const handleSelect = (selectedKeys: any) => {
-    setSelectedNodeId(selectedKeys[0] || null);
+    if (!currentTarget) return;
+    selectInspectNode(currentTarget.key, selectedKeys[0] || null);
   };
+
+  const copySelectedNodeDetails = useCallback(async () => {
+    if (!selectedNodeDetails) return;
+    const text = JSON.stringify(selectedNodeDetails, null, 2);
+    if (typeof globalThis.navigator?.clipboard?.writeText === "function") {
+      await globalThis.navigator.clipboard.writeText(text);
+      message.success("选中节点的 DTO JSON 已复制到剪切板");
+    } else {
+      message.warning("当前浏览器不支持剪切板写入");
+    }
+  }, [selectedNodeDetails]);
 
   return (
     <Card
@@ -279,19 +261,29 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
       <div className="card-content-wrapper" style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: "12px 12px 0 12px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", flex: 1 }}>
+          <div style={{ display: "flex", alignItems: "center", flex: 1, gap: 6 }}>
             <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginRight: 6, whiteSpace: "nowrap" }}>目标源:</span>
             <Select
               size="small"
               style={{ width: "100%", maxWidth: 160 }}
-              value={selectedUdid}
-              onChange={setSelectedUdid}
+              value={currentTarget?.key}
+              onChange={(targetKey) => setFocusedInspectTarget(targetKey, nodeId)}
               placeholder="未关联设备流"
-              options={activeStreams.map((s) => ({
-                value: s.udid,
-                label: `[${s.platform.toUpperCase()}] ${s.name}`,
+              options={inspectTargets.map((target) => ({
+                value: target.key,
+                label: `[${target.platform.toUpperCase()}] ${target.name}`,
               }))}
               notFoundContent={<span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>无活动画面流</span>}
+            />
+            <Select
+              size="small"
+              style={{ width: 92 }}
+              value={bindingMode}
+              onChange={(mode) => setBindingMode(mode)}
+              options={[
+                { value: "follow", label: "跟随" },
+                { value: "pinned", label: "固定" },
+              ]}
             />
           </div>
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -305,7 +297,32 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
             <Button type="text" size="small" style={{ color: "rgba(255,255,255,0.45)" }} icon={<RefreshCw size={12} className={loading ? "spin" : ""} />} onClick={fetchHierarchy} />
           </div>
         </div>
-          <p style={{ marginBottom: 0 }}><span>审查状态:</span> <span className="label-val" style={{ color: currentStream ? "#52c41a" : "#64748b" }}>{currentStream ? "就绪" : "等待连接"}</span></p>
+          <p style={{ marginBottom: 0 }}><span>审查状态:</span> <span className="label-val" style={{ color: currentTarget ? "#52c41a" : "#64748b" }}>{currentTarget ? (currentSession?.loading ? "更新中" : "就绪") : "等待连接"}</span></p>
+          {selectedNodeData && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 8, minWidth: 0 }}>
+              <Tag color="blue" style={{ margin: 0, maxWidth: 240, overflow: "hidden", textOverflow: "ellipsis" }}>
+                选中: {selectedNodeData.className}
+              </Tag>
+              <Button
+                type="text"
+                size="small"
+                icon={<Maximize2 size={12} />}
+                onClick={() => setDetailsModalOpen(true)}
+                style={{ color: "rgba(255,255,255,0.65)", height: 22, padding: "0 6px" }}
+              >
+                详情
+              </Button>
+              <Button
+                type="text"
+                size="small"
+                onClick={copySelectedNodeDetails}
+                disabled={!selectedNodeDetails}
+                style={{ color: "rgba(255,255,255,0.65)", height: 22, padding: "0 6px" }}
+              >
+                复制
+              </Button>
+            </div>
+          )}
         </div>
 
         <div style={{ flex: 1, overflow: 'auto', padding: "0 12px", position: "relative" }}>
@@ -318,50 +335,18 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
             key={treeTabs.map((tab) => tab.key).join("|")}
             size="small"
             defaultActiveKey={treeTabs[0]?.key ?? "view"}
+            onChange={(key) => {
+              if (!currentTarget) return;
+              if (key === "view" || key === "ax") setInspectOverlayMode(currentTarget.key, key);
+            }}
             items={treeTabs.map((tab) => ({
               key: tab.key,
               label: tab.label,
               children: tab.key === "ax"
-                ? renderTree(liveAxTreeData, "无 AX 节点", tab.description)
-                : renderTree(liveViewTreeData, "无数据或未就绪", tab.description),
+                ? renderTree(axTreeData, "无 AX 节点", tab.description)
+                : renderTree(viewTreeData, "无数据或未就绪", tab.description),
             }))}
           />
-        </div>
-
-        <div style={{ padding: "12px", borderTop: "1px solid rgba(255,255,255,0.1)", background: "rgba(0,0,0,0.2)" }}>
-          <div style={{ fontSize: 12, lineHeight: 1.6, marginBottom: 8 }}>
-            <Flex justify="space-between">
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>选中节点</span>
-              <span style={{ color: "#1677ff", fontWeight: "bold" }}>{selectedNodeData?.className || "--"}</span>
-            </Flex>
-            <Flex justify="space-between">
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>元素标识</span>
-              <span>{selectedNodeData?.identifier || "--"}</span>
-            </Flex>
-            <Flex justify="space-between">
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>AX 文本</span>
-              <span>{selectedNodeData?.axText ? `"${selectedNodeData.axText}"` : "--"}</span>
-            </Flex>
-            <Flex justify="space-between">
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>几何框架</span>
-              <span>{selectedNodeData?.frame || "--"}</span>
-            </Flex>
-          </div>
-          {selectedNodeDetails && (
-            <Button
-              type="text"
-              size="small"
-              block
-              icon={<Maximize2 size={12} />}
-              onClick={() => setDetailsModalOpen(true)}
-              style={{ color: "rgba(255,255,255,0.65)" }}
-            >
-              查看更多信息
-            </Button>
-          )}
-          <Button type="primary" size="small" block onClick={() => message.success("选中节点的 DTO JSON 已复制到剪切板")} disabled={!selectedNodeData || !currentStream}>
-            复制 DTO JSON
-          </Button>
         </div>
       </div>
       <Modal

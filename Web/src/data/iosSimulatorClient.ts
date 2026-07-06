@@ -34,6 +34,7 @@ function mapRegistryTarget(target: any): DeviceTarget {
   const runtime = target.runtime ?? {};
   const diagnosis = target.diagnosis ?? {};
   const transportDiagnostics = target.transportDiagnostics ?? [];
+  const inputCapabilities = Array.isArray(target.inputCapabilities) ? target.inputCapabilities : [];
   const ready = target.mirror?.state === "ready";
   const blockedReasons = [
     diagnosis.code,
@@ -68,6 +69,8 @@ function mapRegistryTarget(target: any): DeviceTarget {
     targetSelector: host.target,
     blockedReasons,
     canScreenshot: ready,
+    canInput: inputCapabilities.some((item: any) => item.supported),
+    inputCapabilities,
     screenshotSource: host.scope === "real" ? "runtime" : "host",
     readonly: true,
   };

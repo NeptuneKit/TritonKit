@@ -97,7 +97,7 @@ test("host input query follows platform gesture support", () => {
   );
   assert.equal(
     webHostInputQueryForGesture({ platform: "ios", target: "SIM-1", gestureType: "longPress" }),
-    "platform=ios&target=SIM-1&scope=simulator&kind=simulator&source=runtime",
+    "platform=ios&target=SIM-1&scope=simulator&kind=simulator&source=host",
   );
   assert.equal(
     webHostInputQueryForGesture({ platform: "android", target: "emulator-5554", gestureType: "longPress" }),

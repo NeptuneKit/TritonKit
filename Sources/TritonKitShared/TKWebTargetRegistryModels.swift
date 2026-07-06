@@ -37,6 +37,7 @@ public struct TKWebTargetRegistryEntry: Codable, Equatable {
     public let diagnosis: TKWebTargetDiagnosis?
     public let nextAction: TKWebTargetNextAction?
     public let transportDiagnostics: [TKWebTargetDiagnosis]
+    public let inputCapabilities: [TKWebInputCapability]
 
     public init(
         id: String,
@@ -47,7 +48,8 @@ public struct TKWebTargetRegistryEntry: Codable, Equatable {
         mirror: TKWebTargetMirror,
         diagnosis: TKWebTargetDiagnosis? = nil,
         nextAction: TKWebTargetNextAction? = nil,
-        transportDiagnostics: [TKWebTargetDiagnosis] = []
+        transportDiagnostics: [TKWebTargetDiagnosis] = [],
+        inputCapabilities: [TKWebInputCapability] = []
     ) {
         self.id = id
         self.platform = platform
@@ -58,6 +60,21 @@ public struct TKWebTargetRegistryEntry: Codable, Equatable {
         self.diagnosis = diagnosis
         self.nextAction = nextAction
         self.transportDiagnostics = transportDiagnostics
+        self.inputCapabilities = inputCapabilities
+    }
+}
+
+public struct TKWebInputCapability: Codable, Equatable {
+    public let action: String
+    public let source: String
+    public let supported: Bool
+    public let reason: String?
+
+    public init(action: String, source: String, supported: Bool, reason: String? = nil) {
+        self.action = action
+        self.source = source
+        self.supported = supported
+        self.reason = reason
     }
 }
 

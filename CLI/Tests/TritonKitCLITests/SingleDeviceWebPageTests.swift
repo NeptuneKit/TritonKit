@@ -252,6 +252,40 @@ struct SingleDeviceWebPageTests {
         #expect(target.host?.target == "SIM-1")
     }
 
+    @Test("web target registry exposes unified host input capabilities")
+    func webTargetRegistryExposesUnifiedHostInputCapabilities() throws {
+        let host = HostDeviceTarget(
+            platform: "ios",
+            id: "triton:ios-simulator:SIM-1",
+            target: "SIM-1",
+            state: "Booted",
+            ready: true,
+            source: "simctl",
+            name: "iPhone 17",
+            runtime: "iOS 26.5",
+            transport: "simctl",
+            scope: "simulator",
+            kind: "simulator"
+        )
+
+        let registry = makeWebTargetRegistry(runtimeTargets: [], hostTargets: [host])
+        let target = try #require(registry.targets.first { $0.id == "host:ios:SIM-1" })
+        let capabilities = target.inputCapabilities
+
+        #expect(capabilities.contains(TKWebInputCapability(action: "tap", source: "host", supported: true)))
+        #expect(capabilities.contains(TKWebInputCapability(action: "swipe", source: "host", supported: true)))
+        #expect(capabilities.contains(TKWebInputCapability(action: "longPress", source: "host", supported: true)))
+        #expect(capabilities.contains { capability in
+            capability.action == "pinch" && capability.source == "host" && !capability.supported && capability.reason == "unsupported_capability"
+        })
+        #expect(capabilities.contains { capability in
+            capability.action == "rotate" && capability.source == "host" && !capability.supported && capability.reason == "unsupported_capability"
+        })
+        #expect(capabilities.contains { capability in
+            capability.action == "multiTouchPath" && capability.source == "host" && !capability.supported && capability.reason == "unsupported_capability"
+        })
+    }
+
     @Test("web target registry marks real-device runtime ambiguous across multiple ready hosts")
     func webTargetRegistryMarksRealDeviceRuntimeAmbiguousAcrossMultipleReadyHosts() throws {
         let runtime = TKTargetSummary(
@@ -420,6 +454,35 @@ struct SingleDeviceWebPageTests {
             "--width", "400",
             "--height", "872",
             "--duration", "0.25"
+        ])
+    }
+
+    @Test("iOS web host long press uses same-point host HID swipe")
+    func iOSWebHostLongPressUsesSamePointHostHIDSwipe() throws {
+        let command = try webIOSBaguetteCommand(
+            action: .longPress(
+                x: 600,
+                y: 1200,
+                width: 1200,
+                height: 2400,
+                duration: 0.7
+            ),
+            udid: "SIM-1",
+            screen: WebIOSSimulatorScreenLayout(width: 400, height: 800),
+            executable: "/opt/homebrew/bin/baguette"
+        )
+
+        #expect(command.executable == "/opt/homebrew/bin/baguette")
+        #expect(command.arguments == [
+            "swipe",
+            "--udid", "SIM-1",
+            "--start-x", "200",
+            "--start-y", "400",
+            "--end-x", "200",
+            "--end-y", "400",
+            "--width", "400",
+            "--height", "800",
+            "--duration", "0.7"
         ])
     }
 

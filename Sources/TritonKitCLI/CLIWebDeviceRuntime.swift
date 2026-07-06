@@ -217,7 +217,8 @@ func makeWebTargetRegistry(
             mirror: TKWebTargetMirror(state: mirror.state),
             diagnosis: mirror.diagnosis,
             nextAction: mirror.nextAction,
-            transportDiagnostics: webTargetTransportDiagnostics(host: host, usbTunnelAdapterAvailable: usbTunnelAdapterAvailable)
+            transportDiagnostics: webTargetTransportDiagnostics(host: host, usbTunnelAdapterAvailable: usbTunnelAdapterAvailable),
+            inputCapabilities: webHostInputCapabilities(platform: host.platform)
         )
     }
 
@@ -238,11 +239,31 @@ func makeWebTargetRegistry(
                 nextAction: mirrorState == .ready ? nil : TKWebTargetNextAction(
                     code: "inspect_runtime_capabilities",
                     title: "检查 Debug App runtime capabilities"
-                )
+                ),
+                inputCapabilities: webRuntimeInputCapabilities(runtime: runtime)
             )
         }
 
     return TKWebTargetRegistryResponse(targets: (hostEntries + runtimeEntries).sorted(by: webTargetRegistrySort))
+}
+
+func webHostInputCapabilities(platform: String) -> [TKWebInputCapability] {
+    let supported = ["tap", "swipe", "longPress"]
+    let unsupported = ["pinch", "rotate", "multiTouchPath"]
+    return supported.map {
+        TKWebInputCapability(action: $0, source: "host", supported: true)
+    } + unsupported.map {
+        TKWebInputCapability(action: $0, source: "host", supported: false, reason: "unsupported_capability")
+    }
+}
+
+private func webRuntimeInputCapabilities(runtime: TKTargetSummary) -> [TKWebInputCapability] {
+    let source = "runtime"
+    return ["tap", "swipe", "longPress", "pinch"].map {
+        TKWebInputCapability(action: $0, source: source, supported: true)
+    } + ["rotate", "multiTouchPath"].map {
+        TKWebInputCapability(action: $0, source: source, supported: false, reason: "unsupported_capability")
+    }
 }
 
 func webIOSTunnelAdapterAvailable(path: String? = ProcessInfo.processInfo.environment["PATH"]) -> Bool {
@@ -767,29 +788,46 @@ func webIOSBaguetteCommand(action: TKInputRequest, udid: String, screen: WebIOSS
             "--height", "\(height)"
         ])
     case .swipe:
-        let startX = try requireCoordinate(input.startX, name: "startX", action: "swipe")
-        let startY = try requireCoordinate(input.startY, name: "startY", action: "swipe")
-        let endX = try requireCoordinate(input.endX, name: "endX", action: "swipe")
-        let endY = try requireCoordinate(input.endY, name: "endY", action: "swipe")
-        let width = try requireCoordinate(input.width, name: "width", action: "swipe")
-        let height = try requireCoordinate(input.height, name: "height", action: "swipe")
-        var arguments = [
-            "swipe",
-            "--udid", udid,
-            "--start-x", "\(startX)",
-            "--start-y", "\(startY)",
-            "--end-x", "\(endX)",
-            "--end-y", "\(endY)",
-            "--width", "\(width)",
-            "--height", "\(height)"
-        ]
-        if let duration = input.duration {
-            arguments.append(contentsOf: ["--duration", "\(duration)"])
-        }
-        return TKHostCommand(executable: executable, arguments: arguments)
-    case .longPress, .pinch, .button, .typeText, .paste, .clear, .deleteBackward:
+        return try webIOSBaguetteSwipeCommand(input: input, udid: udid, executable: executable, action: "swipe")
+    case .longPress:
+        let x = try requireCoordinate(input.x, name: "x", action: "longPress")
+        let y = try requireCoordinate(input.y, name: "y", action: "longPress")
+        let hold = TKInputRequest.swipe(
+            startX: Double(x),
+            startY: Double(y),
+            endX: Double(x),
+            endY: Double(y),
+            width: input.width,
+            height: input.height,
+            duration: input.duration ?? 0.65
+        )
+        return try webIOSBaguetteSwipeCommand(input: hold, udid: udid, executable: executable, action: "longPress")
+    case .pinch, .button, .typeText, .paste, .clear, .deleteBackward:
         return TKHostCommand(executable: executable, arguments: [])
     }
+}
+
+private func webIOSBaguetteSwipeCommand(input: TKInputRequest, udid: String, executable: String, action: String) throws -> TKHostCommand {
+    let startX = try requireCoordinate(input.startX, name: "startX", action: action)
+    let startY = try requireCoordinate(input.startY, name: "startY", action: action)
+    let endX = try requireCoordinate(input.endX, name: "endX", action: action)
+    let endY = try requireCoordinate(input.endY, name: "endY", action: action)
+    let width = try requireCoordinate(input.width, name: "width", action: action)
+    let height = try requireCoordinate(input.height, name: "height", action: action)
+    var arguments = [
+        "swipe",
+        "--udid", udid,
+        "--start-x", "\(startX)",
+        "--start-y", "\(startY)",
+        "--end-x", "\(endX)",
+        "--end-y", "\(endY)",
+        "--width", "\(width)",
+        "--height", "\(height)"
+    ]
+    if let duration = input.duration {
+        arguments.append(contentsOf: ["--duration", "\(duration)"])
+    }
+    return TKHostCommand(executable: executable, arguments: arguments)
 }
 
 private func clampedRounded(_ value: Double, min: Int, max: Int) -> Double {
@@ -814,7 +852,7 @@ private struct WebIOSBaguetteLayoutPayload: Decodable {
 
 private func runWebIOSSimulatorInput(selected: HostDeviceTarget, input: TKInputRequest) throws -> TKInputResult {
     switch input.type {
-    case .tap, .swipe:
+    case .tap, .swipe, .longPress:
         let baguette = resolveBaguetteExecutable()
         let layoutCommand = TKHostCommand(executable: baguette, arguments: ["chrome", "layout", "--udid", selected.rawTarget])
         let layoutResult = try runHostCommand(layoutCommand)
@@ -826,7 +864,7 @@ private func runWebIOSSimulatorInput(selected: HostDeviceTarget, input: TKInputR
             action: input.type.rawValue,
             message: "iOS Simulator \(input.type.rawValue) was submitted through Triton host-HID adapter."
         )
-    case .longPress, .pinch, .button, .typeText, .paste, .clear, .deleteBackward:
+    case .pinch, .button, .typeText, .paste, .clear, .deleteBackward:
         return .unsupported(
             action: input.type.rawValue,
             message: "iOS Simulator host-side \(input.type.rawValue) is not exposed in the Web device surface yet."

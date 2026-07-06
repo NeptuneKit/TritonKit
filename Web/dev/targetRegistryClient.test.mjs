@@ -51,6 +51,12 @@ test("fetchHostTargets prefers target registry, hides host_offline, and keeps re
             capabilities: ["screenshot", "hierarchy"],
           },
           mirror: { state: "ready" },
+          inputCapabilities: [
+            { action: "tap", source: "host", supported: true },
+            { action: "swipe", source: "host", supported: true },
+            { action: "longPress", source: "host", supported: true },
+            { action: "pinch", source: "host", supported: false, reason: "unsupported_capability" },
+          ],
         },
         {
           id: "ios-real:73f725dfa795",
@@ -125,7 +131,9 @@ test("fetchHostTargets prefers target registry, hides host_offline, and keeps re
     assert.equal(simulator.targetSelector, "SIM-1");
     assert.equal(simulator.status, "ready");
     assert.equal(simulator.canScreenshot, true);
+    assert.equal(simulator.canInput, true);
     assert.equal(simulator.screenshotSource, "host");
+    assert.deepEqual(simulator.inputCapabilities.map((item) => item.action), ["tap", "swipe", "longPress", "pinch"]);
 
     const realDevice = result.targets.find((target) => target.scope === "real");
     assert.equal(realDevice.name, "Lin iPhone");

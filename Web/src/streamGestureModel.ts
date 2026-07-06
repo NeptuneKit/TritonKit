@@ -147,7 +147,7 @@ export function webHostInputQueryForGesture(input: {
     target: input.target,
     scope: input.platform === "ios" ? "simulator" : "emulator",
     kind: input.platform === "ios" ? "simulator" : "emulator",
-    source: input.platform === "ios" && input.gestureType === "longPress" ? "runtime" : "host",
+    source: "host",
   });
   return params.toString();
 }

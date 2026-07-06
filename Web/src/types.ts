@@ -188,12 +188,20 @@ export type DeviceTarget = {
   deviceTypeIdentifier?: string;
   canScreenshot?: boolean;
   canInput?: boolean;
+  inputCapabilities?: WebInputCapability[];
   screenshotSource?: "host" | "runtime";
   screenshotDataUrl?: string;
   screenshotPixelWidth?: number | null;
   screenshotPixelHeight?: number | null;
   frameOrientation?: DeviceFrameOrientation;
   readonly?: boolean;
+};
+
+export type WebInputCapability = {
+  action: string;
+  source: "host" | "runtime" | string;
+  supported: boolean;
+  reason?: string | null;
 };
 
 export type BridgeCommandOutput = {
@@ -317,6 +325,7 @@ export type WebTargetRegistryEntry = {
     message: string;
     severity: string;
   }[];
+  inputCapabilities?: WebInputCapability[];
 };
 
 export type WebTargetRegistryResponse = {

@@ -9,7 +9,7 @@ Web mock 的“设备实时画面流”已经可以展示 iOS Simulator、Androi
 ## 目标
 
 - 在实时画面无 overlay 审查模式时，将 pointer tap / drag / hold 映射为设备坐标。
-- 复用共享 `TKInputRequest` DTO：一期支持 `tap`、`swipe`，并按平台能力谨慎开放 `longPress`。
+- 复用共享 `TKInputRequest` DTO：一期支持 `tap`、`swipe`、`longPress`，Web / CLI 对外统一为 host input。
 - 通过现有 `/web/host-input?platform=<platform>&target=<udid>&scope=<simulator|emulator>&source=host` 派发，不在 React 里直接调用 `adb`、`hdc`、`baguette` 或裸 `xcrun`。
 - 输入成功后刷新 hierarchy / 画面状态提示；失败时展示可见错误，不声称设备已变化。
 - overlay 模式继续用于节点审查：`view` / `ax` 模式下点击仍选择节点，不派发设备手势。
@@ -81,7 +81,7 @@ Web mock 的“设备实时画面流”已经可以展示 iOS Simulator、Androi
 - Web bridge 已有 `/web/host-input`，可接收 `TKInputRequest` 并转发到 App runtime mirror 或 host target。
 - `triton serve /web/input` 已支持 `target=host:<platform>:<target>`，并调用 `runWebHostDeviceInput`。
 - 当前 host 能力：
-  - iOS Simulator Web host input：`tap`、`swipe`；`longPress`、`pinch` 暂 unsupported。
+  - iOS Simulator Web host input：`tap`、`swipe`、`longPress`，其中 `longPress` 使用同点 host HID `swipe` hold 路径。
   - Android host input：`tap`、`longPress`、`swipe`。
   - Harmony host input：`tap`、`swipe`、`longPress`，其中 `longPress` 使用同点 `uitest uiInput swipe` hold 路径。
 
@@ -141,8 +141,9 @@ Web mock 的“设备实时画面流”已经可以展示 iOS Simulator、Androi
   - 将 pointer client 坐标映射为当前 MJPEG 图像的设备坐标。
   - 点击 contain 留白时返回 `null`，不派发设备输入。
   - 短按生成 `tap`，拖拽超过阈值生成 `swipe`，长按在阈值到达时生成一次 `longPress` 并抑制 pointerup fallback tap。
-  - 平台路由保持诚实：iOS `tap` / `swipe` 走 host，iOS `longPress` 走 runtime fallback，Android `tap` / `swipe` / `longPress` 走 host，Harmony `tap` / `swipe` / `longPress` 走 host。
+  - 平台路由保持一致：iOS / Android / Harmony 的 `tap` / `swipe` / `longPress` 都走 host input；不再把 iOS `longPress` 泄漏为 Web runtime fallback。
 - Harmony `longPress` 已补入 `/web/input` host 执行层：使用 `TKHarmonyHDCCommand.swipeCoordinate`，start/end 坐标相同，velocity 沿用现有 `harmonySwipeVelocity` 下限。
+- iOS Simulator `longPress` 已补入 Web host 执行层：复用 Baguette host HID `swipe` 命令，start/end 坐标相同，duration 默认 `0.65s`，继续使用现有 framebuffer-to-host-point 归一化。
 - `Web/src/components/StreamCard.tsx` 已接入 pointer 事件：
   - 仅在 overlay 为“无”且 stream connected 时启用设备输入。
   - `view` / `ax` overlay 仍保持节点 hover、选中和子节点命中，不发送 `/web/host-input`。
@@ -152,6 +153,30 @@ Web mock 的“设备实时画面流”已经可以展示 iOS Simulator、Androi
   - `cd Web && node --test dev/streamGestureModel.test.mjs`
   - `cd Web && npm test`
   - `cd Web && npm run build`
+
+### 2026-07-06 Web / CLI 差异抹平补充
+
+- 用户确认 Web / CLI 侧应抹平平台差异。本轮把 `longPress` 收敛为三端统一 host input：
+  - Web query 对 iOS / Android / Harmony 都使用 `source=host`。
+  - CLI iOS host adapter 把 `TKInputRequest.longPress` 编译为同点 `swipe` hold。
+  - Android / Harmony 继续使用既有同点 swipe hold。
+- Web target registry 现在暴露统一 `inputCapabilities[]`：
+  - `tap` / `swipe` / `longPress` 为 `source=host`、`supported=true`。
+  - `pinch` / `rotate` / `multiTouchPath` 为 `source=host`、`supported=false`、`reason=unsupported_capability`。
+  - Web 前端把该矩阵映射到 `DeviceTarget.inputCapabilities` 与 `canInput`，后续 UI 只消费 capability，不再硬编码平台分支。
+- `pinch` / `rotate` / 多指路径仍不在本期执行；后续逐端 adapter smoke 后再把 capability 点亮，避免 Web 为某个平台写私有分支。
+- 补充验证：
+  - `cd Web && node --test dev/streamGestureModel.test.mjs`
+  - `cd Web && node --test dev/targetRegistryClient.test.mjs`
+  - `swift test --disable-sandbox --package-path CLI --scratch-path .build/cli-test --filter iOSWebHostLongPressUsesSamePointHostHIDSwipe`
+  - `swift test --disable-sandbox --package-path CLI --scratch-path .build/cli-test --filter webTargetRegistryExposesUnifiedHostInputCapabilities`
+- 浏览器 smoke 补测：
+  - 使用 `TRITONKIT_TRITON_BIN=/Users/linhey/Desktop/linhay-open-sources/TritonKit/.build/cli/debug/triton npm run dev -- --host 127.0.0.1` 启动 Web，确保 dev bridge 使用本轮 CLI build。
+  - `GET /web/target-registry` 返回 `inputCapabilities[]`，首个 ready iOS simulator 包含 `tap` / `swipe` / `longPress` supported 和 `pinch` / `rotate` / `multiTouchPath` unsupported。
+  - 初次实测发现 Web `AppContext.fetchHierarchy` 对所有 iOS 请求强制 `source=runtime`，会在选中没有匹配 App runtime 的 host simulator 时产生 console error；已改为 iOS simulator 默认 `source=host`，iOS real-device 默认 `source=runtime`。
+  - in-app browser 新 tab smoke：页面 title `Triton Inspector`，设备画面 `LIVE`，截图 `1206x2622` 已加载，`界面与 AX 审查` 显示 `审查状态: 就绪`，无横向溢出，新 reload 后 console 无 error/warn。
+  - 实际点击设备画面中心后，Web 状态显示 `tap 603,1313`，gesture 后 console 无 error/warn。
+  - 截图：`screenshots/20260706-web-stream-gesture-browser-smoke-after-v02.png`（本地验收产物，当前被仓库级 `screenshots/` ignore 规则忽略）。
 
 ### 真实 Harmony emulator smoke
 

@@ -1,9 +1,13 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Tag, Button, Select, message, Radio } from "antd";
-import { Smartphone, Wifi, WifiOff, RefreshCw } from "lucide-react";
+import { Tag, Select, Radio } from "antd";
+import { Smartphone, WifiOff, RefreshCw } from "lucide-react";
 
 import { useAppContext } from "../AppContext";
-import { filterEffectivelyVisibleNodes, findDescendantAtPoint } from "../hierarchyVisibility";
+import { fetchHostTargets } from "../data/iosSimulatorClient";
+import { deriveOverlayNodes } from "../inspect/hierarchyDerive";
+import { hitTestHierarchyNode } from "../inspect/hitTest";
+import { loadStreamTargetFps, saveStreamTargetFps } from "../streamPreferences";
+import type { DeviceTarget, WebInputCapability } from "../types";
 import {
   createGestureSession,
   finishGestureSession,
@@ -24,6 +28,11 @@ interface SimTarget {
   platform: "ios" | "android" | "harmony";
   ready: boolean;
   runtime?: string;
+  scope?: string;
+  kind?: string;
+  source?: string;
+  targetKey?: string;
+  inputCapabilities?: WebInputCapability[];
 }
 
 export function StreamCard({ nodeId }: { nodeId: string }) {
@@ -32,9 +41,8 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
   const [targets,   setTargets]       = useState<SimTarget[]>([]);
   const [selectedUdid, setSelectedUdid] = useState<string | null>(null);
   const [fps,    setFps]              = useState(0);
-  const [targetFps, setTargetFps]     = useState(15);
+  const [targetFps, setTargetFps]     = useState(loadStreamTargetFps);
   const [refreshing, setRefreshing]   = useState(false);
-  const [overlayMode, setOverlayMode] = useState<"none" | "view" | "ax">("none");
   const [gestureStatus, setGestureStatus] = useState<string | null>(null);
 
   const frameCount    = useRef(0);
@@ -59,30 +67,50 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
     registerStream,
     unregisterStream,
     setFocusedNodeId,
-    selectedNodeId,
-    setSelectedNodeId,
-    hoveredNodeId,
-    setHoveredNodeId,
-    hierarchyScenes,
-    fetchHierarchy
+    loadInspectTargets,
+    setFocusedInspectTarget,
+    getInspectSession,
+    refreshInspectSession,
+    setInspectOverlayMode,
+    selectInspectNode,
+    hoverInspectNode,
   } = useAppContext();
+
+  useEffect(() => {
+    saveStreamTargetFps(targetFps);
+  }, [targetFps]);
 
   // ── 获取设备列表 ───────────────────────────────────────────────
   const fetchTargets = useCallback(async () => {
     try {
-      const res  = await fetch("/web/host-targets");
-      const data = await res.json();
-      if (data.ok || data.targets) {
-        const booted: SimTarget[] = (data.targets ?? []).filter(
-          (s: SimTarget) => s.ready
-        );
-        setTargets(booted);
-        if (booted.length > 0) {
-          const firstUdid = booted[0].target;
+      const data = await fetchHostTargets();
+      if (data.targets) {
+        const readyDeviceTargets = data.targets
+          .filter((target: DeviceTarget) => target.status === "ready" && target.targetSelector);
+        const inspectTargets = loadInspectTargets(readyDeviceTargets);
+        const readyTargets: SimTarget[] = readyDeviceTargets
+          .map((target: DeviceTarget, index: number) => ({
+            id: target.id,
+            target: target.targetSelector ?? target.id,
+            name: target.name,
+            platform: target.platform,
+            ready: true,
+            runtime: target.os,
+            scope: target.scope,
+            kind: target.kind,
+            source: target.screenshotSource ?? "host",
+            targetKey: inspectTargets[index]?.key,
+            inputCapabilities: target.inputCapabilities,
+          }));
+        setTargets(readyTargets);
+        if (readyTargets.length > 0) {
+          const firstUdid = readyTargets[0].target;
+          const firstTargetKey = readyTargets[0].targetKey;
           setSelectedUdid((prev) => {
             if (!prev) return firstUdid;
             return prev;
           });
+          if (firstTargetKey) setFocusedInspectTarget(firstTargetKey, nodeId);
           // 仅在首次加载且未连接时自动连接到第一个已启动的模拟器
           if (!hasConnectedRef.current) {
             setConnected(true);
@@ -90,35 +118,22 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
             hasConnectedRef.current = true;
           }
         }
+        return readyTargets;
       }
+      return [];
     } catch { /* 静默失败 */ }
-  }, []);
-
-  // ── 连接 / 断开 ────────────────────────────────────────────────
-  const handleConnect = useCallback(async () => {
-    if (!selectedUdid) { message.warning("请先选择一个活跃的调试设备"); return; }
-    setConnectTime(Date.now());
-    setConnected(true);
-    message.success("画面流已成功连接（实时流模式）");
-  }, [selectedUdid]);
-
-  const handleDisconnect = useCallback(() => {
-    setConnected(false);
-    setFps(0);
-    message.info("画面流已断开");
-  }, []);
+    return [];
+  }, [loadInspectTargets, nodeId, setFocusedInspectTarget]);
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchTargets();
-    const targetObj = targets.find(t => t.target === selectedUdid);
-    if (connected && selectedUdid && targetObj) {
-      try {
-        await fetchHierarchy(selectedUdid, targetObj.platform);
-      } catch { /* 静默失败 */ }
+    const nextTargets = await fetchTargets();
+    const targetObj = (nextTargets.length > 0 ? nextTargets : targets).find(t => t.target === selectedUdid);
+    if (connected && targetObj?.targetKey) {
+      await refreshInspectSession(targetObj.targetKey, "manualRefresh");
     }
     setRefreshing(false);
-  }, [fetchTargets, connected, selectedUdid, targets, fetchHierarchy]);
+  }, [fetchTargets, connected, selectedUdid, targets, refreshInspectSession]);
 
   // 计算图片拉伸比率与位置
   const updateImageLayout = useCallback(() => {
@@ -204,6 +219,11 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
 
   const selectedTarget = targets.find((t) => t.target === selectedUdid);
   const platform = selectedTarget?.platform ?? "ios";
+  const selectedTargetKey = selectedTarget?.targetKey ?? null;
+  const inspectSession = getInspectSession(selectedTargetKey);
+  const overlayMode = inspectSession?.overlayMode ?? "none";
+  const selectedNodeId = inspectSession?.selectedNodeId ?? null;
+  const hoveredNodeId = inspectSession?.hoveredNodeId ?? null;
 
   let streamUrl = "";
   if (connected && selectedUdid) {
@@ -223,23 +243,27 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
         nodeId,
         udid: selectedTarget.target,
         name: selectedTarget.name,
-        platform: selectedTarget.platform
+        platform: selectedTarget.platform,
+        scope: selectedTarget.scope,
+        kind: selectedTarget.kind,
+        source: selectedTarget.source,
+        targetKey: selectedTarget.targetKey
       });
+      if (selectedTarget.targetKey) setFocusedInspectTarget(selectedTarget.targetKey, nodeId);
     }
     return () => {
       unregisterStream(nodeId);
     };
-  }, [nodeId, selectedTarget, registerStream, unregisterStream]);
+  }, [nodeId, selectedTarget, registerStream, unregisterStream, setFocusedInspectTarget]);
 
   // ── 自动加载节点层级数据 ───────────────────────────────────────────
   useEffect(() => {
-    if (connected && selectedUdid && overlayMode !== "none" && selectedTarget) {
-      const existing = hierarchyScenes[selectedUdid];
-      if (!existing || existing.length === 0) {
-        fetchHierarchy(selectedUdid, selectedTarget.platform).catch(() => {});
+    if (connected && overlayMode !== "none" && selectedTarget?.targetKey) {
+      if (!inspectSession?.scene || inspectSession.stale) {
+        refreshInspectSession(selectedTarget.targetKey, "overlayEnabled").catch(() => {});
       }
     }
-  }, [connected, selectedUdid, overlayMode, selectedTarget, hierarchyScenes, fetchHierarchy]);
+  }, [connected, overlayMode, selectedTarget, inspectSession?.scene, inspectSession?.stale, refreshInspectSession]);
 
   const clearLongPressTimer = useCallback(() => {
     if (longPressTimerRef.current != null) {
@@ -282,11 +306,13 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
         throw new Error(body?.error?.message || body?.message || `HTTP ${res.status}`);
       }
       setGestureStatus(formatGestureStatus(gesture));
-      await fetchHierarchy(selectedUdid, selectedTarget.platform);
+      if (selectedTarget.targetKey) {
+        await refreshInspectSession(selectedTarget.targetKey, "gestureCompleted");
+      }
     } catch (error) {
       setGestureStatus(`输入失败：${(error as Error).message}`);
     }
-  }, [fetchHierarchy, selectedTarget, selectedUdid]);
+  }, [refreshInspectSession, selectedTarget, selectedUdid]);
 
   const handleViewportPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
     if (!connected || !selectedUdid || overlayMode !== "none") return;
@@ -353,23 +379,14 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
   }, [clearLongPressTimer]);
 
   // ─── 计算需要渲染的节点 (按面积从大到小排序，确保小元素层叠在顶部易于交互) ─────────────────────
-  const flatNodes = selectedUdid ? (hierarchyScenes[selectedUdid] || []) : [];
-  const visibleNodes = filterEffectivelyVisibleNodes(flatNodes);
+  const flatNodes = inspectSession?.scene?.nodes ?? [];
 
   // 获取逻辑屏幕宽高以抵消 Retina 缩放倍率的偏差 (iPhone 17等一般为 @3x)
   const rootNode = flatNodes[0];
   const deviceWidth = rootNode?.frame?.width || 390;
   const deviceHeight = rootNode?.frame?.height || 844;
 
-  const nodesToRender = visibleNodes.filter((node) => {
-    if (overlayMode === "none") return false;
-    if (overlayMode === "ax") {
-      const identifier = node.view?.accessibilityIdentifier || "";
-      const axText = node.view?.accessibilityLabel || node.style?.text || "";
-      return axText !== "" || identifier !== "" || node.interactive;
-    }
-    return true; // view mode
-  });
+  const nodesToRender = deriveOverlayNodes(flatNodes, overlayMode);
 
   const sortedNodes = [...nodesToRender].sort((a, b) => {
     const areaA = (a.frame?.width || 0) * (a.frame?.height || 0);
@@ -393,7 +410,14 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
           <Radio.Group
             size="small"
             value={overlayMode}
-            onChange={(e) => setOverlayMode(e.target.value)}
+            onChange={(e) => {
+              if (!selectedTargetKey) return;
+              const mode = e.target.value;
+              setInspectOverlayMode(selectedTargetKey, mode);
+              if (mode !== "none" && (!inspectSession?.scene || inspectSession.stale)) {
+                refreshInspectSession(selectedTargetKey, "overlayEnabled").catch(() => {});
+              }
+            }}
             optionType="button"
             buttonStyle="solid"
           >
@@ -407,6 +431,14 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
           >
             {connected ? "● LIVE" : "○ 离线"}
           </Tag>
+          {gestureStatus && (
+            <Tag
+              color="blue"
+              style={{ fontSize: 9, lineHeight: "14px", borderRadius: 20, margin: 0, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis" }}
+            >
+              {gestureStatus}
+            </Tag>
+          )}
         </div>
       </div>
 
@@ -417,7 +449,11 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
           style={{ flex: 1 }}
           placeholder="选择调试设备..."
           value={selectedUdid}
-          onChange={setSelectedUdid}
+          onChange={(target) => {
+            setSelectedUdid(target);
+            const nextTarget = targets.find((item) => item.target === target);
+            if (nextTarget?.targetKey) setFocusedInspectTarget(nextTarget.targetKey, nodeId);
+          }}
           options={targets.map((t) => ({ value: t.target, label: `[${t.platform.toUpperCase()}] ${t.name}` }))}
           notFoundContent={<span style={{ fontSize: 11, color: "rgba(255,255,255,0.25)" }}>未发现可用设备</span>}
         />
@@ -519,21 +555,25 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
                         pointerEvents: "auto",
                         cursor: "pointer",
                       }}
-                      onMouseEnter={() => setHoveredNodeId(node.id)}
-                      onMouseLeave={() => setHoveredNodeId(null)}
+                      onMouseEnter={() => selectedTargetKey && hoverInspectNode(selectedTargetKey, node.id)}
+                      onMouseLeave={() => selectedTargetKey && hoverInspectNode(selectedTargetKey, null)}
                       onClick={(e) => {
                         e.stopPropagation();
-                        if (selectedNodeId === node.id) {
-                          const rect = e.currentTarget.parentElement?.getBoundingClientRect();
-                          if (rect) {
-                            const x = ((e.clientX - rect.left) / imgLayout.width) * deviceWidth;
-                            const y = ((e.clientY - rect.top) / imgLayout.height) * deviceHeight;
-                            const child = findDescendantAtPoint(nodesToRender, node.id, x, y);
-                            setSelectedNodeId(child?.id || node.id);
-                            return;
-                          }
+                        if (!selectedTargetKey) return;
+                        const rect = e.currentTarget.parentElement?.getBoundingClientRect();
+                        if (rect) {
+                          const x = ((e.clientX - rect.left) / imgLayout.width) * deviceWidth;
+                          const y = ((e.clientY - rect.top) / imgLayout.height) * deviceHeight;
+                          const hit = hitTestHierarchyNode({
+                            nodes: flatNodes,
+                            mode: overlayMode,
+                            point: { x, y },
+                            selectedNodeId,
+                          });
+                          selectInspectNode(selectedTargetKey, hit.nodeId || node.id);
+                          return;
                         }
-                        setSelectedNodeId(node.id);
+                        selectInspectNode(selectedTargetKey, node.id);
                       }}
                       title={`${node.type || node.className || 'Unknown'} (${node.frame.width.toFixed(0)}x${node.frame.height.toFixed(0)})`}
                     />
@@ -551,45 +591,16 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
         )}
       </div>
 
-      {/* ── 控制栏 ── */}
-      <div className="stream-controls">
-        <div className="stream-metrics">
-          <span className="metric">
-            <span className="metric-val" style={{ color: fps >= 3 ? "#52c41a" : connected ? "#faad14" : undefined }}>
-              {connected ? (fps || "…") : "—"}
-            </span>
-            <span className="metric-label">FPS</span>
-          </span>
-          <div className="metric-divider" />
-          <span className="metric">
-            <span className="metric-val" style={{ color: "#1677ff" }}>19421</span>
-            <span className="metric-label">端口</span>
-          </span>
-          {gestureStatus && (
-            <>
-              <div className="metric-divider" />
-              <span className="metric stream-gesture-status">
-                <span className="metric-val">{gestureStatus}</span>
-              </span>
-            </>
-          )}
-        </div>
-
-        <div className="stream-actions">
-          <Button
-            size="small"
-            type={connected ? "default" : "primary"}
-            danger={connected}
-            icon={connected ? <WifiOff size={10} /> : <Wifi size={10} />}
-            onClick={connected ? handleDisconnect : handleConnect}
-            style={{ fontSize: 10, height: 22, padding: "0 8px", borderRadius: 5, display: "flex", alignItems: "center", gap: 4 }}
-          >
-            {connected ? "断开" : "连接"}
-          </Button>
-        </div>
-      </div>
     </div>
   );
+}
+
+function hierarchyFetchOptions(target: SimTarget) {
+  return {
+    scope: target.scope,
+    kind: target.kind,
+    source: target.source ?? (target.scope === "real" || target.kind === "real-device" ? "runtime" : "host"),
+  };
 }
 
 function formatGestureStatus(gesture: StreamGestureInput) {
