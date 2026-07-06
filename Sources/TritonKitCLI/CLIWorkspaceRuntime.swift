@@ -195,7 +195,11 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
 
     try createWorkspaceRunDirectories(runDir)
     try writeWorkspaceRunConfig(response, to: runDir.appendingPathComponent("config.yaml"))
-    try writeWorkspaceRunArtifacts(response, runDir: runDir)
+    try writeWorkspaceRunArtifacts(
+        response,
+        runDir: runDir,
+        includeDryTransition: request.dryModelFixture
+    )
     if request.dryModelFixture {
         try writeWorkspaceDryDecisionArtifacts(runDir: runDir)
     }
@@ -455,7 +459,11 @@ private func createWorkspaceRunDirectories(_ runDir: URL) throws {
     }
 }
 
-private func writeWorkspaceRunArtifacts(_ run: TKWorkspaceRunResponse, runDir: URL) throws {
+private func writeWorkspaceRunArtifacts(
+    _ run: TKWorkspaceRunResponse,
+    runDir: URL,
+    includeDryTransition: Bool
+) throws {
     try writeWorkspaceJSONArtifact([
         "target": run.target.id,
         "platform": run.target.platform,
@@ -500,7 +508,7 @@ private func writeWorkspaceRunArtifacts(_ run: TKWorkspaceRunResponse, runDir: U
         "proposal": "stop",
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-000.json"))
     try writeWorkspaceJSONArtifact(
-        workspaceAtlasDocument(for: run),
+        workspaceAtlasDocument(for: run, includeDryTransition: includeDryTransition),
         to: runDir.appendingPathComponent("atlas/atlas.json")
     )
 }
@@ -533,7 +541,7 @@ private func writeWorkspaceDryDecisionArtifacts(runDir: URL) throws {
         "proposal": "stop",
     ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
     try """
-    {"deltaId":"atlas_delta_0000","kind":"transition","confidence":0.5}
+    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"screen_0000","status":"candidate_failed","confidence":0.5,"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
     """.write(to: runDir.appendingPathComponent("atlas/deltas.jsonl"), atomically: true, encoding: .utf8)
     try """
     schemaVersion: 1
@@ -666,13 +674,17 @@ private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
     return "provider_missing"
 }
 
-private func workspaceAtlasDocument(for run: TKWorkspaceRunResponse) -> [String: Any] {
+private func workspaceAtlasDocument(
+    for run: TKWorkspaceRunResponse,
+    includeDryTransition: Bool
+) -> [String: Any] {
     let initialObservationRefs = [
         "events.jsonl#observation.captured",
         "evidence/screenshots/0000.txt",
         "evidence/hierarchy/0000.json",
         "evidence/hierarchy/0000-ax.json",
     ]
+    let transitions = includeDryTransition ? [workspaceDryTransition()] : []
     return [
         "schemaVersion": 1,
         "kind": "triton.workspace.atlas",
@@ -700,12 +712,36 @@ private func workspaceAtlasDocument(for run: TKWorkspaceRunResponse) -> [String:
                 "evidenceRefs": initialObservationRefs,
             ],
         ],
-        "transitions": [],
+        "transitions": transitions,
         "coverage": [
             "status": "seeded",
             "screenCount": 1,
             "stateCount": 1,
-            "transitionCount": 0,
+            "transitionCount": transitions.count,
+        ],
+    ]
+}
+
+private func workspaceDryTransition() -> [String: Any] {
+    [
+        "transitionId": "transition_0000",
+        "fromScreenId": "screen_0000",
+        "toScreenId": "screen_0000",
+        "action": "tap",
+        "selector": [
+            "text": "Continue",
+        ],
+        "status": "candidate_failed",
+        "confidence": 0.5,
+        "evidenceRefs": [
+            "events.jsonl#model.decided",
+            "events.jsonl#policy.checked",
+            "events.jsonl#action.executed",
+            "events.jsonl#verify.checked",
+            "evidence/model/decision-000.json",
+            "evidence/model/policy-000.json",
+            "evidence/actions/action-000.json",
+            "evidence/model/verify-000.json",
         ],
     ]
 }

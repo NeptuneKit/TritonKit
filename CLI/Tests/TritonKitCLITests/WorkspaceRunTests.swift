@@ -208,6 +208,27 @@ struct WorkspaceRunTests {
         #expect(eventTypes.contains("verify.checked"))
         #expect(eventTypes.contains("atlas.updated"))
         #expect(eventTypes.contains("flow.updated"))
+
+        let runDir = root.appendingPathComponent("run-workspace-decision", isDirectory: true)
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let transitions = atlas?["transitions"] as? [[String: Any]]
+        let coverage = atlas?["coverage"] as? [String: Any]
+        #expect(transitions?.count == 1)
+        #expect(coverage?["transitionCount"] as? Int == 1)
+        let transition = transitions?.first
+        #expect(transition?["transitionId"] as? String == "transition_0000")
+        #expect(transition?["fromScreenId"] as? String == "screen_0000")
+        #expect(transition?["toScreenId"] as? String == "screen_0000")
+        #expect(transition?["status"] as? String == "candidate_failed")
+        let evidenceRefs = transition?["evidenceRefs"] as? [String]
+        #expect(evidenceRefs?.contains("events.jsonl#action.executed") == true)
+        #expect(evidenceRefs?.contains("evidence/model/decision-000.json") == true)
+
+        let delta = try String(contentsOf: runDir.appendingPathComponent("atlas/deltas.jsonl"), encoding: .utf8)
+        #expect(delta.contains(#""transitionId":"transition_0000""#))
+        #expect(delta.contains(#""status":"candidate_failed""#))
     }
 
     @Test("workspace export flow writes a seed")
