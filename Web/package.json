@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "test": "node --test dev/*.test.mjs",
+    "test": "node --test dev/currentWebContracts.test.mjs dev/hierarchyMaterialPolicy.test.mjs dev/hierarchyVisibility.test.mjs dev/inspectorWorkspaceModel.test.mjs dev/iosRuntimeMirrorBridge.test.mjs dev/iosSimulatorBridge.test.mjs dev/targetRegistryClient.test.mjs",
+    "test:legacy-dom": "node --test dev/appFallbackDom.test.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

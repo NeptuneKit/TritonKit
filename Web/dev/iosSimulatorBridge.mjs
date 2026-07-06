@@ -830,29 +830,45 @@ function mapHostCaptureToWebTargets(capture, runtimeTargets = []) {
   if (!capture?.parsed) return [];
   if (capture.platform === "runtime") return [];
   if (Array.isArray(capture.parsed.simulators)) {
-    return mapTritonSimListToWebTargets(capture.parsed).simulators.map((target) => ({
-      id: target.id,
-      target: target.udid,
-      name: target.name,
-      platform: "ios",
-      appName: normalizeOptionalString(target.appName),
-      bundleIdentifier: normalizeOptionalString(target.bundleIdentifier ?? target.bundleId),
-      runtime: target.runtime,
-      state: target.state,
-      statusLabel: target.statusLabel,
-      ready: target.isBooted,
-      scope: "simulator",
-      kind: "simulator",
-      source: target.source,
-      readonly: true,
-      blockedReasons: [],
-      sensitive: false,
-    }));
+    return mapTritonSimListToWebTargets(capture.parsed).simulators
+      .filter((target) => isIOSSimulatorWebAvailable(target, runtimeTargets))
+      .map((target) => ({
+        id: target.id,
+        target: target.udid,
+        name: target.name,
+        platform: "ios",
+        appName: normalizeOptionalString(target.appName),
+        bundleIdentifier: normalizeOptionalString(target.bundleIdentifier ?? target.bundleId),
+        runtime: target.runtime,
+        state: target.state,
+        statusLabel: target.statusLabel,
+        ready: target.isBooted,
+        scope: "simulator",
+        kind: "simulator",
+        source: target.source,
+        readonly: true,
+        blockedReasons: [],
+        sensitive: false,
+      }));
   }
   if (Array.isArray(capture.parsed.targets)) {
     return mapTritonDeviceListToWebTargetsWithRuntime(capture.parsed, capture.platform, runtimeTargets);
   }
   return [];
+}
+
+function isIOSSimulatorWebAvailable(target, runtimeTargets = []) {
+  const iosRuntimeTargets = runtimeTargets.filter((runtimeTarget) => {
+    const platform = String(runtimeTarget.platform ?? "").toLowerCase();
+    return platform === "ios" && runtimeTarget.connected !== false;
+  });
+  if (iosRuntimeTargets.length === 0) return false;
+
+  const matched = iosRuntimeTargets.some((runtimeTarget) => normalizeOptionalString(runtimeTarget.simulatorUDID) === target.udid);
+  if (matched) return true;
+
+  const unscoped = iosRuntimeTargets.filter((runtimeTarget) => !normalizeOptionalString(runtimeTarget.simulatorUDID));
+  return unscoped.length === 1 && iosRuntimeTargets.length === 1;
 }
 
 function normalizeOptionalString(value) {
@@ -931,6 +947,7 @@ async function resolveIOSRuntimeMirrorTarget(tritonPath, hostTarget, options = {
     return runtimeSimulatorUDID === simulatorUDID || runtimeID === hostTarget || runtimeID.endsWith(simulatorUDID);
   });
   if (simulatorTarget) return String(simulatorTarget.id);
+  if (options.source === "runtime" && runtimeTargets.length === 1) return String(runtimeTargets[0].id);
   throw new Error(`No connected iOS App runtime target matched host target ${hostTarget}. Available: ${describeRuntimeTargets(runtimeTargets)}.`);
 }
 

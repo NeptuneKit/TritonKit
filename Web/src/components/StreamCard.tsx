@@ -3,6 +3,7 @@ import { Tag, Button, Select, message, Radio } from "antd";
 import { Smartphone, Wifi, WifiOff, RefreshCw } from "lucide-react";
 
 import { useAppContext } from "../AppContext";
+import { filterEffectivelyVisibleNodes, findDescendantAtPoint } from "../hierarchyVisibility";
 
 // ── 类型 ───────────────────────────────────────────────────────
 interface SimTarget {
@@ -227,15 +228,15 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
 
   // ─── 计算需要渲染的节点 (按面积从大到小排序，确保小元素层叠在顶部易于交互) ─────────────────────
   const flatNodes = selectedUdid ? (hierarchyScenes[selectedUdid] || []) : [];
+  const visibleNodes = filterEffectivelyVisibleNodes(flatNodes);
 
   // 获取逻辑屏幕宽高以抵消 Retina 缩放倍率的偏差 (iPhone 17等一般为 @3x)
   const rootNode = flatNodes[0];
   const deviceWidth = rootNode?.frame?.width || 390;
   const deviceHeight = rootNode?.frame?.height || 844;
 
-  const nodesToRender = flatNodes.filter((node) => {
+  const nodesToRender = visibleNodes.filter((node) => {
     if (overlayMode === "none") return false;
-    if (node.visible === false) return false;
     if (overlayMode === "ax") {
       const identifier = node.view?.accessibilityIdentifier || "";
       const axText = node.view?.accessibilityLabel || node.style?.text || "";
@@ -388,6 +389,16 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
                       onMouseLeave={() => setHoveredNodeId(null)}
                       onClick={(e) => {
                         e.stopPropagation();
+                        if (selectedNodeId === node.id) {
+                          const rect = e.currentTarget.parentElement?.getBoundingClientRect();
+                          if (rect) {
+                            const x = ((e.clientX - rect.left) / imgLayout.width) * deviceWidth;
+                            const y = ((e.clientY - rect.top) / imgLayout.height) * deviceHeight;
+                            const child = findDescendantAtPoint(nodesToRender, node.id, x, y);
+                            setSelectedNodeId(child?.id || node.id);
+                            return;
+                          }
+                        }
                         setSelectedNodeId(node.id);
                       }}
                       title={`${node.type || node.className || 'Unknown'} (${node.frame.width.toFixed(0)}x${node.frame.height.toFixed(0)})`}

@@ -82,7 +82,8 @@ function makeInitialRoot(): LayoutNode {
 
 function loadInitialRoot(): LayoutNode {
   try {
-    const saved = localStorage.getItem("triton-layout");
+    if (typeof globalThis.localStorage?.getItem !== "function") return makeInitialRoot();
+    const saved = globalThis.localStorage.getItem("triton-layout");
     if (saved) {
       const parsed = JSON.parse(saved);
       if (parsed && typeof parsed === 'object' && parsed.id) {
@@ -351,11 +352,13 @@ function NodeRenderer({
 }
 
 // ─── App ──────────────────────────────────────────────────────────────────────
-export default function App() {
+export function App() {
   const [root, setRoot] = useState<LayoutNode>(loadInitialRoot);
 
   useEffect(() => {
-    localStorage.setItem("triton-layout", JSON.stringify(root));
+    if (typeof globalThis.localStorage?.setItem === "function") {
+      globalThis.localStorage.setItem("triton-layout", JSON.stringify(root));
+    }
   }, [root]);
 
   const handleSplit = useCallback((id: string, dir: "v" | "h") => {
@@ -445,3 +448,5 @@ export default function App() {
     </AppContextProvider>
   );
 }
+
+export default App;

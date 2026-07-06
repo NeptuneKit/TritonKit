@@ -22,6 +22,83 @@ body {
   background: #0a0e1a;
 }
 
+.view-tree-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  padding-left: clamp(0px, var(--tree-depth) * 14px, 112px);
+}
+
+.view-tree .ant-tree-treenode {
+  align-items: flex-start;
+}
+
+.view-tree .ant-tree-title {
+  white-space: normal;
+}
+
+.view-tree-status.is-stale {
+  background: rgba(216, 168, 111, 0.1);
+}
+
+.view-tree-row strong,
+.view-tree-row span,
+.tree-node-copy,
+.controller-shell-badge strong {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.view-tree-row strong {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.view-tree-row span {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.tree-node-copy {
+  white-space: normal;
+}
+
+.controller-shell-badge strong {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+.device-stage {
+  position: relative;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  row-gap: 8px;
+}
+
+.controller-shell-badge {
+  pointer-events: auto;
+  user-select: text;
+}
+
+.controller-shell-badge em {
+  font-style: normal;
+}
+
+.controller-shell-badge.is-stale {
+  background: rgba(30, 22, 12, 0.82);
+}
+
+.device-frame.has-real-frame.orientation-portrait,
+.device-frame.has-real-frame.orientation-unknown {
+  height: min(720px, calc(100dvh - 160px));
+}
+
+@media (max-width: 720px) {
+  .device-frame.has-real-frame.orientation-portrait,
+  .device-frame.has-real-frame.orientation-unknown {
+    height: min(620px, calc(100dvh - 150px));
+  }
+}
+
 /* ============ App Shell ============ */
 .triton-app {
   display: flex;

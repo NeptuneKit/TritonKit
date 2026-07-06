@@ -233,7 +233,7 @@ test("shows iOS localNetwork real device when an App runtime target is connected
   assert.equal(result.targets[0].transport, "localNetwork");
 });
 
-test("keeps host targets ok when optional App runtime target discovery is unavailable", () => {
+test("hides iOS simulator host targets when App runtime target discovery is unavailable", () => {
   const result = mapTritonHostCapturesToWebTargets([
     {
       id: "ios-command",
@@ -279,8 +279,7 @@ test("keeps host targets ok when optional App runtime target discovery is unavai
   ]);
 
   assert.equal(result.ok, true);
-  assert.equal(result.targets.length, 1);
-  assert.equal(result.targets[0].id, "sim:AAAA-BBBB");
+  assert.equal(result.targets.length, 0);
   assert.equal(result.commandOutputs.at(-1).ok, false);
 });
 
@@ -307,6 +306,25 @@ test("combines iOS, Android, and Harmony host captures for visible target switch
             isAvailable: true,
             isBooted: true,
             source: "simctl",
+          },
+        ],
+      },
+    },
+    {
+      id: "runtime-command",
+      platform: "runtime",
+      command: "triton list --json",
+      ok: true,
+      exitCode: 0,
+      stdout: "",
+      stderr: "",
+      parsed: {
+        targets: [
+          {
+            id: "triton:connection:14",
+            platform: "ios",
+            connected: true,
+            simulatorUDID: "AAAA-BBBB",
           },
         ],
       },
@@ -394,6 +412,7 @@ test("combines iOS, Android, and Harmony host captures for visible target switch
   assert.equal(result.ok, true);
   assert.deepEqual(result.source.commands, [
     "triton sim list --json",
+    "triton list --json",
     "triton device list --platform ios --scope real --json",
     "triton device list --platform android --scope emulator --json",
     "triton device list --platform harmony --scope emulator --json",

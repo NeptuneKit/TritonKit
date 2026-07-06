@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Card, Tag, Flex, Button, message, Select, Tabs, Tree, Spin, Checkbox } from "antd";
-import { Search, RefreshCw } from "lucide-react";
+import { Card, Tag, Flex, Button, message, Select, Tabs, Tree, Spin, Checkbox, Modal } from "antd";
+import { Maximize2, Search, RefreshCw } from "lucide-react";
 import { useAppContext } from "../AppContext";
 import { LayoutNode } from "../App";
+import { filterEffectivelyVisibleNodes } from "../hierarchyVisibility";
 
 function findPath(node: LayoutNode, targetId: string, path: string[] = []): string[] | null {
   if (node.kind === "leaf") {
@@ -75,6 +76,8 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
     axText: string;
     frame: string;
   } | null>(null);
+  const [selectedNodeDetails, setSelectedNodeDetails] = useState<any | null>(null);
+  const [detailsModalOpen, setDetailsModalOpen] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [liveViewTreeData, setLiveViewTreeData] = useState<any[]>([]);
@@ -85,9 +88,10 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
   useEffect(() => {
     if (!currentStream) {
       setSelectedNodeData(null);
+      setSelectedNodeDetails(null);
       return;
     }
-    const nodes = hierarchyScenes[currentStream.udid] || [];
+    const nodes = filterEffectivelyVisibleNodes(hierarchyScenes[currentStream.udid] || []);
     const matchedNode = nodes.find(n => n.id === selectedNodeId);
     if (matchedNode) {
       const identifier = matchedNode.view?.accessibilityIdentifier || "";
@@ -101,10 +105,16 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
         axText,
         frame: frameStr
       });
+      setSelectedNodeDetails(matchedNode);
     } else {
       setSelectedNodeData(null);
+      setSelectedNodeDetails(null);
     }
   }, [selectedNodeId, currentStream, hierarchyScenes]);
+
+  useEffect(() => {
+    setDetailsModalOpen(false);
+  }, [selectedNodeId]);
 
   // ─── 响应式树结构计算：监听 hierarchyScenes 并在更新时重新映射视图树 ─────────────────────
   useEffect(() => {
@@ -113,7 +123,7 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
       setLiveAxTreeData([]);
       return;
     }
-    const flatNodes = hierarchyScenes[currentStream.udid];
+    const flatNodes = filterEffectivelyVisibleNodes(hierarchyScenes[currentStream.udid] || []);
     if (!flatNodes || flatNodes.length === 0) {
       setLiveViewTreeData([]);
       setLiveAxTreeData([]);
@@ -124,7 +134,6 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
 
     // 1. Map flat nodes to TreeNode structure
     flatNodes.forEach((node: any) => {
-      if (node.visible === false) return;
       const identifier = node.view?.accessibilityIdentifier || "";
       const axText = node.view?.accessibilityLabel || node.style?.text || "";
       const frameStr = node.frame
@@ -328,11 +337,71 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
               <span>{selectedNodeData?.frame || "--"}</span>
             </Flex>
           </div>
+          {selectedNodeDetails && (
+            <Button
+              type="text"
+              size="small"
+              block
+              icon={<Maximize2 size={12} />}
+              onClick={() => setDetailsModalOpen(true)}
+              style={{ color: "rgba(255,255,255,0.65)" }}
+            >
+              查看更多信息
+            </Button>
+          )}
           <Button type="primary" size="small" block onClick={() => message.success("选中节点的 DTO JSON 已复制到剪切板")} disabled={!selectedNodeData || !currentStream}>
             复制 DTO JSON
           </Button>
         </div>
       </div>
+      <Modal
+        title="节点详情"
+        open={detailsModalOpen}
+        onCancel={() => setDetailsModalOpen(false)}
+        footer={null}
+        width={720}
+        centered
+        destroyOnHidden
+      >
+        {selectedNodeDetails && (
+          <div style={{ fontSize: 12 }}>
+            <Flex justify="space-between">
+              <span style={{ color: "rgba(255,255,255,0.45)" }}>节点 ID</span>
+              <span style={{ overflowWrap: "anywhere", textAlign: "right" }}>{selectedNodeDetails.id || "--"}</span>
+            </Flex>
+            <Flex justify="space-between">
+              <span style={{ color: "rgba(255,255,255,0.45)" }}>父节点</span>
+              <span style={{ overflowWrap: "anywhere", textAlign: "right" }}>{selectedNodeDetails.parentId || "--"}</span>
+            </Flex>
+            <Flex justify="space-between">
+              <span style={{ color: "rgba(255,255,255,0.45)" }}>层级 / 来源</span>
+              <span>{selectedNodeDetails.depth ?? "--"} / {selectedNodeDetails.source || selectedNodeDetails.raw?.source || "--"}</span>
+            </Flex>
+            <Flex justify="space-between">
+              <span style={{ color: "rgba(255,255,255,0.45)" }}>状态</span>
+              <span>{selectedNodeDetails.visible === false ? "隐藏" : "可见"} · {selectedNodeDetails.interactive ? "可交互" : "只读"}</span>
+            </Flex>
+            <pre
+              style={{
+                background: "rgba(0,0,0,0.24)",
+                border: "1px solid rgba(255,255,255,0.08)",
+                borderRadius: 6,
+                color: "rgba(255,255,255,0.72)",
+                fontSize: 11,
+                lineHeight: 1.45,
+                margin: "12px 0 0",
+                maxHeight: "52vh",
+                overflow: "auto",
+                padding: 8,
+                whiteSpace: "pre-wrap",
+                overflowWrap: "anywhere",
+              }}
+            >
+              {JSON.stringify(selectedNodeDetails, null, 2)}
+            </pre>
+          </div>
+        )}
+      </Modal>
     </Card>
   );
 }

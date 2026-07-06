@@ -59,7 +59,9 @@ export function AppContextProvider({ children, layoutRoot }: { children: React.R
 
   const fetchHierarchy = useCallback(async (udid: string, platform: string) => {
     try {
-      const res = await fetch(`/web/host-hierarchy?platform=${platform}&target=${udid}`);
+      const params = new URLSearchParams({ platform, target: udid });
+      if (platform === "ios") params.set("source", "runtime");
+      const res = await fetch(`/web/host-hierarchy?${params.toString()}`);
       if (!res.ok) throw new Error("Failed to fetch");
       const data = await res.json();
       if (data && data.scene && data.scene.nodes && Array.isArray(data.scene.nodes)) {
