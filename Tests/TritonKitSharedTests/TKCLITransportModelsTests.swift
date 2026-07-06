@@ -92,6 +92,42 @@ struct TKCLITransportModelsTests {
         #expect(try TKResolveTargetSummary("SIM-UDID-2", in: [decoded]) == decoded)
     }
 
+    @Test("iOS simulator runtime target id can be scoped by bundle")
+    func iosSimulatorRuntimeTargetIDCanBeScopedByBundle() throws {
+        let demo = TKTargetSummary(
+            id: TKIOSSimulatorRuntimeTargetID(
+                simulatorUDID: "SIM-UDID-4",
+                bundleIdentifier: "com.example.demo"
+            ),
+            connected: true,
+            latestHierarchyAvailable: true,
+            appName: "Demo",
+            bundleIdentifier: "com.example.demo",
+            simulatorUDID: "SIM-UDID-4"
+        )
+        let other = TKTargetSummary(
+            id: TKIOSSimulatorRuntimeTargetID(
+                simulatorUDID: "SIM-UDID-4",
+                bundleIdentifier: "com.example.other"
+            ),
+            connected: true,
+            latestHierarchyAvailable: true,
+            appName: "Other",
+            bundleIdentifier: "com.example.other",
+            simulatorUDID: "SIM-UDID-4"
+        )
+
+        #expect(demo.id == "triton:ios-simulator:SIM-UDID-4/app:com.example.demo")
+        #expect(TKIOSSimulatorUDID(fromTargetID: demo.id) == "SIM-UDID-4")
+        #expect(try TKResolveTargetSummary(demo.id, in: [demo, other]) == demo)
+        #expect(throws: TKTargetResolutionError.ambiguous(requested: "SIM-UDID-4", available: [demo.id, other.id])) {
+            try TKResolveTargetSummary("SIM-UDID-4", in: [demo, other])
+        }
+        #expect(throws: TKTargetResolutionError.ambiguous(requested: "triton:ios-simulator:SIM-UDID-4", available: [demo.id, other.id])) {
+            try TKResolveTargetSummary("triton:ios-simulator:SIM-UDID-4", in: [demo, other])
+        }
+    }
+
     @Test("target summary preserves explicit cross-platform runtime identity")
     func targetSummaryPreservesCrossPlatformRuntimeIdentity() throws {
         let android = TKTargetSummary(

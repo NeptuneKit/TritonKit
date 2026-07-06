@@ -27,13 +27,18 @@ export async function resolveIOSRuntimeMirrorTarget(tritonPath, hostTarget, opti
     throw new Error(`No connected iOS real-device App runtime target matched host target ${hostTarget}. Available iOS runtime targets: ${describeRuntimeTargets(runtimeTargets)}.`);
   }
 
-  const simulatorUDID = String(hostTarget ?? "").replace(/^sim:/, "");
-  const simulatorTarget = runtimeTargets.find((target) => {
-    const runtimeID = String(target.id ?? "");
+  const exactTarget = runtimeTargets.find((target) => String(target.id ?? "") === String(hostTarget ?? ""));
+  if (exactTarget) return String(exactTarget.id);
+
+  const simulatorUDID = simulatorUDIDFromTarget(hostTarget);
+  const simulatorTargets = runtimeTargets.filter((target) => {
     const runtimeSimulatorUDID = String(target.simulatorUDID ?? "");
-    return runtimeSimulatorUDID === simulatorUDID || runtimeID === hostTarget || runtimeID.endsWith(simulatorUDID);
+    return runtimeSimulatorUDID === simulatorUDID;
   });
-  if (simulatorTarget) return String(simulatorTarget.id);
+  if (simulatorTargets.length === 1) return String(simulatorTargets[0].id);
+  if (simulatorTargets.length > 1) {
+    throw new Error(`Multiple connected iOS simulator App runtime targets matched ${hostTarget}: ${describeRuntimeTargets(simulatorTargets)}.`);
+  }
   if (options.source === "runtime" && runtimeTargets.length === 1) return String(runtimeTargets[0].id);
   throw new Error(`No connected iOS App runtime target matched host target ${hostTarget}. Available: ${describeRuntimeTargets(runtimeTargets)}.`);
 }
@@ -60,6 +65,11 @@ function isIOSRealHostTarget(hostTarget, options = {}) {
 
 function describeRuntimeTargets(targets) {
   return targets.map((target) => String(target.id ?? "<unknown>")).join(", ");
+}
+
+function simulatorUDIDFromTarget(target) {
+  const text = String(target ?? "").replace(/^sim:/, "").replace(/^triton:ios-simulator:/, "");
+  return text.split("/app:")[0];
 }
 
 function normalizeOptionalString(value) {

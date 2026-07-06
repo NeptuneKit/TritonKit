@@ -255,7 +255,7 @@ private func explicitHostDeviceMatch(selector: String, candidates: [HostDeviceTa
         return booted.count == 1 ? booted[0] : nil
     }
     if normalizedSelector.hasPrefix("triton:ios-simulator:") {
-        let udid = String(normalizedSelector.dropFirst("triton:ios-simulator:".count))
+        guard let udid = TKIOSSimulatorUDID(fromTargetID: normalizedSelector) else { return nil }
         return candidates.first { $0.platform == HostDevicePlatform.ios.rawValue && $0.target == udid }
     }
     return candidates.first {

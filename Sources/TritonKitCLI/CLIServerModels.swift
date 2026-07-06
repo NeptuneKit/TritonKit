@@ -28,7 +28,7 @@ final class ConnectionState: @unchecked Sendable {
         }
     }
 
-    var outbound: WebSocketOutboundWriter? { lock.withLock { resolveLocked(TKLocalTargetID)?.outbound } }
+    var outbound: WebSocketOutboundWriter? { lock.withLock { matchingConnectionsLocked(TKLocalTargetID).first?.connection.outbound } }
     var isConnected: Bool { lock.withLock { !connections.isEmpty } }
     var targetCount: Int { lock.withLock { connections.count } }
 
@@ -60,8 +60,12 @@ final class ConnectionState: @unchecked Sendable {
 
     func resolve(_ requested: String?) throws -> TargetConnection {
         let target = requested ?? TKLocalTargetID
-        if let connection = lock.withLock({ resolveLocked(target) }) {
-            return connection
+        let matches = lock.withLock { matchingConnectionsLocked(target) }
+        if matches.count == 1, let match = matches.first {
+            return match.connection
+        }
+        if matches.count > 1 {
+            throw TKTargetResolutionError.ambiguous(requested: target, available: matches.map(\.summary.id))
         }
         let normalized = TKNormalizeTargetID(target)
         let available = summaries()
@@ -71,24 +75,28 @@ final class ConnectionState: @unchecked Sendable {
         throw TKTargetResolutionError.notFound(target)
     }
 
-    private func resolveLocked(_ requested: String) -> TargetConnection? {
+    private func matchingConnectionsLocked(_ requested: String) -> [(connection: TargetConnection, summary: TKTargetSummary)] {
         let normalized = TKNormalizeTargetID(requested)
         if normalized == TKLocalTargetID, connections.count == 1 {
-            return connections.values.first
-        }
-        let matches: [(connection: TargetConnection, summary: TKTargetSummary)] = connections.values.compactMap { connection in
-            guard let summary = connection.summary(),
-                  summary.id == normalized || summary.simulatorUDID == requested else {
-                return nil
+            return connections.values.compactMap { connection in
+                connection.summary().map { (connection, $0) }
             }
+        }
+        let summaries: [(connection: TargetConnection, summary: TKTargetSummary)] = connections.values.compactMap { connection in
+            guard let summary = connection.summary(),
+                  summary.id == normalized else { return nil }
             return (connection, summary)
         }
-        if matches.count <= 1 {
-            return matches.first?.connection
+        if !summaries.isEmpty {
+            return summaries
         }
-        return matches.first { match in
-            match.summary.activeHierarchyAvailable == true || match.summary.hierarchyCacheState == "active"
-        }?.connection ?? matches.first?.connection
+
+        let simulatorSelector = TKIOSSimulatorUDID(fromTargetID: normalized) ?? requested
+        return connections.values.compactMap { connection in
+            guard let summary = connection.summary(),
+                  summary.simulatorUDID == simulatorSelector else { return nil }
+            return (connection, summary)
+        }
     }
 
 }
@@ -243,7 +251,10 @@ final class TargetState: @unchecked Sendable {
 
     private func targetID(connectionID: Int) -> String {
         if let simulatorUDID = metadata?.simulatorUDID, !simulatorUDID.isEmpty {
-            return "triton:ios-simulator:\(simulatorUDID)"
+            return TKIOSSimulatorRuntimeTargetID(
+                simulatorUDID: simulatorUDID,
+                bundleIdentifier: metadata?.bundleIdentifier
+            )
         }
         return connectionID == 1 ? TKLocalTargetID : "triton:connection:\(connectionID)"
     }

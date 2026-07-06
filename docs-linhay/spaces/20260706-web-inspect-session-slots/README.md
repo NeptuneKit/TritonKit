@@ -522,7 +522,9 @@ git diff --check
   - 已补 runtime 节点属性写入契约：Shared `TKNodePropertyPatchRequest/Response` 作为 CLI/HTTP/Web 共用 DTO，`triton debug patch-node` 与 `triton serve /web/node-property` 都走 `modifyAttribute` 下发到 embedded runtime。
   - runtime 端按白名单写入 iOS UIKit / CALayer 属性：frame、view hidden/alpha/userInteraction/AX identifier/label、layer hidden/masksToBounds/opacity/cornerRadius/zPosition，以及常见文本控件 text / foregroundColor / backgroundColor；不支持项进入 `skipped`。
   - Web bridge 只支持 iOS runtime 属性写入：iOS host/simulator target 先解析匹配的 App runtime target 后转发，Android / Harmony 返回 `web_node_property_platform_not_supported`，避免伪装成跨端属性反向修改。
-  - 浏览器 smoke 使用 iOS runtime tree 选中 `iDxyer.MTLFormCell`，打开 modal 后确认 Geometry 输入值和禁用应用按钮正常，无 console error/warn；后续属性应用 smoke 应优先选中可安全修改的 Demo 控件。
+  - 浏览器 smoke 使用 iOS runtime tree 选中 `iDxyer.MTLFormCell`，打开 modal 后确认 Geometry 输入值和禁用应用按钮正常，无 console error/warn。
+  - 真实 Demo 属性应用 smoke 使用 `TritonKit Dedicated iPhone 17` 上的 `com.neptunekit.tritonkit.demo`，对 `ComplexHarnessStatus` / `ios-runtime:130` 写入 `view.accessibilityLabel`：`/web/node-property`、`triton debug patch-node` 和 Vite bridge `127.0.0.1:34127/web/node-property` 均返回 `ok=true` 与 `applied:["view.accessibilityLabel"]`；`triton observe tree` 回读命中 smoke 文本，最后恢复为 `Complex harness: 0`。
+  - smoke 暴露同一 Simulator 上多个 App runtime 生成相同 `triton:ios-simulator:<udid>` target id 的问题；本轮已改为 bundle-scoped id，例如 `triton:ios-simulator:<udid>/app:com.neptunekit.tritonkit.demo`，旧 UDID / unscoped selector 在多 runtime 时返回 `ambiguous_target`，Vite bridge 同样拒绝 ambiguous simulator runtime mirror。
   - 截图：`screenshots/20260706/20260706-web-inspector-property-sheet-after-01.png`。
 - 验证通过：
   - `swift test --filter TKCLITransportModelsTests/nodePropertyPatchRequestResolvesOid`
@@ -530,6 +532,11 @@ git diff --check
   - `cd Web && node --test dev/ios-bridge/nodePropertyRoute.test.mjs dev/nodePropertyDraft.test.mjs`
   - `CLI/.build/debug/triton debug --help | rg "patch-node|Patch"`
   - `CLI/.build/debug/triton schema --command debug --json | rg "patch-node|node.propertyPatch|TKNodePropertyPatchResponse"`
+  - `CLI/.build/debug/triton app launch --bundle-id com.neptunekit.tritonkit.demo --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json`
+  - `curl -X POST http://127.0.0.1:19421/web/node-property?...`
+  - `curl -X POST http://127.0.0.1:34127/web/node-property?...`
+  - `CLI/.build/debug/triton observe tree --target triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC/app:com.neptunekit.tritonkit.demo --json`
+  - `CLI/.build/debug/triton observe tree --target triton:ios-simulator:0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json`（多 runtime 时预期 `ambiguous_target`）
   - `swift test --package-path CLI --filter SchemaFactSourceTests/observeAndNodeProvidedCapabilitiesStaySchemaMatrixAligned`
   - `cd Web && npm test`
   - `cd Web && npm run build`

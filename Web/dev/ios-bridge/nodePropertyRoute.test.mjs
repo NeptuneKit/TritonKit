@@ -64,6 +64,99 @@ process.exit(64);
   }
 });
 
+test("forwards iOS node property patches to an exact bundle-scoped runtime target", async () => {
+  const received = [];
+  const nodePropertyServer = await createFakeHostInputServer(received, {
+    ok: true,
+    success: true,
+    action: "node.patch",
+    applied: ["view.accessibilityLabel"],
+    skipped: [],
+  });
+  try {
+    const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.join(" ") === "list --json") {
+  process.stdout.write(JSON.stringify({
+    targets: [
+      {
+        id: "triton:ios-simulator:SIM-UDID/app:com.example.other",
+        platform: "ios",
+        connected: true,
+        simulatorUDID: "SIM-UDID",
+        bundleIdentifier: "com.example.other",
+        latestHierarchyAvailable: true
+      },
+      {
+        id: "triton:ios-simulator:SIM-UDID/app:com.example.demo",
+        platform: "ios",
+        connected: true,
+        simulatorUDID: "SIM-UDID",
+        bundleIdentifier: "com.example.demo",
+        latestHierarchyAvailable: true
+      }
+    ]
+  }));
+  process.exit(0);
+}
+process.stderr.write("unexpected args: " + args.join(" "));
+process.exit(64);
+`);
+    const middleware = createIosSimulatorBridgeMiddleware({
+      tritonPath,
+      hostInputBaseURL: nodePropertyServer.baseURL,
+    });
+    const target = encodeURIComponent("triton:ios-simulator:SIM-UDID/app:com.example.demo");
+    const response = await invokeMiddleware(middleware, {
+      method: "POST",
+      url: `/web/node-property?platform=ios&target=${target}&source=runtime`,
+      body: JSON.stringify({
+        nodeId: "ios:runtime:130",
+        changes: { view: { accessibilityLabel: "Smoke" } },
+      }),
+    });
+
+    assert.equal(response.statusCode, 200);
+    assert.equal(JSON.parse(response.body).ok, true);
+    assert.equal(received.length, 1);
+    assert.equal(received[0].target, "triton:ios-simulator:SIM-UDID/app:com.example.demo");
+  } finally {
+    await nodePropertyServer.close();
+  }
+});
+
+test("rejects ambiguous iOS simulator node property runtime mirrors", async () => {
+  const tritonPath = await createFakeTritonScriptFromSource(`#!/usr/bin/env node
+const args = process.argv.slice(2);
+if (args.join(" ") === "list --json") {
+  process.stdout.write(JSON.stringify({
+    targets: [
+      { id: "triton:ios-simulator:SIM-UDID/app:com.example.one", platform: "ios", connected: true, simulatorUDID: "SIM-UDID" },
+      { id: "triton:ios-simulator:SIM-UDID/app:com.example.two", platform: "ios", connected: true, simulatorUDID: "SIM-UDID" }
+    ]
+  }));
+  process.exit(0);
+}
+process.stderr.write("unexpected args: " + args.join(" "));
+process.exit(64);
+`);
+  const middleware = createIosSimulatorBridgeMiddleware({ tritonPath });
+  const response = await invokeMiddleware(middleware, {
+    method: "POST",
+    url: "/web/node-property?platform=ios&target=SIM-UDID&scope=simulator&kind=simulator",
+    body: JSON.stringify({
+      nodeId: "ios:runtime:130",
+      changes: { view: { accessibilityLabel: "Smoke" } },
+    }),
+  });
+
+  assert.equal(response.statusCode, 409);
+  const body = JSON.parse(response.body);
+  assert.equal(body.ok, false);
+  assert.equal(body.error.code, "web_host_node_property_failed");
+  assert.match(body.error.message, /Multiple connected iOS simulator App runtime targets/);
+});
+
 test("rejects non-iOS node property patches at the Web bridge boundary", async () => {
   const middleware = createIosSimulatorBridgeMiddleware({ tritonPath: "/bin/echo" });
   const response = await invokeMiddleware(middleware, {

@@ -264,13 +264,39 @@ public func TKNormalizeTargetID(_ target: String) -> String {
     target == "local" ? TKLocalTargetID : target
 }
 
+public let TKIOSSimulatorRuntimeTargetPrefix = "triton:ios-simulator:"
+
+public func TKIOSSimulatorRuntimeTargetID(simulatorUDID: String, bundleIdentifier: String? = nil) -> String {
+    let base = "\(TKIOSSimulatorRuntimeTargetPrefix)\(simulatorUDID)"
+    guard let bundleIdentifier = bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !bundleIdentifier.isEmpty else {
+        return base
+    }
+    return "\(base)/app:\(bundleIdentifier)"
+}
+
+public func TKIOSSimulatorUDID(fromTargetID target: String) -> String? {
+    let normalized = TKNormalizeTargetID(target)
+    guard normalized.hasPrefix(TKIOSSimulatorRuntimeTargetPrefix) else { return nil }
+    var tail = String(normalized.dropFirst(TKIOSSimulatorRuntimeTargetPrefix.count))
+    if let range = tail.range(of: "/app:") {
+        tail = String(tail[..<range.lowerBound])
+    }
+    return tail.isEmpty ? nil : tail
+}
+
 public func TKResolveTargetSummary(_ target: String, in targets: [TKTargetSummary]) throws -> TKTargetSummary {
     let normalized = TKNormalizeTargetID(target)
     if let summary = targets.first(where: { $0.id == normalized }) {
         return summary
     }
-    if let simulator = targets.first(where: { $0.simulatorUDID == target }) {
+    let simulatorSelector = TKIOSSimulatorUDID(fromTargetID: normalized) ?? target
+    let simulatorMatches = targets.filter { $0.simulatorUDID == simulatorSelector }
+    if simulatorMatches.count == 1, let simulator = simulatorMatches.first {
         return simulator
+    }
+    if simulatorMatches.count > 1 {
+        throw TKTargetResolutionError.ambiguous(requested: target, available: simulatorMatches.map(\.id))
     }
     if normalized == TKLocalTargetID, targets.count == 1, let only = targets.first {
         return only
