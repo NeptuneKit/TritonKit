@@ -140,7 +140,17 @@ struct TKWorkspaceInspectResponse: Codable, Equatable {
     let kind: String
     let run: TKWorkspaceRunResponse
     let summary: TKTestRunEventSummary
+    let atlas: TKWorkspaceAtlasSummary
     let latestBootstrap: TKTestRunEvent?
+}
+
+struct TKWorkspaceAtlasSummary: Codable, Equatable {
+    let atlasRef: String
+    let deltaRef: String?
+    let coverageStatus: String
+    let screenCount: Int
+    let stateCount: Int
+    let transitionCount: Int
 }
 
 struct TKWorkspaceExportFlowResponse: Codable, Equatable {
@@ -387,6 +397,7 @@ func inspectWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorks
         kind: "triton.workspace.inspect",
         run: run,
         summary: parsed.summary,
+        atlas: try workspaceAtlasSummary(runDir: runDir),
         latestBootstrap: parsed.events.last { $0.type == .flowBootstrapChecked }
     )
 }
@@ -520,6 +531,27 @@ private func workspaceFlowYAML(
         }
     }
     return lines.joined(separator: "\n") + "\n"
+}
+
+private func workspaceAtlasSummary(runDir: URL) throws -> TKWorkspaceAtlasSummary {
+    let atlasRef = "atlas/atlas.json"
+    let atlasURL = runDir.appendingPathComponent(atlasRef)
+    let atlas = try JSONSerialization.jsonObject(with: Data(contentsOf: atlasURL)) as? [String: Any]
+    let screens = atlas?["screens"] as? [[String: Any]] ?? []
+    let states = atlas?["states"] as? [[String: Any]] ?? []
+    let transitions = atlas?["transitions"] as? [[String: Any]] ?? []
+    let coverage = atlas?["coverage"] as? [String: Any] ?? [:]
+    let deltaRef = FileManager.default.fileExists(atPath: runDir.appendingPathComponent("atlas/deltas.jsonl").path)
+        ? "atlas/deltas.jsonl"
+        : nil
+    return TKWorkspaceAtlasSummary(
+        atlasRef: atlasRef,
+        deltaRef: deltaRef,
+        coverageStatus: coverage["status"] as? String ?? "unknown",
+        screenCount: coverage["screenCount"] as? Int ?? screens.count,
+        stateCount: coverage["stateCount"] as? Int ?? states.count,
+        transitionCount: coverage["transitionCount"] as? Int ?? transitions.count
+    )
 }
 
 private func createWorkspaceRunDirectories(_ runDir: URL) throws {

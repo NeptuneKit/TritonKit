@@ -70,6 +70,11 @@ struct WorkspaceRunTests {
         #expect(inspected.run.runID == "run-workspace-001")
         #expect(inspected.summary.eventCount == 7)
         #expect(inspected.latestBootstrap?.phase == "provider_missing")
+        #expect(inspected.atlas.screenCount == 1)
+        #expect(inspected.atlas.stateCount == 1)
+        #expect(inspected.atlas.transitionCount == 0)
+        #expect(inspected.atlas.coverageStatus == "seeded")
+        #expect(inspected.atlas.atlasRef == "atlas/atlas.json")
     }
 
     @Test("workspace run records explicit VLM provider preflight")
@@ -229,6 +234,15 @@ struct WorkspaceRunTests {
         let delta = try String(contentsOf: runDir.appendingPathComponent("atlas/deltas.jsonl"), encoding: .utf8)
         #expect(delta.contains(#""transitionId":"transition_0000""#))
         #expect(delta.contains(#""status":"candidate_failed""#))
+
+        let inspected = try inspectWorkspaceRun(
+            runID: "run-workspace-decision",
+            runsDirectory: root.path
+        )
+        #expect(inspected.atlas.screenCount == 1)
+        #expect(inspected.atlas.stateCount == 1)
+        #expect(inspected.atlas.transitionCount == 1)
+        #expect(inspected.atlas.deltaRef == "atlas/deltas.jsonl")
     }
 
     @Test("workspace export flow writes a seed")

@@ -148,6 +148,7 @@ private func printWorkspaceInspect(_ response: TKWorkspaceInspectResponse, forma
         print("runId: \(response.run.runID)")
         print("status: \(response.run.status)")
         print("events: \(response.summary.eventCount)")
+        print("atlas: screens=\(response.atlas.screenCount) states=\(response.atlas.stateCount) transitions=\(response.atlas.transitionCount)")
     }
 }
 
