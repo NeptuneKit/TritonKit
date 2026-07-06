@@ -23,6 +23,11 @@ struct Workspace: ParsableCommand {
         @Option(name: .customLong("runs-dir"), help: "Workspace runs directory") var runsDirectory: String = ".triton/runs"
         @Option(name: .customLong("run-id"), help: "Run id") var runID: String?
         @Option(name: .customLong("action-policy"), help: "Action policy") var actionPolicy: String = "explore"
+        @Option(name: .customLong("max-steps"), help: "Maximum autonomous runner steps") var maxSteps: Int?
+        @Option(name: .customLong("allowed-action"), help: "Allowed runner action. Repeat for multiple values")
+        var allowedActions: [String] = []
+        @Option(name: .customLong("stop-condition"), help: "Runner stop condition. Repeat for multiple values")
+        var stopConditions: [String] = []
         @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
         var llmProvider: String?
         @Option(name: .customLong("vlm-provider"), help: "VLM provider preflight id, for example mock")
@@ -46,7 +51,10 @@ struct Workspace: ParsableCommand {
                     actionPolicy: actionPolicy,
                     dryModelFixture: dryModelFixture,
                     llmProvider: llmProvider,
-                    vlmProvider: vlmProvider
+                    vlmProvider: vlmProvider,
+                    maxSteps: maxSteps,
+                    allowedActions: allowedActions,
+                    stopConditions: stopConditions
                 ))
                 try printWorkspaceRun(response, format: outputFormat)
             } catch {

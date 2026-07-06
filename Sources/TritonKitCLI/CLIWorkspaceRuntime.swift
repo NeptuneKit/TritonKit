@@ -13,6 +13,9 @@ struct TKWorkspaceRunRequest {
     let dryModelFixture: Bool
     let llmProvider: String?
     let vlmProvider: String?
+    let maxSteps: Int?
+    let allowedActions: [String]
+    let stopConditions: [String]
 
     init(
         runsDirectory: String,
@@ -25,7 +28,10 @@ struct TKWorkspaceRunRequest {
         actionPolicy: String,
         dryModelFixture: Bool = false,
         llmProvider: String? = nil,
-        vlmProvider: String? = nil
+        vlmProvider: String? = nil,
+        maxSteps: Int? = nil,
+        allowedActions: [String] = [],
+        stopConditions: [String] = []
     ) {
         self.runsDirectory = runsDirectory
         self.runID = runID
@@ -38,6 +44,9 @@ struct TKWorkspaceRunRequest {
         self.dryModelFixture = dryModelFixture
         self.llmProvider = llmProvider
         self.vlmProvider = vlmProvider
+        self.maxSteps = maxSteps
+        self.allowedActions = allowedActions
+        self.stopConditions = stopConditions
     }
 }
 
@@ -50,6 +59,7 @@ struct TKWorkspaceRunResponse: Codable, Equatable {
     let target: TKWorkspaceRunTarget
     let app: String
     let ai: TKWorkspaceRunAI
+    let runner: TKWorkspaceRunRunner?
     let paths: TKWorkspaceRunPaths
     let nextActions: [TKWorkspaceNextAction]
 
@@ -62,6 +72,7 @@ struct TKWorkspaceRunResponse: Codable, Equatable {
         target: TKWorkspaceRunTarget,
         app: String,
         ai: TKWorkspaceRunAI,
+        runner: TKWorkspaceRunRunner? = nil,
         paths: TKWorkspaceRunPaths,
         nextActions: [TKWorkspaceNextAction]
     ) {
@@ -73,6 +84,7 @@ struct TKWorkspaceRunResponse: Codable, Equatable {
         self.target = target
         self.app = app
         self.ai = ai
+        self.runner = runner
         self.paths = paths
         self.nextActions = nextActions
     }
@@ -86,6 +98,7 @@ struct TKWorkspaceRunResponse: Codable, Equatable {
         case target
         case app
         case ai
+        case runner
         case paths
         case nextActions
     }
@@ -108,6 +121,13 @@ struct TKWorkspaceRunAI: Codable, Equatable {
     let llmProviderStatus: String?
     let vlmProvider: String?
     let vlmProviderStatus: String?
+}
+
+struct TKWorkspaceRunRunner: Codable, Equatable {
+    let actionPolicy: String
+    let maxSteps: Int
+    let allowedActions: [String]
+    let stopConditions: [String]
 }
 
 struct TKWorkspaceRunPaths: Codable, Equatable {
@@ -141,6 +161,16 @@ private struct TKWorkspaceProviderComponentPreflight {
 
     var ready: Bool { status == "ready" }
 }
+
+private let defaultWorkspaceRunnerMaxSteps = 20
+private let defaultWorkspaceRunnerAllowedActions = ["tap", "swipe", "type", "wait", "verify", "stop"]
+private let defaultWorkspaceRunnerStopConditions = [
+    "max_steps_reached",
+    "provider_missing",
+    "unsupported_capability",
+    "policy_rejected",
+    "model_unparseable",
+]
 
 struct TKWorkspaceInspectResponse: Codable, Equatable {
     let kind: String
@@ -197,6 +227,7 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         scope: targetMetadata.scope,
         capabilities: ["screenshot", "hierarchy", "input"]
     )
+    let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
     let response = TKWorkspaceRunResponse(
         runID: runID,
@@ -215,6 +246,7 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
             vlmProvider: providerPreflight.vlmProvider,
             vlmProviderStatus: providerPreflight.vlmProviderStatus
         ),
+        runner: runner,
         paths: paths,
         nextActions: providerPreflight.nextActions
     )
@@ -274,6 +306,36 @@ private func workspaceProviderPreflight(_ request: TKWorkspaceRunRequest) throws
         bootstrapPhase: workspaceBootstrapPhase(llm: llm, vlm: vlm),
         nextActions: nextActions
     )
+}
+
+private func workspaceRunnerConfig(for request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunRunner {
+    let maxSteps = request.maxSteps ?? defaultWorkspaceRunnerMaxSteps
+    guard maxSteps > 0 else {
+        throw RuntimeError("Invalid workspace runner maxSteps: \(maxSteps). It must be greater than 0.")
+    }
+    return TKWorkspaceRunRunner(
+        actionPolicy: normalizedWorkspaceRunnerValue(request.actionPolicy),
+        maxSteps: maxSteps,
+        allowedActions: normalizedWorkspaceRunnerList(
+            request.allowedActions,
+            defaultValues: defaultWorkspaceRunnerAllowedActions
+        ),
+        stopConditions: normalizedWorkspaceRunnerList(
+            request.stopConditions,
+            defaultValues: defaultWorkspaceRunnerStopConditions
+        )
+    )
+}
+
+private func normalizedWorkspaceRunnerList(_ values: [String], defaultValues: [String]) -> [String] {
+    let normalized = values
+        .map(normalizedWorkspaceRunnerValue)
+        .filter { !$0.isEmpty }
+    return normalized.isEmpty ? defaultValues : normalized
+}
+
+private func normalizedWorkspaceRunnerValue(_ value: String) -> String {
+    value.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
 private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
@@ -444,6 +506,7 @@ func stopWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorkspac
         target: run.target,
         app: run.app,
         ai: run.ai,
+        runner: run.runner,
         paths: run.paths,
         nextActions: run.nextActions
     ), to: runURL)
@@ -779,6 +842,12 @@ private func appendWorkspaceEvent(_ event: TKTestRunEvent, to url: URL) throws {
 }
 
 private func writeWorkspaceRunConfig(_ run: TKWorkspaceRunResponse, to url: URL) throws {
+    let runner = run.runner ?? TKWorkspaceRunRunner(
+        actionPolicy: run.ai.actionPolicy,
+        maxSteps: defaultWorkspaceRunnerMaxSteps,
+        allowedActions: defaultWorkspaceRunnerAllowedActions,
+        stopConditions: defaultWorkspaceRunnerStopConditions
+    )
     let yaml = """
     llm:
       enabled: true
@@ -789,12 +858,23 @@ private func writeWorkspaceRunConfig(_ run: TKWorkspaceRunResponse, to url: URL)
       provider: \(run.ai.vlmProvider ?? "none")
       providerStatus: \(run.ai.vlmProviderStatus ?? "missing")
     runner:
-      actionPolicy: \(run.ai.actionPolicy)
+      actionPolicy: \(runner.actionPolicy)
+      maxSteps: \(runner.maxSteps)
+      allowedActions:
+    \(workspaceYAMLList(runner.allowedActions))
+      stopConditions:
+    \(workspaceYAMLList(runner.stopConditions))
     provider:
       status: \(run.ai.providerStatus)
 
     """
     try yaml.write(to: url, atomically: true, encoding: .utf8)
+}
+
+private func workspaceYAMLList(_ values: [String]) -> String {
+    values
+        .map { "    - \($0)" }
+        .joined(separator: "\n")
 }
 
 private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {

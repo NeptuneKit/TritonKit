@@ -130,6 +130,7 @@ Then LLM/VLM 先做 flow bootstrap 判断，运行中持续做 flow recovery 判
 - LLM/VLM 在 workspace run 中默认开启，默认用于流程稳定启动、偏航回正、理解、定位、Atlas 标注和探索决策；每次模型参与都能追溯 request / response / confidence / artifact，且所有动作经由 Triton CLI/HTTP。
 - Flow bootstrap 和 flow recovery 是 LLM/VLM 的首要验收：能从不同初始场景稳定命中 start anchor，能在 selector drift、弹窗、登录过期、慢加载时给出可审计 repair proposal。
 - VLM 自主探索 loop 有可复跑 dry-run / bounded-run 模式；本地 replay / 稳定回归不能静默退出模型参与，只能把模型角色限制为 observer / verifier / repair-advisor。
+- bounded-run 模式必须有机器可读 runner 边界：`maxSteps`、`allowedActions`、`stopConditions` 可通过 CLI/HTTP 设置并写入 run facts，后续真实 LLM/VLM loop 必须在这些边界内执行。
 - 所有新增行为有 focused tests；HTTP handler 用 `httptest`，CLI 用参数解析/命令分发测试优先。
 - Web 插槽若进入实现，只消费只读 DTO 或调用已存在 CLI/HTTP 控制契约，不新增独立业务语义。
 - 文档、memory 和必要 skill 同步更新。

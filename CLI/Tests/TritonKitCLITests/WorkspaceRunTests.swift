@@ -26,11 +26,19 @@ struct WorkspaceRunTests {
         #expect(run.ai.vlmEnabled)
         #expect(run.ai.providersReady == false)
         #expect(run.nextActions.contains { $0.code == "configure_ai_provider" })
+        #expect(run.runner?.actionPolicy == "explore")
+        #expect(run.runner?.maxSteps == 20)
+        #expect(run.runner?.allowedActions == ["tap", "swipe", "type", "wait", "verify", "stop"])
+        #expect(run.runner?.stopConditions.contains("max_steps_reached") == true)
 
         let runDir = root.appendingPathComponent("run-workspace-001", isDirectory: true)
         #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("run.json").path))
         #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("events.jsonl").path))
         #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("config.yaml").path))
+        let config = try String(contentsOf: runDir.appendingPathComponent("config.yaml"), encoding: .utf8)
+        #expect(config.contains("maxSteps: 20"))
+        #expect(config.contains("  - tap"))
+        #expect(config.contains("  - max_steps_reached"))
 
         let atlas = try JSONSerialization.jsonObject(
             with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
@@ -75,6 +83,74 @@ struct WorkspaceRunTests {
         #expect(inspected.atlas.transitionCount == 0)
         #expect(inspected.atlas.coverageStatus == "seeded")
         #expect(inspected.atlas.atlasRef == "atlas/atlas.json")
+    }
+
+    @Test("workspace run records bounded runner config")
+    func workspaceRunRecordsBoundedRunnerConfig() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let run = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-runner-bounds",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Bounded exploration",
+            actionPolicy: "planFirst",
+            maxSteps: 3,
+            allowedActions: ["tap", "wait"],
+            stopConditions: ["max_steps_reached", "policy_rejected"]
+        ))
+
+        #expect(run.runner?.actionPolicy == "planFirst")
+        #expect(run.runner?.maxSteps == 3)
+        #expect(run.runner?.allowedActions == ["tap", "wait"])
+        #expect(run.runner?.stopConditions == ["max_steps_reached", "policy_rejected"])
+
+        let runDir = root.appendingPathComponent("run-workspace-runner-bounds", isDirectory: true)
+        let config = try String(contentsOf: runDir.appendingPathComponent("config.yaml"), encoding: .utf8)
+        #expect(config.contains("actionPolicy: planFirst"))
+        #expect(config.contains("maxSteps: 3"))
+        #expect(config.contains("  - policy_rejected"))
+
+        let inspected = try inspectWorkspaceRun(
+            runID: "run-workspace-runner-bounds",
+            runsDirectory: root.path
+        )
+        #expect(inspected.run.runner?.maxSteps == 3)
+        #expect(inspected.run.runner?.allowedActions == ["tap", "wait"])
+    }
+
+    @Test("workspace run rejects invalid runner bounds")
+    func workspaceRunRejectsInvalidRunnerBounds() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        #expect(throws: RuntimeError.self) {
+            try runWorkspaceRun(TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-invalid-runner",
+                target: "current",
+                app: "com.example.demo",
+                goal: "Invalid bounds",
+                actionPolicy: "explore",
+                maxSteps: 0
+            ))
+        }
+    }
+
+    @Test("workspace schema exposes bounded runner options")
+    func workspaceSchemaExposesBoundedRunnerOptions() throws {
+        let schema = try #require(workspaceCommandSchemas().first)
+        let optionNames = Set(schema.options.map(\.name))
+        #expect(optionNames.contains("--max-steps"))
+        #expect(optionNames.contains("--allowed-action"))
+        #expect(optionNames.contains("--stop-condition"))
+
+        let run = try #require(schema.subcommands.first { $0.name == "run" })
+        #expect(run.optionalOptions.contains("--max-steps"))
+        #expect(run.optionalOptions.contains("--allowed-action"))
+        #expect(run.optionalOptions.contains("--stop-condition"))
     }
 
     @Test("workspace run records explicit VLM provider preflight")
@@ -349,6 +425,10 @@ struct WorkspaceRunTests {
             "--run-id", "run-workspace-cli",
             "--llm-provider", "mock",
             "--vlm-provider", "mock",
+            "--max-steps", "5",
+            "--allowed-action", "tap",
+            "--allowed-action", "wait",
+            "--stop-condition", "max_steps_reached",
             "--json",
         ])
         let run = try JSONDecoder().decode(TKWorkspaceRunResponse.self, from: Data(runResult.stdout.utf8))
@@ -364,6 +444,9 @@ struct WorkspaceRunTests {
         #expect(run.ai.llmProviderStatus == "ready")
         #expect(run.ai.vlmProvider == "mock")
         #expect(run.ai.vlmProviderStatus == "ready")
+        #expect(run.runner?.maxSteps == 5)
+        #expect(run.runner?.allowedActions == ["tap", "wait"])
+        #expect(run.runner?.stopConditions == ["max_steps_reached"])
 
         let inspectResult = try runWorkspaceCLI([
             "workspace", "inspect",
@@ -406,7 +489,10 @@ struct WorkspaceRunTests {
             goal: "HTTP run",
             actionPolicy: nil,
             llmProvider: "mock",
-            vlmProvider: "mock"
+            vlmProvider: "mock",
+            maxSteps: 4,
+            allowedActions: ["tap"],
+            stopConditions: ["provider_missing"]
         ))
         let run = try handleWorkspaceHTTPRun(body: runBody)
 
@@ -420,6 +506,9 @@ struct WorkspaceRunTests {
         #expect(run.ai.llmProviderStatus == "ready")
         #expect(run.ai.vlmProvider == "mock")
         #expect(run.ai.vlmProviderStatus == "ready")
+        #expect(run.runner?.maxSteps == 4)
+        #expect(run.runner?.allowedActions == ["tap"])
+        #expect(run.runner?.stopConditions == ["provider_missing"])
 
         let inspected = try handleWorkspaceHTTPInspect(runID: "run-workspace-http", runsDir: root.path)
         #expect(inspected.summary.eventCount == 7)

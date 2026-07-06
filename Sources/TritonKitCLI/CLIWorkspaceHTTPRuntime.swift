@@ -12,6 +12,9 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let llmProvider: String?
     let vlmProvider: String?
     let dryModelFixture: Bool?
+    let maxSteps: Int?
+    let allowedActions: [String]?
+    let stopConditions: [String]?
 
     init(
         runsDir: String?,
@@ -24,7 +27,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         actionPolicy: String?,
         llmProvider: String? = nil,
         vlmProvider: String? = nil,
-        dryModelFixture: Bool? = nil
+        dryModelFixture: Bool? = nil,
+        maxSteps: Int? = nil,
+        allowedActions: [String]? = nil,
+        stopConditions: [String]? = nil
     ) {
         self.runsDir = runsDir
         self.runID = runID
@@ -37,6 +43,9 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.llmProvider = llmProvider
         self.vlmProvider = vlmProvider
         self.dryModelFixture = dryModelFixture
+        self.maxSteps = maxSteps
+        self.allowedActions = allowedActions
+        self.stopConditions = stopConditions
     }
 
     enum CodingKeys: String, CodingKey {
@@ -51,6 +60,9 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case llmProvider
         case vlmProvider
         case dryModelFixture
+        case maxSteps
+        case allowedActions
+        case stopConditions
     }
 }
 
@@ -72,7 +84,10 @@ func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
         actionPolicy: request.actionPolicy ?? "explore",
         dryModelFixture: request.dryModelFixture ?? false,
         llmProvider: request.llmProvider,
-        vlmProvider: request.vlmProvider
+        vlmProvider: request.vlmProvider,
+        maxSteps: request.maxSteps,
+        allowedActions: request.allowedActions ?? [],
+        stopConditions: request.stopConditions ?? []
     ))
 }
 

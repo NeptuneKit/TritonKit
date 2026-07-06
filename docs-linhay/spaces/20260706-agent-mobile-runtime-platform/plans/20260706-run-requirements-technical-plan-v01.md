@@ -61,6 +61,14 @@ vlm:
   enabled: true
 runner:
   actionPolicy: explore
+  maxSteps: 20
+  allowedActions: [tap, swipe, type, wait, verify, stop]
+  stopConditions:
+    - max_steps_reached
+    - provider_missing
+    - unsupported_capability
+    - policy_rejected
+    - model_unparseable
 ```
 
 模型默认参与：
@@ -73,6 +81,12 @@ runner:
 - 下一步动作候选
 - flow seed 生成
 - 异常解释和 next actions
+
+runner 边界默认必须机器可读：
+
+- `maxSteps` 限制自主探索最多执行多少个单步 action，默认 20。
+- `allowedActions` 是模型候选动作进入 policy gate 前的 allowlist，默认只允许低风险探索原语。
+- `stopConditions` 是自主 loop 可以结束或暂停的显式原因；任何后续接入真实设备动作、真实 LLM/VLM request、bootstrap/recovery proposal，都必须先落到这些 stop reason 或扩展同一契约。
 
 模型默认不能：
 
@@ -327,6 +341,12 @@ run.stopped
     "vlmProvider": "mock",
     "vlmProviderStatus": "ready"
   },
+  "runner": {
+    "actionPolicy": "explore",
+    "maxSteps": 20,
+    "allowedActions": ["tap", "swipe", "type", "wait", "verify", "stop"],
+    "stopConditions": ["max_steps_reached", "provider_missing", "unsupported_capability", "policy_rejected", "model_unparseable"]
+  },
   "paths": {
     "runDir": ".triton/runs/run_20260706_120000",
     "events": ".triton/runs/run_20260706_120000/events.jsonl"
@@ -498,6 +518,7 @@ CLI 首批只需要：
 ```bash
 triton workspace run --target current --app <app> --goal "<goal>" --json
 triton workspace run --target current --app <app> --goal "<goal>" --llm-provider mock --vlm-provider mock --json
+triton workspace run --target current --app <app> --goal "<goal>" --max-steps 5 --allowed-action tap --allowed-action wait --stop-condition max_steps_reached --json
 triton workspace inspect <run-id> --json
 triton workspace stop <run-id> --json
 triton workspace export-flow <run-id> --output <file> --json
@@ -552,6 +573,8 @@ target.resolved -> provider.checked -> app.ready -> observe.captured -> flow.boo
 - `events.jsonl` schema 有 tests。
 - `workspace inspect` 能读回 run 状态。
 - `actionPolicy` 和 provider missing 的状态能写进 `run.json`。
+- runner `maxSteps`、`allowedActions`、`stopConditions` 能写入 `run.json` / `report.json` / `config.yaml`，并能通过 CLI 和 HTTP 覆盖。
+- 非法 `maxSteps <= 0` 必须失败，不能创建无界 run。
 - fake bootstrap check 能写入 `flow.bootstrap.checked`，并被 `workspace inspect` 读回。
 
 第二刀再接一个 fake model decision：
