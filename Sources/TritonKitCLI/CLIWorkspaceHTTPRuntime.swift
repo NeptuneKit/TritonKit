@@ -4,6 +4,8 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let runsDir: String?
     let runID: String?
     let target: String?
+    let platform: String?
+    let scope: String?
     let app: String
     let goal: String
     let actionPolicy: String?
@@ -15,6 +17,8 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         runsDir: String?,
         runID: String?,
         target: String?,
+        platform: String? = nil,
+        scope: String? = nil,
         app: String,
         goal: String,
         actionPolicy: String?,
@@ -25,6 +29,8 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.runsDir = runsDir
         self.runID = runID
         self.target = target
+        self.platform = platform
+        self.scope = scope
         self.app = app
         self.goal = goal
         self.actionPolicy = actionPolicy
@@ -37,6 +43,8 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case runsDir
         case runID = "runId"
         case target
+        case platform
+        case scope
         case app
         case goal
         case actionPolicy
@@ -57,6 +65,8 @@ func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
         runsDirectory: request.runsDir ?? ".triton/runs",
         runID: request.runID,
         target: request.target ?? "current",
+        platform: request.platform,
+        scope: request.scope,
         app: request.app,
         goal: request.goal,
         actionPolicy: request.actionPolicy ?? "explore",

@@ -16,6 +16,8 @@ struct Workspace: ParsableCommand {
         )
 
         @Option(help: "Target id. Defaults to current.") var target: String = "current"
+        @Option(help: "Target platform fact, for example ios, android, or harmony") var platform: String?
+        @Option(help: "Target scope fact, for example simulator, emulator, real, or current") var scope: String?
         @Option(help: "App artifact, bundle id, or app id") var app: String
         @Option(help: "Run goal") var goal: String
         @Option(name: .customLong("runs-dir"), help: "Workspace runs directory") var runsDirectory: String = ".triton/runs"
@@ -37,6 +39,8 @@ struct Workspace: ParsableCommand {
                     runsDirectory: runsDirectory,
                     runID: runID,
                     target: target,
+                    platform: platform,
+                    scope: scope,
                     app: app,
                     goal: goal,
                     actionPolicy: actionPolicy,

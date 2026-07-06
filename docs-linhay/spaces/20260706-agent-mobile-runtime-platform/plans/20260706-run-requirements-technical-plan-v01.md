@@ -568,6 +568,7 @@ observe.captured -> model.decided(fake) -> policy.checked -> action.executed(dry
 
 - 新增 `triton workspace run|inspect|stop|export-flow` CLI 入口，并在 `triton schema --command workspace --json` 中暴露命令契约。
 - 新增同构 HTTP handler：`POST /workspace/run`、`GET /workspace/runs/:runId`、`POST /workspace/runs/:runId/stop`、`POST /workspace/runs/:runId/export-flow`。
+- `workspace run` 支持显式 target metadata：CLI `--platform/--scope` 和 HTTP `platform/scope` 会写入 `target.platform`、`target.scope` 与 `evidence/model/target.json`；未传时仍保留 `unknown/current`，不伪装自动设备发现。
 - `workspace run` 会创建 `.triton/runs/<run-id>/` 兼容目录骨架，写入 `run.json`、`config.yaml`、`events.jsonl`、`report.json`、`atlas/atlas.json` 和首批 evidence placeholder。
 - `atlas/atlas.json` 不再是空壳：默认从初始 `observation.captured` 生成一个 `screen_0000`、一个 `state_0000`、coverage 计数和 screenshot / hierarchy / event evidence backlink。
 - `--dry-model-fixture` 会把测试协议里的失败动作写回 Atlas：`atlas/deltas.jsonl` 和 `atlas/atlas.json` 都包含 `transition_0000`，状态为 `candidate_failed`，从 `screen_0000` 回到 `screen_0000`，并引用 model / policy / action / verify evidence。

@@ -164,6 +164,36 @@ struct WorkspaceRunTests {
         #expect(inspected.latestBootstrap?.phase == "provider_ready")
     }
 
+    @Test("workspace run records explicit target platform and scope")
+    func workspaceRunRecordsExplicitTargetPlatformAndScope() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let run = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-target",
+            target: "local-ios-sim",
+            platform: "ios",
+            scope: "simulator",
+            app: "com.example.demo",
+            goal: "Target facts",
+            actionPolicy: "explore"
+        ))
+
+        #expect(run.target.id == "local-ios-sim")
+        #expect(run.target.platform == "ios")
+        #expect(run.target.scope == "simulator")
+        #expect(run.target.capabilities.contains("screenshot"))
+
+        let target = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: root
+                .appendingPathComponent("run-workspace-target", isDirectory: true)
+                .appendingPathComponent("evidence/model/target.json"))
+        ) as? [String: Any]
+        #expect(target?["platform"] as? String == "ios")
+        #expect(target?["scope"] as? String == "simulator")
+    }
+
     @Test("workspace stop is idempotent")
     func workspaceStopIsIdempotent() throws {
         let root = temporaryRunsDirectory()
@@ -311,6 +341,8 @@ struct WorkspaceRunTests {
         let runResult = try runWorkspaceCLI([
             "workspace", "run",
             "--target", "current",
+            "--platform", "ios",
+            "--scope", "simulator",
             "--app", "com.example.demo",
             "--goal", "Explore login",
             "--runs-dir", root.path,
@@ -323,6 +355,8 @@ struct WorkspaceRunTests {
 
         #expect(runResult.exitCode == 0)
         #expect(run.runID == "run-workspace-cli")
+        #expect(run.target.platform == "ios")
+        #expect(run.target.scope == "simulator")
         #expect(run.ai.llmEnabled)
         #expect(run.ai.vlmEnabled)
         #expect(run.ai.providersReady)
@@ -366,6 +400,8 @@ struct WorkspaceRunTests {
             runsDir: root.path,
             runID: "run-workspace-http",
             target: "current",
+            platform: "android",
+            scope: "emulator",
             app: "com.example.demo",
             goal: "HTTP run",
             actionPolicy: nil,
@@ -375,6 +411,8 @@ struct WorkspaceRunTests {
         let run = try handleWorkspaceHTTPRun(body: runBody)
 
         #expect(run.runID == "run-workspace-http")
+        #expect(run.target.platform == "android")
+        #expect(run.target.scope == "emulator")
         #expect(run.ai.llmEnabled)
         #expect(run.ai.vlmEnabled)
         #expect(run.ai.providersReady)

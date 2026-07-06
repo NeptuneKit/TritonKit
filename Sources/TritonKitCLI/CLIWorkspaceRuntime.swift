@@ -5,6 +5,8 @@ struct TKWorkspaceRunRequest {
     let runsDirectory: String
     let runID: String?
     let target: String
+    let platform: String?
+    let scope: String?
     let app: String
     let goal: String
     let actionPolicy: String
@@ -16,6 +18,8 @@ struct TKWorkspaceRunRequest {
         runsDirectory: String,
         runID: String?,
         target: String,
+        platform: String? = nil,
+        scope: String? = nil,
         app: String,
         goal: String,
         actionPolicy: String,
@@ -26,6 +30,8 @@ struct TKWorkspaceRunRequest {
         self.runsDirectory = runsDirectory
         self.runID = runID
         self.target = target
+        self.platform = platform
+        self.scope = scope
         self.app = app
         self.goal = goal
         self.actionPolicy = actionPolicy
@@ -184,10 +190,11 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         events: runDir.appendingPathComponent("events.jsonl").path,
         report: runDir.appendingPathComponent("report.json").path
     )
+    let targetMetadata = workspaceTargetMetadata(platform: request.platform, scope: request.scope)
     let target = TKWorkspaceRunTarget(
         id: request.target,
-        platform: "unknown",
-        scope: "current",
+        platform: targetMetadata.platform,
+        scope: targetMetadata.scope,
         capabilities: ["screenshot", "hierarchy", "input"]
     )
     let providerPreflight = try workspaceProviderPreflight(request)
@@ -381,6 +388,18 @@ private func workspaceBootstrapPhase(
         return "vlm_missing"
     }
     return "provider_missing"
+}
+
+private func workspaceTargetMetadata(platform: String?, scope: String?) -> (platform: String, scope: String) {
+    (
+        platform: normalizedWorkspaceTargetValue(platform, defaultValue: "unknown"),
+        scope: normalizedWorkspaceTargetValue(scope, defaultValue: "current")
+    )
+}
+
+private func normalizedWorkspaceTargetValue(_ raw: String?, defaultValue: String) -> String {
+    let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+    return value.isEmpty ? defaultValue : value
 }
 
 func inspectWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorkspaceInspectResponse {
