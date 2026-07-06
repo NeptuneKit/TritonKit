@@ -569,6 +569,7 @@ observe.captured -> model.decided(fake) -> policy.checked -> action.executed(dry
 - 新增 `triton workspace run|inspect|stop|export-flow` CLI 入口，并在 `triton schema --command workspace --json` 中暴露命令契约。
 - 新增同构 HTTP handler：`POST /workspace/run`、`GET /workspace/runs/:runId`、`POST /workspace/runs/:runId/stop`、`POST /workspace/runs/:runId/export-flow`。
 - `workspace run` 会创建 `.triton/runs/<run-id>/` 兼容目录骨架，写入 `run.json`、`config.yaml`、`events.jsonl`、`report.json`、`atlas/atlas.json` 和首批 evidence placeholder。
+- `atlas/atlas.json` 不再是空壳：默认从初始 `observation.captured` 生成一个 `screen_0000`、一个 `state_0000`、coverage 计数和 screenshot / hierarchy / event evidence backlink。
 - 默认写入 `llmEnabled=true`、`vlmEnabled=true`、`providersReady=false` 与 `configure_ai_provider` nextAction；当前不伪装真实模型或设备已执行。
 - `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.stopped`，并复用 `TKTestRunEventLogParser` 校验。
 - `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
@@ -580,7 +581,7 @@ observe.captured -> model.decided(fake) -> policy.checked -> action.executed(dry
 
 - 未接真实 target discovery / app launch / screenshot / action execution。
 - 未接真实 LLM provider、真实 VLM request/response、model decision、policy gate 或 recovery proposal。
-- 未生成完整 Atlas screen/state/transition/coverage，只写空 atlas skeleton。
+- 未生成完整 Atlas transition、state variant 合并、coverage path 或 app-map merge；当前只写 run-local 初始 screen/state seed。
 - 未做 Web Workbench 视图。
 
 ### 测试策略

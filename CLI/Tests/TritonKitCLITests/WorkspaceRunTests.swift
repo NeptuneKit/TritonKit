@@ -32,6 +32,24 @@ struct WorkspaceRunTests {
         #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("events.jsonl").path))
         #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("config.yaml").path))
 
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        #expect(atlas?["kind"] as? String == "triton.workspace.atlas")
+        #expect(atlas?["runId"] as? String == "run-workspace-001")
+        let screens = atlas?["screens"] as? [[String: Any]]
+        let states = atlas?["states"] as? [[String: Any]]
+        let coverage = atlas?["coverage"] as? [String: Any]
+        #expect(screens?.count == 1)
+        #expect(states?.count == 1)
+        #expect(coverage?["screenCount"] as? Int == 1)
+        #expect(coverage?["stateCount"] as? Int == 1)
+        #expect(coverage?["transitionCount"] as? Int == 0)
+        #expect(screens?.first?["screenId"] as? String == "screen_0000")
+        let evidenceRefs = screens?.first?["evidenceRefs"] as? [String]
+        #expect(evidenceRefs?.contains("events.jsonl#observation.captured") == true)
+        #expect(evidenceRefs?.contains("evidence/screenshots/0000.txt") == true)
+
         let parsed = try TKTestRunEventLogParser().parse(
             Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
         )

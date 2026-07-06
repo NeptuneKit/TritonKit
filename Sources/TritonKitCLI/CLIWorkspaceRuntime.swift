@@ -499,12 +499,10 @@ private func writeWorkspaceRunArtifacts(_ run: TKWorkspaceRunResponse, runDir: U
         "evidenceId": "ev_0000",
         "proposal": "stop",
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-000.json"))
-    try writeWorkspaceJSONArtifact([
-        "screens": [],
-        "states": [],
-        "transitions": [],
-        "coverage": ["status": "empty"],
-    ], to: runDir.appendingPathComponent("atlas/atlas.json"))
+    try writeWorkspaceJSONArtifact(
+        workspaceAtlasDocument(for: run),
+        to: runDir.appendingPathComponent("atlas/atlas.json")
+    )
 }
 
 private func writeWorkspaceDryDecisionArtifacts(runDir: URL) throws {
@@ -666,6 +664,50 @@ private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
         return "llm_missing"
     }
     return "provider_missing"
+}
+
+private func workspaceAtlasDocument(for run: TKWorkspaceRunResponse) -> [String: Any] {
+    let initialObservationRefs = [
+        "events.jsonl#observation.captured",
+        "evidence/screenshots/0000.txt",
+        "evidence/hierarchy/0000.json",
+        "evidence/hierarchy/0000-ax.json",
+    ]
+    return [
+        "schemaVersion": 1,
+        "kind": "triton.workspace.atlas",
+        "runId": run.runID,
+        "app": run.app,
+        "source": [
+            "events": "events.jsonl",
+            "mode": "workspace-run-seed",
+        ],
+        "screens": [
+            [
+                "screenId": "screen_0000",
+                "stateId": "state_0000",
+                "signature": "placeholder-screenshot:placeholder-ax:placeholder-hierarchy",
+                "dominantTexts": [],
+                "semanticTags": [],
+                "evidenceRefs": initialObservationRefs,
+            ],
+        ],
+        "states": [
+            [
+                "stateId": "state_0000",
+                "screenId": "screen_0000",
+                "phase": "initial",
+                "evidenceRefs": initialObservationRefs,
+            ],
+        ],
+        "transitions": [],
+        "coverage": [
+            "status": "seeded",
+            "screenCount": 1,
+            "stateCount": 1,
+            "transitionCount": 0,
+        ],
+    ]
 }
 
 private func writeWorkspaceJSONArtifact(_ value: [String: Any], to url: URL) throws {
