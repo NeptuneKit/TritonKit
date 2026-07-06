@@ -12,6 +12,7 @@ enum SimPrivacyAction: String, ExpressibleByArgument {
 
 enum SimPrivacyService: String, ExpressibleByArgument {
     case all
+    case camera
     case calendar
     case contactsLimited = "contacts-limited"
     case contacts
