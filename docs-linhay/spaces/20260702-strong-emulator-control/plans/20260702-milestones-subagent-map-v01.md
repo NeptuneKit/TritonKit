@@ -283,9 +283,13 @@ Status on 2026-07-06:
   --platform android --device emulator-5554 --confirm --json` now executes
   `adb -s emulator-5554 emu kill` for emulator-scoped targets and was verified
   against the same AVD without affecting a connected Android real device.
-- Reviewable commit boundaries are prepared below. Actual commits are not
-  created in this pass; do not stage unrelated Web mock or demo-camera changes
-  unless that review intentionally includes them.
+- Reviewable commit series was created on `main` after this pass:
+  `fb278bd6 feat(cli): strengthen emulator control workflows`,
+  `877e1692 feat(web): refine host bridge mock inspector`,
+  `1d2bbcf7 feat(demo): add camera smoke harness`, and
+  `5fc2d49d fix(cli): expose simulator camera privacy service`.
+- The actual CLI commit intentionally uses one domain-level commit rather than
+  fragile hunk splits across overlapping schema/test files.
 
 Recommended commit series:
 
@@ -484,12 +488,12 @@ Completed batches:
 
 Next batch:
 
-- Main-control: M5 release hardening and reviewable commit series.
-
-Final batch:
-
-- Main-control: prepare commit series from the dirty worktree without mixing
-  unrelated Web mock changes into the emulator-control slice.
+- Main-control: decide whether the current branch should be pushed as-is or
+  further split in a review branch. After those four commits, `main` was ahead
+  of `origin/main` by the four commits listed above.
+- Optional implementation subagents may continue only on concrete gaps:
+  iOS host HID beyond tap, Android bridge endpoint parity, Web mock polishing,
+  or Demo camera runtime smoke.
 
 ## Subagent Handoff Packets
 
