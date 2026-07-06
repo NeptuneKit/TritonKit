@@ -21,7 +21,7 @@ struct WorkspaceRunTests {
 
         #expect(run.kind == "triton.workspace.run")
         #expect(run.runID == "run-workspace-001")
-        #expect(run.status == "stopped")
+        #expect(run.status == "paused")
         #expect(run.ai.llmEnabled)
         #expect(run.ai.vlmEnabled)
         #expect(run.ai.providersReady == false)
@@ -68,7 +68,7 @@ struct WorkspaceRunTests {
             "app.ready",
             "observation.captured",
             "flow.bootstrap.checked",
-            "run.stopped",
+            "run.paused",
         ])
 
         let inspected = try inspectWorkspaceRun(
@@ -76,6 +76,8 @@ struct WorkspaceRunTests {
             runsDirectory: root.path
         )
         #expect(inspected.run.runID == "run-workspace-001")
+        #expect(inspected.run.status == "paused")
+        #expect(inspected.summary.status == .paused)
         #expect(inspected.summary.eventCount == 7)
         #expect(inspected.latestBootstrap?.phase == "provider_missing")
         #expect(inspected.atlas.screenCount == 1)
@@ -364,6 +366,8 @@ struct WorkspaceRunTests {
             goal: "Reject disallowed tap",
             actionPolicy: "explore",
             dryModelFixture: true,
+            llmProvider: "mock",
+            vlmProvider: "mock",
             allowedActions: ["wait"],
             stopConditions: ["policy_rejected"]
         ))
@@ -379,7 +383,10 @@ struct WorkspaceRunTests {
         #expect(eventTypes.contains("action.executed") == false)
         #expect(eventTypes.contains("verify.checked") == false)
         #expect(eventTypes.contains("atlas.updated") == false)
+        #expect(eventTypes.last == "run.paused")
         #expect(parsed.events.first { $0.type == .policyChecked }?.status == .failed)
+        #expect(parsed.events.last?.phase == "policy_rejected")
+        #expect(parsed.summary.status == .paused)
 
         let policy = try JSONSerialization.jsonObject(
             with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/policy-000.json"))
@@ -394,6 +401,7 @@ struct WorkspaceRunTests {
         )
         #expect(inspected.atlas.transitionCount == 0)
         #expect(inspected.atlas.deltaRef == nil)
+        #expect(inspected.run.status == "paused")
     }
 
     @Test("workspace export flow writes a seed")

@@ -187,7 +187,7 @@ func testReportOutputContract() -> TKCommandOutputContract {
             ("kind", "String", true, "Stable kind; triton.test.report"),
             ("evidenceDir", "String", true, "Resolved .tritonevidence directory"),
             ("run", "TKTestReportRun?", false, "Run metadata read from run/run.json when present"),
-            ("summary.status", "TKTestRunStatus?", false, "Final run status from run.finished or run/run.json"),
+            ("summary.status", "TKTestRunStatus?", false, "Final run status from run.finished, run.paused, run.stopped, or run/run.json"),
             ("summary.eventCount", "Int", true, "Total run event count"),
             ("summary.stepCount", "Int", true, "Executed step count"),
             ("summary.assertionCount", "Int", true, "Assertion result count"),

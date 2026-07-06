@@ -566,7 +566,7 @@ Workbench 首屏只读 Run facts：
 
 ```text
 workspace run dry skeleton:
-target.resolved -> provider.checked -> app.ready -> observe.captured -> flow.bootstrap.checked -> run.stopped
+target.resolved -> provider.checked -> app.ready -> observe.captured -> flow.bootstrap.checked -> run.paused|run.stopped
 ```
 
 验收：
@@ -606,7 +606,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `export-flow` 会从 `action.executed` 事件派生最小 action step；dry fixture 当前可导出 `tap Continue`，并保留 model / policy / verify evidence backlink。
 - `workspace inspect` 会返回 Atlas summary：`atlasRef`、`deltaRef`、`coverageStatus`、`screenCount`、`stateCount`、`transitionCount`，便于 agent 不打开文件也能判断 map 覆盖。
 - 默认写入 `llmEnabled=true`、`vlmEnabled=true`、`providersReady=false` 与 `configure_ai_provider` nextAction；当前不伪装真实模型或设备已执行。
-- `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.stopped`，并复用 `TKTestRunEventLogParser` 校验。
+- `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.paused|run.stopped`，并复用 `TKTestRunEventLogParser` 校验；provider missing / LLM missing / policy rejected 会写 `run.paused`，显式 `workspace stop` 会写 `run.stopped`。
 - `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
 - 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；默认不启用，避免把测试夹具伪装成真实 LLM/VLM 或设备动作。
 - 新增显式 LLM/VLM provider preflight：`--llm-provider mock --vlm-provider mock` / HTTP `llmProvider=mock, vlmProvider=mock` 会记录 `providersReady=true`、`providerStatus=ready`、`llmProviderStatus=ready`、`vlmProviderStatus=ready`，并把 `provider.checked` phase 写为 `ready`、`flow.bootstrap.checked` phase 写为 `provider_ready`。

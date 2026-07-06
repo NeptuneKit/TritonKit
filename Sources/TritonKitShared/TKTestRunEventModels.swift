@@ -2,6 +2,7 @@ import Foundation
 
 public enum TKTestRunStatus: String, Codable, Equatable, Sendable {
     case running
+    case paused
     case passed
     case failed
     case blocked
@@ -99,6 +100,7 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
     public static let flowUpdated = Self(rawValue: "flow.updated")
     public static let stepFinished = Self(rawValue: "step.finished")
     public static let runFinished = Self(rawValue: "run.finished")
+    public static let runPaused = Self(rawValue: "run.paused")
     public static let runStopped = Self(rawValue: "run.stopped")
     public static let failureRecorded = Self(rawValue: "failure.recorded")
 
@@ -131,6 +133,7 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
         "flow.updated",
         "step.finished",
         "run.finished",
+        "run.paused",
         "run.stopped",
         "failure.recorded",
     ]
@@ -565,7 +568,7 @@ public struct TKTestRunEventLogParser: Sendable {
             events.append(event)
         }
 
-        let runFinished = events.last { $0.type == .runFinished || $0.type == .runStopped }
+        let runFinished = events.last { $0.type == .runFinished || $0.type == .runPaused || $0.type == .runStopped }
         let stepIndexes = Set(events.compactMap(\.stepIndex))
         let summary = TKTestRunEventSummary(
             runID: events.first?.runID,
@@ -706,6 +709,10 @@ public struct TKTestRunEventLogParser: Sendable {
         case .runFinished:
             try require(event.status, "status", lineNumber)
             try require(event.durationMs, "durationMs", lineNumber)
+        case .runPaused:
+            try require(event.status, "status", lineNumber)
+            try require(event.durationMs, "durationMs", lineNumber)
+            try require(event.phase, "phase", lineNumber)
         case .runStopped:
             try require(event.status, "status", lineNumber)
             try require(event.durationMs, "durationMs", lineNumber)
@@ -772,7 +779,8 @@ public struct TKTestRunEventWriter: Sendable {
     public func append(_ event: TKTestRunEvent) throws {
         let data = try Data(contentsOf: eventsURL)
         let existing = try TKTestRunEventLogParser().parse(data)
-        if existing.events.last?.type == .runFinished {
+        if let lastType = existing.events.last?.type,
+           lastType == .runFinished || lastType == .runPaused || lastType == .runStopped {
             throw TKTestRunEventLogWriteError.eventLogAlreadyFinished
         }
         if existing.events.isEmpty, event.type != .runStarted {

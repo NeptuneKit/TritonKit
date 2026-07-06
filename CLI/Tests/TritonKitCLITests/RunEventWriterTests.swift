@@ -117,6 +117,57 @@ struct RunEventWriterTests {
         }
     }
 
+    @Test("P0C parser supports paused run terminal event")
+    func parserSupportsPausedRunTerminalEvent() throws {
+        let parsed = try TKTestRunEventLogParser().parse(Data("""
+        {"schemaVersion":1,"type":"run.started","runId":"run-paused-001","timestamp":"2026-06-20T00:00:00Z"}
+        {"schemaVersion":1,"type":"run.paused","runId":"run-paused-001","timestamp":"2026-06-20T00:00:01Z","status":"paused","durationMs":1000,"phase":"provider_missing"}
+
+        """.utf8))
+
+        #expect(parsed.summary.runID == "run-paused-001")
+        #expect(parsed.summary.status == .paused)
+        #expect(parsed.events.last?.type == .runPaused)
+        #expect(parsed.events.last?.phase == "provider_missing")
+    }
+
+    @Test("P0C writer treats paused run as terminal")
+    func writerTreatsPausedRunAsTerminal() throws {
+        let root = temporaryRunRoot()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let writer = try TKTestRunEventWriter(
+            evidenceDirectory: root,
+            run: TKTestRunMetadata(
+                runID: "run-p0c-paused",
+                source: "manual-primitive-smoke",
+                status: .paused,
+                startedAt: "2026-06-20T00:00:00Z",
+                endedAt: nil,
+                durationMs: nil,
+                evidenceManifestRef: "../manifest.json"
+            )
+        )
+        try writer.append(.runStarted(runID: "run-p0c-paused", timestamp: "2026-06-20T00:00:00Z"))
+        try writer.append(.init(
+            type: .runPaused,
+            runID: "run-p0c-paused",
+            timestamp: "2026-06-20T00:00:01Z",
+            status: .paused,
+            durationMs: 1000,
+            phase: "provider_missing"
+        ))
+
+        #expect(throws: TKTestRunEventLogWriteError.eventLogAlreadyFinished) {
+            try writer.append(.failureRecorded(
+                runID: "run-p0c-paused",
+                stepIndex: 0,
+                failure: TKTestRunFailure(type: "late_event", message: "should not append"),
+                timestamp: "2026-06-20T00:00:02Z"
+            ))
+        }
+    }
+
     @Test("P0C writer supports failure recorded events")
     func writerSupportsFailureRecordedEvents() throws {
         let root = temporaryRunRoot()

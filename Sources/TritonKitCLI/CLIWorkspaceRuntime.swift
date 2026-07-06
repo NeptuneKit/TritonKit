@@ -162,6 +162,13 @@ private struct TKWorkspaceProviderComponentPreflight {
     var ready: Bool { status == "ready" }
 }
 
+private struct TKWorkspaceRunFinalState {
+    let runStatus: String
+    let eventType: TKTestRunEventType
+    let eventStatus: TKTestRunStatus
+    let phase: String?
+}
+
 private let defaultWorkspaceRunnerMaxSteps = 20
 private let defaultWorkspaceRunnerAllowedActions = ["tap", "swipe", "type", "wait", "verify", "stop"]
 private let defaultWorkspaceRunnerStopConditions = [
@@ -229,10 +236,18 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     )
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
+    let dryDecisionAllowed = request.dryModelFixture
+        ? workspaceDryPolicyAllowsAction("tap", runner: runner)
+        : false
+    let finalState = workspaceRunFinalState(
+        providerPreflight: providerPreflight,
+        dryModelFixture: request.dryModelFixture,
+        dryDecisionAllowed: dryDecisionAllowed
+    )
     let response = TKWorkspaceRunResponse(
         runID: runID,
         goal: request.goal,
-        status: "stopped",
+        status: finalState.runStatus,
         target: target,
         app: request.app,
         ai: TKWorkspaceRunAI(
@@ -250,9 +265,6 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         paths: paths,
         nextActions: providerPreflight.nextActions
     )
-    let dryDecisionAllowed = request.dryModelFixture
-        ? workspaceDryPolicyAllowsAction("tap", run: response)
-        : false
 
     try createWorkspaceRunDirectories(runDir)
     try writeWorkspaceRunConfig(response, to: runDir.appendingPathComponent("config.yaml"))
@@ -272,7 +284,8 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     var events = workspaceSkeletonEvents(
         runID: runID,
         providerEventPhase: providerPreflight.providerEventPhase,
-        bootstrapPhase: providerPreflight.bootstrapPhase
+        bootstrapPhase: providerPreflight.bootstrapPhase,
+        finalState: finalState
     )
     if request.dryModelFixture {
         events.insert(
@@ -348,9 +361,37 @@ private func normalizedWorkspaceRunnerValue(_ value: String) -> String {
     value.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
-private func workspaceDryPolicyAllowsAction(_ action: String, run: TKWorkspaceRunResponse) -> Bool {
-    let allowedActions = run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions
-    return allowedActions.contains(action)
+private func workspaceDryPolicyAllowsAction(_ action: String, runner: TKWorkspaceRunRunner) -> Bool {
+    runner.allowedActions.contains(action)
+}
+
+private func workspaceRunFinalState(
+    providerPreflight: TKWorkspaceProviderPreflight,
+    dryModelFixture: Bool,
+    dryDecisionAllowed: Bool
+) -> TKWorkspaceRunFinalState {
+    if !providerPreflight.providersReady {
+        return TKWorkspaceRunFinalState(
+            runStatus: "paused",
+            eventType: .runPaused,
+            eventStatus: .paused,
+            phase: providerPreflight.bootstrapPhase
+        )
+    }
+    if dryModelFixture, !dryDecisionAllowed {
+        return TKWorkspaceRunFinalState(
+            runStatus: "paused",
+            eventType: .runPaused,
+            eventStatus: .paused,
+            phase: "policy_rejected"
+        )
+    }
+    return TKWorkspaceRunFinalState(
+        runStatus: "stopped",
+        eventType: .runStopped,
+        eventStatus: .stopped,
+        phase: nil
+    )
 }
 
 private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
@@ -785,7 +826,8 @@ private func writeWorkspaceDryDecisionArtifacts(
 private func workspaceSkeletonEvents(
     runID: String,
     providerEventPhase: String,
-    bootstrapPhase: String
+    bootstrapPhase: String,
+    finalState: TKWorkspaceRunFinalState
 ) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
     return [
@@ -819,7 +861,14 @@ private func workspaceSkeletonEvents(
             ref: "evidence/model/bootstrap-000.json",
             phase: bootstrapPhase
         ),
-        .init(type: .runStopped, runID: runID, timestamp: now, status: .stopped, durationMs: 0),
+        .init(
+            type: finalState.eventType,
+            runID: runID,
+            timestamp: now,
+            status: finalState.eventStatus,
+            durationMs: 0,
+            phase: finalState.phase
+        ),
     ]
 }
 

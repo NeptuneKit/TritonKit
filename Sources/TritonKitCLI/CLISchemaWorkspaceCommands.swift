@@ -66,9 +66,10 @@ func workspaceCommandSchemas() -> [TKCommandSchema] {
                 "flow.recovery.rejected",
                 "atlas.updated",
                 "flow.updated",
+                "run.paused",
                 "run.stopped",
             ],
-            finalEventKind: "run.stopped",
+            finalEventKind: "run.paused|run.stopped",
             artifacts: [
                 ".triton/runs/<run-id>/run.json",
                 ".triton/runs/<run-id>/config.yaml",
@@ -83,8 +84,8 @@ func workspaceCommandSchemas() -> [TKCommandSchema] {
                     summary: "Create a local workspace run facts directory",
                     requiredOptions: ["--app", "--goal"],
                     optionalOptions: ["--target", "--platform", "--scope", "--runs-dir", "--run-id", "--action-policy", "--max-steps", "--allowed-action", "--stop-condition", "--llm-provider", "--vlm-provider", "--dry-model-fixture", "--format", "--json"],
-                    jsonlEvents: ["run.started", "target.resolved", "provider.checked", "app.ready", "observation.captured", "flow.bootstrap.checked", "model.decided", "policy.checked", "action.executed", "verify.checked", "flow.recovery.detected", "flow.recovery.proposed", "flow.recovery.rejected", "atlas.updated", "flow.updated", "run.stopped"],
-                    finalEventKind: "run.stopped",
+                    jsonlEvents: ["run.started", "target.resolved", "provider.checked", "app.ready", "observation.captured", "flow.bootstrap.checked", "model.decided", "policy.checked", "action.executed", "verify.checked", "flow.recovery.detected", "flow.recovery.proposed", "flow.recovery.rejected", "atlas.updated", "flow.updated", "run.paused", "run.stopped"],
+                    finalEventKind: "run.paused|run.stopped",
                     artifacts: ["run.json", "config.yaml", "events.jsonl", "report.json", "atlas/atlas.json"],
                     outputSelectors: ["workspace.run"],
                     failureCodes: ["workspace_failed"]
