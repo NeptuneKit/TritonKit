@@ -8,6 +8,25 @@ struct TKWorkspaceRunRequest {
     let app: String
     let goal: String
     let actionPolicy: String
+    let dryModelFixture: Bool
+
+    init(
+        runsDirectory: String,
+        runID: String?,
+        target: String,
+        app: String,
+        goal: String,
+        actionPolicy: String,
+        dryModelFixture: Bool = false
+    ) {
+        self.runsDirectory = runsDirectory
+        self.runID = runID
+        self.target = target
+        self.app = app
+        self.goal = goal
+        self.actionPolicy = actionPolicy
+        self.dryModelFixture = dryModelFixture
+    }
 }
 
 struct TKWorkspaceRunResponse: Codable, Equatable {
@@ -147,8 +166,15 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     try createWorkspaceRunDirectories(runDir)
     try writeWorkspaceRunConfig(response, to: runDir.appendingPathComponent("config.yaml"))
     try writeWorkspaceRunArtifacts(response, runDir: runDir)
+    if request.dryModelFixture {
+        try writeWorkspaceDryDecisionArtifacts(runDir: runDir)
+    }
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
-    try writeWorkspaceEvents(workspaceSkeletonEvents(runID: runID, runDir: runDir), to: runDir.appendingPathComponent("events.jsonl"))
+    var events = workspaceSkeletonEvents(runID: runID, runDir: runDir)
+    if request.dryModelFixture {
+        events.insert(contentsOf: workspaceDryDecisionEvents(runID: runID), at: events.index(before: events.endIndex))
+    }
+    try writeWorkspaceEvents(events, to: runDir.appendingPathComponent("events.jsonl"))
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("report.json"))
     return response
 }
@@ -287,6 +313,46 @@ private func writeWorkspaceRunArtifacts(_ run: TKWorkspaceRunResponse, runDir: U
     ], to: runDir.appendingPathComponent("atlas/atlas.json"))
 }
 
+private func writeWorkspaceDryDecisionArtifacts(runDir: URL) throws {
+    let command = ["triton", "act", "tap", "Continue", "--json"]
+    try writeWorkspaceJSONArtifact([
+        "summary": "Dry fixture selected a single tap candidate.",
+        "command": command,
+        "confidence": 0.5,
+        "usedVLM": true,
+    ], to: runDir.appendingPathComponent("evidence/model/decision-000.json"))
+    try writeWorkspaceJSONArtifact([
+        "allowed": true,
+        "reason": "dry fixture command is low-risk and single-step",
+        "command": command,
+    ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
+    try writeWorkspaceJSONArtifact([
+        "ok": true,
+        "mode": "dry-fixture",
+        "command": command,
+    ], to: runDir.appendingPathComponent("evidence/actions/action-000.json"))
+    try writeWorkspaceJSONArtifact([
+        "status": "failed",
+        "reason": "dry fixture simulates expected screen missing",
+    ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
+    try writeWorkspaceJSONArtifact([
+        "failureCode": "expected_screen_missing",
+        "kind": "selector_drift",
+        "proposal": "stop",
+    ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+    try """
+    {"deltaId":"atlas_delta_0000","kind":"transition","confidence":0.5}
+    """.write(to: runDir.appendingPathComponent("atlas/deltas.jsonl"), atomically: true, encoding: .utf8)
+    try """
+    schemaVersion: 1
+    kind: triton.workspace.flow
+    steps:
+      - action: tap
+        evidenceRef: events.jsonl#action.executed
+
+    """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
+}
+
 private func workspaceSkeletonEvents(runID: String, runDir: URL) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
     return [
@@ -321,6 +387,43 @@ private func workspaceSkeletonEvents(runID: String, runDir: URL) -> [TKTestRunEv
             phase: "provider_missing"
         ),
         .init(type: .runStopped, runID: runID, timestamp: now, status: .stopped, durationMs: 0),
+    ]
+}
+
+private func workspaceDryDecisionEvents(runID: String) -> [TKTestRunEvent] {
+    let now = workspaceTimestamp()
+    let command = ["triton", "act", "tap", "Continue", "--json"]
+    return [
+        .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
+        .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, ref: "evidence/model/policy-000.json"),
+        .init(type: .actionExecuted, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, exitCode: 0),
+        .init(type: .verifyChecked, runID: runID, timestamp: now, stepIndex: 1, status: .failed, ref: "evidence/model/verify-000.json"),
+        .init(
+            type: .flowRecoveryDetected,
+            runID: runID,
+            timestamp: now,
+            stepIndex: 1,
+            failure: TKTestRunFailure(
+                type: "expected_screen_missing",
+                message: "Dry fixture simulates selector drift after action.",
+                artifactRefs: ["evidence/model/verify-000.json"]
+            ),
+            phase: "selector_drift"
+        ),
+        .init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: 1, command: ["stop"], ref: "evidence/model/recovery-000.json"),
+        .init(
+            type: .flowRecoveryRejected,
+            runID: runID,
+            timestamp: now,
+            stepIndex: 1,
+            failure: TKTestRunFailure(
+                type: "dry_fixture_stop",
+                message: "Dry fixture does not execute recovery actions.",
+                artifactRefs: ["evidence/model/recovery-000.json"]
+            )
+        ),
+        .init(type: .atlasUpdated, runID: runID, timestamp: now, stepIndex: 1, ref: "atlas/deltas.jsonl"),
+        .init(type: .flowUpdated, runID: runID, timestamp: now, ref: "flow.tritonflow.yaml"),
     ]
 }
 

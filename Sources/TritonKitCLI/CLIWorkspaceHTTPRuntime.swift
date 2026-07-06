@@ -7,6 +7,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let app: String
     let goal: String
     let actionPolicy: String?
+    let dryModelFixture: Bool? = nil
 
     enum CodingKeys: String, CodingKey {
         case runsDir
@@ -15,6 +16,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case app
         case goal
         case actionPolicy
+        case dryModelFixture
     }
 }
 
@@ -31,7 +33,8 @@ func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
         target: request.target ?? "current",
         app: request.app,
         goal: request.goal,
-        actionPolicy: request.actionPolicy ?? "explore"
+        actionPolicy: request.actionPolicy ?? "explore",
+        dryModelFixture: request.dryModelFixture ?? false
     ))
 }
 

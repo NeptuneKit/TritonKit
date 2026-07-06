@@ -75,6 +75,36 @@ struct WorkspaceRunTests {
         #expect(stoppedAgain.summary.eventCount == stopped.summary.eventCount)
     }
 
+    @Test("workspace run can write dry decision fixture events")
+    func workspaceRunCanWriteDryDecisionFixtureEvents() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        _ = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-decision",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Dry decision",
+            actionPolicy: "explore",
+            dryModelFixture: true
+        ))
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: root
+                .appendingPathComponent("run-workspace-decision", isDirectory: true)
+                .appendingPathComponent("events.jsonl"))
+        )
+        let eventTypes = parsed.events.map(\.type.rawValue)
+
+        #expect(eventTypes.contains("model.decided"))
+        #expect(eventTypes.contains("policy.checked"))
+        #expect(eventTypes.contains("action.executed"))
+        #expect(eventTypes.contains("verify.checked"))
+        #expect(eventTypes.contains("atlas.updated"))
+        #expect(eventTypes.contains("flow.updated"))
+    }
+
     @Test("workspace export flow writes a seed")
     func workspaceExportFlowWritesASeed() throws {
         let root = temporaryRunsDirectory()

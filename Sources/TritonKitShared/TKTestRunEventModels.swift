@@ -85,12 +85,18 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
     public static let assertionResult = Self(rawValue: "assertion.result")
     public static let observationCaptured = Self(rawValue: "observation.captured")
     public static let vlmGrounding = Self(rawValue: "vlm.grounding")
+    public static let modelDecided = Self(rawValue: "model.decided")
+    public static let policyChecked = Self(rawValue: "policy.checked")
+    public static let actionExecuted = Self(rawValue: "action.executed")
+    public static let verifyChecked = Self(rawValue: "verify.checked")
     public static let flowBootstrapChecked = Self(rawValue: "flow.bootstrap.checked")
     public static let flowBootstrapProposed = Self(rawValue: "flow.bootstrap.proposed")
     public static let flowRecoveryDetected = Self(rawValue: "flow.recovery.detected")
     public static let flowRecoveryProposed = Self(rawValue: "flow.recovery.proposed")
     public static let flowRecoveryApplied = Self(rawValue: "flow.recovery.applied")
     public static let flowRecoveryRejected = Self(rawValue: "flow.recovery.rejected")
+    public static let atlasUpdated = Self(rawValue: "atlas.updated")
+    public static let flowUpdated = Self(rawValue: "flow.updated")
     public static let stepFinished = Self(rawValue: "step.finished")
     public static let runFinished = Self(rawValue: "run.finished")
     public static let runStopped = Self(rawValue: "run.stopped")
@@ -111,12 +117,18 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
         "assertion.result",
         "observation.captured",
         "vlm.grounding",
+        "model.decided",
+        "policy.checked",
+        "action.executed",
+        "verify.checked",
         "flow.bootstrap.checked",
         "flow.bootstrap.proposed",
         "flow.recovery.detected",
         "flow.recovery.proposed",
         "flow.recovery.applied",
         "flow.recovery.rejected",
+        "atlas.updated",
+        "flow.updated",
         "step.finished",
         "run.finished",
         "run.stopped",
@@ -637,6 +649,24 @@ public struct TKTestRunEventLogParser: Sendable {
             let grounding = try require(event.vlmGrounding, "vlmGrounding", lineNumber)
             try requireNonEmpty(grounding.provider, "vlmGrounding.provider", lineNumber)
             try requireNonEmpty(grounding.target, "vlmGrounding.target", lineNumber)
+        case .modelDecided:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.command, "command", lineNumber)
+            try require(event.ref, "ref", lineNumber)
+        case .policyChecked:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.command, "command", lineNumber)
+            try require(event.status, "status", lineNumber)
+            try require(event.ref, "ref", lineNumber)
+        case .actionExecuted:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.command, "command", lineNumber)
+            try require(event.status, "status", lineNumber)
+            try require(event.exitCode, "exitCode", lineNumber)
+        case .verifyChecked:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.status, "status", lineNumber)
+            try require(event.ref, "ref", lineNumber)
         case .flowBootstrapChecked:
             try require(event.stepIndex, "stepIndex", lineNumber)
             try require(event.phase, "phase", lineNumber)
@@ -663,6 +693,11 @@ public struct TKTestRunEventLogParser: Sendable {
             try require(event.stepIndex, "stepIndex", lineNumber)
             let failure = try require(event.failure, "failure", lineNumber)
             try require(failure.type, "failure.type", lineNumber)
+        case .atlasUpdated:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.ref, "ref", lineNumber)
+        case .flowUpdated:
+            try require(event.ref, "ref", lineNumber)
         case .stepFinished:
             try require(event.stepIndex, "stepIndex", lineNumber)
             try require(event.stepID, "stepId", lineNumber)

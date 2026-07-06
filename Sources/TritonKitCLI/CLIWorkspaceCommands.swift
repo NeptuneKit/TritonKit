@@ -21,6 +21,8 @@ struct Workspace: ParsableCommand {
         @Option(name: .customLong("runs-dir"), help: "Workspace runs directory") var runsDirectory: String = ".triton/runs"
         @Option(name: .customLong("run-id"), help: "Run id") var runID: String?
         @Option(name: .customLong("action-policy"), help: "Action policy") var actionPolicy: String = "explore"
+        @Flag(name: .customLong("dry-model-fixture"), help: "Append dry model/policy/action/recovery fixture events")
+        var dryModelFixture = false
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
@@ -33,7 +35,8 @@ struct Workspace: ParsableCommand {
                     target: target,
                     app: app,
                     goal: goal,
-                    actionPolicy: actionPolicy
+                    actionPolicy: actionPolicy,
+                    dryModelFixture: dryModelFixture
                 ))
                 try printWorkspaceRun(response, format: outputFormat)
             } catch {
