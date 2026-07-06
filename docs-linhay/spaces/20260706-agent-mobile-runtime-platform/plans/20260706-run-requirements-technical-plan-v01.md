@@ -604,9 +604,10 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `atlas/atlas.json` 不再是空壳：默认从初始 `observation.captured` 生成一个 `screen_0000`、一个 `state_0000`、coverage 计数和 screenshot / hierarchy / event evidence backlink。
 - `--dry-model-fixture` 会把测试协议里的失败动作写回 Atlas：`atlas/deltas.jsonl` 和 `atlas/atlas.json` 都包含 `transition_0000`，状态为 `candidate_failed`，从 `screen_0000` 回到 `screen_0000`，并引用 model / policy / action / verify evidence。
 - `export-flow` 会从 `action.executed` 事件派生最小 action step；dry fixture 当前可导出 `tap Continue`，并保留 model / policy / verify evidence backlink。
-- `workspace inspect` 会返回 Atlas summary：`atlasRef`、`deltaRef`、`coverageStatus`、`screenCount`、`stateCount`、`transitionCount`，便于 agent 不打开文件也能判断 map 覆盖。
+- `workspace inspect` 会返回 Atlas summary：`atlasRef`、`deltaRef`、`coverageStatus`、`screenCount`、`stateCount`、`transitionCount`，并返回 `latestBootstrap` / `latestPause`，便于 agent 不打开文件也能判断 map 覆盖和暂停原因。
 - 默认写入 `llmEnabled=true`、`vlmEnabled=true`、`providersReady=false` 与 `configure_ai_provider` nextAction；当前不伪装真实模型或设备已执行。
 - `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.paused|run.stopped`，并复用 `TKTestRunEventLogParser` 校验；provider missing / LLM missing / policy rejected 会写 `run.paused`，显式 `workspace stop` 会写 `run.stopped`。
+- policy rejected 会返回 `review_policy_rejection` nextAction，指向调整 runner allowlist、修正 goal 或检查 `evidence/model/policy-000.json`。
 - `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
 - 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；默认不启用，避免把测试夹具伪装成真实 LLM/VLM 或设备动作。
 - 新增显式 LLM/VLM provider preflight：`--llm-provider mock --vlm-provider mock` / HTTP `llmProvider=mock, vlmProvider=mock` 会记录 `providersReady=true`、`providerStatus=ready`、`llmProviderStatus=ready`、`vlmProviderStatus=ready`，并把 `provider.checked` phase 写为 `ready`、`flow.bootstrap.checked` phase 写为 `provider_ready`。

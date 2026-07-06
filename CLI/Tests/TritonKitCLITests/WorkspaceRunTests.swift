@@ -80,6 +80,7 @@ struct WorkspaceRunTests {
         #expect(inspected.summary.status == .paused)
         #expect(inspected.summary.eventCount == 7)
         #expect(inspected.latestBootstrap?.phase == "provider_missing")
+        #expect(inspected.latestPause?.phase == "provider_missing")
         #expect(inspected.atlas.screenCount == 1)
         #expect(inspected.atlas.stateCount == 1)
         #expect(inspected.atlas.transitionCount == 0)
@@ -358,7 +359,7 @@ struct WorkspaceRunTests {
         let root = temporaryRunsDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
 
-        _ = try runWorkspaceRun(TKWorkspaceRunRequest(
+        let run = try runWorkspaceRun(TKWorkspaceRunRequest(
             runsDirectory: root.path,
             runID: "run-workspace-policy-reject",
             target: "current",
@@ -371,6 +372,8 @@ struct WorkspaceRunTests {
             allowedActions: ["wait"],
             stopConditions: ["policy_rejected"]
         ))
+        #expect(run.status == "paused")
+        #expect(run.nextActions.contains { $0.code == "review_policy_rejection" })
 
         let runDir = root.appendingPathComponent("run-workspace-policy-reject", isDirectory: true)
         let parsed = try TKTestRunEventLogParser().parse(
@@ -402,6 +405,7 @@ struct WorkspaceRunTests {
         #expect(inspected.atlas.transitionCount == 0)
         #expect(inspected.atlas.deltaRef == nil)
         #expect(inspected.run.status == "paused")
+        #expect(inspected.latestPause?.phase == "policy_rejected")
     }
 
     @Test("workspace export flow writes a seed")

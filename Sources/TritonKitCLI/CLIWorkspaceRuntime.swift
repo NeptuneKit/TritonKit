@@ -185,6 +185,7 @@ struct TKWorkspaceInspectResponse: Codable, Equatable {
     let summary: TKTestRunEventSummary
     let atlas: TKWorkspaceAtlasSummary
     let latestBootstrap: TKTestRunEvent?
+    let latestPause: TKTestRunEvent?
 }
 
 struct TKWorkspaceAtlasSummary: Codable, Equatable {
@@ -263,7 +264,10 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         ),
         runner: runner,
         paths: paths,
-        nextActions: providerPreflight.nextActions
+        nextActions: workspaceRunNextActions(
+            providerNextActions: providerPreflight.nextActions,
+            finalState: finalState
+        )
     )
 
     try createWorkspaceRunDirectories(runDir)
@@ -392,6 +396,24 @@ private func workspaceRunFinalState(
         eventStatus: .stopped,
         phase: nil
     )
+}
+
+private func workspaceRunNextActions(
+    providerNextActions: [TKWorkspaceNextAction],
+    finalState: TKWorkspaceRunFinalState
+) -> [TKWorkspaceNextAction] {
+    if !providerNextActions.isEmpty {
+        return providerNextActions
+    }
+    if finalState.phase == "policy_rejected" {
+        return [
+            TKWorkspaceNextAction(
+                code: "review_policy_rejection",
+                message: "Policy rejected the candidate action; adjust runner allowedActions, revise the goal, or inspect evidence/model/policy-000.json before resuming."
+            ),
+        ]
+    }
+    return []
 }
 
 private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
@@ -535,7 +557,8 @@ func inspectWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorks
         run: run,
         summary: parsed.summary,
         atlas: try workspaceAtlasSummary(runDir: runDir),
-        latestBootstrap: parsed.events.last { $0.type == .flowBootstrapChecked }
+        latestBootstrap: parsed.events.last { $0.type == .flowBootstrapChecked },
+        latestPause: parsed.events.last { $0.type == .runPaused }
     )
 }
 
