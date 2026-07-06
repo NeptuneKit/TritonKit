@@ -238,13 +238,16 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     )
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
-    let dryDecisionAllowed = request.dryModelFixture
-        ? workspaceDryPolicyAllowsAction("tap", runner: runner)
+    let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
+    let modelLoopMode = request.dryModelFixture ? "dry-fixture" : "mock-provider"
+    let modelDecisionAllowed = modelLoopEnabled
+        ? workspacePolicyAllowsAction("tap", runner: runner)
         : false
     let finalState = workspaceRunFinalState(
         providerPreflight: providerPreflight,
         dryModelFixture: request.dryModelFixture,
-        dryDecisionAllowed: dryDecisionAllowed
+        modelLoopEnabled: modelLoopEnabled,
+        modelDecisionAllowed: modelDecisionAllowed
     )
     let response = TKWorkspaceRunResponse(
         runID: runID,
@@ -276,13 +279,14 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     try writeWorkspaceRunArtifacts(
         response,
         runDir: runDir,
-        includeDryTransition: dryDecisionAllowed
+        includeModelTransition: modelLoopEnabled && modelDecisionAllowed
     )
-    if request.dryModelFixture {
-        try writeWorkspaceDryDecisionArtifacts(
+    if modelLoopEnabled {
+        try writeWorkspaceModelDecisionArtifacts(
             run: response,
             runDir: runDir,
-            policyAllowed: dryDecisionAllowed
+            mode: modelLoopMode,
+            policyAllowed: modelDecisionAllowed
         )
     }
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
@@ -292,9 +296,9 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         bootstrapPhase: providerPreflight.bootstrapPhase,
         finalState: finalState
     )
-    if request.dryModelFixture {
+    if modelLoopEnabled {
         events.insert(
-            contentsOf: workspaceDryDecisionEvents(runID: runID, policyAllowed: dryDecisionAllowed),
+            contentsOf: workspaceModelDecisionEvents(runID: runID, mode: modelLoopMode, policyAllowed: modelDecisionAllowed),
             at: events.index(before: events.endIndex)
         )
     }
@@ -366,16 +370,17 @@ private func normalizedWorkspaceRunnerValue(_ value: String) -> String {
     value.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
-private func workspaceDryPolicyAllowsAction(_ action: String, runner: TKWorkspaceRunRunner) -> Bool {
+private func workspacePolicyAllowsAction(_ action: String, runner: TKWorkspaceRunRunner) -> Bool {
     runner.allowedActions.contains(action)
 }
 
 private func workspaceRunFinalState(
     providerPreflight: TKWorkspaceProviderPreflight,
     dryModelFixture: Bool,
-    dryDecisionAllowed: Bool
+    modelLoopEnabled: Bool,
+    modelDecisionAllowed: Bool
 ) -> TKWorkspaceRunFinalState {
-    if !providerPreflight.providersReady {
+    if !providerPreflight.providersReady, !dryModelFixture {
         return TKWorkspaceRunFinalState(
             runStatus: "paused",
             eventType: .runPaused,
@@ -383,12 +388,20 @@ private func workspaceRunFinalState(
             phase: providerPreflight.bootstrapPhase
         )
     }
-    if dryModelFixture, !dryDecisionAllowed {
+    if modelLoopEnabled, !modelDecisionAllowed {
         return TKWorkspaceRunFinalState(
             runStatus: "paused",
             eventType: .runPaused,
             eventStatus: .paused,
             phase: "policy_rejected"
+        )
+    }
+    if !providerPreflight.providersReady {
+        return TKWorkspaceRunFinalState(
+            runStatus: "paused",
+            eventType: .runPaused,
+            eventStatus: .paused,
+            phase: providerPreflight.bootstrapPhase
         )
     }
     return TKWorkspaceRunFinalState(
@@ -736,7 +749,7 @@ private func createWorkspaceRunDirectories(_ runDir: URL) throws {
 private func writeWorkspaceRunArtifacts(
     _ run: TKWorkspaceRunResponse,
     runDir: URL,
-    includeDryTransition: Bool
+    includeModelTransition: Bool
 ) throws {
     try writeWorkspaceJSONArtifact([
         "target": run.target.id,
@@ -779,29 +792,30 @@ private func writeWorkspaceRunArtifacts(
         "state": workspaceBootstrapState(for: run.ai),
         "ready": false,
         "evidenceId": "ev_0000",
-        "proposal": "stop",
+        "proposal": run.ai.providersReady ? "candidate_available" : "stop",
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-000.json"))
     try writeWorkspaceJSONArtifact(
-        workspaceAtlasDocument(for: run, includeDryTransition: includeDryTransition),
+        workspaceAtlasDocument(for: run, includeModelTransition: includeModelTransition),
         to: runDir.appendingPathComponent("atlas/atlas.json")
     )
 }
 
-private func writeWorkspaceDryDecisionArtifacts(
+private func writeWorkspaceModelDecisionArtifacts(
     run: TKWorkspaceRunResponse,
     runDir: URL,
+    mode: String,
     policyAllowed: Bool
 ) throws {
     let command = ["triton", "act", "tap", "Continue", "--json"]
     try writeWorkspaceJSONArtifact([
         "kind": "triton.workspace.model-request",
-        "mode": "dry-fixture",
+        "mode": mode,
         "task": "bootstrap",
         "goal": run.goal,
         "observationRef": "events.jsonl#observation.captured",
         "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-request.redacted.json"))
-    try "dry fixture bootstrap response: tap Continue\n".write(
+    try "\(mode) bootstrap response: tap Continue\n".write(
         to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-response.raw.txt"),
         atomically: true,
         encoding: .utf8
@@ -819,14 +833,14 @@ private func writeWorkspaceDryDecisionArtifacts(
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000.json"))
     try writeWorkspaceJSONArtifact([
         "kind": "triton.workspace.model-request",
-        "mode": "dry-fixture",
+        "mode": mode,
         "task": "decide",
         "goal": run.goal,
         "observationRef": "events.jsonl#observation.captured",
         "bootstrapProposalRef": "evidence/model/bootstrap-proposal-000.json",
         "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
     ], to: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
-    try "dry fixture decision response: tap Continue\n".write(
+    try "\(mode) decision response: tap Continue\n".write(
         to: runDir.appendingPathComponent("evidence/model/decision-000-response.raw.txt"),
         atomically: true,
         encoding: .utf8
@@ -860,17 +874,17 @@ private func writeWorkspaceDryDecisionArtifacts(
     }
     try writeWorkspaceJSONArtifact([
         "allowed": true,
-        "reason": "dry fixture command is low-risk and single-step",
+        "reason": "\(mode) command is low-risk and single-step",
         "command": command,
     ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
     try writeWorkspaceJSONArtifact([
         "ok": true,
-        "mode": "dry-fixture",
+        "mode": mode,
         "command": command,
     ], to: runDir.appendingPathComponent("evidence/actions/action-000.json"))
     try writeWorkspaceJSONArtifact([
         "status": "failed",
-        "reason": "dry fixture simulates expected screen missing",
+        "reason": "\(mode) simulates expected screen missing",
     ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
     try writeWorkspaceJSONArtifact([
         "failureCode": "expected_screen_missing",
@@ -939,9 +953,10 @@ private func workspaceSkeletonEvents(
     ]
 }
 
-private func workspaceDryDecisionEvents(runID: String, policyAllowed: Bool) -> [TKTestRunEvent] {
+private func workspaceModelDecisionEvents(runID: String, mode: String, policyAllowed: Bool) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
     let command = ["triton", "act", "tap", "Continue", "--json"]
+    let failureMode = mode.replacingOccurrences(of: "-", with: "_")
     if !policyAllowed {
         return [
             .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: 0, command: command, ref: "evidence/model/bootstrap-proposal-000.json"),
@@ -954,7 +969,7 @@ private func workspaceDryDecisionEvents(runID: String, policyAllowed: Bool) -> [
                 stepIndex: 1,
                 failure: TKTestRunFailure(
                     type: "policy_rejected",
-                    message: "Runner allowedActions rejected dry fixture tap candidate.",
+                    message: "Runner allowedActions rejected \(mode) tap candidate.",
                     artifactRefs: ["evidence/model/policy-000.json"]
                 ),
                 phase: "policy_rejected"
@@ -975,7 +990,7 @@ private func workspaceDryDecisionEvents(runID: String, policyAllowed: Bool) -> [
             stepIndex: 1,
             failure: TKTestRunFailure(
                 type: "expected_screen_missing",
-                message: "Dry fixture simulates selector drift after action.",
+                message: "\(mode) simulates selector drift after action.",
                 artifactRefs: ["evidence/model/verify-000.json"]
             ),
             phase: "selector_drift"
@@ -987,8 +1002,8 @@ private func workspaceDryDecisionEvents(runID: String, policyAllowed: Bool) -> [
             timestamp: now,
             stepIndex: 1,
             failure: TKTestRunFailure(
-                type: "dry_fixture_stop",
-                message: "Dry fixture does not execute recovery actions.",
+                type: "\(failureMode)_stop",
+                message: "\(mode) does not execute recovery actions.",
                 artifactRefs: ["evidence/model/recovery-000.json"]
             )
         ),
@@ -1051,6 +1066,9 @@ private func workspaceYAMLList(_ values: [String]) -> String {
 }
 
 private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
+    if ai.providerStatus == "ready" {
+        return "provider_ready"
+    }
     if ai.providerStatus == "partial", ai.vlmProviderStatus == "ready" {
         return "llm_missing"
     }
@@ -1059,7 +1077,7 @@ private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
 
 private func workspaceAtlasDocument(
     for run: TKWorkspaceRunResponse,
-    includeDryTransition: Bool
+    includeModelTransition: Bool
 ) -> [String: Any] {
     let initialObservationRefs = [
         "events.jsonl#observation.captured",
@@ -1067,7 +1085,7 @@ private func workspaceAtlasDocument(
         "evidence/hierarchy/0000.json",
         "evidence/hierarchy/0000-ax.json",
     ]
-    let transitions = includeDryTransition ? [workspaceDryTransition()] : []
+    let transitions = includeModelTransition ? [workspaceModelTransition()] : []
     return [
         "schemaVersion": 1,
         "kind": "triton.workspace.atlas",
@@ -1105,7 +1123,7 @@ private func workspaceAtlasDocument(
     ]
 }
 
-private func workspaceDryTransition() -> [String: Any] {
+private func workspaceModelTransition() -> [String: Any] {
     [
         "transitionId": "transition_0000",
         "fromScreenId": "screen_0000",

@@ -230,17 +230,37 @@ struct WorkspaceRunTests {
         #expect(provider?["providerStatus"] as? String == "ready")
         #expect(provider?["llmProvider"] as? String == "mock")
         #expect(provider?["vlmProvider"] as? String == "mock")
+        let bootstrap = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/bootstrap-000.json"))
+        ) as? [String: Any]
+        #expect(bootstrap?["state"] as? String == "provider_ready")
+        #expect(bootstrap?["proposal"] as? String == "candidate_available")
 
         let parsed = try TKTestRunEventLogParser().parse(
             Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
         )
         #expect(parsed.events.first { $0.type == .providerChecked }?.phase == "ready")
+        let eventTypes = parsed.events.map(\.type.rawValue)
+        #expect(eventTypes.contains("flow.bootstrap.proposed"))
+        #expect(eventTypes.contains("model.decided"))
+        #expect(eventTypes.contains("policy.checked"))
+        #expect(eventTypes.contains("action.executed"))
+        #expect(eventTypes.contains("verify.checked"))
+        #expect(eventTypes.contains("atlas.updated"))
+        #expect(eventTypes.contains("flow.updated"))
+        #expect(eventTypes.last == "run.stopped")
+        let decisionRequest = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
+        ) as? [String: Any]
+        #expect(decisionRequest?["mode"] as? String == "mock-provider")
 
         let inspected = try inspectWorkspaceRun(
             runID: "run-workspace-ai-ready",
             runsDirectory: root.path
         )
         #expect(inspected.latestBootstrap?.phase == "provider_ready")
+        #expect(inspected.latestBootstrapProposal?.command == ["triton", "act", "tap", "Continue", "--json"])
+        #expect(inspected.atlas.transitionCount == 1)
     }
 
     @Test("workspace run records explicit target platform and scope")
@@ -425,6 +445,57 @@ struct WorkspaceRunTests {
         #expect(inspected.latestPause?.phase == "policy_rejected")
     }
 
+    @Test("workspace mock provider loop rejects actions outside runner allowlist")
+    func workspaceMockProviderLoopRejectsActionsOutsideRunnerAllowlist() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let run = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-mock-policy-reject",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Reject mock provider tap",
+            actionPolicy: "explore",
+            llmProvider: "mock",
+            vlmProvider: "mock",
+            allowedActions: ["wait"],
+            stopConditions: ["policy_rejected"]
+        ))
+        #expect(run.status == "paused")
+        #expect(run.nextActions.contains { $0.code == "review_policy_rejection" })
+
+        let runDir = root.appendingPathComponent("run-workspace-mock-policy-reject", isDirectory: true)
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let eventTypes = parsed.events.map(\.type.rawValue)
+
+        #expect(eventTypes.contains("flow.bootstrap.proposed"))
+        #expect(eventTypes.contains("model.decided"))
+        #expect(eventTypes.contains("policy.checked"))
+        #expect(eventTypes.contains("action.executed") == false)
+        #expect(eventTypes.contains("verify.checked") == false)
+        #expect(eventTypes.contains("atlas.updated") == false)
+        #expect(eventTypes.last == "run.paused")
+        #expect(parsed.events.first { $0.type == .policyChecked }?.status == .failed)
+        #expect(parsed.events.last?.phase == "policy_rejected")
+
+        let policy = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/policy-000.json"))
+        ) as? [String: Any]
+        #expect(policy?["allowed"] as? Bool == false)
+        #expect(policy?["stopReason"] as? String == "policy_rejected")
+        #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("atlas/deltas.jsonl").path) == false)
+
+        let inspected = try inspectWorkspaceRun(
+            runID: "run-workspace-mock-policy-reject",
+            runsDirectory: root.path
+        )
+        #expect(inspected.atlas.transitionCount == 0)
+        #expect(inspected.latestPause?.phase == "policy_rejected")
+    }
+
     @Test("workspace export flow writes a seed")
     func workspaceExportFlowWritesASeed() throws {
         let root = temporaryRunsDirectory()
@@ -531,7 +602,7 @@ struct WorkspaceRunTests {
         let inspected = try JSONDecoder().decode(TKWorkspaceInspectResponse.self, from: Data(inspectResult.stdout.utf8))
 
         #expect(inspectResult.exitCode == 0)
-        #expect(inspected.summary.eventCount == 7)
+        #expect(inspected.summary.eventCount == 17)
 
         let output = root.appendingPathComponent("cli-flow.tritonflow.yaml")
         let exportResult = try runWorkspaceCLI([
@@ -585,7 +656,7 @@ struct WorkspaceRunTests {
         #expect(run.runner?.stopConditions == ["provider_missing"])
 
         let inspected = try handleWorkspaceHTTPInspect(runID: "run-workspace-http", runsDir: root.path)
-        #expect(inspected.summary.eventCount == 7)
+        #expect(inspected.summary.eventCount == 17)
 
         let output = root.appendingPathComponent("http-flow.tritonflow.yaml")
         let exported = try handleWorkspaceHTTPExportFlow(

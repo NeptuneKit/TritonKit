@@ -609,17 +609,19 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.paused|run.stopped`，并复用 `TKTestRunEventLogParser` 校验；provider missing / LLM missing / policy rejected 会写 `run.paused`，显式 `workspace stop` 会写 `run.stopped`。
 - policy rejected 会返回 `review_policy_rejection` nextAction，指向调整 runner allowlist、修正 goal 或检查 `evidence/model/policy-000.json`。
 - `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
-- 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；默认不启用，避免把测试夹具伪装成真实 LLM/VLM 或设备动作。
+- 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；它仍是测试夹具，不伪装真实 LLM/VLM 或设备动作。
 - dry fixture 现在也会写 `flow.bootstrap.proposed` 和 `evidence/model/bootstrap-proposal-000.json`，以单步 `triton act tap Continue --json` 表达“稳定出发流程”的候选动作；真正执行仍由后续 policy gate 决定。
-- dry fixture 的模型参与证据现在包含红线 request 与原始 response artifact：`bootstrap-proposal-000-request.redacted.json`、`bootstrap-proposal-000-response.raw.txt`、`decision-000-request.redacted.json`、`decision-000-response.raw.txt`，并由 proposal / decision JSON 的 `artifacts` 字段反链；这只固定 deterministic fixture 契约，真实 provider request/response 仍在后续切片。
+- 模型参与证据现在包含红线 request 与原始 response artifact：`bootstrap-proposal-000-request.redacted.json`、`bootstrap-proposal-000-response.raw.txt`、`decision-000-request.redacted.json`、`decision-000-response.raw.txt`，并由 proposal / decision JSON 的 `artifacts` 字段反链；dry fixture 写 `mode=dry-fixture`，mock provider 写 `mode=mock-provider`，真实 provider request/response 仍在后续切片。
 - 新增显式 LLM/VLM provider preflight：`--llm-provider mock --vlm-provider mock` / HTTP `llmProvider=mock, vlmProvider=mock` 会记录 `providersReady=true`、`providerStatus=ready`、`llmProviderStatus=ready`、`vlmProviderStatus=ready`，并把 `provider.checked` phase 写为 `ready`、`flow.bootstrap.checked` phase 写为 `provider_ready`。
+- `mock` LLM/VLM providers ready 时，`workspace run` 默认进入一轮 deterministic autonomous loop，不需要 `--dry-model-fixture`：写入 `flow.bootstrap.proposed -> model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated`，并把 Atlas transition 与 `export-flow` action step 反链到 model / policy / verify evidence。
+- mock provider loop 同样受 runner allowlist 约束；当候选 `tap` 不在 `allowedActions` 时，run 以 `run.paused phase=policy_rejected` 收尾，返回 `review_policy_rejection`，且不写 action / verify / atlas transition。
 - 只配置 `--vlm-provider mock` 时仍是可审计 partial 状态：`providerStatus=partial`、`llmProviderStatus=missing`、`vlmProviderStatus=ready`，`provider.checked` phase 为 `vlm_ready_llm_missing`，`flow.bootstrap.checked` phase 为 `llm_missing`。
 
 刻意未做：
 
 - 未接真实 target discovery / app launch / screenshot / action execution。
-- 未接真实 LLM provider、真实 VLM request/response、model decision、policy gate 或 recovery proposal。
-- 未生成真实 observation 驱动的 Atlas transition、state variant 合并、coverage path 或 app-map merge；当前 transition 和 action flow step 只来自显式 dry fixture。
+- 未接真实 LLM provider、真实 VLM request/response 或真实 observation 驱动的模型决策。
+- 未生成真实 observation 驱动的 Atlas transition、state variant 合并、coverage path 或 app-map merge；当前 transition 和 action flow step 只来自 deterministic dry fixture / mock provider loop。
 - 未做 Web Workbench 视图。
 
 ### 测试策略
