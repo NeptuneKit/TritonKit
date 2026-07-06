@@ -54,6 +54,48 @@ struct WorkspaceRunTests {
         #expect(inspected.latestBootstrap?.phase == "provider_missing")
     }
 
+    @Test("workspace run records explicit VLM provider preflight")
+    func workspaceRunRecordsExplicitVLMProviderPreflight() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let run = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-vlm-provider",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Explore login",
+            actionPolicy: "explore",
+            vlmProvider: "mock"
+        ))
+
+        #expect(run.ai.providersReady == false)
+        #expect(run.ai.providerStatus == "partial")
+        #expect(run.ai.llmProviderStatus == "missing")
+        #expect(run.ai.vlmProvider == "mock")
+        #expect(run.ai.vlmProviderStatus == "ready")
+        #expect(run.nextActions.contains { $0.code == "configure_llm_provider" })
+
+        let runDir = root.appendingPathComponent("run-workspace-vlm-provider", isDirectory: true)
+        let provider = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/provider-check.json"))
+        ) as? [String: Any]
+        #expect(provider?["providerStatus"] as? String == "partial")
+        #expect(provider?["vlmProvider"] as? String == "mock")
+        #expect(provider?["vlmProviderStatus"] as? String == "ready")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        #expect(parsed.events.first { $0.type == .providerChecked }?.phase == "vlm_ready_llm_missing")
+
+        let inspected = try inspectWorkspaceRun(
+            runID: "run-workspace-vlm-provider",
+            runsDirectory: root.path
+        )
+        #expect(inspected.latestBootstrap?.phase == "llm_missing")
+    }
+
     @Test("workspace stop is idempotent")
     func workspaceStopIsIdempotent() throws {
         let root = temporaryRunsDirectory()
@@ -145,6 +187,7 @@ struct WorkspaceRunTests {
             "--goal", "Explore login",
             "--runs-dir", root.path,
             "--run-id", "run-workspace-cli",
+            "--vlm-provider", "mock",
             "--json",
         ])
         let run = try JSONDecoder().decode(TKWorkspaceRunResponse.self, from: Data(runResult.stdout.utf8))
@@ -153,6 +196,8 @@ struct WorkspaceRunTests {
         #expect(run.runID == "run-workspace-cli")
         #expect(run.ai.llmEnabled)
         #expect(run.ai.vlmEnabled)
+        #expect(run.ai.vlmProvider == "mock")
+        #expect(run.ai.vlmProviderStatus == "ready")
 
         let inspectResult = try runWorkspaceCLI([
             "workspace", "inspect",
@@ -191,13 +236,16 @@ struct WorkspaceRunTests {
             target: "current",
             app: "com.example.demo",
             goal: "HTTP run",
-            actionPolicy: nil
+            actionPolicy: nil,
+            vlmProvider: "mock"
         ))
         let run = try handleWorkspaceHTTPRun(body: runBody)
 
         #expect(run.runID == "run-workspace-http")
         #expect(run.ai.llmEnabled)
         #expect(run.ai.vlmEnabled)
+        #expect(run.ai.vlmProvider == "mock")
+        #expect(run.ai.vlmProviderStatus == "ready")
 
         let inspected = try handleWorkspaceHTTPInspect(runID: "run-workspace-http", runsDir: root.path)
         #expect(inspected.summary.eventCount == 7)

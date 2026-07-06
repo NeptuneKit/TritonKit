@@ -283,7 +283,7 @@ run.started
 target.resolved
 provider.checked
 app.ready
-observe.captured
+observation.captured
 flow.bootstrap.checked
 flow.bootstrap.proposed
 model.decided
@@ -320,7 +320,11 @@ run.stopped
     "llmEnabled": true,
     "vlmEnabled": true,
     "actionPolicy": "explore",
-    "providersReady": true
+    "providersReady": false,
+    "providerStatus": "partial",
+    "llmProviderStatus": "missing",
+    "vlmProvider": "mock",
+    "vlmProviderStatus": "ready"
   },
   "paths": {
     "runDir": ".triton/runs/run_20260706_120000",
@@ -492,6 +496,7 @@ CLI 首批只需要：
 
 ```bash
 triton workspace run --target current --app <app> --goal "<goal>" --json
+triton workspace run --target current --app <app> --goal "<goal>" --vlm-provider mock --json
 triton workspace inspect <run-id> --json
 triton workspace stop <run-id> --json
 triton workspace export-flow <run-id> --output <file> --json
@@ -567,11 +572,12 @@ observe.captured -> model.decided(fake) -> policy.checked -> action.executed(dry
 - `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.stopped`，并复用 `TKTestRunEventLogParser` 校验。
 - `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
 - 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；默认不启用，避免把测试夹具伪装成真实 LLM/VLM 或设备动作。
+- 新增显式 VLM provider preflight：`--vlm-provider mock` / HTTP `vlmProvider=mock` 会记录 `providerStatus=partial`、`llmProviderStatus=missing`、`vlmProviderStatus=ready`，并把 `provider.checked` phase 写为 `vlm_ready_llm_missing`、`flow.bootstrap.checked` phase 写为 `llm_missing`。整体 `providersReady` 仍为 `false`，因为 LLM provider 尚未配置。
 
 刻意未做：
 
 - 未接真实 target discovery / app launch / screenshot / action execution。
-- 未接真实 LLM/VLM provider request/response、model decision、policy gate 或 recovery proposal。
+- 未接真实 LLM provider、真实 VLM request/response、model decision、policy gate 或 recovery proposal。
 - 未生成完整 Atlas screen/state/transition/coverage，只写空 atlas skeleton。
 - 未做 Web Workbench 视图。
 

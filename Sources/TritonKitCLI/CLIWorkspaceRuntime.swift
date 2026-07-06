@@ -9,6 +9,7 @@ struct TKWorkspaceRunRequest {
     let goal: String
     let actionPolicy: String
     let dryModelFixture: Bool
+    let vlmProvider: String?
 
     init(
         runsDirectory: String,
@@ -17,7 +18,8 @@ struct TKWorkspaceRunRequest {
         app: String,
         goal: String,
         actionPolicy: String,
-        dryModelFixture: Bool = false
+        dryModelFixture: Bool = false,
+        vlmProvider: String? = nil
     ) {
         self.runsDirectory = runsDirectory
         self.runID = runID
@@ -26,6 +28,7 @@ struct TKWorkspaceRunRequest {
         self.goal = goal
         self.actionPolicy = actionPolicy
         self.dryModelFixture = dryModelFixture
+        self.vlmProvider = vlmProvider
     }
 }
 
@@ -92,6 +95,9 @@ struct TKWorkspaceRunAI: Codable, Equatable {
     let actionPolicy: String
     let providersReady: Bool
     let providerStatus: String
+    let llmProviderStatus: String?
+    let vlmProvider: String?
+    let vlmProviderStatus: String?
 }
 
 struct TKWorkspaceRunPaths: Codable, Equatable {
@@ -103,6 +109,17 @@ struct TKWorkspaceRunPaths: Codable, Equatable {
 struct TKWorkspaceNextAction: Codable, Equatable {
     let code: String
     let message: String
+}
+
+private struct TKWorkspaceProviderPreflight {
+    let providersReady: Bool
+    let providerStatus: String
+    let llmProviderStatus: String
+    let vlmProvider: String?
+    let vlmProviderStatus: String
+    let providerEventPhase: String
+    let bootstrapPhase: String
+    let nextActions: [TKWorkspaceNextAction]
 }
 
 struct TKWorkspaceInspectResponse: Codable, Equatable {
@@ -140,12 +157,7 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         scope: "current",
         capabilities: ["screenshot", "hierarchy", "input"]
     )
-    let nextActions = [
-        TKWorkspaceNextAction(
-            code: "configure_ai_provider",
-            message: "LLM/VLM are enabled by default; configure a local or approved provider before autonomous actions."
-        ),
-    ]
+    let providerPreflight = try workspaceProviderPreflight(request)
     let response = TKWorkspaceRunResponse(
         runID: runID,
         goal: request.goal,
@@ -156,11 +168,14 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
             llmEnabled: true,
             vlmEnabled: true,
             actionPolicy: request.actionPolicy,
-            providersReady: false,
-            providerStatus: "missing"
+            providersReady: providerPreflight.providersReady,
+            providerStatus: providerPreflight.providerStatus,
+            llmProviderStatus: providerPreflight.llmProviderStatus,
+            vlmProvider: providerPreflight.vlmProvider,
+            vlmProviderStatus: providerPreflight.vlmProviderStatus
         ),
         paths: paths,
-        nextActions: nextActions
+        nextActions: providerPreflight.nextActions
     )
 
     try createWorkspaceRunDirectories(runDir)
@@ -170,13 +185,104 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         try writeWorkspaceDryDecisionArtifacts(runDir: runDir)
     }
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
-    var events = workspaceSkeletonEvents(runID: runID, runDir: runDir)
+    var events = workspaceSkeletonEvents(
+        runID: runID,
+        providerEventPhase: providerPreflight.providerEventPhase,
+        bootstrapPhase: providerPreflight.bootstrapPhase
+    )
     if request.dryModelFixture {
         events.insert(contentsOf: workspaceDryDecisionEvents(runID: runID), at: events.index(before: events.endIndex))
     }
     try writeWorkspaceEvents(events, to: runDir.appendingPathComponent("events.jsonl"))
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("report.json"))
     return response
+}
+
+private func workspaceProviderPreflight(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceProviderPreflight {
+    let llmProviderStatus = "missing"
+    guard let rawVLMProvider = request.vlmProvider?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !rawVLMProvider.isEmpty
+    else {
+        return TKWorkspaceProviderPreflight(
+            providersReady: false,
+            providerStatus: "missing",
+            llmProviderStatus: llmProviderStatus,
+            vlmProvider: nil,
+            vlmProviderStatus: "missing",
+            providerEventPhase: "missing",
+            bootstrapPhase: "provider_missing",
+            nextActions: [
+                TKWorkspaceNextAction(
+                    code: "configure_ai_provider",
+                    message: "LLM/VLM are enabled by default; configure a local or approved provider before autonomous actions."
+                ),
+            ]
+        )
+    }
+
+    let vlmProvider = rawVLMProvider.lowercased()
+    switch vlmProvider {
+    case "mock":
+        _ = try makeVLMProvider(vlmProvider)
+        return TKWorkspaceProviderPreflight(
+            providersReady: false,
+            providerStatus: "partial",
+            llmProviderStatus: llmProviderStatus,
+            vlmProvider: vlmProvider,
+            vlmProviderStatus: "ready",
+            providerEventPhase: "vlm_ready_llm_missing",
+            bootstrapPhase: "llm_missing",
+            nextActions: [
+                TKWorkspaceNextAction(
+                    code: "configure_llm_provider",
+                    message: "VLM provider mock is ready; configure the LLM provider before autonomous actions."
+                ),
+            ]
+        )
+    case "mlx-swift-lm":
+        return TKWorkspaceProviderPreflight(
+            providersReady: false,
+            providerStatus: "missing",
+            llmProviderStatus: llmProviderStatus,
+            vlmProvider: vlmProvider,
+            vlmProviderStatus: "missing_model",
+            providerEventPhase: "vlm_missing_model",
+            bootstrapPhase: "provider_missing",
+            nextActions: [
+                TKWorkspaceNextAction(
+                    code: "configure_vlm_provider",
+                    message: "mlx-swift-lm requires an explicit model or model path before workspace run can use it."
+                ),
+                TKWorkspaceNextAction(
+                    code: "configure_llm_provider",
+                    message: "Configure the LLM provider before autonomous actions."
+                ),
+            ]
+        )
+    case "openai-compatible":
+        return TKWorkspaceProviderPreflight(
+            providersReady: false,
+            providerStatus: "missing",
+            llmProviderStatus: llmProviderStatus,
+            vlmProvider: vlmProvider,
+            vlmProviderStatus: "missing_base_url",
+            providerEventPhase: "vlm_missing_base_url",
+            bootstrapPhase: "provider_missing",
+            nextActions: [
+                TKWorkspaceNextAction(
+                    code: "configure_vlm_provider",
+                    message: "openai-compatible VLM requires an explicit local base URL and remote upload approval when not localhost."
+                ),
+                TKWorkspaceNextAction(
+                    code: "configure_llm_provider",
+                    message: "Configure the LLM provider before autonomous actions."
+                ),
+            ]
+        )
+    default:
+        _ = try makeVLMProvider(vlmProvider)
+        throw RuntimeError("Unsupported workspace VLM provider \(rawVLMProvider)")
+    }
 }
 
 func inspectWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorkspaceInspectResponse {
@@ -281,12 +387,22 @@ private func writeWorkspaceRunArtifacts(_ run: TKWorkspaceRunResponse, runDir: U
         "scope": run.target.scope,
         "capabilities": run.target.capabilities,
     ], to: runDir.appendingPathComponent("evidence/model/target.json"))
-    try writeWorkspaceJSONArtifact([
+    var providerArtifact: [String: Any] = [
         "llmEnabled": run.ai.llmEnabled,
         "vlmEnabled": run.ai.vlmEnabled,
         "providersReady": run.ai.providersReady,
         "providerStatus": run.ai.providerStatus,
-    ], to: runDir.appendingPathComponent("evidence/model/provider-check.json"))
+    ]
+    if let llmProviderStatus = run.ai.llmProviderStatus {
+        providerArtifact["llmProviderStatus"] = llmProviderStatus
+    }
+    if let vlmProvider = run.ai.vlmProvider {
+        providerArtifact["vlmProvider"] = vlmProvider
+    }
+    if let vlmProviderStatus = run.ai.vlmProviderStatus {
+        providerArtifact["vlmProviderStatus"] = vlmProviderStatus
+    }
+    try writeWorkspaceJSONArtifact(providerArtifact, to: runDir.appendingPathComponent("evidence/model/provider-check.json"))
     try writeWorkspaceJSONArtifact([
         "app": run.app,
         "ready": false,
@@ -300,7 +416,7 @@ private func writeWorkspaceRunArtifacts(_ run: TKWorkspaceRunResponse, runDir: U
     try writeWorkspaceJSONArtifact(["nodes": []], to: runDir.appendingPathComponent("evidence/hierarchy/0000.json"))
     try writeWorkspaceJSONArtifact(["ax": []], to: runDir.appendingPathComponent("evidence/hierarchy/0000-ax.json"))
     try writeWorkspaceJSONArtifact([
-        "state": "provider_missing",
+        "state": workspaceBootstrapState(for: run.ai),
         "ready": false,
         "evidenceId": "ev_0000",
         "proposal": "stop",
@@ -353,12 +469,16 @@ private func writeWorkspaceDryDecisionArtifacts(runDir: URL) throws {
     """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
 }
 
-private func workspaceSkeletonEvents(runID: String, runDir: URL) -> [TKTestRunEvent] {
+private func workspaceSkeletonEvents(
+    runID: String,
+    providerEventPhase: String,
+    bootstrapPhase: String
+) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
     return [
         .runStarted(runID: runID, timestamp: now),
         .init(type: .targetResolved, runID: runID, timestamp: now, ref: "evidence/model/target.json"),
-        .init(type: .providerChecked, runID: runID, timestamp: now, ref: "evidence/model/provider-check.json", phase: "missing"),
+        .init(type: .providerChecked, runID: runID, timestamp: now, ref: "evidence/model/provider-check.json", phase: providerEventPhase),
         .init(type: .appReady, runID: runID, timestamp: now, ref: "evidence/actions/app-ready.json", phase: "dry-skeleton"),
         .observationCaptured(
             runID: runID,
@@ -384,7 +504,7 @@ private func workspaceSkeletonEvents(runID: String, runDir: URL) -> [TKTestRunEv
             timestamp: now,
             stepIndex: 0,
             ref: "evidence/model/bootstrap-000.json",
-            phase: "provider_missing"
+            phase: bootstrapPhase
         ),
         .init(type: .runStopped, runID: runID, timestamp: now, status: .stopped, durationMs: 0),
     ]
@@ -448,8 +568,11 @@ private func writeWorkspaceRunConfig(_ run: TKWorkspaceRunResponse, to url: URL)
     let yaml = """
     llm:
       enabled: true
+      providerStatus: \(run.ai.llmProviderStatus ?? "missing")
     vlm:
       enabled: true
+      provider: \(run.ai.vlmProvider ?? "none")
+      providerStatus: \(run.ai.vlmProviderStatus ?? "missing")
     runner:
       actionPolicy: \(run.ai.actionPolicy)
     provider:
@@ -457,6 +580,13 @@ private func writeWorkspaceRunConfig(_ run: TKWorkspaceRunResponse, to url: URL)
 
     """
     try yaml.write(to: url, atomically: true, encoding: .utf8)
+}
+
+private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
+    if ai.providerStatus == "partial", ai.vlmProviderStatus == "ready" {
+        return "llm_missing"
+    }
+    return "provider_missing"
 }
 
 private func writeWorkspaceJSONArtifact(_ value: [String: Any], to url: URL) throws {

@@ -7,7 +7,28 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let app: String
     let goal: String
     let actionPolicy: String?
-    let dryModelFixture: Bool? = nil
+    let vlmProvider: String?
+    let dryModelFixture: Bool?
+
+    init(
+        runsDir: String?,
+        runID: String?,
+        target: String?,
+        app: String,
+        goal: String,
+        actionPolicy: String?,
+        vlmProvider: String? = nil,
+        dryModelFixture: Bool? = nil
+    ) {
+        self.runsDir = runsDir
+        self.runID = runID
+        self.target = target
+        self.app = app
+        self.goal = goal
+        self.actionPolicy = actionPolicy
+        self.vlmProvider = vlmProvider
+        self.dryModelFixture = dryModelFixture
+    }
 
     enum CodingKeys: String, CodingKey {
         case runsDir
@@ -16,6 +37,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case app
         case goal
         case actionPolicy
+        case vlmProvider
         case dryModelFixture
     }
 }
@@ -34,7 +56,8 @@ func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
         app: request.app,
         goal: request.goal,
         actionPolicy: request.actionPolicy ?? "explore",
-        dryModelFixture: request.dryModelFixture ?? false
+        dryModelFixture: request.dryModelFixture ?? false,
+        vlmProvider: request.vlmProvider
     ))
 }
 
