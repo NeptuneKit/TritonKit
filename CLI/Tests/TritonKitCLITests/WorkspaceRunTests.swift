@@ -259,6 +259,36 @@ struct WorkspaceRunTests {
         #expect(yaml.contains("evidenceRef: events.jsonl#app.ready"))
     }
 
+    @Test("workspace export flow includes dry action steps")
+    func workspaceExportFlowIncludesDryActionSteps() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        _ = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-flow-action",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Export action flow",
+            actionPolicy: "explore",
+            dryModelFixture: true
+        ))
+
+        let output = root.appendingPathComponent("action-flow.tritonflow.yaml")
+        let response = try exportWorkspaceFlow(
+            runID: "run-workspace-flow-action",
+            runsDirectory: root.path,
+            output: output.path
+        )
+        let yaml = try String(contentsOf: output, encoding: .utf8)
+
+        #expect(response.stepCount == 4)
+        #expect(yaml.contains("action: tap"))
+        #expect(yaml.contains("target: \"Continue\""))
+        #expect(yaml.contains("evidenceRef: events.jsonl#action.executed"))
+        #expect(yaml.contains("modelEvidenceRef: evidence/model/decision-000.json"))
+    }
+
     @Test("workspace CLI run inspect and export flow")
     func workspaceCLIRunInspectAndExportFlow() throws {
         let root = temporaryRunsDirectory()

@@ -157,6 +157,15 @@ struct TKWorkspaceExportFlowResponse: Codable, Equatable {
     }
 }
 
+private struct TKWorkspaceFlowActionStep {
+    let action: String
+    let target: String
+    let evidenceRef: String
+    let modelEvidenceRef: String?
+    let policyEvidenceRef: String?
+    let verifyEvidenceRef: String?
+}
+
 func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
@@ -413,22 +422,12 @@ func stopWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorkspac
 
 func exportWorkspaceFlow(runID: String, runsDirectory: String, output: String) throws -> TKWorkspaceExportFlowResponse {
     let inspected = try inspectWorkspaceRun(runID: runID, runsDirectory: runsDirectory)
-    let yaml = """
-    schemaVersion: 1
-    kind: triton.workspace.flow
-    runId: \(inspected.run.runID)
-    goal: "\(yamlEscaped(inspected.run.goal))"
-    app: "\(yamlEscaped(inspected.run.app))"
-    steps:
-      - action: launchApp
-        app: "\(yamlEscaped(inspected.run.app))"
-        evidenceRef: events.jsonl#app.ready
-      - action: observe
-        evidenceRef: events.jsonl#observation.captured
-      - action: bootstrapCheck
-        evidenceRef: events.jsonl#flow.bootstrap.checked
-
-    """
+    let runDir = workspaceRunDirectory(runID: inspected.run.runID, runsDirectory: runsDirectory)
+    let parsed = try TKTestRunEventLogParser().parse(
+        Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+    )
+    let actionSteps = workspaceFlowActionSteps(from: parsed.events)
+    let yaml = workspaceFlowYAML(run: inspected.run, actionSteps: actionSteps)
     let outputURL = URL(fileURLWithPath: output)
     try FileManager.default.createDirectory(
         at: outputURL.deletingLastPathComponent(),
@@ -439,8 +438,88 @@ func exportWorkspaceFlow(runID: String, runsDirectory: String, output: String) t
         kind: "triton.workspace.export-flow",
         runID: inspected.run.runID,
         output: outputURL.path,
-        stepCount: 3
+        stepCount: 3 + actionSteps.count
     )
+}
+
+private func workspaceFlowActionSteps(from events: [TKTestRunEvent]) -> [TKWorkspaceFlowActionStep] {
+    events.compactMap { event in
+        guard event.type == .actionExecuted,
+              let command = event.command,
+              command.count >= 4,
+              command[0] == "triton",
+              command[1] == "act"
+        else {
+            return nil
+        }
+        let modelRef = workspaceEventRef(
+            in: events,
+            stepIndex: event.stepIndex,
+            type: .modelDecided
+        )
+        let policyRef = workspaceEventRef(
+            in: events,
+            stepIndex: event.stepIndex,
+            type: .policyChecked
+        )
+        let verifyRef = workspaceEventRef(
+            in: events,
+            stepIndex: event.stepIndex,
+            type: .verifyChecked
+        )
+        return TKWorkspaceFlowActionStep(
+            action: command[2],
+            target: command[3],
+            evidenceRef: "events.jsonl#action.executed",
+            modelEvidenceRef: modelRef,
+            policyEvidenceRef: policyRef,
+            verifyEvidenceRef: verifyRef
+        )
+    }
+}
+
+private func workspaceEventRef(
+    in events: [TKTestRunEvent],
+    stepIndex: Int?,
+    type: TKTestRunEventType
+) -> String? {
+    events.first { $0.type == type && $0.stepIndex == stepIndex }?.ref
+}
+
+private func workspaceFlowYAML(
+    run: TKWorkspaceRunResponse,
+    actionSteps: [TKWorkspaceFlowActionStep]
+) -> String {
+    var lines = [
+        "schemaVersion: 1",
+        "kind: triton.workspace.flow",
+        "runId: \(run.runID)",
+        "goal: \"\(yamlEscaped(run.goal))\"",
+        "app: \"\(yamlEscaped(run.app))\"",
+        "steps:",
+        "  - action: launchApp",
+        "    app: \"\(yamlEscaped(run.app))\"",
+        "    evidenceRef: events.jsonl#app.ready",
+        "  - action: observe",
+        "    evidenceRef: events.jsonl#observation.captured",
+        "  - action: bootstrapCheck",
+        "    evidenceRef: events.jsonl#flow.bootstrap.checked",
+    ]
+    for step in actionSteps {
+        lines.append("  - action: \(step.action)")
+        lines.append("    target: \"\(yamlEscaped(step.target))\"")
+        lines.append("    evidenceRef: \(step.evidenceRef)")
+        if let modelEvidenceRef = step.modelEvidenceRef {
+            lines.append("    modelEvidenceRef: \(modelEvidenceRef)")
+        }
+        if let policyEvidenceRef = step.policyEvidenceRef {
+            lines.append("    policyEvidenceRef: \(policyEvidenceRef)")
+        }
+        if let verifyEvidenceRef = step.verifyEvidenceRef {
+            lines.append("    verifyEvidenceRef: \(verifyEvidenceRef)")
+        }
+    }
+    return lines.joined(separator: "\n") + "\n"
 }
 
 private func createWorkspaceRunDirectories(_ runDir: URL) throws {
