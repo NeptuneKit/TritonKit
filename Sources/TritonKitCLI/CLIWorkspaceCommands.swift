@@ -28,6 +28,8 @@ struct Workspace: ParsableCommand {
         var allowedActions: [String] = []
         @Option(name: .customLong("stop-condition"), help: "Runner stop condition. Repeat for multiple values")
         var stopConditions: [String] = []
+        @Option(name: .customLong("observation-fixture"), help: "Observation fixture JSON used to seed initial screen evidence")
+        var observationFixture: String?
         @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
         var llmProvider: String?
         @Option(name: .customLong("vlm-provider"), help: "VLM provider preflight id, for example mock")
@@ -54,7 +56,8 @@ struct Workspace: ParsableCommand {
                     vlmProvider: vlmProvider,
                     maxSteps: maxSteps,
                     allowedActions: allowedActions,
-                    stopConditions: stopConditions
+                    stopConditions: stopConditions,
+                    observationFixture: observationFixture
                 ))
                 try printWorkspaceRun(response, format: outputFormat)
             } catch {

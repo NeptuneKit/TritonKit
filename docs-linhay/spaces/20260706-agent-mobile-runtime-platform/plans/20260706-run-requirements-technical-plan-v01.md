@@ -602,6 +602,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `workspace run` 支持显式 target metadata：CLI `--platform/--scope` 和 HTTP `platform/scope` 会写入 `target.platform`、`target.scope` 与 `evidence/model/target.json`；未传时仍保留 `unknown/current`，不伪装自动设备发现。
 - `workspace run` 会创建 `.triton/runs/<run-id>/` 兼容目录骨架，写入 `run.json`、`config.yaml`、`events.jsonl`、`report.json`、`atlas/atlas.json` 和首批 evidence placeholder。
 - `atlas/atlas.json` 不再是空壳：默认从初始 `observation.captured` 生成一个 `screen_0000`、一个 `state_0000`、coverage 计数和 screenshot / hierarchy / event evidence backlink。
+- `workspace run` 支持 `--observation-fixture <json>` / HTTP `observationFixture`，消费 `artifacts + screenCandidate + sourceCommands` 形式的观察输入，保留原始 JSON 到 `evidence/observations/0000.json`，并用真实 visibleTexts / hash 生成 `observation.captured` 与 Atlas seed；未传时仍使用 placeholder。
 - `--dry-model-fixture` 会把测试协议里的失败动作写回 Atlas：`atlas/deltas.jsonl` 和 `atlas/atlas.json` 都包含 `transition_0000`，状态为 `candidate_failed`，从 `screen_0000` 回到 `screen_0000`，并引用 model / policy / action / verify evidence。
 - `export-flow` 会从 `action.executed` 事件派生最小 action step；dry fixture 当前可导出 `tap Continue`，并保留 model / policy / verify evidence backlink。
 - `workspace inspect` 会返回 Atlas summary：`atlasRef`、`deltaRef`、`coverageStatus`、`screenCount`、`stateCount`、`transitionCount`，并返回 `latestBootstrap` / `latestBootstrapProposal` / `latestPause`，便于 agent 不打开文件也能判断 map 覆盖、稳定启动建议和暂停原因。
@@ -619,7 +620,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 
 刻意未做：
 
-- 未接真实 target discovery / app launch / screenshot / action execution。
+- 未接真实 target discovery / app launch / screenshot / action execution；当前 observation 可通过 fixture 注入，还不是 live `triton observe` 自动采集。
 - 未接真实 LLM provider、真实 VLM request/response 或真实 observation 驱动的模型决策。
 - 未生成真实 observation 驱动的 Atlas transition、state variant 合并、coverage path 或 app-map merge；当前 transition 和 action flow step 只来自 deterministic dry fixture / mock provider loop。
 - 未做 Web Workbench 视图。

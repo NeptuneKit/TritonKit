@@ -149,11 +149,52 @@ struct WorkspaceRunTests {
         #expect(optionNames.contains("--max-steps"))
         #expect(optionNames.contains("--allowed-action"))
         #expect(optionNames.contains("--stop-condition"))
+        #expect(optionNames.contains("--observation-fixture"))
 
         let run = try #require(schema.subcommands.first { $0.name == "run" })
         #expect(run.optionalOptions.contains("--max-steps"))
         #expect(run.optionalOptions.contains("--allowed-action"))
         #expect(run.optionalOptions.contains("--stop-condition"))
+        #expect(run.optionalOptions.contains("--observation-fixture"))
+    }
+
+    @Test("workspace run seeds atlas from observation fixture")
+    func workspaceRunSeedsAtlasFromObservationFixture() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+
+        _ = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-observation-fixture",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Seed from observation",
+            actionPolicy: "explore",
+            observationFixture: fixture.path
+        ))
+
+        let runDir = root.appendingPathComponent("run-workspace-observation-fixture", isDirectory: true)
+        #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("evidence/observations/0000.json").path))
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let observation = try #require(parsed.events.first { $0.type == .observationCaptured })
+        #expect(observation.artifacts?.screenshot == "fixtures/login.png")
+        #expect(observation.screenCandidate?.screenshotSha256 == "sha-login-screen")
+        #expect(observation.screenCandidate?.visibleTexts == ["Login", "Continue"])
+        #expect(observation.changed == true)
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let screen = (atlas?["screens"] as? [[String: Any]])?.first
+        #expect(screen?["signature"] as? String == "sha-login-screen:ax-login-text:hier-login-tree")
+        #expect(screen?["dominantTexts"] as? [String] == ["Login", "Continue"])
+        let evidenceRefs = screen?["evidenceRefs"] as? [String]
+        #expect(evidenceRefs?.contains("evidence/observations/0000.json") == true)
+        #expect(evidenceRefs?.contains("fixtures/login.png") == true)
     }
 
     @Test("workspace run records explicit VLM provider preflight")
@@ -558,6 +599,7 @@ struct WorkspaceRunTests {
     func workspaceCLIRunInspectAndExportFlow() throws {
         let root = temporaryRunsDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
 
         let runResult = try runWorkspaceCLI([
             "workspace", "run",
@@ -568,6 +610,7 @@ struct WorkspaceRunTests {
             "--goal", "Explore login",
             "--runs-dir", root.path,
             "--run-id", "run-workspace-cli",
+            "--observation-fixture", fixture.path,
             "--llm-provider", "mock",
             "--vlm-provider", "mock",
             "--max-steps", "5",
@@ -603,6 +646,11 @@ struct WorkspaceRunTests {
 
         #expect(inspectResult.exitCode == 0)
         #expect(inspected.summary.eventCount == 17)
+        let runDir = root.appendingPathComponent("run-workspace-cli", isDirectory: true)
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        #expect(parsed.events.first { $0.type == .observationCaptured }?.screenCandidate?.visibleTexts == ["Login", "Continue"])
 
         let output = root.appendingPathComponent("cli-flow.tritonflow.yaml")
         let exportResult = try runWorkspaceCLI([
@@ -623,6 +671,7 @@ struct WorkspaceRunTests {
     func workspaceHTTPHandlersShareTheRunRuntime() throws {
         let root = temporaryRunsDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
 
         let runBody = try JSONEncoder().encode(TKWorkspaceHTTPRunRequest(
             runsDir: root.path,
@@ -637,7 +686,8 @@ struct WorkspaceRunTests {
             vlmProvider: "mock",
             maxSteps: 4,
             allowedActions: ["tap"],
-            stopConditions: ["provider_missing"]
+            stopConditions: ["provider_missing"],
+            observationFixture: fixture.path
         ))
         let run = try handleWorkspaceHTTPRun(body: runBody)
 
@@ -657,6 +707,12 @@ struct WorkspaceRunTests {
 
         let inspected = try handleWorkspaceHTTPInspect(runID: "run-workspace-http", runsDir: root.path)
         #expect(inspected.summary.eventCount == 17)
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: root
+                .appendingPathComponent("run-workspace-http", isDirectory: true)
+                .appendingPathComponent("events.jsonl"))
+        )
+        #expect(parsed.events.first { $0.type == .observationCaptured }?.screenCandidate?.visibleTexts == ["Login", "Continue"])
 
         let output = root.appendingPathComponent("http-flow.tritonflow.yaml")
         let exported = try handleWorkspaceHTTPExportFlow(
@@ -674,6 +730,31 @@ struct WorkspaceRunTests {
     private func temporaryRunsDirectory() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("triton-workspace-runs-\(UUID().uuidString)", isDirectory: true)
+    }
+
+    private func writeObservationFixture(in root: URL) throws -> URL {
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let fixture = root.appendingPathComponent("observation-fixture.json")
+        try """
+        {
+          "schemaVersion": 1,
+          "kind": "triton.workspace.observation-fixture",
+          "artifacts": {
+            "screenshot": "fixtures/login.png",
+            "ax": "fixtures/login-ax.json",
+            "hierarchy": "fixtures/login-hierarchy.json"
+          },
+          "screenCandidate": {
+            "screenshotSha256": "sha-login-screen",
+            "axTextHash": "ax-login-text",
+            "hierarchySha256": "hier-login-tree",
+            "visibleTexts": ["Login", "Continue"]
+          },
+          "sourceCommands": ["triton observe current --json"],
+          "changed": true
+        }
+        """.write(to: fixture, atomically: true, encoding: .utf8)
+        return fixture
     }
 
     private func runWorkspaceCLI(_ arguments: [String]) throws -> WorkspaceCLIRunResult {

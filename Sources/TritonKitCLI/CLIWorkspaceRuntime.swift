@@ -16,6 +16,7 @@ struct TKWorkspaceRunRequest {
     let maxSteps: Int?
     let allowedActions: [String]
     let stopConditions: [String]
+    let observationFixture: String?
 
     init(
         runsDirectory: String,
@@ -31,7 +32,8 @@ struct TKWorkspaceRunRequest {
         vlmProvider: String? = nil,
         maxSteps: Int? = nil,
         allowedActions: [String] = [],
-        stopConditions: [String] = []
+        stopConditions: [String] = [],
+        observationFixture: String? = nil
     ) {
         self.runsDirectory = runsDirectory
         self.runID = runID
@@ -47,6 +49,7 @@ struct TKWorkspaceRunRequest {
         self.maxSteps = maxSteps
         self.allowedActions = allowedActions
         self.stopConditions = stopConditions
+        self.observationFixture = observationFixture
     }
 }
 
@@ -169,6 +172,24 @@ private struct TKWorkspaceRunFinalState {
     let phase: String?
 }
 
+private struct TKWorkspaceObservationFixture: Codable {
+    let schemaVersion: Int?
+    let kind: String?
+    let artifacts: TKTestRunObservationArtifacts
+    let screenCandidate: TKTestRunScreenCandidate
+    let sourceCommands: [String]?
+    let changed: Bool?
+}
+
+private struct TKWorkspaceObservationSeed {
+    let fixturePath: String?
+    let fixtureRef: String?
+    let artifacts: TKTestRunObservationArtifacts
+    let screenCandidate: TKTestRunScreenCandidate
+    let sourceCommands: [String]
+    let changed: Bool?
+}
+
 private let defaultWorkspaceRunnerMaxSteps = 20
 private let defaultWorkspaceRunnerAllowedActions = ["tap", "swipe", "type", "wait", "verify", "stop"]
 private let defaultWorkspaceRunnerStopConditions = [
@@ -238,6 +259,7 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     )
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
+    let observationSeed = try workspaceObservationSeed(fixturePath: request.observationFixture)
     let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
     let modelLoopMode = request.dryModelFixture ? "dry-fixture" : "mock-provider"
     let modelDecisionAllowed = modelLoopEnabled
@@ -279,6 +301,7 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     try writeWorkspaceRunArtifacts(
         response,
         runDir: runDir,
+        observation: observationSeed,
         includeModelTransition: modelLoopEnabled && modelDecisionAllowed
     )
     if modelLoopEnabled {
@@ -294,6 +317,7 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         runID: runID,
         providerEventPhase: providerPreflight.providerEventPhase,
         bootstrapPhase: providerPreflight.bootstrapPhase,
+        observation: observationSeed,
         finalState: finalState
     )
     if modelLoopEnabled {
@@ -551,6 +575,43 @@ private func workspaceTargetMetadata(platform: String?, scope: String?) -> (plat
     )
 }
 
+private func workspaceObservationSeed(fixturePath: String?) throws -> TKWorkspaceObservationSeed {
+    guard let rawPath = fixturePath?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !rawPath.isEmpty
+    else {
+        return TKWorkspaceObservationSeed(
+            fixturePath: nil,
+            fixtureRef: nil,
+            artifacts: TKTestRunObservationArtifacts(
+                screenshot: "evidence/screenshots/0000.txt",
+                ax: "evidence/hierarchy/0000-ax.json",
+                hierarchy: "evidence/hierarchy/0000.json"
+            ),
+            screenCandidate: TKTestRunScreenCandidate(
+                screenshotSha256: "placeholder-screenshot",
+                axTextHash: "placeholder-ax",
+                hierarchySha256: "placeholder-hierarchy",
+                visibleTexts: []
+            ),
+            sourceCommands: [],
+            changed: false
+        )
+    }
+
+    let fixture = try JSONDecoder().decode(
+        TKWorkspaceObservationFixture.self,
+        from: Data(contentsOf: URL(fileURLWithPath: rawPath))
+    )
+    return TKWorkspaceObservationSeed(
+        fixturePath: rawPath,
+        fixtureRef: "evidence/observations/0000.json",
+        artifacts: fixture.artifacts,
+        screenCandidate: fixture.screenCandidate,
+        sourceCommands: fixture.sourceCommands ?? [],
+        changed: fixture.changed
+    )
+}
+
 private func normalizedWorkspaceTargetValue(_ raw: String?, defaultValue: String) -> String {
     let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
     return value.isEmpty ? defaultValue : value
@@ -733,6 +794,7 @@ private func workspaceAtlasSummary(runDir: URL) throws -> TKWorkspaceAtlasSummar
 private func createWorkspaceRunDirectories(_ runDir: URL) throws {
     for relativePath in [
         "",
+        "evidence/observations",
         "evidence/screenshots",
         "evidence/hierarchy",
         "evidence/model",
@@ -749,6 +811,7 @@ private func createWorkspaceRunDirectories(_ runDir: URL) throws {
 private func writeWorkspaceRunArtifacts(
     _ run: TKWorkspaceRunResponse,
     runDir: URL,
+    observation: TKWorkspaceObservationSeed,
     includeModelTransition: Bool
 ) throws {
     try writeWorkspaceJSONArtifact([
@@ -788,6 +851,16 @@ private func writeWorkspaceRunArtifacts(
     )
     try writeWorkspaceJSONArtifact(["nodes": []], to: runDir.appendingPathComponent("evidence/hierarchy/0000.json"))
     try writeWorkspaceJSONArtifact(["ax": []], to: runDir.appendingPathComponent("evidence/hierarchy/0000-ax.json"))
+    if let fixturePath = observation.fixturePath {
+        let observationURL = runDir.appendingPathComponent("evidence/observations/0000.json")
+        if FileManager.default.fileExists(atPath: observationURL.path) {
+            try FileManager.default.removeItem(at: observationURL)
+        }
+        try FileManager.default.copyItem(
+            at: URL(fileURLWithPath: fixturePath),
+            to: observationURL
+        )
+    }
     try writeWorkspaceJSONArtifact([
         "state": workspaceBootstrapState(for: run.ai),
         "ready": false,
@@ -795,7 +868,7 @@ private func writeWorkspaceRunArtifacts(
         "proposal": run.ai.providersReady ? "candidate_available" : "stop",
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-000.json"))
     try writeWorkspaceJSONArtifact(
-        workspaceAtlasDocument(for: run, includeModelTransition: includeModelTransition),
+        workspaceAtlasDocument(for: run, observation: observation, includeModelTransition: includeModelTransition),
         to: runDir.appendingPathComponent("atlas/atlas.json")
     )
 }
@@ -908,6 +981,7 @@ private func workspaceSkeletonEvents(
     runID: String,
     providerEventPhase: String,
     bootstrapPhase: String,
+    observation: TKWorkspaceObservationSeed,
     finalState: TKWorkspaceRunFinalState
 ) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
@@ -920,18 +994,9 @@ private func workspaceSkeletonEvents(
             runID: runID,
             stepIndex: 0,
             phase: "initial",
-            artifacts: TKTestRunObservationArtifacts(
-                screenshot: "evidence/screenshots/0000.txt",
-                ax: "evidence/hierarchy/0000-ax.json",
-                hierarchy: "evidence/hierarchy/0000.json"
-            ),
-            screenCandidate: TKTestRunScreenCandidate(
-                screenshotSha256: "placeholder-screenshot",
-                axTextHash: "placeholder-ax",
-                hierarchySha256: "placeholder-hierarchy",
-                visibleTexts: []
-            ),
-            changed: false,
+            artifacts: observation.artifacts,
+            screenCandidate: observation.screenCandidate,
+            changed: observation.changed,
             timestamp: now
         ),
         .init(
@@ -1077,15 +1142,22 @@ private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
 
 private func workspaceAtlasDocument(
     for run: TKWorkspaceRunResponse,
+    observation: TKWorkspaceObservationSeed,
     includeModelTransition: Bool
 ) -> [String: Any] {
-    let initialObservationRefs = [
+    let initialObservationRefs = ([
         "events.jsonl#observation.captured",
-        "evidence/screenshots/0000.txt",
-        "evidence/hierarchy/0000.json",
-        "evidence/hierarchy/0000-ax.json",
-    ]
+        observation.fixtureRef,
+        observation.artifacts.screenshot,
+        observation.artifacts.hierarchy,
+        observation.artifacts.ax,
+    ] as [String?]).compactMap { $0 }
     let transitions = includeModelTransition ? [workspaceModelTransition()] : []
+    let signature = [
+        observation.screenCandidate.screenshotSha256,
+        observation.screenCandidate.axTextHash,
+        observation.screenCandidate.hierarchySha256,
+    ].joined(separator: ":")
     return [
         "schemaVersion": 1,
         "kind": "triton.workspace.atlas",
@@ -1099,8 +1171,8 @@ private func workspaceAtlasDocument(
             [
                 "screenId": "screen_0000",
                 "stateId": "state_0000",
-                "signature": "placeholder-screenshot:placeholder-ax:placeholder-hierarchy",
-                "dominantTexts": [],
+                "signature": signature,
+                "dominantTexts": observation.screenCandidate.visibleTexts,
                 "semanticTags": [],
                 "evidenceRefs": initialObservationRefs,
             ],
