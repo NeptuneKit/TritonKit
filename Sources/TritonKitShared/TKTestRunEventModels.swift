@@ -5,6 +5,7 @@ public enum TKTestRunStatus: String, Codable, Equatable, Sendable {
     case passed
     case failed
     case blocked
+    case stopped
 }
 
 public struct TKTestRunMetadata: Codable, Equatable, Sendable {
@@ -75,6 +76,9 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
     }
 
     public static let runStarted = Self(rawValue: "run.started")
+    public static let targetResolved = Self(rawValue: "target.resolved")
+    public static let providerChecked = Self(rawValue: "provider.checked")
+    public static let appReady = Self(rawValue: "app.ready")
     public static let stepStarted = Self(rawValue: "step.started")
     public static let commandExecuted = Self(rawValue: "command.executed")
     public static let artifactCreated = Self(rawValue: "artifact.created")
@@ -89,6 +93,7 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
     public static let flowRecoveryRejected = Self(rawValue: "flow.recovery.rejected")
     public static let stepFinished = Self(rawValue: "step.finished")
     public static let runFinished = Self(rawValue: "run.finished")
+    public static let runStopped = Self(rawValue: "run.stopped")
     public static let failureRecorded = Self(rawValue: "failure.recorded")
 
     public var isKnown: Bool {
@@ -97,6 +102,9 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
 
     public static let knownValues: Set<String> = [
         "run.started",
+        "target.resolved",
+        "provider.checked",
+        "app.ready",
         "step.started",
         "command.executed",
         "artifact.created",
@@ -111,6 +119,7 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
         "flow.recovery.rejected",
         "step.finished",
         "run.finished",
+        "run.stopped",
         "failure.recorded",
     ]
 }
@@ -544,7 +553,7 @@ public struct TKTestRunEventLogParser: Sendable {
             events.append(event)
         }
 
-        let runFinished = events.last { $0.type == .runFinished }
+        let runFinished = events.last { $0.type == .runFinished || $0.type == .runStopped }
         let stepIndexes = Set(events.compactMap(\.stepIndex))
         let summary = TKTestRunEventSummary(
             runID: events.first?.runID,
@@ -588,6 +597,14 @@ public struct TKTestRunEventLogParser: Sendable {
         switch event.type {
         case .runStarted:
             break
+        case .targetResolved:
+            try require(event.ref, "ref", lineNumber)
+        case .providerChecked:
+            try require(event.phase, "phase", lineNumber)
+            try require(event.ref, "ref", lineNumber)
+        case .appReady:
+            try require(event.phase, "phase", lineNumber)
+            try require(event.ref, "ref", lineNumber)
         case .stepStarted:
             try require(event.stepIndex, "stepIndex", lineNumber)
             try require(event.stepID, "stepId", lineNumber)
@@ -652,6 +669,9 @@ public struct TKTestRunEventLogParser: Sendable {
             try require(event.status, "status", lineNumber)
             try require(event.durationMs, "durationMs", lineNumber)
         case .runFinished:
+            try require(event.status, "status", lineNumber)
+            try require(event.durationMs, "durationMs", lineNumber)
+        case .runStopped:
             try require(event.status, "status", lineNumber)
             try require(event.durationMs, "durationMs", lineNumber)
         case .failureRecorded:

@@ -556,6 +556,24 @@ observe.captured -> model.decided(fake) -> policy.checked -> action.executed(dry
 
 这比先做 Atlas/DSL/UI 都便宜，而且会逼所有后续能力复用同一事实流。
 
+### 第一刀落地状态（2026-07-07）
+
+已落地最小本地 Run 事实流：
+
+- 新增 `triton workspace run|inspect|stop|export-flow` CLI 入口，并在 `triton schema --command workspace --json` 中暴露命令契约。
+- 新增同构 HTTP handler：`POST /workspace/run`、`GET /workspace/runs/:runId`、`POST /workspace/runs/:runId/stop`、`POST /workspace/runs/:runId/export-flow`。
+- `workspace run` 会创建 `.triton/runs/<run-id>/` 兼容目录骨架，写入 `run.json`、`config.yaml`、`events.jsonl`、`report.json`、`atlas/atlas.json` 和首批 evidence placeholder。
+- 默认写入 `llmEnabled=true`、`vlmEnabled=true`、`providersReady=false` 与 `configure_ai_provider` nextAction；当前不伪装真实模型或设备已执行。
+- `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.stopped`，并复用 `TKTestRunEventLogParser` 校验。
+- `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
+
+刻意未做：
+
+- 未接真实 target discovery / app launch / screenshot / action execution。
+- 未接真实 LLM/VLM provider request/response、model decision、policy gate 或 recovery proposal。
+- 未生成完整 Atlas screen/state/transition/coverage，只写空 atlas skeleton。
+- 未做 Web Workbench 视图。
+
 ### 测试策略
 
 文档落地后，代码实现按最小测试走：

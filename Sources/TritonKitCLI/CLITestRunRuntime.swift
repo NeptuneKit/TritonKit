@@ -1494,7 +1494,7 @@ private func testRunEvidenceVerdict(_ status: TKTestRunStatus) -> TKEvidenceRunV
         return .success
     case .blocked:
         return .blocked
-    case .failed, .running:
+    case .failed, .running, .stopped:
         return .failure
     }
 }

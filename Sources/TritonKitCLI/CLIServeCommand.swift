@@ -119,6 +119,60 @@ struct Serve: AsyncParsableCommand {
             return jsonResponse(makeWebTargetRegistry(runtimeTargets: runtimeTargets, hostTargets: hostTargets))
         }
 
+        router.post("/workspace/run") { request, _ -> Response in
+            let endpoint = "/workspace/run"
+            do {
+                return jsonResponse(try handleWorkspaceHTTPRun(body: try await requestBodyData(from: request)))
+            } catch {
+                return workspaceHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.get("/workspace/runs/:runId") { request, _ -> Response in
+            let endpoint = "/workspace/runs/:runId"
+            guard let runID = workspaceHTTPRunID(from: request, terminalComponent: nil) else {
+                return workspaceHTTPInvalidRunID(endpoint: endpoint)
+            }
+            do {
+                return jsonResponse(try handleWorkspaceHTTPInspect(
+                    runID: runID,
+                    runsDir: queryParameter("runsDir", from: request) ?? queryParameter("runs-dir", from: request)
+                ))
+            } catch {
+                return workspaceHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/workspace/runs/:runId/stop") { request, _ -> Response in
+            let endpoint = "/workspace/runs/:runId/stop"
+            guard let runID = workspaceHTTPRunID(from: request, terminalComponent: "stop") else {
+                return workspaceHTTPInvalidRunID(endpoint: endpoint)
+            }
+            do {
+                return jsonResponse(try handleWorkspaceHTTPStop(
+                    runID: runID,
+                    runsDir: queryParameter("runsDir", from: request) ?? queryParameter("runs-dir", from: request)
+                ))
+            } catch {
+                return workspaceHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
+        router.post("/workspace/runs/:runId/export-flow") { request, _ -> Response in
+            let endpoint = "/workspace/runs/:runId/export-flow"
+            guard let runID = workspaceHTTPRunID(from: request, terminalComponent: "export-flow") else {
+                return workspaceHTTPInvalidRunID(endpoint: endpoint)
+            }
+            do {
+                return jsonResponse(try handleWorkspaceHTTPExportFlow(
+                    runID: runID,
+                    body: try await requestBodyData(from: request)
+                ))
+            } catch {
+                return workspaceHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
         router.get("/v1/app-map/inspect") { request, _ -> Response in
             guard let map = queryParameter("map", from: request) else {
                 return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/inspect")
@@ -1161,6 +1215,47 @@ private struct TKAppMapSuiteRunHTTPRequest: Decodable {
 
 private func queryParameter(_ name: String, from request: Request) -> String? {
     request.uri.queryParameters[Substring(name)].map(String.init)?.removingPercentEncoding
+}
+
+private func workspaceHTTPRunID(from request: Request, terminalComponent: String?) -> String? {
+    let components = request.uri.path
+        .split(separator: "/", omittingEmptySubsequences: true)
+        .map(String.init)
+    if let terminalComponent {
+        guard components.count == 4,
+              components[0] == "workspace",
+              components[1] == "runs",
+              components[3] == terminalComponent else {
+            return nil
+        }
+    } else {
+        guard components.count == 3,
+              components[0] == "workspace",
+              components[1] == "runs" else {
+            return nil
+        }
+    }
+    return components[2].removingPercentEncoding
+}
+
+private func workspaceHTTPInvalidRunID(endpoint: String) -> Response {
+    jsonError(
+        code: "invalid_payload",
+        message: "Missing or invalid workspace run id",
+        endpoint: endpoint,
+        hint: "Use /workspace/runs/<run-id>.",
+        status: .badRequest
+    )
+}
+
+private func workspaceHTTPErrorResponse(_ error: Error, endpoint: String) -> Response {
+    jsonError(
+        code: "workspace_failed",
+        message: "\(error)",
+        endpoint: endpoint,
+        hint: "Run `triton schema --command workspace --json` to inspect workspace contracts.",
+        status: .conflict
+    )
 }
 
 private func requestBodyData(from request: Request) async throws -> Data {

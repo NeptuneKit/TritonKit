@@ -98,6 +98,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             Doctor.self,
             Capabilities.self,
             Schema.self,
+            Workspace.self,
             TestCommand.self,
             TestRecorderCommand.self,
             Update.self,
