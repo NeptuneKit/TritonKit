@@ -317,6 +317,7 @@ struct WorkspaceRunTests {
         let eventTypes = parsed.events.map(\.type.rawValue)
 
         #expect(eventTypes.contains("model.decided"))
+        #expect(eventTypes.contains("flow.bootstrap.proposed"))
         #expect(eventTypes.contains("policy.checked"))
         #expect(eventTypes.contains("action.executed"))
         #expect(eventTypes.contains("verify.checked"))
@@ -352,6 +353,7 @@ struct WorkspaceRunTests {
         #expect(inspected.atlas.stateCount == 1)
         #expect(inspected.atlas.transitionCount == 1)
         #expect(inspected.atlas.deltaRef == "atlas/deltas.jsonl")
+        #expect(inspected.latestBootstrapProposal?.command == ["triton", "act", "tap", "Continue", "--json"])
     }
 
     @Test("workspace dry fixture policy rejects actions outside runner allowlist")

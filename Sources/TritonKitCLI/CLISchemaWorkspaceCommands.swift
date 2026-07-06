@@ -49,7 +49,7 @@ func workspaceCommandSchemas() -> [TKCommandSchema] {
                 "triton workspace export-flow run_123 --output flow.tritonflow.yaml --json",
             ],
             successShape: "run emits triton.workspace.run; inspect/stop emit triton.workspace.inspect; export-flow emits triton.workspace.export-flow",
-            outputSemantics: "workspace run is the local Run entry. It writes .triton/runs/<run-id>/run.json, config.yaml, events.jsonl, report.json, evidence placeholders, atlas/atlas.json, runner bounds, default llm/vlm enabled state, provider preflight nextActions, policy rejection nextActions, and flow.bootstrap.checked. workspace inspect returns run status, event summary, latest bootstrap, latest pause, and Atlas coverage summary. It does not claim a real device action or model decision until providers and target execution are wired.",
+            outputSemantics: "workspace run is the local Run entry. It writes .triton/runs/<run-id>/run.json, config.yaml, events.jsonl, report.json, evidence placeholders, atlas/atlas.json, runner bounds, default llm/vlm enabled state, provider preflight nextActions, policy rejection nextActions, flow.bootstrap.checked, and dry flow.bootstrap.proposed when dry-model fixture is enabled. workspace inspect returns run status, event summary, latest bootstrap, latest bootstrap proposal, latest pause, and Atlas coverage summary. It does not claim a real device action or model decision until providers and target execution are wired.",
             jsonlEvents: [
                 "run.started",
                 "target.resolved",

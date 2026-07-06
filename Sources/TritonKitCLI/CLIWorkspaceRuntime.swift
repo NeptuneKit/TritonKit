@@ -185,6 +185,7 @@ struct TKWorkspaceInspectResponse: Codable, Equatable {
     let summary: TKTestRunEventSummary
     let atlas: TKWorkspaceAtlasSummary
     let latestBootstrap: TKTestRunEvent?
+    let latestBootstrapProposal: TKTestRunEvent?
     let latestPause: TKTestRunEvent?
 }
 
@@ -558,6 +559,7 @@ func inspectWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorks
         summary: parsed.summary,
         atlas: try workspaceAtlasSummary(runDir: runDir),
         latestBootstrap: parsed.events.last { $0.type == .flowBootstrapChecked },
+        latestBootstrapProposal: parsed.events.last { $0.type == .flowBootstrapProposed },
         latestPause: parsed.events.last { $0.type == .runPaused }
     )
 }
@@ -792,6 +794,13 @@ private func writeWorkspaceDryDecisionArtifacts(
 ) throws {
     let command = ["triton", "act", "tap", "Continue", "--json"]
     try writeWorkspaceJSONArtifact([
+        "summary": "Dry fixture proposes a single bootstrap action.",
+        "command": command,
+        "confidence": 0.5,
+        "evidenceId": "ev_0000",
+        "expected": "Continue advances the initial screen.",
+    ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000.json"))
+    try writeWorkspaceJSONArtifact([
         "summary": "Dry fixture selected a single tap candidate.",
         "command": command,
         "confidence": 0.5,
@@ -900,6 +909,7 @@ private func workspaceDryDecisionEvents(runID: String, policyAllowed: Bool) -> [
     let command = ["triton", "act", "tap", "Continue", "--json"]
     if !policyAllowed {
         return [
+            .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: 0, command: command, ref: "evidence/model/bootstrap-proposal-000.json"),
             .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
             .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .failed, ref: "evidence/model/policy-000.json"),
             .init(
@@ -918,6 +928,7 @@ private func workspaceDryDecisionEvents(runID: String, policyAllowed: Bool) -> [
         ]
     }
     return [
+        .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: 0, command: command, ref: "evidence/model/bootstrap-proposal-000.json"),
         .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
         .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, ref: "evidence/model/policy-000.json"),
         .init(type: .actionExecuted, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, exitCode: 0),
