@@ -3520,7 +3520,7 @@ struct DeviceCrossPlatformTests {
         let hdc = directory.appendingPathComponent("hdc").path
         let script = """
         #!/bin/sh
-        printf '%s\\n' '[Info]App install path:/tmp/Demo.hap msg:error: failed to install bundle. code:9568332 error: install sign info inconsistent.'
+        printf '%s\\n' '[Info]App install path:/tmp/Demo.hap msg:error: failed to install bundle. code:9568320 error: no signature file.'
         printf '%s\\n' 'AppMod finish'
         exit 0
         """
@@ -3539,7 +3539,8 @@ struct DeviceCrossPlatformTests {
         } catch HostCommandRunError.nonZeroExit(_, let result) {
             #expect(result.exitCode == 0)
             #expect(result.stdout.contains("failed to install bundle"))
-            #expect(result.stdout.contains("code:9568332"))
+            #expect(result.stdout.contains("code:9568320"))
+            #expect(result.stdout.contains("no signature file"))
         }
     }
 

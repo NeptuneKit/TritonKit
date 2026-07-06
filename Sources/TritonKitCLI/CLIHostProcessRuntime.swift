@@ -750,8 +750,8 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             code = "runtime_list_failed"
             hint = "Verify simctl can list installed simulator runtimes on this machine."
         } else if isHDC && command.arguments.contains("install") {
-            code = "app_install_failed"
-            hint = "Verify the Harmony target is Connected and --hap points to a debug-signed HAP."
+            code = "harmony_app_install_failed"
+            hint = "Verify the Harmony target is Connected and --hap or --app points to a signed Harmony artifact."
         } else if isHDC && command.arguments.contains("aa") && command.arguments.contains("start") && command.arguments.contains("-U") {
             code = "host_open_url_failed"
             hint = "Verify the Harmony bundle, ability, target, and deep link URL."
