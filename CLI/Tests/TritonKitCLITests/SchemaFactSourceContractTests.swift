@@ -29,7 +29,7 @@ extension SchemaFactSourceTests {
 
     @Test("schema examples do not recommend retired root commands")
     func schemaExamplesDoNotRecommendRetiredRootCommands() {
-        let retiredRoots: Set<String> = ["state", "runtime", "snapshot", "hierarchy", "nodes", "node", "attrs", "object", "geometry", "ax", "hit", "ledger"]
+        let retiredRoots: Set<String> = ["state", "runtime", "snapshot", "hierarchy", "nodes", "attrs", "object", "geometry", "ax", "hit", "ledger"]
         let invalidExamples = commandSchemas()
             .flatMap { schema in schema.examples.map { (schema.name, $0) } }
             .compactMap { schemaName, example -> String? in
@@ -72,7 +72,7 @@ extension SchemaFactSourceTests {
         let retiredRoots: Set<String> = [
             "find", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "input",
             "assert", "capture",
-            "runtime", "state", "snapshot", "hierarchy", "nodes", "node", "attrs", "object", "geometry", "ax", "hit", "ledger",
+            "runtime", "state", "snapshot", "hierarchy", "nodes", "attrs", "object", "geometry", "ax", "hit", "ledger",
         ]
         let stillExposedRetiredRoots = retiredRoots.intersection(Set(schemas.keys)).sorted()
         #expect(stillExposedRetiredRoots == [])

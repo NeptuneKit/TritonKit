@@ -18,6 +18,7 @@ extension SchemaFactSourceTests {
         #expect(act.failureCodes.contains("text_not_found"))
         #expect(act.failureCodes.contains("validation_failed"))
         #expect(act.failureCodes.contains("semantic_action_failed"))
+        #expect(act.failureCodes.contains("ios_host_ax_action_unavailable"))
         #expect(act.subcommands.map(\.name).contains("find"))
         #expect(act.subcommands.map(\.name).contains("tap"))
         #expect(act.subcommands.map(\.name).contains("type"))
@@ -32,6 +33,10 @@ extension SchemaFactSourceTests {
         ])
         expectContract(act, selector: "input.summary", fields: [
             "ok", "actionCount", "failedCount",
+        ])
+        expectContract(act, selector: "host.ios-tap", fields: [
+            "ok", "action", "platform", "target", "query", "x", "y", "match",
+            "sourceCommands", "note",
         ])
         expectContract(act, selector: "host.harmony-tap", fields: [
             "ok", "action", "platform", "target", "query", "x", "y", "match",
@@ -166,6 +171,9 @@ extension SchemaFactSourceTests {
 
         #expect(observe.failureCodes.contains("target_not_found"))
         #expect(observe.failureCodes.contains("host_command_failed"))
+        #expect(observe.failureCodes.contains("ios_host_ax_unavailable"))
+        #expect(observe.failureCodes.contains("ios_host_ax_tree_unavailable"))
+        #expect(observe.providedCapabilities.contains("observe-ios-host-ax"))
         #expect(observe.nextCommands.contains("triton webview current --json"))
         expectContract(observe, selector: "observe.surface", fields: [
             "ok", "action", "platform", "capturedAt", "partial", "target", "primarySource",
@@ -260,6 +268,7 @@ extension SchemaFactSourceTests {
 
         #expect(sim.failureCodes.contains("simulator_not_found"))
         #expect(sim.failureCodes.contains("host_command_failed"))
+        #expect(sim.providedCapabilities.contains("ios-host-ax"))
         #expect(sim.artifacts.contains("simulator-screenshot"))
         #expect(sim.nextCommands.contains("triton sim use <udid> --json"))
         expectContract(sim, selector: "host.simulator-list", fields: [

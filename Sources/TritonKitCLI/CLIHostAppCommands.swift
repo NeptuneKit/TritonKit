@@ -681,6 +681,13 @@ struct HostAppInspect: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             switch platform {
+            case .ios:
+                try failHostValidation(
+                    code: "unsupported_host_action",
+                    message: "app inspect --platform ios is not supported by the current host app adapter.",
+                    hint: "Use `triton app info --bundle-id <id> --json` for installed iOS Simulator app metadata.",
+                    outputFormat: outputFormat
+                )
             case .android:
                 let selection = try resolveHostDeviceSelection(
                     request: HostDeviceSelectionRequest(

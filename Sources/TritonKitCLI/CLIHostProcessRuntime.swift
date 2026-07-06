@@ -435,6 +435,8 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
     switch error {
     case _ as ValidationError:
         detail = hostValidationErrorDetail(error)
+    case let aliasError as NodeAliasResolutionError:
+        detail = aliasError.detail()
     case XcodeWorkflowError.missingContainer:
         detail = TKCLIErrorDetail(
             code: "invalid_workspace_path",

@@ -139,6 +139,12 @@ func cliErrorDetail(for error: Error, endpoint: String, host: String, port: Int)
        let response = httpError.response {
         return response.error
     }
+    if let hostAXError = error as? HostSimulatorAXError {
+        return hostAXError.detail
+    }
+    if let aliasError = error as? NodeAliasResolutionError {
+        return aliasError.detail(endpoint: url)
+    }
     if let urlError = error as? URLError {
         return TKCLIErrorDetail(
             code: "server_unavailable",

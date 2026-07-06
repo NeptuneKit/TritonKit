@@ -277,22 +277,38 @@ Cross-platform host device entry:
 
 ```bash
 triton device doctor --platform ios --json
+triton device doctor --platform android --json
 triton device doctor --platform harmony --json
 triton device list --platform ios --json
+triton device list --platform android --json
 triton device list --platform harmony --json
 triton device alias set iphone15 --platform ios --target <simulator-udid> --json
+triton device alias set android-a --platform android --target <adb-serial> --json
 triton device alias set harmony-a --platform harmony --target <hdc-target> --json
 triton device use iphone15 --json
 triton device current --json
 triton device resolve iphone15 --json
 triton device wait-ready --device iphone15 --json
+triton device wait-ready --device android-a --json
 triton device wait-ready --device harmony-a --json
 triton device screenshot --device iphone15 --output /tmp/<case>-sim.png --json
+triton device screenshot --device android-a --output /tmp/<case>.png --json
 triton device screenshot --device harmony-a --output /tmp/<case>.jpeg --json
+triton device start --platform android --avd Dxyer_API_34 --headless --gpu swiftshader_indirect --plan-only --json
+triton device stop --platform android --device android-a --confirm --json
 triton device stop --platform harmony --hvd "Codex Test Phone" --path ~/.Huawei/Emulator/deployed --confirm --json
 ```
 
-Use `--device <selector>` as the default agent-facing target selector for common host-side commands. Selectors can be aliases, full ids such as `sim:<udid>` / `harmony:<target>`, raw platform ids, `booted`, or `current`. `--platform`, `--name`, `--runtime`, `--state`, and `--ready` are filters; they may auto-select only when the filtered candidate set is unique. Keep `sim` for iOS-only advanced maintenance; `device runtime-url --device <selector>` is the Harmony embedded runtime port-forward setup path, and `--platform harmony --target <target>` remains the direct raw-target form.
+Use `--device <selector>` as the default agent-facing target selector for common host-side commands. Selectors can be aliases, full ids such as `sim:<udid>` / `android:<serial>` / `harmony:<target>`, raw platform ids, `booted`, or `current`. `--platform`, `--name`, `--runtime`, `--state`, and `--ready` are filters; they may auto-select only when the filtered candidate set is unique. Keep `sim` for iOS-only advanced maintenance; `device runtime-url --device <selector>` is the Harmony embedded runtime port-forward setup path, and `--platform harmony --target <target>` remains the direct raw-target form.
+
+For agent navigation across iOS Simulator host AX, Android bridge/layout, Harmony host layout, or embedded runtime trees, prefer a fresh outline before selecting numbered nodes:
+
+```bash
+triton observe tree --platform <ios|android|harmony> --device <selector> --outline --json
+triton node resolve @1 --platform <ios|android|harmony> --device <selector> --json
+```
+
+`@N` aliases are repo-local snapshots written to `.triton/node-aliases.json`, not a daemon session. If `node resolve @N` returns `stale_node_alias`, run the `nextAction` refresh command instead of guessing from the old cache.
 
 For Harmony target discovery, expect HDC output shape drift. `triton device list --platform harmony --json` should parse `hdc list targets -v` stdout and stderr, fallback to plain `hdc list targets` when verbose output has no target rows, and treat single-column plain targets such as `127.0.0.1:5555` as connected DevEco emulator candidates. Do not parse prose errors such as `Connect server failed` as targets.
 
@@ -371,7 +387,8 @@ triton app install --device harmony-a --hap <debug-signed.hap> --json
 triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json
 triton smoke harmony --device harmony-a --bundle <bundle> --ability <ability> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json
 triton observe current --device harmony-a --json
-triton observe tree --device harmony-a --json
+triton observe tree --device harmony-a --outline --json
+triton node resolve @1 --device harmony-a --json
 triton node resolve --device harmony-a --text "登录" --json
 triton act tap "登录" --platform harmony --device harmony-a --json
 triton swipe --platform harmony --device harmony-a --start-x 350 --start-y 900 --end-x 350 --end-y 300 --json
@@ -403,7 +420,8 @@ triton list --json
 triton debug ax --target triton:ios-simulator:<SIMULATOR_UDID> --json
 triton act tap "登录" --target <SIMULATOR_UDID> --json
 triton observe current --platform ios --json
-triton observe tree --platform ios --runtime-base-url <baseURL> --json
+triton observe tree --platform ios --runtime-base-url <baseURL> --outline --json
+triton node resolve @1 --platform ios --json
 triton node resolve --platform ios --text "登录" --json
 triton webview list --platform ios --json
 triton webview current --platform ios --json
@@ -435,7 +453,7 @@ TRITON_BIN=.build/cli-scratch/debug/triton docs-linhay/scripts/verify-harmony-ru
 
 Use `--no-forward` when the HDC fport already exists, because repeating `hdc fport tcp:28767 tcp:28767` can fail with a host listen conflict even though the existing forwarded endpoint is healthy. Keep mock contract smoke separate from real emulator smoke: the mock script should use an isolated test port while asserting the schema/default output remains `28767`.
 
-Android Emulator host-side support is now part of the implemented local CLI takeover surface. Treat `adb`-backed device discovery, readiness, screenshot, app lifecycle, UIAutomator observe/wait/tap, and `smoke android` as schema-backed Triton commands; continue to keep DTOs, evidence, and command-ledger schemas platform-neutral across iOS, Android, and Harmony.
+Android Emulator host-side support is now part of the implemented local CLI takeover surface. Treat `adb`-backed device discovery, readiness, start/stop, screenshot, app lifecycle, UIAutomator observe/wait/tap, and `smoke android` as schema-backed Triton commands; continue to keep DTOs, evidence, and command-ledger schemas platform-neutral across iOS, Android, and Harmony.
 
 ## Safety Rules
 

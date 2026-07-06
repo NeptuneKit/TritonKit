@@ -89,6 +89,10 @@ func observeSurfaceOutputContract() -> TKCommandOutputContract {
             ("primarySource.sourceCommands", "[String]", true, "Underlying commands that produced the primary source"),
             ("sources", "[ObserveSourceOutput]", true, "Observation sources and availability"),
             ("nodes", "[ObserveNodeOutput]", true, "Visible node summaries"),
+            ("outline", "[ObserveNodeAliasOutput]?", false, "Deterministic @N aliases emitted when `observe tree --outline` is requested"),
+            ("aliasCache", "ObserveAliasCacheOutput?", false, "Repo-local alias cache metadata for follow-up `node resolve @N` calls"),
+            ("aliasCache.path", "String", true, "Written .triton/node-aliases.json path when outline is requested"),
+            ("aliasCache.aliasCount", "Int", true, "Number of aliases written to the cache"),
             ("artifacts", "[String]", true, "Artifact paths written by host observation"),
             ("sourceCommands", "[String]", true, "Underlying host commands"),
             ("note", "String", true, "Boundary or follow-up note"),
@@ -595,6 +599,27 @@ func hostSimulatorScreenshotOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostSimulatorAXOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-ax",
+        format: "json",
+        kind: "host-simulator-ax",
+        model: "TKAXNode",
+        fields: schemaContractFields([
+            ("role", "String", true, "AX role for the host-side simulator element"),
+            ("label", "String?", false, "Accessibility label"),
+            ("value", "String?", false, "Accessibility value"),
+            ("identifier", "String?", false, "Accessibility identifier"),
+            ("title", "String?", false, "Accessibility title"),
+            ("frame", "TKRect", true, "Element frame in simulator point space"),
+            ("enabled", "Bool", true, "Whether the AX element is enabled"),
+            ("focused", "Bool", true, "Whether the AX element is focused"),
+            ("hidden", "Bool", true, "Whether the AX element is hidden"),
+            ("children", "[TKAXNode]", true, "Recursive host-side AX children"),
+        ])
+    )
+}
+
 func hostActionOutputContract(selector: String, model: String) -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: selector,
@@ -736,6 +761,27 @@ func hostAndroidTapOutputContract() -> TKCommandOutputContract {
             ("y", "Int", true, "Screen y coordinate used for tap"),
             ("match", "HostAndroidTapMatch?", false, "Matched Android host layout node"),
             ("sourceCommands", "[String]", true, "Underlying host commands"),
+            ("note", "String", true, "Boundary or follow-up note"),
+        ])
+    )
+}
+
+func hostIOSTapOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.ios-tap",
+        format: "json",
+        kind: "host-action",
+        model: "HostIOSTapOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the iOS host AX tap command succeeded"),
+            ("action", "String", true, "Host action name"),
+            ("platform", "String", true, "ios"),
+            ("target", "HostDeviceTarget", true, "Resolved iOS simulator target"),
+            ("query", "String?", false, "Text query used for host AX target resolution"),
+            ("x", "Int", true, "Simulator point x coordinate used for tap"),
+            ("y", "Int", true, "Simulator point y coordinate used for tap"),
+            ("match", "TKAXNode", true, "Matched host AX node"),
+            ("sourceCommands", "[String]", true, "Underlying observation/action sources"),
             ("note", "String", true, "Boundary or follow-up note"),
         ])
     )

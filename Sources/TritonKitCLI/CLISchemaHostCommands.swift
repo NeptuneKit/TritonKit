@@ -58,6 +58,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "runtime-url --platform harmony --target <target>", type: "Subcommand", description: "Compatibility path for preparing a direct Harmony embedded runtime base URL"),
                 TKCommandSchemaOption(name: "start --platform android --avd <name> --plan-only", type: "Subcommand", description: "Return an Android Emulator launch ledger without starting the emulator"),
                 TKCommandSchemaOption(name: "start --platform harmony --hvd <name> --path <deployed-path> --plan-only", type: "Subcommand", description: "Return a DevEco Harmony Emulator launch ledger and HDC connection follow-up without starting the emulator"),
+                TKCommandSchemaOption(name: "stop --platform android --device <selector> --confirm", type: "Subcommand", description: "Stop a selected Android Emulator through adb emu kill"),
                 TKCommandSchemaOption(name: "stop --platform harmony --hvd <name> --path <deployed-path> --confirm", type: "Subcommand", description: "Unload Triton launchd supervision and stop a Harmony HVD"),
                 TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", defaultValue: "harmony", description: "Host device platform adapter"),
                 TKCommandSchemaOption(name: "--scope", type: "simulator|emulator|real|all", defaultValue: "all", description: "Device scope filter; Android real excludes emulator-* adb serials"),
@@ -151,6 +152,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton device list --platform android --json",
                 "triton device list --platform android --scope real --json",
                 "triton device start --platform android --avd Dxyer_API_34 --headless --gpu swiftshader_indirect --plan-only --json",
+                "triton device stop --platform android --device emulator-5554 --confirm --json",
                 "triton device resolve --platform android --device android-a --ready --json",
                 "triton device alias set android-a --platform android --target emulator-5554 --json",
                 "triton device proxy start --platform android --device android-a --mode record --output /tmp/android-network --json",
@@ -264,7 +266,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "harmony_screenshot_failed",
                 "validation_failed",
             ],
-            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
+            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
         ),
         TKCommandSchema(
             name: "camera",
@@ -332,6 +334,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "logs --output <path.log> --duration <seconds>", type: "Subcommand", description: "Capture bounded simulator OSLog stream output"),
                 TKCommandSchemaOption(name: "diagnose [--output <path>]", type: "Subcommand", description: "Collect simulator diagnostics and logs"),
                 TKCommandSchemaOption(name: "logverbose [--simulator <udid>] enable|disable", type: "Subcommand", description: "Enable or disable verbose simulator logging"),
+                TKCommandSchemaOption(name: "ax --device <udid|booted>", type: "Subcommand", description: "Read host-side iOS Simulator Accessibility tree through private framework adapter"),
                 TKCommandSchemaOption(name: "proxy", type: "Subcommand", description: "iOS Simulator host-side proxy takeover commands"),
                 TKCommandSchemaOption(name: "proxy doctor", type: "Subcommand", description: "Probe iOS Simulator host-side proxy takeover prerequisites"),
                 TKCommandSchemaOption(name: "proxy start --simulator <udid|booted> --mode record|mock|block|throttle --output <dir>", type: "Subcommand", description: "Alias to device proxy start --platform ios for host-side Simulator network takeover"),
@@ -375,6 +378,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "pasteboard sync <source> <destination>", type: "Subcommand", description: "Sync pasteboard content between host and simulator"),
                 TKCommandSchemaOption(name: "push --bundle-id <id> --payload <path|->", type: "Subcommand", description: "Send a simulated push notification"),
                 TKCommandSchemaOption(name: "media seed --manifest <path>", type: "Subcommand", description: "Add manifest-described media fixtures to a simulator photo library"),
+                TKCommandSchemaOption(name: "--device", type: "String", defaultValue: "booted", description: "Simulator UDID or booted target selector for host AX commands"),
                 TKCommandSchemaOption(name: "--simulator", type: "String", defaultValue: "booted", description: "Simulator UDID or booted target selector"),
                 TKCommandSchemaOption(name: "--manifest", type: "Path", description: "Media seed manifest JSON path"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "ASCII text for host-side simulator type"),
@@ -447,6 +451,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             outputContracts: [
                 hostSimulatorListOutputContract(),
                 hostSimulatorScreenshotOutputContract(),
+                hostSimulatorAXOutputContract(),
                 hostSimulatorInputOutputContract(),
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorCreateOutput|HostSimulatorReadyEvent"),
                 hostSimulatorScreenshotMetadataOutputContract(),
@@ -482,6 +487,11 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "sim_logs_failed",
                 "sim_diagnose_failed",
                 "sim_logverbose_failed",
+                "ios_host_ax_unavailable",
+                "ios_host_ax_frontmost_unavailable",
+                "ios_host_ax_platform_element_unavailable",
+                "ios_host_ax_tree_unavailable",
+                "ios_host_ax_unsupported_platform",
                 "sim_runtime_failed",
                 "sim_personalization_failed",
                 "runtime_list_failed",
@@ -582,6 +592,18 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.simulator-action"]
                 ),
                 TKCommandSubcommandSchema(
+                    name: "ax",
+                    summary: "Read host-side iOS Simulator Accessibility tree",
+                    optionalOptions: ["--device", "--format", "--json"],
+                    nextCommands: [
+                        "triton sim list --json",
+                        "triton sim screenshot --simulator <udid|booted> --output <path.png> --json",
+                        "triton device doctor --platform ios --json",
+                    ],
+                    outputSelectors: ["host.simulator-ax"],
+                    failureCodes: ["ios_host_ax_unavailable", "ios_host_ax_frontmost_unavailable", "ios_host_ax_platform_element_unavailable", "ios_host_ax_tree_unavailable", "ios_host_ax_unsupported_platform", "simulator_not_found"]
+                ),
+                TKCommandSubcommandSchema(
                     name: "proxy",
                     summary: "Run iOS Simulator host-side proxy takeover aliases",
                     optionalOptions: ["--simulator", "--mode", "--output", "--proxy", "--session", "--restore", "--restore-snapshot", "--plan-only", "--confirm", "--audit-record", "--execute-runner", "--format", "--json"],
@@ -676,7 +698,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     failureCodes: ["media_seed_manifest_invalid", "host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
                 ),
             ],
-            providedCapabilities: ["host-simulator", "ios-simulator-host-type", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
+            providedCapabilities: ["host-simulator", "ios-simulator-host-type", "ios-host-ax", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
         ),
         TKCommandSchema(
             name: "app",

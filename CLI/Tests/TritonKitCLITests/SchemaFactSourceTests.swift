@@ -711,7 +711,11 @@ struct SchemaFactSourceTests {
     func observeAndNodeProvidedCapabilitiesStaySchemaMatrixAligned() throws {
         let schemas = commandSchemaMap()
         let observeSchema = try #require(schemas["observe"])
-        #expect(observeSchema.providedCapabilities == ["observe", "observe-ios", "observe-android", "observe-harmony"])
+        #expect(observeSchema.providedCapabilities == ["observe", "observe-ios", "observe-ios-host-ax", "observe-android", "observe-harmony", "observe-outline"])
+        let nodeSchema = try #require(schemas["node"])
+        #expect(nodeSchema.runtimeScope == "embedded|host-ios|host-android|host-harmony")
+        #expect(nodeSchema.examples.contains(#"triton node resolve --platform ios --device booted --text "Settings" --json"#))
+        #expect(nodeSchema.examples.contains("triton node resolve @1 --platform ios --device booted --json"))
         let debugSchema = try #require(schemas["debug"])
         #expect(debugSchema.subcommands.map(\.name).contains("node"))
 
@@ -732,10 +736,14 @@ struct SchemaFactSourceTests {
         )] = [
             ("observe", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["current", "--json"], "observe", ["current", "--json"]),
             ("observe-ios", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, false, "observe", ["current", "--platform", "ios", "--json"], "observe", ["current", "--platform", "ios", "--json"]),
+            ("observe-ios-host-ax", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "ios", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "ios", "--device", "<selector>", "--json"]),
             ("observe-android", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "android", "--device", "<selector>", "--json"]),
             ("observe-harmony", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"], "observe", ["tree", "--platform", "harmony", "--device", "<selector>", "--json"]),
+            ("observe-outline", "observe", ["action", "assert", "evidence"], ["surface-tree", "runtime-ax", "host-layout"], true, true, "observe", ["tree", "--outline", "--json"], "observe", ["tree", "--outline", "--json"]),
             ("node", "observe", ["action", "assert", "evidence"], ["hierarchy-node", "surface-tree"], true, false, "debug", ["node", "--oid", "<oid>", "--json"], "status", ["--json"]),
             ("node-resolve", "observe", ["action", "assert", "evidence"], ["target.resolution", "surface-tree"], true, true, "act", ["find", "<text>", "--json"], "act", ["find", "<text>", "--json"]),
+            ("node-alias-resolve", "observe", ["action", "assert", "evidence"], ["target.resolution", "surface-tree"], true, true, "node", ["resolve", "@1", "--json"], "node", ["resolve", "@1", "--json"]),
+            ("ios-simulator-host-tap", "action", ["action", "assert", "evidence"], ["host-command-json", "host-artifact"], true, true, "act", ["tap", "--platform", "ios", "--device", "<selector>", "--text", "<text>", "--json"], "act", ["tap", "--platform", "ios", "--device", "<selector>", "--text", "<text>", "--json"]),
         ]
 
         for expectation in expectations {

@@ -85,6 +85,138 @@ struct ObservationOutputTests {
         #expect(output.primarySource?.sourceCommands == ["triton webview current --json"])
     }
 
+    @Test("iOS host AX observe output uses simulator AX as host layout source")
+    func iosHostAXObserveOutputUsesHostLayoutSource() {
+        let root = TKAXNode(
+            role: "AXWindow",
+            label: "Main",
+            value: nil,
+            identifier: nil,
+            title: nil,
+            frame: TKRect(x: 0, y: 0, width: 393, height: 852),
+            enabled: true,
+            focused: false,
+            hidden: false,
+            targetOID: nil,
+            className: nil,
+            children: [
+                TKAXNode(
+                    role: "AXButton",
+                    label: "Login",
+                    value: nil,
+                    identifier: "login-button",
+                    title: nil,
+                    frame: TKRect(x: 24, y: 120, width: 180, height: 44),
+                    enabled: true,
+                    focused: false,
+                    hidden: false,
+                    targetOID: nil,
+                    className: nil,
+                    children: []
+                ),
+            ]
+        )
+
+        let output = observeIOSHostAXOutput(
+            action: "observe.tree",
+            target: "ABC-123",
+            root: root,
+            maxNodes: nil,
+            capturedAt: "2026-07-06T00:00:00Z"
+        )
+
+        #expect(output.ok)
+        #expect(output.platform == "ios")
+        #expect(output.target == "sim:ABC-123")
+        #expect(output.primarySource?.name == "host-layout")
+        #expect(output.primarySource?.sourceCommands == ["triton sim ax --device ABC-123 --json"])
+        #expect(output.sources.first { $0.name == "runtime-tree" }?.available == false)
+        #expect(output.nodes.count == 2)
+        #expect(output.nodes[0].nodeID == "ios-host:1")
+        #expect(output.nodes[1].source == "host-layout")
+        #expect(output.nodes[1].text == "Login")
+        #expect(output.nodes[1].identifier == "login-button")
+        #expect(output.nodes[1].capabilities.contains("tap"))
+    }
+
+    @Test("iOS host AX observe output respects max nodes")
+    func iosHostAXObserveOutputRespectsMaxNodes() {
+        let root = TKAXNode(
+            role: "AXWindow",
+            label: nil,
+            value: nil,
+            identifier: nil,
+            title: nil,
+            frame: TKRect(x: 0, y: 0, width: 393, height: 852),
+            enabled: true,
+            focused: false,
+            hidden: false,
+            targetOID: nil,
+            className: nil,
+            children: [
+                TKAXNode(
+                    role: "AXStaticText",
+                    label: "Child",
+                    value: nil,
+                    identifier: nil,
+                    title: nil,
+                    frame: TKRect(x: 10, y: 10, width: 80, height: 20),
+                    enabled: true,
+                    focused: false,
+                    hidden: false,
+                    targetOID: nil,
+                    className: nil,
+                    children: []
+                ),
+            ]
+        )
+
+        let output = observeIOSHostAXOutput(
+            action: "observe.current",
+            target: "ABC-123",
+            root: root,
+            maxNodes: 1,
+            capturedAt: "2026-07-06T00:00:00Z"
+        )
+
+        #expect(output.nodes.count == 1)
+        #expect(output.nodes[0].role == "AXWindow")
+    }
+
+    @Test("iOS host AX is enabled only for simulator host targets")
+    func iosHostAXIsEnabledOnlyForSimulatorHostTargets() {
+        let simulator = HostDeviceTarget(
+            platform: "ios",
+            id: "sim:ABC-123",
+            target: "ABC-123",
+            state: "Booted",
+            ready: true,
+            source: "simctl",
+            name: "iPhone",
+            runtime: "iOS 26.0",
+            transport: nil,
+            scope: "simulator",
+            kind: "simulator"
+        )
+        let realDevice = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-device:ABC-123",
+            target: "ABC-123",
+            state: "available",
+            ready: true,
+            source: "devicectl",
+            name: "iPhone",
+            runtime: "iOS 26.0",
+            transport: nil,
+            scope: "real",
+            kind: "device"
+        )
+
+        #expect(usesIOSHostSimulatorAX(simulator))
+        #expect(!usesIOSHostSimulatorAX(realDevice))
+        #expect(!usesIOSHostSimulatorAX(nil))
+    }
+
     @Test("android observe tree decodes UIAutomator XML into host layout nodes")
     func androidObserveTreeDecodesUIAutomatorXML() async throws {
         let target = HostDeviceTarget(
@@ -187,6 +319,62 @@ struct ObservationOutputTests {
         #expect(output.sourceCommands.contains { $0.contains("Bearer <redacted>") })
         #expect(FileManager.default.fileExists(atPath: artifactPath))
     }
+
+    @Test("observe outline assigns deterministic aliases to actionable visible nodes")
+    func observeOutlineAssignsDeterministicAliases() {
+        let nodes = [
+            observationNode(nodeID: "root", role: "AXWindow", text: nil, identifier: nil, hidden: false, capabilities: []),
+            observationNode(nodeID: "settings", role: "AXButton", text: "Settings", identifier: "settings-button", hidden: false, capabilities: ["tap"]),
+            observationNode(nodeID: "hidden", role: "AXButton", text: "Hidden", identifier: nil, hidden: true, capabilities: ["tap"]),
+            observationNode(nodeID: "about", role: "AXStaticText", text: nil, identifier: "about-row", hidden: false, capabilities: []),
+        ]
+
+        let outline = makeObserveNodeOutline(from: nodes)
+
+        #expect(outline.map(\.alias) == ["@1", "@2"])
+        #expect(outline.map(\.nodeID) == ["settings", "about"])
+        #expect(outline[0].text == "Settings")
+        #expect(outline[0].capabilities == ["tap"])
+        #expect(outline[1].identifier == "about-row")
+    }
+
+    @Test("node alias cache resolves matching target and rejects stale target")
+    func nodeAliasCacheResolvesAndRejectsStaleTarget() throws {
+        let temp = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-node-alias-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: temp) }
+
+        let source = ObserveOutput(
+            ok: true,
+            action: "observe.tree",
+            platform: "ios",
+            capturedAt: "2026-07-06T00:00:00Z",
+            partial: true,
+            target: "sim:ABC",
+            sources: [
+                ObserveSourceOutput(name: "host-layout", available: true, reason: nil, artifact: nil, sourceCommands: ["triton sim ax --device ABC --json"])
+            ],
+            nodes: [
+                observationNode(nodeID: "settings", role: "AXButton", text: "Settings", identifier: "settings-button", hidden: false, capabilities: ["tap"])
+            ],
+            artifacts: [],
+            sourceCommands: ["triton sim ax --device ABC --json"],
+            note: "host AX"
+        )
+        let cache = makeNodeAliasCache(from: source, outline: makeObserveNodeOutline(from: source.nodes))
+        let path = try saveNodeAliasCache(cache, workspace: temp.path)
+
+        let resolved = try resolveNodeAlias("@1", platform: "ios", target: "sim:ABC", workspace: temp.path)
+
+        #expect(path.hasSuffix(".triton/node-aliases.json"))
+        #expect(resolved.ok)
+        #expect(resolved.query == "@1")
+        #expect(resolved.node.nodeID == "settings")
+        #expect(resolved.sourceCommands == ["triton sim ax --device ABC --json"])
+        #expect(throws: NodeAliasResolutionError.self) {
+            _ = try resolveNodeAlias("@1", platform: "ios", target: "sim:DEF", workspace: temp.path)
+        }
+    }
 }
 
 private func successfulObservationHostProcessResult(_ command: TKHostCommand, stdout: String = "") -> HostProcessResult {
@@ -202,5 +390,30 @@ private func successfulObservationHostProcessResult(_ command: TKHostCommand, st
         stderrLogPath: nil,
         stdoutBytes: stdoutData.count,
         stderrBytes: 0
+    )
+}
+
+private func observationNode(
+    nodeID: String,
+    role: String?,
+    text: String?,
+    identifier: String?,
+    hidden: Bool?,
+    capabilities: [String]
+) -> ObserveNodeOutput {
+    ObserveNodeOutput(
+        nodeID: nodeID,
+        source: "host-layout",
+        role: role,
+        text: text,
+        identifier: identifier,
+        frame: nil,
+        enabled: true,
+        focused: false,
+        hidden: hidden,
+        candidateOnly: false,
+        confidence: 1,
+        capabilities: capabilities,
+        missingCapabilities: []
     )
 }

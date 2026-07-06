@@ -27,8 +27,30 @@ TritonKit 原本的 iOS 无障碍（AX）树获取强依赖于嵌入在 App 内�
    * 递归解析 `accessibilityChildren` 生成标准跨平台的 `TKAXNode` 树。
 4. **命令行接口暴露与平台适配 (CLI Integration)**：
    * 将 `HostPlatform` 扩展支持 `ios`，将 `triton sim ax` 或 `triton hierarchy --platform ios` 路由至本地宿主 XPC 驱动层。
+   * `triton sim ax --json` 的失败必须返回 `TKCLIErrorResponse`，覆盖私有框架不可用、模拟器目标不存在、frontmost AX root 不可用、platform element 转换失败和 AX tree 不可用等稳定错误码，不允许只输出人类文本。
 5. **单元测试与门禁要求 (Validation Gates)**：
    * 补充 `Tests/TritonKitTests/` 中的 XPC 动态加载与分发逻辑 Mock 校验，确保 CI 下不崩溃且能正常打包。
+
+## Web Mock 验收补充：界面与 AX 审查插槽
+
+### 场景
+
+- Given Web mock 已连接 iOS Simulator 画面流，且被测 Debug App 已连接 embedded TritonKit runtime
+- When 用户在布局中打开“界面与 AX 审查”插槽
+- Then 插槽必须通过 `/web/host-hierarchy?platform=ios&target=<simulator-udid>&source=runtime` 读取 App runtime hierarchy
+- And 当 runtime target 未暴露 `simulatorUDID` 且当前只有一个连接中的 iOS runtime target 时，bridge 可以将该 simulator host target 解析到唯一 runtime target
+- And Web target 列表只展示对 Web 当前可用的 iOS Simulator：单纯 CoreSimulator `Booted` 但没有 App runtime 连接证据的 simulator 不得出现在下拉或自动连接列表中
+- And 视图树 / AX 树必须显示真实节点，而不是停留在“无数据或未就绪”或“无 AX 节点”
+- And 用户选中任意节点后，底部详情区的“查看更多信息”必须打开 modal sheet，展示节点 ID、父节点、层级、来源、状态和原始 DTO
+- And Web 展示可见节点时必须按父链计算有效可见性，隐藏父节点下的子节点不得出现在审查树或画面 overlay 中
+- And 用户已经选中某个画面 overlay 节点后，再次点击该节点内部区域时，应按点击坐标选中对应的更小子节点
+
+### 边界
+
+- 多个 iOS runtime target 同时连接且缺少可匹配 `simulatorUDID` 时，不做猜测匹配。
+- CoreSimulator 后台 `Booted` 不等于 Web 可用 target；iOS Web target 需要 runtime 连接证据。
+- Web 仍只读展示 hierarchy / AX DTO，不新增业务控制闭环；modal sheet 只展示现有 DTO 字段，不从截图或像素推断业务事实。
+- `visible` / `isHidden` / `alpha` 只作为 hierarchy DTO 字段使用；Web 不从截图像素反推可见性。
 
 ---
 

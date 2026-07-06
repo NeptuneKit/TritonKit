@@ -278,6 +278,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(optionNames.contains("--data-container"))
         #expect(optionNames.contains("--manifest"))
         #expect(sim.providedCapabilities.contains("host-simulator"))
+        #expect(sim.providedCapabilities.contains("ios-host-ax"))
         #expect(sim.providedCapabilities.contains("sim-video"))
         #expect(sim.providedCapabilities.contains("sim-logs"))
         #expect(sim.providedCapabilities.contains("sim-diagnostics"))
@@ -477,6 +478,37 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.successShape?.contains("orientationPolicy") == true)
     }
 
+    @Test("sim ax schema exposes host-side AX contract and stable failures")
+    func simAXSchemaExposesStableHostAXContract() throws {
+        let sim = try #require(commandSchemas().first { $0.name == "sim" })
+        let ax = try #require(sim.subcommands.first { $0.name == "ax" })
+        let contract = try #require(sim.outputContracts.first { $0.selector == "host.simulator-ax" })
+        let fields = Set(contract.fields.map(\.name))
+
+        #expect(ax.outputSelectors == ["host.simulator-ax"])
+        #expect(ax.failureCodes.contains("ios_host_ax_unavailable"))
+        #expect(ax.failureCodes.contains("ios_host_ax_tree_unavailable"))
+        #expect(ax.failureCodes.contains("simulator_not_found"))
+        #expect(contract.model == "TKAXNode")
+        #expect(fields.contains("role"))
+        #expect(fields.contains("frame"))
+        #expect(fields.contains("children"))
+    }
+
+    @Test("host simulator AX errors expose machine-readable recovery")
+    func hostSimulatorAXErrorsExposeRecovery() {
+        let unavailable = HostSimulatorAXError.privateFrameworkUnavailable.detail
+        #expect(unavailable.code == "ios_host_ax_unavailable")
+        #expect(unavailable.nextAction?.command == "device")
+        #expect(unavailable.nextAction?.args == ["doctor", "--platform", "ios", "--json"])
+        #expect(unavailable.suggestedCommands?.contains("triton schema --command sim --json") == true)
+
+        let missingTarget = HostSimulatorAXError.targetNotFound("booted").detail
+        #expect(missingTarget.code == "simulator_not_found")
+        #expect(missingTarget.nextAction?.command == "sim")
+        #expect(missingTarget.nextAction?.args == ["list", "--json"])
+    }
+
     @Test("schema exposes xctrace and coverage artifact commands")
     func schemaExposesXctraceAndCoverageCommands() throws {
         let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
@@ -540,5 +572,10 @@ struct SimulatorAdvancedControlsTests {
         #expect(xcresult.providedCapabilities.contains("xcresult-failures"))
         #expect(xcresult.failureShape?.contains("xcresult_parse_failed") == true)
         #expect(xcresult.failureShape?.contains("xcresult_output_too_large") == true)
+    }
+
+    @Test("sim privacy accepts camera service")
+    func simPrivacyAcceptsCameraService() {
+        #expect(SimPrivacyService(rawValue: "camera") == .camera)
     }
 }

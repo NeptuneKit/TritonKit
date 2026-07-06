@@ -38,6 +38,16 @@ struct CLIHelpTests {
         #expect(result.stderr.contains("triton observe current --json"))
     }
 
+    @Test("root node command exposes current UI resolve workflow")
+    func rootNodeCommandExposesCurrentUIResolveWorkflow() throws {
+        let result = try runTritonHelp(["node", "--help"])
+
+        #expect(result.exitCode == 0)
+        #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        #expect(result.stdout.contains("USAGE: triton node"))
+        #expect(result.stdout.contains("resolve"))
+    }
+
     @Test("workflow act command help can drill into tap")
     func workflowActCommandHelpCanDrillIntoTap() throws {
         let result = try runTritonHelp(["act", "tap", "--help"])
@@ -69,10 +79,27 @@ struct CLIHelpTests {
 
     private func tritonExecutableURL() throws -> URL {
         let fileManager = FileManager.default
+        if let override = ProcessInfo.processInfo.environment["TRITON_CLI_PATH"],
+           fileManager.isExecutableFile(atPath: override) {
+            return URL(fileURLWithPath: override)
+        }
+        let testBundleCandidate = Bundle.main.bundleURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("triton")
+        if fileManager.isExecutableFile(atPath: testBundleCandidate.path) {
+            return testBundleCandidate
+        }
         let packageRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
+        let repositoryRoot = packageRoot.deletingLastPathComponent()
+        for scratchPath in [".build/cli-test", ".build/cli"] {
+            let buildRoot = repositoryRoot.appendingPathComponent(scratchPath, isDirectory: true)
+            if let candidate = try findTritonExecutable(under: buildRoot, fileManager: fileManager) {
+                return candidate
+            }
+        }
         let debugCandidate = packageRoot
             .appendingPathComponent(".build", isDirectory: true)
             .appendingPathComponent("debug", isDirectory: true)
@@ -82,27 +109,30 @@ struct CLIHelpTests {
         }
 
         let buildRoot = packageRoot.appendingPathComponent(".build", isDirectory: true)
-        guard let enumerator = fileManager.enumerator(
-            at: buildRoot,
-            includingPropertiesForKeys: [.isExecutableKey],
-            options: [.skipsHiddenFiles]
-        ) else {
-            throw NSError(
-                domain: "TritonKitCLITests.CLIHelpTests",
-                code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Missing triton executable for CLI help test"]
-            )
-        }
-        for case let candidate as URL in enumerator where candidate.lastPathComponent == "triton" {
-            if fileManager.isExecutableFile(atPath: candidate.path) {
-                return candidate
-            }
+        if let candidate = try findTritonExecutable(under: buildRoot, fileManager: fileManager) {
+            return candidate
         }
         throw NSError(
             domain: "TritonKitCLITests.CLIHelpTests",
             code: 1,
             userInfo: [NSLocalizedDescriptionKey: "Missing triton executable for CLI help test"]
         )
+    }
+
+    private func findTritonExecutable(under buildRoot: URL, fileManager: FileManager) throws -> URL? {
+        guard let enumerator = fileManager.enumerator(
+            at: buildRoot,
+            includingPropertiesForKeys: [.isExecutableKey],
+            options: [.skipsHiddenFiles]
+        ) else {
+            return nil
+        }
+        for case let candidate as URL in enumerator where candidate.lastPathComponent == "triton" {
+            if fileManager.isExecutableFile(atPath: candidate.path) {
+                return candidate
+            }
+        }
+        return nil
     }
 }
 

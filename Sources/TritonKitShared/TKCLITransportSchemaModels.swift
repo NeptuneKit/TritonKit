@@ -167,6 +167,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if failureCode == "timeout" {
             categories.append("verify")
         }
+        if failureCode == "stale_node_alias" {
+            categories.append(contentsOf: ["diagnose", "observe", "plan"])
+        }
         if ["request_failed", "server_unavailable", "target_unavailable", "runtime_unavailable", "proxy_status_probe_failed"].contains(failureCode) {
             categories.append("diagnose")
         }

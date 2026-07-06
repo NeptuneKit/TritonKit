@@ -557,7 +557,7 @@ triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json 
 
 `xctrace record` and `coverage report` are artifact commands. They return paths, source commands, and byte summaries; they do not inline large `.trace` or coverage payloads and do not prove app business readiness by themselves. Stdout-backed artifact writes reject existing files and symbolic links by default to avoid accidental overwrite during agent runs.
 
-Common host target discovery, selection, and readiness are exposed through `triton target`. Keep `triton device` for host-side tool probing, aliasing, runtime-url, screenshot, and Harmony stop orchestration, and keep `triton sim` for iOS-only advanced maintenance such as runtime, privacy, location, status bar, pasteboard, push, logs, and diagnostics.
+Common host target discovery, selection, and readiness are exposed through `triton target`. Keep `triton device` for host-side tool probing, aliasing, Android Emulator start/stop, runtime-url, screenshot, and Harmony stop orchestration, and keep `triton sim` for iOS-only advanced maintenance such as runtime, privacy, location, status bar, pasteboard, push, logs, and diagnostics.
 
 ```bash
 triton target list --platform ios --json
@@ -576,19 +576,22 @@ triton target use emulator-5554 --platform android --json
 triton target wait-ready emulator-5554 --platform android --json
 triton device doctor --platform android --json
 triton device list --platform android --json
+triton device start --platform android --avd Dxyer_API_34 --headless --gpu swiftshader_indirect --plan-only --json
+triton device stop --platform android --device emulator-5554 --confirm --json
 triton device alias set android-a --platform android --target emulator-5554 --json
 triton device screenshot --device android-a --output /tmp/android-before.png --json
 triton app list --platform android --device android-a --json
 triton app inspect --platform android --device android-a --bundle com.android.settings --json
 triton app launch --platform android --device android-a --package-name com.android.settings --json
-triton observe tree --platform android --target emulator-5554 --json
+triton observe tree --platform android --target emulator-5554 --outline --json
+triton node resolve @1 --platform android --target emulator-5554 --json
 triton debug ax --platform android --device android-a --output /tmp/android-window.xml --json
 triton wait --platform android --target emulator-5554 --text "Settings" --timeout 10 --json
 triton act tap --platform android --target emulator-5554 "Network & internet" --json
 triton smoke android --device android-a --package com.android.settings --wait-text "Settings" --tap-text "Network & internet" --post-tap-wait-text "Internet" --screenshot /tmp/android-smoke.png --evidence /tmp/android-smoke.tritonevidence --json
 ```
 
-Android `app inspect` uses `adb shell dumpsys package` and returns `host.android-app-inspect`. Android host-side `observe tree` / `ax` / `wait` / `tap` currently rely on `adb shell uiautomator dump` followed by `adb shell cat` of the dumped XML. Parse `ax --platform android` as `host.android-ax`, and keep UIAutomator-backed commands serialized per emulator target during smoke or evidence capture; concurrent dump/read-back flows on the same emulator have previously produced host command exits before the XML was fully available.
+Android `app inspect` uses `adb shell dumpsys package` and returns `host.android-app-inspect`. Android host-side `observe tree` / `ax` / `wait` / `tap` currently rely on `adb shell uiautomator dump` followed by `adb shell cat` of the dumped XML. `observe tree --outline` writes repo-local `.triton/node-aliases.json` aliases for immediate `node resolve @N` follow-up; refresh the outline when `node resolve` returns `stale_node_alias`. Parse `ax --platform android` as `host.android-ax`, and keep UIAutomator-backed commands serialized per emulator target during smoke or evidence capture; concurrent dump/read-back flows on the same emulator have previously produced host command exits before the XML was fully available.
 
 HarmonyOS NEXT / DevEco Emulator host-side discovery does not require a running TritonKit embedded runtime:
 

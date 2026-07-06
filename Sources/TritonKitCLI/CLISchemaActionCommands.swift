@@ -10,6 +10,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
     let inputCommandFailureCodes = schemaInputCommandFailureCodes
     let runtimeBaseURLOption = schemaRuntimeBaseURLOption
     let semanticActionFailureCodes = schemaSemanticActionFailureCodes
+    let tapFailureCodes = schemaInputCommandFailureCodes + ["text_not_found", "host_command_failed"] + schemaIOSHostAXFailureCodes
     let actFailureCodes = [
         "text_not_found",
         "validation_failed",
@@ -18,6 +19,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
         "target_not_found",
         "ambiguous_target",
         "request_failed",
+        "host_command_failed",
         "action_failed",
         "target_unavailable",
         "runtime_unavailable",
@@ -27,7 +29,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
         "semantic_action_failed",
         "action_not_supported",
         "unsupported_runtime_scope",
-    ]
+    ] + schemaIOSHostAXFailureCodes
 
     return [
         TKCommandSchema(
@@ -35,7 +37,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             summary: "Workflow-level UI action surface for find, tap, type, paste, clear, swipe, press, focus, and form controls",
             requiresServer: true,
             requiresTarget: true,
-            runtimeScope: "embedded|host-android|host-harmony",
+            runtimeScope: "embedded|host-ios|host-android|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
                 target,
@@ -108,6 +110,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 targetResolutionOutputContract(),
                 inputResultOutputContract(),
                 inputSummaryOutputContract(),
+                hostIOSTapOutputContract(),
                 hostAndroidTapOutputContract(),
                 hostHarmonyTapOutputContract(),
                 hostAndroidSwipeOutputContract(),
@@ -121,7 +124,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             failureCodes: actFailureCodes,
             subcommands: [
                 TKCommandSubcommandSchema(name: "find", summary: "Resolve a target before acting", requiredOptions: ["<query>"], optionalOptions: ["--target", "--device", "--host", "--port", "--all", "--index", "--within", "--at", "--format", "--json"], outputSelectors: ["target.resolution"], failureCodes: ["text_not_found", "validation_failed", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"]),
-                TKCommandSubcommandSchema(name: "tap", summary: "Tap a UI target", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--x", "--y", "--at", "--oid", "--ax-oid", "--ax-label", "--strategy", "--index", "--within", "--format", "--json"], outputSelectors: ["input.result", "host.android-tap", "host.harmony-tap"], failureCodes: ["text_not_found", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"]),
+                TKCommandSubcommandSchema(name: "tap", summary: "Tap a UI target", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--x", "--y", "--at", "--oid", "--ax-oid", "--ax-label", "--strategy", "--index", "--within", "--format", "--json"], outputSelectors: ["input.result", "host.ios-tap", "host.android-tap", "host.harmony-tap"], failureCodes: tapFailureCodes),
                 TKCommandSubcommandSchema(name: "type", summary: "Type text into the focused field", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--oid", "--secure", "--exact", "--format", "--json"], outputSelectors: ["input.result", "host.android-text-input", "host.harmony-text-input"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "paste", summary: "Paste exact text", requiredOptions: ["<text>"], optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--secure", "--oid", "--x", "--y", "--at", "--format", "--json"], outputSelectors: ["input.result", "host.android-text-input", "host.harmony-text-input"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "clear", summary: "Clear text input", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--oid", "--x", "--y", "--at", "--format", "--json"], outputSelectors: ["input.result"], failureCodes: inputCommandFailureCodes),
@@ -184,11 +187,11 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             summary: "Tap a UI target by text, coordinate, view oid, or AX node",
             requiresServer: true,
             requiresTarget: true,
-            runtimeScope: "embedded|host-android|host-harmony",
+            runtimeScope: "embedded|host-ios|host-android|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
                 target,
-                TKCommandSchemaOption(name: "--platform", type: "android|harmony", description: "Tap by Android adb input or Harmony hdc uitest using host layout text or coordinates"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Tap by iOS host AX, Android adb input, or Harmony hdc uitest using host layout text or coordinates"),
                 TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path for --platform android"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
                 TKCommandSchemaOption(name: "<query>", type: "String", description: "Visible text, AX label, identifier, value, or option title to tap"),
@@ -208,6 +211,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             examples: [
                 #"triton tap "HTTP""#,
                 #"triton tap "HTTP" --device booted --json"#,
+                #"triton tap "设置" --platform ios --device booted --json"#,
                 #"triton tap "我的" --platform harmony --json"#,
                 #"triton tap "hello" --index 2"#,
                 #"triton tap "hello" --at 240,580"#,
@@ -218,7 +222,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 "triton tap --oid 13",
                 "triton tap --ax-label Save",
             ],
-            successShape: "{ ok, action, message, targetOID, targetClassName, matchedOID?, matchedClassName?, activationOID?, activationClassName?, strategy? } or HostAndroidTapOutput or HostHarmonyTapOutput",
+            successShape: "{ ok, action, message, targetOID, targetClassName, matchedOID?, matchedClassName?, activationOID?, activationClassName?, strategy? } or HostIOSTapOutput or HostAndroidTapOutput or HostHarmonyTapOutput",
             outputSemantics: "Use tap after find when targets are ambiguous. Follow successful taps with wait/assert and capture evidence on failure.",
             nextCommands: [
                 "triton status --json",
@@ -226,9 +230,9 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 "triton verify text-exists <text> --json",
                 "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
             ],
-            outputContracts: [inputResultOutputContract(), hostAndroidTapOutputContract(), hostHarmonyTapOutputContract()],
-            failureCodes: ["text_not_found", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"],
-            providedCapabilities: ["tap", "android-tap-text", "harmony-tap-text"]
+            outputContracts: [inputResultOutputContract(), hostIOSTapOutputContract(), hostAndroidTapOutputContract(), hostHarmonyTapOutputContract()],
+            failureCodes: tapFailureCodes,
+            providedCapabilities: ["tap", "ios-simulator-host-tap", "android-tap-text", "harmony-tap-text"]
         ),
         TKCommandSchema(
             name: "swipe",

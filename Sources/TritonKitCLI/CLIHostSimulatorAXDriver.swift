@@ -4,6 +4,110 @@ import ObjectiveC
 import TritonKitShared
 import TritonKit
 
+enum HostSimulatorAXError: Error, CustomStringConvertible, Equatable {
+    case unsupportedPlatform
+    case privateFrameworkUnavailable
+    case translatorUnavailable
+    case targetNotFound(String)
+    case frontmostApplicationUnavailable(String)
+    case platformElementUnavailable(String)
+    case treeUnavailable(String)
+    case actionUnavailable(String)
+
+    var detail: TKCLIErrorDetail {
+        TKCLIErrorDetail(
+            code: code,
+            message: message,
+            hint: hint,
+            nextAction: nextAction,
+            suggestedCommands: suggestedCommands
+        )
+    }
+
+    var description: String { "\(code): \(message)" }
+
+    private var code: String {
+        switch self {
+        case .unsupportedPlatform:
+            return "ios_host_ax_unsupported_platform"
+        case .privateFrameworkUnavailable, .translatorUnavailable:
+            return "ios_host_ax_unavailable"
+        case .targetNotFound:
+            return "simulator_not_found"
+        case .frontmostApplicationUnavailable:
+            return "ios_host_ax_frontmost_unavailable"
+        case .platformElementUnavailable:
+            return "ios_host_ax_platform_element_unavailable"
+        case .treeUnavailable:
+            return "ios_host_ax_tree_unavailable"
+        case .actionUnavailable:
+            return "ios_host_ax_action_unavailable"
+        }
+    }
+
+    private var message: String {
+        switch self {
+        case .unsupportedPlatform:
+            return "Host-side iOS Simulator AX is available only on macOS."
+        case .privateFrameworkUnavailable:
+            return "AccessibilityPlatformTranslation private framework is not available."
+        case .translatorUnavailable:
+            return "AXPTranslator shared instance is not available."
+        case .targetNotFound(let target):
+            return "Simulator target not found: \(target)."
+        case .frontmostApplicationUnavailable(let udid):
+            return "Unable to read the frontmost application AX root for simulator \(udid)."
+        case .platformElementUnavailable(let udid):
+            return "Unable to convert the AX translation into a macOS platform element for simulator \(udid)."
+        case .treeUnavailable(let udid):
+            return "Unable to build the host-side AX tree for simulator \(udid)."
+        case .actionUnavailable(let target):
+            return "Unable to submit host-side AX press for simulator target \(target)."
+        }
+    }
+
+    private var hint: String? {
+        switch self {
+        case .unsupportedPlatform:
+            return "Run this command from macOS with Xcode installed."
+        case .privateFrameworkUnavailable, .translatorUnavailable:
+            return "Use `triton device doctor --platform ios --json` and verify the local Xcode / Simulator private-framework environment."
+        case .targetNotFound:
+            return "Run `triton sim list --json` and pass a booted simulator UDID with `triton sim ax --device <udid> --json`."
+        case .frontmostApplicationUnavailable, .platformElementUnavailable, .treeUnavailable:
+            return "Bring the simulator window forward, verify the target is booted, then retry `triton sim ax --device <udid> --json`."
+        case .actionUnavailable:
+            return "Run `triton observe tree --platform ios --device <selector> --json` and choose a visible tappable node or coordinate."
+        }
+    }
+
+    private var nextAction: TKCLINextAction? {
+        switch self {
+        case .targetNotFound:
+            return TKCLINextAction(command: "sim", args: ["list", "--json"], category: "diagnose")
+        case .unsupportedPlatform, .privateFrameworkUnavailable, .translatorUnavailable:
+            return TKCLINextAction(command: "device", args: ["doctor", "--platform", "ios", "--json"], category: "diagnose")
+        case .frontmostApplicationUnavailable, .platformElementUnavailable, .treeUnavailable:
+            return TKCLINextAction(command: "sim", args: ["ax", "--device", "<udid>", "--json"], category: "observe")
+        case .actionUnavailable:
+            return TKCLINextAction(command: "observe", args: ["tree", "--platform", "ios", "--device", "<selector>", "--json"], category: "observe")
+        }
+    }
+
+    private var suggestedCommands: [String] {
+        switch self {
+        case .targetNotFound:
+            return ["triton sim list --json", "triton sim boot <udid> --wait --jsonl"]
+        case .unsupportedPlatform, .privateFrameworkUnavailable, .translatorUnavailable:
+            return ["triton device doctor --platform ios --json", "triton schema --command sim --json"]
+        case .frontmostApplicationUnavailable, .platformElementUnavailable, .treeUnavailable:
+            return ["triton sim list --json", "triton sim screenshot --simulator <udid> --output <path.png> --json"]
+        case .actionUnavailable:
+            return ["triton observe tree --platform ios --device <selector> --json", "triton node resolve --platform ios --device <selector> --text <text> --json"]
+        }
+    }
+}
+
 #if os(macOS)
 
 // MARK: - AX Element Reader
@@ -158,6 +262,46 @@ class AXPTranslatorAccessibility {
         guard let root = try describeAll() else { return nil }
         return findNodeLocally(node: root, point: point)
     }
+
+    func press(query: String?, point: CGPoint?, index: Int?, within: TKRect?) throws -> TKAXNode {
+        if let index, index <= 0 {
+            throw RuntimeError("--index must be greater than 0")
+        }
+        guard let pressedNode = try withAXPContext({ ctx in
+            Self.stampElementTranslation(token: ctx.token, on: ctx.frontmostRoot)
+            Self.stampSubtree(ctx.frontmostRoot, token: ctx.token, depthCap: Self.maxDepth)
+
+            let selected: ElementNodeMatch?
+            if let point {
+                selected = Self.elementAtPoint(point, context: ctx)
+            } else if let query {
+                let candidates = Self.elementMatches(
+                    root: ctx.frontmostRoot,
+                    query: query,
+                    transform: ctx.transform,
+                    depthCap: Self.maxDepth,
+                    within: within,
+                    deadline: ctx.deadline
+                )
+                let selectedIndex = index ?? 1
+                guard selectedIndex <= candidates.count else {
+                    throw RuntimeError(candidates.isEmpty
+                        ? "No current UI node matched query: \(query)"
+                        : "Only \(candidates.count) UI node(s) matched query: \(query); cannot select --index \(selectedIndex)")
+                }
+                selected = candidates[selectedIndex - 1]
+            } else {
+                selected = nil
+            }
+
+            guard let selected else { throw HostSimulatorAXError.actionUnavailable(udid) }
+            guard Self.performPress(on: selected.element) else { throw HostSimulatorAXError.actionUnavailable(udid) }
+            return selected.node
+        }) else {
+            throw HostSimulatorAXError.actionUnavailable(udid)
+        }
+        return pressedNode
+    }
     
     private func findNodeLocally(node: TKAXNode, point: CGPoint) -> TKAXNode? {
         guard contains(node.frame, point) else { return nil }
@@ -182,20 +326,26 @@ class AXPTranslatorAccessibility {
     }
 
     private func withAXPContext<T>(_ body: (AXPContext) throws -> T?) throws -> T? {
-        guard Self.isAvailable else { return nil }
-        guard let device = resolveDevice() else { return nil }
+        if let error = Self.availabilityError {
+            throw error
+        }
+        guard let device = resolveDevice() else { throw HostSimulatorAXError.targetNotFound(udid) }
 
         let token = UUID().uuidString
         let deadline = Date().addingTimeInterval(Self.xpcTimeoutSeconds)
         Self.sharedDispatcher.register(device: device, token: token, deadline: deadline)
         defer { Self.sharedDispatcher.unregister(token: token) }
 
-        guard let translator = Self.sharedTranslator else { return nil }
+        guard let translator = Self.sharedTranslator else { throw HostSimulatorAXError.translatorUnavailable }
 
-        guard let translation = Self.frontmostApplication(translator: translator, token: token) else { return nil }
+        guard let translation = Self.frontmostApplication(translator: translator, token: token) else {
+            throw HostSimulatorAXError.frontmostApplicationUnavailable(udid)
+        }
         Self.stamp(token: token, on: translation)
 
-        guard let frontmostRoot = Self.macPlatformElement(translator: translator, translation: translation) else { return nil }
+        guard let frontmostRoot = Self.macPlatformElement(translator: translator, translation: translation) else {
+            throw HostSimulatorAXError.platformElementUnavailable(udid)
+        }
         let pointSize = Self.devicePointSize(for: device)
         let rootFrame = AXElementReader.frame(of: frontmostRoot)
         let transform = AXFrameTransform(rootFrame: rootFrame, pointSize: pointSize)
@@ -232,6 +382,11 @@ class AXPTranslatorAccessibility {
     }
 
     static var isAvailable: Bool { sharedTranslator != nil }
+    static var availabilityError: HostSimulatorAXError? {
+        if !frameworksLoaded { return .privateFrameworkUnavailable }
+        if sharedTranslator == nil { return .translatorUnavailable }
+        return nil
+    }
     private static let frameworksLoaded: Bool = {
         let path = "/System/Library/PrivateFrameworks/AccessibilityPlatformTranslation.framework/AccessibilityPlatformTranslation"
         return dlopen(path, RTLD_NOW | RTLD_GLOBAL) != nil
@@ -335,6 +490,165 @@ class AXPTranslatorAccessibility {
             className: nil,
             children: children
         )
+    }
+
+    private struct ElementNodeMatch {
+        let element: NSObject
+        let node: TKAXNode
+        let depth: Int
+    }
+
+    private static func elementAtPoint(_ point: CGPoint, context: AXPContext) -> ElementNodeMatch? {
+        if supportsServerSideHitTest,
+           let hitTranslation = objectAtPoint(translator: context.translator, point: context.transform.unmap(point), displayId: 0, token: context.token) {
+            stamp(token: context.token, on: hitTranslation)
+            if let hitElement = macPlatformElement(translator: context.translator, translation: hitTranslation) {
+                stampElementTranslation(token: context.token, on: hitElement)
+                return ElementNodeMatch(
+                    element: hitElement,
+                    node: summaryNode(from: hitElement, transform: context.transform),
+                    depth: 0
+                )
+            }
+        }
+        return elementContainingPoint(
+            context.frontmostRoot,
+            point: point,
+            transform: context.transform,
+            depthCap: maxDepth,
+            deadline: context.deadline
+        )
+    }
+
+    private static func elementMatches(
+        root: NSObject,
+        query: String,
+        transform: AXFrameTransform,
+        depthCap: Int,
+        within: TKRect?,
+        deadline: Date
+    ) -> [ElementNodeMatch] {
+        var matches: [ElementNodeMatch] = []
+        collectElementMatches(
+            root,
+            query: query,
+            transform: transform,
+            depthCap: depthCap,
+            depth: 0,
+            within: within,
+            deadline: deadline,
+            matches: &matches
+        )
+        return matches
+    }
+
+    private static func collectElementMatches(
+        _ element: NSObject,
+        query: String,
+        transform: AXFrameTransform,
+        depthCap: Int,
+        depth: Int,
+        within: TKRect?,
+        deadline: Date,
+        matches: inout [ElementNodeMatch]
+    ) {
+        guard depth <= depthCap, Date() < deadline else { return }
+        let node = summaryNode(from: element, transform: transform)
+        if nodeMatches(node, query: query) && nodeMatchesBounds(node, within: within) {
+            matches.append(ElementNodeMatch(element: element, node: node, depth: depth))
+        }
+        for child in AXElementReader.children(of: element) {
+            collectElementMatches(
+                child,
+                query: query,
+                transform: transform,
+                depthCap: depthCap,
+                depth: depth + 1,
+                within: within,
+                deadline: deadline,
+                matches: &matches
+            )
+        }
+    }
+
+    private static func elementContainingPoint(
+        _ element: NSObject,
+        point: CGPoint,
+        transform: AXFrameTransform,
+        depthCap: Int,
+        depth: Int = 0,
+        deadline: Date
+    ) -> ElementNodeMatch? {
+        guard depth <= depthCap, Date() < deadline else { return nil }
+        let node = summaryNode(from: element, transform: transform)
+        guard node.frame.contains(x: point.x, y: point.y) else { return nil }
+        for child in AXElementReader.children(of: element) {
+            if let match = elementContainingPoint(
+                child,
+                point: point,
+                transform: transform,
+                depthCap: depthCap,
+                depth: depth + 1,
+                deadline: deadline
+            ) {
+                return match
+            }
+        }
+        return ElementNodeMatch(element: element, node: node, depth: depth)
+    }
+
+    private static func summaryNode(from element: NSObject, transform: AXFrameTransform) -> TKAXNode {
+        let role = AXElementReader.string(element, "accessibilityRole") ?? "AXUnknown"
+        let projected = transform.map(AXElementReader.frame(of: element))
+        return TKAXNode(
+            role: role,
+            label: AXElementReader.string(element, "accessibilityLabel"),
+            value: AXElementReader.stringOrNumber(element, "accessibilityValue"),
+            identifier: AXElementReader.string(element, "accessibilityIdentifier"),
+            title: AXElementReader.string(element, "accessibilityTitle"),
+            frame: TKRect(
+                x: Double(projected.origin.x),
+                y: Double(projected.origin.y),
+                width: Double(projected.size.width),
+                height: Double(projected.size.height)
+            ),
+            enabled: AXElementReader.bool(element, "accessibilityEnabled", default: true) || AXElementReader.bool(element, "isAccessibilityEnabled", default: false),
+            focused: AXElementReader.bool(element, "isAccessibilityFocused", default: false) || AXElementReader.bool(element, "accessibilityFocused", default: false),
+            hidden: AXElementReader.bool(element, "isAccessibilityHidden", default: false) || AXElementReader.bool(element, "accessibilityHidden", default: false),
+            targetOID: nil,
+            className: nil,
+            children: []
+        )
+    }
+
+    private static func nodeMatches(_ node: TKAXNode, query: String) -> Bool {
+        [node.label, node.value, node.identifier, node.title, node.role]
+            .compactMap { $0 }
+            .contains(query)
+    }
+
+    private static func nodeMatchesBounds(_ node: TKAXNode, within: TKRect?) -> Bool {
+        guard let within else { return true }
+        return TKRectIntersects(node.frame, within)
+    }
+
+    private static func performPress(on element: NSObject) -> Bool {
+        let pressSelector = NSSelectorFromString("accessibilityPerformPress")
+        if element.responds(to: pressSelector),
+           let imp = class_getMethodImplementation(type(of: element), pressSelector) {
+            typealias Fn = @convention(c) (AnyObject, Selector) -> Bool
+            if unsafeBitCast(imp, to: Fn.self)(element, pressSelector) {
+                return true
+            }
+        }
+
+        let performActionSelector = NSSelectorFromString("accessibilityPerformAction:")
+        if element.responds(to: performActionSelector) {
+            _ = element.perform(performActionSelector, with: "AXPress" as NSString)
+            return true
+        }
+
+        return false
     }
 }
 
@@ -447,6 +761,10 @@ private let bridgeCallbackImp: @convention(c) (AnyObject, Selector, AnyObject) -
     return withUnsafePointer(to: &globalBlock) { UnsafeRawPointer($0) }
 }
 
+private let rootParentImp: @convention(c) (AnyObject, Selector, AnyObject) -> AnyObject? = { selfObj, selector, token in
+    nil
+}
+
 final class TokenDispatcher: NSObject {
     struct Entry {
         let device: NSObject
@@ -462,6 +780,9 @@ final class TokenDispatcher: NSObject {
         let sel = NSSelectorFromString("accessibilityTranslationDelegateBridgeCallbackWithToken:")
         let imp = unsafeBitCast(bridgeCallbackImp, to: IMP.self)
         class_addMethod(TokenDispatcher.self, sel, imp, "@@:@")
+        let rootParentSelector = NSSelectorFromString("accessibilityTranslationRootParentWithToken:")
+        let rootParentMethod = unsafeBitCast(rootParentImp, to: IMP.self)
+        class_addMethod(TokenDispatcher.self, rootParentSelector, rootParentMethod, "@@:@")
     }
 
     func register(device: NSObject, token: String, deadline: Date) {

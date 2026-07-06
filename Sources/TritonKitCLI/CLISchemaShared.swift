@@ -29,8 +29,24 @@ let schemaRuntimeTargetFailureCodes = [
     "validation_failed",
 ]
 
+let schemaIOSHostAXFailureCodes = [
+    "simulator_not_found",
+    "ios_host_ax_unavailable",
+    "ios_host_ax_frontmost_unavailable",
+    "ios_host_ax_platform_element_unavailable",
+    "ios_host_ax_tree_unavailable",
+    "ios_host_ax_action_unavailable",
+    "ios_host_ax_unsupported_platform",
+]
+
 let schemaHierarchyFailureCodes = schemaRuntimeTargetFailureCodes + ["hierarchy_unavailable"]
-let schemaNodeFailureCodes = schemaHierarchyFailureCodes + ["node_not_found", "ambiguous_target", "host_command_failed"]
+let schemaNodeFailureCodes = schemaHierarchyFailureCodes + [
+    "node_not_found",
+    "node_alias_not_found",
+    "stale_node_alias",
+    "ambiguous_target",
+    "host_command_failed",
+] + schemaIOSHostAXFailureCodes
 let schemaSemanticActionFailureCodes = schemaRuntimeTargetFailureCodes + [
     "ambiguous_target",
     "text_not_found",

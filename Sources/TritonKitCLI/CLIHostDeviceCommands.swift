@@ -1453,9 +1453,11 @@ struct DeviceStart: AsyncParsableCommand {
 struct DeviceStop: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "stop", abstract: "Stop a host-side device or emulator")
 
-    @Option(help: "Platform adapter: harmony") var platform: HostDevicePlatform = .harmony
-    @Option(help: "Harmony HVD name, for example Codex Test Phone") var hvd: String
-    @Option(help: "DevEco deployed emulator path, for example ~/.Huawei/Emulator/deployed") var path: String
+    @Option(help: "Platform adapter: android|harmony") var platform: HostDevicePlatform = .harmony
+    @Option(help: "Android adb serial or alias") var device: String?
+    @Option(help: "ADB executable path") var adb: String = "adb"
+    @Option(help: "Harmony HVD name, for example Codex Test Phone") var hvd: String?
+    @Option(help: "DevEco deployed emulator path, for example ~/.Huawei/Emulator/deployed") var path: String?
     @Option(help: "Path to DevEco Emulator executable") var emulator: String = "/Applications/DevEco-Studio.app/Contents/tools/emulator/Emulator"
     @Option(help: "Triton launchd job label to unload before stopping") var launchdLabel: String = "triton-harmony-emulator"
     @Option(help: "launchd domain, defaults to gui/<uid>") var launchdDomain: String = defaultLaunchdDomain()
@@ -1467,45 +1469,83 @@ struct DeviceStop: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            guard platform == .harmony else {
+            switch platform {
+            case .android:
+                let selection = try resolveHostDeviceSelection(
+                    request: HostDeviceSelectionRequest(device: device, platform: .android, scope: .emulator),
+                    hdc: "hdc",
+                    adb: adb
+                )
+                guard selection.target.scope == HostDeviceScope.emulator.rawValue else {
+                    throw HostDeviceSelectionError.parameterConflict("Android device stop supports emulator targets only.")
+                }
+                guard confirm else {
+                    throw HostDeviceSelectionError.parameterConflict("device stop requires --confirm.")
+                }
+                let command = TKAndroidADBCommand.killEmulator(serial: selection.target.rawTarget, executable: adb)
+                let result = try runHostCommand(command)
+                let output = HostDeviceStopOutput(
+                    ok: true,
+                    action: "device.stop",
+                    platform: "android",
+                    target: selection.target.id,
+                    adb: adb,
+                    hvd: nil,
+                    deployedPath: nil,
+                    emulator: nil,
+                    launchdLabel: nil,
+                    launchdDomain: nil,
+                    sourceCommands: [result.sourceCommand],
+                    note: "Android emulator stop completed. Verify with `triton device list --platform android --json`; the target should be absent or offline."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(output))
+                case .text:
+                    print(output.note)
+                }
+            case .harmony:
+                let plan = try harmonyEmulatorStopPlan(
+                    hvd: hvd ?? "",
+                    deployedPath: path ?? "",
+                    emulator: emulator,
+                    launchdLabel: launchdLabel,
+                    launchdDomain: launchdDomain,
+                    includeLaunchd: !skipLaunchd,
+                    confirmed: confirm
+                )
+                var sourceCommands: [String] = []
+                for command in plan.commands {
+                    let result = try runHostCommand(command)
+                    sourceCommands.append(result.sourceCommand)
+                }
+                let output = HostDeviceStopOutput(
+                    ok: true,
+                    action: plan.action,
+                    platform: plan.platform,
+                    target: nil,
+                    adb: nil,
+                    hvd: plan.hvd,
+                    deployedPath: plan.deployedPath,
+                    emulator: plan.emulator,
+                    launchdLabel: plan.launchdLabel,
+                    launchdDomain: plan.launchdDomain,
+                    sourceCommands: sourceCommands,
+                    note: "Harmony emulator stop completed. Verify with `triton device list --platform harmony --json`; the target should remain disconnected or absent."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(output))
+                case .text:
+                    print(output.note)
+                }
+            case .ios:
                 try failHostUnsupportedCapability(
-                    message: "device stop currently supports Harmony Emulator only.",
-                    hint: "Android emulator lifecycle stop/start is not part of the current Triton device surface.",
-                    nextAction: TKCLINextAction(command: "schema", args: ["--command", "device", "--json"], category: "plan"),
+                    message: "device stop does not stop iOS Simulators.",
+                    hint: "Use `triton sim shutdown <udid-or-booted> --json` for iOS Simulator lifecycle.",
+                    nextAction: TKCLINextAction(command: "sim", args: ["shutdown", "<udid-or-booted>", "--json"], category: "prepare-target"),
                     outputFormat: outputFormat
                 )
-            }
-            let plan = try harmonyEmulatorStopPlan(
-                hvd: hvd,
-                deployedPath: path,
-                emulator: emulator,
-                launchdLabel: launchdLabel,
-                launchdDomain: launchdDomain,
-                includeLaunchd: !skipLaunchd,
-                confirmed: confirm
-            )
-            var sourceCommands: [String] = []
-            for command in plan.commands {
-                let result = try runHostCommand(command)
-                sourceCommands.append(result.sourceCommand)
-            }
-            let output = HostDeviceStopOutput(
-                ok: true,
-                action: plan.action,
-                platform: plan.platform,
-                hvd: plan.hvd,
-                deployedPath: plan.deployedPath,
-                emulator: plan.emulator,
-                launchdLabel: plan.launchdLabel,
-                launchdDomain: plan.launchdDomain,
-                sourceCommands: sourceCommands,
-                note: "Harmony emulator stop completed. Verify with `triton device list --platform harmony --json`; the target should remain disconnected or absent."
-            )
-            switch outputFormat {
-            case .json:
-                print(try encodeJSON(output))
-            case .text:
-                print(output.note)
             }
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)

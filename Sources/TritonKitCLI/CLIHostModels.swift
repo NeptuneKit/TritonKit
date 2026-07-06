@@ -18,6 +18,7 @@ enum HostDeviceScope: String, ExpressibleByArgument, Codable {
 }
 
 enum HostPlatform: String, ExpressibleByArgument {
+    case ios
     case android
     case harmony
 }
@@ -568,9 +569,11 @@ struct HostDeviceStopOutput: Encodable {
     let ok: Bool
     let action: String
     let platform: String
-    let hvd: String
-    let deployedPath: String
-    let emulator: String
+    let target: String?
+    let adb: String?
+    let hvd: String?
+    let deployedPath: String?
+    let emulator: String?
     let launchdLabel: String?
     let launchdDomain: String?
     let sourceCommands: [String]
@@ -629,6 +632,19 @@ struct HostHarmonyTapOutput: Encodable {
     let x: Int
     let y: Int
     let match: TKHarmonyLayoutTextMatch?
+    let sourceCommands: [String]
+    let note: String
+}
+
+struct HostIOSTapOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: HostDeviceTarget
+    let query: String?
+    let x: Int
+    let y: Int
+    let match: TKAXNode
     let sourceCommands: [String]
     let note: String
 }

@@ -62,12 +62,14 @@ func runObserve(
     runtimeBaseURL: String?,
     maxNodes: Int?,
     output: String?,
+    outline: Bool = false,
     format: ClientOutputFormat,
-    json: Bool
+    json: Bool,
+    iosHostAX: Bool = false
 ) async throws {
     let outputFormat = effectiveFormat(format, json: json)
     do {
-        let response: ObserveOutput
+        var response: ObserveOutput
         switch platform {
         case .harmony:
             response = try await observeHarmony(
@@ -96,14 +98,27 @@ func runObserve(
                 host: host,
                 port: port,
                 runtimeBaseURL: runtimeBaseURL,
-                maxNodes: maxNodes
+                maxNodes: maxNodes,
+                iosHostAX: iosHostAX
             )
+        }
+        if outline {
+            response = try observeOutputWithNodeOutline(response, workspace: FileManager.default.currentDirectoryPath)
         }
         switch outputFormat {
         case .json:
             print(try encodeJSON(response))
         case .text:
             print("\(response.platform) \(response.action) nodes=\(response.nodes.count) partial=\(response.partial)")
+            if let outline = response.outline, !outline.isEmpty {
+                for alias in outline {
+                    let text = alias.text.map { " \"\($0)\"" } ?? ""
+                    let identifier = alias.identifier.map { " #\($0)" } ?? ""
+                    let frame = alias.frame.map { " \(formatRect($0))" } ?? ""
+                    print("\(alias.alias) \(alias.source) \(alias.role ?? "-")\(text)\(identifier)\(frame)")
+                }
+                return
+            }
             for node in response.nodes.prefix(30) {
                 let text = node.text.map { " \"\($0)\"" } ?? ""
                 let identifier = node.identifier.map { " #\($0)" } ?? ""
@@ -338,8 +353,13 @@ func observeIOS(
     host: String,
     port: Int,
     runtimeBaseURL: String?,
-    maxNodes: Int?
+    maxNodes: Int?,
+    iosHostAX: Bool = false
 ) async throws -> ObserveOutput {
+    if runtimeBaseURL == nil, iosHostAX {
+        return try observeIOSHostAX(action: action, target: target, maxNodes: maxNodes)
+    }
+
     let snapshotData: Data
     let targetID: String
     if let runtimeBaseURL {
@@ -375,6 +395,55 @@ func observeIOS(
         artifacts: snapshot.artifacts.map(\.name),
         sourceCommands: runtimeBaseURL.map { ["GET \($0)/snapshot"] } ?? ["triton runtimeSnapshot request"],
         note: "iOS P0 observe uses the DEBUG embedded runtime AX tree. WebView DOM, JavaScript, and bridge state require a Web provider."
+    )
+}
+
+func observeIOSHostAX(action: String, target: String, maxNodes: Int?) throws -> ObserveOutput {
+    #if os(macOS)
+    guard let tree = try AXPTranslatorAccessibility(udid: target).describeAll() else {
+        throw HostSimulatorAXError.treeUnavailable(target)
+    }
+    return observeIOSHostAXOutput(action: action, target: target, root: tree, maxNodes: maxNodes)
+    #else
+    throw HostSimulatorAXError.unsupportedPlatform
+    #endif
+}
+
+func observeIOSHostAXOutput(
+    action: String,
+    target: String,
+    root: TKAXNode,
+    maxNodes: Int?,
+    capturedAt: String = ISO8601DateFormatter().string(from: Date())
+) -> ObserveOutput {
+    var nodes = observeNodes(fromAX: [root], source: "host-layout", prefix: "ios-host")
+    if let maxNodes {
+        nodes = Array(nodes.prefix(maxNodes))
+    }
+    let sourceCommands = ["triton sim ax --device \(target) --json"]
+    let hostSource = ObserveSourceOutput(
+        name: "host-layout",
+        available: true,
+        reason: nil,
+        artifact: nil,
+        sourceCommands: sourceCommands
+    )
+    return ObserveOutput(
+        ok: true,
+        action: action,
+        platform: "ios",
+        capturedAt: capturedAt,
+        partial: true,
+        target: "sim:\(target)",
+        sources: [
+            hostSource,
+            ObserveSourceOutput(name: "runtime-tree", available: false, reason: "embedded runtime not used because host simulator target was requested", artifact: nil, sourceCommands: []),
+            ObserveSourceOutput(name: "webview-provider", available: false, reason: "provider not registered", artifact: nil, sourceCommands: []),
+        ],
+        nodes: nodes,
+        artifacts: [],
+        sourceCommands: sourceCommands,
+        note: "iOS host observe uses the Simulator private-framework AX tree. Use embedded runtime AX when connected for runtime OIDs and app-internal state."
     )
 }
 
@@ -556,6 +625,7 @@ func isWebCandidate(role: String?, className: String?, identifier: String? = nil
 
 func runNodeResolve(
     platform: ObservationPlatform,
+    query: String?,
     text: String?,
     target: String,
     hdc: String,
@@ -567,7 +637,8 @@ func runNodeResolve(
     at: String?,
     all: Bool,
     format: ClientOutputFormat,
-    json: Bool
+    json: Bool,
+    iosHostAX: Bool = false
 ) async throws {
     let outputFormat = effectiveFormat(format, json: json)
     do {
@@ -578,47 +649,64 @@ func runNodeResolve(
             }
             throw RuntimeError("--within and --at cannot be used together")
         }
-        guard let text, !text.isEmpty else {
+        if query != nil && text != nil {
             if outputFormat == .json {
-                try printValidationError("`triton node resolve` requires --text")
+                try printValidationError("`triton node resolve` accepts either <query> or --text, not both")
                 throw ExitCode.failure
             }
-            throw RuntimeError("`triton node resolve` requires --text")
+            throw RuntimeError("`triton node resolve` accepts either <query> or --text, not both")
+        }
+        guard let text = query ?? text, !text.isEmpty else {
+            if outputFormat == .json {
+                try printValidationError("`triton node resolve` requires <query> or --text")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("`triton node resolve` requires <query> or --text")
         }
         let bounds = try within.map(parseBounds)
         let point = try at.map(parsePoint)
         let response: NodeResolveOutput
-        switch platform {
-        case .harmony:
-            response = try resolveHarmonyNode(
-                query: text,
+        if isNodeAliasQuery(text) {
+            response = try resolveNodeAlias(
+                text,
+                platform: platform.rawValue,
                 target: target,
-                hdc: hdc,
-                index: index,
-                within: bounds,
-                at: point,
-                includeCandidates: all
+                workspace: FileManager.default.currentDirectoryPath
             )
-        case .android:
-            response = try resolveAndroidNode(
-                query: text,
-                target: target,
-                index: index,
-                within: bounds,
-                at: point
-            )
-        case .ios:
-            response = try await resolveIOSNode(
-                query: text,
-                target: target,
-                host: host,
-                port: port,
-                runtimeBaseURL: runtimeBaseURL,
-                index: index,
-                within: bounds,
-                at: point,
-                includeCandidates: all
-            )
+        } else {
+            switch platform {
+            case .harmony:
+                response = try resolveHarmonyNode(
+                    query: text,
+                    target: target,
+                    hdc: hdc,
+                    index: index,
+                    within: bounds,
+                    at: point,
+                    includeCandidates: all
+                )
+            case .android:
+                response = try resolveAndroidNode(
+                    query: text,
+                    target: target,
+                    index: index,
+                    within: bounds,
+                    at: point
+                )
+            case .ios:
+                response = try await resolveIOSNode(
+                    query: text,
+                    target: target,
+                    host: host,
+                    port: port,
+                    runtimeBaseURL: runtimeBaseURL,
+                    index: index,
+                    within: bounds,
+                    at: point,
+                    includeCandidates: all,
+                    iosHostAX: iosHostAX
+                )
+            }
         }
         switch outputFormat {
         case .json:
@@ -736,11 +824,24 @@ func resolveIOSNode(
     index: Int?,
     within: TKRect?,
     at: (x: Double, y: Double)?,
-    includeCandidates: Bool
+    includeCandidates: Bool,
+    iosHostAX: Bool = false
 ) async throws -> NodeResolveOutput {
     let nodes: [ObserveNodeOutput]
     let sourceCommands: [String]
-    if let runtimeBaseURL {
+    if runtimeBaseURL == nil, iosHostAX {
+        let output = try await observeIOS(
+            action: "observe.tree",
+            target: target,
+            host: host,
+            port: port,
+            runtimeBaseURL: nil,
+            maxNodes: nil,
+            iosHostAX: true
+        )
+        nodes = output.nodes
+        sourceCommands = output.sourceCommands
+    } else if let runtimeBaseURL {
         let runtimeData = try await EmbeddedRuntimeHTTPClient(baseURL: runtimeBaseURL).request(.runtimeSnapshot, queryItems: [
             URLQueryItem(name: "include", value: "ax")
         ])
@@ -811,4 +912,138 @@ func observeNode(_ node: ObserveNodeOutput, matches query: String) -> Bool {
     [node.text, node.identifier, node.role, node.nodeID]
         .compactMap { $0 }
         .contains(query)
+}
+
+func makeObserveNodeOutline(from nodes: [ObserveNodeOutput]) -> [ObserveNodeAliasOutput] {
+    nodes
+        .filter(isObserveOutlineCandidate)
+        .enumerated()
+        .map { index, node in ObserveNodeAliasOutput(alias: "@\(index + 1)", node: node) }
+}
+
+func makeNodeAliasCache(from output: ObserveOutput, outline: [ObserveNodeAliasOutput]) -> NodeAliasCache {
+    NodeAliasCache(
+        platform: output.platform,
+        target: output.target,
+        capturedAt: output.capturedAt,
+        primarySourceName: output.primarySource?.name,
+        sourceCommands: output.sourceCommands,
+        aliases: outline
+    )
+}
+
+func saveNodeAliasCache(_ cache: NodeAliasCache, workspace: String) throws -> String {
+    let path = NodeAliasCache.filePath(workspace: workspace)
+    let url = URL(fileURLWithPath: path)
+    try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+    let encoder = JSONEncoder()
+    encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+    try encoder.encode(cache).write(to: url, options: [.atomic])
+    return path
+}
+
+func loadNodeAliasCache(workspace: String, platform: String, target: String) throws -> NodeAliasCache {
+    let path = NodeAliasCache.filePath(workspace: workspace)
+    guard FileManager.default.fileExists(atPath: path) else {
+        throw NodeAliasResolutionError.cacheMissing(path: path, platform: platform, target: target)
+    }
+    return try JSONDecoder().decode(NodeAliasCache.self, from: Data(contentsOf: URL(fileURLWithPath: path)))
+}
+
+func resolveNodeAlias(_ alias: String, platform: String, target: String, workspace: String) throws -> NodeResolveOutput {
+    guard isNodeAliasQuery(alias) else {
+        throw NodeAliasResolutionError.invalidAlias(alias)
+    }
+    let cache = try loadNodeAliasCache(workspace: workspace, platform: platform, target: target)
+    guard cache.platform == platform, nodeAliasTargetMatches(requested: target, cached: cache.target) else {
+        throw NodeAliasResolutionError.staleAlias(
+            alias: alias,
+            expectedPlatform: platform,
+            expectedTarget: target,
+            cachedPlatform: cache.platform,
+            cachedTarget: cache.target
+        )
+    }
+    guard let entry = cache.aliases.first(where: { $0.alias == alias }) else {
+        throw NodeAliasResolutionError.aliasNotFound(
+            alias: alias,
+            path: NodeAliasCache.filePath(workspace: workspace),
+            platform: platform,
+            target: target,
+            availableAliases: cache.aliases.map(\.alias)
+        )
+    }
+    return NodeResolveOutput(
+        ok: true,
+        action: "node.resolve",
+        platform: platform,
+        query: alias,
+        matchIndex: Int(alias.dropFirst()) ?? 1,
+        matchCount: cache.aliases.count,
+        node: entry.node,
+        candidates: nil,
+        sourceCommands: cache.sourceCommands
+    )
+}
+
+func isNodeAliasQuery(_ query: String) -> Bool {
+    guard query.hasPrefix("@") else { return false }
+    return Int(query.dropFirst()).map { $0 > 0 } ?? false
+}
+
+private func observeOutputWithNodeOutline(_ output: ObserveOutput, workspace: String) throws -> ObserveOutput {
+    let outline = makeObserveNodeOutline(from: output.nodes)
+    let cache = makeNodeAliasCache(from: output, outline: outline)
+    let path = try saveNodeAliasCache(cache, workspace: workspace)
+    return ObserveOutput(
+        ok: output.ok,
+        action: output.action,
+        platform: output.platform,
+        capturedAt: output.capturedAt,
+        partial: output.partial,
+        target: output.target,
+        primarySource: output.primarySource,
+        sources: output.sources,
+        nodes: output.nodes,
+        outline: outline,
+        aliasCache: ObserveAliasCacheOutput(path: path, aliasCount: outline.count),
+        artifacts: output.artifacts,
+        sourceCommands: output.sourceCommands,
+        note: output.note
+    )
+}
+
+private func isObserveOutlineCandidate(_ node: ObserveNodeOutput) -> Bool {
+    if node.hidden == true || node.candidateOnly {
+        return false
+    }
+    return hasNonEmptyValue(node.text)
+        || hasNonEmptyValue(node.identifier)
+        || !node.capabilities.isEmpty
+}
+
+private func hasNonEmptyValue(_ value: String?) -> Bool {
+    guard let value else { return false }
+    return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+}
+
+private func nodeAliasTargetMatches(requested: String, cached: String) -> Bool {
+    if requested == cached {
+        return true
+    }
+    let requestedVariants = nodeAliasTargetVariants(requested)
+    let cachedVariants = nodeAliasTargetVariants(cached)
+    return !requestedVariants.isDisjoint(with: cachedVariants)
+}
+
+private func nodeAliasTargetVariants(_ target: String) -> Set<String> {
+    var variants: Set<String> = [target]
+    for prefix in ["sim:", "android:", "harmony:"] {
+        if target.hasPrefix(prefix) {
+            variants.insert(String(target.dropFirst(prefix.count)))
+        } else {
+            variants.insert(prefix + target)
+        }
+    }
+    return variants
 }

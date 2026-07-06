@@ -55,6 +55,7 @@ struct DeviceCrossPlatformTests {
         #expect(usageForms.contains("runtime-url --device <selector>"))
         #expect(usageForms.contains("start --platform android --avd <name> --plan-only"))
         #expect(usageForms.contains("start --platform harmony --hvd <name> --path <deployed-path> --plan-only"))
+        #expect(usageForms.contains("stop --platform android --device <selector> --confirm"))
         #expect(usageForms.contains("stop --platform harmony --hvd <name> --path <deployed-path> --confirm"))
         #expect(optionNames.contains("--device"))
         #expect(optionNames.contains("--plan-only"))
@@ -79,6 +80,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.examples.contains("triton device runtime-url --device harmony-a --probe-manifest --json"))
         #expect(device.examples.contains("triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --confirm --json"))
         #expect(device.examples.contains("triton device start --platform android --avd Dxyer_API_34 --headless --gpu swiftshader_indirect --plan-only --json"))
+        #expect(device.examples.contains("triton device stop --platform android --device emulator-5554 --confirm --json"))
         #expect(device.examples.contains("triton device start --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --hdc-port 10100 --plan-only --json"))
         #expect(device.examples.contains("triton device bridge status --platform android --device emulator-5554 --json"))
         #expect(device.examples.contains("triton device bridge install --platform android --device emulator-5554 --apk /tmp/triton-bridge.apk --confirm --audit-record ticket-123 --execute-runner --json"))
@@ -120,6 +122,7 @@ struct DeviceCrossPlatformTests {
         #expect(device.providedCapabilities.contains("android-device"))
         #expect(device.providedCapabilities.contains("android-device-list"))
         #expect(device.providedCapabilities.contains("android-device-start"))
+        #expect(device.providedCapabilities.contains("android-device-stop"))
         #expect(device.providedCapabilities.contains("android-device-wait-ready"))
         #expect(device.providedCapabilities.contains("android-device-screenshot"))
         #expect(device.providedCapabilities.contains("android-bridge"))
@@ -286,6 +289,17 @@ struct DeviceCrossPlatformTests {
         #expect(executed.ok)
         #expect(executed.error == nil)
         #expect(executed.limitations.contains("android_bridge_runner_executed:auditRecord=ticket-123"))
+    }
+
+    @Test("Android emulator stop uses adb emu kill for the selected serial")
+    func androidEmulatorStopUsesADBEmuKillForSelectedSerial() {
+        let command = TKAndroidADBCommand.killEmulator(serial: "emulator-5554")
+
+        #expect(command.executable == "adb")
+        #expect(command.argv == ["-s", "emulator-5554", "emu", "kill"])
+        #expect(command.riskLevel == .automation)
+        #expect(command.requiredConfig.contains(.target))
+        #expect(command.requiredConfig.contains(.auditRecord))
     }
 
     @Test("device proxy capabilities expose three-platform network takeover metadata")

@@ -50,7 +50,7 @@ struct TritonKitEntry {
     private static let retiredRootCommandNames: Set<String> = [
         "find", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "input",
         "assert", "capture",
-        "runtime", "state", "snapshot", "hierarchy", "nodes", "node", "attrs", "object", "geometry", "ax", "hit", "ledger",
+        "runtime", "state", "snapshot", "hierarchy", "nodes", "attrs", "object", "geometry", "ax", "hit", "ledger",
     ]
 
     private static func retiredRootInvocation() -> String? {
@@ -112,6 +112,7 @@ struct TritonKitCLI: AsyncParsableCommand {
             List.self,
             Inspect.self,
             Observe.self,
+            NodeWorkflow.self,
             Debug.self,
             WebView.self,
             Route.self,

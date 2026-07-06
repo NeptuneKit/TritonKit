@@ -41,6 +41,10 @@ public enum TKAndroidADBCommand {
         command(["-s", serial, "shell", "pm", "path", "android"], executable: executable, requiredConfig: [.target, .timeout])
     }
 
+    public static func killEmulator(serial: String, executable: String = "adb") -> TKHostCommand {
+        command(["-s", serial, "emu", "kill"], executable: executable, riskLevel: .automation, requiredConfig: [.target, .timeout, .auditRecord])
+    }
+
     public static func screenshot(serial: String, executable: String = "adb") -> TKHostCommand {
         command(["-s", serial, "exec-out", "screencap", "-p"], executable: executable, riskLevel: .evidence, requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord], capturesArtifacts: true, sensitiveOutput: true)
     }

@@ -76,6 +76,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "host-device-ready",
         "host-device-selection",
         "host-device-proxy",
+        "host-simulator-ax",
         "host-simulator-list",
         "host-simulator-media-seed",
         "host-simulator-screenshot-metadata",
@@ -311,6 +312,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
     switch failureCode {
     case "ambiguous_target", "android_target_unauthorized", "device_not_ready", "simulator_not_booted", "simulator_not_found", "target_not_found", "target_unavailable":
         return ["discover", "prepare-target", "diagnose"]
+    case "ios_host_ax_unsupported_platform":
+        return ["diagnose", "plan"]
     case "ambiguous_workspace", "invalid_workspace_path", "scheme_not_found", "workspace_not_found", "xcode_not_idle":
         return ["project", "diagnose"]
     case "assertion_failed", "route_mismatch", "text_not_found", "timeout":
@@ -325,6 +328,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["diagnose", "plan", "act"]
     case "javascript_error":
         return ["diagnose", "observe", "archive"]
+    case "stale_node_alias":
+        return ["diagnose", "observe", "plan"]
     case "runtime_not_connected":
         return ["diagnose", "prepare-target", "observe"]
     case "device_locked", "device_not_trusted", "ddi_missing", "android_debugging_disabled", "harmony_target_unauthorized", "harmony_debugging_disabled":

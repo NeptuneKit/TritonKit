@@ -120,13 +120,14 @@ leakage.
 
 Checklist:
 
-- [ ] Add CLI-only adapter entrypoints.
-- [ ] Keep stable unavailable errors when `idb` or private frameworks are
+- [x] Add CLI-only adapter entrypoints.
+- [x] Keep stable unavailable errors when `idb` or private frameworks are
   missing.
-- [ ] Implement readonly host AX tree first.
-- [ ] Implement `node resolve --platform ios` over host AX nodes.
-- [ ] Implement HID actions only after readonly evidence passes.
-- [ ] Keep root `Package.swift` dependency-boundary test passing.
+- [x] Implement readonly host AX tree first.
+- [x] Route `observe tree --platform ios --device <selector>` to host AX nodes.
+- [x] Implement `node resolve --platform ios` over host AX nodes.
+- [x] Implement HID actions only after readonly evidence passes.
+- [x] Keep root `Package.swift` dependency-boundary test passing.
 
 Exit gate:
 
@@ -137,6 +138,67 @@ triton node resolve <text> --platform ios --device sim:<udid> --json
 triton act tap <text> --platform ios --device sim:<udid> --json
 ```
 
+Status on 2026-07-05:
+
+- `triton sim ax` exists as the host-side simulator AX entrypoint.
+- `triton node resolve` is restored as a first-class root workflow, and
+  `schema --command node --json` now reports `surfaceLayer=workflow` with
+  `deprecatedForMainPath=false`.
+- Raw low-level node inspection remains under `triton debug node`; remaining
+  M3 work is the actual host AX readonly data path, stable unavailable
+  diagnostics, and HID-backed action path.
+
+Status on 2026-07-06:
+
+- `triton sim ax --json` now returns stable `TKCLIErrorResponse` envelopes for
+  missing private framework / translator, missing simulator target, frontmost
+  AX root failure, platform-element conversion failure, and tree-unavailable
+  cases.
+- `schema --command sim --json` exposes the `ax` subcommand, its
+  `host.simulator-ax` output contract, and host AX failure codes. Fake-UDID
+  smoke returns `surface=sim.ax` with `code=simulator_not_found`, which gives
+  subagents a machine-readable no-state-change probe before real simulator
+  smoke.
+- Remaining M3 work is still: prove readonly host AX tree on a booted local
+  simulator, route `observe tree --platform ios --device sim:<udid>` to that
+  tree, then layer `node resolve` and HID actions after readonly evidence.
+
+Status later on 2026-07-06:
+
+- `observe current|tree --platform ios --device <selector> --json` now routes
+  simulator host targets to the private-framework AX tree and returns the same
+  `observe.surface` shape with `primarySource.name=host-layout`.
+- `node resolve --platform ios --device <selector> --text <text> --json`
+  reuses that host AX observe tree for readonly text/id/point resolution.
+- `observe-ios-host-ax` is now a schema/capability-matrix capability with
+  `runtimeScope=host-ios`, recovery commands, and host AX failure codes.
+- Parser-stage `--device sim:<missing-udid>` failures now return JSON
+  `ok=false` envelopes instead of raw text errors, so subagents can smoke
+  target absence without mutating simulator state.
+- Remaining M3 work is now: run a real booted Simulator AX observe/node smoke,
+  capture evidence, then implement HID-backed `act` only after readonly proof.
+- `docs-linhay/scripts/verify.sh --local` passes after the schema/capability
+  sync, including Swift tests, release CLI build, iOS Simulator build,
+  docs structure, and diff whitespace checks.
+
+Status latest on 2026-07-06:
+
+- Real booted Simulator smoke passed on `TritonKit Dedicated iPhone 17`
+  (`0333546D-2AC6-4C22-AF01-293E2F4BA5BC`, iOS 26.5).
+- `sim ax`, `observe tree --platform ios --device <udid>`, and
+  `node resolve --platform ios --device <udid> --text "设置"` all returned
+  host-layout evidence from private host AX.
+- `act tap --platform ios --device <udid> --text "通用"` now submits a
+  host-side `accessibilityPerformPress` through the same private AX translator
+  path and returns clean `HostIOSTapOutput`.
+- Post-action observe proved navigation into Settings / General with labels
+  `通用` and `关于本机`.
+- Evidence is recorded in
+  `evidence/20260706-ios-host-ax-tap-smoke-v01.md`.
+- Remaining M3 work is limited to broadening host HID beyond tap
+  (`type`/`swipe` if still needed) and deciding whether to expose higher-level
+  action aliases in M4.
+
 ### M4: Alias And Outline
 
 Goal: add a small agent convenience layer only after real tree sources are
@@ -144,18 +206,49 @@ proven.
 
 Checklist:
 
-- [ ] Add deterministic outline output for Android bridge, iOS host AX, and
+- [x] Add deterministic outline output for Android bridge, iOS host AX, and
   embedded runtime nodes.
-- [ ] Add session-local or repo-local `@N` aliases.
-- [ ] Add explicit stale alias failure shape.
-- [ ] Avoid daemon cache until repeated runs prove it is needed.
+- [x] Add session-local or repo-local `@N` aliases.
+- [x] Add explicit stale alias failure shape.
+- [x] Avoid daemon cache until repeated runs prove it is needed.
 
 Exit gate:
 
 ```bash
-triton observe tree --platform android --device <emulator> --json
+triton observe tree --platform android --device <emulator> --outline --json
 triton node resolve @1 --platform android --device <emulator> --json
 ```
+
+Status on 2026-07-06:
+
+- `observe tree --outline --json` now emits deterministic `outline[]` entries
+  with `@N` aliases and writes the repo-local cache
+  `.triton/node-aliases.json`.
+- `node resolve @N --platform <platform> ... --json` resolves from that cache;
+  stale target/platform mismatches return `stale_node_alias` with a
+  machine-readable `nextAction` that refreshes aliases through
+  `observe tree --outline --json`.
+- The cache is intentionally repo-local and file-backed. No daemon/session
+  service was introduced.
+- Schema/capabilities now expose `observe-outline` and
+  `node-alias-resolve`; `observe.surface` documents `outline?` and
+  `aliasCache?`.
+- Offline tests cover Android bridge nodes, iOS host AX nodes, parser support
+  for positional `node resolve @1`, schema capability alignment, and stale
+  alias error mapping.
+- Actual CLI smoke passed on the booted iOS Simulator path from a temporary
+  workspace: `observe tree --platform ios --device booted --outline --json`
+  produced 14 aliases, `node resolve @1 --platform ios --device booted --json`
+  returned `ok=true`, and a deliberate mismatched `--target` returned
+  `code=stale_node_alias`.
+- Android real exit gate later passed on `emulator-5554` after Triton
+  `device start --platform android --avd Dxyer_API_34` and bridge forward.
+  `observe tree --platform android --device emulator-5554 --outline --json`
+  returned `primarySource.name=android-bridge` with 33 aliases, and
+  `node resolve @1 --platform android --device emulator-5554 --json` returned
+  `ok=true` from the bridge source.
+- Evidence is recorded in
+  `evidence/20260706-m4-android-outline-smoke-v01.md`.
 
 ### M5: Release Hardening
 
@@ -163,12 +256,12 @@ Goal: make the feature reviewable and shippable.
 
 Checklist:
 
-- [ ] Run full local verification.
-- [ ] Update docs and memory.
-- [ ] Confirm root SwiftPM dependency boundary.
-- [ ] Confirm Android helper packaging is not pulled into business App
+- [x] Run full local verification.
+- [x] Update docs and memory.
+- [x] Confirm root SwiftPM dependency boundary.
+- [x] Confirm Android helper packaging is not pulled into business App
   dependency resolution.
-- [ ] Prepare one reviewable commit series.
+- [x] Prepare one reviewable commit series.
 
 Exit gate:
 
@@ -177,6 +270,56 @@ docs-linhay/scripts/verify.sh --local
 docs-linhay/scripts/check-docs.sh
 git diff --check
 ```
+
+Status on 2026-07-06:
+
+- `docs-linhay/scripts/verify.sh --local` passed after the M3/M4 CLI,
+  schema, docs, and public skill changes. The gate included SwiftPM dependency
+  boundary, Swift tests, release CLI build, Harmony host smoke, iOS runtime
+  observe smoke, iOS Simulator build, docs structure, and diff whitespace.
+- M4 Android real exit gate passed separately after bringing up
+  `emulator-5554` through Triton `device start`.
+- The Android cleanup gap found during that gate is closed: `triton device stop
+  --platform android --device emulator-5554 --confirm --json` now executes
+  `adb -s emulator-5554 emu kill` for emulator-scoped targets and was verified
+  against the same AVD without affecting a connected Android real device.
+- Reviewable commit boundaries are prepared below. Actual commits are not
+  created in this pass; do not stage unrelated Web mock or demo-camera changes
+  unless that review intentionally includes them.
+
+Recommended commit series:
+
+1. `host-ios-ax-takeover`: iOS host AX observe/node/tap support and focused
+   tests.
+   Files: `CLIHostSimulatorAXDriver.swift`, `CLIHostSimAXCommand.swift`,
+   `CLIActionCommands.swift`, `CLIHostModels.swift`,
+   `CLIRuntimeTransport*.swift`, `CLISchemaActionCommands.swift`,
+   `CLISchemaHostCommands.swift`, `CLISchemaCapabilityContracts.swift`,
+   `FailureDiagnosticsTests.swift`, `ObservationOutputTests.swift`,
+   `SelectorFlagTests.swift`, `SimulatorAdvancedControlsTests.swift`,
+   `CLIHelpTests.swift`.
+2. `observe-outline-node-aliases`: agent-readable outline output, repo-local
+   `.triton/node-aliases.json`, stale alias errors, and schema contracts.
+   Files: `CLIObservationCommands.swift`, `CLIObservationModels.swift`,
+   `CLIObservationRuntime.swift`, `CLISchemaObservationCommands.swift`,
+   `CLISchemaOutputContracts.swift`, `CLISchemaRuntime.swift`,
+   `CLISchemaShared.swift`, `TKCLITransportSchemaModels.swift`,
+   schema/selector/observation tests. Some tests overlap with commit 1 and
+   should be hunk-staged.
+3. `android-emulator-stop-cleanup`: schema-backed Android Emulator stop via
+   `triton device stop --platform android --device <selector> --confirm`.
+   Files: `CLIHostDeviceCommands.swift`, `CLIHostModels.swift`,
+   `CLISchemaHostCommands.swift`, `CLIRuntimeTransport.swift`,
+   `TKAndroidADBSupport.swift`, `DeviceCrossPlatformTests.swift`. This commit
+   is the cleanup gap found during the Android M4 smoke.
+4. `strong-emulator-control-docs`: README, public skill, dev docs, memory,
+   milestone, and evidence updates for M3/M4/M5. Stage docs by hunk so Web/demo
+   references do not leak into CLI-only commits.
+5. Optional separate review: `web-mock-host-bridge-ui`.
+   Files under `Web/` only, including untracked Web tests/data/helpers.
+6. Optional separate review: `demo-camera-harness`.
+   Files: `Examples/TritonKitDemo/TritonKitDemo/App.swift`,
+   `Examples/TritonKitDemo/TritonKitDemo/Info.plist`.
 
 ## Parallel Subagent Areas
 
@@ -253,6 +396,13 @@ Evidence:
 - Adapter availability matrix.
 - Focused tests for unavailable and available-probe paths.
 
+Current status: CLI entrypoints exist (`sim ax`, `observe --device <selector>`,
+`node resolve --device <selector>`) and schema/capability metadata is aligned.
+Booted Simulator evidence now covers host AX observe/node and host AX press tap.
+M4 aliases now consume the public observe DTO, so future iOS adapter work should
+only broaden HID beyond tap when a concrete workflow needs type/swipe and can
+provide post-action observe evidence.
+
 Can run in parallel with: A, B, E.
 
 ### D: Alias And Outline Contract
@@ -271,6 +421,12 @@ Evidence:
 - Contract examples for `@N`.
 - Stale alias failure shape.
 - Focused schema tests.
+
+Current status: implemented. `observe tree --outline --json` emits `outline[]`
+and writes `.triton/node-aliases.json`; `node resolve @N` resolves that cache;
+`stale_node_alias` is schema-backed and returns a refresh `nextAction`.
+Android real-emulator exit gate passed later on 2026-07-06 with
+`emulator-5554`, `primarySource.name=android-bridge`, and `outline_count=33`.
 
 Can run in parallel with: B after M2 tree output shape is stable.
 
@@ -302,10 +458,10 @@ Can run in parallel with: A, B, C.
 | 0 | Main-control | M0 bridge / strong-control contract | Current M0 schema baseline | none | Done locally: `device` schema shows bridge commands and strong-control failure shapes |
 | 1 | Subagent A | M1 Android helper APK | Batch 0 bridge contract | C, E | Done locally: APK builds and endpoint contract matches CLI schema |
 | 2 | Main-control + B | M2 Android real bridge smoke and narrow CLI fixes | M1 helper APK | E | Done locally: bridge probe, observe, wait, and tap pass on `emulator-5554` |
-| 3 | Subagent C | M3 iOS host adapter readonly spike | Current iOS probes | D, E | unavailable and available-probe paths are tested; no root package dependency leak |
-| 3 | Subagent D | M4 outline / alias contract | M2 tree sample or stable DTO fixture | C, E | deterministic outline and stale alias failure tests |
-| 3 | Subagent E | Evidence refresh for M3/M4 | Space exists | C, D | evidence path, blocker classification, and command transcript are current |
-| 4 | Main-control | M5 release hardening | Batches 0-3 merged | none | focused tests, `docs-linhay/scripts/check-docs.sh`, `git diff --check`, then full local gate if needed |
+| 3 | Subagent C | M3 iOS host adapter tap spike | Current iOS probes | D, E | Done locally: readonly observe/node and `act tap --platform ios` pass on booted Simulator |
+| 3 | Subagent D | M4 outline / alias contract | M2 tree sample or stable DTO fixture | C, E | Done locally: deterministic outline tests, stale alias failure tests, iOS host AX outline smoke |
+| 3 | Subagent E | Evidence refresh for M3/M4 | Space exists | C, D | Done locally: M3/M4 evidence files, plan status, and memory are current |
+| 4 | Main-control | M5 release hardening | Batches 0-3 merged | none | Done locally: full local gate passed, Android cleanup gap closed, reviewable commit boundaries prepared |
 
 ## Main-Control Rules
 
@@ -324,16 +480,16 @@ Completed batches:
 - Batch 0: M0 contract baseline.
 - Batch 1: M1 Android Bridge APK.
 - Batch 2: M2 Android real bridge smoke and Android bridge CLI integration fixes.
+- Batch 3: M3 iOS host AX observe/node/tap and M4 outline / alias contract.
 
 Next batch:
 
-- Subagent C: iOS adapter spike.
-- Subagent D: alias/outline contract.
-- Subagent E: M3/M4 evidence refresh.
+- Main-control: M5 release hardening and reviewable commit series.
 
 Final batch:
 
-- Main-control: merge, run gates, update docs/memory, prepare commit.
+- Main-control: prepare commit series from the dirty worktree without mixing
+  unrelated Web mock changes into the emulator-control slice.
 
 ## Subagent Handoff Packets
 
@@ -342,26 +498,28 @@ integration and completion.
 
 ### Packet C: iOS Host Adapter
 
-Goal: complete M3 readonly host adapter before any HID mutation.
+Goal: extend M3 beyond the completed readonly/tap path only if more HID primitives
+are still needed.
 
 Write scope:
 
-- `Sources/TritonKitCLI/` iOS host adapter, observe, node resolve, and focused
-  tests.
+- `Sources/TritonKitCLI/` iOS host adapter, real-simulator evidence handling,
+  HID action routing, and focused tests.
 - Shared DTO changes only when required by the public JSON contract.
 
 Non-goals:
 
 - Do not add `idb`, FBSimulatorControl, or Apple private framework dependencies
   to root `Package.swift`.
-- Do not implement HID tap/swipe/type until readonly tree and node resolve have
-  evidence.
+- Do not broaden HID beyond tap until a concrete workflow needs type/swipe and
+  can provide post-action observe evidence.
 
 Required evidence:
 
 - `triton device doctor --platform ios --json`
 - `triton observe tree --platform ios --device sim:<udid> --json`
 - `triton node resolve <text> --platform ios --device sim:<udid> --json`
+- `triton act tap <text> --platform ios --device sim:<udid> --json`
 - focused Swift test command and result
 
 Stop if `idb` command shape or private framework availability cannot be proven

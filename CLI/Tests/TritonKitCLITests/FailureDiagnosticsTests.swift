@@ -76,6 +76,32 @@ struct FailureDiagnosticsTests {
         #expect(response.error.hint == "Dismiss system alerts and retry")
     }
 
+    @Test("host simulator AX errors map to machine-readable CLI diagnostics")
+    func hostSimulatorAXErrorsMapToCLIDiagnostics() {
+        let detail = cliErrorDetail(
+            for: HostSimulatorAXError.frontmostApplicationUnavailable("ABC-123"),
+            endpoint: "/request",
+            host: "127.0.0.1",
+            port: 19421
+        )
+
+        #expect(detail.code == "ios_host_ax_frontmost_unavailable")
+        #expect(detail.message.contains("ABC-123"))
+        #expect(detail.nextAction?.command == "sim")
+        #expect(detail.suggestedCommands?.contains("triton sim list --json") == true)
+
+        let actionDetail = cliErrorDetail(
+            for: HostSimulatorAXError.actionUnavailable("ABC-123"),
+            endpoint: "/request",
+            host: "127.0.0.1",
+            port: 19421
+        )
+
+        #expect(actionDetail.code == "ios_host_ax_action_unavailable")
+        #expect(actionDetail.nextAction?.command == "observe")
+        #expect(actionDetail.suggestedCommands?.contains("triton observe tree --platform ios --device <selector> --json") == true)
+    }
+
     @Test("target state extracts identity from appInfo envelope")
     func targetStateExtractsIdentityFromAppInfoEnvelope() throws {
         let payload = Data("""

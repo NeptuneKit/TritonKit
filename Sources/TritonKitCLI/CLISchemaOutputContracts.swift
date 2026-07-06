@@ -1351,8 +1351,8 @@ func nodeResolveOutputContract() -> TKCommandOutputContract {
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether node resolution succeeded"),
             ("action", "String", true, "node.resolve"),
-            ("platform", "String", true, "ios or harmony"),
-            ("query", "String", true, "Text, id, key, accessibility id, or point query"),
+            ("platform", "String", true, "ios, android, or harmony"),
+            ("query", "String", true, "Text, id, key, accessibility id, point query, or @N alias"),
             ("matchIndex", "Int", true, "1-based selected match index"),
             ("matchCount", "Int", true, "Total candidate count"),
             ("node", "ObserveNodeOutput", true, "Selected visible node"),

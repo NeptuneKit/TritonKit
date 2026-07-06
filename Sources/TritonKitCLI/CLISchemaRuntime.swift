@@ -32,7 +32,7 @@ func commandSchemas() -> [TKCommandSchema] {
 private let retiredRootCommandNames: Set<String> = [
     "find", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "input",
     "assert", "capture",
-    "runtime", "state", "snapshot", "hierarchy", "nodes", "node", "attrs", "object", "geometry", "ax", "hit", "ledger",
+    "runtime", "state", "snapshot", "hierarchy", "nodes", "attrs", "object", "geometry", "ax", "hit", "ledger",
 ]
 
 private let targetFailureRecoveryCommand = "triton target resolve <selector> --json"
@@ -69,6 +69,7 @@ private let destructivePolicyFailureCodesRequiringRecovery: Set<String> = [
 
 private let unsupportedFailureCodesRequiringRecovery: Set<String> = [
     "action_not_supported",
+    "ios_host_ax_unsupported_platform",
     "unsupported_host_action",
     "unsupported_capability",
     "unsupported_runtime_scope",
@@ -171,7 +172,7 @@ private let commandSurfaceMetadata: [String: CommandSurfaceMetadata] = {
         rationale: "Explicit P23 raw/debug surface for low-level engine inspection"
     )
 
-    for name in ["doctor", "schema", "capabilities", "plan", "target", "app", "observe", "act", "verify", "evidence", "test", "testrec", "update", "xcode", "build", "wait", "screenshot"] {
+    for name in ["doctor", "schema", "capabilities", "plan", "target", "app", "observe", "node", "act", "verify", "evidence", "test", "testrec", "update", "xcode", "build", "wait", "screenshot"] {
         workflow(name, rationale: "P23 workflow surface")
     }
     for name in ["status", "serve"] {
@@ -204,7 +205,6 @@ private let commandSurfaceMetadata: [String: CommandSurfaceMetadata] = {
     rawEngine("snapshot", replacement: "triton observe current --json", debug: "triton debug snapshot", rationale: "snapshot is a raw runtime aggregate; observe is the workflow entry")
     rawEngine("hierarchy", replacement: "triton observe tree --json", debug: "triton debug hierarchy", rationale: "hierarchy is an engine tree fact source")
     rawEngine("nodes", replacement: "triton observe tree --json", debug: "triton debug nodes", rationale: "nodes are raw tree enumeration")
-    rawEngine("node", replacement: "triton act find <text> --json", debug: "triton debug node", rationale: "node details are raw inspection; target finding belongs to act")
     rawEngine("attrs", replacement: nil, debug: "triton debug attrs", rationale: "attrs are raw object attributes")
     rawEngine("object", replacement: nil, debug: "triton debug object", rationale: "object metadata is raw runtime inspection")
     rawEngine("geometry", replacement: "triton observe current --json", debug: "triton debug geometry", rationale: "geometry is a low-level observation fact")

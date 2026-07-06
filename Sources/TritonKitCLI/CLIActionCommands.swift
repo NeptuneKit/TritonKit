@@ -1,4 +1,5 @@
 import ArgumentParser
+import CoreGraphics
 import Darwin
 import Foundation
 import Hummingbird
@@ -134,7 +135,7 @@ struct Wait: AsyncParsableCommand {
         abstract: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate"
     )
 
-    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
+    @Option(help: "Host platform adapter: ios, android, or harmony") var platform: HostPlatform?
     @Option(name: .customLong("text"), help: "Visible text, AX label, identifier, title, or value to wait for") var text: String?
     @Option(name: .customLong("gone"), help: "Visible text, AX label, identifier, title, or value to wait to disappear") var gone: String?
     @Option(name: .customLong("exists"), help: "Alias for --text; can be combined with --role") var exists: String?
@@ -456,6 +457,80 @@ struct Tap: AsyncParsableCommand {
                 throw ExitCode.failure
             }
             throw RuntimeError("--strategy can only be used with <query>, --ax-oid, or --ax-label")
+        }
+
+        if platform == .ios {
+            do {
+                if oid != nil || axOID != nil || axLabel != nil || width != nil || height != nil || duration != nil || strategy != nil {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "iOS host tap currently supports <query>, --x/--y, or --at for simulator targets.",
+                        hint: "Use `triton observe tree --platform ios --device <selector> --json` to inspect visible text and bounds.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let point = try at.map(parsePoint)
+                let selected = try resolveHostDeviceSelection(
+                    request: HostDeviceSelectionRequest(
+                        device: target == TKLocalTargetID ? nil : target,
+                        platform: .ios,
+                        scope: .simulator,
+                        ready: true
+                    ),
+                    hdc: hdc,
+                    adb: adb
+                ).target
+                guard usesIOSHostSimulatorAX(selected) else {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "iOS host tap is scoped to local simulator targets.",
+                        hint: "Pass a booted simulator selector such as `--device booted` or `--device sim:<udid>`.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let tapPoint: CGPoint?
+                if let point {
+                    tapPoint = CGPoint(x: point.x, y: point.y)
+                } else if let x, let y {
+                    tapPoint = CGPoint(x: x, y: y)
+                } else {
+                    tapPoint = nil
+                }
+                let bounds = try within.map(parseBounds)
+                let match = try AXPTranslatorAccessibility(udid: selected.target).press(
+                    query: query,
+                    point: tapPoint,
+                    index: index,
+                    within: bounds
+                )
+                let outputX = Int((tapPoint.map { Double($0.x) } ?? match.frame.centerX).rounded())
+                let outputY = Int((tapPoint.map { Double($0.y) } ?? match.frame.centerY).rounded())
+                let response = HostIOSTapOutput(
+                    ok: true,
+                    action: "tap",
+                    platform: "ios",
+                    target: selected,
+                    query: query,
+                    x: outputX,
+                    y: outputY,
+                    match: match,
+                    sourceCommands: [
+                        "triton sim ax --device \(selected.target) --json",
+                        "host.ax accessibilityPerformPress",
+                    ],
+                    note: "iOS host tap was submitted through private host-side AX; verify business state with observe, wait, or screenshot."
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print("\(outputX),\(outputY)")
+                }
+            } catch {
+                if error is ExitCode { throw error }
+                try failHostCommand(error, outputFormat: outputFormat)
+            }
+            return
         }
 
         if platform == .android {
