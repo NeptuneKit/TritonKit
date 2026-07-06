@@ -4,6 +4,17 @@ import { Smartphone, Wifi, WifiOff, RefreshCw } from "lucide-react";
 
 import { useAppContext } from "../AppContext";
 import { filterEffectivelyVisibleNodes, findDescendantAtPoint } from "../hierarchyVisibility";
+import {
+  createGestureSession,
+  finishGestureSession,
+  longPressFromSession,
+  LONG_PRESS_THRESHOLD_MS,
+  mapPointerToDevicePoint,
+  webHostInputQueryForGesture,
+  type DevicePoint,
+  type StreamGestureInput,
+  type StreamGestureSession,
+} from "../streamGestureModel";
 
 // ── 类型 ───────────────────────────────────────────────────────
 interface SimTarget {
@@ -24,10 +35,14 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
   const [targetFps, setTargetFps]     = useState(15);
   const [refreshing, setRefreshing]   = useState(false);
   const [overlayMode, setOverlayMode] = useState<"none" | "view" | "ax">("none");
+  const [gestureStatus, setGestureStatus] = useState<string | null>(null);
 
   const frameCount    = useRef(0);
   const lastFpsTs     = useRef(Date.now());
   const hasConnectedRef = useRef(false);
+  const gestureSessionRef = useRef<StreamGestureSession | null>(null);
+  const gesturePointRef = useRef<DevicePoint | null>(null);
+  const longPressTimerRef = useRef<number | null>(null);
 
   const imgRef = useRef<HTMLImageElement>(null);
   const viewportRef = useRef<HTMLDivElement>(null);
@@ -226,6 +241,117 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
     }
   }, [connected, selectedUdid, overlayMode, selectedTarget, hierarchyScenes, fetchHierarchy]);
 
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current != null) {
+      window.clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => clearLongPressTimer, [clearLongPressTimer]);
+
+  const pointFromPointerEvent = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!viewportRef.current || !imgLayout) return null;
+    return mapPointerToDevicePoint(
+      { clientX: event.clientX, clientY: event.clientY },
+      viewportRef.current.getBoundingClientRect(),
+      imgLayout,
+    );
+  }, [imgLayout]);
+
+  const sendGestureInput = useCallback(async (gesture: StreamGestureInput) => {
+    if (!selectedUdid || !selectedTarget) return;
+    const query = webHostInputQueryForGesture({
+      platform: selectedTarget.platform,
+      target: selectedUdid,
+      gestureType: gesture.type,
+    });
+    if (!query) {
+      setGestureStatus(`${gesture.type} 当前平台暂不支持`);
+      return;
+    }
+    setGestureStatus(`${gesture.type} 发送中...`);
+    try {
+      const res = await fetch(`/web/host-input?${query}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(gesture),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok || body?.ok === false) {
+        throw new Error(body?.error?.message || body?.message || `HTTP ${res.status}`);
+      }
+      setGestureStatus(formatGestureStatus(gesture));
+      await fetchHierarchy(selectedUdid, selectedTarget.platform);
+    } catch (error) {
+      setGestureStatus(`输入失败：${(error as Error).message}`);
+    }
+  }, [fetchHierarchy, selectedTarget, selectedUdid]);
+
+  const handleViewportPointerDown = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    if (!connected || !selectedUdid || overlayMode !== "none") return;
+    const point = pointFromPointerEvent(event);
+    if (!point) {
+      setGestureStatus("未命中设备画面");
+      return;
+    }
+    event.preventDefault();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const session = createGestureSession({
+      pointerId: event.pointerId,
+      point,
+      startedAt: performance.now(),
+    });
+    gestureSessionRef.current = session;
+    gesturePointRef.current = point;
+    clearLongPressTimer();
+    longPressTimerRef.current = window.setTimeout(() => {
+      const current = gestureSessionRef.current;
+      if (!current || current.pointerId !== event.pointerId) return;
+      const gesture = longPressFromSession(current, {
+        now: performance.now(),
+        currentPoint: gesturePointRef.current,
+      });
+      if (gesture) {
+        void sendGestureInput(gesture);
+      }
+    }, LONG_PRESS_THRESHOLD_MS);
+  }, [clearLongPressTimer, connected, overlayMode, pointFromPointerEvent, selectedUdid, sendGestureInput]);
+
+  const handleViewportPointerMove = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const session = gestureSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    gesturePointRef.current = pointFromPointerEvent(event);
+  }, [pointFromPointerEvent]);
+
+  const handleViewportPointerUp = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const session = gestureSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    event.preventDefault();
+    clearLongPressTimer();
+    const point = pointFromPointerEvent(event);
+    const gesture = finishGestureSession(session, {
+      point,
+      endedAt: performance.now(),
+    });
+    gestureSessionRef.current = null;
+    gesturePointRef.current = null;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    if (gesture) {
+      void sendGestureInput(gesture);
+    }
+  }, [clearLongPressTimer, pointFromPointerEvent, sendGestureInput]);
+
+  const handleViewportPointerCancel = useCallback((event: React.PointerEvent<HTMLDivElement>) => {
+    const session = gestureSessionRef.current;
+    if (!session || session.pointerId !== event.pointerId) return;
+    clearLongPressTimer();
+    gestureSessionRef.current = null;
+    gesturePointRef.current = null;
+  }, [clearLongPressTimer]);
+
   // ─── 计算需要渲染的节点 (按面积从大到小排序，确保小元素层叠在顶部易于交互) ─────────────────────
   const flatNodes = selectedUdid ? (hierarchyScenes[selectedUdid] || []) : [];
   const visibleNodes = filterEffectivelyVisibleNodes(flatNodes);
@@ -315,7 +441,15 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
       </div>
 
       {/* ── 画面视口 ── */}
-      <div className="stream-viewport" ref={viewportRef} style={{ position: "relative" }}>
+      <div
+        className="stream-viewport"
+        ref={viewportRef}
+        style={{ position: "relative" }}
+        onPointerDown={handleViewportPointerDown}
+        onPointerMove={handleViewportPointerMove}
+        onPointerUp={handleViewportPointerUp}
+        onPointerCancel={handleViewportPointerCancel}
+      >
         {connected && selectedUdid ? (
           <>
             <img
@@ -431,6 +565,14 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
             <span className="metric-val" style={{ color: "#1677ff" }}>19421</span>
             <span className="metric-label">端口</span>
           </span>
+          {gestureStatus && (
+            <>
+              <div className="metric-divider" />
+              <span className="metric stream-gesture-status">
+                <span className="metric-val">{gestureStatus}</span>
+              </span>
+            </>
+          )}
         </div>
 
         <div className="stream-actions">
@@ -448,4 +590,11 @@ export function StreamCard({ nodeId }: { nodeId: string }) {
       </div>
     </div>
   );
+}
+
+function formatGestureStatus(gesture: StreamGestureInput) {
+  if (gesture.type === "swipe") {
+    return `swipe ${gesture.startX},${gesture.startY} → ${gesture.endX},${gesture.endY}`;
+  }
+  return `${gesture.type} ${gesture.x},${gesture.y}`;
 }

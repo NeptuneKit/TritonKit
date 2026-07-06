@@ -444,6 +444,38 @@ struct SingleDeviceWebPageTests {
         ) == nil)
     }
 
+    @Test("Harmony web host long press is submitted as same-point uitest swipe")
+    func harmonyWebHostLongPressIsSubmittedAsSamePointUITestSwipe() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-fake-hdc-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        let hdc = directory.appendingPathComponent("hdc").path
+        let log = directory.appendingPathComponent("commands.log").path
+        let script = """
+        #!/bin/sh
+        printf '%s\\n' "$*" >> "\(log)"
+        if [ "$1 $2 $3" = "list targets -v" ]; then
+          printf '%s\\n' "127.0.0.1:10100        TCP     Connected       localhost"
+          exit 0
+        fi
+        exit 0
+        """
+        try script.write(toFile: hdc, atomically: true, encoding: .utf8)
+        chmod(hdc, S_IRWXU)
+
+        let result = try runWebHostDeviceInput(
+            id: "host:harmony:127.0.0.1:10100",
+            input: .longPress(x: 120, y: 640, duration: 0.7),
+            hdc: hdc,
+            adb: "/missing/adb"
+        )
+        let commands = try String(contentsOfFile: log, encoding: .utf8)
+
+        #expect(result.ok == true)
+        #expect(result.action == "longPress")
+        #expect(commands.contains("-t 127.0.0.1:10100 shell uitest uiInput swipe 120 640 120 640 200"))
+    }
+
     @Test("web host screenshots expose platform image formats")
     func webHostScreenshotsExposePlatformImageFormats() {
         #expect(webHostDeviceScreenshotFileExtension(for: .ios) == "png")

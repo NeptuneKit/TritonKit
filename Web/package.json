@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1",
     "build": "tsc --noEmit && vite build",
-    "test": "node --test dev/currentWebContracts.test.mjs dev/hierarchyMaterialPolicy.test.mjs dev/hierarchyVisibility.test.mjs dev/inspectorTreeTabs.test.mjs dev/inspectorWorkspaceModel.test.mjs dev/ios-bridge/hierarchyRoute.test.mjs dev/ios-bridge/hostTargets.test.mjs dev/iosRuntimeMirrorBridge.test.mjs dev/iosSimulatorBridge.test.mjs dev/targetRegistryClient.test.mjs",
+    "test": "node --test dev/currentWebContracts.test.mjs dev/hierarchyMaterialPolicy.test.mjs dev/hierarchyVisibility.test.mjs dev/inspectorTreeTabs.test.mjs dev/inspectorWorkspaceModel.test.mjs dev/ios-bridge/hierarchyRoute.test.mjs dev/ios-bridge/hostTargets.test.mjs dev/iosRuntimeMirrorBridge.test.mjs dev/iosSimulatorBridge.test.mjs dev/streamGestureModel.test.mjs dev/targetRegistryClient.test.mjs",
     "preview": "vite preview --host 127.0.0.1"
   },
   "dependencies": {

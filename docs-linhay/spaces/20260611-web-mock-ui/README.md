@@ -538,6 +538,7 @@ TritonKit 当前以 CLI / HTTP 机器可读控制为事实入口。用户希望�
 - 边界：Web 负责采集和转发 DTO；当前底层平台 adapter 按能力返回成功或 unsupported。已明确支持的新增底层路径只有 Android host `longPress`，通过 `adb input swipe x y x y <duration>` 提交；iOS Simulator host、Harmony host、embedded runtime 的 `longPress` / `pinch` 暂返回明确 unsupported，不伪造执行成功。
 - 验证：新增 DOM 用例覆盖 canvas `longPress` / `pinch` payload；新增 Shared model 用例覆盖两个 action 的编码/解码；capability gate 用例覆盖 `longPress -> inputTap`、`pinch -> inputSwipe`；`npm --prefix Web test -- --test-name-pattern 'long press|pinch'`、`npm --prefix Web test`、`npm --prefix Web run build`、`swift test --filter TKInputModelsTests/longPressRequestWireShape --filter TKInputModelsTests/pinchRequestWireShape`、`swift test --filter TKPlatformFallbackTests/capabilityGateMapsRequestMessages`、`swift test --package-path CLI --filter SingleDeviceWebPageTests` 通过。
 - 浏览器烟测：Playwright 打开 `http://127.0.0.1:34127/`，合成长按与双 pointer 捏合后拦截到 `{type:"longPress"}` 与 `{type:"pinch", scale:2}` payload；console error 为 0。验收截图：`docs-linhay/spaces/20260611-web-mock-ui/screenshots/20260619/20260619-web-device-canvas-gestures-after-v01.png`。
+- 2026-07-06 更新：Harmony Web host `longPress` 已在 `20260706-web-stream-gesture-mapping` space 中补齐，使用同点 `uitest uiInput swipe` hold；上述 unsupported 边界仅保留为 2026-06-19 当时事实。
 
 ### 2026-06-18 Network evidence strip hide/restore
 

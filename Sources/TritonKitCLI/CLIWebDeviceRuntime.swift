@@ -894,7 +894,11 @@ private func runWebHarmonyInput(selected: HostDeviceTarget, input: TKInputReques
         _ = try runHostCommand(TKHarmonyHDCCommand.tapCoordinate(target: selected.rawTarget, x: x, y: y, executable: hdc))
         return .success(action: "tap", message: "Harmony tap was submitted through uitest.")
     case .longPress:
-        return .unsupported(action: "longPress", message: "Harmony host longPress is not exposed in the Web device surface yet.")
+        let x = try requireCoordinate(input.x, name: "x", action: "longPress")
+        let y = try requireCoordinate(input.y, name: "y", action: "longPress")
+        let velocity = harmonySwipeVelocity(startX: Double(x), startY: Double(y), endX: Double(x), endY: Double(y), duration: input.duration)
+        _ = try runHostCommand(TKHarmonyHDCCommand.swipeCoordinate(target: selected.rawTarget, startX: x, startY: y, endX: x, endY: y, velocity: velocity, executable: hdc))
+        return .success(action: "longPress", message: "Harmony longPress was submitted through uitest same-point swipe hold.")
     case .swipe:
         let startX = try requireCoordinate(input.startX, name: "startX", action: "swipe")
         let startY = try requireCoordinate(input.startY, name: "startY", action: "swipe")
