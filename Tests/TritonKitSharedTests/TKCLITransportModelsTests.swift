@@ -27,7 +27,24 @@ struct TKCLITransportModelsTests {
         #expect(TKCLICommandRequest(type: "runtimeLedger").requestType == .runtimeLedger)
         #expect(TKCLICommandRequest(type: "allAttrGroups").requestType == .allAttrGroups)
         #expect(TKCLICommandRequest(type: "fetchObject").requestType == .fetchObject)
+        #expect(TKCLICommandRequest(type: "modifyAttribute").requestType == .modifyAttribute)
+        #expect(TKCLICommandRequest(type: "node.patch").requestType == .modifyAttribute)
         #expect(TKCLICommandRequest(type: "unsupported").requestType == nil)
+    }
+
+    @Test("node property patch request resolves runtime oid from Lookin style node id")
+    func nodePropertyPatchRequestResolvesOid() throws {
+        let request = TKNodePropertyPatchRequest(
+            nodeId: "ios:runtime:1717",
+            changes: TKNodePropertyChanges(view: TKNodeViewPropertyChanges(alpha: 0.5))
+        )
+
+        #expect(request.resolvedOID == 1717)
+
+        let data = try JSONEncoder().encode(request)
+        let decoded = try JSONDecoder().decode(TKNodePropertyPatchRequest.self, from: data)
+        #expect(decoded.resolvedOID == 1717)
+        #expect(decoded.changes.view?.alpha == 0.5)
     }
 
     @Test("target summary preserves machine readable identity")

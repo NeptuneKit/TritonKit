@@ -522,7 +522,7 @@ enum WebViewSmokeVariant {
         <label for="keyword:edge.1">Edge Keyword</label>
         <input id="keyword:edge.1" name="keyword-edge" value="triton-edge">
         <label for="password:edge.1">Edge Secret</label>
-        <input id="password:edge.1" name="edge-password" type="password" value="secret-value">
+        <input id="password:edge.1" name="edge-password" type="password" value="secret-value" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false">
         <input id="edge-extra-1" name="edge-extra-1" value="one">
         <input id="edge-extra-2" name="edge-extra-2" value="two">
         <input id="edge-extra-3" name="edge-extra-3" value="three">
@@ -622,6 +622,8 @@ struct WebViewSmokePanel: UIViewRepresentable {
 
     func makeUIView(context: Context) -> WKWebView {
         let webView = WKWebView(frame: .zero)
+        webView.inputAssistantItem.leadingBarButtonGroups = []
+        webView.inputAssistantItem.trailingBarButtonGroups = []
         webView.accessibilityIdentifier = "WebViewSmokeWebView"
         webView.scrollView.accessibilityIdentifier = "WebViewSmokeScrollView"
         webView.isOpaque = false

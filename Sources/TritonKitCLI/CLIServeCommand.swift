@@ -969,6 +969,57 @@ struct Serve: AsyncParsableCommand {
                             body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
         }
 
+        router.post("/web/node-property") { request, _ -> Response in
+            let bodyData = try await requestBodyData(from: request)
+            guard let patch = try? JSONDecoder().decode(TKNodePropertyPatchRequest.self, from: bodyData),
+                  let payload = try? JSONEncoder().encode(patch) else {
+                return jsonError(
+                    code: "invalid_payload",
+                    message: "Unsupported node property patch payload",
+                    endpoint: "/web/node-property",
+                    hint: "Send {\"nodeId\":\"ios:runtime:<oid>\",\"changes\":{...}} or an explicit oid/viewOID/layerOID.",
+                    status: .badRequest
+                )
+            }
+
+            let requestedTarget = queryTarget(from: request)
+            if let target = requestedTarget, parseWebHostTargetID(target) != nil {
+                return jsonError(
+                    code: "node_property_runtime_required",
+                    message: "Host-only targets cannot mutate arbitrary runtime node properties",
+                    endpoint: "/web/node-property",
+                    hint: "Select the matching embedded App runtime target before applying node properties.",
+                    status: .notImplemented
+                )
+            }
+
+            let connection: TargetConnection
+            do {
+                connection = try state.resolve(requestedTarget)
+            } catch {
+                return jsonError(detail: cliErrorDetail(for: error, endpoint: "/web/node-property", host: host, port: port), status: .conflict)
+            }
+
+            let id = counter.next()
+            log("[tritonkit] -> node.patch [id:\(id)]")
+            try await connection.outbound.send(TKMessage(id: id, type: .modifyAttribute, payload: payload), encoder: encoder)
+            guard let responsePayload = await connection.state.waitForResponse(id: id) else {
+                return jsonError(
+                    detail: TKCLIRuntimeTimeoutErrorDetail(requestType: "modifyAttribute", endpoint: "/web/node-property"),
+                    status: .requestTimeout
+                )
+            }
+
+            let status: HTTPResponse.Status
+            if let patchResponse = try? JSONDecoder().decode(TKNodePropertyPatchResponse.self, from: responsePayload), !patchResponse.ok {
+                status = .conflict
+            } else {
+                status = .ok
+            }
+            return Response(status: status, headers: [.contentType: "application/json"],
+                            body: .init(byteBuffer: ByteBuffer(data: responsePayload)))
+        }
+
         // ---- WebSocket Control Channel ----
 
         webSocketRouter.ws("/") { inbound, outbound, _ in

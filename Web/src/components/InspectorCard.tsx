@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Card, Tag, Flex, Button, message, Select, Tabs, Tree, Spin, Checkbox, Modal } from "antd";
-import { Maximize2, Search, RefreshCw } from "lucide-react";
+import { Button, Card, Checkbox, Flex, Input, InputNumber, message, Modal, Select, Space, Spin, Switch, Tabs, Tag, Tree, Typography } from "antd";
+import { Copy, Maximize2, RefreshCw, Search, Send, SlidersHorizontal } from "lucide-react";
 import { useAppContext } from "../AppContext";
 import { deriveAxTree, deriveViewTree, findSelectedNode, type HierarchyTreeNode } from "../inspect/hierarchyDerive";
+import { buildNodePropertyDraft, buildNodePropertyPatchPayload, hasNodePropertyChanges, type NodePropertyDraft } from "../inspect/nodePropertyDraft";
 import { changedHierarchyTreeNodeIds, snapshotHierarchyTree } from "../inspect/treeUpdateHighlight";
 import { getInspectorTreeTabs } from "../inspectorTreeTabs";
+import type { HierarchyLayerNode } from "../types";
 
 const EMPTY_HIERARCHY_NODES: any[] = [];
 type InspectorTreeKind = "view" | "ax";
@@ -37,8 +39,10 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
     axText: string;
     frame: string;
   } | null>(null);
-  const [selectedNodeDetails, setSelectedNodeDetails] = useState<any | null>(null);
+  const [selectedNodeDetails, setSelectedNodeDetails] = useState<HierarchyLayerNode | null>(null);
   const [detailsModalOpen, setDetailsModalOpen] = useState(false);
+  const [nodePatchDraft, setNodePatchDraft] = useState<NodePropertyDraft | null>(null);
+  const [applyingNodePatch, setApplyingNodePatch] = useState(false);
 
   const [loading, setLoading] = useState(false);
   const [liveViewTreeData, setLiveViewTreeData] = useState<HierarchyTreeNode[]>([]);
@@ -83,6 +87,10 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
   useEffect(() => {
     setDetailsModalOpen(false);
   }, [selectedNodeId]);
+
+  useEffect(() => {
+    setNodePatchDraft(buildNodePropertyDraft(selectedNodeDetails));
+  }, [selectedNodeDetails]);
 
   useEffect(() => {
     if (bindingMode === "follow") {
@@ -246,6 +254,74 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
     }
   }, [selectedNodeDetails]);
 
+  const nodePatchPayload = useMemo(() => {
+    if (!selectedNodeDetails || !nodePatchDraft) return null;
+    const base = buildNodePropertyDraft(selectedNodeDetails);
+    if (!base) return null;
+    return buildNodePropertyPatchPayload({
+      targetKey: currentTarget?.key ?? null,
+      node: selectedNodeDetails,
+      base,
+      draft: nodePatchDraft,
+    });
+  }, [currentTarget?.key, nodePatchDraft, selectedNodeDetails]);
+  const nodePatchHasChanges = hasNodePropertyChanges(nodePatchPayload?.changes);
+  const canApplyNodePatch = Boolean(currentTarget && currentTarget.platform === "ios" && nodePatchPayload && nodePatchHasChanges);
+
+  const updateNodePatchDraft = useCallback(<K extends keyof NodePropertyDraft>(
+    section: K,
+    patch: Partial<NodePropertyDraft[K]>,
+  ) => {
+    setNodePatchDraft((current) => current ? {
+      ...current,
+      [section]: {
+        ...current[section],
+        ...patch,
+      },
+    } : current);
+  }, []);
+
+  const copyNodePatchDraft = useCallback(async () => {
+    if (!nodePatchPayload) return;
+    const text = JSON.stringify(nodePatchPayload, null, 2);
+    if (typeof globalThis.navigator?.clipboard?.writeText === "function") {
+      await globalThis.navigator.clipboard.writeText(text);
+      message.success("节点属性 patch 草稿已复制到剪切板");
+    } else {
+      message.warning("当前浏览器不支持剪切板写入");
+    }
+  }, [nodePatchPayload]);
+
+  const applyNodePatchDraft = useCallback(async () => {
+    if (!currentTarget || !nodePatchPayload || !nodePatchHasChanges) return;
+    const params = new URLSearchParams({
+      platform: currentTarget.platform,
+      target: currentTarget.target,
+    });
+    if (currentTarget.scope) params.set("scope", currentTarget.scope);
+    if (currentTarget.kind) params.set("kind", currentTarget.kind);
+    if (currentTarget.hierarchySource) params.set("source", currentTarget.hierarchySource);
+
+    setApplyingNodePatch(true);
+    try {
+      const response = await fetch(`/web/node-property?${params.toString()}`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(nodePatchPayload),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || result?.ok === false) {
+        throw new Error(result?.error?.message || result?.message || `节点属性写入失败 (${response.status})`);
+      }
+      message.success("节点属性已应用到设备");
+      await refreshInspectSession(currentTarget.key, "nodePropertyPatched");
+    } catch (error) {
+      message.error(error instanceof Error ? error.message : String(error));
+    } finally {
+      setApplyingNodePatch(false);
+    }
+  }, [currentTarget, nodePatchHasChanges, nodePatchPayload, refreshInspectSession]);
+
   return (
     <Card
       size="small"
@@ -315,6 +391,7 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
               <Button
                 type="text"
                 size="small"
+                icon={<Copy size={12} />}
                 onClick={copySelectedNodeDetails}
                 disabled={!selectedNodeDetails}
                 style={{ color: "rgba(255,255,255,0.65)", height: 22, padding: "0 6px" }}
@@ -350,53 +427,197 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
         </div>
       </div>
       <Modal
-        title="节点详情"
+        title={
+          <Flex align="center" gap={8}>
+            <SlidersHorizontal size={15} color="#1677ff" />
+            <span>节点属性</span>
+          </Flex>
+        }
         open={detailsModalOpen}
         onCancel={() => setDetailsModalOpen(false)}
-        footer={null}
-        width={720}
+        footer={
+          <Flex justify="space-between" align="center" gap={8}>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>
+              {nodePatchHasChanges ? "有未应用改动" : "无改动"}
+            </Typography.Text>
+            <Space size={8}>
+              <Button icon={<Copy size={13} />} onClick={copySelectedNodeDetails} disabled={!selectedNodeDetails}>
+                复制 DTO
+              </Button>
+              <Button type="primary" icon={<Copy size={13} />} onClick={copyNodePatchDraft} disabled={!nodePatchPayload}>
+                复制 patch
+              </Button>
+              <Button icon={<Send size={13} />} onClick={applyNodePatchDraft} loading={applyingNodePatch} disabled={!canApplyNodePatch}>
+                应用到设备
+              </Button>
+            </Space>
+          </Flex>
+        }
+        width={960}
         centered
         destroyOnHidden
+        className="inspector-property-sheet-modal"
       >
-        {selectedNodeDetails && (
-          <div style={{ fontSize: 12 }}>
-            <Flex justify="space-between">
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>节点 ID</span>
-              <span style={{ overflowWrap: "anywhere", textAlign: "right" }}>{selectedNodeDetails.id || "--"}</span>
-            </Flex>
-            <Flex justify="space-between">
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>父节点</span>
-              <span style={{ overflowWrap: "anywhere", textAlign: "right" }}>{selectedNodeDetails.parentId || "--"}</span>
-            </Flex>
-            <Flex justify="space-between">
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>层级 / 来源</span>
-              <span>{selectedNodeDetails.depth ?? "--"} / {selectedNodeDetails.source || selectedNodeDetails.raw?.source || "--"}</span>
-            </Flex>
-            <Flex justify="space-between">
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>状态</span>
-              <span>{selectedNodeDetails.visible === false ? "隐藏" : "可见"} · {selectedNodeDetails.interactive ? "可交互" : "只读"}</span>
-            </Flex>
-            <pre
-              style={{
-                background: "rgba(0,0,0,0.24)",
-                border: "1px solid rgba(255,255,255,0.08)",
-                borderRadius: 6,
-                color: "rgba(255,255,255,0.72)",
-                fontSize: 11,
-                lineHeight: 1.45,
-                margin: "12px 0 0",
-                maxHeight: "52vh",
-                overflow: "auto",
-                padding: 8,
-                whiteSpace: "pre-wrap",
-                overflowWrap: "anywhere",
-              }}
-            >
-              {JSON.stringify(selectedNodeDetails, null, 2)}
-            </pre>
+        {selectedNodeDetails && nodePatchDraft && (
+          <div className="inspector-property-sheet">
+            <aside className="inspector-property-summary">
+              <div className="inspector-property-class">{selectedNodeDetails.type || selectedNodeDetails.className || "Unknown"}</div>
+              <div className="inspector-property-name">{selectedNodeDetails.name || selectedNodeDetails.id}</div>
+              <PropertySummaryRow label="节点 ID" value={selectedNodeDetails.id} />
+              <PropertySummaryRow label="父节点" value={selectedNodeDetails.parentId || "--"} />
+              <PropertySummaryRow label="层级" value={String(selectedNodeDetails.depth ?? "--")} />
+              <PropertySummaryRow label="来源" value={selectedNodeDetails.source || selectedNodeDetails.raw?.source || "--"} />
+              <PropertySummaryRow label="状态" value={`${selectedNodeDetails.visible === false ? "隐藏" : "可见"} · ${selectedNodeDetails.interactive ? "可交互" : "只读"}`} />
+              <PropertySummaryRow label="Frame" value={selectedNodeData?.frame || "--"} />
+            </aside>
+            <section className="inspector-property-main">
+              <Tabs
+                size="small"
+                defaultActiveKey="geometry"
+                items={[
+                  {
+                    key: "geometry",
+                    label: "Geometry",
+                    children: (
+                      <PropertyGrid>
+                        <PropertyNumber label="x" value={nodePatchDraft.frame.x} onChange={(x) => updateNodePatchDraft("frame", { x })} />
+                        <PropertyNumber label="y" value={nodePatchDraft.frame.y} onChange={(y) => updateNodePatchDraft("frame", { y })} />
+                        <PropertyNumber label="width" min={0} value={nodePatchDraft.frame.width} onChange={(width) => updateNodePatchDraft("frame", { width })} />
+                        <PropertyNumber label="height" min={0} value={nodePatchDraft.frame.height} onChange={(height) => updateNodePatchDraft("frame", { height })} />
+                      </PropertyGrid>
+                    ),
+                  },
+                  {
+                    key: "view",
+                    label: "View",
+                    children: (
+                      <PropertyGrid>
+                        <PropertySwitch label="hidden" checked={nodePatchDraft.view.isHidden} onChange={(isHidden) => updateNodePatchDraft("view", { isHidden })} />
+                        <PropertySwitch label="userInteraction" checked={nodePatchDraft.view.isUserInteractionEnabled} onChange={(isUserInteractionEnabled) => updateNodePatchDraft("view", { isUserInteractionEnabled })} />
+                        <PropertyNumber label="alpha" min={0} max={1} step={0.05} value={nodePatchDraft.view.alpha} onChange={(alpha) => updateNodePatchDraft("view", { alpha })} />
+                      </PropertyGrid>
+                    ),
+                  },
+                  {
+                    key: "layer",
+                    label: "Layer",
+                    children: (
+                      <PropertyGrid>
+                        <PropertySwitch label="hidden" checked={nodePatchDraft.layer.isHidden} onChange={(isHidden) => updateNodePatchDraft("layer", { isHidden })} />
+                        <PropertySwitch label="masksToBounds" checked={nodePatchDraft.layer.masksToBounds} onChange={(masksToBounds) => updateNodePatchDraft("layer", { masksToBounds })} />
+                        <PropertyNumber label="opacity" min={0} max={1} step={0.05} value={nodePatchDraft.layer.opacity} onChange={(opacity) => updateNodePatchDraft("layer", { opacity })} />
+                        <PropertyNumber label="cornerRadius" min={0} value={nodePatchDraft.layer.cornerRadius} onChange={(cornerRadius) => updateNodePatchDraft("layer", { cornerRadius })} />
+                        <PropertyNumber label="zPosition" value={nodePatchDraft.layer.zPosition} onChange={(zPosition) => updateNodePatchDraft("layer", { zPosition })} />
+                      </PropertyGrid>
+                    ),
+                  },
+                  {
+                    key: "ax",
+                    label: "AX",
+                    children: (
+                      <PropertyGrid>
+                        <PropertyText label="accessibilityIdentifier" value={nodePatchDraft.view.accessibilityIdentifier} onChange={(accessibilityIdentifier) => updateNodePatchDraft("view", { accessibilityIdentifier })} />
+                        <PropertyText label="accessibilityLabel" value={nodePatchDraft.view.accessibilityLabel} onChange={(accessibilityLabel) => updateNodePatchDraft("view", { accessibilityLabel })} />
+                        <PropertyText label="text" value={nodePatchDraft.style.text} onChange={(text) => updateNodePatchDraft("style", { text })} />
+                        <PropertyText label="backgroundColor" value={nodePatchDraft.style.backgroundColor} onChange={(backgroundColor) => updateNodePatchDraft("style", { backgroundColor })} />
+                        <PropertyText label="foregroundColor" value={nodePatchDraft.style.foregroundColor} onChange={(foregroundColor) => updateNodePatchDraft("style", { foregroundColor })} />
+                        <PropertyNumber label="styleAlpha" min={0} max={1} step={0.05} value={nodePatchDraft.style.alpha} onChange={(alpha) => updateNodePatchDraft("style", { alpha })} />
+                        <PropertyNumber label="styleCornerRadius" min={0} value={nodePatchDraft.style.cornerRadius} onChange={(cornerRadius) => updateNodePatchDraft("style", { cornerRadius })} />
+                      </PropertyGrid>
+                    ),
+                  },
+                  {
+                    key: "raw",
+                    label: "Raw",
+                    children: (
+                      <pre className="inspector-property-raw">
+                        {JSON.stringify(selectedNodeDetails, null, 2)}
+                      </pre>
+                    ),
+                  },
+                ]}
+              />
+            </section>
           </div>
         )}
       </Modal>
     </Card>
+  );
+}
+
+function PropertySummaryRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="inspector-property-summary-row">
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  );
+}
+
+function PropertyGrid({ children }: { children: React.ReactNode }) {
+  return <div className="inspector-property-grid">{children}</div>;
+}
+
+function PropertyNumber({
+  label,
+  value,
+  onChange,
+  min,
+  max,
+  step,
+}: {
+  label: string;
+  value: number;
+  onChange: (value: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
+}) {
+  return (
+    <label className="inspector-property-row">
+      <span>{label}</span>
+      <InputNumber
+        size="small"
+        value={value}
+        min={min}
+        max={max}
+        step={step}
+        onChange={(next) => onChange(typeof next === "number" ? next : value)}
+      />
+    </label>
+  );
+}
+
+function PropertyText({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <label className="inspector-property-row">
+      <span>{label}</span>
+      <Input size="small" value={value} onChange={(event) => onChange(event.target.value)} />
+    </label>
+  );
+}
+
+function PropertySwitch({
+  label,
+  checked,
+  onChange,
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="inspector-property-row inspector-property-row-switch">
+      <span>{label}</span>
+      <Switch size="small" checked={checked} onChange={onChange} />
+    </label>
   );
 }

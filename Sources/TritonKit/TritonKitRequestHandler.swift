@@ -74,7 +74,7 @@ public class TritonKitRequestHandler: TritonKitDelegate {
             let response = runtimeLedgerStore.response(limit: request.limit)
             return TKMessage(id: msg.id, type: .runtimeLedger, payload: try? JSONEncoder().encode(response))
         case .legacyInspection:
-            return handleLegacyInspection(msg)
+            return await handleLegacyInspection(msg)
         case .unsupported:
             return unsupportedMessage(msg)
         }

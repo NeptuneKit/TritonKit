@@ -515,8 +515,22 @@ git diff --check
   - 修复过程中发现并处理一个 React maximum update depth 问题：Inspector 空 scene 使用稳定空数组，避免 effect 反复 setState。
   - 新操作后的 console 无 error/warn。
   - 截图：`screenshots/20260706-web-inspect-session-slots-browser-smoke-after-v01.png`（本地验收产物，当前被仓库级 `screenshots/` ignore 规则忽略）。
+- Inspector 选中节点详情已从底部信息块改为 Lookin-like modal property sheet：
+  - 顶部只保留轻量 `选中:` chip、`详情` 和 `复制`。
+  - modal 左侧显示节点 class/name/id/parent/source/status/frame 摘要。
+  - modal 右侧按 `Geometry`、`View`、`Layer`、`AX`、`Raw` 分区查看和编辑草稿字段。
+  - 已补 runtime 节点属性写入契约：Shared `TKNodePropertyPatchRequest/Response` 作为 CLI/HTTP/Web 共用 DTO，`triton debug patch-node` 与 `triton serve /web/node-property` 都走 `modifyAttribute` 下发到 embedded runtime。
+  - runtime 端按白名单写入 iOS UIKit / CALayer 属性：frame、view hidden/alpha/userInteraction/AX identifier/label、layer hidden/masksToBounds/opacity/cornerRadius/zPosition，以及常见文本控件 text / foregroundColor / backgroundColor；不支持项进入 `skipped`。
+  - Web bridge 只支持 iOS runtime 属性写入：iOS host/simulator target 先解析匹配的 App runtime target 后转发，Android / Harmony 返回 `web_node_property_platform_not_supported`，避免伪装成跨端属性反向修改。
+  - 浏览器 smoke 使用 iOS runtime tree 选中 `iDxyer.MTLFormCell`，打开 modal 后确认 Geometry 输入值和禁用应用按钮正常，无 console error/warn；后续属性应用 smoke 应优先选中可安全修改的 Demo 控件。
+  - 截图：`screenshots/20260706/20260706-web-inspector-property-sheet-after-01.png`。
 - 验证通过：
+  - `swift test --filter TKCLITransportModelsTests/nodePropertyPatchRequestResolvesOid`
+  - `swift test --filter TKNodePropertyPatchTests`（macOS 上 UIKit case 被 `#if canImport(UIKit)` 跳过）
+  - `cd Web && node --test dev/ios-bridge/nodePropertyRoute.test.mjs dev/nodePropertyDraft.test.mjs`
+  - `CLI/.build/debug/triton debug --help | rg "patch-node|Patch"`
+  - `CLI/.build/debug/triton schema --command debug --json | rg "patch-node|node.propertyPatch|TKNodePropertyPatchResponse"`
+  - `swift test --package-path CLI --filter SchemaFactSourceTests/observeAndNodeProvidedCapabilitiesStaySchemaMatrixAligned`
   - `cd Web && npm test`
   - `cd Web && npm run build`
-  - `swift build --package-path CLI --scratch-path .build/cli --product triton`
   - `docs-linhay/scripts/check-docs.sh && git diff --check`

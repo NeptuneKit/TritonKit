@@ -1497,3 +1497,22 @@ func runtimeLedgerEntryOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
+
+func nodePropertyPatchOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "node.propertyPatch",
+        format: "json",
+        kind: "runtime-node-property-patch",
+        model: "TKNodePropertyPatchResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether at least one supported runtime node property was applied"),
+            ("success", "Bool", true, "Backward-compatible alias for ok"),
+            ("action", "String", true, "Runtime action name, currently node.patch"),
+            ("nodeId", "String?", false, "Hierarchy node id supplied by the caller"),
+            ("oid", "UInt?", false, "Resolved runtime object identifier"),
+            ("applied", "[String]", true, "Applied property paths"),
+            ("skipped", "[String]", true, "Unsupported, missing, invalid, or unchanged property paths"),
+            ("message", "String?", false, "Human-readable diagnostic message"),
+        ])
+    )
+}

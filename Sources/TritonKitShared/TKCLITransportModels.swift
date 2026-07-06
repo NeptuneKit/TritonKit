@@ -325,6 +325,7 @@ public struct TKCLICommandRequest: Codable, Equatable {
         case "allattrgroups": .allAttrGroups
         case "fetchobject": .fetchObject
         case "hierarchydetails": .hierarchyDetails
+        case "modifyattribute", "modify.attribute", "node.patch", "nodepatch": .modifyAttribute
         case "input": .input
         case "accessibility", "ax": .accessibility
         case "hittest", "hit": .hitTest

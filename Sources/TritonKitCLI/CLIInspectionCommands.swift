@@ -392,3 +392,71 @@ struct ObjectInfo: AsyncParsableCommand {
         }
     }
 }
+
+struct PatchNode: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "patch-node",
+        abstract: "Apply a runtime node property patch to a UIKit view or layer"
+    )
+
+    @Option(help: "Target id from `triton list`") var target: String = TKLocalTargetID
+    @Option(name: .customLong("node-id"), help: "Hierarchy node id such as ios:runtime:<oid>") var nodeId: String?
+    @Option(help: "Runtime object oid") var oid: UInt?
+    @Option(name: .customLong("view-oid"), help: "Runtime UIView oid") var viewOID: UInt?
+    @Option(name: .customLong("layer-oid"), help: "Runtime CALayer oid") var layerOID: UInt?
+    @Option(help: "Node property changes JSON, for example '{\"view\":{\"alpha\":0.5}}'") var patch: String
+    @Option(help: "Server host") var host: String = "127.0.0.1"
+    @Option(help: "Server port") var port: Int = 19421
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .text
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() async throws {
+        let outputFormat = effectiveFormat(format, json: json)
+        do {
+            let request = try buildPatchRequest()
+            let payload = try JSONEncoder().encode(request)
+            let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
+            let data = try await client.request(type: "node.patch", payload: payload)
+            switch outputFormat {
+            case .json:
+                print(try prettyJSON(data))
+            case .text:
+                let response = try JSONDecoder().decode(TKNodePropertyPatchResponse.self, from: data)
+                print("ok: \(response.ok)")
+                print("action: \(response.action)")
+                print("oid: \(response.oid.map(String.init) ?? "-")")
+                print("applied: \(response.applied.isEmpty ? "-" : response.applied.joined(separator: ","))")
+                print("skipped: \(response.skipped.isEmpty ? "-" : response.skipped.joined(separator: ","))")
+                if let message = response.message {
+                    print("message: \(message)")
+                }
+            }
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+
+    private func buildPatchRequest() throws -> TKNodePropertyPatchRequest {
+        guard nodeId != nil || oid != nil || viewOID != nil || layerOID != nil else {
+            throw RuntimeError("Provide --node-id, --oid, --view-oid, or --layer-oid")
+        }
+        let data = Data(patch.utf8)
+        let changes: TKNodePropertyChanges
+        do {
+            changes = try JSONDecoder().decode(TKNodePropertyChanges.self, from: data)
+        } catch {
+            throw RuntimeError("--patch must be a TKNodePropertyChanges JSON object: \(error)")
+        }
+        guard !changes.isEmpty else {
+            throw RuntimeError("--patch must contain at least one changed node property")
+        }
+        return TKNodePropertyPatchRequest(
+            nodeId: nodeId,
+            oid: oid,
+            viewOID: viewOID,
+            layerOID: layerOID,
+            changes: changes
+        )
+    }
+}
