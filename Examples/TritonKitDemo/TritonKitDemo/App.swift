@@ -1,3 +1,4 @@
+import AVFoundation
 import SwiftUI
 #if DEBUG
 import TritonKit
@@ -24,6 +25,7 @@ enum DemoScenario: String, CaseIterable, Identifiable {
     case webViewBasic
     case webViewEdge
     case webViewNavigation
+    case camera
 
     var id: String { rawValue }
 
@@ -41,6 +43,8 @@ enum DemoScenario: String, CaseIterable, Identifiable {
             return "Web Edge"
         case .webViewNavigation:
             return "Web Nav"
+        case .camera:
+            return "Camera"
         }
     }
 
@@ -196,6 +200,9 @@ struct ContentView: View {
                 case .webViewNavigation:
                     WebViewSmokePanel(variant: .navigation)
                         .frame(height: 240)
+                case .camera:
+                    CameraSmokePanel()
+                        .frame(height: 360)
                 }
             }
 
@@ -245,6 +252,140 @@ struct UIKitSmokePanel: UIViewRepresentable {
     }
 
     func updateUIView(_ uiView: UIKitSmokeView, context: Context) {}
+}
+
+struct CameraSmokePanel: UIViewRepresentable {
+    func makeUIView(context: Context) -> CameraSmokeView {
+        CameraSmokeView()
+    }
+
+    func updateUIView(_ uiView: CameraSmokeView, context: Context) {}
+}
+
+final class CameraSmokeView: UIView, AVCaptureVideoDataOutputSampleBufferDelegate {
+    private let statusLabel = UILabel()
+    private let frameLabel = UILabel()
+    private let previewView = UIView()
+    private let session = AVCaptureSession()
+    private let queue = DispatchQueue(label: "triton.demo.camera")
+    private var previewLayer: AVCaptureVideoPreviewLayer?
+    private var frameCount = 0
+
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        configureUI()
+        startCamera()
+    }
+
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        configureUI()
+        startCamera()
+    }
+
+    override func layoutSubviews() {
+        super.layoutSubviews()
+        previewLayer?.frame = previewView.bounds
+    }
+
+    private func configureUI() {
+        backgroundColor = .secondarySystemGroupedBackground
+        layer.cornerRadius = 8
+        accessibilityIdentifier = "CameraHarnessPanel"
+
+        statusLabel.text = "camera=starting"
+        statusLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        statusLabel.accessibilityIdentifier = "CameraHarnessStatus"
+
+        frameLabel.text = "frames=0"
+        frameLabel.font = .systemFont(ofSize: 12, weight: .medium)
+        frameLabel.accessibilityIdentifier = "CameraHarnessFrameCount"
+
+        previewView.backgroundColor = .black
+        previewView.layer.cornerRadius = 6
+        previewView.clipsToBounds = true
+        previewView.accessibilityIdentifier = "CameraHarnessPreview"
+
+        let stack = UIStackView(arrangedSubviews: [statusLabel, frameLabel, previewView])
+        stack.axis = .vertical
+        stack.spacing = 8
+        addSubview(stack)
+        stack.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            stack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 12),
+            stack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -12),
+            stack.topAnchor.constraint(equalTo: topAnchor, constant: 10),
+            stack.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -10),
+            previewView.heightAnchor.constraint(greaterThanOrEqualToConstant: 240)
+        ])
+    }
+
+    private func startCamera() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        if status == .notDetermined {
+            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
+                DispatchQueue.main.async {
+                    granted ? self?.configureCameraSession() : self?.setStatus("camera=denied")
+                }
+            }
+            return
+        }
+        guard status == .authorized else {
+            setStatus("camera=\(status)")
+            return
+        }
+        configureCameraSession()
+    }
+
+    private func configureCameraSession() {
+        guard let device = AVCaptureDevice.default(for: .video) else {
+            setStatus("camera=missing-device")
+            return
+        }
+        do {
+            let input = try AVCaptureDeviceInput(device: device)
+            if session.canAddInput(input) {
+                session.addInput(input)
+            }
+
+            let output = AVCaptureVideoDataOutput()
+            output.setSampleBufferDelegate(self, queue: queue)
+            if session.canAddOutput(output) {
+                session.addOutput(output)
+            }
+
+            let preview = AVCaptureVideoPreviewLayer(session: session)
+            preview.videoGravity = .resizeAspectFill
+            previewView.layer.addSublayer(preview)
+            previewLayer = preview
+            setNeedsLayout()
+
+            setStatus("camera=\(device.localizedName)")
+            queue.async { [session] in
+                session.startRunning()
+            }
+        } catch {
+            setStatus("camera=error \(error.localizedDescription)")
+        }
+    }
+
+    private func setStatus(_ text: String) {
+        DispatchQueue.main.async {
+            self.statusLabel.text = text
+        }
+    }
+
+    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+        guard let imageBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else {
+            return
+        }
+        frameCount += 1
+        let width = CVPixelBufferGetWidth(imageBuffer)
+        let height = CVPixelBufferGetHeight(imageBuffer)
+        DispatchQueue.main.async {
+            self.frameLabel.text = "frames=\(self.frameCount) size=\(width)x\(height)"
+        }
+    }
 }
 
 enum WebViewSmokeVariant {

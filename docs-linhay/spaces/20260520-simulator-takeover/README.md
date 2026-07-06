@@ -126,6 +126,7 @@ TritonKit 需要从单一 `triton:local` 扩展为可绑定的多层 target：
 - And 输出中的 `sourceCommand` 对注入环境值保持脱敏
 - And `camera serve` 通过 Unix socket 输出协议 v2 的 BGRA frame stream
 - And App 内通过 `AVCaptureDevice` 发现 Triton fake camera，`AVCaptureVideoDataOutput` delegate 与 `AVCaptureVideoPreviewLayer` 可接收同一帧源
+- And `Examples/TritonKitDemo` 的 `Camera` 场景暴露 `CameraHarnessStatus`、`CameraHarnessFrameCount` 和 `CameraHarnessPreview`，可用于自动化验证相机状态、帧计数和 preview layer 渲染
 - And 未启用的 bundle、真机、Android 和 Harmony App 不受影响
 
 ### 场景四：通过 deep link 准备业务状态

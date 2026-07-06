@@ -33,6 +33,8 @@
 	<array>
 		<string>_tritonkit-server._tcp</string>
 	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>TritonKit demo uses the simulator camera hook to validate camera preview and sample-buffer delivery.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>TritonKit uses local network discovery to connect this Debug app to the local Triton server.</string>
 	<key>NSAppTransportSecurity</key>
