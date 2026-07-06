@@ -794,17 +794,52 @@ private func writeWorkspaceDryDecisionArtifacts(
 ) throws {
     let command = ["triton", "act", "tap", "Continue", "--json"]
     try writeWorkspaceJSONArtifact([
+        "kind": "triton.workspace.model-request",
+        "mode": "dry-fixture",
+        "task": "bootstrap",
+        "goal": run.goal,
+        "observationRef": "events.jsonl#observation.captured",
+        "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
+    ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-request.redacted.json"))
+    try "dry fixture bootstrap response: tap Continue\n".write(
+        to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-response.raw.txt"),
+        atomically: true,
+        encoding: .utf8
+    )
+    try writeWorkspaceJSONArtifact([
         "summary": "Dry fixture proposes a single bootstrap action.",
         "command": command,
         "confidence": 0.5,
         "evidenceId": "ev_0000",
         "expected": "Continue advances the initial screen.",
+        "artifacts": [
+            "request": "evidence/model/bootstrap-proposal-000-request.redacted.json",
+            "response": "evidence/model/bootstrap-proposal-000-response.raw.txt",
+        ],
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000.json"))
+    try writeWorkspaceJSONArtifact([
+        "kind": "triton.workspace.model-request",
+        "mode": "dry-fixture",
+        "task": "decide",
+        "goal": run.goal,
+        "observationRef": "events.jsonl#observation.captured",
+        "bootstrapProposalRef": "evidence/model/bootstrap-proposal-000.json",
+        "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
+    ], to: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
+    try "dry fixture decision response: tap Continue\n".write(
+        to: runDir.appendingPathComponent("evidence/model/decision-000-response.raw.txt"),
+        atomically: true,
+        encoding: .utf8
+    )
     try writeWorkspaceJSONArtifact([
         "summary": "Dry fixture selected a single tap candidate.",
         "command": command,
         "confidence": 0.5,
         "usedVLM": true,
+        "artifacts": [
+            "request": "evidence/model/decision-000-request.redacted.json",
+            "response": "evidence/model/decision-000-response.raw.txt",
+        ],
     ], to: runDir.appendingPathComponent("evidence/model/decision-000.json"))
     if !policyAllowed {
         try writeWorkspaceJSONArtifact([

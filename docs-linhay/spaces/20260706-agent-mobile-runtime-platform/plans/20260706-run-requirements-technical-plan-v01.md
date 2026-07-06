@@ -611,6 +611,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
 - 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；默认不启用，避免把测试夹具伪装成真实 LLM/VLM 或设备动作。
 - dry fixture 现在也会写 `flow.bootstrap.proposed` 和 `evidence/model/bootstrap-proposal-000.json`，以单步 `triton act tap Continue --json` 表达“稳定出发流程”的候选动作；真正执行仍由后续 policy gate 决定。
+- dry fixture 的模型参与证据现在包含红线 request 与原始 response artifact：`bootstrap-proposal-000-request.redacted.json`、`bootstrap-proposal-000-response.raw.txt`、`decision-000-request.redacted.json`、`decision-000-response.raw.txt`，并由 proposal / decision JSON 的 `artifacts` 字段反链；这只固定 deterministic fixture 契约，真实 provider request/response 仍在后续切片。
 - 新增显式 LLM/VLM provider preflight：`--llm-provider mock --vlm-provider mock` / HTTP `llmProvider=mock, vlmProvider=mock` 会记录 `providersReady=true`、`providerStatus=ready`、`llmProviderStatus=ready`、`vlmProviderStatus=ready`，并把 `provider.checked` phase 写为 `ready`、`flow.bootstrap.checked` phase 写为 `provider_ready`。
 - 只配置 `--vlm-provider mock` 时仍是可审计 partial 状态：`providerStatus=partial`、`llmProviderStatus=missing`、`vlmProviderStatus=ready`，`provider.checked` phase 为 `vlm_ready_llm_missing`，`flow.bootstrap.checked` phase 为 `llm_missing`。
 

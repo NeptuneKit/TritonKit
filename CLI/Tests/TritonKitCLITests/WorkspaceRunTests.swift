@@ -325,6 +325,21 @@ struct WorkspaceRunTests {
         #expect(eventTypes.contains("flow.updated"))
 
         let runDir = root.appendingPathComponent("run-workspace-decision", isDirectory: true)
+        let decision = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/decision-000.json"))
+        ) as? [String: Any]
+        let decisionArtifacts = decision?["artifacts"] as? [String: String]
+        #expect(decisionArtifacts?["request"] == "evidence/model/decision-000-request.redacted.json")
+        #expect(decisionArtifacts?["response"] == "evidence/model/decision-000-response.raw.txt")
+        #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json").path))
+        #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("evidence/model/decision-000-response.raw.txt").path))
+        let bootstrapProposal = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000.json"))
+        ) as? [String: Any]
+        let bootstrapArtifacts = bootstrapProposal?["artifacts"] as? [String: String]
+        #expect(bootstrapArtifacts?["request"] == "evidence/model/bootstrap-proposal-000-request.redacted.json")
+        #expect(bootstrapArtifacts?["response"] == "evidence/model/bootstrap-proposal-000-response.raw.txt")
+
         let atlas = try JSONSerialization.jsonObject(
             with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
         ) as? [String: Any]
@@ -595,18 +610,33 @@ struct WorkspaceRunTests {
         process.executableURL = try tritonExecutableURL()
         process.arguments = arguments
 
-        let stdout = Pipe()
-        let stderr = Pipe()
+        let captureDir = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-workspace-cli-capture-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: captureDir, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: captureDir) }
+
+        let stdoutURL = captureDir.appendingPathComponent("stdout.txt")
+        let stderrURL = captureDir.appendingPathComponent("stderr.txt")
+        FileManager.default.createFile(atPath: stdoutURL.path, contents: nil)
+        FileManager.default.createFile(atPath: stderrURL.path, contents: nil)
+        let stdout = try FileHandle(forWritingTo: stdoutURL)
+        let stderr = try FileHandle(forWritingTo: stderrURL)
+        defer {
+            try? stdout.close()
+            try? stderr.close()
+        }
         process.standardOutput = stdout
         process.standardError = stderr
 
         try process.run()
         process.waitUntilExit()
+        try stdout.close()
+        try stderr.close()
 
         return WorkspaceCLIRunResult(
             exitCode: process.terminationStatus,
-            stdout: String(decoding: stdout.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self),
-            stderr: String(decoding: stderr.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+            stdout: try String(contentsOf: stdoutURL, encoding: .utf8),
+            stderr: try String(contentsOf: stderrURL, encoding: .utf8)
         )
     }
 
