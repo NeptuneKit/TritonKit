@@ -266,8 +266,10 @@ final class CameraSmokeView: UIView, AVCaptureVideoDataOutputSampleBufferDelegat
     private let statusLabel = UILabel()
     private let frameLabel = UILabel()
     private let previewView = UIView()
+    private let previewImageView = UIImageView()
     private let session = AVCaptureSession()
     private let queue = DispatchQueue(label: "triton.demo.camera")
+    private let imageContext = CIContext()
     private var previewLayer: AVCaptureVideoPreviewLayer?
     private var frameCount = 0
 
@@ -305,6 +307,18 @@ final class CameraSmokeView: UIView, AVCaptureVideoDataOutputSampleBufferDelegat
         previewView.layer.cornerRadius = 6
         previewView.clipsToBounds = true
         previewView.accessibilityIdentifier = "CameraHarnessPreview"
+
+        previewImageView.contentMode = .scaleAspectFill
+        previewImageView.clipsToBounds = true
+        previewImageView.accessibilityIdentifier = "CameraHarnessPreviewImage"
+        previewView.addSubview(previewImageView)
+        previewImageView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            previewImageView.leadingAnchor.constraint(equalTo: previewView.leadingAnchor),
+            previewImageView.trailingAnchor.constraint(equalTo: previewView.trailingAnchor),
+            previewImageView.topAnchor.constraint(equalTo: previewView.topAnchor),
+            previewImageView.bottomAnchor.constraint(equalTo: previewView.bottomAnchor)
+        ])
 
         let stack = UIStackView(arrangedSubviews: [statusLabel, frameLabel, previewView])
         stack.axis = .vertical
@@ -382,9 +396,24 @@ final class CameraSmokeView: UIView, AVCaptureVideoDataOutputSampleBufferDelegat
         frameCount += 1
         let width = CVPixelBufferGetWidth(imageBuffer)
         let height = CVPixelBufferGetHeight(imageBuffer)
+        let previewImage = makePreviewImage(from: imageBuffer)
         DispatchQueue.main.async {
             self.frameLabel.text = "frames=\(self.frameCount) size=\(width)x\(height)"
+            if let previewImage {
+                self.previewImageView.image = previewImage
+            }
         }
+    }
+
+    private func makePreviewImage(from imageBuffer: CVImageBuffer) -> UIImage? {
+        guard frameCount % 5 == 0 else {
+            return nil
+        }
+        let image = CIImage(cvImageBuffer: imageBuffer)
+        guard let cgImage = imageContext.createCGImage(image, from: image.extent) else {
+            return nil
+        }
+        return UIImage(cgImage: cgImage)
     }
 }
 

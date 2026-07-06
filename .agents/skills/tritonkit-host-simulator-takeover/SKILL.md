@@ -172,6 +172,20 @@ Run real simulator smoke only when it is safe for the current machine state:
 .build/cli/debug/triton app info --bundle-id com.example.missing --simulator booted --json
 ```
 
+For simulator camera hook smoke, keep injection scoped and clean it up:
+
+```bash
+.build/cli/debug/triton camera on --bundle-id <bundle-id> --json
+.build/cli/debug/triton camera serve --socket /tmp/tritonkit-sim-camera.sock --json
+.build/cli/debug/triton app launch --bundle-id <bundle-id> --device <udid-or-booted> --json
+.build/cli/debug/triton act tap --platform ios --device <udid-or-booted> --x <x> --y <y> --json
+.build/cli/debug/triton observe tree --platform ios --device <udid-or-booted> --outline --json
+.build/cli/debug/triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-camera.png --json
+.build/cli/debug/triton camera off --bundle-id <bundle-id> --json
+```
+
+Success needs all three facts: `app launch` redacts `SIMCTL_CHILD_DYLD_INSERT_LIBRARIES` / `SIMCTL_CHILD_TRITON_SIM_CAMERA_SOCKET`, `observe tree` shows camera status plus an increasing frame count, and the screenshot shows rendered frame content. Stop `camera serve` after the smoke; do not leave bundle injection enabled.
+
 For `sim use`, validate in `/tmp` or another disposable directory:
 
 ```bash

@@ -556,15 +556,17 @@ static void TritonInstallAVFoundationHooks(void) {
     static id (*origPreviewInit)(id, SEL, AVCaptureSession *) = NULL;
     origPreviewInit = (void *)TritonSwizzleInstanceMethod([AVCaptureVideoPreviewLayer class], previewInitSel, ^id(AVCaptureVideoPreviewLayer *self, AVCaptureSession *session) {
         NSArray *inputs = objc_getAssociatedObject(session, TritonSessionInputsKey);
-        if (inputs.count == 0 && origPreviewInit) {
-            return origPreviewInit(self, previewInitSel, session);
+        if (inputs.count == 0) {
+            return origPreviewInit ? origPreviewInit(self, previewInitSel, session) : [self init];
         }
-        objc_setAssociatedObject(self, TritonPreviewSessionKey, session, OBJC_ASSOCIATION_ASSIGN);
+        AVCaptureVideoPreviewLayer *initialized = [self init];
+        AVCaptureVideoPreviewLayer *layer = initialized ?: self;
+        objc_setAssociatedObject(layer, TritonPreviewSessionKey, session, OBJC_ASSOCIATION_ASSIGN);
         @synchronized(gPreviewLayers) {
-            [gPreviewLayers addObject:self];
+            [gPreviewLayers addObject:layer];
         }
-        (void)TritonPreviewOverlay(self);
-        return self;
+        (void)TritonPreviewOverlay(layer);
+        return layer;
     });
 
     SEL previewLayerSel = @selector(layerWithSession:);
@@ -584,7 +586,9 @@ static void TritonInstallAVFoundationHooks(void) {
             origPreviewSetFrame(self, previewSetFrameSel, frame);
         }
         CALayer *overlay = objc_getAssociatedObject(self, TritonPreviewOverlayKey);
-        overlay.frame = self.bounds;
+        if (overlay != nil) {
+            overlay.frame = self.bounds;
+        }
     });
 
     SEL previewSetBoundsSel = @selector(setBounds:);
@@ -594,7 +598,9 @@ static void TritonInstallAVFoundationHooks(void) {
             origPreviewSetBounds(self, previewSetBoundsSel, bounds);
         }
         CALayer *overlay = objc_getAssociatedObject(self, TritonPreviewOverlayKey);
-        overlay.frame = self.bounds;
+        if (overlay != nil) {
+            overlay.frame = self.bounds;
+        }
     });
 
     SEL startRunningSel = @selector(startRunning);
