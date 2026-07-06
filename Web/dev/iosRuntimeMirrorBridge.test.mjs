@@ -4,7 +4,7 @@ import { createServer } from "node:http";
 import { join } from "node:path";
 import test from "node:test";
 import { tmpdir } from "node:os";
-import { createIosSimulatorBridgeMiddleware } from "./iosSimulatorBridge.mjs";
+import { createIosSimulatorBridgeMiddleware } from "./ios-bridge/index.mjs";
 
 test("resolves single iOS simulator runtime target for runtime hierarchy mirror when simulator UDID is unavailable", async () => {
   const tritonPath = await createFakeTritonScript(`#!/usr/bin/env node

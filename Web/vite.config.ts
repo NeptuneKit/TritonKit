@@ -2,7 +2,7 @@ import { defineConfig, type Plugin } from "vite";
 import { createViteDebugInspectorPlugin } from "@linhey/react-debug-inspector";
 import react from "@vitejs/plugin-react";
 // @ts-expect-error Local dev middleware is a Node ESM helper outside the TS app bundle.
-import { createIosSimulatorBridgeMiddleware } from "./dev/iosSimulatorBridge.mjs";
+import { createIosSimulatorBridgeMiddleware } from "./dev/ios-bridge/index.mjs";
 
 function iosSimulatorBridge(): Plugin {
   return {

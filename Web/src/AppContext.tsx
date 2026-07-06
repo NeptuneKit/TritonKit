@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
-import { LayoutNode } from './App';
+import type { LayoutNode } from "./layoutModel";
 
 export interface StreamState {
   nodeId: string;

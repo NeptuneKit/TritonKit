@@ -52,6 +52,18 @@ TritonKit 原本的 iOS 无障碍（AX）树获取强依赖于嵌入在 App 内�
 - Web 仍只读展示 hierarchy / AX DTO，不新增业务控制闭环；modal sheet 只展示现有 DTO 字段，不从截图或像素推断业务事实。
 - `visible` / `isHidden` / `alpha` 只作为 hierarchy DTO 字段使用；Web 不从截图像素反推可见性。
 
+### 2026-07-06 Web bridge 文件归类
+
+- `Web/dev/iosSimulatorBridge.mjs` 兼容入口已删除，Vite 与测试直接 import `Web/dev/ios-bridge/index.mjs`。
+- host target 映射测试已拆到 `Web/dev/ios-bridge/hostTargets.test.mjs`，`iosSimulatorBridge.test.mjs` 只保留 middleware / route 行为测试。
+- iOS App runtime mirror 匹配逻辑已拆到 `Web/dev/ios-bridge/runtimeMirror.mjs`，host hierarchy 抓取与 legacy iOS scene 转换已拆到 `Web/dev/ios-bridge/hierarchy.mjs`。
+- `Web/dev/ios-bridge/index.mjs` 已收缩为 middleware / route 分发入口；托管 `triton serve`、JSON/body helper、图片解析、host screenshot、host input 和 iOS/Android/Harmony 流代理分别拆到 `tritonServe.mjs`、`http.mjs`、`image.mjs`、`hostScreenshot.mjs`、`hostInput.mjs`、`streamRoutes.mjs`。
+- host logs 的 triton 调用与 ndjson 解析统一放在 `hostLogs.mjs`；host target 的 capture plan、执行和 DTO 映射统一放在 `hostTargets.mjs`。
+- bridge route 测试继续归类：hierarchy route 用例拆到 `Web/dev/ios-bridge/hierarchyRoute.test.mjs`，fake triton / fake host server / middleware invoke 支撑函数拆到 `Web/dev/ios-bridge/testSupport.mjs`。
+- 旧版 Web UI 的 `appFallbackDom.test.mjs` / `appFallbackDomHarness.mjs`、`HostBridgeNotice`、`hostBridgePresentation` 和 `npm run test:legacy-dom` 已删除；`happy-dom` 依赖已移除。
+- `Web/src/App.tsx` 已拆成瘦入口；布局树类型和操作在 `Web/src/layoutModel.ts`，pane / card 渲染在 `Web/src/components/AppCanvas.tsx`。
+- 验证：`node --test dev/ios-bridge/hierarchyRoute.test.mjs dev/ios-bridge/hostTargets.test.mjs dev/iosRuntimeMirrorBridge.test.mjs dev/iosSimulatorBridge.test.mjs` 通过 30 项；`cd Web && npm test` 与 `cd Web && npm run build` 通过。
+
 ---
 
 ## 技术方案设计 (Technical Design)

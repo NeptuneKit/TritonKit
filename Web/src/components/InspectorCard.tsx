@@ -2,8 +2,9 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Card, Tag, Flex, Button, message, Select, Tabs, Tree, Spin, Checkbox, Modal } from "antd";
 import { Maximize2, Search, RefreshCw } from "lucide-react";
 import { useAppContext } from "../AppContext";
-import { LayoutNode } from "../App";
+import type { LayoutNode } from "../layoutModel";
 import { filterEffectivelyVisibleNodes } from "../hierarchyVisibility";
+import { getInspectorTreeTabs } from "../inspectorTreeTabs";
 
 function findPath(node: LayoutNode, targetId: string, path: string[] = []): string[] | null {
   if (node.kind === "leaf") {
@@ -82,6 +83,7 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
   const [loading, setLoading] = useState(false);
   const [liveViewTreeData, setLiveViewTreeData] = useState<any[]>([]);
   const [liveAxTreeData, setLiveAxTreeData] = useState<any[]>([]);
+  const [liveTreeNodes, setLiveTreeNodes] = useState<any[]>([]);
   const [simplify, setSimplify] = useState(true);
 
   // ─── 双向选择联动：根据选中的全局 selectedNodeId 查找并渲染当前节点属性 ─────────────────────
@@ -119,11 +121,13 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
   // ─── 响应式树结构计算：监听 hierarchyScenes 并在更新时重新映射视图树 ─────────────────────
   useEffect(() => {
     if (!currentStream) {
+      setLiveTreeNodes([]);
       setLiveViewTreeData([]);
       setLiveAxTreeData([]);
       return;
     }
     const flatNodes = filterEffectivelyVisibleNodes(hierarchyScenes[currentStream.udid] || []);
+    setLiveTreeNodes(flatNodes);
     if (!flatNodes || flatNodes.length === 0) {
       setLiveViewTreeData([]);
       setLiveAxTreeData([]);
@@ -225,6 +229,20 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
     setLiveAxTreeData(filterAx(roots));
   }, [hierarchyScenes, currentStream, simplify, setHoveredNodeId]);
 
+  const treeTabs = getInspectorTreeTabs(currentStream?.platform, liveTreeNodes, liveTreeNodes.length > 0);
+  const renderTree = (treeData: any[], emptyText: string, description?: string) => (
+    <>
+      {description && (
+        <div style={{ padding: "0 0 8px", color: "rgba(255,255,255,0.38)", fontSize: 11 }}>
+          {description}
+        </div>
+      )}
+      {treeData.length > 0
+        ? <Tree selectedKeys={selectedNodeId ? [selectedNodeId] : []} treeData={treeData} onSelect={handleSelect} showLine={{ showLeafIcon: false }} defaultExpandAll style={{ background: 'transparent', fontSize: 11, whiteSpace: 'nowrap' }} />
+        : <div style={{ padding: 12, textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 12 }}>{emptyText}</div>}
+    </>
+  );
+
   const fetchHierarchy = useCallback(async () => {
     if (!currentStream) return;
     setLoading(true);
@@ -297,24 +315,16 @@ export function InspectorCard({ nodeId }: { nodeId: string }) {
             </div>
           )}
           <Tabs
+            key={treeTabs.map((tab) => tab.key).join("|")}
             size="small"
-            defaultActiveKey="view"
-            items={[
-              {
-                key: 'view',
-                label: '视图树',
-                children: liveViewTreeData.length > 0
-                  ? <Tree selectedKeys={selectedNodeId ? [selectedNodeId] : []} treeData={liveViewTreeData} onSelect={handleSelect} showLine={{ showLeafIcon: false }} defaultExpandAll style={{ background: 'transparent', fontSize: 11, whiteSpace: 'nowrap' }} />
-                  : <div style={{ padding: 12, textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 12 }}>无数据或未就绪</div>
-              },
-              {
-                key: 'ax',
-                label: 'AX 树',
-                children: liveAxTreeData.length > 0
-                  ? <Tree selectedKeys={selectedNodeId ? [selectedNodeId] : []} treeData={liveAxTreeData} onSelect={handleSelect} showLine={{ showLeafIcon: false }} defaultExpandAll style={{ background: 'transparent', fontSize: 11, whiteSpace: 'nowrap' }} />
-                  : <div style={{ padding: 12, textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 12 }}>无 AX 节点</div>
-              }
-            ]}
+            defaultActiveKey={treeTabs[0]?.key ?? "view"}
+            items={treeTabs.map((tab) => ({
+              key: tab.key,
+              label: tab.label,
+              children: tab.key === "ax"
+                ? renderTree(liveAxTreeData, "无 AX 节点", tab.description)
+                : renderTree(liveViewTreeData, "无数据或未就绪", tab.description),
+            }))}
           />
         </div>
 
