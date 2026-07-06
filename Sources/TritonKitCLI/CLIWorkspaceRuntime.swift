@@ -250,16 +250,23 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         paths: paths,
         nextActions: providerPreflight.nextActions
     )
+    let dryDecisionAllowed = request.dryModelFixture
+        ? workspaceDryPolicyAllowsAction("tap", run: response)
+        : false
 
     try createWorkspaceRunDirectories(runDir)
     try writeWorkspaceRunConfig(response, to: runDir.appendingPathComponent("config.yaml"))
     try writeWorkspaceRunArtifacts(
         response,
         runDir: runDir,
-        includeDryTransition: request.dryModelFixture
+        includeDryTransition: dryDecisionAllowed
     )
     if request.dryModelFixture {
-        try writeWorkspaceDryDecisionArtifacts(runDir: runDir)
+        try writeWorkspaceDryDecisionArtifacts(
+            run: response,
+            runDir: runDir,
+            policyAllowed: dryDecisionAllowed
+        )
     }
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
     var events = workspaceSkeletonEvents(
@@ -268,7 +275,10 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
         bootstrapPhase: providerPreflight.bootstrapPhase
     )
     if request.dryModelFixture {
-        events.insert(contentsOf: workspaceDryDecisionEvents(runID: runID), at: events.index(before: events.endIndex))
+        events.insert(
+            contentsOf: workspaceDryDecisionEvents(runID: runID, policyAllowed: dryDecisionAllowed),
+            at: events.index(before: events.endIndex)
+        )
     }
     try writeWorkspaceEvents(events, to: runDir.appendingPathComponent("events.jsonl"))
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("report.json"))
@@ -336,6 +346,11 @@ private func normalizedWorkspaceRunnerList(_ values: [String], defaultValues: [S
 
 private func normalizedWorkspaceRunnerValue(_ value: String) -> String {
     value.trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
+private func workspaceDryPolicyAllowsAction(_ action: String, run: TKWorkspaceRunResponse) -> Bool {
+    let allowedActions = run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions
+    return allowedActions.contains(action)
 }
 
 private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
@@ -706,7 +721,11 @@ private func writeWorkspaceRunArtifacts(
     )
 }
 
-private func writeWorkspaceDryDecisionArtifacts(runDir: URL) throws {
+private func writeWorkspaceDryDecisionArtifacts(
+    run: TKWorkspaceRunResponse,
+    runDir: URL,
+    policyAllowed: Bool
+) throws {
     let command = ["triton", "act", "tap", "Continue", "--json"]
     try writeWorkspaceJSONArtifact([
         "summary": "Dry fixture selected a single tap candidate.",
@@ -714,6 +733,23 @@ private func writeWorkspaceDryDecisionArtifacts(runDir: URL) throws {
         "confidence": 0.5,
         "usedVLM": true,
     ], to: runDir.appendingPathComponent("evidence/model/decision-000.json"))
+    if !policyAllowed {
+        try writeWorkspaceJSONArtifact([
+            "allowed": false,
+            "reason": "runner allowedActions does not include tap",
+            "stopReason": "policy_rejected",
+            "action": "tap",
+            "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
+            "command": command,
+        ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
+        try writeWorkspaceJSONArtifact([
+            "failureCode": "policy_rejected",
+            "kind": "policy_rejected",
+            "proposal": "stop",
+            "reason": "candidate action is outside runner allowedActions",
+        ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+        return
+    }
     try writeWorkspaceJSONArtifact([
         "allowed": true,
         "reason": "dry fixture command is low-risk and single-step",
@@ -787,9 +823,28 @@ private func workspaceSkeletonEvents(
     ]
 }
 
-private func workspaceDryDecisionEvents(runID: String) -> [TKTestRunEvent] {
+private func workspaceDryDecisionEvents(runID: String, policyAllowed: Bool) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
     let command = ["triton", "act", "tap", "Continue", "--json"]
+    if !policyAllowed {
+        return [
+            .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
+            .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .failed, ref: "evidence/model/policy-000.json"),
+            .init(
+                type: .flowRecoveryDetected,
+                runID: runID,
+                timestamp: now,
+                stepIndex: 1,
+                failure: TKTestRunFailure(
+                    type: "policy_rejected",
+                    message: "Runner allowedActions rejected dry fixture tap candidate.",
+                    artifactRefs: ["evidence/model/policy-000.json"]
+                ),
+                phase: "policy_rejected"
+            ),
+            .init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: 1, command: ["stop"], ref: "evidence/model/recovery-000.json"),
+        ]
+    }
     return [
         .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
         .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, ref: "evidence/model/policy-000.json"),

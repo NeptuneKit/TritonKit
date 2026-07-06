@@ -351,6 +351,51 @@ struct WorkspaceRunTests {
         #expect(inspected.atlas.deltaRef == "atlas/deltas.jsonl")
     }
 
+    @Test("workspace dry fixture policy rejects actions outside runner allowlist")
+    func workspaceDryFixturePolicyRejectsActionsOutsideRunnerAllowlist() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        _ = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-policy-reject",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Reject disallowed tap",
+            actionPolicy: "explore",
+            dryModelFixture: true,
+            allowedActions: ["wait"],
+            stopConditions: ["policy_rejected"]
+        ))
+
+        let runDir = root.appendingPathComponent("run-workspace-policy-reject", isDirectory: true)
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let eventTypes = parsed.events.map(\.type.rawValue)
+
+        #expect(eventTypes.contains("model.decided"))
+        #expect(eventTypes.contains("policy.checked"))
+        #expect(eventTypes.contains("action.executed") == false)
+        #expect(eventTypes.contains("verify.checked") == false)
+        #expect(eventTypes.contains("atlas.updated") == false)
+        #expect(parsed.events.first { $0.type == .policyChecked }?.status == .failed)
+
+        let policy = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/policy-000.json"))
+        ) as? [String: Any]
+        #expect(policy?["allowed"] as? Bool == false)
+        #expect(policy?["stopReason"] as? String == "policy_rejected")
+        #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("evidence/actions/action-000.json").path) == false)
+
+        let inspected = try inspectWorkspaceRun(
+            runID: "run-workspace-policy-reject",
+            runsDirectory: root.path
+        )
+        #expect(inspected.atlas.transitionCount == 0)
+        #expect(inspected.atlas.deltaRef == nil)
+    }
+
     @Test("workspace export flow writes a seed")
     func workspaceExportFlowWritesASeed() throws {
         let root = temporaryRunsDirectory()

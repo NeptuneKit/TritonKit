@@ -471,6 +471,8 @@ tap | type | swipe | wait | press | verify | stop
 
 拒绝不算失败，写 `run.paused` 和 next actions。
 
+当前 deterministic dry fixture 已把 runner allowlist 接入 policy gate：模型仍会写出单步 `tap Continue` 候选；如果 `tap` 不在 `runner.allowedActions`，`policy.checked` 写 `failed`，`evidence/model/policy-000.json` 写 `stopReason=policy_rejected`，且不写 `action.executed`、`verify.checked`、`atlas.updated`、`atlas/deltas.jsonl` 或 `evidence/actions/action-000.json`。
+
 ### Atlas Delta DTO
 
 ```json
@@ -581,6 +583,12 @@ target.resolved -> provider.checked -> app.ready -> observe.captured -> flow.boo
 
 ```text
 observe.captured -> model.decided(fake) -> policy.checked -> action.executed(dry) -> verify.checked -> flow.recovery.detected(fake) -> atlas.updated
+```
+
+如果 fake model decision 被 runner allowlist 拒绝，第二刀事件应提前停止在：
+
+```text
+observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recovery.detected(policy_rejected) -> flow.recovery.proposed(stop)
 ```
 
 这比先做 Atlas/DSL/UI 都便宜，而且会逼所有后续能力复用同一事实流。
