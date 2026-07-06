@@ -15,7 +15,7 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 - 每次探索或测试都能生成结构化证据包，包含命令、截图、层级、日志和结果。
 - 成功探索可以沉淀为可复跑 plan / workflow。
 - 必须提供完整 Atlas map：基于本机 session/evidence 建立 screen、state、transition 和 coverage 图谱。
-- 必须提供 VLM 自主探索 loop：VLM 只读取本机证据和机器可读状态，只通过 Triton CLI/HTTP 执行动作。
+- 必须提供默认开启的 LLM/VLM 自主探索 loop：LLM/VLM 的核心职责是帮助流程回到正轨，并帮助同一流程在不同初始场景中稳定启动；模型只读取本机证据和机器可读状态，只通过 Triton CLI/HTTP 执行动作。
 - Web 新插槽只作为人类可视化和调试入口，业务控制事实仍以 CLI/HTTP 机器可读契约为准。
 
 ## Revyl-like 能力映射
@@ -23,12 +23,12 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 | Revyl 能力 | TritonKit 对应方向 | 一期边界 |
 | --- | --- | --- |
 | Cloud device session | Local target session | 只做本机真机/模拟器/仿真器，不做云设备池 |
-| CLI / CI 运行测试 | `triton` CLI / HTTP JSON contracts | 优先已有命令，缺口再补 schema |
+| CLI / 本地回归运行 | `triton` CLI / HTTP JSON contracts | 优先已有命令，缺口再补 schema |
 | MCP / agent tools | Codex/agent 通过 CLI/HTTP 控制 | 不先新增独立 MCP server |
-| Natural-language mobile actions | `triton act` + VLM 自主探索 loop + 可解释 plan/workflow | VLM loop 必做，但只驱动本机设备 |
+| Natural-language mobile actions | `triton act` + 默认开启的 LLM/VLM 自主探索 loop + 可解释 plan/workflow | LLM/VLM loop 必做，但只驱动本机设备 |
 | Replayable reports | `triton evidence capture` | 强化证据 manifest 和 artifacts |
 | Atlas runtime map | 完整本机 Atlas map | 必做 screen/state/transition/coverage 图谱 |
-| CI gate | JSON output + exit code | 后续接入 GitHub Actions gate |
+| Automation gate | JSON output + exit code | 先服务本地自动回归；外部流水线以后另定边界 |
 
 ## 已接入基础能力
 
@@ -39,10 +39,10 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 | Target / capability 事实源 | `triton status/doctor/capabilities/schema/plan --json`；Web `/web/target-registry`；`DeviceTarget` / `InspectTarget` 已有 `platform`、`scope`、`kind`、`targetSelector`、`screenshotSource`、`inputCapabilities` | 统一 runtime session DTO，禁止上层直接按设备类型分叉 |
 | App lifecycle | `triton app list/info/inspect/install/uninstall/launch/terminate/open-url` 已支持 `--scope simulator|emulator|real|all` 形态，iOS / Android / Harmony 逐步覆盖 | 把未覆盖项收敛为 capability / unsupported / next action，不让调用方猜 |
 | Observe / hierarchy / WebView | 已有 runtime snapshot / AX / hierarchy、host layout、WebView provider、route/assertion 和 Inspect Session 状态模型 | Atlas graph 需要把这些 observation 转成 screen/state/transition 证据 |
-| Device actions | `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`；Web stream gesture 已走 `/web/host-input`；unsupported 输出已有稳定 envelope | VLM loop 只能调用这些动作入口，不能直接执行底层工具 |
+| Device actions | `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`；Web stream gesture 已走 `/web/host-input`；unsupported 输出已有稳定 envelope | LLM/VLM loop 只能调用这些动作入口，不能直接执行底层工具 |
 | Evidence | `triton evidence capture --case <case> --output <dir.tritonevidence> --json`；证据 taxonomy 已覆盖 stdout/schema/status、host artifact、runtime snapshot/AX/ledger、input result、evidence bundle、tritonplan 等 | Atlas 和 VLM run 需要把 evidence id 作为共同索引 |
 | Replay / workflow seed | `.tritonplan`、`triton record`、`triton plan inspect`、`triton replay --dry-run`、真实 `replay` 已有机器可读 failure / recovery surface | 从探索 session 生成可审查 workflow seed，而不是只录坐标 |
-| Local VLM grounding | `triton vlm providers/ground/compare/model *` 轨道、MLX helper、模型 cache / download / preflight、grounding evidence artifacts 已有边界 | 自主探索 loop 必须保持 bounded-run、显式 opt-in 和 evidence-backed 决策 |
+| Local LLM/VLM grounding | `triton vlm providers/ground/compare/model *` 轨道、MLX helper、模型 cache / download / preflight、grounding evidence artifacts 已有边界 | workspace run 默认启用 LLM/VLM 辅助理解和执行；每次模型参与都必须 evidence-backed、policy-gated，并写入 run ledger |
 | Semantic provider | runtime manifest / snapshot 已能表达 semantic state/action provider、schema、actions、redaction、evidence commands | VLM 和 Atlas 应优先消费 provider-backed 业务语义，缺失时降级为截图/hierarchy |
 | Web human slot | Web mock 已收敛到 stream / inspector；已有 target registry client、InspectTarget、InspectSession、hierarchy tabs、property sheet、stream gesture mapping | 新增 Map / Run summary 时只读 CLI/HTTP DTO，不新增 Web-only 业务语义 |
 
@@ -54,6 +54,7 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 - 不新增 Postgres、Kafka、Webhook 或托管控制平面。
 - 不按真机/模拟器/仿真器拆产品入口；差异只能体现在 capabilities、unsupported error 和 next actions。
 - 不让 VLM 直接绕过 Triton 执行裸 `xcrun` / `adb` / `hdc`；所有动作必须走 Triton CLI/HTTP。
+- 不把默认开启 LLM/VLM 等同于模型直接执行动作；模型只能提出单步意图、候选 selector 或解释，实际动作仍由 Triton capability / policy / evidence gate 裁决。
 - 不把自然语言测试建立在不可审计的 UI 猜测上；VLM 决策必须引用截图、hierarchy、Atlas 节点或机器可读状态。
 
 ## 一期范围
@@ -66,7 +67,8 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 - Evidence：一次 session 能导出 evidence bundle。
 - Workflow Seed：把一次成功探索保存为 `.tritonplan` 初稿。
 - Atlas Map：从 evidence 生成本机 screen/state/transition/coverage 图谱。
-- VLM Explore Loop：按 observe -> decide -> act -> verify -> record 循环自主探索本机 App。
+- LLM/VLM Explore Loop：按 observe -> decide -> act -> verify -> record 循环自主探索本机 App。
+- LLM/VLM Runtime Policy：workspace run 默认启用 LLM/VLM；本地 replay / 稳定回归仍要求模型全程参与流程启动、回正、验证和诊断，只是动作选择可被 policy 限制为 plan-first。
 - Human Slot：Web 只展示 stream、inspector、evidence summary 和 workflow seed 状态。
 
 ## BDD 场景
@@ -109,9 +111,15 @@ Then TritonKit 输出本机 screen/state/transition/coverage 图谱，并能追�
 
 ### 场景 7：VLM 自主探索 loop
 
-Given 本机 App 已启动且 VLM provider 可用
-When agent 启动 autonomous explore loop
-Then loop 按 observe -> decide -> act -> verify -> record 执行，每一步写入机器可读日志和 evidence；遇到危险动作、unsupported 能力或无法解释状态时停止并返回 next actions
+Given 本机 App 已启动且 LLM/VLM provider 可用或已配置
+When agent 启动 workspace run 或 autonomous explore loop
+Then LLM/VLM 默认参与 observe -> decide -> act -> verify -> record，每一步写入机器可读日志和 evidence；遇到危险动作、unsupported 能力、模型缺失或无法解释状态时停止并返回 next actions
+
+### 场景 8：LLM/VLM 稳定启动和偏航回正
+
+Given 同一条 flow 可能从登录页、首页、弹窗、深层页面或错误页启动
+When agent 执行 workspace run 或本地 replay
+Then LLM/VLM 先做 flow bootstrap 判断，运行中持续做 flow recovery 判断；每个 bootstrap / recovery proposal 都必须有 evidence、confidence、policy decision 和 next action
 
 ## 验收
 
@@ -119,7 +127,9 @@ Then loop 按 observe -> decide -> act -> verify -> record 执行，每一步写
 - 本机至少一个 target scope 完成端到端 smoke：target discovery -> session ready -> app launch -> screenshot -> action -> evidence export；后续按 capabilities 扩展到其他 scope。
 - CLI/HTTP 和 Web DTO 必须以 target/capability 为事实源，不要求调用方预先区分真机、模拟器或仿真器。
 - 本机 Atlas map 能从 evidence 生成可查询图谱，至少覆盖 screen、state、transition、coverage 和 evidence backlink。
-- VLM 自主探索 loop 有可复跑 dry-run / bounded-run 模式，且所有动作经由 Triton CLI/HTTP。
+- LLM/VLM 在 workspace run 中默认开启，默认用于流程稳定启动、偏航回正、理解、定位、Atlas 标注和探索决策；每次模型参与都能追溯 request / response / confidence / artifact，且所有动作经由 Triton CLI/HTTP。
+- Flow bootstrap 和 flow recovery 是 LLM/VLM 的首要验收：能从不同初始场景稳定命中 start anchor，能在 selector drift、弹窗、登录过期、慢加载时给出可审计 repair proposal。
+- VLM 自主探索 loop 有可复跑 dry-run / bounded-run 模式；本地 replay / 稳定回归不能静默退出模型参与，只能把模型角色限制为 observer / verifier / repair-advisor。
 - 所有新增行为有 focused tests；HTTP handler 用 `httptest`，CLI 用参数解析/命令分发测试优先。
 - Web 插槽若进入实现，只消费只读 DTO 或调用已存在 CLI/HTTP 控制契约，不新增独立业务语义。
 - 文档、memory 和必要 skill 同步更新。
@@ -127,3 +137,5 @@ Then loop 按 observe -> decide -> act -> verify -> record 执行，每一步写
 ## 计划
 
 - `plans/20260706-phase-0-scope-v01.md`
+- `plans/20260706-serve-sim-maestro-landing-v01.md`
+- `plans/20260706-run-requirements-technical-plan-v01.md`

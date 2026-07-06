@@ -13,7 +13,7 @@ Use this skill when work touches the local `mlx-swift-lm` VLM provider track:
 - `mlx-swift-lm` / `swift-transformers` / `swift-huggingface` helper integration
 - local model cache, explicit model download, preflight, prune, or remove
 - Qwen VL model selection or real local model smoke
-- VLM-assisted runner steps that must remain explicit opt-in
+- VLM-assisted workspace / runner defaults and evidence-gated execution boundaries
 
 ## Product Boundary
 
@@ -89,17 +89,24 @@ Required behavior:
 - prune never deletes ready models
 - ready model deletion requires explicit `remove`
 
-## Runner Policy
+## Workspace / Runner Policy
 
-VLM-assisted execution remains opt-in:
+The Agent Mobile Runtime Platform product direction now defaults LLM/VLM on for local `workspace run` and bounded explore flows:
 
-- no autonomous loop
+- LLM/VLM participates in flow bootstrap, flow recovery, scene understanding, selector disambiguation, Atlas labeling, next-action candidate generation, and workflow seed generation by default
+- direct VLM grounding commands still expose explicit flags/options for focused CLI use
+- local replay / stable regression keeps model participation on; policy can restrict actions to plan-first while LLM/VLM still helps bootstrap the flow, recover from drift, observe, verify, diagnose, and suggest repair
+- pass/fail impact is still controlled by step / runner policy; model conclusions are assistive unless explicitly marked `required`
+
+Default-on must not weaken execution boundaries:
+
 - no direct model action execution
 - no model-generated multi-action plan execution
-- no default VLM runner execution in CI
-- no silent fallback from deterministic selectors to VLM
+- no hidden fallback from deterministic selectors to VLM; default VLM fallback must be reported as `usedVLM=true` with confidence, artifacts, and fallback reason
+- no screenshot or evidence upload to remote models by default
+- every model participation must be evidence-backed and policy-gated
 
-`tap.target` with VLM grounding must require explicit allow flags and evidence artifacts for request, raw output, parsed point, transform, overlay, and model metadata.
+`tap.target` with VLM grounding must write evidence artifacts for request, raw output, parsed point, transform, overlay, model metadata, confidence, and policy decision. The model proposes a point or selector candidate; Triton still owns coordinate transform, action execution, error envelope, and ledger output.
 
 ## Model Selection Baseline
 
