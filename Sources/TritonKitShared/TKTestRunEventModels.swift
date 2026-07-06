@@ -81,6 +81,12 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
     public static let assertionResult = Self(rawValue: "assertion.result")
     public static let observationCaptured = Self(rawValue: "observation.captured")
     public static let vlmGrounding = Self(rawValue: "vlm.grounding")
+    public static let flowBootstrapChecked = Self(rawValue: "flow.bootstrap.checked")
+    public static let flowBootstrapProposed = Self(rawValue: "flow.bootstrap.proposed")
+    public static let flowRecoveryDetected = Self(rawValue: "flow.recovery.detected")
+    public static let flowRecoveryProposed = Self(rawValue: "flow.recovery.proposed")
+    public static let flowRecoveryApplied = Self(rawValue: "flow.recovery.applied")
+    public static let flowRecoveryRejected = Self(rawValue: "flow.recovery.rejected")
     public static let stepFinished = Self(rawValue: "step.finished")
     public static let runFinished = Self(rawValue: "run.finished")
     public static let failureRecorded = Self(rawValue: "failure.recorded")
@@ -97,6 +103,12 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
         "assertion.result",
         "observation.captured",
         "vlm.grounding",
+        "flow.bootstrap.checked",
+        "flow.bootstrap.proposed",
+        "flow.recovery.detected",
+        "flow.recovery.proposed",
+        "flow.recovery.applied",
+        "flow.recovery.rejected",
         "step.finished",
         "run.finished",
         "failure.recorded",
@@ -608,6 +620,32 @@ public struct TKTestRunEventLogParser: Sendable {
             let grounding = try require(event.vlmGrounding, "vlmGrounding", lineNumber)
             try requireNonEmpty(grounding.provider, "vlmGrounding.provider", lineNumber)
             try requireNonEmpty(grounding.target, "vlmGrounding.target", lineNumber)
+        case .flowBootstrapChecked:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.phase, "phase", lineNumber)
+            try require(event.ref, "ref", lineNumber)
+        case .flowBootstrapProposed:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.command, "command", lineNumber)
+            try require(event.ref, "ref", lineNumber)
+        case .flowRecoveryDetected:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.phase, "phase", lineNumber)
+            let failure = try require(event.failure, "failure", lineNumber)
+            try require(failure.type, "failure.type", lineNumber)
+        case .flowRecoveryProposed:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.command, "command", lineNumber)
+            try require(event.ref, "ref", lineNumber)
+        case .flowRecoveryApplied:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.command, "command", lineNumber)
+            try require(event.status, "status", lineNumber)
+            try require(event.exitCode, "exitCode", lineNumber)
+        case .flowRecoveryRejected:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            let failure = try require(event.failure, "failure", lineNumber)
+            try require(failure.type, "failure.type", lineNumber)
         case .stepFinished:
             try require(event.stepIndex, "stepIndex", lineNumber)
             try require(event.stepID, "stepId", lineNumber)

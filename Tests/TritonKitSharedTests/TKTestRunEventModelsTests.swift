@@ -141,6 +141,27 @@ struct TKTestRunEventModelsTests {
         #expect(parsed.events[1].screenCandidate?.visibleTexts == ["Fixture Login", "Go Home"])
     }
 
+    @Test("parser accepts flow bootstrap and recovery events")
+    func parserAcceptsFlowBootstrapAndRecoveryEvents() throws {
+        let data = Data("""
+        {"schemaVersion":1,"type":"run.started","runId":"run-workspace-001","timestamp":"2026-07-06T00:00:00Z"}
+        {"schemaVersion":1,"type":"flow.bootstrap.checked","runId":"run-workspace-001","timestamp":"2026-07-06T00:00:01Z","stepIndex":0,"phase":"needs_login","ref":"../model/bootstrap-000.json"}
+        {"schemaVersion":1,"type":"flow.bootstrap.proposed","runId":"run-workspace-001","timestamp":"2026-07-06T00:00:02Z","stepIndex":0,"command":["triton","act","tap","Continue","--json"],"status":"running","ref":"../model/bootstrap-proposal-000.json"}
+        {"schemaVersion":1,"type":"flow.recovery.detected","runId":"run-workspace-001","timestamp":"2026-07-06T00:00:03Z","stepIndex":1,"phase":"selector_drift","failure":{"type":"expected_screen_missing","message":"Expected checkout did not appear","artifactRefs":["../screenshots/0003.png"]}}
+        {"schemaVersion":1,"type":"flow.recovery.proposed","runId":"run-workspace-001","timestamp":"2026-07-06T00:00:04Z","stepIndex":1,"command":["triton","act","tap","Login again","--json"],"ref":"../model/recovery-proposal-001.json"}
+        {"schemaVersion":1,"type":"flow.recovery.applied","runId":"run-workspace-001","timestamp":"2026-07-06T00:00:05Z","stepIndex":1,"status":"passed","command":["triton","act","tap","Login again","--json"],"exitCode":0}
+        {"schemaVersion":1,"type":"run.finished","runId":"run-workspace-001","timestamp":"2026-07-06T00:00:06Z","status":"passed","durationMs":6000}
+        """.utf8)
+
+        let parsed = try TKTestRunEventLogParser().parse(data)
+
+        #expect(parsed.events.map(\.type.rawValue).contains("flow.bootstrap.checked"))
+        #expect(parsed.events.map(\.type.rawValue).contains("flow.recovery.detected"))
+        #expect(parsed.events[1].phase == "needs_login")
+        #expect(parsed.events[3].failure?.type == "expected_screen_missing")
+        #expect(parsed.events[5].status == .passed)
+    }
+
     @Test("writer supports failure event samples")
     func writerSupportsFailureEventSamples() throws {
         let root = temporaryRunRoot()
