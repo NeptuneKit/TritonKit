@@ -1,3 +1,4 @@
+import CryptoKit
 import Foundation
 import TritonKitShared
 
@@ -179,6 +180,23 @@ private struct TKWorkspaceObservationFixture: Codable {
     let screenCandidate: TKTestRunScreenCandidate
     let sourceCommands: [String]?
     let changed: Bool?
+}
+
+private struct TKWorkspaceObserveOutputFixture: Codable {
+    let action: String?
+    let primarySource: TKWorkspaceObserveSourceFixture?
+    let sources: [TKWorkspaceObserveSourceFixture]?
+    let nodes: [ObserveNodeOutput]
+    let artifacts: [String]?
+    let sourceCommands: [String]?
+}
+
+private struct TKWorkspaceObserveSourceFixture: Codable {
+    let name: String
+    let available: Bool
+    let reason: String?
+    let artifact: String?
+    let sourceCommands: [String]
 }
 
 private struct TKWorkspaceObservationSeed {
@@ -598,18 +616,88 @@ private func workspaceObservationSeed(fixturePath: String?) throws -> TKWorkspac
         )
     }
 
-    let fixture = try JSONDecoder().decode(
-        TKWorkspaceObservationFixture.self,
-        from: Data(contentsOf: URL(fileURLWithPath: rawPath))
-    )
+    let data = try Data(contentsOf: URL(fileURLWithPath: rawPath))
+    if let fixture = try? JSONDecoder().decode(TKWorkspaceObservationFixture.self, from: data) {
+        return TKWorkspaceObservationSeed(
+            fixturePath: rawPath,
+            fixtureRef: "evidence/observations/0000.json",
+            artifacts: fixture.artifacts,
+            screenCandidate: fixture.screenCandidate,
+            sourceCommands: fixture.sourceCommands ?? [],
+            changed: fixture.changed
+        )
+    }
+
+    let observeOutput = try JSONDecoder().decode(TKWorkspaceObserveOutputFixture.self, from: data)
+    let visibleTexts = workspaceVisibleTexts(from: observeOutput.nodes)
     return TKWorkspaceObservationSeed(
         fixturePath: rawPath,
         fixtureRef: "evidence/observations/0000.json",
-        artifacts: fixture.artifacts,
-        screenCandidate: fixture.screenCandidate,
-        sourceCommands: fixture.sourceCommands ?? [],
-        changed: fixture.changed
+        artifacts: TKTestRunObservationArtifacts(
+            screenshot: workspaceObserveScreenshotRef(observeOutput),
+            ax: workspaceObserveAXRef(observeOutput),
+            hierarchy: workspaceObserveHierarchyRef(observeOutput)
+        ),
+        screenCandidate: TKTestRunScreenCandidate(
+            screenshotSha256: workspaceSHA256(data),
+            axTextHash: workspaceSHA256(Data(visibleTexts.joined(separator: "\n").utf8)),
+            hierarchySha256: workspaceSHA256(Data(workspaceHierarchyFingerprint(from: observeOutput.nodes).utf8)),
+            visibleTexts: visibleTexts
+        ),
+        sourceCommands: observeOutput.sourceCommands ?? observeOutput.primarySource?.sourceCommands ?? [],
+        changed: nil
     )
+}
+
+private func workspaceVisibleTexts(from nodes: [ObserveNodeOutput]) -> [String] {
+    var seen = Set<String>()
+    var texts: [String] = []
+    for node in nodes {
+        guard let text = node.text?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !text.isEmpty,
+              seen.insert(text).inserted
+        else {
+            continue
+        }
+        texts.append(text)
+    }
+    return texts
+}
+
+private func workspaceObserveScreenshotRef(_ output: TKWorkspaceObserveOutputFixture) -> String? {
+    output.artifacts?.first { path in
+        let lower = path.lowercased()
+        return lower.contains("screenshot") || lower.hasSuffix(".png") || lower.hasSuffix(".jpg") || lower.hasSuffix(".jpeg")
+    }
+}
+
+private func workspaceObserveHierarchyRef(_ output: TKWorkspaceObserveOutputFixture) -> String? {
+    output.primarySource?.artifact
+        ?? output.sources?.first(where: { $0.available && $0.artifact != nil })?.artifact
+        ?? output.artifacts?.first
+}
+
+private func workspaceObserveAXRef(_ output: TKWorkspaceObserveOutputFixture) -> String? {
+    output.artifacts?.first { path in
+        let lower = path.lowercased()
+        return lower.contains("ax") || lower.contains("accessibility")
+    }
+}
+
+private func workspaceHierarchyFingerprint(from nodes: [ObserveNodeOutput]) -> String {
+    nodes.map { node in
+        [
+            node.nodeID,
+            node.source,
+            node.role ?? "",
+            node.text ?? "",
+            node.identifier ?? "",
+        ].joined(separator: "|")
+    }.joined(separator: "\n")
+}
+
+private func workspaceSHA256(_ data: Data) -> String {
+    SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
 }
 
 private func normalizedWorkspaceTargetValue(_ raw: String?, defaultValue: String) -> String {

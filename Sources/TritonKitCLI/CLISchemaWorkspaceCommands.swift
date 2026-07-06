@@ -26,7 +26,7 @@ func workspaceCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--max-steps", type: "Int", defaultValue: "20", description: "Maximum bounded runner steps before max_steps_reached"),
                 TKCommandSchemaOption(name: "--allowed-action", type: "String[]", defaultValue: "tap,swipe,type,wait,verify,stop", description: "Allowed runner action; repeat to override the default action allowlist"),
                 TKCommandSchemaOption(name: "--stop-condition", type: "String[]", defaultValue: "max_steps_reached,provider_missing,unsupported_capability,policy_rejected,model_unparseable", description: "Runner stop condition; repeat to override the default stop set"),
-                TKCommandSchemaOption(name: "--observation-fixture", type: "Path", description: "Optional observation fixture JSON used to seed observation.captured and Atlas screen evidence"),
+                TKCommandSchemaOption(name: "--observation-fixture", type: "Path", description: "Optional workspace observation fixture or triton observe JSON used to seed observation.captured and Atlas screen evidence"),
                 TKCommandSchemaOption(name: "--llm-provider", type: "String", description: "Optional LLM provider id to preflight for workspace bootstrap"),
                 TKCommandSchemaOption(name: "--vlm-provider", type: "String", description: "Optional VLM provider id to preflight for workspace bootstrap"),
                 TKCommandSchemaOption(name: "--dry-model-fixture", type: "Bool", defaultValue: "false", description: "Append dry model/policy/action/recovery events without calling a model or device"),
@@ -50,7 +50,7 @@ func workspaceCommandSchemas() -> [TKCommandSchema] {
                 "triton workspace export-flow run_123 --output flow.tritonflow.yaml --json",
             ],
             successShape: "run emits triton.workspace.run; inspect/stop emit triton.workspace.inspect; export-flow emits triton.workspace.export-flow",
-            outputSemantics: "workspace run is the local Run entry. It writes .triton/runs/<run-id>/run.json, config.yaml, events.jsonl, report.json, evidence placeholders or observation fixture evidence, atlas/atlas.json, runner bounds, default llm/vlm enabled state, provider preflight nextActions, policy rejection nextActions, flow.bootstrap.checked, and model loop events when mock providers are ready or dry-model fixture is enabled. workspace inspect returns run status, event summary, latest bootstrap, latest bootstrap proposal, latest pause, and Atlas coverage summary. It does not claim a real device action or real model decision until real providers and target execution are wired.",
+            outputSemantics: "workspace run is the local Run entry. It writes .triton/runs/<run-id>/run.json, config.yaml, events.jsonl, report.json, evidence placeholders, workspace observation fixture evidence, or triton observe output evidence, atlas/atlas.json, runner bounds, default llm/vlm enabled state, provider preflight nextActions, policy rejection nextActions, flow.bootstrap.checked, and model loop events when mock providers are ready or dry-model fixture is enabled. workspace inspect returns run status, event summary, latest bootstrap, latest bootstrap proposal, latest pause, and Atlas coverage summary. It does not claim a real device action or real model decision until real providers and target execution are wired.",
             jsonlEvents: [
                 "run.started",
                 "target.resolved",

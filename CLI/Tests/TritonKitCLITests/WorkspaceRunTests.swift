@@ -197,6 +197,46 @@ struct WorkspaceRunTests {
         #expect(evidenceRefs?.contains("fixtures/login.png") == true)
     }
 
+    @Test("workspace run seeds atlas from observe output fixture")
+    func workspaceRunSeedsAtlasFromObserveOutputFixture() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObserveOutputFixture(in: root)
+
+        _ = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-observe-output",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Seed from observe output",
+            actionPolicy: "explore",
+            observationFixture: fixture.path
+        ))
+
+        let runDir = root.appendingPathComponent("run-workspace-observe-output", isDirectory: true)
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let observation = try #require(parsed.events.first { $0.type == .observationCaptured })
+        #expect(observation.artifacts?.screenshot == "fixtures/login-screenshot.png")
+        #expect(observation.artifacts?.hierarchy == "fixtures/observe-tree.json")
+        #expect(observation.artifacts?.ax == "fixtures/login-ax.json")
+        #expect(observation.screenCandidate?.screenshotSha256.count == 64)
+        #expect(observation.screenCandidate?.axTextHash.count == 64)
+        #expect(observation.screenCandidate?.hierarchySha256.count == 64)
+        #expect(observation.screenCandidate?.visibleTexts == ["Login", "Continue"])
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let screen = (atlas?["screens"] as? [[String: Any]])?.first
+        #expect(screen?["dominantTexts"] as? [String] == ["Login", "Continue"])
+        let evidenceRefs = screen?["evidenceRefs"] as? [String]
+        #expect(evidenceRefs?.contains("evidence/observations/0000.json") == true)
+        #expect(evidenceRefs?.contains("fixtures/login-screenshot.png") == true)
+        #expect(evidenceRefs?.contains("fixtures/observe-tree.json") == true)
+    }
+
     @Test("workspace run records explicit VLM provider preflight")
     func workspaceRunRecordsExplicitVLMProviderPreflight() throws {
         let root = temporaryRunsDirectory()
@@ -752,6 +792,71 @@ struct WorkspaceRunTests {
           },
           "sourceCommands": ["triton observe current --json"],
           "changed": true
+        }
+        """.write(to: fixture, atomically: true, encoding: .utf8)
+        return fixture
+    }
+
+    private func writeObserveOutputFixture(in root: URL) throws -> URL {
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let fixture = root.appendingPathComponent("observe-output.json")
+        try """
+        {
+          "ok": true,
+          "action": "observe.current",
+          "platform": "ios",
+          "capturedAt": "2026-07-07T00:00:00Z",
+          "partial": false,
+          "target": "sim:booted",
+          "primarySource": {
+            "name": "host-layout",
+            "available": true,
+            "reason": null,
+            "artifact": "fixtures/observe-tree.json",
+            "sourceCommands": ["triton observe current --platform ios --device booted --json"]
+          },
+          "sources": [
+            {
+              "name": "host-layout",
+              "available": true,
+              "reason": null,
+              "artifact": "fixtures/observe-tree.json",
+              "sourceCommands": ["triton observe current --platform ios --device booted --json"]
+            }
+          ],
+          "nodes": [
+            {
+              "nodeID": "ios-host:1",
+              "source": "host-layout",
+              "role": "button",
+              "text": "Login",
+              "identifier": "login-button",
+              "enabled": true,
+              "focused": false,
+              "hidden": false,
+              "candidateOnly": false,
+              "confidence": 0.96,
+              "capabilities": ["tap"],
+              "missingCapabilities": []
+            },
+            {
+              "nodeID": "ios-host:2",
+              "source": "host-layout",
+              "role": "button",
+              "text": "Continue",
+              "identifier": "continue-button",
+              "enabled": true,
+              "focused": false,
+              "hidden": false,
+              "candidateOnly": false,
+              "confidence": 0.93,
+              "capabilities": ["tap"],
+              "missingCapabilities": []
+            }
+          ],
+          "artifacts": ["fixtures/login-screenshot.png", "fixtures/observe-tree.json", "fixtures/login-ax.json"],
+          "sourceCommands": ["triton observe current --platform ios --device booted --json"],
+          "note": "observe output fixture"
         }
         """.write(to: fixture, atomically: true, encoding: .utf8)
         return fixture
