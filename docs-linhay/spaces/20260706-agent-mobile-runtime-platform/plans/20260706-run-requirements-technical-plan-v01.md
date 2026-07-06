@@ -320,9 +320,10 @@ run.stopped
     "llmEnabled": true,
     "vlmEnabled": true,
     "actionPolicy": "explore",
-    "providersReady": false,
-    "providerStatus": "partial",
-    "llmProviderStatus": "missing",
+    "providersReady": true,
+    "providerStatus": "ready",
+    "llmProvider": "mock",
+    "llmProviderStatus": "ready",
     "vlmProvider": "mock",
     "vlmProviderStatus": "ready"
   },
@@ -496,7 +497,7 @@ CLI 首批只需要：
 
 ```bash
 triton workspace run --target current --app <app> --goal "<goal>" --json
-triton workspace run --target current --app <app> --goal "<goal>" --vlm-provider mock --json
+triton workspace run --target current --app <app> --goal "<goal>" --llm-provider mock --vlm-provider mock --json
 triton workspace inspect <run-id> --json
 triton workspace stop <run-id> --json
 triton workspace export-flow <run-id> --output <file> --json
@@ -572,7 +573,8 @@ observe.captured -> model.decided(fake) -> policy.checked -> action.executed(dry
 - `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.stopped`，并复用 `TKTestRunEventLogParser` 校验。
 - `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
 - 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；默认不启用，避免把测试夹具伪装成真实 LLM/VLM 或设备动作。
-- 新增显式 VLM provider preflight：`--vlm-provider mock` / HTTP `vlmProvider=mock` 会记录 `providerStatus=partial`、`llmProviderStatus=missing`、`vlmProviderStatus=ready`，并把 `provider.checked` phase 写为 `vlm_ready_llm_missing`、`flow.bootstrap.checked` phase 写为 `llm_missing`。整体 `providersReady` 仍为 `false`，因为 LLM provider 尚未配置。
+- 新增显式 LLM/VLM provider preflight：`--llm-provider mock --vlm-provider mock` / HTTP `llmProvider=mock, vlmProvider=mock` 会记录 `providersReady=true`、`providerStatus=ready`、`llmProviderStatus=ready`、`vlmProviderStatus=ready`，并把 `provider.checked` phase 写为 `ready`、`flow.bootstrap.checked` phase 写为 `provider_ready`。
+- 只配置 `--vlm-provider mock` 时仍是可审计 partial 状态：`providerStatus=partial`、`llmProviderStatus=missing`、`vlmProviderStatus=ready`，`provider.checked` phase 为 `vlm_ready_llm_missing`，`flow.bootstrap.checked` phase 为 `llm_missing`。
 
 刻意未做：
 

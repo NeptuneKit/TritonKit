@@ -21,6 +21,8 @@ struct Workspace: ParsableCommand {
         @Option(name: .customLong("runs-dir"), help: "Workspace runs directory") var runsDirectory: String = ".triton/runs"
         @Option(name: .customLong("run-id"), help: "Run id") var runID: String?
         @Option(name: .customLong("action-policy"), help: "Action policy") var actionPolicy: String = "explore"
+        @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
+        var llmProvider: String?
         @Option(name: .customLong("vlm-provider"), help: "VLM provider preflight id, for example mock")
         var vlmProvider: String?
         @Flag(name: .customLong("dry-model-fixture"), help: "Append dry model/policy/action/recovery fixture events")
@@ -39,6 +41,7 @@ struct Workspace: ParsableCommand {
                     goal: goal,
                     actionPolicy: actionPolicy,
                     dryModelFixture: dryModelFixture,
+                    llmProvider: llmProvider,
                     vlmProvider: vlmProvider
                 ))
                 try printWorkspaceRun(response, format: outputFormat)

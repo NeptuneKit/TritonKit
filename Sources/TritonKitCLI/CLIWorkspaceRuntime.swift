@@ -9,6 +9,7 @@ struct TKWorkspaceRunRequest {
     let goal: String
     let actionPolicy: String
     let dryModelFixture: Bool
+    let llmProvider: String?
     let vlmProvider: String?
 
     init(
@@ -19,6 +20,7 @@ struct TKWorkspaceRunRequest {
         goal: String,
         actionPolicy: String,
         dryModelFixture: Bool = false,
+        llmProvider: String? = nil,
         vlmProvider: String? = nil
     ) {
         self.runsDirectory = runsDirectory
@@ -28,6 +30,7 @@ struct TKWorkspaceRunRequest {
         self.goal = goal
         self.actionPolicy = actionPolicy
         self.dryModelFixture = dryModelFixture
+        self.llmProvider = llmProvider
         self.vlmProvider = vlmProvider
     }
 }
@@ -95,6 +98,7 @@ struct TKWorkspaceRunAI: Codable, Equatable {
     let actionPolicy: String
     let providersReady: Bool
     let providerStatus: String
+    let llmProvider: String?
     let llmProviderStatus: String?
     let vlmProvider: String?
     let vlmProviderStatus: String?
@@ -114,12 +118,22 @@ struct TKWorkspaceNextAction: Codable, Equatable {
 private struct TKWorkspaceProviderPreflight {
     let providersReady: Bool
     let providerStatus: String
+    let llmProvider: String?
     let llmProviderStatus: String
     let vlmProvider: String?
     let vlmProviderStatus: String
     let providerEventPhase: String
     let bootstrapPhase: String
     let nextActions: [TKWorkspaceNextAction]
+}
+
+private struct TKWorkspaceProviderComponentPreflight {
+    let provider: String?
+    let status: String
+    let phase: String
+    let nextAction: TKWorkspaceNextAction?
+
+    var ready: Bool { status == "ready" }
 }
 
 struct TKWorkspaceInspectResponse: Codable, Equatable {
@@ -170,6 +184,7 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
             actionPolicy: request.actionPolicy,
             providersReady: providerPreflight.providersReady,
             providerStatus: providerPreflight.providerStatus,
+            llmProvider: providerPreflight.llmProvider,
             llmProviderStatus: providerPreflight.llmProviderStatus,
             vlmProvider: providerPreflight.vlmProvider,
             vlmProviderStatus: providerPreflight.vlmProviderStatus
@@ -199,90 +214,150 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
 }
 
 private func workspaceProviderPreflight(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceProviderPreflight {
-    let llmProviderStatus = "missing"
-    guard let rawVLMProvider = request.vlmProvider?.trimmingCharacters(in: .whitespacesAndNewlines),
-          !rawVLMProvider.isEmpty
+    let llm = try workspaceLLMProviderPreflight(request.llmProvider)
+    let vlm = try workspaceVLMProviderPreflight(request.vlmProvider)
+    let providersReady = llm.ready && vlm.ready
+    let providerStatus = providersReady ? "ready" : (llm.ready || vlm.ready ? "partial" : "missing")
+
+    let nextActions: [TKWorkspaceNextAction]
+    if providersReady {
+        nextActions = []
+    } else if llm.provider == nil, vlm.provider == nil {
+        nextActions = [
+            TKWorkspaceNextAction(
+                code: "configure_ai_provider",
+                message: "LLM/VLM are enabled by default; configure a local or approved provider before autonomous actions."
+            ),
+        ]
+    } else {
+        nextActions = [llm.nextAction, vlm.nextAction].compactMap { $0 }
+    }
+
+    return TKWorkspaceProviderPreflight(
+        providersReady: providersReady,
+        providerStatus: providerStatus,
+        llmProvider: llm.provider,
+        llmProviderStatus: llm.status,
+        vlmProvider: vlm.provider,
+        vlmProviderStatus: vlm.status,
+        providerEventPhase: workspaceProviderEventPhase(llm: llm, vlm: vlm),
+        bootstrapPhase: workspaceBootstrapPhase(llm: llm, vlm: vlm),
+        nextActions: nextActions
+    )
+}
+
+private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
+    guard let rawProvider = rawProvider?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !rawProvider.isEmpty
     else {
-        return TKWorkspaceProviderPreflight(
-            providersReady: false,
-            providerStatus: "missing",
-            llmProviderStatus: llmProviderStatus,
-            vlmProvider: nil,
-            vlmProviderStatus: "missing",
-            providerEventPhase: "missing",
-            bootstrapPhase: "provider_missing",
-            nextActions: [
-                TKWorkspaceNextAction(
-                    code: "configure_ai_provider",
-                    message: "LLM/VLM are enabled by default; configure a local or approved provider before autonomous actions."
-                ),
-            ]
+        return TKWorkspaceProviderComponentPreflight(
+            provider: nil,
+            status: "missing",
+            phase: "llm_missing",
+            nextAction: TKWorkspaceNextAction(
+                code: "configure_llm_provider",
+                message: "Configure the LLM provider before autonomous actions."
+            )
         )
     }
 
-    let vlmProvider = rawVLMProvider.lowercased()
-    switch vlmProvider {
+    let provider = rawProvider.lowercased()
+    switch provider {
     case "mock":
-        _ = try makeVLMProvider(vlmProvider)
-        return TKWorkspaceProviderPreflight(
-            providersReady: false,
-            providerStatus: "partial",
-            llmProviderStatus: llmProviderStatus,
-            vlmProvider: vlmProvider,
-            vlmProviderStatus: "ready",
-            providerEventPhase: "vlm_ready_llm_missing",
-            bootstrapPhase: "llm_missing",
-            nextActions: [
-                TKWorkspaceNextAction(
-                    code: "configure_llm_provider",
-                    message: "VLM provider mock is ready; configure the LLM provider before autonomous actions."
-                ),
-            ]
-        )
-    case "mlx-swift-lm":
-        return TKWorkspaceProviderPreflight(
-            providersReady: false,
-            providerStatus: "missing",
-            llmProviderStatus: llmProviderStatus,
-            vlmProvider: vlmProvider,
-            vlmProviderStatus: "missing_model",
-            providerEventPhase: "vlm_missing_model",
-            bootstrapPhase: "provider_missing",
-            nextActions: [
-                TKWorkspaceNextAction(
-                    code: "configure_vlm_provider",
-                    message: "mlx-swift-lm requires an explicit model or model path before workspace run can use it."
-                ),
-                TKWorkspaceNextAction(
-                    code: "configure_llm_provider",
-                    message: "Configure the LLM provider before autonomous actions."
-                ),
-            ]
-        )
-    case "openai-compatible":
-        return TKWorkspaceProviderPreflight(
-            providersReady: false,
-            providerStatus: "missing",
-            llmProviderStatus: llmProviderStatus,
-            vlmProvider: vlmProvider,
-            vlmProviderStatus: "missing_base_url",
-            providerEventPhase: "vlm_missing_base_url",
-            bootstrapPhase: "provider_missing",
-            nextActions: [
-                TKWorkspaceNextAction(
-                    code: "configure_vlm_provider",
-                    message: "openai-compatible VLM requires an explicit local base URL and remote upload approval when not localhost."
-                ),
-                TKWorkspaceNextAction(
-                    code: "configure_llm_provider",
-                    message: "Configure the LLM provider before autonomous actions."
-                ),
-            ]
+        return TKWorkspaceProviderComponentPreflight(
+            provider: provider,
+            status: "ready",
+            phase: "llm_ready",
+            nextAction: nil
         )
     default:
-        _ = try makeVLMProvider(vlmProvider)
-        throw RuntimeError("Unsupported workspace VLM provider \(rawVLMProvider)")
+        throw RuntimeError("Unsupported workspace LLM provider \(rawProvider)")
     }
+}
+
+private func workspaceVLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
+    guard let rawProvider = rawProvider?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !rawProvider.isEmpty
+    else {
+        return TKWorkspaceProviderComponentPreflight(
+            provider: nil,
+            status: "missing",
+            phase: "vlm_missing",
+            nextAction: TKWorkspaceNextAction(
+                code: "configure_vlm_provider",
+                message: "Configure the VLM provider before autonomous actions."
+            )
+        )
+    }
+
+    let provider = rawProvider.lowercased()
+    switch provider {
+    case "mock":
+        _ = try makeVLMProvider(provider)
+        return TKWorkspaceProviderComponentPreflight(
+            provider: provider,
+            status: "ready",
+            phase: "vlm_ready",
+            nextAction: nil
+        )
+    case "mlx-swift-lm":
+        return TKWorkspaceProviderComponentPreflight(
+            provider: provider,
+            status: "missing_model",
+            phase: "vlm_missing_model",
+            nextAction: TKWorkspaceNextAction(
+                code: "configure_vlm_provider",
+                message: "mlx-swift-lm requires an explicit model or model path before workspace run can use it."
+            )
+        )
+    case "openai-compatible":
+        return TKWorkspaceProviderComponentPreflight(
+            provider: provider,
+            status: "missing_base_url",
+            phase: "vlm_missing_base_url",
+            nextAction: TKWorkspaceNextAction(
+                code: "configure_vlm_provider",
+                message: "openai-compatible VLM requires an explicit local base URL and remote upload approval when not localhost."
+            )
+        )
+    default:
+        throw RuntimeError("Unsupported workspace VLM provider \(rawProvider)")
+    }
+}
+
+private func workspaceProviderEventPhase(
+    llm: TKWorkspaceProviderComponentPreflight,
+    vlm: TKWorkspaceProviderComponentPreflight
+) -> String {
+    if llm.ready, vlm.ready {
+        return "ready"
+    }
+    if llm.ready {
+        return "llm_ready_\(vlm.phase)"
+    }
+    if vlm.ready {
+        return "vlm_ready_\(llm.phase)"
+    }
+    if llm.provider == nil, vlm.provider == nil {
+        return "missing"
+    }
+    return "\(llm.phase)_\(vlm.phase)"
+}
+
+private func workspaceBootstrapPhase(
+    llm: TKWorkspaceProviderComponentPreflight,
+    vlm: TKWorkspaceProviderComponentPreflight
+) -> String {
+    if llm.ready, vlm.ready {
+        return "provider_ready"
+    }
+    if !llm.ready, vlm.ready {
+        return "llm_missing"
+    }
+    if llm.ready, !vlm.ready {
+        return "vlm_missing"
+    }
+    return "provider_missing"
 }
 
 func inspectWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorkspaceInspectResponse {
@@ -395,6 +470,9 @@ private func writeWorkspaceRunArtifacts(_ run: TKWorkspaceRunResponse, runDir: U
     ]
     if let llmProviderStatus = run.ai.llmProviderStatus {
         providerArtifact["llmProviderStatus"] = llmProviderStatus
+    }
+    if let llmProvider = run.ai.llmProvider {
+        providerArtifact["llmProvider"] = llmProvider
     }
     if let vlmProvider = run.ai.vlmProvider {
         providerArtifact["vlmProvider"] = vlmProvider
@@ -568,6 +646,7 @@ private func writeWorkspaceRunConfig(_ run: TKWorkspaceRunResponse, to url: URL)
     let yaml = """
     llm:
       enabled: true
+      provider: \(run.ai.llmProvider ?? "none")
       providerStatus: \(run.ai.llmProviderStatus ?? "missing")
     vlm:
       enabled: true

@@ -96,6 +96,51 @@ struct WorkspaceRunTests {
         #expect(inspected.latestBootstrap?.phase == "llm_missing")
     }
 
+    @Test("workspace run marks providers ready when LLM and VLM preflight pass")
+    func workspaceRunMarksProvidersReadyWhenLLMAndVLMPreflightPass() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let run = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-ai-ready",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Explore login",
+            actionPolicy: "explore",
+            llmProvider: "mock",
+            vlmProvider: "mock"
+        ))
+
+        #expect(run.ai.providersReady)
+        #expect(run.ai.providerStatus == "ready")
+        #expect(run.ai.llmProvider == "mock")
+        #expect(run.ai.llmProviderStatus == "ready")
+        #expect(run.ai.vlmProvider == "mock")
+        #expect(run.ai.vlmProviderStatus == "ready")
+        #expect(run.nextActions.isEmpty)
+
+        let runDir = root.appendingPathComponent("run-workspace-ai-ready", isDirectory: true)
+        let provider = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/provider-check.json"))
+        ) as? [String: Any]
+        #expect(provider?["providersReady"] as? Bool == true)
+        #expect(provider?["providerStatus"] as? String == "ready")
+        #expect(provider?["llmProvider"] as? String == "mock")
+        #expect(provider?["vlmProvider"] as? String == "mock")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        #expect(parsed.events.first { $0.type == .providerChecked }?.phase == "ready")
+
+        let inspected = try inspectWorkspaceRun(
+            runID: "run-workspace-ai-ready",
+            runsDirectory: root.path
+        )
+        #expect(inspected.latestBootstrap?.phase == "provider_ready")
+    }
+
     @Test("workspace stop is idempotent")
     func workspaceStopIsIdempotent() throws {
         let root = temporaryRunsDirectory()
@@ -187,6 +232,7 @@ struct WorkspaceRunTests {
             "--goal", "Explore login",
             "--runs-dir", root.path,
             "--run-id", "run-workspace-cli",
+            "--llm-provider", "mock",
             "--vlm-provider", "mock",
             "--json",
         ])
@@ -196,6 +242,9 @@ struct WorkspaceRunTests {
         #expect(run.runID == "run-workspace-cli")
         #expect(run.ai.llmEnabled)
         #expect(run.ai.vlmEnabled)
+        #expect(run.ai.providersReady)
+        #expect(run.ai.llmProvider == "mock")
+        #expect(run.ai.llmProviderStatus == "ready")
         #expect(run.ai.vlmProvider == "mock")
         #expect(run.ai.vlmProviderStatus == "ready")
 
@@ -237,6 +286,7 @@ struct WorkspaceRunTests {
             app: "com.example.demo",
             goal: "HTTP run",
             actionPolicy: nil,
+            llmProvider: "mock",
             vlmProvider: "mock"
         ))
         let run = try handleWorkspaceHTTPRun(body: runBody)
@@ -244,6 +294,9 @@ struct WorkspaceRunTests {
         #expect(run.runID == "run-workspace-http")
         #expect(run.ai.llmEnabled)
         #expect(run.ai.vlmEnabled)
+        #expect(run.ai.providersReady)
+        #expect(run.ai.llmProvider == "mock")
+        #expect(run.ai.llmProviderStatus == "ready")
         #expect(run.ai.vlmProvider == "mock")
         #expect(run.ai.vlmProviderStatus == "ready")
 

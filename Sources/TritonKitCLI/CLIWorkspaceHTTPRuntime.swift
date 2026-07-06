@@ -7,6 +7,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let app: String
     let goal: String
     let actionPolicy: String?
+    let llmProvider: String?
     let vlmProvider: String?
     let dryModelFixture: Bool?
 
@@ -17,6 +18,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         app: String,
         goal: String,
         actionPolicy: String?,
+        llmProvider: String? = nil,
         vlmProvider: String? = nil,
         dryModelFixture: Bool? = nil
     ) {
@@ -26,6 +28,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.app = app
         self.goal = goal
         self.actionPolicy = actionPolicy
+        self.llmProvider = llmProvider
         self.vlmProvider = vlmProvider
         self.dryModelFixture = dryModelFixture
     }
@@ -37,6 +40,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case app
         case goal
         case actionPolicy
+        case llmProvider
         case vlmProvider
         case dryModelFixture
     }
@@ -57,6 +61,7 @@ func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
         goal: request.goal,
         actionPolicy: request.actionPolicy ?? "explore",
         dryModelFixture: request.dryModelFixture ?? false,
+        llmProvider: request.llmProvider,
         vlmProvider: request.vlmProvider
     ))
 }
