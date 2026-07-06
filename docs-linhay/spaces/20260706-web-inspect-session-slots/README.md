@@ -12,6 +12,8 @@ Web mock 当前已经有插槽式工作台、设备实时画面流、界面与 A
 
 用户反馈 iOS 的视图树 / AX 树选不到 cell，排查方向确认：这不只是 cell hit-test 问题，根因之一是“界面与 AX 审查”没有跟着设备画面流刷新，同一个目标可能被两个插槽用不同 source / refresh 时机处理。需要把插槽设计升级为整体 Inspect Session 架构，而不是只补一个最小联动。
 
+2026-07-06 产品形态补充：当前 Web mock 不再保留十宫格能力卡片。工作台只保留 `stream` 和 `inspector` 两类插槽，其他 Xcode、VLM、目标探测、时间线、doctor、模拟器、录制、HDC/ADB 卡片入口从插槽选择中移除，避免 Web mock 表达成错误的产品控制台形态。
+
 ## 核心目标
 
 建立 Web mock 的统一审查状态模型：
@@ -19,7 +21,7 @@ Web mock 当前已经有插槽式工作台、设备实时画面流、界面与 A
 - 插槽仍然保留，但插槽只管布局和展示，不拥有设备事实。
 - Target registry 产出的 target descriptor 是设备身份的唯一事实。
 - Inspect Session 是 hierarchy、overlay、节点选中、刷新状态的唯一事实源。
-- Stream slot、Inspector slot、Logs slot、Actions slot 通过 Slot Binding 绑定到同一个 Inspect Session。
+- Stream slot、Inspector slot 通过 Slot Binding 绑定到同一个 Inspect Session。
 - View tree / AX tree / overlay / hit-test 都从同一份 `HierarchyScene.nodes` 派生。
 - iOS simulator / iOS real-device / Android / Harmony 的 hierarchy source 差异在 target/session 层抹平，组件不再自己猜。
 

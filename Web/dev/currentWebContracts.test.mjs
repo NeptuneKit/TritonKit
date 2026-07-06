@@ -13,6 +13,7 @@ const viteServer = await createServer({
 });
 
 const { hierarchyScenes } = await viteServer.ssrLoadModule("/src/data/mockData.ts");
+const { SUPPORTED_CARD_TYPES, loadInitialRoot } = await viteServer.ssrLoadModule("/src/layoutModel.ts");
 
 after(async () => {
   await viteServer.close();
@@ -86,4 +87,36 @@ test("keeps real portrait screenshots from collapsing inside the device stage gr
   assert.doesNotMatch(portraitRealFrameRule, /height:\s*min\([^;]*100%/);
   assert.match(portraitRealFrameMobileRule, /height:\s*min\(620px, calc\(100dvh - 150px\)\)/);
   assert.doesNotMatch(portraitRealFrameMobileRule, /height:\s*min\([^;]*100%/);
+});
+
+test("keeps the Web workbench scoped to stream and inspector slots", () => {
+  assert.deepEqual(SUPPORTED_CARD_TYPES, ["stream", "inspector"]);
+
+  const originalLocalStorage = globalThis.localStorage;
+  globalThis.localStorage = {
+    getItem() {
+      return JSON.stringify({
+        kind: "split",
+        id: "1",
+        direction: "v",
+        ratio: 0.5,
+        first: { kind: "leaf", id: "2", card: "vlm" },
+        second: { kind: "leaf", id: "3", card: "inspector" },
+      });
+    },
+    setItem() {},
+  };
+
+  try {
+    assert.deepEqual(loadInitialRoot(), {
+      kind: "split",
+      id: "1",
+      direction: "v",
+      ratio: 0.5,
+      first: { kind: "leaf", id: "2", card: null },
+      second: { kind: "leaf", id: "3", card: "inspector" },
+    });
+  } finally {
+    globalThis.localStorage = originalLocalStorage;
+  }
 });

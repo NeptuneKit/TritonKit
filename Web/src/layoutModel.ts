@@ -1,14 +1,6 @@
-export type CardType =
-  | "stream"
-  | "xcode"
-  | "vlm"
-  | "target"
-  | "timeline"
-  | "doctor"
-  | "simulator"
-  | "recorder"
-  | "hdc"
-  | "inspector";
+export const SUPPORTED_CARD_TYPES = ["stream", "inspector"] as const;
+
+export type CardType = (typeof SUPPORTED_CARD_TYPES)[number];
 
 export type LeafNode = {
   kind: "leaf";
@@ -42,6 +34,21 @@ function setMaxId(root: LayoutNode) {
   }
 }
 
+function isCardType(card: unknown): card is CardType {
+  return card === "stream" || card === "inspector";
+}
+
+function pruneUnsupportedCards(root: LayoutNode): LayoutNode {
+  if (root.kind === "leaf") {
+    return { ...root, card: isCardType(root.card) ? root.card : null };
+  }
+  return {
+    ...root,
+    first: pruneUnsupportedCards(root.first),
+    second: pruneUnsupportedCards(root.second),
+  };
+}
+
 export function makeInitialRoot(): LayoutNode {
   return { kind: "leaf", id: nextId(), card: "stream" };
 }
@@ -54,7 +61,7 @@ export function loadInitialRoot(): LayoutNode {
       const parsed = JSON.parse(saved);
       if (parsed && typeof parsed === "object" && parsed.id) {
         setMaxId(parsed as LayoutNode);
-        return parsed as LayoutNode;
+        return pruneUnsupportedCards(parsed as LayoutNode);
       }
     }
   } catch (error) {
