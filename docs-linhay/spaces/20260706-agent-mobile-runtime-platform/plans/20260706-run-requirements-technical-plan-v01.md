@@ -48,7 +48,7 @@ triton workspace run --target current --app <artifact-or-app-id> --goal "<goal>"
 | --- | --- | --- |
 | AI agent | 不知道 App 结构时也能探索和执行 | 默认 LLM/VLM 理解，动作只能走 Triton 契约 |
 | 本地研发 | 看懂 agent 做了什么 | 每一步 evidence-backed，可回看、可复跑、可接管 |
-| 自动化维护者 | 把成功探索沉淀为稳定回归 | 从 Run 生成 `.tritonflow.yaml` / `.tritonplan` |
+| 自动化维护者 | 把成功探索沉淀为稳定回归 | 从 Run 生成 `.tritontest.yaml` / `.tritonplan` |
 
 ### 默认模式
 
@@ -224,7 +224,7 @@ Then Atlas 写入 screen/state/transition delta，并能反查截图、hierarchy
 
 Given Run 到达目标或用户停止
 When 请求导出 seed
-Then TritonKit 输出 `.tritonflow.yaml` 和 `.tritonplan`，每一步带 selector、变量、证据引用和 dry-run 校验入口
+Then TritonKit 输出可被 `triton test validate/run` 消费的 `.tritontest.yaml`，必要时再沉淀 `.tritonplan`，每一步带 selector、业务断言和 dry-run / validate 校验入口
 
 #### 场景 6：本地稳定回放
 
@@ -276,7 +276,7 @@ Then LLM/VLM 生成 recovery diagnosis 和 repair proposal；TritonKit 经 polic
         ├── atlas/
         │   ├── atlas.json
         │   └── deltas.jsonl
-        ├── flow.tritonflow.yaml
+        ├── flow.tritontest.yaml
         ├── plan.tritonplan
         └── report.json
 ```
@@ -630,7 +630,8 @@ triton workspace run --target booted --platform ios --scope simulator --app <app
 triton workspace run --target current --app <app> --goal "<goal>" --max-steps 5 --allowed-action tap --allowed-action wait --stop-condition max_steps_reached --json
 triton workspace inspect <run-id> --json
 triton workspace stop <run-id> --json
-triton workspace export-flow <run-id> --output <file> --json
+triton workspace export-flow <run-id> --output <file.tritontest.yaml> --json
+triton test validate <file.tritontest.yaml> --json
 triton workspace merge-map <run-id> --map-dir <dir.tritonmap> --confirm --json
 ```
 
@@ -724,12 +725,12 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `workspace run` 支持 `--observation-fixture <json>` / HTTP `observationFixture`，可消费 workspace observation fixture 的 `artifacts + screenCandidate + sourceCommands`，也可直接消费 `triton observe current/tree --json` 输出；运行时保留原始 JSON 到 `evidence/observations/0000.json`，并用真实 visibleTexts / hash / artifact refs 生成 `observation.captured` 与 Atlas seed；未传时仍使用 placeholder。
 - `workspace run` 支持显式 live observe：CLI `--observe-live --observe-kind current|tree --platform <platform> --target <selector>` 与 HTTP `observeLive/observeKind/observeMaxNodes` 会调用现有 `triton observe current/tree` 下层 runtime，保存 initial raw `ObserveOutput` 到 `evidence/observations/0000.json`，并从 nodes / primarySource / artifacts 派生 `observation.captured` 与 Atlas seed；当同一 run 的显式 action 成功后，会再次调用 live observe，保存 post-action raw `ObserveOutput` 到 `evidence/observations/0001.json`，派生 `observation.captured phase=post_action` 和 Atlas `screen_0001/state_0001`；无独立截图或 AX artifact 时保留 placeholder screenshot，并用 hierarchy/raw observe 作为 AX 回退，保持事件协议可解析。
 - `--dry-model-fixture` 会把测试协议里的失败动作写回 Atlas：`atlas/deltas.jsonl` 和 `atlas/atlas.json` 都包含 `transition_0000`，状态为 `candidate_failed`，从 `screen_0000` 回到 `screen_0000`，并引用 model / policy / action / verify evidence。
-- `export-flow` 会从 `action.executed` 事件派生最小 action step；dry fixture 当前可导出 observation-derived tap 候选（例如 `tap Continue` 或 `tap Start`），并保留 model / policy / verify evidence backlink。
+- `export-flow` 会从 `action.executed` 事件派生最小 deterministic test action step；dry fixture 当前可导出 observation-derived tap 候选（例如 `tap Continue` 或 `tap Start`）。内部 model / policy / verify evidence backlink 保留在 run 目录、events 和 artifacts 中，`.tritontest.yaml` 只承载可验证回放步骤。
 - `workspace inspect` 会返回 Atlas summary：`atlasRef`、`deltaRef`、`coverageStatus`、`screenCount`、`stateCount`、`transitionCount`，并返回可选 `appMap` summary：`mapRef`、`screenCount`、`transitionCount`、`pathCount`、`pathIds`；同时返回 `latestBootstrap` / `latestBootstrapProposal` / `latestPause`，便于 agent 不打开文件也能判断 map 覆盖、稳定启动建议和暂停原因。
 - 默认写入 `llmEnabled=true`、`vlmEnabled=true`、`providersReady=false` 与 `configure_ai_provider` nextAction；当前不伪装真实模型或设备已执行。
 - `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.paused|run.stopped`，命中 `--business-ready-text` 时进入 `business.ready -> verify.checked -> run.finished(status=passed)` 分支，并复用 `TKTestRunEventLogParser` 校验；provider missing / LLM missing / policy rejected 会写 `run.paused`，显式 `workspace stop` 会写 `run.stopped`。
 - policy rejected 会返回 `review_policy_rejection` nextAction，指向调整 runner allowlist、修正 goal 或检查 `evidence/model/policy-000.json`。
-- `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
+- `export-flow` 当前从事件流导出最小 `.tritontest.yaml` seed，覆盖 `launch`、`takeScreenshot`、已执行 action steps，并在配置 `businessReadyText` 时追加 `assertVisible` 业务 checkpoint；导出后可直接走 `triton test validate/run`。
 - 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；它仍是测试夹具，不伪装真实 LLM/VLM 或设备动作。
 - dry fixture 现在也会写 `flow.bootstrap.proposed` 和 `evidence/model/bootstrap-proposal-000.json`，以单步 `triton act tap <visibleText> --json`（无 visibleText 时 fallback 为 `Continue`）表达“稳定出发流程”的候选动作；真正执行仍由后续 policy gate 决定。
 - 模型参与证据现在包含红线 request 与原始 response artifact：`bootstrap-proposal-000-request.redacted.json`、`bootstrap-proposal-000-response.raw.txt`、`decision-000-request.redacted.json`、`decision-000-response.raw.txt`，并由 proposal / decision JSON 的 `artifacts` 字段反链；request artifact 固定包含 goal、allowedActions、stopConditions、provider status 和 visibleTexts。workspace runtime 已有可注入 model decision provider，provider 输出的 action/query/confidence/candidateSource 会驱动后续 action、event、Atlas 和 flow；dry fixture / 默认 mock 仍可用 deterministic visible-text heuristic。

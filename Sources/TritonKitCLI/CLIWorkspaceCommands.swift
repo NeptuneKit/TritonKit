@@ -215,11 +215,11 @@ struct Workspace: AsyncParsableCommand {
     struct ExportFlow: ParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "export-flow",
-            abstract: "Export a local workspace run to a flow seed"
+            abstract: "Export a local workspace run to a deterministic .tritontest.yaml seed"
         )
 
         @Argument(help: "Run id") var runID: String
-        @Option(help: "Output .tritonflow.yaml file") var output: String
+        @Option(help: "Output .tritontest.yaml file") var output: String
         @Option(name: .customLong("runs-dir"), help: "Workspace runs directory") var runsDirectory: String = ".triton/runs"
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false

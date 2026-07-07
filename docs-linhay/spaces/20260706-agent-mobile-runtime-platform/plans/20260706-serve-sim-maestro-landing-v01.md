@@ -108,7 +108,7 @@ Artifact 类型：
 
 ### 3. Flow DSL
 
-新增或演进为 `*.tritonflow.yaml`，但执行前必须编译成 normalized `.tritonplan`。
+当前落地优先复用已实现的 `.tritontest.yaml` 合约：`workspace export-flow` 从探索 run 导出 deterministic test seed，并用 `triton test validate/run` 做本地稳定回放。独立 `*.tritonflow.yaml` DSL 仍可作为后续演进，但执行前必须编译成 normalized `.tritonplan` 或 `.tritontest.yaml`，不能绕过现有验证器。
 
 最小 DSL：
 
@@ -629,7 +629,8 @@ Web 不新增业务控制语义；按钮只调用已存在 CLI/HTTP DTO。
 
 验收：
 
-- `triton flow validate login.tritonflow.yaml --json`
+- 已落地路径：`triton workspace export-flow <run-id> --output login.tritontest.yaml --json`，随后 `triton test validate login.tritontest.yaml --json`
+- 后续独立 DSL 路径：`triton flow validate login.tritonflow.yaml --json`
 - invalid YAML 返回单个 JSON envelope。
 - 输出 normalized plan preview，不连接设备。
 

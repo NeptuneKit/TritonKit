@@ -469,6 +469,11 @@ private struct TKWorkspaceFlowActionStep {
     let verifyEvidenceRef: String?
 }
 
+private struct TKWorkspaceExportedFlow {
+    let yaml: String
+    let stepCount: Int
+}
+
 func runWorkspaceRun(
     _ request: TKWorkspaceRunRequest,
     targetResolver: TKWorkspaceTargetResolverProvider = workspaceDefaultTargetResolverProvider
@@ -1044,18 +1049,18 @@ func exportWorkspaceFlow(runID: String, runsDirectory: String, output: String) t
         Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
     )
     let actionSteps = workspaceFlowActionSteps(from: parsed.events)
-    let yaml = workspaceFlowYAML(run: inspected.run, actionSteps: actionSteps)
+    let exportedFlow = workspaceFlowYAML(run: inspected.run, actionSteps: actionSteps)
     let outputURL = URL(fileURLWithPath: output)
     try FileManager.default.createDirectory(
         at: outputURL.deletingLastPathComponent(),
         withIntermediateDirectories: true
     )
-    try yaml.write(to: outputURL, atomically: true, encoding: .utf8)
+    try exportedFlow.yaml.write(to: outputURL, atomically: true, encoding: .utf8)
     return TKWorkspaceExportFlowResponse(
         kind: "triton.workspace.export-flow",
         runID: inspected.run.runID,
         output: outputURL.path,
-        stepCount: 3 + actionSteps.count
+        stepCount: exportedFlow.stepCount
     )
 }
 
@@ -1106,37 +1111,58 @@ private func workspaceEventRef(
 private func workspaceFlowYAML(
     run: TKWorkspaceRunResponse,
     actionSteps: [TKWorkspaceFlowActionStep]
-) -> String {
+) -> TKWorkspaceExportedFlow {
     var lines = [
-        "schemaVersion: 1",
-        "kind: triton.workspace.flow",
-        "runId: \(run.runID)",
-        "goal: \"\(yamlEscaped(run.goal))\"",
-        "app: \"\(yamlEscaped(run.app))\"",
+        "version: 1",
+        "name: \(run.runID)",
+        "app:",
+        "  bundleId: \(run.app)",
+        "device:",
+        "  platform: \(run.target.platform)",
         "steps:",
-        "  - action: launchApp",
-        "    app: \"\(yamlEscaped(run.app))\"",
-        "    evidenceRef: events.jsonl#app.ready",
-        "  - action: observe",
-        "    evidenceRef: events.jsonl#observation.captured",
-        "  - action: bootstrapCheck",
-        "    evidenceRef: events.jsonl#flow.bootstrap.checked",
+        "  - launch: {}",
+        "  - takeScreenshot: {}",
     ]
+    var stepCount = 2
     for step in actionSteps {
-        lines.append("  - action: \(step.action)")
-        lines.append("    target: \"\(yamlEscaped(step.target))\"")
-        lines.append("    evidenceRef: \(step.evidenceRef)")
-        if let modelEvidenceRef = step.modelEvidenceRef {
-            lines.append("    modelEvidenceRef: \(modelEvidenceRef)")
-        }
-        if let policyEvidenceRef = step.policyEvidenceRef {
-            lines.append("    policyEvidenceRef: \(policyEvidenceRef)")
-        }
-        if let verifyEvidenceRef = step.verifyEvidenceRef {
-            lines.append("    verifyEvidenceRef: \(verifyEvidenceRef)")
-        }
+        guard let stepLines = workspaceTritonTestStepLines(for: step) else { continue }
+        lines.append(contentsOf: stepLines)
+        stepCount += 1
     }
-    return lines.joined(separator: "\n") + "\n"
+    if let businessQuery = run.business?.query.trimmingCharacters(in: .whitespacesAndNewlines),
+       !businessQuery.isEmpty {
+        lines.append("  - assertVisible:")
+        lines.append("      text: \"\(yamlEscaped(businessQuery))\"")
+        stepCount += 1
+    }
+    return TKWorkspaceExportedFlow(yaml: lines.joined(separator: "\n") + "\n", stepCount: stepCount)
+}
+
+private func workspaceTritonTestStepLines(for step: TKWorkspaceFlowActionStep) -> [String]? {
+    switch step.action {
+    case "tap":
+        return [
+            "  - tap:",
+            "      text: \"\(yamlEscaped(step.target))\"",
+        ]
+    case "wait", "verify":
+        return [
+            "  - assertVisible:",
+            "      text: \"\(yamlEscaped(step.target))\"",
+        ]
+    case "press":
+        return [
+            "  - press:",
+            "      button: \"\(yamlEscaped(step.target))\"",
+        ]
+    case "type", "input":
+        return [
+            "  - input:",
+            "      text: \"\(yamlEscaped(step.target))\"",
+        ]
+    default:
+        return nil
+    }
 }
 
 private func workspaceAtlasSummary(runDir: URL) throws -> TKWorkspaceAtlasSummary {

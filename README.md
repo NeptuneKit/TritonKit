@@ -529,7 +529,8 @@ triton workspace run --target current --app com.example.app --goal "Open dashboa
 triton workspace run --target booted --platform ios --scope simulator --resolve-target --app com.example.app --goal "Open dashboard" --llm-provider mock --vlm-provider mock --execute-actions --observe-live --business-ready-text Dashboard --business-ready-live-wait --max-steps 2 --json
 triton workspace run --target booted --platform ios --scope simulator --resolve-target --app com.example.app --goal "Explore login" --observe-live --observe-kind tree --json
 triton workspace inspect <run-id> --json
-triton workspace export-flow <run-id> --output flow.tritonflow.yaml --json
+triton workspace export-flow <run-id> --output flow.tritontest.yaml --json
+triton test validate flow.tritontest.yaml --json
 triton workspace merge-map <run-id> --map-dir .triton/maps/com.example.app.tritonmap --confirm --json
 ```
 

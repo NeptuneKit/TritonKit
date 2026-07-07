@@ -1218,7 +1218,7 @@ struct WorkspaceRunTests {
         #expect(inspected.latestPause?.phase == "policy_rejected")
     }
 
-    @Test("workspace export flow writes a seed")
+    @Test("workspace export flow writes a deterministic test seed")
     func workspaceExportFlowWritesASeed() throws {
         let root = temporaryRunsDirectory()
         defer { try? FileManager.default.removeItem(at: root) }
@@ -1227,23 +1227,29 @@ struct WorkspaceRunTests {
             runsDirectory: root.path,
             runID: "run-workspace-flow",
             target: "current",
+            platform: "ios",
+            scope: "simulator",
             app: "com.example.demo",
             goal: "Export flow",
             actionPolicy: "explore"
         ))
 
-        let output = root.appendingPathComponent("flow.tritonflow.yaml")
+        let output = root.appendingPathComponent("flow.tritontest.yaml")
         let response = try exportWorkspaceFlow(
             runID: "run-workspace-flow",
             runsDirectory: root.path,
             output: output.path
         )
         let yaml = try String(contentsOf: output, encoding: .utf8)
+        let plan = try validateTritonTestContract(yaml: yaml, inputPath: output.path)
 
         #expect(response.output == output.path)
-        #expect(yaml.contains("kind: triton.workspace.flow"))
-        #expect(yaml.contains("runId: run-workspace-flow"))
-        #expect(yaml.contains("evidenceRef: events.jsonl#app.ready"))
+        #expect(response.stepCount == 2)
+        #expect(yaml.contains("version: 1"))
+        #expect(yaml.contains("name: run-workspace-flow"))
+        #expect(yaml.contains("bundleId: com.example.demo"))
+        #expect(yaml.contains("platform: ios"))
+        #expect(plan.steps.map(\.type) == ["launch", "takeScreenshot"])
     }
 
     @Test("workspace export flow includes dry action steps")
@@ -1261,19 +1267,68 @@ struct WorkspaceRunTests {
             dryModelFixture: true
         ))
 
-        let output = root.appendingPathComponent("action-flow.tritonflow.yaml")
+        let output = root.appendingPathComponent("action-flow.tritontest.yaml")
         let response = try exportWorkspaceFlow(
             runID: "run-workspace-flow-action",
             runsDirectory: root.path,
             output: output.path
         )
         let yaml = try String(contentsOf: output, encoding: .utf8)
+        let plan = try validateTritonTestContract(yaml: yaml, inputPath: output.path)
 
+        #expect(response.stepCount == 3)
+        #expect(yaml.contains("tap:"))
+        #expect(yaml.contains("text: \"Continue\""))
+        #expect(plan.steps.map(\.type) == ["launch", "takeScreenshot", "tap"])
+        #expect(plan.steps[2].selector?.text == "Continue")
+    }
+
+    @Test("workspace export flow is accepted by deterministic test validator")
+    func workspaceExportFlowIsAcceptedByDeterministicTestValidator() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        _ = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-flow-rerun",
+            target: "current",
+            platform: "ios",
+            scope: "simulator",
+            app: "com.example.demo",
+            goal: "Export action flow for deterministic rerun",
+            actionPolicy: "explore",
+            dryModelFixture: true,
+            businessReadyText: "Dashboard"
+        ))
+
+        let output = root.appendingPathComponent("rerun.tritontest.yaml")
+        let response = try exportWorkspaceFlow(
+            runID: "run-workspace-flow-rerun",
+            runsDirectory: root.path,
+            output: output.path
+        )
+        let yaml = try String(contentsOf: output, encoding: .utf8)
+        let plan = try validateTritonTestContract(yaml: yaml, inputPath: output.path)
+
+        #expect(response.output == output.path)
+        #expect(response.kind == "triton.workspace.export-flow")
         #expect(response.stepCount == 4)
-        #expect(yaml.contains("action: tap"))
-        #expect(yaml.contains("target: \"Continue\""))
-        #expect(yaml.contains("evidenceRef: events.jsonl#action.executed"))
-        #expect(yaml.contains("modelEvidenceRef: evidence/model/decision-000.json"))
+        #expect(yaml.contains("version: 1"))
+        #expect(yaml.contains("name: run-workspace-flow-rerun"))
+        #expect(yaml.contains("bundleId: com.example.demo"))
+        #expect(yaml.contains("platform: ios"))
+        #expect(yaml.contains("launch: {}"))
+        #expect(yaml.contains("takeScreenshot: {}"))
+        #expect(yaml.contains("tap:"))
+        #expect(yaml.contains("text: \"Continue\""))
+        #expect(yaml.contains("assertVisible:"))
+        #expect(yaml.contains("text: \"Dashboard\""))
+        #expect(plan.name == "run-workspace-flow-rerun")
+        #expect(plan.app.bundleId == "com.example.demo")
+        #expect(plan.device.platform == "ios")
+        #expect(plan.steps.map(\.type) == ["launch", "takeScreenshot", "tap", "assertVisible"])
+        #expect(plan.steps[2].selector?.text == "Continue")
+        #expect(plan.steps[3].selector?.text == "Dashboard")
     }
 
     @Test("workspace CLI run inspect and export flow")
@@ -1333,7 +1388,7 @@ struct WorkspaceRunTests {
         )
         #expect(parsed.events.first { $0.type == .observationCaptured }?.screenCandidate?.visibleTexts == ["Login", "Continue"])
 
-        let output = root.appendingPathComponent("cli-flow.tritonflow.yaml")
+        let output = root.appendingPathComponent("cli-flow.tritontest.yaml")
         let exportResult = try runWorkspaceCLI([
             "workspace", "export-flow",
             "run-workspace-cli",
@@ -1346,6 +1401,10 @@ struct WorkspaceRunTests {
         #expect(exportResult.exitCode == 0)
         #expect(exported.output == output.path)
         #expect(FileManager.default.fileExists(atPath: output.path))
+        let yaml = try String(contentsOf: output, encoding: .utf8)
+        let plan = try validateTritonTestContract(yaml: yaml, inputPath: output.path)
+        #expect(plan.app.bundleId == "com.example.demo")
+        #expect(plan.steps.map(\.type) == ["launch", "takeScreenshot", "tap"])
     }
 
     @Test("workspace HTTP handlers share the run runtime")
@@ -1395,7 +1454,7 @@ struct WorkspaceRunTests {
         )
         #expect(parsed.events.first { $0.type == .observationCaptured }?.screenCandidate?.visibleTexts == ["Login", "Continue"])
 
-        let output = root.appendingPathComponent("http-flow.tritonflow.yaml")
+        let output = root.appendingPathComponent("http-flow.tritontest.yaml")
         let exported = try handleWorkspaceHTTPExportFlow(
             runID: "run-workspace-http",
             body: try JSONEncoder().encode(TKWorkspaceHTTPExportFlowRequest(
@@ -1406,6 +1465,11 @@ struct WorkspaceRunTests {
 
         #expect(exported.output == output.path)
         #expect(FileManager.default.fileExists(atPath: output.path))
+        let yaml = try String(contentsOf: output, encoding: .utf8)
+        let plan = try validateTritonTestContract(yaml: yaml, inputPath: output.path)
+        #expect(plan.app.bundleId == "com.example.demo")
+        #expect(plan.device.platform == "android")
+        #expect(plan.steps.map(\.type) == ["launch", "takeScreenshot", "tap"])
     }
 
     @Test("workspace HTTP merge-map accumulates run-local app maps")
@@ -1820,10 +1884,20 @@ struct WorkspaceRunTests {
            fileManager.isExecutableFile(atPath: override) {
             return URL(fileURLWithPath: override)
         }
+        let executableHints = [Bundle.main.executableURL, CommandLine.arguments.first.map(URL.init(fileURLWithPath:))].compactMap { $0 }
+        for executableHint in executableHints {
+            if let candidate = findSiblingTritonExecutable(near: executableHint, fileManager: fileManager) {
+                return candidate
+            }
+        }
         let packageRoot = URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
+        let packageBuildRoot = packageRoot.appendingPathComponent(".build", isDirectory: true)
+        if let candidate = try findTritonExecutable(under: packageBuildRoot, fileManager: fileManager) {
+            return candidate
+        }
         let debugCandidate = packageRoot
             .appendingPathComponent(".build", isDirectory: true)
             .appendingPathComponent("debug", isDirectory: true)
@@ -1838,10 +1912,6 @@ struct WorkspaceRunTests {
                 return candidate
             }
         }
-        let buildRoot = packageRoot.appendingPathComponent(".build", isDirectory: true)
-        if let candidate = try findTritonExecutable(under: buildRoot, fileManager: fileManager) {
-            return candidate
-        }
         throw NSError(
             domain: "TritonKitCLITests.WorkspaceRunTests",
             code: 1,
@@ -1849,21 +1919,36 @@ struct WorkspaceRunTests {
         )
     }
 
+    private func findSiblingTritonExecutable(near executableURL: URL, fileManager: FileManager) -> URL? {
+        var directory = executableURL.deletingLastPathComponent()
+        for _ in 0..<8 {
+            let candidate = directory.appendingPathComponent("triton")
+            if fileManager.isExecutableFile(atPath: candidate.path) {
+                return candidate
+            }
+            let parent = directory.deletingLastPathComponent()
+            if parent.path == directory.path { break }
+            directory = parent
+        }
+        return nil
+    }
+
     private func findTritonExecutable(under buildRoot: URL, fileManager: FileManager) throws -> URL? {
         guard fileManager.fileExists(atPath: buildRoot.path) else { return nil }
-        let keys: Set<URLResourceKey> = [.isRegularFileKey, .isExecutableKey, .nameKey]
+        let keys: Set<URLResourceKey> = [.isRegularFileKey, .isExecutableKey, .nameKey, .contentModificationDateKey]
         guard let enumerator = fileManager.enumerator(at: buildRoot, includingPropertiesForKeys: Array(keys)) else {
             return nil
         }
+        var candidates: [(url: URL, modified: Date)] = []
         for case let url as URL in enumerator {
             let values = try url.resourceValues(forKeys: keys)
             if values.name == "triton",
                values.isRegularFile == true,
                values.isExecutable == true {
-                return url
+                candidates.append((url, values.contentModificationDate ?? .distantPast))
             }
         }
-        return nil
+        return candidates.max { lhs, rhs in lhs.modified < rhs.modified }?.url
     }
 }
 

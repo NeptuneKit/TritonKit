@@ -41,7 +41,7 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 | Observe / hierarchy / WebView | 已有 runtime snapshot / AX / hierarchy、host layout、WebView provider、route/assertion 和 Inspect Session 状态模型 | Atlas graph 需要把这些 observation 转成 screen/state/transition 证据 |
 | Device actions | `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`；Web stream gesture 已走 `/web/host-input`；unsupported 输出已有稳定 envelope | LLM/VLM loop 只能调用这些动作入口，不能直接执行底层工具 |
 | Evidence | `triton evidence capture --case <case> --output <dir.tritonevidence> --json`；证据 taxonomy 已覆盖 stdout/schema/status、host artifact、runtime snapshot/AX/ledger、input result、evidence bundle、tritonplan 等 | Atlas 和 VLM run 需要把 evidence id 作为共同索引 |
-| Replay / workflow seed | `.tritonplan`、`triton record`、`triton plan inspect`、`triton replay --dry-run`、真实 `replay` 已有机器可读 failure / recovery surface | 从探索 session 生成可审查 workflow seed，而不是只录坐标 |
+| Replay / workflow seed | `.tritontest.yaml`、`.tritonplan`、`triton test validate/run`、`triton record`、`triton plan inspect`、`triton replay --dry-run`、真实 `replay` 已有机器可读 failure / recovery surface；`workspace export-flow` 当前可从 run 事件流导出 deterministic `.tritontest.yaml` seed | 从探索 session 生成可审查 workflow seed，而不是只录坐标 |
 | Local LLM/VLM grounding | `triton vlm providers/ground/compare/model *` 轨道、MLX helper、模型 cache / download / preflight、grounding evidence artifacts 已有边界；`workspace run` 已支持 `--llm-provider openai-compatible --llm-base-url <local-v1> --llm-model <model>` 调用本地 OpenAI-compatible LLM 生成逐步 action candidate；VLM 支持 OpenAI-compatible provider，也支持本地 `mlx-swift-lm`：`--vlm-provider mlx-swift-lm --vlm-model <id>` 或 `--vlm-model-path <path>`，可选 `--vlm-helper <helper>` / `TRITON_MLX_HELPER` / `TRITON_MLX_SWIFT_LM_HELPER` 与 `--vlm-allow-model-download`；当当前 step observation 有可读本地 screenshot artifact 且启用 `executeActions` 时，workspace action path 可生成 run-local coordinate contract、调用 VLM grounding、按步写 `evidence/actions/vlm-000/*` / `vlm-001/*`，并用 runtime-point 执行 tap；VLM grounding 失败会写 `vlm-failure.json`、failed action artifact 和 recovery proposal，并以 `inspect_vlm_grounding_failure` 暂停；`--business-ready-assert` / HTTP `businessReadyAssert=true` 已把 runtime verify text-exists assertion provider 串入 initial / post-action business checkpoint | workspace run 默认启用 LLM/VLM 辅助理解和执行；每次模型参与都必须 evidence-backed、policy-gated，并写入 run ledger；已支持 bounded multi-step recovery 的 step-indexed decision/action/verify/Atlas delta，把 run-local Atlas 投影到 `atlas/app-map/`，并可用 `workspace merge-map` 合并到长期本地 app-map；长期 map 已合并跨 run state variant、coverage summary、path `sourceRuns` 与 health，`mlx-swift-lm` workspace helper 配置会写入 provider-check / model request / grounding request 证据；runtime wait 和 runtime assert 都可作为 action 后业务 readiness 证明 |
 | Semantic provider | runtime manifest / snapshot 已能表达 semantic state/action provider、schema、actions、redaction、evidence commands | VLM 和 Atlas 应优先消费 provider-backed 业务语义，缺失时降级为截图/hierarchy |
 | Web human slot | Web mock 已收敛到 stream / inspector；已有 target registry client、InspectTarget、InspectSession、hierarchy tabs、property sheet、stream gesture mapping | 新增 Map / Run summary 时只读 CLI/HTTP DTO，不新增 Web-only 业务语义 |
@@ -65,7 +65,7 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 - App Lifecycle：安装、启动、停止、重启当前 App。
 - Device Actions：截图、点击、输入、滑动、等待、返回、Home 等已支持动作。
 - Evidence：一次 session 能导出 evidence bundle。
-- Workflow Seed：把一次成功探索保存为 `.tritonplan` 初稿。
+- Workflow Seed：把一次成功探索保存为可被 `triton test validate/run` 消费的 `.tritontest.yaml` seed，必要时再沉淀 `.tritonplan` 初稿。
 - Atlas Map：从 evidence 生成本机 screen/state/transition/coverage 图谱。
 - LLM/VLM Explore Loop：按 observe -> decide -> act -> verify -> record 循环自主探索本机 App。
 - LLM/VLM Runtime Policy：workspace run 默认启用 LLM/VLM；本地 replay / 稳定回归仍要求模型全程参与流程启动、回正、验证和诊断，只是动作选择可被 policy 限制为 plan-first。
@@ -97,7 +97,7 @@ Then 每步输出 JSON 结果，失败时包含错误码、目标、截图或 hi
 
 Given 一次探索 session 已完成
 When agent 请求生成 workflow seed
-Then TritonKit 生成可审查的 `.tritonplan` 初稿，包含步骤、变量、证据引用和 dry-run 校验入口
+Then TritonKit 生成可审查的 `.tritontest.yaml` seed，包含启动、截图、动作、业务断言和 validate/run 校验入口；需要 plan-first replay 时再沉淀 `.tritonplan`
 
 ### 场景 5：Web 新插槽只消费事实
 
