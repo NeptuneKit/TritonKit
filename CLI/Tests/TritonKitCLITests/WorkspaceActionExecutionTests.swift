@@ -604,6 +604,31 @@ struct WorkspaceActionExecutionTests {
         )
         #expect(deltas.components(separatedBy: "\n").filter { !$0.isEmpty }.count == 2)
         #expect(deltas.contains(#""transitionId":"transition_0001""#))
+
+        let appMapRoot = runDir.appendingPathComponent("atlas/app-map", isDirectory: true)
+        #expect(FileManager.default.fileExists(atPath: appMapRoot.appendingPathComponent("app-map.json").path))
+        #expect(FileManager.default.fileExists(atPath: appMapRoot.appendingPathComponent("paths/path-login-dashboard.json").path))
+        let appMap = try JSONDecoder().decode(
+            TKAppMapDocument.self,
+            from: Data(contentsOf: appMapRoot.appendingPathComponent("app-map.json"))
+        )
+        #expect(appMap.screenCount == 3)
+        #expect(appMap.transitionCount == 2)
+        #expect(appMap.pathCount == 1)
+        let paths = try listTritonAppMapPaths(mapPath: appMapRoot.path)
+        #expect(paths.paths.map(\.pathID) == ["path-login-dashboard"])
+        #expect(paths.paths.first?.transitions.count == 2)
+        #expect(paths.paths.first?.sourceRuns == ["run-workspace-bounded-loop"])
+        let inspected = try inspectWorkspaceRun(
+            runID: "run-workspace-bounded-loop",
+            runsDirectory: root.path
+        )
+        let appMapSummary = try #require(inspected.appMap)
+        #expect(appMapSummary.mapRef == "atlas/app-map/app-map.json")
+        #expect(appMapSummary.screenCount == 3)
+        #expect(appMapSummary.transitionCount == 2)
+        #expect(appMapSummary.pathCount == 1)
+        #expect(appMapSummary.pathIDs == ["path-login-dashboard"])
     }
 
     @Test("workspace run skips explicit action execution after business checkpoint passes")

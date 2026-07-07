@@ -352,6 +352,7 @@ struct TKWorkspaceInspectResponse: Codable, Equatable {
     let run: TKWorkspaceRunResponse
     let summary: TKTestRunEventSummary
     let atlas: TKWorkspaceAtlasSummary
+    let appMap: TKWorkspaceAppMapSummary?
     let latestBootstrap: TKTestRunEvent?
     let latestBootstrapProposal: TKTestRunEvent?
     let latestPause: TKTestRunEvent?
@@ -364,6 +365,22 @@ struct TKWorkspaceAtlasSummary: Codable, Equatable {
     let screenCount: Int
     let stateCount: Int
     let transitionCount: Int
+}
+
+struct TKWorkspaceAppMapSummary: Codable, Equatable {
+    let mapRef: String
+    let screenCount: Int
+    let transitionCount: Int
+    let pathCount: Int
+    let pathIDs: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case mapRef
+        case screenCount
+        case transitionCount
+        case pathCount
+        case pathIDs = "pathIds"
+    }
 }
 
 struct TKWorkspaceExportFlowResponse: Codable, Equatable {
@@ -655,6 +672,7 @@ private func runWorkspaceRun(
             modelDecision: modelDecision ?? workspaceDefaultModelDecision(modelDecisionRequest)
         )
     }
+    try projectWorkspaceAtlasAppMap(run: response, runDir: runDir)
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
     var events = workspaceSkeletonEvents(
         runID: runID,
@@ -859,6 +877,7 @@ func inspectWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorks
         run: run,
         summary: parsed.summary,
         atlas: try workspaceAtlasSummary(runDir: runDir),
+        appMap: try workspaceAppMapSummary(runDir: runDir),
         latestBootstrap: parsed.events.last { $0.type == .flowBootstrapChecked },
         latestBootstrapProposal: parsed.events.last { $0.type == .flowBootstrapProposed },
         latestPause: parsed.events.last { $0.type == .runPaused }

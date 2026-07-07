@@ -188,6 +188,7 @@ func runWorkspaceActionLoop(
         )
     }
     try writeWorkspaceActionLoopFlow(response, steps: steps, to: runDir.appendingPathComponent("flow.tritonflow.yaml"))
+    try projectWorkspaceAtlasAppMap(run: response, runDir: runDir)
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("report.json"))
     try writeWorkspaceEvents(

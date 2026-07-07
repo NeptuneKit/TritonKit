@@ -1,0 +1,392 @@
+import CryptoKit
+import Foundation
+
+private struct TKWorkspaceAtlasProjectionDocument: Decodable {
+    let runID: String
+    let app: String
+    let screens: [TKWorkspaceAtlasProjectionScreen]
+    let transitions: [TKWorkspaceAtlasProjectionTransition]
+
+    enum CodingKeys: String, CodingKey {
+        case runID = "runId"
+        case app
+        case screens
+        case transitions
+    }
+}
+
+private struct TKWorkspaceAtlasProjectionScreen: Decodable {
+    let screenID: String
+    let signature: String
+    let dominantTexts: [String]
+    let evidenceRefs: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case screenID = "screenId"
+        case signature
+        case dominantTexts
+        case evidenceRefs
+    }
+}
+
+private struct TKWorkspaceAtlasProjectionTransition: Decodable {
+    let transitionID: String
+    let fromScreenID: String
+    let toScreenID: String
+    let action: String
+    let status: String
+
+    enum CodingKeys: String, CodingKey {
+        case transitionID = "transitionId"
+        case fromScreenID = "fromScreenId"
+        case toScreenID = "toScreenId"
+        case action
+        case status
+    }
+}
+
+private struct TKWorkspaceActionPointArtifact: Decodable {
+    let vlmGrounding: TKWorkspaceVLMGroundingPointArtifact?
+}
+
+private struct TKWorkspaceVLMGroundingPointArtifact: Decodable {
+    let coordinateSpace: String?
+    let runtimePoint: TKWorkspaceRuntimePointArtifact?
+}
+
+private struct TKWorkspaceRuntimePointArtifact: Decodable {
+    let x: Double
+    let y: Double
+}
+
+func projectWorkspaceAtlasAppMap(run: TKWorkspaceRunResponse, runDir: URL) throws {
+    let atlasURL = runDir.appendingPathComponent("atlas/atlas.json")
+    guard FileManager.default.fileExists(atPath: atlasURL.path) else { return }
+    let atlas = try JSONDecoder().decode(
+        TKWorkspaceAtlasProjectionDocument.self,
+        from: Data(contentsOf: atlasURL)
+    )
+    let mapRoot = workspaceAppMapRoot(runDir: runDir)
+    if FileManager.default.fileExists(atPath: mapRoot.path) {
+        try FileManager.default.removeItem(at: mapRoot)
+    }
+    try workspacePrepareAppMapDirectories(mapRoot)
+
+    let runID = atlas.runID.isEmpty ? run.runID : atlas.runID
+    let app = TKAppMapApp(bundleID: atlas.app.isEmpty ? run.app : atlas.app, platform: run.target.platform)
+    var localToMapScreenID: [String: String] = [:]
+    for screen in atlas.screens {
+        let fingerprint = workspaceAtlasFingerprint(from: screen.signature)
+        let screenID = workspaceMapScreenID(for: fingerprint)
+        localToMapScreenID[screen.screenID] = screenID
+        let merged = TKAppMapScreen(
+            schemaVersion: 1,
+            kind: "triton.app-map.screen",
+            screenID: screenID,
+            fingerprint: fingerprint,
+            primaryText: workspacePrimaryText(screen.dominantTexts),
+            visibleTexts: workspaceUnique(screen.dominantTexts),
+            runLocalScreenIDs: [screen.screenID],
+            sourceRuns: [runID],
+            vlmHealth: nil
+        )
+        try prettyEncodedData(merged).write(
+            to: mapRoot.appendingPathComponent("screens/\(screenID).json"),
+            options: .atomic
+        )
+    }
+
+    var changedTransitionIDs: [String] = []
+    for (index, transition) in atlas.transitions.enumerated() {
+        guard let fromScreenID = localToMapScreenID[transition.fromScreenID],
+              let toScreenID = localToMapScreenID[transition.toScreenID]
+        else {
+            continue
+        }
+        let point = workspaceActionPoint(runDir: runDir, index: index)
+        let trigger = TKAppMapTransitionTrigger(type: transition.action, point: point)
+        let transitionID = workspaceMapTransitionID(
+            fromScreenID: fromScreenID,
+            toScreenID: toScreenID,
+            stepIndex: index + 1,
+            trigger: trigger
+        )
+        let changed = fromScreenID != toScreenID
+        let mapped = TKAppMapTransition(
+            schemaVersion: 1,
+            kind: "triton.app-map.transition",
+            transitionID: transitionID,
+            fromScreenID: fromScreenID,
+            toScreenID: toScreenID,
+            triggerStepIndex: index + 1,
+            trigger: trigger,
+            changed: changed,
+            replayable: point?.coordinateSpace == "runtime-point",
+            status: transition.status,
+            sourceRuns: [runID],
+            vlmHealth: nil
+        )
+        try prettyEncodedData(mapped).write(
+            to: mapRoot.appendingPathComponent("transitions/\(transitionID).json"),
+            options: .atomic
+        )
+        if changed {
+            changedTransitionIDs.append(transitionID)
+        }
+    }
+
+    let pathIDs = try workspaceWriteAppMapPath(
+        transitionIDs: changedTransitionIDs,
+        mapRoot: mapRoot,
+        run: run
+    )
+    if !pathIDs.isEmpty {
+        try workspaceWriteAppMapSuite(mapRoot: mapRoot, pathIDs: pathIDs)
+    }
+    try workspaceWriteAppMapRunRecord(
+        mapRoot: mapRoot,
+        run: run,
+        screenCount: atlas.screens.count,
+        transitionCount: atlas.transitions.count,
+        pathCount: pathIDs.count
+    )
+    try workspaceWriteAppMapIndex(mapRoot: mapRoot, app: app)
+}
+
+func workspaceAppMapSummary(runDir: URL) throws -> TKWorkspaceAppMapSummary? {
+    let mapRoot = workspaceAppMapRoot(runDir: runDir)
+    guard FileManager.default.fileExists(atPath: mapRoot.appendingPathComponent("app-map.json").path) else {
+        return nil
+    }
+    let inspect = try inspectTritonAppMap(mapPath: mapRoot.path)
+    let paths = try listTritonAppMapPaths(mapPath: mapRoot.path).paths
+    return TKWorkspaceAppMapSummary(
+        mapRef: "atlas/app-map/app-map.json",
+        screenCount: inspect.screenCount,
+        transitionCount: inspect.transitionCount,
+        pathCount: inspect.pathCount,
+        pathIDs: paths.map(\.pathID)
+    )
+}
+
+private func workspaceAppMapRoot(runDir: URL) -> URL {
+    runDir.appendingPathComponent("atlas/app-map", isDirectory: true)
+}
+
+private func workspacePrepareAppMapDirectories(_ mapRoot: URL) throws {
+    for path in ["screens", "transitions", "paths", "suites", "runs"] {
+        try FileManager.default.createDirectory(
+            at: mapRoot.appendingPathComponent(path, isDirectory: true),
+            withIntermediateDirectories: true
+        )
+    }
+}
+
+private func workspaceWriteAppMapPath(
+    transitionIDs: [String],
+    mapRoot: URL,
+    run: TKWorkspaceRunResponse
+) throws -> [String] {
+    guard !transitionIDs.isEmpty else { return [] }
+    let transitions = try transitionIDs.map {
+        try JSONDecoder().decode(
+            TKAppMapTransition.self,
+            from: Data(contentsOf: mapRoot.appendingPathComponent("transitions/\($0).json"))
+        )
+    }.sorted { $0.triggerStepIndex < $1.triggerStepIndex }
+    guard let first = transitions.first, let last = transitions.last else { return [] }
+    let start = try workspaceReadAppMapScreen(mapRoot: mapRoot, screenID: first.fromScreenID)
+    let end = try workspaceReadAppMapScreen(mapRoot: mapRoot, screenID: last.toScreenID)
+    let startName = start.primaryText ?? start.screenID
+    let endName = workspacePathEndName(start: startName, end: end.primaryText ?? end.screenID)
+    let pathID = "path-\(workspaceSlug(startName))-\(workspaceSlug(endName))"
+    let path = TKAppMapPath(
+        schemaVersion: 1,
+        kind: "triton.app-map.path",
+        pathID: pathID,
+        name: "\(startName) to \(endName)",
+        status: "observed",
+        confirmed: run.status == "passed",
+        startScreenID: first.fromScreenID,
+        endScreenID: last.toScreenID,
+        transitions: transitions.map(\.transitionID),
+        health: workspaceAppMapHealth(for: run),
+        replayable: transitions.allSatisfy(\.replayable),
+        sourceRuns: [run.runID],
+        source: "workspace-atlas",
+        vlmHealth: nil
+    )
+    try prettyEncodedData(path).write(to: mapRoot.appendingPathComponent("paths/\(pathID).json"), options: .atomic)
+    return [pathID]
+}
+
+private func workspaceWriteAppMapSuite(mapRoot: URL, pathIDs: [String]) throws {
+    let suite = TKAppMapSuite(
+        schemaVersion: 1,
+        kind: "triton.app-map.suite",
+        suiteID: "workspace",
+        name: "Workspace",
+        paths: pathIDs.sorted(),
+        policy: TKAppMapSuitePolicy(strict: true, stopOnFailure: true)
+    )
+    try prettyEncodedData(suite).write(to: mapRoot.appendingPathComponent("suites/workspace.json"), options: .atomic)
+}
+
+private func workspaceWriteAppMapRunRecord(
+    mapRoot: URL,
+    run: TKWorkspaceRunResponse,
+    screenCount: Int,
+    transitionCount: Int,
+    pathCount: Int
+) throws {
+    let record = TKAppMapRunRecord(
+        schemaVersion: 1,
+        kind: "triton.app-map.run",
+        runID: run.runID,
+        evidenceDir: run.paths.runDir,
+        verdict: workspaceAppMapVerdict(for: run),
+        screenCount: screenCount,
+        transitionCount: transitionCount,
+        pathCount: pathCount
+    )
+    try prettyEncodedData(record).write(to: mapRoot.appendingPathComponent("runs/\(run.runID).json"), options: .atomic)
+}
+
+private func workspaceWriteAppMapIndex(mapRoot: URL, app: TKAppMapApp) throws {
+    let document = TKAppMapDocument(
+        schemaVersion: 1,
+        kind: "triton.app-map",
+        app: app,
+        screenCount: try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("screens", isDirectory: true)),
+        transitionCount: try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("transitions", isDirectory: true)),
+        pathCount: try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("paths", isDirectory: true)),
+        suiteCount: try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("suites", isDirectory: true)),
+        updatedAt: workspaceISO8601Timestamp()
+    )
+    try prettyEncodedData(document).write(to: mapRoot.appendingPathComponent("app-map.json"), options: .atomic)
+}
+
+private func workspaceReadAppMapScreen(mapRoot: URL, screenID: String) throws -> TKAppMapScreen {
+    try JSONDecoder().decode(
+        TKAppMapScreen.self,
+        from: Data(contentsOf: mapRoot.appendingPathComponent("screens/\(screenID).json"))
+    )
+}
+
+private func workspaceActionPoint(runDir: URL, index: Int) -> TKAppMapPoint? {
+    let suffix = workspaceArtifactSuffix(index)
+    let url = runDir.appendingPathComponent("evidence/actions/action-\(suffix).json")
+    guard let data = try? Data(contentsOf: url),
+          let artifact = try? JSONDecoder().decode(TKWorkspaceActionPointArtifact.self, from: data),
+          let grounding = artifact.vlmGrounding,
+          let runtimePoint = grounding.runtimePoint else {
+        return nil
+    }
+    return TKAppMapPoint(
+        x: runtimePoint.x,
+        y: runtimePoint.y,
+        coordinateSpace: grounding.coordinateSpace ?? "runtime-point"
+    )
+}
+
+private func workspaceAtlasFingerprint(from signature: String) -> TKScreenWorkspaceFingerprint {
+    let parts = signature.split(separator: ":", maxSplits: 2, omittingEmptySubsequences: false).map(String.init)
+    return TKScreenWorkspaceFingerprint(
+        screenshotSha256: parts[safe: 0] ?? "unknown-screenshot",
+        axTextHash: parts[safe: 1] ?? "unknown-ax",
+        hierarchySha256: parts[safe: 2] ?? "unknown-hierarchy"
+    )
+}
+
+private func workspaceMapScreenID(for fingerprint: TKScreenWorkspaceFingerprint) -> String {
+    let key = "\(fingerprint.screenshotSha256)|\(fingerprint.axTextHash)|\(fingerprint.hierarchySha256)"
+    return "screen-\(workspaceShortHash(key))"
+}
+
+private func workspaceMapTransitionID(
+    fromScreenID: String,
+    toScreenID: String,
+    stepIndex: Int,
+    trigger: TKAppMapTransitionTrigger
+) -> String {
+    let point = trigger.point.map { "\($0.x),\($0.y),\($0.coordinateSpace)" } ?? "none"
+    return "transition-\(workspaceShortHash("\(fromScreenID)|\(toScreenID)|\(stepIndex)|\(trigger.type)|\(point)"))"
+}
+
+private func workspacePrimaryText(_ texts: [String]) -> String? {
+    texts
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .first { !$0.isEmpty }
+}
+
+private func workspacePathEndName(start: String, end: String) -> String {
+    let startParts = start.split(separator: " ")
+    let endParts = end.split(separator: " ")
+    guard let firstStart = startParts.first,
+          endParts.first == firstStart,
+          endParts.count > 1
+    else {
+        return end
+    }
+    return endParts.dropFirst().joined(separator: " ")
+}
+
+private func workspaceAppMapHealth(for run: TKWorkspaceRunResponse) -> TKAppMapHealth {
+    TKAppMapHealth(
+        observedRuns: 1,
+        passCount: run.status == "passed" ? 1 : 0,
+        failCount: run.status == "failed" ? 1 : 0,
+        flakeCount: 0
+    )
+}
+
+private func workspaceAppMapVerdict(for run: TKWorkspaceRunResponse) -> String? {
+    if run.status == "passed" { return "success" }
+    if run.status == "failed" { return "failure" }
+    return nil
+}
+
+private func workspaceJSONFileCount(in directory: URL) throws -> Int {
+    guard FileManager.default.fileExists(atPath: directory.path) else { return 0 }
+    return try FileManager.default.contentsOfDirectory(
+        at: directory,
+        includingPropertiesForKeys: nil
+    ).filter { $0.pathExtension == "json" }.count
+}
+
+private func workspaceUnique(_ values: [String]) -> [String] {
+    var result: [String] = []
+    var seen = Set<String>()
+    for value in values where seen.insert(value).inserted {
+        result.append(value)
+    }
+    return result
+}
+
+private func workspaceSlug(_ value: String) -> String {
+    let allowed = CharacterSet.alphanumerics
+    let scalars = value.lowercased().unicodeScalars.map { scalar -> Character in
+        allowed.contains(scalar) ? Character(scalar) : "-"
+    }
+    let collapsed = String(scalars)
+        .split(separator: "-", omittingEmptySubsequences: true)
+        .joined(separator: "-")
+    return collapsed.isEmpty ? "screen" : collapsed
+}
+
+private func workspaceShortHash(_ value: String) -> String {
+    let digest = SHA256.hash(data: Data(value.utf8))
+    return digest.map { String(format: "%02x", $0) }.joined().prefix(12).description
+}
+
+private func workspaceISO8601Timestamp(_ date: Date = Date()) -> String {
+    let formatter = ISO8601DateFormatter()
+    formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+    return formatter.string(from: date)
+}
+
+private extension Array {
+    subscript(safe index: Int) -> Element? {
+        indices.contains(index) ? self[index] : nil
+    }
+}

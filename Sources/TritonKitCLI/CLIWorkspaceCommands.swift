@@ -247,6 +247,9 @@ private func printWorkspaceInspect(_ response: TKWorkspaceInspectResponse, forma
         print("status: \(response.run.status)")
         print("events: \(response.summary.eventCount)")
         print("atlas: screens=\(response.atlas.screenCount) states=\(response.atlas.stateCount) transitions=\(response.atlas.transitionCount)")
+        if let appMap = response.appMap {
+            print("appMap: screens=\(appMap.screenCount) transitions=\(appMap.transitionCount) paths=\(appMap.pathCount)")
+        }
     }
 }
 
