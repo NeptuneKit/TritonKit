@@ -69,6 +69,14 @@ struct Workspace: AsyncParsableCommand {
         var adb = "adb"
         @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
         var llmProvider: String?
+        @Option(name: .customLong("llm-base-url"), help: "OpenAI-compatible LLM /v1 base URL for workspace model decisions")
+        var llmBaseURL: String?
+        @Option(name: .customLong("llm-model"), help: "OpenAI-compatible LLM model for workspace model decisions")
+        var llmModel: String?
+        @Option(name: .customLong("llm-api-key-env"), help: "Environment variable containing the workspace LLM provider API key")
+        var llmAPIKeyEnv: String?
+        @Flag(name: .customLong("allow-remote-llm"), help: "Allow non-localhost workspace LLM provider requests")
+        var allowRemoteLLM = false
         @Option(name: .customLong("vlm-provider"), help: "VLM provider preflight id, for example mock")
         var vlmProvider: String?
         @Flag(name: .customLong("dry-model-fixture"), help: "Append dry model/policy/action/recovery fixture events")
@@ -99,6 +107,10 @@ struct Workspace: AsyncParsableCommand {
                     adb: adb,
                     dryModelFixture: dryModelFixture,
                     llmProvider: llmProvider,
+                    llmBaseURL: llmBaseURL,
+                    llmModel: llmModel,
+                    llmAPIKeyEnv: llmAPIKeyEnv,
+                    allowRemoteLLM: allowRemoteLLM,
                     vlmProvider: vlmProvider,
                     maxSteps: maxSteps,
                     allowedActions: allowedActions,

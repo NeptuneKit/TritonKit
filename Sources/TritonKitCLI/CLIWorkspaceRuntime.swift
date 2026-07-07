@@ -19,6 +19,10 @@ struct TKWorkspaceRunRequest {
     let adb: String
     let dryModelFixture: Bool
     let llmProvider: String?
+    let llmBaseURL: String?
+    let llmModel: String?
+    let llmAPIKeyEnv: String?
+    let allowRemoteLLM: Bool
     let vlmProvider: String?
     let maxSteps: Int?
     let allowedActions: [String]
@@ -56,6 +60,10 @@ struct TKWorkspaceRunRequest {
         adb: String = "adb",
         dryModelFixture: Bool = false,
         llmProvider: String? = nil,
+        llmBaseURL: String? = nil,
+        llmModel: String? = nil,
+        llmAPIKeyEnv: String? = nil,
+        allowRemoteLLM: Bool = false,
         vlmProvider: String? = nil,
         maxSteps: Int? = nil,
         allowedActions: [String] = [],
@@ -92,6 +100,10 @@ struct TKWorkspaceRunRequest {
         self.adb = adb
         self.dryModelFixture = dryModelFixture
         self.llmProvider = llmProvider
+        self.llmBaseURL = llmBaseURL
+        self.llmModel = llmModel
+        self.llmAPIKeyEnv = llmAPIKeyEnv
+        self.allowRemoteLLM = allowRemoteLLM
         self.vlmProvider = vlmProvider
         self.maxSteps = maxSteps
         self.allowedActions = allowedActions
@@ -521,6 +533,7 @@ private func runWorkspaceRun(
     try writeWorkspaceRunConfig(response, to: runDir.appendingPathComponent("config.yaml"))
     try writeWorkspaceRunArtifacts(
         response,
+        request: request,
         runDir: runDir,
         observation: observationSeed,
         appReady: appReady,
@@ -573,7 +586,7 @@ private func runWorkspaceRun(
 }
 
 private func workspaceProviderPreflight(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceProviderPreflight {
-    let llm = try workspaceLLMProviderPreflight(request.llmProvider)
+    let llm = try workspaceLLMProviderPreflight(request)
     let vlm = try workspaceVLMProviderPreflight(request.vlmProvider)
     let providersReady = llm.ready && vlm.ready
     let providerStatus = providersReady ? "ready" : (llm.ready || vlm.ready ? "partial" : "missing")
@@ -753,9 +766,8 @@ private func workspaceShouldExecuteCandidateAction(
     return modelLoopEnabled && workspacePolicyAllowsAction(actionCandidate.action, runner: runner)
 }
 
-private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
-    guard let rawProvider = rawProvider?.trimmingCharacters(in: .whitespacesAndNewlines),
-          !rawProvider.isEmpty
+private func workspaceLLMProviderPreflight(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceProviderComponentPreflight {
+    guard let rawProvider = workspaceNonEmpty(request.llmProvider)
     else {
         return TKWorkspaceProviderComponentPreflight(
             provider: nil,
@@ -771,6 +783,70 @@ private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKW
     let provider = rawProvider.lowercased()
     switch provider {
     case "mock":
+        return TKWorkspaceProviderComponentPreflight(
+            provider: provider,
+            status: "ready",
+            phase: "llm_ready",
+            nextAction: nil
+        )
+    case "openai-compatible":
+        guard let baseURL = workspaceNonEmpty(request.llmBaseURL) else {
+            return TKWorkspaceProviderComponentPreflight(
+                provider: provider,
+                status: "missing_base_url",
+                phase: "llm_missing_base_url",
+                nextAction: TKWorkspaceNextAction(
+                    code: "configure_llm_provider",
+                    message: "openai-compatible LLM requires --llm-base-url with a local endpoint unless remote approval is explicit."
+                )
+            )
+        }
+        guard let model = workspaceNonEmpty(request.llmModel) else {
+            return TKWorkspaceProviderComponentPreflight(
+                provider: provider,
+                status: "missing_model",
+                phase: "llm_missing_model",
+                nextAction: TKWorkspaceNextAction(
+                    code: "configure_llm_provider",
+                    message: "openai-compatible LLM requires --llm-model before workspace run can call it."
+                )
+            )
+        }
+        guard let url = URL(string: baseURL), let host = url.host else {
+            return TKWorkspaceProviderComponentPreflight(
+                provider: provider,
+                status: "invalid_base_url",
+                phase: "llm_invalid_base_url",
+                nextAction: TKWorkspaceNextAction(
+                    code: "configure_llm_provider",
+                    message: "openai-compatible LLM base URL is invalid; pass an absolute http(s) URL ending at /v1."
+                )
+            )
+        }
+        if !isLocalWorkspaceProviderHost(host), !request.allowRemoteLLM {
+            return TKWorkspaceProviderComponentPreflight(
+                provider: provider,
+                status: "remote_approval_required",
+                phase: "llm_remote_approval_required",
+                nextAction: TKWorkspaceNextAction(
+                    code: "approve_remote_llm_provider",
+                    message: "Remote LLM provider \(host) requires --allow-remote-llm because workspace evidence may be sent to that endpoint."
+                )
+            )
+        }
+        if let apiKeyEnv = workspaceNonEmpty(request.llmAPIKeyEnv),
+           ProcessInfo.processInfo.environment[apiKeyEnv]?.isEmpty != false {
+            return TKWorkspaceProviderComponentPreflight(
+                provider: provider,
+                status: "missing_api_key",
+                phase: "llm_missing_api_key",
+                nextAction: TKWorkspaceNextAction(
+                    code: "configure_llm_provider",
+                    message: "LLM API key environment variable \(apiKeyEnv) is not set."
+                )
+            )
+        }
+        _ = model
         return TKWorkspaceProviderComponentPreflight(
             provider: provider,
             status: "ready",
@@ -1074,6 +1150,7 @@ private func createWorkspaceRunDirectories(_ runDir: URL) throws {
 
 private func writeWorkspaceRunArtifacts(
     _ run: TKWorkspaceRunResponse,
+    request: TKWorkspaceRunRequest,
     runDir: URL,
     observation: TKWorkspaceObservationSeed,
     appReady: TKWorkspaceAppReadyEvidence,
@@ -1101,6 +1178,16 @@ private func writeWorkspaceRunArtifacts(
     if let llmProvider = run.ai.llmProvider {
         providerArtifact["llmProvider"] = llmProvider
     }
+    if let llmBaseURL = workspaceNonEmpty(request.llmBaseURL) {
+        providerArtifact["llmBaseURL"] = redactedWorkspaceProviderBaseURL(llmBaseURL)
+    }
+    if let llmModel = workspaceNonEmpty(request.llmModel) {
+        providerArtifact["llmModel"] = llmModel
+    }
+    if let llmAPIKeyEnv = workspaceNonEmpty(request.llmAPIKeyEnv) {
+        providerArtifact["llmAPIKeyEnv"] = llmAPIKeyEnv
+    }
+    providerArtifact["allowRemoteLLM"] = request.allowRemoteLLM
     if let vlmProvider = run.ai.vlmProvider {
         providerArtifact["vlmProvider"] = vlmProvider
     }

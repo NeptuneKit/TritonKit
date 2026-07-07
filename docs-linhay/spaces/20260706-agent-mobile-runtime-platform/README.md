@@ -42,7 +42,7 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 | Device actions | `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`；Web stream gesture 已走 `/web/host-input`；unsupported 输出已有稳定 envelope | LLM/VLM loop 只能调用这些动作入口，不能直接执行底层工具 |
 | Evidence | `triton evidence capture --case <case> --output <dir.tritonevidence> --json`；证据 taxonomy 已覆盖 stdout/schema/status、host artifact、runtime snapshot/AX/ledger、input result、evidence bundle、tritonplan 等 | Atlas 和 VLM run 需要把 evidence id 作为共同索引 |
 | Replay / workflow seed | `.tritonplan`、`triton record`、`triton plan inspect`、`triton replay --dry-run`、真实 `replay` 已有机器可读 failure / recovery surface | 从探索 session 生成可审查 workflow seed，而不是只录坐标 |
-| Local LLM/VLM grounding | `triton vlm providers/ground/compare/model *` 轨道、MLX helper、模型 cache / download / preflight、grounding evidence artifacts 已有边界 | workspace run 默认启用 LLM/VLM 辅助理解和执行；每次模型参与都必须 evidence-backed、policy-gated，并写入 run ledger |
+| Local LLM/VLM grounding | `triton vlm providers/ground/compare/model *` 轨道、MLX helper、模型 cache / download / preflight、grounding evidence artifacts 已有边界；`workspace run` 已支持 `--llm-provider openai-compatible --llm-base-url <local-v1> --llm-model <model>` 调用本地 OpenAI-compatible LLM 生成单步 action candidate | workspace run 默认启用 LLM/VLM 辅助理解和执行；每次模型参与都必须 evidence-backed、policy-gated，并写入 run ledger；后续补齐 VLM grounding 与 multi-step recovery |
 | Semantic provider | runtime manifest / snapshot 已能表达 semantic state/action provider、schema、actions、redaction、evidence commands | VLM 和 Atlas 应优先消费 provider-backed 业务语义，缺失时降级为截图/hierarchy |
 | Web human slot | Web mock 已收敛到 stream / inspector；已有 target registry client、InspectTarget、InspectSession、hierarchy tabs、property sheet、stream gesture mapping | 新增 Map / Run summary 时只读 CLI/HTTP DTO，不新增 Web-only 业务语义 |
 
@@ -121,6 +121,12 @@ Given 同一条 flow 可能从登录页、首页、弹窗、深层页面或错�
 When agent 执行 workspace run 或本地 replay
 Then LLM/VLM 先做 flow bootstrap 判断，运行中持续做 flow recovery 判断；每个 bootstrap / recovery proposal 都必须有 evidence、confidence、policy decision 和 next action
 
+### 场景 9：本地 OpenAI-compatible LLM 参与 workspace decision
+
+Given 本机已有 OpenAI-compatible Chat Completions endpoint
+When agent 执行 `triton workspace run --llm-provider openai-compatible --llm-base-url http://127.0.0.1:<port>/v1 --llm-model <model> --vlm-provider mock`
+Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 goal、runner bounds、provider status 和 initial visibleTexts，并只接受一个 JSON action candidate；远端 base URL 必须显式 `--allow-remote-llm`，否则返回 setup nextAction 或 provider failure
+
 ## 验收
 
 - 对应 CLI/HTTP schema 明确列出 runtime session、app lifecycle、device action、evidence 和 workflow seed 能力。
@@ -129,6 +135,7 @@ Then LLM/VLM 先做 flow bootstrap 判断，运行中持续做 flow recovery 判
 - CLI/HTTP 和 Web DTO 必须以 target/capability 为事实源，不要求调用方预先区分真机、模拟器或仿真器。
 - 本机 Atlas map 能从 evidence 生成可查询图谱，至少覆盖 screen、state、transition、coverage 和 evidence backlink。
 - LLM/VLM 在 workspace run 中默认开启，默认用于流程稳定启动、偏航回正、理解、定位、Atlas 标注和探索决策；每次模型参与都能追溯 request / response / confidence / artifact，且所有动作经由 Triton CLI/HTTP。
+- `workspace run` 的首个真实 LLM provider 落地为 OpenAI-compatible Chat Completions：CLI 参数 `--llm-provider openai-compatible --llm-base-url --llm-model [--llm-api-key-env] [--allow-remote-llm]`，HTTP 字段为 `llmProvider/llmBaseURL/llmModel/llmAPIKeyEnv/allowRemoteLLM`；默认只允许 localhost，本地 provider 输出只能是单步 JSON action candidate。
 - 显式 `--execute-actions` / HTTP `executeActions=true` 时，模型候选动作必须来自 model decision provider 输出或默认 initial observation visibleTexts heuristic，并通过 runtime action provider 执行，写入 `evidence/actions/action-000.json`、`action.executed` 和 Atlas transition；只执行未验证时状态为 `executed_unverified`，搭配 `--observe-live` 时必须在 action 成功后再次采集 observation、写 `screen_0001/state_0001` 和 `screen_0000 -> screen_0001` transition，搭配 post-action runtime wait 通过后必须写 `business.ready` / passed `verify.checked` 并把 transition 标为 `verified`。
 - Flow bootstrap 和 flow recovery 是 LLM/VLM 的首要验收：能从不同初始场景稳定命中 start anchor，能在 selector drift、弹窗、登录过期、慢加载时给出可审计 repair proposal。
 - VLM 自主探索 loop 有可复跑 dry-run / bounded-run 模式；本地 replay / 稳定回归不能静默退出模型参与，只能把模型角色限制为 observer / verifier / repair-advisor。

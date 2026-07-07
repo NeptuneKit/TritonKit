@@ -161,6 +161,11 @@ struct WorkspaceRunTests {
         #expect(optionNames.contains("--business-ready-timeout"))
         #expect(optionNames.contains("--business-ready-interval"))
         #expect(optionNames.contains("--execute-actions"))
+        #expect(optionNames.contains("--llm-provider"))
+        #expect(optionNames.contains("--llm-base-url"))
+        #expect(optionNames.contains("--llm-model"))
+        #expect(optionNames.contains("--llm-api-key-env"))
+        #expect(optionNames.contains("--allow-remote-llm"))
         #expect(optionNames.contains("--app-mode"))
         #expect(optionNames.contains("--bundle-id"))
         #expect(optionNames.contains("--package-name"))
@@ -185,6 +190,11 @@ struct WorkspaceRunTests {
         #expect(run.optionalOptions.contains("--business-ready-timeout"))
         #expect(run.optionalOptions.contains("--business-ready-interval"))
         #expect(run.optionalOptions.contains("--execute-actions"))
+        #expect(run.optionalOptions.contains("--llm-provider"))
+        #expect(run.optionalOptions.contains("--llm-base-url"))
+        #expect(run.optionalOptions.contains("--llm-model"))
+        #expect(run.optionalOptions.contains("--llm-api-key-env"))
+        #expect(run.optionalOptions.contains("--allow-remote-llm"))
         #expect(run.optionalOptions.contains("--app-mode"))
         #expect(run.optionalOptions.contains("--bundle-id"))
         #expect(run.optionalOptions.contains("--package-name"))
@@ -675,6 +685,59 @@ struct WorkspaceRunTests {
         #expect(inspected.latestBootstrap?.phase == "provider_ready")
         #expect(inspected.latestBootstrapProposal?.command == ["triton", "act", "tap", "Continue", "--json"])
         #expect(inspected.atlas.transitionCount == 1)
+    }
+
+    @Test("workspace run marks local openai-compatible LLM ready")
+    func workspaceRunMarksLocalOpenAICompatibleLLMReady() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-openai-llm-ready",
+                target: "current",
+                app: "com.example.demo",
+                goal: "Explore login",
+                actionPolicy: "explore",
+                llmProvider: "openai-compatible",
+                llmBaseURL: "http://127.0.0.1:8000/v1",
+                llmModel: "local-workspace-model",
+                vlmProvider: "mock",
+                observationFixture: fixture.path
+            ),
+            modelDecisionProvider: { request in
+                #expect(request.llmProvider == "openai-compatible")
+                #expect(request.llmBaseURL == "http://127.0.0.1:8000/v1")
+                #expect(request.llmModel == "local-workspace-model")
+                #expect(request.vlmProvider == "mock")
+                return workspaceDefaultModelDecision(request)
+            }
+        )
+
+        #expect(run.ai.providersReady)
+        #expect(run.ai.providerStatus == "ready")
+        #expect(run.ai.llmProvider == "openai-compatible")
+        #expect(run.ai.llmProviderStatus == "ready")
+        #expect(run.nextActions.isEmpty)
+
+        let runDir = root.appendingPathComponent("run-workspace-openai-llm-ready", isDirectory: true)
+        let provider = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/provider-check.json"))
+        ) as? [String: Any]
+        #expect(provider?["llmProvider"] as? String == "openai-compatible")
+        #expect(provider?["llmProviderStatus"] as? String == "ready")
+        #expect(provider?["llmBaseURL"] as? String == "http://127.0.0.1:8000/v1")
+        #expect(provider?["llmModel"] as? String == "local-workspace-model")
+
+        let decisionRequest = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
+        ) as? [String: Any]
+        #expect(decisionRequest?["mode"] as? String == "openai-compatible-provider")
+        #expect(decisionRequest?["llmProvider"] as? String == "openai-compatible")
+        #expect(decisionRequest?["llmBaseURL"] as? String == "http://127.0.0.1:8000/v1")
+        #expect(decisionRequest?["llmModel"] as? String == "local-workspace-model")
     }
 
     @Test("workspace run records explicit target platform and scope")

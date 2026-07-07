@@ -17,6 +17,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let ability: String?
     let adb: String?
     let llmProvider: String?
+    let llmBaseURL: String?
+    let llmModel: String?
+    let llmAPIKeyEnv: String?
+    let allowRemoteLLM: Bool?
     let vlmProvider: String?
     let dryModelFixture: Bool?
     let maxSteps: Int?
@@ -54,6 +58,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         ability: String? = nil,
         adb: String? = nil,
         llmProvider: String? = nil,
+        llmBaseURL: String? = nil,
+        llmModel: String? = nil,
+        llmAPIKeyEnv: String? = nil,
+        allowRemoteLLM: Bool? = nil,
         vlmProvider: String? = nil,
         dryModelFixture: Bool? = nil,
         maxSteps: Int? = nil,
@@ -90,6 +98,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.ability = ability
         self.adb = adb
         self.llmProvider = llmProvider
+        self.llmBaseURL = llmBaseURL
+        self.llmModel = llmModel
+        self.llmAPIKeyEnv = llmAPIKeyEnv
+        self.allowRemoteLLM = allowRemoteLLM
         self.vlmProvider = vlmProvider
         self.dryModelFixture = dryModelFixture
         self.maxSteps = maxSteps
@@ -128,6 +140,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case ability
         case adb
         case llmProvider
+        case llmBaseURL
+        case llmModel
+        case llmAPIKeyEnv
+        case allowRemoteLLM
         case vlmProvider
         case dryModelFixture
         case maxSteps
@@ -165,6 +181,7 @@ func handleWorkspaceHTTPRunAsync(
     observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
     appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
     businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider,
+    modelDecisionProvider: TKWorkspaceModelDecisionProvider = workspaceDefaultModelDecisionProvider,
     actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
 ) async throws -> TKWorkspaceRunResponse {
     let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPRunRequest.self, from: body)
@@ -173,6 +190,7 @@ func handleWorkspaceHTTPRunAsync(
         observeProvider: observeProvider,
         appLifecycleProvider: appLifecycleProvider,
         businessWaitProvider: businessWaitProvider,
+        modelDecisionProvider: modelDecisionProvider,
         actionExecutionProvider: actionExecutionProvider
     )
 }
@@ -196,6 +214,10 @@ private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKW
         adb: request.adb ?? "adb",
         dryModelFixture: request.dryModelFixture ?? false,
         llmProvider: request.llmProvider,
+        llmBaseURL: request.llmBaseURL,
+        llmModel: request.llmModel,
+        llmAPIKeyEnv: request.llmAPIKeyEnv,
+        allowRemoteLLM: request.allowRemoteLLM ?? false,
         vlmProvider: request.vlmProvider,
         maxSteps: request.maxSteps,
         allowedActions: request.allowedActions ?? [],

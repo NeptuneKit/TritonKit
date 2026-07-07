@@ -96,6 +96,15 @@ runner 边界默认必须机器可读：
 - 无证据影响 pass/fail
 - 默认上传截图或 evidence 到远端模型
 
+当前已落地的真实 LLM provider 切片：
+
+- `workspace run` 支持 OpenAI-compatible Chat Completions LLM decision provider。
+- CLI 参数：`--llm-provider openai-compatible --llm-base-url <http://127.0.0.1:port/v1> --llm-model <model> [--llm-api-key-env <ENV>] [--allow-remote-llm]`。
+- HTTP 字段：`llmProvider`、`llmBaseURL`、`llmModel`、`llmAPIKeyEnv`、`allowRemoteLLM`。
+- 默认只允许 localhost / loopback；远端 base URL 必须显式 approval。
+- LLM 请求只携带 goal、app、actionPolicy、allowedActions、stopConditions、providerStatus、observationRef 和 initial visibleTexts；模型只能返回单步 JSON action candidate，Triton 继续负责 policy gate、runtime action、Atlas transition 和 evidence。
+- VLM 本轮仍以 `mock` provider 参与 readiness；真实 VLM grounding 与 recovery loop 仍是后续切片。
+
 ### Flow Bootstrap 需求
 
 Flow bootstrap 解决“同一流程在不同初始场景中稳定出发”。
@@ -354,6 +363,8 @@ run.stopped
   "nextActions": []
 }
 ```
+
+OpenAI-compatible LLM 配置不会把 API key 写入 run DTO；provider-check 和 model request artifact 只记录 redacted `llmBaseURL`、`llmModel`、`llmAPIKeyEnv` 名称和 `allowRemoteLLM`。
 
 ### App Lifecycle Evidence DTO
 

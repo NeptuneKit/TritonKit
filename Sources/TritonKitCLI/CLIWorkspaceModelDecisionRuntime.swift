@@ -1,6 +1,15 @@
 import Foundation
 
 typealias TKWorkspaceModelDecisionProvider = (TKWorkspaceModelDecisionRequest) async throws -> TKWorkspaceModelDecision
+typealias TKWorkspaceModelDecisionHTTPTransport = (_ url: URL, _ body: Data, _ headers: [String: String]) throws -> Data
+
+struct TKWorkspaceModelDecisionFailure: Error, CustomStringConvertible {
+    let code: String
+    let message: String
+    let hint: String?
+
+    var description: String { message }
+}
 
 struct TKWorkspaceModelDecisionRequest {
     let mode: String
@@ -13,6 +22,10 @@ struct TKWorkspaceModelDecisionRequest {
     let observationRef: String
     let providerStatus: String
     let llmProvider: String?
+    let llmBaseURL: String?
+    let llmModel: String?
+    let llmAPIKeyEnv: String?
+    let allowRemoteLLM: Bool
     let vlmProvider: String?
 }
 
@@ -28,7 +41,15 @@ struct TKWorkspaceModelDecision {
 }
 
 func workspaceModelLoopMode(for request: TKWorkspaceRunRequest) -> String {
-    request.dryModelFixture ? "dry-fixture" : "mock-provider"
+    if request.dryModelFixture {
+        return "dry-fixture"
+    }
+    if normalizedWorkspaceModelProvider(request.llmProvider) == "openai-compatible",
+       workspaceNonEmpty(request.llmBaseURL) != nil,
+       workspaceNonEmpty(request.llmModel) != nil {
+        return "openai-compatible-provider"
+    }
+    return "mock-provider"
 }
 
 func workspaceModelDecisionRequest(
@@ -49,6 +70,10 @@ func workspaceModelDecisionRequest(
         observationRef: "events.jsonl#observation.captured",
         providerStatus: providerPreflight.providerStatus,
         llmProvider: providerPreflight.llmProvider,
+        llmBaseURL: request.llmBaseURL,
+        llmModel: request.llmModel,
+        llmAPIKeyEnv: request.llmAPIKeyEnv,
+        allowRemoteLLM: request.allowRemoteLLM,
         vlmProvider: providerPreflight.vlmProvider
     )
 }
@@ -56,7 +81,10 @@ func workspaceModelDecisionRequest(
 func workspaceDefaultModelDecisionProvider(
     _ request: TKWorkspaceModelDecisionRequest
 ) async throws -> TKWorkspaceModelDecision {
-    workspaceDefaultModelDecision(request)
+    if normalizedWorkspaceModelProvider(request.llmProvider) == "openai-compatible" {
+        return try await workspaceOpenAICompatibleModelDecisionProvider(request)
+    }
+    return workspaceDefaultModelDecision(request)
 }
 
 func workspaceDefaultModelDecision(_ request: TKWorkspaceModelDecisionRequest) -> TKWorkspaceModelDecision {
@@ -85,10 +113,287 @@ func workspaceDefaultModelDecisionRequestContext(
     if let llmProvider = request.llmProvider {
         context["llmProvider"] = llmProvider
     }
+    if let llmBaseURL = workspaceNonEmpty(request.llmBaseURL) {
+        context["llmBaseURL"] = redactedWorkspaceProviderBaseURL(llmBaseURL)
+    }
+    if let llmModel = workspaceNonEmpty(request.llmModel) {
+        context["llmModel"] = llmModel
+    }
+    if let llmAPIKeyEnv = workspaceNonEmpty(request.llmAPIKeyEnv) {
+        context["llmAPIKeyEnv"] = llmAPIKeyEnv
+    }
+    context["allowRemoteLLM"] = request.allowRemoteLLM
     if let vlmProvider = request.vlmProvider {
         context["vlmProvider"] = vlmProvider
     }
     return context
+}
+
+func workspaceOpenAICompatibleModelDecisionProvider(
+    _ request: TKWorkspaceModelDecisionRequest,
+    httpTransport: TKWorkspaceModelDecisionHTTPTransport? = nil
+) async throws -> TKWorkspaceModelDecision {
+    guard let baseURLString = workspaceNonEmpty(request.llmBaseURL) else {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_openai_base_url_required",
+            message: "--llm-base-url is required for --llm-provider openai-compatible",
+            hint: "Use a local OpenAI-compatible endpoint first, for example http://127.0.0.1:8000/v1"
+        )
+    }
+    guard let model = workspaceNonEmpty(request.llmModel) else {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_openai_model_required",
+            message: "--llm-model is required for --llm-provider openai-compatible",
+            hint: "Pass the local model served by your OpenAI-compatible endpoint"
+        )
+    }
+    guard let baseURL = URL(string: baseURLString), let host = baseURL.host else {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_openai_base_url_invalid",
+            message: "Invalid OpenAI-compatible LLM base URL \(baseURLString)",
+            hint: "Pass an absolute http(s) URL ending at the OpenAI-compatible /v1 base"
+        )
+    }
+    if !isLocalWorkspaceProviderHost(host), !request.allowRemoteLLM {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_remote_provider_requires_approval",
+            message: "Remote LLM provider \(host) requires explicit approval",
+            hint: "Pass --allow-remote-llm only when uploading local workspace evidence is intended"
+        )
+    }
+    let apiKey = try workspaceModelDecisionAPIKey(from: request.llmAPIKeyEnv)
+    let requestURL = baseURL.appendingPathComponent("chat/completions")
+    let body = try makeWorkspaceOpenAICompatibleDecisionRequestBody(request: request, model: model)
+    var headers = [
+        "Content-Type": "application/json",
+    ]
+    if let apiKey, !apiKey.isEmpty {
+        headers["Authorization"] = "Bearer \(apiKey)"
+    }
+
+    let responseData: Data
+    do {
+        if let httpTransport {
+            responseData = try httpTransport(requestURL, body, headers)
+        } else {
+            responseData = try postWorkspaceModelDecisionJSON(url: requestURL, body: body, headers: headers)
+        }
+    } catch let failure as TKWorkspaceModelDecisionFailure {
+        throw failure
+    } catch {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_provider_request_failed",
+            message: "OpenAI-compatible workspace LLM request failed: \(error)",
+            hint: "Check --llm-base-url and provider availability"
+        )
+    }
+
+    let rawText = try parseWorkspaceOpenAICompatibleText(responseData)
+    let parsed = try parseWorkspaceOpenAICompatibleDecision(rawText)
+    let candidate = TKWorkspaceActionCandidate(
+        action: parsed.action,
+        query: parsed.query,
+        source: "openai-compatible.llm"
+    )
+    return TKWorkspaceModelDecision(
+        candidate: candidate,
+        confidence: parsed.confidence,
+        summary: parsed.summary,
+        expected: parsed.expected,
+        usedVLM: false,
+        requestContext: [
+            "llmProvider": "openai-compatible",
+            "llmBaseURL": redactedWorkspaceProviderBaseURL(baseURLString) ?? baseURLString,
+            "llmModel": model,
+            "network": "openai-compatible",
+        ],
+        bootstrapResponseText: rawText,
+        decisionResponseText: rawText
+    )
+}
+
+private struct TKWorkspaceOpenAICompatibleDecisionPayload: Decodable {
+    let action: String
+    let query: String
+    let confidence: Double?
+    let summary: String?
+    let expected: String?
+}
+
+private struct TKWorkspaceParsedModelDecision {
+    let action: String
+    let query: String
+    let confidence: Double
+    let summary: String
+    let expected: String
+}
+
+private func makeWorkspaceOpenAICompatibleDecisionRequestBody(
+    request: TKWorkspaceModelDecisionRequest,
+    model: String
+) throws -> Data {
+    let prompt = """
+    Return only one JSON object with keys action, query, confidence, summary, and expected.
+    Use one action from allowedActions.
+    Prefer stable visible text selectors when possible.
+    goal: \(request.goal)
+    app: \(request.app)
+    actionPolicy: \(request.actionPolicy)
+    allowedActions: \(request.allowedActions)
+    stopConditions: \(request.stopConditions)
+    providerStatus: \(request.providerStatus)
+    observationRef: \(request.observationRef)
+    visibleTexts: \(request.visibleTexts)
+    """
+    let payload: [String: Any] = [
+        "model": model,
+        "temperature": 0,
+        "messages": [
+            [
+                "role": "system",
+                "content": "You are TritonKit's local workspace decision provider. Propose exactly one bounded UI action candidate; Triton executes and verifies it.",
+            ],
+            [
+                "role": "user",
+                "content": prompt,
+            ],
+        ],
+    ]
+    guard JSONSerialization.isValidJSONObject(payload) else {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_provider_request_invalid",
+            message: "OpenAI-compatible workspace LLM payload is not valid JSON",
+            hint: nil
+        )
+    }
+    return try JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys])
+}
+
+private func parseWorkspaceOpenAICompatibleText(_ data: Data) throws -> String {
+    do {
+        return try parseOpenAICompatibleText(data)
+    } catch let failure as TKVLMGroundingFailure {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_provider_response_invalid",
+            message: failure.message,
+            hint: "Expected Chat Completions-compatible JSON with choices[0].message.content"
+        )
+    } catch {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_provider_response_invalid",
+            message: "OpenAI-compatible workspace LLM response is invalid: \(error)",
+            hint: "Expected Chat Completions-compatible JSON with choices[0].message.content"
+        )
+    }
+}
+
+private func parseWorkspaceOpenAICompatibleDecision(_ text: String) throws -> TKWorkspaceParsedModelDecision {
+    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    let data = Data(trimmed.utf8)
+    let payload: TKWorkspaceOpenAICompatibleDecisionPayload
+    do {
+        payload = try JSONDecoder().decode(TKWorkspaceOpenAICompatibleDecisionPayload.self, from: data)
+    } catch {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_decision_unparseable",
+            message: "Workspace LLM decision is not valid JSON: \(error)",
+            hint: #"Return only JSON like {"action":"tap","query":"Continue","confidence":0.8}"#
+        )
+    }
+    let action = payload.action.trimmingCharacters(in: .whitespacesAndNewlines)
+    let query = payload.query.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !action.isEmpty, !query.isEmpty else {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_decision_unparseable",
+            message: "Workspace LLM decision must contain non-empty action and query",
+            hint: #"Return only JSON like {"action":"tap","query":"Continue","confidence":0.8}"#
+        )
+    }
+    let confidence = min(max(payload.confidence ?? 0.5, 0), 1)
+    return TKWorkspaceParsedModelDecision(
+        action: action,
+        query: query,
+        confidence: confidence,
+        summary: workspaceNonEmpty(payload.summary) ?? "OpenAI-compatible workspace LLM selected \(action) \(query).",
+        expected: workspaceNonEmpty(payload.expected) ?? "\(query) advances the current goal."
+    )
+}
+
+private func workspaceModelDecisionAPIKey(from apiKeyEnv: String?) throws -> String? {
+    guard let apiKeyEnv = workspaceNonEmpty(apiKeyEnv) else {
+        return nil
+    }
+    guard let value = ProcessInfo.processInfo.environment[apiKeyEnv], !value.isEmpty else {
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_api_key_missing",
+            message: "Environment variable \(apiKeyEnv) is not set",
+            hint: "Set \(apiKeyEnv) or omit --llm-api-key-env for local unauthenticated providers"
+        )
+    }
+    return value
+}
+
+private func postWorkspaceModelDecisionJSON(url: URL, body: Data, headers: [String: String]) throws -> Data {
+    var request = URLRequest(url: url)
+    request.httpMethod = "POST"
+    request.httpBody = body
+    request.timeoutInterval = 30
+    for (key, value) in headers {
+        request.setValue(value, forHTTPHeaderField: key)
+    }
+
+    let semaphore = DispatchSemaphore(value: 0)
+    var result: Result<(Data, URLResponse), Error>?
+    URLSession.shared.dataTask(with: request) { data, response, error in
+        if let error {
+            result = .failure(error)
+        } else {
+            result = .success((data ?? Data(), response ?? URLResponse()))
+        }
+        semaphore.signal()
+    }.resume()
+    semaphore.wait()
+
+    let (data, response) = try result?.get() ?? (Data(), URLResponse())
+    if let http = response as? HTTPURLResponse, !(200..<300).contains(http.statusCode) {
+        let body = String(data: data, encoding: .utf8) ?? ""
+        throw TKWorkspaceModelDecisionFailure(
+            code: "workspace_llm_provider_request_failed",
+            message: "OpenAI-compatible workspace LLM returned HTTP \(http.statusCode): \(body)",
+            hint: "Inspect provider logs and response body"
+        )
+    }
+    return data
+}
+
+func normalizedWorkspaceModelProvider(_ value: String?) -> String? {
+    workspaceNonEmpty(value)?.lowercased()
+}
+
+func workspaceNonEmpty(_ value: String?) -> String? {
+    let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+    return trimmed.isEmpty ? nil : trimmed
+}
+
+func isLocalWorkspaceProviderHost(_ host: String) -> Bool {
+    let normalized = host.lowercased()
+    return normalized == "localhost" ||
+        normalized == "127.0.0.1" ||
+        normalized == "::1" ||
+        normalized == "[::1]"
+}
+
+func redactedWorkspaceProviderBaseURL(_ baseURL: String?) -> String? {
+    guard let baseURL, var components = URLComponents(string: baseURL) else {
+        return baseURL
+    }
+    if components.password != nil {
+        components.password = "<redacted>"
+    }
+    if components.user != nil {
+        components.user = "<redacted>"
+    }
+    return components.string ?? baseURL
 }
 
 func writeWorkspaceModelDecisionArtifacts(
