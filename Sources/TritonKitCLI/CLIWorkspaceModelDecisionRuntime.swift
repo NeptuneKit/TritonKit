@@ -426,8 +426,17 @@ func writeWorkspaceModelDecisionArtifacts(
     actionExecution: TKWorkspaceActionExecutionResult?,
     postActionObservation: TKWorkspaceObservationSeed?,
     modelRequest: TKWorkspaceModelDecisionRequest,
-    modelDecision: TKWorkspaceModelDecision
+    modelDecision: TKWorkspaceModelDecision,
+    artifactIndex: Int = 0,
+    fromScreenID: String = "screen_0000",
+    toScreenID: String? = nil,
+    appendAtlasDelta: Bool = false,
+    writeFlow: Bool = true
 ) throws {
+    let suffix = workspaceArtifactSuffix(artifactIndex)
+    let graphSuffix = workspaceGraphSuffix(artifactIndex)
+    let transitionID = "transition_\(graphSuffix)"
+    let resolvedToScreenID = toScreenID ?? (postActionObservation == nil ? fromScreenID : "screen_0001")
     let actionCandidate = modelDecision.candidate
     let command = actionCandidate.command
     try writeWorkspaceJSONArtifact(
@@ -439,11 +448,11 @@ func writeWorkspaceModelDecisionArtifacts(
             modelRequest: modelRequest,
             modelDecision: modelDecision
         ),
-        to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-request.redacted.json")
+        to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-\(suffix)-request.redacted.json")
     )
     try workspaceWriteRawModelResponse(
         modelDecision.bootstrapResponseText,
-        to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-response.raw.txt")
+        to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-\(suffix)-response.raw.txt")
     )
     try writeWorkspaceJSONArtifact([
         "summary": modelDecision.summary,
@@ -453,24 +462,24 @@ func writeWorkspaceModelDecisionArtifacts(
         "evidenceId": "ev_0000",
         "expected": modelDecision.expected,
         "artifacts": [
-            "request": "evidence/model/bootstrap-proposal-000-request.redacted.json",
-            "response": "evidence/model/bootstrap-proposal-000-response.raw.txt",
+            "request": "evidence/model/bootstrap-proposal-\(suffix)-request.redacted.json",
+            "response": "evidence/model/bootstrap-proposal-\(suffix)-response.raw.txt",
         ],
-    ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000.json"))
+    ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-\(suffix).json"))
     try writeWorkspaceJSONArtifact(
         workspaceModelDecisionRequestArtifact(
             run: run,
             mode: mode,
             task: "decide",
-            bootstrapProposalRef: "evidence/model/bootstrap-proposal-000.json",
+            bootstrapProposalRef: "evidence/model/bootstrap-proposal-\(suffix).json",
             modelRequest: modelRequest,
             modelDecision: modelDecision
         ),
-        to: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json")
+        to: runDir.appendingPathComponent("evidence/model/decision-\(suffix)-request.redacted.json")
     )
     try workspaceWriteRawModelResponse(
         modelDecision.decisionResponseText,
-        to: runDir.appendingPathComponent("evidence/model/decision-000-response.raw.txt")
+        to: runDir.appendingPathComponent("evidence/model/decision-\(suffix)-response.raw.txt")
     )
     try writeWorkspaceJSONArtifact([
         "summary": modelDecision.summary,
@@ -479,10 +488,10 @@ func writeWorkspaceModelDecisionArtifacts(
         "candidateSource": actionCandidate.source,
         "usedVLM": modelDecision.usedVLM,
         "artifacts": [
-            "request": "evidence/model/decision-000-request.redacted.json",
-            "response": "evidence/model/decision-000-response.raw.txt",
+            "request": "evidence/model/decision-\(suffix)-request.redacted.json",
+            "response": "evidence/model/decision-\(suffix)-response.raw.txt",
         ],
-    ], to: runDir.appendingPathComponent("evidence/model/decision-000.json"))
+    ], to: runDir.appendingPathComponent("evidence/model/decision-\(suffix).json"))
     if !policyAllowed {
         try writeWorkspaceJSONArtifact([
             "allowed": false,
@@ -491,31 +500,31 @@ func writeWorkspaceModelDecisionArtifacts(
             "action": actionCandidate.action,
             "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
             "command": command,
-        ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
+        ], to: runDir.appendingPathComponent("evidence/model/policy-\(suffix).json"))
         try writeWorkspaceJSONArtifact([
             "failureCode": "policy_rejected",
             "kind": "policy_rejected",
             "proposal": "stop",
             "reason": "candidate action is outside runner allowedActions",
-        ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+        ], to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json"))
         return
     }
     try writeWorkspaceJSONArtifact([
         "allowed": true,
-        "reason": "\(mode) command is low-risk and single-step",
+        "reason": "\(mode) command is allowed by the bounded runner policy",
         "command": command,
-    ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
+    ], to: runDir.appendingPathComponent("evidence/model/policy-\(suffix).json"))
     if let actionExecution {
         try writeWorkspaceJSONArtifact(
-            try workspaceActionExecutionArtifact(actionExecution, runDir: runDir),
-            to: runDir.appendingPathComponent("evidence/actions/action-000.json")
+            try workspaceActionExecutionArtifact(actionExecution, runDir: runDir, artifactIndex: artifactIndex),
+            to: runDir.appendingPathComponent("evidence/actions/action-\(suffix).json")
         )
     } else {
         try writeWorkspaceJSONArtifact([
             "ok": true,
             "mode": mode,
             "command": command,
-        ], to: runDir.appendingPathComponent("evidence/actions/action-000.json"))
+        ], to: runDir.appendingPathComponent("evidence/actions/action-\(suffix).json"))
     }
     if let businessCheckpoint, businessCheckpoint.stage == .postAction {
         try writeWorkspaceJSONArtifact([
@@ -526,14 +535,14 @@ func writeWorkspaceModelDecisionArtifacts(
             "businessRef": businessCheckpoint.readiness.ref,
             "check": businessCheckpoint.readiness.check,
             "phase": businessCheckpoint.readiness.phase,
-        ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
+        ], to: runDir.appendingPathComponent("evidence/model/verify-\(suffix).json"))
         if !businessCheckpoint.ready {
             try writeWorkspaceJSONArtifact([
                 "failureCode": "business_checkpoint_missing",
                 "kind": "post_action_business_not_ready",
                 "proposal": "stop",
                 "businessRef": businessCheckpoint.readiness.ref,
-            ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+            ], to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json"))
         }
     } else {
         try writeWorkspaceJSONArtifact([
@@ -541,26 +550,44 @@ func writeWorkspaceModelDecisionArtifacts(
             "reason": actionExecution == nil
                 ? "\(mode) simulates expected screen missing"
                 : "action executed without a post-action business verification request",
-        ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
+        ], to: runDir.appendingPathComponent("evidence/model/verify-\(suffix).json"))
         try writeWorkspaceJSONArtifact([
             "failureCode": "expected_screen_missing",
             "kind": actionExecution == nil ? "selector_drift" : "post_action_unverified",
             "proposal": "stop",
-        ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+        ], to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json"))
     }
-    let toScreenID = postActionObservation == nil ? "screen_0000" : "screen_0001"
-    try """
-    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"\(toScreenID)","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint))","confidence":\(modelDecision.confidence),"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
-    """.write(to: runDir.appendingPathComponent("atlas/deltas.jsonl"), atomically: true, encoding: .utf8)
-    try """
-    schemaVersion: 1
-    kind: triton.workspace.flow
-    steps:
-      - action: \(actionCandidate.action)
-        target: "\(yamlEscaped(actionCandidate.query))"
-        evidenceRef: events.jsonl#action.executed
+    let deltaLine = """
+    {"deltaId":"atlas_delta_\(graphSuffix)","kind":"transition","transitionId":"\(transitionID)","fromScreenId":"\(fromScreenID)","toScreenId":"\(resolvedToScreenID)","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint))","confidence":\(modelDecision.confidence),"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-\(suffix).json","evidence/model/verify-\(suffix).json"]}
+    """
+    try writeWorkspaceAtlasDeltaLine(
+        deltaLine,
+        to: runDir.appendingPathComponent("atlas/deltas.jsonl"),
+        append: appendAtlasDelta
+    )
+    if writeFlow {
+        try """
+        schemaVersion: 1
+        kind: triton.workspace.flow
+        steps:
+          - action: \(actionCandidate.action)
+            target: "\(yamlEscaped(actionCandidate.query))"
+            evidenceRef: events.jsonl#action.executed
 
-    """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
+        """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
+    }
+}
+
+func writeWorkspaceAtlasDeltaLine(_ line: String, to url: URL, append: Bool) throws {
+    let text = line.hasSuffix("\n") ? line : "\(line)\n"
+    if append, FileManager.default.fileExists(atPath: url.path) {
+        let handle = try FileHandle(forWritingTo: url)
+        defer { handle.closeFile() }
+        handle.seekToEndOfFile()
+        handle.write(Data(text.utf8))
+    } else {
+        try text.write(to: url, atomically: true, encoding: .utf8)
+    }
 }
 
 private func workspaceModelDecisionRequestArtifact(

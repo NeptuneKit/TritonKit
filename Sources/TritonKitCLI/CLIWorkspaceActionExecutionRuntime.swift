@@ -155,7 +155,11 @@ func workspaceDefaultActionExecutionProvider(
     )
 }
 
-func workspaceActionExecutionArtifact(_ result: TKWorkspaceActionExecutionResult, runDir: URL) throws -> [String: Any] {
+func workspaceActionExecutionArtifact(
+    _ result: TKWorkspaceActionExecutionResult,
+    runDir: URL,
+    artifactIndex: Int = 0
+) throws -> [String: Any] {
     var artifact: [String: Any] = [
         "schemaVersion": 1,
         "kind": "triton.workspace.action-execution",
@@ -178,7 +182,11 @@ func workspaceActionExecutionArtifact(_ result: TKWorkspaceActionExecutionResult
     }
     if let grounding = result.vlmGrounding {
         artifact["usedVLMGrounding"] = true
-        artifact["vlmGrounding"] = workspaceVLMGroundingActionArtifact(grounding, runDir: runDir)
+        artifact["vlmGrounding"] = workspaceVLMGroundingActionArtifact(
+            grounding,
+            runDir: runDir,
+            artifactIndex: artifactIndex
+        )
     } else {
         artifact["usedVLMGrounding"] = false
     }
@@ -236,10 +244,12 @@ private func workspaceEncodableJSONObject<T: Encodable>(_ value: T) throws -> An
 
 private func workspaceVLMGroundingActionArtifact(
     _ grounding: TKVLMGroundResponse,
-    runDir: URL
+    runDir: URL,
+    artifactIndex: Int = 0
 ) -> [String: Any] {
+    let suffix = workspaceArtifactSuffix(artifactIndex)
     var payload: [String: Any] = [
-        "ref": "evidence/actions/vlm-000/vlm-grounding.json",
+        "ref": "evidence/actions/vlm-\(suffix)/vlm-grounding.json",
         "provider": grounding.provider,
         "target": grounding.target,
         "coordinateSpace": grounding.point.coordinateSpace,

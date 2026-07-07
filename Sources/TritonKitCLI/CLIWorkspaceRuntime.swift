@@ -418,6 +418,35 @@ func runWorkspaceRunAsync(
     let providerPreflight = try workspaceProviderPreflight(request)
     let modelLoopMode = workspaceModelLoopMode(for: request)
     let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
+    let appReady = workspaceAppReadyEvidence(
+        lifecycle: appLifecycle,
+        observation: observationSeed,
+        observedAfterLifecycle: request.observeLive
+    )
+    let initialBusinessCheckpoint = request.executeActions
+        ? workspaceBusinessVisibleTextCheckpoint(for: request, observation: observationSeed, appReady: appReady)
+        : nil
+    if workspaceShouldUseBoundedActionLoop(
+        request: request,
+        runner: runner,
+        providerPreflight: providerPreflight,
+        initialBusinessCheckpoint: initialBusinessCheckpoint
+    ) {
+        return try await runWorkspaceActionLoop(
+            request: request,
+            initialObservation: observationSeed,
+            appReady: appReady,
+            runner: runner,
+            providerPreflight: providerPreflight,
+            modelLoopMode: modelLoopMode,
+            initialBusinessCheckpoint: initialBusinessCheckpoint,
+            observeProvider: observeProvider,
+            businessWaitProvider: businessWaitProvider,
+            modelDecisionProvider: modelDecisionProvider,
+            vlmGroundingProvider: vlmGroundingProvider,
+            actionExecutionProvider: actionExecutionProvider
+        )
+    }
     let modelDecision = modelLoopEnabled
         ? try await modelDecisionProvider(workspaceModelDecisionRequest(
             for: request,
@@ -428,14 +457,6 @@ func runWorkspaceRunAsync(
         ))
         : nil
     let actionCandidate = modelDecision?.candidate ?? workspaceModelActionCandidate(from: observationSeed)
-    let appReady = workspaceAppReadyEvidence(
-        lifecycle: appLifecycle,
-        observation: observationSeed,
-        observedAfterLifecycle: request.observeLive
-    )
-    let initialBusinessCheckpoint = request.executeActions
-        ? workspaceBusinessVisibleTextCheckpoint(for: request, observation: observationSeed, appReady: appReady)
-        : nil
     let actionExecution: TKWorkspaceActionExecutionResult?
     if try workspaceShouldExecuteCandidateAction(
         request,
@@ -693,11 +714,11 @@ private func normalizedWorkspaceRunnerValue(_ value: String) -> String {
     value.trimmingCharacters(in: .whitespacesAndNewlines)
 }
 
-private func workspacePolicyAllowsAction(_ action: String, runner: TKWorkspaceRunRunner) -> Bool {
+func workspacePolicyAllowsAction(_ action: String, runner: TKWorkspaceRunRunner) -> Bool {
     runner.allowedActions.contains(action)
 }
 
-private func workspaceRunFinalState(
+func workspaceRunFinalState(
     providerPreflight: TKWorkspaceProviderPreflight,
     dryModelFixture: Bool,
     modelLoopEnabled: Bool,
@@ -761,7 +782,7 @@ private func workspaceRunFinalState(
     )
 }
 
-private func workspaceRunNextActions(
+func workspaceRunNextActions(
     providerNextActions: [TKWorkspaceNextAction],
     finalState: TKWorkspaceRunFinalState,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
@@ -811,7 +832,7 @@ private func workspaceShouldExecuteCandidateAction(
     return modelLoopEnabled && workspacePolicyAllowsAction(actionCandidate.action, runner: runner)
 }
 
-private func workspaceTargetMetadata(platform: String?, scope: String?) -> (platform: String, scope: String) {
+func workspaceTargetMetadata(platform: String?, scope: String?) -> (platform: String, scope: String) {
     (
         platform: normalizedWorkspaceTargetValue(platform, defaultValue: "unknown"),
         scope: normalizedWorkspaceTargetValue(scope, defaultValue: "current")
@@ -998,7 +1019,7 @@ private func workspaceAtlasSummary(runDir: URL) throws -> TKWorkspaceAtlasSummar
     )
 }
 
-private func createWorkspaceRunDirectories(_ runDir: URL) throws {
+func createWorkspaceRunDirectories(_ runDir: URL) throws {
     for relativePath in [
         "",
         "evidence/observations",
@@ -1114,11 +1135,11 @@ private func writeWorkspaceRunArtifacts(
     )
 }
 
-private func writeWorkspaceRun(_ run: TKWorkspaceRunResponse, to url: URL) throws {
+func writeWorkspaceRun(_ run: TKWorkspaceRunResponse, to url: URL) throws {
     try encodeCompactJSON(run).write(to: url, atomically: true, encoding: .utf8)
 }
 
-private func writeWorkspaceEvents(_ events: [TKTestRunEvent], to url: URL) throws {
+func writeWorkspaceEvents(_ events: [TKTestRunEvent], to url: URL) throws {
     let text = try events.map(encodeCompactJSON).joined(separator: "\n") + "\n"
     try text.write(to: url, atomically: true, encoding: .utf8)
 }
@@ -1131,7 +1152,7 @@ private func appendWorkspaceEvent(_ event: TKTestRunEvent, to url: URL) throws {
     handle.write(Data(line.utf8))
 }
 
-private func writeWorkspaceRunConfig(_ run: TKWorkspaceRunResponse, to url: URL) throws {
+func writeWorkspaceRunConfig(_ run: TKWorkspaceRunResponse, to url: URL) throws {
     let runner = run.runner ?? TKWorkspaceRunRunner(
         actionPolicy: run.ai.actionPolicy,
         maxSteps: defaultWorkspaceRunnerMaxSteps,
@@ -1167,7 +1188,7 @@ private func workspaceYAMLList(_ values: [String]) -> String {
         .joined(separator: "\n")
 }
 
-private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
+func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
     if ai.providerStatus == "ready" {
         return "provider_ready"
     }
@@ -1258,7 +1279,7 @@ private func workspaceAtlasDocument(
     ]
 }
 
-private func workspaceAtlasObservationRefs(
+func workspaceAtlasObservationRefs(
     _ observation: TKWorkspaceObservationSeed,
     eventRef: String,
     evidenceIndex: Int
@@ -1277,7 +1298,7 @@ private func workspaceAtlasObservationRefs(
     ] as [String?]).compactMap { $0 }
 }
 
-private func workspaceAtlasScreen(
+func workspaceAtlasScreen(
     screenID: String,
     stateID: String,
     observation: TKWorkspaceObservationSeed,
@@ -1293,7 +1314,7 @@ private func workspaceAtlasScreen(
     ]
 }
 
-private func workspaceAtlasState(
+func workspaceAtlasState(
     stateID: String,
     screenID: String,
     phase: String,

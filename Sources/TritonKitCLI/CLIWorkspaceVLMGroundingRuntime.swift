@@ -37,7 +37,8 @@ func workspaceVLMGroundingForAction(
     actionCandidate: TKWorkspaceActionCandidate,
     runDir: URL,
     providerPreflight: TKWorkspaceProviderPreflight,
-    vlmGroundingProvider: TKWorkspaceVLMGroundingProvider
+    vlmGroundingProvider: TKWorkspaceVLMGroundingProvider,
+    artifactIndex: Int = 0
 ) async throws -> TKVLMGroundResponse? {
     guard actionCandidate.action == "tap",
           providerPreflight.vlmProviderStatus == "ready",
@@ -48,10 +49,12 @@ func workspaceVLMGroundingForAction(
     }
 
     try FileManager.default.createDirectory(at: runDir, withIntermediateDirectories: true)
-    let coordinateContractURL = runDir.appendingPathComponent("coordinate-contract.json")
+    let suffix = workspaceArtifactSuffix(artifactIndex)
+    let coordinateContractName = artifactIndex == 0 ? "coordinate-contract.json" : "coordinate-contract-\(suffix).json"
+    let coordinateContractURL = runDir.appendingPathComponent(coordinateContractName)
     try writeWorkspaceVLMCoordinateContract(imagePath: image, to: coordinateContractURL)
 
-    let outputURL = runDir.appendingPathComponent("evidence/actions/vlm-000", isDirectory: true)
+    let outputURL = runDir.appendingPathComponent("evidence/actions/vlm-\(suffix)", isDirectory: true)
     try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
     let grounding = try await vlmGroundingProvider(TKWorkspaceVLMGroundingRequest(
         provider: provider,

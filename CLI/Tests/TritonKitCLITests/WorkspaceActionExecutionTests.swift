@@ -470,6 +470,142 @@ struct WorkspaceActionExecutionTests {
         #expect(deltas.contains(#""toScreenId":"screen_0001""#))
     }
 
+    @Test("workspace run continues bounded loop after failed business checkpoint")
+    func workspaceRunContinuesBoundedLoopAfterFailedBusinessCheckpoint() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        var observeRequests: [TKWorkspaceLiveObserveRequest] = []
+        var decisionRequests: [TKWorkspaceModelDecisionRequest] = []
+        var actionRequests: [TKWorkspaceActionExecutionRequest] = []
+        var waitCount = 0
+
+        let snapshots: [([String], String)] = [
+            (["Login", "Continue"], "login"),
+            (["Interstitial", "Next"], "interstitial"),
+            (["Dashboard"], "dashboard"),
+        ]
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-bounded-loop",
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Reach dashboard through intermediate screen",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                maxSteps: 2,
+                observeLive: true,
+                observeKind: "tree",
+                observeMaxNodes: 25,
+                businessReadyText: "Dashboard",
+                businessReadyLiveWait: true,
+                businessReadyTimeout: 2,
+                businessReadyInterval: 0.25,
+                executeActions: true
+            ),
+            observeProvider: { request in
+                observeRequests.append(request)
+                let snapshot = snapshots[min(observeRequests.count - 1, snapshots.count - 1)]
+                return fakeLiveObserveOutput(
+                    for: request,
+                    visibleTexts: snapshot.0,
+                    artifactStem: snapshot.1
+                )
+            },
+            businessWaitProvider: { request in
+                waitCount += 1
+                if waitCount == 1 {
+                    return failedBusinessWaitResult(
+                        query: request.query,
+                        timeout: request.timeout,
+                        interval: request.interval
+                    )
+                }
+                return successfulBusinessWaitResult(
+                    query: request.query,
+                    timeout: request.timeout,
+                    interval: request.interval
+                )
+            },
+            modelDecisionProvider: { request in
+                decisionRequests.append(request)
+                return workspaceDefaultModelDecision(request)
+            },
+            actionExecutionProvider: { request in
+                actionRequests.append(request)
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "passed")
+        #expect(observeRequests.count == 3)
+        #expect(decisionRequests.map(\.visibleTexts) == [
+            ["Login", "Continue"],
+            ["Interstitial", "Next"],
+        ])
+        #expect(actionRequests.compactMap(\.query) == ["Continue", "Next"])
+        #expect(waitCount == 2)
+
+        let runDir = root.appendingPathComponent("run-workspace-bounded-loop", isDirectory: true)
+        for relativePath in [
+            "evidence/actions/action-000.json",
+            "evidence/actions/action-001.json",
+            "evidence/model/decision-000.json",
+            "evidence/model/decision-001.json",
+            "evidence/model/verify-000.json",
+            "evidence/model/verify-001.json",
+            "evidence/observations/0002.json",
+        ] {
+            #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent(relativePath).path))
+        }
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let actionEvents = parsed.events.filter { $0.type == .actionExecuted }
+        #expect(actionEvents.map(\.stepIndex) == [1, 2])
+        let modelEvents = parsed.events.filter { $0.type == .modelDecided }
+        #expect(modelEvents.map(\.stepIndex) == [1, 2])
+        let observationEvents = parsed.events.filter { $0.type == .observationCaptured }
+        #expect(observationEvents.map(\.stepIndex) == [0, 1, 2])
+        #expect(observationEvents.last?.screenCandidate?.visibleTexts == ["Dashboard"])
+        let businessEvents = parsed.events.filter { $0.type == .businessReady }
+        #expect(businessEvents.map(\.phase) == ["post_action_wait_timeout", "post_action_wait_matched"])
+        #expect(parsed.events.last?.type == .runFinished)
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let screens = try #require(atlas?["screens"] as? [[String: Any]])
+        let states = try #require(atlas?["states"] as? [[String: Any]])
+        let transitions = try #require(atlas?["transitions"] as? [[String: Any]])
+        let coverage = try #require(atlas?["coverage"] as? [String: Any])
+        #expect(screens.count == 3)
+        #expect(states.count == 3)
+        #expect(transitions.count == 2)
+        #expect(screens.last?["dominantTexts"] as? [String] == ["Dashboard"])
+        #expect(transitions.map { $0["transitionId"] as? String } == ["transition_0000", "transition_0001"])
+        #expect(transitions.map { $0["status"] as? String } == ["verification_failed", "verified"])
+        #expect(transitions.first?["fromScreenId"] as? String == "screen_0000")
+        #expect(transitions.first?["toScreenId"] as? String == "screen_0001")
+        #expect(transitions.last?["fromScreenId"] as? String == "screen_0001")
+        #expect(transitions.last?["toScreenId"] as? String == "screen_0002")
+        #expect(coverage["screenCount"] as? Int == 3)
+        #expect(coverage["stateCount"] as? Int == 3)
+        #expect(coverage["transitionCount"] as? Int == 2)
+
+        let deltas = try String(
+            contentsOf: runDir.appendingPathComponent("atlas/deltas.jsonl"),
+            encoding: .utf8
+        )
+        #expect(deltas.components(separatedBy: "\n").filter { !$0.isEmpty }.count == 2)
+        #expect(deltas.contains(#""transitionId":"transition_0001""#))
+    }
+
     @Test("workspace run skips explicit action execution after business checkpoint passes")
     func workspaceRunSkipsExplicitActionExecutionAfterBusinessCheckpointPasses() async throws {
         let root = temporaryRunsDirectory()

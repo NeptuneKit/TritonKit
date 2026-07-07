@@ -93,50 +93,55 @@ func workspaceModelDecisionEvents(
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     actionExecution: TKWorkspaceActionExecutionResult?,
     postActionObservation: TKWorkspaceObservationSeed?,
-    actionCandidate: TKWorkspaceActionCandidate
+    actionCandidate: TKWorkspaceActionCandidate,
+    artifactIndex: Int = 0,
+    recoveryCommand: [String] = ["stop"]
 ) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
     let command = actionCandidate.command
     let failureMode = mode.replacingOccurrences(of: "-", with: "_")
+    let suffix = workspaceArtifactSuffix(artifactIndex)
+    let stepIndex = artifactIndex + 1
+    let bootstrapStepIndex = artifactIndex == 0 ? 0 : stepIndex
     if !policyAllowed {
         return [
-            .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: 0, command: command, ref: "evidence/model/bootstrap-proposal-000.json"),
-            .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
-            .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .failed, ref: "evidence/model/policy-000.json"),
+            .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: bootstrapStepIndex, command: command, ref: "evidence/model/bootstrap-proposal-\(suffix).json"),
+            .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: stepIndex, command: command, ref: "evidence/model/decision-\(suffix).json"),
+            .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: stepIndex, command: command, status: .failed, ref: "evidence/model/policy-\(suffix).json"),
             .init(
                 type: .flowRecoveryDetected,
                 runID: runID,
                 timestamp: now,
-                stepIndex: 1,
+                stepIndex: stepIndex,
                 failure: TKTestRunFailure(
                     type: "policy_rejected",
                     message: "Runner allowedActions rejected \(mode) \(actionCandidate.action) candidate.",
-                    artifactRefs: ["evidence/model/policy-000.json"]
+                    artifactRefs: ["evidence/model/policy-\(suffix).json"]
                 ),
                 phase: "policy_rejected"
             ),
-            .init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: 1, command: ["stop"], ref: "evidence/model/recovery-000.json"),
+            .init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: stepIndex, command: ["stop"], ref: "evidence/model/recovery-\(suffix).json"),
         ]
     }
     var events: [TKTestRunEvent] = [
-        .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: 0, command: command, ref: "evidence/model/bootstrap-proposal-000.json"),
-        .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
-        .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, ref: "evidence/model/policy-000.json"),
+        .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: bootstrapStepIndex, command: command, ref: "evidence/model/bootstrap-proposal-\(suffix).json"),
+        .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: stepIndex, command: command, ref: "evidence/model/decision-\(suffix).json"),
+        .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: stepIndex, command: command, status: .passed, ref: "evidence/model/policy-\(suffix).json"),
         .init(
             type: .actionExecuted,
             runID: runID,
             timestamp: now,
-            stepIndex: 1,
+            stepIndex: stepIndex,
             command: command,
             status: actionExecution?.eventStatus ?? .passed,
             exitCode: actionExecution?.exitCode ?? 0,
-            ref: "evidence/actions/action-000.json"
+            ref: "evidence/actions/action-\(suffix).json"
         ),
     ]
     if let postActionObservation {
         events.append(.observationCaptured(
             runID: runID,
-            stepIndex: 1,
+            stepIndex: stepIndex,
             phase: "post_action",
             artifacts: postActionObservation.artifacts,
             screenCandidate: postActionObservation.screenCandidate,
@@ -148,7 +153,7 @@ func workspaceModelDecisionEvents(
         events += workspaceBusinessCheckpointEvents(
             runID: runID,
             timestamp: now,
-            stepIndex: 1,
+            stepIndex: stepIndex,
             businessCheckpoint: businessCheckpoint
         )
         if !businessCheckpoint.ready {
@@ -156,7 +161,7 @@ func workspaceModelDecisionEvents(
                 type: .flowRecoveryDetected,
                 runID: runID,
                 timestamp: now,
-                stepIndex: 1,
+                stepIndex: stepIndex,
                 failure: TKTestRunFailure(
                     type: "business_checkpoint_missing",
                     message: "Post-action business checkpoint '\(businessCheckpoint.readiness.query)' did not pass.",
@@ -168,39 +173,39 @@ func workspaceModelDecisionEvents(
                 type: .flowRecoveryProposed,
                 runID: runID,
                 timestamp: now,
-                stepIndex: 1,
-                command: ["stop"],
-                ref: "evidence/model/recovery-000.json"
+                stepIndex: stepIndex,
+                command: recoveryCommand,
+                ref: "evidence/model/recovery-\(suffix).json"
             ))
         }
     } else {
-        events.append(.init(type: .verifyChecked, runID: runID, timestamp: now, stepIndex: 1, status: .failed, ref: "evidence/model/verify-000.json"))
+        events.append(.init(type: .verifyChecked, runID: runID, timestamp: now, stepIndex: stepIndex, status: .failed, ref: "evidence/model/verify-\(suffix).json"))
         events.append(.init(
             type: .flowRecoveryDetected,
             runID: runID,
             timestamp: now,
-            stepIndex: 1,
+            stepIndex: stepIndex,
             failure: TKTestRunFailure(
                 type: "expected_screen_missing",
                 message: "\(mode) simulates selector drift after action.",
-                artifactRefs: ["evidence/model/verify-000.json"]
+                artifactRefs: ["evidence/model/verify-\(suffix).json"]
             ),
             phase: "selector_drift"
         ))
-        events.append(.init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: 1, command: ["stop"], ref: "evidence/model/recovery-000.json"))
+        events.append(.init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: stepIndex, command: ["stop"], ref: "evidence/model/recovery-\(suffix).json"))
         events.append(.init(
             type: .flowRecoveryRejected,
             runID: runID,
             timestamp: now,
-            stepIndex: 1,
+            stepIndex: stepIndex,
             failure: TKTestRunFailure(
                 type: "\(failureMode)_stop",
                 message: "\(mode) does not execute recovery actions.",
-                artifactRefs: ["evidence/model/recovery-000.json"]
+                artifactRefs: ["evidence/model/recovery-\(suffix).json"]
             )
         ))
     }
-    events.append(.init(type: .atlasUpdated, runID: runID, timestamp: now, stepIndex: 1, ref: "atlas/deltas.jsonl"))
+    events.append(.init(type: .atlasUpdated, runID: runID, timestamp: now, stepIndex: stepIndex, ref: "atlas/deltas.jsonl"))
     events.append(.init(type: .flowUpdated, runID: runID, timestamp: now, ref: "flow.tritonflow.yaml"))
     return events
 }
