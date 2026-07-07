@@ -235,6 +235,7 @@ func appMapInspectOutputContract() -> TKCommandOutputContract {
             ("transitionCount", "Int", true, "Total transition count"),
             ("pathCount", "Int", true, "Total path count"),
             ("suiteCount", "Int", true, "Total suite count"),
+            ("coverage", "TKAppMapCoverage", true, "Screen, state, transition, path, suite, run, and path readiness coverage summary"),
             ("health", "TKAppMapHealth", true, "Observed run health"),
         ])
     )
@@ -269,7 +270,7 @@ func appMapScreensOutputContract() -> TKCommandOutputContract {
             ("kind", "String", true, "Stable kind; triton.app-map.screens-result"),
             ("mapDir", "String", true, "Input .tritonmap directory"),
             ("screenCount", "Int", true, "Total screen count"),
-            ("screens", "[TKAppMapScreen]", true, "Screen graph nodes"),
+            ("screens", "[TKAppMapScreen]", true, "Screen graph nodes with run-local stateVariants"),
         ])
     )
 }

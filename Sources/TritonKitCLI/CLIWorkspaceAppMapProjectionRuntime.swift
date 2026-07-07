@@ -5,26 +5,53 @@ private struct TKWorkspaceAtlasProjectionDocument: Decodable {
     let runID: String
     let app: String
     let screens: [TKWorkspaceAtlasProjectionScreen]
+    let states: [TKWorkspaceAtlasProjectionState]
     let transitions: [TKWorkspaceAtlasProjectionTransition]
 
     enum CodingKeys: String, CodingKey {
         case runID = "runId"
         case app
         case screens
+        case states
         case transitions
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        runID = try container.decodeIfPresent(String.self, forKey: .runID) ?? ""
+        app = try container.decodeIfPresent(String.self, forKey: .app) ?? ""
+        screens = try container.decodeIfPresent([TKWorkspaceAtlasProjectionScreen].self, forKey: .screens) ?? []
+        states = try container.decodeIfPresent([TKWorkspaceAtlasProjectionState].self, forKey: .states) ?? []
+        transitions = try container.decodeIfPresent([TKWorkspaceAtlasProjectionTransition].self, forKey: .transitions) ?? []
     }
 }
 
 private struct TKWorkspaceAtlasProjectionScreen: Decodable {
     let screenID: String
+    let stateID: String?
     let signature: String
     let dominantTexts: [String]
     let evidenceRefs: [String]
 
     enum CodingKeys: String, CodingKey {
         case screenID = "screenId"
+        case stateID = "stateId"
         case signature
         case dominantTexts
+        case evidenceRefs
+    }
+}
+
+private struct TKWorkspaceAtlasProjectionState: Decodable {
+    let stateID: String
+    let screenID: String
+    let phase: String?
+    let evidenceRefs: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case stateID = "stateId"
+        case screenID = "screenId"
+        case phase
         case evidenceRefs
     }
 }
@@ -69,6 +96,7 @@ struct TKWorkspaceMergeMapResponse: Codable, Equatable {
     let transitionCount: Int
     let pathCount: Int
     let suiteCount: Int
+    let coverage: TKAppMapCoverage
     let pathIDs: [String]
 
     enum CodingKeys: String, CodingKey {
@@ -81,6 +109,7 @@ struct TKWorkspaceMergeMapResponse: Codable, Equatable {
         case transitionCount
         case pathCount
         case suiteCount
+        case coverage
         case pathIDs = "pathIds"
     }
 }
@@ -101,10 +130,16 @@ func projectWorkspaceAtlasAppMap(run: TKWorkspaceRunResponse, runDir: URL) throw
     let runID = atlas.runID.isEmpty ? run.runID : atlas.runID
     let app = TKAppMapApp(bundleID: atlas.app.isEmpty ? run.app : atlas.app, platform: run.target.platform)
     var localToMapScreenID: [String: String] = [:]
+    let statesByScreenID = Dictionary(grouping: atlas.states, by: \.screenID)
     for screen in atlas.screens {
         let fingerprint = workspaceAtlasFingerprint(from: screen.signature)
         let screenID = workspaceMapScreenID(for: fingerprint)
         localToMapScreenID[screen.screenID] = screenID
+        let stateVariants = workspaceStateVariants(
+            screen: screen,
+            states: statesByScreenID[screen.screenID] ?? [],
+            runID: runID
+        )
         let merged = TKAppMapScreen(
             schemaVersion: 1,
             kind: "triton.app-map.screen",
@@ -114,6 +149,7 @@ func projectWorkspaceAtlasAppMap(run: TKWorkspaceRunResponse, runDir: URL) throw
             visibleTexts: workspaceUnique(screen.dominantTexts),
             runLocalScreenIDs: [screen.screenID],
             sourceRuns: [runID],
+            stateVariants: stateVariants,
             vlmHealth: nil
         )
         try prettyEncodedData(merged).write(
@@ -214,6 +250,7 @@ func mergeWorkspaceRunAppMap(
             visibleTexts: workspaceUnique((existing?.visibleTexts ?? []) + screen.visibleTexts),
             runLocalScreenIDs: workspaceUnique((existing?.runLocalScreenIDs ?? []) + screen.runLocalScreenIDs),
             sourceRuns: workspaceUnique((existing?.sourceRuns ?? []) + screen.sourceRuns),
+            stateVariants: workspaceMergeStateVariants(existing?.stateVariants ?? [], screen.stateVariants),
             vlmHealth: existing?.vlmHealth ?? screen.vlmHealth
         )
         try prettyEncodedData(merged).write(to: targetURL, options: .atomic)
@@ -286,6 +323,13 @@ func mergeWorkspaceRunAppMap(
 
     let inspect = try inspectTritonAppMap(mapPath: mapRoot.path)
     let pathIDs = try listTritonAppMapPaths(mapPath: mapRoot.path).paths.map(\.pathID)
+    let coverage = try workspaceAppMapCoverage(
+        mapRoot: mapRoot,
+        screenCount: inspect.screenCount,
+        transitionCount: inspect.transitionCount,
+        pathCount: inspect.pathCount,
+        suiteCount: inspect.suiteCount
+    )
     return TKWorkspaceMergeMapResponse(
         schemaVersion: 1,
         kind: "triton.workspace.merge-map",
@@ -296,6 +340,7 @@ func mergeWorkspaceRunAppMap(
         transitionCount: inspect.transitionCount,
         pathCount: inspect.pathCount,
         suiteCount: inspect.suiteCount,
+        coverage: coverage,
         pathIDs: pathIDs
     )
 }
@@ -400,14 +445,25 @@ private func workspaceWriteAppMapRunRecord(
 }
 
 private func workspaceWriteAppMapIndex(mapRoot: URL, app: TKAppMapApp) throws {
+    let screenCount = try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("screens", isDirectory: true))
+    let transitionCount = try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("transitions", isDirectory: true))
+    let pathCount = try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("paths", isDirectory: true))
+    let suiteCount = try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("suites", isDirectory: true))
     let document = TKAppMapDocument(
         schemaVersion: 1,
         kind: "triton.app-map",
         app: app,
-        screenCount: try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("screens", isDirectory: true)),
-        transitionCount: try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("transitions", isDirectory: true)),
-        pathCount: try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("paths", isDirectory: true)),
-        suiteCount: try workspaceJSONFileCount(in: mapRoot.appendingPathComponent("suites", isDirectory: true)),
+        screenCount: screenCount,
+        transitionCount: transitionCount,
+        pathCount: pathCount,
+        suiteCount: suiteCount,
+        coverage: try workspaceAppMapCoverage(
+            mapRoot: mapRoot,
+            screenCount: screenCount,
+            transitionCount: transitionCount,
+            pathCount: pathCount,
+            suiteCount: suiteCount
+        ),
         updatedAt: workspaceISO8601Timestamp()
     )
     try prettyEncodedData(document).write(to: mapRoot.appendingPathComponent("app-map.json"), options: .atomic)
@@ -438,6 +494,90 @@ private func workspaceReadMapPaths(mapRoot: URL) throws -> [TKAppMapPath] {
 private func workspaceReadMapSuites(mapRoot: URL) throws -> [TKAppMapSuite] {
     try workspaceJSONFiles(in: mapRoot.appendingPathComponent("suites", isDirectory: true))
         .map { try JSONDecoder().decode(TKAppMapSuite.self, from: Data(contentsOf: $0)) }
+}
+
+private func workspaceStateVariants(
+    screen: TKWorkspaceAtlasProjectionScreen,
+    states: [TKWorkspaceAtlasProjectionState],
+    runID: String
+) -> [TKAppMapStateVariant] {
+    let variants = states.map { state in
+        TKAppMapStateVariant(
+            stateID: state.stateID,
+            runLocalScreenID: screen.screenID,
+            phase: state.phase,
+            sourceRuns: [runID],
+            evidenceRefs: workspaceUnique(screen.evidenceRefs + state.evidenceRefs),
+            visibleTexts: workspaceUnique(screen.dominantTexts)
+        )
+    }
+    if !variants.isEmpty {
+        return variants
+    }
+    let stateID = screen.stateID ?? screen.screenID
+    return [
+        TKAppMapStateVariant(
+            stateID: stateID,
+            runLocalScreenID: screen.screenID,
+            phase: nil,
+            sourceRuns: [runID],
+            evidenceRefs: workspaceUnique(screen.evidenceRefs),
+            visibleTexts: workspaceUnique(screen.dominantTexts)
+        ),
+    ]
+}
+
+private func workspaceMergeStateVariants(
+    _ existing: [TKAppMapStateVariant],
+    _ incoming: [TKAppMapStateVariant]
+) -> [TKAppMapStateVariant] {
+    var result = existing
+    for variant in incoming {
+        if let index = result.firstIndex(where: {
+            $0.stateID == variant.stateID
+                && $0.runLocalScreenID == variant.runLocalScreenID
+                && $0.phase == variant.phase
+        }) {
+            let current = result[index]
+            result[index] = TKAppMapStateVariant(
+                stateID: current.stateID,
+                runLocalScreenID: current.runLocalScreenID,
+                phase: current.phase,
+                sourceRuns: workspaceUnique(current.sourceRuns + variant.sourceRuns),
+                evidenceRefs: workspaceUnique(current.evidenceRefs + variant.evidenceRefs),
+                visibleTexts: workspaceUnique(current.visibleTexts + variant.visibleTexts)
+            )
+        } else {
+            result.append(variant)
+        }
+    }
+    return result
+}
+
+private func workspaceAppMapCoverage(
+    mapRoot: URL,
+    screenCount: Int,
+    transitionCount: Int,
+    pathCount: Int,
+    suiteCount: Int
+) throws -> TKAppMapCoverage {
+    let runs = try workspaceJSONFiles(in: mapRoot.appendingPathComponent("runs", isDirectory: true))
+        .map { try JSONDecoder().decode(TKAppMapRunRecord.self, from: Data(contentsOf: $0)) }
+    let screens = try workspaceReadMapScreens(mapRoot: mapRoot)
+    let paths = try workspaceReadMapPaths(mapRoot: mapRoot)
+    return TKAppMapCoverage(
+        observedRuns: runs.count,
+        screenCount: screenCount,
+        stateCount: screens.reduce(0) { $0 + $1.stateVariants.count },
+        transitionCount: transitionCount,
+        pathCount: pathCount,
+        suiteCount: suiteCount,
+        confirmedPathCount: paths.filter(\.confirmed).count,
+        replayablePathCount: paths.filter(\.replayable).count,
+        passCount: runs.filter { $0.verdict == "success" }.count,
+        failCount: runs.filter { $0.verdict == "failure" }.count,
+        flakeCount: 0
+    )
 }
 
 private func workspaceActionPoint(runDir: URL, index: Int) -> TKAppMapPoint? {

@@ -661,11 +661,18 @@ struct WorkspaceActionExecutionTests {
         #expect(secondMerge.transitionCount == 2)
         #expect(secondMerge.pathCount == 1)
         #expect(secondMerge.pathIDs == ["path-login-dashboard"])
+        #expect(secondMerge.coverage.observedRuns == 2)
+        #expect(secondMerge.coverage.screenCount == 3)
+        #expect(secondMerge.coverage.stateCount == 3)
+        #expect(secondMerge.coverage.pathCount == 1)
+        #expect(secondMerge.coverage.confirmedPathCount == 1)
 
         let inspect = try inspectTritonAppMap(mapPath: mapDir.path)
         #expect(inspect.screenCount == 3)
         #expect(inspect.transitionCount == 2)
         #expect(inspect.pathCount == 1)
+        #expect(inspect.coverage.observedRuns == 2)
+        #expect(inspect.coverage.stateCount == 3)
         #expect(inspect.health.observedRuns == 2)
         #expect(inspect.health.passCount == 2)
 
@@ -675,6 +682,25 @@ struct WorkspaceActionExecutionTests {
         #expect(path.health.observedRuns == 2)
         #expect(path.health.passCount == 2)
         #expect(path.confirmed)
+
+        let index = try JSONDecoder().decode(
+            TKAppMapDocument.self,
+            from: Data(contentsOf: mapDir.appendingPathComponent("app-map.json"))
+        )
+        #expect(index.coverage?.observedRuns == 2)
+        #expect(index.coverage?.stateCount == 3)
+        #expect(index.coverage?.confirmedPathCount == 1)
+
+        let startScreen = try JSONDecoder().decode(
+            TKAppMapScreen.self,
+            from: Data(contentsOf: mapDir.appendingPathComponent("screens/\(path.startScreenID).json"))
+        )
+        let initialVariant = try #require(startScreen.stateVariants.first { $0.stateID == "state_0000" })
+        #expect(initialVariant.runLocalScreenID == "screen_0000")
+        #expect(initialVariant.phase == "initial")
+        #expect(initialVariant.sourceRuns == ["run-workspace-map-merge-1", "run-workspace-map-merge-2"])
+        #expect(initialVariant.visibleTexts.contains("Login"))
+        #expect(initialVariant.evidenceRefs.contains("events.jsonl#observation.captured"))
     }
 
     @Test("workspace run skips explicit action execution after business checkpoint passes")

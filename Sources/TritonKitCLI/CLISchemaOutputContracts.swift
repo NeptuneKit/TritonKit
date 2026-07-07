@@ -1500,7 +1500,7 @@ func runtimeLedgerEntryOutputContract() -> TKCommandOutputContract {
 
 func nodePropertyPatchOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
-        selector: "node.propertyPatch",
+        selector: "node.property-patch",
         format: "json",
         kind: "runtime-node-property-patch",
         model: "TKNodePropertyPatchResponse",

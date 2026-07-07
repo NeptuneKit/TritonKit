@@ -95,6 +95,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "runtime-ledger",
         "runtime-ledger-entry",
         "runtime-manifest",
+        "runtime-node-property-patch",
         "simulator-screenshot",
         "xcode-status",
         "runtime-snapshot",

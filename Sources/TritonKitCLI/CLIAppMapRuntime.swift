@@ -51,6 +51,7 @@ struct TKAppMapInspectResponse: Codable, Equatable {
     let transitionCount: Int
     let pathCount: Int
     let suiteCount: Int
+    let coverage: TKAppMapCoverage
     let health: TKAppMapHealth
 }
 
@@ -233,6 +234,7 @@ struct TKAppMapDocument: Codable, Equatable {
     let transitionCount: Int
     let pathCount: Int
     let suiteCount: Int
+    let coverage: TKAppMapCoverage?
     let updatedAt: String
 
     enum CodingKeys: String, CodingKey {
@@ -243,7 +245,43 @@ struct TKAppMapDocument: Codable, Equatable {
         case transitionCount
         case pathCount
         case suiteCount
+        case coverage
         case updatedAt
+    }
+
+    init(
+        schemaVersion: Int,
+        kind: String,
+        app: TKAppMapApp,
+        screenCount: Int,
+        transitionCount: Int,
+        pathCount: Int,
+        suiteCount: Int,
+        coverage: TKAppMapCoverage? = nil,
+        updatedAt: String
+    ) {
+        self.schemaVersion = schemaVersion
+        self.kind = kind
+        self.app = app
+        self.screenCount = screenCount
+        self.transitionCount = transitionCount
+        self.pathCount = pathCount
+        self.suiteCount = suiteCount
+        self.coverage = coverage
+        self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        kind = try container.decode(String.self, forKey: .kind)
+        app = try container.decode(TKAppMapApp.self, forKey: .app)
+        screenCount = try container.decode(Int.self, forKey: .screenCount)
+        transitionCount = try container.decode(Int.self, forKey: .transitionCount)
+        pathCount = try container.decode(Int.self, forKey: .pathCount)
+        suiteCount = try container.decode(Int.self, forKey: .suiteCount)
+        coverage = try container.decodeIfPresent(TKAppMapCoverage.self, forKey: .coverage)
+        updatedAt = try container.decode(String.self, forKey: .updatedAt)
     }
 }
 
@@ -257,6 +295,38 @@ struct TKAppMapApp: Codable, Equatable {
     }
 }
 
+struct TKAppMapCoverage: Codable, Equatable {
+    let observedRuns: Int
+    let screenCount: Int
+    let stateCount: Int
+    let transitionCount: Int
+    let pathCount: Int
+    let suiteCount: Int
+    let confirmedPathCount: Int
+    let replayablePathCount: Int
+    let passCount: Int
+    let failCount: Int
+    let flakeCount: Int
+}
+
+struct TKAppMapStateVariant: Codable, Equatable {
+    let stateID: String
+    let runLocalScreenID: String
+    let phase: String?
+    let sourceRuns: [String]
+    let evidenceRefs: [String]
+    let visibleTexts: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case stateID = "stateId"
+        case runLocalScreenID = "runLocalScreenId"
+        case phase
+        case sourceRuns
+        case evidenceRefs
+        case visibleTexts
+    }
+}
+
 struct TKAppMapScreen: Codable, Equatable {
     let schemaVersion: Int
     let kind: String
@@ -266,6 +336,7 @@ struct TKAppMapScreen: Codable, Equatable {
     let visibleTexts: [String]
     let runLocalScreenIDs: [String]
     let sourceRuns: [String]
+    let stateVariants: [TKAppMapStateVariant]
     let vlmHealth: TKAppMapVLMHealth?
 
     enum CodingKeys: String, CodingKey {
@@ -277,7 +348,46 @@ struct TKAppMapScreen: Codable, Equatable {
         case visibleTexts
         case runLocalScreenIDs = "runLocalScreenIds"
         case sourceRuns
+        case stateVariants
         case vlmHealth
+    }
+
+    init(
+        schemaVersion: Int,
+        kind: String,
+        screenID: String,
+        fingerprint: TKScreenWorkspaceFingerprint,
+        primaryText: String?,
+        visibleTexts: [String],
+        runLocalScreenIDs: [String],
+        sourceRuns: [String],
+        stateVariants: [TKAppMapStateVariant] = [],
+        vlmHealth: TKAppMapVLMHealth? = nil
+    ) {
+        self.schemaVersion = schemaVersion
+        self.kind = kind
+        self.screenID = screenID
+        self.fingerprint = fingerprint
+        self.primaryText = primaryText
+        self.visibleTexts = visibleTexts
+        self.runLocalScreenIDs = runLocalScreenIDs
+        self.sourceRuns = sourceRuns
+        self.stateVariants = stateVariants
+        self.vlmHealth = vlmHealth
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        schemaVersion = try container.decode(Int.self, forKey: .schemaVersion)
+        kind = try container.decode(String.self, forKey: .kind)
+        screenID = try container.decode(String.self, forKey: .screenID)
+        fingerprint = try container.decode(TKScreenWorkspaceFingerprint.self, forKey: .fingerprint)
+        primaryText = try container.decodeIfPresent(String.self, forKey: .primaryText)
+        visibleTexts = try container.decode([String].self, forKey: .visibleTexts)
+        runLocalScreenIDs = try container.decodeIfPresent([String].self, forKey: .runLocalScreenIDs) ?? []
+        sourceRuns = try container.decodeIfPresent([String].self, forKey: .sourceRuns) ?? []
+        stateVariants = try container.decodeIfPresent([TKAppMapStateVariant].self, forKey: .stateVariants) ?? []
+        vlmHealth = try container.decodeIfPresent(TKAppMapVLMHealth.self, forKey: .vlmHealth)
     }
 }
 
@@ -664,6 +774,13 @@ func inspectTritonAppMap(mapPath: String) throws -> TKAppMapInspectResponse {
         transitionCount: transitionCount,
         pathCount: pathCount,
         suiteCount: suiteCount,
+        coverage: try appMapCoverage(
+            mapRoot,
+            screenCount: screenCount,
+            transitionCount: transitionCount,
+            pathCount: pathCount,
+            suiteCount: suiteCount
+        ),
         health: try appMapHealth(mapRoot)
     )
 }
@@ -1465,9 +1582,44 @@ private func writeAppMapIndex(mapRoot: URL, app: TKAppMapApp) throws {
         transitionCount: transitionCount,
         pathCount: pathCount,
         suiteCount: suiteCount,
+        coverage: try appMapCoverage(
+            mapRoot,
+            screenCount: screenCount,
+            transitionCount: transitionCount,
+            pathCount: pathCount,
+            suiteCount: suiteCount
+        ),
         updatedAt: isoTimestamp()
     )
     try prettyEncodedData(document).write(to: mapRoot.appendingPathComponent("app-map.json"), options: .atomic)
+}
+
+private func appMapCoverage(
+    _ mapRoot: URL,
+    screenCount: Int,
+    transitionCount: Int,
+    pathCount: Int,
+    suiteCount: Int
+) throws -> TKAppMapCoverage {
+    let runs = try jsonFiles(in: mapRoot.appendingPathComponent("runs", isDirectory: true))
+        .map { try decodeJSON(TKAppMapRunRecord.self, from: $0) }
+    let screens = try jsonFiles(in: mapRoot.appendingPathComponent("screens", isDirectory: true))
+        .map { try decodeJSON(TKAppMapScreen.self, from: $0) }
+    let paths = try jsonFiles(in: mapRoot.appendingPathComponent("paths", isDirectory: true))
+        .map { try decodeJSON(TKAppMapPath.self, from: $0) }
+    return TKAppMapCoverage(
+        observedRuns: runs.count,
+        screenCount: screenCount,
+        stateCount: screens.reduce(0) { $0 + $1.stateVariants.count },
+        transitionCount: transitionCount,
+        pathCount: pathCount,
+        suiteCount: suiteCount,
+        confirmedPathCount: paths.filter(\.confirmed).count,
+        replayablePathCount: paths.filter(\.replayable).count,
+        passCount: runs.filter { $0.verdict == "success" }.count,
+        failCount: runs.filter { $0.verdict == "failure" }.count,
+        flakeCount: 0
+    )
 }
 
 private func appMapHealth(_ mapRoot: URL) throws -> TKAppMapHealth {

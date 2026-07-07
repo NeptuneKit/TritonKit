@@ -1323,8 +1323,14 @@ struct WorkspaceRunTests {
         )
         #expect(second.pathCount == 1)
         #expect(second.pathIDs == ["path-login-dashboard"])
+        #expect(second.coverage.observedRuns == 2)
+        #expect(second.coverage.screenCount == 3)
+        #expect(second.coverage.stateCount == 3)
+        #expect(second.coverage.confirmedPathCount == 1)
 
         let inspect = try inspectTritonAppMap(mapPath: mapDir.path)
+        #expect(inspect.coverage.observedRuns == 2)
+        #expect(inspect.coverage.stateCount == 3)
         #expect(inspect.health.observedRuns == 2)
         #expect(inspect.health.passCount == 2)
 
