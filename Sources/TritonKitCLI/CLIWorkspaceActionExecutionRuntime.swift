@@ -103,12 +103,22 @@ func workspaceActionExecutionArtifact(_ result: TKWorkspaceActionExecutionResult
     return artifact
 }
 
-func workspaceModelTransitionStatus(actionExecution: TKWorkspaceActionExecutionResult?) -> String {
+func workspaceModelTransitionStatus(
+    actionExecution: TKWorkspaceActionExecutionResult?,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil
+) -> String {
     guard let actionExecution else { return "candidate_failed" }
-    return actionExecution.ok ? "executed_unverified" : "action_failed"
+    guard actionExecution.ok else { return "action_failed" }
+    if businessCheckpoint?.stage == .postAction {
+        return businessCheckpoint?.ready == true ? "verified" : "verification_failed"
+    }
+    return "executed_unverified"
 }
 
-func workspaceModelTransition(actionExecution: TKWorkspaceActionExecutionResult?) -> [String: Any] {
+func workspaceModelTransition(
+    actionExecution: TKWorkspaceActionExecutionResult?,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil
+) -> [String: Any] {
     [
         "transitionId": "transition_0000",
         "fromScreenId": "screen_0000",
@@ -117,7 +127,10 @@ func workspaceModelTransition(actionExecution: TKWorkspaceActionExecutionResult?
         "selector": [
             "text": "Continue",
         ],
-        "status": workspaceModelTransitionStatus(actionExecution: actionExecution),
+        "status": workspaceModelTransitionStatus(
+            actionExecution: actionExecution,
+            businessCheckpoint: businessCheckpoint
+        ),
         "confidence": 0.5,
         "evidenceRefs": [
             "events.jsonl#model.decided",

@@ -254,7 +254,7 @@ private struct TKWorkspaceProviderComponentPreflight {
     var ready: Bool { status == "ready" }
 }
 
-private struct TKWorkspaceRunFinalState {
+struct TKWorkspaceRunFinalState {
     let runStatus: String
     let eventType: TKTestRunEventType
     let eventStatus: TKTestRunStatus
@@ -339,29 +339,54 @@ func runWorkspaceRunAsync(
         observation: observationSeed,
         observedAfterLifecycle: request.observeLive
     )
-    let businessWaitResult: TKWaitResult?
-    if request.businessReadyLiveWait {
-        businessWaitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
-    } else {
-        businessWaitResult = nil
-    }
-    let businessCheckpoint = workspaceBusinessCheckpoint(
-        for: request,
-        observation: observationSeed,
-        appReady: appReady,
-        waitResult: businessWaitResult
-    )
+    let initialBusinessCheckpoint = request.executeActions
+        ? workspaceBusinessVisibleTextCheckpoint(for: request, observation: observationSeed, appReady: appReady)
+        : nil
     let actionExecution: TKWorkspaceActionExecutionResult?
-    if try workspaceShouldExecuteCandidateAction(request, businessCheckpoint: businessCheckpoint) {
+    if try workspaceShouldExecuteCandidateAction(request, businessCheckpoint: initialBusinessCheckpoint) {
         actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(for: request))
     } else {
         actionExecution = nil
+    }
+    let businessWaitResult: TKWaitResult?
+    let businessCheckpoint: TKWorkspaceBusinessCheckpoint?
+    if request.businessReadyLiveWait, initialBusinessCheckpoint?.ready == true {
+        businessWaitResult = nil
+        businessCheckpoint = initialBusinessCheckpoint
+    } else if request.businessReadyLiveWait, actionExecution?.ok == true {
+        let waitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
+        businessWaitResult = waitResult
+        businessCheckpoint = workspaceBusinessCheckpoint(
+            for: request,
+            observation: observationSeed,
+            appReady: appReady,
+            waitResult: waitResult,
+            stage: .postAction
+        )
+    } else if request.businessReadyLiveWait {
+        let waitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
+        businessWaitResult = waitResult
+        businessCheckpoint = workspaceBusinessCheckpoint(
+            for: request,
+            observation: observationSeed,
+            appReady: appReady,
+            waitResult: waitResult
+        )
+    } else {
+        businessWaitResult = nil
+        businessCheckpoint = workspaceBusinessCheckpoint(
+            for: request,
+            observation: observationSeed,
+            appReady: appReady,
+            waitResult: nil
+        )
     }
     return try runWorkspaceRun(
         request,
         observationSeed: observationSeed,
         appLifecycle: appLifecycle,
         businessWaitResult: businessWaitResult,
+        businessCheckpoint: businessCheckpoint,
         actionExecution: actionExecution
     )
 }
@@ -371,6 +396,7 @@ private func runWorkspaceRun(
     observationSeed: TKWorkspaceObservationSeed,
     appLifecycle: TKWorkspaceAppLifecycleEvidence,
     businessWaitResult: TKWaitResult? = nil,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil,
     actionExecution: TKWorkspaceActionExecutionResult? = nil
 ) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
@@ -399,14 +425,16 @@ private func runWorkspaceRun(
         observation: observationSeed,
         observedAfterLifecycle: request.observeLive
     )
-    let businessCheckpoint = workspaceBusinessCheckpoint(
+    let businessCheckpoint = businessCheckpoint ?? workspaceBusinessCheckpoint(
         for: request,
         observation: observationSeed,
         appReady: appReady,
         waitResult: businessWaitResult
     )
     let businessReady = businessCheckpoint?.readiness
-    let shouldWriteModelDecision = modelLoopEnabled && modelDecisionAllowed && businessCheckpoint?.ready != true
+    let shouldWriteModelDecision = modelLoopEnabled
+        && modelDecisionAllowed
+        && (businessCheckpoint?.ready != true || actionExecution != nil)
     let shouldWritePolicyRejection = modelLoopEnabled && !modelDecisionAllowed && businessCheckpoint?.ready != true
     let finalState = workspaceRunFinalState(
         providerPreflight: providerPreflight,
@@ -461,6 +489,7 @@ private func runWorkspaceRun(
             runDir: runDir,
             mode: modelLoopMode,
             policyAllowed: modelDecisionAllowed,
+            businessCheckpoint: businessCheckpoint,
             actionExecution: actionExecution
         )
     }
@@ -480,6 +509,7 @@ private func runWorkspaceRun(
                 runID: runID,
                 mode: modelLoopMode,
                 policyAllowed: modelDecisionAllowed,
+                businessCheckpoint: businessCheckpoint,
                 actionExecution: actionExecution
             ),
             at: events.index(before: events.endIndex)
@@ -573,20 +603,20 @@ private func workspaceRunFinalState(
             phase: nil
         )
     }
-    if let businessCheckpoint, !businessCheckpoint.ready {
-        return TKWorkspaceRunFinalState(
-            runStatus: "paused",
-            eventType: .runPaused,
-            eventStatus: .paused,
-            phase: businessCheckpoint.readiness.phase
-        )
-    }
     if let actionExecution, !actionExecution.ok {
         return TKWorkspaceRunFinalState(
             runStatus: "paused",
             eventType: .runPaused,
             eventStatus: .paused,
             phase: "action_failed"
+        )
+    }
+    if let businessCheckpoint, !businessCheckpoint.ready {
+        return TKWorkspaceRunFinalState(
+            runStatus: "paused",
+            eventType: .runPaused,
+            eventStatus: .paused,
+            phase: businessCheckpoint.readiness.phase
         )
     }
     if !providerPreflight.providersReady, !dryModelFixture {
@@ -1066,6 +1096,7 @@ private func writeWorkspaceRunArtifacts(
             for: run,
             observation: observation,
             includeModelTransition: includeModelTransition,
+            businessCheckpoint: businessCheckpoint,
             actionExecution: actionExecution
         ),
         to: runDir.appendingPathComponent("atlas/atlas.json")
@@ -1077,6 +1108,7 @@ private func writeWorkspaceModelDecisionArtifacts(
     runDir: URL,
     mode: String,
     policyAllowed: Bool,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     actionExecution: TKWorkspaceActionExecutionResult?
 ) throws {
     let command = ["triton", "act", "tap", "Continue", "--json"]
@@ -1162,19 +1194,39 @@ private func writeWorkspaceModelDecisionArtifacts(
             "command": command,
         ], to: runDir.appendingPathComponent("evidence/actions/action-000.json"))
     }
-    try writeWorkspaceJSONArtifact([
-        "status": "failed",
-        "reason": actionExecution == nil
-            ? "\(mode) simulates expected screen missing"
-            : "action executed; post-action business verification is not wired yet",
-    ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
-    try writeWorkspaceJSONArtifact([
-        "failureCode": "expected_screen_missing",
-        "kind": actionExecution == nil ? "selector_drift" : "post_action_unverified",
-        "proposal": "stop",
-    ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+    if let businessCheckpoint, businessCheckpoint.stage == .postAction {
+        try writeWorkspaceJSONArtifact([
+            "status": businessCheckpoint.readiness.status,
+            "reason": businessCheckpoint.ready
+                ? "post-action business checkpoint passed"
+                : "post-action business checkpoint did not pass",
+            "businessRef": businessCheckpoint.readiness.ref,
+            "check": businessCheckpoint.readiness.check,
+            "phase": businessCheckpoint.readiness.phase,
+        ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
+        if !businessCheckpoint.ready {
+            try writeWorkspaceJSONArtifact([
+                "failureCode": "business_checkpoint_missing",
+                "kind": "post_action_business_not_ready",
+                "proposal": "stop",
+                "businessRef": businessCheckpoint.readiness.ref,
+            ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+        }
+    } else {
+        try writeWorkspaceJSONArtifact([
+            "status": "failed",
+            "reason": actionExecution == nil
+                ? "\(mode) simulates expected screen missing"
+                : "action executed without a post-action business verification request",
+        ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
+        try writeWorkspaceJSONArtifact([
+            "failureCode": "expected_screen_missing",
+            "kind": actionExecution == nil ? "selector_drift" : "post_action_unverified",
+            "proposal": "stop",
+        ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+    }
     try """
-    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"screen_0000","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution))","confidence":0.5,"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
+    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"screen_0000","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint))","confidence":0.5,"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
     """.write(to: runDir.appendingPathComponent("atlas/deltas.jsonl"), atomically: true, encoding: .utf8)
     try """
     schemaVersion: 1
@@ -1184,148 +1236,6 @@ private func writeWorkspaceModelDecisionArtifacts(
         evidenceRef: events.jsonl#action.executed
 
     """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
-}
-
-private func workspaceSkeletonEvents(
-    runID: String,
-    providerEventPhase: String,
-    bootstrapPhase: String,
-    appReady: TKWorkspaceAppReadyEvidence,
-    observation: TKWorkspaceObservationSeed,
-    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
-    finalState: TKWorkspaceRunFinalState
-) -> [TKTestRunEvent] {
-    let now = workspaceTimestamp()
-    var events: [TKTestRunEvent] = [
-        .runStarted(runID: runID, timestamp: now),
-        .init(type: .targetResolved, runID: runID, timestamp: now, ref: "evidence/model/target.json"),
-        .init(type: .providerChecked, runID: runID, timestamp: now, ref: "evidence/model/provider-check.json", phase: providerEventPhase),
-        .init(type: .appReady, runID: runID, timestamp: now, ref: "evidence/actions/app-ready.json", phase: appReady.phase),
-        .observationCaptured(
-            runID: runID,
-            stepIndex: 0,
-            phase: "initial",
-            artifacts: observation.artifacts,
-            screenCandidate: observation.screenCandidate,
-            changed: observation.changed,
-            timestamp: now
-        ),
-        .init(
-            type: .flowBootstrapChecked,
-            runID: runID,
-            timestamp: now,
-            stepIndex: 0,
-            ref: "evidence/model/bootstrap-000.json",
-            phase: bootstrapPhase
-        ),
-    ]
-    if let businessCheckpoint {
-        let selector = TKTestRunSelector(text: TKTestRunTextSelector(
-            value: businessCheckpoint.readiness.query,
-            match: "exact",
-            source: businessCheckpoint.source
-        ))
-        events.append(.init(
-            type: .businessReady,
-            runID: runID,
-            timestamp: now,
-            stepIndex: 1,
-            status: businessCheckpoint.eventStatus,
-            ref: businessCheckpoint.readiness.ref,
-            selector: selector,
-            phase: businessCheckpoint.readiness.phase
-        ))
-        events.append(.init(
-            type: .verifyChecked,
-            runID: runID,
-            timestamp: now,
-            stepIndex: 1,
-            status: businessCheckpoint.eventStatus,
-            ref: businessCheckpoint.readiness.ref
-        ))
-    }
-    events.append(.init(
-        type: finalState.eventType,
-        runID: runID,
-        timestamp: now,
-        status: finalState.eventStatus,
-        durationMs: 0,
-        phase: finalState.phase
-    ))
-    return events
-}
-
-private func workspaceModelDecisionEvents(
-    runID: String,
-    mode: String,
-    policyAllowed: Bool,
-    actionExecution: TKWorkspaceActionExecutionResult?
-) -> [TKTestRunEvent] {
-    let now = workspaceTimestamp()
-    let command = ["triton", "act", "tap", "Continue", "--json"]
-    let failureMode = mode.replacingOccurrences(of: "-", with: "_")
-    if !policyAllowed {
-        return [
-            .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: 0, command: command, ref: "evidence/model/bootstrap-proposal-000.json"),
-            .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
-            .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .failed, ref: "evidence/model/policy-000.json"),
-            .init(
-                type: .flowRecoveryDetected,
-                runID: runID,
-                timestamp: now,
-                stepIndex: 1,
-                failure: TKTestRunFailure(
-                    type: "policy_rejected",
-                    message: "Runner allowedActions rejected \(mode) tap candidate.",
-                    artifactRefs: ["evidence/model/policy-000.json"]
-                ),
-                phase: "policy_rejected"
-            ),
-            .init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: 1, command: ["stop"], ref: "evidence/model/recovery-000.json"),
-        ]
-    }
-    return [
-        .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: 0, command: command, ref: "evidence/model/bootstrap-proposal-000.json"),
-        .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
-        .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, ref: "evidence/model/policy-000.json"),
-        .init(
-            type: .actionExecuted,
-            runID: runID,
-            timestamp: now,
-            stepIndex: 1,
-            command: command,
-            status: actionExecution?.eventStatus ?? .passed,
-            exitCode: actionExecution?.exitCode ?? 0,
-            ref: "evidence/actions/action-000.json"
-        ),
-        .init(type: .verifyChecked, runID: runID, timestamp: now, stepIndex: 1, status: .failed, ref: "evidence/model/verify-000.json"),
-        .init(
-            type: .flowRecoveryDetected,
-            runID: runID,
-            timestamp: now,
-            stepIndex: 1,
-            failure: TKTestRunFailure(
-                type: "expected_screen_missing",
-                message: "\(mode) simulates selector drift after action.",
-                artifactRefs: ["evidence/model/verify-000.json"]
-            ),
-            phase: "selector_drift"
-        ),
-        .init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: 1, command: ["stop"], ref: "evidence/model/recovery-000.json"),
-        .init(
-            type: .flowRecoveryRejected,
-            runID: runID,
-            timestamp: now,
-            stepIndex: 1,
-            failure: TKTestRunFailure(
-                type: "\(failureMode)_stop",
-                message: "\(mode) does not execute recovery actions.",
-                artifactRefs: ["evidence/model/recovery-000.json"]
-            )
-        ),
-        .init(type: .atlasUpdated, runID: runID, timestamp: now, stepIndex: 1, ref: "atlas/deltas.jsonl"),
-        .init(type: .flowUpdated, runID: runID, timestamp: now, ref: "flow.tritonflow.yaml"),
-    ]
 }
 
 private func writeWorkspaceRun(_ run: TKWorkspaceRunResponse, to url: URL) throws {
@@ -1395,6 +1305,7 @@ private func workspaceAtlasDocument(
     for run: TKWorkspaceRunResponse,
     observation: TKWorkspaceObservationSeed,
     includeModelTransition: Bool,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     actionExecution: TKWorkspaceActionExecutionResult?
 ) -> [String: Any] {
     let initialObservationRefs = ([
@@ -1404,7 +1315,9 @@ private func workspaceAtlasDocument(
         observation.artifacts.hierarchy,
         observation.artifacts.ax,
     ] as [String?]).compactMap { $0 }
-    let transitions = includeModelTransition ? [workspaceModelTransition(actionExecution: actionExecution)] : []
+    let transitions = includeModelTransition
+        ? [workspaceModelTransition(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint)]
+        : []
     let signature = [
         observation.screenCandidate.screenshotSha256,
         observation.screenCandidate.axTextHash,
@@ -1470,10 +1383,6 @@ private func normalizedWorkspaceRunID(_ raw: String) throws -> String {
 
 private func defaultWorkspaceRunID() -> String {
     "run_\(Int(Date().timeIntervalSince1970))_\(UUID().uuidString.prefix(8))"
-}
-
-private func workspaceTimestamp() -> String {
-    ISO8601DateFormatter().string(from: Date())
 }
 
 private func yamlEscaped(_ value: String) -> String {

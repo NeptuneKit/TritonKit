@@ -69,6 +69,96 @@ struct WorkspaceActionExecutionTests {
         #expect(transition?["status"] as? String == "executed_unverified")
     }
 
+    @Test("workspace run verifies business readiness after explicit action execution")
+    func workspaceRunVerifiesBusinessReadinessAfterExplicitActionExecution() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+        var actionCount = 0
+        var waitCount = 0
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-post-action-business-ready",
+                target: "runtime-target-post-action",
+                app: "com.example.demo",
+                goal: "Open dashboard",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observationFixture: fixture.path,
+                businessReadyText: "Dashboard",
+                businessReadyLiveWait: true,
+                businessReadyTimeout: 2,
+                businessReadyInterval: 0.25,
+                executeActions: true
+            ),
+            businessWaitProvider: { request in
+                waitCount += 1
+                return actionCount > 0
+                    ? successfulBusinessWaitResult(
+                        query: request.query,
+                        timeout: request.timeout,
+                        interval: request.interval
+                    )
+                    : failedBusinessWaitResult(
+                        query: request.query,
+                        timeout: request.timeout,
+                        interval: request.interval
+                    )
+            },
+            actionExecutionProvider: { request in
+                actionCount += 1
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(actionCount == 1)
+        #expect(waitCount == 1)
+        #expect(run.status == "passed")
+        #expect(run.business?.ready == true)
+        #expect(run.business?.check == "runtime_wait")
+        #expect(run.business?.phase == "post_action_wait_matched")
+
+        let runDir = root.appendingPathComponent("run-workspace-post-action-business-ready", isDirectory: true)
+        let business = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/business/ready.json"))
+        ) as? [String: Any]
+        #expect(business?["ready"] as? Bool == true)
+        #expect(business?["stage"] as? String == "post_action")
+        #expect(business?["phase"] as? String == "post_action_wait_matched")
+        #expect((business?["evidenceRefs"] as? [String])?.contains("events.jsonl#action.executed") == true)
+        #expect((business?["evidenceRefs"] as? [String])?.contains("evidence/actions/action-000.json") == true)
+
+        let verify = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/verify-000.json"))
+        ) as? [String: Any]
+        #expect(verify?["status"] as? String == "passed")
+        #expect(verify?["businessRef"] as? String == "evidence/business/ready.json")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let actionIndex = try #require(parsed.events.firstIndex { $0.type == .actionExecuted })
+        let businessIndex = try #require(parsed.events.firstIndex {
+            $0.type == .businessReady && $0.phase == "post_action_wait_matched"
+        })
+        let verifyIndex = try #require(parsed.events.firstIndex {
+            $0.type == .verifyChecked && $0.status == .passed
+        })
+        #expect(actionIndex < businessIndex)
+        #expect(businessIndex < verifyIndex)
+        #expect(parsed.events.last?.type == .runFinished)
+        #expect(parsed.summary.status == .passed)
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let transition = (atlas?["transitions"] as? [[String: Any]])?.first
+        #expect(transition?["status"] as? String == "verified")
+    }
+
     @Test("workspace run skips explicit action execution after business checkpoint passes")
     func workspaceRunSkipsExplicitActionExecutionAfterBusinessCheckpointPasses() async throws {
         let root = temporaryRunsDirectory()
@@ -192,6 +282,56 @@ struct WorkspaceActionExecutionTests {
                 strategy: "exact"
             ),
             tapResolution: nil
+        )
+    }
+
+    private func successfulBusinessWaitResult(query: String, timeout: Double, interval: Double) -> TKWaitResult {
+        TKWaitResult(
+            ok: true,
+            matched: true,
+            condition: "text",
+            query: query,
+            timedOut: false,
+            elapsedMs: 140,
+            pollCount: 2,
+            timeoutSeconds: timeout,
+            intervalSeconds: interval,
+            targetConnectionState: "connected",
+            hierarchyCacheState: "active",
+            lastObservedNodeCount: 4,
+            lastObservedTextSample: ["Login", query],
+            match: TKWaitMatch(
+                text: query,
+                role: "button",
+                label: query,
+                value: nil,
+                identifier: "dashboard-button",
+                title: query,
+                frame: nil,
+                targetOID: 77,
+                viewOID: 70,
+                className: "UIButton",
+                source: "ax"
+            )
+        )
+    }
+
+    private func failedBusinessWaitResult(query: String, timeout: Double, interval: Double) -> TKWaitResult {
+        TKWaitResult(
+            ok: false,
+            matched: false,
+            condition: "text",
+            query: query,
+            timedOut: true,
+            elapsedMs: Int(timeout * 1000),
+            pollCount: 1,
+            timeoutSeconds: timeout,
+            intervalSeconds: interval,
+            targetConnectionState: "connected",
+            hierarchyCacheState: "active",
+            lastObservedNodeCount: 2,
+            lastObservedTextSample: ["Login", "Continue"],
+            match: nil
         )
     }
 }

@@ -12,6 +12,11 @@ struct TKWorkspaceBusinessWaitRequest: Equatable {
     let interval: Double
 }
 
+enum TKWorkspaceBusinessCheckpointStage: String {
+    case initial
+    case postAction = "post_action"
+}
+
 struct TKWorkspaceBusinessCheckpoint {
     let readiness: TKWorkspaceBusinessReadiness
     let matchedTexts: [String]
@@ -19,6 +24,7 @@ struct TKWorkspaceBusinessCheckpoint {
     let evidenceRefs: [String]
     let source: String
     let wait: TKWaitResult?
+    let stage: TKWorkspaceBusinessCheckpointStage
 
     var ready: Bool { readiness.ready }
     var eventStatus: TKTestRunStatus { ready ? .passed : .failed }
@@ -68,7 +74,8 @@ func workspaceBusinessCheckpoint(
     for request: TKWorkspaceRunRequest,
     observation: TKWorkspaceObservationSeed,
     appReady: TKWorkspaceAppReadyEvidence,
-    waitResult: TKWaitResult?
+    waitResult: TKWaitResult?,
+    stage: TKWorkspaceBusinessCheckpointStage = .initial
 ) -> TKWorkspaceBusinessCheckpoint? {
     guard let query = normalizedWorkspaceBusinessReadyText(request.businessReadyText) else {
         return nil
@@ -78,13 +85,32 @@ func workspaceBusinessCheckpoint(
             query: query,
             observation: observation,
             appReady: appReady,
-            waitResult: waitResult
+            waitResult: waitResult,
+            stage: stage
         )
     }
     return workspaceBusinessVisibleTextCheckpoint(
         query: query,
         observation: observation,
-        appReady: appReady
+        appReady: appReady,
+        stage: stage
+    )
+}
+
+func workspaceBusinessVisibleTextCheckpoint(
+    for request: TKWorkspaceRunRequest,
+    observation: TKWorkspaceObservationSeed,
+    appReady: TKWorkspaceAppReadyEvidence,
+    stage: TKWorkspaceBusinessCheckpointStage = .initial
+) -> TKWorkspaceBusinessCheckpoint? {
+    guard let query = normalizedWorkspaceBusinessReadyText(request.businessReadyText) else {
+        return nil
+    }
+    return workspaceBusinessVisibleTextCheckpoint(
+        query: query,
+        observation: observation,
+        appReady: appReady,
+        stage: stage
     )
 }
 
@@ -103,6 +129,7 @@ func workspaceBusinessReadyArtifact(_ checkpoint: TKWorkspaceBusinessCheckpoint)
         "matchedTexts": checkpoint.matchedTexts,
         "observationRef": checkpoint.observationRef,
         "evidenceRefs": checkpoint.evidenceRefs,
+        "stage": checkpoint.stage.rawValue,
     ]
     if let wait = checkpoint.wait {
         artifact["wait"] = workspaceBusinessWaitArtifact(wait)
@@ -113,7 +140,8 @@ func workspaceBusinessReadyArtifact(_ checkpoint: TKWorkspaceBusinessCheckpoint)
 private func workspaceBusinessVisibleTextCheckpoint(
     query: String,
     observation: TKWorkspaceObservationSeed,
-    appReady: TKWorkspaceAppReadyEvidence
+    appReady: TKWorkspaceAppReadyEvidence,
+    stage: TKWorkspaceBusinessCheckpointStage
 ) -> TKWorkspaceBusinessCheckpoint {
     let visibleTexts = observation.screenCandidate.visibleTexts
     let matchedTexts = visibleTexts.filter { normalizedWorkspaceBusinessText($0) == query }
@@ -128,9 +156,10 @@ private func workspaceBusinessVisibleTextCheckpoint(
         ),
         matchedTexts: matchedTexts,
         observationRef: "events.jsonl#observation.captured",
-        evidenceRefs: workspaceBusinessEvidenceRefs(observation: observation, appReady: appReady),
+        evidenceRefs: workspaceBusinessEvidenceRefs(observation: observation, appReady: appReady, stage: stage),
         source: "observation.visibleTexts",
-        wait: nil
+        wait: nil,
+        stage: stage
     )
 }
 
@@ -138,17 +167,19 @@ private func workspaceBusinessWaitCheckpoint(
     query: String,
     observation: TKWorkspaceObservationSeed,
     appReady: TKWorkspaceAppReadyEvidence,
-    waitResult: TKWaitResult
+    waitResult: TKWaitResult,
+    stage: TKWorkspaceBusinessCheckpointStage
 ) -> TKWorkspaceBusinessCheckpoint {
     let ready = waitResult.ok
-    let phase: String
+    let basePhase: String
     if ready {
-        phase = "wait_matched"
+        basePhase = "wait_matched"
     } else if waitResult.timedOut {
-        phase = "wait_timeout"
+        basePhase = "wait_timeout"
     } else {
-        phase = "wait_unmatched"
+        basePhase = "wait_unmatched"
     }
+    let phase = stage == .postAction ? "post_action_\(basePhase)" : basePhase
     return TKWorkspaceBusinessCheckpoint(
         readiness: TKWorkspaceBusinessReadiness(
             ready: ready,
@@ -159,17 +190,19 @@ private func workspaceBusinessWaitCheckpoint(
         ),
         matchedTexts: workspaceBusinessWaitMatchedTexts(query: query, waitResult: waitResult),
         observationRef: "events.jsonl#observation.captured",
-        evidenceRefs: workspaceBusinessEvidenceRefs(observation: observation, appReady: appReady),
+        evidenceRefs: workspaceBusinessEvidenceRefs(observation: observation, appReady: appReady, stage: stage),
         source: "runtime.wait",
-        wait: waitResult
+        wait: waitResult,
+        stage: stage
     )
 }
 
 private func workspaceBusinessEvidenceRefs(
     observation: TKWorkspaceObservationSeed,
-    appReady: TKWorkspaceAppReadyEvidence
+    appReady: TKWorkspaceAppReadyEvidence,
+    stage: TKWorkspaceBusinessCheckpointStage
 ) -> [String] {
-    let refs = ([
+    var refs = ([
         "events.jsonl#observation.captured",
         "events.jsonl#app.ready",
         "evidence/actions/app-ready.json",
@@ -178,6 +211,12 @@ private func workspaceBusinessEvidenceRefs(
         observation.artifacts.hierarchy,
         observation.artifacts.ax,
     ] as [String?]).compactMap { $0 }
+    if stage == .postAction {
+        refs += [
+            "events.jsonl#action.executed",
+            "evidence/actions/action-000.json",
+        ]
+    }
     return uniqueWorkspaceEvidenceRefs(appReady.observationRef.map { refs + [$0] } ?? refs)
 }
 

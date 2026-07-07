@@ -83,7 +83,7 @@ Then TritonKit 返回稳定 JSON，包含 target id、platform、scope、capabil
 
 Given 已有本地 App artifact 或可解析 bundle/app id
 When agent 通过 CLI/HTTP 安装并启动 App
-Then 返回机器可读成功或明确 unsupported/error code，并保留 fallback 建议；在 workspace run 中，显式 `appMode=launch` 必须写入 `app.ready phase=launch_submitted` 和 `evidence/actions/app-ready.json`，若同一 run 继续 live observe 成功则升级为 `phase=launch_observed`、`ready=true`、`businessReady=false`；若 agent 同时传入 `businessReadyText` 并在 initial observation 命中，则必须写入 `evidence/business/ready.json`、`business.ready` 和 passed `verify.checked`，并以 `run.finished status=passed` 收尾；若 agent 显式传入 `businessReadyLiveWait=true`，则必须通过 runtime wait(text) 证明业务状态，并在同一 artifact 中写入 `check=runtime_wait`、`source=runtime.wait`、wait phase 和嵌套 wait 证据
+Then 返回机器可读成功或明确 unsupported/error code，并保留 fallback 建议；在 workspace run 中，显式 `appMode=launch` 必须写入 `app.ready phase=launch_submitted` 和 `evidence/actions/app-ready.json`，若同一 run 继续 live observe 成功则升级为 `phase=launch_observed`、`ready=true`、`businessReady=false`；若 agent 同时传入 `businessReadyText` 并在 initial observation 命中，则必须写入 `evidence/business/ready.json`、`business.ready` 和 passed `verify.checked`，并以 `run.finished status=passed` 收尾；若 agent 显式传入 `businessReadyLiveWait=true`，则必须通过 runtime wait(text) 证明业务状态，并在同一 artifact 中写入 `check=runtime_wait`、`source=runtime.wait`、wait phase 和嵌套 wait 证据；若同一 run 还启用 `executeActions=true`，则 wait 必须在 action 成功后执行，通过时写 `stage=post_action`、`phase=post_action_wait_matched` 并把 Atlas transition 标为 `verified`
 
 ### 场景 3：agent 执行动作并采集证据
 
@@ -129,7 +129,7 @@ Then LLM/VLM 先做 flow bootstrap 判断，运行中持续做 flow recovery 判
 - CLI/HTTP 和 Web DTO 必须以 target/capability 为事实源，不要求调用方预先区分真机、模拟器或仿真器。
 - 本机 Atlas map 能从 evidence 生成可查询图谱，至少覆盖 screen、state、transition、coverage 和 evidence backlink。
 - LLM/VLM 在 workspace run 中默认开启，默认用于流程稳定启动、偏航回正、理解、定位、Atlas 标注和探索决策；每次模型参与都能追溯 request / response / confidence / artifact，且所有动作经由 Triton CLI/HTTP。
-- 显式 `--execute-actions` / HTTP `executeActions=true` 时，模型候选动作必须通过 runtime action provider 执行，写入 `evidence/actions/action-000.json`、`action.executed` 和 Atlas transition；执行后状态先标记为 `executed_unverified`，直到后续 wait/verify 证明业务 ready。
+- 显式 `--execute-actions` / HTTP `executeActions=true` 时，模型候选动作必须通过 runtime action provider 执行，写入 `evidence/actions/action-000.json`、`action.executed` 和 Atlas transition；只执行未验证时状态为 `executed_unverified`，搭配 post-action runtime wait 通过后必须写 `business.ready` / passed `verify.checked` 并把 transition 标为 `verified`。
 - Flow bootstrap 和 flow recovery 是 LLM/VLM 的首要验收：能从不同初始场景稳定命中 start anchor，能在 selector drift、弹窗、登录过期、慢加载时给出可审计 repair proposal。
 - VLM 自主探索 loop 有可复跑 dry-run / bounded-run 模式；本地 replay / 稳定回归不能静默退出模型参与，只能把模型角色限制为 observer / verifier / repair-advisor。
 - bounded-run 模式必须有机器可读 runner 边界：`maxSteps`、`allowedActions`、`stopConditions` 可通过 CLI/HTTP 设置并写入 run facts，后续真实 LLM/VLM loop 必须在这些边界内执行。
