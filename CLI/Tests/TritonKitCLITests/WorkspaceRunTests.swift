@@ -1245,6 +1245,11 @@ struct WorkspaceRunTests {
 
         #expect(response.output == output.path)
         #expect(response.stepCount == 2)
+        #expect(response.requiresVLM == false)
+        #expect(response.suggestedCommands == [
+            "triton test validate \(shellQuotedEvidencePath(output.path)) --json",
+            "triton test run \(shellQuotedEvidencePath(output.path)) --json --evidence-dir \(shellQuotedEvidencePath(output.deletingPathExtension().path + ".tritonevidence"))",
+        ])
         #expect(yaml.contains("version: 1"))
         #expect(yaml.contains("name: run-workspace-flow"))
         #expect(yaml.contains("bundleId: com.example.demo"))
@@ -1323,6 +1328,10 @@ struct WorkspaceRunTests {
         let plan = try validateTritonTestContract(yaml: yaml, inputPath: output.path)
 
         #expect(response.stepCount == 3)
+        #expect(response.requiresVLM)
+        #expect(response.suggestedCommands.contains(
+            "triton test run \(shellQuotedEvidencePath(output.path)) --json --evidence-dir \(shellQuotedEvidencePath(output.deletingPathExtension().path + ".tritonevidence")) --allow-vlm"
+        ))
         #expect(yaml.contains("target: \"Continue\""))
         #expect(yaml.contains("grounding: vlm"))
         #expect(yaml.contains("provider: mock"))

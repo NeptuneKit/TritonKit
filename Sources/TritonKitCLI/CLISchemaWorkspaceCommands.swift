@@ -186,6 +186,8 @@ func workspaceCommandSchemas() -> [TKCommandSchema] {
                         ("runId", "String", true, "Workspace run id"),
                         ("output", "String", true, "Written .tritontest.yaml path"),
                         ("stepCount", "Int", true, "Exported deterministic test step count"),
+                        ("requiresVLM", "Bool", true, "True when exported steps require triton test run --allow-vlm"),
+                        ("suggestedCommands", "[String]", true, "Executable validate/run commands for the exported .tritontest.yaml seed"),
                     ])
                 ),
                 TKCommandOutputContract(

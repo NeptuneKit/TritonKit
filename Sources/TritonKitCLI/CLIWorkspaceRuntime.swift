@@ -451,12 +451,42 @@ struct TKWorkspaceExportFlowResponse: Codable, Equatable {
     let runID: String
     let output: String
     let stepCount: Int
+    let requiresVLM: Bool
+    let suggestedCommands: [String]
+
+    init(
+        kind: String = "triton.workspace.export-flow",
+        runID: String,
+        output: String,
+        stepCount: Int,
+        requiresVLM: Bool = false,
+        suggestedCommands: [String] = []
+    ) {
+        self.kind = kind
+        self.runID = runID
+        self.output = output
+        self.stepCount = stepCount
+        self.requiresVLM = requiresVLM
+        self.suggestedCommands = suggestedCommands
+    }
 
     enum CodingKeys: String, CodingKey {
         case kind
         case runID = "runId"
         case output
         case stepCount
+        case requiresVLM
+        case suggestedCommands
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.kind = try container.decode(String.self, forKey: .kind)
+        self.runID = try container.decode(String.self, forKey: .runID)
+        self.output = try container.decode(String.self, forKey: .output)
+        self.stepCount = try container.decode(Int.self, forKey: .stepCount)
+        self.requiresVLM = try container.decodeIfPresent(Bool.self, forKey: .requiresVLM) ?? false
+        self.suggestedCommands = try container.decodeIfPresent([String].self, forKey: .suggestedCommands) ?? []
     }
 }
 
@@ -480,6 +510,7 @@ private struct TKWorkspaceFlowVLMGrounding {
 private struct TKWorkspaceExportedFlow {
     let yaml: String
     let stepCount: Int
+    let requiresVLM: Bool
 }
 
 func runWorkspaceRun(
@@ -1069,10 +1100,14 @@ func exportWorkspaceFlow(runID: String, runsDirectory: String, output: String) t
     )
     try exportedFlow.yaml.write(to: outputURL, atomically: true, encoding: .utf8)
     return TKWorkspaceExportFlowResponse(
-        kind: "triton.workspace.export-flow",
         runID: inspected.run.runID,
         output: outputURL.path,
-        stepCount: exportedFlow.stepCount
+        stepCount: exportedFlow.stepCount,
+        requiresVLM: exportedFlow.requiresVLM,
+        suggestedCommands: workspaceExportFlowSuggestedCommands(
+            outputURL: outputURL,
+            requiresVLM: exportedFlow.requiresVLM
+        )
     )
 }
 
@@ -1150,10 +1185,14 @@ private func workspaceFlowYAML(
         "  - takeScreenshot: {}",
     ]
     var stepCount = 2
+    var requiresVLM = false
     for step in actionSteps {
         guard let stepLines = workspaceTritonTestStepLines(for: step) else { continue }
         lines.append(contentsOf: stepLines)
         stepCount += 1
+        if step.vlmGrounding != nil {
+            requiresVLM = true
+        }
     }
     if let businessQuery = run.business?.query.trimmingCharacters(in: .whitespacesAndNewlines),
        !businessQuery.isEmpty {
@@ -1161,7 +1200,27 @@ private func workspaceFlowYAML(
         lines.append("      text: \"\(yamlEscaped(businessQuery))\"")
         stepCount += 1
     }
-    return TKWorkspaceExportedFlow(yaml: lines.joined(separator: "\n") + "\n", stepCount: stepCount)
+    return TKWorkspaceExportedFlow(
+        yaml: lines.joined(separator: "\n") + "\n",
+        stepCount: stepCount,
+        requiresVLM: requiresVLM
+    )
+}
+
+private func workspaceExportFlowSuggestedCommands(
+    outputURL: URL,
+    requiresVLM: Bool
+) -> [String] {
+    let output = shellQuotedEvidencePath(outputURL.path)
+    let evidenceDir = shellQuotedEvidencePath(outputURL.deletingPathExtension().path + ".tritonevidence")
+    var runCommand = "triton test run \(output) --json --evidence-dir \(evidenceDir)"
+    if requiresVLM {
+        runCommand += " --allow-vlm"
+    }
+    return [
+        "triton test validate \(output) --json",
+        runCommand,
+    ]
 }
 
 private func workspaceTritonTestStepLines(for step: TKWorkspaceFlowActionStep) -> [String]? {
