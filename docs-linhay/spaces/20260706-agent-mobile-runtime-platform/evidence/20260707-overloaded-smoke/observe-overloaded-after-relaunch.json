@@ -1,0 +1,9 @@
+{
+  "error" : {
+    "code" : "target_not_found",
+    "endpoint" : "http:\/\/127.0.0.1:19421\/targets",
+    "hint" : "Run `triton list --json` and pass the exact --target id, or the simulator UDID for an iOS simulator runtime.",
+    "message" : "Target not found: triton:ios-simulator:1B360513-22E7-46DB-A942-198EE522C6DC\/app:overloaded.cn.debug"
+  },
+  "ok" : false
+}

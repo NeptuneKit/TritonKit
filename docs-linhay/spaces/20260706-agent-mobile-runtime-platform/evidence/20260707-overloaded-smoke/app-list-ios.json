@@ -1,0 +1,63 @@
+{
+  "action" : "app.list",
+  "apps" : [
+    {
+      "applicationType" : "User",
+      "bundleContainerURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/5099BD9D-14D0-4003-B689-A273A58E5663\/",
+      "bundleID" : "cn.dxy.iDxyer",
+      "bundleURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/5099BD9D-14D0-4003-B689-A273A58E5663\/iDxyer.app\/",
+      "dataContainerURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Data\/Application\/7F5710BB-580C-4C8B-9AA6-E771A60F8186\/",
+      "displayName" : "丁香园",
+      "executable" : "iDxyer",
+      "groupContainers" : {
+        "group.cn.dxy.dxyergroup" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Shared\/AppGroup\/249A0C16-8500-49F1-A0DB-F7BE2888256D\/"
+      },
+      "name" : "丁香园",
+      "path" : "\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/5099BD9D-14D0-4003-B689-A273A58E5663\/iDxyer.app",
+      "tags" : [
+
+      ],
+      "version" : "2978"
+    },
+    {
+      "applicationType" : "User",
+      "bundleContainerURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/F4BCD2E2-C7B1-4762-9550-5E6990C038EC\/",
+      "bundleID" : "com.neptunekit.tritonkit.demo",
+      "bundleURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/F4BCD2E2-C7B1-4762-9550-5E6990C038EC\/TritonKitDemo.app\/",
+      "dataContainerURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Data\/Application\/194ED78C-D4D8-4136-B8D3-1C95459E630D\/",
+      "displayName" : "TritonKitDemo",
+      "executable" : "TritonKitDemo",
+      "groupContainers" : {
+
+      },
+      "name" : "TritonKitDemo",
+      "path" : "\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/F4BCD2E2-C7B1-4762-9550-5E6990C038EC\/TritonKitDemo.app",
+      "tags" : [
+
+      ],
+      "version" : "1"
+    },
+    {
+      "applicationType" : "User",
+      "bundleContainerURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/49AABDD4-D0E2-4485-8B56-26EF2009048F\/",
+      "bundleID" : "overloaded.cn.debug",
+      "bundleURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/49AABDD4-D0E2-4485-8B56-26EF2009048F\/Overloaded.app\/",
+      "dataContainerURL" : "file:\/\/\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Data\/Application\/93F02C2A-49B7-49F2-A5F3-52A312E5CE71\/",
+      "displayName" : "Overloaded",
+      "executable" : "Overloaded",
+      "groupContainers" : {
+
+      },
+      "name" : "Overloaded",
+      "path" : "\/Users\/linhey\/Library\/Developer\/CoreSimulator\/Devices\/1B360513-22E7-46DB-A942-198EE522C6DC\/data\/Containers\/Bundle\/Application\/49AABDD4-D0E2-4485-8B56-26EF2009048F\/Overloaded.app",
+      "tags" : [
+
+      ],
+      "version" : "1"
+    }
+  ],
+  "count" : 3,
+  "ok" : true,
+  "simulatorUDID" : "1B360513-22E7-46DB-A942-198EE522C6DC",
+  "userOnly" : true
+}

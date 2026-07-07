@@ -1,0 +1,70 @@
+{
+  "action" : "app.terminate",
+  "artifacts" : [
+
+  ],
+  "exitCode" : 0,
+  "hostAction" : {
+    "businessReady" : false,
+    "nextAction" : {
+      "args" : [
+        "<platform>",
+        "--device",
+        "<selector>",
+        "--json"
+      ],
+      "category" : "smoke",
+      "command" : "smoke",
+      "finalEvents" : [
+
+      ],
+      "readyEvents" : [
+
+      ],
+      "requiresLongRunningProcess" : false,
+      "terminationSignals" : [
+
+      ]
+    },
+    "ok" : true,
+    "proofSource" : "host-action"
+  },
+  "note" : "Host action was submitted for app.terminate; hostAction.ok=true is not business readiness. Verify with `triton app launch`, smoke, or evidence.",
+  "ok" : true,
+  "riskLevel" : "automation",
+  "runtimeScope" : "host-simulator",
+  "selection" : {
+    "filters" : {
+      "platform" : "ios",
+      "ready" : false,
+      "scope" : "simulator"
+    },
+    "platform" : "ios",
+    "selector" : "sim:1B360513-22E7-46DB-A942-198EE522C6DC",
+    "source" : "explicit",
+    "target" : {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:1B360513-22E7-46DB-A942-198EE522C6DC",
+      "kind" : "simulator",
+      "name" : "Overloaded-v2 Dedicated iPhone 16 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "1B360513-22E7-46DB-A942-198EE522C6DC"
+    }
+  },
+  "sourceCommand" : "xcrun simctl terminate 1B360513-22E7-46DB-A942-198EE522C6DC cn.dxy.iDxyer",
+  "stderrTruncated" : false,
+  "stdoutTruncated" : false,
+  "suggestedCommands" : [
+    "triton smoke <platform> --device <selector> --json"
+  ],
+  "target" : "sim:1B360513-22E7-46DB-A942-198EE522C6DC\/app:cn.dxy.iDxyer",
+  "tool" : "xcrun"
+}

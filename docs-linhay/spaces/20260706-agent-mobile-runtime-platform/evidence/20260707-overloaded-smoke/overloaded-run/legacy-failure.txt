@@ -1,0 +1,16 @@
+Command:
+
+TRITON_BIN=.build/cli/release/triton TRITON_VERIFY_OUT_DIR=docs-linhay/spaces/20260706-agent-mobile-runtime-platform/evidence/20260707-overloaded-smoke/overloaded-run docs-linhay/scripts/verify-overloaded-triton-smoke.sh
+
+Result:
+
+Exit code 64.
+
+stderr:
+
+Error: Unknown subcommand 'find'
+Usage: triton <subcommand>
+
+Interpretation:
+
+The smoke script was still calling the legacy top-level `find` command. Current Triton CLI exposes the agent-facing action surface under `triton act find/tap/type`.

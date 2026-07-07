@@ -1,0 +1,16 @@
+Command:
+
+TRITON_BIN=.build/cli/release/triton TRITON_VERIFY_OUT_DIR=docs-linhay/spaces/20260706-agent-mobile-runtime-platform/evidence/20260707-overloaded-smoke/overloaded-run-after-script-fix-preflight docs-linhay/scripts/verify-overloaded-triton-smoke.sh
+
+Result:
+
+Exit code 2.
+
+stderr:
+
+expected Overloaded runtime target matching ^overloaded\.cn(\.debug)?$, got: triton:ios-simulator:1B360513-22E7-46DB-A942-198EE522C6DC/app:cn.dxy.iDxyer
+set TRITON_OVERLOADED_EXPECTED_BUNDLE_REGEX= to skip this app identity preflight
+
+Interpretation:
+
+The script no longer fails on a stale CLI command. It now stops before business assertions when the selected runtime target is not Overloaded.

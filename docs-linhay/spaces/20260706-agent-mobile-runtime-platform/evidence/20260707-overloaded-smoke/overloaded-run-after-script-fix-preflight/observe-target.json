@@ -1,0 +1,498 @@
+{
+  "action" : "observe.current",
+  "artifacts" : [
+    "app",
+    "scene",
+    "route",
+    "geometry",
+    "ax"
+  ],
+  "capturedAt" : "2026-07-07T15:38:06Z",
+  "nodes" : [
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : true,
+      "frame" : {
+        "height" : 874,
+        "width" : 402,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:1",
+      "role" : "window",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 24,
+        "width" : 24,
+        "x" : 212,
+        "y" : 797
+      },
+      "hidden" : false,
+      "identifier" : "dui_chat",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:503",
+      "role" : "image",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 14,
+        "width" : 12.666666666666657,
+        "x" : 217.66666666666666,
+        "y" : 821
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:505",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "62"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 49,
+        "width" : 44,
+        "x" : 202,
+        "y" : 791
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:507",
+      "role" : "button",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 24,
+        "width" : 24,
+        "x" : 260,
+        "y" : 797
+      },
+      "hidden" : false,
+      "identifier" : "dui_like",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:511",
+      "role" : "image",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 14,
+        "width" : 11,
+        "x" : 266.6666666666667,
+        "y" : 821
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:513",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "12"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 49,
+        "width" : 44,
+        "x" : 250,
+        "y" : 791
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:515",
+      "role" : "button",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 24,
+        "width" : 24,
+        "x" : 308,
+        "y" : 797
+      },
+      "hidden" : false,
+      "identifier" : "dui_collection",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:519",
+      "role" : "image",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 14,
+        "width" : 20,
+        "x" : 310,
+        "y" : 821
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:521",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "收藏"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 49,
+        "width" : 44,
+        "x" : 298,
+        "y" : 791
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:523",
+      "role" : "button",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 24,
+        "width" : 24,
+        "x" : 356,
+        "y" : 797
+      },
+      "hidden" : false,
+      "identifier" : "dui_share",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:527",
+      "role" : "image",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 14,
+        "width" : 6.666666666666686,
+        "x" : 364.6666666666667,
+        "y" : 821
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:529",
+      "role" : "text",
+      "source" : "runtime-tree",
+      "text" : "3"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 49,
+        "width" : 44,
+        "x" : 346,
+        "y" : 791
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:533",
+      "role" : "button",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 35,
+        "width" : 170,
+        "x" : 20,
+        "y" : 798
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:535",
+      "role" : "button",
+      "source" : "runtime-tree",
+      "text" : "良言医人心"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 106,
+        "width" : 269.6666666666667,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "details_bg1",
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:545",
+      "role" : "image",
+      "source" : "runtime-tree"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 44,
+        "width" : 40,
+        "x" : 0,
+        "y" : 62
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:597",
+      "role" : "button",
+      "source" : "runtime-tree",
+      "text" : "dui back"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap",
+        "runtime-oid"
+      ],
+      "confidence" : 0.9,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 44,
+        "width" : 44,
+        "x" : 352,
+        "y" : 62
+      },
+      "hidden" : false,
+      "missingCapabilities" : [
+        "webview.url",
+        "webview.dom",
+        "webview.bridge-call"
+      ],
+      "nodeID" : "ios-runtime:605",
+      "role" : "button",
+      "source" : "runtime-tree",
+      "text" : "dui more"
+    }
+  ],
+  "note" : "iOS P0 observe uses the DEBUG embedded runtime AX tree. WebView DOM, JavaScript, and bridge state require a Web provider.",
+  "ok" : true,
+  "partial" : true,
+  "platform" : "ios",
+  "primarySource" : {
+    "available" : true,
+    "name" : "runtime-tree",
+    "sourceCommands" : [
+      "triton runtimeSnapshot request"
+    ]
+  },
+  "sourceCommands" : [
+    "triton runtimeSnapshot request"
+  ],
+  "sources" : [
+    {
+      "available" : false,
+      "name" : "host-layout",
+      "reason" : "iOS host layout is not available in P0; use embedded runtime AX",
+      "sourceCommands" : [
+
+      ]
+    },
+    {
+      "available" : true,
+      "name" : "runtime-tree",
+      "sourceCommands" : [
+        "triton runtimeSnapshot request"
+      ]
+    },
+    {
+      "available" : false,
+      "name" : "webview-provider",
+      "reason" : "provider not registered",
+      "sourceCommands" : [
+
+      ]
+    }
+  ],
+  "target" : "triton:ios-simulator:1B360513-22E7-46DB-A942-198EE522C6DC\/app:cn.dxy.iDxyer"
+}
