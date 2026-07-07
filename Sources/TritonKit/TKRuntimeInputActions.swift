@@ -6,6 +6,11 @@ import TritonKitShared
 import UIKit
 #endif
 
+func isSafeControlActionTarget(_ target: Any?) -> Bool {
+    guard let target else { return true }
+    return target is NSObject
+}
+
 #if canImport(UIKit)
 @MainActor
 func performInput(_ request: TKInputRequest) async -> TKInputResult {
@@ -824,6 +829,9 @@ func preferredTapDispatch(for control: UIControl) -> (event: UIControl.Event, ev
         if !actions.isEmpty {
             return (event, eventName, actions)
         }
+        if control.allControlEvents.contains(event) {
+            return (event, eventName, [])
+        }
     }
     return nil
 }
@@ -831,10 +839,16 @@ func preferredTapDispatch(for control: UIControl) -> (event: UIControl.Event, ev
 @MainActor
 func targetActions(for control: UIControl, event: UIControl.Event) -> [(target: Any?, action: Selector)] {
     normalizedControlTargets(from: control.perform(#selector(getter: UIControl.allTargets))?.takeUnretainedValue()).flatMap { target in
-        (control.actions(forTarget: target, forControlEvent: event) ?? []).map { action in
+        safeControlActionNames(for: control, target: target, event: event).map { action in
             (target: target, action: Selector(action))
         }
     }
+}
+
+@MainActor
+func safeControlActionNames(for control: UIControl, target: Any?, event: UIControl.Event) -> [String] {
+    guard isSafeControlActionTarget(target) else { return [] }
+    return control.actions(forTarget: target, forControlEvent: event) ?? []
 }
 
 func normalizedControlTargets(from object: Any?) -> [Any?] {

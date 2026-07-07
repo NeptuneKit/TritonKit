@@ -98,6 +98,14 @@ func buildWorkflowPlan(
         )
     }
 
+    if request.goal == "general", let platform = hostSideWorkflowPlatform(request.platform) {
+        return buildHostSidePlatformWorkflowPlan(
+            capabilities: capabilities,
+            request: request,
+            platform: platform
+        )
+    }
+
     if !capabilities.serverReachable {
         let afterRecoverySteps = request.goal == "general"
             ? []
@@ -278,6 +286,38 @@ func buildWorkflowPlan(
                 expected: "Self-contained .triton archive"
             ),
         ]
+    )
+}
+
+private func hostSideWorkflowPlatform(_ platform: String?) -> String? {
+    guard let platform else { return nil }
+    let normalized = platform.lowercased()
+    return ["android", "harmony"].contains(normalized) ? normalized : nil
+}
+
+private func buildHostSidePlatformWorkflowPlan(
+    capabilities: TKCapabilitiesResponse,
+    request: WorkflowPlanRequest,
+    platform: String
+) -> TKWorkflowPlanResponse {
+    let device = planValue(request.device, "<selector>")
+    return TKWorkflowPlanResponse(
+        ok: true,
+        serverReachable: capabilities.serverReachable,
+        connected: capabilities.connected,
+        runtime: capabilities.runtime,
+        mode: "task",
+        goal: request.goal,
+        nextStep: "device-doctor",
+        nextWorkflows: ["target", "evidence"],
+        steps: [
+            hostDeviceDoctorPlanStep(platform: platform),
+            hostDeviceListPlanStep(platform: platform),
+            hostDeviceWaitReadyPlanStep(platform: platform, device: device),
+            hostObserveTreePlanStep(platform: platform, device: device),
+            hostDeviceScreenshotPlanStep(platform: platform, device: device),
+        ],
+        error: nil
     )
 }
 
@@ -550,6 +590,111 @@ private func targetWaitReadyPlanStep(device: String?, host: String, port: Int) -
         requiresTarget: false,
         when: "before launching or opening app URLs",
         expected: "Target reports ready or returns device_not_ready with source command"
+    )
+}
+
+private func hostDeviceDoctorPlanStep(platform: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "device-doctor",
+        title: "Inspect host-side \(platform) prerequisites",
+        command: [
+            "triton", "device", "doctor",
+            "--platform", platform,
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "before using raw platform tools",
+        expected: "Device doctor reports host tool availability and nextAction without requiring embedded runtime",
+        requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "host-device"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func hostDeviceListPlanStep(platform: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "device-list",
+        title: "List host-side \(platform) targets",
+        command: [
+            "triton", "device", "list",
+            "--platform", platform,
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after host tool prerequisites are known",
+        expected: "Device list returns ready state, transport, sourceCommand, and target ids",
+        requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "host-device"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func hostDeviceWaitReadyPlanStep(platform: String, device: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "device-wait-ready",
+        title: "Wait for host-side \(platform) target readiness",
+        command: [
+            "triton", "device", "wait-ready",
+            "--platform", platform,
+            "--device", device,
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["target", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after choosing a host target",
+        expected: "Target readiness is proven or blocked reasons are machine-readable",
+        requires: ["cli.available"],
+        expectedArtifacts: ["stdout-json", "host-device"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func hostObserveTreePlanStep(platform: String, device: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "observe-tree",
+        title: "Capture host-side \(platform) layout tree",
+        command: [
+            "triton", "observe", "tree",
+            "--platform", platform,
+            "--device", device,
+            "--outline",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["observe", "assert", "evidence"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after the target is ready and a visible UI state is needed",
+        expected: "Host layout tree returns visible nodes or a stable unsupported/error envelope",
+        requires: ["cli.available", "target.ready"],
+        expectedArtifacts: ["stdout-json", "host-layout"],
+        stopConditions: ["command.failed"]
+    )
+}
+
+private func hostDeviceScreenshotPlanStep(platform: String, device: String) -> TKWorkflowPlanStep {
+    TKWorkflowPlanStep(
+        id: "device-screenshot",
+        title: "Capture host-side \(platform) screenshot artifact",
+        command: [
+            "triton", "device", "screenshot",
+            "--platform", platform,
+            "--device", device,
+            "--output", "<screenshot-path>",
+            "--json",
+        ].map(shellEscaped).joined(separator: " "),
+        workflowCategories: ["evidence", "target"],
+        requiresServer: false,
+        requiresTarget: false,
+        when: "after readiness or a UI action needs visual evidence",
+        expected: "Screenshot command writes an artifact and returns source command metadata",
+        requires: ["cli.available", "target.ready"],
+        expectedArtifacts: ["stdout-json", "screenshot", "host-device"],
+        stopConditions: ["command.failed", "artifact.write-failed"]
     )
 }
 

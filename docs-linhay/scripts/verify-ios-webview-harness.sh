@@ -11,9 +11,26 @@ out_dir="${TRITON_VERIFY_OUT_DIR:-/tmp/triton-ios-webview-harness}"
 project="${TRITON_DEMO_PROJECT:-$root/Examples/TritonKitDemo/TritonKitDemo.xcodeproj}"
 scheme="${TRITON_DEMO_SCHEME:-TritonKitDemo}"
 configuration="${TRITON_DEMO_CONFIGURATION:-Debug}"
+demo_source="${TRITON_DEMO_SOURCE:-$root/Examples/TritonKitDemo/TritonKitDemo/App.swift}"
 server_pid=""
 
 mkdir -p "$out_dir"
+
+if ! grep -F 'webView.inputAssistantItem.leadingBarButtonGroups = []' "$demo_source" >/dev/null ||
+   ! grep -F 'webView.inputAssistantItem.trailingBarButtonGroups = []' "$demo_source" >/dev/null; then
+  echo "Demo WKWebView must clear input assistant button groups to avoid avoidable input accessory noise" >&2
+  exit 1
+fi
+
+if ! grep -F 'type="password" value="secret-value" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false"' "$demo_source" >/dev/null; then
+  echo "Demo edge password input must keep AutoFill/autocorrect/spellcheck disabled" >&2
+  exit 1
+fi
+
+if [[ "${TRITON_STATIC_ONLY:-0}" == "1" ]]; then
+  echo "iOS WebView harness static checks passed"
+  exit 0
+fi
 
 if [[ ! -x "$triton" ]]; then
   echo "missing triton binary: $triton" >&2

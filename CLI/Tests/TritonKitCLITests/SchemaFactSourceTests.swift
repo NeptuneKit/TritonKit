@@ -155,6 +155,32 @@ struct SchemaFactSourceTests {
         #expect(unavailable.checks.first?.relatedCapabilities.contains("status") == true)
         #expect(unavailable.checks.first?.workflowCategories.contains("app") == true)
 
+        let unavailableHarmony = buildDoctorResponse(
+            capabilities: TKCapabilitiesResponse(
+                ok: false,
+                serverReachable: false,
+                connected: false,
+                latestHierarchyAvailable: false,
+                targetCount: 0,
+                runtime: "unknown",
+                capabilities: runtimeCapabilities(host: "127.0.0.1", port: 19421, serverReachable: false, connected: false),
+                error: TKCLIErrorDetail(code: "server_unavailable", message: "No server")
+            ),
+            host: "127.0.0.1",
+            port: 19421,
+            platform: .harmony
+        )
+
+        #expect(unavailableHarmony.nextStep == "host-device")
+        #expect(unavailableHarmony.primaryWorkflowCategory == "target")
+        #expect(unavailableHarmony.nextWorkflows == ["target", "evidence"])
+        #expect(unavailableHarmony.primaryNextAction?.command == "device")
+        #expect(unavailableHarmony.primaryNextAction?.args == ["list", "--platform", "harmony", "--json"])
+        #expect(unavailableHarmony.primaryNextActionSource == "next-step-check")
+        #expect(unavailableHarmony.error == nil)
+        #expect(unavailableHarmony.checks.first?.id == "host-device")
+        #expect(unavailableHarmony.checks.first(where: { $0.id == "runtime-server" })?.status == "warn")
+
         let connected = buildDoctorResponse(
             capabilities: TKCapabilitiesResponse(
                 ok: true,

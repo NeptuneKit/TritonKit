@@ -1083,19 +1083,24 @@ func buildDoctorResponse(capabilities: TKCapabilitiesResponse, host: String, por
         ?? checks.first(where: { $0.id == "host-device" })
         ?? checks.first(where: { $0.status == "warn" })
     let nextStep = nextCheck?.id ?? "ready"
+    let platformFocused = platform != nil
     return TKDoctorResponse(
-        ok: capabilities.ok && checks.allSatisfy { $0.status != "fail" },
+        ok: platformFocused ? checks.allSatisfy { $0.status != "fail" } : capabilities.ok && checks.allSatisfy { $0.status != "fail" },
         serverReachable: capabilities.serverReachable,
         connected: capabilities.connected,
         runtime: capabilities.runtime,
         nextStep: nextStep,
         nextWorkflows: nextCheck?.workflowCategories ?? [],
         checks: checks,
-        error: capabilities.error
+        error: platformFocused ? nil : capabilities.error
     )
 }
 
 private func doctorChecks(capabilities: TKCapabilitiesResponse, host: String, port: Int, platform: HostDevicePlatform?) -> [TKDoctorCheck] {
+    if let platform {
+        return platformFocusedDoctorChecks(capabilities: capabilities, host: host, port: port, platform: platform)
+    }
+
     if !capabilities.serverReachable {
         let startServerRelatedCapabilities = capabilities.capabilities.filter { $0.nextAction?.command == "serve" }.map(\.name)
         return [
@@ -1206,6 +1211,88 @@ private func doctorChecks(capabilities: TKCapabilitiesResponse, host: String, po
         code: "plan_available",
         message: "Task planning is available",
         nextAction: TKCLINextAction(command: "plan", args: ["--json"]),
+        relatedCapabilities: planRelatedCapabilities,
+        workflowCategories: workflowCategoriesForCapabilities(planRelatedCapabilities, in: capabilities.capabilities)
+    ))
+
+    return checks
+}
+
+private func platformFocusedDoctorChecks(capabilities: TKCapabilitiesResponse, host: String, port: Int, platform: HostDevicePlatform) -> [TKDoctorCheck] {
+    var checks: [TKDoctorCheck] = []
+
+    if capabilities.serverReachable {
+        checks.append(TKDoctorCheck(
+            id: "server",
+            status: "pass",
+            code: "server_reachable",
+            message: "Local Triton server responded",
+            nextAction: TKCLINextAction(command: "status", args: ["--json"]),
+            relatedCapabilities: ["status", "capabilities"],
+            workflowCategories: workflowCategoriesForCapabilities(["status", "capabilities"], in: capabilities.capabilities)
+        ))
+    }
+
+    let hostDeviceCapabilities = hostDeviceDoctorCapabilities(platform: platform)
+    checks.append(TKDoctorCheck(
+        id: "host-device",
+        status: "pass",
+        code: "host_device_available",
+        message: "Host-side \(platform.rawValue) device workflows are available",
+        hint: "Use device doctor/list/wait-ready before falling back to raw platform tools.",
+        nextAction: hostDeviceDoctorNextAction(platform: platform),
+        relatedCapabilities: hostDeviceCapabilities,
+        workflowCategories: ["target", "evidence"]
+    ))
+
+    if capabilities.serverReachable {
+        if capabilities.connected {
+            let runtimeRelatedCapabilities = capabilities.capabilities.filter { $0.group == "runtime" && $0.supported }.map(\.name)
+            checks.append(TKDoctorCheck(
+                id: "runtime",
+                status: "pass",
+                code: "runtime_available",
+                message: "Embedded runtime capabilities are available",
+                nextAction: TKCLINextAction(command: "runtime", args: ["manifest", "--json"]),
+                relatedCapabilities: runtimeRelatedCapabilities,
+                workflowCategories: workflowCategoriesForCapabilities(runtimeRelatedCapabilities, in: capabilities.capabilities)
+            ))
+        } else {
+            let runtimeRelatedCapabilities = capabilities.capabilities
+                .filter { $0.reason?.contains("embedded TritonKit runtime") == true }
+                .map(\.name)
+            checks.append(TKDoctorCheck(
+                id: "embedded-runtime",
+                status: "warn",
+                code: "target_unavailable",
+                message: "No embedded runtime target is connected; host-side \(platform.rawValue) workflows can continue without it",
+                hint: "Only connect an embedded runtime when the workflow needs in-app DEBUG state.",
+                nextAction: TKCLINextAction(command: "target", args: ["list", "--json"]),
+                relatedCapabilities: runtimeRelatedCapabilities,
+                workflowCategories: workflowCategoriesForCapabilities(runtimeRelatedCapabilities, in: capabilities.capabilities)
+            ))
+        }
+    } else {
+        let startServerRelatedCapabilities = capabilities.capabilities.filter { $0.nextAction?.command == "serve" }.map(\.name)
+        checks.append(TKDoctorCheck(
+            id: "runtime-server",
+            status: "warn",
+            code: "server_unavailable",
+            message: "Local Triton server is not reachable; host-side \(platform.rawValue) device diagnostics do not require it",
+            hint: "Start `triton serve` only when the workflow needs embedded runtime state.",
+            nextAction: TKCLINextAction(command: "serve", args: ["--host", host, "--port", String(port)], requiresLongRunningProcess: true),
+            relatedCapabilities: startServerRelatedCapabilities,
+            workflowCategories: workflowCategoriesForCapabilities(startServerRelatedCapabilities, in: capabilities.capabilities)
+        ))
+    }
+
+    let planRelatedCapabilities = ["plan", "target-list", "evidence-summary"]
+    checks.append(TKDoctorCheck(
+        id: "plan",
+        status: "pass",
+        code: "plan_available",
+        message: "Task planning is available",
+        nextAction: TKCLINextAction(command: "plan", args: ["--platform", platform.rawValue, "--json"]),
         relatedCapabilities: planRelatedCapabilities,
         workflowCategories: workflowCategoriesForCapabilities(planRelatedCapabilities, in: capabilities.capabilities)
     ))
