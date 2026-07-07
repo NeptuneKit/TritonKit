@@ -173,6 +173,21 @@ struct Serve: AsyncParsableCommand {
             }
         }
 
+        router.post("/workspace/runs/:runId/merge-map") { request, _ -> Response in
+            let endpoint = "/workspace/runs/:runId/merge-map"
+            guard let runID = workspaceHTTPRunID(from: request, terminalComponent: "merge-map") else {
+                return workspaceHTTPInvalidRunID(endpoint: endpoint)
+            }
+            do {
+                return jsonResponse(try handleWorkspaceHTTPMergeMap(
+                    runID: runID,
+                    body: try await requestBodyData(from: request)
+                ))
+            } catch {
+                return workspaceHTTPErrorResponse(error, endpoint: endpoint)
+            }
+        }
+
         router.get("/v1/app-map/inspect") { request, _ -> Response in
             guard let map = queryParameter("map", from: request) else {
                 return missingAppMapHTTPParameter("map", endpoint: "/v1/app-map/inspect")

@@ -613,6 +613,7 @@ POST /workspace/run
 GET  /workspace/runs/:runId
 POST /workspace/runs/:runId/stop
 POST /workspace/runs/:runId/export-flow
+POST /workspace/runs/:runId/merge-map
 ```
 
 ### Workbench
@@ -681,7 +682,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 已落地最小本地 Run 事实流：
 
 - 新增 `triton workspace run|inspect|stop|export-flow|merge-map` CLI 入口，并在 `triton schema --command workspace --json` 中暴露命令契约。
-- 新增同构 HTTP handler：`POST /workspace/run`、`GET /workspace/runs/:runId`、`POST /workspace/runs/:runId/stop`、`POST /workspace/runs/:runId/export-flow`。
+- 新增同构 HTTP handler：`POST /workspace/run`、`GET /workspace/runs/:runId`、`POST /workspace/runs/:runId/stop`、`POST /workspace/runs/:runId/export-flow`、`POST /workspace/runs/:runId/merge-map`。
 - `workspace run` 支持显式 target metadata：CLI `--platform/--scope` 和 HTTP `platform/scope` 会写入 `target.platform`、`target.scope` 与 `evidence/model/target.json`；未传时仍保留 `unknown/current`，不伪装自动设备发现。
 - `workspace run` 会创建 `.triton/runs/<run-id>/` 兼容目录骨架，写入 `run.json`、`config.yaml`、`events.jsonl`、`report.json`、`atlas/atlas.json`、`atlas/app-map/app-map.json` 和首批 evidence placeholder。
 - `workspace run` 支持显式 App lifecycle mode：CLI `--app-mode dry|attach|launch` 与 HTTP `appMode` 默认 `dry`；`launch` 会在 initial observation 前调用现有 host app launch adapter，支持 iOS `bundleId`、Android `packageName/activity`、Harmony `bundle/ability`，并把 `evidence/actions/app-ready.json` 写为 `mode=launch`、`phase=launch_submitted`、`businessReady=false`。当同一 run 显式 `--observe-live` 成功后，app-ready artifact 和 `app.ready` event phase 升级为 `launch_observed`，保留 observation backlink 与首帧摘要。
@@ -690,7 +691,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `workspace run` 支持 action 后业务验证和 bounded recovery loop：`--execute-actions --business-ready-text <text> --business-ready-live-wait` / HTTP `executeActions=true, businessReadyLiveWait=true` 会在 action 成功后调用 runtime wait(text)；wait ok 时写 `evidence/business/ready.json stage=post_action, phase=post_action_wait_matched`，事件顺序为 `action.executed -> business.ready -> verify.checked -> atlas.updated`，`run.status=passed`，Atlas transition 写 `verified`。如果同一 run 也显式 `--observe-live`，action 成功后会先二次 observe，写 `evidence/observations/0001.json`、`observation.captured phase=post_action`、Atlas `screen_0001/state_0001`，事件顺序变为 `action.executed -> observation.captured(post_action) -> business.ready -> verify.checked -> atlas.updated`，transition 从 `screen_0000` 指向 `screen_0001`。若 post-action wait 失败且 `maxSteps` 仍有预算，下一轮使用最新 post-action observation visibleTexts，写 `decision-001/action-001/verify-001`，并追加 `transition_0001`。
 - `atlas/atlas.json` 不再是空壳：默认从初始 `observation.captured` 生成一个 `screen_0000`、一个 `state_0000`、coverage 计数和 screenshot / hierarchy / event evidence backlink。
 - `workspace run` 会把 run-local Atlas 投影成 `atlas/app-map/`：写 app-map screen、transition、run record、candidate path 和 suite 文件；bounded recovery loop 的 `screen_0000 -> screen_0001 -> screen_0002` 会形成完整 path，例如 `path-login-dashboard`。
-- `workspace merge-map <run-id> --map-dir <dir.tritonmap>` 会把 run-local `atlas/app-map/` 合并进长期本地 app-map，screen / transition / path / suite 按稳定 id 去重，path `sourceRuns` 与 health 跨 run 累积，`--confirm` 可把候选 path 标为 confirmed。
+- `workspace merge-map <run-id> --map-dir <dir.tritonmap>` 和 HTTP `POST /workspace/runs/:runId/merge-map` 会把 run-local `atlas/app-map/` 合并进长期本地 app-map，screen / transition / path / suite 按稳定 id 去重，path `sourceRuns` 与 health 跨 run 累积，`--confirm` / body `confirm=true` 可把候选 path 标为 confirmed。
 - `workspace run` 支持 `--observation-fixture <json>` / HTTP `observationFixture`，可消费 workspace observation fixture 的 `artifacts + screenCandidate + sourceCommands`，也可直接消费 `triton observe current/tree --json` 输出；运行时保留原始 JSON 到 `evidence/observations/0000.json`，并用真实 visibleTexts / hash / artifact refs 生成 `observation.captured` 与 Atlas seed；未传时仍使用 placeholder。
 - `workspace run` 支持显式 live observe：CLI `--observe-live --observe-kind current|tree --platform <platform> --target <selector>` 与 HTTP `observeLive/observeKind/observeMaxNodes` 会调用现有 `triton observe current/tree` 下层 runtime，保存 initial raw `ObserveOutput` 到 `evidence/observations/0000.json`，并从 nodes / primarySource / artifacts 派生 `observation.captured` 与 Atlas seed；当同一 run 的显式 action 成功后，会再次调用 live observe，保存 post-action raw `ObserveOutput` 到 `evidence/observations/0001.json`，派生 `observation.captured phase=post_action` 和 Atlas `screen_0001/state_0001`；无独立截图或 AX artifact 时保留 placeholder screenshot，并用 hierarchy/raw observe 作为 AX 回退，保持事件协议可解析。
 - `--dry-model-fixture` 会把测试协议里的失败动作写回 Atlas：`atlas/deltas.jsonl` 和 `atlas/atlas.json` 都包含 `transition_0000`，状态为 `candidate_failed`，从 `screen_0000` 回到 `screen_0000`，并引用 model / policy / action / verify evidence。

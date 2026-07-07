@@ -187,6 +187,12 @@ struct TKWorkspaceHTTPExportFlowRequest: Codable, Equatable {
     let output: String
 }
 
+struct TKWorkspaceHTTPMergeMapRequest: Codable, Equatable {
+    let runsDir: String?
+    let mapDir: String
+    let confirm: Bool?
+}
+
 func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
     let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPRunRequest.self, from: body)
     return try runWorkspaceRun(workspaceRunRequest(from: request))
@@ -275,6 +281,16 @@ func handleWorkspaceHTTPExportFlow(runID: String, body: Data) throws -> TKWorksp
         runID: runID,
         runsDirectory: request.runsDir ?? ".triton/runs",
         output: request.output
+    )
+}
+
+func handleWorkspaceHTTPMergeMap(runID: String, body: Data) throws -> TKWorkspaceMergeMapResponse {
+    let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPMergeMapRequest.self, from: body)
+    return try mergeWorkspaceRunAppMap(
+        runID: runID,
+        runsDirectory: request.runsDir ?? ".triton/runs",
+        mapDirectory: request.mapDir,
+        confirm: request.confirm ?? false
     )
 }
 

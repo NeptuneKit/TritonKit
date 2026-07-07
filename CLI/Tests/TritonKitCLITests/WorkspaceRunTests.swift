@@ -1293,9 +1293,113 @@ struct WorkspaceRunTests {
         #expect(FileManager.default.fileExists(atPath: output.path))
     }
 
+    @Test("workspace HTTP merge-map accumulates run-local app maps")
+    func workspaceHTTPMergeMapAccumulatesRunLocalAppMaps() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let mapDir = root.appendingPathComponent("workspace-http.tritonmap", isDirectory: true)
+
+        try await runDashboardPath(runID: "run-workspace-http-merge-1", root: root)
+        try await runDashboardPath(runID: "run-workspace-http-merge-2", root: root)
+
+        let first = try handleWorkspaceHTTPMergeMap(
+            runID: "run-workspace-http-merge-1",
+            body: try JSONEncoder().encode(TKWorkspaceHTTPMergeMapRequest(
+                runsDir: root.path,
+                mapDir: mapDir.path,
+                confirm: true
+            ))
+        )
+        #expect(first.kind == "triton.workspace.merge-map")
+        #expect(first.pathIDs == ["path-login-dashboard"])
+
+        let second = try handleWorkspaceHTTPMergeMap(
+            runID: "run-workspace-http-merge-2",
+            body: try JSONEncoder().encode(TKWorkspaceHTTPMergeMapRequest(
+                runsDir: root.path,
+                mapDir: mapDir.path,
+                confirm: true
+            ))
+        )
+        #expect(second.pathCount == 1)
+        #expect(second.pathIDs == ["path-login-dashboard"])
+
+        let inspect = try inspectTritonAppMap(mapPath: mapDir.path)
+        #expect(inspect.health.observedRuns == 2)
+        #expect(inspect.health.passCount == 2)
+
+        let path = try #require(listTritonAppMapPaths(mapPath: mapDir.path).paths.first)
+        #expect(path.sourceRuns == ["run-workspace-http-merge-1", "run-workspace-http-merge-2"])
+        #expect(path.health.observedRuns == 2)
+        #expect(path.confirmed)
+    }
+
     private func temporaryRunsDirectory() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("triton-workspace-runs-\(UUID().uuidString)", isDirectory: true)
+    }
+
+    private func runDashboardPath(runID: String, root: URL) async throws {
+        var observeRequests: [TKWorkspaceLiveObserveRequest] = []
+        var waitCount = 0
+        let snapshots: [([String], String)] = [
+            (["Login", "Continue"], "login"),
+            (["Interstitial", "Next"], "interstitial"),
+            (["Dashboard"], "dashboard"),
+        ]
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: runID,
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Reach dashboard through intermediate screen",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                maxSteps: 2,
+                observeLive: true,
+                businessReadyText: "Dashboard",
+                businessReadyLiveWait: true,
+                businessReadyTimeout: 2,
+                businessReadyInterval: 0.25,
+                executeActions: true
+            ),
+            observeProvider: { request in
+                observeRequests.append(request)
+                let snapshot = snapshots[min(observeRequests.count - 1, snapshots.count - 1)]
+                return fakeLiveObserveOutput(
+                    for: request,
+                    visibleTexts: snapshot.0,
+                    artifactStem: snapshot.1
+                )
+            },
+            businessWaitProvider: { request in
+                waitCount += 1
+                if waitCount == 1 {
+                    return businessWaitResult(
+                        query: request.query,
+                        timeout: request.timeout,
+                        interval: request.interval,
+                        ok: false
+                    )
+                }
+                return businessWaitResult(
+                    query: request.query,
+                    timeout: request.timeout,
+                    interval: request.interval,
+                    ok: true
+                )
+            },
+            actionExecutionProvider: { request in
+                successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "passed")
     }
 
     private func writeObservationFixture(in root: URL) throws -> URL {
@@ -1388,7 +1492,73 @@ struct WorkspaceRunTests {
         return fixture
     }
 
-    private func fakeLiveObserveOutput(for request: TKWorkspaceLiveObserveRequest) -> ObserveOutput {
+    private func successfulActionExecution(
+        for request: TKWorkspaceActionExecutionRequest
+    ) -> TKWorkspaceActionExecutionResult {
+        TKWorkspaceActionExecutionResult(
+            ok: true,
+            action: request.action,
+            command: request.command,
+            proofSource: request.vlmGrounding == nil ? "runtime.input" : "vlm.grounding+runtime.input",
+            sourceCommands: [request.command.map { $0 }.joined(separator: " "), "runtime input tap"],
+            message: "submitted",
+            inputResult: TKInputResult.success(
+                action: "tap",
+                message: "tap submitted",
+                targetOID: 42,
+                targetClassName: "UIButton",
+                matchedOID: 42,
+                matchedClassName: "UIButton",
+                activationOID: 42,
+                activationClassName: "UIButton",
+                strategy: "exact"
+            ),
+            tapResolution: nil,
+            vlmGrounding: request.vlmGrounding
+        )
+    }
+
+    private func businessWaitResult(
+        query: String,
+        timeout: Double,
+        interval: Double,
+        ok: Bool
+    ) -> TKWaitResult {
+        TKWaitResult(
+            ok: ok,
+            matched: ok,
+            condition: "text",
+            query: query,
+            timedOut: !ok,
+            elapsedMs: ok ? 140 : Int(timeout * 1000),
+            pollCount: ok ? 2 : 1,
+            timeoutSeconds: timeout,
+            intervalSeconds: interval,
+            targetConnectionState: "connected",
+            hierarchyCacheState: "active",
+            lastObservedNodeCount: ok ? 4 : 2,
+            lastObservedTextSample: ok ? ["Login", query] : ["Login", "Continue"],
+            match: ok ? TKWaitMatch(
+                text: query,
+                role: "button",
+                label: query,
+                value: nil,
+                identifier: "dashboard-button",
+                title: query,
+                frame: nil,
+                targetOID: 77,
+                viewOID: 70,
+                className: "UIButton",
+                source: "ax"
+            ) : nil
+        )
+    }
+
+    private func fakeLiveObserveOutput(
+        for request: TKWorkspaceLiveObserveRequest,
+        visibleTexts: [String] = ["Login", "Continue"],
+        artifactStem: String = "live"
+    ) -> ObserveOutput {
         ObserveOutput(
             ok: true,
             action: request.action,
@@ -1400,7 +1570,7 @@ struct WorkspaceRunTests {
                 name: "host-layout",
                 available: true,
                 reason: nil,
-                artifact: "fixtures/live-tree.json",
+                artifact: "fixtures/\(artifactStem)-tree.json",
                 sourceCommands: ["triton sim ax --device \(request.target) --json"]
             ),
             sources: [
@@ -1408,43 +1578,28 @@ struct WorkspaceRunTests {
                     name: "host-layout",
                     available: true,
                     reason: nil,
-                    artifact: "fixtures/live-tree.json",
+                    artifact: "fixtures/\(artifactStem)-tree.json",
                     sourceCommands: ["triton sim ax --device \(request.target) --json"]
                 ),
             ],
-            nodes: [
+            nodes: visibleTexts.enumerated().map { index, text in
                 ObserveNodeOutput(
-                    nodeID: "ios-host:1",
+                    nodeID: "ios-host:\(index + 1)",
                     source: "host-layout",
                     role: "button",
-                    text: "Login",
-                    identifier: "login-button",
+                    text: text,
+                    identifier: "\(text.lowercased())-button",
                     frame: nil,
                     enabled: true,
                     focused: false,
                     hidden: false,
                     candidateOnly: false,
-                    confidence: 0.96,
+                    confidence: 0.95,
                     capabilities: ["visible", "tap"],
                     missingCapabilities: []
-                ),
-                ObserveNodeOutput(
-                    nodeID: "ios-host:2",
-                    source: "host-layout",
-                    role: "button",
-                    text: "Continue",
-                    identifier: "continue-button",
-                    frame: nil,
-                    enabled: true,
-                    focused: false,
-                    hidden: false,
-                    candidateOnly: false,
-                    confidence: 0.93,
-                    capabilities: ["visible", "tap"],
-                    missingCapabilities: []
-                ),
-            ],
-            artifacts: ["fixtures/live-screenshot.png", "fixtures/live-tree.json"],
+                )
+            },
+            artifacts: ["fixtures/\(artifactStem)-screenshot.png", "fixtures/\(artifactStem)-tree.json"],
             sourceCommands: ["triton sim ax --device \(request.target) --json"],
             note: "fake live observe"
         )
