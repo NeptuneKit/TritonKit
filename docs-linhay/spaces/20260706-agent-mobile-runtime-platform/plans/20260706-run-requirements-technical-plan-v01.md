@@ -389,7 +389,30 @@ dry | attach | launch
 }
 ```
 
-`dry` 保持旧 skeleton，不提交 host/device action；`attach` 只把当前目标纳入 run facts；`launch` 复用现有 host app adapter 并写 `app.ready phase=launch_submitted`。如果同一 run 在 launch 后执行 live observe 并成功拿到 `observation.captured`，`app.ready` phase 升级为 `launch_observed`，`ready=true`，并写入 `observationRef=events.jsonl#observation.captured` 以及首帧 screenshot / hierarchy / visibleTextCount 摘要。`launch_submitted` 和 `launch_observed` 都不能跳过后续 `wait/verify` 或业务 anchor 判断，`businessReady` 保持 `false`。
+`dry` 保持旧 skeleton，不提交 host/device action；`attach` 只把当前目标纳入 run facts；`launch` 复用现有 host app adapter 并写 `app.ready phase=launch_submitted`。如果同一 run 在 launch 后执行 live observe 并成功拿到 `observation.captured`，`app.ready` phase 升级为 `launch_observed`，`ready=true`，并写入 `observationRef=events.jsonl#observation.captured` 以及首帧 screenshot / hierarchy / visibleTextCount 摘要。`launch_submitted` 和 `launch_observed` 都不能跳过后续 `wait/verify` 或业务 anchor 判断，`businessReady` 保持 `false`。首期业务 anchor 可由 `--business-ready-text <text>` / HTTP `businessReadyText` 提供：命中 initial observation visible text 时写 `evidence/business/ready.json`、`business.ready` 和 passed `verify.checked`，并以 `run.finished status=passed` 收尾。
+
+业务 checkpoint artifact：
+
+```json
+{
+  "schemaVersion": 1,
+  "kind": "triton.workspace.business-ready",
+  "ready": true,
+  "businessReady": true,
+  "status": "passed",
+  "check": "visible_text",
+  "query": "Continue",
+  "match": "exact",
+  "phase": "text_matched",
+  "source": "observation.visibleTexts",
+  "matchedTexts": ["Continue"],
+  "observationRef": "events.jsonl#observation.captured",
+  "evidenceRefs": [
+    "events.jsonl#observation.captured",
+    "evidence/actions/app-ready.json"
+  ]
+}
+```
 
 ### Observation DTO
 
@@ -557,6 +580,7 @@ CLI 首批只需要：
 triton workspace run --target current --app <app> --goal "<goal>" --json
 triton workspace run --target current --app <app> --goal "<goal>" --llm-provider mock --vlm-provider mock --json
 triton workspace run --target booted --platform ios --scope simulator --app <app> --goal "<goal>" --app-mode launch --bundle-id <bundle-id> --observe-live --observe-kind tree --json
+triton workspace run --target booted --platform ios --scope simulator --app <app> --goal "<goal>" --app-mode launch --bundle-id <bundle-id> --observe-live --business-ready-text Continue --json
 triton workspace run --target emulator-5554 --platform android --scope emulator --app <package> --goal "<goal>" --app-mode launch --package-name <package> --activity <activity> --observe-live --json
 triton workspace run --target booted --platform ios --scope simulator --app <app> --goal "<goal>" --observe-live --observe-kind tree --json
 triton workspace run --target current --app <app> --goal "<goal>" --max-steps 5 --allowed-action tap --allowed-action wait --stop-condition max_steps_reached --json
@@ -605,7 +629,10 @@ Workbench 首屏只读 Run facts：
 
 ```text
 workspace run dry skeleton:
-target.resolved -> provider.checked -> app.ready -> observe.captured -> flow.bootstrap.checked -> run.paused|run.stopped
+target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.paused|run.stopped
+
+workspace run with matched business checkpoint:
+target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> business.ready -> verify.checked -> run.finished(status=passed)
 ```
 
 验收：
@@ -641,6 +668,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `workspace run` 支持显式 target metadata：CLI `--platform/--scope` 和 HTTP `platform/scope` 会写入 `target.platform`、`target.scope` 与 `evidence/model/target.json`；未传时仍保留 `unknown/current`，不伪装自动设备发现。
 - `workspace run` 会创建 `.triton/runs/<run-id>/` 兼容目录骨架，写入 `run.json`、`config.yaml`、`events.jsonl`、`report.json`、`atlas/atlas.json` 和首批 evidence placeholder。
 - `workspace run` 支持显式 App lifecycle mode：CLI `--app-mode dry|attach|launch` 与 HTTP `appMode` 默认 `dry`；`launch` 会在 initial observation 前调用现有 host app launch adapter，支持 iOS `bundleId`、Android `packageName/activity`、Harmony `bundle/ability`，并把 `evidence/actions/app-ready.json` 写为 `mode=launch`、`phase=launch_submitted`、`businessReady=false`。当同一 run 显式 `--observe-live` 成功后，app-ready artifact 和 `app.ready` event phase 升级为 `launch_observed`，保留 observation backlink 与首帧摘要。
+- `workspace run` 支持首个业务 checkpoint：CLI `--business-ready-text <text>` 与 HTTP `businessReadyText` 会用 initial observation 的 visibleTexts 做 exact match；命中时写 `evidence/business/ready.json`、`business.ready` 和 passed `verify.checked`，`run.json` / `report.json` 写 `business.ready=true` 并以 `run.finished status=passed` 收尾；未命中时返回 `business_checkpoint_missing` nextAction。
 - `atlas/atlas.json` 不再是空壳：默认从初始 `observation.captured` 生成一个 `screen_0000`、一个 `state_0000`、coverage 计数和 screenshot / hierarchy / event evidence backlink。
 - `workspace run` 支持 `--observation-fixture <json>` / HTTP `observationFixture`，可消费 workspace observation fixture 的 `artifacts + screenCandidate + sourceCommands`，也可直接消费 `triton observe current/tree --json` 输出；运行时保留原始 JSON 到 `evidence/observations/0000.json`，并用真实 visibleTexts / hash / artifact refs 生成 `observation.captured` 与 Atlas seed；未传时仍使用 placeholder。
 - `workspace run` 支持显式 live observe：CLI `--observe-live --observe-kind current|tree --platform <platform> --target <selector>` 与 HTTP `observeLive/observeKind/observeMaxNodes` 会调用现有 `triton observe current/tree` 下层 runtime，保存 raw `ObserveOutput` 到 `evidence/observations/0000.json`，并从 nodes / primarySource / artifacts 派生 `observation.captured` 与 Atlas seed；无独立截图或 AX artifact 时保留 placeholder screenshot，并用 hierarchy/raw observe 作为 AX 回退，保持事件协议可解析。
@@ -648,7 +676,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `export-flow` 会从 `action.executed` 事件派生最小 action step；dry fixture 当前可导出 `tap Continue`，并保留 model / policy / verify evidence backlink。
 - `workspace inspect` 会返回 Atlas summary：`atlasRef`、`deltaRef`、`coverageStatus`、`screenCount`、`stateCount`、`transitionCount`，并返回 `latestBootstrap` / `latestBootstrapProposal` / `latestPause`，便于 agent 不打开文件也能判断 map 覆盖、稳定启动建议和暂停原因。
 - 默认写入 `llmEnabled=true`、`vlmEnabled=true`、`providersReady=false` 与 `configure_ai_provider` nextAction；当前不伪装真实模型或设备已执行。
-- `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.paused|run.stopped`，并复用 `TKTestRunEventLogParser` 校验；provider missing / LLM missing / policy rejected 会写 `run.paused`，显式 `workspace stop` 会写 `run.stopped`。
+- `events.jsonl` 首批事实流为 `run.started -> target.resolved -> provider.checked -> app.ready -> observation.captured -> flow.bootstrap.checked -> run.paused|run.stopped`，命中 `--business-ready-text` 时进入 `business.ready -> verify.checked -> run.finished(status=passed)` 分支，并复用 `TKTestRunEventLogParser` 校验；provider missing / LLM missing / policy rejected 会写 `run.paused`，显式 `workspace stop` 会写 `run.stopped`。
 - policy rejected 会返回 `review_policy_rejection` nextAction，指向调整 runner allowlist、修正 goal 或检查 `evidence/model/policy-000.json`。
 - `export-flow` 当前从事件流导出最小 `.tritonflow.yaml` seed，先覆盖 `launchApp / observe / bootstrapCheck` 三步。
 - 新增显式 dry fixture：`--dry-model-fixture` / HTTP `dryModelFixture=true` 会追加 `model.decided -> policy.checked -> action.executed -> verify.checked -> flow.recovery.detected/proposed/rejected -> atlas.updated -> flow.updated` 事件，用于固定第二刀协议；它仍是测试夹具，不伪装真实 LLM/VLM 或设备动作。
@@ -661,7 +689,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 
 刻意未做：
 
-- 未接真实 target discovery / action execution；App launch 已可通过显式 `--app-mode launch` 进入 Run 并写入 `launch_submitted`，且 `--observe-live` 可把同一次 run 升级为 `launch_observed`，但还没有做业务 anchor verify、失败恢复或 action 后二次 observation transition。
+- 未接真实 target discovery / action execution；App launch 已可通过显式 `--app-mode launch` 进入 Run 并写入 `launch_submitted`，且 `--observe-live` 可把同一次 run 升级为 `launch_observed`；业务 anchor 首期已支持 initial observation text checkpoint，但还没有接 live wait/assert provider、失败恢复执行或 action 后二次 observation transition。
 - 未接真实 LLM provider、真实 VLM request/response 或真实 observation 驱动的模型决策。
 - 未生成真实 observation 驱动的 Atlas transition、state variant 合并、coverage path 或 app-map merge；当前 transition 和 action flow step 只来自 deterministic dry fixture / mock provider loop。
 - 未做 Web Workbench 视图。

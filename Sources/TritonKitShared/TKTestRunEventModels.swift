@@ -90,6 +90,7 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
     public static let policyChecked = Self(rawValue: "policy.checked")
     public static let actionExecuted = Self(rawValue: "action.executed")
     public static let verifyChecked = Self(rawValue: "verify.checked")
+    public static let businessReady = Self(rawValue: "business.ready")
     public static let flowBootstrapChecked = Self(rawValue: "flow.bootstrap.checked")
     public static let flowBootstrapProposed = Self(rawValue: "flow.bootstrap.proposed")
     public static let flowRecoveryDetected = Self(rawValue: "flow.recovery.detected")
@@ -123,6 +124,7 @@ public struct TKTestRunEventType: RawRepresentable, Codable, Equatable, Hashable
         "policy.checked",
         "action.executed",
         "verify.checked",
+        "business.ready",
         "flow.bootstrap.checked",
         "flow.bootstrap.proposed",
         "flow.recovery.detected",
@@ -670,6 +672,12 @@ public struct TKTestRunEventLogParser: Sendable {
             try require(event.stepIndex, "stepIndex", lineNumber)
             try require(event.status, "status", lineNumber)
             try require(event.ref, "ref", lineNumber)
+        case .businessReady:
+            try require(event.stepIndex, "stepIndex", lineNumber)
+            try require(event.status, "status", lineNumber)
+            try require(event.ref, "ref", lineNumber)
+            try require(event.phase, "phase", lineNumber)
+            try require(event.selector, "selector", lineNumber)
         case .flowBootstrapChecked:
             try require(event.stepIndex, "stepIndex", lineNumber)
             try require(event.phase, "phase", lineNumber)

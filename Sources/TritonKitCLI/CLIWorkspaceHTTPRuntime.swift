@@ -31,6 +31,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let observeHost: String?
     let observePort: Int?
     let hdc: String?
+    let businessReadyText: String?
 
     init(
         runsDir: String?,
@@ -62,7 +63,8 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         observeRuntimeBaseURL: String? = nil,
         observeHost: String? = nil,
         observePort: Int? = nil,
-        hdc: String? = nil
+        hdc: String? = nil,
+        businessReadyText: String? = nil
     ) {
         self.runsDir = runsDir
         self.runID = runID
@@ -94,6 +96,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.observeHost = observeHost
         self.observePort = observePort
         self.hdc = hdc
+        self.businessReadyText = businessReadyText
     }
 
     enum CodingKeys: String, CodingKey {
@@ -127,6 +130,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case observeHost
         case observePort
         case hdc
+        case businessReadyText
     }
 }
 
@@ -184,7 +188,8 @@ private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKW
         observeRuntimeBaseURL: request.observeRuntimeBaseURL,
         observeHost: request.observeHost ?? "127.0.0.1",
         observePort: request.observePort ?? 19421,
-        hdc: request.hdc ?? "hdc"
+        hdc: request.hdc ?? "hdc",
+        businessReadyText: request.businessReadyText
     )
 }
 

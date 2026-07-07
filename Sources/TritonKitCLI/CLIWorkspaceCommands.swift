@@ -57,6 +57,8 @@ struct Workspace: AsyncParsableCommand {
         var observePort = 19421
         @Option(help: "Path to hdc executable for Harmony live observation")
         var hdc = "hdc"
+        @Option(name: .customLong("business-ready-text"), help: "Exact visible text that proves business readiness from the initial observation")
+        var businessReadyText: String?
         @Option(help: "Path to adb executable for Android app launch")
         var adb = "adb"
         @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
@@ -101,7 +103,8 @@ struct Workspace: AsyncParsableCommand {
                     observeRuntimeBaseURL: observeRuntimeBaseURL,
                     observeHost: observeHost,
                     observePort: observePort,
-                    hdc: hdc
+                    hdc: hdc,
+                    businessReadyText: businessReadyText
                 ))
                 try printWorkspaceRun(response, format: outputFormat)
             } catch {

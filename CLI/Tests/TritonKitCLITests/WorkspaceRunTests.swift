@@ -156,6 +156,7 @@ struct WorkspaceRunTests {
         #expect(optionNames.contains("--observe-host"))
         #expect(optionNames.contains("--observe-port"))
         #expect(optionNames.contains("--hdc"))
+        #expect(optionNames.contains("--business-ready-text"))
         #expect(optionNames.contains("--app-mode"))
         #expect(optionNames.contains("--bundle-id"))
         #expect(optionNames.contains("--package-name"))
@@ -175,6 +176,7 @@ struct WorkspaceRunTests {
         #expect(run.optionalOptions.contains("--observe-host"))
         #expect(run.optionalOptions.contains("--observe-port"))
         #expect(run.optionalOptions.contains("--hdc"))
+        #expect(run.optionalOptions.contains("--business-ready-text"))
         #expect(run.optionalOptions.contains("--app-mode"))
         #expect(run.optionalOptions.contains("--bundle-id"))
         #expect(run.optionalOptions.contains("--package-name"))
@@ -458,6 +460,63 @@ struct WorkspaceRunTests {
         )
         #expect(parsed.events.first { $0.type == .appReady }?.phase == "launch_observed")
         #expect(parsed.events.first { $0.type == .observationCaptured }?.screenCandidate?.visibleTexts == ["Login", "Continue"])
+    }
+
+    @Test("workspace run completes when business ready text is observed")
+    func workspaceRunCompletesWhenBusinessReadyTextIsObserved() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+
+        let run = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-business-ready",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Open login screen",
+            actionPolicy: "explore",
+            llmProvider: "mock",
+            vlmProvider: "mock",
+            observationFixture: fixture.path,
+            businessReadyText: "Continue"
+        ))
+
+        #expect(run.status == "passed")
+        #expect(run.business?.ready == true)
+        #expect(run.business?.status == "passed")
+        #expect(run.business?.query == "Continue")
+        #expect(run.business?.ref == "evidence/business/ready.json")
+        #expect(run.nextActions.isEmpty)
+
+        let runDir = root.appendingPathComponent("run-workspace-business-ready", isDirectory: true)
+        let businessReady = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/business/ready.json"))
+        ) as? [String: Any]
+        #expect(businessReady?["ready"] as? Bool == true)
+        #expect(businessReady?["businessReady"] as? Bool == true)
+        #expect(businessReady?["phase"] as? String == "text_matched")
+        #expect(businessReady?["query"] as? String == "Continue")
+        #expect(businessReady?["matchedTexts"] as? [String] == ["Continue"])
+        #expect(businessReady?["observationRef"] as? String == "events.jsonl#observation.captured")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let eventTypes = parsed.events.map(\.type.rawValue)
+        #expect(eventTypes.contains("business.ready"))
+        #expect(eventTypes.contains("model.decided") == false)
+        #expect(parsed.events.first { $0.type.rawValue == "business.ready" }?.status == .passed)
+        #expect(parsed.events.first { $0.type == .verifyChecked }?.status == .passed)
+        #expect(parsed.events.last?.type == .runFinished)
+        #expect(parsed.summary.status == .passed)
+
+        let inspected = try inspectWorkspaceRun(
+            runID: "run-workspace-business-ready",
+            runsDirectory: root.path
+        )
+        #expect(inspected.run.status == "passed")
+        #expect(inspected.run.business?.ready == true)
+        #expect(inspected.latestPause == nil)
     }
 
     @Test("workspace HTTP run records app launch evidence when enabled")

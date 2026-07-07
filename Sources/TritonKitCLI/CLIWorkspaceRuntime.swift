@@ -32,6 +32,7 @@ struct TKWorkspaceRunRequest {
     let observeHost: String
     let observePort: Int
     let hdc: String
+    let businessReadyText: String?
 
     init(
         runsDirectory: String,
@@ -63,7 +64,8 @@ struct TKWorkspaceRunRequest {
         observeRuntimeBaseURL: String? = nil,
         observeHost: String = "127.0.0.1",
         observePort: Int = 19421,
-        hdc: String = "hdc"
+        hdc: String = "hdc",
+        businessReadyText: String? = nil
     ) {
         self.runsDirectory = runsDirectory
         self.runID = runID
@@ -95,6 +97,7 @@ struct TKWorkspaceRunRequest {
         self.observeHost = observeHost
         self.observePort = observePort
         self.hdc = hdc
+        self.businessReadyText = businessReadyText
     }
 }
 
@@ -108,6 +111,7 @@ struct TKWorkspaceRunResponse: Codable, Equatable {
     let app: String
     let ai: TKWorkspaceRunAI
     let runner: TKWorkspaceRunRunner?
+    let business: TKWorkspaceBusinessReadiness?
     let paths: TKWorkspaceRunPaths
     let nextActions: [TKWorkspaceNextAction]
 
@@ -121,6 +125,7 @@ struct TKWorkspaceRunResponse: Codable, Equatable {
         app: String,
         ai: TKWorkspaceRunAI,
         runner: TKWorkspaceRunRunner? = nil,
+        business: TKWorkspaceBusinessReadiness? = nil,
         paths: TKWorkspaceRunPaths,
         nextActions: [TKWorkspaceNextAction]
     ) {
@@ -133,6 +138,7 @@ struct TKWorkspaceRunResponse: Codable, Equatable {
         self.app = app
         self.ai = ai
         self.runner = runner
+        self.business = business
         self.paths = paths
         self.nextActions = nextActions
     }
@@ -147,6 +153,7 @@ struct TKWorkspaceRunResponse: Codable, Equatable {
         case app
         case ai
         case runner
+        case business
         case paths
         case nextActions
     }
@@ -176,6 +183,31 @@ struct TKWorkspaceRunRunner: Codable, Equatable {
     let maxSteps: Int
     let allowedActions: [String]
     let stopConditions: [String]
+}
+
+struct TKWorkspaceBusinessReadiness: Codable, Equatable {
+    let ready: Bool
+    let status: String
+    let check: String
+    let query: String
+    let phase: String
+    let ref: String
+
+    init(
+        ready: Bool,
+        status: String,
+        check: String = "visible_text",
+        query: String,
+        phase: String,
+        ref: String = "evidence/business/ready.json"
+    ) {
+        self.ready = ready
+        self.status = status
+        self.check = check
+        self.query = query
+        self.phase = phase
+        self.ref = ref
+    }
 }
 
 struct TKWorkspaceRunPaths: Codable, Equatable {
@@ -215,6 +247,16 @@ private struct TKWorkspaceRunFinalState {
     let eventType: TKTestRunEventType
     let eventStatus: TKTestRunStatus
     let phase: String?
+}
+
+private struct TKWorkspaceBusinessCheckpoint {
+    let readiness: TKWorkspaceBusinessReadiness
+    let matchedTexts: [String]
+    let observationRef: String
+    let evidenceRefs: [String]
+
+    var ready: Bool { readiness.ready }
+    var eventStatus: TKTestRunStatus { ready ? .passed : .failed }
 }
 
 private let defaultWorkspaceRunnerMaxSteps = 20
@@ -316,11 +358,20 @@ private func runWorkspaceRun(
         observation: observationSeed,
         observedAfterLifecycle: request.observeLive
     )
+    let businessCheckpoint = workspaceBusinessCheckpoint(
+        for: request,
+        observation: observationSeed,
+        appReady: appReady
+    )
+    let businessReady = businessCheckpoint?.readiness
+    let shouldWriteModelDecision = modelLoopEnabled && modelDecisionAllowed && businessCheckpoint?.ready != true
+    let shouldWritePolicyRejection = modelLoopEnabled && !modelDecisionAllowed && businessCheckpoint?.ready != true
     let finalState = workspaceRunFinalState(
         providerPreflight: providerPreflight,
         dryModelFixture: request.dryModelFixture,
         modelLoopEnabled: modelLoopEnabled,
-        modelDecisionAllowed: modelDecisionAllowed
+        modelDecisionAllowed: modelDecisionAllowed,
+        businessCheckpoint: businessCheckpoint
     )
     let response = TKWorkspaceRunResponse(
         runID: runID,
@@ -340,10 +391,12 @@ private func runWorkspaceRun(
             vlmProviderStatus: providerPreflight.vlmProviderStatus
         ),
         runner: runner,
+        business: businessReady,
         paths: paths,
         nextActions: workspaceRunNextActions(
             providerNextActions: providerPreflight.nextActions,
-            finalState: finalState
+            finalState: finalState,
+            businessCheckpoint: businessCheckpoint
         )
     )
 
@@ -354,9 +407,10 @@ private func runWorkspaceRun(
         runDir: runDir,
         observation: observationSeed,
         appReady: appReady,
-        includeModelTransition: modelLoopEnabled && modelDecisionAllowed
+        businessCheckpoint: businessCheckpoint,
+        includeModelTransition: shouldWriteModelDecision
     )
-    if modelLoopEnabled {
+    if shouldWriteModelDecision || shouldWritePolicyRejection {
         try writeWorkspaceModelDecisionArtifacts(
             run: response,
             runDir: runDir,
@@ -371,9 +425,10 @@ private func runWorkspaceRun(
         bootstrapPhase: providerPreflight.bootstrapPhase,
         appReady: appReady,
         observation: observationSeed,
+        businessCheckpoint: businessCheckpoint,
         finalState: finalState
     )
-    if modelLoopEnabled {
+    if shouldWriteModelDecision || shouldWritePolicyRejection {
         events.insert(
             contentsOf: workspaceModelDecisionEvents(runID: runID, mode: modelLoopMode, policyAllowed: modelDecisionAllowed),
             at: events.index(before: events.endIndex)
@@ -436,6 +491,59 @@ private func workspaceRunnerConfig(for request: TKWorkspaceRunRequest) throws ->
     )
 }
 
+private func workspaceBusinessCheckpoint(
+    for request: TKWorkspaceRunRequest,
+    observation: TKWorkspaceObservationSeed,
+    appReady: TKWorkspaceAppReadyEvidence
+) -> TKWorkspaceBusinessCheckpoint? {
+    guard let query = normalizedWorkspaceBusinessReadyText(request.businessReadyText) else {
+        return nil
+    }
+    let visibleTexts = observation.screenCandidate.visibleTexts
+    let matchedTexts = visibleTexts.filter { normalizedWorkspaceBusinessText($0) == query }
+    let ready = !matchedTexts.isEmpty
+    let phase = ready ? "text_matched" : "text_missing"
+    let refs = ([
+        "events.jsonl#observation.captured",
+        "events.jsonl#app.ready",
+        "evidence/actions/app-ready.json",
+        observation.fixtureRef,
+        observation.artifacts.screenshot,
+        observation.artifacts.hierarchy,
+        observation.artifacts.ax,
+    ] as [String?]).compactMap { $0 }
+    return TKWorkspaceBusinessCheckpoint(
+        readiness: TKWorkspaceBusinessReadiness(
+            ready: ready,
+            status: ready ? "passed" : "failed",
+            query: query,
+            phase: phase
+        ),
+        matchedTexts: matchedTexts,
+        observationRef: "events.jsonl#observation.captured",
+        evidenceRefs: uniqueWorkspaceEvidenceRefs(appReady.observationRef.map { refs + [$0] } ?? refs)
+    )
+}
+
+private func uniqueWorkspaceEvidenceRefs(_ refs: [String]) -> [String] {
+    var seen = Set<String>()
+    var result: [String] = []
+    for ref in refs where !seen.contains(ref) {
+        seen.insert(ref)
+        result.append(ref)
+    }
+    return result
+}
+
+private func normalizedWorkspaceBusinessReadyText(_ raw: String?) -> String? {
+    let value = normalizedWorkspaceBusinessText(raw ?? "")
+    return value.isEmpty ? nil : value
+}
+
+private func normalizedWorkspaceBusinessText(_ raw: String) -> String {
+    raw.trimmingCharacters(in: .whitespacesAndNewlines)
+}
+
 private func normalizedWorkspaceRunnerList(_ values: [String], defaultValues: [String]) -> [String] {
     let normalized = values
         .map(normalizedWorkspaceRunnerValue)
@@ -455,8 +563,25 @@ private func workspaceRunFinalState(
     providerPreflight: TKWorkspaceProviderPreflight,
     dryModelFixture: Bool,
     modelLoopEnabled: Bool,
-    modelDecisionAllowed: Bool
+    modelDecisionAllowed: Bool,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?
 ) -> TKWorkspaceRunFinalState {
+    if businessCheckpoint?.ready == true {
+        return TKWorkspaceRunFinalState(
+            runStatus: "passed",
+            eventType: .runFinished,
+            eventStatus: .passed,
+            phase: nil
+        )
+    }
+    if let businessCheckpoint, !businessCheckpoint.ready {
+        return TKWorkspaceRunFinalState(
+            runStatus: "paused",
+            eventType: .runPaused,
+            eventStatus: .paused,
+            phase: businessCheckpoint.readiness.phase
+        )
+    }
     if !providerPreflight.providersReady, !dryModelFixture {
         return TKWorkspaceRunFinalState(
             runStatus: "paused",
@@ -491,8 +616,17 @@ private func workspaceRunFinalState(
 
 private func workspaceRunNextActions(
     providerNextActions: [TKWorkspaceNextAction],
-    finalState: TKWorkspaceRunFinalState
+    finalState: TKWorkspaceRunFinalState,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?
 ) -> [TKWorkspaceNextAction] {
+    if let businessCheckpoint, !businessCheckpoint.ready {
+        return [
+            TKWorkspaceNextAction(
+                code: "business_checkpoint_missing",
+                message: "The business ready text '\(businessCheckpoint.readiness.query)' was not present in the initial observation; run live observe/wait or let the model propose a recovery action."
+            ),
+        ] + providerNextActions
+    }
     if !providerNextActions.isEmpty {
         return providerNextActions
     }
@@ -678,6 +812,7 @@ func stopWorkspaceRun(runID: String, runsDirectory: String) throws -> TKWorkspac
         app: run.app,
         ai: run.ai,
         runner: run.runner,
+        business: run.business,
         paths: run.paths,
         nextActions: run.nextActions
     ), to: runURL)
@@ -815,6 +950,7 @@ private func createWorkspaceRunDirectories(_ runDir: URL) throws {
         "evidence/hierarchy",
         "evidence/model",
         "evidence/actions",
+        "evidence/business",
         "atlas",
     ] {
         try FileManager.default.createDirectory(
@@ -829,6 +965,7 @@ private func writeWorkspaceRunArtifacts(
     runDir: URL,
     observation: TKWorkspaceObservationSeed,
     appReady: TKWorkspaceAppReadyEvidence,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     includeModelTransition: Bool
 ) throws {
     try writeWorkspaceJSONArtifact([
@@ -860,6 +997,12 @@ private func writeWorkspaceRunArtifacts(
         workspaceAppLifecycleArtifact(appReady),
         to: runDir.appendingPathComponent("evidence/actions/app-ready.json")
     )
+    if let businessCheckpoint {
+        try writeWorkspaceJSONArtifact(
+            workspaceBusinessReadyArtifact(businessCheckpoint),
+            to: runDir.appendingPathComponent(businessCheckpoint.readiness.ref)
+        )
+    }
     try "workspace dry screenshot placeholder\n".write(
         to: runDir.appendingPathComponent("evidence/screenshots/0000.txt"),
         atomically: true,
@@ -998,16 +1141,35 @@ private func writeWorkspaceModelDecisionArtifacts(
     """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
 }
 
+private func workspaceBusinessReadyArtifact(_ checkpoint: TKWorkspaceBusinessCheckpoint) -> [String: Any] {
+    [
+        "schemaVersion": 1,
+        "kind": "triton.workspace.business-ready",
+        "ready": checkpoint.ready,
+        "businessReady": checkpoint.ready,
+        "status": checkpoint.readiness.status,
+        "check": checkpoint.readiness.check,
+        "query": checkpoint.readiness.query,
+        "match": "exact",
+        "phase": checkpoint.readiness.phase,
+        "source": "observation.visibleTexts",
+        "matchedTexts": checkpoint.matchedTexts,
+        "observationRef": checkpoint.observationRef,
+        "evidenceRefs": checkpoint.evidenceRefs,
+    ]
+}
+
 private func workspaceSkeletonEvents(
     runID: String,
     providerEventPhase: String,
     bootstrapPhase: String,
     appReady: TKWorkspaceAppReadyEvidence,
     observation: TKWorkspaceObservationSeed,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     finalState: TKWorkspaceRunFinalState
 ) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
-    return [
+    var events: [TKTestRunEvent] = [
         .runStarted(runID: runID, timestamp: now),
         .init(type: .targetResolved, runID: runID, timestamp: now, ref: "evidence/model/target.json"),
         .init(type: .providerChecked, runID: runID, timestamp: now, ref: "evidence/model/provider-check.json", phase: providerEventPhase),
@@ -1029,15 +1191,41 @@ private func workspaceSkeletonEvents(
             ref: "evidence/model/bootstrap-000.json",
             phase: bootstrapPhase
         ),
-        .init(
-            type: finalState.eventType,
+    ]
+    if let businessCheckpoint {
+        let selector = TKTestRunSelector(text: TKTestRunTextSelector(
+            value: businessCheckpoint.readiness.query,
+            match: "exact",
+            source: "observation.visibleTexts"
+        ))
+        events.append(.init(
+            type: .businessReady,
             runID: runID,
             timestamp: now,
-            status: finalState.eventStatus,
-            durationMs: 0,
-            phase: finalState.phase
-        ),
-    ]
+            stepIndex: 1,
+            status: businessCheckpoint.eventStatus,
+            ref: businessCheckpoint.readiness.ref,
+            selector: selector,
+            phase: businessCheckpoint.readiness.phase
+        ))
+        events.append(.init(
+            type: .verifyChecked,
+            runID: runID,
+            timestamp: now,
+            stepIndex: 1,
+            status: businessCheckpoint.eventStatus,
+            ref: businessCheckpoint.readiness.ref
+        ))
+    }
+    events.append(.init(
+        type: finalState.eventType,
+        runID: runID,
+        timestamp: now,
+        status: finalState.eventStatus,
+        durationMs: 0,
+        phase: finalState.phase
+    ))
+    return events
 }
 
 private func workspaceModelDecisionEvents(runID: String, mode: String, policyAllowed: Bool) -> [TKTestRunEvent] {
