@@ -83,7 +83,7 @@ Then TritonKit 返回稳定 JSON，包含 target id、platform、scope、capabil
 
 Given 已有本地 App artifact 或可解析 bundle/app id
 When agent 通过 CLI/HTTP 安装并启动 App
-Then 返回机器可读成功或明确 unsupported/error code，并保留 fallback 建议；在 workspace run 中，显式 `appMode=launch` 必须写入 `app.ready phase=launch_submitted` 和 `evidence/actions/app-ready.json`，若同一 run 继续 live observe 成功则升级为 `phase=launch_observed`、`ready=true`、`businessReady=false`；若 agent 同时传入 `businessReadyText` 并在 initial observation 命中，则必须写入 `evidence/business/ready.json`、`business.ready` 和 passed `verify.checked`，并以 `run.finished status=passed` 收尾
+Then 返回机器可读成功或明确 unsupported/error code，并保留 fallback 建议；在 workspace run 中，显式 `appMode=launch` 必须写入 `app.ready phase=launch_submitted` 和 `evidence/actions/app-ready.json`，若同一 run 继续 live observe 成功则升级为 `phase=launch_observed`、`ready=true`、`businessReady=false`；若 agent 同时传入 `businessReadyText` 并在 initial observation 命中，则必须写入 `evidence/business/ready.json`、`business.ready` 和 passed `verify.checked`，并以 `run.finished status=passed` 收尾；若 agent 显式传入 `businessReadyLiveWait=true`，则必须通过 runtime wait(text) 证明业务状态，并在同一 artifact 中写入 `check=runtime_wait`、`source=runtime.wait`、wait phase 和嵌套 wait 证据
 
 ### 场景 3：agent 执行动作并采集证据
 

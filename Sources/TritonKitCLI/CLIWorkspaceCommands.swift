@@ -59,6 +59,12 @@ struct Workspace: AsyncParsableCommand {
         var hdc = "hdc"
         @Option(name: .customLong("business-ready-text"), help: "Exact visible text that proves business readiness from the initial observation")
         var businessReadyText: String?
+        @Flag(name: .customLong("business-ready-live-wait"), help: "Use runtime wait text matching for the business readiness checkpoint")
+        var businessReadyLiveWait = false
+        @Option(name: .customLong("business-ready-timeout"), help: "Timeout in seconds for --business-ready-live-wait")
+        var businessReadyTimeout: Double = 10
+        @Option(name: .customLong("business-ready-interval"), help: "Polling interval in seconds for --business-ready-live-wait")
+        var businessReadyInterval: Double = 0.5
         @Option(help: "Path to adb executable for Android app launch")
         var adb = "adb"
         @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
@@ -104,7 +110,10 @@ struct Workspace: AsyncParsableCommand {
                     observeHost: observeHost,
                     observePort: observePort,
                     hdc: hdc,
-                    businessReadyText: businessReadyText
+                    businessReadyText: businessReadyText,
+                    businessReadyLiveWait: businessReadyLiveWait,
+                    businessReadyTimeout: businessReadyTimeout,
+                    businessReadyInterval: businessReadyInterval
                 ))
                 try printWorkspaceRun(response, format: outputFormat)
             } catch {

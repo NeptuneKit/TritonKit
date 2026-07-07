@@ -33,6 +33,9 @@ struct TKWorkspaceRunRequest {
     let observePort: Int
     let hdc: String
     let businessReadyText: String?
+    let businessReadyLiveWait: Bool
+    let businessReadyTimeout: Double
+    let businessReadyInterval: Double
 
     init(
         runsDirectory: String,
@@ -65,7 +68,10 @@ struct TKWorkspaceRunRequest {
         observeHost: String = "127.0.0.1",
         observePort: Int = 19421,
         hdc: String = "hdc",
-        businessReadyText: String? = nil
+        businessReadyText: String? = nil,
+        businessReadyLiveWait: Bool = false,
+        businessReadyTimeout: Double = 10,
+        businessReadyInterval: Double = 0.5
     ) {
         self.runsDirectory = runsDirectory
         self.runID = runID
@@ -98,6 +104,9 @@ struct TKWorkspaceRunRequest {
         self.observePort = observePort
         self.hdc = hdc
         self.businessReadyText = businessReadyText
+        self.businessReadyLiveWait = businessReadyLiveWait
+        self.businessReadyTimeout = businessReadyTimeout
+        self.businessReadyInterval = businessReadyInterval
     }
 }
 
@@ -249,16 +258,6 @@ private struct TKWorkspaceRunFinalState {
     let phase: String?
 }
 
-private struct TKWorkspaceBusinessCheckpoint {
-    let readiness: TKWorkspaceBusinessReadiness
-    let matchedTexts: [String]
-    let observationRef: String
-    let evidenceRefs: [String]
-
-    var ready: Bool { readiness.ready }
-    var eventStatus: TKTestRunStatus { ready ? .passed : .failed }
-}
-
 private let defaultWorkspaceRunnerMaxSteps = 20
 private let defaultWorkspaceRunnerAllowedActions = ["tap", "swipe", "type", "wait", "verify", "stop"]
 private let defaultWorkspaceRunnerStopConditions = [
@@ -312,6 +311,9 @@ private struct TKWorkspaceFlowActionStep {
 }
 
 func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunResponse {
+    if request.businessReadyLiveWait {
+        throw RuntimeError("Workspace business live wait requires the async workspace runtime.")
+    }
     let appLifecycle = try workspaceAppLifecycleEvidence(for: request)
     let observationSeed = try workspaceObservationSeed(for: request)
     return try runWorkspaceRun(request, observationSeed: observationSeed, appLifecycle: appLifecycle)
@@ -320,17 +322,30 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
 func runWorkspaceRunAsync(
     _ request: TKWorkspaceRunRequest,
     observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
-    appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider
+    appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
+    businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider
 ) async throws -> TKWorkspaceRunResponse {
     let appLifecycle = try await workspaceAppLifecycleEvidence(for: request, provider: appLifecycleProvider)
     let observationSeed = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
-    return try runWorkspaceRun(request, observationSeed: observationSeed, appLifecycle: appLifecycle)
+    let businessWaitResult: TKWaitResult?
+    if request.businessReadyLiveWait {
+        businessWaitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
+    } else {
+        businessWaitResult = nil
+    }
+    return try runWorkspaceRun(
+        request,
+        observationSeed: observationSeed,
+        appLifecycle: appLifecycle,
+        businessWaitResult: businessWaitResult
+    )
 }
 
 private func runWorkspaceRun(
     _ request: TKWorkspaceRunRequest,
     observationSeed: TKWorkspaceObservationSeed,
-    appLifecycle: TKWorkspaceAppLifecycleEvidence
+    appLifecycle: TKWorkspaceAppLifecycleEvidence,
+    businessWaitResult: TKWaitResult? = nil
 ) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
@@ -361,7 +376,8 @@ private func runWorkspaceRun(
     let businessCheckpoint = workspaceBusinessCheckpoint(
         for: request,
         observation: observationSeed,
-        appReady: appReady
+        appReady: appReady,
+        waitResult: businessWaitResult
     )
     let businessReady = businessCheckpoint?.readiness
     let shouldWriteModelDecision = modelLoopEnabled && modelDecisionAllowed && businessCheckpoint?.ready != true
@@ -491,59 +507,6 @@ private func workspaceRunnerConfig(for request: TKWorkspaceRunRequest) throws ->
     )
 }
 
-private func workspaceBusinessCheckpoint(
-    for request: TKWorkspaceRunRequest,
-    observation: TKWorkspaceObservationSeed,
-    appReady: TKWorkspaceAppReadyEvidence
-) -> TKWorkspaceBusinessCheckpoint? {
-    guard let query = normalizedWorkspaceBusinessReadyText(request.businessReadyText) else {
-        return nil
-    }
-    let visibleTexts = observation.screenCandidate.visibleTexts
-    let matchedTexts = visibleTexts.filter { normalizedWorkspaceBusinessText($0) == query }
-    let ready = !matchedTexts.isEmpty
-    let phase = ready ? "text_matched" : "text_missing"
-    let refs = ([
-        "events.jsonl#observation.captured",
-        "events.jsonl#app.ready",
-        "evidence/actions/app-ready.json",
-        observation.fixtureRef,
-        observation.artifacts.screenshot,
-        observation.artifacts.hierarchy,
-        observation.artifacts.ax,
-    ] as [String?]).compactMap { $0 }
-    return TKWorkspaceBusinessCheckpoint(
-        readiness: TKWorkspaceBusinessReadiness(
-            ready: ready,
-            status: ready ? "passed" : "failed",
-            query: query,
-            phase: phase
-        ),
-        matchedTexts: matchedTexts,
-        observationRef: "events.jsonl#observation.captured",
-        evidenceRefs: uniqueWorkspaceEvidenceRefs(appReady.observationRef.map { refs + [$0] } ?? refs)
-    )
-}
-
-private func uniqueWorkspaceEvidenceRefs(_ refs: [String]) -> [String] {
-    var seen = Set<String>()
-    var result: [String] = []
-    for ref in refs where !seen.contains(ref) {
-        seen.insert(ref)
-        result.append(ref)
-    }
-    return result
-}
-
-private func normalizedWorkspaceBusinessReadyText(_ raw: String?) -> String? {
-    let value = normalizedWorkspaceBusinessText(raw ?? "")
-    return value.isEmpty ? nil : value
-}
-
-private func normalizedWorkspaceBusinessText(_ raw: String) -> String {
-    raw.trimmingCharacters(in: .whitespacesAndNewlines)
-}
-
 private func normalizedWorkspaceRunnerList(_ values: [String], defaultValues: [String]) -> [String] {
     let normalized = values
         .map(normalizedWorkspaceRunnerValue)
@@ -623,7 +586,7 @@ private func workspaceRunNextActions(
         return [
             TKWorkspaceNextAction(
                 code: "business_checkpoint_missing",
-                message: "The business ready text '\(businessCheckpoint.readiness.query)' was not present in the initial observation; run live observe/wait or let the model propose a recovery action."
+                message: "The business checkpoint '\(businessCheckpoint.readiness.query)' did not pass via \(businessCheckpoint.readiness.check) (\(businessCheckpoint.readiness.phase)); run live observe/wait or let the model propose a recovery action."
             ),
         ] + providerNextActions
     }
@@ -1141,24 +1104,6 @@ private func writeWorkspaceModelDecisionArtifacts(
     """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
 }
 
-private func workspaceBusinessReadyArtifact(_ checkpoint: TKWorkspaceBusinessCheckpoint) -> [String: Any] {
-    [
-        "schemaVersion": 1,
-        "kind": "triton.workspace.business-ready",
-        "ready": checkpoint.ready,
-        "businessReady": checkpoint.ready,
-        "status": checkpoint.readiness.status,
-        "check": checkpoint.readiness.check,
-        "query": checkpoint.readiness.query,
-        "match": "exact",
-        "phase": checkpoint.readiness.phase,
-        "source": "observation.visibleTexts",
-        "matchedTexts": checkpoint.matchedTexts,
-        "observationRef": checkpoint.observationRef,
-        "evidenceRefs": checkpoint.evidenceRefs,
-    ]
-}
-
 private func workspaceSkeletonEvents(
     runID: String,
     providerEventPhase: String,
@@ -1196,7 +1141,7 @@ private func workspaceSkeletonEvents(
         let selector = TKTestRunSelector(text: TKTestRunTextSelector(
             value: businessCheckpoint.readiness.query,
             match: "exact",
-            source: "observation.visibleTexts"
+            source: businessCheckpoint.source
         ))
         events.append(.init(
             type: .businessReady,
