@@ -45,6 +45,7 @@ struct TKWorkspaceRunRequest {
     let hdc: String
     let businessReadyText: String?
     let businessReadyLiveWait: Bool
+    let businessReadyAssert: Bool
     let businessReadyTimeout: Double
     let businessReadyInterval: Double
     let resolveTarget: Bool
@@ -94,6 +95,7 @@ struct TKWorkspaceRunRequest {
         hdc: String = "hdc",
         businessReadyText: String? = nil,
         businessReadyLiveWait: Bool = false,
+        businessReadyAssert: Bool = false,
         businessReadyTimeout: Double = 10,
         businessReadyInterval: Double = 0.5,
         resolveTarget: Bool = false,
@@ -142,6 +144,7 @@ struct TKWorkspaceRunRequest {
         self.hdc = hdc
         self.businessReadyText = businessReadyText
         self.businessReadyLiveWait = businessReadyLiveWait
+        self.businessReadyAssert = businessReadyAssert
         self.businessReadyTimeout = businessReadyTimeout
         self.businessReadyInterval = businessReadyInterval
         self.resolveTarget = resolveTarget
@@ -197,6 +200,7 @@ struct TKWorkspaceRunRequest {
             hdc: hdc,
             businessReadyText: businessReadyText,
             businessReadyLiveWait: businessReadyLiveWait,
+            businessReadyAssert: businessReadyAssert,
             businessReadyTimeout: businessReadyTimeout,
             businessReadyInterval: businessReadyInterval,
             resolveTarget: resolveTarget,
@@ -473,6 +477,9 @@ func runWorkspaceRun(
     if request.businessReadyLiveWait {
         throw RuntimeError("Workspace business live wait requires the async workspace runtime.")
     }
+    if request.businessReadyAssert {
+        throw RuntimeError("Workspace business assertion requires the async workspace runtime.")
+    }
     if request.executeActions {
         throw RuntimeError("Workspace action execution requires the async workspace runtime.")
     }
@@ -494,6 +501,7 @@ func runWorkspaceRunAsync(
     observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
     appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
     businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider,
+    businessAssertProvider: TKWorkspaceBusinessAssertProvider = workspaceDefaultBusinessAssertProvider,
     modelDecisionProvider: TKWorkspaceModelDecisionProvider = workspaceDefaultModelDecisionProvider,
     vlmGroundingProvider: TKWorkspaceVLMGroundingProvider = workspaceDefaultVLMGroundingProvider,
     actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
@@ -532,6 +540,7 @@ func runWorkspaceRunAsync(
             initialBusinessCheckpoint: initialBusinessCheckpoint,
             observeProvider: observeProvider,
             businessWaitProvider: businessWaitProvider,
+            businessAssertProvider: businessAssertProvider,
             modelDecisionProvider: modelDecisionProvider,
             vlmGroundingProvider: vlmGroundingProvider,
             actionExecutionProvider: actionExecutionProvider
@@ -600,7 +609,7 @@ func runWorkspaceRunAsync(
         businessWaitResult = waitResult
         businessCheckpoint = workspaceBusinessCheckpoint(
             for: resolvedRequest,
-            observation: observationSeed,
+            observation: postActionObservation ?? observationSeed,
             appReady: appReady,
             waitResult: waitResult,
             stage: .postAction
@@ -613,6 +622,28 @@ func runWorkspaceRunAsync(
             observation: observationSeed,
             appReady: appReady,
             waitResult: waitResult
+        )
+    } else if resolvedRequest.businessReadyAssert, initialBusinessCheckpoint?.ready == true {
+        businessWaitResult = nil
+        businessCheckpoint = initialBusinessCheckpoint
+    } else if resolvedRequest.businessReadyAssert, actionExecution?.ok == true {
+        let assertResult = try await businessAssertProvider(workspaceBusinessAssertRequest(for: resolvedRequest))
+        businessWaitResult = nil
+        businessCheckpoint = workspaceBusinessAssertCheckpoint(
+            for: resolvedRequest,
+            observation: postActionObservation ?? observationSeed,
+            appReady: appReady,
+            assertionResult: assertResult,
+            stage: .postAction
+        )
+    } else if resolvedRequest.businessReadyAssert {
+        let assertResult = try await businessAssertProvider(workspaceBusinessAssertRequest(for: resolvedRequest))
+        businessWaitResult = nil
+        businessCheckpoint = workspaceBusinessAssertCheckpoint(
+            for: resolvedRequest,
+            observation: observationSeed,
+            appReady: appReady,
+            assertionResult: assertResult
         )
     } else {
         businessWaitResult = nil

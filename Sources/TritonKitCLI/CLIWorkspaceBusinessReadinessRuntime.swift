@@ -2,6 +2,7 @@ import Foundation
 import TritonKitShared
 
 typealias TKWorkspaceBusinessWaitProvider = (TKWorkspaceBusinessWaitRequest) async throws -> TKWaitResult
+typealias TKWorkspaceBusinessAssertProvider = (TKWorkspaceBusinessAssertRequest) async throws -> TKUIAssertResult
 
 struct TKWorkspaceBusinessWaitRequest: Equatable {
     let target: String
@@ -10,6 +11,18 @@ struct TKWorkspaceBusinessWaitRequest: Equatable {
     let query: String
     let timeout: Double
     let interval: Double
+}
+
+struct TKWorkspaceBusinessAssertRequest: Equatable {
+    let target: String
+    let host: String
+    let port: Int
+    let condition: TKUIAssertCondition
+    let query: String
+}
+
+func workspaceUsesRuntimeBusinessCheck(_ request: TKWorkspaceRunRequest) -> Bool {
+    request.businessReadyLiveWait || request.businessReadyAssert
 }
 
 enum TKWorkspaceBusinessCheckpointStage: String {
@@ -24,6 +37,7 @@ struct TKWorkspaceBusinessCheckpoint {
     let evidenceRefs: [String]
     let source: String
     let wait: TKWaitResult?
+    let assertion: TKUIAssertResult?
     let stage: TKWorkspaceBusinessCheckpointStage
 
     var ready: Bool { readiness.ready }
@@ -50,6 +64,19 @@ func workspaceBusinessWaitRequest(for request: TKWorkspaceRunRequest) throws -> 
     )
 }
 
+func workspaceBusinessAssertRequest(for request: TKWorkspaceRunRequest) throws -> TKWorkspaceBusinessAssertRequest {
+    guard let query = normalizedWorkspaceBusinessReadyText(request.businessReadyText) else {
+        throw RuntimeError("--business-ready-assert requires --business-ready-text.")
+    }
+    return TKWorkspaceBusinessAssertRequest(
+        target: request.target,
+        host: request.observeHost,
+        port: request.observePort,
+        condition: .textExists,
+        query: query
+    )
+}
+
 func workspaceDefaultBusinessWaitProvider(_ request: TKWorkspaceBusinessWaitRequest) async throws -> TKWaitResult {
     let (_, client) = try await resolveRuntimeClient(
         target: request.target,
@@ -67,6 +94,24 @@ func workspaceDefaultBusinessWaitProvider(_ request: TKWorkspaceBusinessWaitRequ
             interval: request.interval
         ),
         client: client
+    )
+}
+
+func workspaceDefaultBusinessAssertProvider(_ request: TKWorkspaceBusinessAssertRequest) async throws -> TKUIAssertResult {
+    let (_, client) = try await resolveRuntimeClient(
+        target: request.target,
+        host: request.host,
+        port: request.port,
+        jsonError: true
+    )
+    let status: TKStatusResponse = try await client.getJSON("/status")
+    let accessibilityData = try await client.request(type: "accessibility")
+    let nodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
+    return TKUIAssertEvaluate(
+        TKUIAssertRequest(condition: request.condition, query: request.query),
+        nodes: nodes,
+        targetConnectionState: status.targetConnectionState,
+        hierarchyCacheState: status.hierarchyCacheState
     )
 }
 
@@ -114,6 +159,25 @@ func workspaceBusinessVisibleTextCheckpoint(
     )
 }
 
+func workspaceBusinessAssertCheckpoint(
+    for request: TKWorkspaceRunRequest,
+    observation: TKWorkspaceObservationSeed,
+    appReady: TKWorkspaceAppReadyEvidence,
+    assertionResult: TKUIAssertResult,
+    stage: TKWorkspaceBusinessCheckpointStage = .initial
+) -> TKWorkspaceBusinessCheckpoint? {
+    guard let query = normalizedWorkspaceBusinessReadyText(request.businessReadyText) else {
+        return nil
+    }
+    return workspaceBusinessAssertCheckpoint(
+        query: query,
+        observation: observation,
+        appReady: appReady,
+        assertionResult: assertionResult,
+        stage: stage
+    )
+}
+
 func workspaceBusinessReadyArtifact(_ checkpoint: TKWorkspaceBusinessCheckpoint) -> [String: Any] {
     var artifact: [String: Any] = [
         "schemaVersion": 1,
@@ -133,6 +197,9 @@ func workspaceBusinessReadyArtifact(_ checkpoint: TKWorkspaceBusinessCheckpoint)
     ]
     if let wait = checkpoint.wait {
         artifact["wait"] = workspaceBusinessWaitArtifact(wait)
+    }
+    if let assertion = checkpoint.assertion {
+        artifact["assertion"] = workspaceBusinessAssertArtifact(assertion)
     }
     return artifact
 }
@@ -159,6 +226,7 @@ private func workspaceBusinessVisibleTextCheckpoint(
         evidenceRefs: workspaceBusinessEvidenceRefs(observation: observation, appReady: appReady, stage: stage),
         source: "observation.visibleTexts",
         wait: nil,
+        assertion: nil,
         stage: stage
     )
 }
@@ -193,6 +261,35 @@ private func workspaceBusinessWaitCheckpoint(
         evidenceRefs: workspaceBusinessEvidenceRefs(observation: observation, appReady: appReady, stage: stage),
         source: "runtime.wait",
         wait: waitResult,
+        assertion: nil,
+        stage: stage
+    )
+}
+
+private func workspaceBusinessAssertCheckpoint(
+    query: String,
+    observation: TKWorkspaceObservationSeed,
+    appReady: TKWorkspaceAppReadyEvidence,
+    assertionResult: TKUIAssertResult,
+    stage: TKWorkspaceBusinessCheckpointStage
+) -> TKWorkspaceBusinessCheckpoint {
+    let ready = assertionResult.ok
+    let basePhase = ready ? "assertion_passed" : "assertion_failed"
+    let phase = stage == .postAction ? "post_action_\(basePhase)" : basePhase
+    return TKWorkspaceBusinessCheckpoint(
+        readiness: TKWorkspaceBusinessReadiness(
+            ready: ready,
+            status: ready ? "passed" : "failed",
+            check: "runtime_assert",
+            query: query,
+            phase: phase
+        ),
+        matchedTexts: assertionResult.matches.map(\.text),
+        observationRef: "events.jsonl#observation.captured",
+        evidenceRefs: workspaceBusinessEvidenceRefs(observation: observation, appReady: appReady, stage: stage),
+        source: "runtime.assert",
+        wait: nil,
+        assertion: assertionResult,
         stage: stage
     )
 }
@@ -252,6 +349,24 @@ private func workspaceBusinessWaitArtifact(_ result: TKWaitResult) -> [String: A
     if let hash = result.lastObservedHierarchyHash { artifact["lastObservedHierarchyHash"] = hash }
     if let match = result.match { artifact["match"] = workspaceBusinessWaitMatchArtifact(match) }
     return artifact
+}
+
+private func workspaceBusinessAssertArtifact(_ result: TKUIAssertResult) -> Any {
+    do {
+        let data = try JSONEncoder().encode(result)
+        return try JSONSerialization.jsonObject(with: data)
+    } catch {
+        var fallback: [String: Any] = [
+            "ok": result.ok,
+            "condition": result.condition,
+            "query": result.query,
+            "count": result.count,
+        ]
+        if let message = result.message {
+            fallback["message"] = message
+        }
+        return fallback
+    }
 }
 
 private func workspaceBusinessWaitMatchArtifact(_ match: TKWaitMatch) -> [String: Any] {

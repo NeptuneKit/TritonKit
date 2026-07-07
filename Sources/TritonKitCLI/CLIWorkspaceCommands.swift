@@ -63,6 +63,8 @@ struct Workspace: AsyncParsableCommand {
         var businessReadyText: String?
         @Flag(name: .customLong("business-ready-live-wait"), help: "Use runtime wait text matching for the business readiness checkpoint")
         var businessReadyLiveWait = false
+        @Flag(name: .customLong("business-ready-assert"), help: "Use runtime verify text-exists assertion for the business readiness checkpoint")
+        var businessReadyAssert = false
         @Option(name: .customLong("business-ready-timeout"), help: "Timeout in seconds for --business-ready-live-wait")
         var businessReadyTimeout: Double = 10
         @Option(name: .customLong("business-ready-interval"), help: "Polling interval in seconds for --business-ready-live-wait")
@@ -149,6 +151,7 @@ struct Workspace: AsyncParsableCommand {
                     hdc: hdc,
                     businessReadyText: businessReadyText,
                     businessReadyLiveWait: businessReadyLiveWait,
+                    businessReadyAssert: businessReadyAssert,
                     businessReadyTimeout: businessReadyTimeout,
                     businessReadyInterval: businessReadyInterval,
                     resolveTarget: resolveTarget,

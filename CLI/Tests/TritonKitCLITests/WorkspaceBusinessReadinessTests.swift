@@ -118,6 +118,45 @@ struct WorkspaceBusinessReadinessTests {
         #expect(run.business?.phase == "wait_matched")
     }
 
+    @Test("workspace HTTP run maps business assertion option")
+    func workspaceHTTPRunMapsBusinessAssertionOption() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+        var assertRequest: TKWorkspaceBusinessAssertRequest?
+
+        let body = try JSONEncoder().encode(TKWorkspaceHTTPRunRequest(
+            runsDir: root.path,
+            runID: "run-workspace-http-business-assert",
+            target: "triton:ios-simulator:SIM-3",
+            platform: "ios",
+            scope: "simulator",
+            app: "com.example.demo",
+            goal: "Open dashboard",
+            actionPolicy: "explore",
+            llmProvider: "mock",
+            vlmProvider: "mock",
+            observationFixture: fixture.path,
+            observeHost: "127.0.0.3",
+            observePort: 19423,
+            businessReadyText: "Dashboard",
+            businessReadyAssert: true
+        ))
+        let run = try await handleWorkspaceHTTPRunAsync(body: body, businessAssertProvider: { request in
+            assertRequest = request
+            return successBusinessAssertResult(query: request.query)
+        })
+
+        #expect(assertRequest?.target == "triton:ios-simulator:SIM-3")
+        #expect(assertRequest?.host == "127.0.0.3")
+        #expect(assertRequest?.port == 19423)
+        #expect(assertRequest?.condition == .textExists)
+        #expect(assertRequest?.query == "Dashboard")
+        #expect(run.status == "passed")
+        #expect(run.business?.check == "runtime_assert")
+        #expect(run.business?.phase == "assertion_passed")
+    }
+
     private func temporaryRunsDirectory() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("triton-workspace-business-readiness-tests-\(UUID().uuidString)", isDirectory: true)
@@ -176,6 +215,33 @@ struct WorkspaceBusinessReadinessTests {
                 className: "UIButton",
                 source: "ax"
             )
+        )
+    }
+
+    private func successBusinessAssertResult(query: String) -> TKUIAssertResult {
+        TKUIAssertResult(
+            ok: true,
+            condition: TKUIAssertCondition.textExists.rawValue,
+            query: query,
+            count: 1,
+            matches: [
+                TKWaitMatch(
+                    text: query,
+                    role: "button",
+                    label: query,
+                    value: nil,
+                    identifier: "dashboard-button",
+                    title: query,
+                    frame: nil,
+                    targetOID: 42,
+                    viewOID: 24,
+                    className: "UIButton",
+                    source: "ax"
+                ),
+            ],
+            sample: ["Login", query],
+            targetConnectionState: "connected",
+            hierarchyCacheState: "active"
         )
     }
 }

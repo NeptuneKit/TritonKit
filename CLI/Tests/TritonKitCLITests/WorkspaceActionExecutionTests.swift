@@ -598,6 +598,98 @@ struct WorkspaceActionExecutionTests {
         #expect(transition?["status"] as? String == "verified")
     }
 
+    @Test("workspace run verifies business readiness through assertion provider after action")
+    func workspaceRunVerifiesBusinessReadinessThroughAssertionProviderAfterAction() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+        var actionCount = 0
+        var assertRequests: [TKWorkspaceBusinessAssertRequest] = []
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-post-action-business-assert",
+                target: "runtime-target-post-action-assert",
+                app: "com.example.demo",
+                goal: "Open dashboard",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observationFixture: fixture.path,
+                observeHost: "127.0.0.9",
+                observePort: 19429,
+                businessReadyText: "Dashboard",
+                businessReadyAssert: true,
+                executeActions: true
+            ),
+            businessAssertProvider: { request in
+                assertRequests.append(request)
+                return successfulBusinessAssertResult(query: request.query)
+            },
+            actionExecutionProvider: { request in
+                actionCount += 1
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(actionCount == 1)
+        #expect(assertRequests.count == 1)
+        #expect(assertRequests.first?.target == "runtime-target-post-action-assert")
+        #expect(assertRequests.first?.host == "127.0.0.9")
+        #expect(assertRequests.first?.port == 19429)
+        #expect(assertRequests.first?.condition == .textExists)
+        #expect(assertRequests.first?.query == "Dashboard")
+        #expect(run.status == "passed")
+        #expect(run.business?.ready == true)
+        #expect(run.business?.check == "runtime_assert")
+        #expect(run.business?.phase == "post_action_assertion_passed")
+
+        let runDir = root.appendingPathComponent("run-workspace-post-action-business-assert", isDirectory: true)
+        let business = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/business/ready.json"))
+        ) as? [String: Any]
+        #expect(business?["ready"] as? Bool == true)
+        #expect(business?["stage"] as? String == "post_action")
+        #expect(business?["check"] as? String == "runtime_assert")
+        #expect(business?["phase"] as? String == "post_action_assertion_passed")
+        #expect(business?["source"] as? String == "runtime.assert")
+        #expect((business?["evidenceRefs"] as? [String])?.contains("events.jsonl#action.executed") == true)
+        #expect((business?["evidenceRefs"] as? [String])?.contains("evidence/actions/action-000.json") == true)
+        let assertion = try #require(business?["assertion"] as? [String: Any])
+        #expect(assertion["ok"] as? Bool == true)
+        #expect(assertion["condition"] as? String == "text-exists")
+        #expect(assertion["query"] as? String == "Dashboard")
+        #expect(assertion["count"] as? Int == 1)
+
+        let verify = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/verify-000.json"))
+        ) as? [String: Any]
+        #expect(verify?["status"] as? String == "passed")
+        #expect(verify?["businessRef"] as? String == "evidence/business/ready.json")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let actionIndex = try #require(parsed.events.firstIndex { $0.type == .actionExecuted })
+        let businessIndex = try #require(parsed.events.firstIndex {
+            $0.type == .businessReady && $0.phase == "post_action_assertion_passed"
+        })
+        let verifyIndex = try #require(parsed.events.firstIndex {
+            $0.type == .verifyChecked && $0.status == .passed
+        })
+        #expect(actionIndex < businessIndex)
+        #expect(businessIndex < verifyIndex)
+        #expect(parsed.events.last?.type == .runFinished)
+        #expect(parsed.summary.status == .passed)
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let transition = (atlas?["transitions"] as? [[String: Any]])?.first
+        #expect(transition?["status"] as? String == "verified")
+    }
+
     @Test("workspace run captures post-action observation and atlas transition")
     func workspaceRunCapturesPostActionObservationAndAtlasTransition() async throws {
         let root = temporaryRunsDirectory()
@@ -1185,6 +1277,85 @@ struct WorkspaceActionExecutionTests {
         #expect(run.status == "passed")
     }
 
+    @Test("workspace run continues bounded loop after failed assertion checkpoint")
+    func workspaceRunContinuesBoundedLoopAfterFailedAssertionCheckpoint() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        var observeRequests: [TKWorkspaceLiveObserveRequest] = []
+        var actionRequests: [TKWorkspaceActionExecutionRequest] = []
+        var assertCount = 0
+
+        let snapshots: [([String], String)] = [
+            (["Login", "Continue"], "login"),
+            (["Interstitial", "Next"], "interstitial"),
+            (["Dashboard"], "dashboard"),
+        ]
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-bounded-assert-loop",
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Reach dashboard through assertion checkpoints",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                maxSteps: 2,
+                observeLive: true,
+                observeKind: "tree",
+                observeMaxNodes: 25,
+                businessReadyText: "Dashboard",
+                businessReadyAssert: true,
+                executeActions: true
+            ),
+            observeProvider: { request in
+                observeRequests.append(request)
+                let snapshot = snapshots[min(observeRequests.count - 1, snapshots.count - 1)]
+                return fakeLiveObserveOutput(
+                    for: request,
+                    visibleTexts: snapshot.0,
+                    artifactStem: snapshot.1
+                )
+            },
+            businessAssertProvider: { request in
+                assertCount += 1
+                return assertCount == 1
+                    ? failedBusinessAssertResult(query: request.query)
+                    : successfulBusinessAssertResult(query: request.query)
+            },
+            actionExecutionProvider: { request in
+                actionRequests.append(request)
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "passed")
+        #expect(assertCount == 2)
+        #expect(observeRequests.count == 3)
+        #expect(actionRequests.map(\.query) == ["Continue", "Next"])
+
+        let runDir = root.appendingPathComponent("run-workspace-bounded-assert-loop", isDirectory: true)
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        #expect(parsed.events.contains {
+            $0.type == .businessReady && $0.phase == "post_action_assertion_failed"
+        })
+        #expect(parsed.events.contains {
+            $0.type == .businessReady && $0.phase == "post_action_assertion_passed"
+        })
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let transitions = try #require(atlas?["transitions"] as? [[String: Any]])
+        #expect(transitions.count == 2)
+        #expect(transitions[0]["status"] as? String == "verification_failed")
+        #expect(transitions[1]["status"] as? String == "verified")
+    }
+
     private func writeObservationFixture(
         in root: URL,
         visibleTexts: [String] = ["Login", "Continue"],
@@ -1393,6 +1564,49 @@ struct WorkspaceActionExecutionTests {
                 className: "UIButton",
                 source: "ax"
             )
+        )
+    }
+
+    private func successfulBusinessAssertResult(query: String) -> TKUIAssertResult {
+        TKUIAssertResult(
+            ok: true,
+            condition: TKUIAssertCondition.textExists.rawValue,
+            query: query,
+            count: 1,
+            matches: [
+                TKWaitMatch(
+                    text: query,
+                    role: "button",
+                    label: query,
+                    value: nil,
+                    identifier: "dashboard-button",
+                    title: query,
+                    frame: nil,
+                    targetOID: 77,
+                    viewOID: 70,
+                    className: "UIButton",
+                    source: "ax"
+                ),
+            ],
+            sample: ["Login", query],
+            targetConnectionState: "connected",
+            hierarchyCacheState: "active"
+        )
+    }
+
+    private func failedBusinessAssertResult(query: String) -> TKUIAssertResult {
+        TKUIAssertResult(
+            ok: false,
+            condition: TKUIAssertCondition.textExists.rawValue,
+            query: query,
+            count: 0,
+            matches: [],
+            sample: ["Login", "Continue"],
+            targetConnectionState: "connected",
+            hierarchyCacheState: "active",
+            message: "Expected text to exist: \(query)",
+            nearestText: ["Login", "Continue"],
+            suggestedCommands: ["triton act find '\(query)' --all --json", "triton screenshot --json"]
         )
     }
 

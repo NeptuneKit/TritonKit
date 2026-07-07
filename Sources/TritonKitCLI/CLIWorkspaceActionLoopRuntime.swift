@@ -22,7 +22,7 @@ func workspaceShouldUseBoundedActionLoop(
 ) -> Bool {
     request.executeActions
         && request.observeLive
-        && request.businessReadyLiveWait
+        && workspaceUsesRuntimeBusinessCheck(request)
         && runner.maxSteps > 1
         && initialBusinessCheckpoint?.ready != true
         && (request.dryModelFixture || providerPreflight.providersReady)
@@ -39,6 +39,7 @@ func runWorkspaceActionLoop(
     initialBusinessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     observeProvider: TKWorkspaceLiveObserveProvider,
     businessWaitProvider: TKWorkspaceBusinessWaitProvider,
+    businessAssertProvider: TKWorkspaceBusinessAssertProvider,
     modelDecisionProvider: TKWorkspaceModelDecisionProvider,
     vlmGroundingProvider: TKWorkspaceVLMGroundingProvider,
     actionExecutionProvider: TKWorkspaceActionExecutionProvider
@@ -125,14 +126,25 @@ func runWorkspaceActionLoop(
 
         let businessCheckpoint: TKWorkspaceBusinessCheckpoint?
         if actionExecution.ok {
-            let waitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
-            businessCheckpoint = workspaceBusinessCheckpoint(
-                for: request,
-                observation: postActionObservation ?? currentObservation,
-                appReady: appReady,
-                waitResult: waitResult,
-                stage: .postAction
-            )
+            if request.businessReadyAssert {
+                let assertResult = try await businessAssertProvider(workspaceBusinessAssertRequest(for: request))
+                businessCheckpoint = workspaceBusinessAssertCheckpoint(
+                    for: request,
+                    observation: postActionObservation ?? currentObservation,
+                    appReady: appReady,
+                    assertionResult: assertResult,
+                    stage: .postAction
+                )
+            } else {
+                let waitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
+                businessCheckpoint = workspaceBusinessCheckpoint(
+                    for: request,
+                    observation: postActionObservation ?? currentObservation,
+                    appReady: appReady,
+                    waitResult: waitResult,
+                    stage: .postAction
+                )
+            }
         } else {
             businessCheckpoint = nil
         }

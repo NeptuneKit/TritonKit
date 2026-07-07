@@ -106,6 +106,7 @@ extension TKWorkspaceRunRequest {
             hdc: hdc,
             businessReadyText: businessReadyText,
             businessReadyLiveWait: businessReadyLiveWait,
+            businessReadyAssert: businessReadyAssert,
             businessReadyTimeout: businessReadyTimeout,
             businessReadyInterval: businessReadyInterval,
             resolveTarget: resolveTarget,
