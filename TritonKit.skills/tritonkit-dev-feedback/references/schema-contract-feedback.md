@@ -42,8 +42,9 @@ File feedback when:
 - Replay dry-run accepts statically invalid steps, such as tap with multiple selectors, wait with multiple conditions, paste/type without value, or wait without a condition.
 - Replay failure routing downgrades clear runtime/target/transport errors to generic `step_failed`.
 - `failureError.nextAction` and replay `recoveryCommands[]` disagree.
+- Replay failure output lacks `recoveryProposal`, or its `diagnosis`, `evidenceRefs`, `proposal.policyDecision`, and `nextActions[]` do not match the failed step and recovery commands.
 
-Preserve `failedStepIndex`, `failureCode`, `failureError`, `failureWorkflowCategories[]`, `failureRecoveryCategories[]`, `failurePrimaryArtifacts[]`, `recoveryCommands[]`, `suggestedCommands[]`, and failed step error payloads.
+Preserve `recoveryProposal`, `failedStepIndex`, `failureCode`, `failureError`, `failureWorkflowCategories[]`, `failureRecoveryCategories[]`, `failurePrimaryArtifacts[]`, `recoveryCommands[]`, `suggestedCommands[]`, and failed step error payloads.
 
 ## Recovery and failure-code rules
 

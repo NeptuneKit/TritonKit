@@ -1408,6 +1408,112 @@ public struct TKReplayStepResult: Codable, Equatable {
     }
 }
 
+public struct TKReplayRecoveryDiagnosis: Codable, Equatable {
+    public let type: String
+    public let phase: String
+    public let message: String?
+    public let hint: String?
+    public let endpoint: String?
+    public let evidenceRefs: [String]
+
+    public init(
+        type: String,
+        phase: String,
+        message: String? = nil,
+        hint: String? = nil,
+        endpoint: String? = nil,
+        evidenceRefs: [String]
+    ) {
+        self.type = type
+        self.phase = phase
+        self.message = message
+        self.hint = hint
+        self.endpoint = endpoint
+        self.evidenceRefs = evidenceRefs
+    }
+}
+
+public struct TKReplayRecoveryAction: Codable, Equatable {
+    public let action: String
+    public let reason: String
+    public let policyDecision: String
+    public let command: [String]
+
+    public init(
+        action: String,
+        reason: String,
+        policyDecision: String,
+        command: [String]
+    ) {
+        self.action = action
+        self.reason = reason
+        self.policyDecision = policyDecision
+        self.command = command
+    }
+}
+
+public struct TKReplayRecoveryNextAction: Codable, Equatable {
+    public let code: String
+    public let message: String
+    public let command: String?
+    public let category: String
+
+    public init(
+        code: String,
+        message: String,
+        command: String?,
+        category: String
+    ) {
+        self.code = code
+        self.message = message
+        self.command = command
+        self.category = category
+    }
+}
+
+public struct TKReplayRecoveryProposal: Codable, Equatable {
+    public let schemaVersion: Int
+    public let kind: String
+    public let trigger: String
+    public let planName: String?
+    public let failedStepIndex: Int
+    public let failureCode: String
+    public let workflowCategories: [String]
+    public let recoveryCategories: [String]
+    public let diagnosis: TKReplayRecoveryDiagnosis
+    public let proposal: TKReplayRecoveryAction
+    public let nextActions: [TKReplayRecoveryNextAction]
+    public let evidenceRefs: [String]
+
+    public init(
+        schemaVersion: Int = 1,
+        kind: String = "triton.replay.recovery-proposal",
+        trigger: String = "replay_step_failed",
+        planName: String?,
+        failedStepIndex: Int,
+        failureCode: String,
+        workflowCategories: [String],
+        recoveryCategories: [String],
+        diagnosis: TKReplayRecoveryDiagnosis,
+        proposal: TKReplayRecoveryAction,
+        nextActions: [TKReplayRecoveryNextAction],
+        evidenceRefs: [String]
+    ) {
+        self.schemaVersion = schemaVersion
+        self.kind = kind
+        self.trigger = trigger
+        self.planName = planName
+        self.failedStepIndex = failedStepIndex
+        self.failureCode = failureCode
+        self.workflowCategories = workflowCategories
+        self.recoveryCategories = recoveryCategories
+        self.diagnosis = diagnosis
+        self.proposal = proposal
+        self.nextActions = nextActions
+        self.evidenceRefs = evidenceRefs
+    }
+}
+
 public struct TKReplayResult: Codable, Equatable {
     public let ok: Bool
     public let dryRun: Bool
@@ -1432,6 +1538,7 @@ public struct TKReplayResult: Codable, Equatable {
     public let suggestedCommands: [String]
     public let failurePrimaryRecoveryCommand: TKCommandRecoveryCommand?
     public let recoveryCommands: [TKCommandRecoveryCommand]
+    public let recoveryProposal: TKReplayRecoveryProposal?
 
     enum CodingKeys: String, CodingKey {
         case ok
@@ -1457,6 +1564,7 @@ public struct TKReplayResult: Codable, Equatable {
         case suggestedCommands
         case failurePrimaryRecoveryCommand
         case recoveryCommands
+        case recoveryProposal
     }
 
     public init(
@@ -1482,7 +1590,8 @@ public struct TKReplayResult: Codable, Equatable {
         failurePrimarySuggestedCommand: String? = nil,
         suggestedCommands: [String] = [],
         failurePrimaryRecoveryCommand: TKCommandRecoveryCommand? = nil,
-        recoveryCommands: [TKCommandRecoveryCommand]? = nil
+        recoveryCommands: [TKCommandRecoveryCommand]? = nil,
+        recoveryProposal: TKReplayRecoveryProposal? = nil
     ) {
         self.ok = ok
         self.dryRun = dryRun
@@ -1525,6 +1634,17 @@ public struct TKReplayResult: Codable, Equatable {
         )
         self.failurePrimaryRecoveryCategory = failurePrimaryRecoveryCategory ?? self.failureRecoveryCategories.first
         self.failurePrimaryArtifact = failurePrimaryArtifact ?? self.failurePrimaryArtifacts.first
+        self.recoveryProposal = recoveryProposal ?? Self.defaultRecoveryProposal(
+            planName: planName,
+            failedStepIndex: failedStepIndex,
+            failureCode: self.failureCode,
+            failureError: self.failureError,
+            failureWorkflowCategories: self.failureWorkflowCategories,
+            failureRecoveryCategories: self.failureRecoveryCategories,
+            failurePrimaryArtifacts: self.failurePrimaryArtifacts,
+            recoveryCommands: self.recoveryCommands,
+            steps: steps
+        )
     }
 
     public init(from decoder: Decoder) throws {
@@ -1578,6 +1698,18 @@ public struct TKReplayResult: Codable, Equatable {
             ?? self.failureRecoveryCategories.first
         self.failurePrimaryArtifact = try container.decodeIfPresent(TKEvidenceArtifactSummary.self, forKey: .failurePrimaryArtifact)
             ?? self.failurePrimaryArtifacts.first
+        self.recoveryProposal = try container.decodeIfPresent(TKReplayRecoveryProposal.self, forKey: .recoveryProposal)
+            ?? Self.defaultRecoveryProposal(
+                planName: self.planName,
+                failedStepIndex: failedStepIndex,
+                failureCode: self.failureCode,
+                failureError: self.failureError,
+                failureWorkflowCategories: self.failureWorkflowCategories,
+                failureRecoveryCategories: self.failureRecoveryCategories,
+                failurePrimaryArtifacts: self.failurePrimaryArtifacts,
+                recoveryCommands: self.recoveryCommands,
+                steps: steps
+            )
     }
 
     private static func defaultFailureWorkflowCategories(
@@ -1727,6 +1859,128 @@ public struct TKReplayResult: Codable, Equatable {
     ) -> TKReplayStepResult? {
         guard let failedStepIndex else { return nil }
         return steps.first { $0.index == failedStepIndex }
+    }
+
+    private static func defaultRecoveryProposal(
+        planName: String?,
+        failedStepIndex: Int?,
+        failureCode: String?,
+        failureError: TKCLIErrorDetail?,
+        failureWorkflowCategories: [String],
+        failureRecoveryCategories: [String],
+        failurePrimaryArtifacts: [TKEvidenceArtifactSummary],
+        recoveryCommands: [TKCommandRecoveryCommand],
+        steps: [TKReplayStepResult]
+    ) -> TKReplayRecoveryProposal? {
+        guard let failedStep = failedStep(steps: steps, failedStepIndex: failedStepIndex) else {
+            return nil
+        }
+        let resolvedFailureCode = failureCode ?? failedStep.failureCode ?? failureError?.code ?? "step_failed"
+        let evidenceRefs = recoveryEvidenceRefs(
+            failedStep: failedStep,
+            failureError: failureError,
+            failurePrimaryArtifacts: failurePrimaryArtifacts,
+            steps: steps
+        )
+        let diagnosis = TKReplayRecoveryDiagnosis(
+            type: resolvedFailureCode,
+            phase: failedStep.action,
+            message: failureError?.message ?? failedStep.message,
+            hint: failureError?.hint,
+            endpoint: failureError?.endpoint,
+            evidenceRefs: evidenceRefs
+        )
+        let proposal = TKReplayRecoveryAction(
+            action: "inspect_recovery_commands",
+            reason: "Replay failed at step \(failedStep.index) with \(resolvedFailureCode); review recovery commands before retrying.",
+            policyDecision: "requires_review",
+            command: ["stop"]
+        )
+        let nextActions = recoveryNextActions(
+            failedStepIndex: failedStep.index,
+            recoveryCommands: recoveryCommands
+        )
+        return TKReplayRecoveryProposal(
+            planName: planName,
+            failedStepIndex: failedStep.index,
+            failureCode: resolvedFailureCode,
+            workflowCategories: failureWorkflowCategories,
+            recoveryCategories: failureRecoveryCategories,
+            diagnosis: diagnosis,
+            proposal: proposal,
+            nextActions: nextActions,
+            evidenceRefs: evidenceRefs
+        )
+    }
+
+    private static func recoveryEvidenceRefs(
+        failedStep: TKReplayStepResult,
+        failureError: TKCLIErrorDetail?,
+        failurePrimaryArtifacts: [TKEvidenceArtifactSummary],
+        steps: [TKReplayStepResult]
+    ) -> [String] {
+        var refs: [String] = []
+        var seen = Set<String>()
+
+        func append(_ ref: String) {
+            guard !seen.contains(ref) else { return }
+            seen.insert(ref)
+            refs.append(ref)
+        }
+
+        append("steps[\(failedStep.index)]")
+        if failedStep.wait != nil {
+            append("steps[\(failedStep.index)].wait")
+        }
+        if failedStep.input != nil {
+            append("steps[\(failedStep.index)].input")
+        }
+        if failedStep.evidence != nil {
+            append("steps[\(failedStep.index)].evidence")
+        }
+        if failedStep.file != nil {
+            append("steps[\(failedStep.index)].file")
+        }
+        if failureError != nil {
+            append("failureError")
+        }
+        for step in steps where step.index != failedStep.index {
+            if step.evidence != nil {
+                append("steps[\(step.index)].evidence")
+            }
+            if step.file != nil {
+                append("steps[\(step.index)].file")
+            }
+        }
+        if !failurePrimaryArtifacts.isEmpty {
+            append("failurePrimaryArtifacts[]")
+        }
+        return refs
+    }
+
+    private static func recoveryNextActions(
+        failedStepIndex: Int,
+        recoveryCommands: [TKCommandRecoveryCommand]
+    ) -> [TKReplayRecoveryNextAction] {
+        let actions = recoveryCommands.prefix(5).map { command in
+            TKReplayRecoveryNextAction(
+                code: "run_recovery_command",
+                message: "Run recovery command before retrying replay step \(failedStepIndex).",
+                command: command.command,
+                category: command.category
+            )
+        }
+        if !actions.isEmpty {
+            return actions
+        }
+        return [
+            TKReplayRecoveryNextAction(
+                code: "inspect_replay_failure",
+                message: "Inspect the failed replay step before retrying.",
+                command: nil,
+                category: "replay"
+            ),
+        ]
     }
 }
 

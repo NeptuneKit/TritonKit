@@ -723,7 +723,7 @@ triton replay /tmp/login-flow.tritonplan --dry-run --var username=alice --var pa
 triton replay /tmp/login-flow.tritonplan --var username=alice --var password-env=TRITON_PASSWORD --json
 ```
 
-`record` currently writes an editable starter template; it does not capture live terminal history or global input events yet. `replay` supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence` steps, `${variable}` substitution, `--var key=value`, `--var key-env=ENV_NAME`, and secure value redaction in step summaries. `triton capabilities --json` exposes `plan-inspect` separately from `replay-dry-run`, so agents can discover offline plan inspection before choosing dry-run or real replay.
+`record` currently writes an editable starter template; it does not capture live terminal history or global input events yet. `replay` supports `tap`, `paste`, `type`, `clear`, `wait`, `screenshot`, and `evidence` steps, `${variable}` substitution, `--var key=value`, `--var key-env=ENV_NAME`, and secure value redaction in step summaries. Failed replay results include `recoveryProposal` with `diagnosis`, `evidenceRefs`, `policyDecision`, and structured `nextActions[]`, so agents can inspect the proposed repair path before retrying the flow. `triton capabilities --json` exposes `plan-inspect` separately from `replay-dry-run`, so agents can discover offline plan inspection before choosing dry-run or real replay.
 
 ## Harmony App Integration Guide
 

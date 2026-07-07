@@ -375,6 +375,93 @@ struct ReplayCommandTests {
         #expect(recovery.map(\.category) == ["act", "diagnose", "archive", "archive"])
     }
 
+    @Test("replay result exposes recovery proposal for failed wait steps")
+    func replayResultExposesRecoveryProposalForFailedWaitSteps() throws {
+        let priorEvidence = TKEvidenceManifest(
+            ok: true,
+            createdAt: "2026-05-31T00:00:00Z",
+            output: "/tmp/login.tritonevidence",
+            artifacts: [
+                TKEvidenceArtifact(kind: "status", path: "status.json", contentType: "application/json"),
+                TKEvidenceArtifact(kind: "screenshot", path: "screenshot.png", contentType: "image/png"),
+            ],
+            cli: TKEvidenceCLI(version: "test")
+        )
+        let steps = [
+            TKReplayStepResult(
+                index: 1,
+                action: "evidence",
+                ok: true,
+                dryRun: false,
+                elapsedMs: 5,
+                command: ["triton", "evidence", "capture", "--case", "login", "--output", "/tmp/login.tritonevidence", "--json"],
+                evidence: priorEvidence
+            ),
+            TKReplayStepResult(
+                index: 2,
+                action: "wait",
+                ok: false,
+                dryRun: false,
+                elapsedMs: 10,
+                command: ["triton", "wait", "--text", "Home", "--json"],
+                wait: TKWaitResult(
+                    ok: false,
+                    matched: false,
+                    condition: "text",
+                    query: "Home",
+                    timedOut: true,
+                    elapsedMs: 10,
+                    pollCount: 2,
+                    timeoutSeconds: 5,
+                    intervalSeconds: 1
+                )
+            ),
+        ]
+        let result = TKReplayResult(
+            ok: false,
+            dryRun: false,
+            planName: "login-flow",
+            stepCount: 2,
+            executedCount: 2,
+            failedStepIndex: 2,
+            elapsedMs: 15,
+            steps: steps,
+            suggestedCommands: replaySuggestedCommands(steps: steps, failedStepIndex: 2),
+            recoveryCommands: replayRecoveryCommands(steps: steps, failedStepIndex: 2)
+        )
+
+        let proposal = try #require(result.recoveryProposal)
+        #expect(proposal.schemaVersion == 1)
+        #expect(proposal.kind == "triton.replay.recovery-proposal")
+        #expect(proposal.trigger == "replay_step_failed")
+        #expect(proposal.planName == "login-flow")
+        #expect(proposal.failedStepIndex == 2)
+        #expect(proposal.failureCode == "timeout")
+        #expect(proposal.diagnosis.type == "timeout")
+        #expect(proposal.diagnosis.phase == "wait")
+        #expect(proposal.diagnosis.evidenceRefs == [
+            "steps[2]",
+            "steps[2].wait",
+            "steps[1].evidence",
+            "failurePrimaryArtifacts[]",
+        ])
+        #expect(proposal.proposal.action == "inspect_recovery_commands")
+        #expect(proposal.proposal.policyDecision == "requires_review")
+        #expect(proposal.proposal.command == ["stop"])
+        #expect(proposal.nextActions.map(\.category) == ["act", "diagnose", "archive", "archive"])
+        #expect(proposal.nextActions.first?.code == "run_recovery_command")
+        #expect(proposal.nextActions.first?.command == "triton act find 'Home' --all --json")
+        #expect(proposal.evidenceRefs == proposal.diagnosis.evidenceRefs)
+
+        let encoded = try JSONEncoder().encode(result)
+        var json = try #require(JSONSerialization.jsonObject(with: encoded) as? [String: Any])
+        json.removeValue(forKey: "recoveryProposal")
+        let legacyJSON = try JSONSerialization.data(withJSONObject: json)
+        let legacyResult = try JSONDecoder().decode(TKReplayResult.self, from: legacyJSON)
+
+        #expect(legacyResult.recoveryProposal == proposal)
+    }
+
     @Test("replay failure helper preserves underlying error codes")
     func replayFailureHelperPreservesUnderlyingErrorCodes() throws {
         let serverDetail = TKCLIErrorDetail(

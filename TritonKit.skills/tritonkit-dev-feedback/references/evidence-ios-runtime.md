@@ -80,7 +80,7 @@ triton plan inspect /tmp/<case>.tritonplan --json
 triton replay /tmp/<case>.tritonplan --dry-run --json
 ```
 
-Read `primaryArtifacts[]` before scanning every artifact. For replay failures, preserve `failedStepIndex`, `failureCode`, `failureError`, `failureWorkflowCategories[]`, `failureRecoveryCategories[]`, `failurePrimaryArtifacts[]`, `recoveryCommands[]`, `suggestedCommands[]`, and the failed step error payload.
+Read `primaryArtifacts[]` before scanning every artifact. For replay failures, preserve `recoveryProposal`, `failedStepIndex`, `failureCode`, `failureError`, `failureWorkflowCategories[]`, `failureRecoveryCategories[]`, `failurePrimaryArtifacts[]`, `recoveryCommands[]`, `suggestedCommands[]`, and the failed step error payload.
 
 ## Xcode workflow evidence
 
