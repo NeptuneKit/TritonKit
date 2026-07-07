@@ -254,6 +254,8 @@ func appMapPathsOutputContract() -> TKCommandOutputContract {
             ("mapDir", "String", true, "Input .tritonmap directory"),
             ("pathCount", "Int", true, "Total path count"),
             ("paths", "[TKAppMapPath]", true, "Replayable and observed path assets"),
+            ("paths[].requiresVLM", "Bool", true, "True when path provenance requires VLM-enabled replay policy"),
+            ("paths[].suggestedCommands", "[String]", true, "Executable export/run commands for this path, with --allow-vlm when required"),
         ])
     )
 }
@@ -304,6 +306,8 @@ func appMapPathShowOutputContract() -> TKCommandOutputContract {
             ("kind", "String", true, "Stable kind; triton.app-map.path-show-result"),
             ("mapDir", "String", true, "Input .tritonmap directory"),
             ("path", "TKAppMapPath", true, "Selected path"),
+            ("path.requiresVLM", "Bool", true, "True when path provenance requires VLM-enabled replay policy"),
+            ("path.suggestedCommands", "[String]", true, "Executable export/run commands for this path, with --allow-vlm when required"),
             ("screens", "[TKAppMapScreen]", true, "Path screens"),
             ("transitions", "[TKAppMapTransition]", true, "Path transitions"),
         ])
@@ -408,6 +412,8 @@ func appMapExportFlowOutputContract() -> TKCommandOutputContract {
             ("pathID", "String", true, "Exported path id"),
             ("output", "String", true, "Written .tritontest.yaml file"),
             ("stepCount", "Int", true, "Number of generated P0D-compatible test steps"),
+            ("requiresVLM", "Bool", true, "True when exported path provenance requires VLM-enabled replay policy"),
+            ("suggestedCommands", "[String]", true, "Validate and run commands for the exported flow, with --allow-vlm when required"),
         ])
     )
 }

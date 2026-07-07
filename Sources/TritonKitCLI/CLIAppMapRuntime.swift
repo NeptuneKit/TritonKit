@@ -267,6 +267,8 @@ struct TKAppMapExportFlowResponse: Codable, Equatable {
     let pathID: String
     let output: String
     let stepCount: Int
+    let requiresVLM: Bool
+    let suggestedCommands: [String]
 }
 
 struct TKAppMapViewerResponse: Codable, Equatable {
@@ -503,6 +505,8 @@ struct TKAppMapPath: Codable, Equatable {
     let sourceRuns: [String]
     let source: String
     let vlmHealth: TKAppMapVLMHealth?
+    let requiresVLM: Bool
+    let suggestedCommands: [String]
 
     enum CodingKeys: String, CodingKey {
         case schemaVersion
@@ -519,6 +523,8 @@ struct TKAppMapPath: Codable, Equatable {
         case sourceRuns
         case source
         case vlmHealth
+        case requiresVLM
+        case suggestedCommands
     }
 
     init(
@@ -535,7 +541,9 @@ struct TKAppMapPath: Codable, Equatable {
         replayable: Bool,
         sourceRuns: [String],
         source: String = "deterministic",
-        vlmHealth: TKAppMapVLMHealth? = nil
+        vlmHealth: TKAppMapVLMHealth? = nil,
+        requiresVLM: Bool = false,
+        suggestedCommands: [String] = []
     ) {
         self.schemaVersion = schemaVersion
         self.kind = kind
@@ -551,6 +559,8 @@ struct TKAppMapPath: Codable, Equatable {
         self.sourceRuns = sourceRuns
         self.source = source
         self.vlmHealth = vlmHealth
+        self.requiresVLM = requiresVLM
+        self.suggestedCommands = suggestedCommands
     }
 
     init(from decoder: Decoder) throws {
@@ -569,6 +579,9 @@ struct TKAppMapPath: Codable, Equatable {
         sourceRuns = try container.decodeIfPresent([String].self, forKey: .sourceRuns) ?? []
         source = try container.decodeIfPresent(String.self, forKey: .source) ?? "deterministic"
         vlmHealth = try container.decodeIfPresent(TKAppMapVLMHealth.self, forKey: .vlmHealth)
+        requiresVLM = try container.decodeIfPresent(Bool.self, forKey: .requiresVLM)
+            ?? appMapPathHasVLMProvenance(source: source, vlmHealth: vlmHealth)
+        suggestedCommands = try container.decodeIfPresent([String].self, forKey: .suggestedCommands) ?? []
     }
 }
 
@@ -600,6 +613,74 @@ struct TKAppMapHealth: Codable, Equatable {
     let passCount: Int
     let failCount: Int
     let flakeCount: Int
+}
+
+private func appMapPathHasVLMProvenance(source: String, vlmHealth: TKAppMapVLMHealth?) -> Bool {
+    if source == "vlm-assisted" {
+        return true
+    }
+    return vlmHealth?.providers.values.contains { $0.groundingRuns > 0 } == true
+}
+
+private func appMapPathRequiresVLM(_ path: TKAppMapPath) -> Bool {
+    path.requiresVLM || appMapPathHasVLMProvenance(source: path.source, vlmHealth: path.vlmHealth)
+}
+
+private func appMapPathFlowURL(mapRoot: URL, pathID: String) -> URL {
+    mapRoot.appendingPathComponent("flows/\(pathID).tritontest.yaml")
+}
+
+private func appMapPathEvidenceURL(mapRoot: URL, pathID: String) -> URL {
+    mapRoot.appendingPathComponent("evidence/\(pathID).tritonevidence", isDirectory: true)
+}
+
+private func appMapPathSuggestedCommands(mapRoot: URL, path: TKAppMapPath) -> [String] {
+    guard path.replayable else { return [] }
+    let flowURL = appMapPathFlowURL(mapRoot: mapRoot, pathID: path.pathID)
+    let evidenceURL = appMapPathEvidenceURL(mapRoot: mapRoot, pathID: path.pathID)
+    var runCommand = "triton test run \(shellQuotedEvidencePath(flowURL.path)) --json --evidence-dir \(shellQuotedEvidencePath(evidenceURL.path))"
+    if appMapPathRequiresVLM(path) {
+        runCommand += " --allow-vlm"
+    }
+    return [
+        "triton map export-flow \(shellQuotedEvidencePath(mapRoot.path)) --path \(path.pathID) --out \(shellQuotedEvidencePath(flowURL.path)) --json",
+        runCommand,
+    ]
+}
+
+private func appMapExportFlowSuggestedCommands(outputURL: URL, requiresVLM: Bool) -> [String] {
+    let output = shellQuotedEvidencePath(outputURL.path)
+    let evidenceDir = shellQuotedEvidencePath(outputURL.deletingPathExtension().path + ".tritonevidence")
+    var runCommand = "triton test run \(output) --json --evidence-dir \(evidenceDir)"
+    if requiresVLM {
+        runCommand += " --allow-vlm"
+    }
+    return [
+        "triton test validate \(output) --json",
+        runCommand,
+    ]
+}
+
+private func appMapPathWithSuggestedCommands(_ path: TKAppMapPath, mapRoot: URL) -> TKAppMapPath {
+    let requiresVLM = appMapPathRequiresVLM(path)
+    return TKAppMapPath(
+        schemaVersion: path.schemaVersion,
+        kind: path.kind,
+        pathID: path.pathID,
+        name: path.name,
+        status: path.status,
+        confirmed: path.confirmed,
+        startScreenID: path.startScreenID,
+        endScreenID: path.endScreenID,
+        transitions: path.transitions,
+        health: path.health,
+        replayable: path.replayable,
+        sourceRuns: path.sourceRuns,
+        source: path.source,
+        vlmHealth: path.vlmHealth,
+        requiresVLM: requiresVLM,
+        suggestedCommands: appMapPathSuggestedCommands(mapRoot: mapRoot, path: path)
+    )
 }
 
 struct TKAppMapVLMHealth: Codable, Equatable {
@@ -850,6 +931,7 @@ func listTritonAppMapPaths(mapPath: String) throws -> TKAppMapPathsResponse {
     }
     let paths = try jsonFiles(in: mapRoot.appendingPathComponent("paths", isDirectory: true))
         .map { try decodeJSON(TKAppMapPath.self, from: $0) }
+        .map { appMapPathWithSuggestedCommands($0, mapRoot: mapRoot) }
         .sorted { $0.pathID < $1.pathID }
     return TKAppMapPathsResponse(
         ok: true,
@@ -889,7 +971,7 @@ func listTritonAppMapTransitions(mapPath: String) throws -> TKAppMapTransitionsR
 
 func showTritonAppMapPath(mapPath: String, pathID: String) throws -> TKAppMapPathShowResponse {
     let mapRoot = try requireAppMapRoot(mapPath)
-    let path = try readMapPath(mapRoot: mapRoot, pathID: pathID)
+    let path = appMapPathWithSuggestedCommands(try readMapPath(mapRoot: mapRoot, pathID: pathID), mapRoot: mapRoot)
     let transitions = try path.transitions.map { transitionID in
         try readMapTransition(mapRoot: mapRoot, transitionID: transitionID)
     }
@@ -927,7 +1009,9 @@ func setTritonAppMapPathConfirmation(
         replayable: path.replayable,
         sourceRuns: path.sourceRuns,
         source: path.source,
-        vlmHealth: path.vlmHealth
+        vlmHealth: path.vlmHealth,
+        requiresVLM: appMapPathRequiresVLM(path),
+        suggestedCommands: []
     )
     try writeMapPath(mapRoot: mapRoot, path: updated)
     if !confirmed {
@@ -938,7 +1022,7 @@ func setTritonAppMapPathConfirmation(
         schemaVersion: 1,
         kind: confirmed ? "triton.app-map.path-confirm-result" : "triton.app-map.path-unconfirm-result",
         mapDir: mapRoot.path,
-        path: updated
+        path: appMapPathWithSuggestedCommands(updated, mapRoot: mapRoot)
     )
 }
 
@@ -1031,7 +1115,9 @@ func inspectTritonAppMapVLMHealth(
 func inspectTritonAppMapSuite(mapPath: String, suiteID: String) throws -> TKAppMapSuiteInspectResponse {
     let mapRoot = try requireAppMapRoot(mapPath)
     let suite = try readMapSuite(mapRoot: mapRoot, suiteID: suiteID)
-    let paths = try suite.paths.map { try readMapPath(mapRoot: mapRoot, pathID: $0) }
+    let paths = try suite.paths.map {
+        appMapPathWithSuggestedCommands(try readMapPath(mapRoot: mapRoot, pathID: $0), mapRoot: mapRoot)
+    }
     return TKAppMapSuiteInspectResponse(
         ok: true,
         schemaVersion: 1,
@@ -1061,7 +1147,9 @@ func addTritonAppMapSuitePath(
         policy: suite.policy
     )
     try writeMapSuite(mapRoot: mapRoot, suite: updated)
-    let paths = try updated.paths.map { try readMapPath(mapRoot: mapRoot, pathID: $0) }
+    let paths = try updated.paths.map {
+        appMapPathWithSuggestedCommands(try readMapPath(mapRoot: mapRoot, pathID: $0), mapRoot: mapRoot)
+    }
     return TKAppMapSuiteMutationResponse(
         ok: true,
         schemaVersion: 1,
@@ -1088,7 +1176,9 @@ func removeTritonAppMapSuitePath(
         policy: suite.policy
     )
     try writeMapSuite(mapRoot: mapRoot, suite: updated)
-    let paths = try updated.paths.map { try readMapPath(mapRoot: mapRoot, pathID: $0) }
+    let paths = try updated.paths.map {
+        appMapPathWithSuggestedCommands(try readMapPath(mapRoot: mapRoot, pathID: $0), mapRoot: mapRoot)
+    }
     return TKAppMapSuiteMutationResponse(
         ok: true,
         schemaVersion: 1,
@@ -1247,6 +1337,7 @@ func exportTritonAppMapFlow(
     let outputURL = URL(fileURLWithPath: output)
     try FileManager.default.createDirectory(at: outputURL.deletingLastPathComponent(), withIntermediateDirectories: true)
     try yaml.write(to: outputURL, atomically: true, encoding: .utf8)
+    let requiresVLM = appMapPathRequiresVLM(path)
     return TKAppMapExportFlowResponse(
         ok: true,
         schemaVersion: 1,
@@ -1254,7 +1345,9 @@ func exportTritonAppMapFlow(
         mapDir: mapRoot.path,
         pathID: pathID,
         output: outputURL.path,
-        stepCount: stepCount
+        stepCount: stepCount,
+        requiresVLM: requiresVLM,
+        suggestedCommands: appMapExportFlowSuggestedCommands(outputURL: outputURL, requiresVLM: requiresVLM)
     )
 }
 
@@ -1474,6 +1567,8 @@ private func writeCandidatePath(
     let pathURL = mapRoot.appendingPathComponent("paths/\(pathID).json")
     let existing = try? decodeJSON(TKAppMapPath.self, from: pathURL)
     let healthUpdate = pathHealthAfterMerge(existing: existing, runID: runID, verdict: verdict)
+    let mergedSource = existing?.source == "vlm-assisted" || source == "vlm-assisted" ? "vlm-assisted" : "deterministic"
+    let mergedVLMHealth = mergeVLMHealth(existing?.vlmHealth, vlmHealth)
     let path = TKAppMapPath(
         schemaVersion: 1,
         kind: "triton.app-map.path",
@@ -1487,8 +1582,10 @@ private func writeCandidatePath(
         health: healthUpdate.health,
         replayable: transitions.allSatisfy(\.replayable),
         sourceRuns: healthUpdate.sourceRuns,
-        source: existing?.source == "vlm-assisted" || source == "vlm-assisted" ? "vlm-assisted" : "deterministic",
-        vlmHealth: mergeVLMHealth(existing?.vlmHealth, vlmHealth)
+        source: mergedSource,
+        vlmHealth: mergedVLMHealth,
+        requiresVLM: existing?.requiresVLM == true || appMapPathHasVLMProvenance(source: mergedSource, vlmHealth: mergedVLMHealth),
+        suggestedCommands: []
     )
     try prettyEncodedData(path).write(to: pathURL, options: .atomic)
     return [pathID]

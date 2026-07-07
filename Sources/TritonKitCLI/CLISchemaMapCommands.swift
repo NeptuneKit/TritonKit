@@ -85,7 +85,7 @@ func mapCommandSchemas() -> [TKCommandSchema] {
             ],
             successShape: "TKAppMapMergeResponse, TKAppMapInspectResponse, TKAppMapPathsResponse, TKAppMapScreensResponse, TKAppMapTransitionsResponse, TKAppMapPathShowResponse, TKAppMapHealthResponse, TKAppMapSuiteInspectResponse, TKAppMapSuiteRunResponse, TKAppMapExportFlowResponse, or TKAppMapViewerResponse",
             failureShape: "{ ok:false, error:{ code: app_map_error, message, hint } }",
-            outputSemantics: "Offline App Map projection and path planning only. It reads existing .tritonevidence and .tritonmap files; it can confirm paths, edit suite membership, and export a static HTML viewer, but it does not execute runner steps, devices, VLM, selector healing, Web/Wails control, or JUnit.",
+            outputSemantics: "Offline App Map projection and path planning only. It reads existing .tritonevidence and .tritonmap files; it can confirm paths, edit suite membership, and export a static HTML viewer, but it does not execute runner steps, devices, selector healing, Web/Wails control, or JUnit. Path list/show responses expose requiresVLM plus executable suggestedCommands for export/run, and export-flow returns validate/run suggestedCommands with --allow-vlm when the source path has VLM provenance.",
             artifacts: ["app-map", "app-map.screens", "app-map.transitions", "app-map.paths", "app-map.suites", "tritontest-yaml", "app-map-viewer-html"],
             nextCommands: [
                 "triton evidence project-workspace <dir.tritonevidence> --json",
