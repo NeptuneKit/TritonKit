@@ -270,6 +270,29 @@ extension SchemaFactSourceTests {
         #expect(disconnectedOpenURLPlan.steps.map(\.id) == ["start-server", "connect-target", "diagnose"])
         #expect(disconnectedOpenURLPlan.afterRecoverySteps.map(\.id) == ["target-resolve", "app-open-url", "wait-text", "assert-text", "evidence"])
 
+        let disconnectedHarmonyPlan = buildWorkflowPlan(
+            capabilities: disconnected,
+            host: "127.0.0.1",
+            port: 19421,
+            request: WorkflowPlanRequest(
+                goal: "general",
+                device: "harmony-real:abc123",
+                platform: "harmony",
+                evidence: "/tmp/harmony.tritonevidence"
+            )
+        )
+        #expect(disconnectedHarmonyPlan.ok)
+        #expect(disconnectedHarmonyPlan.serverReachable == false)
+        #expect(disconnectedHarmonyPlan.mode == "task")
+        #expect(disconnectedHarmonyPlan.nextStep == "device-doctor")
+        #expect(disconnectedHarmonyPlan.nextWorkflows == ["target", "evidence"])
+        #expect(disconnectedHarmonyPlan.primaryWorkflowCategory == "target")
+        #expect(disconnectedHarmonyPlan.primaryNextAction?.command == "device")
+        #expect(disconnectedHarmonyPlan.primaryNextAction?.args == ["doctor", "--platform", "harmony", "--json"])
+        #expect(Array(disconnectedHarmonyPlan.steps.map(\.id).prefix(3)) == ["device-doctor", "device-list", "device-wait-ready"])
+        #expect(disconnectedHarmonyPlan.steps.contains(where: { $0.command.contains("triton serve") }) == false)
+        #expect(disconnectedHarmonyPlan.steps.contains(where: { $0.command.contains("triton xcode run") }) == false)
+
         let hostOnlyProxyPlan = buildWorkflowPlan(
             capabilities: disconnected,
             host: "127.0.0.1",

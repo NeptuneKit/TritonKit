@@ -40,6 +40,29 @@ struct TKRuntimeInputActionsTests {
     }
 
     @MainActor
+    @Test("UIControl target action lookup skips non-NSObject targets")
+    func controlTargetActionLookupSkipsNonNSObjectTargets() {
+        let control = UIControl()
+        let target = SwiftOnlyControlTarget()
+
+        let actions = safeControlActionNames(for: control, target: target, event: .touchUpInside)
+
+        #expect(actions.isEmpty)
+    }
+
+    @MainActor
+    @Test("UIControl tap dispatch can fall back to event dispatch when actions are not introspectable")
+    func controlTapDispatchFallsBackToEventDispatchWhenActionsAreNotIntrospectable() {
+        let control = EventReportingControl(frame: .zero, events: .touchUpInside)
+
+        let dispatch = preferredTapDispatch(for: control)
+
+        #expect(dispatch?.event == .touchUpInside)
+        #expect(dispatch?.eventName == "UIControl.touchUpInside")
+        #expect(dispatch?.actions.isEmpty == true)
+    }
+
+    @MainActor
     @Test("UISlider swipe sets value from end coordinate")
     func sliderSwipeSetsValueFromEndCoordinate() {
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 120))
@@ -279,6 +302,27 @@ private final class ControlEventRecorder: NSObject {
 
     @objc func touchUpInside() {
         events.append("up")
+    }
+}
+
+private final class SwiftOnlyControlTarget {
+    func touchUpInside() {}
+}
+
+private final class EventReportingControl: UIControl {
+    private let events: UIControl.Event
+
+    init(frame: CGRect, events: UIControl.Event) {
+        self.events = events
+        super.init(frame: frame)
+    }
+
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    override var allControlEvents: UIControl.Event {
+        events
     }
 }
 
