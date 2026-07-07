@@ -114,6 +114,29 @@ func workspaceDefaultLiveObserveProvider(_ request: TKWorkspaceLiveObserveReques
     }
 }
 
+func writeWorkspaceObservationEvidence(
+    _ observation: TKWorkspaceObservationSeed,
+    runDir: URL,
+    index: Int
+) throws {
+    let observationURL = runDir.appendingPathComponent(workspaceObservationEvidenceRef(index: index))
+    if let rawObservationData = observation.rawObservationData {
+        try rawObservationData.write(to: observationURL, options: .atomic)
+    } else if let fixturePath = observation.fixturePath {
+        if FileManager.default.fileExists(atPath: observationURL.path) {
+            try FileManager.default.removeItem(at: observationURL)
+        }
+        try FileManager.default.copyItem(
+            at: URL(fileURLWithPath: fixturePath),
+            to: observationURL
+        )
+    }
+}
+
+func workspaceObservationEvidenceRef(index: Int) -> String {
+    "evidence/observations/\(String(format: "%04d", index)).json"
+}
+
 private func workspaceLiveObservationSeed(
     for request: TKWorkspaceRunRequest,
     observeProvider: TKWorkspaceLiveObserveProvider

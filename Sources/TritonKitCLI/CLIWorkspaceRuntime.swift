@@ -348,6 +348,12 @@ func runWorkspaceRunAsync(
     } else {
         actionExecution = nil
     }
+    let postActionObservation: TKWorkspaceObservationSeed?
+    if request.observeLive, actionExecution?.ok == true {
+        postActionObservation = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
+    } else {
+        postActionObservation = nil
+    }
     let businessWaitResult: TKWaitResult?
     let businessCheckpoint: TKWorkspaceBusinessCheckpoint?
     if request.businessReadyLiveWait, initialBusinessCheckpoint?.ready == true {
@@ -387,7 +393,8 @@ func runWorkspaceRunAsync(
         appLifecycle: appLifecycle,
         businessWaitResult: businessWaitResult,
         businessCheckpoint: businessCheckpoint,
-        actionExecution: actionExecution
+        actionExecution: actionExecution,
+        postActionObservation: postActionObservation
     )
 }
 
@@ -397,7 +404,8 @@ private func runWorkspaceRun(
     appLifecycle: TKWorkspaceAppLifecycleEvidence,
     businessWaitResult: TKWaitResult? = nil,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil,
-    actionExecution: TKWorkspaceActionExecutionResult? = nil
+    actionExecution: TKWorkspaceActionExecutionResult? = nil,
+    postActionObservation: TKWorkspaceObservationSeed? = nil
 ) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
@@ -481,7 +489,8 @@ private func runWorkspaceRun(
         appReady: appReady,
         businessCheckpoint: businessCheckpoint,
         includeModelTransition: shouldWriteModelDecision,
-        actionExecution: actionExecution
+        actionExecution: actionExecution,
+        postActionObservation: postActionObservation
     )
     if shouldWriteModelDecision || shouldWritePolicyRejection {
         try writeWorkspaceModelDecisionArtifacts(
@@ -490,7 +499,8 @@ private func runWorkspaceRun(
             mode: modelLoopMode,
             policyAllowed: modelDecisionAllowed,
             businessCheckpoint: businessCheckpoint,
-            actionExecution: actionExecution
+            actionExecution: actionExecution,
+            postActionObservation: postActionObservation
         )
     }
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
@@ -510,7 +520,8 @@ private func runWorkspaceRun(
                 mode: modelLoopMode,
                 policyAllowed: modelDecisionAllowed,
                 businessCheckpoint: businessCheckpoint,
-                actionExecution: actionExecution
+                actionExecution: actionExecution,
+                postActionObservation: postActionObservation
             ),
             at: events.index(before: events.endIndex)
         )
@@ -1026,7 +1037,8 @@ private func writeWorkspaceRunArtifacts(
     appReady: TKWorkspaceAppReadyEvidence,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     includeModelTransition: Bool,
-    actionExecution: TKWorkspaceActionExecutionResult?
+    actionExecution: TKWorkspaceActionExecutionResult?,
+    postActionObservation: TKWorkspaceObservationSeed?
 ) throws {
     try writeWorkspaceJSONArtifact([
         "target": run.target.id,
@@ -1070,20 +1082,9 @@ private func writeWorkspaceRunArtifacts(
     )
     try writeWorkspaceJSONArtifact(["nodes": []], to: runDir.appendingPathComponent("evidence/hierarchy/0000.json"))
     try writeWorkspaceJSONArtifact(["ax": []], to: runDir.appendingPathComponent("evidence/hierarchy/0000-ax.json"))
-    if let rawObservationData = observation.rawObservationData {
-        try rawObservationData.write(
-            to: runDir.appendingPathComponent("evidence/observations/0000.json"),
-            options: .atomic
-        )
-    } else if let fixturePath = observation.fixturePath {
-        let observationURL = runDir.appendingPathComponent("evidence/observations/0000.json")
-        if FileManager.default.fileExists(atPath: observationURL.path) {
-            try FileManager.default.removeItem(at: observationURL)
-        }
-        try FileManager.default.copyItem(
-            at: URL(fileURLWithPath: fixturePath),
-            to: observationURL
-        )
+    try writeWorkspaceObservationEvidence(observation, runDir: runDir, index: 0)
+    if let postActionObservation {
+        try writeWorkspaceObservationEvidence(postActionObservation, runDir: runDir, index: 1)
     }
     try writeWorkspaceJSONArtifact([
         "state": workspaceBootstrapState(for: run.ai),
@@ -1095,6 +1096,7 @@ private func writeWorkspaceRunArtifacts(
         workspaceAtlasDocument(
             for: run,
             observation: observation,
+            postActionObservation: postActionObservation,
             includeModelTransition: includeModelTransition,
             businessCheckpoint: businessCheckpoint,
             actionExecution: actionExecution
@@ -1109,7 +1111,8 @@ private func writeWorkspaceModelDecisionArtifacts(
     mode: String,
     policyAllowed: Bool,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
-    actionExecution: TKWorkspaceActionExecutionResult?
+    actionExecution: TKWorkspaceActionExecutionResult?,
+    postActionObservation: TKWorkspaceObservationSeed?
 ) throws {
     let command = ["triton", "act", "tap", "Continue", "--json"]
     try writeWorkspaceJSONArtifact([
@@ -1225,8 +1228,9 @@ private func writeWorkspaceModelDecisionArtifacts(
             "proposal": "stop",
         ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
     }
+    let toScreenID = postActionObservation == nil ? "screen_0000" : "screen_0001"
     try """
-    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"screen_0000","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint))","confidence":0.5,"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
+    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"\(toScreenID)","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint))","confidence":0.5,"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
     """.write(to: runDir.appendingPathComponent("atlas/deltas.jsonl"), atomically: true, encoding: .utf8)
     try """
     schemaVersion: 1
@@ -1304,25 +1308,61 @@ private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
 private func workspaceAtlasDocument(
     for run: TKWorkspaceRunResponse,
     observation: TKWorkspaceObservationSeed,
+    postActionObservation: TKWorkspaceObservationSeed?,
     includeModelTransition: Bool,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     actionExecution: TKWorkspaceActionExecutionResult?
 ) -> [String: Any] {
-    let initialObservationRefs = ([
-        "events.jsonl#observation.captured",
-        observation.fixtureRef,
-        observation.artifacts.screenshot,
-        observation.artifacts.hierarchy,
-        observation.artifacts.ax,
-    ] as [String?]).compactMap { $0 }
+    let initialObservationRefs = workspaceAtlasObservationRefs(
+        observation,
+        eventRef: "events.jsonl#observation.captured",
+        evidenceIndex: 0
+    )
+    let postActionObservationRefs = postActionObservation.map {
+        workspaceAtlasObservationRefs(
+            $0,
+            eventRef: "events.jsonl#observation.captured:post_action",
+            evidenceIndex: 1
+        )
+    }
+    let toScreenID = postActionObservation == nil ? "screen_0000" : "screen_0001"
     let transitions = includeModelTransition
-        ? [workspaceModelTransition(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint)]
+        ? [workspaceModelTransition(
+            actionExecution: actionExecution,
+            businessCheckpoint: businessCheckpoint,
+            toScreenID: toScreenID
+        )]
         : []
-    let signature = [
-        observation.screenCandidate.screenshotSha256,
-        observation.screenCandidate.axTextHash,
-        observation.screenCandidate.hierarchySha256,
-    ].joined(separator: ":")
+    var screens: [[String: Any]] = [
+        workspaceAtlasScreen(
+            screenID: "screen_0000",
+            stateID: "state_0000",
+            observation: observation,
+            evidenceRefs: initialObservationRefs
+        ),
+    ]
+    var states: [[String: Any]] = [
+        workspaceAtlasState(
+            stateID: "state_0000",
+            screenID: "screen_0000",
+            phase: "initial",
+            evidenceRefs: initialObservationRefs
+        ),
+    ]
+    if let postActionObservation, let postActionObservationRefs {
+        screens.append(workspaceAtlasScreen(
+            screenID: "screen_0001",
+            stateID: "state_0001",
+            observation: postActionObservation,
+            evidenceRefs: postActionObservationRefs
+        ))
+        states.append(workspaceAtlasState(
+            stateID: "state_0001",
+            screenID: "screen_0001",
+            phase: "post_action",
+            evidenceRefs: postActionObservationRefs
+        ))
+    }
     return [
         "schemaVersion": 1,
         "kind": "triton.workspace.atlas",
@@ -1332,32 +1372,73 @@ private func workspaceAtlasDocument(
             "events": "events.jsonl",
             "mode": "workspace-run-seed",
         ],
-        "screens": [
-            [
-                "screenId": "screen_0000",
-                "stateId": "state_0000",
-                "signature": signature,
-                "dominantTexts": observation.screenCandidate.visibleTexts,
-                "semanticTags": [],
-                "evidenceRefs": initialObservationRefs,
-            ],
-        ],
-        "states": [
-            [
-                "stateId": "state_0000",
-                "screenId": "screen_0000",
-                "phase": "initial",
-                "evidenceRefs": initialObservationRefs,
-            ],
-        ],
+        "screens": screens,
+        "states": states,
         "transitions": transitions,
         "coverage": [
             "status": "seeded",
-            "screenCount": 1,
-            "stateCount": 1,
+            "screenCount": screens.count,
+            "stateCount": states.count,
             "transitionCount": transitions.count,
         ],
     ]
+}
+
+private func workspaceAtlasObservationRefs(
+    _ observation: TKWorkspaceObservationSeed,
+    eventRef: String,
+    evidenceIndex: Int
+) -> [String] {
+    let observationEvidenceRef = observation.fixtureRef == nil
+        && observation.fixturePath == nil
+        && observation.rawObservationData == nil
+        ? nil
+        : workspaceObservationEvidenceRef(index: evidenceIndex)
+    return ([
+        eventRef,
+        observationEvidenceRef,
+        observation.artifacts.screenshot,
+        observation.artifacts.hierarchy,
+        observation.artifacts.ax,
+    ] as [String?]).compactMap { $0 }
+}
+
+private func workspaceAtlasScreen(
+    screenID: String,
+    stateID: String,
+    observation: TKWorkspaceObservationSeed,
+    evidenceRefs: [String]
+) -> [String: Any] {
+    [
+        "screenId": screenID,
+        "stateId": stateID,
+        "signature": workspaceAtlasSignature(observation),
+        "dominantTexts": observation.screenCandidate.visibleTexts,
+        "semanticTags": [],
+        "evidenceRefs": evidenceRefs,
+    ]
+}
+
+private func workspaceAtlasState(
+    stateID: String,
+    screenID: String,
+    phase: String,
+    evidenceRefs: [String]
+) -> [String: Any] {
+    [
+        "stateId": stateID,
+        "screenId": screenID,
+        "phase": phase,
+        "evidenceRefs": evidenceRefs,
+    ]
+}
+
+private func workspaceAtlasSignature(_ observation: TKWorkspaceObservationSeed) -> String {
+    [
+        observation.screenCandidate.screenshotSha256,
+        observation.screenCandidate.axTextHash,
+        observation.screenCandidate.hierarchySha256,
+    ].joined(separator: ":")
 }
 
 private func writeWorkspaceJSONArtifact(_ value: [String: Any], to url: URL) throws {

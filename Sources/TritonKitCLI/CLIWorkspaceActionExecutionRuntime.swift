@@ -117,12 +117,13 @@ func workspaceModelTransitionStatus(
 
 func workspaceModelTransition(
     actionExecution: TKWorkspaceActionExecutionResult?,
-    businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil,
+    toScreenID: String = "screen_0000"
 ) -> [String: Any] {
     [
         "transitionId": "transition_0000",
         "fromScreenId": "screen_0000",
-        "toScreenId": "screen_0000",
+        "toScreenId": toScreenID,
         "action": "tap",
         "selector": [
             "text": "Continue",

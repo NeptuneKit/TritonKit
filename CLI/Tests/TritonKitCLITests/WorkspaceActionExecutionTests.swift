@@ -159,6 +159,126 @@ struct WorkspaceActionExecutionTests {
         #expect(transition?["status"] as? String == "verified")
     }
 
+    @Test("workspace run captures post-action observation and atlas transition")
+    func workspaceRunCapturesPostActionObservationAndAtlasTransition() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        var observeRequests: [TKWorkspaceLiveObserveRequest] = []
+        var actionCount = 0
+        var waitCount = 0
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-post-action-observe",
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Open dashboard",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observeLive: true,
+                observeKind: "tree",
+                observeMaxNodes: 25,
+                businessReadyText: "Dashboard",
+                businessReadyLiveWait: true,
+                businessReadyTimeout: 2,
+                businessReadyInterval: 0.25,
+                executeActions: true
+            ),
+            observeProvider: { request in
+                observeRequests.append(request)
+                return observeRequests.count == 1
+                    ? fakeLiveObserveOutput(
+                        for: request,
+                        visibleTexts: ["Login", "Continue"],
+                        artifactStem: "login"
+                    )
+                    : fakeLiveObserveOutput(
+                        for: request,
+                        visibleTexts: ["Dashboard"],
+                        artifactStem: "dashboard"
+                    )
+            },
+            businessWaitProvider: { request in
+                waitCount += 1
+                return successfulBusinessWaitResult(
+                    query: request.query,
+                    timeout: request.timeout,
+                    interval: request.interval
+                )
+            },
+            actionExecutionProvider: { request in
+                actionCount += 1
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "passed")
+        #expect(actionCount == 1)
+        #expect(waitCount == 1)
+        #expect(observeRequests.count == 2)
+        #expect(observeRequests.allSatisfy { $0.action == "observe.tree" })
+
+        let runDir = root.appendingPathComponent("run-workspace-post-action-observe", isDirectory: true)
+        let initialObservationURL = runDir.appendingPathComponent("evidence/observations/0000.json")
+        let postActionObservationURL = runDir.appendingPathComponent("evidence/observations/0001.json")
+        #expect(FileManager.default.fileExists(atPath: initialObservationURL.path))
+        #expect(FileManager.default.fileExists(atPath: postActionObservationURL.path))
+        let postActionObservation = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: postActionObservationURL)
+        ) as? [String: Any]
+        let postActionNodes = postActionObservation?["nodes"] as? [[String: Any]]
+        #expect(postActionNodes?.first?["text"] as? String == "Dashboard")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let observationEvents = parsed.events.filter { $0.type == .observationCaptured }
+        #expect(observationEvents.count == 2)
+        #expect(observationEvents.first?.stepIndex == 0)
+        #expect(observationEvents.first?.phase == "initial")
+        #expect(observationEvents.last?.stepIndex == 1)
+        #expect(observationEvents.last?.phase == "post_action")
+        #expect(observationEvents.last?.screenCandidate?.visibleTexts == ["Dashboard"])
+
+        let actionIndex = try #require(parsed.events.firstIndex { $0.type == .actionExecuted })
+        let postObservationIndex = try #require(parsed.events.firstIndex {
+            $0.type == .observationCaptured && $0.phase == "post_action"
+        })
+        let businessIndex = try #require(parsed.events.firstIndex {
+            $0.type == .businessReady && $0.phase == "post_action_wait_matched"
+        })
+        #expect(actionIndex < postObservationIndex)
+        #expect(postObservationIndex < businessIndex)
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let screens = atlas?["screens"] as? [[String: Any]]
+        let states = atlas?["states"] as? [[String: Any]]
+        let transition = (atlas?["transitions"] as? [[String: Any]])?.first
+        let coverage = atlas?["coverage"] as? [String: Any]
+        #expect(screens?.count == 2)
+        #expect(states?.count == 2)
+        #expect(screens?.first { $0["screenId"] as? String == "screen_0001" }?["dominantTexts"] as? [String] == ["Dashboard"])
+        #expect(states?.first { $0["stateId"] as? String == "state_0001" }?["phase"] as? String == "post_action")
+        #expect(transition?["fromScreenId"] as? String == "screen_0000")
+        #expect(transition?["toScreenId"] as? String == "screen_0001")
+        #expect(transition?["status"] as? String == "verified")
+        #expect(coverage?["screenCount"] as? Int == 2)
+        #expect(coverage?["stateCount"] as? Int == 2)
+        #expect(coverage?["transitionCount"] as? Int == 1)
+
+        let deltas = try String(
+            contentsOf: runDir.appendingPathComponent("atlas/deltas.jsonl"),
+            encoding: .utf8
+        )
+        #expect(deltas.contains(#""toScreenId":"screen_0001""#))
+    }
+
     @Test("workspace run skips explicit action execution after business checkpoint passes")
     func workspaceRunSkipsExplicitActionExecutionAfterBusinessCheckpointPasses() async throws {
         let root = temporaryRunsDirectory()
@@ -282,6 +402,57 @@ struct WorkspaceActionExecutionTests {
                 strategy: "exact"
             ),
             tapResolution: nil
+        )
+    }
+
+    private func fakeLiveObserveOutput(
+        for request: TKWorkspaceLiveObserveRequest,
+        visibleTexts: [String],
+        artifactStem: String
+    ) -> ObserveOutput {
+        ObserveOutput(
+            ok: true,
+            action: request.action,
+            platform: request.platform.rawValue,
+            capturedAt: "2026-07-07T00:00:00Z",
+            partial: false,
+            target: "sim:\(request.target)",
+            primarySource: ObserveSourceOutput(
+                name: "host-layout",
+                available: true,
+                reason: nil,
+                artifact: "fixtures/\(artifactStem)-tree.json",
+                sourceCommands: ["triton sim ax --device \(request.target) --json"]
+            ),
+            sources: [
+                ObserveSourceOutput(
+                    name: "host-layout",
+                    available: true,
+                    reason: nil,
+                    artifact: "fixtures/\(artifactStem)-tree.json",
+                    sourceCommands: ["triton sim ax --device \(request.target) --json"]
+                ),
+            ],
+            nodes: visibleTexts.enumerated().map { index, text in
+                ObserveNodeOutput(
+                    nodeID: "ios-host:\(index + 1)",
+                    source: "host-layout",
+                    role: "button",
+                    text: text,
+                    identifier: "\(text.lowercased())-button",
+                    frame: nil,
+                    enabled: true,
+                    focused: false,
+                    hidden: false,
+                    candidateOnly: false,
+                    confidence: 0.95,
+                    capabilities: ["visible", "tap"],
+                    missingCapabilities: []
+                )
+            },
+            artifacts: ["fixtures/\(artifactStem)-screenshot.png", "fixtures/\(artifactStem)-tree.json"],
+            sourceCommands: ["triton sim ax --device \(request.target) --json"],
+            note: "fake live observe"
         )
     }
 

@@ -91,7 +91,8 @@ func workspaceModelDecisionEvents(
     mode: String,
     policyAllowed: Bool,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
-    actionExecution: TKWorkspaceActionExecutionResult?
+    actionExecution: TKWorkspaceActionExecutionResult?,
+    postActionObservation: TKWorkspaceObservationSeed?
 ) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
     let command = ["triton", "act", "tap", "Continue", "--json"]
@@ -131,6 +132,17 @@ func workspaceModelDecisionEvents(
             ref: "evidence/actions/action-000.json"
         ),
     ]
+    if let postActionObservation {
+        events.append(.observationCaptured(
+            runID: runID,
+            stepIndex: 1,
+            phase: "post_action",
+            artifacts: postActionObservation.artifacts,
+            screenCandidate: postActionObservation.screenCandidate,
+            changed: postActionObservation.changed,
+            timestamp: now
+        ))
+    }
     if let businessCheckpoint, businessCheckpoint.stage == .postAction {
         events += workspaceBusinessCheckpointEvents(
             runID: runID,
