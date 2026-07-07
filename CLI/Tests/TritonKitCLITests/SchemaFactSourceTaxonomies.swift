@@ -503,6 +503,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "vlm-request",
         "vlm-response",
         "vlm-transform",
+        "workspace-recovery-proposal",
         "xcode-artifacts",
     ]
 }

@@ -556,12 +556,41 @@ struct WorkspaceActionExecutionTests {
             "evidence/actions/action-001.json",
             "evidence/model/decision-000.json",
             "evidence/model/decision-001.json",
+            "evidence/model/recovery-000.json",
             "evidence/model/verify-000.json",
             "evidence/model/verify-001.json",
             "evidence/observations/0002.json",
         ] {
             #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent(relativePath).path))
         }
+
+        let recovery = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+        ) as? [String: Any]
+        #expect(recovery?["schemaVersion"] as? Int == 1)
+        #expect(recovery?["kind"] as? String == "triton.workspace.recovery-proposal")
+        #expect(recovery?["failureCode"] as? String == "business_checkpoint_missing")
+        #expect(recovery?["trigger"] as? String == "business_checkpoint_failed")
+        #expect(recovery?["stepIndex"] as? Int == 1)
+        let diagnosis = try #require(recovery?["diagnosis"] as? [String: Any])
+        #expect(diagnosis["type"] as? String == "business_checkpoint_missing")
+        #expect(diagnosis["phase"] as? String == "post_action_wait_timeout")
+        #expect(diagnosis["confidence"] as? Double != nil)
+        let diagnosisRefs = try #require(diagnosis["evidenceRefs"] as? [String])
+        #expect(diagnosisRefs.contains("events.jsonl#business.ready"))
+        #expect(diagnosisRefs.contains("events.jsonl#verify.checked"))
+        #expect(diagnosisRefs.contains("evidence/model/decision-000.json"))
+        #expect(diagnosisRefs.contains("evidence/actions/action-000.json"))
+        #expect(diagnosisRefs.contains("evidence/business/ready.json"))
+        #expect(diagnosisRefs.contains("evidence/model/verify-000.json"))
+        let proposal = try #require(recovery?["proposal"] as? [String: Any])
+        #expect(proposal["action"] as? String == "continue")
+        #expect(proposal["policyDecision"] as? String == "allowed")
+        #expect(proposal["usesLatestObservation"] as? Bool == true)
+        #expect(proposal["nextStepIndex"] as? Int == 2)
+        #expect(proposal["command"] as? [String] == ["continue"])
+        let nextActions = try #require(recovery?["nextActions"] as? [[String: Any]])
+        #expect(nextActions.first?["code"] as? String == "continue_from_latest_observation")
 
         let parsed = try TKTestRunEventLogParser().parse(
             Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))

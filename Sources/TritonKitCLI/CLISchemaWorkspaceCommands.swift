@@ -121,6 +121,7 @@ func workspaceCommandSchemas() -> [TKCommandSchema] {
                 "screen-workspace",
                 "coordinate-contract",
                 "vlm-grounding",
+                "workspace-recovery-proposal",
                 "triton-plan",
             ],
             nextCommands: [
@@ -203,7 +204,7 @@ func workspaceCommandSchemas() -> [TKCommandSchema] {
                     requiredOptions: ["--app", "--goal"],
                     optionalOptions: ["--target", "--platform", "--scope", "--runs-dir", "--run-id", "--action-policy", "--app-mode", "--bundle-id", "--package-name", "--activity", "--bundle", "--ability", "--adb", "--max-steps", "--allowed-action", "--stop-condition", "--observation-fixture", "--observe-live", "--observe-kind", "--observe-max-nodes", "--observe-output", "--runtime-base-url", "--observe-host", "--observe-port", "--hdc", "--business-ready-text", "--business-ready-live-wait", "--business-ready-timeout", "--business-ready-interval", "--execute-actions", "--llm-provider", "--llm-base-url", "--llm-model", "--llm-api-key-env", "--allow-remote-llm", "--vlm-provider", "--vlm-base-url", "--vlm-model", "--vlm-api-key-env", "--allow-remote-vlm", "--dry-model-fixture", "--format", "--json"],
                     jsonlEvents: ["run.started", "target.resolved", "provider.checked", "app.ready", "observation.captured", "flow.bootstrap.checked", "business.ready", "model.decided", "policy.checked", "action.executed", "verify.checked", "flow.recovery.detected", "flow.recovery.proposed", "flow.recovery.rejected", "atlas.updated", "flow.updated", "run.paused", "run.stopped", "run.finished"],
-                    artifacts: ["manifest", "host-artifacts", "runtime-snapshot", "runtime-ledger", "ax", "screenshot", "screen-workspace", "coordinate-contract", "vlm-grounding", "triton-plan"],
+                    artifacts: ["manifest", "host-artifacts", "runtime-snapshot", "runtime-ledger", "ax", "screenshot", "screen-workspace", "coordinate-contract", "vlm-grounding", "workspace-recovery-proposal", "triton-plan"],
                     outputSelectors: ["workspace.run"],
                     failureCodes: ["workspace_failed"]
                 ),

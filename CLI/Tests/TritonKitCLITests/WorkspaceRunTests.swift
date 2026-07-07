@@ -1041,6 +1041,17 @@ struct WorkspaceRunTests {
         #expect(policy?["allowed"] as? Bool == false)
         #expect(policy?["stopReason"] as? String == "policy_rejected")
         #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("evidence/actions/action-000.json").path) == false)
+        let recovery = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+        ) as? [String: Any]
+        #expect(recovery?["kind"] as? String == "triton.workspace.recovery-proposal")
+        #expect(recovery?["failureCode"] as? String == "policy_rejected")
+        let diagnosis = try #require(recovery?["diagnosis"] as? [String: Any])
+        #expect(diagnosis["type"] as? String == "policy_rejected")
+        let proposal = try #require(recovery?["proposal"] as? [String: Any])
+        #expect(proposal["action"] as? String == "stop")
+        #expect(proposal["policyDecision"] as? String == "rejected")
+        #expect(proposal["command"] as? [String] == ["stop"])
 
         let inspected = try inspectWorkspaceRun(
             runID: "run-workspace-policy-reject",

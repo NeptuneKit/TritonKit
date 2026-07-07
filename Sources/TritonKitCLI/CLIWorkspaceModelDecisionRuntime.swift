@@ -501,12 +501,34 @@ func writeWorkspaceModelDecisionArtifacts(
             "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
             "command": command,
         ], to: runDir.appendingPathComponent("evidence/model/policy-\(suffix).json"))
-        try writeWorkspaceJSONArtifact([
-            "failureCode": "policy_rejected",
-            "kind": "policy_rejected",
-            "proposal": "stop",
-            "reason": "candidate action is outside runner allowedActions",
-        ], to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json"))
+        try writeWorkspaceJSONArtifact(
+            workspaceRecoveryProposalArtifact(
+                failureCode: "policy_rejected",
+                diagnosisType: "policy_rejected",
+                trigger: "policy_rejected",
+                legacyKind: "policy_rejected",
+                phase: "policy_rejected",
+                stepIndex: artifactIndex + 1,
+                confidence: 1.0,
+                evidenceRefs: [
+                    "events.jsonl#model.decided",
+                    "events.jsonl#policy.checked",
+                    "evidence/model/decision-\(suffix).json",
+                    "evidence/model/policy-\(suffix).json",
+                ],
+                proposalAction: "stop",
+                proposalReason: "candidate action is outside runner allowedActions",
+                policyDecision: "rejected",
+                command: ["stop"],
+                nextActions: [
+                    [
+                        "code": "review_policy_rejection",
+                        "message": "Inspect evidence/model/policy-\(suffix).json and either adjust allowedActions or ask the model for an allowed action.",
+                    ],
+                ]
+            ),
+            to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json")
+        )
         return
     }
     try writeWorkspaceJSONArtifact([
@@ -537,12 +559,59 @@ func writeWorkspaceModelDecisionArtifacts(
             "phase": businessCheckpoint.readiness.phase,
         ], to: runDir.appendingPathComponent("evidence/model/verify-\(suffix).json"))
         if !businessCheckpoint.ready {
-            try writeWorkspaceJSONArtifact([
-                "failureCode": "business_checkpoint_missing",
-                "kind": "post_action_business_not_ready",
-                "proposal": "stop",
-                "businessRef": businessCheckpoint.readiness.ref,
-            ], to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json"))
+            let canContinue = artifactIndex + 1 < (run.runner?.maxSteps ?? defaultWorkspaceRunnerMaxSteps)
+            let proposalAction = canContinue ? "continue" : "stop"
+            var proposal: [String: Any] = [
+                "action": proposalAction,
+                "reason": canContinue
+                    ? "business checkpoint did not pass; continue from the latest post-action observation within runner bounds"
+                    : "business checkpoint did not pass and runner maxSteps is exhausted",
+                "policyDecision": canContinue ? "allowed" : "blocked_by_runner_bounds",
+                "command": [proposalAction],
+                "usesLatestObservation": canContinue,
+            ]
+            if canContinue {
+                proposal["nextStepIndex"] = artifactIndex + 2
+            }
+            try writeWorkspaceJSONArtifact(
+                workspaceRecoveryProposalArtifact(
+                    failureCode: "business_checkpoint_missing",
+                    diagnosisType: "business_checkpoint_missing",
+                    trigger: "business_checkpoint_failed",
+                    legacyKind: "post_action_business_not_ready",
+                    phase: businessCheckpoint.readiness.phase,
+                    stepIndex: artifactIndex + 1,
+                    confidence: 0.78,
+                    evidenceRefs: [
+                        "events.jsonl#action.executed",
+                        "events.jsonl#observation.captured:post_action",
+                        "events.jsonl#business.ready",
+                        "events.jsonl#verify.checked",
+                        "evidence/model/decision-\(suffix).json",
+                        "evidence/actions/action-\(suffix).json",
+                        businessCheckpoint.readiness.ref,
+                        "evidence/model/verify-\(suffix).json",
+                    ] + businessCheckpoint.evidenceRefs,
+                    proposal: proposal,
+                    nextActions: [
+                        canContinue
+                            ? [
+                                "code": "continue_from_latest_observation",
+                                "message": "Use the latest post-action observation as the next model input and continue the bounded loop.",
+                            ]
+                            : [
+                                "code": "inspect_business_checkpoint_missing",
+                                "message": "Runner bounds are exhausted; inspect business readiness evidence before retrying with a larger maxSteps or a revised goal.",
+                            ],
+                    ],
+                    extraFields: [
+                        "businessRef": businessCheckpoint.readiness.ref,
+                        "businessQuery": businessCheckpoint.readiness.query,
+                        "businessCheck": businessCheckpoint.readiness.check,
+                    ]
+                ),
+                to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json")
+            )
         }
     } else {
         try writeWorkspaceJSONArtifact([
@@ -551,11 +620,34 @@ func writeWorkspaceModelDecisionArtifacts(
                 ? "\(mode) simulates expected screen missing"
                 : "action executed without a post-action business verification request",
         ], to: runDir.appendingPathComponent("evidence/model/verify-\(suffix).json"))
-        try writeWorkspaceJSONArtifact([
-            "failureCode": "expected_screen_missing",
-            "kind": actionExecution == nil ? "selector_drift" : "post_action_unverified",
-            "proposal": "stop",
-        ], to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json"))
+        let diagnosisType = actionExecution == nil ? "selector_drift" : "post_action_unverified"
+        try writeWorkspaceJSONArtifact(
+            workspaceRecoveryProposalArtifact(
+                failureCode: "expected_screen_missing",
+                diagnosisType: diagnosisType,
+                trigger: "verification_failed",
+                legacyKind: diagnosisType,
+                phase: "selector_drift",
+                stepIndex: artifactIndex + 1,
+                confidence: 0.68,
+                evidenceRefs: [
+                    "events.jsonl#verify.checked",
+                    "evidence/model/verify-\(suffix).json",
+                    "evidence/model/decision-\(suffix).json",
+                ],
+                proposalAction: "stop",
+                proposalReason: "verification failed without a safe bounded recovery action",
+                policyDecision: "requires_review",
+                command: ["stop"],
+                nextActions: [
+                    [
+                        "code": "inspect_verification_failure",
+                        "message": "Inspect model and verification evidence, then re-observe the target or revise the goal before retrying.",
+                    ],
+                ]
+            ),
+            to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json")
+        )
     }
     let deltaLine = """
     {"deltaId":"atlas_delta_\(graphSuffix)","kind":"transition","transitionId":"\(transitionID)","fromScreenId":"\(fromScreenID)","toScreenId":"\(resolvedToScreenID)","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint))","confidence":\(modelDecision.confidence),"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-\(suffix).json","evidence/model/verify-\(suffix).json"]}
@@ -576,6 +668,90 @@ func writeWorkspaceModelDecisionArtifacts(
 
         """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
     }
+}
+
+private func workspaceRecoveryProposalArtifact(
+    failureCode: String,
+    diagnosisType: String,
+    trigger: String,
+    legacyKind: String,
+    phase: String?,
+    stepIndex: Int,
+    confidence: Double,
+    evidenceRefs: [String],
+    proposalAction: String,
+    proposalReason: String,
+    policyDecision: String,
+    command: [String],
+    nextActions: [[String: Any]],
+    extraFields: [String: Any] = [:]
+) -> [String: Any] {
+    workspaceRecoveryProposalArtifact(
+        failureCode: failureCode,
+        diagnosisType: diagnosisType,
+        trigger: trigger,
+        legacyKind: legacyKind,
+        phase: phase,
+        stepIndex: stepIndex,
+        confidence: confidence,
+        evidenceRefs: evidenceRefs,
+        proposal: [
+            "action": proposalAction,
+            "reason": proposalReason,
+            "policyDecision": policyDecision,
+            "command": command,
+        ],
+        nextActions: nextActions,
+        extraFields: extraFields
+    )
+}
+
+private func workspaceRecoveryProposalArtifact(
+    failureCode: String,
+    diagnosisType: String,
+    trigger: String,
+    legacyKind: String,
+    phase: String?,
+    stepIndex: Int,
+    confidence: Double,
+    evidenceRefs: [String],
+    proposal: [String: Any],
+    nextActions: [[String: Any]],
+    extraFields: [String: Any] = [:]
+) -> [String: Any] {
+    let uniqueRefs = uniqueWorkspaceRecoveryEvidenceRefs(evidenceRefs)
+    var artifact: [String: Any] = [
+        "schemaVersion": 1,
+        "kind": "triton.workspace.recovery-proposal",
+        "legacyKind": legacyKind,
+        "failureCode": failureCode,
+        "trigger": trigger,
+        "stepIndex": stepIndex,
+        "diagnosis": [
+            "type": diagnosisType,
+            "phase": phase ?? "unknown",
+            "confidence": confidence,
+            "evidenceRefs": uniqueRefs,
+        ],
+        "proposal": proposal,
+        "proposalAction": proposal["action"] as? String ?? "stop",
+        "evidenceRefs": uniqueRefs,
+        "nextActions": nextActions,
+    ]
+    for (key, value) in extraFields {
+        artifact[key] = value
+    }
+    return artifact
+}
+
+private func uniqueWorkspaceRecoveryEvidenceRefs(_ refs: [String]) -> [String] {
+    var seen = Set<String>()
+    var result: [String] = []
+    for ref in refs where !ref.isEmpty && !seen.contains(ref) {
+        seen.insert(ref)
+        result.append(ref)
+    }
+    return result
 }
 
 func writeWorkspaceAtlasDeltaLine(_ line: String, to url: URL, append: Bool) throws {

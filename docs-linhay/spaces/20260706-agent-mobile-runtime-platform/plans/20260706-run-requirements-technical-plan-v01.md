@@ -469,25 +469,53 @@ ready | needs_login | blocked_by_dialog | wrong_screen | loading | error_state |
 
 ```json
 {
-  "anchor": "screen_checkout",
-  "failureCode": "expected_screen_missing",
-  "diagnosis": "A login-expired dialog interrupted the checkout transition.",
-  "kind": "interrupt",
+  "schemaVersion": 1,
+  "kind": "triton.workspace.recovery-proposal",
+  "legacyKind": "post_action_business_not_ready",
+  "failureCode": "business_checkpoint_missing",
+  "trigger": "business_checkpoint_failed",
+  "stepIndex": 1,
+  "diagnosis": {
+    "type": "business_checkpoint_missing",
+    "phase": "post_action_wait_timeout",
+    "confidence": 0.78,
+    "evidenceRefs": [
+      "events.jsonl#business.ready",
+      "events.jsonl#verify.checked",
+      "evidence/business/ready.json",
+      "evidence/model/verify-000.json"
+    ]
+  },
   "proposal": {
-    "action": "tap",
-    "target": "Login again",
-    "expected": "login screen opens",
-    "confidence": 0.78
+    "action": "continue",
+    "reason": "business checkpoint did not pass; continue from the latest post-action observation within runner bounds",
+    "policyDecision": "allowed",
+    "command": ["continue"],
+    "usesLatestObservation": true,
+    "nextStepIndex": 2
   },
-  "policy": {
-    "requiresApproval": false,
-    "reason": "low-risk navigation repair"
-  },
-  "evidenceId": "ev_0014"
+  "evidenceRefs": [
+    "events.jsonl#business.ready",
+    "events.jsonl#verify.checked",
+    "evidence/business/ready.json",
+    "evidence/model/verify-000.json"
+  ],
+  "nextActions": [
+    {
+      "code": "continue_from_latest_observation",
+      "message": "Use the latest post-action observation as the next model input and continue the bounded loop."
+    }
+  ]
 }
 ```
 
-允许的 recovery `kind`：
+当前 deterministic recovery classifier 先覆盖以下 `diagnosis.type`：
+
+```text
+business_checkpoint_missing | policy_rejected | selector_drift | post_action_unverified
+```
+
+长期模型分类仍保留以下目标类型，用于后续 LLM/VLM repair advisor 细化：
 
 ```text
 selector_drift | screen_variant | interrupt | precondition_missing | slow_loading | unsupported | unknown
@@ -689,6 +717,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `workspace run` 支持业务 checkpoint：CLI `--business-ready-text <text>` 与 HTTP `businessReadyText` 默认用 initial observation 的 visibleTexts 做 exact match；命中时写 `evidence/business/ready.json`、`business.ready` 和 passed `verify.checked`，`run.json` / `report.json` 写 `business.ready=true` 并以 `run.finished status=passed` 收尾；未命中时返回 `business_checkpoint_missing` nextAction。显式 `--business-ready-live-wait` / HTTP `businessReadyLiveWait=true` 时改由 runtime wait(text) 证明业务 ready，并把 timeout / interval / wait result 写进同一个 artifact。
 - `workspace run` 支持显式候选动作执行：CLI `--execute-actions` 与 HTTP `executeActions=true` 会把 model decision provider 输出的候选交给 runtime action provider；默认 provider 从当前 observation visibleTexts 派生当前步骤 tap 候选。运行时按步写 `evidence/actions/action-000.json` / `action-001.json`，其中 `source=workspace.action-provider`、`proofSource=runtime.input`，并把 `action.executed` 指向该证据；Atlas transition 状态从 `candidate_failed` 升级为 `executed_unverified`，表示动作已执行但业务 ready 尚未由后续 wait/verify 证明。若初始业务 checkpoint 已通过，则不会执行候选动作。
 - `workspace run` 支持 action 后业务验证和 bounded recovery loop：`--execute-actions --business-ready-text <text> --business-ready-live-wait` / HTTP `executeActions=true, businessReadyLiveWait=true` 会在 action 成功后调用 runtime wait(text)；wait ok 时写 `evidence/business/ready.json stage=post_action, phase=post_action_wait_matched`，事件顺序为 `action.executed -> business.ready -> verify.checked -> atlas.updated`，`run.status=passed`，Atlas transition 写 `verified`。如果同一 run 也显式 `--observe-live`，action 成功后会先二次 observe，写 `evidence/observations/0001.json`、`observation.captured phase=post_action`、Atlas `screen_0001/state_0001`，事件顺序变为 `action.executed -> observation.captured(post_action) -> business.ready -> verify.checked -> atlas.updated`，transition 从 `screen_0000` 指向 `screen_0001`。若 post-action wait 失败且 `maxSteps` 仍有预算，下一轮使用最新 post-action observation visibleTexts，写 `decision-001/action-001/verify-001`，并追加 `transition_0001`。
+- `workspace run` 会为 policy rejection、post-action business checkpoint failure 和 verification failure 写 `evidence/model/recovery-<step>.json`，schema 为 `triton.workspace.recovery-proposal`，包含 `failureCode`、`trigger`、`diagnosis`、`proposal`、`evidenceRefs` 和 `nextActions`；bounded loop 中仍有预算的 business checkpoint failure 会输出 `proposal.action=continue`、`policyDecision=allowed`、`usesLatestObservation=true`。
 - `atlas/atlas.json` 不再是空壳：默认从初始 `observation.captured` 生成一个 `screen_0000`、一个 `state_0000`、coverage 计数和 screenshot / hierarchy / event evidence backlink。
 - `workspace run` 会把 run-local Atlas 投影成 `atlas/app-map/`：写 app-map screen、transition、run record、candidate path 和 suite 文件；bounded recovery loop 的 `screen_0000 -> screen_0001 -> screen_0002` 会形成完整 path，例如 `path-login-dashboard`。
 - `workspace merge-map <run-id> --map-dir <dir.tritonmap>` 和 HTTP `POST /workspace/runs/:runId/merge-map` 会把 run-local `atlas/app-map/` 合并进长期本地 app-map，screen / transition / path / suite 按稳定 id 去重，screen `stateVariants`、coverage summary、path `sourceRuns` 与 health 跨 run 累积，`--confirm` / body `confirm=true` 可把候选 path 标为 confirmed。
@@ -712,9 +741,9 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 
 刻意未做：
 
-- 未接真实 target discovery；App launch 已可通过显式 `--app-mode launch` 进入 Run 并写入 `launch_submitted`，且 `--observe-live` 可把同一次 run 升级为 `launch_observed`。动作执行目前覆盖显式 `--execute-actions` 的 bounded runtime tap 候选；业务 anchor 已支持 initial observation text checkpoint、live wait checkpoint、action 后二次 observation、action 后 live wait 验证和 post-action wait 失败后的 bounded recovery loop，但还没有把 assert provider 或更丰富 recovery proposal 分类串成完整闭环。
+- 未接真实 target discovery；App launch 已可通过显式 `--app-mode launch` 进入 Run 并写入 `launch_submitted`，且 `--observe-live` 可把同一次 run 升级为 `launch_observed`。动作执行目前覆盖显式 `--execute-actions` 的 bounded runtime tap 候选；业务 anchor 已支持 initial observation text checkpoint、live wait checkpoint、action 后二次 observation、action 后 live wait 验证、post-action wait 失败后的 bounded recovery loop 和首个 evidence-backed recovery proposal artifact，但还没有把 assert provider 或 VLM grounding failure 的细分 repair proposal 串成完整闭环。
 - VLM screenshot grounding 已接入 workspace action path：当前在 step observation 有可读本地 screenshot artifact 时，会生成 coordinate contract、调用 VLM grounding、按步写 overlay/request/response/full grounding artifact，并用 VLM runtime-point 执行动作；仍未完成的是 `mlx-swift-lm` workspace helper。
-- Atlas 已能在 bounded recovery loop 中写多 screen/state/transition delta，例如 `screen_0000 -> screen_0001 -> screen_0002` 和 `transition_0000/0001`，投影到 run-local `atlas/app-map/`，并通过 `workspace merge-map` 合并到长期本地 app-map；长期 map 已跨 run 合并 screen `stateVariants`、coverage summary、path `sourceRuns` 与 health。仍未完成的是更丰富的 recovery proposal 分类、state / transition 级 health 和 `mlx-swift-lm` workspace helper。
+- Atlas 已能在 bounded recovery loop 中写多 screen/state/transition delta，例如 `screen_0000 -> screen_0001 -> screen_0002` 和 `transition_0000/0001`，投影到 run-local `atlas/app-map/`，并通过 `workspace merge-map` 合并到长期本地 app-map；长期 map 已跨 run 合并 screen `stateVariants`、coverage summary、path `sourceRuns` 与 health。仍未完成的是 VLM / replay 失败面的更细 recovery proposal 分类、state / transition 级 health 和 `mlx-swift-lm` workspace helper。
 - 未做 Web Workbench 视图。
 
 ### 测试策略
