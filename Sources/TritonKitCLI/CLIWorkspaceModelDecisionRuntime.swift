@@ -507,7 +507,7 @@ func writeWorkspaceModelDecisionArtifacts(
     ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
     if let actionExecution {
         try writeWorkspaceJSONArtifact(
-            try workspaceActionExecutionArtifact(actionExecution),
+            try workspaceActionExecutionArtifact(actionExecution, runDir: runDir),
             to: runDir.appendingPathComponent("evidence/actions/action-000.json")
         )
     } else {

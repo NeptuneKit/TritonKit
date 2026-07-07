@@ -103,7 +103,7 @@ runner 边界默认必须机器可读：
 - HTTP 字段：`llmProvider`、`llmBaseURL`、`llmModel`、`llmAPIKeyEnv`、`allowRemoteLLM`。
 - 默认只允许 localhost / loopback；远端 base URL 必须显式 approval。
 - LLM 请求只携带 goal、app、actionPolicy、allowedActions、stopConditions、providerStatus、observationRef 和 initial visibleTexts；模型只能返回单步 JSON action candidate，Triton 继续负责 policy gate、runtime action、Atlas transition 和 evidence。
-- VLM 本轮仍以 `mock` provider 参与 readiness；真实 VLM grounding 与 recovery loop 仍是后续切片。
+- VLM 已从 readiness 推进到 action grounding：当 initial observation 提供可读本地 screenshot artifact 且显式 `executeActions=true` 时，workspace 生成 `coordinate-contract.json`，调用 VLM grounding provider，写 `evidence/actions/vlm-000/vlm-grounding.json` / overlay / request / response，并用 grounding runtime-point 提交 tap；`mlx-swift-lm` workspace helper 与 multi-step recovery loop 仍是后续切片。
 
 ### Flow Bootstrap 需求
 
@@ -709,7 +709,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 刻意未做：
 
 - 未接真实 target discovery；App launch 已可通过显式 `--app-mode launch` 进入 Run 并写入 `launch_submitted`，且 `--observe-live` 可把同一次 run 升级为 `launch_observed`。动作执行目前只覆盖显式 `--execute-actions` 的 runtime tap 候选；业务 anchor 已支持 initial observation text checkpoint、live wait checkpoint、action 后二次 observation 和 action 后 live wait 验证，但还没有把 assert provider 或失败恢复执行串成完整闭环。
-- 未把真实 VLM screenshot grounding 接进 workspace action path；当前已能配置并 preflight OpenAI-compatible VLM，且把配置写入证据，但还没有生成 coordinate contract、调用 `triton vlm ground`、写 overlay/transform/parsed point 并用 VLM point 执行动作。`mlx-swift-lm` workspace helper 接入仍未完成。
+- VLM screenshot grounding 已接入 workspace 单步 action path：当前在 initial observation 有可读本地 screenshot artifact 时，会生成 coordinate contract、调用 VLM grounding、写 overlay/request/response/full grounding artifact，并用 VLM runtime-point 执行动作；仍未完成的是 `mlx-swift-lm` workspace helper、失败后的 recovery action 执行、多步 loop 和完整 Atlas coverage。
 - 未生成完整 Atlas map 的 state variant 合并、coverage path 或 app-map merge；当前 transition 和 action flow step 仍只覆盖 deterministic dry fixture / mock provider loop 的单步路径。
 - 未做 Web Workbench 视图。
 

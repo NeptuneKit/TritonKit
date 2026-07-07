@@ -198,6 +198,7 @@ func handleWorkspaceHTTPRunAsync(
     appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
     businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider,
     modelDecisionProvider: TKWorkspaceModelDecisionProvider = workspaceDefaultModelDecisionProvider,
+    vlmGroundingProvider: TKWorkspaceVLMGroundingProvider = workspaceDefaultVLMGroundingProvider,
     actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
 ) async throws -> TKWorkspaceRunResponse {
     let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPRunRequest.self, from: body)
@@ -207,6 +208,7 @@ func handleWorkspaceHTTPRunAsync(
         appLifecycleProvider: appLifecycleProvider,
         businessWaitProvider: businessWaitProvider,
         modelDecisionProvider: modelDecisionProvider,
+        vlmGroundingProvider: vlmGroundingProvider,
         actionExecutionProvider: actionExecutionProvider
     )
 }

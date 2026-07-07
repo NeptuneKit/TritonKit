@@ -97,7 +97,7 @@ The Agent Mobile Runtime Platform product direction now defaults LLM/VLM on for 
 - direct VLM grounding commands still expose explicit flags/options for focused CLI use
 - local replay / stable regression keeps model participation on; policy can restrict actions to plan-first while LLM/VLM still helps bootstrap the flow, recover from drift, observe, verify, diagnose, and suggest repair
 - pass/fail impact is still controlled by step / runner policy; model conclusions are assistive unless explicitly marked `required`
-- `workspace run` can now call a real local OpenAI-compatible LLM decision provider with `--llm-provider openai-compatible --llm-base-url <local /v1> --llm-model <model>`, and can preflight/write evidence for OpenAI-compatible VLM with `--vlm-provider openai-compatible --vlm-base-url <local /v1> --vlm-model <model>`; actual workspace screenshot grounding is still a separate follow-up
+- `workspace run` can now call a real local OpenAI-compatible LLM decision provider with `--llm-provider openai-compatible --llm-base-url <local /v1> --llm-model <model>`, can preflight/write evidence for OpenAI-compatible VLM with `--vlm-provider openai-compatible --vlm-base-url <local /v1> --vlm-model <model>`, and can use VLM grounding before a bounded tap action when the initial observation has a readable local screenshot artifact; `mlx-swift-lm` workspace helper wiring and multi-step recovery remain follow-ups
 
 Default-on must not weaken execution boundaries:
 

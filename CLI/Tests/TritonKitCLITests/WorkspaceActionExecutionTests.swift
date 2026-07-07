@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Testing
 import TritonKitShared
@@ -197,6 +198,66 @@ struct WorkspaceActionExecutionTests {
         )
         let actionEvent = parsed.events.first { $0.type == .actionExecuted }
         #expect(actionEvent?.command == ["triton", "act", "tap", "Begin", "--json"])
+    }
+
+    @Test("workspace run grounds tap candidate with VLM before action execution")
+    func workspaceRunGroundsTapCandidateWithVLMBeforeActionExecution() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let screenshot = root.appendingPathComponent("login.png")
+        try writeFixtureImage(to: screenshot)
+        let fixture = try writeObservationFixture(
+            in: root,
+            visibleTexts: ["Welcome", "Continue"],
+            screenshot: screenshot.path
+        )
+        var groundingRequest: TKWorkspaceVLMGroundingRequest?
+        var actionRequest: TKWorkspaceActionExecutionRequest?
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-vlm-grounded-action",
+                target: "runtime-target-vlm",
+                app: "com.example.demo",
+                goal: "Continue onboarding",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observationFixture: fixture.path,
+                executeActions: true
+            ),
+            vlmGroundingProvider: { request in
+                groundingRequest = request
+                return fakeVLMGrounding(for: request)
+            },
+            actionExecutionProvider: { request in
+                actionRequest = request
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "stopped")
+        #expect(groundingRequest?.provider == "mock")
+        #expect(groundingRequest?.image == screenshot.path)
+        #expect(groundingRequest?.target == "Continue")
+        #expect(groundingRequest?.coordinateContract.hasSuffix("coordinate-contract.json") == true)
+        #expect(groundingRequest?.outputDirectory.hasSuffix("evidence/actions/vlm-000") == true)
+        #expect(actionRequest?.vlmGrounding?.target == "Continue")
+        #expect(actionRequest?.vlmGrounding?.point.runtimePoint.x == 201)
+        #expect(actionRequest?.vlmGrounding?.point.runtimePoint.y == 437)
+
+        let runDir = root.appendingPathComponent("run-workspace-vlm-grounded-action", isDirectory: true)
+        #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("coordinate-contract.json").path))
+        #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("evidence/actions/vlm-000/vlm-grounding.json").path))
+        let action = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/actions/action-000.json"))
+        ) as? [String: Any]
+        #expect(action?["proofSource"] as? String == "vlm.grounding+runtime.input")
+        #expect(action?["usedVLMGrounding"] as? Bool == true)
+        let grounding = action?["vlmGrounding"] as? [String: Any]
+        #expect(grounding?["ref"] as? String == "evidence/actions/vlm-000/vlm-grounding.json")
+        #expect(grounding?["overlay"] as? String == "evidence/actions/vlm-000/vlm-overlay.png")
     }
 
     @Test("workspace run verifies business readiness after explicit action execution")
@@ -487,7 +548,8 @@ struct WorkspaceActionExecutionTests {
 
     private func writeObservationFixture(
         in root: URL,
-        visibleTexts: [String] = ["Login", "Continue"]
+        visibleTexts: [String] = ["Login", "Continue"],
+        screenshot: String = "fixtures/login.png"
     ) throws -> URL {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let fixture = root.appendingPathComponent("observation.json")
@@ -500,7 +562,7 @@ struct WorkspaceActionExecutionTests {
           "schemaVersion": 1,
           "kind": "triton.workspace.observation-fixture",
           "artifacts": {
-            "screenshot": "fixtures/login.png",
+            "screenshot": "\(screenshot)",
             "hierarchy": "fixtures/login-hierarchy.json",
             "ax": "fixtures/login-ax.json"
           },
@@ -517,6 +579,76 @@ struct WorkspaceActionExecutionTests {
         return fixture
     }
 
+    private func writeFixtureImage(to url: URL) throws {
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let width = 402
+        let height = 874
+        guard let bitmap = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: width,
+            pixelsHigh: height,
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else {
+            throw RuntimeError("Could not allocate fixture bitmap")
+        }
+        NSGraphicsContext.saveGraphicsState()
+        NSGraphicsContext.current = NSGraphicsContext(bitmapImageRep: bitmap)
+        NSColor.white.setFill()
+        NSRect(x: 0, y: 0, width: width, height: height).fill()
+        NSColor.black.set()
+        ("Continue" as NSString).draw(
+            at: NSPoint(x: 140, y: 220),
+            withAttributes: [.font: NSFont.systemFont(ofSize: 20)]
+        )
+        NSGraphicsContext.restoreGraphicsState()
+        guard let data = bitmap.representation(using: .png, properties: [:]) else {
+            throw RuntimeError("Could not encode fixture image")
+        }
+        try data.write(to: url, options: .atomic)
+    }
+
+    private func fakeVLMGrounding(for request: TKWorkspaceVLMGroundingRequest) -> TKVLMGroundResponse {
+        TKVLMGroundResponse(
+            provider: request.provider,
+            model: request.model,
+            baseURL: redactedVLMBaseURL(request.baseURL),
+            target: request.target,
+            image: TKVLMGroundImage(path: request.image, width: 402, height: 874, sha256: "image-sha"),
+            coordinateContract: TKVLMGroundCoordinateContractRef(
+                path: request.coordinateContract,
+                canonicalTapSpace: "runtime-point"
+            ),
+            point: TKVLMGroundPoint(
+                normalized: TKVLMNormalizedPoint(x: 500, y: 500),
+                runtimePoint: TKVLMRuntimePoint(x: 201, y: 437),
+                coordinateSpace: "runtime-point"
+            ),
+            transform: TKVLMCoordinateTransform(
+                inputSpace: "normalized_0_1000",
+                imageSpace: "image-pixel",
+                outputSpace: "runtime-point",
+                imageWidth: 402,
+                imageHeight: 874,
+                runtimeWidth: 402,
+                runtimeHeight: 874,
+                scale: 1,
+                orientation: "portrait",
+                source: request.coordinateContract
+            ),
+            artifacts: TKVLMGroundArtifacts(
+                overlay: URL(fileURLWithPath: request.outputDirectory).appendingPathComponent("vlm-overlay.png").path,
+                request: URL(fileURLWithPath: request.outputDirectory).appendingPathComponent("vlm-request.redacted.json").path,
+                response: URL(fileURLWithPath: request.outputDirectory).appendingPathComponent("vlm-response.json").path
+            )
+        )
+    }
+
     private func successfulActionExecution(
         for request: TKWorkspaceActionExecutionRequest
     ) -> TKWorkspaceActionExecutionResult {
@@ -524,7 +656,7 @@ struct WorkspaceActionExecutionTests {
             ok: true,
             action: request.action,
             command: request.command,
-            proofSource: "runtime.input",
+            proofSource: request.vlmGrounding == nil ? "runtime.input" : "vlm.grounding+runtime.input",
             sourceCommands: [request.command.map { $0 }.joined(separator: " "), "runtime input tap"],
             message: "submitted",
             inputResult: TKInputResult.success(
@@ -538,7 +670,8 @@ struct WorkspaceActionExecutionTests {
                 activationClassName: "UIButton",
                 strategy: "exact"
             ),
-            tapResolution: nil
+            tapResolution: nil,
+            vlmGrounding: request.vlmGrounding
         )
     }
 

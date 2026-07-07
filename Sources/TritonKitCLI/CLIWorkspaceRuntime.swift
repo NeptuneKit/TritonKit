@@ -135,6 +135,58 @@ struct TKWorkspaceRunRequest {
         self.businessReadyInterval = businessReadyInterval
         self.executeActions = executeActions
     }
+
+    func resolvingRunID() throws -> TKWorkspaceRunRequest {
+        let resolvedRunID = try normalizedWorkspaceRunID(runID ?? defaultWorkspaceRunID())
+        if runID == resolvedRunID {
+            return self
+        }
+        return TKWorkspaceRunRequest(
+            runsDirectory: runsDirectory,
+            runID: resolvedRunID,
+            target: target,
+            platform: platform,
+            scope: scope,
+            app: app,
+            goal: goal,
+            actionPolicy: actionPolicy,
+            appMode: appMode,
+            bundleID: bundleID,
+            packageName: packageName,
+            activity: activity,
+            bundle: bundle,
+            ability: ability,
+            adb: adb,
+            dryModelFixture: dryModelFixture,
+            llmProvider: llmProvider,
+            llmBaseURL: llmBaseURL,
+            llmModel: llmModel,
+            llmAPIKeyEnv: llmAPIKeyEnv,
+            allowRemoteLLM: allowRemoteLLM,
+            vlmProvider: vlmProvider,
+            vlmBaseURL: vlmBaseURL,
+            vlmModel: vlmModel,
+            vlmAPIKeyEnv: vlmAPIKeyEnv,
+            allowRemoteVLM: allowRemoteVLM,
+            maxSteps: maxSteps,
+            allowedActions: allowedActions,
+            stopConditions: stopConditions,
+            observationFixture: observationFixture,
+            observeLive: observeLive,
+            observeKind: observeKind,
+            observeMaxNodes: observeMaxNodes,
+            observeOutput: observeOutput,
+            observeRuntimeBaseURL: observeRuntimeBaseURL,
+            observeHost: observeHost,
+            observePort: observePort,
+            hdc: hdc,
+            businessReadyText: businessReadyText,
+            businessReadyLiveWait: businessReadyLiveWait,
+            businessReadyTimeout: businessReadyTimeout,
+            businessReadyInterval: businessReadyInterval,
+            executeActions: executeActions
+        )
+    }
 }
 
 struct TKWorkspaceRunResponse: Codable, Equatable {
@@ -338,6 +390,7 @@ private struct TKWorkspaceFlowActionStep {
 }
 
 func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunResponse {
+    let request = try request.resolvingRunID()
     if request.businessReadyLiveWait {
         throw RuntimeError("Workspace business live wait requires the async workspace runtime.")
     }
@@ -355,8 +408,10 @@ func runWorkspaceRunAsync(
     appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
     businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider,
     modelDecisionProvider: TKWorkspaceModelDecisionProvider = workspaceDefaultModelDecisionProvider,
+    vlmGroundingProvider: TKWorkspaceVLMGroundingProvider = workspaceDefaultVLMGroundingProvider,
     actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
 ) async throws -> TKWorkspaceRunResponse {
+    let request = try request.resolvingRunID()
     let appLifecycle = try await workspaceAppLifecycleEvidence(for: request, provider: appLifecycleProvider)
     let observationSeed = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
     let runner = try workspaceRunnerConfig(for: request)
@@ -387,9 +442,19 @@ func runWorkspaceRunAsync(
         businessCheckpoint: initialBusinessCheckpoint,
         actionCandidate: actionCandidate
     ) {
+        let runDir = workspaceRunDirectory(runID: request.runID ?? defaultWorkspaceRunID(), runsDirectory: request.runsDirectory)
+        let vlmGrounding = try await workspaceVLMGroundingForAction(
+            request: request,
+            observation: observationSeed,
+            actionCandidate: actionCandidate,
+            runDir: runDir,
+            providerPreflight: providerPreflight,
+            vlmGroundingProvider: vlmGroundingProvider
+        )
         actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(
             for: request,
-            candidate: actionCandidate
+            candidate: actionCandidate,
+            vlmGrounding: vlmGrounding
         ))
     } else {
         actionExecution = nil
@@ -457,6 +522,7 @@ private func runWorkspaceRun(
     actionCandidate: TKWorkspaceActionCandidate? = nil,
     modelDecision: TKWorkspaceModelDecision? = nil
 ) throws -> TKWorkspaceRunResponse {
+    let request = try request.resolvingRunID()
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
     let paths = TKWorkspaceRunPaths(
@@ -1254,7 +1320,7 @@ func writeWorkspaceJSONArtifact(_ value: [String: Any], to url: URL) throws {
     try data.write(to: url, options: .atomic)
 }
 
-private func workspaceRunDirectory(runID: String, runsDirectory: String) -> URL {
+func workspaceRunDirectory(runID: String, runsDirectory: String) -> URL {
     URL(fileURLWithPath: runsDirectory, isDirectory: true)
         .appendingPathComponent(runID, isDirectory: true)
 }

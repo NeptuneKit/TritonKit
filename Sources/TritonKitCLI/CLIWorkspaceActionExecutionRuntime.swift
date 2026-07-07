@@ -12,6 +12,7 @@ struct TKWorkspaceActionExecutionRequest: Equatable {
     let action: String
     let query: String?
     let command: [String]
+    let vlmGrounding: TKVLMGroundResponse?
 }
 
 struct TKWorkspaceActionCandidate: Equatable {
@@ -33,6 +34,29 @@ struct TKWorkspaceActionExecutionResult {
     let message: String?
     let inputResult: TKInputResult?
     let tapResolution: TapTargetResolution?
+    let vlmGrounding: TKVLMGroundResponse?
+
+    init(
+        ok: Bool,
+        action: String,
+        command: [String],
+        proofSource: String,
+        sourceCommands: [String],
+        message: String?,
+        inputResult: TKInputResult?,
+        tapResolution: TapTargetResolution?,
+        vlmGrounding: TKVLMGroundResponse? = nil
+    ) {
+        self.ok = ok
+        self.action = action
+        self.command = command
+        self.proofSource = proofSource
+        self.sourceCommands = sourceCommands
+        self.message = message
+        self.inputResult = inputResult
+        self.tapResolution = tapResolution
+        self.vlmGrounding = vlmGrounding
+    }
 
     var eventStatus: TKTestRunStatus { ok ? .passed : .failed }
     var exitCode: Int { ok ? 0 : 1 }
@@ -56,7 +80,8 @@ func workspaceModelActionCandidate(fromVisibleTexts rawVisibleTexts: [String]) -
 
 func workspaceActionExecutionRequest(
     for request: TKWorkspaceRunRequest,
-    candidate: TKWorkspaceActionCandidate
+    candidate: TKWorkspaceActionCandidate,
+    vlmGrounding: TKVLMGroundResponse? = nil
 ) throws -> TKWorkspaceActionExecutionRequest {
     return TKWorkspaceActionExecutionRequest(
         target: request.target,
@@ -66,7 +91,8 @@ func workspaceActionExecutionRequest(
         scope: request.scope,
         action: candidate.action,
         query: candidate.query,
-        command: candidate.command
+        command: candidate.command,
+        vlmGrounding: vlmGrounding
     )
 }
 
@@ -82,6 +108,28 @@ func workspaceDefaultActionExecutionProvider(
         port: request.port,
         jsonError: true
     )
+    if let grounding = request.vlmGrounding {
+        let point = grounding.point.runtimePoint
+        let input = try await executeInputRequest(
+            .tap(x: point.x, y: point.y, targetOID: nil, width: nil, height: nil, duration: nil),
+            client: client
+        )
+        return TKWorkspaceActionExecutionResult(
+            ok: input.ok,
+            action: request.action,
+            command: request.command,
+            proofSource: "vlm.grounding+runtime.input",
+            sourceCommands: [
+                request.command.map(shellEscaped).joined(separator: " "),
+                "vlm grounding \(grounding.provider) \(grounding.target)",
+                "runtime input \(request.action) \(formatDouble(point.x)),\(formatDouble(point.y))",
+            ],
+            message: input.message,
+            inputResult: input,
+            tapResolution: nil,
+            vlmGrounding: grounding
+        )
+    }
     let resolution = try await resolveTapTarget(
         query,
         client: client,
@@ -107,7 +155,7 @@ func workspaceDefaultActionExecutionProvider(
     )
 }
 
-func workspaceActionExecutionArtifact(_ result: TKWorkspaceActionExecutionResult) throws -> [String: Any] {
+func workspaceActionExecutionArtifact(_ result: TKWorkspaceActionExecutionResult, runDir: URL) throws -> [String: Any] {
     var artifact: [String: Any] = [
         "schemaVersion": 1,
         "kind": "triton.workspace.action-execution",
@@ -127,6 +175,12 @@ func workspaceActionExecutionArtifact(_ result: TKWorkspaceActionExecutionResult
     }
     if let tapResolution = result.tapResolution {
         artifact["tapResolution"] = try workspaceEncodableJSONObject(tapResolution)
+    }
+    if let grounding = result.vlmGrounding {
+        artifact["usedVLMGrounding"] = true
+        artifact["vlmGrounding"] = workspaceVLMGroundingActionArtifact(grounding, runDir: runDir)
+    } else {
+        artifact["usedVLMGrounding"] = false
     }
     return artifact
 }
@@ -178,4 +232,57 @@ func workspaceModelTransition(
 private func workspaceEncodableJSONObject<T: Encodable>(_ value: T) throws -> Any {
     let data = try JSONEncoder().encode(value)
     return try JSONSerialization.jsonObject(with: data)
+}
+
+private func workspaceVLMGroundingActionArtifact(
+    _ grounding: TKVLMGroundResponse,
+    runDir: URL
+) -> [String: Any] {
+    var payload: [String: Any] = [
+        "ref": "evidence/actions/vlm-000/vlm-grounding.json",
+        "provider": grounding.provider,
+        "target": grounding.target,
+        "coordinateSpace": grounding.point.coordinateSpace,
+        "runtimePoint": [
+            "x": grounding.point.runtimePoint.x,
+            "y": grounding.point.runtimePoint.y,
+        ],
+        "normalized": [
+            "x": grounding.point.normalized.x,
+            "y": grounding.point.normalized.y,
+            "scale": grounding.point.normalized.scale,
+        ],
+        "coordinateContract": workspaceRelativeArtifactPath(grounding.coordinateContract.path, runDir: runDir),
+        "overlay": workspaceRelativeArtifactPath(grounding.artifacts.overlay, runDir: runDir),
+        "request": workspaceRelativeArtifactPath(grounding.artifacts.request, runDir: runDir),
+        "response": workspaceRelativeArtifactPath(grounding.artifacts.response, runDir: runDir),
+    ]
+    if let model = grounding.model {
+        payload["model"] = model
+    }
+    if let baseURL = grounding.baseURL {
+        payload["baseURL"] = baseURL
+    }
+    if let rawOutput = grounding.artifacts.rawOutput {
+        payload["rawOutput"] = workspaceRelativeArtifactPath(rawOutput, runDir: runDir)
+    }
+    if let parsedPoint = grounding.artifacts.parsedPoint {
+        payload["parsedPoint"] = workspaceRelativeArtifactPath(parsedPoint, runDir: runDir)
+    }
+    if let transform = grounding.artifacts.transform {
+        payload["transform"] = workspaceRelativeArtifactPath(transform, runDir: runDir)
+    }
+    if let modelMetadata = grounding.artifacts.modelMetadata {
+        payload["modelMetadata"] = workspaceRelativeArtifactPath(modelMetadata, runDir: runDir)
+    }
+    return payload
+}
+
+func workspaceRelativeArtifactPath(_ path: String, runDir: URL) -> String {
+    let runPath = runDir.standardizedFileURL.path
+    let artifactPath = URL(fileURLWithPath: path).standardizedFileURL.path
+    guard artifactPath.hasPrefix(runPath + "/") else {
+        return path
+    }
+    return String(artifactPath.dropFirst(runPath.count + 1))
 }
