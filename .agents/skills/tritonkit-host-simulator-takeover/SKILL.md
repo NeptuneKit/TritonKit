@@ -118,6 +118,8 @@ This lane must not require App-side URLProtocol, method swizzling, SDK network i
 
 `triton sim use` writes repo-local workspace defaults to `.triton/host-defaults.json`. Do not run smoke writes in the repository unless that file is intentionally part of the test. Use a temporary working directory for validation when possible.
 
+For `triton workspace run` flows that use a selector such as `current`, `booted`, or a workspace alias, add `--resolve-target` (HTTP `resolveTarget=true`) before app lifecycle, live observe, action, or wait steps. Workspace target resolution reuses host target discovery, writes the stable host target id plus `selector`, raw `hostTarget`, readiness metadata, and `sourceCommands` to `evidence/model/target.json`, then uses the resolved raw target downstream. Keep default dry / fixture runs unresolved unless the run should touch host discovery. When the selector depends on custom tools, preserve `--hdc` / `--adb` in the workspace command so the target sourceCommands remain reproducible.
+
 `triton app open-url` only proves that the URL was submitted to Simulator. When an embedded runtime is connected, prefer `--wait-ready --snapshot` for a one-shot host action plus runtime readiness/snapshot summary. Otherwise always verify business completion with `triton wait`, `triton find`, `triton assert`, `triton app prefs get`, a fresh screenshot, or an evidence bundle.
 
 `simctl appinfo` can exit 0 for a missing bundle while only echoing `CFBundleIdentifier`; Triton normalizes this to `app_info_not_available`. Do not treat raw `simctl` exit code alone as proof of installed app metadata.

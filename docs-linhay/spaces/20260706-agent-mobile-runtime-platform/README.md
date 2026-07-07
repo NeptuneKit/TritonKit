@@ -36,7 +36,7 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 
 | 基础能力 | 当前已有 | 本 space 需要补齐 |
 | --- | --- | --- |
-| Target / capability 事实源 | `triton status/doctor/capabilities/schema/plan --json`；Web `/web/target-registry`；`DeviceTarget` / `InspectTarget` 已有 `platform`、`scope`、`kind`、`targetSelector`、`screenshotSource`、`inputCapabilities` | 统一 runtime session DTO，禁止上层直接按设备类型分叉 |
+| Target / capability 事实源 | `triton status/doctor/capabilities/schema/plan --json`；`triton target list/use/current/resolve/wait-ready --json`；Web `/web/target-registry`；`DeviceTarget` / `InspectTarget` 已有 `platform`、`scope`、`kind`、`targetSelector`、`screenshotSource`、`inputCapabilities`；`workspace run --resolve-target` / HTTP `resolveTarget=true` 会先把 `current`、`booted` 或 alias 解析为 stable host target，并把 selector、raw host target、readiness 和 sourceCommands 写入 `evidence/model/target.json` | 统一 runtime session DTO，禁止上层直接按设备类型分叉；target 解析必须仍以 Triton CLI/HTTP schema 为事实源 |
 | App lifecycle | `triton app list/info/inspect/install/uninstall/launch/terminate/open-url` 已支持 `--scope simulator|emulator|real|all` 形态，iOS / Android / Harmony 逐步覆盖；`workspace run --app-mode launch` 已能把启动提交写入 `evidence/actions/app-ready.json` | 把未覆盖项收敛为 capability / unsupported / next action，不让调用方猜；`launch_submitted` 只代表启动命令提交，`launch_observed` 代表启动后拿到首帧观察，业务 ready 由 wait / verify 或 `--business-ready-text` checkpoint 证明 |
 | Observe / hierarchy / WebView | 已有 runtime snapshot / AX / hierarchy、host layout、WebView provider、route/assertion 和 Inspect Session 状态模型 | Atlas graph 需要把这些 observation 转成 screen/state/transition 证据 |
 | Device actions | `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`；Web stream gesture 已走 `/web/host-input`；unsupported 输出已有稳定 envelope | LLM/VLM loop 只能调用这些动作入口，不能直接执行底层工具 |
@@ -132,6 +132,7 @@ Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 g
 ## 验收
 
 - 对应 CLI/HTTP schema 明确列出 runtime session、app lifecycle、device action、evidence 和 workflow seed 能力。
+- `workspace run --resolve-target` / HTTP `resolveTarget=true` 必须复用 host target discovery，把 `current`、`booted` 或 alias 解析成 stable host target；后续 app lifecycle、observe、action、wait 使用解析后的 raw target，`run.target` 与 `evidence/model/target.json` 保留 stable id、selector、hostTarget、ready/source/name/runtime/kind 和 sourceCommands。
 - `workspace run` 必须区分 `dry`、`attach`、`launch` App lifecycle mode；只有显式 `launch` 会提交 host app launch，launch 后 live observation 可证明 App 已可观察，但不得把启动或首帧观察等同于业务完成；业务完成首期由 `--business-ready-text`、wait、assert 或后续 action verify 明确证明。
 - 本机至少一个 target scope 完成端到端 smoke：target discovery -> session ready -> app launch -> screenshot -> action -> evidence export；后续按 capabilities 扩展到其他 scope。
 - CLI/HTTP 和 Web DTO 必须以 target/capability 为事实源，不要求调用方预先区分真机、模拟器或仿真器。

@@ -57,6 +57,8 @@ struct Workspace: AsyncParsableCommand {
         var observePort = 19421
         @Option(help: "Path to hdc executable for Harmony live observation")
         var hdc = "hdc"
+        @Flag(name: .customLong("resolve-target"), help: "Resolve --target through Triton host target discovery before lifecycle, observation, and actions")
+        var resolveTarget = false
         @Option(name: .customLong("business-ready-text"), help: "Exact visible text that proves business readiness from the initial observation")
         var businessReadyText: String?
         @Flag(name: .customLong("business-ready-live-wait"), help: "Use runtime wait text matching for the business readiness checkpoint")
@@ -149,6 +151,7 @@ struct Workspace: AsyncParsableCommand {
                     businessReadyLiveWait: businessReadyLiveWait,
                     businessReadyTimeout: businessReadyTimeout,
                     businessReadyInterval: businessReadyInterval,
+                    resolveTarget: resolveTarget,
                     executeActions: executeActions
                 ))
                 try printWorkspaceRun(response, format: outputFormat)

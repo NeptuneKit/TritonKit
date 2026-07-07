@@ -30,6 +30,7 @@ func workspaceShouldUseBoundedActionLoop(
 
 func runWorkspaceActionLoop(
     request: TKWorkspaceRunRequest,
+    targetResolution: TKWorkspaceTargetResolution?,
     initialObservation: TKWorkspaceObservationSeed,
     appReady: TKWorkspaceAppReadyEvidence,
     runner: TKWorkspaceRunRunner,
@@ -169,6 +170,7 @@ func runWorkspaceActionLoop(
     )
     let response = workspaceActionLoopRunResponse(
         request: request,
+        targetResolution: targetResolution,
         runID: runID,
         runDir: runDir,
         runner: runner,
@@ -228,6 +230,7 @@ func runWorkspaceActionLoop(
 
 private func workspaceActionLoopRunResponse(
     request: TKWorkspaceRunRequest,
+    targetResolution: TKWorkspaceTargetResolution?,
     runID: String,
     runDir: URL,
     runner: TKWorkspaceRunRunner,
@@ -236,13 +239,7 @@ private func workspaceActionLoopRunResponse(
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     actionExecution: TKWorkspaceActionExecutionResult?
 ) -> TKWorkspaceRunResponse {
-    let targetMetadata = workspaceTargetMetadata(platform: request.platform, scope: request.scope)
-    let target = TKWorkspaceRunTarget(
-        id: request.target,
-        platform: targetMetadata.platform,
-        scope: targetMetadata.scope,
-        capabilities: ["screenshot", "hierarchy", "input"]
-    )
+    let target = workspaceRunTarget(for: request, targetResolution: targetResolution)
     return TKWorkspaceRunResponse(
         runID: runID,
         goal: request.goal,
@@ -285,12 +282,10 @@ private func writeWorkspaceActionLoopBaseArtifacts(
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     steps: [TKWorkspaceActionLoopStep]
 ) throws {
-    try writeWorkspaceJSONArtifact([
-        "target": run.target.id,
-        "platform": run.target.platform,
-        "scope": run.target.scope,
-        "capabilities": run.target.capabilities,
-    ], to: runDir.appendingPathComponent("evidence/model/target.json"))
+    try writeWorkspaceJSONArtifact(
+        workspaceTargetArtifact(for: run.target),
+        to: runDir.appendingPathComponent("evidence/model/target.json")
+    )
     try writeWorkspaceJSONArtifact(
         workspaceActionLoopProviderArtifact(run: run, request: request),
         to: runDir.appendingPathComponent("evidence/model/provider-check.json")

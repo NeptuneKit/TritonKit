@@ -6,6 +6,121 @@ import TritonKitShared
 
 @Suite("WorkspaceActionExecutionTests")
 struct WorkspaceActionExecutionTests {
+    @Test("workspace run resolves host target before lifecycle observation and action")
+    func workspaceRunResolvesHostTargetBeforeLifecycleObservationAndAction() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let selected = HostDeviceTarget(
+            platform: "ios",
+            id: "host:ios:SIM-1",
+            target: "SIM-1",
+            state: "Booted",
+            ready: true,
+            source: "xcrun simctl",
+            name: "iPhone 17",
+            runtime: "iOS 26.5",
+            transport: nil,
+            scope: "simulator",
+            kind: "simulator"
+        )
+        var resolveRequest: TKWorkspaceTargetResolveRequest?
+        var lifecycleRequest: TKWorkspaceAppLifecycleRequest?
+        var observeRequests: [TKWorkspaceLiveObserveRequest] = []
+        var actionRequest: TKWorkspaceActionExecutionRequest?
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-resolved-target",
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Open next screen",
+                actionPolicy: "explore",
+                appMode: "launch",
+                bundleID: "com.example.demo",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observeLive: true,
+                observeKind: "tree",
+                resolveTarget: true,
+                executeActions: true
+            ),
+            targetResolver: { request in
+                resolveRequest = request
+                return TKWorkspaceTargetResolution(
+                    selection: HostDeviceSelectionResult(
+                        platform: .ios,
+                        target: selected,
+                        selector: "booted",
+                        source: .explicit,
+                        filters: HostDeviceSelectionFilters(request: HostDeviceSelectionRequest(device: "booted", platform: .ios, scope: .simulator))
+                    ),
+                    sourceCommands: ["triton target resolve booted --platform ios --scope simulator --json"]
+                )
+            },
+            observeProvider: { request in
+                observeRequests.append(request)
+                return fakeLiveObserveOutput(for: request, visibleTexts: ["Welcome", "Continue"], artifactStem: "resolved")
+            },
+            appLifecycleProvider: { request in
+                lifecycleRequest = request
+                return TKWorkspaceAppLifecycleEvidence(
+                    mode: "launch",
+                    phase: "launch_submitted",
+                    action: "app.launch",
+                    app: request.app,
+                    platform: request.platform,
+                    scope: request.scope,
+                    target: request.target,
+                    runtimeScope: "host-simulator",
+                    ready: false,
+                    businessReady: false,
+                    submitted: true,
+                    sourceCommands: ["triton app launch --target \(request.target) --bundle-id \(request.bundleID ?? "") --json"],
+                    artifacts: [],
+                    note: nil
+                )
+            },
+            actionExecutionProvider: { request in
+                actionRequest = request
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(resolveRequest?.enabled == true)
+        #expect(resolveRequest?.selector == "booted")
+        #expect(resolveRequest?.platform == "ios")
+        #expect(resolveRequest?.scope == "simulator")
+        #expect(lifecycleRequest?.target == "SIM-1")
+        #expect(observeRequests.first?.target == "SIM-1")
+        #expect(actionRequest?.target == "SIM-1")
+        #expect(run.target.id == "host:ios:SIM-1")
+        #expect(run.target.platform == "ios")
+        #expect(run.target.scope == "simulator")
+        #expect(run.target.resolved == true)
+        #expect(run.target.selector == "booted")
+        #expect(run.target.hostTarget == "SIM-1")
+        #expect(run.target.source == "xcrun simctl")
+        #expect(run.target.ready == true)
+        #expect(run.target.name == "iPhone 17")
+        #expect(run.target.runtime == "iOS 26.5")
+        #expect(run.target.kind == "simulator")
+
+        let target = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: root
+                .appendingPathComponent("run-workspace-resolved-target", isDirectory: true)
+                .appendingPathComponent("evidence/model/target.json"))
+        ) as? [String: Any]
+        #expect(target?["target"] as? String == "host:ios:SIM-1")
+        #expect(target?["selector"] as? String == "booted")
+        #expect(target?["hostTarget"] as? String == "SIM-1")
+        #expect(target?["resolved"] as? Bool == true)
+        #expect(target?["sourceCommands"] as? [String] == ["triton target resolve booted --platform ios --scope simulator --json"])
+    }
+
     @Test("workspace run executes candidate action when explicitly enabled")
     func workspaceRunExecutesCandidateActionWhenExplicitlyEnabled() async throws {
         let root = temporaryRunsDirectory()
@@ -934,6 +1049,74 @@ struct WorkspaceActionExecutionTests {
         #expect(run.status == "stopped")
         let runDir = root.appendingPathComponent("run-workspace-http-execute-action", isDirectory: true)
         #expect(FileManager.default.fileExists(atPath: runDir.appendingPathComponent("evidence/actions/action-000.json").path))
+    }
+
+    @Test("workspace HTTP run resolves target before action execution")
+    func workspaceHTTPRunResolvesTargetBeforeActionExecution() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+        let selected = HostDeviceTarget(
+            platform: "android",
+            id: "host:android:emulator-5554",
+            target: "emulator-5554",
+            state: "device",
+            ready: true,
+            source: "adb",
+            name: "Pixel_9",
+            runtime: "API 36",
+            transport: "local",
+            scope: "emulator",
+            kind: "emulator"
+        )
+        var resolveRequest: TKWorkspaceTargetResolveRequest?
+        var actionRequest: TKWorkspaceActionExecutionRequest?
+
+        let body = try JSONEncoder().encode(TKWorkspaceHTTPRunRequest(
+            runsDir: root.path,
+            runID: "run-workspace-http-resolve-target",
+            target: "android-emulator",
+            platform: "android",
+            scope: "emulator",
+            app: "com.example.demo",
+            goal: "Open next screen",
+            actionPolicy: "explore",
+            llmProvider: "mock",
+            vlmProvider: "mock",
+            observationFixture: fixture.path,
+            resolveTarget: true,
+            executeActions: true
+        ))
+        let run = try await handleWorkspaceHTTPRunAsync(
+            body: body,
+            targetResolver: { request in
+                resolveRequest = request
+                return TKWorkspaceTargetResolution(
+                    selection: HostDeviceSelectionResult(
+                        platform: .android,
+                        target: selected,
+                        selector: "android-emulator",
+                        source: .alias,
+                        filters: HostDeviceSelectionFilters(request: HostDeviceSelectionRequest(device: "android-emulator", platform: .android, scope: .emulator))
+                    ),
+                    sourceCommands: ["triton target resolve android-emulator --platform android --scope emulator --json"]
+                )
+            },
+            actionExecutionProvider: { request in
+                actionRequest = request
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(resolveRequest?.enabled == true)
+        #expect(resolveRequest?.selector == "android-emulator")
+        #expect(resolveRequest?.platform == "android")
+        #expect(resolveRequest?.scope == "emulator")
+        #expect(actionRequest?.target == "emulator-5554")
+        #expect(actionRequest?.platform == "android")
+        #expect(actionRequest?.scope == "emulator")
+        #expect(run.target.id == "host:android:emulator-5554")
+        #expect(run.target.hostTarget == "emulator-5554")
     }
 
     private func temporaryRunsDirectory() -> URL {

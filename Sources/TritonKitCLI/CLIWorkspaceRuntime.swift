@@ -47,6 +47,7 @@ struct TKWorkspaceRunRequest {
     let businessReadyLiveWait: Bool
     let businessReadyTimeout: Double
     let businessReadyInterval: Double
+    let resolveTarget: Bool
     let executeActions: Bool
 
     init(
@@ -95,6 +96,7 @@ struct TKWorkspaceRunRequest {
         businessReadyLiveWait: Bool = false,
         businessReadyTimeout: Double = 10,
         businessReadyInterval: Double = 0.5,
+        resolveTarget: Bool = false,
         executeActions: Bool = false
     ) {
         self.runsDirectory = runsDirectory
@@ -142,6 +144,7 @@ struct TKWorkspaceRunRequest {
         self.businessReadyLiveWait = businessReadyLiveWait
         self.businessReadyTimeout = businessReadyTimeout
         self.businessReadyInterval = businessReadyInterval
+        self.resolveTarget = resolveTarget
         self.executeActions = executeActions
     }
 
@@ -196,9 +199,11 @@ struct TKWorkspaceRunRequest {
             businessReadyLiveWait: businessReadyLiveWait,
             businessReadyTimeout: businessReadyTimeout,
             businessReadyInterval: businessReadyInterval,
+            resolveTarget: resolveTarget,
             executeActions: executeActions
         )
     }
+
 }
 
 struct TKWorkspaceRunResponse: Codable, Equatable {
@@ -264,6 +269,48 @@ struct TKWorkspaceRunTarget: Codable, Equatable {
     let platform: String
     let scope: String
     let capabilities: [String]
+    let resolved: Bool?
+    let selector: String?
+    let hostTarget: String?
+    let source: String?
+    let state: String?
+    let ready: Bool?
+    let name: String?
+    let runtime: String?
+    let kind: String?
+    let sourceCommands: [String]?
+
+    init(
+        id: String,
+        platform: String,
+        scope: String,
+        capabilities: [String],
+        resolved: Bool? = nil,
+        selector: String? = nil,
+        hostTarget: String? = nil,
+        source: String? = nil,
+        state: String? = nil,
+        ready: Bool? = nil,
+        name: String? = nil,
+        runtime: String? = nil,
+        kind: String? = nil,
+        sourceCommands: [String]? = nil
+    ) {
+        self.id = id
+        self.platform = platform
+        self.scope = scope
+        self.capabilities = capabilities
+        self.resolved = resolved
+        self.selector = selector
+        self.hostTarget = hostTarget
+        self.source = source
+        self.state = state
+        self.ready = ready
+        self.name = name
+        self.runtime = runtime
+        self.kind = kind
+        self.sourceCommands = sourceCommands
+    }
 }
 
 struct TKWorkspaceRunAI: Codable, Equatable {
@@ -418,7 +465,10 @@ private struct TKWorkspaceFlowActionStep {
     let verifyEvidenceRef: String?
 }
 
-func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunResponse {
+func runWorkspaceRun(
+    _ request: TKWorkspaceRunRequest,
+    targetResolver: TKWorkspaceTargetResolverProvider = workspaceDefaultTargetResolverProvider
+) throws -> TKWorkspaceRunResponse {
     let request = try request.resolvingRunID()
     if request.businessReadyLiveWait {
         throw RuntimeError("Workspace business live wait requires the async workspace runtime.")
@@ -426,13 +476,21 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     if request.executeActions {
         throw RuntimeError("Workspace action execution requires the async workspace runtime.")
     }
-    let appLifecycle = try workspaceAppLifecycleEvidence(for: request)
-    let observationSeed = try workspaceObservationSeed(for: request)
-    return try runWorkspaceRun(request, observationSeed: observationSeed, appLifecycle: appLifecycle)
+    let targetResolution = try targetResolver(workspaceTargetResolveRequest(for: request))
+    let resolvedRequest = workspaceRunRequest(request, applying: targetResolution)
+    let appLifecycle = try workspaceAppLifecycleEvidence(for: resolvedRequest)
+    let observationSeed = try workspaceObservationSeed(for: resolvedRequest)
+    return try runWorkspaceRun(
+        resolvedRequest,
+        observationSeed: observationSeed,
+        appLifecycle: appLifecycle,
+        targetResolution: targetResolution
+    )
 }
 
 func runWorkspaceRunAsync(
     _ request: TKWorkspaceRunRequest,
+    targetResolver: TKWorkspaceTargetResolverProvider = workspaceDefaultTargetResolverProvider,
     observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
     appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
     businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider,
@@ -441,28 +499,31 @@ func runWorkspaceRunAsync(
     actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
 ) async throws -> TKWorkspaceRunResponse {
     let request = try request.resolvingRunID()
-    let appLifecycle = try await workspaceAppLifecycleEvidence(for: request, provider: appLifecycleProvider)
-    let observationSeed = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
-    let runner = try workspaceRunnerConfig(for: request)
-    let providerPreflight = try workspaceProviderPreflight(request)
-    let modelLoopMode = workspaceModelLoopMode(for: request)
-    let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
+    let targetResolution = try targetResolver(workspaceTargetResolveRequest(for: request))
+    let resolvedRequest = workspaceRunRequest(request, applying: targetResolution)
+    let appLifecycle = try await workspaceAppLifecycleEvidence(for: resolvedRequest, provider: appLifecycleProvider)
+    let observationSeed = try await workspaceObservationSeed(for: resolvedRequest, observeProvider: observeProvider)
+    let runner = try workspaceRunnerConfig(for: resolvedRequest)
+    let providerPreflight = try workspaceProviderPreflight(resolvedRequest)
+    let modelLoopMode = workspaceModelLoopMode(for: resolvedRequest)
+    let modelLoopEnabled = resolvedRequest.dryModelFixture || providerPreflight.providersReady
     let appReady = workspaceAppReadyEvidence(
         lifecycle: appLifecycle,
         observation: observationSeed,
-        observedAfterLifecycle: request.observeLive
+        observedAfterLifecycle: resolvedRequest.observeLive
     )
-    let initialBusinessCheckpoint = request.executeActions
-        ? workspaceBusinessVisibleTextCheckpoint(for: request, observation: observationSeed, appReady: appReady)
+    let initialBusinessCheckpoint = resolvedRequest.executeActions
+        ? workspaceBusinessVisibleTextCheckpoint(for: resolvedRequest, observation: observationSeed, appReady: appReady)
         : nil
     if workspaceShouldUseBoundedActionLoop(
-        request: request,
+        request: resolvedRequest,
         runner: runner,
         providerPreflight: providerPreflight,
         initialBusinessCheckpoint: initialBusinessCheckpoint
     ) {
         return try await runWorkspaceActionLoop(
-            request: request,
+            request: resolvedRequest,
+            targetResolution: targetResolution,
             initialObservation: observationSeed,
             appReady: appReady,
             runner: runner,
@@ -478,7 +539,7 @@ func runWorkspaceRunAsync(
     }
     let modelDecision = modelLoopEnabled
         ? try await modelDecisionProvider(workspaceModelDecisionRequest(
-            for: request,
+            for: resolvedRequest,
             observation: observationSeed,
             runner: runner,
             providerPreflight: providerPreflight,
@@ -488,15 +549,15 @@ func runWorkspaceRunAsync(
     let actionCandidate = modelDecision?.candidate ?? workspaceModelActionCandidate(from: observationSeed)
     let actionExecution: TKWorkspaceActionExecutionResult?
     if try workspaceShouldExecuteCandidateAction(
-        request,
+        resolvedRequest,
         businessCheckpoint: initialBusinessCheckpoint,
         actionCandidate: actionCandidate
     ) {
-        let runDir = workspaceRunDirectory(runID: request.runID ?? defaultWorkspaceRunID(), runsDirectory: request.runsDirectory)
+        let runDir = workspaceRunDirectory(runID: resolvedRequest.runID ?? defaultWorkspaceRunID(), runsDirectory: resolvedRequest.runsDirectory)
         let vlmGroundingResult: Result<TKVLMGroundResponse?, Error>
         do {
             vlmGroundingResult = .success(try await workspaceVLMGroundingForAction(
-                request: request,
+                request: resolvedRequest,
                 observation: observationSeed,
                 actionCandidate: actionCandidate,
                 runDir: runDir,
@@ -509,7 +570,7 @@ func runWorkspaceRunAsync(
         switch vlmGroundingResult {
         case .success(let vlmGrounding):
             actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(
-                for: request,
+                for: resolvedRequest,
                 candidate: actionCandidate,
                 vlmGrounding: vlmGrounding
             ))
@@ -524,31 +585,31 @@ func runWorkspaceRunAsync(
         actionExecution = nil
     }
     let postActionObservation: TKWorkspaceObservationSeed?
-    if request.observeLive, actionExecution?.ok == true {
-        postActionObservation = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
+    if resolvedRequest.observeLive, actionExecution?.ok == true {
+        postActionObservation = try await workspaceObservationSeed(for: resolvedRequest, observeProvider: observeProvider)
     } else {
         postActionObservation = nil
     }
     let businessWaitResult: TKWaitResult?
     let businessCheckpoint: TKWorkspaceBusinessCheckpoint?
-    if request.businessReadyLiveWait, initialBusinessCheckpoint?.ready == true {
+    if resolvedRequest.businessReadyLiveWait, initialBusinessCheckpoint?.ready == true {
         businessWaitResult = nil
         businessCheckpoint = initialBusinessCheckpoint
-    } else if request.businessReadyLiveWait, actionExecution?.ok == true {
-        let waitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
+    } else if resolvedRequest.businessReadyLiveWait, actionExecution?.ok == true {
+        let waitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: resolvedRequest))
         businessWaitResult = waitResult
         businessCheckpoint = workspaceBusinessCheckpoint(
-            for: request,
+            for: resolvedRequest,
             observation: observationSeed,
             appReady: appReady,
             waitResult: waitResult,
             stage: .postAction
         )
-    } else if request.businessReadyLiveWait {
-        let waitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
+    } else if resolvedRequest.businessReadyLiveWait {
+        let waitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: resolvedRequest))
         businessWaitResult = waitResult
         businessCheckpoint = workspaceBusinessCheckpoint(
-            for: request,
+            for: resolvedRequest,
             observation: observationSeed,
             appReady: appReady,
             waitResult: waitResult
@@ -556,14 +617,14 @@ func runWorkspaceRunAsync(
     } else {
         businessWaitResult = nil
         businessCheckpoint = workspaceBusinessCheckpoint(
-            for: request,
+            for: resolvedRequest,
             observation: observationSeed,
             appReady: appReady,
             waitResult: nil
         )
     }
     return try runWorkspaceRun(
-        request,
+        resolvedRequest,
         observationSeed: observationSeed,
         appLifecycle: appLifecycle,
         businessWaitResult: businessWaitResult,
@@ -571,7 +632,8 @@ func runWorkspaceRunAsync(
         actionExecution: actionExecution,
         postActionObservation: postActionObservation,
         actionCandidate: actionCandidate,
-        modelDecision: modelDecision
+        modelDecision: modelDecision,
+        targetResolution: targetResolution
     )
 }
 
@@ -584,7 +646,8 @@ private func runWorkspaceRun(
     actionExecution: TKWorkspaceActionExecutionResult? = nil,
     postActionObservation: TKWorkspaceObservationSeed? = nil,
     actionCandidate: TKWorkspaceActionCandidate? = nil,
-    modelDecision: TKWorkspaceModelDecision? = nil
+    modelDecision: TKWorkspaceModelDecision? = nil,
+    targetResolution: TKWorkspaceTargetResolution? = nil
 ) throws -> TKWorkspaceRunResponse {
     let request = try request.resolvingRunID()
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
@@ -594,13 +657,7 @@ private func runWorkspaceRun(
         events: runDir.appendingPathComponent("events.jsonl").path,
         report: runDir.appendingPathComponent("report.json").path
     )
-    let targetMetadata = workspaceTargetMetadata(platform: request.platform, scope: request.scope)
-    let target = TKWorkspaceRunTarget(
-        id: request.target,
-        platform: targetMetadata.platform,
-        scope: targetMetadata.scope,
-        capabilities: ["screenshot", "hierarchy", "input"]
-    )
+    let target = workspaceRunTarget(for: request, targetResolution: targetResolution)
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
     let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
@@ -1102,12 +1159,10 @@ private func writeWorkspaceRunArtifacts(
     postActionObservation: TKWorkspaceObservationSeed?,
     actionCandidate: TKWorkspaceActionCandidate
 ) throws {
-    try writeWorkspaceJSONArtifact([
-        "target": run.target.id,
-        "platform": run.target.platform,
-        "scope": run.target.scope,
-        "capabilities": run.target.capabilities,
-    ], to: runDir.appendingPathComponent("evidence/model/target.json"))
+    try writeWorkspaceJSONArtifact(
+        workspaceTargetArtifact(for: run.target),
+        to: runDir.appendingPathComponent("evidence/model/target.json")
+    )
     var providerArtifact: [String: Any] = [
         "llmEnabled": run.ai.llmEnabled,
         "vlmEnabled": run.ai.vlmEnabled,

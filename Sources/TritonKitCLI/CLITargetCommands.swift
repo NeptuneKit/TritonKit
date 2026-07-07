@@ -14,13 +14,14 @@ struct TargetList: AsyncParsableCommand {
 
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform = .harmony
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let result = try hostDeviceTargets(platform: platform, hdc: hdc)
+            let result = try hostDeviceTargets(platform: platform, hdc: hdc, adb: adb)
             let output = HostDeviceListOutput(
                 ok: true,
                 platform: platform.rawValue,
@@ -54,11 +55,13 @@ struct TargetUse: AsyncParsableCommand {
 
     @Argument(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Target scope filter: simulator|emulator|real|all") var scope: HostDeviceScope?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
     @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -66,8 +69,9 @@ struct TargetUse: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             let selected = try resolveHostDeviceSelection(
-                request: HostDeviceSelectionRequest(device: selector, platform: platform, name: name, runtime: runtime, state: state, ready: ready),
-                hdc: hdc
+                request: HostDeviceSelectionRequest(device: selector, platform: platform, scope: scope, name: name, runtime: runtime, state: state, ready: ready),
+                hdc: hdc,
+                adb: adb
             )
             var store = try loadHostTargetAliasStore()
             store.current = hostDeviceCurrentSelector(explicitSelector: selector, explicitTarget: nil, selected: selected)
@@ -88,6 +92,7 @@ struct TargetCurrent: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "current", abstract: "Show the current agent target")
 
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -97,7 +102,7 @@ struct TargetCurrent: AsyncParsableCommand {
             let store = try loadHostTargetAliasStore()
             let path = HostTargetAliasStore.filePath(workspace: FileManager.default.currentDirectoryPath)
             let selection = try store.current.map {
-                try resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: $0), hdc: hdc)
+                try resolveHostDeviceSelection(request: HostDeviceSelectionRequest(device: $0), hdc: hdc, adb: adb)
             }
             switch outputFormat {
             case .json:
@@ -116,11 +121,13 @@ struct TargetResolve: AsyncParsableCommand {
 
     @Argument(help: "Target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current") var selector: String?
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
+    @Option(help: "Target scope filter: simulator|emulator|real|all") var scope: HostDeviceScope?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?
     @Option(help: "Target state filter, for example booted or connected") var state: String?
     @Flag(help: "Only match ready targets") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -128,8 +135,9 @@ struct TargetResolve: AsyncParsableCommand {
         let outputFormat = effectiveFormat(format, json: json)
         do {
             let selection = try resolveHostDeviceSelection(
-                request: HostDeviceSelectionRequest(device: selector, platform: platform, name: name, runtime: runtime, state: state, ready: ready),
-                hdc: hdc
+                request: HostDeviceSelectionRequest(device: selector, platform: platform, scope: scope, name: name, runtime: runtime, state: state, ready: ready),
+                hdc: hdc,
+                adb: adb
             )
             switch outputFormat {
             case .json:
@@ -153,6 +161,7 @@ struct TargetWaitReady: AsyncParsableCommand {
     @Option(help: "Target state filter, for example booted or connected") var state: String?
     @Flag(help: "Only match ready targets before waiting") var ready = false
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
+    @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Timeout in seconds") var timeout: Double = 30
     @Option(help: "Polling interval in seconds") var interval: Double = 1
     @Flag(help: "Alias for --format json") var json = false
@@ -163,12 +172,14 @@ struct TargetWaitReady: AsyncParsableCommand {
         do {
             let selection = try resolveHostDeviceSelection(
                 request: HostDeviceSelectionRequest(device: selector, platform: platform, name: name, runtime: runtime, state: state, ready: ready),
-                hdc: hdc
+                hdc: hdc,
+                adb: adb
             )
             let event = try await waitForHostDeviceReady(
                 platform: selection.platform,
                 selected: selection.target,
                 hdc: hdc,
+                adb: adb,
                 timeout: timeout,
                 interval: interval
             )
