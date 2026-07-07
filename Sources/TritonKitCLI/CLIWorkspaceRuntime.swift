@@ -233,7 +233,7 @@ struct TKWorkspaceNextAction: Codable, Equatable {
     let message: String
 }
 
-private struct TKWorkspaceProviderPreflight {
+struct TKWorkspaceProviderPreflight {
     let providersReady: Bool
     let providerStatus: String
     let llmProvider: String?
@@ -245,7 +245,7 @@ private struct TKWorkspaceProviderPreflight {
     let nextActions: [TKWorkspaceNextAction]
 }
 
-private struct TKWorkspaceProviderComponentPreflight {
+struct TKWorkspaceProviderComponentPreflight {
     let provider: String?
     let status: String
     let phase: String
@@ -261,9 +261,9 @@ struct TKWorkspaceRunFinalState {
     let phase: String?
 }
 
-private let defaultWorkspaceRunnerMaxSteps = 20
-private let defaultWorkspaceRunnerAllowedActions = ["tap", "swipe", "type", "wait", "verify", "stop"]
-private let defaultWorkspaceRunnerStopConditions = [
+let defaultWorkspaceRunnerMaxSteps = 20
+let defaultWorkspaceRunnerAllowedActions = ["tap", "swipe", "type", "wait", "verify", "stop"]
+let defaultWorkspaceRunnerStopConditions = [
     "max_steps_reached",
     "provider_missing",
     "unsupported_capability",
@@ -330,11 +330,25 @@ func runWorkspaceRunAsync(
     observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
     appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
     businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider,
+    modelDecisionProvider: TKWorkspaceModelDecisionProvider = workspaceDefaultModelDecisionProvider,
     actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
 ) async throws -> TKWorkspaceRunResponse {
     let appLifecycle = try await workspaceAppLifecycleEvidence(for: request, provider: appLifecycleProvider)
     let observationSeed = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
-    let actionCandidate = workspaceModelActionCandidate(from: observationSeed)
+    let runner = try workspaceRunnerConfig(for: request)
+    let providerPreflight = try workspaceProviderPreflight(request)
+    let modelLoopMode = workspaceModelLoopMode(for: request)
+    let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
+    let modelDecision = modelLoopEnabled
+        ? try await modelDecisionProvider(workspaceModelDecisionRequest(
+            for: request,
+            observation: observationSeed,
+            runner: runner,
+            providerPreflight: providerPreflight,
+            mode: modelLoopMode
+        ))
+        : nil
+    let actionCandidate = modelDecision?.candidate ?? workspaceModelActionCandidate(from: observationSeed)
     let appReady = workspaceAppReadyEvidence(
         lifecycle: appLifecycle,
         observation: observationSeed,
@@ -344,7 +358,11 @@ func runWorkspaceRunAsync(
         ? workspaceBusinessVisibleTextCheckpoint(for: request, observation: observationSeed, appReady: appReady)
         : nil
     let actionExecution: TKWorkspaceActionExecutionResult?
-    if try workspaceShouldExecuteCandidateAction(request, businessCheckpoint: initialBusinessCheckpoint) {
+    if try workspaceShouldExecuteCandidateAction(
+        request,
+        businessCheckpoint: initialBusinessCheckpoint,
+        actionCandidate: actionCandidate
+    ) {
         actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(
             for: request,
             candidate: actionCandidate
@@ -399,7 +417,8 @@ func runWorkspaceRunAsync(
         businessCheckpoint: businessCheckpoint,
         actionExecution: actionExecution,
         postActionObservation: postActionObservation,
-        actionCandidate: actionCandidate
+        actionCandidate: actionCandidate,
+        modelDecision: modelDecision
     )
 }
 
@@ -411,7 +430,8 @@ private func runWorkspaceRun(
     businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil,
     actionExecution: TKWorkspaceActionExecutionResult? = nil,
     postActionObservation: TKWorkspaceObservationSeed? = nil,
-    actionCandidate: TKWorkspaceActionCandidate? = nil
+    actionCandidate: TKWorkspaceActionCandidate? = nil,
+    modelDecision: TKWorkspaceModelDecision? = nil
 ) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
@@ -430,8 +450,18 @@ private func runWorkspaceRun(
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
     let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
-    let modelLoopMode = request.dryModelFixture ? "dry-fixture" : "mock-provider"
-    let actionCandidate = actionCandidate ?? workspaceModelActionCandidate(from: observationSeed)
+    let modelLoopMode = workspaceModelLoopMode(for: request)
+    let modelDecisionRequest = workspaceModelDecisionRequest(
+        for: request,
+        observation: observationSeed,
+        runner: runner,
+        providerPreflight: providerPreflight,
+        mode: modelLoopMode
+    )
+    let modelDecision = modelLoopEnabled
+        ? (modelDecision ?? workspaceDefaultModelDecision(modelDecisionRequest))
+        : nil
+    let actionCandidate = actionCandidate ?? modelDecision?.candidate ?? workspaceModelActionCandidate(from: observationSeed)
     let modelDecisionAllowed = modelLoopEnabled
         ? workspacePolicyAllowsAction(actionCandidate.action, runner: runner)
         : false
@@ -509,7 +539,8 @@ private func runWorkspaceRun(
             businessCheckpoint: businessCheckpoint,
             actionExecution: actionExecution,
             postActionObservation: postActionObservation,
-            actionCandidate: actionCandidate
+            modelRequest: modelDecisionRequest,
+            modelDecision: modelDecision ?? workspaceDefaultModelDecision(modelDecisionRequest)
         )
     }
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
@@ -710,7 +741,8 @@ private func workspaceRunNextActions(
 
 private func workspaceShouldExecuteCandidateAction(
     _ request: TKWorkspaceRunRequest,
-    businessCheckpoint: TKWorkspaceBusinessCheckpoint?
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
+    actionCandidate: TKWorkspaceActionCandidate
 ) throws -> Bool {
     guard request.executeActions, businessCheckpoint?.ready != true else {
         return false
@@ -718,7 +750,7 @@ private func workspaceShouldExecuteCandidateAction(
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
     let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
-    return modelLoopEnabled && workspacePolicyAllowsAction("tap", runner: runner)
+    return modelLoopEnabled && workspacePolicyAllowsAction(actionCandidate.action, runner: runner)
 }
 
 private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
@@ -1117,148 +1149,6 @@ private func writeWorkspaceRunArtifacts(
     )
 }
 
-private func writeWorkspaceModelDecisionArtifacts(
-    run: TKWorkspaceRunResponse,
-    runDir: URL,
-    mode: String,
-    policyAllowed: Bool,
-    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
-    actionExecution: TKWorkspaceActionExecutionResult?,
-    postActionObservation: TKWorkspaceObservationSeed?,
-    actionCandidate: TKWorkspaceActionCandidate
-) throws {
-    let command = actionCandidate.command
-    try writeWorkspaceJSONArtifact([
-        "kind": "triton.workspace.model-request",
-        "mode": mode,
-        "task": "bootstrap",
-        "goal": run.goal,
-        "observationRef": "events.jsonl#observation.captured",
-        "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
-        "candidateSource": actionCandidate.source,
-    ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-request.redacted.json"))
-    try "\(mode) bootstrap response: \(actionCandidate.action) \(actionCandidate.query)\n".write(
-        to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-response.raw.txt"),
-        atomically: true,
-        encoding: .utf8
-    )
-    try writeWorkspaceJSONArtifact([
-        "summary": "Dry fixture proposes a single bootstrap action.",
-        "command": command,
-        "confidence": 0.5,
-        "candidateSource": actionCandidate.source,
-        "evidenceId": "ev_0000",
-        "expected": "\(actionCandidate.query) advances the initial screen.",
-        "artifacts": [
-            "request": "evidence/model/bootstrap-proposal-000-request.redacted.json",
-            "response": "evidence/model/bootstrap-proposal-000-response.raw.txt",
-        ],
-    ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000.json"))
-    try writeWorkspaceJSONArtifact([
-        "kind": "triton.workspace.model-request",
-        "mode": mode,
-        "task": "decide",
-        "goal": run.goal,
-        "observationRef": "events.jsonl#observation.captured",
-        "bootstrapProposalRef": "evidence/model/bootstrap-proposal-000.json",
-        "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
-        "candidateSource": actionCandidate.source,
-    ], to: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
-    try "\(mode) decision response: \(actionCandidate.action) \(actionCandidate.query)\n".write(
-        to: runDir.appendingPathComponent("evidence/model/decision-000-response.raw.txt"),
-        atomically: true,
-        encoding: .utf8
-    )
-    try writeWorkspaceJSONArtifact([
-        "summary": "Dry fixture selected a single tap candidate.",
-        "command": command,
-        "confidence": 0.5,
-        "candidateSource": actionCandidate.source,
-        "usedVLM": true,
-        "artifacts": [
-            "request": "evidence/model/decision-000-request.redacted.json",
-            "response": "evidence/model/decision-000-response.raw.txt",
-        ],
-    ], to: runDir.appendingPathComponent("evidence/model/decision-000.json"))
-    if !policyAllowed {
-        try writeWorkspaceJSONArtifact([
-            "allowed": false,
-            "reason": "runner allowedActions does not include tap",
-            "stopReason": "policy_rejected",
-            "action": actionCandidate.action,
-            "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
-            "command": command,
-        ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
-        try writeWorkspaceJSONArtifact([
-            "failureCode": "policy_rejected",
-            "kind": "policy_rejected",
-            "proposal": "stop",
-            "reason": "candidate action is outside runner allowedActions",
-        ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
-        return
-    }
-    try writeWorkspaceJSONArtifact([
-        "allowed": true,
-        "reason": "\(mode) command is low-risk and single-step",
-        "command": command,
-    ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
-    if let actionExecution {
-        try writeWorkspaceJSONArtifact(
-            try workspaceActionExecutionArtifact(actionExecution),
-            to: runDir.appendingPathComponent("evidence/actions/action-000.json")
-        )
-    } else {
-        try writeWorkspaceJSONArtifact([
-            "ok": true,
-            "mode": mode,
-            "command": command,
-        ], to: runDir.appendingPathComponent("evidence/actions/action-000.json"))
-    }
-    if let businessCheckpoint, businessCheckpoint.stage == .postAction {
-        try writeWorkspaceJSONArtifact([
-            "status": businessCheckpoint.readiness.status,
-            "reason": businessCheckpoint.ready
-                ? "post-action business checkpoint passed"
-                : "post-action business checkpoint did not pass",
-            "businessRef": businessCheckpoint.readiness.ref,
-            "check": businessCheckpoint.readiness.check,
-            "phase": businessCheckpoint.readiness.phase,
-        ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
-        if !businessCheckpoint.ready {
-            try writeWorkspaceJSONArtifact([
-                "failureCode": "business_checkpoint_missing",
-                "kind": "post_action_business_not_ready",
-                "proposal": "stop",
-                "businessRef": businessCheckpoint.readiness.ref,
-            ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
-        }
-    } else {
-        try writeWorkspaceJSONArtifact([
-            "status": "failed",
-            "reason": actionExecution == nil
-                ? "\(mode) simulates expected screen missing"
-                : "action executed without a post-action business verification request",
-        ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
-        try writeWorkspaceJSONArtifact([
-            "failureCode": "expected_screen_missing",
-            "kind": actionExecution == nil ? "selector_drift" : "post_action_unverified",
-            "proposal": "stop",
-        ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
-    }
-    let toScreenID = postActionObservation == nil ? "screen_0000" : "screen_0001"
-    try """
-    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"\(toScreenID)","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution, businessCheckpoint: businessCheckpoint))","confidence":0.5,"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
-    """.write(to: runDir.appendingPathComponent("atlas/deltas.jsonl"), atomically: true, encoding: .utf8)
-    try """
-    schemaVersion: 1
-    kind: triton.workspace.flow
-    steps:
-      - action: tap
-        evidenceRef: events.jsonl#action.executed
-
-    """.write(to: runDir.appendingPathComponent("flow.tritonflow.yaml"), atomically: true, encoding: .utf8)
-}
-
 private func writeWorkspaceRun(_ run: TKWorkspaceRunResponse, to url: URL) throws {
     try encodeCompactJSON(run).write(to: url, atomically: true, encoding: .utf8)
 }
@@ -1460,7 +1350,7 @@ private func workspaceAtlasSignature(_ observation: TKWorkspaceObservationSeed) 
     ].joined(separator: ":")
 }
 
-private func writeWorkspaceJSONArtifact(_ value: [String: Any], to url: URL) throws {
+func writeWorkspaceJSONArtifact(_ value: [String: Any], to url: URL) throws {
     let data = try JSONSerialization.data(withJSONObject: value, options: [.prettyPrinted, .sortedKeys])
     try data.write(to: url, options: .atomic)
 }
@@ -1485,7 +1375,7 @@ private func defaultWorkspaceRunID() -> String {
     "run_\(Int(Date().timeIntervalSince1970))_\(UUID().uuidString.prefix(8))"
 }
 
-private func yamlEscaped(_ value: String) -> String {
+func yamlEscaped(_ value: String) -> String {
     value.replacingOccurrences(of: "\\", with: "\\\\")
         .replacingOccurrences(of: "\"", with: "\\\"")
 }

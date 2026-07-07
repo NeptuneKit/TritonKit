@@ -39,7 +39,11 @@ struct TKWorkspaceActionExecutionResult {
 }
 
 func workspaceModelActionCandidate(from observation: TKWorkspaceObservationSeed) -> TKWorkspaceActionCandidate {
-    let visibleTexts = observation.screenCandidate.visibleTexts
+    workspaceModelActionCandidate(fromVisibleTexts: observation.screenCandidate.visibleTexts)
+}
+
+func workspaceModelActionCandidate(fromVisibleTexts rawVisibleTexts: [String]) -> TKWorkspaceActionCandidate {
+    let visibleTexts = rawVisibleTexts
         .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
         .filter { !$0.isEmpty }
     let preferredTexts = ["Continue", "Start", "Get Started", "Next", "Login", "Log In", "Sign In"]

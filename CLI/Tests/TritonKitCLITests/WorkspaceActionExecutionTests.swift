@@ -120,6 +120,85 @@ struct WorkspaceActionExecutionTests {
         #expect(selector?["text"] as? String == "Start")
     }
 
+    @Test("workspace model provider output drives explicit action candidate")
+    func workspaceModelProviderOutputDrivesExplicitActionCandidate() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root, visibleTexts: ["Welcome", "Begin"])
+        var providerRequest: TKWorkspaceModelDecisionRequest?
+        var actionRequest: TKWorkspaceActionExecutionRequest?
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-provider-candidate",
+                target: "runtime-target-provider",
+                app: "com.example.demo",
+                goal: "Start onboarding",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observationFixture: fixture.path,
+                executeActions: true
+            ),
+            modelDecisionProvider: { request in
+                providerRequest = request
+                return TKWorkspaceModelDecision(
+                    candidate: TKWorkspaceActionCandidate(
+                        action: "tap",
+                        query: "Begin",
+                        source: "llm-vlm.provider"
+                    ),
+                    confidence: 0.87,
+                    summary: "Provider selected the visible onboarding entry.",
+                    expected: "Begin opens onboarding.",
+                    usedVLM: true,
+                    requestContext: [
+                        "providerRequestId": "fake-model-request-1",
+                    ],
+                    bootstrapResponseText: #"{"action":"tap","query":"Begin","confidence":0.87}"#,
+                    decisionResponseText: #"{"action":"tap","query":"Begin","confidence":0.87}"#
+                )
+            },
+            actionExecutionProvider: { request in
+                actionRequest = request
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "stopped")
+        #expect(providerRequest?.visibleTexts == ["Welcome", "Begin"])
+        #expect(providerRequest?.allowedActions.contains("tap") == true)
+        #expect(actionRequest?.query == "Begin")
+        #expect(actionRequest?.command == ["triton", "act", "tap", "Begin", "--json"])
+
+        let runDir = root.appendingPathComponent("run-workspace-provider-candidate", isDirectory: true)
+        let decisionRequest = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
+        ) as? [String: Any]
+        #expect(decisionRequest?["providerRequestId"] as? String == "fake-model-request-1")
+        #expect(decisionRequest?["visibleTexts"] as? [String] == ["Welcome", "Begin"])
+
+        let decisionResponse = try String(
+            contentsOf: runDir.appendingPathComponent("evidence/model/decision-000-response.raw.txt"),
+            encoding: .utf8
+        )
+        #expect(decisionResponse.contains(#""query":"Begin""#))
+
+        let decision = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/decision-000.json"))
+        ) as? [String: Any]
+        #expect(decision?["command"] as? [String] == ["triton", "act", "tap", "Begin", "--json"])
+        #expect(decision?["candidateSource"] as? String == "llm-vlm.provider")
+        #expect(decision?["confidence"] as? Double == 0.87)
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let actionEvent = parsed.events.first { $0.type == .actionExecuted }
+        #expect(actionEvent?.command == ["triton", "act", "tap", "Begin", "--json"])
+    }
+
     @Test("workspace run verifies business readiness after explicit action execution")
     func workspaceRunVerifiesBusinessReadinessAfterExplicitActionExecution() async throws {
         let root = temporaryRunsDirectory()
