@@ -656,7 +656,7 @@ Workbench 首屏只读 Run facts：
 - Timeline: events.jsonl。
 - Flow Seed: 当前生成的 steps。
 
-按钮只调用 CLI/HTTP 已有契约：pause / stop / approve dangerous action / export flow。不要新增设备控制按钮矩阵。
+首版 Web mock 已落地只读 Run / Atlas Workbench：默认布局展示 stream + Workbench，Workbench 消费 mock DTO，展示 run facts、LLM/VLM readiness、Atlas coverage、path health、source runs 和 suggested commands；VLM-assisted path 明确展示 `requiresVLM` 和包含 `--allow-vlm` 的 replay command。后续如补按钮，只能调用 CLI/HTTP 已有契约：pause / stop / approve dangerous action / export flow；不要新增设备控制按钮矩阵。
 
 ### 复用现有能力
 
@@ -746,7 +746,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - 真实 target discovery 已通过显式 `--resolve-target` / HTTP `resolveTarget=true` 接入 workspace run；默认 dry / fixture run 仍保留原始 selector，避免无意触发 host discovery。App launch 已可通过显式 `--app-mode launch` 进入 Run 并写入 `launch_submitted`，且 `--observe-live` 可把同一次 run 升级为 `launch_observed`。动作执行目前覆盖显式 `--execute-actions` 的 bounded runtime tap 候选；业务 anchor 已支持 initial observation text checkpoint、live wait checkpoint、action 后二次 observation、action 后 live wait 验证、post-action business checkpoint 失败后的 bounded recovery loop、evidence-backed recovery proposal artifact，以及 replay failure 的 `TKReplayResult.recoveryProposal` repair envelope；runtime assert provider 已通过 `--business-ready-assert` / HTTP `businessReadyAssert=true` 串入 initial 与 post-action business checkpoint。
 - VLM screenshot grounding 已接入 workspace action path：当前在 step observation 有可读本地 screenshot artifact 时，会生成 coordinate contract、调用 VLM grounding、按步写 overlay/request/response/full grounding artifact，并用 VLM runtime-point 执行动作；grounding 失败会写 `vlm-failure.json`、failed action artifact 和 `vlm_grounding_failed` recovery proposal；OpenAI-compatible VLM 与本地 `mlx-swift-lm` helper 路径都能通过同一 workspace grounding request 接入。
 - Atlas 已能在 bounded recovery loop 中写多 screen/state/transition delta，例如 `screen_0000 -> screen_0001 -> screen_0002` 和 `transition_0000/0001`，投影到 run-local `atlas/app-map/`，并通过 `workspace merge-map` 合并到长期本地 app-map；长期 map 已跨 run 合并 screen `stateVariants`、coverage summary、path `sourceRuns` 与 health。`triton map health --map <dir.tritonmap> --json` 与 HTTP app-map health 已补 state / transition 级健康，输出 `stateHealth[]`、`transitionHealth[]`、`unhealthyStateRefs`、`unhealthyTransitionIds` 和 transition suite 覆盖状态。
-- 未做 Web Workbench 视图。
+- Web Workbench 首版已落地：`Web/src/workbenchModel.ts` 固化只读 DTO projection，`RunWorkbenchCard` 接入 AntD Card / Tabs / Descriptions / Table，默认 layout 从单 stream 变为 stream + workbench；新增 Web 测试覆盖 slot 支持、默认布局、run/provider/Atlas facts 和 VLM replay suggested command。浏览器截图验证受当前 sandbox 的 Playwright browser cache / Chrome headless 限制未生成产物，已通过 Web 全量 tests、build、AntD usage/lint 兜底。
 
 ### 测试策略
 

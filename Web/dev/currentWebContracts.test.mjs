@@ -89,8 +89,8 @@ test("keeps real portrait screenshots from collapsing inside the device stage gr
   assert.doesNotMatch(portraitRealFrameMobileRule, /height:\s*min\([^;]*100%/);
 });
 
-test("keeps the Web workbench scoped to stream and inspector slots", () => {
-  assert.deepEqual(SUPPORTED_CARD_TYPES, ["stream", "inspector"]);
+test("keeps the Web workbench scoped to read-only runtime slots", () => {
+  assert.deepEqual(SUPPORTED_CARD_TYPES, ["stream", "inspector", "workbench"]);
 
   const originalLocalStorage = globalThis.localStorage;
   globalThis.localStorage = {
@@ -101,7 +101,7 @@ test("keeps the Web workbench scoped to stream and inspector slots", () => {
         direction: "v",
         ratio: 0.5,
         first: { kind: "leaf", id: "2", card: "vlm" },
-        second: { kind: "leaf", id: "3", card: "inspector" },
+        second: { kind: "leaf", id: "3", card: "workbench" },
       });
     },
     setItem() {},
@@ -114,8 +114,26 @@ test("keeps the Web workbench scoped to stream and inspector slots", () => {
       direction: "v",
       ratio: 0.5,
       first: { kind: "leaf", id: "2", card: null },
-      second: { kind: "leaf", id: "3", card: "inspector" },
+      second: { kind: "leaf", id: "3", card: "workbench" },
     });
+  } finally {
+    globalThis.localStorage = originalLocalStorage;
+  }
+});
+
+test("opens new layouts with stream and run atlas workbench visible", () => {
+  const originalLocalStorage = globalThis.localStorage;
+  globalThis.localStorage = undefined;
+
+  try {
+    const root = loadInitialRoot();
+    assert.equal(root.kind, "split");
+    assert.equal(root.direction, "v");
+    assert.equal(root.ratio, 0.58);
+    assert.equal(root.first.kind, "leaf");
+    assert.equal(root.first.card, "stream");
+    assert.equal(root.second.kind, "leaf");
+    assert.equal(root.second.card, "workbench");
   } finally {
     globalThis.localStorage = originalLocalStorage;
   }

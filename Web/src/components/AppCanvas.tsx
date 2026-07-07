@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import {
   Columns,
+  Map,
   RotateCcw,
   Rows,
   Search,
@@ -9,6 +10,7 @@ import {
 } from "lucide-react";
 import type { CardType, LayoutNode } from "../layoutModel";
 import { InspectorCard } from "./InspectorCard";
+import { RunWorkbenchCard } from "./RunWorkbenchCard";
 import { StreamCard } from "./StreamCard";
 
 interface CardConfig {
@@ -22,12 +24,14 @@ interface CardConfig {
 const CARD_CONFIGS: CardConfig[] = [
   { type: "stream", name: "设备实时画面流", icon: <Tv size={16} />, description: "实时获取模拟器或真机画面并进行手势控制", color: "#1677ff" },
   { type: "inspector", name: "界面 AX 审查器", icon: <Search size={16} />, description: "树级审查、属性观察和无障碍辅助诊断工具", color: "#096dd9" },
+  { type: "workbench", name: "Run / Atlas Workbench", icon: <Map size={16} />, description: "只读查看 Run、Atlas path、VLM replay 和机器命令", color: "#13c2c2" },
 ];
 
 function renderCardContent(card: CardType, nodeId: string): React.ReactNode {
   switch (card) {
     case "stream": return <StreamCard nodeId={nodeId} />;
     case "inspector": return <InspectorCard nodeId={nodeId} />;
+    case "workbench": return <RunWorkbenchCard nodeId={nodeId} />;
   }
 }
 

@@ -214,6 +214,81 @@ export type BridgeCommandOutput = {
   stderr: string;
 };
 
+export type WorkspaceRunStatus = "running" | "paused" | "passed" | "failed" | "stopped";
+
+export type WorkspaceCommandSuggestion = {
+  key: string;
+  label: string;
+  command: string;
+};
+
+export type WorkspaceRunTargetSummary = {
+  platform: DevicePlatform;
+  scope: "simulator" | "emulator" | "real" | string;
+  name: string;
+  targetSelector: string;
+};
+
+export type WorkspaceAppSummary = {
+  name: string;
+  bundleId: string;
+};
+
+export type WorkspaceAppMapSummary = {
+  mapRef: string;
+  screenCount: number;
+  stateCount: number;
+  transitionCount: number;
+  pathCount: number;
+  coverageStatus: string;
+  pathIds: string[];
+};
+
+export type WorkspaceRunPauseSummary = {
+  reason: string;
+  evidenceRef: string;
+};
+
+export type WorkspaceRunProposalSummary = {
+  title: string;
+  summary: string;
+  evidenceRefs: string[];
+};
+
+export type WorkspaceRunWorkbenchSummary = {
+  runId: string;
+  status: WorkspaceRunStatus;
+  goal: string;
+  app: WorkspaceAppSummary;
+  target: WorkspaceRunTargetSummary;
+  llmEnabled: boolean;
+  vlmEnabled: boolean;
+  providersReady: boolean;
+  latestPause?: WorkspaceRunPauseSummary;
+  latestBootstrapProposal?: WorkspaceRunProposalSummary;
+  latestRecoveryProposal?: WorkspaceRunProposalSummary;
+  appMap: WorkspaceAppMapSummary;
+  suggestedCommands: WorkspaceCommandSuggestion[];
+};
+
+export type WorkspaceAppMapPathSummary = {
+  pathId: string;
+  name: string;
+  status: "candidate" | "verified" | "unhealthy" | "blocked";
+  confirmed: boolean;
+  replayable: boolean;
+  requiresVLM: boolean;
+  health: "healthy" | "warning" | "unhealthy";
+  sourceRuns: string[];
+  suggestedCommands: WorkspaceCommandSuggestion[];
+};
+
+export type WorkspaceWorkbenchDTO = {
+  run: WorkspaceRunWorkbenchSummary;
+  paths: WorkspaceAppMapPathSummary[];
+  evidenceRefs: string[];
+};
+
 export type IosSimulatorWebTarget = {
   id: string;
   udid: string;

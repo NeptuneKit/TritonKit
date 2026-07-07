@@ -1,4 +1,4 @@
-export const SUPPORTED_CARD_TYPES = ["stream", "inspector"] as const;
+export const SUPPORTED_CARD_TYPES = ["stream", "inspector", "workbench"] as const;
 
 export type CardType = (typeof SUPPORTED_CARD_TYPES)[number];
 
@@ -35,7 +35,7 @@ function setMaxId(root: LayoutNode) {
 }
 
 function isCardType(card: unknown): card is CardType {
-  return card === "stream" || card === "inspector";
+  return SUPPORTED_CARD_TYPES.includes(card as CardType);
 }
 
 function pruneUnsupportedCards(root: LayoutNode): LayoutNode {
@@ -50,7 +50,14 @@ function pruneUnsupportedCards(root: LayoutNode): LayoutNode {
 }
 
 export function makeInitialRoot(): LayoutNode {
-  return { kind: "leaf", id: nextId(), card: "stream" };
+  return {
+    kind: "split",
+    id: nextId(),
+    direction: "v",
+    ratio: 0.58,
+    first: { kind: "leaf", id: nextId(), card: "stream" },
+    second: { kind: "leaf", id: nextId(), card: "workbench" },
+  };
 }
 
 export function loadInitialRoot(): LayoutNode {

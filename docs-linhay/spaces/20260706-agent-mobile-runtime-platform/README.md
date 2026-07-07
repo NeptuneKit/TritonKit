@@ -103,7 +103,7 @@ Then TritonKit 生成可审查的 `.tritontest.yaml` seed，包含启动、截�
 
 Given CLI/HTTP 已有 session 和 evidence 状态
 When Web 新插槽打开 runtime workbench
-Then Web 只读取 DTO 并展示 stream / inspector / evidence / plan seed，不直接定义业务控制能力
+Then Web 只读取 DTO 并展示 stream / inspector / Run / Atlas / evidence / replay commands，不直接定义业务控制能力；首版 Web mock 默认打开 stream + Run / Atlas Workbench，并把 VLM path replay 的 `--allow-vlm` suggested command 明确展示给人类审查
 
 ### 场景 6：本机 Atlas map 生成
 
@@ -136,6 +136,7 @@ Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 g
 - `workspace run` 必须区分 `dry`、`attach`、`launch` App lifecycle mode；只有显式 `launch` 会提交 host app launch，launch 后 live observation 可证明 App 已可观察，但不得把启动或首帧观察等同于业务完成；业务完成首期由 `--business-ready-text`、wait、assert 或后续 action verify 明确证明。
 - 本机至少一个 target scope 完成端到端 smoke：target discovery -> session ready -> app launch -> screenshot -> action -> evidence export；后续按 capabilities 扩展到其他 scope。
 - CLI/HTTP 和 Web DTO 必须以 target/capability 为事实源，不要求调用方预先区分真机、模拟器或仿真器。
+- Web 新插槽首版仅消费只读 mock DTO：默认布局展示 stream + Run / Atlas Workbench，Workbench 显示 run facts、provider readiness、Atlas coverage、path health、source runs 和 suggested commands；其中 VLM-assisted path 必须显式标记 `requiresVLM` 并展示包含 `--allow-vlm` 的 replay command。
 - 本机 Atlas map 能从 evidence 生成可查询图谱，至少覆盖 screen、state、transition、coverage 和 evidence backlink；run-local `atlas/app-map/` 能通过 `workspace merge-map` 合并到长期本地 map，并跨 run 累积 screen `stateVariants`、coverage、path `sourceRuns` 与 health；`triton map health` / HTTP app-map health 必须暴露 `stateHealth[]`、`transitionHealth[]`、`unhealthyStateRefs` 和 `unhealthyTransitionIds`，供 agent 在探索或回放前判断缺口。
 - 长期 Atlas path 必须可直接指导回放：`triton map paths <dir.tritonmap> --json` 和 `triton map path show <dir.tritonmap> --path <pathId> --json` 返回的 path 含 `requiresVLM` 与 `suggestedCommands[]`；`suggestedCommands[]` 至少包含 `triton map export-flow ... --json` 和 `triton test run ... --evidence-dir ...`，当 path 来自 VLM-assisted evidence 或带 VLM health 时 run 命令自动包含 `--allow-vlm`。`triton map export-flow ... --json` 也必须返回 validate/run `suggestedCommands[]`，让 agent 从长期 map path 到 replay seed 的链路不需要猜输出路径或授权参数。
 - LLM/VLM 在 workspace run 中默认开启，默认用于流程稳定启动、偏航回正、理解、定位、Atlas 标注和探索决策；每次模型参与都能追溯 request / response / confidence / artifact，且所有动作经由 Triton CLI/HTTP。

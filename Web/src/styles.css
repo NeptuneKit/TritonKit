@@ -644,6 +644,175 @@ body {
   flex-direction: column;
 }
 
+/* ============ Run / Atlas Workbench ============ */
+.workbench-card {
+  flex: 1;
+  min-height: 0;
+}
+
+.workbench-shell {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  height: 100%;
+  flex-direction: column;
+}
+
+.workbench-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+  color: rgba(255,255,255,0.78);
+}
+
+.workbench-title {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.workbench-title strong {
+  color: rgba(255,255,255,0.88);
+  font-size: 12px;
+  line-height: 1.3;
+}
+
+.workbench-title span {
+  color: rgba(255,255,255,0.42);
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.workbench-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 8px 12px 12px;
+}
+
+.workbench-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.workbench-card .ant-tabs {
+  min-height: 0;
+}
+
+.workbench-card .ant-tabs-content-holder,
+.workbench-card .ant-tabs-content,
+.workbench-card .ant-tabs-tabpane {
+  min-height: 0;
+}
+
+.workbench-fact {
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  color: rgba(255,255,255,0.76);
+}
+
+.workbench-fact.is-success { color: rgba(129, 230, 137, 0.88); }
+.workbench-fact.is-warning { color: rgba(250, 173, 20, 0.9); }
+.workbench-fact.is-error { color: rgba(255, 120, 117, 0.92); }
+.workbench-fact.is-processing { color: rgba(105, 177, 255, 0.9); }
+
+.workbench-map-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+}
+
+.workbench-map-grid > div,
+.workbench-proposals > div,
+.workbench-command-row {
+  min-width: 0;
+  padding: 10px;
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 8px;
+  background: rgba(255,255,255,0.025);
+}
+
+.workbench-map-grid span,
+.workbench-proposals span,
+.workbench-muted {
+  color: rgba(255,255,255,0.44);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.workbench-map-grid strong,
+.workbench-proposals strong {
+  display: block;
+  margin-top: 4px;
+  color: rgba(255,255,255,0.8);
+  font-size: 12px;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.workbench-proposals {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 8px;
+}
+
+.workbench-proposals span {
+  display: block;
+  margin-top: 4px;
+  overflow-wrap: anywhere;
+}
+
+.workbench-path-table .ant-table-cell {
+  vertical-align: top;
+}
+
+.workbench-path-title {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.workbench-path-title strong {
+  color: rgba(255,255,255,0.82);
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.workbench-path-title span {
+  color: rgba(255,255,255,0.4);
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+.workbench-inline-code,
+.workbench-command-row code {
+  display: block;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+  color: rgba(255,255,255,0.78);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+.workbench-command-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.workbench-command-row {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
 /* Fix InspectorCard content wrapper */
 .card-content-wrapper {
   height: 100%;
