@@ -9,6 +9,13 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let app: String
     let goal: String
     let actionPolicy: String?
+    let appMode: String?
+    let bundleID: String?
+    let packageName: String?
+    let activity: String?
+    let bundle: String?
+    let ability: String?
+    let adb: String?
     let llmProvider: String?
     let vlmProvider: String?
     let dryModelFixture: Bool?
@@ -34,6 +41,13 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         app: String,
         goal: String,
         actionPolicy: String?,
+        appMode: String? = nil,
+        bundleID: String? = nil,
+        packageName: String? = nil,
+        activity: String? = nil,
+        bundle: String? = nil,
+        ability: String? = nil,
+        adb: String? = nil,
         llmProvider: String? = nil,
         vlmProvider: String? = nil,
         dryModelFixture: Bool? = nil,
@@ -58,6 +72,13 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.app = app
         self.goal = goal
         self.actionPolicy = actionPolicy
+        self.appMode = appMode
+        self.bundleID = bundleID
+        self.packageName = packageName
+        self.activity = activity
+        self.bundle = bundle
+        self.ability = ability
+        self.adb = adb
         self.llmProvider = llmProvider
         self.vlmProvider = vlmProvider
         self.dryModelFixture = dryModelFixture
@@ -84,6 +105,13 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case app
         case goal
         case actionPolicy
+        case appMode
+        case bundleID
+        case packageName
+        case activity
+        case bundle
+        case ability
+        case adb
         case llmProvider
         case vlmProvider
         case dryModelFixture
@@ -114,10 +142,15 @@ func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
 
 func handleWorkspaceHTTPRunAsync(
     body: Data,
-    observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider
+    observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
+    appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider
 ) async throws -> TKWorkspaceRunResponse {
     let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPRunRequest.self, from: body)
-    return try await runWorkspaceRunAsync(workspaceRunRequest(from: request), observeProvider: observeProvider)
+    return try await runWorkspaceRunAsync(
+        workspaceRunRequest(from: request),
+        observeProvider: observeProvider,
+        appLifecycleProvider: appLifecycleProvider
+    )
 }
 
 private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKWorkspaceRunRequest {
@@ -130,6 +163,13 @@ private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKW
         app: request.app,
         goal: request.goal,
         actionPolicy: request.actionPolicy ?? "explore",
+        appMode: request.appMode ?? "dry",
+        bundleID: request.bundleID,
+        packageName: request.packageName,
+        activity: request.activity,
+        bundle: request.bundle,
+        ability: request.ability,
+        adb: request.adb ?? "adb",
         dryModelFixture: request.dryModelFixture ?? false,
         llmProvider: request.llmProvider,
         vlmProvider: request.vlmProvider,

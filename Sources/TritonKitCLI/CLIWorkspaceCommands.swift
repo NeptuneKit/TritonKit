@@ -23,6 +23,17 @@ struct Workspace: AsyncParsableCommand {
         @Option(name: .customLong("runs-dir"), help: "Workspace runs directory") var runsDirectory: String = ".triton/runs"
         @Option(name: .customLong("run-id"), help: "Run id") var runID: String?
         @Option(name: .customLong("action-policy"), help: "Action policy") var actionPolicy: String = "explore"
+        @Option(name: .customLong("app-mode"), help: "App lifecycle mode: dry, attach, or launch") var appMode: String = "dry"
+        @Option(name: .customLong("bundle-id"), help: "iOS app bundle identifier; defaults to --app for iOS launch")
+        var bundleID: String?
+        @Option(name: .customLong("package-name"), help: "Android package name; defaults to --app for Android launch")
+        var packageName: String?
+        @Option(help: "Android activity for explicit component launch")
+        var activity: String?
+        @Option(help: "Harmony bundle name; defaults to --app for Harmony launch")
+        var bundle: String?
+        @Option(help: "Harmony ability name")
+        var ability: String?
         @Option(name: .customLong("max-steps"), help: "Maximum autonomous runner steps") var maxSteps: Int?
         @Option(name: .customLong("allowed-action"), help: "Allowed runner action. Repeat for multiple values")
         var allowedActions: [String] = []
@@ -46,6 +57,8 @@ struct Workspace: AsyncParsableCommand {
         var observePort = 19421
         @Option(help: "Path to hdc executable for Harmony live observation")
         var hdc = "hdc"
+        @Option(help: "Path to adb executable for Android app launch")
+        var adb = "adb"
         @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
         var llmProvider: String?
         @Option(name: .customLong("vlm-provider"), help: "VLM provider preflight id, for example mock")
@@ -67,6 +80,13 @@ struct Workspace: AsyncParsableCommand {
                     app: app,
                     goal: goal,
                     actionPolicy: actionPolicy,
+                    appMode: appMode,
+                    bundleID: bundleID,
+                    packageName: packageName,
+                    activity: activity,
+                    bundle: bundle,
+                    ability: ability,
+                    adb: adb,
                     dryModelFixture: dryModelFixture,
                     llmProvider: llmProvider,
                     vlmProvider: vlmProvider,

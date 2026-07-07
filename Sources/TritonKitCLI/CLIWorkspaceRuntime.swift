@@ -10,6 +10,13 @@ struct TKWorkspaceRunRequest {
     let app: String
     let goal: String
     let actionPolicy: String
+    let appMode: String
+    let bundleID: String?
+    let packageName: String?
+    let activity: String?
+    let bundle: String?
+    let ability: String?
+    let adb: String
     let dryModelFixture: Bool
     let llmProvider: String?
     let vlmProvider: String?
@@ -35,6 +42,13 @@ struct TKWorkspaceRunRequest {
         app: String,
         goal: String,
         actionPolicy: String,
+        appMode: String = "dry",
+        bundleID: String? = nil,
+        packageName: String? = nil,
+        activity: String? = nil,
+        bundle: String? = nil,
+        ability: String? = nil,
+        adb: String = "adb",
         dryModelFixture: Bool = false,
         llmProvider: String? = nil,
         vlmProvider: String? = nil,
@@ -59,6 +73,13 @@ struct TKWorkspaceRunRequest {
         self.app = app
         self.goal = goal
         self.actionPolicy = actionPolicy
+        self.appMode = appMode
+        self.bundleID = bundleID
+        self.packageName = packageName
+        self.activity = activity
+        self.bundle = bundle
+        self.ability = ability
+        self.adb = adb
         self.dryModelFixture = dryModelFixture
         self.llmProvider = llmProvider
         self.vlmProvider = vlmProvider
@@ -249,21 +270,25 @@ private struct TKWorkspaceFlowActionStep {
 }
 
 func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunResponse {
+    let appLifecycle = try workspaceAppLifecycleEvidence(for: request)
     let observationSeed = try workspaceObservationSeed(for: request)
-    return try runWorkspaceRun(request, observationSeed: observationSeed)
+    return try runWorkspaceRun(request, observationSeed: observationSeed, appLifecycle: appLifecycle)
 }
 
 func runWorkspaceRunAsync(
     _ request: TKWorkspaceRunRequest,
-    observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider
+    observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
+    appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider
 ) async throws -> TKWorkspaceRunResponse {
+    let appLifecycle = try await workspaceAppLifecycleEvidence(for: request, provider: appLifecycleProvider)
     let observationSeed = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
-    return try runWorkspaceRun(request, observationSeed: observationSeed)
+    return try runWorkspaceRun(request, observationSeed: observationSeed, appLifecycle: appLifecycle)
 }
 
 private func runWorkspaceRun(
     _ request: TKWorkspaceRunRequest,
-    observationSeed: TKWorkspaceObservationSeed
+    observationSeed: TKWorkspaceObservationSeed,
+    appLifecycle: TKWorkspaceAppLifecycleEvidence
 ) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
@@ -323,6 +348,7 @@ private func runWorkspaceRun(
         response,
         runDir: runDir,
         observation: observationSeed,
+        appLifecycle: appLifecycle,
         includeModelTransition: modelLoopEnabled && modelDecisionAllowed
     )
     if modelLoopEnabled {
@@ -338,6 +364,7 @@ private func runWorkspaceRun(
         runID: runID,
         providerEventPhase: providerPreflight.providerEventPhase,
         bootstrapPhase: providerPreflight.bootstrapPhase,
+        appLifecycle: appLifecycle,
         observation: observationSeed,
         finalState: finalState
     )
@@ -796,6 +823,7 @@ private func writeWorkspaceRunArtifacts(
     _ run: TKWorkspaceRunResponse,
     runDir: URL,
     observation: TKWorkspaceObservationSeed,
+    appLifecycle: TKWorkspaceAppLifecycleEvidence,
     includeModelTransition: Bool
 ) throws {
     try writeWorkspaceJSONArtifact([
@@ -823,11 +851,10 @@ private func writeWorkspaceRunArtifacts(
         providerArtifact["vlmProviderStatus"] = vlmProviderStatus
     }
     try writeWorkspaceJSONArtifact(providerArtifact, to: runDir.appendingPathComponent("evidence/model/provider-check.json"))
-    try writeWorkspaceJSONArtifact([
-        "app": run.app,
-        "ready": false,
-        "mode": "dry-skeleton",
-    ], to: runDir.appendingPathComponent("evidence/actions/app-ready.json"))
+    try writeWorkspaceJSONArtifact(
+        workspaceAppLifecycleArtifact(appLifecycle),
+        to: runDir.appendingPathComponent("evidence/actions/app-ready.json")
+    )
     try "workspace dry screenshot placeholder\n".write(
         to: runDir.appendingPathComponent("evidence/screenshots/0000.txt"),
         atomically: true,
@@ -970,6 +997,7 @@ private func workspaceSkeletonEvents(
     runID: String,
     providerEventPhase: String,
     bootstrapPhase: String,
+    appLifecycle: TKWorkspaceAppLifecycleEvidence,
     observation: TKWorkspaceObservationSeed,
     finalState: TKWorkspaceRunFinalState
 ) -> [TKTestRunEvent] {
@@ -978,7 +1006,7 @@ private func workspaceSkeletonEvents(
         .runStarted(runID: runID, timestamp: now),
         .init(type: .targetResolved, runID: runID, timestamp: now, ref: "evidence/model/target.json"),
         .init(type: .providerChecked, runID: runID, timestamp: now, ref: "evidence/model/provider-check.json", phase: providerEventPhase),
-        .init(type: .appReady, runID: runID, timestamp: now, ref: "evidence/actions/app-ready.json", phase: "dry-skeleton"),
+        .init(type: .appReady, runID: runID, timestamp: now, ref: "evidence/actions/app-ready.json", phase: appLifecycle.phase),
         .observationCaptured(
             runID: runID,
             stepIndex: 0,

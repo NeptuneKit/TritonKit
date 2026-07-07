@@ -156,6 +156,13 @@ struct WorkspaceRunTests {
         #expect(optionNames.contains("--observe-host"))
         #expect(optionNames.contains("--observe-port"))
         #expect(optionNames.contains("--hdc"))
+        #expect(optionNames.contains("--app-mode"))
+        #expect(optionNames.contains("--bundle-id"))
+        #expect(optionNames.contains("--package-name"))
+        #expect(optionNames.contains("--activity"))
+        #expect(optionNames.contains("--bundle"))
+        #expect(optionNames.contains("--ability"))
+        #expect(optionNames.contains("--adb"))
 
         let run = try #require(schema.subcommands.first { $0.name == "run" })
         #expect(run.optionalOptions.contains("--max-steps"))
@@ -168,6 +175,13 @@ struct WorkspaceRunTests {
         #expect(run.optionalOptions.contains("--observe-host"))
         #expect(run.optionalOptions.contains("--observe-port"))
         #expect(run.optionalOptions.contains("--hdc"))
+        #expect(run.optionalOptions.contains("--app-mode"))
+        #expect(run.optionalOptions.contains("--bundle-id"))
+        #expect(run.optionalOptions.contains("--package-name"))
+        #expect(run.optionalOptions.contains("--activity"))
+        #expect(run.optionalOptions.contains("--bundle"))
+        #expect(run.optionalOptions.contains("--ability"))
+        #expect(run.optionalOptions.contains("--adb"))
     }
 
     @Test("workspace run seeds atlas from observation fixture")
@@ -340,6 +354,103 @@ struct WorkspaceRunTests {
                 .appendingPathComponent("events.jsonl"))
         )
         #expect(parsed.events.first { $0.type == .observationCaptured }?.screenCandidate?.visibleTexts == ["Login", "Continue"])
+    }
+
+    @Test("workspace run records app launch evidence when enabled")
+    func workspaceRunRecordsAppLaunchEvidenceWhenEnabled() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        var lifecycleRequest: TKWorkspaceAppLifecycleRequest?
+
+        _ = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-app-launch",
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Launch app",
+                actionPolicy: "explore",
+                appMode: "launch",
+                bundleID: "com.example.demo"
+            ),
+            appLifecycleProvider: { request in
+                lifecycleRequest = request
+                return fakeAppLaunchEvidence(for: request)
+            }
+        )
+
+        #expect(lifecycleRequest?.mode == "launch")
+        #expect(lifecycleRequest?.platform == "ios")
+        #expect(lifecycleRequest?.scope == "simulator")
+        #expect(lifecycleRequest?.target == "booted")
+        #expect(lifecycleRequest?.app == "com.example.demo")
+        #expect(lifecycleRequest?.bundleID == "com.example.demo")
+
+        let runDir = root.appendingPathComponent("run-workspace-app-launch", isDirectory: true)
+        let appReady = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/actions/app-ready.json"))
+        ) as? [String: Any]
+        #expect(appReady?["mode"] as? String == "launch")
+        #expect(appReady?["phase"] as? String == "launch_submitted")
+        #expect(appReady?["action"] as? String == "app.launch")
+        #expect(appReady?["ready"] as? Bool == false)
+        #expect(appReady?["businessReady"] as? Bool == false)
+        #expect(appReady?["runtimeScope"] as? String == "host-simulator")
+        #expect(appReady?["sourceCommands"] as? [String] == [
+            "triton app launch --platform ios --device booted --bundle-id com.example.demo --json",
+        ])
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let appReadyEvent = try #require(parsed.events.first { $0.type == .appReady })
+        #expect(appReadyEvent.phase == "launch_submitted")
+        #expect(appReadyEvent.ref == "evidence/actions/app-ready.json")
+    }
+
+    @Test("workspace HTTP run records app launch evidence when enabled")
+    func workspaceHTTPRunRecordsAppLaunchEvidenceWhenEnabled() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        var lifecycleRequest: TKWorkspaceAppLifecycleRequest?
+
+        let body = try JSONEncoder().encode(TKWorkspaceHTTPRunRequest(
+            runsDir: root.path,
+            runID: "run-workspace-http-app-launch",
+            target: "emulator-5554",
+            platform: "android",
+            scope: "emulator",
+            app: "com.example.demo",
+            goal: "HTTP app launch",
+            actionPolicy: "explore",
+            appMode: "launch",
+            packageName: "com.example.demo",
+            activity: ".MainActivity"
+        ))
+        let run = try await handleWorkspaceHTTPRunAsync(body: body, appLifecycleProvider: { request in
+            lifecycleRequest = request
+            return fakeAppLaunchEvidence(for: request)
+        })
+
+        #expect(run.runID == "run-workspace-http-app-launch")
+        #expect(lifecycleRequest?.platform == "android")
+        #expect(lifecycleRequest?.scope == "emulator")
+        #expect(lifecycleRequest?.target == "emulator-5554")
+        #expect(lifecycleRequest?.packageName == "com.example.demo")
+        #expect(lifecycleRequest?.activity == ".MainActivity")
+
+        let appReady = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: root
+                .appendingPathComponent("run-workspace-http-app-launch", isDirectory: true)
+                .appendingPathComponent("evidence/actions/app-ready.json"))
+        ) as? [String: Any]
+        #expect(appReady?["mode"] as? String == "launch")
+        #expect(appReady?["runtimeScope"] as? String == "host-android")
+        #expect(appReady?["sourceCommands"] as? [String] == [
+            "triton app launch --platform android --device emulator-5554 --package-name com.example.demo --activity .MainActivity --json",
+        ])
     }
 
     @Test("workspace run records explicit VLM provider preflight")
@@ -1027,6 +1138,59 @@ struct WorkspaceRunTests {
             sourceCommands: ["triton sim ax --device \(request.target) --json"],
             note: "fake live observe"
         )
+    }
+
+    private func fakeAppLaunchEvidence(for request: TKWorkspaceAppLifecycleRequest) -> TKWorkspaceAppLifecycleEvidence {
+        let runtimeScope: String
+        switch request.platform {
+        case "android":
+            runtimeScope = "host-android"
+        case "harmony":
+            runtimeScope = "host-harmony"
+        default:
+            runtimeScope = "host-simulator"
+        }
+        return TKWorkspaceAppLifecycleEvidence(
+            mode: request.mode,
+            phase: "launch_submitted",
+            action: "app.launch",
+            app: request.app,
+            platform: request.platform,
+            scope: request.scope,
+            target: request.target,
+            runtimeScope: runtimeScope,
+            ready: false,
+            businessReady: false,
+            submitted: true,
+            sourceCommands: [fakeAppLaunchCommand(for: request)],
+            artifacts: [],
+            note: "fake app launch"
+        )
+    }
+
+    private func fakeAppLaunchCommand(for request: TKWorkspaceAppLifecycleRequest) -> String {
+        var parts = ["triton", "app", "launch"]
+        if let platform = request.platform {
+            parts += ["--platform", platform]
+        }
+        parts += ["--device", request.target]
+        if let bundleID = request.bundleID {
+            parts += ["--bundle-id", bundleID]
+        }
+        if let packageName = request.packageName {
+            parts += ["--package-name", packageName]
+        }
+        if let activity = request.activity {
+            parts += ["--activity", activity]
+        }
+        if let bundle = request.bundle {
+            parts += ["--bundle", bundle]
+        }
+        if let ability = request.ability {
+            parts += ["--ability", ability]
+        }
+        parts.append("--json")
+        return parts.joined(separator: " ")
     }
 
     private func runWorkspaceCLI(_ arguments: [String]) throws -> WorkspaceCLIRunResult {
