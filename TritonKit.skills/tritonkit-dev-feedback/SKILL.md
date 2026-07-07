@@ -22,7 +22,8 @@ Repository: `NeptuneKit/TritonKit`
 3. Pick the narrowest reference below and read only that file plus `references/issue-filing.md`.
 4. Reproduce or inspect locally when possible. Prefer machine-readable `triton ... --json` / `--jsonl` output.
 5. Redact private app, account, network, path, log, screenshot, and evidence data before creating public GitHub content.
-6. Create the issue with `gh issue create --repo NeptuneKit/TritonKit`, or report the auth/network blocker with the exact command and body.
+6. Run the public issue preflight in `references/issue-filing.md` immediately before any `gh issue create` or `gh issue edit`.
+7. Create or update the issue with `gh issue create --repo NeptuneKit/TritonKit` / `gh issue edit --repo NeptuneKit/TritonKit`, or report the auth/network blocker with the exact command and body file.
 
 ## Reference routing
 

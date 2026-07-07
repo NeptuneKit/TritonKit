@@ -29,3 +29,10 @@ TritonKit 仍处开发阶段，外部使用者在试用、接入、评估或自�
 - GitHub issue #118 已处理：`TritonKit.skills/tritonkit-dev-feedback/SKILL.md` 从 605 行收缩到 44 行，只保留原则、快速 workflow、reference route table 和全局脱敏边界。
 - 详细规则移动到 `references/`：`issue-filing.md`、`evidence-ios-runtime.md`、`evidence-host-devices.md`、`schema-contract-feedback.md`、`app-integration-ios.md`、`app-integration-harmony.md`。
 - `docs-linhay/scripts/verify-skill-package.sh` 新增门禁：打包后的顶层 `SKILL.md` 必须不超过 150 行，并且六个 routed references 必须进入 `tritonkit-skills.tar.gz`。
+
+## 2026-07-07 公开 issue 脱敏预检
+
+- GitHub issue #140 已处理：`references/issue-filing.md` 新增 `Public issue preflight`，要求任何 `gh issue create` / `gh issue edit` 前必须先把正文写入临时 Markdown 文件并执行本地扫描。
+- 预检要求命中私有 App / project 名、bundle ID、模拟器 target 或 UDID、本机用户名、绝对路径、内部 host、邮箱等信息时停止发布，先使用 `<private-app>`、`<bundle-id>`、`<simulator-target>` / `<ios-simulator-runtime-target>`、`<repo-path>` / `<local-path>`、`<user>` 等占位符脱敏。
+- raw logs、screenshots、evidence bundles、crash reports、`.xcresult`、`.tritonplan`、HDC/Simulator dumps 或 app archives 未确认脱敏前只能摘要，不直接粘贴或上传。
+- `docs-linhay/scripts/verify-skill-package.sh` 已补门禁：打包后的 `issue-filing.md` 必须包含 preflight 章节、`rg` scan 示例、占位符集合和最终 handoff 文案 `Redaction preflight passed:`。
