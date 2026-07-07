@@ -1,0 +1,26 @@
+llm:
+  enabled: true
+  provider: mock
+  providerStatus: ready
+vlm:
+  enabled: true
+  provider: mock
+  providerStatus: ready
+runner:
+  actionPolicy: explore
+  maxSteps: 20
+  allowedActions:
+    - tap
+    - swipe
+    - type
+    - wait
+    - verify
+    - stop
+  stopConditions:
+    - max_steps_reached
+    - provider_missing
+    - unsupported_capability
+    - policy_rejected
+    - model_unparseable
+provider:
+  status: ready

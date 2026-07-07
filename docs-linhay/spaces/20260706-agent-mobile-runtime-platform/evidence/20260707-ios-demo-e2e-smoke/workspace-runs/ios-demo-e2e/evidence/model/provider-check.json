@@ -1,0 +1,13 @@
+{
+  "allowRemoteLLM" : false,
+  "allowRemoteVLM" : false,
+  "llmEnabled" : true,
+  "llmProvider" : "mock",
+  "llmProviderStatus" : "ready",
+  "providersReady" : true,
+  "providerStatus" : "ready",
+  "vlmAllowModelDownload" : false,
+  "vlmEnabled" : true,
+  "vlmProvider" : "mock",
+  "vlmProviderStatus" : "ready"
+}

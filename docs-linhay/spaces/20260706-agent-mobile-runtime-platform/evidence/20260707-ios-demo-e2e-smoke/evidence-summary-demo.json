@@ -1,0 +1,128 @@
+{
+  "action" : "evidence.summary",
+  "artifactCount" : 9,
+  "artifacts" : [
+    {
+      "bytes" : 196,
+      "contentType" : "application\/json",
+      "kind" : "status",
+      "path" : "status.json"
+    },
+    {
+      "bytes" : 661,
+      "contentType" : "application\/json",
+      "kind" : "list",
+      "path" : "targets.json"
+    },
+    {
+      "bytes" : 195,
+      "contentType" : "application\/json",
+      "kind" : "version",
+      "path" : "version.json"
+    },
+    {
+      "bytes" : 1465729,
+      "contentType" : "application\/json",
+      "kind" : "hierarchy",
+      "path" : "hierarchy.json"
+    },
+    {
+      "bytes" : 18008,
+      "contentType" : "application\/json",
+      "kind" : "ax",
+      "path" : "ax.json"
+    },
+    {
+      "bytes" : 38737,
+      "contentType" : "image\/png",
+      "kind" : "screenshot",
+      "path" : "screenshot.png"
+    },
+    {
+      "bytes" : 180,
+      "contentType" : "application\/json",
+      "kind" : "screenshot-metadata",
+      "path" : "screenshot.json"
+    },
+    {
+      "bytes" : 220,
+      "contentType" : "application\/json",
+      "kind" : "geometry",
+      "path" : "geometry.json"
+    },
+    {
+      "bytes" : 1631601,
+      "contentType" : "application\/json",
+      "kind" : "archive",
+      "path" : "archive.json"
+    }
+  ],
+  "cli" : {
+    "schemaVersion" : 1,
+    "version" : "0.1.0-dev"
+  },
+  "createdAt" : "2026-07-07T16:02:59Z",
+  "input" : "docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/demo.tritonevidence",
+  "name" : "ios-demo-e2e-smoke",
+  "note" : "iOS Demo end-to-end smoke after Primary action reached Complex harness: 1",
+  "ok" : true,
+  "output" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/demo.tritonevidence",
+  "primaryArtifact" : {
+    "bytes" : 38737,
+    "contentType" : "image\/png",
+    "kind" : "screenshot",
+    "path" : "screenshot.png"
+  },
+  "primaryArtifacts" : [
+    {
+      "bytes" : 38737,
+      "contentType" : "image\/png",
+      "kind" : "screenshot",
+      "path" : "screenshot.png"
+    },
+    {
+      "bytes" : 1631601,
+      "contentType" : "application\/json",
+      "kind" : "archive",
+      "path" : "archive.json"
+    },
+    {
+      "bytes" : 220,
+      "contentType" : "application\/json",
+      "kind" : "geometry",
+      "path" : "geometry.json"
+    },
+    {
+      "bytes" : 18008,
+      "contentType" : "application\/json",
+      "kind" : "ax",
+      "path" : "ax.json"
+    },
+    {
+      "bytes" : 1465729,
+      "contentType" : "application\/json",
+      "kind" : "hierarchy",
+      "path" : "hierarchy.json"
+    }
+  ],
+  "profile" : "ios-private",
+  "sensitiveArtifactCount" : 5,
+  "skipped" : [
+
+  ],
+  "skippedCount" : 0,
+  "suggestedCommands" : [
+    "triton evidence redact 'docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/demo.tritonevidence' --profile ios-private --output '\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/demo.tritonevidence\/redacted' --json"
+  ],
+  "target" : {
+    "appName" : "TritonKitDemo",
+    "bundleIdentifier" : "com.neptunekit.tritonkit.demo",
+    "connected" : true,
+    "deviceDescription" : "iPhone",
+    "hierarchyCacheState" : "active",
+    "id" : "triton:ios-simulator:83407554-53AB-45B4-A0C1-D59F34E26A67\/app:com.neptunekit.tritonkit.demo",
+    "identityState" : "current",
+    "osDescription" : "26.5",
+    "targetConnectionState" : "connected"
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "app" : {
+    "bundleId" : "com.neptunekit.tritonkit.demo",
+    "platform" : "ios"
+  },
+  "coverage" : {
+    "confirmedPathCount" : 0,
+    "failCount" : 0,
+    "flakeCount" : 0,
+    "observedRuns" : 1,
+    "passCount" : 1,
+    "pathCount" : 0,
+    "replayablePathCount" : 0,
+    "screenCount" : 1,
+    "stateCount" : 1,
+    "suiteCount" : 0,
+    "transitionCount" : 0
+  },
+  "kind" : "triton.app-map",
+  "pathCount" : 0,
+  "schemaVersion" : 1,
+  "screenCount" : 1,
+  "suiteCount" : 0,
+  "transitionCount" : 0,
+  "updatedAt" : "2026-07-07T16:03:38.815Z"
+}

@@ -1,0 +1,31 @@
+{
+  "action" : "app.launch",
+  "app" : "com.neptunekit.tritonkit.demo",
+  "artifacts" : [
+
+  ],
+  "businessReady" : false,
+  "kind" : "triton.workspace.app-lifecycle",
+  "mode" : "launch",
+  "note" : "Host action was submitted for app.launch; hostAction.ok=true is not business readiness. Verify with `triton status`, wait\/assert, smoke, or evidence. Workspace app launch only proves submission; follow with observe\/wait\/verify evidence.",
+  "observation" : {
+    "ax" : "evidence\/observations\/0000.json",
+    "hierarchy" : "evidence\/observations\/0000.json",
+    "screenshot" : "evidence\/screenshots\/0000.txt",
+    "visibleTextCount" : 39
+  },
+  "observationRef" : "events.jsonl#observation.captured",
+  "observedAfterLifecycle" : true,
+  "phase" : "launch_observed",
+  "platform" : "ios",
+  "ready" : true,
+  "runtimeScope" : "host-simulator",
+  "schemaVersion" : 1,
+  "scope" : "simulator",
+  "sourceCommands" : [
+    "triton app launch --platform ios --device 83407554-53AB-45B4-A0C1-D59F34E26A67 --scope simulator --bundle-id com.neptunekit.tritonkit.demo --json",
+    "xcrun simctl launch 83407554-53AB-45B4-A0C1-D59F34E26A67 com.neptunekit.tritonkit.demo"
+  ],
+  "submitted" : true,
+  "target" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67\/app:com.neptunekit.tritonkit.demo"
+}

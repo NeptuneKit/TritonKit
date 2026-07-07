@@ -1,0 +1,114 @@
+{
+  "appMap" : {
+    "mapRef" : "atlas\/app-map\/app-map.json",
+    "pathCount" : 0,
+    "pathIds" : [
+
+    ],
+    "screenCount" : 1,
+    "transitionCount" : 0
+  },
+  "atlas" : {
+    "atlasRef" : "atlas\/atlas.json",
+    "coverageStatus" : "seeded",
+    "screenCount" : 1,
+    "stateCount" : 1,
+    "transitionCount" : 0
+  },
+  "kind" : "triton.workspace.inspect",
+  "latestBootstrap" : {
+    "phase" : "provider_ready",
+    "ref" : "evidence\/model\/bootstrap-000.json",
+    "runId" : "ios-demo-e2e",
+    "schemaVersion" : 1,
+    "stepIndex" : 0,
+    "timestamp" : "2026-07-07T16:03:38Z",
+    "type" : "flow.bootstrap.checked"
+  },
+  "run" : {
+    "ai" : {
+      "actionPolicy" : "explore",
+      "llmEnabled" : true,
+      "llmProvider" : "mock",
+      "llmProviderStatus" : "ready",
+      "providerStatus" : "ready",
+      "providersReady" : true,
+      "vlmEnabled" : true,
+      "vlmProvider" : "mock",
+      "vlmProviderStatus" : "ready"
+    },
+    "app" : "com.neptunekit.tritonkit.demo",
+    "business" : {
+      "check" : "runtime_assert",
+      "phase" : "assertion_passed",
+      "query" : "Primary",
+      "ready" : true,
+      "ref" : "evidence\/business\/ready.json",
+      "status" : "passed"
+    },
+    "goal" : "Verify iOS Demo runtime and Atlas map",
+    "kind" : "triton.workspace.run",
+    "nextActions" : [
+
+    ],
+    "paths" : {
+      "events" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/workspace-runs\/ios-demo-e2e\/events.jsonl",
+      "report" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/workspace-runs\/ios-demo-e2e\/report.json",
+      "runDir" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/workspace-runs\/ios-demo-e2e"
+    },
+    "runId" : "ios-demo-e2e",
+    "runner" : {
+      "actionPolicy" : "explore",
+      "allowedActions" : [
+        "tap",
+        "swipe",
+        "type",
+        "wait",
+        "verify",
+        "stop"
+      ],
+      "maxSteps" : 20,
+      "stopConditions" : [
+        "max_steps_reached",
+        "provider_missing",
+        "unsupported_capability",
+        "policy_rejected",
+        "model_unparseable"
+      ]
+    },
+    "schemaVersion" : 1,
+    "status" : "passed",
+    "target" : {
+      "capabilities" : [
+        "screenshot",
+        "hierarchy",
+        "input"
+      ],
+      "hostTarget" : "83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "id" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "kind" : "simulator",
+      "name" : "iPhone 17 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "resolved" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "selector" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "source" : "simctl",
+      "sourceCommands" : [
+        "triton target resolve sim:83407554-53AB-45B4-A0C1-D59F34E26A67 --platform ios --scope simulator --json"
+      ],
+      "state" : "Booted"
+    }
+  },
+  "summary" : {
+    "artifactCount" : 0,
+    "assertionCount" : 0,
+    "eventCount" : 9,
+    "failureCount" : 0,
+    "observationCount" : 1,
+    "runID" : "ios-demo-e2e",
+    "status" : "passed",
+    "stepCount" : 2
+  }
+}

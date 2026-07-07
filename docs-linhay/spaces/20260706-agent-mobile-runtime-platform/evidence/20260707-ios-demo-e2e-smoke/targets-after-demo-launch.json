@@ -1,0 +1,20 @@
+{
+  "targets" : [
+    {
+      "activeHierarchyAvailable" : true,
+      "appName" : "TritonKitDemo",
+      "bundleIdentifier" : "com.neptunekit.tritonkit.demo",
+      "cachedHierarchyAvailable" : true,
+      "connected" : true,
+      "deviceDescription" : "iPhone",
+      "hierarchyCacheState" : "active",
+      "id" : "triton:ios-simulator:83407554-53AB-45B4-A0C1-D59F34E26A67\/app:com.neptunekit.tritonkit.demo",
+      "identityState" : "current",
+      "latestHierarchyAvailable" : true,
+      "osDescription" : "26.5",
+      "platform" : "ios",
+      "simulatorUDID" : "83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "transport" : "local-websocket"
+    }
+  ]
+}

@@ -1,0 +1,530 @@
+{
+  "afterRecoverySteps" : [
+    {
+      "argv" : [
+        "triton",
+        "target",
+        "list",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421",
+        "--json"
+      ],
+      "category" : "prepare-target",
+      "command" : "triton target list --host 127.0.0.1 --port 19421 --json",
+      "expected" : "Targets include platform, readiness, and default candidate",
+      "expectedArtifacts" : [
+        "stdout-json",
+        "target-resolution"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "target-list",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "List available host targets",
+      "when" : "before selecting a device or emulator",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "runtime",
+        "smoke",
+        "target"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "target",
+        "resolve",
+        "booted",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421",
+        "--json"
+      ],
+      "category" : "prepare-target",
+      "command" : "triton target resolve booted --host 127.0.0.1 --port 19421 --json",
+      "expected" : "A single target is selected or ambiguity is explained",
+      "expectedArtifacts" : [
+        "stdout-json",
+        "target-resolution"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "target-resolve",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Resolve target selector",
+      "when" : "after target list returns candidates",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "runtime",
+        "smoke",
+        "target"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "target",
+        "use",
+        "booted",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421",
+        "--json"
+      ],
+      "category" : "prepare-target",
+      "command" : "triton target use booted --host 127.0.0.1 --port 19421 --json",
+      "expected" : "Workspace defaults contain the selected target",
+      "expectedArtifacts" : [
+        "stdout-json",
+        "target-resolution"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "target-use",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Persist current target",
+      "when" : "the resolved target will be reused by later commands",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "runtime",
+        "smoke",
+        "target"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "target",
+        "wait-ready",
+        "booted",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421",
+        "--json"
+      ],
+      "category" : "prepare-target",
+      "command" : "triton target wait-ready booted --host 127.0.0.1 --port 19421 --json",
+      "expected" : "Target reports ready or returns device_not_ready with source command",
+      "expectedArtifacts" : [
+        "stdout-json",
+        "target-resolution"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "target-wait-ready",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Wait for target readiness",
+      "when" : "before launching or opening app URLs",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "runtime",
+        "smoke",
+        "target"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "smoke",
+        "ios",
+        "--device",
+        "booted",
+        "--bundle-id",
+        "com.neptunekit.tritonkit.demo",
+        "--open-url",
+        "<url>",
+        "--wait-text",
+        "TritonKit Demo",
+        "--assert-text",
+        "TritonKit Demo",
+        "--evidence",
+        "docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/demo.tritonevidence",
+        "--json"
+      ],
+      "category" : "smoke",
+      "command" : "triton smoke ios --device booted --bundle-id com.neptunekit.tritonkit.demo --open-url <url> --wait-text 'TritonKit Demo' --assert-text 'TritonKit Demo' --evidence docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/demo.tritonevidence --json",
+      "expected" : "Smoke summary proves host action, runtime readiness, assertion, screenshot, and evidence",
+      "expectedArtifacts" : [
+        "stdout-json",
+        "smoke-summary",
+        "evidence-bundle"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "ios-smoke",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available",
+        "server.reachable",
+        "target.ready",
+        "runtime.connected"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : true,
+      "requiresTarget" : true,
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable",
+        "target.unavailable",
+        "step.failed"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Run iOS smoke workflow",
+      "when" : "target is resolved and host app can be launched",
+      "workflowCategories" : [
+        "app",
+        "assert",
+        "evidence",
+        "smoke",
+        "target"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "evidence",
+        "summary",
+        "docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/demo.tritonevidence",
+        "--json"
+      ],
+      "category" : "archive",
+      "command" : "triton evidence summary docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/demo.tritonevidence --json",
+      "expected" : "Summary identifies the key artifacts and redaction state",
+      "expectedArtifacts" : [
+        "stdout-json",
+        "evidence-bundle"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "evidence-summary",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed",
+        "artifact.write-failed"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Summarize evidence bundle",
+      "when" : "before handoff or issue filing",
+      "workflowCategories" : [
+        "evidence",
+        "replay"
+      ]
+    }
+  ],
+  "connected" : false,
+  "error" : {
+    "code" : "server_unavailable",
+    "endpoint" : "http:\/\/127.0.0.1:19421\/status",
+    "hint" : "Run `triton serve --host 127.0.0.1 --port 19421` and connect the iOS app",
+    "message" : "Could not connect to the server.",
+    "nextAction" : {
+      "args" : [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421"
+      ],
+      "category" : "diagnose",
+      "command" : "serve",
+      "finalEvents" : [
+
+      ],
+      "readyEvents" : [
+
+      ],
+      "requiresLongRunningProcess" : true,
+      "terminationSignals" : [
+        "sigint",
+        "sigterm"
+      ]
+    }
+  },
+  "goal" : "ios-smoke",
+  "mode" : "bootstrap",
+  "nextStep" : "start-server",
+  "nextWorkflows" : [
+    "app",
+    "assert",
+    "evidence",
+    "smoke",
+    "target"
+  ],
+  "ok" : false,
+  "primaryExpectedArtifact" : "stdout-json",
+  "primaryNextAction" : {
+    "args" : [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "19421"
+    ],
+    "category" : "diagnose",
+    "command" : "serve",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : true,
+    "terminationSignals" : [
+      "sigint",
+      "sigterm"
+    ]
+  },
+  "primaryNextActionSource" : "next-step-step",
+  "primaryWorkflowCategory" : "app",
+  "runtime" : "unknown",
+  "serverReachable" : false,
+  "steps" : [
+    {
+      "argv" : [
+        "triton",
+        "serve",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421"
+      ],
+      "category" : "diagnose",
+      "command" : "triton serve --host 127.0.0.1 --port 19421",
+      "expected" : "Server listens on 127.0.0.1:19421",
+      "expectedArtifacts" : [
+        "stdout-json"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "start-server",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available"
+      ],
+      "requiresLongRunningProcess" : true,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed"
+      ],
+      "terminationSignals" : [
+        "sigint",
+        "sigterm"
+      ],
+      "title" : "Start Triton server",
+      "when" : "serverReachable == false",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "replay",
+        "route",
+        "smoke",
+        "webview-check"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "xcode",
+        "run",
+        "--json"
+      ],
+      "category" : "project",
+      "command" : "triton xcode run --json",
+      "expected" : "App launches with embedded TritonKit runtime and triton status reports connected: true",
+      "expectedArtifacts" : [
+        "stdout-json",
+        "xcode-log"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "connect-target",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available",
+        "server.reachable"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : true,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Launch an app with embedded TritonKit runtime",
+      "when" : "serverReachable == true && connected == false",
+      "workflowCategories" : [
+        "app",
+        "evidence",
+        "project",
+        "runtime",
+        "target",
+        "xcode"
+      ]
+    },
+    {
+      "argv" : [
+        "triton",
+        "doctor",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421",
+        "--format",
+        "json"
+      ],
+      "category" : "diagnose",
+      "command" : "triton doctor --host 127.0.0.1 --port 19421 --format json",
+      "expected" : "ok=true, serverReachable=true, connected=true",
+      "expectedArtifacts" : [
+        "stdout-json"
+      ],
+      "finalEvents" : [
+
+      ],
+      "id" : "diagnose",
+      "readyEvents" : [
+
+      ],
+      "requires" : [
+        "cli.available",
+        "server.reachable"
+      ],
+      "requiresLongRunningProcess" : false,
+      "requiresServer" : true,
+      "requiresTarget" : false,
+      "stopConditions" : [
+        "command.failed",
+        "server.unavailable"
+      ],
+      "terminationSignals" : [
+
+      ],
+      "title" : "Re-check machine-readable runtime state",
+      "when" : "after starting server and target",
+      "workflowCategories" : [
+        "action",
+        "app",
+        "assert",
+        "evidence",
+        "observe",
+        "project",
+        "replay",
+        "route",
+        "runtime",
+        "smoke",
+        "target",
+        "webview-check",
+        "xcode"
+      ]
+    }
+  ],
+  "surface" : "plan"
+}

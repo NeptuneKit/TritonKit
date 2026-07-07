@@ -1,0 +1,91 @@
+{
+  "assertion" : {
+    "condition" : "text-exists",
+    "count" : 2,
+    "hierarchyCacheState" : "active",
+    "matches" : [
+      {
+        "className" : "UIButton",
+        "frame" : {
+          "height" : 30,
+          "width" : 53,
+          "x" : 163,
+          "y" : 351.33333333333331
+        },
+        "identifier" : "ComplexHarnessPrimary",
+        "label" : "Primary",
+        "role" : "button",
+        "source" : "label",
+        "targetOID" : 132,
+        "text" : "Primary",
+        "title" : "Primary",
+        "viewOID" : 132
+      },
+      {
+        "className" : "UIButton",
+        "frame" : {
+          "height" : 30,
+          "width" : 53,
+          "x" : 163,
+          "y" : 351.33333333333331
+        },
+        "identifier" : "ComplexHarnessPrimary",
+        "label" : "Primary",
+        "role" : "button",
+        "source" : "title",
+        "targetOID" : 132,
+        "text" : "Primary",
+        "title" : "Primary",
+        "viewOID" : 132
+      }
+    ],
+    "ok" : true,
+    "query" : "Primary",
+    "sample" : [
+      "Host",
+      "linhey.local",
+      "Port",
+      "19421",
+      "Overview",
+      "HarnessScenarioPicker",
+      "Complex harness: 1",
+      "ComplexHarnessStatus",
+      "Primary",
+      "ComplexHarnessPrimary",
+      "Secondary",
+      "ComplexHarnessSecondary",
+      "Enabled",
+      "0",
+      "ComplexHarnessSwitch",
+      "mode=Inspect progress=50 count=2 switch=off text=-",
+      "ComplexHarnessSummary",
+      "Mode",
+      "Inspect",
+      "ComplexHarnessMode"
+    ],
+    "targetConnectionState" : "connected"
+  },
+  "businessReady" : true,
+  "check" : "runtime_assert",
+  "evidenceRefs" : [
+    "events.jsonl#observation.captured",
+    "events.jsonl#app.ready",
+    "evidence\/actions\/app-ready.json",
+    "evidence\/observations\/0000.json",
+    "evidence\/screenshots\/0000.txt"
+  ],
+  "kind" : "triton.workspace.business-ready",
+  "match" : "exact",
+  "matchedTexts" : [
+    "Primary",
+    "Primary"
+  ],
+  "observationRef" : "events.jsonl#observation.captured",
+  "phase" : "assertion_passed",
+  "query" : "Primary",
+  "ready" : true,
+  "schemaVersion" : 1,
+  "source" : "runtime.assert",
+  "stage" : "initial",
+  "status" : "passed"
+}

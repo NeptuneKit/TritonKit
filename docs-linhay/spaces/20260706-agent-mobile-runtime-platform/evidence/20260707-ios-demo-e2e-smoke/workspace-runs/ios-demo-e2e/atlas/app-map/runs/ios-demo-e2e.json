@@ -1,0 +1,10 @@
+{
+  "evidenceDir" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260706-agent-mobile-runtime-platform\/evidence\/20260707-ios-demo-e2e-smoke\/workspace-runs\/ios-demo-e2e",
+  "kind" : "triton.app-map.run",
+  "pathCount" : 0,
+  "runId" : "ios-demo-e2e",
+  "schemaVersion" : 1,
+  "screenCount" : 1,
+  "transitionCount" : 0,
+  "verdict" : "success"
+}

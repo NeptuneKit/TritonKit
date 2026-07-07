@@ -1,0 +1,91 @@
+{
+  "app" : "com.neptunekit.tritonkit.demo",
+  "coverage" : {
+    "screenCount" : 1,
+    "stateCount" : 1,
+    "status" : "seeded",
+    "transitionCount" : 0
+  },
+  "kind" : "triton.workspace.atlas",
+  "runId" : "ios-demo-e2e",
+  "schemaVersion" : 1,
+  "screens" : [
+    {
+      "dominantTexts" : [
+        "TritonKitDemo",
+        "TritonKit Demo",
+        "00:03:38.598",
+        "Status: Connected",
+        "linhey.local",
+        "19421",
+        "Connect",
+        "Disconnect",
+        "Complex harness: 1",
+        "Primary",
+        "Secondary",
+        "Enabled",
+        "mode=Inspect progress=50 count=2 switch=off text=-",
+        "Mode",
+        "Progress",
+        "50%",
+        "2",
+        "Count, Decrement",
+        "Count, Increment",
+        "Triton type target",
+        "Notes",
+        "item 1",
+        "item 2",
+        "item 3",
+        "item 4",
+        "item 5",
+        "item 6",
+        "item 7",
+        "item 8",
+        "item 9",
+        "item 10",
+        "item 11",
+        "item 12",
+        "item 13",
+        "item 14",
+        "item 15",
+        "item 16",
+        "item 17",
+        "item 18"
+      ],
+      "evidenceRefs" : [
+        "events.jsonl#observation.captured",
+        "evidence\/observations\/0000.json",
+        "evidence\/screenshots\/0000.txt",
+        "evidence\/observations\/0000.json",
+        "evidence\/observations\/0000.json"
+      ],
+      "screenId" : "screen_0000",
+      "semanticTags" : [
+
+      ],
+      "signature" : "d86d95defc57ec8178cd33815549950947fefeb3a850d11fa7bde8781b3f414d:b3c73d555dff3e54d47bd589e39cd496b933c01d652a9ad89fcc88b2096c0562:41a522305dcd63d294b970e615ec5f57748b6a898f01558ed6755fe26a83031f",
+      "stateId" : "state_0000"
+    }
+  ],
+  "source" : {
+    "events" : "events.jsonl",
+    "mode" : "workspace-run-seed"
+  },
+  "states" : [
+    {
+      "evidenceRefs" : [
+        "events.jsonl#observation.captured",
+        "evidence\/observations\/0000.json",
+        "evidence\/screenshots\/0000.txt",
+        "evidence\/observations\/0000.json",
+        "evidence\/observations\/0000.json"
+      ],
+      "phase" : "initial",
+      "screenId" : "screen_0000",
+      "stateId" : "state_0000"
+    }
+  ],
+  "transitions" : [
+
+  ]
+}

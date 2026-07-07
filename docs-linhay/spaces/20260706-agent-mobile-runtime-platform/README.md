@@ -165,3 +165,10 @@ Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 g
 - 脚本新增 target identity preflight：默认通过 `observe current` 要求 bundle 匹配 `^overloaded\.cn(\.debug)?$`，并把 `status-before.json` / `observe-target.json` 写入 out dir；当前连到 `cn.dxy.iDxyer` 时脚本会以 exit 2 早失败，不再继续执行错误 App 上的业务断言。
 - 本机 simulator `1B360513-22E7-46DB-A942-198EE522C6DC` 上确认已安装 `overloaded.cn.debug`；`triton app launch ... --bundle-id overloaded.cn.debug` host action 返回 ok 且 PID 存在，但停止 DXY 后重启 Overloaded，server target list 变为空，`observe` 明确返回 `target_not_found`。因此本轮不能宣称 Overloaded 端到端业务 smoke 已通过；后续需要先修正或重装 Overloaded Debug bootstrap，使 embedded runtime 能注册回 `127.0.0.1:19421`，再复跑安全 smoke。
 - 证据目录：`evidence/20260707-overloaded-smoke/README.md`。
+
+## 2026-07-07 iOS Demo 端到端 smoke baseline
+
+- 新增可复跑脚本 `docs-linhay/scripts/verify-ios-demo-e2e-smoke.sh`，覆盖 server readiness、target discovery、`triton xcode run` build/install/launch、runtime target ready、screenshot、`act tap Primary`、`wait "Complex harness: 1"`、`evidence capture` 和 `workspace run` Atlas/app-map 生成。
+- 本机 `iPhone 17 Pro / iOS 26.5` simulator `83407554-53AB-45B4-A0C1-D59F34E26A67` 已完成真实 smoke：runtime target 为 `triton:ios-simulator:83407554-53AB-45B4-A0C1-D59F34E26A67/app:com.neptunekit.tritonkit.demo`，`connected=true`，`hierarchyCacheState=active`；action 后 `Complex harness: 1` wait 通过；`demo.tritonevidence` 导出 9 个 artifact；`workspace run` 返回 `status=passed` 并生成 run-local app-map。
+- 这满足本 space 首个本机 target scope 的端到端 baseline；Overloaded 仍作为外部真实 App 回归问题继续跟进，不影响 iOS Demo 这条可控产品验收链。
+- 证据目录：`evidence/20260707-ios-demo-e2e-smoke/README.md`。

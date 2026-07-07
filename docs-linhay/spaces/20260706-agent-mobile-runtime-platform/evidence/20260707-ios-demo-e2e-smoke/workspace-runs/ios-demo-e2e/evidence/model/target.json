@@ -1,0 +1,22 @@
+{
+  "capabilities" : [
+    "screenshot",
+    "hierarchy",
+    "input"
+  ],
+  "hostTarget" : "83407554-53AB-45B4-A0C1-D59F34E26A67",
+  "kind" : "simulator",
+  "name" : "iPhone 17 Pro",
+  "platform" : "ios",
+  "ready" : true,
+  "resolved" : true,
+  "runtime" : "iOS 26.5",
+  "scope" : "simulator",
+  "selector" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+  "source" : "simctl",
+  "sourceCommands" : [
+    "triton target resolve sim:83407554-53AB-45B4-A0C1-D59F34E26A67 --platform ios --scope simulator --json"
+  ],
+  "state" : "Booted",
+  "target" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67"
+}

@@ -1,0 +1,29 @@
+{
+  "ok" : true,
+  "selection" : {
+    "filters" : {
+      "platform" : "ios",
+      "ready" : false,
+      "scope" : "simulator"
+    },
+    "platform" : "ios",
+    "selector" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+    "source" : "explicit",
+    "target" : {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "kind" : "simulator",
+      "name" : "iPhone 17 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "83407554-53AB-45B4-A0C1-D59F34E26A67"
+    }
+  }
+}

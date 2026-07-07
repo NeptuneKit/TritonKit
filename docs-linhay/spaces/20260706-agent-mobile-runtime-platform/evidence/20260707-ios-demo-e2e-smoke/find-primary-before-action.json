@@ -1,0 +1,26 @@
+{
+  "className" : "UIButton",
+  "frame" : {
+    "height" : 30,
+    "width" : 53,
+    "x" : 165.33333333333334,
+    "y" : 351.3333333333333
+  },
+  "identifier" : "ComplexHarnessPrimary",
+  "label" : "Primary",
+  "matchCount" : 2,
+  "matchIndex" : 1,
+  "query" : "Primary",
+  "request" : {
+    "activationStrategy" : "smart",
+    "matchedClassName" : "UIButton",
+    "matchedOID" : 132,
+    "targetOID" : 132,
+    "type" : "tap"
+  },
+  "role" : "button",
+  "source" : "ax",
+  "strategy" : "smart",
+  "targetOID" : 132,
+  "viewOID" : 132
+}
