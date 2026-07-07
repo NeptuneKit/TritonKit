@@ -35,6 +35,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let businessReadyLiveWait: Bool?
     let businessReadyTimeout: Double?
     let businessReadyInterval: Double?
+    let executeActions: Bool?
 
     init(
         runsDir: String?,
@@ -70,7 +71,8 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         businessReadyText: String? = nil,
         businessReadyLiveWait: Bool? = nil,
         businessReadyTimeout: Double? = nil,
-        businessReadyInterval: Double? = nil
+        businessReadyInterval: Double? = nil,
+        executeActions: Bool? = nil
     ) {
         self.runsDir = runsDir
         self.runID = runID
@@ -106,6 +108,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.businessReadyLiveWait = businessReadyLiveWait
         self.businessReadyTimeout = businessReadyTimeout
         self.businessReadyInterval = businessReadyInterval
+        self.executeActions = executeActions
     }
 
     enum CodingKeys: String, CodingKey {
@@ -143,6 +146,7 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case businessReadyLiveWait
         case businessReadyTimeout
         case businessReadyInterval
+        case executeActions
     }
 }
 
@@ -160,14 +164,16 @@ func handleWorkspaceHTTPRunAsync(
     body: Data,
     observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
     appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
-    businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider
+    businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider,
+    actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
 ) async throws -> TKWorkspaceRunResponse {
     let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPRunRequest.self, from: body)
     return try await runWorkspaceRunAsync(
         workspaceRunRequest(from: request),
         observeProvider: observeProvider,
         appLifecycleProvider: appLifecycleProvider,
-        businessWaitProvider: businessWaitProvider
+        businessWaitProvider: businessWaitProvider,
+        actionExecutionProvider: actionExecutionProvider
     )
 }
 
@@ -206,7 +212,8 @@ private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKW
         businessReadyText: request.businessReadyText,
         businessReadyLiveWait: request.businessReadyLiveWait ?? false,
         businessReadyTimeout: request.businessReadyTimeout ?? 10,
-        businessReadyInterval: request.businessReadyInterval ?? 0.5
+        businessReadyInterval: request.businessReadyInterval ?? 0.5,
+        executeActions: request.executeActions ?? false
     )
 }
 

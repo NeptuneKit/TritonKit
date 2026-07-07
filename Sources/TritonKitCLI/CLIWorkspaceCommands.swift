@@ -73,6 +73,8 @@ struct Workspace: AsyncParsableCommand {
         var vlmProvider: String?
         @Flag(name: .customLong("dry-model-fixture"), help: "Append dry model/policy/action/recovery fixture events")
         var dryModelFixture = false
+        @Flag(name: .customLong("execute-actions"), help: "Execute model-selected candidate actions through the runtime action provider")
+        var executeActions = false
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
@@ -113,7 +115,8 @@ struct Workspace: AsyncParsableCommand {
                     businessReadyText: businessReadyText,
                     businessReadyLiveWait: businessReadyLiveWait,
                     businessReadyTimeout: businessReadyTimeout,
-                    businessReadyInterval: businessReadyInterval
+                    businessReadyInterval: businessReadyInterval,
+                    executeActions: executeActions
                 ))
                 try printWorkspaceRun(response, format: outputFormat)
             } catch {

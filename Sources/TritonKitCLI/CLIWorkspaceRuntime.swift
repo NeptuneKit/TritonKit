@@ -36,6 +36,7 @@ struct TKWorkspaceRunRequest {
     let businessReadyLiveWait: Bool
     let businessReadyTimeout: Double
     let businessReadyInterval: Double
+    let executeActions: Bool
 
     init(
         runsDirectory: String,
@@ -71,7 +72,8 @@ struct TKWorkspaceRunRequest {
         businessReadyText: String? = nil,
         businessReadyLiveWait: Bool = false,
         businessReadyTimeout: Double = 10,
-        businessReadyInterval: Double = 0.5
+        businessReadyInterval: Double = 0.5,
+        executeActions: Bool = false
     ) {
         self.runsDirectory = runsDirectory
         self.runID = runID
@@ -107,6 +109,7 @@ struct TKWorkspaceRunRequest {
         self.businessReadyLiveWait = businessReadyLiveWait
         self.businessReadyTimeout = businessReadyTimeout
         self.businessReadyInterval = businessReadyInterval
+        self.executeActions = executeActions
     }
 }
 
@@ -314,6 +317,9 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     if request.businessReadyLiveWait {
         throw RuntimeError("Workspace business live wait requires the async workspace runtime.")
     }
+    if request.executeActions {
+        throw RuntimeError("Workspace action execution requires the async workspace runtime.")
+    }
     let appLifecycle = try workspaceAppLifecycleEvidence(for: request)
     let observationSeed = try workspaceObservationSeed(for: request)
     return try runWorkspaceRun(request, observationSeed: observationSeed, appLifecycle: appLifecycle)
@@ -323,21 +329,40 @@ func runWorkspaceRunAsync(
     _ request: TKWorkspaceRunRequest,
     observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider,
     appLifecycleProvider: TKWorkspaceAppLifecycleProvider = workspaceDefaultAppLifecycleProvider,
-    businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider
+    businessWaitProvider: TKWorkspaceBusinessWaitProvider = workspaceDefaultBusinessWaitProvider,
+    actionExecutionProvider: TKWorkspaceActionExecutionProvider = workspaceDefaultActionExecutionProvider
 ) async throws -> TKWorkspaceRunResponse {
     let appLifecycle = try await workspaceAppLifecycleEvidence(for: request, provider: appLifecycleProvider)
     let observationSeed = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
+    let appReady = workspaceAppReadyEvidence(
+        lifecycle: appLifecycle,
+        observation: observationSeed,
+        observedAfterLifecycle: request.observeLive
+    )
     let businessWaitResult: TKWaitResult?
     if request.businessReadyLiveWait {
         businessWaitResult = try await businessWaitProvider(workspaceBusinessWaitRequest(for: request))
     } else {
         businessWaitResult = nil
     }
+    let businessCheckpoint = workspaceBusinessCheckpoint(
+        for: request,
+        observation: observationSeed,
+        appReady: appReady,
+        waitResult: businessWaitResult
+    )
+    let actionExecution: TKWorkspaceActionExecutionResult?
+    if try workspaceShouldExecuteCandidateAction(request, businessCheckpoint: businessCheckpoint) {
+        actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(for: request))
+    } else {
+        actionExecution = nil
+    }
     return try runWorkspaceRun(
         request,
         observationSeed: observationSeed,
         appLifecycle: appLifecycle,
-        businessWaitResult: businessWaitResult
+        businessWaitResult: businessWaitResult,
+        actionExecution: actionExecution
     )
 }
 
@@ -345,7 +370,8 @@ private func runWorkspaceRun(
     _ request: TKWorkspaceRunRequest,
     observationSeed: TKWorkspaceObservationSeed,
     appLifecycle: TKWorkspaceAppLifecycleEvidence,
-    businessWaitResult: TKWaitResult? = nil
+    businessWaitResult: TKWaitResult? = nil,
+    actionExecution: TKWorkspaceActionExecutionResult? = nil
 ) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
@@ -387,7 +413,8 @@ private func runWorkspaceRun(
         dryModelFixture: request.dryModelFixture,
         modelLoopEnabled: modelLoopEnabled,
         modelDecisionAllowed: modelDecisionAllowed,
-        businessCheckpoint: businessCheckpoint
+        businessCheckpoint: businessCheckpoint,
+        actionExecution: actionExecution
     )
     let response = TKWorkspaceRunResponse(
         runID: runID,
@@ -412,7 +439,8 @@ private func runWorkspaceRun(
         nextActions: workspaceRunNextActions(
             providerNextActions: providerPreflight.nextActions,
             finalState: finalState,
-            businessCheckpoint: businessCheckpoint
+            businessCheckpoint: businessCheckpoint,
+            actionExecution: actionExecution
         )
     )
 
@@ -424,14 +452,16 @@ private func runWorkspaceRun(
         observation: observationSeed,
         appReady: appReady,
         businessCheckpoint: businessCheckpoint,
-        includeModelTransition: shouldWriteModelDecision
+        includeModelTransition: shouldWriteModelDecision,
+        actionExecution: actionExecution
     )
     if shouldWriteModelDecision || shouldWritePolicyRejection {
         try writeWorkspaceModelDecisionArtifacts(
             run: response,
             runDir: runDir,
             mode: modelLoopMode,
-            policyAllowed: modelDecisionAllowed
+            policyAllowed: modelDecisionAllowed,
+            actionExecution: actionExecution
         )
     }
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
@@ -446,7 +476,12 @@ private func runWorkspaceRun(
     )
     if shouldWriteModelDecision || shouldWritePolicyRejection {
         events.insert(
-            contentsOf: workspaceModelDecisionEvents(runID: runID, mode: modelLoopMode, policyAllowed: modelDecisionAllowed),
+            contentsOf: workspaceModelDecisionEvents(
+                runID: runID,
+                mode: modelLoopMode,
+                policyAllowed: modelDecisionAllowed,
+                actionExecution: actionExecution
+            ),
             at: events.index(before: events.endIndex)
         )
     }
@@ -527,7 +562,8 @@ private func workspaceRunFinalState(
     dryModelFixture: Bool,
     modelLoopEnabled: Bool,
     modelDecisionAllowed: Bool,
-    businessCheckpoint: TKWorkspaceBusinessCheckpoint?
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
+    actionExecution: TKWorkspaceActionExecutionResult?
 ) -> TKWorkspaceRunFinalState {
     if businessCheckpoint?.ready == true {
         return TKWorkspaceRunFinalState(
@@ -543,6 +579,14 @@ private func workspaceRunFinalState(
             eventType: .runPaused,
             eventStatus: .paused,
             phase: businessCheckpoint.readiness.phase
+        )
+    }
+    if let actionExecution, !actionExecution.ok {
+        return TKWorkspaceRunFinalState(
+            runStatus: "paused",
+            eventType: .runPaused,
+            eventStatus: .paused,
+            phase: "action_failed"
         )
     }
     if !providerPreflight.providersReady, !dryModelFixture {
@@ -580,8 +624,17 @@ private func workspaceRunFinalState(
 private func workspaceRunNextActions(
     providerNextActions: [TKWorkspaceNextAction],
     finalState: TKWorkspaceRunFinalState,
-    businessCheckpoint: TKWorkspaceBusinessCheckpoint?
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
+    actionExecution: TKWorkspaceActionExecutionResult?
 ) -> [TKWorkspaceNextAction] {
+    if let actionExecution, !actionExecution.ok {
+        return [
+            TKWorkspaceNextAction(
+                code: "inspect_action_failure",
+                message: "The candidate action '\(actionExecution.action)' failed; inspect evidence/actions/action-000.json, observe the target again, or let the model propose a recovery action."
+            ),
+        ] + providerNextActions
+    }
     if let businessCheckpoint, !businessCheckpoint.ready {
         return [
             TKWorkspaceNextAction(
@@ -602,6 +655,19 @@ private func workspaceRunNextActions(
         ]
     }
     return []
+}
+
+private func workspaceShouldExecuteCandidateAction(
+    _ request: TKWorkspaceRunRequest,
+    businessCheckpoint: TKWorkspaceBusinessCheckpoint?
+) throws -> Bool {
+    guard request.executeActions, businessCheckpoint?.ready != true else {
+        return false
+    }
+    let runner = try workspaceRunnerConfig(for: request)
+    let providerPreflight = try workspaceProviderPreflight(request)
+    let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
+    return modelLoopEnabled && workspacePolicyAllowsAction("tap", runner: runner)
 }
 
 private func workspaceLLMProviderPreflight(_ rawProvider: String?) throws -> TKWorkspaceProviderComponentPreflight {
@@ -929,7 +995,8 @@ private func writeWorkspaceRunArtifacts(
     observation: TKWorkspaceObservationSeed,
     appReady: TKWorkspaceAppReadyEvidence,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
-    includeModelTransition: Bool
+    includeModelTransition: Bool,
+    actionExecution: TKWorkspaceActionExecutionResult?
 ) throws {
     try writeWorkspaceJSONArtifact([
         "target": run.target.id,
@@ -995,7 +1062,12 @@ private func writeWorkspaceRunArtifacts(
         "proposal": run.ai.providersReady ? "candidate_available" : "stop",
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-000.json"))
     try writeWorkspaceJSONArtifact(
-        workspaceAtlasDocument(for: run, observation: observation, includeModelTransition: includeModelTransition),
+        workspaceAtlasDocument(
+            for: run,
+            observation: observation,
+            includeModelTransition: includeModelTransition,
+            actionExecution: actionExecution
+        ),
         to: runDir.appendingPathComponent("atlas/atlas.json")
     )
 }
@@ -1004,7 +1076,8 @@ private func writeWorkspaceModelDecisionArtifacts(
     run: TKWorkspaceRunResponse,
     runDir: URL,
     mode: String,
-    policyAllowed: Bool
+    policyAllowed: Bool,
+    actionExecution: TKWorkspaceActionExecutionResult?
 ) throws {
     let command = ["triton", "act", "tap", "Continue", "--json"]
     try writeWorkspaceJSONArtifact([
@@ -1077,22 +1150,31 @@ private func writeWorkspaceModelDecisionArtifacts(
         "reason": "\(mode) command is low-risk and single-step",
         "command": command,
     ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
-    try writeWorkspaceJSONArtifact([
-        "ok": true,
-        "mode": mode,
-        "command": command,
-    ], to: runDir.appendingPathComponent("evidence/actions/action-000.json"))
+    if let actionExecution {
+        try writeWorkspaceJSONArtifact(
+            try workspaceActionExecutionArtifact(actionExecution),
+            to: runDir.appendingPathComponent("evidence/actions/action-000.json")
+        )
+    } else {
+        try writeWorkspaceJSONArtifact([
+            "ok": true,
+            "mode": mode,
+            "command": command,
+        ], to: runDir.appendingPathComponent("evidence/actions/action-000.json"))
+    }
     try writeWorkspaceJSONArtifact([
         "status": "failed",
-        "reason": "\(mode) simulates expected screen missing",
+        "reason": actionExecution == nil
+            ? "\(mode) simulates expected screen missing"
+            : "action executed; post-action business verification is not wired yet",
     ], to: runDir.appendingPathComponent("evidence/model/verify-000.json"))
     try writeWorkspaceJSONArtifact([
         "failureCode": "expected_screen_missing",
-        "kind": "selector_drift",
+        "kind": actionExecution == nil ? "selector_drift" : "post_action_unverified",
         "proposal": "stop",
     ], to: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
     try """
-    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"screen_0000","status":"candidate_failed","confidence":0.5,"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
+    {"deltaId":"atlas_delta_0000","kind":"transition","transitionId":"transition_0000","fromScreenId":"screen_0000","toScreenId":"screen_0000","status":"\(workspaceModelTransitionStatus(actionExecution: actionExecution))","confidence":0.5,"evidenceRefs":["events.jsonl#action.executed","events.jsonl#verify.checked","evidence/model/decision-000.json","evidence/model/verify-000.json"]}
     """.write(to: runDir.appendingPathComponent("atlas/deltas.jsonl"), atomically: true, encoding: .utf8)
     try """
     schemaVersion: 1
@@ -1173,7 +1255,12 @@ private func workspaceSkeletonEvents(
     return events
 }
 
-private func workspaceModelDecisionEvents(runID: String, mode: String, policyAllowed: Bool) -> [TKTestRunEvent] {
+private func workspaceModelDecisionEvents(
+    runID: String,
+    mode: String,
+    policyAllowed: Bool,
+    actionExecution: TKWorkspaceActionExecutionResult?
+) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
     let command = ["triton", "act", "tap", "Continue", "--json"]
     let failureMode = mode.replacingOccurrences(of: "-", with: "_")
@@ -1201,7 +1288,16 @@ private func workspaceModelDecisionEvents(runID: String, mode: String, policyAll
         .init(type: .flowBootstrapProposed, runID: runID, timestamp: now, stepIndex: 0, command: command, ref: "evidence/model/bootstrap-proposal-000.json"),
         .init(type: .modelDecided, runID: runID, timestamp: now, stepIndex: 1, command: command, ref: "evidence/model/decision-000.json"),
         .init(type: .policyChecked, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, ref: "evidence/model/policy-000.json"),
-        .init(type: .actionExecuted, runID: runID, timestamp: now, stepIndex: 1, command: command, status: .passed, exitCode: 0),
+        .init(
+            type: .actionExecuted,
+            runID: runID,
+            timestamp: now,
+            stepIndex: 1,
+            command: command,
+            status: actionExecution?.eventStatus ?? .passed,
+            exitCode: actionExecution?.exitCode ?? 0,
+            ref: "evidence/actions/action-000.json"
+        ),
         .init(type: .verifyChecked, runID: runID, timestamp: now, stepIndex: 1, status: .failed, ref: "evidence/model/verify-000.json"),
         .init(
             type: .flowRecoveryDetected,
@@ -1298,7 +1394,8 @@ private func workspaceBootstrapState(for ai: TKWorkspaceRunAI) -> String {
 private func workspaceAtlasDocument(
     for run: TKWorkspaceRunResponse,
     observation: TKWorkspaceObservationSeed,
-    includeModelTransition: Bool
+    includeModelTransition: Bool,
+    actionExecution: TKWorkspaceActionExecutionResult?
 ) -> [String: Any] {
     let initialObservationRefs = ([
         "events.jsonl#observation.captured",
@@ -1307,7 +1404,7 @@ private func workspaceAtlasDocument(
         observation.artifacts.hierarchy,
         observation.artifacts.ax,
     ] as [String?]).compactMap { $0 }
-    let transitions = includeModelTransition ? [workspaceModelTransition()] : []
+    let transitions = includeModelTransition ? [workspaceModelTransition(actionExecution: actionExecution)] : []
     let signature = [
         observation.screenCandidate.screenshotSha256,
         observation.screenCandidate.axTextHash,
@@ -1346,30 +1443,6 @@ private func workspaceAtlasDocument(
             "screenCount": 1,
             "stateCount": 1,
             "transitionCount": transitions.count,
-        ],
-    ]
-}
-
-private func workspaceModelTransition() -> [String: Any] {
-    [
-        "transitionId": "transition_0000",
-        "fromScreenId": "screen_0000",
-        "toScreenId": "screen_0000",
-        "action": "tap",
-        "selector": [
-            "text": "Continue",
-        ],
-        "status": "candidate_failed",
-        "confidence": 0.5,
-        "evidenceRefs": [
-            "events.jsonl#model.decided",
-            "events.jsonl#policy.checked",
-            "events.jsonl#action.executed",
-            "events.jsonl#verify.checked",
-            "evidence/model/decision-000.json",
-            "evidence/model/policy-000.json",
-            "evidence/actions/action-000.json",
-            "evidence/model/verify-000.json",
         ],
     ]
 }
