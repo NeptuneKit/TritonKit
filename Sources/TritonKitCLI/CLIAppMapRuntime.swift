@@ -107,11 +107,17 @@ struct TKAppMapHealthResponse: Codable, Equatable {
     let mapDir: String
     let health: TKAppMapHealth
     let pathCount: Int
+    let stateCount: Int
+    let transitionCount: Int
     let failingPathIDs: [String]
     let unconfirmedPathIDs: [String]
     let unreplayablePathIDs: [String]
     let uncoveredScreenIDs: [String]
     let uncoveredTransitionIDs: [String]
+    let unhealthyStateRefs: [String]
+    let unhealthyTransitionIDs: [String]
+    let stateHealth: [TKAppMapStateHealth]
+    let transitionHealth: [TKAppMapTransitionHealth]
 
     enum CodingKeys: String, CodingKey {
         case ok
@@ -120,11 +126,61 @@ struct TKAppMapHealthResponse: Codable, Equatable {
         case mapDir
         case health
         case pathCount
+        case stateCount
+        case transitionCount
         case failingPathIDs = "failingPathIds"
         case unconfirmedPathIDs = "unconfirmedPathIds"
         case unreplayablePathIDs = "unreplayablePathIds"
         case uncoveredScreenIDs = "uncoveredScreenIds"
         case uncoveredTransitionIDs = "uncoveredTransitionIds"
+        case unhealthyStateRefs
+        case unhealthyTransitionIDs = "unhealthyTransitionIds"
+        case stateHealth
+        case transitionHealth
+    }
+}
+
+struct TKAppMapStateHealth: Codable, Equatable {
+    let screenID: String
+    let stateID: String
+    let ref: String
+    let status: String
+    let sourceRuns: [String]
+    let evidenceRefs: [String]
+    let issueCodes: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case screenID = "screenId"
+        case stateID = "stateId"
+        case ref
+        case status
+        case sourceRuns
+        case evidenceRefs
+        case issueCodes
+    }
+}
+
+struct TKAppMapTransitionHealth: Codable, Equatable {
+    let transitionID: String
+    let fromScreenID: String
+    let toScreenID: String
+    let status: String
+    let replayable: Bool
+    let coveredByPathIDs: [String]
+    let coveredBySuite: Bool
+    let sourceRuns: [String]
+    let issueCodes: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case transitionID = "transitionId"
+        case fromScreenID = "fromScreenId"
+        case toScreenID = "toScreenId"
+        case status
+        case replayable
+        case coveredByPathIDs = "coveredByPathIds"
+        case coveredBySuite
+        case sourceRuns
+        case issueCodes
     }
 }
 
@@ -667,6 +723,7 @@ func mergeTritonAppMap(
         runLocalToMapScreen[screen.screenID] = mapScreenID
         let screenURL = mapRoot.appendingPathComponent("screens/\(mapScreenID).json")
         let existing = try? decodeJSON(TKAppMapScreen.self, from: screenURL)
+        let stateVariants = appMapStateVariants(screen: screen, runID: runID)
         let merged = TKAppMapScreen(
             schemaVersion: 1,
             kind: "triton.app-map.screen",
@@ -676,6 +733,7 @@ func mergeTritonAppMap(
             visibleTexts: unique((existing?.visibleTexts ?? []) + screen.visibleTexts),
             runLocalScreenIDs: unique((existing?.runLocalScreenIDs ?? []) + [screen.screenID]),
             sourceRuns: unique((existing?.sourceRuns ?? []) + [runID]),
+            stateVariants: appMapMergeStateVariants(existing?.stateVariants ?? [], stateVariants),
             vlmHealth: mergeVLMHealth(existing?.vlmHealth, runVLMHealth)
         )
         try prettyEncodedData(merged).write(to: screenURL, options: .atomic)
@@ -892,6 +950,12 @@ func inspectTritonAppMapHealth(mapPath: String) throws -> TKAppMapHealthResponse
     let suitePaths = try readSuiteCoveredPathIDs(mapRoot: mapRoot)
     let pathScreenIDs = Set(paths.flatMap { [$0.startScreenID, $0.endScreenID] })
     let pathTransitionIDs = Set(paths.filter { suitePaths.contains($0.pathID) }.flatMap(\.transitions))
+    let stateHealth = appMapStateHealth(screens: screens)
+    let transitionHealth = appMapTransitionHealth(
+        transitions: transitions,
+        paths: paths,
+        suitePathIDs: suitePaths
+    )
     return TKAppMapHealthResponse(
         ok: true,
         schemaVersion: 1,
@@ -899,11 +963,17 @@ func inspectTritonAppMapHealth(mapPath: String) throws -> TKAppMapHealthResponse
         mapDir: mapRoot.path,
         health: try appMapHealth(mapRoot),
         pathCount: paths.count,
+        stateCount: stateHealth.count,
+        transitionCount: transitionHealth.count,
         failingPathIDs: paths.filter { $0.health.failCount > 0 }.map(\.pathID).sorted(),
         unconfirmedPathIDs: paths.filter { !$0.confirmed }.map(\.pathID).sorted(),
         unreplayablePathIDs: paths.filter { !$0.replayable }.map(\.pathID).sorted(),
         uncoveredScreenIDs: screens.map(\.screenID).filter { !pathScreenIDs.contains($0) }.sorted(),
-        uncoveredTransitionIDs: transitions.map(\.transitionID).filter { !pathTransitionIDs.contains($0) }.sorted()
+        uncoveredTransitionIDs: transitions.map(\.transitionID).filter { !pathTransitionIDs.contains($0) }.sorted(),
+        unhealthyStateRefs: stateHealth.filter { $0.status != "healthy" }.map(\.ref).sorted(),
+        unhealthyTransitionIDs: transitionHealth.filter { $0.status != "healthy" }.map(\.transitionID).sorted(),
+        stateHealth: stateHealth,
+        transitionHealth: transitionHealth
     )
 }
 
@@ -1332,6 +1402,56 @@ private func prepareAppMapDirectories(_ mapRoot: URL) throws {
     }
 }
 
+private func appMapStateVariants(screen: TKScreenWorkspaceScreen, runID: String) -> [TKAppMapStateVariant] {
+    [
+        TKAppMapStateVariant(
+            stateID: screen.screenID,
+            runLocalScreenID: screen.screenID,
+            phase: screen.observations.first?.phase,
+            sourceRuns: [runID],
+            evidenceRefs: unique(screen.observations.flatMap { observation in
+                [
+                    observation.artifacts.screenshot,
+                    observation.artifacts.ax,
+                    observation.artifacts.hierarchy,
+                ]
+            }),
+            visibleTexts: screen.visibleTexts
+        ),
+    ]
+}
+
+private func appMapMergeStateVariants(
+    _ existing: [TKAppMapStateVariant],
+    _ incoming: [TKAppMapStateVariant]
+) -> [TKAppMapStateVariant] {
+    var result = existing
+    for variant in incoming {
+        if let index = result.firstIndex(where: {
+            $0.stateID == variant.stateID
+                && $0.runLocalScreenID == variant.runLocalScreenID
+                && $0.phase == variant.phase
+        }) {
+            let current = result[index]
+            result[index] = TKAppMapStateVariant(
+                stateID: current.stateID,
+                runLocalScreenID: current.runLocalScreenID,
+                phase: current.phase,
+                sourceRuns: unique(current.sourceRuns + variant.sourceRuns),
+                evidenceRefs: unique(current.evidenceRefs + variant.evidenceRefs),
+                visibleTexts: unique(current.visibleTexts + variant.visibleTexts)
+            )
+        } else {
+            result.append(variant)
+        }
+    }
+    return result.sorted {
+        if $0.stateID != $1.stateID { return $0.stateID < $1.stateID }
+        if $0.runLocalScreenID != $1.runLocalScreenID { return $0.runLocalScreenID < $1.runLocalScreenID }
+        return ($0.phase ?? "") < ($1.phase ?? "")
+    }
+}
+
 private func writeCandidatePath(
     transitionIDs: [String],
     mapRoot: URL,
@@ -1631,6 +1751,83 @@ private func appMapHealth(_ mapRoot: URL) throws -> TKAppMapHealth {
         failCount: runs.filter { $0.verdict == "failure" }.count,
         flakeCount: 0
     )
+}
+
+private func appMapStateHealth(screens: [TKAppMapScreen]) -> [TKAppMapStateHealth] {
+    screens.flatMap { screen in
+        screen.stateVariants.map { state in
+            var issueCodes: [String] = []
+            if state.sourceRuns.isEmpty {
+                issueCodes.append("missing_source_run")
+            }
+            if state.evidenceRefs.isEmpty {
+                issueCodes.append("missing_evidence_ref")
+            }
+            return TKAppMapStateHealth(
+                screenID: screen.screenID,
+                stateID: state.stateID,
+                ref: "\(screen.screenID):\(state.stateID)",
+                status: issueCodes.isEmpty ? "healthy" : "needs_evidence",
+                sourceRuns: state.sourceRuns.sorted(),
+                evidenceRefs: state.evidenceRefs.sorted(),
+                issueCodes: issueCodes
+            )
+        }
+    }
+    .sorted {
+        if $0.screenID != $1.screenID { return $0.screenID < $1.screenID }
+        if $0.stateID != $1.stateID { return $0.stateID < $1.stateID }
+        return $0.ref < $1.ref
+    }
+}
+
+private func appMapTransitionHealth(
+    transitions: [TKAppMapTransition],
+    paths: [TKAppMapPath],
+    suitePathIDs: Set<String>
+) -> [TKAppMapTransitionHealth] {
+    transitions.map { transition in
+        let coveredByPathIDs = paths
+            .filter { $0.transitions.contains(transition.transitionID) }
+            .map(\.pathID)
+            .sorted()
+        let coveredBySuite = coveredByPathIDs.contains { suitePathIDs.contains($0) }
+        var issueCodes: [String] = []
+        if transition.sourceRuns.isEmpty {
+            issueCodes.append("missing_source_run")
+        }
+        if !transition.replayable {
+            issueCodes.append("non_replayable_transition")
+        }
+        if !coveredBySuite {
+            issueCodes.append("uncovered_by_suite")
+        }
+        return TKAppMapTransitionHealth(
+            transitionID: transition.transitionID,
+            fromScreenID: transition.fromScreenID,
+            toScreenID: transition.toScreenID,
+            status: appMapTransitionHealthStatus(issueCodes),
+            replayable: transition.replayable,
+            coveredByPathIDs: coveredByPathIDs,
+            coveredBySuite: coveredBySuite,
+            sourceRuns: transition.sourceRuns.sorted(),
+            issueCodes: issueCodes
+        )
+    }
+    .sorted { $0.transitionID < $1.transitionID }
+}
+
+private func appMapTransitionHealthStatus(_ issueCodes: [String]) -> String {
+    if issueCodes.isEmpty {
+        return "healthy"
+    }
+    if issueCodes == ["uncovered_by_suite"] {
+        return "uncovered_by_suite"
+    }
+    if issueCodes.contains("non_replayable_transition") {
+        return "non_replayable"
+    }
+    return "needs_evidence"
 }
 
 private func readMapScreen(mapRoot: URL, screenID: String) throws -> TKAppMapScreen {

@@ -493,6 +493,10 @@ func printAppMapHealth(_ response: TKAppMapHealthResponse, format: ClientOutputF
         print("failCount: \(response.health.failCount)")
         print("uncoveredScreens: \(response.uncoveredScreenIDs.count)")
         print("uncoveredTransitions: \(response.uncoveredTransitionIDs.count)")
+        print("stateCount: \(response.stateCount)")
+        print("transitionCount: \(response.transitionCount)")
+        print("unhealthyStates: \(response.unhealthyStateRefs.count)")
+        print("unhealthyTransitions: \(response.unhealthyTransitionIDs.count)")
     }
 }
 

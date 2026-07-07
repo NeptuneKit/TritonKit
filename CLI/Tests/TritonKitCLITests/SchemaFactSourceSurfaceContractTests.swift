@@ -261,6 +261,7 @@ extension SchemaFactSourceTests {
         let device = try #require(schemas["device"])
         let sim = try #require(schemas["sim"])
         let app = try #require(schemas["app"])
+        let map = try #require(schemas["map"])
         let smoke = try #require(schemas["smoke"])
         let record = try #require(schemas["record"])
 
@@ -308,6 +309,19 @@ extension SchemaFactSourceTests {
         ])
         expectContract(app, selector: "host.app-open-url", fields: [
             "ok", "status", "hostAction", "ready", "snapshot",
+        ])
+
+        #expect(map.providedCapabilities.contains("app-map-health"))
+        expectContract(map, selector: "app-map.health", fields: [
+            "ok", "schemaVersion", "kind", "mapDir", "health", "pathCount", "stateCount", "transitionCount",
+            "failingPathIds", "unconfirmedPathIds", "unreplayablePathIds", "uncoveredScreenIds", "uncoveredTransitionIds",
+            "unhealthyStateRefs", "unhealthyTransitionIds",
+            "stateHealth", "stateHealth[].screenId", "stateHealth[].stateId", "stateHealth[].ref",
+            "stateHealth[].status", "stateHealth[].sourceRuns", "stateHealth[].evidenceRefs", "stateHealth[].issueCodes",
+            "transitionHealth", "transitionHealth[].transitionId", "transitionHealth[].fromScreenId",
+            "transitionHealth[].toScreenId", "transitionHealth[].status", "transitionHealth[].replayable",
+            "transitionHealth[].coveredByPathIds", "transitionHealth[].coveredBySuite",
+            "transitionHealth[].sourceRuns", "transitionHealth[].issueCodes",
         ])
 
         #expect(smoke.failureCodes.contains("smoke_failed"))

@@ -346,9 +346,47 @@ struct AppMapPathGraphTests {
         let health = try inspectTritonAppMapHealth(mapPath: mapURL.path)
         #expect(health.health.observedRuns == 1)
         #expect(health.health.passCount == 1)
+        #expect(health.stateCount == 2)
+        #expect(health.transitionCount == 1)
+        #expect(health.stateHealth.count == 2)
+        #expect(health.stateHealth.allSatisfy { $0.status == "healthy" })
+        #expect(health.stateHealth.allSatisfy { !$0.screenID.isEmpty && !$0.stateID.isEmpty })
+        #expect(health.stateHealth.allSatisfy { !$0.sourceRuns.isEmpty && !$0.evidenceRefs.isEmpty })
         #expect(health.failingPathIDs.isEmpty)
         #expect(health.uncoveredScreenIDs.isEmpty)
         #expect(health.uncoveredTransitionIDs.isEmpty)
+        #expect(health.unhealthyStateRefs.isEmpty)
+        #expect(health.unhealthyTransitionIDs.isEmpty)
+        let transitionHealth = try #require(health.transitionHealth.first)
+        #expect(transitionHealth.status == "healthy")
+        #expect(transitionHealth.coveredByPathIDs == ["path-fixture-login-home"])
+        #expect(transitionHealth.coveredBySuite)
+        #expect(transitionHealth.issueCodes.isEmpty)
+    }
+
+    @Test("map health marks candidate transition gaps before suite coverage")
+    func mapHealthMarksCandidateTransitionGapsBeforeSuiteCoverage() throws {
+        let fixture = try ScreenWorkspaceProjectionFixture(runID: "run-candidate-health")
+        try fixture.writePassEvidence()
+        let mapURL = fixture.root.appendingPathComponent(".tritonmap", isDirectory: true)
+        _ = try mergeTritonAppMap(
+            evidencePath: fixture.evidence.path,
+            into: mapURL.path,
+            confirm: false
+        )
+
+        let candidatePath = try #require(try listTritonAppMapPaths(mapPath: mapURL.path).paths.first)
+        let health = try inspectTritonAppMapHealth(mapPath: mapURL.path)
+        let transitionHealth = try #require(health.transitionHealth.first)
+
+        #expect(health.stateHealth.allSatisfy { $0.status == "healthy" })
+        #expect(health.unhealthyStateRefs.isEmpty)
+        #expect(transitionHealth.coveredByPathIDs == [candidatePath.pathID])
+        #expect(transitionHealth.coveredBySuite == false)
+        #expect(transitionHealth.status == "uncovered_by_suite")
+        #expect(transitionHealth.issueCodes == ["uncovered_by_suite"])
+        #expect(health.uncoveredTransitionIDs == [transitionHealth.transitionID])
+        #expect(health.unhealthyTransitionIDs == [transitionHealth.transitionID])
     }
 }
 
