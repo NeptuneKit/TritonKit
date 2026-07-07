@@ -24,6 +24,9 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let vlmProvider: String?
     let vlmBaseURL: String?
     let vlmModel: String?
+    let vlmModelPath: String?
+    let vlmHelper: String?
+    let vlmAllowModelDownload: Bool?
     let vlmAPIKeyEnv: String?
     let allowRemoteVLM: Bool?
     let dryModelFixture: Bool?
@@ -69,6 +72,9 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         vlmProvider: String? = nil,
         vlmBaseURL: String? = nil,
         vlmModel: String? = nil,
+        vlmModelPath: String? = nil,
+        vlmHelper: String? = nil,
+        vlmAllowModelDownload: Bool? = nil,
         vlmAPIKeyEnv: String? = nil,
         allowRemoteVLM: Bool? = nil,
         dryModelFixture: Bool? = nil,
@@ -113,6 +119,9 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.vlmProvider = vlmProvider
         self.vlmBaseURL = vlmBaseURL
         self.vlmModel = vlmModel
+        self.vlmModelPath = vlmModelPath
+        self.vlmHelper = vlmHelper
+        self.vlmAllowModelDownload = vlmAllowModelDownload
         self.vlmAPIKeyEnv = vlmAPIKeyEnv
         self.allowRemoteVLM = allowRemoteVLM
         self.dryModelFixture = dryModelFixture
@@ -159,6 +168,9 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case vlmProvider
         case vlmBaseURL
         case vlmModel
+        case vlmModelPath
+        case vlmHelper
+        case vlmAllowModelDownload
         case vlmAPIKeyEnv
         case allowRemoteVLM
         case dryModelFixture
@@ -245,6 +257,9 @@ private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKW
         vlmProvider: request.vlmProvider,
         vlmBaseURL: request.vlmBaseURL,
         vlmModel: request.vlmModel,
+        vlmModelPath: request.vlmModelPath,
+        vlmHelper: request.vlmHelper,
+        vlmAllowModelDownload: request.vlmAllowModelDownload ?? false,
         vlmAPIKeyEnv: request.vlmAPIKeyEnv,
         allowRemoteVLM: request.allowRemoteVLM ?? false,
         maxSteps: request.maxSteps,

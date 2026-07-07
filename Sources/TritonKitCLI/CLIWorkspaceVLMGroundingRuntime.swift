@@ -11,8 +11,39 @@ struct TKWorkspaceVLMGroundingRequest: Equatable {
     let outputDirectory: String
     let baseURL: String?
     let model: String?
+    let modelPath: String?
+    let mlxHelperPath: String?
+    let allowModelDownload: Bool
     let apiKeyEnv: String?
     let allowRemoteVLM: Bool
+
+    init(
+        provider: String,
+        image: String,
+        target: String,
+        coordinateContract: String,
+        outputDirectory: String,
+        baseURL: String?,
+        model: String?,
+        modelPath: String? = nil,
+        mlxHelperPath: String? = nil,
+        allowModelDownload: Bool = false,
+        apiKeyEnv: String?,
+        allowRemoteVLM: Bool
+    ) {
+        self.provider = provider
+        self.image = image
+        self.target = target
+        self.coordinateContract = coordinateContract
+        self.outputDirectory = outputDirectory
+        self.baseURL = baseURL
+        self.model = model
+        self.modelPath = modelPath
+        self.mlxHelperPath = mlxHelperPath
+        self.allowModelDownload = allowModelDownload
+        self.apiKeyEnv = apiKeyEnv
+        self.allowRemoteVLM = allowRemoteVLM
+    }
 }
 
 func workspaceDefaultVLMGroundingProvider(
@@ -26,8 +57,11 @@ func workspaceDefaultVLMGroundingProvider(
         outputDirectory: request.outputDirectory,
         baseURL: request.baseURL,
         model: request.model,
+        modelPath: request.modelPath,
         apiKeyEnv: request.apiKeyEnv,
-        allowRemoteVLM: request.allowRemoteVLM
+        allowRemoteVLM: request.allowRemoteVLM,
+        allowModelDownload: request.allowModelDownload,
+        mlxHelperPath: request.mlxHelperPath
     )
 }
 
@@ -64,6 +98,9 @@ func workspaceVLMGroundingForAction(
         outputDirectory: outputURL.path,
         baseURL: request.vlmBaseURL,
         model: request.vlmModel,
+        modelPath: request.vlmModelPath,
+        mlxHelperPath: request.vlmHelper,
+        allowModelDownload: request.vlmAllowModelDownload,
         apiKeyEnv: request.vlmAPIKeyEnv,
         allowRemoteVLM: request.allowRemoteVLM
     ))

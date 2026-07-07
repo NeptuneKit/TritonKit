@@ -169,7 +169,10 @@ struct WorkspaceRunTests {
         #expect(optionNames.contains("--vlm-provider"))
         #expect(optionNames.contains("--vlm-base-url"))
         #expect(optionNames.contains("--vlm-model"))
+        #expect(optionNames.contains("--vlm-model-path"))
         #expect(optionNames.contains("--vlm-api-key-env"))
+        #expect(optionNames.contains("--vlm-allow-model-download"))
+        #expect(optionNames.contains("--vlm-helper"))
         #expect(optionNames.contains("--allow-remote-vlm"))
         #expect(optionNames.contains("--app-mode"))
         #expect(optionNames.contains("--bundle-id"))
@@ -203,7 +206,10 @@ struct WorkspaceRunTests {
         #expect(run.optionalOptions.contains("--vlm-provider"))
         #expect(run.optionalOptions.contains("--vlm-base-url"))
         #expect(run.optionalOptions.contains("--vlm-model"))
+        #expect(run.optionalOptions.contains("--vlm-model-path"))
         #expect(run.optionalOptions.contains("--vlm-api-key-env"))
+        #expect(run.optionalOptions.contains("--vlm-allow-model-download"))
+        #expect(run.optionalOptions.contains("--vlm-helper"))
         #expect(run.optionalOptions.contains("--allow-remote-vlm"))
         #expect(run.optionalOptions.contains("--app-mode"))
         #expect(run.optionalOptions.contains("--bundle-id"))
@@ -804,6 +810,63 @@ struct WorkspaceRunTests {
         #expect(decisionRequest?["allowRemoteVLM"] as? Bool == false)
     }
 
+    @Test("workspace run marks local mlx-swift-lm VLM ready with model path and helper")
+    func workspaceRunMarksLocalMLXSwiftLMVLMReadyWithModelPathAndHelper() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+        let modelPath = root.appendingPathComponent("models/qwen-vl", isDirectory: true)
+        let helperPath = root.appendingPathComponent("bin/triton-mlx-provider").path
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-mlx-vlm-ready",
+                target: "current",
+                app: "com.example.demo",
+                goal: "Explore login",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mlx-swift-lm",
+                vlmModelPath: modelPath.path,
+                vlmHelper: helperPath,
+                vlmAllowModelDownload: true,
+                observationFixture: fixture.path
+            ),
+            modelDecisionProvider: { request in
+                #expect(request.vlmProvider == "mlx-swift-lm")
+                #expect(request.vlmModelPath == modelPath.path)
+                #expect(request.vlmHelper == helperPath)
+                #expect(request.vlmAllowModelDownload)
+                return workspaceDefaultModelDecision(request)
+            }
+        )
+
+        #expect(run.ai.providersReady)
+        #expect(run.ai.providerStatus == "ready")
+        #expect(run.ai.vlmProvider == "mlx-swift-lm")
+        #expect(run.ai.vlmProviderStatus == "ready")
+        #expect(run.nextActions.isEmpty)
+
+        let runDir = root.appendingPathComponent("run-workspace-mlx-vlm-ready", isDirectory: true)
+        let provider = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/provider-check.json"))
+        ) as? [String: Any]
+        #expect(provider?["vlmProvider"] as? String == "mlx-swift-lm")
+        #expect(provider?["vlmProviderStatus"] as? String == "ready")
+        #expect(provider?["vlmModelPath"] as? String == modelPath.path)
+        #expect(provider?["vlmHelper"] as? String == helperPath)
+        #expect(provider?["vlmAllowModelDownload"] as? Bool == true)
+
+        let decisionRequest = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
+        ) as? [String: Any]
+        #expect(decisionRequest?["vlmProvider"] as? String == "mlx-swift-lm")
+        #expect(decisionRequest?["vlmModelPath"] as? String == modelPath.path)
+        #expect(decisionRequest?["vlmHelper"] as? String == helperPath)
+        #expect(decisionRequest?["vlmAllowModelDownload"] as? Bool == true)
+    }
+
     @Test("workspace run requires explicit approval for remote openai-compatible VLM")
     func workspaceRunRequiresApprovalForRemoteOpenAICompatibleVLM() throws {
         let root = temporaryRunsDirectory()
@@ -868,6 +931,43 @@ struct WorkspaceRunTests {
         #expect(provider?["vlmProvider"] as? String == "openai-compatible")
         #expect(provider?["vlmBaseURL"] as? String == "http://127.0.0.1:8000/v1")
         #expect(provider?["vlmModel"] as? String == "local-vlm-model")
+    }
+
+    @Test("workspace HTTP run maps mlx-swift-lm VLM provider options")
+    func workspaceHTTPRunMapsMLXSwiftLMVLMProviderOptions() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let modelPath = root.appendingPathComponent("models/qwen-vl", isDirectory: true).path
+        let helperPath = root.appendingPathComponent("bin/triton-mlx-provider").path
+
+        let body = try JSONEncoder().encode(TKWorkspaceHTTPRunRequest(
+            runsDir: root.path,
+            runID: "run-workspace-http-mlx-vlm",
+            target: "current",
+            app: "com.example.demo",
+            goal: "HTTP MLX VLM run",
+            actionPolicy: nil,
+            llmProvider: "mock",
+            vlmProvider: "mlx-swift-lm",
+            vlmModelPath: modelPath,
+            vlmHelper: helperPath,
+            vlmAllowModelDownload: true
+        ))
+        let run = try handleWorkspaceHTTPRun(body: body)
+
+        #expect(run.ai.providersReady)
+        #expect(run.ai.vlmProvider == "mlx-swift-lm")
+        #expect(run.ai.vlmProviderStatus == "ready")
+
+        let provider = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: root
+                .appendingPathComponent("run-workspace-http-mlx-vlm", isDirectory: true)
+                .appendingPathComponent("evidence/model/provider-check.json"))
+        ) as? [String: Any]
+        #expect(provider?["vlmProvider"] as? String == "mlx-swift-lm")
+        #expect(provider?["vlmModelPath"] as? String == modelPath)
+        #expect(provider?["vlmHelper"] as? String == helperPath)
+        #expect(provider?["vlmAllowModelDownload"] as? Bool == true)
     }
 
     @Test("workspace run records explicit target platform and scope")

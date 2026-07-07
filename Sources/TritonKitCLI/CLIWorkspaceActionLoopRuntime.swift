@@ -363,6 +363,13 @@ private func workspaceActionLoopProviderArtifact(
     if let vlmModel = workspaceNonEmpty(request.vlmModel) {
         providerArtifact["vlmModel"] = vlmModel
     }
+    if let vlmModelPath = workspaceNonEmpty(request.vlmModelPath) {
+        providerArtifact["vlmModelPath"] = vlmModelPath
+    }
+    if let vlmHelper = workspaceNonEmpty(request.vlmHelper) {
+        providerArtifact["vlmHelper"] = vlmHelper
+    }
+    providerArtifact["vlmAllowModelDownload"] = request.vlmAllowModelDownload
     if let vlmAPIKeyEnv = workspaceNonEmpty(request.vlmAPIKeyEnv) {
         providerArtifact["vlmAPIKeyEnv"] = vlmAPIKeyEnv
     }

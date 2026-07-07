@@ -83,6 +83,12 @@ struct Workspace: AsyncParsableCommand {
         var vlmBaseURL: String?
         @Option(name: .customLong("vlm-model"), help: "OpenAI-compatible VLM model for workspace visual decisions")
         var vlmModel: String?
+        @Option(name: .customLong("vlm-model-path"), help: "Local mlx-swift-lm model path for workspace visual grounding")
+        var vlmModelPath: String?
+        @Option(name: .customLong("vlm-helper"), help: "External mlx-swift-lm helper path for workspace visual grounding")
+        var vlmHelper: String?
+        @Flag(name: .customLong("vlm-allow-model-download"), help: "Allow mlx-swift-lm helper to materialize the configured local model")
+        var vlmAllowModelDownload = false
         @Option(name: .customLong("vlm-api-key-env"), help: "Environment variable containing the workspace VLM provider API key")
         var vlmAPIKeyEnv: String?
         @Flag(name: .customLong("allow-remote-vlm"), help: "Allow non-localhost workspace VLM provider requests")
@@ -122,6 +128,9 @@ struct Workspace: AsyncParsableCommand {
                     vlmProvider: vlmProvider,
                     vlmBaseURL: vlmBaseURL,
                     vlmModel: vlmModel,
+                    vlmModelPath: vlmModelPath,
+                    vlmHelper: vlmHelper,
+                    vlmAllowModelDownload: vlmAllowModelDownload,
                     vlmAPIKeyEnv: vlmAPIKeyEnv,
                     allowRemoteVLM: allowRemoteVLM,
                     maxSteps: maxSteps,

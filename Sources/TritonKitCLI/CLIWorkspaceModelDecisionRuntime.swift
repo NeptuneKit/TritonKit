@@ -29,8 +29,59 @@ struct TKWorkspaceModelDecisionRequest {
     let vlmProvider: String?
     let vlmBaseURL: String?
     let vlmModel: String?
+    let vlmModelPath: String?
+    let vlmHelper: String?
+    let vlmAllowModelDownload: Bool
     let vlmAPIKeyEnv: String?
     let allowRemoteVLM: Bool
+
+    init(
+        mode: String,
+        goal: String,
+        app: String,
+        actionPolicy: String,
+        allowedActions: [String],
+        stopConditions: [String],
+        visibleTexts: [String],
+        observationRef: String,
+        providerStatus: String,
+        llmProvider: String?,
+        llmBaseURL: String?,
+        llmModel: String?,
+        llmAPIKeyEnv: String?,
+        allowRemoteLLM: Bool,
+        vlmProvider: String?,
+        vlmBaseURL: String?,
+        vlmModel: String?,
+        vlmModelPath: String? = nil,
+        vlmHelper: String? = nil,
+        vlmAllowModelDownload: Bool = false,
+        vlmAPIKeyEnv: String?,
+        allowRemoteVLM: Bool
+    ) {
+        self.mode = mode
+        self.goal = goal
+        self.app = app
+        self.actionPolicy = actionPolicy
+        self.allowedActions = allowedActions
+        self.stopConditions = stopConditions
+        self.visibleTexts = visibleTexts
+        self.observationRef = observationRef
+        self.providerStatus = providerStatus
+        self.llmProvider = llmProvider
+        self.llmBaseURL = llmBaseURL
+        self.llmModel = llmModel
+        self.llmAPIKeyEnv = llmAPIKeyEnv
+        self.allowRemoteLLM = allowRemoteLLM
+        self.vlmProvider = vlmProvider
+        self.vlmBaseURL = vlmBaseURL
+        self.vlmModel = vlmModel
+        self.vlmModelPath = vlmModelPath
+        self.vlmHelper = vlmHelper
+        self.vlmAllowModelDownload = vlmAllowModelDownload
+        self.vlmAPIKeyEnv = vlmAPIKeyEnv
+        self.allowRemoteVLM = allowRemoteVLM
+    }
 }
 
 struct TKWorkspaceModelDecision {
@@ -81,6 +132,9 @@ func workspaceModelDecisionRequest(
         vlmProvider: providerPreflight.vlmProvider,
         vlmBaseURL: request.vlmBaseURL,
         vlmModel: request.vlmModel,
+        vlmModelPath: request.vlmModelPath,
+        vlmHelper: request.vlmHelper,
+        vlmAllowModelDownload: request.vlmAllowModelDownload,
         vlmAPIKeyEnv: request.vlmAPIKeyEnv,
         allowRemoteVLM: request.allowRemoteVLM
     )
@@ -140,6 +194,13 @@ func workspaceDefaultModelDecisionRequestContext(
     if let vlmModel = workspaceNonEmpty(request.vlmModel) {
         context["vlmModel"] = vlmModel
     }
+    if let vlmModelPath = workspaceNonEmpty(request.vlmModelPath) {
+        context["vlmModelPath"] = vlmModelPath
+    }
+    if let vlmHelper = workspaceNonEmpty(request.vlmHelper) {
+        context["vlmHelper"] = vlmHelper
+    }
+    context["vlmAllowModelDownload"] = request.vlmAllowModelDownload
     if let vlmAPIKeyEnv = workspaceNonEmpty(request.vlmAPIKeyEnv) {
         context["vlmAPIKeyEnv"] = vlmAPIKeyEnv
     }
@@ -265,6 +326,7 @@ private func makeWorkspaceOpenAICompatibleDecisionRequestBody(
     vlmProvider: \(request.vlmProvider ?? "none")
     vlmBaseURL: \(redactedWorkspaceProviderBaseURL(request.vlmBaseURL) ?? "none")
     vlmModel: \(request.vlmModel ?? "none")
+    vlmModelPath: \(request.vlmModelPath ?? "none")
     """
     let payload: [String: Any] = [
         "model": model,

@@ -98,14 +98,29 @@ private func workspaceVLMProviderPreflight(_ request: TKWorkspaceRunRequest) thr
             nextAction: nil
         )
     case "mlx-swift-lm":
+        guard workspaceNonEmpty(request.vlmModel) != nil || workspaceNonEmpty(request.vlmModelPath) != nil else {
+            return TKWorkspaceProviderComponentPreflight(
+                provider: provider,
+                status: "missing_model",
+                phase: "vlm_missing_model",
+                nextAction: TKWorkspaceNextAction(
+                    code: "configure_vlm_provider",
+                    message: "mlx-swift-lm requires an explicit model or model path before workspace run can use it."
+                )
+            )
+        }
+        _ = try makeVLMProvider(
+            provider,
+            model: request.vlmModel,
+            modelPath: request.vlmModelPath,
+            allowModelDownload: request.vlmAllowModelDownload,
+            mlxHelperPath: request.vlmHelper
+        )
         return TKWorkspaceProviderComponentPreflight(
             provider: provider,
-            status: "missing_model",
-            phase: "vlm_missing_model",
-            nextAction: TKWorkspaceNextAction(
-                code: "configure_vlm_provider",
-                message: "mlx-swift-lm requires an explicit model or model path before workspace run can use it."
-            )
+            status: "ready",
+            phase: "vlm_ready",
+            nextAction: nil
         )
     case "openai-compatible":
         return workspaceOpenAICompatiblePreflight(

@@ -260,6 +260,55 @@ struct WorkspaceActionExecutionTests {
         #expect(grounding?["overlay"] as? String == "evidence/actions/vlm-000/vlm-overlay.png")
     }
 
+    @Test("workspace run passes mlx-swift-lm helper options into VLM grounding")
+    func workspaceRunPassesMLXSwiftLMHelperOptionsIntoVLMGrounding() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let screenshot = root.appendingPathComponent("login.png")
+        try writeFixtureImage(to: screenshot)
+        let fixture = try writeObservationFixture(
+            in: root,
+            visibleTexts: ["Welcome", "Continue"],
+            screenshot: screenshot.path
+        )
+        let modelPath = root.appendingPathComponent("models/qwen-vl", isDirectory: true).path
+        let helperPath = root.appendingPathComponent("bin/triton-mlx-provider").path
+        var groundingRequest: TKWorkspaceVLMGroundingRequest?
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-mlx-vlm-grounded-action",
+                target: "runtime-target-mlx-vlm",
+                app: "com.example.demo",
+                goal: "Continue onboarding",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mlx-swift-lm",
+                vlmModelPath: modelPath,
+                vlmHelper: helperPath,
+                vlmAllowModelDownload: true,
+                observationFixture: fixture.path,
+                executeActions: true
+            ),
+            vlmGroundingProvider: { request in
+                groundingRequest = request
+                return fakeVLMGrounding(for: request)
+            },
+            actionExecutionProvider: { request in
+                successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "stopped")
+        #expect(groundingRequest?.provider == "mlx-swift-lm")
+        #expect(groundingRequest?.modelPath == modelPath)
+        #expect(groundingRequest?.mlxHelperPath == helperPath)
+        #expect(groundingRequest?.allowModelDownload == true)
+        #expect(groundingRequest?.model == nil)
+        #expect(groundingRequest?.target == "Continue")
+    }
+
     @Test("workspace run pauses with recovery proposal when VLM grounding fails")
     func workspaceRunPausesWithRecoveryProposalWhenVLMGroundingFails() async throws {
         let root = temporaryRunsDirectory()

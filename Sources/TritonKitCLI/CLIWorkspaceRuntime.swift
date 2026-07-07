@@ -26,6 +26,9 @@ struct TKWorkspaceRunRequest {
     let vlmProvider: String?
     let vlmBaseURL: String?
     let vlmModel: String?
+    let vlmModelPath: String?
+    let vlmHelper: String?
+    let vlmAllowModelDownload: Bool
     let vlmAPIKeyEnv: String?
     let allowRemoteVLM: Bool
     let maxSteps: Int?
@@ -71,6 +74,9 @@ struct TKWorkspaceRunRequest {
         vlmProvider: String? = nil,
         vlmBaseURL: String? = nil,
         vlmModel: String? = nil,
+        vlmModelPath: String? = nil,
+        vlmHelper: String? = nil,
+        vlmAllowModelDownload: Bool = false,
         vlmAPIKeyEnv: String? = nil,
         allowRemoteVLM: Bool = false,
         maxSteps: Int? = nil,
@@ -115,6 +121,9 @@ struct TKWorkspaceRunRequest {
         self.vlmProvider = vlmProvider
         self.vlmBaseURL = vlmBaseURL
         self.vlmModel = vlmModel
+        self.vlmModelPath = vlmModelPath
+        self.vlmHelper = vlmHelper
+        self.vlmAllowModelDownload = vlmAllowModelDownload
         self.vlmAPIKeyEnv = vlmAPIKeyEnv
         self.allowRemoteVLM = allowRemoteVLM
         self.maxSteps = maxSteps
@@ -166,6 +175,9 @@ struct TKWorkspaceRunRequest {
             vlmProvider: vlmProvider,
             vlmBaseURL: vlmBaseURL,
             vlmModel: vlmModel,
+            vlmModelPath: vlmModelPath,
+            vlmHelper: vlmHelper,
+            vlmAllowModelDownload: vlmAllowModelDownload,
             vlmAPIKeyEnv: vlmAPIKeyEnv,
             allowRemoteVLM: allowRemoteVLM,
             maxSteps: maxSteps,
@@ -1127,6 +1139,13 @@ private func writeWorkspaceRunArtifacts(
     if let vlmModel = workspaceNonEmpty(request.vlmModel) {
         providerArtifact["vlmModel"] = vlmModel
     }
+    if let vlmModelPath = workspaceNonEmpty(request.vlmModelPath) {
+        providerArtifact["vlmModelPath"] = vlmModelPath
+    }
+    if let vlmHelper = workspaceNonEmpty(request.vlmHelper) {
+        providerArtifact["vlmHelper"] = vlmHelper
+    }
+    providerArtifact["vlmAllowModelDownload"] = request.vlmAllowModelDownload
     if let vlmAPIKeyEnv = workspaceNonEmpty(request.vlmAPIKeyEnv) {
         providerArtifact["vlmAPIKeyEnv"] = vlmAPIKeyEnv
     }
