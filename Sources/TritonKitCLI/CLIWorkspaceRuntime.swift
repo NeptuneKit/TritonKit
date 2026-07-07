@@ -311,6 +311,11 @@ private func runWorkspaceRun(
     let modelDecisionAllowed = modelLoopEnabled
         ? workspacePolicyAllowsAction("tap", runner: runner)
         : false
+    let appReady = workspaceAppReadyEvidence(
+        lifecycle: appLifecycle,
+        observation: observationSeed,
+        observedAfterLifecycle: request.observeLive
+    )
     let finalState = workspaceRunFinalState(
         providerPreflight: providerPreflight,
         dryModelFixture: request.dryModelFixture,
@@ -348,7 +353,7 @@ private func runWorkspaceRun(
         response,
         runDir: runDir,
         observation: observationSeed,
-        appLifecycle: appLifecycle,
+        appReady: appReady,
         includeModelTransition: modelLoopEnabled && modelDecisionAllowed
     )
     if modelLoopEnabled {
@@ -364,7 +369,7 @@ private func runWorkspaceRun(
         runID: runID,
         providerEventPhase: providerPreflight.providerEventPhase,
         bootstrapPhase: providerPreflight.bootstrapPhase,
-        appLifecycle: appLifecycle,
+        appReady: appReady,
         observation: observationSeed,
         finalState: finalState
     )
@@ -823,7 +828,7 @@ private func writeWorkspaceRunArtifacts(
     _ run: TKWorkspaceRunResponse,
     runDir: URL,
     observation: TKWorkspaceObservationSeed,
-    appLifecycle: TKWorkspaceAppLifecycleEvidence,
+    appReady: TKWorkspaceAppReadyEvidence,
     includeModelTransition: Bool
 ) throws {
     try writeWorkspaceJSONArtifact([
@@ -852,7 +857,7 @@ private func writeWorkspaceRunArtifacts(
     }
     try writeWorkspaceJSONArtifact(providerArtifact, to: runDir.appendingPathComponent("evidence/model/provider-check.json"))
     try writeWorkspaceJSONArtifact(
-        workspaceAppLifecycleArtifact(appLifecycle),
+        workspaceAppLifecycleArtifact(appReady),
         to: runDir.appendingPathComponent("evidence/actions/app-ready.json")
     )
     try "workspace dry screenshot placeholder\n".write(
@@ -997,7 +1002,7 @@ private func workspaceSkeletonEvents(
     runID: String,
     providerEventPhase: String,
     bootstrapPhase: String,
-    appLifecycle: TKWorkspaceAppLifecycleEvidence,
+    appReady: TKWorkspaceAppReadyEvidence,
     observation: TKWorkspaceObservationSeed,
     finalState: TKWorkspaceRunFinalState
 ) -> [TKTestRunEvent] {
@@ -1006,7 +1011,7 @@ private func workspaceSkeletonEvents(
         .runStarted(runID: runID, timestamp: now),
         .init(type: .targetResolved, runID: runID, timestamp: now, ref: "evidence/model/target.json"),
         .init(type: .providerChecked, runID: runID, timestamp: now, ref: "evidence/model/provider-check.json", phase: providerEventPhase),
-        .init(type: .appReady, runID: runID, timestamp: now, ref: "evidence/actions/app-ready.json", phase: appLifecycle.phase),
+        .init(type: .appReady, runID: runID, timestamp: now, ref: "evidence/actions/app-ready.json", phase: appReady.phase),
         .observationCaptured(
             runID: runID,
             stepIndex: 0,

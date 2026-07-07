@@ -37,7 +37,7 @@ TritonKit 的产品边界是本地单机：本机 CLI + 本机可连接 mobile t
 | 基础能力 | 当前已有 | 本 space 需要补齐 |
 | --- | --- | --- |
 | Target / capability 事实源 | `triton status/doctor/capabilities/schema/plan --json`；Web `/web/target-registry`；`DeviceTarget` / `InspectTarget` 已有 `platform`、`scope`、`kind`、`targetSelector`、`screenshotSource`、`inputCapabilities` | 统一 runtime session DTO，禁止上层直接按设备类型分叉 |
-| App lifecycle | `triton app list/info/inspect/install/uninstall/launch/terminate/open-url` 已支持 `--scope simulator|emulator|real|all` 形态，iOS / Android / Harmony 逐步覆盖；`workspace run --app-mode launch` 已能把启动提交写入 `evidence/actions/app-ready.json` | 把未覆盖项收敛为 capability / unsupported / next action，不让调用方猜；`launch_submitted` 只代表启动命令提交，业务 ready 仍由 observe / wait / verify 证明 |
+| App lifecycle | `triton app list/info/inspect/install/uninstall/launch/terminate/open-url` 已支持 `--scope simulator|emulator|real|all` 形态，iOS / Android / Harmony 逐步覆盖；`workspace run --app-mode launch` 已能把启动提交写入 `evidence/actions/app-ready.json` | 把未覆盖项收敛为 capability / unsupported / next action，不让调用方猜；`launch_submitted` 只代表启动命令提交，`launch_observed` 代表启动后拿到首帧观察，业务 ready 仍由 wait / verify 证明 |
 | Observe / hierarchy / WebView | 已有 runtime snapshot / AX / hierarchy、host layout、WebView provider、route/assertion 和 Inspect Session 状态模型 | Atlas graph 需要把这些 observation 转成 screen/state/transition 证据 |
 | Device actions | `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`；Web stream gesture 已走 `/web/host-input`；unsupported 输出已有稳定 envelope | LLM/VLM loop 只能调用这些动作入口，不能直接执行底层工具 |
 | Evidence | `triton evidence capture --case <case> --output <dir.tritonevidence> --json`；证据 taxonomy 已覆盖 stdout/schema/status、host artifact、runtime snapshot/AX/ledger、input result、evidence bundle、tritonplan 等 | Atlas 和 VLM run 需要把 evidence id 作为共同索引 |
@@ -83,7 +83,7 @@ Then TritonKit 返回稳定 JSON，包含 target id、platform、scope、capabil
 
 Given 已有本地 App artifact 或可解析 bundle/app id
 When agent 通过 CLI/HTTP 安装并启动 App
-Then 返回机器可读成功或明确 unsupported/error code，并保留 fallback 建议；在 workspace run 中，显式 `appMode=launch` 必须写入 `app.ready phase=launch_submitted` 和 `evidence/actions/app-ready.json`，且 `businessReady=false`
+Then 返回机器可读成功或明确 unsupported/error code，并保留 fallback 建议；在 workspace run 中，显式 `appMode=launch` 必须写入 `app.ready phase=launch_submitted` 和 `evidence/actions/app-ready.json`，若同一 run 继续 live observe 成功则升级为 `phase=launch_observed`、`ready=true`、`businessReady=false`
 
 ### 场景 3：agent 执行动作并采集证据
 
@@ -124,7 +124,7 @@ Then LLM/VLM 先做 flow bootstrap 判断，运行中持续做 flow recovery 判
 ## 验收
 
 - 对应 CLI/HTTP schema 明确列出 runtime session、app lifecycle、device action、evidence 和 workflow seed 能力。
-- `workspace run` 必须区分 `dry`、`attach`、`launch` App lifecycle mode；只有显式 `launch` 会提交 host app launch，且产物不得把启动提交等同于业务完成。
+- `workspace run` 必须区分 `dry`、`attach`、`launch` App lifecycle mode；只有显式 `launch` 会提交 host app launch，launch 后 live observation 可证明 App 已可观察，但不得把启动或首帧观察等同于业务完成。
 - 本机至少一个 target scope 完成端到端 smoke：target discovery -> session ready -> app launch -> screenshot -> action -> evidence export；后续按 capabilities 扩展到其他 scope。
 - CLI/HTTP 和 Web DTO 必须以 target/capability 为事实源，不要求调用方预先区分真机、模拟器或仿真器。
 - 本机 Atlas map 能从 evidence 生成可查询图谱，至少覆盖 screen、state、transition、coverage 和 evidence backlink。

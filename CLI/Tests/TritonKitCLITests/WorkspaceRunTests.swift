@@ -410,6 +410,56 @@ struct WorkspaceRunTests {
         #expect(appReadyEvent.ref == "evidence/actions/app-ready.json")
     }
 
+    @Test("workspace run records launch observed readiness when live observe follows launch")
+    func workspaceRunRecordsLaunchObservedReadinessWhenLiveObserveFollowsLaunch() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        _ = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-launch-observed",
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Launch and observe",
+                actionPolicy: "explore",
+                appMode: "launch",
+                bundleID: "com.example.demo",
+                observeLive: true,
+                observeKind: "tree"
+            ),
+            observeProvider: { request in
+                fakeLiveObserveOutput(for: request)
+            },
+            appLifecycleProvider: { request in
+                fakeAppLaunchEvidence(for: request)
+            }
+        )
+
+        let runDir = root.appendingPathComponent("run-workspace-launch-observed", isDirectory: true)
+        let appReady = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/actions/app-ready.json"))
+        ) as? [String: Any]
+        #expect(appReady?["mode"] as? String == "launch")
+        #expect(appReady?["phase"] as? String == "launch_observed")
+        #expect(appReady?["ready"] as? Bool == true)
+        #expect(appReady?["businessReady"] as? Bool == false)
+        #expect(appReady?["observedAfterLifecycle"] as? Bool == true)
+        #expect(appReady?["observationRef"] as? String == "events.jsonl#observation.captured")
+        let observation = appReady?["observation"] as? [String: Any]
+        #expect(observation?["visibleTextCount"] as? Int == 2)
+        #expect(observation?["screenshot"] as? String == "fixtures/live-screenshot.png")
+        #expect(observation?["hierarchy"] as? String == "fixtures/live-tree.json")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        #expect(parsed.events.first { $0.type == .appReady }?.phase == "launch_observed")
+        #expect(parsed.events.first { $0.type == .observationCaptured }?.screenCandidate?.visibleTexts == ["Login", "Continue"])
+    }
+
     @Test("workspace HTTP run records app launch evidence when enabled")
     func workspaceHTTPRunRecordsAppLaunchEvidenceWhenEnabled() async throws {
         let root = temporaryRunsDirectory()

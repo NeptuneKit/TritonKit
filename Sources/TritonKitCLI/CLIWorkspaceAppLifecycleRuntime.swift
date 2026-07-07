@@ -35,6 +35,23 @@ struct TKWorkspaceAppLifecycleEvidence: Codable, Equatable {
     let note: String?
 }
 
+struct TKWorkspaceAppReadyEvidence: Equatable {
+    let lifecycle: TKWorkspaceAppLifecycleEvidence
+    let phase: String
+    let ready: Bool
+    let businessReady: Bool
+    let observedAfterLifecycle: Bool
+    let observationRef: String?
+    let observation: TKWorkspaceAppReadyObservation?
+}
+
+struct TKWorkspaceAppReadyObservation: Equatable {
+    let screenshot: String?
+    let ax: String?
+    let hierarchy: String?
+    let visibleTextCount: Int
+}
+
 func workspaceAppLifecycleEvidence(for request: TKWorkspaceRunRequest) throws -> TKWorkspaceAppLifecycleEvidence {
     let lifecycleRequest = try workspaceAppLifecycleRequest(for: request)
     switch lifecycleRequest.mode {
@@ -79,20 +96,68 @@ func workspaceDefaultAppLifecycleProvider(
     }
 }
 
-func workspaceAppLifecycleArtifact(_ evidence: TKWorkspaceAppLifecycleEvidence) -> [String: Any] {
+func workspaceAppReadyEvidence(
+    lifecycle: TKWorkspaceAppLifecycleEvidence,
+    observation: TKWorkspaceObservationSeed,
+    observedAfterLifecycle: Bool
+) -> TKWorkspaceAppReadyEvidence {
+    let observedPhase = workspaceObservedAppReadyPhase(
+        lifecycle: lifecycle,
+        observedAfterLifecycle: observedAfterLifecycle
+    )
+    let observationSummary = observedAfterLifecycle
+        ? TKWorkspaceAppReadyObservation(
+            screenshot: observation.artifacts.screenshot,
+            ax: observation.artifacts.ax,
+            hierarchy: observation.artifacts.hierarchy,
+            visibleTextCount: observation.screenCandidate.visibleTexts.count
+        )
+        : nil
+    return TKWorkspaceAppReadyEvidence(
+        lifecycle: lifecycle,
+        phase: observedPhase,
+        ready: workspaceObservedAppReadyState(lifecycle: lifecycle, observedAfterLifecycle: observedAfterLifecycle),
+        businessReady: lifecycle.businessReady,
+        observedAfterLifecycle: observedAfterLifecycle,
+        observationRef: observedAfterLifecycle ? "events.jsonl#observation.captured" : nil,
+        observation: observationSummary
+    )
+}
+
+func workspaceAppLifecycleArtifact(_ appReady: TKWorkspaceAppReadyEvidence) -> [String: Any] {
+    let evidence = appReady.lifecycle
     var artifact: [String: Any] = [
         "schemaVersion": 1,
         "kind": "triton.workspace.app-lifecycle",
         "mode": evidence.mode,
-        "phase": evidence.phase,
+        "phase": appReady.phase,
         "action": evidence.action,
         "app": evidence.app,
-        "ready": evidence.ready,
-        "businessReady": evidence.businessReady,
+        "ready": appReady.ready,
+        "businessReady": appReady.businessReady,
         "submitted": evidence.submitted,
+        "observedAfterLifecycle": appReady.observedAfterLifecycle,
         "sourceCommands": evidence.sourceCommands,
         "artifacts": evidence.artifacts,
     ]
+    if let observationRef = appReady.observationRef {
+        artifact["observationRef"] = observationRef
+    }
+    if let observation = appReady.observation {
+        var observationArtifact: [String: Any] = [
+            "visibleTextCount": observation.visibleTextCount,
+        ]
+        if let screenshot = observation.screenshot {
+            observationArtifact["screenshot"] = screenshot
+        }
+        if let ax = observation.ax {
+            observationArtifact["ax"] = ax
+        }
+        if let hierarchy = observation.hierarchy {
+            observationArtifact["hierarchy"] = hierarchy
+        }
+        artifact["observation"] = observationArtifact
+    }
     if let platform = evidence.platform {
         artifact["platform"] = platform
     }
@@ -109,6 +174,45 @@ func workspaceAppLifecycleArtifact(_ evidence: TKWorkspaceAppLifecycleEvidence) 
         artifact["note"] = note
     }
     return artifact
+}
+
+func workspaceAppLifecycleArtifact(_ evidence: TKWorkspaceAppLifecycleEvidence) -> [String: Any] {
+    workspaceAppLifecycleArtifact(TKWorkspaceAppReadyEvidence(
+        lifecycle: evidence,
+        phase: evidence.phase,
+        ready: evidence.ready,
+        businessReady: evidence.businessReady,
+        observedAfterLifecycle: false,
+        observationRef: nil,
+        observation: nil
+    ))
+}
+
+private func workspaceObservedAppReadyPhase(
+    lifecycle: TKWorkspaceAppLifecycleEvidence,
+    observedAfterLifecycle: Bool
+) -> String {
+    guard observedAfterLifecycle else {
+        return lifecycle.phase
+    }
+    switch lifecycle.mode {
+    case "launch":
+        return "launch_observed"
+    case "attach":
+        return "attached_observed"
+    default:
+        return lifecycle.phase
+    }
+}
+
+private func workspaceObservedAppReadyState(
+    lifecycle: TKWorkspaceAppLifecycleEvidence,
+    observedAfterLifecycle: Bool
+) -> Bool {
+    guard observedAfterLifecycle else {
+        return lifecycle.ready
+    }
+    return lifecycle.mode == "launch" || lifecycle.mode == "attach"
 }
 
 private func workspaceAppLifecycleRequest(for request: TKWorkspaceRunRequest) throws -> TKWorkspaceAppLifecycleRequest {
