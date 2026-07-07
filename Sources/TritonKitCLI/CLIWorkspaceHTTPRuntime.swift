@@ -22,6 +22,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let llmAPIKeyEnv: String?
     let allowRemoteLLM: Bool?
     let vlmProvider: String?
+    let vlmBaseURL: String?
+    let vlmModel: String?
+    let vlmAPIKeyEnv: String?
+    let allowRemoteVLM: Bool?
     let dryModelFixture: Bool?
     let maxSteps: Int?
     let allowedActions: [String]?
@@ -63,6 +67,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         llmAPIKeyEnv: String? = nil,
         allowRemoteLLM: Bool? = nil,
         vlmProvider: String? = nil,
+        vlmBaseURL: String? = nil,
+        vlmModel: String? = nil,
+        vlmAPIKeyEnv: String? = nil,
+        allowRemoteVLM: Bool? = nil,
         dryModelFixture: Bool? = nil,
         maxSteps: Int? = nil,
         allowedActions: [String]? = nil,
@@ -103,6 +111,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.llmAPIKeyEnv = llmAPIKeyEnv
         self.allowRemoteLLM = allowRemoteLLM
         self.vlmProvider = vlmProvider
+        self.vlmBaseURL = vlmBaseURL
+        self.vlmModel = vlmModel
+        self.vlmAPIKeyEnv = vlmAPIKeyEnv
+        self.allowRemoteVLM = allowRemoteVLM
         self.dryModelFixture = dryModelFixture
         self.maxSteps = maxSteps
         self.allowedActions = allowedActions
@@ -145,6 +157,10 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case llmAPIKeyEnv
         case allowRemoteLLM
         case vlmProvider
+        case vlmBaseURL
+        case vlmModel
+        case vlmAPIKeyEnv
+        case allowRemoteVLM
         case dryModelFixture
         case maxSteps
         case allowedActions
@@ -219,6 +235,10 @@ private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKW
         llmAPIKeyEnv: request.llmAPIKeyEnv,
         allowRemoteLLM: request.allowRemoteLLM ?? false,
         vlmProvider: request.vlmProvider,
+        vlmBaseURL: request.vlmBaseURL,
+        vlmModel: request.vlmModel,
+        vlmAPIKeyEnv: request.vlmAPIKeyEnv,
+        allowRemoteVLM: request.allowRemoteVLM ?? false,
         maxSteps: request.maxSteps,
         allowedActions: request.allowedActions ?? [],
         stopConditions: request.stopConditions ?? [],

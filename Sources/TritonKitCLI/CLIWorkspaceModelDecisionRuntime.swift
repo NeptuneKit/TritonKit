@@ -27,6 +27,10 @@ struct TKWorkspaceModelDecisionRequest {
     let llmAPIKeyEnv: String?
     let allowRemoteLLM: Bool
     let vlmProvider: String?
+    let vlmBaseURL: String?
+    let vlmModel: String?
+    let vlmAPIKeyEnv: String?
+    let allowRemoteVLM: Bool
 }
 
 struct TKWorkspaceModelDecision {
@@ -74,7 +78,11 @@ func workspaceModelDecisionRequest(
         llmModel: request.llmModel,
         llmAPIKeyEnv: request.llmAPIKeyEnv,
         allowRemoteLLM: request.allowRemoteLLM,
-        vlmProvider: providerPreflight.vlmProvider
+        vlmProvider: providerPreflight.vlmProvider,
+        vlmBaseURL: request.vlmBaseURL,
+        vlmModel: request.vlmModel,
+        vlmAPIKeyEnv: request.vlmAPIKeyEnv,
+        allowRemoteVLM: request.allowRemoteVLM
     )
 }
 
@@ -126,6 +134,16 @@ func workspaceDefaultModelDecisionRequestContext(
     if let vlmProvider = request.vlmProvider {
         context["vlmProvider"] = vlmProvider
     }
+    if let vlmBaseURL = workspaceNonEmpty(request.vlmBaseURL) {
+        context["vlmBaseURL"] = redactedWorkspaceProviderBaseURL(vlmBaseURL)
+    }
+    if let vlmModel = workspaceNonEmpty(request.vlmModel) {
+        context["vlmModel"] = vlmModel
+    }
+    if let vlmAPIKeyEnv = workspaceNonEmpty(request.vlmAPIKeyEnv) {
+        context["vlmAPIKeyEnv"] = vlmAPIKeyEnv
+    }
+    context["allowRemoteVLM"] = request.allowRemoteVLM
     return context
 }
 
@@ -244,6 +262,9 @@ private func makeWorkspaceOpenAICompatibleDecisionRequestBody(
     providerStatus: \(request.providerStatus)
     observationRef: \(request.observationRef)
     visibleTexts: \(request.visibleTexts)
+    vlmProvider: \(request.vlmProvider ?? "none")
+    vlmBaseURL: \(redactedWorkspaceProviderBaseURL(request.vlmBaseURL) ?? "none")
+    vlmModel: \(request.vlmModel ?? "none")
     """
     let payload: [String: Any] = [
         "model": model,

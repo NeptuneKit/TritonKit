@@ -98,7 +98,11 @@ struct WorkspaceModelDecisionProviderTests {
             llmModel: model,
             llmAPIKeyEnv: nil,
             allowRemoteLLM: allowRemote,
-            vlmProvider: "mock"
+            vlmProvider: "mock",
+            vlmBaseURL: nil,
+            vlmModel: nil,
+            vlmAPIKeyEnv: nil,
+            allowRemoteVLM: false
         )
     }
 }

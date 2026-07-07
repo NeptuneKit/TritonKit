@@ -125,7 +125,7 @@ Then LLM/VLM 先做 flow bootstrap 判断，运行中持续做 flow recovery 判
 
 Given 本机已有 OpenAI-compatible Chat Completions endpoint
 When agent 执行 `triton workspace run --llm-provider openai-compatible --llm-base-url http://127.0.0.1:<port>/v1 --llm-model <model> --vlm-provider mock`
-Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 goal、runner bounds、provider status 和 initial visibleTexts，并只接受一个 JSON action candidate；远端 base URL 必须显式 `--allow-remote-llm`，否则返回 setup nextAction 或 provider failure
+Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 goal、runner bounds、provider status、initial visibleTexts 和 VLM provider metadata，并只接受一个 JSON action candidate；本地 VLM provider 配置写入 provider-check / model request artifacts；远端 LLM/VLM base URL 必须分别显式 `--allow-remote-llm` / `--allow-remote-vlm`，否则返回 setup nextAction 或 provider failure
 
 ## 验收
 
@@ -136,6 +136,7 @@ Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 g
 - 本机 Atlas map 能从 evidence 生成可查询图谱，至少覆盖 screen、state、transition、coverage 和 evidence backlink。
 - LLM/VLM 在 workspace run 中默认开启，默认用于流程稳定启动、偏航回正、理解、定位、Atlas 标注和探索决策；每次模型参与都能追溯 request / response / confidence / artifact，且所有动作经由 Triton CLI/HTTP。
 - `workspace run` 的首个真实 LLM provider 落地为 OpenAI-compatible Chat Completions：CLI 参数 `--llm-provider openai-compatible --llm-base-url --llm-model [--llm-api-key-env] [--allow-remote-llm]`，HTTP 字段为 `llmProvider/llmBaseURL/llmModel/llmAPIKeyEnv/allowRemoteLLM`；默认只允许 localhost，本地 provider 输出只能是单步 JSON action candidate。
+- `workspace run` 已有 OpenAI-compatible VLM provider preflight / evidence 输入面：CLI 参数 `--vlm-provider openai-compatible --vlm-base-url --vlm-model [--vlm-api-key-env] [--allow-remote-vlm]`，HTTP 字段为 `vlmProvider/vlmBaseURL/vlmModel/vlmAPIKeyEnv/allowRemoteVLM`；默认只允许 localhost，实际 screenshot grounding 仍需后续通过 coordinate-contract/action evidence gate 接入。
 - 显式 `--execute-actions` / HTTP `executeActions=true` 时，模型候选动作必须来自 model decision provider 输出或默认 initial observation visibleTexts heuristic，并通过 runtime action provider 执行，写入 `evidence/actions/action-000.json`、`action.executed` 和 Atlas transition；只执行未验证时状态为 `executed_unverified`，搭配 `--observe-live` 时必须在 action 成功后再次采集 observation、写 `screen_0001/state_0001` 和 `screen_0000 -> screen_0001` transition，搭配 post-action runtime wait 通过后必须写 `business.ready` / passed `verify.checked` 并把 transition 标为 `verified`。
 - Flow bootstrap 和 flow recovery 是 LLM/VLM 的首要验收：能从不同初始场景稳定命中 start anchor，能在 selector drift、弹窗、登录过期、慢加载时给出可审计 repair proposal。
 - VLM 自主探索 loop 有可复跑 dry-run / bounded-run 模式；本地 replay / 稳定回归不能静默退出模型参与，只能把模型角色限制为 observer / verifier / repair-advisor。

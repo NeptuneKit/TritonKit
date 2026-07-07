@@ -166,6 +166,11 @@ struct WorkspaceRunTests {
         #expect(optionNames.contains("--llm-model"))
         #expect(optionNames.contains("--llm-api-key-env"))
         #expect(optionNames.contains("--allow-remote-llm"))
+        #expect(optionNames.contains("--vlm-provider"))
+        #expect(optionNames.contains("--vlm-base-url"))
+        #expect(optionNames.contains("--vlm-model"))
+        #expect(optionNames.contains("--vlm-api-key-env"))
+        #expect(optionNames.contains("--allow-remote-vlm"))
         #expect(optionNames.contains("--app-mode"))
         #expect(optionNames.contains("--bundle-id"))
         #expect(optionNames.contains("--package-name"))
@@ -195,6 +200,11 @@ struct WorkspaceRunTests {
         #expect(run.optionalOptions.contains("--llm-model"))
         #expect(run.optionalOptions.contains("--llm-api-key-env"))
         #expect(run.optionalOptions.contains("--allow-remote-llm"))
+        #expect(run.optionalOptions.contains("--vlm-provider"))
+        #expect(run.optionalOptions.contains("--vlm-base-url"))
+        #expect(run.optionalOptions.contains("--vlm-model"))
+        #expect(run.optionalOptions.contains("--vlm-api-key-env"))
+        #expect(run.optionalOptions.contains("--allow-remote-vlm"))
         #expect(run.optionalOptions.contains("--app-mode"))
         #expect(run.optionalOptions.contains("--bundle-id"))
         #expect(run.optionalOptions.contains("--package-name"))
@@ -738,6 +748,126 @@ struct WorkspaceRunTests {
         #expect(decisionRequest?["llmProvider"] as? String == "openai-compatible")
         #expect(decisionRequest?["llmBaseURL"] as? String == "http://127.0.0.1:8000/v1")
         #expect(decisionRequest?["llmModel"] as? String == "local-workspace-model")
+    }
+
+    @Test("workspace run marks local openai-compatible VLM ready")
+    func workspaceRunMarksLocalOpenAICompatibleVLMReady() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root)
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-openai-vlm-ready",
+                target: "current",
+                app: "com.example.demo",
+                goal: "Explore login",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "openai-compatible",
+                vlmBaseURL: "http://127.0.0.1:8000/v1",
+                vlmModel: "local-vlm-model",
+                observationFixture: fixture.path
+            ),
+            modelDecisionProvider: { request in
+                #expect(request.llmProvider == "mock")
+                #expect(request.vlmProvider == "openai-compatible")
+                #expect(request.vlmBaseURL == "http://127.0.0.1:8000/v1")
+                #expect(request.vlmModel == "local-vlm-model")
+                #expect(request.allowRemoteVLM == false)
+                return workspaceDefaultModelDecision(request)
+            }
+        )
+
+        #expect(run.ai.providersReady)
+        #expect(run.ai.providerStatus == "ready")
+        #expect(run.ai.vlmProvider == "openai-compatible")
+        #expect(run.ai.vlmProviderStatus == "ready")
+        #expect(run.nextActions.isEmpty)
+
+        let runDir = root.appendingPathComponent("run-workspace-openai-vlm-ready", isDirectory: true)
+        let provider = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/provider-check.json"))
+        ) as? [String: Any]
+        #expect(provider?["vlmProvider"] as? String == "openai-compatible")
+        #expect(provider?["vlmProviderStatus"] as? String == "ready")
+        #expect(provider?["vlmBaseURL"] as? String == "http://127.0.0.1:8000/v1")
+        #expect(provider?["vlmModel"] as? String == "local-vlm-model")
+
+        let decisionRequest = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
+        ) as? [String: Any]
+        #expect(decisionRequest?["vlmProvider"] as? String == "openai-compatible")
+        #expect(decisionRequest?["vlmBaseURL"] as? String == "http://127.0.0.1:8000/v1")
+        #expect(decisionRequest?["vlmModel"] as? String == "local-vlm-model")
+        #expect(decisionRequest?["allowRemoteVLM"] as? Bool == false)
+    }
+
+    @Test("workspace run requires explicit approval for remote openai-compatible VLM")
+    func workspaceRunRequiresApprovalForRemoteOpenAICompatibleVLM() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let run = try runWorkspaceRun(TKWorkspaceRunRequest(
+            runsDirectory: root.path,
+            runID: "run-workspace-openai-vlm-remote",
+            target: "current",
+            app: "com.example.demo",
+            goal: "Explore login",
+            actionPolicy: "explore",
+            llmProvider: "mock",
+            vlmProvider: "openai-compatible",
+            vlmBaseURL: "https://example.com/v1",
+            vlmModel: "remote-vlm-model"
+        ))
+
+        #expect(run.ai.providersReady == false)
+        #expect(run.ai.providerStatus == "partial")
+        #expect(run.ai.vlmProviderStatus == "remote_approval_required")
+        #expect(run.nextActions.contains { $0.code == "approve_remote_vlm_provider" })
+
+        let runDir = root.appendingPathComponent("run-workspace-openai-vlm-remote", isDirectory: true)
+        let provider = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/provider-check.json"))
+        ) as? [String: Any]
+        #expect(provider?["vlmProvider"] as? String == "openai-compatible")
+        #expect(provider?["vlmProviderStatus"] as? String == "remote_approval_required")
+        #expect(provider?["vlmBaseURL"] as? String == "https://example.com/v1")
+        #expect(provider?["allowRemoteVLM"] as? Bool == false)
+    }
+
+    @Test("workspace HTTP run maps openai-compatible VLM provider options")
+    func workspaceHTTPRunMapsOpenAICompatibleVLMProviderOptions() throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let body = try JSONEncoder().encode(TKWorkspaceHTTPRunRequest(
+            runsDir: root.path,
+            runID: "run-workspace-http-openai-vlm",
+            target: "current",
+            app: "com.example.demo",
+            goal: "HTTP VLM run",
+            actionPolicy: nil,
+            llmProvider: "mock",
+            vlmProvider: "openai-compatible",
+            vlmBaseURL: "http://127.0.0.1:8000/v1",
+            vlmModel: "local-vlm-model"
+        ))
+        let run = try handleWorkspaceHTTPRun(body: body)
+
+        #expect(run.ai.providersReady)
+        #expect(run.ai.vlmProvider == "openai-compatible")
+        #expect(run.ai.vlmProviderStatus == "ready")
+
+        let provider = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: root
+                .appendingPathComponent("run-workspace-http-openai-vlm", isDirectory: true)
+                .appendingPathComponent("evidence/model/provider-check.json"))
+        ) as? [String: Any]
+        #expect(provider?["vlmProvider"] as? String == "openai-compatible")
+        #expect(provider?["vlmBaseURL"] as? String == "http://127.0.0.1:8000/v1")
+        #expect(provider?["vlmModel"] as? String == "local-vlm-model")
     }
 
     @Test("workspace run records explicit target platform and scope")

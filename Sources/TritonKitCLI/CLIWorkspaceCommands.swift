@@ -79,6 +79,14 @@ struct Workspace: AsyncParsableCommand {
         var allowRemoteLLM = false
         @Option(name: .customLong("vlm-provider"), help: "VLM provider preflight id, for example mock")
         var vlmProvider: String?
+        @Option(name: .customLong("vlm-base-url"), help: "OpenAI-compatible VLM /v1 base URL for workspace visual decisions")
+        var vlmBaseURL: String?
+        @Option(name: .customLong("vlm-model"), help: "OpenAI-compatible VLM model for workspace visual decisions")
+        var vlmModel: String?
+        @Option(name: .customLong("vlm-api-key-env"), help: "Environment variable containing the workspace VLM provider API key")
+        var vlmAPIKeyEnv: String?
+        @Flag(name: .customLong("allow-remote-vlm"), help: "Allow non-localhost workspace VLM provider requests")
+        var allowRemoteVLM = false
         @Flag(name: .customLong("dry-model-fixture"), help: "Append dry model/policy/action/recovery fixture events")
         var dryModelFixture = false
         @Flag(name: .customLong("execute-actions"), help: "Execute model-selected candidate actions through the runtime action provider")
@@ -112,6 +120,10 @@ struct Workspace: AsyncParsableCommand {
                     llmAPIKeyEnv: llmAPIKeyEnv,
                     allowRemoteLLM: allowRemoteLLM,
                     vlmProvider: vlmProvider,
+                    vlmBaseURL: vlmBaseURL,
+                    vlmModel: vlmModel,
+                    vlmAPIKeyEnv: vlmAPIKeyEnv,
+                    allowRemoteVLM: allowRemoteVLM,
                     maxSteps: maxSteps,
                     allowedActions: allowedActions,
                     stopConditions: stopConditions,
