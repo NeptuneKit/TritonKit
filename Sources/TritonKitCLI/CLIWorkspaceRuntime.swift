@@ -467,6 +467,14 @@ private struct TKWorkspaceFlowActionStep {
     let modelEvidenceRef: String?
     let policyEvidenceRef: String?
     let verifyEvidenceRef: String?
+    let vlmGrounding: TKWorkspaceFlowVLMGrounding?
+}
+
+private struct TKWorkspaceFlowVLMGrounding {
+    let provider: String
+    let model: String?
+    let modelPath: String?
+    let allowModelDownload: Bool?
 }
 
 private struct TKWorkspaceExportedFlow {
@@ -1048,7 +1056,11 @@ func exportWorkspaceFlow(runID: String, runsDirectory: String, output: String) t
     let parsed = try TKTestRunEventLogParser().parse(
         Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
     )
-    let actionSteps = workspaceFlowActionSteps(from: parsed.events)
+    let actionSteps = workspaceFlowActionSteps(
+        from: parsed.events,
+        runDir: runDir,
+        run: inspected.run
+    )
     let exportedFlow = workspaceFlowYAML(run: inspected.run, actionSteps: actionSteps)
     let outputURL = URL(fileURLWithPath: output)
     try FileManager.default.createDirectory(
@@ -1064,8 +1076,16 @@ func exportWorkspaceFlow(runID: String, runsDirectory: String, output: String) t
     )
 }
 
-private func workspaceFlowActionSteps(from events: [TKTestRunEvent]) -> [TKWorkspaceFlowActionStep] {
-    events.compactMap { event in
+private func workspaceFlowActionSteps(
+    from events: [TKTestRunEvent],
+    runDir: URL,
+    run: TKWorkspaceRunResponse
+) -> [TKWorkspaceFlowActionStep] {
+    let providerArtifact = workspaceFlowJSONArtifact(
+        ref: "evidence/model/provider-check.json",
+        runDir: runDir
+    )
+    return events.compactMap { event in
         guard event.type == .actionExecuted,
               let command = event.command,
               command.count >= 4,
@@ -1089,13 +1109,19 @@ private func workspaceFlowActionSteps(from events: [TKTestRunEvent]) -> [TKWorks
             stepIndex: event.stepIndex,
             type: .verifyChecked
         )
+        let actionArtifact = workspaceFlowJSONArtifact(ref: event.ref, runDir: runDir)
         return TKWorkspaceFlowActionStep(
             action: command[2],
             target: command[3],
-            evidenceRef: "events.jsonl#action.executed",
+            evidenceRef: event.ref ?? "events.jsonl#action.executed",
             modelEvidenceRef: modelRef,
             policyEvidenceRef: policyRef,
-            verifyEvidenceRef: verifyRef
+            verifyEvidenceRef: verifyRef,
+            vlmGrounding: workspaceFlowVLMGrounding(
+                from: actionArtifact,
+                providerArtifact: providerArtifact,
+                run: run
+            )
         )
     }
 }
@@ -1141,6 +1167,24 @@ private func workspaceFlowYAML(
 private func workspaceTritonTestStepLines(for step: TKWorkspaceFlowActionStep) -> [String]? {
     switch step.action {
     case "tap":
+        if let grounding = step.vlmGrounding {
+            var lines = [
+                "  - tap:",
+                "      target: \"\(yamlEscaped(step.target))\"",
+                "      grounding: vlm",
+                "      provider: \(grounding.provider)",
+            ]
+            if let model = grounding.model {
+                lines.append("      model: \"\(yamlEscaped(model))\"")
+            }
+            if let modelPath = grounding.modelPath {
+                lines.append("      modelPath: \"\(yamlEscaped(modelPath))\"")
+            }
+            if grounding.allowModelDownload == true {
+                lines.append("      allowModelDownload: true")
+            }
+            return lines
+        }
         return [
             "  - tap:",
             "      text: \"\(yamlEscaped(step.target))\"",
@@ -1163,6 +1207,58 @@ private func workspaceTritonTestStepLines(for step: TKWorkspaceFlowActionStep) -
     default:
         return nil
     }
+}
+
+private func workspaceFlowVLMGrounding(
+    from actionArtifact: [String: Any]?,
+    providerArtifact: [String: Any]?,
+    run: TKWorkspaceRunResponse
+) -> TKWorkspaceFlowVLMGrounding? {
+    guard actionArtifact?["usedVLMGrounding"] as? Bool == true,
+          let grounding = actionArtifact?["vlmGrounding"] as? [String: Any]
+    else {
+        return nil
+    }
+
+    let provider = workspaceFlowNonEmptyString(grounding["provider"])
+        ?? workspaceFlowNonEmptyString(providerArtifact?["vlmProvider"])
+        ?? run.ai.vlmProvider
+    guard let provider else { return nil }
+
+    let allowModelDownload = (providerArtifact?["vlmAllowModelDownload"] as? Bool) == true
+        ? true
+        : nil
+    return TKWorkspaceFlowVLMGrounding(
+        provider: provider,
+        model: workspaceFlowNonEmptyString(grounding["model"])
+            ?? workspaceFlowNonEmptyString(providerArtifact?["vlmModel"]),
+        modelPath: workspaceFlowNonEmptyString(providerArtifact?["vlmModelPath"]),
+        allowModelDownload: allowModelDownload
+    )
+}
+
+private func workspaceFlowJSONArtifact(ref: String?, runDir: URL) -> [String: Any]? {
+    guard let ref = ref?.trimmingCharacters(in: .whitespacesAndNewlines),
+          !ref.isEmpty,
+          !ref.hasPrefix("/"),
+          !ref.split(separator: "/").contains("..")
+    else {
+        return nil
+    }
+    let url = runDir.appendingPathComponent(ref)
+    guard FileManager.default.fileExists(atPath: url.path),
+          let data = try? Data(contentsOf: url),
+          let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
+    else {
+        return nil
+    }
+    return object
+}
+
+private func workspaceFlowNonEmptyString(_ value: Any?) -> String? {
+    guard let string = value as? String else { return nil }
+    let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmed.isEmpty ? nil : trimmed
 }
 
 private func workspaceAtlasSummary(runDir: URL) throws -> TKWorkspaceAtlasSummary {

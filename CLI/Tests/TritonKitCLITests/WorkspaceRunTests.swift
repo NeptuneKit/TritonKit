@@ -1283,6 +1283,57 @@ struct WorkspaceRunTests {
         #expect(plan.steps[2].selector?.text == "Continue")
     }
 
+    @Test("workspace export flow preserves VLM target grounding for rerun seeds")
+    func workspaceExportFlowPreservesVLMGroundingSeed() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let screenshot = root.appendingPathComponent("fixtures/login.png")
+        try writeFixtureImage(to: screenshot)
+        let fixture = try writeObservationFixture(in: root, screenshot: screenshot.path)
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-flow-vlm-grounded-action",
+                target: "current",
+                app: "com.example.demo",
+                goal: "Export VLM grounded action flow",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observationFixture: fixture.path,
+                executeActions: true
+            ),
+            vlmGroundingProvider: { request in
+                fakeVLMGrounding(for: request)
+            },
+            actionExecutionProvider: { request in
+                successfulActionExecution(for: request)
+            }
+        )
+        #expect(run.status == "stopped")
+
+        let output = root.appendingPathComponent("vlm-action-flow.tritontest.yaml")
+        let response = try exportWorkspaceFlow(
+            runID: "run-workspace-flow-vlm-grounded-action",
+            runsDirectory: root.path,
+            output: output.path
+        )
+        let yaml = try String(contentsOf: output, encoding: .utf8)
+        let plan = try validateTritonTestContract(yaml: yaml, inputPath: output.path)
+
+        #expect(response.stepCount == 3)
+        #expect(yaml.contains("target: \"Continue\""))
+        #expect(yaml.contains("grounding: vlm"))
+        #expect(yaml.contains("provider: mock"))
+        #expect(yaml.contains("text: \"Continue\"") == false)
+        #expect(plan.steps.map(\.type) == ["launch", "takeScreenshot", "tap"])
+        #expect(plan.steps[2].target == "Continue")
+        #expect(plan.steps[2].grounding == "vlm")
+        #expect(plan.steps[2].provider == "mock")
+        #expect(plan.steps[2].selector == nil)
+    }
+
     @Test("workspace export flow is accepted by deterministic test validator")
     func workspaceExportFlowIsAcceptedByDeterministicTestValidator() throws {
         let root = temporaryRunsDirectory()
@@ -1587,15 +1638,23 @@ struct WorkspaceRunTests {
         #expect(run.status == "passed")
     }
 
-    private func writeObservationFixture(in root: URL) throws -> URL {
+    private func writeObservationFixture(
+        in root: URL,
+        visibleTexts: [String] = ["Login", "Continue"],
+        screenshot: String = "fixtures/login.png"
+    ) throws -> URL {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let fixture = root.appendingPathComponent("observation-fixture.json")
+        let visibleTextsJSON = String(
+            data: try JSONEncoder().encode(visibleTexts),
+            encoding: .utf8
+        ) ?? "[]"
         try """
         {
           "schemaVersion": 1,
           "kind": "triton.workspace.observation-fixture",
           "artifacts": {
-            "screenshot": "fixtures/login.png",
+            "screenshot": "\(screenshot)",
             "ax": "fixtures/login-ax.json",
             "hierarchy": "fixtures/login-hierarchy.json"
           },
@@ -1603,13 +1662,58 @@ struct WorkspaceRunTests {
             "screenshotSha256": "sha-login-screen",
             "axTextHash": "ax-login-text",
             "hierarchySha256": "hier-login-tree",
-            "visibleTexts": ["Login", "Continue"]
+            "visibleTexts": \(visibleTextsJSON)
           },
           "sourceCommands": ["triton observe current --json"],
           "changed": true
         }
         """.write(to: fixture, atomically: true, encoding: .utf8)
         return fixture
+    }
+
+    private func writeFixtureImage(to url: URL) throws {
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAFgwJ/lhV3WQAAAABJRU5ErkJggg=="
+        guard let data = Data(base64Encoded: pngBase64) else {
+            throw RuntimeError("Could not decode fixture image")
+        }
+        try data.write(to: url, options: .atomic)
+    }
+
+    private func fakeVLMGrounding(for request: TKWorkspaceVLMGroundingRequest) -> TKVLMGroundResponse {
+        TKVLMGroundResponse(
+            provider: request.provider,
+            model: request.model,
+            baseURL: redactedVLMBaseURL(request.baseURL),
+            target: request.target,
+            image: TKVLMGroundImage(path: request.image, width: 1, height: 1, sha256: "image-sha"),
+            coordinateContract: TKVLMGroundCoordinateContractRef(
+                path: request.coordinateContract,
+                canonicalTapSpace: "runtime-point"
+            ),
+            point: TKVLMGroundPoint(
+                normalized: TKVLMNormalizedPoint(x: 500, y: 500),
+                runtimePoint: TKVLMRuntimePoint(x: 1, y: 1),
+                coordinateSpace: "runtime-point"
+            ),
+            transform: TKVLMCoordinateTransform(
+                inputSpace: "normalized_0_1000",
+                imageSpace: "image-pixel",
+                outputSpace: "runtime-point",
+                imageWidth: 1,
+                imageHeight: 1,
+                runtimeWidth: 1,
+                runtimeHeight: 1,
+                scale: 1,
+                orientation: "portrait",
+                source: request.coordinateContract
+            ),
+            artifacts: TKVLMGroundArtifacts(
+                overlay: URL(fileURLWithPath: request.outputDirectory).appendingPathComponent("vlm-overlay.png").path,
+                request: URL(fileURLWithPath: request.outputDirectory).appendingPathComponent("vlm-request.redacted.json").path,
+                response: URL(fileURLWithPath: request.outputDirectory).appendingPathComponent("vlm-response.json").path
+            )
+        )
     }
 
     private func writeObserveOutputFixture(in root: URL) throws -> URL {
