@@ -122,7 +122,7 @@ struct Serve: AsyncParsableCommand {
         router.post("/workspace/run") { request, _ -> Response in
             let endpoint = "/workspace/run"
             do {
-                return jsonResponse(try handleWorkspaceHTTPRun(body: try await requestBodyData(from: request)))
+                return jsonResponse(try await handleWorkspaceHTTPRunAsync(body: try await requestBodyData(from: request)))
             } catch {
                 return workspaceHTTPErrorResponse(error, endpoint: endpoint)
             }

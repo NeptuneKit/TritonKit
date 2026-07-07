@@ -150,12 +150,24 @@ struct WorkspaceRunTests {
         #expect(optionNames.contains("--allowed-action"))
         #expect(optionNames.contains("--stop-condition"))
         #expect(optionNames.contains("--observation-fixture"))
+        #expect(optionNames.contains("--observe-live"))
+        #expect(optionNames.contains("--observe-kind"))
+        #expect(optionNames.contains("--observe-max-nodes"))
+        #expect(optionNames.contains("--observe-host"))
+        #expect(optionNames.contains("--observe-port"))
+        #expect(optionNames.contains("--hdc"))
 
         let run = try #require(schema.subcommands.first { $0.name == "run" })
         #expect(run.optionalOptions.contains("--max-steps"))
         #expect(run.optionalOptions.contains("--allowed-action"))
         #expect(run.optionalOptions.contains("--stop-condition"))
         #expect(run.optionalOptions.contains("--observation-fixture"))
+        #expect(run.optionalOptions.contains("--observe-live"))
+        #expect(run.optionalOptions.contains("--observe-kind"))
+        #expect(run.optionalOptions.contains("--observe-max-nodes"))
+        #expect(run.optionalOptions.contains("--observe-host"))
+        #expect(run.optionalOptions.contains("--observe-port"))
+        #expect(run.optionalOptions.contains("--hdc"))
     }
 
     @Test("workspace run seeds atlas from observation fixture")
@@ -235,6 +247,99 @@ struct WorkspaceRunTests {
         #expect(evidenceRefs?.contains("evidence/observations/0000.json") == true)
         #expect(evidenceRefs?.contains("fixtures/login-screenshot.png") == true)
         #expect(evidenceRefs?.contains("fixtures/observe-tree.json") == true)
+    }
+
+    @Test("workspace run captures live observe seed when enabled")
+    func workspaceRunCapturesLiveObserveSeedWhenEnabled() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        var observedRequest: TKWorkspaceLiveObserveRequest?
+
+        _ = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-live-observe",
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Seed from live observe",
+                actionPolicy: "explore",
+                observeLive: true,
+                observeKind: "tree",
+                observeMaxNodes: 25
+            ),
+            observeProvider: { request in
+                observedRequest = request
+                return fakeLiveObserveOutput(for: request)
+            }
+        )
+
+        #expect(observedRequest?.action == "observe.tree")
+        #expect(observedRequest?.platform == .ios)
+        #expect(observedRequest?.target == "booted")
+        #expect(observedRequest?.maxNodes == 25)
+
+        let runDir = root.appendingPathComponent("run-workspace-live-observe", isDirectory: true)
+        let observationURL = runDir.appendingPathComponent("evidence/observations/0000.json")
+        #expect(FileManager.default.fileExists(atPath: observationURL.path))
+        let rawObservation = try JSONSerialization.jsonObject(with: Data(contentsOf: observationURL)) as? [String: Any]
+        #expect(rawObservation?["action"] as? String == "observe.tree")
+        #expect((rawObservation?["nodes"] as? [[String: Any]])?.count == 2)
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let observation = try #require(parsed.events.first { $0.type == .observationCaptured })
+        #expect(observation.artifacts?.screenshot == "fixtures/live-screenshot.png")
+        #expect(observation.artifacts?.hierarchy == "fixtures/live-tree.json")
+        #expect(observation.screenCandidate?.visibleTexts == ["Login", "Continue"])
+        #expect(observation.screenCandidate?.screenshotSha256.count == 64)
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let screen = (atlas?["screens"] as? [[String: Any]])?.first
+        #expect(screen?["dominantTexts"] as? [String] == ["Login", "Continue"])
+        let evidenceRefs = screen?["evidenceRefs"] as? [String]
+        #expect(evidenceRefs?.contains("evidence/observations/0000.json") == true)
+        #expect(evidenceRefs?.contains("fixtures/live-tree.json") == true)
+    }
+
+    @Test("workspace HTTP run captures live observe seed when enabled")
+    func workspaceHTTPRunCapturesLiveObserveSeedWhenEnabled() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        var observedRequest: TKWorkspaceLiveObserveRequest?
+
+        let body = try JSONEncoder().encode(TKWorkspaceHTTPRunRequest(
+            runsDir: root.path,
+            runID: "run-workspace-http-live-observe",
+            target: "booted",
+            platform: "ios",
+            scope: "simulator",
+            app: "com.example.demo",
+            goal: "HTTP live observe",
+            actionPolicy: "explore",
+            observeLive: true,
+            observeKind: "current",
+            observeMaxNodes: 7
+        ))
+        let run = try await handleWorkspaceHTTPRunAsync(body: body, observeProvider: { request in
+            observedRequest = request
+            return fakeLiveObserveOutput(for: request)
+        })
+
+        #expect(run.runID == "run-workspace-http-live-observe")
+        #expect(observedRequest?.action == "observe.current")
+        #expect(observedRequest?.maxNodes == 7)
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: root
+                .appendingPathComponent("run-workspace-http-live-observe", isDirectory: true)
+                .appendingPathComponent("events.jsonl"))
+        )
+        #expect(parsed.events.first { $0.type == .observationCaptured }?.screenCandidate?.visibleTexts == ["Login", "Continue"])
     }
 
     @Test("workspace run records explicit VLM provider preflight")
@@ -860,6 +965,68 @@ struct WorkspaceRunTests {
         }
         """.write(to: fixture, atomically: true, encoding: .utf8)
         return fixture
+    }
+
+    private func fakeLiveObserveOutput(for request: TKWorkspaceLiveObserveRequest) -> ObserveOutput {
+        ObserveOutput(
+            ok: true,
+            action: request.action,
+            platform: request.platform.rawValue,
+            capturedAt: "2026-07-07T00:00:00Z",
+            partial: false,
+            target: "sim:\(request.target)",
+            primarySource: ObserveSourceOutput(
+                name: "host-layout",
+                available: true,
+                reason: nil,
+                artifact: "fixtures/live-tree.json",
+                sourceCommands: ["triton sim ax --device \(request.target) --json"]
+            ),
+            sources: [
+                ObserveSourceOutput(
+                    name: "host-layout",
+                    available: true,
+                    reason: nil,
+                    artifact: "fixtures/live-tree.json",
+                    sourceCommands: ["triton sim ax --device \(request.target) --json"]
+                ),
+            ],
+            nodes: [
+                ObserveNodeOutput(
+                    nodeID: "ios-host:1",
+                    source: "host-layout",
+                    role: "button",
+                    text: "Login",
+                    identifier: "login-button",
+                    frame: nil,
+                    enabled: true,
+                    focused: false,
+                    hidden: false,
+                    candidateOnly: false,
+                    confidence: 0.96,
+                    capabilities: ["visible", "tap"],
+                    missingCapabilities: []
+                ),
+                ObserveNodeOutput(
+                    nodeID: "ios-host:2",
+                    source: "host-layout",
+                    role: "button",
+                    text: "Continue",
+                    identifier: "continue-button",
+                    frame: nil,
+                    enabled: true,
+                    focused: false,
+                    hidden: false,
+                    candidateOnly: false,
+                    confidence: 0.93,
+                    capabilities: ["visible", "tap"],
+                    missingCapabilities: []
+                ),
+            ],
+            artifacts: ["fixtures/live-screenshot.png", "fixtures/live-tree.json"],
+            sourceCommands: ["triton sim ax --device \(request.target) --json"],
+            note: "fake live observe"
+        )
     }
 
     private func runWorkspaceCLI(_ arguments: [String]) throws -> WorkspaceCLIRunResult {

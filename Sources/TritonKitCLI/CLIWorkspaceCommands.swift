@@ -2,14 +2,14 @@ import ArgumentParser
 import Foundation
 import TritonKitShared
 
-struct Workspace: ParsableCommand {
+struct Workspace: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "workspace",
         abstract: "Create and inspect local agent workspace runs",
         subcommands: [Run.self, Inspect.self, Stop.self, ExportFlow.self]
     )
 
-    struct Run: ParsableCommand {
+    struct Run: AsyncParsableCommand {
         static let configuration = CommandConfiguration(
             commandName: "run",
             abstract: "Create a local workspace run facts directory"
@@ -30,6 +30,22 @@ struct Workspace: ParsableCommand {
         var stopConditions: [String] = []
         @Option(name: .customLong("observation-fixture"), help: "Observation fixture JSON used to seed initial screen evidence")
         var observationFixture: String?
+        @Flag(name: .customLong("observe-live"), help: "Capture initial observation through triton observe")
+        var observeLive = false
+        @Option(name: .customLong("observe-kind"), help: "Live observation kind: current or tree")
+        var observeKind = "tree"
+        @Option(name: .customLong("observe-max-nodes"), help: "Maximum nodes for live observation")
+        var observeMaxNodes: Int?
+        @Option(name: .customLong("observe-output"), help: "Write host layout artifact for live observation")
+        var observeOutput: String?
+        @Option(name: .customLong("runtime-base-url"), help: "Direct embedded runtime base URL for live observation")
+        var observeRuntimeBaseURL: String?
+        @Option(name: .customLong("observe-host"), help: "Embedded runtime host for live observation")
+        var observeHost = "127.0.0.1"
+        @Option(name: .customLong("observe-port"), help: "Embedded runtime port for live observation")
+        var observePort = 19421
+        @Option(help: "Path to hdc executable for Harmony live observation")
+        var hdc = "hdc"
         @Option(name: .customLong("llm-provider"), help: "LLM provider preflight id, for example mock")
         var llmProvider: String?
         @Option(name: .customLong("vlm-provider"), help: "VLM provider preflight id, for example mock")
@@ -39,10 +55,10 @@ struct Workspace: ParsableCommand {
         @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
         @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
 
-        func run() throws {
+        func run() async throws {
             let outputFormat = effectiveFormat(format, json: json)
             do {
-                let response = try runWorkspaceRun(TKWorkspaceRunRequest(
+                let response = try await runWorkspaceRunAsync(TKWorkspaceRunRequest(
                     runsDirectory: runsDirectory,
                     runID: runID,
                     target: target,
@@ -57,7 +73,15 @@ struct Workspace: ParsableCommand {
                     maxSteps: maxSteps,
                     allowedActions: allowedActions,
                     stopConditions: stopConditions,
-                    observationFixture: observationFixture
+                    observationFixture: observationFixture,
+                    observeLive: observeLive,
+                    observeKind: observeKind,
+                    observeMaxNodes: observeMaxNodes,
+                    observeOutput: observeOutput,
+                    observeRuntimeBaseURL: observeRuntimeBaseURL,
+                    observeHost: observeHost,
+                    observePort: observePort,
+                    hdc: hdc
                 ))
                 try printWorkspaceRun(response, format: outputFormat)
             } catch {

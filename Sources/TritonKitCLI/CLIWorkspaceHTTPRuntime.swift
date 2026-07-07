@@ -16,6 +16,14 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
     let allowedActions: [String]?
     let stopConditions: [String]?
     let observationFixture: String?
+    let observeLive: Bool?
+    let observeKind: String?
+    let observeMaxNodes: Int?
+    let observeOutput: String?
+    let observeRuntimeBaseURL: String?
+    let observeHost: String?
+    let observePort: Int?
+    let hdc: String?
 
     init(
         runsDir: String?,
@@ -32,7 +40,15 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         maxSteps: Int? = nil,
         allowedActions: [String]? = nil,
         stopConditions: [String]? = nil,
-        observationFixture: String? = nil
+        observationFixture: String? = nil,
+        observeLive: Bool? = nil,
+        observeKind: String? = nil,
+        observeMaxNodes: Int? = nil,
+        observeOutput: String? = nil,
+        observeRuntimeBaseURL: String? = nil,
+        observeHost: String? = nil,
+        observePort: Int? = nil,
+        hdc: String? = nil
     ) {
         self.runsDir = runsDir
         self.runID = runID
@@ -49,6 +65,14 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         self.allowedActions = allowedActions
         self.stopConditions = stopConditions
         self.observationFixture = observationFixture
+        self.observeLive = observeLive
+        self.observeKind = observeKind
+        self.observeMaxNodes = observeMaxNodes
+        self.observeOutput = observeOutput
+        self.observeRuntimeBaseURL = observeRuntimeBaseURL
+        self.observeHost = observeHost
+        self.observePort = observePort
+        self.hdc = hdc
     }
 
     enum CodingKeys: String, CodingKey {
@@ -67,6 +91,14 @@ struct TKWorkspaceHTTPRunRequest: Codable, Equatable {
         case allowedActions
         case stopConditions
         case observationFixture
+        case observeLive
+        case observeKind
+        case observeMaxNodes
+        case observeOutput
+        case observeRuntimeBaseURL
+        case observeHost
+        case observePort
+        case hdc
     }
 }
 
@@ -77,7 +109,19 @@ struct TKWorkspaceHTTPExportFlowRequest: Codable, Equatable {
 
 func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
     let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPRunRequest.self, from: body)
-    return try runWorkspaceRun(TKWorkspaceRunRequest(
+    return try runWorkspaceRun(workspaceRunRequest(from: request))
+}
+
+func handleWorkspaceHTTPRunAsync(
+    body: Data,
+    observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider
+) async throws -> TKWorkspaceRunResponse {
+    let request = try decodeWorkspaceHTTP(TKWorkspaceHTTPRunRequest.self, from: body)
+    return try await runWorkspaceRunAsync(workspaceRunRequest(from: request), observeProvider: observeProvider)
+}
+
+private func workspaceRunRequest(from request: TKWorkspaceHTTPRunRequest) -> TKWorkspaceRunRequest {
+    TKWorkspaceRunRequest(
         runsDirectory: request.runsDir ?? ".triton/runs",
         runID: request.runID,
         target: request.target ?? "current",
@@ -92,8 +136,16 @@ func handleWorkspaceHTTPRun(body: Data) throws -> TKWorkspaceRunResponse {
         maxSteps: request.maxSteps,
         allowedActions: request.allowedActions ?? [],
         stopConditions: request.stopConditions ?? [],
-        observationFixture: request.observationFixture
-    ))
+        observationFixture: request.observationFixture,
+        observeLive: request.observeLive ?? false,
+        observeKind: request.observeKind ?? "tree",
+        observeMaxNodes: request.observeMaxNodes,
+        observeOutput: request.observeOutput,
+        observeRuntimeBaseURL: request.observeRuntimeBaseURL,
+        observeHost: request.observeHost ?? "127.0.0.1",
+        observePort: request.observePort ?? 19421,
+        hdc: request.hdc ?? "hdc"
+    )
 }
 
 func handleWorkspaceHTTPInspect(runID: String, runsDir: String?) throws -> TKWorkspaceInspectResponse {

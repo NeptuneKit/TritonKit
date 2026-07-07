@@ -310,6 +310,8 @@ triton node resolve @1 --platform <ios|android|harmony> --device <selector> --js
 
 `@N` aliases are repo-local snapshots written to `.triton/node-aliases.json`, not a daemon session. If `node resolve @N` returns `stale_node_alias`, run the `nextAction` refresh command instead of guessing from the old cache.
 
+For a local agent Run that needs the same first observation as Atlas seed, use `triton workspace run --target <selector> --platform <ios|android|harmony> --app <app> --goal "<goal>" --observe-live --observe-kind tree --json`. This saves raw `ObserveOutput` under the run evidence directory and derives `observation.captured` / initial Atlas screen from it; it still does not prove app launch or business completion without later action and verification events.
+
 For Harmony target discovery, expect HDC output shape drift. `triton device list --platform harmony --json` should parse `hdc list targets -v` stdout and stderr, fallback to plain `hdc list targets` when verbose output has no target rows, and treat single-column plain targets such as `127.0.0.1:5555` as connected DevEco emulator candidates. Do not parse prose errors such as `Connect server failed` as targets.
 
 For Harmony host discovery, parse optional foreground app identity from `triton device list --platform harmony --json` when present. Treat `identityState=current` with `current=true` as the only current foreground identity. Treat `identityState=unknown` or `identityState=unsupported` as an explicit no-identity boundary; do not substitute the HDC target id, emulator name, or selected alias as `appName` / `bundleIdentifier`.

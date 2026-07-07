@@ -517,6 +517,9 @@ triton app prefs get DEBUG-mock --device booted --bundle-id com.example.app --js
 triton app prefs set DEBUG-mock true --device booted --bundle-id com.example.app --json
 triton app prefs set SeedState --type data --base64 W3t9XQ== --device booted --bundle-id com.example.app --json
 triton app prefs dump --device booted --bundle-id com.example.app --json
+triton workspace run --target booted --platform ios --scope simulator --app com.example.app --goal "Explore login" --observe-live --observe-kind tree --json
+triton workspace inspect <run-id> --json
+triton workspace export-flow <run-id> --output flow.tritonflow.yaml --json
 ```
 
 `sim screenshot` captures the CoreSimulator framebuffer. Its JSON output includes `pixelWidth`, `pixelHeight`, `display.*`, `orientationPolicy=raw-framebuffer`, and `orientationNote`; use `--display internal|external|<screen-id>|<display-uuid>` when the default display selected by `simctl` is not the one you want. Triton does not rotate iPad framebuffer screenshots yet, so downstream evidence viewers should treat the orientation metadata as authoritative.
@@ -528,6 +531,7 @@ For local emulator or simulator actions, use Triton as the first control surface
 `app go <url>` is the short iOS deep-link smoke entry: it opens the URL, waits for embedded runtime readiness, returns an app/route/AX snapshot summary, and defaults to JSON output. Use `--device <selector>` only when the current/default target is ambiguous.
 For iOS simulator selectors, `sim:` is optional. `--device 60667794-96F8-40E6-8664-85538EC4663E` and `--device sim:60667794-96F8-40E6-8664-85538EC4663E` both resolve to the same simulator; keep `sim:` only when you want explicit platform disambiguation.
 `app open-url` is the lower-level host action and only proves the URL was submitted to Simulator. Continue with `triton wait`, `triton act find`, `triton verify`, `triton webview current-url`, `triton route assert-current-url`, or `triton app prefs get` to verify the business state.
+`workspace run --observe-live` creates a local agent run and seeds its initial `observation.captured` / Atlas screen from `triton observe current|tree`; it still does not prove app launch, action execution, or end-to-end business completion without later run events and verification evidence.
 
 Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts; if fallback is still required, keep the `triton schema --command xcode --json` or `triton xcode ...` failure / unsupported evidence with the fallback log:
 

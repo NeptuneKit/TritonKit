@@ -520,6 +520,7 @@ CLI 首批只需要：
 ```bash
 triton workspace run --target current --app <app> --goal "<goal>" --json
 triton workspace run --target current --app <app> --goal "<goal>" --llm-provider mock --vlm-provider mock --json
+triton workspace run --target booted --platform ios --scope simulator --app <app> --goal "<goal>" --observe-live --observe-kind tree --json
 triton workspace run --target current --app <app> --goal "<goal>" --max-steps 5 --allowed-action tap --allowed-action wait --stop-condition max_steps_reached --json
 triton workspace inspect <run-id> --json
 triton workspace stop <run-id> --json
@@ -603,6 +604,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 - `workspace run` 会创建 `.triton/runs/<run-id>/` 兼容目录骨架，写入 `run.json`、`config.yaml`、`events.jsonl`、`report.json`、`atlas/atlas.json` 和首批 evidence placeholder。
 - `atlas/atlas.json` 不再是空壳：默认从初始 `observation.captured` 生成一个 `screen_0000`、一个 `state_0000`、coverage 计数和 screenshot / hierarchy / event evidence backlink。
 - `workspace run` 支持 `--observation-fixture <json>` / HTTP `observationFixture`，可消费 workspace observation fixture 的 `artifacts + screenCandidate + sourceCommands`，也可直接消费 `triton observe current/tree --json` 输出；运行时保留原始 JSON 到 `evidence/observations/0000.json`，并用真实 visibleTexts / hash / artifact refs 生成 `observation.captured` 与 Atlas seed；未传时仍使用 placeholder。
+- `workspace run` 支持显式 live observe：CLI `--observe-live --observe-kind current|tree --platform <platform> --target <selector>` 与 HTTP `observeLive/observeKind/observeMaxNodes` 会调用现有 `triton observe current/tree` 下层 runtime，保存 raw `ObserveOutput` 到 `evidence/observations/0000.json`，并从 nodes / primarySource / artifacts 派生 `observation.captured` 与 Atlas seed；无独立截图或 AX artifact 时保留 placeholder screenshot，并用 hierarchy/raw observe 作为 AX 回退，保持事件协议可解析。
 - `--dry-model-fixture` 会把测试协议里的失败动作写回 Atlas：`atlas/deltas.jsonl` 和 `atlas/atlas.json` 都包含 `transition_0000`，状态为 `candidate_failed`，从 `screen_0000` 回到 `screen_0000`，并引用 model / policy / action / verify evidence。
 - `export-flow` 会从 `action.executed` 事件派生最小 action step；dry fixture 当前可导出 `tap Continue`，并保留 model / policy / verify evidence backlink。
 - `workspace inspect` 会返回 Atlas summary：`atlasRef`、`deltaRef`、`coverageStatus`、`screenCount`、`stateCount`、`transitionCount`，并返回 `latestBootstrap` / `latestBootstrapProposal` / `latestPause`，便于 agent 不打开文件也能判断 map 覆盖、稳定启动建议和暂停原因。
@@ -620,7 +622,7 @@ observe.captured -> model.decided(fake) -> policy.checked(failed) -> flow.recove
 
 刻意未做：
 
-- 未接真实 target discovery / app launch / screenshot / action execution；当前 observation 可通过 fixture 注入，还不是 live `triton observe` 自动采集。
+- 未接真实 target discovery / app launch / action execution；当前 observation 已可通过 fixture 或显式 live `triton observe` 进入 Run，但还没有成为 app ready 后的默认自动采集链路。
 - 未接真实 LLM provider、真实 VLM request/response 或真实 observation 驱动的模型决策。
 - 未生成真实 observation 驱动的 Atlas transition、state variant 合并、coverage path 或 app-map merge；当前 transition 和 action flow step 只来自 deterministic dry fixture / mock provider loop。
 - 未做 Web Workbench 视图。

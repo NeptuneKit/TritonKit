@@ -1,4 +1,3 @@
-import CryptoKit
 import Foundation
 import TritonKitShared
 
@@ -18,6 +17,14 @@ struct TKWorkspaceRunRequest {
     let allowedActions: [String]
     let stopConditions: [String]
     let observationFixture: String?
+    let observeLive: Bool
+    let observeKind: String
+    let observeMaxNodes: Int?
+    let observeOutput: String?
+    let observeRuntimeBaseURL: String?
+    let observeHost: String
+    let observePort: Int
+    let hdc: String
 
     init(
         runsDirectory: String,
@@ -34,7 +41,15 @@ struct TKWorkspaceRunRequest {
         maxSteps: Int? = nil,
         allowedActions: [String] = [],
         stopConditions: [String] = [],
-        observationFixture: String? = nil
+        observationFixture: String? = nil,
+        observeLive: Bool = false,
+        observeKind: String = "tree",
+        observeMaxNodes: Int? = nil,
+        observeOutput: String? = nil,
+        observeRuntimeBaseURL: String? = nil,
+        observeHost: String = "127.0.0.1",
+        observePort: Int = 19421,
+        hdc: String = "hdc"
     ) {
         self.runsDirectory = runsDirectory
         self.runID = runID
@@ -51,6 +66,14 @@ struct TKWorkspaceRunRequest {
         self.allowedActions = allowedActions
         self.stopConditions = stopConditions
         self.observationFixture = observationFixture
+        self.observeLive = observeLive
+        self.observeKind = observeKind
+        self.observeMaxNodes = observeMaxNodes
+        self.observeOutput = observeOutput
+        self.observeRuntimeBaseURL = observeRuntimeBaseURL
+        self.observeHost = observeHost
+        self.observePort = observePort
+        self.hdc = hdc
     }
 }
 
@@ -173,41 +196,6 @@ private struct TKWorkspaceRunFinalState {
     let phase: String?
 }
 
-private struct TKWorkspaceObservationFixture: Codable {
-    let schemaVersion: Int?
-    let kind: String?
-    let artifacts: TKTestRunObservationArtifacts
-    let screenCandidate: TKTestRunScreenCandidate
-    let sourceCommands: [String]?
-    let changed: Bool?
-}
-
-private struct TKWorkspaceObserveOutputFixture: Codable {
-    let action: String?
-    let primarySource: TKWorkspaceObserveSourceFixture?
-    let sources: [TKWorkspaceObserveSourceFixture]?
-    let nodes: [ObserveNodeOutput]
-    let artifacts: [String]?
-    let sourceCommands: [String]?
-}
-
-private struct TKWorkspaceObserveSourceFixture: Codable {
-    let name: String
-    let available: Bool
-    let reason: String?
-    let artifact: String?
-    let sourceCommands: [String]
-}
-
-private struct TKWorkspaceObservationSeed {
-    let fixturePath: String?
-    let fixtureRef: String?
-    let artifacts: TKTestRunObservationArtifacts
-    let screenCandidate: TKTestRunScreenCandidate
-    let sourceCommands: [String]
-    let changed: Bool?
-}
-
 private let defaultWorkspaceRunnerMaxSteps = 20
 private let defaultWorkspaceRunnerAllowedActions = ["tap", "swipe", "type", "wait", "verify", "stop"]
 private let defaultWorkspaceRunnerStopConditions = [
@@ -261,6 +249,22 @@ private struct TKWorkspaceFlowActionStep {
 }
 
 func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunResponse {
+    let observationSeed = try workspaceObservationSeed(for: request)
+    return try runWorkspaceRun(request, observationSeed: observationSeed)
+}
+
+func runWorkspaceRunAsync(
+    _ request: TKWorkspaceRunRequest,
+    observeProvider: TKWorkspaceLiveObserveProvider = workspaceDefaultLiveObserveProvider
+) async throws -> TKWorkspaceRunResponse {
+    let observationSeed = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
+    return try runWorkspaceRun(request, observationSeed: observationSeed)
+}
+
+private func runWorkspaceRun(
+    _ request: TKWorkspaceRunRequest,
+    observationSeed: TKWorkspaceObservationSeed
+) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
     let paths = TKWorkspaceRunPaths(
@@ -277,7 +281,6 @@ func runWorkspaceRun(_ request: TKWorkspaceRunRequest) throws -> TKWorkspaceRunR
     )
     let runner = try workspaceRunnerConfig(for: request)
     let providerPreflight = try workspaceProviderPreflight(request)
-    let observationSeed = try workspaceObservationSeed(fixturePath: request.observationFixture)
     let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
     let modelLoopMode = request.dryModelFixture ? "dry-fixture" : "mock-provider"
     let modelDecisionAllowed = modelLoopEnabled
@@ -593,113 +596,6 @@ private func workspaceTargetMetadata(platform: String?, scope: String?) -> (plat
     )
 }
 
-private func workspaceObservationSeed(fixturePath: String?) throws -> TKWorkspaceObservationSeed {
-    guard let rawPath = fixturePath?.trimmingCharacters(in: .whitespacesAndNewlines),
-          !rawPath.isEmpty
-    else {
-        return TKWorkspaceObservationSeed(
-            fixturePath: nil,
-            fixtureRef: nil,
-            artifacts: TKTestRunObservationArtifacts(
-                screenshot: "evidence/screenshots/0000.txt",
-                ax: "evidence/hierarchy/0000-ax.json",
-                hierarchy: "evidence/hierarchy/0000.json"
-            ),
-            screenCandidate: TKTestRunScreenCandidate(
-                screenshotSha256: "placeholder-screenshot",
-                axTextHash: "placeholder-ax",
-                hierarchySha256: "placeholder-hierarchy",
-                visibleTexts: []
-            ),
-            sourceCommands: [],
-            changed: false
-        )
-    }
-
-    let data = try Data(contentsOf: URL(fileURLWithPath: rawPath))
-    if let fixture = try? JSONDecoder().decode(TKWorkspaceObservationFixture.self, from: data) {
-        return TKWorkspaceObservationSeed(
-            fixturePath: rawPath,
-            fixtureRef: "evidence/observations/0000.json",
-            artifacts: fixture.artifacts,
-            screenCandidate: fixture.screenCandidate,
-            sourceCommands: fixture.sourceCommands ?? [],
-            changed: fixture.changed
-        )
-    }
-
-    let observeOutput = try JSONDecoder().decode(TKWorkspaceObserveOutputFixture.self, from: data)
-    let visibleTexts = workspaceVisibleTexts(from: observeOutput.nodes)
-    return TKWorkspaceObservationSeed(
-        fixturePath: rawPath,
-        fixtureRef: "evidence/observations/0000.json",
-        artifacts: TKTestRunObservationArtifacts(
-            screenshot: workspaceObserveScreenshotRef(observeOutput),
-            ax: workspaceObserveAXRef(observeOutput),
-            hierarchy: workspaceObserveHierarchyRef(observeOutput)
-        ),
-        screenCandidate: TKTestRunScreenCandidate(
-            screenshotSha256: workspaceSHA256(data),
-            axTextHash: workspaceSHA256(Data(visibleTexts.joined(separator: "\n").utf8)),
-            hierarchySha256: workspaceSHA256(Data(workspaceHierarchyFingerprint(from: observeOutput.nodes).utf8)),
-            visibleTexts: visibleTexts
-        ),
-        sourceCommands: observeOutput.sourceCommands ?? observeOutput.primarySource?.sourceCommands ?? [],
-        changed: nil
-    )
-}
-
-private func workspaceVisibleTexts(from nodes: [ObserveNodeOutput]) -> [String] {
-    var seen = Set<String>()
-    var texts: [String] = []
-    for node in nodes {
-        guard let text = node.text?.trimmingCharacters(in: .whitespacesAndNewlines),
-              !text.isEmpty,
-              seen.insert(text).inserted
-        else {
-            continue
-        }
-        texts.append(text)
-    }
-    return texts
-}
-
-private func workspaceObserveScreenshotRef(_ output: TKWorkspaceObserveOutputFixture) -> String? {
-    output.artifacts?.first { path in
-        let lower = path.lowercased()
-        return lower.contains("screenshot") || lower.hasSuffix(".png") || lower.hasSuffix(".jpg") || lower.hasSuffix(".jpeg")
-    }
-}
-
-private func workspaceObserveHierarchyRef(_ output: TKWorkspaceObserveOutputFixture) -> String? {
-    output.primarySource?.artifact
-        ?? output.sources?.first(where: { $0.available && $0.artifact != nil })?.artifact
-        ?? output.artifacts?.first
-}
-
-private func workspaceObserveAXRef(_ output: TKWorkspaceObserveOutputFixture) -> String? {
-    output.artifacts?.first { path in
-        let lower = path.lowercased()
-        return lower.contains("ax") || lower.contains("accessibility")
-    }
-}
-
-private func workspaceHierarchyFingerprint(from nodes: [ObserveNodeOutput]) -> String {
-    nodes.map { node in
-        [
-            node.nodeID,
-            node.source,
-            node.role ?? "",
-            node.text ?? "",
-            node.identifier ?? "",
-        ].joined(separator: "|")
-    }.joined(separator: "\n")
-}
-
-private func workspaceSHA256(_ data: Data) -> String {
-    SHA256.hash(data: data).map { String(format: "%02x", $0) }.joined()
-}
-
 private func normalizedWorkspaceTargetValue(_ raw: String?, defaultValue: String) -> String {
     let value = raw?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
     return value.isEmpty ? defaultValue : value
@@ -939,7 +835,12 @@ private func writeWorkspaceRunArtifacts(
     )
     try writeWorkspaceJSONArtifact(["nodes": []], to: runDir.appendingPathComponent("evidence/hierarchy/0000.json"))
     try writeWorkspaceJSONArtifact(["ax": []], to: runDir.appendingPathComponent("evidence/hierarchy/0000-ax.json"))
-    if let fixturePath = observation.fixturePath {
+    if let rawObservationData = observation.rawObservationData {
+        try rawObservationData.write(
+            to: runDir.appendingPathComponent("evidence/observations/0000.json"),
+            options: .atomic
+        )
+    } else if let fixturePath = observation.fixturePath {
         let observationURL = runDir.appendingPathComponent("evidence/observations/0000.json")
         if FileManager.default.fileExists(atPath: observationURL.path) {
             try FileManager.default.removeItem(at: observationURL)
