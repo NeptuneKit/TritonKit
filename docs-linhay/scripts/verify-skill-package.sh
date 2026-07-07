@@ -44,6 +44,25 @@ do
   grep -q "references/${reference}.md" "${tmp_dir}/tritonkit-dev-feedback.skill.md"
 done
 
+tar -xOf "${package}" TritonKit.skills/tritonkit-dev-feedback/references/issue-filing.md > "${tmp_dir}/issue-filing.md"
+grep -q '^## Public issue preflight$' "${tmp_dir}/issue-filing.md"
+grep -q 'rg -n' "${tmp_dir}/issue-filing.md"
+grep -q '<private-app>' "${tmp_dir}/issue-filing.md"
+grep -q '<bundle-id>' "${tmp_dir}/issue-filing.md"
+grep -Eq '<simulator-target>|<ios-simulator-runtime-target>' "${tmp_dir}/issue-filing.md"
+grep -Eq '<repo-path>|<local-path>' "${tmp_dir}/issue-filing.md"
+grep -q '<user>' "${tmp_dir}/issue-filing.md"
+grep -q 'Redaction preflight passed:' "${tmp_dir}/issue-filing.md"
+python3 - "${tmp_dir}/issue-filing.md" <<'PY'
+import pathlib
+import sys
+
+text = pathlib.Path(sys.argv[1]).read_text()
+preflight = text.index("## Public issue preflight")
+create = text.index("gh issue create")
+assert preflight < create
+PY
+
 if grep -q '[.]DS_Store' "${tmp_dir}/contents.txt"; then
   echo "skill package should not contain .DS_Store" >&2
   exit 1
