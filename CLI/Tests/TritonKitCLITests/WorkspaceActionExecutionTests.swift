@@ -69,6 +69,57 @@ struct WorkspaceActionExecutionTests {
         #expect(transition?["status"] as? String == "executed_unverified")
     }
 
+    @Test("workspace run derives explicit action candidate from observation")
+    func workspaceRunDerivesExplicitActionCandidateFromObservation() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let fixture = try writeObservationFixture(in: root, visibleTexts: ["Welcome", "Start"])
+        var actionRequest: TKWorkspaceActionExecutionRequest?
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-observation-candidate",
+                target: "runtime-target-candidate",
+                app: "com.example.demo",
+                goal: "Open start screen",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observationFixture: fixture.path,
+                executeActions: true
+            ),
+            actionExecutionProvider: { request in
+                actionRequest = request
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "stopped")
+        #expect(actionRequest?.query == "Start")
+        #expect(actionRequest?.command == ["triton", "act", "tap", "Start", "--json"])
+
+        let runDir = root.appendingPathComponent("run-workspace-observation-candidate", isDirectory: true)
+        let decision = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/decision-000.json"))
+        ) as? [String: Any]
+        #expect(decision?["command"] as? [String] == ["triton", "act", "tap", "Start", "--json"])
+        #expect(decision?["candidateSource"] as? String == "observation.visibleTexts")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let actionEvent = parsed.events.first { $0.type == .actionExecuted }
+        #expect(actionEvent?.command == ["triton", "act", "tap", "Start", "--json"])
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let transition = (atlas?["transitions"] as? [[String: Any]])?.first
+        let selector = transition?["selector"] as? [String: Any]
+        #expect(selector?["text"] as? String == "Start")
+    }
+
     @Test("workspace run verifies business readiness after explicit action execution")
     func workspaceRunVerifiesBusinessReadinessAfterExplicitActionExecution() async throws {
         let root = temporaryRunsDirectory()
@@ -355,9 +406,16 @@ struct WorkspaceActionExecutionTests {
             .appendingPathComponent("triton-workspace-action-execution-tests-\(UUID().uuidString)", isDirectory: true)
     }
 
-    private func writeObservationFixture(in root: URL) throws -> URL {
+    private func writeObservationFixture(
+        in root: URL,
+        visibleTexts: [String] = ["Login", "Continue"]
+    ) throws -> URL {
         try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
         let fixture = root.appendingPathComponent("observation.json")
+        let visibleTextsJSON = String(
+            data: try JSONEncoder().encode(visibleTexts),
+            encoding: .utf8
+        ) ?? "[]"
         try """
         {
           "schemaVersion": 1,
@@ -371,7 +429,7 @@ struct WorkspaceActionExecutionTests {
             "screenshotSha256": "sha-login-screen",
             "axTextHash": "ax-login-text",
             "hierarchySha256": "hier-login-tree",
-            "visibleTexts": ["Login", "Continue"]
+            "visibleTexts": \(visibleTextsJSON)
           },
           "sourceCommands": ["triton observe current --json"],
           "changed": true
@@ -388,7 +446,7 @@ struct WorkspaceActionExecutionTests {
             action: request.action,
             command: request.command,
             proofSource: "runtime.input",
-            sourceCommands: ["triton act tap Continue --json", "runtime input tap"],
+            sourceCommands: [request.command.map { $0 }.joined(separator: " "), "runtime input tap"],
             message: "submitted",
             inputResult: TKInputResult.success(
                 action: "tap",

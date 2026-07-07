@@ -129,7 +129,7 @@ Then LLM/VLM 先做 flow bootstrap 判断，运行中持续做 flow recovery 判
 - CLI/HTTP 和 Web DTO 必须以 target/capability 为事实源，不要求调用方预先区分真机、模拟器或仿真器。
 - 本机 Atlas map 能从 evidence 生成可查询图谱，至少覆盖 screen、state、transition、coverage 和 evidence backlink。
 - LLM/VLM 在 workspace run 中默认开启，默认用于流程稳定启动、偏航回正、理解、定位、Atlas 标注和探索决策；每次模型参与都能追溯 request / response / confidence / artifact，且所有动作经由 Triton CLI/HTTP。
-- 显式 `--execute-actions` / HTTP `executeActions=true` 时，模型候选动作必须通过 runtime action provider 执行，写入 `evidence/actions/action-000.json`、`action.executed` 和 Atlas transition；只执行未验证时状态为 `executed_unverified`，搭配 `--observe-live` 时必须在 action 成功后再次采集 observation、写 `screen_0001/state_0001` 和 `screen_0000 -> screen_0001` transition，搭配 post-action runtime wait 通过后必须写 `business.ready` / passed `verify.checked` 并把 transition 标为 `verified`。
+- 显式 `--execute-actions` / HTTP `executeActions=true` 时，模型候选动作必须由 initial observation visibleTexts 派生并通过 runtime action provider 执行，写入 `evidence/actions/action-000.json`、`action.executed` 和 Atlas transition；只执行未验证时状态为 `executed_unverified`，搭配 `--observe-live` 时必须在 action 成功后再次采集 observation、写 `screen_0001/state_0001` 和 `screen_0000 -> screen_0001` transition，搭配 post-action runtime wait 通过后必须写 `business.ready` / passed `verify.checked` 并把 transition 标为 `verified`。
 - Flow bootstrap 和 flow recovery 是 LLM/VLM 的首要验收：能从不同初始场景稳定命中 start anchor，能在 selector drift、弹窗、登录过期、慢加载时给出可审计 repair proposal。
 - VLM 自主探索 loop 有可复跑 dry-run / bounded-run 模式；本地 replay / 稳定回归不能静默退出模型参与，只能把模型角色限制为 observer / verifier / repair-advisor。
 - bounded-run 模式必须有机器可读 runner 边界：`maxSteps`、`allowedActions`、`stopConditions` 可通过 CLI/HTTP 设置并写入 run facts，后续真实 LLM/VLM loop 必须在这些边界内执行。

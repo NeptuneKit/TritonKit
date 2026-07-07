@@ -92,10 +92,11 @@ func workspaceModelDecisionEvents(
     policyAllowed: Bool,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     actionExecution: TKWorkspaceActionExecutionResult?,
-    postActionObservation: TKWorkspaceObservationSeed?
+    postActionObservation: TKWorkspaceObservationSeed?,
+    actionCandidate: TKWorkspaceActionCandidate
 ) -> [TKTestRunEvent] {
     let now = workspaceTimestamp()
-    let command = ["triton", "act", "tap", "Continue", "--json"]
+    let command = actionCandidate.command
     let failureMode = mode.replacingOccurrences(of: "-", with: "_")
     if !policyAllowed {
         return [
@@ -109,7 +110,7 @@ func workspaceModelDecisionEvents(
                 stepIndex: 1,
                 failure: TKTestRunFailure(
                     type: "policy_rejected",
-                    message: "Runner allowedActions rejected \(mode) tap candidate.",
+                    message: "Runner allowedActions rejected \(mode) \(actionCandidate.action) candidate.",
                     artifactRefs: ["evidence/model/policy-000.json"]
                 ),
                 phase: "policy_rejected"

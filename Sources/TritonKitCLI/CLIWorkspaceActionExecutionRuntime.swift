@@ -14,6 +14,16 @@ struct TKWorkspaceActionExecutionRequest: Equatable {
     let command: [String]
 }
 
+struct TKWorkspaceActionCandidate: Equatable {
+    static let fallback = TKWorkspaceActionCandidate(action: "tap", query: "Continue", source: "fallback.default")
+
+    let action: String
+    let query: String
+    let source: String
+
+    var command: [String] { ["triton", "act", action, query, "--json"] }
+}
+
 struct TKWorkspaceActionExecutionResult {
     let ok: Bool
     let action: String
@@ -28,17 +38,31 @@ struct TKWorkspaceActionExecutionResult {
     var exitCode: Int { ok ? 0 : 1 }
 }
 
-func workspaceActionExecutionRequest(for request: TKWorkspaceRunRequest) throws -> TKWorkspaceActionExecutionRequest {
-    let command = ["triton", "act", "tap", "Continue", "--json"]
+func workspaceModelActionCandidate(from observation: TKWorkspaceObservationSeed) -> TKWorkspaceActionCandidate {
+    let visibleTexts = observation.screenCandidate.visibleTexts
+        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+    let preferredTexts = ["Continue", "Start", "Get Started", "Next", "Login", "Log In", "Sign In"]
+    let query = preferredTexts.first { preferred in
+        visibleTexts.contains { $0.compare(preferred, options: [.caseInsensitive, .diacriticInsensitive]) == .orderedSame }
+    } ?? visibleTexts.first
+    guard let query else { return .fallback }
+    return TKWorkspaceActionCandidate(action: "tap", query: query, source: "observation.visibleTexts")
+}
+
+func workspaceActionExecutionRequest(
+    for request: TKWorkspaceRunRequest,
+    candidate: TKWorkspaceActionCandidate
+) throws -> TKWorkspaceActionExecutionRequest {
     return TKWorkspaceActionExecutionRequest(
         target: request.target,
         host: request.observeHost,
         port: request.observePort,
         platform: request.platform,
         scope: request.scope,
-        action: "tap",
-        query: "Continue",
-        command: command
+        action: candidate.action,
+        query: candidate.query,
+        command: candidate.command
     )
 }
 
@@ -116,6 +140,7 @@ func workspaceModelTransitionStatus(
 }
 
 func workspaceModelTransition(
+    actionCandidate: TKWorkspaceActionCandidate = .fallback,
     actionExecution: TKWorkspaceActionExecutionResult?,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil,
     toScreenID: String = "screen_0000"
@@ -124,9 +149,9 @@ func workspaceModelTransition(
         "transitionId": "transition_0000",
         "fromScreenId": "screen_0000",
         "toScreenId": toScreenID,
-        "action": "tap",
+        "action": actionCandidate.action,
         "selector": [
-            "text": "Continue",
+            "text": actionCandidate.query,
         ],
         "status": workspaceModelTransitionStatus(
             actionExecution: actionExecution,

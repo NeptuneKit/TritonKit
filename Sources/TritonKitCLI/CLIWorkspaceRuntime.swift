@@ -334,6 +334,7 @@ func runWorkspaceRunAsync(
 ) async throws -> TKWorkspaceRunResponse {
     let appLifecycle = try await workspaceAppLifecycleEvidence(for: request, provider: appLifecycleProvider)
     let observationSeed = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
+    let actionCandidate = workspaceModelActionCandidate(from: observationSeed)
     let appReady = workspaceAppReadyEvidence(
         lifecycle: appLifecycle,
         observation: observationSeed,
@@ -344,7 +345,10 @@ func runWorkspaceRunAsync(
         : nil
     let actionExecution: TKWorkspaceActionExecutionResult?
     if try workspaceShouldExecuteCandidateAction(request, businessCheckpoint: initialBusinessCheckpoint) {
-        actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(for: request))
+        actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(
+            for: request,
+            candidate: actionCandidate
+        ))
     } else {
         actionExecution = nil
     }
@@ -394,7 +398,8 @@ func runWorkspaceRunAsync(
         businessWaitResult: businessWaitResult,
         businessCheckpoint: businessCheckpoint,
         actionExecution: actionExecution,
-        postActionObservation: postActionObservation
+        postActionObservation: postActionObservation,
+        actionCandidate: actionCandidate
     )
 }
 
@@ -405,7 +410,8 @@ private func runWorkspaceRun(
     businessWaitResult: TKWaitResult? = nil,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint? = nil,
     actionExecution: TKWorkspaceActionExecutionResult? = nil,
-    postActionObservation: TKWorkspaceObservationSeed? = nil
+    postActionObservation: TKWorkspaceObservationSeed? = nil,
+    actionCandidate: TKWorkspaceActionCandidate? = nil
 ) throws -> TKWorkspaceRunResponse {
     let runID = try normalizedWorkspaceRunID(request.runID ?? defaultWorkspaceRunID())
     let runDir = workspaceRunDirectory(runID: runID, runsDirectory: request.runsDirectory)
@@ -425,8 +431,9 @@ private func runWorkspaceRun(
     let providerPreflight = try workspaceProviderPreflight(request)
     let modelLoopEnabled = request.dryModelFixture || providerPreflight.providersReady
     let modelLoopMode = request.dryModelFixture ? "dry-fixture" : "mock-provider"
+    let actionCandidate = actionCandidate ?? workspaceModelActionCandidate(from: observationSeed)
     let modelDecisionAllowed = modelLoopEnabled
-        ? workspacePolicyAllowsAction("tap", runner: runner)
+        ? workspacePolicyAllowsAction(actionCandidate.action, runner: runner)
         : false
     let appReady = workspaceAppReadyEvidence(
         lifecycle: appLifecycle,
@@ -490,7 +497,8 @@ private func runWorkspaceRun(
         businessCheckpoint: businessCheckpoint,
         includeModelTransition: shouldWriteModelDecision,
         actionExecution: actionExecution,
-        postActionObservation: postActionObservation
+        postActionObservation: postActionObservation,
+        actionCandidate: actionCandidate
     )
     if shouldWriteModelDecision || shouldWritePolicyRejection {
         try writeWorkspaceModelDecisionArtifacts(
@@ -500,7 +508,8 @@ private func runWorkspaceRun(
             policyAllowed: modelDecisionAllowed,
             businessCheckpoint: businessCheckpoint,
             actionExecution: actionExecution,
-            postActionObservation: postActionObservation
+            postActionObservation: postActionObservation,
+            actionCandidate: actionCandidate
         )
     }
     try writeWorkspaceRun(response, to: runDir.appendingPathComponent("run.json"))
@@ -521,7 +530,8 @@ private func runWorkspaceRun(
                 policyAllowed: modelDecisionAllowed,
                 businessCheckpoint: businessCheckpoint,
                 actionExecution: actionExecution,
-                postActionObservation: postActionObservation
+                postActionObservation: postActionObservation,
+                actionCandidate: actionCandidate
             ),
             at: events.index(before: events.endIndex)
         )
@@ -1038,7 +1048,8 @@ private func writeWorkspaceRunArtifacts(
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     includeModelTransition: Bool,
     actionExecution: TKWorkspaceActionExecutionResult?,
-    postActionObservation: TKWorkspaceObservationSeed?
+    postActionObservation: TKWorkspaceObservationSeed?,
+    actionCandidate: TKWorkspaceActionCandidate
 ) throws {
     try writeWorkspaceJSONArtifact([
         "target": run.target.id,
@@ -1099,7 +1110,8 @@ private func writeWorkspaceRunArtifacts(
             postActionObservation: postActionObservation,
             includeModelTransition: includeModelTransition,
             businessCheckpoint: businessCheckpoint,
-            actionExecution: actionExecution
+            actionExecution: actionExecution,
+            actionCandidate: actionCandidate
         ),
         to: runDir.appendingPathComponent("atlas/atlas.json")
     )
@@ -1112,9 +1124,10 @@ private func writeWorkspaceModelDecisionArtifacts(
     policyAllowed: Bool,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
     actionExecution: TKWorkspaceActionExecutionResult?,
-    postActionObservation: TKWorkspaceObservationSeed?
+    postActionObservation: TKWorkspaceObservationSeed?,
+    actionCandidate: TKWorkspaceActionCandidate
 ) throws {
-    let command = ["triton", "act", "tap", "Continue", "--json"]
+    let command = actionCandidate.command
     try writeWorkspaceJSONArtifact([
         "kind": "triton.workspace.model-request",
         "mode": mode,
@@ -1122,8 +1135,9 @@ private func writeWorkspaceModelDecisionArtifacts(
         "goal": run.goal,
         "observationRef": "events.jsonl#observation.captured",
         "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
+        "candidateSource": actionCandidate.source,
     ], to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-request.redacted.json"))
-    try "\(mode) bootstrap response: tap Continue\n".write(
+    try "\(mode) bootstrap response: \(actionCandidate.action) \(actionCandidate.query)\n".write(
         to: runDir.appendingPathComponent("evidence/model/bootstrap-proposal-000-response.raw.txt"),
         atomically: true,
         encoding: .utf8
@@ -1132,8 +1146,9 @@ private func writeWorkspaceModelDecisionArtifacts(
         "summary": "Dry fixture proposes a single bootstrap action.",
         "command": command,
         "confidence": 0.5,
+        "candidateSource": actionCandidate.source,
         "evidenceId": "ev_0000",
-        "expected": "Continue advances the initial screen.",
+        "expected": "\(actionCandidate.query) advances the initial screen.",
         "artifacts": [
             "request": "evidence/model/bootstrap-proposal-000-request.redacted.json",
             "response": "evidence/model/bootstrap-proposal-000-response.raw.txt",
@@ -1147,8 +1162,9 @@ private func writeWorkspaceModelDecisionArtifacts(
         "observationRef": "events.jsonl#observation.captured",
         "bootstrapProposalRef": "evidence/model/bootstrap-proposal-000.json",
         "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
+        "candidateSource": actionCandidate.source,
     ], to: runDir.appendingPathComponent("evidence/model/decision-000-request.redacted.json"))
-    try "\(mode) decision response: tap Continue\n".write(
+    try "\(mode) decision response: \(actionCandidate.action) \(actionCandidate.query)\n".write(
         to: runDir.appendingPathComponent("evidence/model/decision-000-response.raw.txt"),
         atomically: true,
         encoding: .utf8
@@ -1157,6 +1173,7 @@ private func writeWorkspaceModelDecisionArtifacts(
         "summary": "Dry fixture selected a single tap candidate.",
         "command": command,
         "confidence": 0.5,
+        "candidateSource": actionCandidate.source,
         "usedVLM": true,
         "artifacts": [
             "request": "evidence/model/decision-000-request.redacted.json",
@@ -1168,7 +1185,7 @@ private func writeWorkspaceModelDecisionArtifacts(
             "allowed": false,
             "reason": "runner allowedActions does not include tap",
             "stopReason": "policy_rejected",
-            "action": "tap",
+            "action": actionCandidate.action,
             "allowedActions": run.runner?.allowedActions ?? defaultWorkspaceRunnerAllowedActions,
             "command": command,
         ], to: runDir.appendingPathComponent("evidence/model/policy-000.json"))
@@ -1311,7 +1328,8 @@ private func workspaceAtlasDocument(
     postActionObservation: TKWorkspaceObservationSeed?,
     includeModelTransition: Bool,
     businessCheckpoint: TKWorkspaceBusinessCheckpoint?,
-    actionExecution: TKWorkspaceActionExecutionResult?
+    actionExecution: TKWorkspaceActionExecutionResult?,
+    actionCandidate: TKWorkspaceActionCandidate
 ) -> [String: Any] {
     let initialObservationRefs = workspaceAtlasObservationRefs(
         observation,
@@ -1328,6 +1346,7 @@ private func workspaceAtlasDocument(
     let toScreenID = postActionObservation == nil ? "screen_0000" : "screen_0001"
     let transitions = includeModelTransition
         ? [workspaceModelTransition(
+            actionCandidate: actionCandidate,
             actionExecution: actionExecution,
             businessCheckpoint: businessCheckpoint,
             toScreenID: toScreenID
