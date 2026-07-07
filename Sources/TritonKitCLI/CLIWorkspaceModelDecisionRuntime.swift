@@ -548,7 +548,76 @@ func writeWorkspaceModelDecisionArtifacts(
             "command": command,
         ], to: runDir.appendingPathComponent("evidence/actions/action-\(suffix).json"))
     }
-    if let businessCheckpoint, businessCheckpoint.stage == .postAction {
+    if let actionExecution, !actionExecution.ok {
+        let failureCode = actionExecution.failure?.code ?? "action_failed"
+        let failureKind = actionExecution.failure?.kind ?? "action_failed"
+        let actionRef = "evidence/actions/action-\(suffix).json"
+        let verifyRef = "evidence/model/verify-\(suffix).json"
+        var verifyArtifact: [String: Any] = [
+            "status": "failed",
+            "reason": actionExecution.message ?? "workspace action failed before post-action verification",
+            "failureCode": failureCode,
+            "failureKind": failureKind,
+            "actionRef": actionRef,
+        ]
+        if let artifactRef = actionExecution.failure?.artifactRef {
+            verifyArtifact["failureRef"] = artifactRef
+        }
+        try writeWorkspaceJSONArtifact(
+            verifyArtifact,
+            to: runDir.appendingPathComponent(verifyRef)
+        )
+
+        let isVLMGroundingFailure = failureKind == "vlm_grounding_failed"
+        let failureArtifactRef = actionExecution.failure?.artifactRef
+        var evidenceRefs = [
+            "events.jsonl#action.executed",
+            "events.jsonl#verify.checked",
+            "evidence/model/decision-\(suffix).json",
+            "evidence/model/policy-\(suffix).json",
+            actionRef,
+            verifyRef,
+        ]
+        if let failureArtifactRef {
+            evidenceRefs.append(failureArtifactRef)
+        }
+        var extraFields: [String: Any] = [
+            "actionRef": actionRef,
+        ]
+        if let failureArtifactRef {
+            extraFields["failureRef"] = failureArtifactRef
+        }
+        try writeWorkspaceJSONArtifact(
+            workspaceRecoveryProposalArtifact(
+                failureCode: failureCode,
+                diagnosisType: failureKind,
+                trigger: isVLMGroundingFailure ? "vlm_grounding_failed" : "action_failed",
+                legacyKind: failureKind,
+                phase: failureKind,
+                stepIndex: artifactIndex + 1,
+                confidence: isVLMGroundingFailure ? 0.86 : 0.72,
+                evidenceRefs: evidenceRefs,
+                proposalAction: "stop",
+                proposalReason: isVLMGroundingFailure
+                    ? "VLM grounding failed before runtime action execution"
+                    : "workspace action failed before post-action verification",
+                policyDecision: "requires_review",
+                command: ["stop"],
+                nextActions: [
+                    [
+                        "code": isVLMGroundingFailure
+                            ? "inspect_vlm_grounding_failure"
+                            : "inspect_action_failure",
+                        "message": isVLMGroundingFailure
+                            ? "Inspect \(actionRef) and \(failureArtifactRef ?? "the VLM failure artifact"), then observe again or choose a visible target."
+                            : "Inspect \(actionRef), observe the target again, or let the model propose a recovery action.",
+                    ],
+                ],
+                extraFields: extraFields
+            ),
+            to: runDir.appendingPathComponent("evidence/model/recovery-\(suffix).json")
+        )
+    } else if let businessCheckpoint, businessCheckpoint.stage == .postAction {
         try writeWorkspaceJSONArtifact([
             "status": businessCheckpoint.readiness.status,
             "reason": businessCheckpoint.ready

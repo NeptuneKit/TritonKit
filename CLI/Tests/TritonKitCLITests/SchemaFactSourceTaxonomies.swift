@@ -28,7 +28,7 @@ func capabilityEvidenceTaxonomy() -> Set<String> {
         "runtime-samples", "runtime-snapshot", "screenshot", "screenshot-metadata",
         "network-capture", "network-fixture", "network-map", "proxy-restore", "smoke-summary", "snapshot-json", "status-json", "stdout-json",
         "contract-capabilities", "screen-workspace", "surface-tree", "target.resolution", "test.normalized-plan", "trace", "tritonplan", "tritontest-yaml", "tritontestcase",
-        "unsupported-envelope", "vlm-compare", "vlm-grounding", "vlm-model-cache", "vlm-model-metadata", "vlm-overlay", "vlm-parsed-point", "vlm-raw-output", "vlm-request", "vlm-response", "vlm-transform", "wait.result", "wait-samples", "webview-candidates",
+        "unsupported-envelope", "vlm-compare", "vlm-grounding", "vlm-grounding-failure", "vlm-model-cache", "vlm-model-metadata", "vlm-overlay", "vlm-parsed-point", "vlm-raw-output", "vlm-request", "vlm-response", "vlm-transform", "wait.result", "wait-samples", "webview-candidates",
         "webview-provider", "webview-snapshot", "xcodebuild-json", "xcresult",
     ]
 }
@@ -495,6 +495,7 @@ func schemaArtifactTaxonomy() -> Set<String> {
         "tritontestcase",
         "vlm-compare",
         "vlm-grounding",
+        "vlm-grounding-failure",
         "vlm-model-cache",
         "vlm-model-metadata",
         "vlm-overlay",

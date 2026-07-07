@@ -260,6 +260,90 @@ struct WorkspaceActionExecutionTests {
         #expect(grounding?["overlay"] as? String == "evidence/actions/vlm-000/vlm-overlay.png")
     }
 
+    @Test("workspace run pauses with recovery proposal when VLM grounding fails")
+    func workspaceRunPausesWithRecoveryProposalWhenVLMGroundingFails() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let screenshot = root.appendingPathComponent("login.png")
+        try writeFixtureImage(to: screenshot)
+        let fixture = try writeObservationFixture(
+            in: root,
+            visibleTexts: ["Welcome", "Continue"],
+            screenshot: screenshot.path
+        )
+        var groundingRequest: TKWorkspaceVLMGroundingRequest?
+        var actionExecuted = false
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-vlm-grounding-failed",
+                target: "runtime-target-vlm-failure",
+                app: "com.example.demo",
+                goal: "Continue onboarding",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observationFixture: fixture.path,
+                executeActions: true
+            ),
+            vlmGroundingProvider: { request in
+                groundingRequest = request
+                throw TKVLMGroundingFailure(
+                    code: "vlm_target_not_visible",
+                    message: "The target is not visible in the screenshot.",
+                    hint: "Observe again or choose a visible target."
+                )
+            },
+            actionExecutionProvider: { request in
+                actionExecuted = true
+                return successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "paused")
+        #expect(run.nextActions.contains { $0.code == "inspect_vlm_grounding_failure" })
+        #expect(groundingRequest?.target == "Continue")
+        #expect(actionExecuted == false)
+
+        let runDir = root.appendingPathComponent("run-workspace-vlm-grounding-failed", isDirectory: true)
+        let action = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/actions/action-000.json"))
+        ) as? [String: Any]
+        #expect(action?["ok"] as? Bool == false)
+        #expect(action?["failureCode"] as? String == "vlm_target_not_visible")
+        #expect(action?["failureKind"] as? String == "vlm_grounding_failed")
+        #expect(action?["proofSource"] as? String == "vlm.grounding")
+        #expect(action?["usedVLMGrounding"] as? Bool == false)
+        let vlmFailure = try #require(action?["vlmGroundingFailure"] as? [String: Any])
+        #expect(vlmFailure["code"] as? String == "vlm_target_not_visible")
+        #expect(vlmFailure["hint"] as? String == "Observe again or choose a visible target.")
+
+        let recovery = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/model/recovery-000.json"))
+        ) as? [String: Any]
+        #expect(recovery?["kind"] as? String == "triton.workspace.recovery-proposal")
+        #expect(recovery?["failureCode"] as? String == "vlm_target_not_visible")
+        #expect(recovery?["trigger"] as? String == "vlm_grounding_failed")
+        let diagnosis = try #require(recovery?["diagnosis"] as? [String: Any])
+        #expect(diagnosis["type"] as? String == "vlm_grounding_failed")
+        let diagnosisRefs = try #require(diagnosis["evidenceRefs"] as? [String])
+        #expect(diagnosisRefs.contains("evidence/actions/action-000.json"))
+        #expect(diagnosisRefs.contains("evidence/actions/vlm-000/vlm-failure.json"))
+        let proposal = try #require(recovery?["proposal"] as? [String: Any])
+        #expect(proposal["action"] as? String == "stop")
+        #expect(proposal["policyDecision"] as? String == "requires_review")
+        let nextActions = try #require(recovery?["nextActions"] as? [[String: Any]])
+        #expect(nextActions.first?["code"] as? String == "inspect_vlm_grounding_failure")
+
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        #expect(parsed.events.first { $0.type == .actionExecuted }?.status == .failed)
+        #expect(parsed.events.first { $0.type == .flowRecoveryDetected }?.failure?.type == "vlm_target_not_visible")
+        #expect(parsed.events.last?.type == .runPaused)
+    }
+
     @Test("workspace run verifies business readiness after explicit action execution")
     func workspaceRunVerifiesBusinessReadinessAfterExplicitActionExecution() async throws {
         let root = temporaryRunsDirectory()

@@ -74,6 +74,80 @@ func workspaceVLMGroundingForAction(
     return grounding
 }
 
+func workspaceVLMGroundingFailureActionExecution(
+    actionCandidate: TKWorkspaceActionCandidate,
+    error: Error,
+    runDir: URL,
+    artifactIndex: Int = 0
+) throws -> TKWorkspaceActionExecutionResult {
+    let suffix = workspaceArtifactSuffix(artifactIndex)
+    let outputURL = runDir.appendingPathComponent("evidence/actions/vlm-\(suffix)", isDirectory: true)
+    try FileManager.default.createDirectory(at: outputURL, withIntermediateDirectories: true)
+    let failureRef = "evidence/actions/vlm-\(suffix)/vlm-failure.json"
+    let failure = workspaceVLMGroundingActionFailure(error, artifactRef: failureRef)
+    try writeWorkspaceJSONArtifact(
+        workspaceVLMGroundingFailureArtifact(failure, actionCandidate: actionCandidate),
+        to: outputURL.appendingPathComponent("vlm-failure.json")
+    )
+    return TKWorkspaceActionExecutionResult(
+        ok: false,
+        action: actionCandidate.action,
+        command: actionCandidate.command,
+        proofSource: "vlm.grounding",
+        sourceCommands: [
+            actionCandidate.command.map(shellEscaped).joined(separator: " "),
+            "vlm grounding \(failure.code)",
+        ],
+        message: failure.message,
+        inputResult: nil,
+        tapResolution: nil,
+        vlmGrounding: nil,
+        failure: failure
+    )
+}
+
+private func workspaceVLMGroundingActionFailure(
+    _ error: Error,
+    artifactRef: String
+) -> TKWorkspaceActionFailure {
+    if let failure = error as? TKVLMGroundingFailure {
+        return TKWorkspaceActionFailure(
+            code: failure.code,
+            kind: "vlm_grounding_failed",
+            message: failure.message,
+            hint: failure.hint,
+            artifactRef: artifactRef
+        )
+    }
+    return TKWorkspaceActionFailure(
+        code: "vlm_grounding_failed",
+        kind: "vlm_grounding_failed",
+        message: String(describing: error),
+        hint: "Inspect VLM grounding evidence, observe again, or choose a visible target before retrying.",
+        artifactRef: artifactRef
+    )
+}
+
+private func workspaceVLMGroundingFailureArtifact(
+    _ failure: TKWorkspaceActionFailure,
+    actionCandidate: TKWorkspaceActionCandidate
+) -> [String: Any] {
+    var artifact: [String: Any] = [
+        "schemaVersion": 1,
+        "kind": "triton.workspace.vlm-grounding-failure",
+        "code": failure.code,
+        "failureKind": failure.kind,
+        "message": failure.message,
+        "action": actionCandidate.action,
+        "target": actionCandidate.query,
+        "command": actionCandidate.command,
+    ]
+    if let hint = failure.hint {
+        artifact["hint"] = hint
+    }
+    return artifact
+}
+
 private func workspaceObservationScreenshotPath(
     _ observation: TKWorkspaceObservationSeed,
     runDir: URL

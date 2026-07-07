@@ -77,15 +77,36 @@ func runWorkspaceActionLoop(
             break
         }
 
-        let vlmGrounding = try await workspaceVLMGroundingForAction(
-            request: request,
-            observation: currentObservation,
-            actionCandidate: actionCandidate,
-            runDir: runDir,
-            providerPreflight: providerPreflight,
-            vlmGroundingProvider: vlmGroundingProvider,
-            artifactIndex: artifactIndex
-        )
+        let vlmGrounding: TKVLMGroundResponse?
+        do {
+            vlmGrounding = try await workspaceVLMGroundingForAction(
+                request: request,
+                observation: currentObservation,
+                actionCandidate: actionCandidate,
+                runDir: runDir,
+                providerPreflight: providerPreflight,
+                vlmGroundingProvider: vlmGroundingProvider,
+                artifactIndex: artifactIndex
+            )
+        } catch {
+            let actionExecution = try workspaceVLMGroundingFailureActionExecution(
+                actionCandidate: actionCandidate,
+                error: error,
+                runDir: runDir,
+                artifactIndex: artifactIndex
+            )
+            steps.append(TKWorkspaceActionLoopStep(
+                artifactIndex: artifactIndex,
+                observation: currentObservation,
+                modelRequest: modelRequest,
+                modelDecision: modelDecision,
+                policyAllowed: policyAllowed,
+                actionExecution: actionExecution,
+                postActionObservation: nil,
+                businessCheckpoint: nil
+            ))
+            break
+        }
         let actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(
             for: request,
             candidate: actionCandidate,

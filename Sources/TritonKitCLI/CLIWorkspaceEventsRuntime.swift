@@ -149,7 +149,31 @@ func workspaceModelDecisionEvents(
             timestamp: now
         ))
     }
-    if let businessCheckpoint, businessCheckpoint.stage == .postAction {
+    if let actionExecution, !actionExecution.ok {
+        let failureType = actionExecution.failure?.code ?? "action_failed"
+        let failurePhase = actionExecution.failure?.kind ?? "action_failed"
+        var artifactRefs = [
+            "evidence/actions/action-\(suffix).json",
+            "evidence/model/verify-\(suffix).json",
+        ]
+        if let artifactRef = actionExecution.failure?.artifactRef {
+            artifactRefs.append(artifactRef)
+        }
+        events.append(.init(type: .verifyChecked, runID: runID, timestamp: now, stepIndex: stepIndex, status: .failed, ref: "evidence/model/verify-\(suffix).json"))
+        events.append(.init(
+            type: .flowRecoveryDetected,
+            runID: runID,
+            timestamp: now,
+            stepIndex: stepIndex,
+            failure: TKTestRunFailure(
+                type: failureType,
+                message: actionExecution.message ?? "Workspace action failed before verification.",
+                artifactRefs: artifactRefs
+            ),
+            phase: failurePhase
+        ))
+        events.append(.init(type: .flowRecoveryProposed, runID: runID, timestamp: now, stepIndex: stepIndex, command: ["stop"], ref: "evidence/model/recovery-\(suffix).json"))
+    } else if let businessCheckpoint, businessCheckpoint.stage == .postAction {
         events += workspaceBusinessCheckpointEvents(
             runID: runID,
             timestamp: now,

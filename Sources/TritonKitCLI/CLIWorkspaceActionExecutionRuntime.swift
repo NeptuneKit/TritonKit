@@ -15,6 +15,14 @@ struct TKWorkspaceActionExecutionRequest: Equatable {
     let vlmGrounding: TKVLMGroundResponse?
 }
 
+struct TKWorkspaceActionFailure: Equatable {
+    let code: String
+    let kind: String
+    let message: String
+    let hint: String?
+    let artifactRef: String?
+}
+
 struct TKWorkspaceActionCandidate: Equatable {
     static let fallback = TKWorkspaceActionCandidate(action: "tap", query: "Continue", source: "fallback.default")
 
@@ -35,6 +43,7 @@ struct TKWorkspaceActionExecutionResult {
     let inputResult: TKInputResult?
     let tapResolution: TapTargetResolution?
     let vlmGrounding: TKVLMGroundResponse?
+    let failure: TKWorkspaceActionFailure?
 
     init(
         ok: Bool,
@@ -45,7 +54,8 @@ struct TKWorkspaceActionExecutionResult {
         message: String?,
         inputResult: TKInputResult?,
         tapResolution: TapTargetResolution?,
-        vlmGrounding: TKVLMGroundResponse? = nil
+        vlmGrounding: TKVLMGroundResponse? = nil,
+        failure: TKWorkspaceActionFailure? = nil
     ) {
         self.ok = ok
         self.action = action
@@ -56,6 +66,7 @@ struct TKWorkspaceActionExecutionResult {
         self.inputResult = inputResult
         self.tapResolution = tapResolution
         self.vlmGrounding = vlmGrounding
+        self.failure = failure
     }
 
     var eventStatus: TKTestRunStatus { ok ? .passed : .failed }
@@ -173,6 +184,25 @@ func workspaceActionExecutionArtifact(
     ]
     if let message = result.message {
         artifact["message"] = message
+    }
+    if let failure = result.failure {
+        artifact["failureCode"] = failure.code
+        artifact["failureKind"] = failure.kind
+        var failurePayload: [String: Any] = [
+            "code": failure.code,
+            "kind": failure.kind,
+            "message": failure.message,
+        ]
+        if let hint = failure.hint {
+            failurePayload["hint"] = hint
+        }
+        if let artifactRef = failure.artifactRef {
+            failurePayload["artifactRef"] = artifactRef
+        }
+        artifact["failure"] = failurePayload
+        if failure.kind == "vlm_grounding_failed" {
+            artifact["vlmGroundingFailure"] = failurePayload
+        }
     }
     if let inputResult = result.inputResult {
         artifact["inputResult"] = try workspaceEncodableJSONObject(inputResult)

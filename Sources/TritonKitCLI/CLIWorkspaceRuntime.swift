@@ -481,19 +481,33 @@ func runWorkspaceRunAsync(
         actionCandidate: actionCandidate
     ) {
         let runDir = workspaceRunDirectory(runID: request.runID ?? defaultWorkspaceRunID(), runsDirectory: request.runsDirectory)
-        let vlmGrounding = try await workspaceVLMGroundingForAction(
-            request: request,
-            observation: observationSeed,
-            actionCandidate: actionCandidate,
-            runDir: runDir,
-            providerPreflight: providerPreflight,
-            vlmGroundingProvider: vlmGroundingProvider
-        )
-        actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(
-            for: request,
-            candidate: actionCandidate,
-            vlmGrounding: vlmGrounding
-        ))
+        let vlmGroundingResult: Result<TKVLMGroundResponse?, Error>
+        do {
+            vlmGroundingResult = .success(try await workspaceVLMGroundingForAction(
+                request: request,
+                observation: observationSeed,
+                actionCandidate: actionCandidate,
+                runDir: runDir,
+                providerPreflight: providerPreflight,
+                vlmGroundingProvider: vlmGroundingProvider
+            ))
+        } catch {
+            vlmGroundingResult = .failure(error)
+        }
+        switch vlmGroundingResult {
+        case .success(let vlmGrounding):
+            actionExecution = try await actionExecutionProvider(workspaceActionExecutionRequest(
+                for: request,
+                candidate: actionCandidate,
+                vlmGrounding: vlmGrounding
+            ))
+        case .failure(let error):
+            actionExecution = try workspaceVLMGroundingFailureActionExecution(
+                actionCandidate: actionCandidate,
+                error: error,
+                runDir: runDir
+            )
+        }
     } else {
         actionExecution = nil
     }
@@ -807,6 +821,14 @@ func workspaceRunNextActions(
     actionExecution: TKWorkspaceActionExecutionResult?
 ) -> [TKWorkspaceNextAction] {
     if let actionExecution, !actionExecution.ok {
+        if actionExecution.failure?.kind == "vlm_grounding_failed" {
+            return [
+                TKWorkspaceNextAction(
+                    code: "inspect_vlm_grounding_failure",
+                    message: "VLM grounding failed before action execution; inspect evidence/actions/action-000.json and the VLM failure artifact, then observe again or choose a visible target."
+                ),
+            ] + providerNextActions
+        }
         return [
             TKWorkspaceNextAction(
                 code: "inspect_action_failure",
