@@ -556,6 +556,8 @@ triton xctrace record --template "Time Profiler" --device 0333546D-2AC6-4C22-AF0
 triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
 ```
 
+If `triton xcode build/test/run` returns `xcodebuild_interrupted` or `orphaned_xcodebuild`, inspect the final summary's stdout/stderr artifact paths and run `triton xcode status --json` followed by `triton xcode wait-idle --workspace <workspace> --timeout 120 --json` before retrying or falling back.
+
 `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts, which gives agents a way to inspect long-running builds without waiting blindly.
 
 `xcode test` writes the result bundle but does not yet inline all test counts or failures into the final build summary. Run `triton xcresult summary` and `triton xcresult failures` against the bundle to produce issue-ready test evidence.

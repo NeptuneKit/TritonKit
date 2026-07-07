@@ -521,6 +521,8 @@ struct SimulatorAdvancedControlsTests {
         #expect(xcode.outputContracts.map(\.selector).contains("xcode.progress"))
         #expect(xcode.outputContracts.map(\.selector).contains("xcode.final"))
         #expect(xcode.failureCodes.contains("xcodebuild_failed"))
+        #expect(xcode.failureCodes.contains("xcodebuild_interrupted"))
+        #expect(xcode.failureCodes.contains("orphaned_xcodebuild"))
         let xcodeProgress = try #require(xcode.outputContracts.first { $0.selector == "xcode.progress" })
         #expect(xcodeProgress.fields.first { $0.name == "message" }?.required == true)
         #expect(xcodeProgress.fields.first { $0.name == "elapsedMs" }?.type == "Int?")

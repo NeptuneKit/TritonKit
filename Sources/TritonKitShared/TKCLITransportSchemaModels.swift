@@ -267,6 +267,8 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "scheme_not_found",
         "workspace_not_found",
         "xcode_not_idle",
+        "xcodebuild_interrupted",
+        "orphaned_xcodebuild",
     ]
 
     private static let actionFailureCodesRequiringRecovery: Set<String> = [

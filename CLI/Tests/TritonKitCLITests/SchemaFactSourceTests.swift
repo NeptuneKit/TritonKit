@@ -102,10 +102,17 @@ struct SchemaFactSourceTests {
             "derivedDataCache.cleanupPolicy",
             "derivedDataCache.guidance",
             "xcodeDiagnostics",
+            "postActionProcessStatus",
+            "postActionProcessStatus.active",
+            "postActionProcessStatus.processes",
+            "nextActions",
         ])
 
         #expect(xcode.failureCodes.contains("swift_macro_plugin_malformed_response"))
+        #expect(xcode.failureCodes.contains("xcodebuild_interrupted"))
+        #expect(xcode.failureCodes.contains("orphaned_xcodebuild"))
         #expect(xcode.failureShape?.contains("swift_macro_plugin_malformed_response") == true)
+        #expect(xcode.failureShape?.contains("orphaned_xcodebuild") == true)
         #expect(xcode.outputContracts.first { $0.selector == "xcode.final" }?.fields.first { $0.name == "xcodeDiagnostics" }?.description.contains("Swift macro") == true)
     }
 

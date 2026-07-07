@@ -73,6 +73,35 @@ struct XcodeProcessStatusOutput: Codable, Equatable {
     }
 }
 
+extension XcodeProcessSummary {
+    func sharedSummary() -> TKXcodeActiveProcessSummary {
+        TKXcodeActiveProcessSummary(
+            pid: pid,
+            name: name,
+            commandLine: commandLine,
+            elapsed: elapsed,
+            elapsedSeconds: elapsedSeconds,
+            workspace: workspace,
+            project: project,
+            scheme: scheme,
+            destination: destination,
+            derivedDataPath: derivedDataPath,
+            confidence: confidence
+        )
+    }
+}
+
+extension XcodeProcessStatusOutput {
+    func sharedPostActionStatus() -> TKXcodePostActionProcessStatus {
+        TKXcodePostActionProcessStatus(
+            active: active,
+            workspaceFilter: workspaceFilter,
+            processes: processes.map { $0.sharedSummary() },
+            sourceCommand: sourceCommand
+        )
+    }
+}
+
 struct XcodeWaitIdleOutput: Codable, Equatable {
     let ok: Bool
     let action: String

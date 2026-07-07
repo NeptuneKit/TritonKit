@@ -83,6 +83,89 @@ struct XcodeDiagnosticsTests {
         #expect(xcodeBuildFailureCode(ok: true, diagnostics: [diagnostic]) == nil)
     }
 
+    @Test("xcodebuild interrupted output with active matching process maps to orphaned xcodebuild")
+    func interruptedBuildWithActiveMatchingProcessMapsToOrphanedXcodebuild() throws {
+        let result = HostProcessResult(
+            stdoutData: Data("CompileSwift normal arm64 HomeView.swift\n".utf8),
+            stderrData: Data("** BUILD INTERRUPTED **\n".utf8),
+            exitCode: 15,
+            sourceCommand: "xcodebuild -workspace App.xcworkspace -scheme App build",
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: "/tmp/triton-xcode-artifacts/build/stdout.log",
+            stderrLogPath: "/tmp/triton-xcode-artifacts/build/stderr.log",
+            stdoutBytes: 40,
+            stderrBytes: 24
+        )
+        let status = activeXcodeStatus(workspace: "App.xcworkspace")
+
+        let postActionStatus = xcodePostActionProcessStatusIfInterrupted(
+            ok: false,
+            result: result,
+            workspaceFilter: "App.xcworkspace",
+            statusProvider: { filter in
+                #expect(filter == "App.xcworkspace")
+                return status
+            }
+        )
+        let failureCode = xcodeBuildFailureCode(
+            ok: false,
+            diagnostics: nil,
+            result: result,
+            postActionProcessStatus: postActionStatus
+        )
+        let actions = xcodeBuildRecoveryActions(
+            failureCode: failureCode,
+            workspaceFilter: "App.xcworkspace"
+        )
+
+        #expect(failureCode == "orphaned_xcodebuild")
+        #expect(postActionStatus?.active == true)
+        #expect(postActionStatus?.processes.first?.pid == 222)
+        #expect(postActionStatus?.processes.first?.scheme == "App")
+        #expect(actions?.contains { $0.command == "xcode" && $0.args == ["status", "--json"] } == true)
+        #expect(actions?.contains {
+            $0.command == "xcode" &&
+                $0.args == ["wait-idle", "--workspace", "App.xcworkspace", "--timeout", "120", "--json"]
+        } == true)
+    }
+
+    @Test("xcodebuild interrupted output without active matching process maps to interrupted")
+    func interruptedBuildWithoutActiveMatchingProcessMapsToInterrupted() throws {
+        let result = HostProcessResult(
+            stdoutData: Data(),
+            stderrData: Data("** BUILD INTERRUPTED **\n".utf8),
+            exitCode: 15,
+            sourceCommand: "xcodebuild -workspace App.xcworkspace -scheme App build",
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: nil,
+            stderrLogPath: nil,
+            stdoutBytes: 0,
+            stderrBytes: 24
+        )
+
+        #expect(xcodeBuildFailureCode(ok: false, diagnostics: nil, result: result) == "xcodebuild_interrupted")
+    }
+
+    @Test("xcodebuild exit 15 with build failed marker remains generic xcodebuild failure")
+    func exit15WithBuildFailedMarkerRemainsGenericFailure() throws {
+        let result = HostProcessResult(
+            stdoutData: Data("PhaseScriptExecution failed with exit code 15\n** BUILD FAILED **\n".utf8),
+            stderrData: Data(),
+            exitCode: 15,
+            sourceCommand: "xcodebuild -workspace App.xcworkspace -scheme App build",
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: nil,
+            stderrLogPath: nil,
+            stdoutBytes: 65,
+            stderrBytes: 0
+        )
+
+        #expect(xcodeBuildFailureCode(ok: false, diagnostics: nil, result: result) == "xcodebuild_failed")
+    }
+
     @Test("xcodebuild stale DerivedData diagnostics are exposed on action summaries")
     func actionSummaryCarriesStaleDerivedDataDiagnostics() throws {
         let output = """
@@ -115,6 +198,47 @@ struct XcodeDiagnosticsTests {
         #expect(decoded.failureCode == "xcodebuild_failed")
         #expect(decoded.xcodeDiagnostics?.first?.kind == "stale-derived-data-outside-root")
         #expect(decoded.xcodeDiagnostics?.first?.nextAction.args.contains("<fresh-derived-data-path>") == true)
+    }
+
+    @Test("xcode action summary carries orphaned process status and recovery actions")
+    func actionSummaryCarriesOrphanedProcessStatusAndRecoveryActions() throws {
+        let status = activeXcodeStatus(workspace: "App.xcworkspace").sharedPostActionStatus()
+        let actions = try #require(xcodeBuildRecoveryActions(
+            failureCode: "orphaned_xcodebuild",
+            workspaceFilter: "App.xcworkspace"
+        ))
+        let summary = TKXcodeActionSummary(
+            ok: false,
+            action: "xcode.build",
+            failureCode: "orphaned_xcodebuild",
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: nil,
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData",
+            durationMs: 151442,
+            sourceCommand: "xcodebuild -workspace App.xcworkspace -scheme App build",
+            exitCode: 15,
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: "/tmp/triton-xcode-artifacts/build/stdout.log",
+            stderrLogPath: "/tmp/triton-xcode-artifacts/build/stderr.log",
+            stdoutBytes: 73424,
+            stderrBytes: 24,
+            postActionProcessStatus: status,
+            nextActions: actions,
+            note: "xcodebuild was interrupted while matching processes are still active."
+        )
+
+        let decoded = try JSONDecoder().decode(TKXcodeActionSummary.self, from: JSONEncoder().encode(summary))
+
+        #expect(decoded.failureCode == "orphaned_xcodebuild")
+        #expect(decoded.postActionProcessStatus?.active == true)
+        #expect(decoded.postActionProcessStatus?.processes.first?.pid == 222)
+        #expect(decoded.nextActions?.first?.args == ["status", "--json"])
+        #expect(decoded.nextActions?.last?.args == ["wait-idle", "--workspace", "App.xcworkspace", "--timeout", "120", "--json"])
     }
 
     @Test("DerivedData cache state is derived from path existence")
@@ -371,5 +495,35 @@ struct XcodeDiagnosticsTests {
             )
         }
         #expect(polls >= 2)
+    }
+
+    private func activeXcodeStatus(workspace: String) -> XcodeProcessStatusOutput {
+        XcodeProcessStatusOutput(
+            ok: true,
+            active: true,
+            workspaceFilter: workspace,
+            processes: [
+                XcodeProcessSummary(
+                    pid: 222,
+                    name: "xcodebuild",
+                    commandLine: "xcodebuild -workspace \(workspace) -scheme App -destination platform=iOS\\ Simulator,id=SIM-1 -derivedDataPath .triton/DerivedData build",
+                    elapsed: "00:22",
+                    elapsedSeconds: 22,
+                    workspace: workspace,
+                    project: nil,
+                    scheme: "App",
+                    destination: "platform=iOS Simulator,id=SIM-1",
+                    derivedDataPath: ".triton/DerivedData",
+                    confidence: "medium"
+                )
+            ],
+            summary: XcodeProcessStatusSummary(
+                xcodebuildCount: 1,
+                buildServiceCount: 0,
+                xctestCount: 0,
+                matchingWorkspaceCount: 1
+            ),
+            sourceCommand: "ps -p 222 -o pid=,comm=,etime=,args="
+        )
     }
 }

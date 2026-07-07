@@ -247,6 +247,12 @@ process.exit
 }
 ```
 
+当 build/test/run 的 wrapper 返回 `** BUILD INTERRUPTED **` 或无 `BUILD FAILED` / `TEST FAILED` 标记的 exit code 15 时，summary 不能再泛化为普通 `xcodebuild_failed`：
+
+1. 若 post-action `triton xcode status` 采样仍看到匹配 workspace/project 的进程，返回 `failureCode=orphaned_xcodebuild`，并写入 `postActionProcessStatus.processes[]` 与 `nextActions=[xcode status, xcode wait-idle]`。
+2. 若没有匹配活跃进程，返回 `failureCode=xcodebuild_interrupted`，提示检查 stdout/stderr artifact 并在必要时用更长 `--timeout` 重试。
+3. 若输出明确包含 `BUILD FAILED` / `TEST FAILED`，即使 exit code 是 15，也保持 `xcodebuild_failed`，避免把真实脚本或编译失败误判为 orphan。
+
 ### Test Summary
 
 ```json
@@ -312,6 +318,8 @@ P0 错误码至少包括：
 ```text
 xcode_not_available
 xcodebuild_failed
+xcodebuild_interrupted
+orphaned_xcodebuild
 xcresulttool_failed
 invalid_workspace_path
 invalid_project_path

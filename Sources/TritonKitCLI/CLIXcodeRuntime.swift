@@ -184,7 +184,8 @@ func runXcodeBuild(
     jsonl: Bool,
     timeout: Double? = nil,
     allowNonZeroExit: Bool = true,
-    allowProvisioningUpdates: Bool = false
+    allowProvisioningUpdates: Bool = false,
+    statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
 ) throws -> TKXcodeActionSummary {
     let command = TKXcodebuildCommand.build(
         workspace: invocation.workspace,
@@ -199,10 +200,23 @@ func runXcodeBuild(
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl, allowNonZeroExit: allowNonZeroExit)
     let diagnostics = xcodeBuildOutputDiagnostics(result)
     let ok = result.exitCode == 0
+    let workspaceFilter = xcodeWorkspaceFilter(for: invocation)
+    let postActionProcessStatus = xcodePostActionProcessStatusIfInterrupted(
+        ok: ok,
+        result: result,
+        workspaceFilter: workspaceFilter,
+        statusProvider: statusProvider
+    )
+    let failureCode = xcodeBuildFailureCode(
+        ok: ok,
+        diagnostics: diagnostics,
+        result: result,
+        postActionProcessStatus: postActionProcessStatus
+    )
     return TKXcodeActionSummary(
         ok: ok,
         action: "xcode.build",
-        failureCode: xcodeBuildFailureCode(ok: ok, diagnostics: diagnostics),
+        failureCode: failureCode,
         workspace: invocation.workspace,
         project: invocation.project,
         scheme: invocation.scheme,
@@ -223,13 +237,24 @@ func runXcodeBuild(
         stdoutBytes: result.stdoutBytes,
         stderrBytes: result.stderrBytes,
         xcodeDiagnostics: diagnostics,
-        note: ok
-            ? "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`."
-            : "Build failed. Inspect xcodeDiagnostics first, then stdout/stderr artifacts if needed."
+        postActionProcessStatus: postActionProcessStatus,
+        nextActions: xcodeBuildRecoveryActions(failureCode: failureCode, workspaceFilter: workspaceFilter),
+        note: xcodeBuildSummaryNote(
+            ok: ok,
+            failureCode: failureCode,
+            successNote: "Build finished. Use `triton xcode run --jsonl` or verify business readiness with runtime `triton status/wait/assert`.",
+            defaultFailureNote: "Build failed. Inspect xcodeDiagnostics first, then stdout/stderr artifacts if needed."
+        )
     )
 }
 
-func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?, jsonl: Bool, timeout: Double? = nil) throws -> TKXcodeActionSummary {
+func runXcodeTest(
+    invocation: ResolvedXcodeInvocation,
+    resultBundlePath: String?,
+    jsonl: Bool,
+    timeout: Double? = nil,
+    statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
+) throws -> TKXcodeActionSummary {
     let command = TKXcodebuildCommand.test(
         workspace: invocation.workspace,
         project: invocation.project,
@@ -243,11 +268,24 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl, allowNonZeroExit: true)
     let diagnostics = xcodeBuildOutputDiagnostics(result)
     let ok = result.exitCode == 0
+    let workspaceFilter = xcodeWorkspaceFilter(for: invocation)
+    let postActionProcessStatus = xcodePostActionProcessStatusIfInterrupted(
+        ok: ok,
+        result: result,
+        workspaceFilter: workspaceFilter,
+        statusProvider: statusProvider
+    )
+    let failureCode = xcodeBuildFailureCode(
+        ok: ok,
+        diagnostics: diagnostics,
+        result: result,
+        postActionProcessStatus: postActionProcessStatus
+    )
     let resultDetails = xcodeTestResultBundleDetails(resultBundlePath: resultBundlePath)
     return TKXcodeActionSummary(
         ok: ok,
         action: "xcode.test",
-        failureCode: xcodeBuildFailureCode(ok: ok, diagnostics: diagnostics),
+        failureCode: failureCode,
         workspace: invocation.workspace,
         project: invocation.project,
         scheme: invocation.scheme,
@@ -272,7 +310,14 @@ func runXcodeTest(invocation: ResolvedXcodeInvocation, resultBundlePath: String?
         topFailures: resultDetails.topFailures,
         xcresultNote: resultDetails.note,
         xcodeDiagnostics: diagnostics,
-        note: "Test command finished. Use `triton xcresult summary --path <result.xcresult> --json` or `triton xcresult failures --path <result.xcresult> --json` for structured result parsing."
+        postActionProcessStatus: postActionProcessStatus,
+        nextActions: xcodeBuildRecoveryActions(failureCode: failureCode, workspaceFilter: workspaceFilter),
+        note: xcodeBuildSummaryNote(
+            ok: ok,
+            failureCode: failureCode,
+            successNote: "Test command finished. Use `triton xcresult summary --path <result.xcresult> --json` or `triton xcresult failures --path <result.xcresult> --json` for structured result parsing.",
+            defaultFailureNote: "Test command failed. Inspect xcodeDiagnostics and xcresult details first, then stdout/stderr artifacts if needed."
+        )
     )
 }
 
@@ -322,6 +367,8 @@ func runXcodeBuildInstallLaunch(
             stdoutBytes: buildSummary.stdoutBytes,
             stderrBytes: buildSummary.stderrBytes,
             xcodeDiagnostics: buildSummary.xcodeDiagnostics,
+            postActionProcessStatus: buildSummary.postActionProcessStatus,
+            nextActions: buildSummary.nextActions,
             note: "Run build phase failed. Inspect xcodeDiagnostics first, then stdout/stderr artifacts if needed."
         )
     }
@@ -469,12 +516,78 @@ func xcodeBuildOutputDiagnostics(_ result: HostProcessResult) -> [TKXcodeOutputD
     return [diagnostic]
 }
 
-func xcodeBuildFailureCode(ok: Bool, diagnostics: [TKXcodeOutputDiagnostic]?) -> String? {
+func xcodeBuildFailureCode(
+    ok: Bool,
+    diagnostics: [TKXcodeOutputDiagnostic]?,
+    result: HostProcessResult? = nil,
+    postActionProcessStatus: TKXcodePostActionProcessStatus? = nil
+) -> String? {
     guard !ok else { return nil }
     if diagnostics?.contains(where: { $0.kind == "swift-macro-plugin-malformed-response" }) == true {
         return "swift_macro_plugin_malformed_response"
     }
+    if let result, xcodeBuildWasInterrupted(result) {
+        return postActionProcessStatus?.active == true ? "orphaned_xcodebuild" : "xcodebuild_interrupted"
+    }
     return "xcodebuild_failed"
+}
+
+func xcodePostActionProcessStatusIfInterrupted(
+    ok: Bool,
+    result: HostProcessResult,
+    workspaceFilter: String?,
+    statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
+) -> TKXcodePostActionProcessStatus? {
+    guard !ok, xcodeBuildWasInterrupted(result) else { return nil }
+    guard let status = try? statusProvider(workspaceFilter), status.active else { return nil }
+    return status.sharedPostActionStatus()
+}
+
+func xcodeBuildRecoveryActions(failureCode: String?, workspaceFilter: String?) -> [TKCLINextAction]? {
+    guard failureCode == "orphaned_xcodebuild" || failureCode == "xcodebuild_interrupted" else {
+        return nil
+    }
+    var waitArgs = ["wait-idle"]
+    if let workspaceFilter, !workspaceFilter.isEmpty {
+        waitArgs += ["--workspace", workspaceFilter]
+    }
+    waitArgs += ["--timeout", "120", "--json"]
+    return [
+        TKCLINextAction(command: "xcode", args: ["status", "--json"], category: "project"),
+        TKCLINextAction(command: "xcode", args: waitArgs, category: "project"),
+    ]
+}
+
+func xcodeBuildSummaryNote(
+    ok: Bool,
+    failureCode: String?,
+    successNote: String,
+    defaultFailureNote: String
+) -> String {
+    if ok { return successNote }
+    switch failureCode {
+    case "orphaned_xcodebuild":
+        return "xcodebuild was interrupted while matching processes are still active. Run `triton xcode status --json`, then `triton xcode wait-idle --workspace <workspace> --timeout 120 --json` or cancel stale PIDs before retrying."
+    case "xcodebuild_interrupted":
+        return "xcodebuild was interrupted before Triton observed a terminal build result. Run `triton xcode status --json`; if no matching process remains, retry with a longer --timeout or inspect stdout/stderr artifacts."
+    default:
+        return defaultFailureNote
+    }
+}
+
+private func xcodeWorkspaceFilter(for invocation: ResolvedXcodeInvocation) -> String? {
+    invocation.workspace ?? invocation.project
+}
+
+private func xcodeBuildWasInterrupted(_ result: HostProcessResult) -> Bool {
+    let combined = [result.stdout, result.stderr]
+        .joined(separator: "\n")
+        .lowercased()
+    let hasInterruptedMarker = combined.contains("build interrupted")
+        || combined.contains("test interrupted")
+    let hasFailureMarker = combined.contains("build failed")
+        || combined.contains("test failed")
+    return hasInterruptedMarker || (result.exitCode == 15 && !hasFailureMarker)
 }
 
 func runXcodeHostCommand(_ command: TKHostCommand, event: String, jsonl: Bool, allowNonZeroExit: Bool = false) throws -> (HostProcessResult, Int) {

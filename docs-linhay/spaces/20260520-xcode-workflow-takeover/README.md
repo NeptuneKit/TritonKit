@@ -144,6 +144,16 @@
 - And `--append-run` 只允许追加到已存在且非符号链接的 trace 路径
 - And 符号链接输出路径始终被拒绝
 
+### 场景十：Xcode build 中断后仍有匹配进程
+
+- Given agent 使用 `triton xcode build --jsonl` 构建大型 iOS workspace
+- When wrapper 进程返回 `** BUILD INTERRUPTED **` 或 exit code 15
+- And `triton xcode status --json` 仍能看到同一 workspace/project 的 `xcodebuild` 进程
+- Then 最终 `TKXcodeActionSummary` 必须返回 `ok=false` 和 `failureCode=orphaned_xcodebuild`
+- And summary 必须包含仍活跃的匹配进程摘要、stdout/stderr artifact 路径和下一步恢复命令
+- And 恢复命令至少包含 `triton xcode status --json` 与 `triton xcode wait-idle --workspace <workspace> --timeout 120 --json`
+- And 如果没有匹配活跃进程，summary 使用 `failureCode=xcodebuild_interrupted`，不能泛化成普通 `xcodebuild_failed`
+
 ## 分期
 
 ### 当前实现状态（2026-05-24）

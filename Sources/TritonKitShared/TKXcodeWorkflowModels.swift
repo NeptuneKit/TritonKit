@@ -1121,6 +1121,65 @@ public struct TKXcodeOutputDiagnostic: Codable, Equatable {
     }
 }
 
+public struct TKXcodeActiveProcessSummary: Codable, Equatable {
+    public let pid: Int
+    public let name: String
+    public let commandLine: String
+    public let elapsed: String?
+    public let elapsedSeconds: Int?
+    public let workspace: String?
+    public let project: String?
+    public let scheme: String?
+    public let destination: String?
+    public let derivedDataPath: String?
+    public let confidence: String
+
+    public init(
+        pid: Int,
+        name: String,
+        commandLine: String,
+        elapsed: String? = nil,
+        elapsedSeconds: Int? = nil,
+        workspace: String? = nil,
+        project: String? = nil,
+        scheme: String? = nil,
+        destination: String? = nil,
+        derivedDataPath: String? = nil,
+        confidence: String
+    ) {
+        self.pid = pid
+        self.name = name
+        self.commandLine = commandLine
+        self.elapsed = elapsed
+        self.elapsedSeconds = elapsedSeconds
+        self.workspace = workspace
+        self.project = project
+        self.scheme = scheme
+        self.destination = destination
+        self.derivedDataPath = derivedDataPath
+        self.confidence = confidence
+    }
+}
+
+public struct TKXcodePostActionProcessStatus: Codable, Equatable {
+    public let active: Bool
+    public let workspaceFilter: String?
+    public let processes: [TKXcodeActiveProcessSummary]
+    public let sourceCommand: String
+
+    public init(
+        active: Bool,
+        workspaceFilter: String? = nil,
+        processes: [TKXcodeActiveProcessSummary],
+        sourceCommand: String
+    ) {
+        self.active = active
+        self.workspaceFilter = workspaceFilter
+        self.processes = processes
+        self.sourceCommand = sourceCommand
+    }
+}
+
 public struct TKXcodeActionSummary: Codable, Equatable {
     public let ok: Bool
     public let action: String
@@ -1151,6 +1210,8 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let topFailures: [TKXcresultFailureRecord]?
     public let xcresultNote: String?
     public let xcodeDiagnostics: [TKXcodeOutputDiagnostic]?
+    public let postActionProcessStatus: TKXcodePostActionProcessStatus?
+    public let nextActions: [TKCLINextAction]?
     public let note: String?
 
     public init(
@@ -1183,6 +1244,8 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         topFailures: [TKXcresultFailureRecord]? = nil,
         xcresultNote: String? = nil,
         xcodeDiagnostics: [TKXcodeOutputDiagnostic]? = nil,
+        postActionProcessStatus: TKXcodePostActionProcessStatus? = nil,
+        nextActions: [TKCLINextAction]? = nil,
         note: String? = nil
     ) {
         self.ok = ok
@@ -1214,6 +1277,8 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.topFailures = topFailures
         self.xcresultNote = xcresultNote
         self.xcodeDiagnostics = xcodeDiagnostics
+        self.postActionProcessStatus = postActionProcessStatus
+        self.nextActions = nextActions
         self.note = note
     }
 }
