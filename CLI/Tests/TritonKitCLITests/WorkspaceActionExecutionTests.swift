@@ -631,6 +631,52 @@ struct WorkspaceActionExecutionTests {
         #expect(appMapSummary.pathIDs == ["path-login-dashboard"])
     }
 
+    @Test("workspace app map merge accumulates repeated runs")
+    func workspaceAppMapMergeAccumulatesRepeatedRuns() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let mapDir = root.appendingPathComponent("workspace.tritonmap", isDirectory: true)
+
+        try await runDashboardPath(runID: "run-workspace-map-merge-1", root: root)
+        try await runDashboardPath(runID: "run-workspace-map-merge-2", root: root)
+
+        let firstMerge = try mergeWorkspaceRunAppMap(
+            runID: "run-workspace-map-merge-1",
+            runsDirectory: root.path,
+            mapDirectory: mapDir.path,
+            confirm: true
+        )
+        #expect(firstMerge.screenCount == 3)
+        #expect(firstMerge.transitionCount == 2)
+        #expect(firstMerge.pathCount == 1)
+        #expect(firstMerge.pathIDs == ["path-login-dashboard"])
+
+        let secondMerge = try mergeWorkspaceRunAppMap(
+            runID: "run-workspace-map-merge-2",
+            runsDirectory: root.path,
+            mapDirectory: mapDir.path,
+            confirm: true
+        )
+        #expect(secondMerge.screenCount == 3)
+        #expect(secondMerge.transitionCount == 2)
+        #expect(secondMerge.pathCount == 1)
+        #expect(secondMerge.pathIDs == ["path-login-dashboard"])
+
+        let inspect = try inspectTritonAppMap(mapPath: mapDir.path)
+        #expect(inspect.screenCount == 3)
+        #expect(inspect.transitionCount == 2)
+        #expect(inspect.pathCount == 1)
+        #expect(inspect.health.observedRuns == 2)
+        #expect(inspect.health.passCount == 2)
+
+        let path = try #require(listTritonAppMapPaths(mapPath: mapDir.path).paths.first)
+        #expect(path.pathID == "path-login-dashboard")
+        #expect(path.sourceRuns == ["run-workspace-map-merge-1", "run-workspace-map-merge-2"])
+        #expect(path.health.observedRuns == 2)
+        #expect(path.health.passCount == 2)
+        #expect(path.confirmed)
+    }
+
     @Test("workspace run skips explicit action execution after business checkpoint passes")
     func workspaceRunSkipsExplicitActionExecutionAfterBusinessCheckpointPasses() async throws {
         let root = temporaryRunsDirectory()
@@ -705,6 +751,67 @@ struct WorkspaceActionExecutionTests {
     private func temporaryRunsDirectory() -> URL {
         FileManager.default.temporaryDirectory
             .appendingPathComponent("triton-workspace-action-execution-tests-\(UUID().uuidString)", isDirectory: true)
+    }
+
+    private func runDashboardPath(runID: String, root: URL) async throws {
+        var observeRequests: [TKWorkspaceLiveObserveRequest] = []
+        var waitCount = 0
+        let snapshots: [([String], String)] = [
+            (["Login", "Continue"], "login"),
+            (["Interstitial", "Next"], "interstitial"),
+            (["Dashboard"], "dashboard"),
+        ]
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: runID,
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Reach dashboard through intermediate screen",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                maxSteps: 2,
+                observeLive: true,
+                businessReadyText: "Dashboard",
+                businessReadyLiveWait: true,
+                businessReadyTimeout: 2,
+                businessReadyInterval: 0.25,
+                executeActions: true
+            ),
+            observeProvider: { request in
+                observeRequests.append(request)
+                let snapshot = snapshots[min(observeRequests.count - 1, snapshots.count - 1)]
+                return fakeLiveObserveOutput(
+                    for: request,
+                    visibleTexts: snapshot.0,
+                    artifactStem: snapshot.1
+                )
+            },
+            businessWaitProvider: { request in
+                waitCount += 1
+                if waitCount == 1 {
+                    return failedBusinessWaitResult(
+                        query: request.query,
+                        timeout: request.timeout,
+                        interval: request.interval
+                    )
+                }
+                return successfulBusinessWaitResult(
+                    query: request.query,
+                    timeout: request.timeout,
+                    interval: request.interval
+                )
+            },
+            actionExecutionProvider: { request in
+                successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "passed")
     }
 
     private func writeObservationFixture(

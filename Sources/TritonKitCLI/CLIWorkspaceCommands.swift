@@ -6,7 +6,7 @@ struct Workspace: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "workspace",
         abstract: "Create and inspect local agent workspace runs",
-        subcommands: [Run.self, Inspect.self, Stop.self, ExportFlow.self]
+        subcommands: [Run.self, Inspect.self, Stop.self, ExportFlow.self, MergeMap.self]
     )
 
     struct Run: AsyncParsableCommand {
@@ -219,6 +219,42 @@ struct Workspace: AsyncParsableCommand {
                 case .text:
                     print("output: \(response.output)")
                     print("steps: \(response.stepCount)")
+                }
+            } catch {
+                try failWorkspace(error, outputFormat: outputFormat)
+            }
+        }
+    }
+
+    struct MergeMap: ParsableCommand {
+        static let configuration = CommandConfiguration(
+            commandName: "merge-map",
+            abstract: "Merge a workspace run app-map into a long-lived map"
+        )
+
+        @Argument(help: "Run id") var runID: String
+        @Option(name: .customLong("runs-dir"), help: "Workspace runs directory") var runsDirectory: String = ".triton/runs"
+        @Option(name: .customLong("map-dir"), help: "Output app-map directory") var mapDirectory: String
+        @Flag(name: .customLong("confirm"), help: "Mark merged candidate paths as confirmed") var confirm = false
+        @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+        @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+        func run() throws {
+            let outputFormat = effectiveFormat(format, json: json)
+            do {
+                let response = try mergeWorkspaceRunAppMap(
+                    runID: runID,
+                    runsDirectory: runsDirectory,
+                    mapDirectory: mapDirectory,
+                    confirm: confirm
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print("runId: \(response.runID)")
+                    print("mapDir: \(response.mapDir)")
+                    print("paths: \(response.pathCount)")
                 }
             } catch {
                 try failWorkspace(error, outputFormat: outputFormat)

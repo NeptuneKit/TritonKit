@@ -59,6 +59,32 @@ private struct TKWorkspaceRuntimePointArtifact: Decodable {
     let y: Double
 }
 
+struct TKWorkspaceMergeMapResponse: Codable, Equatable {
+    let schemaVersion: Int
+    let kind: String
+    let runID: String
+    let sourceMapRef: String
+    let mapDir: String
+    let screenCount: Int
+    let transitionCount: Int
+    let pathCount: Int
+    let suiteCount: Int
+    let pathIDs: [String]
+
+    enum CodingKeys: String, CodingKey {
+        case schemaVersion
+        case kind
+        case runID = "runId"
+        case sourceMapRef
+        case mapDir
+        case screenCount
+        case transitionCount
+        case pathCount
+        case suiteCount
+        case pathIDs = "pathIds"
+    }
+}
+
 func projectWorkspaceAtlasAppMap(run: TKWorkspaceRunResponse, runDir: URL) throws {
     let atlasURL = runDir.appendingPathComponent("atlas/atlas.json")
     guard FileManager.default.fileExists(atPath: atlasURL.path) else { return }
@@ -151,6 +177,127 @@ func projectWorkspaceAtlasAppMap(run: TKWorkspaceRunResponse, runDir: URL) throw
         pathCount: pathIDs.count
     )
     try workspaceWriteAppMapIndex(mapRoot: mapRoot, app: app)
+}
+
+func mergeWorkspaceRunAppMap(
+    runID: String,
+    runsDirectory: String,
+    mapDirectory: String,
+    confirm: Bool = false
+) throws -> TKWorkspaceMergeMapResponse {
+    let inspected = try inspectWorkspaceRun(runID: runID, runsDirectory: runsDirectory)
+    let run = inspected.run
+    let runDir = workspaceRunDirectory(runID: run.runID, runsDirectory: runsDirectory)
+    let sourceRoot = workspaceAppMapRoot(runDir: runDir)
+    let sourceIndexURL = sourceRoot.appendingPathComponent("app-map.json")
+    guard FileManager.default.fileExists(atPath: sourceIndexURL.path) else {
+        throw RuntimeError("Workspace run \(run.runID) does not have a projected app map at atlas/app-map/app-map.json.")
+    }
+
+    let sourceIndex = try JSONDecoder().decode(TKAppMapDocument.self, from: Data(contentsOf: sourceIndexURL))
+    let mapRoot = URL(fileURLWithPath: mapDirectory, isDirectory: true)
+    try workspacePrepareAppMapDirectories(mapRoot)
+    let app = (try? JSONDecoder().decode(
+        TKAppMapDocument.self,
+        from: Data(contentsOf: mapRoot.appendingPathComponent("app-map.json"))
+    ))?.app ?? sourceIndex.app
+
+    for screen in try workspaceReadMapScreens(mapRoot: sourceRoot) {
+        let targetURL = mapRoot.appendingPathComponent("screens/\(screen.screenID).json")
+        let existing = try? JSONDecoder().decode(TKAppMapScreen.self, from: Data(contentsOf: targetURL))
+        let merged = TKAppMapScreen(
+            schemaVersion: 1,
+            kind: "triton.app-map.screen",
+            screenID: screen.screenID,
+            fingerprint: screen.fingerprint,
+            primaryText: existing?.primaryText ?? screen.primaryText,
+            visibleTexts: workspaceUnique((existing?.visibleTexts ?? []) + screen.visibleTexts),
+            runLocalScreenIDs: workspaceUnique((existing?.runLocalScreenIDs ?? []) + screen.runLocalScreenIDs),
+            sourceRuns: workspaceUnique((existing?.sourceRuns ?? []) + screen.sourceRuns),
+            vlmHealth: existing?.vlmHealth ?? screen.vlmHealth
+        )
+        try prettyEncodedData(merged).write(to: targetURL, options: .atomic)
+    }
+
+    for transition in try workspaceReadMapTransitions(mapRoot: sourceRoot) {
+        let targetURL = mapRoot.appendingPathComponent("transitions/\(transition.transitionID).json")
+        let existing = try? JSONDecoder().decode(TKAppMapTransition.self, from: Data(contentsOf: targetURL))
+        let merged = TKAppMapTransition(
+            schemaVersion: 1,
+            kind: "triton.app-map.transition",
+            transitionID: transition.transitionID,
+            fromScreenID: transition.fromScreenID,
+            toScreenID: transition.toScreenID,
+            triggerStepIndex: transition.triggerStepIndex,
+            trigger: transition.trigger,
+            changed: transition.changed || (existing?.changed ?? false),
+            replayable: transition.replayable || (existing?.replayable ?? false),
+            status: transition.status,
+            sourceRuns: workspaceUnique((existing?.sourceRuns ?? []) + transition.sourceRuns),
+            vlmHealth: existing?.vlmHealth ?? transition.vlmHealth
+        )
+        try prettyEncodedData(merged).write(to: targetURL, options: .atomic)
+    }
+
+    for path in try workspaceReadMapPaths(mapRoot: sourceRoot) {
+        let targetURL = mapRoot.appendingPathComponent("paths/\(path.pathID).json")
+        let existing = try? JSONDecoder().decode(TKAppMapPath.self, from: Data(contentsOf: targetURL))
+        let merged = TKAppMapPath(
+            schemaVersion: 1,
+            kind: "triton.app-map.path",
+            pathID: path.pathID,
+            name: existing?.name ?? path.name,
+            status: path.status,
+            confirmed: existing?.confirmed == true || confirm || path.confirmed,
+            startScreenID: path.startScreenID,
+            endScreenID: path.endScreenID,
+            transitions: workspaceUnique((existing?.transitions ?? []) + path.transitions),
+            health: workspaceMergedPathHealth(existing: existing, incoming: path, runID: run.runID),
+            replayable: path.replayable || (existing?.replayable ?? false),
+            sourceRuns: workspaceUnique((existing?.sourceRuns ?? []) + path.sourceRuns),
+            source: existing?.source ?? path.source,
+            vlmHealth: existing?.vlmHealth ?? path.vlmHealth
+        )
+        try prettyEncodedData(merged).write(to: targetURL, options: .atomic)
+    }
+
+    for suite in try workspaceReadMapSuites(mapRoot: sourceRoot) {
+        let targetURL = mapRoot.appendingPathComponent("suites/\(suite.suiteID).json")
+        let existing = try? JSONDecoder().decode(TKAppMapSuite.self, from: Data(contentsOf: targetURL))
+        let merged = TKAppMapSuite(
+            schemaVersion: 1,
+            kind: "triton.app-map.suite",
+            suiteID: suite.suiteID,
+            name: existing?.name ?? suite.name,
+            paths: workspaceUnique((existing?.paths ?? []) + suite.paths).sorted(),
+            policy: existing?.policy ?? suite.policy
+        )
+        try prettyEncodedData(merged).write(to: targetURL, options: .atomic)
+    }
+
+    try workspaceWriteAppMapRunRecord(
+        mapRoot: mapRoot,
+        run: run,
+        screenCount: sourceIndex.screenCount,
+        transitionCount: sourceIndex.transitionCount,
+        pathCount: sourceIndex.pathCount
+    )
+    try workspaceWriteAppMapIndex(mapRoot: mapRoot, app: app)
+
+    let inspect = try inspectTritonAppMap(mapPath: mapRoot.path)
+    let pathIDs = try listTritonAppMapPaths(mapPath: mapRoot.path).paths.map(\.pathID)
+    return TKWorkspaceMergeMapResponse(
+        schemaVersion: 1,
+        kind: "triton.workspace.merge-map",
+        runID: run.runID,
+        sourceMapRef: "atlas/app-map/app-map.json",
+        mapDir: mapRoot.path,
+        screenCount: inspect.screenCount,
+        transitionCount: inspect.transitionCount,
+        pathCount: inspect.pathCount,
+        suiteCount: inspect.suiteCount,
+        pathIDs: pathIDs
+    )
 }
 
 func workspaceAppMapSummary(runDir: URL) throws -> TKWorkspaceAppMapSummary? {
@@ -273,6 +420,26 @@ private func workspaceReadAppMapScreen(mapRoot: URL, screenID: String) throws ->
     )
 }
 
+private func workspaceReadMapScreens(mapRoot: URL) throws -> [TKAppMapScreen] {
+    try workspaceJSONFiles(in: mapRoot.appendingPathComponent("screens", isDirectory: true))
+        .map { try JSONDecoder().decode(TKAppMapScreen.self, from: Data(contentsOf: $0)) }
+}
+
+private func workspaceReadMapTransitions(mapRoot: URL) throws -> [TKAppMapTransition] {
+    try workspaceJSONFiles(in: mapRoot.appendingPathComponent("transitions", isDirectory: true))
+        .map { try JSONDecoder().decode(TKAppMapTransition.self, from: Data(contentsOf: $0)) }
+}
+
+private func workspaceReadMapPaths(mapRoot: URL) throws -> [TKAppMapPath] {
+    try workspaceJSONFiles(in: mapRoot.appendingPathComponent("paths", isDirectory: true))
+        .map { try JSONDecoder().decode(TKAppMapPath.self, from: Data(contentsOf: $0)) }
+}
+
+private func workspaceReadMapSuites(mapRoot: URL) throws -> [TKAppMapSuite] {
+    try workspaceJSONFiles(in: mapRoot.appendingPathComponent("suites", isDirectory: true))
+        .map { try JSONDecoder().decode(TKAppMapSuite.self, from: Data(contentsOf: $0)) }
+}
+
 private func workspaceActionPoint(runDir: URL, index: Int) -> TKAppMapPoint? {
     let suffix = workspaceArtifactSuffix(index)
     let url = runDir.appendingPathComponent("evidence/actions/action-\(suffix).json")
@@ -346,12 +513,33 @@ private func workspaceAppMapVerdict(for run: TKWorkspaceRunResponse) -> String? 
     return nil
 }
 
+private func workspaceMergedPathHealth(existing: TKAppMapPath?, incoming: TKAppMapPath, runID: String) -> TKAppMapHealth {
+    guard let existing else {
+        return incoming.health
+    }
+    guard !existing.sourceRuns.contains(runID) else {
+        return existing.health
+    }
+    return TKAppMapHealth(
+        observedRuns: existing.health.observedRuns + incoming.health.observedRuns,
+        passCount: existing.health.passCount + incoming.health.passCount,
+        failCount: existing.health.failCount + incoming.health.failCount,
+        flakeCount: existing.health.flakeCount + incoming.health.flakeCount
+    )
+}
+
 private func workspaceJSONFileCount(in directory: URL) throws -> Int {
-    guard FileManager.default.fileExists(atPath: directory.path) else { return 0 }
+    return try workspaceJSONFiles(in: directory).count
+}
+
+private func workspaceJSONFiles(in directory: URL) throws -> [URL] {
+    guard FileManager.default.fileExists(atPath: directory.path) else { return [] }
     return try FileManager.default.contentsOfDirectory(
         at: directory,
         includingPropertiesForKeys: nil
-    ).filter { $0.pathExtension == "json" }.count
+    )
+    .filter { $0.pathExtension == "json" }
+    .sorted { $0.lastPathComponent < $1.lastPathComponent }
 }
 
 private func workspaceUnique(_ values: [String]) -> [String] {
