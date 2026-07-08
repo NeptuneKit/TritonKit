@@ -64,13 +64,28 @@ func workspaceObservationSeed(
     for request: TKWorkspaceRunRequest,
     observeProvider: TKWorkspaceLiveObserveProvider
 ) async throws -> TKWorkspaceObservationSeed {
-    if workspaceHasObservationFixture(request.observationFixture), request.observeLive {
-        throw RuntimeError("--observation-fixture cannot be combined with --observe-live.")
+    try await workspaceInitialObservationSeed(for: request, observeProvider: observeProvider)
+}
+
+func workspaceInitialObservationSeed(
+    for request: TKWorkspaceRunRequest,
+    observeProvider: TKWorkspaceLiveObserveProvider
+) async throws -> TKWorkspaceObservationSeed {
+    if workspaceHasObservationFixture(request.observationFixture) {
+        return try workspaceObservationSeed(fixturePath: request.observationFixture)
     }
     if request.observeLive {
         return try await workspaceLiveObservationSeed(for: request, observeProvider: observeProvider)
     }
     return try workspaceObservationSeed(fixturePath: request.observationFixture)
+}
+
+func workspacePostActionObservationSeed(
+    for request: TKWorkspaceRunRequest,
+    observeProvider: TKWorkspaceLiveObserveProvider
+) async throws -> TKWorkspaceObservationSeed? {
+    guard request.observeLive else { return nil }
+    return try await workspaceLiveObservationSeed(for: request, observeProvider: observeProvider)
 }
 
 func workspaceDefaultLiveObserveProvider(_ request: TKWorkspaceLiveObserveRequest) async throws -> ObserveOutput {
@@ -160,7 +175,7 @@ private func workspaceLiveObserveRequest(for request: TKWorkspaceRunRequest) thr
         action: "observe.\(kind)",
         kind: kind,
         platform: platform,
-        target: workspaceLiveObservationTarget(request.target),
+        target: workspaceLiveObservationTarget(workspaceRuntimeTarget(for: request)),
         hdc: request.hdc,
         host: request.observeHost,
         port: request.observePort,

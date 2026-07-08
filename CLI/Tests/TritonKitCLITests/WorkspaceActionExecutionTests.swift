@@ -95,8 +95,8 @@ struct WorkspaceActionExecutionTests {
         #expect(resolveRequest?.platform == "ios")
         #expect(resolveRequest?.scope == "simulator")
         #expect(lifecycleRequest?.target == "SIM-1")
-        #expect(observeRequests.first?.target == "SIM-1")
-        #expect(actionRequest?.target == "SIM-1")
+        #expect(observeRequests.first?.target == "triton:ios-simulator:SIM-1/app:com.example.demo")
+        #expect(actionRequest?.target == "triton:ios-simulator:SIM-1/app:com.example.demo")
         #expect(run.target.id == "host:ios:SIM-1")
         #expect(run.target.platform == "ios")
         #expect(run.target.scope == "simulator")
@@ -1133,7 +1133,7 @@ struct WorkspaceActionExecutionTests {
             return successfulActionExecution(for: request)
         })
 
-        #expect(actionRequest?.target == "runtime-target-http")
+        #expect(actionRequest?.target == "triton:ios-simulator:runtime-target-http/app:com.example.demo")
         #expect(actionRequest?.host == "127.0.0.3")
         #expect(actionRequest?.port == 19423)
         #expect(actionRequest?.platform == "ios")
@@ -1354,6 +1354,127 @@ struct WorkspaceActionExecutionTests {
         #expect(transitions.count == 2)
         #expect(transitions[0]["status"] as? String == "verification_failed")
         #expect(transitions[1]["status"] as? String == "verified")
+    }
+
+    @Test("workspace run can use an initial screenshot fixture and post-action live observe")
+    func workspaceRunUsesInitialFixtureAndPostActionLiveObserve() async throws {
+        let root = temporaryRunsDirectory()
+        defer { try? FileManager.default.removeItem(at: root) }
+        let screenshot = root.appendingPathComponent("fixtures/demo-initial.png")
+        try writeFixtureImage(to: screenshot)
+        let fixture = try writeObservationFixture(
+            in: root,
+            visibleTexts: ["Complex harness: 0", "Primary"],
+            screenshot: screenshot.path
+        )
+        var observeRequests: [TKWorkspaceLiveObserveRequest] = []
+        var providerRequest: TKWorkspaceModelDecisionRequest?
+        var groundingRequest: TKWorkspaceVLMGroundingRequest?
+
+        let run = try await runWorkspaceRunAsync(
+            TKWorkspaceRunRequest(
+                runsDirectory: root.path,
+                runID: "run-workspace-fixture-plus-live",
+                target: "booted",
+                platform: "ios",
+                scope: "simulator",
+                app: "com.example.demo",
+                goal: "Tap primary and verify counter",
+                actionPolicy: "explore",
+                llmProvider: "mock",
+                vlmProvider: "mock",
+                observationFixture: fixture.path,
+                observeLive: true,
+                observeKind: "current",
+                businessReadyText: "Complex harness: 1",
+                businessReadyAssert: true,
+                executeActions: true
+            ),
+            observeProvider: { request in
+                observeRequests.append(request)
+                return fakeLiveObserveOutput(
+                    for: request,
+                    visibleTexts: ["Complex harness: 1", "Primary"],
+                    artifactStem: "demo-post-action"
+                )
+            },
+            businessAssertProvider: { request in
+                successfulBusinessAssertResult(query: request.query)
+            },
+            modelDecisionProvider: { request in
+                providerRequest = request
+                return TKWorkspaceModelDecision(
+                    candidate: TKWorkspaceActionCandidate(
+                        action: "tap",
+                        query: "Primary",
+                        source: "llm-vlm.provider"
+                    ),
+                    confidence: 0.93,
+                    summary: "Primary is the visible counter action.",
+                    expected: "Primary increments the complex harness counter.",
+                    usedVLM: true,
+                    requestContext: [
+                        "providerRequestId": "fixture-plus-live-decision",
+                    ],
+                    bootstrapResponseText: #"{"action":"tap","query":"Primary","confidence":0.93}"#,
+                    decisionResponseText: #"{"action":"tap","query":"Primary","confidence":0.93}"#
+                )
+            },
+            vlmGroundingProvider: { request in
+                groundingRequest = request
+                return fakeVLMGrounding(for: request)
+            },
+            actionExecutionProvider: { request in
+                successfulActionExecution(for: request)
+            }
+        )
+
+        #expect(run.status == "passed")
+        #expect(observeRequests.count == 1)
+        #expect(observeRequests.first?.action == "observe.current")
+        #expect(providerRequest?.visibleTexts == ["Complex harness: 0", "Primary"])
+        #expect(groundingRequest?.image == screenshot.path)
+        #expect(groundingRequest?.target == "Primary")
+
+        let runDir = root.appendingPathComponent("run-workspace-fixture-plus-live", isDirectory: true)
+        let parsed = try TKTestRunEventLogParser().parse(
+            Data(contentsOf: runDir.appendingPathComponent("events.jsonl"))
+        )
+        let observationEvents = parsed.events.filter { $0.type == .observationCaptured }
+        #expect(observationEvents.map(\.phase) == ["initial", "post_action"])
+        #expect(observationEvents.first?.screenCandidate?.visibleTexts == ["Complex harness: 0", "Primary"])
+        #expect(observationEvents.last?.screenCandidate?.visibleTexts == ["Complex harness: 1", "Primary"])
+
+        let action = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("evidence/actions/action-000.json"))
+        ) as? [String: Any]
+        #expect(action?["usedVLMGrounding"] as? Bool == true)
+        #expect(action?["proofSource"] as? String == "vlm.grounding+runtime.input")
+
+        let atlas = try JSONSerialization.jsonObject(
+            with: Data(contentsOf: runDir.appendingPathComponent("atlas/atlas.json"))
+        ) as? [String: Any]
+        let transitions = try #require(atlas?["transitions"] as? [[String: Any]])
+        #expect(transitions.count == 1)
+        #expect(transitions.first?["fromScreenId"] as? String == "screen_0000")
+        #expect(transitions.first?["toScreenId"] as? String == "screen_0001")
+        #expect(transitions.first?["status"] as? String == "verified")
+
+        let appMap = try JSONDecoder().decode(
+            TKAppMapDocument.self,
+            from: Data(contentsOf: runDir.appendingPathComponent("atlas/app-map/app-map.json"))
+        )
+        #expect(appMap.screenCount == 2)
+        #expect(appMap.transitionCount == 1)
+        #expect(appMap.pathCount == 1)
+
+        let paths = try listTritonAppMapPaths(
+            mapPath: runDir.appendingPathComponent("atlas/app-map", isDirectory: true).path
+        )
+        #expect(paths.paths.first?.requiresVLM == true)
+        #expect(paths.paths.first?.source == "vlm-assisted")
+        #expect(paths.paths.first?.vlmHealth?.providers["mock"]?.groundingRuns == 1)
+        #expect(paths.paths.first?.suggestedCommands.contains { $0.contains("--allow-vlm") } == true)
     }
 
     private func writeObservationFixture(

@@ -482,6 +482,26 @@ struct TKAppMapTransition: Codable, Equatable {
 struct TKAppMapTransitionTrigger: Codable, Equatable {
     let type: String
     let point: TKAppMapPoint?
+    let target: String?
+
+    init(type: String, point: TKAppMapPoint? = nil, target: String? = nil) {
+        self.type = type
+        self.point = point
+        self.target = target
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type
+        case point
+        case target
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decode(String.self, forKey: .type)
+        point = try container.decodeIfPresent(TKAppMapPoint.self, forKey: .point)
+        target = try container.decodeIfPresent(String.self, forKey: .target)
+    }
 }
 
 struct TKAppMapPoint: Codable, Equatable {
@@ -620,6 +640,14 @@ private func appMapPathHasVLMProvenance(source: String, vlmHealth: TKAppMapVLMHe
         return true
     }
     return vlmHealth?.providers.values.contains { $0.groundingRuns > 0 } == true
+}
+
+private func appMapPrimaryVLMProvider(_ vlmHealth: TKAppMapVLMHealth?) -> String? {
+    vlmHealth?.providers
+        .filter { $0.value.groundingRuns > 0 }
+        .map(\.key)
+        .sorted()
+        .first
 }
 
 private func appMapPathRequiresVLM(_ path: TKAppMapPath) -> Bool {
@@ -835,7 +863,10 @@ func mergeTritonAppMap(
                 coordinateSpace: transition.trigger.coordinateSpace ?? "runtime-point"
             )
         }
-        let trigger = TKAppMapTransitionTrigger(type: transition.trigger.type, point: triggerPoint)
+        let trigger = TKAppMapTransitionTrigger(
+            type: transition.trigger.type,
+            point: triggerPoint
+        )
         let transitionID = mapTransitionID(
             fromScreenID: fromScreenID,
             toScreenID: toScreenID,
@@ -1316,20 +1347,28 @@ func exportTritonAppMapFlow(
     """
 
     for transition in transitions {
-        guard let point = transition.trigger.point else {
+        guard transition.trigger.point != nil || transition.trigger.target != nil else {
             throw TKAppMapError.nonReplayablePath(pathID)
         }
         let targetScreen = try readMapScreen(mapRoot: mapRoot, screenID: transition.toScreenID)
-        yaml += """
-
-          - tap:
-              point:
-                x: \(formatNumber(point.x))
-                y: \(formatNumber(point.y))
-                coordinateSpace: \(point.coordinateSpace)
-          - assertVisible:
-              text: \(yamlQuoted(targetScreen.primaryText ?? ""))
-        """
+        if let point = transition.trigger.point {
+            yaml += "\n  - tap:\n"
+            yaml += "      point:\n"
+            yaml += "        x: \(formatNumber(point.x))\n"
+            yaml += "        y: \(formatNumber(point.y))\n"
+            yaml += "        coordinateSpace: \(point.coordinateSpace)\n"
+        } else if let target = transition.trigger.target {
+            yaml += "\n  - tap:\n"
+            if appMapPathHasVLMProvenance(source: path.source, vlmHealth: transition.vlmHealth) {
+                yaml += "      target: \(yamlQuoted(target))\n"
+                yaml += "      grounding: vlm\n"
+                yaml += "      provider: \(yamlQuoted(appMapPrimaryVLMProvider(transition.vlmHealth) ?? "mock"))\n"
+            } else {
+                yaml += "      text: \(yamlQuoted(target))\n"
+            }
+        }
+        yaml += "  - assertVisible:\n"
+        yaml += "      text: \(yamlQuoted(targetScreen.primaryText ?? ""))\n"
         stepCount += 2
     }
     yaml += "\n"
@@ -2068,7 +2107,8 @@ private func mapTransitionID(
     trigger: TKAppMapTransitionTrigger
 ) -> String {
     let point = trigger.point.map { "\($0.x),\($0.y),\($0.coordinateSpace)" } ?? "none"
-    return "transition-\(shortHash("\(fromScreenID)|\(toScreenID)|\(stepIndex)|\(trigger.type)|\(point)"))"
+    let target = trigger.target ?? "none"
+    return "transition-\(shortHash("\(fromScreenID)|\(toScreenID)|\(stepIndex)|\(trigger.type)|\(point)|\(target)"))"
 }
 
 private func shortHash(_ value: String) -> String {

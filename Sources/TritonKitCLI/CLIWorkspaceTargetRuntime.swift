@@ -60,6 +60,58 @@ func workspaceRunRequest(
     )
 }
 
+func workspaceRuntimeTarget(for request: TKWorkspaceRunRequest) -> String {
+    workspaceRuntimeTarget(
+        request.target,
+        platform: request.platform,
+        scope: request.scope,
+        appID: workspaceNonEmpty(request.bundleID) ?? workspaceNonEmpty(request.app)
+    )
+}
+
+func workspaceRuntimeTarget(
+    _ rawTarget: String,
+    platform: String?,
+    scope: String?,
+    appID: String? = nil
+) -> String {
+    let target = rawTarget.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard workspaceNonEmpty(platform)?.lowercased() == "ios",
+          workspaceNonEmpty(scope)?.lowercased() == "simulator",
+          !target.isEmpty
+    else {
+        return rawTarget
+    }
+    if target == "current" || target == "booted" {
+        return target
+    }
+    if target.hasPrefix("triton:") {
+        return workspaceRuntimeAppTarget(target, appID: appID)
+    }
+    if target.hasPrefix("sim:") {
+        return workspaceRuntimeAppTarget(
+            "triton:ios-simulator:\(String(target.dropFirst(4)))",
+            appID: appID
+        )
+    }
+    if target.hasPrefix("host:ios:") {
+        return workspaceRuntimeAppTarget(
+            "triton:ios-simulator:\(String(target.dropFirst("host:ios:".count)))",
+            appID: appID
+        )
+    }
+    return workspaceRuntimeAppTarget("triton:ios-simulator:\(target)", appID: appID)
+}
+
+private func workspaceRuntimeAppTarget(_ target: String, appID: String?) -> String {
+    guard !target.contains("/app:"),
+          let appID = workspaceNonEmpty(appID)
+    else {
+        return target
+    }
+    return "\(target)/app:\(appID)"
+}
+
 extension TKWorkspaceRunRequest {
     func resolvingTarget(target: String, platform: String?, scope: String?) -> TKWorkspaceRunRequest {
         TKWorkspaceRunRequest(

@@ -172,3 +172,11 @@ Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 g
 - 本机 `iPhone 17 Pro / iOS 26.5` simulator `83407554-53AB-45B4-A0C1-D59F34E26A67` 已完成真实 smoke：runtime target 为 `triton:ios-simulator:83407554-53AB-45B4-A0C1-D59F34E26A67/app:com.neptunekit.tritonkit.demo`，`connected=true`，`hierarchyCacheState=active`；action 后 `Complex harness: 1` wait 通过；`demo.tritonevidence` 导出 9 个 artifact；`workspace run` 返回 `status=passed` 并生成 run-local app-map。
 - 这满足本 space 首个本机 target scope 的端到端 baseline；Overloaded 仍作为外部真实 App 回归问题继续跟进，不影响 iOS Demo 这条可控产品验收链。
 - 证据目录：`evidence/20260707-ios-demo-e2e-smoke/README.md`。
+
+## 2026-07-08 iOS Demo LLM/VLM + Atlas map 全链验收
+
+- `workspace run` 已支持“初始 observation fixture + 动作后 live observe”组合：fixture 用于首轮 LLM/VLM grounding，action 成功后仍通过 runtime live observe 写入 `post_action` observation 和 Atlas transition。
+- iOS simulator runtime target 解析补齐 app 维度：`--resolve-target` 得到 raw simulator UDID 后，observe/action/assert 会归一化为 `triton:ios-simulator:<udid>/app:<bundle-id>`，而 app lifecycle 仍使用 host raw target。
+- run-local Atlas 投影到 app-map 时会保留 VLM provenance：action artifact 的 `usedVLMGrounding=true` 会进入 transition/path `vlmHealth`，path 标记 `source=vlm-assisted`、`requiresVLM=true`，并在 `map paths/path show/export-flow` suggested commands 中自动带 `--allow-vlm`。
+- app-map export-flow 已支持混合 transition：有 runtime point 的 tap 导出为 `tap.point`；只有 selector text 的普通 transition 导出为 `tap.text`；若 transition 自身带 VLM provenance，才导出 `tap.target + grounding: vlm + provider`。导出的 `.tritontest.yaml` 可直接通过 `triton test validate`。
+- 真实 iOS Demo smoke 已全链通过：`TRITON_BIN=CLI/.build/debug/triton TRITON_IOS_DEMO_SIMULATOR=83407554-53AB-45B4-A0C1-D59F34E26A67 TRITON_VERIFY_OUT_DIR=.build/ios-demo-e2e-smoke-map-current9 docs-linhay/scripts/verify-ios-demo-e2e-smoke.sh`。通过范围覆盖 `xcode run`、runtime target ready、手动 action/evidence、workspace OpenAI-compatible LLM mock、VLM grounding、bounded recovery loop、post-action runtime assert、run-local app-map、`workspace merge-map`、`map paths`、`map path show`、`map export-flow` 和 `test validate`。

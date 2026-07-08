@@ -95,7 +95,7 @@ func workspaceActionExecutionRequest(
     vlmGrounding: TKVLMGroundResponse? = nil
 ) throws -> TKWorkspaceActionExecutionRequest {
     return TKWorkspaceActionExecutionRequest(
-        target: request.target,
+        target: workspaceRuntimeTarget(for: request),
         host: request.observeHost,
         port: request.observePort,
         platform: request.platform,

@@ -55,7 +55,7 @@ func workspaceBusinessWaitRequest(for request: TKWorkspaceRunRequest) throws -> 
         throw RuntimeError("--business-ready-interval must be greater than 0.")
     }
     return TKWorkspaceBusinessWaitRequest(
-        target: request.target,
+        target: workspaceRuntimeTarget(for: request),
         host: request.observeHost,
         port: request.observePort,
         query: query,
@@ -69,7 +69,7 @@ func workspaceBusinessAssertRequest(for request: TKWorkspaceRunRequest) throws -
         throw RuntimeError("--business-ready-assert requires --business-ready-text.")
     }
     return TKWorkspaceBusinessAssertRequest(
-        target: request.target,
+        target: workspaceRuntimeTarget(for: request),
         host: request.observeHost,
         port: request.observePort,
         condition: .textExists,

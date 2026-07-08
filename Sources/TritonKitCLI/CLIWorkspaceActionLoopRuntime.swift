@@ -116,7 +116,7 @@ func runWorkspaceActionLoop(
         ))
         let postActionObservation: TKWorkspaceObservationSeed?
         if actionExecution.ok {
-            postActionObservation = try await workspaceObservationSeed(for: request, observeProvider: observeProvider)
+            postActionObservation = try await workspacePostActionObservationSeed(for: request, observeProvider: observeProvider)
             if let postActionObservation {
                 observations.append(postActionObservation)
             }

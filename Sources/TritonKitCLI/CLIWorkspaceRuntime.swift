@@ -554,7 +554,7 @@ func runWorkspaceRunAsync(
     let targetResolution = try targetResolver(workspaceTargetResolveRequest(for: request))
     let resolvedRequest = workspaceRunRequest(request, applying: targetResolution)
     let appLifecycle = try await workspaceAppLifecycleEvidence(for: resolvedRequest, provider: appLifecycleProvider)
-    let observationSeed = try await workspaceObservationSeed(for: resolvedRequest, observeProvider: observeProvider)
+    let observationSeed = try await workspaceInitialObservationSeed(for: resolvedRequest, observeProvider: observeProvider)
     let runner = try workspaceRunnerConfig(for: resolvedRequest)
     let providerPreflight = try workspaceProviderPreflight(resolvedRequest)
     let modelLoopMode = workspaceModelLoopMode(for: resolvedRequest)
@@ -638,8 +638,8 @@ func runWorkspaceRunAsync(
         actionExecution = nil
     }
     let postActionObservation: TKWorkspaceObservationSeed?
-    if resolvedRequest.observeLive, actionExecution?.ok == true {
-        postActionObservation = try await workspaceObservationSeed(for: resolvedRequest, observeProvider: observeProvider)
+    if actionExecution?.ok == true {
+        postActionObservation = try await workspacePostActionObservationSeed(for: resolvedRequest, observeProvider: observeProvider)
     } else {
         postActionObservation = nil
     }

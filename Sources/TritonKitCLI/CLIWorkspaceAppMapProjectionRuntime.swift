@@ -62,6 +62,7 @@ private struct TKWorkspaceAtlasProjectionTransition: Decodable {
     let toScreenID: String
     let action: String
     let status: String
+    let selector: TKWorkspaceAtlasProjectionSelector?
 
     enum CodingKeys: String, CodingKey {
         case transitionID = "transitionId"
@@ -69,14 +70,22 @@ private struct TKWorkspaceAtlasProjectionTransition: Decodable {
         case toScreenID = "toScreenId"
         case action
         case status
+        case selector
     }
 }
 
+private struct TKWorkspaceAtlasProjectionSelector: Decodable {
+    let text: String?
+}
+
 private struct TKWorkspaceActionPointArtifact: Decodable {
+    let usedVLMGrounding: Bool?
     let vlmGrounding: TKWorkspaceVLMGroundingPointArtifact?
 }
 
 private struct TKWorkspaceVLMGroundingPointArtifact: Decodable {
+    let provider: String?
+    let target: String?
     let coordinateSpace: String?
     let runtimePoint: TKWorkspaceRuntimePointArtifact?
 }
@@ -165,8 +174,14 @@ func projectWorkspaceAtlasAppMap(run: TKWorkspaceRunResponse, runDir: URL) throw
         else {
             continue
         }
-        let point = workspaceActionPoint(runDir: runDir, index: index)
-        let trigger = TKAppMapTransitionTrigger(type: transition.action, point: point)
+        let actionArtifact = workspaceActionArtifact(runDir: runDir, index: index)
+        let point = workspaceActionPoint(actionArtifact)
+        let vlmHealth = workspaceActionVLMHealth(actionArtifact)
+        let trigger = TKAppMapTransitionTrigger(
+            type: transition.action,
+            point: point,
+            target: workspaceNonEmpty(transition.selector?.text)
+        )
         let transitionID = workspaceMapTransitionID(
             fromScreenID: fromScreenID,
             toScreenID: toScreenID,
@@ -183,10 +198,10 @@ func projectWorkspaceAtlasAppMap(run: TKWorkspaceRunResponse, runDir: URL) throw
             triggerStepIndex: index + 1,
             trigger: trigger,
             changed: changed,
-            replayable: point?.coordinateSpace == "runtime-point",
+            replayable: point?.coordinateSpace == "runtime-point" || workspaceNonEmpty(transition.selector?.text) != nil,
             status: transition.status,
             sourceRuns: [runID],
-            vlmHealth: nil
+            vlmHealth: vlmHealth
         )
         try prettyEncodedData(mapped).write(
             to: mapRoot.appendingPathComponent("transitions/\(transitionID).json"),
@@ -392,6 +407,12 @@ private func workspaceWriteAppMapPath(
     let startName = start.primaryText ?? start.screenID
     let endName = workspacePathEndName(start: startName, end: end.primaryText ?? end.screenID)
     let pathID = "path-\(workspaceSlug(startName))-\(workspaceSlug(endName))"
+    let pathVLMHealth = transitions.reduce(nil as TKAppMapVLMHealth?) { partial, transition in
+        workspaceMergeVLMHealth(partial, transition.vlmHealth)
+    }
+    let source = workspaceAppMapPathHasVLMProvenance(source: "workspace-atlas", vlmHealth: pathVLMHealth)
+        ? "vlm-assisted"
+        : "workspace-atlas"
     let path = TKAppMapPath(
         schemaVersion: 1,
         kind: "triton.app-map.path",
@@ -405,8 +426,9 @@ private func workspaceWriteAppMapPath(
         health: workspaceAppMapHealth(for: run),
         replayable: transitions.allSatisfy(\.replayable),
         sourceRuns: [run.runID],
-        source: "workspace-atlas",
-        vlmHealth: nil
+        source: source,
+        vlmHealth: pathVLMHealth,
+        requiresVLM: workspaceAppMapPathHasVLMProvenance(source: source, vlmHealth: pathVLMHealth)
     )
     try prettyEncodedData(path).write(to: mapRoot.appendingPathComponent("paths/\(pathID).json"), options: .atomic)
     return [pathID]
@@ -580,11 +602,17 @@ private func workspaceAppMapCoverage(
     )
 }
 
-private func workspaceActionPoint(runDir: URL, index: Int) -> TKAppMapPoint? {
+private func workspaceActionArtifact(runDir: URL, index: Int) -> TKWorkspaceActionPointArtifact? {
     let suffix = workspaceArtifactSuffix(index)
     let url = runDir.appendingPathComponent("evidence/actions/action-\(suffix).json")
-    guard let data = try? Data(contentsOf: url),
-          let artifact = try? JSONDecoder().decode(TKWorkspaceActionPointArtifact.self, from: data),
+    guard let data = try? Data(contentsOf: url) else {
+        return nil
+    }
+    return try? JSONDecoder().decode(TKWorkspaceActionPointArtifact.self, from: data)
+}
+
+private func workspaceActionPoint(_ artifact: TKWorkspaceActionPointArtifact?) -> TKAppMapPoint? {
+    guard let artifact,
           let grounding = artifact.vlmGrounding,
           let runtimePoint = grounding.runtimePoint else {
         return nil
@@ -594,6 +622,68 @@ private func workspaceActionPoint(runDir: URL, index: Int) -> TKAppMapPoint? {
         y: runtimePoint.y,
         coordinateSpace: grounding.coordinateSpace ?? "runtime-point"
     )
+}
+
+private func workspaceActionVLMHealth(_ artifact: TKWorkspaceActionPointArtifact?) -> TKAppMapVLMHealth? {
+    guard artifact?.usedVLMGrounding == true,
+          let grounding = artifact?.vlmGrounding
+    else {
+        return nil
+    }
+    let provider = workspaceNonEmpty(grounding.provider) ?? "unknown"
+    return TKAppMapVLMHealth(providers: [
+        provider: TKAppMapVLMProviderHealth(
+            groundingRuns: 1,
+            successCount: 1,
+            failureCount: 0,
+            targetNotVisibleCount: 0,
+            parseFailureCount: 0,
+            outOfBoundsCount: 0,
+            meanLatencyMs: nil,
+            lastModel: nil,
+            lastSeenAt: workspaceISO8601Timestamp(),
+            targets: workspaceNonEmpty(grounding.target).map { [$0] } ?? []
+        ),
+    ])
+}
+
+private func workspaceMergeVLMHealth(_ lhs: TKAppMapVLMHealth?, _ rhs: TKAppMapVLMHealth?) -> TKAppMapVLMHealth? {
+    guard let lhs else { return rhs }
+    guard let rhs else { return lhs }
+    var providers = lhs.providers
+    for (provider, incoming) in rhs.providers {
+        if let existing = providers[provider] {
+            let totalRuns = existing.groundingRuns + incoming.groundingRuns
+            let meanLatencyMs: Double?
+            if let existingMean = existing.meanLatencyMs, let incomingMean = incoming.meanLatencyMs, totalRuns > 0 {
+                meanLatencyMs = ((existingMean * Double(existing.groundingRuns)) + (incomingMean * Double(incoming.groundingRuns))) / Double(totalRuns)
+            } else {
+                meanLatencyMs = existing.meanLatencyMs ?? incoming.meanLatencyMs
+            }
+            providers[provider] = TKAppMapVLMProviderHealth(
+                groundingRuns: totalRuns,
+                successCount: existing.successCount + incoming.successCount,
+                failureCount: existing.failureCount + incoming.failureCount,
+                targetNotVisibleCount: existing.targetNotVisibleCount + incoming.targetNotVisibleCount,
+                parseFailureCount: existing.parseFailureCount + incoming.parseFailureCount,
+                outOfBoundsCount: existing.outOfBoundsCount + incoming.outOfBoundsCount,
+                meanLatencyMs: meanLatencyMs,
+                lastModel: incoming.lastModel ?? existing.lastModel,
+                lastSeenAt: incoming.lastSeenAt ?? existing.lastSeenAt,
+                targets: workspaceUnique(existing.targets + incoming.targets)
+            )
+        } else {
+            providers[provider] = incoming
+        }
+    }
+    return TKAppMapVLMHealth(providers: providers)
+}
+
+private func workspaceAppMapPathHasVLMProvenance(source: String, vlmHealth: TKAppMapVLMHealth?) -> Bool {
+    if source == "vlm-assisted" {
+        return true
+    }
+    return vlmHealth?.providers.values.contains { $0.groundingRuns > 0 } == true
 }
 
 private func workspaceAtlasFingerprint(from signature: String) -> TKScreenWorkspaceFingerprint {
@@ -617,7 +707,8 @@ private func workspaceMapTransitionID(
     trigger: TKAppMapTransitionTrigger
 ) -> String {
     let point = trigger.point.map { "\($0.x),\($0.y),\($0.coordinateSpace)" } ?? "none"
-    return "transition-\(workspaceShortHash("\(fromScreenID)|\(toScreenID)|\(stepIndex)|\(trigger.type)|\(point)"))"
+    let target = trigger.target ?? "none"
+    return "transition-\(workspaceShortHash("\(fromScreenID)|\(toScreenID)|\(stepIndex)|\(trigger.type)|\(point)|\(target)"))"
 }
 
 private func workspacePrimaryText(_ texts: [String]) -> String? {
