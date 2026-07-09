@@ -20,43 +20,63 @@ usage() {
 version="$1"
 [[ "${version}" =~ ^[0-9]+([.][0-9]+){1,2}([-+][0-9A-Za-z.-]+)?$ ]] || fail "invalid version: ${version}"
 
-ruby -rjson - "${root}" "${version}" <<'RUBY'
-root = ARGV.fetch(0)
-expected = ARGV.fetch(1)
+python3 - "${root}" "${version}" <<'PYTHON'
+import sys
+import os
+import re
+import json
 
-def fail(message)
-  warn "release package version verification failed: #{message}"
-  exit 1
-end
+root = sys.argv[1]
+expected = sys.argv[2]
 
-def read(path)
-  File.read(path)
-rescue Errno::ENOENT
-  fail "missing #{path}"
-end
+def fail(message):
+    sys.stderr.write("release package version verification failed: " + message + "\n")
+    sys.exit(1)
 
-{
-  "TritonKit.podspec" => File.join(root, "TritonKit.podspec")
-}.each do |label, path|
-  text = read(path)
-  match = text.match(/^\s*s\.version\s*=\s*['"]([^'"]+)['"]/)
-  fail "missing s.version in #{label}" unless match
-  actual = match[1]
-  fail "#{label} version #{actual} does not match #{expected}" unless actual == expected
-end
+def read(path):
+    try:
+        with open(path, 'r', encoding='utf-8') as f:
+            return f.read()
+    except FileNotFoundError:
+        fail("missing " + path)
 
-web_package_path = File.join(root, "Web/package.json")
-web_package = JSON.parse(read(web_package_path))
-actual = web_package["version"]
-fail "Web/package.json version #{actual.inspect} does not match #{expected}" unless actual == expected
+# Check TritonKit.podspec
+podspec_path = os.path.join(root, "TritonKit.podspec")
+text = read(podspec_path)
+match = re.search(r'^\s*s\.version\s*=\s*[\'"]([^\'"]+)[\'"]', text, re.MULTILINE)
+if not match:
+    fail("missing s.version in TritonKit.podspec")
+actual = match.group(1)
+if actual != expected:
+    fail("TritonKit.podspec version " + actual + " does not match " + expected)
 
-lock_path = File.join(root, "Web/package-lock.json")
-lock = JSON.parse(read(lock_path))
-root_version = lock["version"]
-fail "Web/package-lock.json root version #{root_version.inspect} does not match #{expected}" unless root_version == expected
+# Check Web/package.json
+web_package_path = os.path.join(root, "Web/package.json")
+try:
+    web_package = json.loads(read(web_package_path))
+except Exception as e:
+    fail("failed to parse Web/package.json: " + str(e))
+actual = web_package.get("version")
+if actual != expected:
+    fail("Web/package.json version " + repr(actual) + " does not match " + expected)
 
-package_root_version = lock.dig("packages", "", "version")
-fail "Web/package-lock.json packages[''] version #{package_root_version.inspect} does not match #{expected}" unless package_root_version == expected
-RUBY
+# Check Web/package-lock.json
+lock_path = os.path.join(root, "Web/package-lock.json")
+try:
+    lock = json.loads(read(lock_path))
+except Exception as e:
+    fail("failed to parse Web/package-lock.json: " + str(e))
+root_version = lock.get("version")
+if root_version != expected:
+    fail("Web/package-lock.json root version " + repr(root_version) + " does not match " + expected)
+
+packages = lock.get("packages", {})
+root_pkg = packages.get("")
+if not root_pkg:
+    fail("Web/package-lock.json packages[''] is missing")
+package_root_version = root_pkg.get("version")
+if package_root_version != expected:
+    fail("Web/package-lock.json packages[''] version " + repr(package_root_version) + " does not match " + expected)
+PYTHON
 
 echo "release package version verification passed: ${version}"
