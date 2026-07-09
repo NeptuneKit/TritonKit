@@ -573,6 +573,39 @@ struct PackagedWebStaticResponse: Equatable {
     let contentType: String
 }
 
+struct PackagedWebIOSSimulatorMjpegRequest: Equatable {
+    let udid: String
+    let fps: Int
+    let targetIntervalSeconds: Double
+    let boundary: String
+}
+
+func makePackagedWebIOSSimulatorMjpegRequest(
+    target: String?,
+    udid: String?,
+    fps: String?
+) throws -> PackagedWebIOSSimulatorMjpegRequest {
+    guard let rawTarget = [target, udid].compactMap({ $0?.trimmingCharacters(in: .whitespacesAndNewlines) }).first(where: { !$0.isEmpty }) else {
+        throw RuntimeError("Missing target or udid parameter.")
+    }
+    let resolvedUDID: String
+    if rawTarget.hasPrefix("host:ios:") {
+        resolvedUDID = String(rawTarget.dropFirst("host:ios:".count))
+    } else if rawTarget.hasPrefix("triton:ios-simulator:") {
+        resolvedUDID = String(rawTarget.dropFirst("triton:ios-simulator:".count))
+    } else {
+        resolvedUDID = rawTarget
+    }
+    let requestedFps = fps.flatMap(Int.init) ?? 15
+    let normalizedFps = min(120, max(1, requestedFps))
+    return PackagedWebIOSSimulatorMjpegRequest(
+        udid: resolvedUDID,
+        fps: normalizedFps,
+        targetIntervalSeconds: Double(1000 / normalizedFps) / 1000.0,
+        boundary: "tritonboundary"
+    )
+}
+
 func makePackagedWebStaticResponse(webRoot: String, requestPath: String) throws -> PackagedWebStaticResponse {
     let root = URL(fileURLWithPath: webRoot, isDirectory: true).standardizedFileURL
     guard isValidBundledWebRoot(root) else {
@@ -1019,6 +1052,94 @@ private func makeWebHostLogsBridgeResponse(tritonBin: String, platform: String, 
     )
 }
 
+private func makePackagedWebIOSSimulatorMjpegResponse(_ streamRequest: PackagedWebIOSSimulatorMjpegRequest) -> Response {
+    guard CLIHostSimulatorFramebufferService.shared.startStreaming(udid: streamRequest.udid) else {
+        return jsonError(
+            code: "web_ios_simulator_mjpeg_unavailable",
+            message: "Unable to start host framebuffer streaming for simulator \(streamRequest.udid).",
+            endpoint: "/web/ios-simulator/mjpeg",
+            hint: "Verify the simulator is booted and available with `triton sim list --json`.",
+            status: .conflict
+        )
+    }
+
+    let headers: HTTPFields = [
+        .contentType: "multipart/x-mixed-replace; boundary=\(streamRequest.boundary)",
+        .cacheControl: "no-cache, no-store, must-revalidate",
+        .connection: "close"
+    ]
+    let responseBody = ResponseBody { writer in
+        defer {
+            CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: streamRequest.udid)
+        }
+
+        var lastSentVersion: UInt64 = 0
+        var lastWriteTime = Date().timeIntervalSince1970
+        while true {
+            if let (jpegData, version) = CLIHostSimulatorFramebufferService.shared.getLatestFrameWithVersion(udid: streamRequest.udid) {
+                let now = Date().timeIntervalSince1970
+                if version != lastSentVersion || (now - lastWriteTime) >= 1.0 {
+                    lastSentVersion = version
+                    lastWriteTime = now
+
+                    var buffer = ByteBuffer()
+                    buffer.writeString("--\(streamRequest.boundary)\r\n")
+                    buffer.writeString("Content-Type: image/jpeg\r\n")
+                    buffer.writeString("Content-Length: \(jpegData.count)\r\n\r\n")
+                    buffer.writeBytes(jpegData)
+                    buffer.writeString("\r\n")
+
+                    do {
+                        try await writer.write(buffer)
+                    } catch {
+                        break
+                    }
+                }
+            }
+
+            try await Task.sleep(nanoseconds: UInt64(streamRequest.targetIntervalSeconds * 1_000_000_000))
+        }
+
+        try? await writer.finish(nil)
+    }
+
+    return Response(status: .ok, headers: headers, body: responseBody)
+}
+
+private func makePackagedWebIOSSimulatorFrameResponse(_ streamRequest: PackagedWebIOSSimulatorMjpegRequest) async -> Response {
+    guard CLIHostSimulatorFramebufferService.shared.startStreaming(udid: streamRequest.udid) else {
+        return jsonError(
+            code: "web_ios_simulator_frame_unavailable",
+            message: "Unable to start host framebuffer capture for simulator \(streamRequest.udid).",
+            endpoint: "/web/ios-simulator/frame",
+            hint: "Verify the simulator is booted and available with `triton sim list --json`.",
+            status: .conflict
+        )
+    }
+    defer {
+        CLIHostSimulatorFramebufferService.shared.stopStreaming(udid: streamRequest.udid)
+    }
+
+    for _ in 0..<30 {
+        if let (jpegData, _) = CLIHostSimulatorFramebufferService.shared.getLatestFrameWithVersion(udid: streamRequest.udid) {
+            return Response(
+                status: .ok,
+                headers: [.contentType: "image/jpeg"],
+                body: .init(byteBuffer: ByteBuffer(data: jpegData))
+            )
+        }
+        try? await Task.sleep(nanoseconds: 50_000_000)
+    }
+
+    return jsonError(
+        code: "web_ios_simulator_frame_timeout",
+        message: "Host framebuffer capture started but did not produce a frame for simulator \(streamRequest.udid).",
+        endpoint: "/web/ios-simulator/frame",
+        hint: "Keep the Simulator window active and retry the Web stream.",
+        status: .requestTimeout
+    )
+}
+
 private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
     guard let webRoot = plan.bundledWebRoot else {
         throw WebCommandError.bundledWebRootNotFound(path: nil)
@@ -1079,6 +1200,30 @@ private func runPackagedWebServer(_ plan: WebLaunchPlan) async throws {
             return jsonResponse(try await makeWebHostScreenshotBridgeResponse(platform: HostDevicePlatform.ios.rawValue, target: simulator, scope: HostDeviceScope.simulator.rawValue, kind: "simulator", source: "host"))
         } catch {
             return jsonError(code: "web_ios_simulator_screenshot_failed", message: "\(error)", endpoint: "/web/ios-simulator/screenshot", status: .conflict)
+        }
+    }
+    router.get("/web/ios-simulator/mjpeg") { request, _ -> Response in
+        do {
+            let streamRequest = try makePackagedWebIOSSimulatorMjpegRequest(
+                target: request.uri.queryParameters.get("target"),
+                udid: request.uri.queryParameters.get("udid"),
+                fps: request.uri.queryParameters.get("fps")
+            )
+            return makePackagedWebIOSSimulatorMjpegResponse(streamRequest)
+        } catch {
+            return jsonError(code: "invalid_query", message: "\(error)", endpoint: "/web/ios-simulator/mjpeg", status: .badRequest)
+        }
+    }
+    router.get("/web/ios-simulator/frame") { request, _ -> Response in
+        do {
+            let streamRequest = try makePackagedWebIOSSimulatorMjpegRequest(
+                target: request.uri.queryParameters.get("target"),
+                udid: request.uri.queryParameters.get("udid"),
+                fps: request.uri.queryParameters.get("fps")
+            )
+            return await makePackagedWebIOSSimulatorFrameResponse(streamRequest)
+        } catch {
+            return jsonError(code: "invalid_query", message: "\(error)", endpoint: "/web/ios-simulator/frame", status: .badRequest)
         }
     }
     router.get("/web/host-logs") { request, _ -> Response in

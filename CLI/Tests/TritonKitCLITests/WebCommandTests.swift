@@ -336,6 +336,20 @@ struct WebCommandTests {
         ])
     }
 
+    @Test("packaged web iOS simulator MJPEG request normalizes target and fps")
+    func packagedWebIOSSimulatorMjpegRequestNormalizesTargetAndFps() throws {
+        let request = try makePackagedWebIOSSimulatorMjpegRequest(
+            target: "host:ios:60667794-96F8-40E6-8664-85538EC4663E",
+            udid: nil,
+            fps: "999"
+        )
+
+        #expect(request.udid == "60667794-96F8-40E6-8664-85538EC4663E")
+        #expect(request.fps == 120)
+        #expect(request.boundary == "tritonboundary")
+        #expect(request.targetIntervalSeconds < 0.01)
+    }
+
     @Test("packaged web missing static root renders browser readable diagnostic")
     func packagedWebMissingStaticRootRendersBrowserReadableDiagnostic() throws {
         let missingWeb = try temporaryDirectory().appendingPathComponent("web", isDirectory: true)
