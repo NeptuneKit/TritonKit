@@ -90,6 +90,13 @@ private func hostCommandHasSemanticFailure(_ command: TKHostCommand, result: Hos
     if combinedOutput.contains("[fail]") {
         return true
     }
+    if command.arguments.contains("aa"),
+       command.arguments.contains("start"),
+       (combinedOutput.contains("error code:")
+        || combinedOutput.contains("failed to start ability")
+        || combinedOutput.contains("error: failed to start")) {
+        return true
+    }
     guard command.arguments.contains("install") else {
         return false
     }

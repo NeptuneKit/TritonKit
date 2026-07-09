@@ -159,6 +159,32 @@ struct SimulatorAdvancedControlsTests {
         }
     }
 
+    @Test("host command treats Harmony aa start error code as failure even with zero exit")
+    func runHostCommandTreatsHarmonyAAStartErrorCodeAsFailure() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-fake-hdc-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let fakeHdc = directory.appendingPathComponent("hdc")
+        try Data("""
+        #!/bin/sh
+        printf 'error: failed to start ability.\\nError Code:10104001 Error Message:The specified ability does not exist.\\n'
+        exit 0
+        """.utf8).write(to: fakeHdc)
+        try FileManager.default.setAttributes([.posixPermissions: 0o755], ofItemAtPath: fakeHdc.path)
+        let command = TKHarmonyHDCCommand.appOpenURL(
+            target: "harmony-real:redacted",
+            bundleName: "invalid.bundle",
+            abilityName: "InvalidAbility",
+            url: "app-scheme://example/path",
+            executable: fakeHdc.path
+        )
+
+        #expect(throws: HostCommandRunError.self) {
+            try runHostCommand(command)
+        }
+    }
+
     @Test("host command timeout terminates process and leaves later commands usable")
     func runHostCommandTimeoutCleansUpProcess() throws {
         let command = TKHostCommand(

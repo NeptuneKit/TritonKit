@@ -239,6 +239,19 @@ struct WebViewRouteTests {
         #expect(tap.optionalOptions.contains("--webview-id"))
     }
 
+    @Test("tap schema documents selectable cell ancestor activation")
+    func tapSchemaDocumentsSelectableCellAncestorActivation() throws {
+        let act = try #require(commandSchemas().first { $0.name == "act" })
+        let tap = try #require(actionCommandSchemas().first { $0.name == "tap" })
+        let actStrategy = try #require(act.options.first { $0.name == "--strategy" })
+        let tapStrategy = try #require(tap.options.first { $0.name == "--strategy" })
+
+        #expect(actStrategy.description.contains("UICollectionViewCell"))
+        #expect(tapStrategy.description.contains("UICollectionViewCell"))
+        #expect(tap.outputSemantics?.contains("ancestor-collection-cell-selection") == true)
+        #expect(tap.outputSemantics?.contains("ancestor-table-cell-selection") == true)
+    }
+
     @Test("Harmony route WebView warnings expose next actions")
     func harmonyRouteWebViewWarningsExposeNextActions() {
         let warnings = harmonyRouteWebViewWarnings(hasRuntimeBaseURL: false, hasCandidates: true)

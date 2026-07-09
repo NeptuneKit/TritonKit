@@ -421,13 +421,26 @@ extension SchemaFactSourceTests {
 
     @Test("schema lookup supports nested command selectors")
     func schemaLookupSupportsNestedCommandSelectors() throws {
-        let response = try buildSchemaResponse(command: "xcode run")
-
-        let xcode = try #require(response.commands.first)
-        #expect(response.commands.map(\.name) == ["xcode"])
+        let xcodeResponse = try buildSchemaResponse(command: "xcode run")
+        let xcode = try #require(xcodeResponse.commands.first)
+        #expect(xcodeResponse.commands.map(\.name) == ["xcode"])
         #expect(xcode.subcommands.map(\.name) == ["run"])
         #expect(xcode.subcommands.first?.optionalOptions.contains("--device") == true)
-        #expect(response.httpManagementAPI.isEmpty)
+        #expect(xcodeResponse.httpManagementAPI.isEmpty)
+
+        let appResponse = try buildSchemaResponse(command: "app open-url")
+        let app = try #require(appResponse.commands.first)
+        #expect(appResponse.commands.map(\.name) == ["app"])
+        #expect(app.subcommands.map(\.name) == ["open-url"])
+        #expect(app.subcommands.first?.outputSelectors == ["host.app-open-url"])
+        #expect(appResponse.httpManagementAPI.isEmpty)
+
+        let deviceResponse = try buildSchemaResponse(command: "device list")
+        let device = try #require(deviceResponse.commands.first)
+        #expect(deviceResponse.commands.map(\.name) == ["device"])
+        #expect(device.subcommands.map(\.name) == ["list"])
+        #expect(device.subcommands.first?.outputSelectors == ["host.device-list"])
+        #expect(deviceResponse.httpManagementAPI.isEmpty)
     }
 
     @Test("schema command filtering covers the full command inventory")

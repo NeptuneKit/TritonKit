@@ -20,7 +20,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
     return [
         TKCommandSchema(
             name: "list",
-            summary: "List connected Triton targets",
+            summary: "List connected embedded runtime targets",
             requiresServer: true,
             requiresTarget: false,
             runtimeScope: "cli",
@@ -34,9 +34,11 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             examples: ["triton list --format json", "triton list --ids-only"],
             successShape: "{ targets: [{ id, transport, connected, latestHierarchyAvailable, activeHierarchyAvailable, cachedHierarchyAvailable, hierarchyCacheState, identityState, appName, bundleIdentifier, deviceDescription, osDescription }] }",
             failureShape: "{ ok:false, error:{ code: server_unavailable|request_failed, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use list to discover connected embedded runtime targets before inspect, hierarchy, action, or evidence commands.",
+            outputSemantics: "`triton list` is embedded-runtime discovery only. For host-side iOS Simulator, Android Emulator, or Harmony HDC device workflows, use `triton target list --platform <platform> --json` or `triton device list --platform <platform> --json` before falling back to raw platform tools.",
             nextCommands: [
                 "triton inspect --target <id> --json",
+                "triton target list --platform <ios|android|harmony> --json",
+                "triton device list --platform <ios|android|harmony> --json",
                 "triton status --json",
                 "triton doctor --format json",
             ],

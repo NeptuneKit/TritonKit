@@ -266,6 +266,58 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "harmony_screenshot_failed",
                 "validation_failed",
             ],
+            subcommands: [
+                TKCommandSubcommandSchema(
+                    name: "doctor",
+                    summary: "Probe platform host tool availability",
+                    optionalOptions: ["--platform", "--scope", "--hdc", "--adb", "--format", "--json"],
+                    outputSelectors: ["host.device-doctor"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "list",
+                    summary: "List iOS Simulator, Android, or Harmony host targets",
+                    optionalOptions: ["--platform", "--scope", "--name", "--runtime", "--state", "--ready", "--hdc", "--adb", "--format", "--json"],
+                    outputSelectors: ["host.device-list"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "use",
+                    summary: "Resolve a target selector and save it as the current agent target",
+                    requiredOptions: ["<selector>"],
+                    optionalOptions: ["--platform", "--scope", "--name", "--runtime", "--state", "--ready", "--target", "--hdc", "--adb", "--format", "--json"],
+                    outputSelectors: ["host.device-selection"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "current",
+                    summary: "Show the current agent target",
+                    optionalOptions: ["--hdc", "--adb", "--format", "--json"],
+                    outputSelectors: ["host.device-selection"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "resolve",
+                    summary: "Resolve a target selector without executing an action",
+                    optionalOptions: ["<selector>", "--device", "--platform", "--scope", "--name", "--runtime", "--state", "--ready", "--hdc", "--adb", "--format", "--json"],
+                    outputSelectors: ["host.device-selection"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "wait-ready",
+                    summary: "Wait for a host target to become ready",
+                    optionalOptions: ["<selector>", "--device", "--target", "--platform", "--scope", "--name", "--runtime", "--state", "--ready", "--timeout", "--interval", "--hdc", "--adb", "--format", "--json"],
+                    outputSelectors: ["host.device-ready"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "screenshot",
+                    summary: "Capture a host-side iOS, Android, or Harmony screenshot artifact",
+                    requiredOptions: ["--output"],
+                    optionalOptions: ["--platform", "--device", "--target", "--scope", "--name", "--runtime", "--state", "--ready", "--timeout", "--hdc", "--adb", "--format", "--json"],
+                    outputSelectors: ["host.device-screenshot"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "runtime-url",
+                    summary: "Prepare and print a Harmony embedded runtime base URL",
+                    optionalOptions: ["--platform", "--device", "--target", "--scope", "--name", "--runtime", "--state", "--ready", "--local-port", "--remote-port", "--no-forward", "--probe-manifest", "--timeout", "--hdc", "--format", "--json"],
+                    outputSelectors: ["host.harmony-runtime-url"]
+                ),
+            ],
             providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
         ),
         TKCommandSchema(

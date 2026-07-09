@@ -12,6 +12,12 @@ struct SchemaFactSourceTests {
         let capabilities = try #require(schemas["capabilities"])
         let plan = try #require(schemas["plan"])
         let schema = try #require(schemas["schema"])
+        let list = try #require(schemas["list"])
+
+        #expect(list.summary.contains("embedded runtime"))
+        #expect(list.outputSemantics?.contains("embedded-runtime discovery only") == true)
+        #expect(list.nextCommands.contains("triton target list --platform <ios|android|harmony> --json"))
+        #expect(list.nextCommands.contains("triton device list --platform <ios|android|harmony> --json"))
 
         #expect(status.failureCodes.contains("server_unavailable"))
         #expect(status.failureCodes.contains("request_failed"))
