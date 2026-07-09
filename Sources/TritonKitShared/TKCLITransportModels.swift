@@ -342,6 +342,7 @@ public struct TKCLICommandRequest: Codable, Equatable {
         case "webviewsnapshot", "webview.snapshot": .webViewSnapshot
         case "webviewbridgecall", "webview.bridgecall", "webview.bridge-call", "webview.call": .webViewBridgeCall
         case "webviewbridgepost", "webview.bridgepost", "webview.bridge-post", "webview.post": .webViewBridgePost
+        case "webviewtap", "webview.tap", "webview.click": .webViewTap
         case "webviewwait", "webview.wait": .webViewWait
         case "webviewevents", "webview.events": .webViewEvents
         case "webviewledger", "webview.ledger": .webViewLedger

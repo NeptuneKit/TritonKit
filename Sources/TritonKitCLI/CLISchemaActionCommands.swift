@@ -10,7 +10,19 @@ func actionCommandSchemas() -> [TKCommandSchema] {
     let inputCommandFailureCodes = schemaInputCommandFailureCodes
     let runtimeBaseURLOption = schemaRuntimeBaseURLOption
     let semanticActionFailureCodes = schemaSemanticActionFailureCodes
-    let tapFailureCodes = schemaInputCommandFailureCodes + ["text_not_found", "host_command_failed"] + schemaIOSHostAXFailureCodes
+    let webViewTapFailureCodes = [
+        "webview_not_found",
+        "ambiguous_webview",
+        "webview_id_not_found",
+        "webview_provider_unavailable",
+        "webview_element_not_found",
+        "webview_element_not_interactable",
+        "webview_navigation_changed",
+        "webview_wait_timeout",
+        "webview_wait_unsupported",
+        "javascript_error",
+    ]
+    let tapFailureCodes = schemaInputCommandFailureCodes + ["text_not_found", "host_command_failed"] + schemaIOSHostAXFailureCodes + webViewTapFailureCodes
     let actFailureCodes = [
         "text_not_found",
         "validation_failed",
@@ -29,7 +41,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
         "semantic_action_failed",
         "action_not_supported",
         "unsupported_runtime_scope",
-    ] + schemaIOSHostAXFailureCodes
+    ] + schemaIOSHostAXFailureCodes + webViewTapFailureCodes
 
     return [
         TKCommandSchema(
@@ -72,6 +84,12 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--all", type: "Bool", defaultValue: "false", description: "Include all matching candidates for target resolution"),
                 TKCommandSchemaOption(name: "--index", type: "Int", description: "Select one matching candidate by 1-based index"),
                 TKCommandSchemaOption(name: "--within", type: "x,y,width,height", description: "Restrict matching to window bounds"),
+                TKCommandSchemaOption(name: "--webview-aware", type: "Bool", defaultValue: "false", description: "Explicitly route act tap through the current WebView provider; first slice supports --selector only"),
+                TKCommandSchemaOption(name: "--selector", type: "String", description: "CSS selector for --webview-aware WebView tap"),
+                TKCommandSchemaOption(name: "--webview-id", type: "String", description: "WebView candidate id for --webview-aware disambiguation"),
+                TKCommandSchemaOption(name: "--page-session-id", type: "String", description: "Expected WebView page session id; fails if navigation changed before tap"),
+                TKCommandSchemaOption(name: "--expect-text", type: "String", description: "Expected WebView text after --webview-aware dispatch; required to prove business completion"),
+                TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "3", description: "Timeout in seconds for --expect-text"),
                 TKCommandSchemaOption(name: "--secure", type: "Bool", defaultValue: "false", description: "Redact inserted text details"),
                 TKCommandSchemaOption(name: "--exact", type: "Bool", defaultValue: "false", description: "Use exact text insertion when supported"),
                 TKCommandSchemaOption(name: "--start-x", type: "Double", description: "Swipe start x coordinate"),
@@ -91,14 +109,16 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             usageForms: [
                 TKCommandUsageForm(form: "find <query> --json", kind: "Subcommand", description: "Resolve a target before acting"),
                 TKCommandUsageForm(form: "tap --text <text> --json", kind: "Subcommand", description: "Product-language tap entry; positional text remains supported by the underlying tap command"),
+                TKCommandUsageForm(form: "tap --webview-aware --selector <css> [--webview-id <id>] --expect-text <text> --json", kind: "Subcommand", description: "Dispatch a WebView DOM click and verify expected WebView text"),
                 TKCommandUsageForm(form: "type <text> --json", kind: "Subcommand", description: "Type text into the focused field"),
             ],
             examples: [
                 "triton act tap --text 登录 --json",
+                "triton act tap --webview-aware --selector '#submit' --expect-text 成功 --json",
                 "triton act type hello --json",
                 "triton act find 登录 --json",
             ],
-            successShape: "Delegates to the selected action primitive output contract",
+            successShape: "Delegates to the selected action primitive output contract, or WebView-aware tap { ok, action:act.tap, status:passed|failed|uncertain, context:webview, selector, target?, attempts[], verification, recoveryCommand?, sourceCommands[], note }",
             failureShape: "{ ok:false, error:{ code, message, endpoint?, hint, nextAction? } }",
             outputSemantics: "Use act as the workflow-level action surface. Retired root action primitives are exposed here as explicit subcommands.",
             nextCommands: [
@@ -109,6 +129,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             outputContracts: [
                 targetResolutionOutputContract(),
                 inputResultOutputContract(),
+                webViewAwareTapOutputContract(),
                 inputSummaryOutputContract(),
                 hostIOSTapOutputContract(),
                 hostAndroidTapOutputContract(),
@@ -124,7 +145,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
             failureCodes: actFailureCodes,
             subcommands: [
                 TKCommandSubcommandSchema(name: "find", summary: "Resolve a target before acting", requiredOptions: ["<query>"], optionalOptions: ["--target", "--device", "--host", "--port", "--all", "--index", "--within", "--at", "--format", "--json"], outputSelectors: ["target.resolution"], failureCodes: ["text_not_found", "validation_failed", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"]),
-                TKCommandSubcommandSchema(name: "tap", summary: "Tap a UI target", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--x", "--y", "--at", "--oid", "--ax-oid", "--ax-label", "--strategy", "--index", "--within", "--format", "--json"], outputSelectors: ["input.result", "host.ios-tap", "host.android-tap", "host.harmony-tap"], failureCodes: tapFailureCodes),
+                TKCommandSubcommandSchema(name: "tap", summary: "Tap a UI target", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--x", "--y", "--at", "--oid", "--ax-oid", "--ax-label", "--strategy", "--index", "--within", "--webview-aware", "--selector", "--webview-id", "--page-session-id", "--expect-text", "--timeout", "--format", "--json"], outputSelectors: ["input.result", "host.ios-tap", "host.android-tap", "host.harmony-tap", "act.webview-aware-tap"], failureCodes: tapFailureCodes),
                 TKCommandSubcommandSchema(name: "type", summary: "Type text into the focused field", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--oid", "--secure", "--exact", "--format", "--json"], outputSelectors: ["input.result", "host.android-text-input", "host.harmony-text-input"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "paste", summary: "Paste exact text", requiredOptions: ["<text>"], optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--secure", "--oid", "--x", "--y", "--at", "--format", "--json"], outputSelectors: ["input.result", "host.android-text-input", "host.harmony-text-input"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "clear", summary: "Clear text input", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--oid", "--x", "--y", "--at", "--format", "--json"], outputSelectors: ["input.result"], failureCodes: inputCommandFailureCodes),
@@ -137,7 +158,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(name: "input", summary: "Run newline-delimited JSON actions", optionalOptions: ["--target", "--device", "--host", "--port", "--format", "--json", "--fail-fast", "--summary", "--strict"], outputSelectors: ["input.result", "input.summary"], failureCodes: ["validation_failed", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed", "action_failed"]),
             ],
             inputActions: inputActionSchemas(),
-            providedCapabilities: ["act", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "input"]
+            providedCapabilities: ["act", "tap", "webview-aware-tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "input"]
         ),
         TKCommandSchema(
             name: "action",

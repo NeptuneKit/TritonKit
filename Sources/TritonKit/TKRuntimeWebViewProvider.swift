@@ -12,8 +12,26 @@ struct RuntimeWebViewSnapshotPayload: Decodable, Equatable {
     let redaction: TKWebViewRedaction
 }
 
+struct RuntimeWebViewTapPayload: Decodable, Equatable {
+    let ok: Bool
+    let dispatched: Bool?
+    let trusted: Bool?
+    let selector: String?
+    let tagName: String?
+    let nodeID: String?
+    let text: String?
+    let disabled: Bool?
+    let visible: Bool?
+    let domRect: TKRect?
+    let error: TKWebViewError?
+}
+
 func decodeRuntimeWebViewSnapshotPayload(_ json: String) throws -> RuntimeWebViewSnapshotPayload {
     try JSONDecoder().decode(RuntimeWebViewSnapshotPayload.self, from: Data(json.utf8))
+}
+
+func decodeRuntimeWebViewTapPayload(_ json: String) throws -> RuntimeWebViewTapPayload {
+    try JSONDecoder().decode(RuntimeWebViewTapPayload.self, from: Data(json.utf8))
 }
 
 func runtimeWebViewSnapshotScript(include: [String], maxDOMNodes: Int?, maxTextBytes: Int?) throws -> String {
@@ -193,6 +211,106 @@ func bridgeCallScript(method: String, arguments: [String: TKJSONValue]) throws -
         return JSON.stringify({ ok: true, result: result });
       } catch (error) {
         return JSON.stringify({ ok: false, error: { code: "javascript_error", message: String(error && error.message ? error.message : error) } });
+      }
+    })()
+    """
+}
+
+func runtimeWebViewTapScript(selector: String) throws -> String {
+    let selectorData = try JSONEncoder().encode(selector)
+    guard let selectorLiteral = String(data: selectorData, encoding: .utf8) else {
+        throw NSError(domain: "TritonKit.WebViewTap", code: 1, userInfo: [NSLocalizedDescriptionKey: "Unable to encode WebView tap selector"])
+    }
+    return """
+    (function() {
+      var selector = \(selectorLiteral);
+      function clean(value) {
+        return String(value || "").replace(/\\s+/g, " ").trim();
+      }
+      function frameFor(element) {
+        try {
+          var rect = element.getBoundingClientRect();
+          return { x: rect.x, y: rect.y, width: rect.width, height: rect.height };
+        } catch (_) {
+          return null;
+        }
+      }
+      function visible(element) {
+        var rect = frameFor(element);
+        if (!rect || rect.width <= 0 || rect.height <= 0) { return false; }
+        var style = window.getComputedStyle ? window.getComputedStyle(element) : null;
+        return !style || (style.visibility !== "hidden" && style.display !== "none" && style.opacity !== "0");
+      }
+      try {
+        if (!selector || !clean(selector)) {
+          return JSON.stringify({
+            ok: false,
+            error: { code: "webview_wait_unsupported", message: "WebView tap requires a non-empty CSS selector." }
+          });
+        }
+        var element = document.querySelector(selector);
+        if (!element) {
+          return JSON.stringify({
+            ok: false,
+            selector: selector,
+            error: {
+              code: "webview_element_not_found",
+              message: "No DOM element matched selector: " + selector,
+              hint: "Run triton webview snapshot --include metadata,text,dom,forms --json and retry with a stable selector."
+            }
+          });
+        }
+        if (typeof element.scrollIntoView === "function") {
+          element.scrollIntoView({ block: "center", inline: "center", behavior: "instant" });
+        }
+        var rect = frameFor(element);
+        var isVisible = visible(element);
+        var disabled = !!element.disabled || element.getAttribute("aria-disabled") === "true";
+        if (!isVisible || disabled) {
+          return JSON.stringify({
+            ok: false,
+            selector: selector,
+            tagName: String(element.tagName || "").toUpperCase(),
+            nodeID: element.id || null,
+            text: clean(element.innerText || element.textContent || element.getAttribute("aria-label") || "") || null,
+            disabled: disabled,
+            visible: isVisible,
+            domRect: rect,
+            error: {
+              code: "webview_element_not_interactable",
+              message: "DOM element matched selector but is hidden, zero-sized, or disabled.",
+              hint: "Inspect WebView snapshot and choose an enabled visible target."
+            }
+          });
+        }
+        if (typeof element.focus === "function") { element.focus(); }
+        var events = ["mousedown", "mouseup", "click"];
+        for (var index = 0; index < events.length; index += 1) {
+          var event = new MouseEvent(events[index], { bubbles: true, cancelable: true, view: window });
+          element.dispatchEvent(event);
+        }
+        if (typeof element.click === "function") { element.click(); }
+        return JSON.stringify({
+          ok: true,
+          dispatched: true,
+          trusted: false,
+          selector: selector,
+          tagName: String(element.tagName || "").toUpperCase(),
+          nodeID: element.id || null,
+          text: clean(element.innerText || element.textContent || element.getAttribute("aria-label") || "") || null,
+          disabled: disabled,
+          visible: isVisible,
+          domRect: rect
+        });
+      } catch (error) {
+        return JSON.stringify({
+          ok: false,
+          selector: selector,
+          error: {
+            code: "javascript_error",
+            message: String(error && error.message ? error.message : error)
+          }
+        });
       }
     })()
     """
@@ -602,6 +720,96 @@ func currentWebViewSnapshotResponse(_ request: TKWebViewSnapshotRequest) async t
 }
 
 @MainActor
+func currentWebViewTapResponse(_ request: TKWebViewTapRequest) async -> TKWebViewTapResponse {
+    let startedAt = Date()
+    let pairs = currentWKWebViewsWithDescriptors()
+    do {
+        let selected = try TKSelectCurrentWebView(from: pairs.map(\.descriptor), webViewID: request.webViewID)
+        guard let pair = pairs.first(where: { $0.descriptor.webViewID == selected.webViewID }) else {
+            throw TKWebViewSelectionError(detail: TKWebViewError(
+                code: .webviewNotFound,
+                message: "Selected WebView is no longer available.",
+                hint: "Run `triton webview current --json` again and retry."
+            ))
+        }
+        if let requestedSession = request.pageSessionID,
+           let actualSession = selected.pageSessionID,
+           requestedSession != actualSession {
+            throw TKWebViewSelectionError(detail: TKWebViewError(
+                code: .webViewNavigationChanged,
+                message: "WebView page session changed.",
+                hint: "Run `triton webview current --json` and retry against the new pageSessionID.",
+                webViewID: selected.webViewID
+            ))
+        }
+
+        let script = try runtimeWebViewTapScript(selector: request.selector)
+        let value = try await evaluateJavaScript(script, in: pair.webView)
+        let json = value as? String ?? "\(value)"
+        let payload = try decodeRuntimeWebViewTapPayload(json)
+        let element = TKWebViewTapTarget(
+            selector: request.selector,
+            tagName: payload.tagName,
+            nodeID: payload.nodeID,
+            text: payload.text,
+            disabled: payload.disabled,
+            visible: payload.visible,
+            webViewID: selected.webViewID,
+            pageSessionID: selected.pageSessionID,
+            webViewFrame: selected.frame,
+            domRect: payload.domRect,
+            nativeRect: payload.domRect.flatMap { rect in
+                selected.frame.map { frame in
+                    TKRect(x: frame.x + rect.x, y: frame.y + rect.y, width: rect.width, height: rect.height)
+                }
+            }
+        )
+        return TKWebViewTapResponse(
+            ok: payload.ok,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            webViewID: selected.webViewID,
+            pageSessionID: selected.pageSessionID,
+            selector: request.selector,
+            dispatched: payload.dispatched ?? false,
+            trusted: payload.trusted ?? false,
+            element: element,
+            error: payload.error,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [request.sourceCommand ?? "triton webViewTap request"],
+            note: payload.ok ? "DOM click was dispatched with trusted=false; verify business state before claiming success." : nil
+        )
+    } catch let error as TKWebViewSelectionError {
+        return TKWebViewTapResponse(
+            ok: false,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            selector: request.selector,
+            dispatched: false,
+            trusted: false,
+            error: error.detail,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [request.sourceCommand ?? "triton webViewTap request"]
+        )
+    } catch {
+        return TKWebViewTapResponse(
+            ok: false,
+            capturedAt: currentStateTimestamp(),
+            platform: "ios",
+            target: "embedded-runtime",
+            selector: request.selector,
+            dispatched: false,
+            trusted: false,
+            error: TKWebViewError(code: .javascriptError, message: "\(error)", hint: "Retry with a simple CSS selector and inspect `triton webview snapshot --include metadata,text,dom --json`."),
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            sourceCommands: [request.sourceCommand ?? "triton webViewTap request"]
+        )
+    }
+}
+
+@MainActor
 func currentWebViewWaitResponse(_ request: TKWebViewWaitRequest) async -> TKWebViewWaitResponse {
     let startedAt = Date()
     guard request.timeoutSeconds > 0, request.intervalSeconds > 0 else {
@@ -921,8 +1129,8 @@ private func webViewDescriptor(for webView: WKWebView) -> TKWebViewDescriptor {
         canGoForward: webView.canGoForward,
         providerStatus: "available",
         bridgeStatus: "page-bridge-required",
-        capabilities: ["visible", "webview.current", "webview.list", "webview.current-url", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.wait", "webview.events", "webview.dom-input", "webview.contenteditable-typing", "webview.type"],
-        missingCapabilities: ["webview.bridge-call", "webview.tap"],
+        capabilities: ["visible", "webview.current", "webview.list", "webview.current-url", "webview.metadata", "webview.snapshot", "webview.dom", "webview.text", "webview.forms", "webview.links", "webview.tap", "webview.wait", "webview.events", "webview.dom-input", "webview.contenteditable-typing", "webview.type"],
+        missingCapabilities: ["webview.bridge-call"],
         providerCapabilities: TKWebViewProviderCapabilities.iosRuntimeDefaults()
     )
 }

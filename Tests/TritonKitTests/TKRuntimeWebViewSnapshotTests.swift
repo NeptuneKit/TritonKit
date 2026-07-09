@@ -105,4 +105,40 @@ struct TKRuntimeWebViewSnapshotTests {
         #expect(script.contains("window.__tritonBridge.methods"))
         #expect(script.contains("triton webview snapshot --include metadata,text,dom,forms --json"))
     }
+
+    @Test("WebView tap script is selector-only and marks dispatch untrusted")
+    func webViewTapScriptIsSelectorOnlyAndUntrusted() throws {
+        let script = try runtimeWebViewTapScript(selector: "#submit")
+
+        #expect(script.contains("document.querySelector(selector)"))
+        #expect(script.contains("dispatched: true"))
+        #expect(script.contains("trusted: false"))
+        #expect(script.contains("webview_element_not_found"))
+        #expect(!script.contains("eval("))
+    }
+
+    @Test("WebView tap payload decodes element target")
+    func webViewTapPayloadDecodesElementTarget() throws {
+        let json = """
+        {
+          "ok": true,
+          "dispatched": true,
+          "trusted": false,
+          "selector": "#submit",
+          "tagName": "BUTTON",
+          "nodeID": "submit",
+          "text": "Submit",
+          "disabled": false,
+          "visible": true,
+          "domRect": { "x": 10, "y": 20, "width": 120, "height": 44 }
+        }
+        """
+
+        let payload = try decodeRuntimeWebViewTapPayload(json)
+
+        #expect(payload.ok)
+        #expect(payload.dispatched == true)
+        #expect(payload.trusted == false)
+        #expect(payload.domRect?.width == 120)
+    }
 }

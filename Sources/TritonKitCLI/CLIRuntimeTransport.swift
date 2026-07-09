@@ -245,6 +245,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "webview-bridge-call", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "webview-events", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "webview-wait", supported: connected, reason: requiresWebViewProvider),
+        TKRuntimeCapability(name: "webview-aware-tap", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "route-current-url-assert", supported: connected, reason: requiresWebViewProvider),
         TKRuntimeCapability(name: "node-resolve", supported: true),
         TKRuntimeCapability(name: "node-alias-resolve", supported: true),
@@ -360,7 +361,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "assert"
     case "plan-inspect", "replay":
         return "replay"
-    case "act", "action-provider-parse", "tap", "swipe", "type", "paste", "clear", "input", "press", "ios-simulator-host-tap", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
+    case "act", "action-provider-parse", "tap", "webview-aware-tap", "swipe", "type", "paste", "clear", "input", "press", "ios-simulator-host-tap", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
         return "action"
     default:
         return "misc"
@@ -389,6 +390,8 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["observe", "route", "assert", "evidence"]
     case "webview-current-url", "webview-snapshot", "webview-bridge-call", "webview-events", "webview-wait":
         return ["route", "assert", "evidence", "webview-check"]
+    case "webview-aware-tap":
+        return ["action", "assert", "evidence"]
     case "route-current-url-assert":
         return ["assert", "smoke", "evidence", "webview-check"]
     case "verify", "verify-text-exists", "verify-text-not-exists":
@@ -776,6 +779,8 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "webview", args: ["events", "--limit", "50", "--json"])
     case "webview-wait":
         return TKCLINextAction(command: "webview", args: ["wait", "--text", "<text>", "--json"])
+    case "webview-aware-tap":
+        return TKCLINextAction(command: "act", args: ["tap", "--webview-aware", "--selector", "<css>", "--expect-text", "<text>", "--json"])
     case "route-current-url-assert":
         return TKCLINextAction(command: "route", args: ["assert-current-url", "<expected-url>", "--json"])
     case "tap":
@@ -950,6 +955,8 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["webview-provider", "page-events"]
     case "webview-wait":
         return ["webview-provider", "wait-samples"]
+    case "webview-aware-tap":
+        return ["webview-provider", "act.webview-aware-tap"]
     case "route-current-url-assert":
         return ["webview-provider", "route-assertion"]
     case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":

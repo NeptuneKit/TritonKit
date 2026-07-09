@@ -20,7 +20,7 @@ func capabilityWorkflowTaxonomy() -> Set<String> {
 
 func capabilityEvidenceTaxonomy() -> Set<String> {
     [
-        "action-map", "action-result", "assert.result", "bridge-call-result", "command-schema",
+        "act.webview-aware-tap", "action-map", "action-result", "assert.result", "bridge-call-result", "command-schema",
         "app-map", "app-map-viewer-html", "app.structured-evidence", "compile-proposals", "compiled-contract", "coordinate-contract", "coverage", "evidence-bundle", "host-artifact", "host-command-json", "host-simulator-media-seed",
         "host-layout", "host-targets.json", "hierarchy-node", "input.result",
         "page-events", "page-fingerprint-match", "page-map", "provider-url", "route-assertion", "runtime-ax",
@@ -133,6 +133,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "vlm-providers-result",
         "wait-result",
         "webview-bridge-call",
+        "webview-aware-tap-result",
         "webview-candidates",
         "webview-current",
         "webview-events",
@@ -327,7 +328,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["act", "observe", "verify", "archive"]
     case "confirmation_required", "destructive_action_requires_policy":
         return ["diagnose", "plan", "act"]
-    case "javascript_error":
+    case "javascript_error", "webview_element_not_interactable":
         return ["diagnose", "observe", "archive"]
     case "stale_node_alias":
         return ["diagnose", "observe", "plan"]

@@ -58,6 +58,11 @@ CLI 是 AI 的稳定控制入口，embedded SDK 是 App 进程内的感知与执
 4. 语义动作：`focus`、`set-text`、`select-segment`、`set-switch` 已接入 CLI schema、selector 消歧和 embedded `semanticAction`。
 5. 复盘：`triton ledger --limit 50 --jsonl` 已输出 runtime request/action/error ring buffer，并保留 secure input redaction 状态。
 
+2026-07-09 新增 WebView-aware agent action 第一刀设计：
+
+- [WebView-aware `act tap` 技术方案 v01](technical-research-webview-aware-act-v01.md)
+- 裁决：agent-facing 主入口继续使用 `triton act tap`；`webview.tap` 只作为 runtime 内部能力和 evidence/debug 积木；首期显式 `--webview-aware` opt-in，`expect-request`、自动 HID fallback、Shadow DOM/iframe 均推迟。
+
 ## 能力分层
 
 ### P0：可立即规划实现的 App 内公开 API 能力

@@ -9,6 +9,12 @@ private struct HostPipeDrainResult {
     let truncated: Bool
 }
 
+private let hostCommandIOQueue = DispatchQueue(
+    label: "jp.lycorp.tritonkit.host-command-io",
+    qos: .userInitiated,
+    attributes: .concurrent
+)
+
 private func drainPipe(_ pipe: Pipe, maximumBytes: Int?) -> HostPipeDrainResult {
     let handle = pipe.fileHandleForReading
     var data = Data()
@@ -168,6 +174,10 @@ func runHostCommand(
     if let stdinPipe {
         process.standardInput = stdinPipe
     }
+    let semaphore = DispatchSemaphore(value: 0)
+    process.terminationHandler = { _ in
+        semaphore.signal()
+    }
 
     do {
         try process.run()
@@ -184,7 +194,7 @@ func runHostCommand(
         }
     }
     if let interruptAfter {
-        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + interruptAfter) {
+        hostCommandIOQueue.asyncAfter(deadline: .now() + interruptAfter) {
             if process.isRunning {
                 process.interrupt()
             }
@@ -195,21 +205,16 @@ func runHostCommand(
     var stdoutRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
     var stderrRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
     stdoutGroup.enter()
-    DispatchQueue.global(qos: .utility).async {
+    hostCommandIOQueue.async {
         stdoutRead = drainPipe(stdout, maximumBytes: maximumOutputBytes)
         stdoutGroup.leave()
     }
     stderrGroup.enter()
-    DispatchQueue.global(qos: .utility).async {
+    hostCommandIOQueue.async {
         stderrRead = drainPipe(stderr, maximumBytes: maximumOutputBytes)
         stderrGroup.leave()
     }
 
-    let semaphore = DispatchSemaphore(value: 0)
-    DispatchQueue.global(qos: .utility).async {
-        process.waitUntilExit()
-        semaphore.signal()
-    }
     if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
         process.terminate()
         if semaphore.wait(timeout: .now() + 2) == .timedOut {
@@ -257,6 +262,10 @@ func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: S
     let stderr = Pipe()
     process.standardOutput = stdout
     process.standardError = stderr
+    let semaphore = DispatchSemaphore(value: 0)
+    process.terminationHandler = { _ in
+        semaphore.signal()
+    }
 
     do {
         try process.run()
@@ -270,23 +279,18 @@ func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: S
     var stdoutError: Error?
     var stderrRead = HostPipeDrainResult(data: Data(), bytes: 0, truncated: false)
     stdoutGroup.enter()
-    DispatchQueue.global(qos: .utility).async {
+    hostCommandIOQueue.async {
         let result = drainPipeToFile(stdout, outputPath: outputPath)
         stdoutBytes = result.bytes
         stdoutError = result.error
         stdoutGroup.leave()
     }
     stderrGroup.enter()
-    DispatchQueue.global(qos: .utility).async {
+    hostCommandIOQueue.async {
         stderrRead = drainPipe(stderr, maximumBytes: 1_048_576)
         stderrGroup.leave()
     }
 
-    let semaphore = DispatchSemaphore(value: 0)
-    DispatchQueue.global(qos: .utility).async {
-        process.waitUntilExit()
-        semaphore.signal()
-    }
     if semaphore.wait(timeout: .now() + timeoutSeconds) == .timedOut {
         process.terminate()
         if semaphore.wait(timeout: .now() + 2) == .timedOut {

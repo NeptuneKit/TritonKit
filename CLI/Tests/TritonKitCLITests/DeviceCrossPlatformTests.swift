@@ -3917,7 +3917,23 @@ private func failedHostProcessResult(_ command: TKHostCommand, stderr: String) -
     )
 }
 
+private let localPortReservationLock = NSLock()
+private var localPortReservations = Set<Int>()
+
 private func reserveLocalPortForTest() throws -> Int {
+    for _ in 0..<100 {
+        let port = try reserveEphemeralLocalPort()
+        localPortReservationLock.lock()
+        let inserted = localPortReservations.insert(port).inserted
+        localPortReservationLock.unlock()
+        if inserted {
+            return port
+        }
+    }
+    throw POSIXError(.EADDRINUSE)
+}
+
+private func reserveEphemeralLocalPort() throws -> Int {
     let fd = socket(AF_INET, SOCK_STREAM, 0)
     guard fd >= 0 else { throw POSIXError(POSIXErrorCode(rawValue: errno) ?? .EIO) }
     defer { close(fd) }

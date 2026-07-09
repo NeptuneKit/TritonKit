@@ -397,9 +397,26 @@ struct Tap: AsyncParsableCommand {
     @Option(help: "Select one matching query candidate by 1-based index") var index: Int?
     @Option(help: "Restrict query matching to bounds: x,y,width,height") var within: String?
     @Option(help: "Coordinate selector or query disambiguation point: x,y") var at: String?
+    @Flag(name: .customLong("webview-aware"), help: "Route this tap through the current WebView provider; first slice is explicit opt-in") var webViewAware = false
+    @Option(help: "CSS selector for --webview-aware WebView tap") var selector: String?
+    @Option(name: .customLong("webview-id"), help: "WebView candidate id for --webview-aware tap disambiguation") var webViewID: String?
+    @Option(name: .customLong("page-session-id"), help: "Expected WebView page session id for --webview-aware tap") var pageSessionID: String?
+    @Option(name: .customLong("expect-text"), help: "Expected WebView text after --webview-aware dispatch") var expectText: String?
+    @Option(help: "Timeout in seconds for --webview-aware expectation") var timeout: Double = 3
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
+        if webViewAware {
+            try await runWebViewAwareTap(outputFormat: outputFormat)
+            return
+        }
+        if selector != nil || webViewID != nil || pageSessionID != nil || expectText != nil {
+            if outputFormat == .json {
+                try printValidationError("--selector, --webview-id, --page-session-id, and --expect-text require --webview-aware")
+                throw ExitCode.failure
+            }
+            throw RuntimeError("--selector, --webview-id, --page-session-id, and --expect-text require --webview-aware")
+        }
         if query != nil && text != nil {
             if outputFormat == .json {
                 try printValidationError("Provide exactly one text query: <query> or --text")
@@ -723,6 +740,197 @@ struct Tap: AsyncParsableCommand {
             try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
         }
     }
+
+    private func runWebViewAwareTap(outputFormat: ClientOutputFormat) async throws {
+        do {
+            guard platform == nil else {
+                try failHostValidation(
+                    code: "unsupported_capability",
+                    message: "--webview-aware currently targets the embedded iOS runtime, not host platform adapters.",
+                    hint: "Omit --platform and use the connected DEBUG iOS runtime, or use the existing host tap path.",
+                    outputFormat: outputFormat
+                )
+            }
+            guard query == nil, text == nil, oid == nil, axOID == nil, axLabel == nil, x == nil, y == nil, at == nil else {
+                if outputFormat == .json {
+                    try printValidationError("--webview-aware first slice accepts only --selector")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--webview-aware first slice accepts only --selector")
+            }
+            let selectorValue = selector?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+            guard !selectorValue.isEmpty else {
+                if outputFormat == .json {
+                    try printValidationError("--webview-aware requires --selector")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--webview-aware requires --selector")
+            }
+            guard timeout > 0 else {
+                if outputFormat == .json {
+                    try printValidationError("--timeout must be greater than 0")
+                    throw ExitCode.failure
+                }
+                throw RuntimeError("--timeout must be greater than 0")
+            }
+
+            let (_, runtimeClient) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)
+            let expectedText = expectText?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let sourceCommand = webViewAwareTapSourceCommand(
+                selector: selectorValue,
+                webViewID: webViewID,
+                pageSessionID: pageSessionID,
+                expectText: expectedText,
+                timeout: timeout,
+                outputFormat: outputFormat
+            )
+            let tapRequest = TKWebViewTapRequest(
+                webViewID: webViewID,
+                pageSessionID: pageSessionID,
+                selector: selectorValue,
+                sourceCommand: sourceCommand
+            )
+            let tapData = try await runtimeClient.request(type: "webViewTap", payload: try JSONEncoder().encode(tapRequest))
+            let tap = try decodeWebViewTapRuntimeResult(tapData)
+            let wait: TKWebViewWaitResponse?
+            if tap.ok, let expected = expectedText, !expected.isEmpty {
+                let waitRequest = TKWebViewWaitRequest(
+                    webViewID: tap.webViewID,
+                    pageSessionID: tap.pageSessionID,
+                    condition: .text,
+                    query: expected,
+                    timeoutSeconds: timeout,
+                    intervalSeconds: 0.25,
+                    sourceCommand: "triton webview wait --text \(webViewAwareShellQuote(expected)) --json"
+                )
+                let waitData = try await runtimeClient.request(type: "webViewWait", payload: try JSONEncoder().encode(waitRequest))
+                switch try decodeWebViewWaitRuntimeResult(waitData) {
+                case .wait(let response):
+                    wait = response
+                case .error:
+                    wait = nil
+                }
+            } else {
+                wait = nil
+            }
+
+            let response = TKMakeWebViewAwareTapResponse(
+                selector: selectorValue,
+                tap: tap,
+                expectText: expectedText,
+                wait: wait,
+                recoveryCommand: webViewAwareTapRecoveryCommand(selector: selectorValue, tap: tap, expectText: expectedText)
+            )
+            switch outputFormat {
+            case .json:
+                print(try encodeJSON(response))
+            case .text:
+                print("status: \(response.status.rawValue)")
+                print("selector: \(selectorValue)")
+                print("note: \(response.note)")
+                if let recovery = response.recoveryCommand {
+                    print("recovery: \(recovery)")
+                }
+            }
+            if response.status == .failed {
+                throw ExitCode.failure
+            }
+        } catch {
+            if error is ExitCode { throw error }
+            try failCommand(error, outputFormat: outputFormat, endpoint: "/request", host: host, port: port)
+        }
+    }
+}
+
+private func decodeWebViewTapRuntimeResult(_ data: Data) throws -> TKWebViewTapResponse {
+    let decoder = JSONDecoder()
+    if let response = try? decoder.decode(TKWebViewTapResponse.self, from: data) {
+        return response
+    }
+    if let error = try? decoder.decode(TKWebViewErrorResponse.self, from: data) {
+        return TKWebViewTapResponse(
+            ok: false,
+            capturedAt: currentCLITimestamp(),
+            platform: error.platform,
+            target: error.target,
+            selector: "",
+            dispatched: false,
+            trusted: false,
+            error: TKWebViewError(code: TKWebViewErrorCode(rawValue: error.error.code) ?? .javascriptError, message: error.error.message, hint: error.error.hint),
+            elapsedMs: 0
+        )
+    }
+    return try decoder.decode(TKWebViewTapResponse.self, from: data)
+}
+
+private func currentCLITimestamp() -> String {
+    ISO8601DateFormatter().string(from: Date())
+}
+
+func webViewAwareTapSourceCommand(
+    selector: String,
+    webViewID: String? = nil,
+    pageSessionID: String? = nil,
+    expectText: String?,
+    timeout: Double,
+    outputFormat: ClientOutputFormat
+) -> String {
+    var parts = [
+        "triton",
+        "act",
+        "tap",
+        "--webview-aware",
+        "--selector",
+        webViewAwareShellQuote(selector),
+    ]
+    if let webViewID, !webViewID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        parts.append("--webview-id")
+        parts.append(webViewAwareShellQuote(webViewID))
+    }
+    if let pageSessionID, !pageSessionID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        parts.append("--page-session-id")
+        parts.append(webViewAwareShellQuote(pageSessionID))
+    }
+    if let expectText, !expectText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        parts.append("--expect-text")
+        parts.append(webViewAwareShellQuote(expectText))
+        if timeout != 3 {
+            parts.append("--timeout")
+            parts.append(formatPointForCommand(timeout))
+        }
+    }
+    switch outputFormat {
+    case .json:
+        parts.append("--json")
+    case .text:
+        parts.append("--format")
+        parts.append("text")
+    }
+    return parts.joined(separator: " ")
+}
+
+private func webViewAwareTapRecoveryCommand(selector: String, tap: TKWebViewTapResponse, expectText: String?) -> String {
+    if let rect = tap.element?.nativeRect {
+        let x = rect.x + rect.width / 2
+        let y = rect.y + rect.height / 2
+        return "triton act tap --at \(formatPointForCommand(x)),\(formatPointForCommand(y)) --json"
+    }
+    if let expectText, !expectText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        return "triton webview snapshot --include metadata,text,dom,forms --json"
+    }
+    return "triton act tap --webview-aware --selector \(webViewAwareShellQuote(selector)) --expect-text <text> --json"
+}
+
+private func formatPointForCommand(_ value: Double) -> String {
+    let rounded = (value * 10).rounded() / 10
+    if rounded.rounded() == rounded {
+        return String(Int(rounded))
+    }
+    return String(rounded)
+}
+
+private func webViewAwareShellQuote(_ value: String) -> String {
+    "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
 }
 
 struct Swipe: AsyncParsableCommand {

@@ -494,6 +494,14 @@ struct SchemaFactSourceTests {
         #expect(webViewWait.supported)
         #expect(webViewWait.nextAction?.args == ["wait", "--text", "<text>", "--json"])
 
+        let webViewAwareTap = try #require(connected["webview-aware-tap"])
+        #expect(webViewAwareTap.supported)
+        #expect(webViewAwareTap.group == "action")
+        #expect(webViewAwareTap.requiredBy == ["action", "assert", "evidence"])
+        #expect(webViewAwareTap.nextAction?.command == "act")
+        #expect(webViewAwareTap.nextAction?.args == ["tap", "--webview-aware", "--selector", "<css>", "--expect-text", "<text>", "--json"])
+        #expect(webViewAwareTap.evidence == ["webview-provider", "act.webview-aware-tap"])
+
         let routeCurrentURLAssert = try #require(connected["route-current-url-assert"])
         #expect(routeCurrentURLAssert.supported)
         #expect(routeCurrentURLAssert.group == "route")
@@ -637,6 +645,7 @@ struct SchemaFactSourceTests {
             ("webview-bridge-call", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "bridge-call-result"], "webview", ["call", "<method>", "--json"]),
             ("webview-events", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "page-events"], "webview", ["events", "--limit", "50", "--json"]),
             ("webview-wait", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "wait-samples"], "webview", ["wait", "--text", "<text>", "--json"]),
+            ("webview-aware-tap", "action", ["action", "assert", "evidence"], ["webview-provider", "act.webview-aware-tap"], "act", ["tap", "--webview-aware", "--selector", "<css>", "--expect-text", "<text>", "--json"]),
             ("route-current-url-assert", "route", ["assert", "smoke", "evidence", "webview-check"], ["webview-provider", "route-assertion"], "route", ["assert-current-url", "<expected-url>", "--json"]),
         ]
 
@@ -808,6 +817,7 @@ struct SchemaFactSourceTests {
             ("webview-bridge-call", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "bridge-call-result"], true, false, "webview", ["call", "<method>", "--json"]),
             ("webview-events", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "page-events"], true, false, "webview", ["events", "--limit", "50", "--json"]),
             ("webview-wait", "webview", ["route", "assert", "evidence", "webview-check"], ["webview-provider", "wait-samples"], true, false, "webview", ["wait", "--text", "<text>", "--json"]),
+            ("webview-aware-tap", "action", ["action", "assert", "evidence"], ["webview-provider", "act.webview-aware-tap"], true, false, "act", ["tap", "--webview-aware", "--selector", "<css>", "--expect-text", "<text>", "--json"]),
             ("route-current-url-assert", "route", ["assert", "smoke", "evidence", "webview-check"], ["webview-provider", "route-assertion"], true, false, "route", ["assert-current-url", "<expected-url>", "--json"]),
         ]
 

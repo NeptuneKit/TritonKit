@@ -15,6 +15,7 @@ public enum TKRuntimeCapabilityName: String, Codable, CaseIterable {
     case webViewSnapshot = "webview.snapshot"
     case webViewBridgeCall = "webview.bridge-call"
     case webViewBridgePost = "webview.bridge-post"
+    case webViewTap = "webview.tap"
     case webViewWait = "webview.wait"
     case webViewEvents = "webview.events"
     case webViewEval = "webview.eval"
@@ -288,6 +289,13 @@ public struct TKRuntimeManifestResponse: Codable, Equatable {
             scope: .optInProvider,
             boundary: .businessOptIn,
             reason: "WebView bridge requires an opt-in allowlist provider"
+        ),
+        TKRuntimeCapabilityDetail(
+            name: .webViewTap,
+            supported: false,
+            scope: .optInProvider,
+            boundary: .businessOptIn,
+            reason: "WebView tap requires an iOS DEBUG WKWebView provider"
         ),
         TKRuntimeCapabilityDetail(
             name: .webViewWait,

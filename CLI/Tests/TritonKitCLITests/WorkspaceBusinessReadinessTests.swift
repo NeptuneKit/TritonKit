@@ -107,7 +107,7 @@ struct WorkspaceBusinessReadinessTests {
             )
         })
 
-        #expect(waitRequest?.target == "triton:ios-simulator:SIM-2")
+        #expect(waitRequest?.target == "triton:ios-simulator:SIM-2/app:com.example.demo")
         #expect(waitRequest?.host == "127.0.0.2")
         #expect(waitRequest?.port == 19422)
         #expect(waitRequest?.query == "Dashboard")
@@ -147,7 +147,7 @@ struct WorkspaceBusinessReadinessTests {
             return successBusinessAssertResult(query: request.query)
         })
 
-        #expect(assertRequest?.target == "triton:ios-simulator:SIM-3")
+        #expect(assertRequest?.target == "triton:ios-simulator:SIM-3/app:com.example.demo")
         #expect(assertRequest?.host == "127.0.0.3")
         #expect(assertRequest?.port == 19423)
         #expect(assertRequest?.condition == .textExists)

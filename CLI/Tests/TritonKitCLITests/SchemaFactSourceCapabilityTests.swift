@@ -125,7 +125,7 @@ extension SchemaFactSourceTests {
         ])
         let webviewProviderReasonCapabilities = Set([
             "webview-current-url", "webview-snapshot", "webview-bridge-call",
-            "webview-events", "webview-wait", "route-current-url-assert",
+            "webview-events", "webview-wait", "webview-aware-tap", "route-current-url-assert",
         ])
 
         let connected = connectedCapabilityMap()
@@ -228,10 +228,10 @@ extension SchemaFactSourceTests {
         let pressBoundary = "Host-side HID is not available in the embedded runtime"
 
         let runtimeReasonGroups = Set(["runtime", "observe", "assert", "evidence", "replay", "action"])
-        let webviewReasonGroups = Set(["webview", "route"])
+        let webviewReasonGroups = Set(["webview", "route", "action"])
         let webviewEvidenceKeys = Set([
             "webview-provider", "provider-url", "webview-snapshot",
-            "bridge-call-result", "page-events", "wait-samples", "route-assertion",
+            "bridge-call-result", "page-events", "wait-samples", "act.webview-aware-tap", "route-assertion",
         ])
 
         let fixtures: [(name: String, map: [String: TKRuntimeCapability])] = [
@@ -276,9 +276,11 @@ extension SchemaFactSourceTests {
                     } else {
                         webviewReasonGroupMismatches.append("\(fixture.name):\(capability.name):group=nil")
                     }
-                    if !capability.requiredBy.contains("webview-check") ||
-                        !capability.requiredBy.contains("assert") ||
-                        !capability.requiredBy.contains("evidence") {
+                    let requiredBy = Set(capability.requiredBy)
+                    let hasExpectedWorkflow = capability.group == "action"
+                        ? requiredBy.isSuperset(of: ["action", "assert", "evidence"])
+                        : requiredBy.isSuperset(of: ["webview-check", "assert", "evidence"])
+                    if !hasExpectedWorkflow {
                         webviewReasonWorkflowMismatches.append("\(fixture.name):\(capability.name):requiredBy=\(capability.requiredBy)")
                     }
                     let evidence = Set(capability.evidence)

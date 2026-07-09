@@ -1194,6 +1194,31 @@ func inputResultOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func webViewAwareTapOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "act.webview-aware-tap",
+        format: "json",
+        kind: "webview-aware-tap-result",
+        model: "TKActTapWebViewAwareResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the command completed without transport failure"),
+            ("action", "String", true, "act.tap"),
+            ("status", "passed|failed|uncertain", true, "passed only when expectation is proven; uncertain when DOM dispatch is not enough"),
+            ("context", "String", true, "webview for this output contract"),
+            ("selector", "String?", false, "CSS selector used for WebView DOM dispatch"),
+            ("target", "TKWebViewTapTarget?", false, "Resolved DOM element and native/WebView rects"),
+            ("attempts", "[TKActTapAttempt]", true, "Attempt ledger such as dom_dispatch trusted=false"),
+            ("attempts[].trusted", "Bool?", false, "Always false for DOM-dispatched WebView click"),
+            ("verification", "TKActTapVerification", true, "Expectation and observation result"),
+            ("verification.expectProvided", "Bool", true, "Whether the caller supplied --expect-text"),
+            ("verification.textMatched", "Bool?", false, "Whether expected WebView text was observed"),
+            ("recoveryCommand", "String?", false, "Suggested next command when status is uncertain or failed"),
+            ("sourceCommands", "[String]", true, "Underlying runtime request commands"),
+            ("note", "String", true, "Boundary note explaining that DOM dispatch does not prove business completion"),
+        ])
+    )
+}
+
 func inputSummaryOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "input.summary",

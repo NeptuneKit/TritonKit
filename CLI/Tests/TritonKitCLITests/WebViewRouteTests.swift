@@ -220,6 +220,25 @@ struct WebViewRouteTests {
         #expect(schema.examples.contains("triton webview wait --text Ready --json"))
     }
 
+    @Test("act schema exposes WebView-aware tap as opt-in agent surface")
+    func actSchemaExposesWebViewAwareTap() throws {
+        let schema = try #require(commandSchemas().first { $0.name == "act" })
+        let optionNames = Set(schema.options.map(\.name))
+        let tap = try #require(schema.subcommands.first { $0.name == "tap" })
+
+        #expect(optionNames.contains("--webview-aware"))
+        #expect(optionNames.contains("--selector"))
+        #expect(optionNames.contains("--webview-id"))
+        #expect(optionNames.contains("--page-session-id"))
+        #expect(optionNames.contains("--expect-text"))
+        #expect(optionNames.contains("--expect-request") == false)
+        #expect(schema.providedCapabilities.contains("webview-aware-tap"))
+        #expect(schema.outputContracts.contains { $0.selector == "act.webview-aware-tap" })
+        #expect(tap.outputSelectors.contains("act.webview-aware-tap"))
+        #expect(tap.optionalOptions.contains("--webview-aware"))
+        #expect(tap.optionalOptions.contains("--webview-id"))
+    }
+
     @Test("Harmony route WebView warnings expose next actions")
     func harmonyRouteWebViewWarningsExposeNextActions() {
         let warnings = harmonyRouteWebViewWarnings(hasRuntimeBaseURL: false, hasCandidates: true)

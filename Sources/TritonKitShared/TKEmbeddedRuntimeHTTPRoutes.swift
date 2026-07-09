@@ -38,6 +38,8 @@ public struct TKEmbeddedRuntimeHTTPRoute: Codable, Equatable {
             TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/call")
         case .webViewBridgePost:
             TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/post")
+        case .webViewTap:
+            TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/tap")
         case .webViewWait:
             TKEmbeddedRuntimeHTTPRoute(method: .post, path: "/v2/runtime/webview/wait")
         case .webViewEvents:

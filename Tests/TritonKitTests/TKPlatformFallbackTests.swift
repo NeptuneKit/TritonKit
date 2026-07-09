@@ -149,7 +149,9 @@ struct TKPlatformFallbackTests {
         #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .input, payload: pinchPayload)) == .inputSwipe)
         #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .semanticAction, payload: semanticPayload)) == .semanticSelectSegment)
         #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .webViewSnapshot)) == .webViewSnapshot)
+        #expect(TKRuntimeCapabilityGate.capability(for: TKMessage(id: 1, type: .webViewTap)) == .webViewTap)
         #expect(TKRuntimeCapabilityGate.actionName(for: TKMessage(id: 1, type: .webViewSnapshot)) == "webview.snapshot")
+        #expect(TKRuntimeCapabilityGate.actionName(for: TKMessage(id: 1, type: .webViewTap)) == "webview.tap")
     }
 
     @Test("capability gate builds model-specific disabled responses")
@@ -264,9 +266,9 @@ struct TKPlatformFallbackTests {
         }
     }
 
-    @Test("configuration defaults are safe for debug app bootstrap")
+    @Test("configuration defaults are safe when discovery is unavailable")
     func configurationDefaults() {
-        let configuration = TritonKit.Configuration()
+        let configuration = TritonKit.Configuration(endpoint: .environment([:], bundleInfo: nil, bonjourResolver: { nil }))
 
         #expect(configuration.endpoint.host == "127.0.0.1")
         #expect(configuration.endpoint.port == 19421)

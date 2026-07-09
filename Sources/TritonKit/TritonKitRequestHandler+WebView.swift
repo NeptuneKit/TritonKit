@@ -66,6 +66,18 @@ extension TritonKitRequestHandler {
             return webViewErrorMessage(id: message.id, type: .webViewEvents, action: "webview.events", code: .webViewBridgeUnavailable, message: "WebView events are not available.", hint: "Use an iOS DEBUG runtime with WebKit support or register a Harmony WebView event provider.")
             #endif
 
+        case .webViewTap:
+            guard let data = message.payload,
+                  let request = try? JSONDecoder().decode(TKWebViewTapRequest.self, from: data) else {
+                return webViewErrorMessage(id: message.id, type: .webViewTap, action: "webview.tap", code: .javascriptError, message: "Missing or invalid WebView tap payload.", hint: "Pass --selector with a CSS selector.")
+            }
+            #if canImport(UIKit) && canImport(WebKit)
+            let result = await currentWebViewTapResponse(request)
+            return TKMessage(id: message.id, type: .webViewTap, payload: try? JSONEncoder().encode(result))
+            #else
+            return webViewErrorMessage(id: message.id, type: .webViewTap, action: "webview.tap", code: .webViewProviderUnavailable, message: "WebView tap is not available in this runtime.", hint: "Use an iOS DEBUG runtime with WebKit support.")
+            #endif
+
         case .webViewWait:
             guard let data = message.payload,
                   let request = try? JSONDecoder().decode(TKWebViewWaitRequest.self, from: data) else {

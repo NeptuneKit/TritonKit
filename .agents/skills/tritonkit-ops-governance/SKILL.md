@@ -21,6 +21,7 @@ metadata:
 - 完整回归报告优先用 `triton evidence capture --case <case> --output <dir.tritonevidence> --json`；最终 pass/fail 判断优先用 `triton verify text-exists|text-not-exists <text> --json`，重复文本用 `--within` / `--role` / `--count` 收敛。
 - 可复跑真实项目 smoke 优先沉淀为 `.tritonplan`：`record` 只生成模板，`plan inspect` 做离线摘要，`replay --dry-run` 先校验变量和脱敏命令，真实 `replay` 再执行并在失败步骤停止。
 - 同文案多目标点击先用 `triton act find "<text>" --all --json` 获取候选；已知目标点位时优先用 `triton act tap "<text>" --at x,y --json` 消歧，也可用 `--index <n>` 或 `--within x,y,width,height`。`--within` 表示区域过滤，只有一个点位时不要把 width/height 伪造成 0。
+- WebView 内 H5 控件命中问题优先保持 agent 高层入口：使用 `triton act tap --webview-aware --selector <css> --webview-id <id> --page-session-id <id> --expect-text <text> --json`，不要把 `webview tap/click` 暴露成主操作面。DOM click 为 `trusted=false`，没有 `--expect-text` 或其它显式验证时结果必须是 `uncertain`，不能宣称业务成功；`expect-request`、CDP/远程调试、任意 JS eval 和 trusted HID 合成需另建切片。
 - 面向 agent 的 action 命令统一走 `triton act find/tap/swipe/type/paste/clear/press/focus/set-text/select-segment/set-switch/input`，默认要求机器可读输出。旧 action root 不再作为兼容入口；raw layout / AX 排查走 `triton debug ax --json` 或 `triton debug hierarchy --json`。
 - 设备控制参考 Baguette 时，先区分 embedded TritonKit runtime 与 macOS host-side adapter：embedded runtime 只能承诺公开 UIKit API 可验证的 in-app 控制；SimulatorKit / HID / Home / App Switcher 等设备级动作必须等 host-side adapter，当前要返回明确 unsupported。
 - Wails 绑定先测绑定对象和 DTO；有真实 UI 后再补桌面窗口验收。
@@ -48,6 +49,7 @@ metadata:
 - 本仓库默认本地门禁入口是 `docs-linhay/scripts/verify.sh --local`；CI validate 先用 `docs-linhay/scripts/ci-validate-mode.sh` 分类，docs/skill-only 走 `docs-linhay/scripts/verify.sh --ci-docs`，CLI/test/SwiftPM-only 走 Swift tests、CLI release build 与 release/homebrew 契约检查并跳过 podspec lint，workflow/release 脚本类只跑契约检查，`Sources/TritonKit/` 与 `Sources/TritonKitShared/` 走 podkit，运行 Swift tests、`TritonKit.podspec` lint 和 release/homebrew 契约检查；本地仍用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 用户明确要求“实现完成再测试 / 分段提交”时，每个切片先完成代码、测试、schema、文档与 memory 的一致性改动，再集中跑该切片的 focused tests、必要 schema tests、完整回归和文档门禁；不要在同一切片里每改几行就停下来跑测试，除非正在定位失败。
 - 有副作用或共享状态的命令必须单飞，不进入 `multi_tool_use.parallel`：`git add/commit/tag/push/merge`、会写同一 scratch path 的 SwiftPM build/test、会启动/停止服务或修改本机/模拟器状态的命令。只有只读检查或彼此独立的文件读取、搜索、不同 scratch path 的纯构建验证，才适合并行。
+- CLI 全量测试若暴露 host command timeout、fake tool timeout 或 proxy serve `Connection refused`，先排查测试基础设施和并发资源竞态，不要只调大 timeout。`Process`/pipe runner 不应把阻塞式 `read`、`waitUntilExit` 大量投到 `DispatchQueue.global`；优先用专用 queue、`terminationHandler`、有界 pipe drain 和明确 cleanup。并发网络测试不要 `bind(0)` 取端口后无登记释放给多个用例抢用；同一 test runner 内应有 reservation 或其它唯一端口策略。
 - GitHub issue / PR 评论若包含 Markdown 命令片段，必须通过文件传给 `gh --body-file`，优先使用 `docs-linhay/scripts/gh-issue-comment-file.sh`，避免 shell 执行反引号内容。
 - 上报 GitHub issue 前必须脱敏工程和个人信息：真实工程名、App 名、bundle ID、team ID、组织名、用户名、账号、邮箱、手机号、内网域名、绝对私有路径、完整私有日志、未脱敏截图和证据包不得进入公开 issue；必要时使用 `<private-app>`、`<bundle-id>`、`<user>`、`<internal-host>`、`<repo-path>` 等占位符，并保留平台版本、TritonKit 版本、命令、错误码和最小可复现片段。
 - GitHub Actions 状态观察优先使用 `docs-linhay/scripts/gh-run-summary.sh --watch <run-id>`；失败后再拉完整日志，避免 `gh run watch` 重复输出淹没关键状态。

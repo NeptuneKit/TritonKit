@@ -29,6 +29,46 @@ struct SelectorFlagTests {
         #expect(command.target == "booted")
     }
 
+    @Test("tap parses WebView-aware agent options")
+    func tapParsesWebViewAwareAgentOptions() throws {
+        let command = try Tap.parse([
+            "--webview-aware",
+            "--selector",
+            "#submit",
+            "--webview-id",
+            "webview-1",
+            "--page-session-id",
+            "page-1",
+            "--expect-text",
+            "成功",
+            "--timeout",
+            "5",
+            "--json",
+        ])
+
+        #expect(command.webViewAware)
+        #expect(command.selector == "#submit")
+        #expect(command.webViewID == "webview-1")
+        #expect(command.pageSessionID == "page-1")
+        #expect(command.expectText == "成功")
+        #expect(command.timeout == 5)
+        #expect(command.json)
+    }
+
+    @Test("WebView-aware tap source command preserves agent contract")
+    func webViewAwareTapSourceCommandPreservesAgentContract() {
+        let command = webViewAwareTapSourceCommand(
+            selector: "#submit",
+            webViewID: "webview-1",
+            pageSessionID: "page-1",
+            expectText: "成功",
+            timeout: 5,
+            outputFormat: .json
+        )
+
+        #expect(command == "triton act tap --webview-aware --selector '#submit' --webview-id 'webview-1' --page-session-id 'page-1' --expect-text '成功' --timeout 5 --json")
+    }
+
     @Test("wait and assert accept device as target selector alias")
     func waitAndAssertAcceptDeviceAlias() throws {
         let wait = try Wait.parse(["--text", "Ready", "--device", "booted"])

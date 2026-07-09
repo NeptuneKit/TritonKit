@@ -101,6 +101,11 @@ func runtimeLedgerDetails(
               let request = try? JSONDecoder().decode(TKWebViewBridgeCallRequest.self, from: payload) {
         source = request.sourceCommand ?? "cli"
         action = "webview.call"
+    } else if message.type == .webViewTap,
+              let payload = message.payload,
+              let request = try? JSONDecoder().decode(TKWebViewTapRequest.self, from: payload) {
+        source = request.sourceCommand ?? "cli"
+        action = "webview.tap"
     }
 
     guard let payload = response?.payload else {
@@ -123,6 +128,16 @@ func runtimeLedgerDetails(
             webView.ok,
             webView.error?.code.rawValue,
             webView.error?.message,
+            redaction
+        )
+    }
+    if let webViewTap = try? JSONDecoder().decode(TKWebViewTapResponse.self, from: payload) {
+        return (
+            source,
+            webViewTap.action,
+            webViewTap.ok,
+            webViewTap.error?.code.rawValue,
+            webViewTap.error?.message ?? webViewTap.note,
             redaction
         )
     }
@@ -211,6 +226,7 @@ private func resolveRuntimeCapabilitySupport(
     case TKRuntimeCapabilityName.webViewList.rawValue,
          TKRuntimeCapabilityName.webViewCurrent.rawValue,
          TKRuntimeCapabilityName.webViewSnapshot.rawValue,
+         TKRuntimeCapabilityName.webViewTap.rawValue,
          TKRuntimeCapabilityName.webViewWait.rawValue,
          TKRuntimeCapabilityName.webViewEvents.rawValue where webViewProviderAvailable:
         return TKRuntimeCapabilityDetail(
