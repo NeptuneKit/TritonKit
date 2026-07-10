@@ -119,14 +119,14 @@ triton device use harmony-a --json
 triton device wait-ready --device harmony-a --json
 triton app inspect --platform harmony --bundle <bundle> --json
 triton app install --device harmony-a --hap <debug-signed.hap> --json
-triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json
+triton app launch --platform harmony --device harmony-a --bundle <bundle> --ability <ability> --json
 triton smoke harmony --device harmony-a --bundle <bundle> --ability <ability> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json
 triton observe current --device harmony-a --json
 triton observe tree --device harmony-a --outline --json
 triton node resolve @1 --device harmony-a --json
 triton node resolve --device harmony-a --text "登录" --json
 triton act tap "登录" --platform harmony --device harmony-a --json
-triton swipe --platform harmony --device harmony-a --start-x 350 --start-y 900 --end-x 350 --end-y 300 --json
+triton act swipe --platform harmony --device harmony-a --start-x 350 --start-y 900 --end-x 350 --end-y 300 --json
 triton act type "hello" --platform harmony --device harmony-a --json
 triton act paste "hello" --platform harmony --device harmony-a --json
 ```
@@ -153,7 +153,8 @@ iOS embedded runtime observation:
 ```bash
 triton list --json
 triton debug ax --target triton:ios-simulator:<SIMULATOR_UDID> --json
-triton act tap "登录" --target <SIMULATOR_UDID> --json
+triton act tap "登录" --target <ios-runtime-target-from-triton-list> --json
+triton act swipe --target <ios-runtime-target-from-triton-list> --start-x 110 --start-y 700 --end-x 110 --end-y 140 --duration 0.6 --json
 triton act tap --webview-aware --selector "#submit" --webview-id <webview-id> --page-session-id <page-session-id> --expect-text "成功" --json
 triton observe current --platform ios --json
 triton observe tree --platform ios --runtime-base-url <baseURL> --outline --json

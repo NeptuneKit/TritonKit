@@ -76,6 +76,16 @@ struct TritonKitEntry {
     }
 
     private static func retiredRootHint(_ root: String) -> String {
+        let actionRoots: Set<String> = ["find", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "input"]
+        if actionRoots.contains(root) {
+            return "Hint: use `triton act \(root) ...` for workflow UI actions, for example `triton act \(root) --json`."
+        }
+        if root == "assert" {
+            return "Hint: use `triton verify text-exists <text> --json` or `triton verify text-not-exists <text> --json`."
+        }
+        if root == "capture" {
+            return "Hint: use `triton evidence capture --case <case> --output <dir.tritonevidence> --json`."
+        }
         guard root == "state" else { return "" }
         return "Hint: use `triton debug state route --json` for raw route diagnostics, or `triton observe current --json` for the workflow observation entry."
     }

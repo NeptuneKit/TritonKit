@@ -10,8 +10,8 @@ triton device list --platform harmony --json
 triton device wait-ready --device <hdc-target> --json
 triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json
 triton app install --device <hdc-target> --hap <debug-signed.hap> --json
-triton app launch --device <hdc-target> --bundle <bundle> --ability <ability> --json
-triton app open-url --device <hdc-target> --bundle <bundle> --ability <ability> '<url>' --json
+triton app launch --platform harmony --device <hdc-target> --bundle <bundle> --ability <ability> --json
+triton app open-url --platform harmony --device <hdc-target> --bundle <bundle> --ability <ability> '<url>' --json
 triton debug ax --platform harmony --target <hdc-target> --output /tmp/<case>-layout.json --json
 triton wait --platform harmony --target <hdc-target> --text '<text>' --timeout 15 --json
 triton act tap '<text>' --platform harmony --target <hdc-target> --json

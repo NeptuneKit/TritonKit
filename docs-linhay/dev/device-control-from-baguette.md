@@ -29,7 +29,7 @@ CLI：
 ```bash
 triton act tap --target triton:local --at 120,240 --format json
 triton act tap --target triton:local --oid 42 --format json
-triton swipe --target triton:local --start-x 200 --start-y 700 --end-x 200 --end-y 300 --format json
+triton act swipe --target triton:local --start-x 200 --start-y 700 --end-x 200 --end-y 300 --format json
 triton act type --target triton:local "hello" --format json
 triton act press --target triton:local home --format json
 triton geometry --target triton:local --format json

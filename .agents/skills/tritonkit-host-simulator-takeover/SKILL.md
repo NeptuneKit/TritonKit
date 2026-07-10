@@ -180,7 +180,8 @@ For simulator camera hook smoke, keep injection scoped and clean it up:
 .build/cli/debug/triton camera on --bundle-id <bundle-id> --json
 .build/cli/debug/triton camera serve --socket /tmp/tritonkit-sim-camera.sock --json
 .build/cli/debug/triton app launch --bundle-id <bundle-id> --device <udid-or-booted> --json
-.build/cli/debug/triton act tap --platform ios --device <udid-or-booted> --x <x> --y <y> --json
+.build/cli/debug/triton list --json
+.build/cli/debug/triton act tap --target <ios-runtime-target-from-triton-list> --x <x> --y <y> --json
 .build/cli/debug/triton observe tree --platform ios --device <udid-or-booted> --outline --json
 .build/cli/debug/triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-camera.png --json
 .build/cli/debug/triton camera off --bundle-id <bundle-id> --json

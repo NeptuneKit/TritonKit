@@ -44,6 +44,7 @@ triton act tap "<text>" --json
 triton act tap "<text>" --at x,y --json
 triton act tap "<text>" --index <n> --json
 triton act tap "<text>" --within x,y,width,height --json
+triton act swipe --target <ios-runtime-target-from-triton-list> --start-x 110 --start-y 700 --end-x 110 --end-y 140 --duration 0.6 --json
 triton act focus "<label>" --json
 triton act set-text "<label>" "<value>" --json
 triton act set-text "<label>" "$SECRET" --secure --json

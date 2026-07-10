@@ -18,8 +18,11 @@ triton device doctor --platform harmony --json
 triton device list --platform harmony --json
 triton device wait-ready --device 127.0.0.1:10100 --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
-triton app launch --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
+triton app launch --platform harmony --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
+triton app open-url --platform harmony --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility "example://debug" --json
 ```
+
+Harmony lifecycle uses `--bundle` and `--ability`; do not use the iOS `--bundle-id` shape for Harmony launch or open-url.
 
 `triton device list --platform harmony --json` may include `targets[].appName`, `bundleIdentifier`, `identityState`, and `current`. File feedback when stable foreground identity is available but missing. Do not report `unknown` or `unsupported` as an app mismatch by itself.
 

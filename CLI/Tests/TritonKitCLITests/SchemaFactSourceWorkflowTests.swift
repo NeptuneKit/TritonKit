@@ -441,6 +441,14 @@ extension SchemaFactSourceTests {
         #expect(device.subcommands.map(\.name) == ["list"])
         #expect(device.subcommands.first?.outputSelectors == ["host.device-list"])
         #expect(deviceResponse.httpManagementAPI.isEmpty)
+
+        let actResponse = try buildSchemaResponse(command: "act swipe")
+        let act = try #require(actResponse.commands.first)
+        #expect(actResponse.commands.map(\.name) == ["act"])
+        #expect(act.subcommands.map(\.name) == ["swipe"])
+        #expect(act.options.first { $0.name == "--platform" }?.type.contains("ios") == true)
+        #expect(act.options.first { $0.name == "--target/--device" }?.description.contains("Runtime target") == true)
+        #expect(actResponse.httpManagementAPI.isEmpty)
     }
 
     @Test("schema command filtering covers the full command inventory")

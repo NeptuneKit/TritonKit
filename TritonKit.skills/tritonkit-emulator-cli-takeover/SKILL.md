@@ -69,7 +69,9 @@ Observation and action:
 ```bash
 triton observe tree --platform <ios|android|harmony> --device <selector> --outline --json
 triton node resolve @1 --platform <ios|android|harmony> --device <selector> --json
-triton act tap "登录" --platform <ios|android|harmony> --device <selector> --json
+triton act tap "登录" --platform <android|harmony> --device <selector> --json
+triton act tap "登录" --target <ios-runtime-target-from-triton-list> --json
+triton act swipe --target <ios-runtime-target-from-triton-list> --start-x 110 --start-y 700 --end-x 110 --end-y 140 --duration 0.6 --json
 triton act tap --webview-aware --selector "#submit" --webview-id <webview-id> --page-session-id <page-session-id> --expect-text "成功" --json
 triton wait text "成功" --platform <ios|android|harmony> --device <selector> --json
 ```

@@ -93,8 +93,8 @@
    - if a command or subcommand exposes `failureCodes[]` but neither that object nor its parent command provides a usable `nextCommands[]` recovery path, report a TritonKit recovery contract bug before relying on it for automated regression recovery;
    - if schema examples use commands or flags that schema does not declare, report a TritonKit schema/example contract bug instead of copying the example into a real project regression script;
    - treat `plan-inspect` as offline `.tritonplan` summary inspection and `replay-dry-run` as offline validation only; real replay, smoke, wait, assert, and evidence capture remain separate proof steps.
-   - for iOS Simulator embedded runtime, confirm `triton list --json` exposes `triton:ios-simulator:<SIMULATOR_UDID>` and `simulatorUDID`;
-   - if multiple iOS Simulator runtime targets are connected, pass `--target <SIMULATOR_UDID>` or `--target triton:ios-simulator:<SIMULATOR_UDID>` for runtime commands; default `triton:local` should return `ambiguous_target`.
+   - for iOS Simulator embedded runtime, confirm `triton list --json` exposes `triton:ios-simulator:<SIMULATOR_UDID>` or `triton:ios-simulator:<SIMULATOR_UDID>/app:<bundle-id>` plus `simulatorUDID`;
+   - if multiple iOS Simulator runtime targets are connected, pass the full runtime target from `triton list --json` through `--target`; do not pass host selectors such as `sim:<udid>` to runtime gestures. Default `triton:local` should return `ambiguous_target`.
    - `triton debug runtime manifest --json`
    - `triton debug state app --json`
    - `triton debug state scene --json`
@@ -153,7 +153,7 @@
    - close a Triton-supervised HVD with launchd cleanup: `triton device stop --platform harmony --hvd <hvd-name> --path <deployed-path> --confirm --json`;
    - inspect app metadata: `triton app inspect --platform harmony --bundle <bundle> --target <hdc-target> --json`;
    - install a debug HAP when needed: `triton app install --device harmony-a --hap <debug-signed.hap> --json`;
-   - launch an Ability: `triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json`;
+   - launch an Ability: `triton app launch --platform harmony --device harmony-a --bundle <bundle> --ability <ability> --json`;
    - run the one-command host smoke when available: `triton smoke harmony --device harmony-a --bundle <bundle> --ability <ability> --open-url <url> --wait-text <text> --screenshot /tmp/<case>.jpeg --evidence /tmp/<case>.tritonevidence --json`;
    - when multiple targets are `Connected`, pass `--device <alias-or-id>` or narrow with `--platform`, `--name`, `--runtime`, `--state`, and `--ready`; `ambiguous_target` is the expected machine-readable failure.
    - if a disposable Harmony fixture app is needed, use the local `harmony-next` skill's minimal Empty Ability scaffold:

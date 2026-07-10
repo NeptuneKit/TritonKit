@@ -438,7 +438,7 @@ triton debug hierarchy --json
 triton debug ax --json
 ```
 
-Use `triton target list|use|current|resolve|wait-ready` as the preferred target-selection entry. When multiple iOS Simulator apps are connected to the same `triton serve`, it exposes stable embedded runtime targets shaped as `triton:ios-simulator:<SIMULATOR_UDID>`. Pass either the full target id or the simulator UDID through `--target`; commands that still rely on the default `triton:local` return `error.code=ambiguous_target` instead of choosing a connection implicitly.
+Use `triton target list|use|current|resolve|wait-ready` as the preferred host target-selection entry. Use `triton list --json` for embedded runtime targets. When multiple iOS Simulator apps are connected to the same `triton serve`, runtime targets are shaped as `triton:ios-simulator:<SIMULATOR_UDID>` or `triton:ios-simulator:<SIMULATOR_UDID>/app:<bundle-id>`. Runtime actions such as `triton act swipe` need that runtime target through `--target`; do not pass a host selector such as `sim:<udid>` to iOS runtime gestures. Commands that still rely on the default `triton:local` return `error.code=ambiguous_target` instead of choosing a connection implicitly.
 
 When validating a standalone embedded runtime HTTP endpoint before it is connected through `triton serve`, bypass the local control server with `--runtime-base-url`:
 
@@ -628,11 +628,12 @@ triton device screenshot --device 127.0.0.1:10100 --output /tmp/smoke.jpeg --jso
 triton device stop --platform harmony --hvd "Codex Test Phone" --path ~/.Huawei/Emulator/deployed --confirm --json
 triton app inspect --platform harmony --bundle com.example.app --target 127.0.0.1:10100 --json
 triton app install --device 127.0.0.1:10100 --hap /tmp/Demo.hap --json
-triton app launch --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
-triton app open-url --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility "example://debug" --json
+triton app launch --platform harmony --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility --json
+triton app open-url --platform harmony --device 127.0.0.1:10100 --bundle com.example.app --ability EntryAbility "example://debug" --json
 triton debug ax --platform harmony --target 127.0.0.1:10100 --output /tmp/harmony-layout.json --json
 triton wait --platform harmony --target 127.0.0.1:10100 --text "目标页" --timeout 15 --json
 triton act tap "我的" --platform harmony --target 127.0.0.1:10100 --json
+triton act swipe --platform harmony --target 127.0.0.1:10100 --start-x 350 --start-y 900 --end-x 350 --end-y 300 --json
 triton screenshot --platform harmony --target 127.0.0.1:10100 --output /tmp/smoke.jpeg --json
 ```
 

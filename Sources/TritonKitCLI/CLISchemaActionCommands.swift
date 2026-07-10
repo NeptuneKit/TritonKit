@@ -3,7 +3,12 @@ import TritonKitShared
 
 func actionCommandSchemas() -> [TKCommandSchema] {
     let hostPort = schemaHostPortOptions
-    let target = schemaTargetDeviceAliasOption
+    let target = TKCommandSchemaOption(
+        name: "--target/--device",
+        type: "String",
+        defaultValue: TKLocalTargetID,
+        description: "Runtime target id from `triton list --json`; for iOS embedded-runtime actions pass a target such as triton:ios-simulator:<udid> or triton:ios-simulator:<udid>/app:<bundle-id>, not the host selector sim:<udid>. --device is an alias."
+    )
     let jsonText = schemaTextJSONFormats
     let formatJSONText = schemaFormatJSONTextOption
     let jsonAlias = schemaJSONAliasOption
@@ -70,7 +75,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "<text>", type: "String", description: "Text value for type or paste actions"),
                 TKCommandSchemaOption(name: "<value>", type: "String|Int", description: "Segment title/index or switch state for semantic actions"),
                 runtimeBaseURLOption,
-                TKCommandSchemaOption(name: "--platform", type: "android|harmony", description: "Use Android adb or Harmony hdc host adapter"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Use iOS embedded runtime actions, Android adb host adapter, or Harmony hdc host adapter. iOS gestures require --target from `triton list --json`, not sim:<udid>."),
                 TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "Product-surface alias for text query or input text where supported"),
@@ -107,10 +112,10 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 jsonAlias,
             ],
             usageForms: [
-                TKCommandUsageForm(form: "find <query> --json", kind: "Subcommand", description: "Resolve a target before acting"),
-                TKCommandUsageForm(form: "tap --text <text> --json", kind: "Subcommand", description: "Product-language tap entry; positional text remains supported by the underlying tap command"),
-                TKCommandUsageForm(form: "tap --webview-aware --selector <css> [--webview-id <id>] --expect-text <text> --json", kind: "Subcommand", description: "Dispatch a WebView DOM click and verify expected WebView text"),
-                TKCommandUsageForm(form: "type <text> --json", kind: "Subcommand", description: "Type text into the focused field"),
+                TKCommandUsageForm(form: "triton act find <query> --json", kind: "Subcommand", description: "Resolve a target before acting"),
+                TKCommandUsageForm(form: "triton act tap --text <text> --json", kind: "Subcommand", description: "Product-language tap entry; positional text remains supported by the underlying tap command"),
+                TKCommandUsageForm(form: "triton act tap --webview-aware --selector <css> [--webview-id <id>] --expect-text <text> --json", kind: "Subcommand", description: "Dispatch a WebView DOM click and verify expected WebView text"),
+                TKCommandUsageForm(form: "triton act type <text> --json", kind: "Subcommand", description: "Type text into the focused field"),
             ],
             examples: [
                 "triton act tap --text 登录 --json",
@@ -149,7 +154,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(name: "type", summary: "Type text into the focused field", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--text", "--oid", "--secure", "--exact", "--format", "--json"], outputSelectors: ["input.result", "host.android-text-input", "host.harmony-text-input"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "paste", summary: "Paste exact text", requiredOptions: ["<text>"], optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--secure", "--oid", "--x", "--y", "--at", "--format", "--json"], outputSelectors: ["input.result", "host.android-text-input", "host.harmony-text-input"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "clear", summary: "Clear text input", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--oid", "--x", "--y", "--at", "--format", "--json"], outputSelectors: ["input.result"], failureCodes: inputCommandFailureCodes),
-                TKCommandSubcommandSchema(name: "swipe", summary: "Swipe by coordinates", requiredOptions: ["--start-x", "--start-y", "--end-x", "--end-y"], optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--width", "--height", "--duration", "--format", "--json"], outputSelectors: ["input.result", "host.android-swipe", "host.harmony-swipe"], failureCodes: inputCommandFailureCodes),
+                TKCommandSubcommandSchema(name: "swipe", summary: "Swipe by coordinates; iOS uses an embedded runtime target from `triton list --json`, while Android/Harmony use host coordinates", requiredOptions: ["--start-x", "--start-y", "--end-x", "--end-y"], optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--width", "--height", "--duration", "--format", "--json"], outputSelectors: ["input.result", "host.android-swipe", "host.harmony-swipe"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "press", summary: "Press a device button", optionalOptions: ["--target", "--device", "--host", "--port", "--platform", "--adb", "--hdc", "--button", "--duration", "--format", "--json"], outputSelectors: ["input.result", "host.android-key-action", "host.harmony-key-action"], failureCodes: inputCommandFailureCodes),
                 TKCommandSubcommandSchema(name: "focus", summary: "Focus a text input by selector", requiredOptions: ["<selector>"], optionalOptions: ["--target", "--host", "--port", "--runtime-base-url", "--index", "--within", "--at", "--format", "--json"], outputSelectors: ["semantic.action"], failureCodes: semanticActionFailureCodes),
                 TKCommandSubcommandSchema(name: "set-text", summary: "Set exact editable text by selector", requiredOptions: ["<selector>", "<text>"], optionalOptions: ["--target", "--host", "--port", "--runtime-base-url", "--secure", "--index", "--within", "--at", "--format", "--json"], outputSelectors: ["semantic.action"], failureCodes: semanticActionFailureCodes),
@@ -278,8 +283,8 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 jsonAlias,
             ],
             examples: [
-                "triton swipe --start-x 350 --start-y 390 --end-x 100 --end-y 390",
-                "triton swipe --platform harmony --target 127.0.0.1:10100 --start-x 350 --start-y 900 --end-x 350 --end-y 300 --json",
+                "triton act swipe --target <ios-runtime-target-from-triton-list> --start-x 350 --start-y 390 --end-x 100 --end-y 390 --json",
+                "triton act swipe --platform harmony --target 127.0.0.1:10100 --start-x 350 --start-y 900 --end-x 350 --end-y 300 --json",
             ],
             successShape: "{ ok, action, message, targetOID, targetClassName } or HostAndroidSwipeOutput or HostHarmonySwipeOutput",
             failureShape: "{ ok:false, error:{ code: unsupported_capability|validation_failed|server_unavailable|target_not_found|ambiguous_target|request_failed, message, endpoint?, hint, nextAction? } }",

@@ -26,6 +26,7 @@ struct CLIHelpTests {
 
         #expect(result.exitCode != 0)
         #expect(result.stderr.contains("Unknown subcommand 'tap'"))
+        #expect(result.stderr.contains("triton act tap"))
     }
 
     @Test("retired state root suggests current debug and observation commands")
@@ -55,6 +56,17 @@ struct CLIHelpTests {
         #expect(result.exitCode == 0)
         #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         #expect(result.stdout.contains("USAGE: triton act tap"))
+    }
+
+    @Test("workflow act swipe help documents iOS runtime targets")
+    func workflowActSwipeHelpDocumentsIOSRuntimeTargets() throws {
+        let result = try runTritonHelp(["act", "swipe", "--help"])
+
+        #expect(result.exitCode == 0)
+        #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        #expect(result.stdout.contains("iOS embedded runtime"))
+        #expect(result.stdout.contains("triton list --json"))
+        #expect(result.stdout.contains("sim:<udid>"))
     }
 
     private func runTritonHelp(_ arguments: [String]) throws -> CLIHelpRunResult {
@@ -93,13 +105,6 @@ struct CLIHelpTests {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        let repositoryRoot = packageRoot.deletingLastPathComponent()
-        for scratchPath in [".build/cli-test", ".build/cli"] {
-            let buildRoot = repositoryRoot.appendingPathComponent(scratchPath, isDirectory: true)
-            if let candidate = try findTritonExecutable(under: buildRoot, fileManager: fileManager) {
-                return candidate
-            }
-        }
         let debugCandidate = packageRoot
             .appendingPathComponent(".build", isDirectory: true)
             .appendingPathComponent("debug", isDirectory: true)
@@ -108,9 +113,17 @@ struct CLIHelpTests {
             return debugCandidate
         }
 
-        let buildRoot = packageRoot.appendingPathComponent(".build", isDirectory: true)
-        if let candidate = try findTritonExecutable(under: buildRoot, fileManager: fileManager) {
+        let packageBuildRoot = packageRoot.appendingPathComponent(".build", isDirectory: true)
+        if let candidate = try findTritonExecutable(under: packageBuildRoot, fileManager: fileManager) {
             return candidate
+        }
+
+        let repositoryRoot = packageRoot.deletingLastPathComponent()
+        for scratchPath in [".build/cli-test", ".build/cli"] {
+            let buildRoot = repositoryRoot.appendingPathComponent(scratchPath, isDirectory: true)
+            if let candidate = try findTritonExecutable(under: buildRoot, fileManager: fileManager) {
+                return candidate
+            }
         }
         throw NSError(
             domain: "TritonKitCLITests.CLIHelpTests",

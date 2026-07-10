@@ -936,8 +936,8 @@ private func webViewAwareShellQuote(_ value: String) -> String {
 struct Swipe: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Swipe inside the app using window-point coordinates")
 
-    @Option(help: "Host platform adapter: android or harmony") var platform: HostPlatform?
-    @Option(name: [.long, .customLong("device")], help: "Target id from `triton list`; --device is an alias") var target: String = TKLocalTargetID
+    @Option(help: "Platform adapter: iOS embedded runtime, android host, or harmony host") var platform: HostPlatform?
+    @Option(name: [.long, .customLong("device")], help: "Runtime target id from `triton list --json`; for iOS use triton:ios-simulator:<udid> or triton:ios-simulator:<udid>/app:<bundle-id>, not host selector sim:<udid>. --device is an alias") var target: String = TKLocalTargetID
     @Option(help: "Path to adb executable") var adb: String = "adb"
     @Option(help: "Path to hdc executable") var hdc: String = "hdc"
     @Option(help: "Server host") var host: String = "127.0.0.1"

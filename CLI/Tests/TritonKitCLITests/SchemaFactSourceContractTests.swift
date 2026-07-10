@@ -29,7 +29,11 @@ extension SchemaFactSourceTests {
 
     @Test("schema examples do not recommend retired root commands")
     func schemaExamplesDoNotRecommendRetiredRootCommands() {
-        let retiredRoots: Set<String> = ["state", "runtime", "snapshot", "hierarchy", "nodes", "attrs", "object", "geometry", "ax", "hit", "ledger"]
+        let retiredRoots: Set<String> = [
+            "find", "tap", "type", "paste", "clear", "swipe", "press", "focus", "set-text", "select-segment", "set-switch", "input",
+            "assert", "capture",
+            "state", "runtime", "snapshot", "hierarchy", "nodes", "attrs", "object", "geometry", "ax", "hit", "ledger",
+        ]
         let invalidExamples = commandSchemas()
             .flatMap { schema in schema.examples.map { (schema.name, $0) } }
             .compactMap { schemaName, example -> String? in
@@ -42,6 +46,17 @@ extension SchemaFactSourceTests {
             .sorted()
 
         #expect(invalidExamples == [])
+    }
+
+    @Test("act schema usage forms are fully qualified for agent reuse")
+    func actSchemaUsageFormsAreFullyQualifiedForAgentReuse() throws {
+        let act = try #require(commandSchemaMap()["act"])
+        let ambiguousForms = act.usageForms
+            .map(\.form)
+            .filter { $0.contains(" ") && !$0.hasPrefix("triton act ") }
+            .sorted()
+
+        #expect(ambiguousForms == [])
     }
 
     @Test("P23 command schemas expose product surface metadata")
@@ -634,6 +649,21 @@ extension SchemaFactSourceTests {
         #expect(missingOutputFormats == [])
         #expect(missingExamples == [])
         expectNoSchemaBackedCommandIssues(issues)
+    }
+
+    @Test("act schema documents iOS runtime target for swipe")
+    func actSchemaDocumentsIOSRuntimeTargetForSwipe() throws {
+        let act = try #require(commandSchemaMap()["act"])
+        let platform = try #require(act.options.first { $0.name == "--platform" })
+        let target = try #require(act.options.first { $0.name == "--target/--device" })
+        let swipe = try #require(act.subcommands.first { $0.name == "swipe" })
+
+        #expect(platform.type.contains("ios"))
+        #expect(platform.description.contains("iOS embedded runtime"))
+        #expect(target.description.contains("Runtime target"))
+        #expect(target.description.contains("triton list --json"))
+        #expect(target.description.contains("sim:<udid>"))
+        #expect(swipe.outputSelectors.contains("input.result"))
     }
 
     @Test("schema output formats stay within the command taxonomy")

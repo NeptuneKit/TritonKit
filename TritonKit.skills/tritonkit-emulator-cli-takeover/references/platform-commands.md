@@ -43,7 +43,11 @@ triton app install --device iphone15 --app <path.app> --json
 triton app launch --device iphone15 --bundle-id <bundle-id> --json
 ```
 
-Embedded runtime targets use stable ids shaped as `triton:ios-simulator:<SIMULATOR_UDID>`. If more than one runtime target is connected and the command uses default `triton:local`, return `ambiguous_target`.
+Embedded runtime targets use stable ids shaped as `triton:ios-simulator:<SIMULATOR_UDID>` or `triton:ios-simulator:<SIMULATOR_UDID>/app:<bundle-id>`. Get them from `triton list --json`. Runtime gestures such as `triton act swipe` need that runtime target through `--target`; do not pass host selectors such as `sim:<udid>`. If more than one runtime target is connected and the command uses default `triton:local`, return `ambiguous_target`.
+
+```bash
+triton act swipe --target <ios-runtime-target-from-triton-list> --start-x 110 --start-y 700 --end-x 110 --end-y 140 --duration 0.6 --json
+```
 
 ## Android Emulator
 
@@ -59,7 +63,7 @@ Examples:
 triton device list --platform harmony --json
 triton device wait-ready --device harmony-a --json
 triton app install --device harmony-a --hap <debug-signed.hap> --json
-triton app launch --device harmony-a --bundle <bundle> --ability <ability> --json
+triton app launch --platform harmony --device harmony-a --bundle <bundle> --ability <ability> --json
 triton observe tree --device harmony-a --outline --json
 triton act tap "登录" --platform harmony --device harmony-a --json
 ```

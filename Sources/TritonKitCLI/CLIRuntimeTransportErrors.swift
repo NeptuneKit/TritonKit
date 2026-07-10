@@ -128,7 +128,7 @@ func printValidationError(_ message: String) throws {
     let response = TKCLIErrorResponse(error: TKCLIErrorDetail(
         code: "validation_failed",
         message: message,
-        hint: "Run `triton schema --command tap --json` to inspect required fields"
+        hint: "Run `triton schema --command act tap --json` to inspect required fields"
     ))
     print(try encodeJSON(response))
 }
