@@ -14,6 +14,7 @@
 ├── memory/            # 每日日志目录（过期，后续改为 docs-linhay/memory/）
 └── docs-linhay/       # 项目文档系统目录：开发计划、需求文档、技术文档等
     ├── spaces/        # 以 feature / topic / milestone 为单位的工作空间根目录
+    │   ├── README.md  # space 总索引：状态、当前队列、worktree 与历史归档
     │   └── <space-key>/
     │       ├── README.md      # 当前 space 的需求背景、目标、范围、验收标准
     │       ├── plans/         # 开发计划、迭代规划、里程碑
@@ -36,6 +37,7 @@
 5. 单个 feature `worktree` 推荐路径为 `../TritonKit-worktrees/<space-key>/`；默认与对应 `space` 共享同一个 `<space-key>`。
 6. `worktree` 是临时执行环境，`space` 是长期文档资产；需求完成后可删除 `worktree`，不得删除对应 `space` 历史。
 7. 单个 `space` 的单期设计稿默认只保留一个 HTML 文件；若存在多稿对比，也必须收敛在同一个 HTML 文件内，不为同一期拆分多个 `option-*.html`。
+8. `docs-linhay/spaces/README.md` 是 space 固定总索引；新建 space、状态变化、独立 worktree 待集成或需求收口时必须同步更新。
 
 ## 1. 全局原则
 
@@ -97,9 +99,10 @@
 
 `docs-linhay/` 是项目文档系统目录，按类型分文件夹：
 
-1. `docs-linhay/spaces/<space-key>/README.md`：单个需求空间的背景、目标、范围、验收标准、相关链接。
-2. `docs-linhay/spaces/<space-key>/plans/`：该需求空间下的开发计划、迭代规划、里程碑。
-3. `docs-linhay/spaces/<space-key>/screenshots/`：该需求空间下的截图归档。
+1. `docs-linhay/spaces/README.md`：space 总索引，记录状态定义、当前队列、独立 worktree、待收口项和历史归档。
+2. `docs-linhay/spaces/<space-key>/README.md`：单个需求空间的背景、目标、范围、验收标准、相关链接。
+3. `docs-linhay/spaces/<space-key>/plans/`：该需求空间下的开发计划、迭代规划、里程碑。
+4. `docs-linhay/spaces/<space-key>/screenshots/`：该需求空间下的截图归档。
 5. `docs-linhay/dev/`：研发文档、技术方案、治理说明。
 6. `docs-linhay/features/`：项目级需求与功能规格旧入口；新单需求优先放 `spaces`。
 7. `docs-linhay/plans/`：项目级计划和里程碑；单需求计划优先跟随对应 `space`。
@@ -133,6 +136,7 @@ Git `worktree` 治理：
 2. 技术方案和治理说明放 `docs-linhay/dev/`。
 3. 截图、计划材料必须跟着对应 `space` 走。
 4. 外部参考资料统一归档到 `docs-linhay/references/`。
+5. space 的新增、状态变化、worktree 集成和完成收口必须同步更新 `docs-linhay/spaces/README.md`。
 
 项目级 skills：
 
@@ -154,7 +158,7 @@ Git `worktree` 治理：
 
 ## 5. 文档工具（推荐）
 
-1. 新建 `space` 时优先使用 `docs-linhay/scripts/create-space.sh <space-key>`。
+1. 新建 `space` 时优先使用 `docs-linhay/scripts/create-space.sh <space-key>`，并同步更新 `docs-linhay/spaces/README.md`。
 2. 提交前或调整治理规则后，运行 `docs-linhay/scripts/check-docs.sh` 做结构校验。
 3. 新建 feature `worktree` 时，默认使用 `git worktree add ../TritonKit-worktrees/<space-key> -b feat/<space-key> main`；若当前集成分支不是 `main`，以当轮基线分支替换末尾参数。
 4. 采用 `subagent` 交付的需求，主控 agent 收尾前默认补做一次 DoD 自检：测试、HTTP/CLI 验收、Wails/桌面验收、截图、文档、memory、必要时 `check-docs.sh`。

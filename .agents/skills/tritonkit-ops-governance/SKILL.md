@@ -10,6 +10,7 @@ metadata:
 ## CLI / HTTP / Wails 开发回路
 
 - 新单需求优先在 `docs-linhay/spaces/<space-key>/README.md` 写清 BDD 场景和验收边界；历史或项目级规格再使用 `docs-linhay/features/`。
+- `docs-linhay/spaces/README.md` 是 space 固定总索引；新建 space、状态变化、独立 worktree 待集成或需求收口时，同步更新索引的当前队列、下一步和历史归档。
 - 先补失败测试，再实现最小代码。
 - HTTP handler 用 `httptest` 优先验证，只有进程生命周期或信号处理才启动真实 server。
 - CLI 行为优先测试参数解析和命令分发，不在单元测试里长期占用端口。
@@ -59,9 +60,11 @@ metadata:
 
 ## 文档与记忆
 
+- Space 总索引：`docs-linhay/spaces/README.md`。
 - 需求与验收：`docs-linhay/features/`。
 - 架构、技术方案、测试策略：`docs-linhay/dev/`。
 - 关键决策、里程碑、风险结论：`docs-linhay/memory/YYYY-MM-DD.md`。
+- 长期稳定入口：`docs-linhay/memory/MEMORY.md`；其中必须保留 spaces 总索引的固定路径。
 - 用户要求“整理会话”时，先用 `git status --short --branch` 和 `git diff --stat` 隔离已提交代码、未提交文档、外部仓验证和临时产物；只 stage 本次整理相关文件，不默认 `git add -A`。
 - 用户要求 subagent 并行处理多个 GitHub issue 且强调不要串工作时，按 issue 建独立 `space` / `feat/<space-key>` / `../TritonKit-worktrees/<space-key>/`；主控 agent 逐 worktree 检查 clean status、commit、测试、docs/memory，不把多个 issue 或主仓并行改动混成一个提交。
 - 用户要求“其他 worktree 都结束了就合并到主分支后删除”时，收尾顺序固定为：`git worktree list --porcelain` 枚举，逐 worktree 跑 `git status --short --branch`，用 `git log main..<branch>` 和 `git merge-base --is-ancestor` 判断是否还有未合入提交，对需要合入的分支先用 `git merge-tree --write-tree main <branch>` 做无副作用冲突预检；合入主仓后必须在主仓跑门禁，通过后再 `git worktree remove <path>`，最后复查 registered worktree 只剩主仓。空包装目录可在确认不是 registered worktree 且为空后用 `rmdir` 清理；本地/远端分支不随 worktree 默认删除。若 `git branch -d` 因分支尚未合入 `origin/main` 拒绝删除，但它已经合入本地 `HEAD`，先推送 `main` 并 `git fetch origin main`，再重试非强制 `git branch -d`，不要直接升级到 `-D`。
@@ -119,5 +122,6 @@ SwiftPM / CLI 修复沉淀：
 - BDD 场景满足。
 - 相关测试已运行并通过，或明确说明阻塞和风险。
 - 文档与 memory 已更新。
+- Space 新增、状态变化、worktree 集成或收口时，`docs-linhay/spaces/README.md` 已同步。
 - 若产生可复用模式，已更新对应 skill 或说明暂不沉淀。
 - 若任务要求“从头开始”，需同步检查 docs、skills 和 AGENTS 是否仍残留旧方向规则。
