@@ -10,34 +10,33 @@
 
 | 状态 | 含义 |
 | --- | --- |
-| 进行中 | 当前仍有明确实现或验收缺口 |
-| 待集成 | 独立 worktree 已有提交，但尚未合入 `main` |
-| 明确待办 | 已确认未完成，等待后续实现或真实验收 |
-| 规划冻结 | 只保留研究和执行蓝图，当前不占用 active roadmap |
-| 待收口 | 代码或后续实现已覆盖主要目标，但 space 的计划、勾选项或结论仍陈旧 |
-| 已归档 | 本期工作已结束或已被后续 space 接管；不表示 README 中所有远期设想均已实现 |
+| 执行 | 当前有边界明确、可验证、应继续完成的有限任务 |
+| 待定 | 暂停实现，必须先完成产品合并、范围取舍或环境条件判断 |
+| 废弃 | 不再作为独立 roadmap 推进；保留历史文档和仍有价值的既有代码 |
+| 已归档 | 本期验收已满足或原型已完成，不再追加远期设想 |
 
-## 当前队列
+## 路线裁决
 
-| 状态 | Space | 当前进度 | 下一步 |
+| 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 进行中 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 的 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke 已通过 | 修复或重装 Overloaded Debug bootstrap 后补真实 App smoke；继续按 capability 扩展其他 target scope，并明确本期关闭条件 |
-| 进行中 | [20260521-ios-embedded-sdk-expansion](./20260521-ios-embedded-sdk-expansion/README.md) | S0-S4 首批闭环已完成，2026-07-09 开始 WebView-aware `act tap` 切片 | 完成 WebView-aware action 的实现、证据和真实 harness 验收；P1/P2 增强按独立切片推进 |
-| 明确待办 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | P0 合同、录制事件、compile、page/network map、dry-run 和 local-simulated executor 已落地 | 实现 Triton-first `local-device` 真实 executor；系统级录制、真实 VLM fingerprint、proposal 审批和 live network policy 仍未实现 |
-| 明确待办 | [20260525-simulator-target-simplification](./20260525-simulator-target-simplification/README.md) | parser/schema/CLI 单测已通过 | 补 `--bundle` 反向过滤，并执行真实多开 iOS + Harmony alias smoke |
-| 规划冻结 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究、需求和 M1-M6 蓝图已归档，明确不占 active roadmap | 需要启动时先重新核对现有 `skill/update/evidence/schema/workspace` 能力，避免重复实现旧缺口 |
-| 待收口 | [20260701-host-framebuffer-stream](./20260701-host-framebuffer-stream/README.md) | `CLIHostSimulatorFramebufferService`、IOSurface 捕获和 `/web/ios-simulator/framebuffer` 已存在，但 README 四个里程碑仍全部未勾选 | 用当前实现和真实 smoke 逐项回填 M1-M4，修正 `<15ms/120 FPS` 是否有证据支撑 |
-| 待收口 | [20260702-cross-platform-framebuffer-stream](./20260702-cross-platform-framebuffer-stream/README.md) | Android/Harmony service、HTTP route 和 Web bridge 已存在，README DoD 已勾选 | 更新 `plans/research_and_implementation_plan.md` 的 16 个陈旧未勾选项，并补充真实帧率、断连释放和降频证据路径 |
-| 待收口 | [20260617-issue-61-android-emulator-adapter](./20260617-issue-61-android-emulator-adapter/README.md) | space 仍记录被旧 Web test 编译错误阻塞；后续 Android adapter/strong-control 已有大量实现与真实 smoke | 复跑当前 focused tests，确认旧 blocker 是否已消失，再把本期状态改为完成或列出真实剩余缺口 |
+| 已归档 | [20260521-ios-embedded-sdk-expansion](./20260521-ios-embedded-sdk-expansion/README.md) | S0-S4 与 WebView-aware `act tap` 已完成，真实 iOS Simulator 证明 `selector -> DOM dispatch -> expect-text` 返回 `status=passed` | 保留动态 smoke 证据；P1/P2 需求另建有限 space |
+| 已归档 | [20260525-simulator-target-simplification](./20260525-simulator-target-simplification/README.md) | 真实多开 iOS、Harmony alias、指定目标动作和多候选拒绝均通过；同时修复 observation alias 缺省 platform 被误判为 iOS | 不实现 `--bundle` 反向过滤；批量 fan-out 或新 selector 能力另建 space |
+| 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | P0 合同与 local-simulated executor 已形成大体量实现，但真实 executor 与 `workspace run`、`.tritontest`、replay/evidence/Atlas 高度重叠 | 暂停新代码；先裁决 `testrec` 是否保留独立产品面，还是并入现有 workspace/test/replay 契约 |
+| 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
+| 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
+| 已归档 | [20260701-host-framebuffer-stream](./20260701-host-framebuffer-stream/README.md) | SimulatorKit/IOSurface host stream、MJPEG route 和历史高帧率测量已落地 | 作为实验性 Web mock 能力保留，不再承诺 `<15ms/120 FPS` 产品 SLA；正式 Web 恢复时重新立项 |
+| 已归档 | [20260702-cross-platform-framebuffer-stream](./20260702-cross-platform-framebuffer-stream/README.md) | Android/Harmony host pull stream、HTTP route、Web bridge 和截图证据已落地 | 作为 Web mock 原型归档，不再追加性能优化；正式产品化需重新定义边界和证据门禁 |
+| 已归档 | [20260617-issue-61-android-emulator-adapter](./20260617-issue-61-android-emulator-adapter/README.md) | 旧 Web 编译 blocker 已消失，当前 `DeviceCrossPlatformTests` 93 项通过；Android Emulator 主链已有历史真实 smoke | 不再单独执行；后续 Android 回归走现有 emulator takeover 与 strong-control spaces |
 
 ## 维护规则
 
-1. 新建 space 后，同一提交内将其加入本索引的“当前队列”或“历史归档”。
-2. 状态变化时更新“最近审计”日期、当前进度和下一步，不只修改单个 space。
+1. 新建 space 后，同一提交内将其加入本索引的“路线裁决”或“历史归档”。
+2. 状态变化时更新“最近审计”日期、裁决和下一步，不只修改单个 space。
 3. 独立 worktree 必须记录路径、branch/commit 和待集成动作；合入后从“待集成”移除。
-4. 代码已落地但 README/plan 未同步时标记“待收口”，不得直接标记“已完成”。
-5. space 完成本期 DoD、文档与 memory 写回后移入“历史归档”。
-6. 本索引只做导航和进度摘要，不复制单个 space 的完整需求、BDD 或技术方案。
+4. “执行”必须有有限停止条件；没有产品取舍结论的方向标记“待定”，不得继续堆实现。
+5. 被后续路线吸收或不再符合产品边界的独立计划标记“废弃”，但不删除历史文档和仍有价值的代码。
+6. space 完成本期 DoD、文档与 memory 写回后标记“已归档”。
+7. 本索引只做导航和进度摘要，不复制单个 space 的完整需求、BDD 或技术方案。
 
 ## 历史归档
 

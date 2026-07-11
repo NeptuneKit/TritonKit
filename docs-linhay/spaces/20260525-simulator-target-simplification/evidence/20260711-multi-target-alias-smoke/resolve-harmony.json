@@ -1,0 +1,29 @@
+{
+  "ok" : true,
+  "selection" : {
+    "filters" : {
+      "ready" : false,
+      "scope" : "all"
+    },
+    "platform" : "harmony",
+    "selector" : "triton-smoke-harmony-20260711",
+    "source" : "alias",
+    "target" : {
+      "blockedReasons" : [
+
+      ],
+      "current" : false,
+      "id" : "harmony:127.0.0.1:5555",
+      "identityState" : "unknown",
+      "kind" : "emulator",
+      "platform" : "harmony",
+      "ready" : true,
+      "scope" : "emulator",
+      "sensitive" : false,
+      "source" : "hdc",
+      "state" : "Connected",
+      "target" : "127.0.0.1:5555",
+      "transport" : "TCP"
+    }
+  }
+}

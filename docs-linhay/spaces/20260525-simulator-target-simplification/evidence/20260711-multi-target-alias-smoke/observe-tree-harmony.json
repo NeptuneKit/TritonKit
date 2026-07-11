@@ -1,0 +1,8 @@
+{
+  "error" : {
+    "code" : "target_platform_mismatch",
+    "hint" : "Remove --platform or pick an alias\/id for the requested platform.",
+    "message" : "Host device selector triton-smoke-harmony-20260711 resolved to harmony, but ios was requested"
+  },
+  "ok" : false
+}

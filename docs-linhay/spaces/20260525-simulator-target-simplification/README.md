@@ -383,3 +383,12 @@ swift test --package-path CLI --scratch-path .build/cli -c debug
 
 1. `--bundle` 反向过滤未实现，仍按原设计留到 P1/P2。
 2. 尚未执行真实多开 iOS + Harmony alias smoke，本轮只做 parser/schema/CLI 单元验证。
+
+## 2026-07-11 路线裁决
+
+- 状态：已归档。
+- 真实多开 iOS + Harmony alias smoke 已通过：两个 Booted iOS Simulator 在无 selector 时稳定返回 `ambiguous_target`，iOS alias 只启动指定 UDID 上的 Demo，Harmony alias 可在不显式传 `--platform` 时完成 `observe tree`。
+- smoke 暴露并修复了 observation 命令把缺省 platform 强制解释为 iOS 的问题；显式 platform 仍作为选择过滤器。
+- 验收证据见 [20260711 multi-target alias smoke](evidence/20260711-multi-target-alias-smoke/README.md)。
+- `--bundle` 反向过滤收益不足，且会引入跨目标 App 查询和缓存复杂度，明确不在本 space 实现。
+- 其他批量 fan-out 或新 selector 能力必须另建 space，不再扩张当前范围。

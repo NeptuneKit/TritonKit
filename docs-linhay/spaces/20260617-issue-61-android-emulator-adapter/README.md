@@ -125,3 +125,10 @@ GitHub Issue #61 反馈 released CLI 中 `triton device list/doctor --platform a
 
 - `swift test --package-path CLI --scratch-path .build/cli --filter DeviceCrossPlatformTests` 当前在编译 CLI test target 时被既有 `WebCommandTests` / `WebLaunchPlan` API 不匹配阻塞，未进入本测试用例执行。
 - 本 worker 未执行真实 Android Emulator screenshot/wait-ready smoke；真实 emulator 验收由主控 agent 统一决定。
+
+## 2026-07-11 路线裁决
+
+- 状态：已归档。
+- 旧 `WebCommandTests` 编译 blocker 已消失；当前主线 `DeviceCrossPlatformTests` 93 项全部通过，其中包含 Issue 61 Android public P0 command parsing。
+- Android Emulator 主链已经在 `20260605-android-emulator-support` 和后续 strong-control 工作中完成真实 smoke。
+- 本 space 不再保留独立未完成项；后续 Android 回归统一走现有 emulator takeover 能力。

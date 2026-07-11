@@ -97,6 +97,32 @@ struct SelectorFlagTests {
         #expect(command.outline)
     }
 
+    @Test("observation device alias infers platform when platform is omitted")
+    func observationDeviceAliasInfersPlatform() {
+        let request = observationHostDeviceSelectionRequest(
+            device: "harmony-a",
+            platform: nil,
+            target: "triton:local",
+            runtimeBaseURL: nil
+        )
+
+        #expect(request.device == "harmony-a")
+        #expect(request.platform == nil)
+        #expect(request.ready)
+    }
+
+    @Test("observation explicit platform remains a selection filter")
+    func observationExplicitPlatformRemainsFilter() {
+        let request = observationHostDeviceSelectionRequest(
+            device: "harmony-a",
+            platform: .harmony,
+            target: "triton:local",
+            runtimeBaseURL: nil
+        )
+
+        #expect(request.platform == .harmony)
+    }
+
     @Test("find and tap schemas expose target device selector vocabulary")
     func actionSchemasExposeDeviceAlias() throws {
         let schemas = Dictionary(uniqueKeysWithValues: commandSchemas().map { ($0.name, $0) })

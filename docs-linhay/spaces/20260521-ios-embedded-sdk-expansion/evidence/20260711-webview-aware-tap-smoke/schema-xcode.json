@@ -1,0 +1,1310 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+
+      ],
+      "artifacts" : [
+        "stdout-log",
+        "stderr-log",
+        "result-bundle"
+      ],
+      "deprecatedForMainPath" : false,
+      "examples" : [
+        "triton xcode discover --path . --json",
+        "triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+        "triton xcode schemes --json",
+        "triton xcode status --json",
+        "triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json",
+        "triton xcode settings --json",
+        "triton xcode build --jsonl",
+        "triton xcode build --device <ios-real-target> --sdk iphoneos --allow-provisioning-updates --jsonl",
+        "triton xcode test --result-bundle \/tmp\/App.xcresult --jsonl",
+        "triton xcode run --jsonl",
+        "triton xcode run --env FEATURE_FLAG=1 --arg debug-route --arg demo.home --jsonl",
+        "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "invalid_workspace_path",
+        "ambiguous_workspace",
+        "scheme_not_found",
+        "simulator_not_found",
+        "device_not_ready",
+        "device_not_trusted",
+        "developer_mode_required",
+        "ddi_missing",
+        "xcode_signing_failed",
+        "provisioning_profile_missing",
+        "xcode_not_idle",
+        "xcodebuild_failed",
+        "xcodebuild_interrupted",
+        "orphaned_xcodebuild",
+        "swift_macro_plugin_malformed_response",
+        "app_path_unresolved",
+        "bundle_id_unresolved"
+      ],
+      "failureShape" : "{ ok:false, error:{ code: invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|xcode_not_idle|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+      "finalEventKind" : "xcode.<action>.summary",
+      "inheritsDefaultsFrom" : [
+        "triton xcode use",
+        "triton sim use"
+      ],
+      "jsonlEvents" : [
+        "xcode.<action>.invocation",
+        "xcode.<action>.stdout",
+        "xcode.<action>.stderr",
+        "xcode.<action>.heartbeat",
+        "xcode.<action>.summary"
+      ],
+      "name" : "xcode",
+      "nextCommands" : [
+        "triton xcresult summary --path <result.xcresult> --json",
+        "triton xcresult failures --path <result.xcresult> --json",
+        "triton status --json",
+        "triton verify text-exists <text> --json",
+        "triton target resolve <selector> --json",
+        "triton xcode discover --path . --json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : ".",
+          "description" : "Directory to scan for Xcode workspace, project, or Package.swift candidates",
+          "name" : "--path",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Path to .xcworkspace",
+          "name" : "--workspace",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Path to .xcodeproj",
+          "name" : "--project",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Xcode scheme",
+          "name" : "--scheme",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "Debug",
+          "description" : "Build configuration",
+          "name" : "--configuration",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "iphonesimulator",
+          "description" : "xcodebuild SDK",
+          "name" : "--sdk",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "xcodebuild destination",
+          "name" : "--destination",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Simulator UDID; also used to synthesize destination",
+          "name" : "--simulator",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Real-device selector from `triton device`; real-device builds use sdk=iphoneos and a device destination",
+          "name" : "--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : ".triton\/DerivedData",
+          "description" : "Repo-local DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default; use a fresh path to recover Swift macro plugin malformed-response failures",
+          "name" : "--derived-data-path",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Repeatable iOS app launch environment for xcode run; values are passed as SIMCTL_CHILD_* on Simulator or DEVICECTL_CHILD_* on real devices and redacted in sourceCommand",
+          "name" : "--env",
+          "required" : false,
+          "type" : "KEY=VALUE"
+        },
+        {
+          "description" : "Repeatable iOS Simulator app launch argument for xcode run",
+          "name" : "--arg",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices",
+          "name" : "--allow-provisioning-updates",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Result bundle path for test",
+          "name" : "--result-bundle",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Command timeout in seconds for large workspaces",
+          "name" : "--timeout",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Emit JSON Lines progress for long commands",
+          "name" : "--jsonl",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Whether status collection succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether matching Xcode processes are active",
+              "name" : "active",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Workspace\/project filter used for process matching",
+              "name" : "workspaceFilter",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Active xcodebuild\/build-service processes",
+              "name" : "processes",
+              "required" : true,
+              "type" : "[XcodeProcessSummary]"
+            },
+            {
+              "description" : "Process counts",
+              "name" : "summary",
+              "required" : true,
+              "type" : "XcodeProcessStatusSummary"
+            },
+            {
+              "description" : "Underlying process listing command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Most recent Xcode stdout artifact path when available",
+              "name" : "stdoutLogPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Most recent Xcode stderr artifact path when available",
+              "name" : "stderrLogPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "ISO-8601 timestamp for the newest stdout\/stderr artifact output",
+              "name" : "lastOutputAt",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Most recent stdout artifact byte count",
+              "name" : "stdoutBytes",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Most recent stderr artifact byte count",
+              "name" : "stderrBytes",
+              "required" : false,
+              "type" : "Int?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "xcode-status",
+          "model" : "XcodeProcessStatusOutput",
+          "selector" : "xcode.status"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the progress event is valid",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Progress event kind",
+              "name" : "event",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Human-readable progress message",
+              "name" : "message",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Elapsed milliseconds",
+              "name" : "elapsedMs",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Stdout artifact path",
+              "name" : "stdoutLogPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Stderr artifact path",
+              "name" : "stderrLogPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Total stdout bytes",
+              "name" : "stdoutBytes",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Total stderr bytes",
+              "name" : "stderrBytes",
+              "required" : false,
+              "type" : "Int?"
+            }
+          ],
+          "format" : "jsonl",
+          "kind" : "progress-event",
+          "model" : "TKXcodeProgressEvent",
+          "selector" : "xcode.progress"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the action completed",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "xcode.build, xcode.test, or xcode.run",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Stable failure code such as xcodebuild_failed, xcodebuild_interrupted, or orphaned_xcodebuild when ok=false",
+              "name" : "failureCode",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Workspace path",
+              "name" : "workspace",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Project path",
+              "name" : "project",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Scheme name",
+              "name" : "scheme",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Build configuration",
+              "name" : "configuration",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "SDK",
+              "name" : "sdk",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "xcodebuild destination",
+              "name" : "destination",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Real-device selector when sdk=iphoneos",
+              "name" : "device",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "DerivedData path",
+              "name" : "derivedDataPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "DerivedData cache metadata for incremental build expectations and cleanup policy",
+              "name" : "derivedDataCache",
+              "required" : false,
+              "type" : "TKXcodeDerivedDataCacheInfo?"
+            },
+            {
+              "description" : "Resolved DerivedData path used by xcodebuild",
+              "name" : "derivedDataCache.path",
+              "required" : false,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the DerivedData directory exists before the action",
+              "name" : "derivedDataCache.exists",
+              "required" : false,
+              "type" : "Bool"
+            },
+            {
+              "description" : "DerivedData cache state, for example empty or warm",
+              "name" : "derivedDataCache.cacheState",
+              "required" : false,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether incremental Xcode build reuse is expected",
+              "name" : "derivedDataCache.incrementalExpected",
+              "required" : false,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Cleanup policy; preserve-by-default means Triton should not delete the cache automatically",
+              "name" : "derivedDataCache.cleanupPolicy",
+              "required" : false,
+              "type" : "String"
+            },
+            {
+              "description" : "Human-readable guidance for preserving or intentionally resetting the cache",
+              "name" : "derivedDataCache.guidance",
+              "required" : false,
+              "type" : "String"
+            },
+            {
+              "description" : "Built app path",
+              "name" : "appPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Resolved bundle id",
+              "name" : "bundleID",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Result bundle path",
+              "name" : "resultBundlePath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Simulator UDID",
+              "name" : "simulatorUDID",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Duration in milliseconds",
+              "name" : "durationMs",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Host process exit code",
+              "name" : "exitCode",
+              "required" : true,
+              "type" : "Int32"
+            },
+            {
+              "description" : "Whether stdout sample was truncated",
+              "name" : "stdoutTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether stderr sample was truncated",
+              "name" : "stderrTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Stdout artifact path",
+              "name" : "stdoutLogPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Stderr artifact path",
+              "name" : "stderrLogPath",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Total stdout bytes",
+              "name" : "stdoutBytes",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Total stderr bytes",
+              "name" : "stderrBytes",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Inline parsed xcresult test counts for xcode.test when --result-bundle is available",
+              "name" : "testResultSummary",
+              "required" : false,
+              "type" : "TKXcresultSummaryMetrics?"
+            },
+            {
+              "description" : "Default-redacted top test failures for xcode.test",
+              "name" : "topFailures",
+              "required" : false,
+              "type" : "[TKXcresultFailureRecord]?"
+            },
+            {
+              "description" : "Inline xcresult parsing note",
+              "name" : "xcresultNote",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Structured diagnostics parsed from xcodebuild stdout\/stderr, including stale DerivedData outside-root and Swift macro plugin malformed-response recovery",
+              "name" : "xcodeDiagnostics",
+              "required" : false,
+              "type" : "[TKXcodeOutputDiagnostic]?"
+            },
+            {
+              "description" : "Xcode process status sampled after an interrupted xcodebuild result",
+              "name" : "postActionProcessStatus",
+              "required" : false,
+              "type" : "TKXcodePostActionProcessStatus?"
+            },
+            {
+              "description" : "Whether matching Xcode processes remained active after the action returned",
+              "name" : "postActionProcessStatus.active",
+              "required" : false,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Matching xcodebuild\/build-service processes still active after an interrupted result",
+              "name" : "postActionProcessStatus.processes",
+              "required" : false,
+              "type" : "[TKXcodeActiveProcessSummary]"
+            },
+            {
+              "description" : "Recovery commands such as xcode status and wait-idle for interrupted or orphaned xcodebuild results",
+              "name" : "nextActions",
+              "required" : false,
+              "type" : "[TKCLINextAction]?"
+            },
+            {
+              "description" : "Boundary or next-step note",
+              "name" : "note",
+              "required" : false,
+              "type" : "String?"
+            }
+          ],
+          "format" : "jsonl",
+          "kind" : "final-event",
+          "model" : "TKXcodeActionSummary",
+          "selector" : "xcode.final"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json",
+        "jsonl"
+      ],
+      "providedCapabilities" : [
+        "xcode-discovery",
+        "xcode-defaults",
+        "xcode-diagnostics",
+        "xcodebuild",
+        "xcode-run"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "archive",
+          "command" : "triton xcresult summary --path <result.xcresult> --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton xcresult failures --path <result.xcresult> --json"
+        },
+        {
+          "category" : "diagnose",
+          "command" : "triton status --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton verify text-exists <text> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        },
+        {
+          "category" : "project",
+          "command" : "triton xcode discover --path . --json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : false,
+      "requiresTarget" : false,
+      "retryable" : true,
+      "runtimeScope" : "host-xcode",
+      "subcommands" : [
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "invalid_workspace_path"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "discover",
+          "nextCommands" : [
+            "triton xcode use --workspace <workspace> --scheme <scheme> --json",
+            "triton xcode discover --path . --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--path"
+          ],
+          "outputSelectors" : [
+
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "project",
+              "command" : "triton xcode use --workspace <workspace> --scheme <scheme> --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode discover --path . --json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : true,
+          "summary" : "Discover Xcode workspaces, projects, and packages"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+            "triton sim use"
+          ],
+          "failureCodes" : [
+            "invalid_workspace_path",
+            "ambiguous_workspace",
+            "scheme_not_found",
+            "simulator_not_found"
+          ],
+          "inheritsDefaultsFrom" : [
+            "triton sim use"
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "use",
+          "nextCommands" : [
+            "triton xcode schemes --json",
+            "triton xcode settings --jsonl",
+            "triton target resolve <selector> --json",
+            "triton xcode discover --path . --json"
+          ],
+          "oneOfRequiredOptions" : [
+            [
+              "--workspace"
+            ],
+            [
+              "--project"
+            ]
+          ],
+          "optionalOptions" : [
+            "--configuration",
+            "--simulator"
+          ],
+          "outputSelectors" : [
+
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "project",
+              "command" : "triton xcode schemes --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode settings --jsonl"
+            },
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode discover --path . --json"
+            }
+          ],
+          "requiredOptions" : [
+            "--scheme"
+          ],
+          "retryable" : true,
+          "summary" : "Persist repo-local Xcode defaults"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+            "triton xcode use"
+          ],
+          "failureCodes" : [
+            "invalid_workspace_path",
+            "ambiguous_workspace",
+            "xcodebuild_failed"
+          ],
+          "inheritsDefaultsFrom" : [
+            "triton xcode use"
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "schemes",
+          "nextCommands" : [
+            "triton xcode use --workspace <workspace> --scheme <scheme> --json",
+            "triton xcode discover --path . --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--workspace",
+            "--project"
+          ],
+          "outputSelectors" : [
+
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "project",
+              "command" : "triton xcode use --workspace <workspace> --scheme <scheme> --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode discover --path . --json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : true,
+          "summary" : "List shared Xcode schemes"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "status",
+          "nextCommands" : [
+            "triton xcode wait-idle --workspace <workspace> --timeout 120 --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--workspace"
+          ],
+          "outputSelectors" : [
+
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "project",
+              "command" : "triton xcode wait-idle --workspace <workspace> --timeout 120 --json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : true,
+          "summary" : "Inspect active xcodebuild and build-service processes"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "xcode_not_idle"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "wait-idle",
+          "nextCommands" : [
+            "triton xcode status --json",
+            "triton xcode discover --path . --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--workspace",
+            "--timeout"
+          ],
+          "outputSelectors" : [
+
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "project",
+              "command" : "triton xcode status --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode discover --path . --json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : true,
+          "summary" : "Wait until matching Xcode build processes are idle"
+        },
+        {
+          "artifacts" : [
+            "stdout-log",
+            "stderr-log"
+          ],
+          "defaultProviders" : [
+            "triton xcode use",
+            "triton sim use"
+          ],
+          "failureCodes" : [
+            "invalid_workspace_path",
+            "ambiguous_workspace",
+            "scheme_not_found",
+            "simulator_not_found",
+            "device_not_ready",
+            "device_not_trusted",
+            "developer_mode_required",
+            "ddi_missing",
+            "xcode_signing_failed",
+            "provisioning_profile_missing",
+            "xcodebuild_failed",
+            "swift_macro_plugin_malformed_response",
+            "app_path_unresolved",
+            "bundle_id_unresolved"
+          ],
+          "finalEventKind" : "xcode.settings.summary",
+          "inheritsDefaultsFrom" : [
+            "triton xcode use",
+            "triton sim use"
+          ],
+          "jsonlEvents" : [
+            "xcode.settings.invocation",
+            "xcode.settings.stdout",
+            "xcode.settings.stderr",
+            "xcode.settings.heartbeat",
+            "xcode.settings.summary"
+          ],
+          "name" : "settings",
+          "nextCommands" : [
+            "triton xcode build --jsonl",
+            "triton xcode run --jsonl",
+            "triton target resolve <selector> --json",
+            "triton xcode discover --path . --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--workspace",
+            "--project",
+            "--scheme",
+            "--configuration",
+            "--sdk",
+            "--destination",
+            "--simulator",
+            "--device",
+            "--derived-data-path",
+            "--timeout"
+          ],
+          "outputSelectors" : [
+            "xcode.progress",
+            "xcode.final"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "project",
+              "command" : "triton xcode build --jsonl"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode run --jsonl"
+            },
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode discover --path . --json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : true,
+          "summary" : "Resolve build settings, app path, and bundle id"
+        },
+        {
+          "artifacts" : [
+            "stdout-log",
+            "stderr-log"
+          ],
+          "defaultProviders" : [
+            "triton xcode use",
+            "triton sim use"
+          ],
+          "failureCodes" : [
+            "invalid_workspace_path",
+            "ambiguous_workspace",
+            "scheme_not_found",
+            "simulator_not_found",
+            "device_not_ready",
+            "device_not_trusted",
+            "developer_mode_required",
+            "ddi_missing",
+            "xcode_signing_failed",
+            "provisioning_profile_missing",
+            "xcodebuild_failed",
+            "xcodebuild_interrupted",
+            "orphaned_xcodebuild",
+            "swift_macro_plugin_malformed_response"
+          ],
+          "finalEventKind" : "xcode.build.summary",
+          "inheritsDefaultsFrom" : [
+            "triton xcode use",
+            "triton sim use"
+          ],
+          "jsonlEvents" : [
+            "xcode.build.invocation",
+            "xcode.build.stdout",
+            "xcode.build.stderr",
+            "xcode.build.heartbeat",
+            "xcode.build.summary"
+          ],
+          "name" : "build",
+          "nextCommands" : [
+            "triton xcode run --jsonl",
+            "triton xcode status --json",
+            "triton xcode wait-idle --workspace <workspace> --timeout 120 --json",
+            "triton status --json",
+            "triton target resolve <selector> --json",
+            "triton xcode discover --path . --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--workspace",
+            "--project",
+            "--scheme",
+            "--configuration",
+            "--sdk",
+            "--destination",
+            "--simulator",
+            "--device",
+            "--derived-data-path",
+            "--env",
+            "--arg",
+            "--timeout",
+            "--jsonl"
+          ],
+          "outputSelectors" : [
+            "xcode.progress",
+            "xcode.final"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "project",
+              "command" : "triton xcode run --jsonl"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode status --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode wait-idle --workspace <workspace> --timeout 120 --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton status --json"
+            },
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode discover --path . --json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : true,
+          "summary" : "Run xcodebuild build and emit bounded JSONL progress"
+        },
+        {
+          "artifacts" : [
+            "stdout-log",
+            "stderr-log",
+            "result-bundle"
+          ],
+          "defaultProviders" : [
+            "triton xcode use",
+            "triton sim use"
+          ],
+          "failureCodes" : [
+            "invalid_workspace_path",
+            "ambiguous_workspace",
+            "scheme_not_found",
+            "simulator_not_found",
+            "device_not_ready",
+            "device_not_trusted",
+            "developer_mode_required",
+            "ddi_missing",
+            "xcode_signing_failed",
+            "provisioning_profile_missing",
+            "xcodebuild_failed",
+            "xcodebuild_interrupted",
+            "orphaned_xcodebuild",
+            "swift_macro_plugin_malformed_response"
+          ],
+          "finalEventKind" : "xcode.test.summary",
+          "inheritsDefaultsFrom" : [
+            "triton xcode use",
+            "triton sim use"
+          ],
+          "jsonlEvents" : [
+            "xcode.test.invocation",
+            "xcode.test.stdout",
+            "xcode.test.stderr",
+            "xcode.test.heartbeat",
+            "xcode.test.summary"
+          ],
+          "name" : "test",
+          "nextCommands" : [
+            "triton xcresult summary --path <result.xcresult> --json",
+            "triton xcresult failures --path <result.xcresult> --json",
+            "triton target resolve <selector> --json",
+            "triton xcode discover --path . --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--workspace",
+            "--project",
+            "--scheme",
+            "--configuration",
+            "--sdk",
+            "--destination",
+            "--simulator",
+            "--device",
+            "--derived-data-path",
+            "--result-bundle",
+            "--timeout",
+            "--jsonl"
+          ],
+          "outputSelectors" : [
+            "xcode.progress",
+            "xcode.final"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "archive",
+              "command" : "triton xcresult summary --path <result.xcresult> --json"
+            },
+            {
+              "category" : "archive",
+              "command" : "triton xcresult failures --path <result.xcresult> --json"
+            },
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode discover --path . --json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : true,
+          "summary" : "Run xcodebuild test and optionally write a result bundle"
+        },
+        {
+          "artifacts" : [
+            "stdout-log",
+            "stderr-log"
+          ],
+          "defaultProviders" : [
+            "triton xcode use",
+            "triton sim use"
+          ],
+          "failureCodes" : [
+            "invalid_workspace_path",
+            "ambiguous_workspace",
+            "scheme_not_found",
+            "simulator_not_found",
+            "device_not_ready",
+            "device_not_trusted",
+            "developer_mode_required",
+            "ddi_missing",
+            "xcode_signing_failed",
+            "provisioning_profile_missing",
+            "xcodebuild_failed",
+            "xcodebuild_interrupted",
+            "orphaned_xcodebuild",
+            "swift_macro_plugin_malformed_response",
+            "app_path_unresolved",
+            "bundle_id_unresolved"
+          ],
+          "finalEventKind" : "xcode.run.summary",
+          "inheritsDefaultsFrom" : [
+            "triton xcode use",
+            "triton sim use"
+          ],
+          "jsonlEvents" : [
+            "xcode.run.invocation",
+            "xcode.run.stdout",
+            "xcode.run.stderr",
+            "xcode.run.heartbeat",
+            "xcode.run.summary"
+          ],
+          "name" : "run",
+          "nextCommands" : [
+            "triton xcode status --json",
+            "triton xcode wait-idle --workspace <workspace> --timeout 120 --json",
+            "triton status --json",
+            "triton wait --json",
+            "triton verify text-exists <text> --json",
+            "triton target resolve <selector> --json",
+            "triton xcode discover --path . --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--workspace",
+            "--project",
+            "--scheme",
+            "--configuration",
+            "--sdk",
+            "--destination",
+            "--simulator",
+            "--device",
+            "--derived-data-path",
+            "--env",
+            "--arg",
+            "--timeout",
+            "--jsonl"
+          ],
+          "outputSelectors" : [
+            "xcode.progress",
+            "xcode.final"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "project",
+              "command" : "triton xcode status --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode wait-idle --workspace <workspace> --timeout 120 --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton status --json"
+            },
+            {
+              "category" : "verify",
+              "command" : "triton wait --json"
+            },
+            {
+              "category" : "verify",
+              "command" : "triton verify text-exists <text> --json"
+            },
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "project",
+              "command" : "triton xcode discover --path . --json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : true,
+          "summary" : "Build, install, and launch on a selected simulator or real device without claiming business readiness"
+        }
+      ],
+      "successShape" : "discover\/use\/schemes\/status\/wait-idle\/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
+      "summary" : "Discover, configure, build, test, and run Xcode projects without exposing XcodeBuildMCP APIs",
+      "surfaceLayer" : "workflow",
+      "surfaceRationale" : "P23 workflow surface",
+      "usageForms" : [
+        {
+          "description" : "Discover .xcworkspace, .xcodeproj, and Package.swift candidates",
+          "form" : "discover --path <path>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Set repo-local Xcode defaults in .triton\/host-defaults.json",
+          "form" : "use --workspace <path>|--project <path> --scheme <scheme>",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "List schemes via xcodebuild -list -json",
+          "form" : "schemes",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Inspect active xcodebuild and build-service processes",
+          "form" : "status",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Wait until matching Xcode build\/test processes are idle",
+          "form" : "wait-idle",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Resolve app product path and bundle id from -showBuildSettings -json",
+          "form" : "settings",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run xcodebuild build",
+          "form" : "build",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run xcodebuild test",
+          "form" : "test",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run build, simulator install, and simulator launch",
+          "form" : "run",
+          "kind" : "Subcommand"
+        }
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

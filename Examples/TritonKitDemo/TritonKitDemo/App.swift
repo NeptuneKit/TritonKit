@@ -468,10 +468,15 @@ enum WebViewSmokeVariant {
       <main>
         <h1>Triton WebView Smoke</h1>
         <p id="route">route=/smoke ready=true</p>
+        <p id="submit-status">idle</p>
         <button id="submit">Submit</button>
         <input id="keyword" aria-label="Keyword" value="triton">
       </main>
       <script>
+        document.getElementById("submit").addEventListener("click", function() {
+          document.getElementById("submit-status").textContent = "submitted=true";
+        });
+
         window.__tritonBridge = {
           version: 1,
           methods: {

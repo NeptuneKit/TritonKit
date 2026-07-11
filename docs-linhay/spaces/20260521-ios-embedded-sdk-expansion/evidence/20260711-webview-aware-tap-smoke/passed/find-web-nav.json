@@ -1,0 +1,49 @@
+{
+  "candidates" : [
+    {
+      "className" : "UISegmentLabel",
+      "frame" : {
+        "height" : 15.666666666666686,
+        "width" : 45,
+        "x" : 282,
+        "y" : 317.66666666666663
+      },
+      "index" : 1,
+      "label" : "Web Nav",
+      "layerOID" : 111,
+      "query" : "Web Nav",
+      "request" : {
+        "activationStrategy" : "smart",
+        "matchedClassName" : "UISegmentLabel",
+        "matchedOID" : 110,
+        "targetOID" : 110,
+        "type" : "tap"
+      },
+      "source" : "hierarchy-text",
+      "strategy" : "smart",
+      "viewOID" : 110
+    }
+  ],
+  "className" : "UISegmentLabel",
+  "frame" : {
+    "height" : 15.666666666666686,
+    "width" : 45,
+    "x" : 282,
+    "y" : 317.66666666666663
+  },
+  "label" : "Web Nav",
+  "layerOID" : 111,
+  "matchCount" : 1,
+  "matchIndex" : 1,
+  "query" : "Web Nav",
+  "request" : {
+    "activationStrategy" : "smart",
+    "matchedClassName" : "UISegmentLabel",
+    "matchedOID" : 110,
+    "targetOID" : 110,
+    "type" : "tap"
+  },
+  "source" : "hierarchy-text",
+  "strategy" : "smart",
+  "viewOID" : 110
+}

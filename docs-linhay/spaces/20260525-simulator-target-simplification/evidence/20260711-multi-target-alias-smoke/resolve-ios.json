@@ -1,0 +1,28 @@
+{
+  "ok" : true,
+  "selection" : {
+    "filters" : {
+      "ready" : false,
+      "scope" : "all"
+    },
+    "platform" : "ios",
+    "selector" : "triton-smoke-ios-20260711",
+    "source" : "alias",
+    "target" : {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "kind" : "simulator",
+      "name" : "iPhone 17 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "83407554-53AB-45B4-A0C1-D59F34E26A67"
+    }
+  }
+}

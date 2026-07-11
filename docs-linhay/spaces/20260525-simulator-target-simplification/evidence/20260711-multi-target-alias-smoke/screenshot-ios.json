@@ -1,0 +1,57 @@
+{
+  "action" : "screenshot",
+  "artifact" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260525-simulator-target-simplification\/evidence\/20260711-multi-target-alias-smoke\/20260711-cli-multi-target-ios-after-v01.png",
+  "bytes" : 294101,
+  "capturedAt" : "2026-07-11T01:49:22Z",
+  "format" : "png",
+  "height" : 2622,
+  "note" : "Host-side iOS simulator screenshot was written.",
+  "ok" : true,
+  "platform" : "ios",
+  "selection" : {
+    "filters" : {
+      "ready" : false,
+      "scope" : "all"
+    },
+    "platform" : "ios",
+    "selector" : "triton-smoke-ios-20260711",
+    "source" : "alias",
+    "target" : {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "kind" : "simulator",
+      "name" : "iPhone 17 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "83407554-53AB-45B4-A0C1-D59F34E26A67"
+    }
+  },
+  "sha256" : "7f15e4dd5dd5d302e00bcf913acd107dcf1bb96054676264f98842ea07149b6c",
+  "sourceCommands" : [
+    "xcrun simctl io 83407554-53AB-45B4-A0C1-D59F34E26A67 screenshot \/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260525-simulator-target-simplification\/evidence\/20260711-multi-target-alias-smoke\/20260711-cli-multi-target-ios-after-v01.png"
+  ],
+  "target" : {
+    "blockedReasons" : [
+
+    ],
+    "id" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+    "kind" : "simulator",
+    "name" : "iPhone 17 Pro",
+    "platform" : "ios",
+    "ready" : true,
+    "runtime" : "iOS 26.5",
+    "scope" : "simulator",
+    "sensitive" : false,
+    "source" : "simctl",
+    "state" : "Booted",
+    "target" : "83407554-53AB-45B4-A0C1-D59F34E26A67"
+  },
+  "width" : 1206
+}

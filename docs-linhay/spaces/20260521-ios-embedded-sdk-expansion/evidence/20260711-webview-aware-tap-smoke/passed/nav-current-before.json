@@ -1,0 +1,218 @@
+{
+  "action" : "webview.current",
+  "capturedAt" : "2026-07-11T01:48:27Z",
+  "note" : "iOS WKWebView provider exposes metadata, bounded DOM\/text\/form\/link snapshots, and focused activeElement text input. Bridge calls and page events require an opt-in page bridge.",
+  "ok" : true,
+  "platform" : "ios",
+  "primarySource" : {
+    "available" : true,
+    "name" : "webview-provider",
+    "sourceCommands" : [
+      "triton webViewList request"
+    ]
+  },
+  "sourceCommands" : [
+    "triton webViewList request"
+  ],
+  "sources" : [
+    {
+      "available" : true,
+      "name" : "runtime-tree",
+      "sourceCommands" : [
+        "triton runtimeSnapshot request"
+      ]
+    },
+    {
+      "available" : true,
+      "name" : "webview-provider",
+      "sourceCommands" : [
+        "triton webViewList request"
+      ]
+    }
+  ],
+  "target" : "triton:ios-simulator:83407554-53AB-45B4-A0C1-D59F34E26A67\/app:com.neptunekit.tritonkit.demo",
+  "warnings" : [
+
+  ],
+  "webView" : {
+    "bridgeStatus" : "page-bridge-required",
+    "canGoBack" : false,
+    "canGoForward" : false,
+    "candidateOnly" : false,
+    "capabilities" : [
+      "visible",
+      "webview.current",
+      "webview.list",
+      "webview.current-url",
+      "webview.metadata",
+      "webview.snapshot",
+      "webview.dom",
+      "webview.text",
+      "webview.forms",
+      "webview.links",
+      "webview.tap",
+      "webview.wait",
+      "webview.events",
+      "webview.dom-input",
+      "webview.contenteditable-typing",
+      "webview.type"
+    ],
+    "confidence" : 1,
+    "estimatedProgress" : 1,
+    "frame" : {
+      "height" : 239.99999999999994,
+      "width" : 370,
+      "x" : 16,
+      "y" : 356.3333333333333
+    },
+    "identifier" : "WebViewSmokeWebView",
+    "isLoading" : false,
+    "missingCapabilities" : [
+      "webview.bridge-call"
+    ],
+    "nodeID" : "ios-webkit:409",
+    "pageSessionID" : "ios-webkit:409:page:9054262890083589106",
+    "platform" : "ios",
+    "providerCapabilities" : {
+      "supportsBridgeCall" : {
+        "nextAction" : {
+          "args" : [
+            "call",
+            "<method>",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "page must expose an allowlisted window.__tritonBridge.methods entry",
+        "supported" : false
+      },
+      "supportsContentEditableTyping" : {
+        "nextAction" : {
+          "args" : [
+            "--json"
+          ],
+          "category" : "act",
+          "command" : "input",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "focused contenteditable insertion is supported after runtime focus",
+        "supported" : true
+      },
+      "supportsCurrentURL" : {
+        "nextAction" : {
+          "args" : [
+            "current-url",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "supported" : true
+      },
+      "supportsDOMInput" : {
+        "nextAction" : {
+          "args" : [
+            "--json"
+          ],
+          "category" : "act",
+          "command" : "input",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "focused activeElement text insertion is supported after runtime focus",
+        "supported" : true
+      },
+      "supportsEvents" : {
+        "nextAction" : {
+          "args" : [
+            "events",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "page bridge event buffer is available after bridge installation",
+        "supported" : true
+      },
+      "supportsSnapshot" : {
+        "nextAction" : {
+          "args" : [
+            "snapshot",
+            "--include",
+            "metadata,text,dom,forms",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "supported" : true
+      }
+    },
+    "providerStatus" : "available",
+    "role" : "webview",
+    "source" : "webview-provider",
+    "text" : "Triton WebView Navigation A",
+    "title" : "Triton WebView Navigation A",
+    "url" : "https:\/\/tritonkit.local\/navigation",
+    "visibleRatio" : 1,
+    "webViewID" : "ios-webkit:409"
+  }
+}

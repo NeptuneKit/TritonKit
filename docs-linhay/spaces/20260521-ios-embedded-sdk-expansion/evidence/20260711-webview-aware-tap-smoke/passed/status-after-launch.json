@@ -1,0 +1,12 @@
+{
+  "activeHierarchyAvailable" : false,
+  "connected" : true,
+  "hierarchyCacheState" : "unavailable",
+  "latestHierarchyAvailable" : false,
+  "ok" : true,
+  "runtime" : "embedded",
+  "serverReachable" : true,
+  "surface" : "status",
+  "targetConnectionState" : "connected",
+  "targetCount" : 1
+}

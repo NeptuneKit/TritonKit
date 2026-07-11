@@ -1,0 +1,18 @@
+{
+  "action" : "webview.call",
+  "capturedAt" : "2026-07-11T01:48:28Z",
+  "elapsedMs" : 5,
+  "method" : "navigateDetails",
+  "ok" : true,
+  "pageSessionID" : "ios-webkit:409:page:9054262890083589106",
+  "platform" : "ios",
+  "redaction" : {
+
+  },
+  "result" : {
+    "ok" : true,
+    "route" : "\/navigation\/b"
+  },
+  "target" : "embedded-runtime",
+  "webViewID" : "ios-webkit:409"
+}

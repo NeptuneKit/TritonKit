@@ -1,0 +1,8307 @@
+{
+  "activeHierarchyAvailable" : false,
+  "capabilities" : [
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "bootstrap",
+      "name" : "version",
+      "requiredBy" : [
+
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "bootstrap",
+      "name" : "cli-update",
+      "nextAction" : {
+        "args" : [
+          "--check",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "update",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "runtime"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "bootstrap",
+      "name" : "plan",
+      "nextAction" : {
+        "args" : [
+          "--format",
+          "json"
+        ],
+        "category" : "plan",
+        "command" : "plan",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "tritonplan",
+        "stdout-json"
+      ],
+      "group" : "replay",
+      "name" : "plan-inspect",
+      "nextAction" : {
+        "args" : [
+          "inspect",
+          "<file.tritonplan>",
+          "--json"
+        ],
+        "category" : "plan",
+        "command" : "plan",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "tritonplan",
+        "stdout-json"
+      ],
+      "group" : "bootstrap",
+      "name" : "record",
+      "nextAction" : {
+        "args" : [
+          "--output",
+          "<file.tritonplan>",
+          "--json"
+        ],
+        "category" : "replay",
+        "command" : "record",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "tritonplan",
+        "stdout-json"
+      ],
+      "group" : "bootstrap",
+      "name" : "replay-dry-run",
+      "nextAction" : {
+        "args" : [
+          "<file.tritonplan>",
+          "--dry-run",
+          "--json"
+        ],
+        "category" : "replay",
+        "command" : "replay",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "bootstrap",
+      "name" : "web-device-hub",
+      "nextAction" : {
+        "args" : [
+          "--print-command",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "web",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "observe",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "bootstrap",
+      "name" : "schema",
+      "requiredBy" : [
+
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "test.normalized-plan"
+      ],
+      "group" : "test",
+      "name" : "test-validate",
+      "nextAction" : {
+        "args" : [
+          "validate",
+          "<path.tritontest.yaml>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "test",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "test.normalized-plan"
+      ],
+      "group" : "test",
+      "name" : "test-normalized-plan",
+      "nextAction" : {
+        "args" : [
+          "normalize",
+          "<path.tritontest.yaml>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "test",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "test.normalized-plan",
+        "evidence-bundle"
+      ],
+      "group" : "test",
+      "name" : "test-run-minimal",
+      "nextAction" : {
+        "args" : [
+          "run",
+          "<path.tritontest.yaml>",
+          "--json",
+          "--evidence-dir",
+          "<dir.tritonevidence>"
+        ],
+        "category" : "diagnose",
+        "command" : "test",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "test.normalized-plan",
+        "evidence-bundle"
+      ],
+      "group" : "test",
+      "name" : "test-run-deterministic",
+      "nextAction" : {
+        "args" : [
+          "run",
+          "<path.tritontest.yaml>",
+          "--json",
+          "--evidence-dir",
+          "<dir.tritonevidence>"
+        ],
+        "category" : "diagnose",
+        "command" : "test",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "test.normalized-plan",
+        "evidence-bundle"
+      ],
+      "group" : "test",
+      "name" : "test-run-vlm-assisted",
+      "nextAction" : {
+        "args" : [
+          "run",
+          "<path.tritontest.yaml>",
+          "--json",
+          "--evidence-dir",
+          "<dir.tritonevidence>",
+          "--allow-vlm"
+        ],
+        "category" : "diagnose",
+        "command" : "test",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "test.normalized-plan",
+        "evidence-bundle"
+      ],
+      "group" : "test",
+      "name" : "test-run-ai-mock",
+      "nextAction" : {
+        "args" : [
+          "run",
+          "<path.tritontest.yaml>",
+          "--json",
+          "--evidence-dir",
+          "<dir.tritonevidence>"
+        ],
+        "category" : "diagnose",
+        "command" : "test",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "evidence-bundle"
+      ],
+      "group" : "test",
+      "name" : "test-report",
+      "nextAction" : {
+        "args" : [
+          "report",
+          "<dir.tritonevidence>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "test",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "evidence-bundle",
+        "test.normalized-plan",
+        "tritontest-yaml"
+      ],
+      "group" : "test",
+      "name" : "test-create-from-session",
+      "nextAction" : {
+        "args" : [
+          "create",
+          "--from-session",
+          "<dir.tritonevidence>",
+          "--output",
+          "<path.tritontest.yaml>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "test",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "contract-capabilities"
+      ],
+      "group" : "test",
+      "name" : "testrec-session-start",
+      "nextAction" : {
+        "args" : [
+          "start",
+          "--platform",
+          "ios",
+          "--case",
+          "<name>",
+          "--output",
+          "<case.tritontestcase>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "page-events",
+        "network-capture"
+      ],
+      "group" : "test",
+      "name" : "testrec-event-ingest",
+      "nextAction" : {
+        "args" : [
+          "event",
+          "--session",
+          "<session-id>",
+          "--kind",
+          "action",
+          "--payload-json",
+          "<json>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "contract-capabilities"
+      ],
+      "group" : "test",
+      "name" : "testrec-session-stop",
+      "nextAction" : {
+        "args" : [
+          "stop",
+          "--session",
+          "<session-id>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "contract-capabilities"
+      ],
+      "group" : "test",
+      "name" : "testrec-inspect",
+      "nextAction" : {
+        "args" : [
+          "inspect",
+          "<case.tritontestcase>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "contract-capabilities",
+        "compiled-contract",
+        "compile-proposals"
+      ],
+      "group" : "test",
+      "name" : "testrec-compile",
+      "nextAction" : {
+        "args" : [
+          "compile",
+          "<case.tritontestcase>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "compile-proposals"
+      ],
+      "group" : "test",
+      "name" : "testrec-proposals-inspect",
+      "nextAction" : {
+        "args" : [
+          "proposals",
+          "<case.tritontestcase>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "compiled-contract",
+        "page-fingerprint-match"
+      ],
+      "group" : "test",
+      "name" : "testrec-page-match",
+      "nextAction" : {
+        "args" : [
+          "match-page",
+          "<case.tritontestcase>",
+          "--page",
+          "<page>",
+          "--candidate-json",
+          "<json>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "contract-capabilities"
+      ],
+      "group" : "test",
+      "name" : "testrec-replay-dry-run",
+      "nextAction" : {
+        "args" : [
+          "replay",
+          "<case.tritontestcase>",
+          "--platform",
+          "android",
+          "--dry-run",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "compiled-contract",
+        "action-map",
+        "page-fingerprint-match",
+        "evidence-bundle"
+      ],
+      "group" : "test",
+      "name" : "testrec-replay-local-simulated",
+      "nextAction" : {
+        "args" : [
+          "replay",
+          "<case.tritontestcase>",
+          "--platform",
+          "android",
+          "--executor",
+          "local-simulated",
+          "--target-fingerprints-json",
+          "<json>",
+          "--evidence-dir",
+          "<dir.tritonevidence>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema",
+        "tritontestcase",
+        "compiled-contract"
+      ],
+      "group" : "test",
+      "name" : "testrec-matrix",
+      "nextAction" : {
+        "args" : [
+          "matrix",
+          "<case.tritontestcase>",
+          "--targets",
+          "ios:sim-a,android:emu-a",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "testrec",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "action",
+      "name" : "action-provider-parse",
+      "nextAction" : {
+        "args" : [
+          "parse",
+          "--provider",
+          "ui-tars",
+          "--input",
+          "<provider-output>",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "action",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "bootstrap",
+      "name" : "status",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "requiredBy" : [
+
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "bootstrap",
+      "name" : "doctor",
+      "requiredBy" : [
+
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "stdout-json",
+        "command-schema"
+      ],
+      "group" : "bootstrap",
+      "name" : "capabilities",
+      "requiredBy" : [
+
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-targets.json",
+        "status-json"
+      ],
+      "group" : "target",
+      "name" : "target-list",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "target",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "app",
+        "runtime",
+        "observe",
+        "action",
+        "assert",
+        "evidence",
+        "smoke"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-targets.json",
+        "status-json"
+      ],
+      "group" : "target",
+      "name" : "target-use",
+      "nextAction" : {
+        "args" : [
+          "use",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "target",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "app",
+        "runtime",
+        "observe",
+        "action",
+        "assert",
+        "evidence",
+        "smoke"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-targets.json",
+        "status-json"
+      ],
+      "group" : "target",
+      "name" : "target-current",
+      "nextAction" : {
+        "args" : [
+          "current",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "target",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "app",
+        "runtime",
+        "observe",
+        "action",
+        "assert",
+        "evidence",
+        "smoke"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-targets.json",
+        "status-json"
+      ],
+      "group" : "target",
+      "name" : "target-resolve",
+      "nextAction" : {
+        "args" : [
+          "resolve",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "target",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "app",
+        "runtime",
+        "observe",
+        "action",
+        "assert",
+        "evidence",
+        "smoke"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-targets.json",
+        "status-json"
+      ],
+      "group" : "target",
+      "name" : "target-wait-ready",
+      "nextAction" : {
+        "args" : [
+          "wait-ready",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "target",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "app",
+        "runtime",
+        "observe",
+        "action",
+        "assert",
+        "evidence",
+        "smoke"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "runtime-manifest",
+        "snapshot-json"
+      ],
+      "group" : "runtime",
+      "name" : "runtime-manifest",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-manifest",
+        "snapshot-json"
+      ],
+      "group" : "runtime",
+      "name" : "state-app",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-manifest",
+        "snapshot-json"
+      ],
+      "group" : "runtime",
+      "name" : "state-scene",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-manifest",
+        "snapshot-json"
+      ],
+      "group" : "runtime",
+      "name" : "state-route",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-manifest",
+        "snapshot-json"
+      ],
+      "group" : "runtime",
+      "name" : "state-responder",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-manifest",
+        "snapshot-json"
+      ],
+      "group" : "runtime",
+      "name" : "snapshot",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-manifest",
+        "snapshot-json"
+      ],
+      "group" : "runtime",
+      "name" : "app-semantic-state",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "runtime-provider",
+        "action-result",
+        "runtime-ledger"
+      ],
+      "group" : "runtime",
+      "name" : "app-semantic-action",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "runtime-manifest",
+        "snapshot-json"
+      ],
+      "group" : "runtime",
+      "name" : "media-playback",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "runtime-provider",
+        "action-result",
+        "runtime-ledger"
+      ],
+      "group" : "runtime",
+      "name" : "focus",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-provider",
+        "action-result",
+        "runtime-ledger"
+      ],
+      "group" : "runtime",
+      "name" : "set-text",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-provider",
+        "action-result",
+        "runtime-ledger"
+      ],
+      "group" : "runtime",
+      "name" : "select-segment",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-provider",
+        "action-result",
+        "runtime-ledger"
+      ],
+      "group" : "runtime",
+      "name" : "set-switch",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-provider",
+        "action-result",
+        "runtime-ledger"
+      ],
+      "group" : "runtime",
+      "name" : "semantic-action",
+      "nextAction" : {
+        "args" : [
+          "--command",
+          "act",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "schema",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-ledger"
+      ],
+      "group" : "runtime",
+      "name" : "ledger",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "app",
+        "observe",
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "host-device",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "host-device-selector",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "device-alias",
+      "nextAction" : {
+        "args" : [
+          "alias",
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "device-list",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "device-use",
+      "nextAction" : {
+        "args" : [
+          "use",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "device-current",
+      "nextAction" : {
+        "args" : [
+          "use",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "device-resolve",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "device-wait-ready",
+      "nextAction" : {
+        "args" : [
+          "wait-ready",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "device-screenshot",
+      "nextAction" : {
+        "args" : [
+          "screenshot",
+          "--device",
+          "<selector>",
+          "--output",
+          "<path>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "host-device-screenshot",
+      "nextAction" : {
+        "args" : [
+          "screenshot",
+          "--device",
+          "<selector>",
+          "--output",
+          "<path>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-device",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--platform",
+          "ios",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-device-list",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--platform",
+          "ios",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-device-use",
+      "nextAction" : {
+        "args" : [
+          "use",
+          "<selector>",
+          "--platform",
+          "ios",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-device-wait-ready",
+      "nextAction" : {
+        "args" : [
+          "wait-ready",
+          "<selector>",
+          "--platform",
+          "ios",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-device-screenshot",
+      "nextAction" : {
+        "args" : [
+          "screenshot",
+          "--platform",
+          "ios",
+          "--device",
+          "<selector>",
+          "--output",
+          "<path>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-screenshot",
+      "nextAction" : {
+        "args" : [
+          "screenshot",
+          "--device",
+          "<selector>",
+          "--output",
+          "<path>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-host-ax",
+      "nextAction" : {
+        "args" : [
+          "ax",
+          "--platform",
+          "ios",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "debug",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-host-hid",
+      "nextAction" : {
+        "args" : [
+          "--command",
+          "act",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "schema",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "ios-simulator-host-tap",
+      "nextAction" : {
+        "args" : [
+          "tap",
+          "--platform",
+          "ios",
+          "--device",
+          "<selector>",
+          "--text",
+          "<text>",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "unsupported-envelope",
+        "command-schema"
+      ],
+      "group" : "host",
+      "name" : "ios-simulator-host-type",
+      "nextAction" : {
+        "args" : [
+          "type",
+          "--simulator",
+          "<udid|booted>",
+          "--text",
+          "<text>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-device",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-device-doctor",
+      "nextAction" : {
+        "args" : [
+          "doctor",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-device-list",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-device-start",
+      "nextAction" : {
+        "args" : [
+          "start",
+          "--platform",
+          "android",
+          "--avd",
+          "<name>",
+          "--plan-only",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-device-stop",
+      "nextAction" : {
+        "args" : [
+          "stop",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--confirm",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-device-wait-ready",
+      "nextAction" : {
+        "args" : [
+          "wait-ready",
+          "<selector>",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-device-screenshot",
+      "nextAction" : {
+        "args" : [
+          "screenshot",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--output",
+          "<path>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-bridge",
+      "nextAction" : {
+        "args" : [
+          "bridge",
+          "status",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-bridge-install",
+      "nextAction" : {
+        "args" : [
+          "bridge",
+          "install",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--apk",
+          "<path.apk>",
+          "--confirm",
+          "--audit-record",
+          "<id>",
+          "--execute-runner",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-bridge-forward",
+      "nextAction" : {
+        "args" : [
+          "bridge",
+          "forward",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--confirm",
+          "--audit-record",
+          "<id>",
+          "--execute-runner",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-ax",
+      "nextAction" : {
+        "args" : [
+          "ax",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "debug",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "observe",
+      "name" : "android-hierarchy",
+      "nextAction" : {
+        "args" : [
+          "hierarchy",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "debug",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "network-capture",
+        "proxy-restore"
+      ],
+      "group" : "host",
+      "name" : "device-proxy-ios",
+      "nextAction" : {
+        "args" : [
+          "proxy",
+          "doctor",
+          "--platform",
+          "ios",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "network-capture",
+        "proxy-restore"
+      ],
+      "group" : "host",
+      "name" : "device-proxy-android",
+      "nextAction" : {
+        "args" : [
+          "proxy",
+          "doctor",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "network-capture",
+        "proxy-restore"
+      ],
+      "group" : "host",
+      "name" : "device-proxy-harmony",
+      "nextAction" : {
+        "args" : [
+          "proxy",
+          "doctor",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "network-capture",
+        "evidence-bundle"
+      ],
+      "group" : "evidence",
+      "name" : "network-capture-export",
+      "nextAction" : {
+        "args" : [
+          "proxy",
+          "export",
+          "--platform",
+          "<platform>",
+          "--device",
+          "<selector>",
+          "--output",
+          "<path.har|path.ndjson>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "network-capture"
+      ],
+      "group" : "host",
+      "name" : "network-certificate-plan",
+      "nextAction" : {
+        "args" : [
+          "proxy",
+          "cert",
+          "plan",
+          "--platform",
+          "<platform>",
+          "--device",
+          "<selector>",
+          "--certificate",
+          "<path.cer>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "network-capture"
+      ],
+      "group" : "host",
+      "name" : "network-certificate-install",
+      "nextAction" : {
+        "args" : [
+          "proxy",
+          "cert",
+          "install",
+          "--platform",
+          "<platform>",
+          "--device",
+          "<selector>",
+          "--certificate",
+          "<path.cer>",
+          "--confirm",
+          "--audit-record",
+          "<id>",
+          "--execute-runner",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-device",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-device-doctor",
+      "nextAction" : {
+        "args" : [
+          "doctor",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-device-list",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-foreground-app-identity",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-device-use",
+      "nextAction" : {
+        "args" : [
+          "use",
+          "<selector>",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-device-start",
+      "nextAction" : {
+        "args" : [
+          "start",
+          "--platform",
+          "harmony",
+          "--hvd",
+          "<name>",
+          "--path",
+          "<deployed-path>",
+          "--plan-only",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-device-wait-ready",
+      "nextAction" : {
+        "args" : [
+          "wait-ready",
+          "<selector>",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-device-screenshot",
+      "nextAction" : {
+        "args" : [
+          "screenshot",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--output",
+          "<path>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-device-stop",
+      "nextAction" : {
+        "args" : [
+          "stop",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--confirm",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-runtime-url",
+      "nextAction" : {
+        "args" : [
+          "runtime-url",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-app-install",
+      "nextAction" : {
+        "args" : [
+          "install",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--hap",
+          "<path.hap>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-app-open-url",
+      "nextAction" : {
+        "args" : [
+          "open-url",
+          "<url>",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-app-info",
+      "nextAction" : {
+        "args" : [
+          "info",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--bundle-id",
+          "<bundle-id>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-ax",
+      "nextAction" : {
+        "args" : [
+          "ax",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "debug",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "observe",
+      "name" : "harmony-hierarchy",
+      "nextAction" : {
+        "args" : [
+          "hierarchy",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "debug",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "harmony-wait-text",
+      "nextAction" : {
+        "args" : [
+          "--platform",
+          "harmony",
+          "--text",
+          "<text>",
+          "--json"
+        ],
+        "category" : "verify",
+        "command" : "wait",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "harmony-tap-text",
+      "nextAction" : {
+        "args" : [
+          "tap",
+          "<text>",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "harmony-swipe",
+      "nextAction" : {
+        "args" : [
+          "swipe",
+          "--platform",
+          "harmony",
+          "--start-x",
+          "<x1>",
+          "--start-y",
+          "<y1>",
+          "--end-x",
+          "<x2>",
+          "--end-y",
+          "<y2>",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "harmony-type-text",
+      "nextAction" : {
+        "args" : [
+          "type",
+          "<text>",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "harmony-paste-text",
+      "nextAction" : {
+        "args" : [
+          "paste",
+          "<text>",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "unsupported-envelope",
+        "command-schema"
+      ],
+      "group" : "action",
+      "name" : "harmony-clear-text",
+      "nextAction" : {
+        "args" : [
+          "clear",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Host-side Harmony clear is not available in the current adapter",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "harmony-press-key",
+      "nextAction" : {
+        "args" : [
+          "press",
+          "<button>",
+          "--platform",
+          "harmony",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-screenshot",
+      "nextAction" : {
+        "args" : [
+          "screenshot",
+          "--device",
+          "<selector>",
+          "--output",
+          "<path>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "device",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "host-simulator",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-video",
+      "nextAction" : {
+        "args" : [
+          "record",
+          "--simulator",
+          "<udid|booted>",
+          "--output",
+          "<path.mov>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-logs",
+      "nextAction" : {
+        "args" : [
+          "logs",
+          "--simulator",
+          "<udid|booted>",
+          "--output",
+          "<path.ndjson>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-diagnostics",
+      "nextAction" : {
+        "args" : [
+          "diagnose",
+          "--output",
+          "<path>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-runtime",
+      "nextAction" : {
+        "args" : [
+          "runtime",
+          "list",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-runtime-maintenance",
+      "nextAction" : {
+        "args" : [
+          "runtime",
+          "verify",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-device-maintenance",
+      "nextAction" : {
+        "args" : [
+          "clone",
+          "<udid>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-personalization",
+      "nextAction" : {
+        "args" : [
+          "personalization",
+          "scan-and-personalize",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-status-bar",
+      "nextAction" : {
+        "args" : [
+          "status-bar",
+          "list",
+          "--simulator",
+          "<udid|booted>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-privacy",
+      "nextAction" : {
+        "args" : [
+          "privacy",
+          "grant",
+          "<service>",
+          "<bundle-id>",
+          "--simulator",
+          "<udid|booted>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-location",
+      "nextAction" : {
+        "args" : [
+          "location",
+          "set",
+          "<lat,lon>",
+          "--simulator",
+          "<udid|booted>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-ui",
+      "nextAction" : {
+        "args" : [
+          "ui",
+          "appearance",
+          "--simulator",
+          "<udid|booted>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-pasteboard",
+      "nextAction" : {
+        "args" : [
+          "pasteboard",
+          "get",
+          "--simulator",
+          "<udid|booted>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "sim-push",
+      "nextAction" : {
+        "args" : [
+          "push",
+          "--bundle-id",
+          "<bundle-id>",
+          "--payload",
+          "<path|->",
+          "--simulator",
+          "<udid|booted>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "host-app",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "ios-real-app",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "host-app-open-url-ready",
+      "nextAction" : {
+        "args" : [
+          "go",
+          "<url>",
+          "--device",
+          "<selector>"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "host-app-open-url-snapshot",
+      "nextAction" : {
+        "args" : [
+          "go",
+          "<url>",
+          "--device",
+          "<selector>"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "host-preferences",
+      "nextAction" : {
+        "args" : [
+          "prefs",
+          "get",
+          "<key>",
+          "--device",
+          "<selector>",
+          "--bundle-id",
+          "<bundle-id>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-app",
+      "nextAction" : {
+        "args" : [
+          "install",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--apk",
+          "<path.apk>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-app-inspect",
+      "nextAction" : {
+        "args" : [
+          "inspect",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--package-name",
+          "<package>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-app-install",
+      "nextAction" : {
+        "args" : [
+          "install",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--apk",
+          "<path.apk>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-app-launch",
+      "nextAction" : {
+        "args" : [
+          "launch",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--package-name",
+          "<package>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-app-terminate",
+      "nextAction" : {
+        "args" : [
+          "terminate",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--package-name",
+          "<package>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "android-app-open-url",
+      "nextAction" : {
+        "args" : [
+          "open-url",
+          "<url>",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--package-name",
+          "<package>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "host",
+      "name" : "harmony-app",
+      "nextAction" : {
+        "args" : [
+          "install",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--hap",
+          "<path.hap>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "app",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcode-discovery",
+      "nextAction" : {
+        "args" : [
+          "discover",
+          "--path",
+          ".",
+          "--json"
+        ],
+        "category" : "project",
+        "command" : "xcode",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcode-defaults",
+      "nextAction" : {
+        "args" : [
+          "status",
+          "--json"
+        ],
+        "category" : "project",
+        "command" : "xcode",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcode-diagnostics",
+      "nextAction" : {
+        "args" : [
+          "status",
+          "--json"
+        ],
+        "category" : "project",
+        "command" : "xcode",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcodebuild",
+      "nextAction" : {
+        "args" : [
+          "build",
+          "--jsonl"
+        ],
+        "category" : "project",
+        "command" : "xcode",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcode-build",
+      "nextAction" : {
+        "args" : [
+          "discover",
+          "--path",
+          ".",
+          "--json"
+        ],
+        "category" : "project",
+        "command" : "xcode",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcode-test",
+      "nextAction" : {
+        "args" : [
+          "discover",
+          "--path",
+          ".",
+          "--json"
+        ],
+        "category" : "project",
+        "command" : "xcode",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcode-run",
+      "nextAction" : {
+        "args" : [
+          "discover",
+          "--path",
+          ".",
+          "--json"
+        ],
+        "category" : "project",
+        "command" : "xcode",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcresult-summary",
+      "nextAction" : {
+        "args" : [
+          "summary",
+          "--path",
+          "<path.xcresult>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "xcresult",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xcresult-failures",
+      "nextAction" : {
+        "args" : [
+          "failures",
+          "--path",
+          "<path.xcresult>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "xcresult",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "xctrace-record",
+      "nextAction" : {
+        "args" : [
+          "record",
+          "--template",
+          "<name>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "xctrace",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "xcodebuild-json",
+        "xcresult",
+        "trace",
+        "coverage"
+      ],
+      "group" : "xcode",
+      "name" : "coverage-report",
+      "nextAction" : {
+        "args" : [
+          "report",
+          "--xcresult",
+          "<path.xcresult>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "coverage",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "project",
+        "xcode",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax",
+        "host-layout"
+      ],
+      "group" : "observe",
+      "name" : "observe",
+      "nextAction" : {
+        "args" : [
+          "current",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "observe",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax",
+        "host-layout"
+      ],
+      "group" : "observe",
+      "name" : "observe-ios",
+      "nextAction" : {
+        "args" : [
+          "current",
+          "--platform",
+          "ios",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "observe",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax",
+        "host-layout"
+      ],
+      "group" : "observe",
+      "name" : "observe-ios-host-ax",
+      "nextAction" : {
+        "args" : [
+          "tree",
+          "--platform",
+          "ios",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "observe",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax",
+        "host-layout"
+      ],
+      "group" : "observe",
+      "name" : "observe-android",
+      "nextAction" : {
+        "args" : [
+          "tree",
+          "--platform",
+          "android",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "observe",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax",
+        "host-layout"
+      ],
+      "group" : "observe",
+      "name" : "observe-harmony",
+      "nextAction" : {
+        "args" : [
+          "tree",
+          "--platform",
+          "harmony",
+          "--device",
+          "<selector>",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "observe",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax",
+        "host-layout"
+      ],
+      "group" : "observe",
+      "name" : "observe-outline",
+      "nextAction" : {
+        "args" : [
+          "tree",
+          "--outline",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "observe",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "android-wait-text",
+      "nextAction" : {
+        "args" : [
+          "--platform",
+          "android",
+          "--text",
+          "<text>",
+          "--json"
+        ],
+        "category" : "verify",
+        "command" : "wait",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "android-tap-text",
+      "nextAction" : {
+        "args" : [
+          "tap",
+          "<text>",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "android-swipe",
+      "nextAction" : {
+        "args" : [
+          "swipe",
+          "--platform",
+          "android",
+          "--start-x",
+          "<x1>",
+          "--start-y",
+          "<y1>",
+          "--end-x",
+          "<x2>",
+          "--end-y",
+          "<y2>",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "android-type-text",
+      "nextAction" : {
+        "args" : [
+          "type",
+          "<text>",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "android-paste-text",
+      "nextAction" : {
+        "args" : [
+          "paste",
+          "<text>",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-artifact"
+      ],
+      "group" : "action",
+      "name" : "android-press-key",
+      "nextAction" : {
+        "args" : [
+          "press",
+          "<button>",
+          "--platform",
+          "android",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "webview-candidates",
+        "host-layout",
+        "runtime-ax"
+      ],
+      "group" : "webview",
+      "name" : "webview-list",
+      "nextAction" : {
+        "args" : [
+          "list",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "webview",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "observe",
+        "route",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "webview-candidates",
+        "host-layout",
+        "runtime-ax"
+      ],
+      "group" : "webview",
+      "name" : "webview-current",
+      "nextAction" : {
+        "args" : [
+          "current",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "webview",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "observe",
+        "route",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "webview-provider",
+        "provider-url"
+      ],
+      "group" : "webview",
+      "name" : "webview-current-url",
+      "nextAction" : {
+        "args" : [
+          "current-url",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "webview",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires WebView provider metadata from embedded runtime or --runtime-base-url",
+      "requiredBy" : [
+        "route",
+        "assert",
+        "evidence",
+        "webview-check"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "webview-provider",
+        "webview-snapshot"
+      ],
+      "group" : "webview",
+      "name" : "webview-snapshot",
+      "nextAction" : {
+        "args" : [
+          "snapshot",
+          "--include",
+          "metadata,text,forms",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "webview",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires WebView provider metadata from embedded runtime or --runtime-base-url",
+      "requiredBy" : [
+        "route",
+        "assert",
+        "evidence",
+        "webview-check"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "webview-provider",
+        "bridge-call-result"
+      ],
+      "group" : "webview",
+      "name" : "webview-bridge-call",
+      "nextAction" : {
+        "args" : [
+          "call",
+          "<method>",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "webview",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires WebView provider metadata from embedded runtime or --runtime-base-url",
+      "requiredBy" : [
+        "route",
+        "assert",
+        "evidence",
+        "webview-check"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "webview-provider",
+        "page-events"
+      ],
+      "group" : "webview",
+      "name" : "webview-events",
+      "nextAction" : {
+        "args" : [
+          "events",
+          "--limit",
+          "50",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "webview",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires WebView provider metadata from embedded runtime or --runtime-base-url",
+      "requiredBy" : [
+        "route",
+        "assert",
+        "evidence",
+        "webview-check"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "webview-provider",
+        "wait-samples"
+      ],
+      "group" : "webview",
+      "name" : "webview-wait",
+      "nextAction" : {
+        "args" : [
+          "wait",
+          "--text",
+          "<text>",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "webview",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires WebView provider metadata from embedded runtime or --runtime-base-url",
+      "requiredBy" : [
+        "route",
+        "assert",
+        "evidence",
+        "webview-check"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "webview-provider",
+        "act.webview-aware-tap"
+      ],
+      "group" : "action",
+      "name" : "webview-aware-tap",
+      "nextAction" : {
+        "args" : [
+          "tap",
+          "--webview-aware",
+          "--selector",
+          "<css>",
+          "--expect-text",
+          "<text>",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires WebView provider metadata from embedded runtime or --runtime-base-url",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "webview-provider",
+        "route-assertion"
+      ],
+      "group" : "route",
+      "name" : "route-current-url-assert",
+      "nextAction" : {
+        "args" : [
+          "assert-current-url",
+          "<expected-url>",
+          "--json"
+        ],
+        "category" : "verify",
+        "command" : "route",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Requires WebView provider metadata from embedded runtime or --runtime-base-url",
+      "requiredBy" : [
+        "assert",
+        "smoke",
+        "evidence",
+        "webview-check"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "target.resolution",
+        "surface-tree"
+      ],
+      "group" : "observe",
+      "name" : "node-resolve",
+      "nextAction" : {
+        "args" : [
+          "find",
+          "<text>",
+          "--json"
+        ],
+        "category" : "act",
+        "command" : "act",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "target.resolution",
+        "surface-tree"
+      ],
+      "group" : "observe",
+      "name" : "node-alias-resolve",
+      "nextAction" : {
+        "args" : [
+          "resolve",
+          "@1",
+          "--json"
+        ],
+        "category" : "observe",
+        "command" : "node",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "status-json",
+        "runtime-manifest"
+      ],
+      "group" : "observe",
+      "name" : "list",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax"
+      ],
+      "group" : "observe",
+      "name" : "inspect",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax"
+      ],
+      "group" : "observe",
+      "name" : "hierarchy",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax"
+      ],
+      "group" : "observe",
+      "name" : "hierarchy-scene",
+      "nextAction" : {
+        "args" : [
+          "hierarchy",
+          "--platform",
+          "ios",
+          "--target",
+          "<target>",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "debug",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "runtime-ax"
+      ],
+      "group" : "observe",
+      "name" : "nodes",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "hierarchy-node",
+        "surface-tree"
+      ],
+      "group" : "observe",
+      "name" : "node",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "hierarchy-node",
+        "surface-tree"
+      ],
+      "group" : "observe",
+      "name" : "attrs",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "hierarchy-node",
+        "surface-tree"
+      ],
+      "group" : "observe",
+      "name" : "object",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "surface-tree",
+        "host-artifact"
+      ],
+      "group" : "observe",
+      "name" : "export-json",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "host-artifact",
+        "screenshot-metadata"
+      ],
+      "group" : "observe",
+      "name" : "export-archive",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "snapshot-json"
+      ],
+      "group" : "observe",
+      "name" : "geometry",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "runtime-ax",
+        "host-layout"
+      ],
+      "group" : "observe",
+      "name" : "ax",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "target.resolution",
+        "surface-tree"
+      ],
+      "group" : "observe",
+      "name" : "hit",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "screenshot",
+        "screenshot-metadata"
+      ],
+      "group" : "observe",
+      "name" : "screenshot",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "wait.result",
+        "runtime-samples"
+      ],
+      "group" : "observe",
+      "name" : "wait",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "evidence-bundle"
+      ],
+      "group" : "evidence",
+      "name" : "capture",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "evidence",
+        "replay"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "assert.result",
+        "runtime-snapshot"
+      ],
+      "group" : "assert",
+      "name" : "assert",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "assert.result",
+        "runtime-snapshot"
+      ],
+      "group" : "assert",
+      "name" : "verify",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "assert.result",
+        "runtime-snapshot"
+      ],
+      "group" : "assert",
+      "name" : "verify-text-exists",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "assert.result",
+        "runtime-snapshot"
+      ],
+      "group" : "assert",
+      "name" : "verify-text-not-exists",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "tritonplan"
+      ],
+      "group" : "replay",
+      "name" : "replay",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "evidence-bundle"
+      ],
+      "group" : "evidence",
+      "name" : "evidence",
+      "nextAction" : {
+        "args" : [
+          "capture",
+          "--case",
+          "<case>",
+          "--output",
+          "<dir.tritonevidence>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "evidence",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle"
+      ],
+      "group" : "evidence",
+      "name" : "evidence-summary",
+      "nextAction" : {
+        "args" : [
+          "summary",
+          "<dir.tritonevidence>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "evidence",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle"
+      ],
+      "group" : "evidence",
+      "name" : "evidence-redact",
+      "nextAction" : {
+        "args" : [
+          "redact",
+          "<dir.tritonevidence>",
+          "--output",
+          "<safe.tritonevidence>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "evidence",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace"
+      ],
+      "group" : "evidence",
+      "name" : "evidence-project-workspace",
+      "nextAction" : {
+        "args" : [
+          "project-workspace",
+          "<dir.tritonevidence>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "evidence",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace"
+      ],
+      "group" : "evidence",
+      "name" : "evidence-project-screens",
+      "nextAction" : {
+        "args" : [
+          "project-screens",
+          "<dir.tritonevidence>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "evidence",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "app.structured-evidence"
+      ],
+      "group" : "evidence",
+      "name" : "evidence-ingest",
+      "nextAction" : {
+        "args" : [
+          "ingest",
+          "--file",
+          "<artifact.json>",
+          "--kind",
+          "app.structured-evidence",
+          "--output",
+          "<dir.tritonevidence>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "evidence",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "host-command-json",
+        "host-simulator-media-seed"
+      ],
+      "group" : "host",
+      "name" : "sim-media-seed",
+      "nextAction" : {
+        "args" : [
+          "media",
+          "seed",
+          "--manifest",
+          "<manifest.json>",
+          "--simulator",
+          "<udid|booted>",
+          "--json"
+        ],
+        "category" : "prepare-target",
+        "command" : "sim",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "target",
+        "app",
+        "smoke",
+        "evidence"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-merge",
+      "nextAction" : {
+        "args" : [
+          "merge",
+          "<dir.tritonevidence>",
+          "--into",
+          "<dir.tritonmap>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-inspect",
+      "nextAction" : {
+        "args" : [
+          "inspect",
+          "<dir.tritonmap>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-paths",
+      "nextAction" : {
+        "args" : [
+          "paths",
+          "<dir.tritonmap>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-screens",
+      "nextAction" : {
+        "args" : [
+          "screens",
+          "<dir.tritonmap>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-transitions",
+      "nextAction" : {
+        "args" : [
+          "transitions",
+          "<dir.tritonmap>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-path-show",
+      "nextAction" : {
+        "args" : [
+          "path",
+          "show",
+          "<dir.tritonmap>",
+          "--path",
+          "<pathId>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-path-confirm",
+      "nextAction" : {
+        "args" : [
+          "path",
+          "confirm",
+          "<dir.tritonmap>",
+          "--path",
+          "<pathId>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-health",
+      "nextAction" : {
+        "args" : [
+          "health",
+          "<dir.tritonmap>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-suite-inspect",
+      "nextAction" : {
+        "args" : [
+          "suite",
+          "inspect",
+          "<dir.tritonmap>",
+          "--suite",
+          "smoke",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-suite-edit",
+      "nextAction" : {
+        "args" : [
+          "suite",
+          "add-path",
+          "<dir.tritonmap>",
+          "--suite",
+          "smoke",
+          "--path",
+          "<pathId>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map",
+        "test.normalized-plan"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-suite-run",
+      "nextAction" : {
+        "args" : [
+          "suite",
+          "run",
+          "<dir.tritonmap>",
+          "--suite",
+          "smoke",
+          "--evidence-root",
+          "<dir>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "app-map",
+        "test.normalized-plan"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-export-flow",
+      "nextAction" : {
+        "args" : [
+          "export-flow",
+          "<dir.tritonmap>",
+          "--path",
+          "<pathId>",
+          "--out",
+          "<file.tritontest.yaml>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "app-map",
+        "app-map-viewer-html"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-viewer",
+      "nextAction" : {
+        "args" : [
+          "viewer",
+          "<dir.tritonmap>",
+          "--output",
+          "<file.html>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "evidence-bundle",
+        "screen-workspace",
+        "app-map"
+      ],
+      "group" : "evidence",
+      "name" : "app-map-vlm-health",
+      "nextAction" : {
+        "args" : [
+          "vlm-health",
+          "<dir.tritonmap>",
+          "--provider",
+          "<provider>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "map",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "command-schema"
+      ],
+      "group" : "evidence",
+      "name" : "vlm-provider-list",
+      "nextAction" : {
+        "args" : [
+          "providers",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "vlm",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "vlm-grounding",
+        "vlm-overlay",
+        "coordinate-contract",
+        "screenshot"
+      ],
+      "group" : "evidence",
+      "name" : "vlm-ground-mock",
+      "nextAction" : {
+        "args" : [
+          "ground",
+          "--provider",
+          "mock",
+          "--image",
+          "<screenshot.png>",
+          "--target",
+          "<target>",
+          "--coordinate-contract",
+          "<coordinate-contract.json>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "vlm",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "vlm-grounding",
+        "vlm-overlay",
+        "coordinate-contract",
+        "screenshot"
+      ],
+      "group" : "evidence",
+      "name" : "vlm-ground-openai-compatible",
+      "nextAction" : {
+        "args" : [
+          "ground",
+          "--provider",
+          "openai-compatible",
+          "--base-url",
+          "<http:\/\/127.0.0.1:8000\/v1>",
+          "--model",
+          "<model>",
+          "--image",
+          "<screenshot.png>",
+          "--target",
+          "<target>",
+          "--coordinate-contract",
+          "<coordinate-contract.json>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "vlm",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "vlm-grounding",
+        "vlm-overlay",
+        "vlm-request",
+        "vlm-response",
+        "vlm-raw-output",
+        "vlm-parsed-point",
+        "vlm-transform",
+        "vlm-model-metadata",
+        "coordinate-contract",
+        "screenshot"
+      ],
+      "group" : "evidence",
+      "name" : "vlm-ground-mlx-swift-lm",
+      "nextAction" : {
+        "args" : [
+          "ground",
+          "--provider",
+          "mlx-swift-lm",
+          "--model-path",
+          "<local-model>",
+          "--image",
+          "<screenshot.png>",
+          "--target",
+          "<target>",
+          "--coordinate-contract",
+          "<coordinate-contract.json>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "vlm",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "vlm-grounding",
+        "vlm-overlay",
+        "vlm-compare",
+        "coordinate-contract",
+        "screenshot"
+      ],
+      "group" : "evidence",
+      "name" : "vlm-provider-compare",
+      "nextAction" : {
+        "args" : [
+          "compare",
+          "--provider",
+          "mock",
+          "--provider",
+          "mlx-swift-lm",
+          "--model-path",
+          "<local-model>",
+          "--image",
+          "<screenshot.png>",
+          "--target",
+          "<target>",
+          "--coordinate-contract",
+          "<coordinate-contract.json>",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "vlm",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "vlm-model-cache",
+        "vlm-model-metadata"
+      ],
+      "group" : "evidence",
+      "name" : "vlm-model-cache",
+      "nextAction" : {
+        "args" : [
+          "model",
+          "list",
+          "--provider",
+          "mlx-swift-lm",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "vlm",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "vlm-model-cache",
+        "vlm-model-metadata"
+      ],
+      "group" : "evidence",
+      "name" : "vlm-model-download",
+      "nextAction" : {
+        "args" : [
+          "model",
+          "download",
+          "<model-id>",
+          "--provider",
+          "mlx-swift-lm",
+          "--json"
+        ],
+        "category" : "archive",
+        "command" : "vlm",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "evidence",
+        "test"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "smoke-summary",
+        "evidence-bundle"
+      ],
+      "group" : "smoke",
+      "name" : "smoke-ios",
+      "nextAction" : {
+        "args" : [
+          "ios",
+          "--device",
+          "<device>",
+          "--bundle-id",
+          "<bundle-id>",
+          "--open-url",
+          "<url>",
+          "--wait-text",
+          "<text>",
+          "--json"
+        ],
+        "category" : "smoke",
+        "command" : "smoke",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "smoke",
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "smoke-summary",
+        "evidence-bundle"
+      ],
+      "group" : "smoke",
+      "name" : "smoke-android",
+      "nextAction" : {
+        "args" : [
+          "android",
+          "--device",
+          "<device>",
+          "--package",
+          "<package>",
+          "--wait-text",
+          "<text>",
+          "--evidence",
+          "<dir.tritonevidence>",
+          "--json"
+        ],
+        "category" : "smoke",
+        "command" : "smoke",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "smoke",
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "smoke-summary",
+        "evidence-bundle"
+      ],
+      "group" : "smoke",
+      "name" : "smoke-harmony",
+      "nextAction" : {
+        "args" : [
+          "harmony",
+          "--device",
+          "<device>",
+          "--bundle",
+          "<bundle>",
+          "--ability",
+          "<ability>",
+          "--wait-text",
+          "<text>",
+          "--json"
+        ],
+        "category" : "smoke",
+        "command" : "smoke",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "requiredBy" : [
+        "smoke",
+        "evidence",
+        "replay"
+      ],
+      "supported" : true
+    },
+    {
+      "evidence" : [
+        "input.result",
+        "runtime-ledger"
+      ],
+      "group" : "action",
+      "name" : "act",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "input.result",
+        "runtime-ledger"
+      ],
+      "group" : "action",
+      "name" : "tap",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "input.result",
+        "runtime-ledger"
+      ],
+      "group" : "action",
+      "name" : "swipe",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "input.result",
+        "runtime-ledger"
+      ],
+      "group" : "action",
+      "name" : "type",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "input.result",
+        "runtime-ledger"
+      ],
+      "group" : "action",
+      "name" : "paste",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "input.result",
+        "runtime-ledger"
+      ],
+      "group" : "action",
+      "name" : "clear",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "input.result",
+        "runtime-ledger"
+      ],
+      "group" : "action",
+      "name" : "input",
+      "nextAction" : {
+        "args" : [
+          "--host",
+          "127.0.0.1",
+          "--port",
+          "19421"
+        ],
+        "category" : "diagnose",
+        "command" : "serve",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : true,
+        "terminationSignals" : [
+          "sigint",
+          "sigterm"
+        ]
+      },
+      "reason" : "Requires connected embedded TritonKit runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    },
+    {
+      "evidence" : [
+        "unsupported-envelope",
+        "command-schema"
+      ],
+      "group" : "action",
+      "name" : "press",
+      "nextAction" : {
+        "args" : [
+          "--command",
+          "act",
+          "--json"
+        ],
+        "category" : "diagnose",
+        "command" : "schema",
+        "finalEvents" : [
+
+        ],
+        "readyEvents" : [
+
+        ],
+        "requiresLongRunningProcess" : false,
+        "terminationSignals" : [
+
+        ]
+      },
+      "reason" : "Host-side HID is not available in the embedded runtime",
+      "requiredBy" : [
+        "action",
+        "assert",
+        "evidence"
+      ],
+      "supported" : false
+    }
+  ],
+  "connected" : false,
+  "error" : {
+    "code" : "server_unavailable",
+    "endpoint" : "http:\/\/127.0.0.1:19421\/status",
+    "hint" : "Run `triton serve --host 127.0.0.1 --port 19421` and connect the iOS app",
+    "message" : "Could not connect to the server.",
+    "nextAction" : {
+      "args" : [
+        "--host",
+        "127.0.0.1",
+        "--port",
+        "19421"
+      ],
+      "category" : "diagnose",
+      "command" : "serve",
+      "finalEvents" : [
+
+      ],
+      "readyEvents" : [
+
+      ],
+      "requiresLongRunningProcess" : true,
+      "terminationSignals" : [
+        "sigint",
+        "sigterm"
+      ]
+    }
+  },
+  "hierarchyCacheState" : "unavailable",
+  "latestHierarchyAvailable" : false,
+  "ok" : false,
+  "primaryCapability" : "status",
+  "primaryEvidence" : "stdout-json",
+  "primaryNextAction" : {
+    "args" : [
+      "--host",
+      "127.0.0.1",
+      "--port",
+      "19421"
+    ],
+    "category" : "diagnose",
+    "command" : "serve",
+    "finalEvents" : [
+
+    ],
+    "readyEvents" : [
+
+    ],
+    "requiresLongRunningProcess" : true,
+    "terminationSignals" : [
+      "sigint",
+      "sigterm"
+    ]
+  },
+  "primaryNextActionSource" : "error",
+  "runtime" : "unknown",
+  "serverReachable" : false,
+  "surface" : "capabilities",
+  "targetConnectionState" : "disconnected",
+  "targetCount" : 0
+}

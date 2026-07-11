@@ -1,0 +1,533 @@
+{
+  "ok" : true,
+  "platform" : "ios",
+  "sourceCommand" : "xcrun simctl list devices available --json\nxcrun devicectl list devices --json-output \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-devicectl-list-devices-7536F72D-B25F-4C3E-A201-3A23FEAD6AA7\/list-devices.json --log-output \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-devicectl-list-devices-7536F72D-B25F-4C3E-A201-3A23FEAD6AA7\/list-devices.log",
+  "sourceCommands" : [
+    "xcrun simctl list devices available --json\nxcrun devicectl list devices --json-output \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-devicectl-list-devices-7536F72D-B25F-4C3E-A201-3A23FEAD6AA7\/list-devices.json --log-output \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-devicectl-list-devices-7536F72D-B25F-4C3E-A201-3A23FEAD6AA7\/list-devices.log"
+  ],
+  "targets" : [
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "kind" : "simulator",
+      "name" : "iPhone 17 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "83407554-53AB-45B4-A0C1-D59F34E26A67"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:F4E55B8E-0141-4C46-9965-263CCE782B5F",
+      "kind" : "simulator",
+      "name" : "Overloaded RemoteFS Cruise iPhone 16 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "F4E55B8E-0141-4C46-9965-263CCE782B5F"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:54A3A7A9-9B95-4E02-8643-3646537CE32F",
+      "kind" : "simulator",
+      "name" : "clash-li Dedicated iPhone 17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "54A3A7A9-9B95-4E02-8643-3646537CE32F"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:60D9B834-A2D6-4C1F-A2BA-6D4269E9DE1B",
+      "kind" : "simulator",
+      "name" : "Dxyer-iPad-Pro-12.9",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "60D9B834-A2D6-4C1F-A2BA-6D4269E9DE1B"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:EBE0BF36-9E38-4414-BC8C-D58230B6A753",
+      "kind" : "simulator",
+      "name" : "Dxyer-Wenqi-iPhone17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "EBE0BF36-9E38-4414-BC8C-D58230B6A753"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:825C31BA-7CEB-4339-B449-613448446E7C",
+      "kind" : "simulator",
+      "name" : "iPad (A16)",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "825C31BA-7CEB-4339-B449-613448446E7C"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:C94B54D2-2301-4B9B-A9E0-D18E6FF1A660",
+      "kind" : "simulator",
+      "name" : "iPad Air 11-inch (M4)",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "C94B54D2-2301-4B9B-A9E0-D18E6FF1A660"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:A436CE6D-41DE-4A46-A84C-9D2495AFABEC",
+      "kind" : "simulator",
+      "name" : "iPad Air 13-inch (M4)",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "A436CE6D-41DE-4A46-A84C-9D2495AFABEC"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:027D7664-F924-45F4-A23F-5108C7AE38BE",
+      "kind" : "simulator",
+      "name" : "iPad mini (A17 Pro)",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "027D7664-F924-45F4-A23F-5108C7AE38BE"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:142359A2-219F-4ECD-9B21-B652F05126F7",
+      "kind" : "simulator",
+      "name" : "iPad Pro 11-inch (M5)",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "142359A2-219F-4ECD-9B21-B652F05126F7"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:191ABFEA-721E-4C22-9137-F71AFEB005B7",
+      "kind" : "simulator",
+      "name" : "iPad Pro 13-inch (M5)",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "191ABFEA-721E-4C22-9137-F71AFEB005B7"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:60667794-96F8-40E6-8664-85538EC4663E",
+      "kind" : "simulator",
+      "name" : "iPhone 17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "60667794-96F8-40E6-8664-85538EC4663E"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:05B47CDF-CE80-421B-8FD2-A6D6E21BABBD",
+      "kind" : "simulator",
+      "name" : "iPhone 17 Pro Max",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "05B47CDF-CE80-421B-8FD2-A6D6E21BABBD"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:5887864C-7609-4858-B93D-2CD2B4B5BC1A",
+      "kind" : "simulator",
+      "name" : "iPhone 17e",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "5887864C-7609-4858-B93D-2CD2B4B5BC1A"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:AC8E570C-E41D-4987-AD57-E09506225E31",
+      "kind" : "simulator",
+      "name" : "iPhone Air",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "AC8E570C-E41D-4987-AD57-E09506225E31"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:1B2BB7E6-1B56-4B2C-96B9-15A325D86322",
+      "kind" : "simulator",
+      "name" : "Jobmd Talent Dedicated iPhone 17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "1B2BB7E6-1B56-4B2C-96B9-15A325D86322"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:DE77009B-ABDE-40FE-984C-6DEC87BBC4FB",
+      "kind" : "simulator",
+      "name" : "Overloaded Wall Display iPhone 17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "DE77009B-ABDE-40FE-984C-6DEC87BBC4FB"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:1B360513-22E7-46DB-A942-198EE522C6DC",
+      "kind" : "simulator",
+      "name" : "Overloaded-v2 Dedicated iPhone 16 Pro",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "1B360513-22E7-46DB-A942-198EE522C6DC"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:12B13EAD-3139-4AE9-8314-AB56946AA6F7",
+      "kind" : "simulator",
+      "name" : "qbit-ios-manager Dedicated iPhone 17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "12B13EAD-3139-4AE9-8314-AB56946AA6F7"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:84D331F6-391F-4CDE-BF09-83BFA077DB76",
+      "kind" : "simulator",
+      "name" : "Screenshot Inbox Dedicated iPhone 17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "84D331F6-391F-4CDE-BF09-83BFA077DB76"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:0333546D-2AC6-4C22-AF01-293E2F4BA5BC",
+      "kind" : "simulator",
+      "name" : "TritonKit Dedicated iPhone 17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Shutdown",
+      "target" : "0333546D-2AC6-4C22-AF01-293E2F4BA5BC"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:181c291c0efb",
+      "kind" : "real-device",
+      "name" : "13 Pro Max",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.3.1 (a)",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:181c291c0efb"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:1a60d9ff2d8d",
+      "kind" : "real-device",
+      "name" : "LBR13",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 18.5",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:1a60d9ff2d8d"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:103bf5ffb540",
+      "kind" : "real-device",
+      "name" : "Tsai",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 18.5",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:103bf5ffb540"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:7abc675196cb",
+      "kind" : "real-device",
+      "name" : "iPad mini",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.0",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:7abc675196cb"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "ios-real:7a9d976cc4d4",
+      "kind" : "real-device",
+      "name" : "iPhone",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "connected",
+      "target" : "ios-real:7a9d976cc4d4",
+      "transport" : "localNetwork"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:003ed3d679de",
+      "kind" : "real-device",
+      "name" : "iPhone",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.0.1",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:003ed3d679de"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:701d5daf9505",
+      "kind" : "real-device",
+      "name" : "iPhone",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.0",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:701d5daf9505"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:f4753a20c047",
+      "kind" : "real-device",
+      "name" : "iPhone",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 17.5.1",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:f4753a20c047"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:5fb117fd306c",
+      "kind" : "real-device",
+      "name" : "iPhone",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 27.0",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:5fb117fd306c"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "ios-real:73f725dfa795",
+      "kind" : "real-device",
+      "name" : "iPhone (2)",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "connected",
+      "target" : "ios-real:73f725dfa795",
+      "transport" : "localNetwork"
+    },
+    {
+      "blockedReasons" : [
+        "offline",
+        "ddi-missing"
+      ],
+      "id" : "ios-real:a7f199b66fcf",
+      "kind" : "real-device",
+      "name" : "iPhone17",
+      "platform" : "ios",
+      "ready" : false,
+      "runtime" : "iOS 26.5.1",
+      "scope" : "real",
+      "sensitive" : false,
+      "source" : "devicectl",
+      "state" : "offline",
+      "target" : "ios-real:a7f199b66fcf"
+    }
+  ]
+}

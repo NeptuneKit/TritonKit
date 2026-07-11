@@ -1,0 +1,19 @@
+{
+  "action" : "webview.call",
+  "capturedAt" : "2026-07-11T01:48:25Z",
+  "elapsedMs" : 2,
+  "method" : "getRouteState",
+  "ok" : true,
+  "pageSessionID" : "ios-webkit:371:page:2805640995122866841",
+  "platform" : "ios",
+  "redaction" : {
+
+  },
+  "result" : {
+    "ready" : true,
+    "route" : "\/edge",
+    "title" : "Triton WebView Edge"
+  },
+  "target" : "embedded-runtime",
+  "webViewID" : "ios-webkit:371"
+}

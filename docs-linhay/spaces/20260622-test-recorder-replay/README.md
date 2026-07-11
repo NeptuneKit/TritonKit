@@ -116,3 +116,10 @@ Exclude：
 - 失败输出为单个 JSON error envelope。
 - Web mock 不承载业务控制入口。
 - 文档调整后运行 `docs-linhay/scripts/check-docs.sh`。
+
+## 2026-07-11 路线裁决
+
+- 状态：待定。
+- 暂停 `local-device`、系统级动作监听、真实 VLM fingerprint、proposal apply 和 live network policy 的新增实现。
+- 原因：这些能力与 `workspace run`、`.tritontest`、现有 replay/evidence 和 Atlas map 已形成明显重叠，继续独立实现会制造第二套运行时与成功判定。
+- 恢复条件：先裁决 `testrec` 是否保留独立产品面，或将 `.tritontestcase` 的有效合同合并进现有 workspace/test/replay 契约。

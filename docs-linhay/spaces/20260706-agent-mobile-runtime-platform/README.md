@@ -180,3 +180,10 @@ Then TritonKit preflight 标记 LLM/VLM providers ready，向本地 LLM 发送 g
 - run-local Atlas 投影到 app-map 时会保留 VLM provenance：action artifact 的 `usedVLMGrounding=true` 会进入 transition/path `vlmHealth`，path 标记 `source=vlm-assisted`、`requiresVLM=true`，并在 `map paths/path show/export-flow` suggested commands 中自动带 `--allow-vlm`。
 - app-map export-flow 已支持混合 transition：有 runtime point 的 tap 导出为 `tap.point`；只有 selector text 的普通 transition 导出为 `tap.text`；若 transition 自身带 VLM provenance，才导出 `tap.target + grounding: vlm + provider`。导出的 `.tritontest.yaml` 可直接通过 `triton test validate`。
 - 真实 iOS Demo smoke 已全链通过：`TRITON_BIN=CLI/.build/debug/triton TRITON_IOS_DEMO_SIMULATOR=83407554-53AB-45B4-A0C1-D59F34E26A67 TRITON_VERIFY_OUT_DIR=.build/ios-demo-e2e-smoke-map-current9 docs-linhay/scripts/verify-ios-demo-e2e-smoke.sh`。通过范围覆盖 `xcode run`、runtime target ready、手动 action/evidence、workspace OpenAI-compatible LLM mock、VLM grounding、bounded recovery loop、post-action runtime assert、run-local app-map、`workspace merge-map`、`map paths`、`map path show`、`map export-flow` 和 `test validate`。
+
+## 2026-07-11 路线裁决
+
+- 状态：已归档。
+- 本期要求“至少一个本机 target scope 完成端到端 smoke”已经由 iOS Demo 全链满足。
+- Overloaded Debug bootstrap 是外部真实项目回归问题，不再作为本 space 的关闭门禁。
+- 不在本 space 内继续无边界扩展其他 target scope；后续新能力必须按有限验收目标另建 space。

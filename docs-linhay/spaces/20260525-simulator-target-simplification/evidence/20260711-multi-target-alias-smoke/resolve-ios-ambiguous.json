@@ -1,0 +1,51 @@
+{
+  "candidates" : [
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "kind" : "simulator",
+      "name" : "iPhone 17 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "83407554-53AB-45B4-A0C1-D59F34E26A67"
+    },
+    {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:F4E55B8E-0141-4C46-9965-263CCE782B5F",
+      "kind" : "simulator",
+      "name" : "Overloaded RemoteFS Cruise iPhone 16 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "F4E55B8E-0141-4C46-9965-263CCE782B5F"
+    }
+  ],
+  "error" : {
+    "candidateCount" : 2,
+    "code" : "ambiguous_target",
+    "hint" : "Narrow with --device, --platform, --name, --runtime, --state, or --ready.",
+    "message" : "Multiple connected host devices found: 83407554-53AB-45B4-A0C1-D59F34E26A67, F4E55B8E-0141-4C46-9965-263CCE782B5F",
+    "nearestCandidates" : [
+      "83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "F4E55B8E-0141-4C46-9965-263CCE782B5F"
+    ],
+    "suggestedCommands" : [
+      "triton device alias set <name> --platform <ios|harmony> --target <id> --json",
+      "triton <command> --device <alias-or-id> --json"
+    ]
+  },
+  "ok" : false
+}

@@ -1,0 +1,24 @@
+{
+  "action" : "webview.events",
+  "capturedAt" : "2026-07-11T01:48:25Z",
+  "events" : [
+    {
+      "id" : "webview-event-1",
+      "name" : "edge.ready",
+      "pageSessionID" : "ios-webkit:371:page:2805640995122866841",
+      "payload" : {
+        "formCount" : 6
+      },
+      "redaction" : {
+
+      },
+      "source" : "page-bridge",
+      "timestamp" : "2026-07-11T01:48:25Z",
+      "webViewID" : "ios-webkit:371"
+    }
+  ],
+  "limit" : 10,
+  "ok" : true,
+  "platform" : "ios",
+  "target" : "embedded-runtime"
+}

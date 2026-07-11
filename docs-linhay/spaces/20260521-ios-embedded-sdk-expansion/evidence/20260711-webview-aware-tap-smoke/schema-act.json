@@ -1,0 +1,3325 @@
+{
+  "commands" : [
+    {
+      "argumentForms" : [
+        {
+          "description" : "Visible text, AX label, identifier, value, or option title",
+          "name" : "<query>",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Visible text, AX label, identifier, or placeholder for semantic actions",
+          "name" : "<selector>",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Text value for type or paste actions",
+          "name" : "<text>",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Segment title\/index or switch state for semantic actions",
+          "name" : "<value>",
+          "required" : false,
+          "type" : "String|Int"
+        }
+      ],
+      "artifacts" : [
+
+      ],
+      "deprecatedForMainPath" : false,
+      "examples" : [
+        "triton act tap --text 登录 --json",
+        "triton act tap --webview-aware --selector '#submit' --expect-text 成功 --json",
+        "triton act type hello --json",
+        "triton act find 登录 --json"
+      ],
+      "exitCodeOnFailure" : 1,
+      "failureCodes" : [
+        "text_not_found",
+        "validation_failed",
+        "unsupported_capability",
+        "server_unavailable",
+        "target_not_found",
+        "ambiguous_target",
+        "request_failed",
+        "host_command_failed",
+        "action_failed",
+        "target_unavailable",
+        "runtime_unavailable",
+        "runtime_ui_interrupted",
+        "request_timeout",
+        "invalid_payload",
+        "semantic_action_failed",
+        "action_not_supported",
+        "unsupported_runtime_scope",
+        "simulator_not_found",
+        "ios_host_ax_unavailable",
+        "ios_host_ax_frontmost_unavailable",
+        "ios_host_ax_platform_element_unavailable",
+        "ios_host_ax_tree_unavailable",
+        "ios_host_ax_action_unavailable",
+        "ios_host_ax_unsupported_platform",
+        "webview_not_found",
+        "ambiguous_webview",
+        "webview_id_not_found",
+        "webview_provider_unavailable",
+        "webview_element_not_found",
+        "webview_element_not_interactable",
+        "webview_navigation_changed",
+        "webview_wait_timeout",
+        "webview_wait_unsupported",
+        "javascript_error"
+      ],
+      "failureShape" : "{ ok:false, error:{ code, message, endpoint?, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+      "inheritsDefaultsFrom" : [
+
+      ],
+      "inputActions" : [
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"tap\",\"x\":270,\"y\":300}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "tap"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Window x coordinate in points; required with y unless targetOID is used",
+              "name" : "x",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate in points; required with x unless targetOID is used",
+              "name" : "y",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "View oid from hierarchy\/ax\/hit; alternative to x\/y",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Original matched node oid for smart text activation",
+              "name" : "matchedOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Original matched node class name for smart text activation",
+              "name" : "matchedClassName",
+              "required" : false,
+              "type" : "String"
+            },
+            {
+              "description" : "Tap activation strategy",
+              "enumValues" : [
+                "smart",
+                "exact",
+                "ancestor"
+              ],
+              "name" : "activationStrategy",
+              "required" : false,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional window width in points for caller bookkeeping",
+              "name" : "width",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window height in points for caller bookkeeping",
+              "name" : "height",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional hold duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+            [
+              "x",
+              "y"
+            ],
+            [
+              "targetOID"
+            ]
+          ],
+          "optionalFields" : [
+            "x",
+            "y",
+            "targetOID",
+            "matchedOID",
+            "matchedClassName",
+            "activationStrategy",
+            "width",
+            "height",
+            "duration"
+          ],
+          "requiredFields" : [
+            "type"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName }",
+          "type" : "tap"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"longPress\",\"x\":270,\"y\":300,\"duration\":0.65}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "longPress"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Window x coordinate in points",
+              "name" : "x",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate in points",
+              "name" : "y",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window width in points for caller bookkeeping",
+              "name" : "width",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window height in points for caller bookkeeping",
+              "name" : "height",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Hold duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "width",
+            "height",
+            "duration"
+          ],
+          "requiredFields" : [
+            "type",
+            "x",
+            "y"
+          ],
+          "resultShape" : "{ ok, action, message }",
+          "type" : "longPress"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"swipe\",\"startX\":350,\"startY\":390,\"endX\":100,\"endY\":390}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "swipe"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Start x coordinate in window points",
+              "name" : "startX",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Start y coordinate in window points",
+              "name" : "startY",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "End x coordinate in window points",
+              "name" : "endX",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "End y coordinate in window points",
+              "name" : "endY",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window width in points for caller bookkeeping",
+              "name" : "width",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window height in points for caller bookkeeping",
+              "name" : "height",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional gesture duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "width",
+            "height",
+            "duration"
+          ],
+          "requiredFields" : [
+            "type",
+            "startX",
+            "startY",
+            "endX",
+            "endY"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName }",
+          "type" : "swipe"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"pinch\",\"centerX\":190,\"centerY\":420,\"startDistance\":60,\"endDistance\":120,\"scale\":2}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "pinch"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Gesture center x coordinate in window points",
+              "name" : "centerX",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Gesture center y coordinate in window points",
+              "name" : "centerY",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Initial two-finger distance in window points",
+              "name" : "startDistance",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Final two-finger distance in window points",
+              "name" : "endDistance",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Final distance divided by initial distance",
+              "name" : "scale",
+              "required" : true,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window width in points for caller bookkeeping",
+              "name" : "width",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Optional window height in points for caller bookkeeping",
+              "name" : "height",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Gesture duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "width",
+            "height",
+            "duration"
+          ],
+          "requiredFields" : [
+            "type",
+            "centerX",
+            "centerY",
+            "startDistance",
+            "endDistance",
+            "scale"
+          ],
+          "resultShape" : "{ ok, action, message }",
+          "type" : "pinch"
+        },
+        {
+          "example" : "{\"type\":\"type\",\"text\":\"hello\"}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "type"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Text to insert into target or first responder",
+              "name" : "text",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional UIKeyInput target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Redact inserted text details in command output",
+              "name" : "secure",
+              "required" : false,
+              "type" : "Bool"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "targetOID",
+            "secure"
+          ],
+          "requiredFields" : [
+            "type",
+            "text"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName }",
+          "type" : "type"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"paste\",\"text\":\"console\",\"secure\":false}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "paste"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Exact text to insert into target or first responder",
+              "name" : "text",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional UIKeyInput target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Window x coordinate to focus before paste; required with y",
+              "name" : "x",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate to focus before paste; required with x",
+              "name" : "y",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Redact inserted text details in command output",
+              "name" : "secure",
+              "required" : false,
+              "type" : "Bool"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "targetOID",
+            "x",
+            "y",
+            "secure"
+          ],
+          "requiredFields" : [
+            "type",
+            "text"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName, secure, redacted, insertedLength }",
+          "type" : "paste"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"clear\"}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "clear"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional UIKeyInput target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Window x coordinate to focus before clear; required with y",
+              "name" : "x",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate to focus before clear; required with x",
+              "name" : "y",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "targetOID",
+            "x",
+            "y"
+          ],
+          "requiredFields" : [
+            "type"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName, insertedLength: 0 }",
+          "type" : "clear"
+        },
+        {
+          "coordinateSpace" : "window-points",
+          "example" : "{\"type\":\"deleteBackward\"}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "deleteBackward"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional UIKeyInput target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt"
+            },
+            {
+              "description" : "Window x coordinate to focus before deleting; required with y",
+              "name" : "x",
+              "required" : false,
+              "type" : "Double"
+            },
+            {
+              "description" : "Window y coordinate to focus before deleting; required with x",
+              "name" : "y",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "targetOID",
+            "x",
+            "y"
+          ],
+          "requiredFields" : [
+            "type"
+          ],
+          "resultShape" : "{ ok, action, message, targetOID, targetClassName, deletedLength }",
+          "type" : "deleteBackward"
+        },
+        {
+          "example" : "{\"type\":\"button\",\"button\":\"home\"}",
+          "fields" : [
+            {
+              "description" : "Action discriminator",
+              "enumValues" : [
+                "button"
+              ],
+              "name" : "type",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Device button name; embedded runtime returns unsupported",
+              "enumValues" : [
+                "home"
+              ],
+              "name" : "button",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional press duration in seconds",
+              "name" : "duration",
+              "required" : false,
+              "type" : "Double"
+            }
+          ],
+          "oneOfRequired" : [
+
+          ],
+          "optionalFields" : [
+            "duration"
+          ],
+          "requiredFields" : [
+            "type",
+            "button"
+          ],
+          "resultShape" : "{ ok: false, action, message } in embedded runtime",
+          "type" : "button"
+        }
+      ],
+      "jsonlEvents" : [
+
+      ],
+      "name" : "act",
+      "nextCommands" : [
+        "triton observe current --json",
+        "triton verify text-exists <text> --json",
+        "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
+        "triton target resolve <selector> --json",
+        "triton doctor --json",
+        "triton act input --json --summary --strict",
+        "triton plan --format json"
+      ],
+      "options" : [
+        {
+          "defaultValue" : "127.0.0.1",
+          "description" : "Triton server host",
+          "name" : "--host",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "19421",
+          "description" : "Triton server port",
+          "name" : "--port",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "defaultValue" : "triton:local",
+          "description" : "Runtime target id from `triton list --json`; for iOS embedded-runtime actions pass a target such as triton:ios-simulator:<udid> or triton:ios-simulator:<udid>\/app:<bundle-id>, not the host selector sim:<udid>. --device is an alias.",
+          "name" : "--target\/--device",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Bypass Triton server and call a direct embedded runtime HTTP base URL, for example http:\/\/127.0.0.1:28767",
+          "name" : "--runtime-base-url",
+          "required" : false,
+          "type" : "URL"
+        },
+        {
+          "description" : "Use iOS embedded runtime actions, Android adb host adapter, or Harmony hdc host adapter. iOS gestures require --target from `triton list --json`, not sim:<udid>.",
+          "name" : "--platform",
+          "required" : false,
+          "type" : "ios|android|harmony"
+        },
+        {
+          "defaultValue" : "adb",
+          "description" : "ADB executable path",
+          "name" : "--adb",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "defaultValue" : "hdc",
+          "description" : "HDC executable path",
+          "name" : "--hdc",
+          "required" : false,
+          "type" : "Path"
+        },
+        {
+          "description" : "Product-surface alias for text query or input text where supported",
+          "name" : "--text",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Window x coordinate",
+          "name" : "--x",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Window y coordinate",
+          "name" : "--y",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Window coordinate selector",
+          "name" : "--at",
+          "required" : false,
+          "type" : "x,y"
+        },
+        {
+          "description" : "Runtime view oid",
+          "name" : "--oid",
+          "required" : false,
+          "type" : "UInt"
+        },
+        {
+          "description" : "AX target\/view oid",
+          "name" : "--ax-oid",
+          "required" : false,
+          "type" : "UInt"
+        },
+        {
+          "description" : "Exact AX label",
+          "name" : "--ax-label",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Activation strategy for text matches; smart\/ancestor can activate selectable UITableViewCell or UICollectionViewCell ancestors",
+          "name" : "--strategy",
+          "required" : false,
+          "type" : "smart|exact|ancestor"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Include all matching candidates for target resolution",
+          "name" : "--all",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Select one matching candidate by 1-based index",
+          "name" : "--index",
+          "required" : false,
+          "type" : "Int"
+        },
+        {
+          "description" : "Restrict matching to window bounds",
+          "name" : "--within",
+          "required" : false,
+          "type" : "x,y,width,height"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Explicitly route act tap through the current WebView provider; first slice supports --selector only",
+          "name" : "--webview-aware",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "CSS selector for --webview-aware WebView tap",
+          "name" : "--selector",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "WebView candidate id for --webview-aware disambiguation",
+          "name" : "--webview-id",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Expected WebView page session id; fails if navigation changed before tap",
+          "name" : "--page-session-id",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "description" : "Expected WebView text after --webview-aware dispatch; required to prove business completion",
+          "name" : "--expect-text",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "3",
+          "description" : "Timeout in seconds for --expect-text",
+          "name" : "--timeout",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Redact inserted text details",
+          "name" : "--secure",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Use exact text insertion when supported",
+          "name" : "--exact",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "description" : "Swipe start x coordinate",
+          "name" : "--start-x",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Swipe start y coordinate",
+          "name" : "--start-y",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Swipe end x coordinate",
+          "name" : "--end-x",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Swipe end y coordinate",
+          "name" : "--end-y",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Optional screen\/window width",
+          "name" : "--width",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Optional screen\/window height",
+          "name" : "--height",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Gesture or button duration",
+          "name" : "--duration",
+          "required" : false,
+          "type" : "Double"
+        },
+        {
+          "description" : "Compatibility input for device button",
+          "name" : "--button",
+          "required" : false,
+          "type" : "String"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Stop NDJSON input on first failed action",
+          "name" : "--fail-fast",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Print a final input batch summary",
+          "name" : "--summary",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Exit non-zero when any input action fails",
+          "name" : "--strict",
+          "required" : false,
+          "type" : "Bool"
+        },
+        {
+          "defaultValue" : "json",
+          "description" : "Output format",
+          "name" : "--format",
+          "required" : false,
+          "type" : "text|json"
+        },
+        {
+          "defaultValue" : "false",
+          "description" : "Alias for --format json",
+          "name" : "--json",
+          "required" : false,
+          "type" : "Bool"
+        }
+      ],
+      "outputContracts" : [
+        {
+          "fields" : [
+            {
+              "description" : "Original text or identifier query",
+              "name" : "query",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Matched source such as ax, hierarchy, or option",
+              "name" : "source",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Activation strategy used for the candidate",
+              "name" : "strategy",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Optional accessibility role",
+              "name" : "role",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Matched label",
+              "name" : "label",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Matched value",
+              "name" : "value",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Matched accessibility identifier",
+              "name" : "identifier",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Matched view class name",
+              "name" : "className",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Matched view oid",
+              "name" : "viewOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Action target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Matched layer oid",
+              "name" : "layerOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Matched frame in window points",
+              "name" : "frame",
+              "required" : false,
+              "type" : "TKRect?"
+            },
+            {
+              "description" : "Executable input request for the selected target",
+              "name" : "request",
+              "required" : true,
+              "type" : "TKInputRequest"
+            },
+            {
+              "description" : "1-based selected match index",
+              "name" : "matchIndex",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Total match count",
+              "name" : "matchCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "All candidates when --all is requested",
+              "name" : "candidates",
+              "required" : false,
+              "type" : "[TapTargetCandidate]?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "target-resolution",
+          "model" : "TapTargetResolution",
+          "selector" : "target.resolution"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the action succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Human-readable action message",
+              "name" : "message",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Target view oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Target view class",
+              "name" : "targetClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Original matched oid",
+              "name" : "matchedOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Original matched class",
+              "name" : "matchedClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Activated target oid",
+              "name" : "activationOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Activated target class",
+              "name" : "activationClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Activation strategy",
+              "name" : "strategy",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Whether inserted text was treated as secure",
+              "name" : "secure",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Whether output text details were redacted",
+              "name" : "redacted",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Inserted text length",
+              "name" : "insertedLength",
+              "required" : false,
+              "type" : "Int?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "input-result",
+          "model" : "TKInputResult",
+          "selector" : "input.result"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the command completed without transport failure",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "act.tap",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "passed only when expectation is proven; uncertain when DOM dispatch is not enough",
+              "name" : "status",
+              "required" : true,
+              "type" : "passed|failed|uncertain"
+            },
+            {
+              "description" : "webview for this output contract",
+              "name" : "context",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "CSS selector used for WebView DOM dispatch",
+              "name" : "selector",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Resolved DOM element and native\/WebView rects",
+              "name" : "target",
+              "required" : false,
+              "type" : "TKWebViewTapTarget?"
+            },
+            {
+              "description" : "Attempt ledger such as dom_dispatch trusted=false",
+              "name" : "attempts",
+              "required" : true,
+              "type" : "[TKActTapAttempt]"
+            },
+            {
+              "description" : "Always false for DOM-dispatched WebView click",
+              "name" : "attempts[].trusted",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Expectation and observation result",
+              "name" : "verification",
+              "required" : true,
+              "type" : "TKActTapVerification"
+            },
+            {
+              "description" : "Whether the caller supplied --expect-text",
+              "name" : "verification.expectProvided",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether expected WebView text was observed",
+              "name" : "verification.textMatched",
+              "required" : false,
+              "type" : "Bool?"
+            },
+            {
+              "description" : "Suggested next command when status is uncertain or failed",
+              "name" : "recoveryCommand",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Underlying runtime request commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary note explaining that DOM dispatch does not prove business completion",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "webview-aware-tap-result",
+          "model" : "TKActTapWebViewAwareResponse",
+          "selector" : "act.webview-aware-tap"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the batch completed under strict\/fail-fast rules",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Number of input actions processed",
+              "name" : "actionCount",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Number of failed input actions",
+              "name" : "failedCount",
+              "required" : true,
+              "type" : "Int"
+            }
+          ],
+          "format" : "json",
+          "kind" : "input-batch-summary",
+          "model" : "TKInputBatchSummaryResponse",
+          "selector" : "input.summary"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the iOS host AX tap command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "ios",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved iOS simulator target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Text query used for host AX target resolution",
+              "name" : "query",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Simulator point x coordinate used for tap",
+              "name" : "x",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Simulator point y coordinate used for tap",
+              "name" : "y",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Matched host AX node",
+              "name" : "match",
+              "required" : true,
+              "type" : "TKAXNode"
+            },
+            {
+              "description" : "Underlying observation\/action sources",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostIOSTapOutput",
+          "selector" : "host.ios-tap"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the Android host tap command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "android",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Android target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Text query used for target resolution",
+              "name" : "query",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Screen x coordinate used for tap",
+              "name" : "x",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Screen y coordinate used for tap",
+              "name" : "y",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Matched Android host layout node",
+              "name" : "match",
+              "required" : false,
+              "type" : "HostAndroidTapMatch?"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostAndroidTapOutput",
+          "selector" : "host.android-tap"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the Harmony host tap command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Harmony target",
+              "name" : "target",
+              "required" : true,
+              "type" : "TKHarmonyTarget"
+            },
+            {
+              "description" : "Text query used for target resolution",
+              "name" : "query",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Screen x coordinate used for tap",
+              "name" : "x",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Screen y coordinate used for tap",
+              "name" : "y",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Matched host layout text node",
+              "name" : "match",
+              "required" : false,
+              "type" : "TKHarmonyLayoutTextMatch?"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostHarmonyTapOutput",
+          "selector" : "host.harmony-tap"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the Android host swipe command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "android",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Android target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Swipe start x coordinate",
+              "name" : "startX",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Swipe start y coordinate",
+              "name" : "startY",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Swipe end x coordinate",
+              "name" : "endX",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Swipe end y coordinate",
+              "name" : "endY",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Swipe duration in milliseconds when supplied",
+              "name" : "durationMs",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostAndroidSwipeOutput",
+          "selector" : "host.android-swipe"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the Harmony host swipe command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Harmony target",
+              "name" : "target",
+              "required" : true,
+              "type" : "TKHarmonyTarget"
+            },
+            {
+              "description" : "Swipe start x coordinate",
+              "name" : "startX",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Swipe start y coordinate",
+              "name" : "startY",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Swipe end x coordinate",
+              "name" : "endX",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Swipe end y coordinate",
+              "name" : "endY",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Host swipe velocity when available",
+              "name" : "velocity",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostHarmonySwipeOutput",
+          "selector" : "host.harmony-swipe"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the Android host text input command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "android",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Android target",
+              "name" : "target",
+              "required" : true,
+              "type" : "HostDeviceTarget"
+            },
+            {
+              "description" : "Focused screen x coordinate when supplied",
+              "name" : "x",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Focused screen y coordinate when supplied",
+              "name" : "y",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Whether input was treated as secure",
+              "name" : "secure",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether output text details were redacted",
+              "name" : "redacted",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Inserted text length",
+              "name" : "insertedLength",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostAndroidTextInputOutput",
+          "selector" : "host.android-text-input"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the Harmony host text input command succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "harmony",
+              "name" : "platform",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved Harmony target",
+              "name" : "target",
+              "required" : true,
+              "type" : "TKHarmonyTarget"
+            },
+            {
+              "description" : "Focused screen x coordinate when supplied",
+              "name" : "x",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Focused screen y coordinate when supplied",
+              "name" : "y",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Whether input was treated as secure",
+              "name" : "secure",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether output text details were redacted",
+              "name" : "redacted",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Inserted text length",
+              "name" : "insertedLength",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Underlying host commands",
+              "name" : "sourceCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : true,
+              "type" : "String"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostHarmonyTextInputOutput",
+          "selector" : "host.harmony-text-input"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the host action completed",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "host-simulator or host-harmony",
+              "name" : "runtimeScope",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved host target id",
+              "name" : "target",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Unified target selection details",
+              "name" : "selection",
+              "required" : false,
+              "type" : "HostDeviceSelectionResult?"
+            },
+            {
+              "description" : "Submission proof; ok=true only means host action was accepted",
+              "name" : "hostAction",
+              "required" : true,
+              "type" : "HostActionSubmissionEvidence"
+            },
+            {
+              "description" : "Whether the host action was submitted",
+              "name" : "hostAction.ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Always host-action for this output",
+              "name" : "hostAction.proofSource",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Always false until wait\/assert\/smoke\/evidence proves business readiness",
+              "name" : "hostAction.businessReady",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Suggested proof-producing follow-up command",
+              "name" : "hostAction.nextAction",
+              "required" : true,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "hostAction.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "hostAction.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "hostAction.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "hostAction.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "hostAction.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "hostAction.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "hostAction.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Host executable",
+              "name" : "tool",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Host process exit code",
+              "name" : "exitCode",
+              "required" : true,
+              "type" : "Int32"
+            },
+            {
+              "description" : "Host command risk level",
+              "name" : "riskLevel",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether stdout sample was truncated",
+              "name" : "stdoutTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether stderr sample was truncated",
+              "name" : "stderrTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Bounded stdout sample",
+              "name" : "stdout",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Bounded stderr sample",
+              "name" : "stderr",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Written artifact paths",
+              "name" : "artifacts",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Simulator screenshot orientation and pixel metadata",
+              "name" : "screenshot",
+              "required" : false,
+              "type" : "HostSimulatorScreenshotMetadata?"
+            },
+            {
+              "description" : "Proof-producing follow-up commands derived from hostAction.nextAction",
+              "name" : "suggestedCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : false,
+              "type" : "String?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostActionOutput",
+          "selector" : "host.android-key-action"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the host action completed",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Host action name",
+              "name" : "action",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "host-simulator or host-harmony",
+              "name" : "runtimeScope",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved host target id",
+              "name" : "target",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Unified target selection details",
+              "name" : "selection",
+              "required" : false,
+              "type" : "HostDeviceSelectionResult?"
+            },
+            {
+              "description" : "Submission proof; ok=true only means host action was accepted",
+              "name" : "hostAction",
+              "required" : true,
+              "type" : "HostActionSubmissionEvidence"
+            },
+            {
+              "description" : "Whether the host action was submitted",
+              "name" : "hostAction.ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Always host-action for this output",
+              "name" : "hostAction.proofSource",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Always false until wait\/assert\/smoke\/evidence proves business readiness",
+              "name" : "hostAction.businessReady",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Suggested proof-producing follow-up command",
+              "name" : "hostAction.nextAction",
+              "required" : true,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "hostAction.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "hostAction.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "hostAction.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "hostAction.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "hostAction.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "hostAction.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "hostAction.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Host executable",
+              "name" : "tool",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Host process exit code",
+              "name" : "exitCode",
+              "required" : true,
+              "type" : "Int32"
+            },
+            {
+              "description" : "Host command risk level",
+              "name" : "riskLevel",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Underlying host command",
+              "name" : "sourceCommand",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether stdout sample was truncated",
+              "name" : "stdoutTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Whether stderr sample was truncated",
+              "name" : "stderrTruncated",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "Bounded stdout sample",
+              "name" : "stdout",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Bounded stderr sample",
+              "name" : "stderr",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Written artifact paths",
+              "name" : "artifacts",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Simulator screenshot orientation and pixel metadata",
+              "name" : "screenshot",
+              "required" : false,
+              "type" : "HostSimulatorScreenshotMetadata?"
+            },
+            {
+              "description" : "Proof-producing follow-up commands derived from hostAction.nextAction",
+              "name" : "suggestedCommands",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Boundary or follow-up note",
+              "name" : "note",
+              "required" : false,
+              "type" : "String?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "host-action",
+          "model" : "HostActionOutput",
+          "selector" : "host.harmony-key-action"
+        },
+        {
+          "fields" : [
+            {
+              "description" : "Whether the semantic action succeeded",
+              "name" : "ok",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "focus, setText, selectSegment, or setSwitch",
+              "name" : "action",
+              "required" : true,
+              "type" : "TKSemanticActionType"
+            },
+            {
+              "description" : "Resolution and execution strategy",
+              "name" : "strategy",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Resolved target oid",
+              "name" : "targetOID",
+              "required" : false,
+              "type" : "UInt?"
+            },
+            {
+              "description" : "Resolved target class name",
+              "name" : "targetClassName",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Elapsed milliseconds",
+              "name" : "elapsedMs",
+              "required" : true,
+              "type" : "Int"
+            },
+            {
+              "description" : "Human-readable result message",
+              "name" : "message",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Structured action failure",
+              "name" : "error",
+              "required" : false,
+              "type" : "TKCLIErrorDetail?"
+            },
+            {
+              "description" : "Associated endpoint when the failure came from runtime transport or another addressable surface",
+              "name" : "error.endpoint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Suggested diagnostic hint for the failure",
+              "name" : "error.hint",
+              "required" : false,
+              "type" : "String?"
+            },
+            {
+              "description" : "Nearest candidate strings when the failure exposes selector or text alternatives",
+              "name" : "error.nearestCandidates",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Command suggestions bundled directly inside the failure diagnostic",
+              "name" : "error.suggestedCommands",
+              "required" : false,
+              "type" : "[String]?"
+            },
+            {
+              "description" : "Candidate count associated with the failure diagnostic",
+              "name" : "error.candidateCount",
+              "required" : false,
+              "type" : "Int?"
+            },
+            {
+              "description" : "Recommended recovery command when the failure is actionable",
+              "name" : "error.nextAction",
+              "required" : false,
+              "type" : "TKCLINextAction?"
+            },
+            {
+              "description" : "Suggested Triton command root for the next action",
+              "name" : "error.nextAction.command",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Suggested command arguments for the next action",
+              "name" : "error.nextAction.args",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Recovery category derived from the next action command root",
+              "name" : "error.nextAction.category",
+              "required" : true,
+              "type" : "String"
+            },
+            {
+              "description" : "Whether the next action starts a long-running process",
+              "name" : "error.nextAction.requiresLongRunningProcess",
+              "required" : true,
+              "type" : "Bool"
+            },
+            {
+              "description" : "JSONL events that prove a long-running next action is ready for dependent actions",
+              "name" : "error.nextAction.readyEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "JSONL events expected when a long-running next action exits cleanly",
+              "name" : "error.nextAction.finalEvents",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Preferred signals for agents to stop a long-running next action after dependent work finishes",
+              "name" : "error.nextAction.terminationSignals",
+              "required" : true,
+              "type" : "[String]"
+            },
+            {
+              "description" : "Text redaction policy and inserted length",
+              "name" : "redaction",
+              "required" : false,
+              "type" : "TKSemanticActionRedaction?"
+            }
+          ],
+          "format" : "json",
+          "kind" : "semantic-action-result",
+          "model" : "TKSemanticActionResponse",
+          "selector" : "semantic.action"
+        }
+      ],
+      "outputFormats" : [
+        "text",
+        "json"
+      ],
+      "outputSemantics" : "Use act as the workflow-level action surface. Retired root action primitives are exposed here as explicit subcommands.",
+      "providedCapabilities" : [
+        "act",
+        "tap",
+        "webview-aware-tap",
+        "type",
+        "paste",
+        "clear",
+        "swipe",
+        "press",
+        "focus",
+        "set-text",
+        "select-segment",
+        "set-switch",
+        "semantic-action",
+        "input"
+      ],
+      "recoveryCommands" : [
+        {
+          "category" : "observe",
+          "command" : "triton observe current --json"
+        },
+        {
+          "category" : "verify",
+          "command" : "triton verify text-exists <text> --json"
+        },
+        {
+          "category" : "archive",
+          "command" : "triton evidence capture --case <case> --output <dir.tritonevidence> --json"
+        },
+        {
+          "category" : "prepare-target",
+          "command" : "triton target resolve <selector> --json"
+        },
+        {
+          "category" : "diagnose",
+          "command" : "triton doctor --json"
+        },
+        {
+          "category" : "act",
+          "command" : "triton act input --json --summary --strict"
+        },
+        {
+          "category" : "plan",
+          "command" : "triton plan --format json"
+        }
+      ],
+      "requiredOptions" : [
+
+      ],
+      "requiresHierarchy" : false,
+      "requiresServer" : true,
+      "requiresTarget" : true,
+      "retryable" : false,
+      "runtimeScope" : "embedded|host-ios|host-android|host-harmony",
+      "subcommands" : [
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "text_not_found",
+            "validation_failed",
+            "server_unavailable",
+            "target_not_found",
+            "ambiguous_target",
+            "request_failed"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "find",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton verify text-exists <text> --json",
+            "triton observe current --json",
+            "triton evidence capture --case <case> --output <dir.tritonevidence> --json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--device",
+            "--host",
+            "--port",
+            "--all",
+            "--index",
+            "--within",
+            "--at",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "target.resolution"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "verify",
+              "command" : "triton verify text-exists <text> --json"
+            },
+            {
+              "category" : "observe",
+              "command" : "triton observe current --json"
+            },
+            {
+              "category" : "archive",
+              "command" : "triton evidence capture --case <case> --output <dir.tritonevidence> --json"
+            }
+          ],
+          "requiredOptions" : [
+            "<query>"
+          ],
+          "retryable" : false,
+          "summary" : "Resolve a target before acting"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "unsupported_capability",
+            "validation_failed",
+            "server_unavailable",
+            "target_not_found",
+            "ambiguous_target",
+            "request_failed",
+            "text_not_found",
+            "host_command_failed",
+            "simulator_not_found",
+            "ios_host_ax_unavailable",
+            "ios_host_ax_frontmost_unavailable",
+            "ios_host_ax_platform_element_unavailable",
+            "ios_host_ax_tree_unavailable",
+            "ios_host_ax_action_unavailable",
+            "ios_host_ax_unsupported_platform",
+            "webview_not_found",
+            "ambiguous_webview",
+            "webview_id_not_found",
+            "webview_provider_unavailable",
+            "webview_element_not_found",
+            "webview_element_not_interactable",
+            "webview_navigation_changed",
+            "webview_wait_timeout",
+            "webview_wait_unsupported",
+            "javascript_error"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "tap",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton verify text-exists <text> --json",
+            "triton observe current --json",
+            "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--device",
+            "--host",
+            "--port",
+            "--platform",
+            "--adb",
+            "--hdc",
+            "--text",
+            "--x",
+            "--y",
+            "--at",
+            "--oid",
+            "--ax-oid",
+            "--ax-label",
+            "--strategy",
+            "--index",
+            "--within",
+            "--webview-aware",
+            "--selector",
+            "--webview-id",
+            "--page-session-id",
+            "--expect-text",
+            "--timeout",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "input.result",
+            "host.ios-tap",
+            "host.android-tap",
+            "host.harmony-tap",
+            "act.webview-aware-tap"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "verify",
+              "command" : "triton verify text-exists <text> --json"
+            },
+            {
+              "category" : "observe",
+              "command" : "triton observe current --json"
+            },
+            {
+              "category" : "archive",
+              "command" : "triton evidence capture --case <case> --output <dir.tritonevidence> --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : false,
+          "summary" : "Tap a UI target"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "unsupported_capability",
+            "validation_failed",
+            "server_unavailable",
+            "target_not_found",
+            "ambiguous_target",
+            "request_failed"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "type",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--device",
+            "--host",
+            "--port",
+            "--platform",
+            "--adb",
+            "--hdc",
+            "--text",
+            "--oid",
+            "--secure",
+            "--exact",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "input.result",
+            "host.android-text-input",
+            "host.harmony-text-input"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : false,
+          "summary" : "Type text into the focused field"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "unsupported_capability",
+            "validation_failed",
+            "server_unavailable",
+            "target_not_found",
+            "ambiguous_target",
+            "request_failed"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "paste",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--device",
+            "--host",
+            "--port",
+            "--platform",
+            "--adb",
+            "--hdc",
+            "--secure",
+            "--oid",
+            "--x",
+            "--y",
+            "--at",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "input.result",
+            "host.android-text-input",
+            "host.harmony-text-input"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+            "<text>"
+          ],
+          "retryable" : false,
+          "summary" : "Paste exact text"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "unsupported_capability",
+            "validation_failed",
+            "server_unavailable",
+            "target_not_found",
+            "ambiguous_target",
+            "request_failed"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "clear",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--device",
+            "--host",
+            "--port",
+            "--platform",
+            "--adb",
+            "--hdc",
+            "--oid",
+            "--x",
+            "--y",
+            "--at",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "input.result"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : false,
+          "summary" : "Clear text input"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "unsupported_capability",
+            "validation_failed",
+            "server_unavailable",
+            "target_not_found",
+            "ambiguous_target",
+            "request_failed"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "swipe",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--device",
+            "--host",
+            "--port",
+            "--platform",
+            "--adb",
+            "--hdc",
+            "--width",
+            "--height",
+            "--duration",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "input.result",
+            "host.android-swipe",
+            "host.harmony-swipe"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+            "--start-x",
+            "--start-y",
+            "--end-x",
+            "--end-y"
+          ],
+          "retryable" : false,
+          "summary" : "Swipe by coordinates; iOS uses an embedded runtime target from `triton list --json`, while Android\/Harmony use host coordinates"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "unsupported_capability",
+            "validation_failed",
+            "server_unavailable",
+            "target_not_found",
+            "ambiguous_target",
+            "request_failed"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "press",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--device",
+            "--host",
+            "--port",
+            "--platform",
+            "--adb",
+            "--hdc",
+            "--button",
+            "--duration",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "input.result",
+            "host.android-key-action",
+            "host.harmony-key-action"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : false,
+          "summary" : "Press a device button"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "server_unavailable",
+            "target_unavailable",
+            "target_not_found",
+            "request_failed",
+            "runtime_unavailable",
+            "runtime_ui_interrupted",
+            "request_timeout",
+            "invalid_payload",
+            "validation_failed",
+            "ambiguous_target",
+            "text_not_found",
+            "semantic_action_failed",
+            "action_not_supported",
+            "unsupported_runtime_scope"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "focus",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton verify text-exists <text> --json",
+            "triton observe current --json",
+            "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--host",
+            "--port",
+            "--runtime-base-url",
+            "--index",
+            "--within",
+            "--at",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "semantic.action"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "verify",
+              "command" : "triton verify text-exists <text> --json"
+            },
+            {
+              "category" : "observe",
+              "command" : "triton observe current --json"
+            },
+            {
+              "category" : "archive",
+              "command" : "triton evidence capture --case <case> --output <dir.tritonevidence> --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+            "<selector>"
+          ],
+          "retryable" : false,
+          "summary" : "Focus a text input by selector"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "server_unavailable",
+            "target_unavailable",
+            "target_not_found",
+            "request_failed",
+            "runtime_unavailable",
+            "runtime_ui_interrupted",
+            "request_timeout",
+            "invalid_payload",
+            "validation_failed",
+            "ambiguous_target",
+            "text_not_found",
+            "semantic_action_failed",
+            "action_not_supported",
+            "unsupported_runtime_scope"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "set-text",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton verify text-exists <text> --json",
+            "triton observe current --json",
+            "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--host",
+            "--port",
+            "--runtime-base-url",
+            "--secure",
+            "--index",
+            "--within",
+            "--at",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "semantic.action"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "verify",
+              "command" : "triton verify text-exists <text> --json"
+            },
+            {
+              "category" : "observe",
+              "command" : "triton observe current --json"
+            },
+            {
+              "category" : "archive",
+              "command" : "triton evidence capture --case <case> --output <dir.tritonevidence> --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+            "<selector>",
+            "<text>"
+          ],
+          "retryable" : false,
+          "summary" : "Set exact editable text by selector"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "server_unavailable",
+            "target_unavailable",
+            "target_not_found",
+            "request_failed",
+            "runtime_unavailable",
+            "runtime_ui_interrupted",
+            "request_timeout",
+            "invalid_payload",
+            "validation_failed",
+            "ambiguous_target",
+            "text_not_found",
+            "semantic_action_failed",
+            "action_not_supported",
+            "unsupported_runtime_scope"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "select-segment",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton verify text-exists <text> --json",
+            "triton observe current --json",
+            "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--host",
+            "--port",
+            "--runtime-base-url",
+            "--index",
+            "--within",
+            "--at",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "semantic.action"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "verify",
+              "command" : "triton verify text-exists <text> --json"
+            },
+            {
+              "category" : "observe",
+              "command" : "triton observe current --json"
+            },
+            {
+              "category" : "archive",
+              "command" : "triton evidence capture --case <case> --output <dir.tritonevidence> --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+            "<selector>",
+            "<value>"
+          ],
+          "retryable" : false,
+          "summary" : "Select a segmented-control option by title or index"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "server_unavailable",
+            "target_unavailable",
+            "target_not_found",
+            "request_failed",
+            "runtime_unavailable",
+            "runtime_ui_interrupted",
+            "request_timeout",
+            "invalid_payload",
+            "validation_failed",
+            "ambiguous_target",
+            "text_not_found",
+            "semantic_action_failed",
+            "action_not_supported",
+            "unsupported_runtime_scope"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "set-switch",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton verify text-exists <text> --json",
+            "triton observe current --json",
+            "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
+            "triton plan --format json"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--host",
+            "--port",
+            "--runtime-base-url",
+            "--index",
+            "--within",
+            "--at",
+            "--format",
+            "--json"
+          ],
+          "outputSelectors" : [
+            "semantic.action"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "verify",
+              "command" : "triton verify text-exists <text> --json"
+            },
+            {
+              "category" : "observe",
+              "command" : "triton observe current --json"
+            },
+            {
+              "category" : "archive",
+              "command" : "triton evidence capture --case <case> --output <dir.tritonevidence> --json"
+            },
+            {
+              "category" : "plan",
+              "command" : "triton plan --format json"
+            }
+          ],
+          "requiredOptions" : [
+            "<selector>",
+            "<value>"
+          ],
+          "retryable" : false,
+          "summary" : "Set or toggle a switch by selector"
+        },
+        {
+          "artifacts" : [
+
+          ],
+          "defaultProviders" : [
+
+          ],
+          "failureCodes" : [
+            "validation_failed",
+            "server_unavailable",
+            "target_not_found",
+            "ambiguous_target",
+            "request_failed",
+            "action_failed"
+          ],
+          "inheritsDefaultsFrom" : [
+
+          ],
+          "jsonlEvents" : [
+
+          ],
+          "name" : "input",
+          "nextCommands" : [
+            "triton target resolve <selector> --json",
+            "triton doctor --json",
+            "triton act input --json --summary --strict"
+          ],
+          "oneOfRequiredOptions" : [
+
+          ],
+          "optionalOptions" : [
+            "--target",
+            "--device",
+            "--host",
+            "--port",
+            "--format",
+            "--json",
+            "--fail-fast",
+            "--summary",
+            "--strict"
+          ],
+          "outputSelectors" : [
+            "input.result",
+            "input.summary"
+          ],
+          "recoveryCommands" : [
+            {
+              "category" : "prepare-target",
+              "command" : "triton target resolve <selector> --json"
+            },
+            {
+              "category" : "diagnose",
+              "command" : "triton doctor --json"
+            },
+            {
+              "category" : "act",
+              "command" : "triton act input --json --summary --strict"
+            }
+          ],
+          "requiredOptions" : [
+
+          ],
+          "retryable" : false,
+          "summary" : "Run newline-delimited JSON actions"
+        }
+      ],
+      "successShape" : "Delegates to the selected action primitive output contract, or WebView-aware tap { ok, action:act.tap, status:passed|failed|uncertain, context:webview, selector, target?, attempts[], verification, recoveryCommand?, sourceCommands[], note }",
+      "summary" : "Workflow-level UI action surface for find, tap, type, paste, clear, swipe, press, focus, and form controls",
+      "surfaceLayer" : "workflow",
+      "surfaceRationale" : "P23 workflow surface",
+      "usageForms" : [
+        {
+          "description" : "Resolve a target before acting",
+          "form" : "triton act find <query> --json",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Product-language tap entry; positional text remains supported by the underlying tap command",
+          "form" : "triton act tap --text <text> --json",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Dispatch a WebView DOM click and verify expected WebView text",
+          "form" : "triton act tap --webview-aware --selector <css> [--webview-id <id>] --expect-text <text> --json",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Type text into the focused field",
+          "form" : "triton act type <text> --json",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Resolve a UI target by visible text, label, identifier, or option title",
+          "form" : "find",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Tap a UI target by text, coordinate, oid, or AX node",
+          "form" : "tap",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Type text into a focused or oid-targeted input",
+          "form" : "type",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Paste exact text into a focused, coordinate-targeted, or oid-targeted input",
+          "form" : "paste",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Clear a focused, coordinate-targeted, or oid-targeted input",
+          "form" : "clear",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Swipe inside the app using window-point coordinates",
+          "form" : "swipe",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Press a device button when supported",
+          "form" : "press",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Focus a text input by selector",
+          "form" : "focus",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Clear and set exact text by selector",
+          "form" : "set-text",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Select a segmented control segment",
+          "form" : "select-segment",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Set or toggle a switch",
+          "form" : "set-switch",
+          "kind" : "Subcommand"
+        },
+        {
+          "description" : "Run newline-delimited JSON actions from stdin",
+          "form" : "input",
+          "kind" : "Subcommand"
+        }
+      ]
+    }
+  ],
+  "httpManagementAPI" : [
+
+  ],
+  "schemaVersion" : 1
+}

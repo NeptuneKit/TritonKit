@@ -1,0 +1,19 @@
+{
+  "action" : "webview.call",
+  "capturedAt" : "2026-07-11T01:48:28Z",
+  "elapsedMs" : 4,
+  "method" : "getRouteState",
+  "ok" : true,
+  "pageSessionID" : "ios-webkit:409:page:9054262890083589106",
+  "platform" : "ios",
+  "redaction" : {
+
+  },
+  "result" : {
+    "ready" : true,
+    "route" : "\/navigation",
+    "title" : "Triton WebView Navigation A"
+  },
+  "target" : "embedded-runtime",
+  "webViewID" : "ios-webkit:409"
+}

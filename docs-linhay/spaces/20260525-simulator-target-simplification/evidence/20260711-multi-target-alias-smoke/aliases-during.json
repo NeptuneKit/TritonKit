@@ -1,0 +1,14 @@
+{
+  "aliases" : {
+    "triton-smoke-harmony-20260711" : {
+      "platform" : "harmony",
+      "target" : "127.0.0.1:5555"
+    },
+    "triton-smoke-ios-20260711" : {
+      "platform" : "ios",
+      "target" : "83407554-53AB-45B4-A0C1-D59F34E26A67"
+    }
+  },
+  "ok" : true,
+  "path" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/.triton\/host-targets.json"
+}

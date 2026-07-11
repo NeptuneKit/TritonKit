@@ -1,0 +1,49 @@
+{
+  "candidates" : [
+    {
+      "className" : "UISegmentLabel",
+      "frame" : {
+        "height" : 15.666666666666686,
+        "width" : 44,
+        "x" : 230,
+        "y" : 302.66666666666663
+      },
+      "index" : 1,
+      "label" : "Web Edge",
+      "layerOID" : 107,
+      "query" : "Web Edge",
+      "request" : {
+        "activationStrategy" : "smart",
+        "matchedClassName" : "UISegmentLabel",
+        "matchedOID" : 106,
+        "targetOID" : 106,
+        "type" : "tap"
+      },
+      "source" : "hierarchy-text",
+      "strategy" : "smart",
+      "viewOID" : 106
+    }
+  ],
+  "className" : "UISegmentLabel",
+  "frame" : {
+    "height" : 15.666666666666686,
+    "width" : 44,
+    "x" : 230,
+    "y" : 302.66666666666663
+  },
+  "label" : "Web Edge",
+  "layerOID" : 107,
+  "matchCount" : 1,
+  "matchIndex" : 1,
+  "query" : "Web Edge",
+  "request" : {
+    "activationStrategy" : "smart",
+    "matchedClassName" : "UISegmentLabel",
+    "matchedOID" : 106,
+    "targetOID" : 106,
+    "type" : "tap"
+  },
+  "source" : "hierarchy-text",
+  "strategy" : "smart",
+  "viewOID" : 106
+}

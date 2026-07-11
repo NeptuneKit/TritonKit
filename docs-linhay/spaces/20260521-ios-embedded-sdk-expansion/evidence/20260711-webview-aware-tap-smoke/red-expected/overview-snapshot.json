@@ -1,0 +1,292 @@
+{
+  "action" : "webview.snapshot",
+  "capturedAt" : "2026-07-11T01:47:28Z",
+  "dom" : [
+    {
+      "frame" : {
+        "height" : 126,
+        "width" : 370,
+        "x" : 0,
+        "y" : 0
+      },
+      "nodeID" : "dom-1",
+      "tagName" : "main",
+      "text" : "Triton WebView Smoke route=\/smoke ready=true Submit"
+    },
+    {
+      "frame" : {
+        "height" : 23,
+        "width" : 342,
+        "x" : 14,
+        "y" : 14
+      },
+      "nodeID" : "dom-2",
+      "role" : "heading",
+      "tagName" : "h1",
+      "text" : "Triton WebView Smoke"
+    },
+    {
+      "frame" : {
+        "height" : 19,
+        "width" : 342,
+        "x" : 14,
+        "y" : 45
+      },
+      "nodeID" : "route",
+      "tagName" : "p",
+      "text" : "route=\/smoke ready=true"
+    },
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 62.84375,
+        "x" : 14,
+        "y" : 74
+      },
+      "nodeID" : "submit",
+      "role" : "button",
+      "tagName" : "button",
+      "text" : "Submit"
+    },
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 89.1875,
+        "y" : 74
+      },
+      "nodeID" : "keyword",
+      "role" : "form-field",
+      "tagName" : "input",
+      "text" : "Keyword"
+    }
+  ],
+  "forms" : [
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 89.1875,
+        "y" : 74
+      },
+      "inputType" : "text",
+      "label" : "Keyword",
+      "name" : "keyword",
+      "valueLength" : 6,
+      "valueRedaction" : "length-only"
+    }
+  ],
+  "include" : [
+    "metadata",
+    "dom",
+    "text",
+    "forms",
+    "links"
+  ],
+  "links" : [
+
+  ],
+  "ok" : true,
+  "platform" : "ios",
+  "redaction" : {
+    "secureText" : "length-only"
+  },
+  "skipped" : [
+
+  ],
+  "target" : "embedded-runtime",
+  "text" : [
+    "Triton WebView Smoke route=\/smoke ready=true Submit"
+  ],
+  "truncation" : {
+    "maxBytes" : 2048,
+    "maxNodes" : 20,
+    "returnedBytes" : 51,
+    "returnedNodes" : 6,
+    "truncated" : false
+  },
+  "warnings" : [
+
+  ],
+  "webView" : {
+    "bridgeStatus" : "page-bridge-required",
+    "canGoBack" : false,
+    "canGoForward" : false,
+    "candidateOnly" : false,
+    "capabilities" : [
+      "visible",
+      "webview.current",
+      "webview.list",
+      "webview.current-url",
+      "webview.metadata",
+      "webview.snapshot",
+      "webview.dom",
+      "webview.text",
+      "webview.forms",
+      "webview.links",
+      "webview.tap",
+      "webview.wait",
+      "webview.events",
+      "webview.dom-input",
+      "webview.contenteditable-typing",
+      "webview.type"
+    ],
+    "confidence" : 1,
+    "estimatedProgress" : 1,
+    "frame" : {
+      "height" : 150.33333333333326,
+      "width" : 370,
+      "x" : 16,
+      "y" : 673
+    },
+    "identifier" : "WebViewSmokeWebView",
+    "isLoading" : false,
+    "missingCapabilities" : [
+      "webview.bridge-call"
+    ],
+    "nodeID" : "ios-webkit:322",
+    "pageSessionID" : "ios-webkit:322:page:983739906334447604",
+    "platform" : "ios",
+    "providerCapabilities" : {
+      "supportsBridgeCall" : {
+        "nextAction" : {
+          "args" : [
+            "call",
+            "<method>",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "page must expose an allowlisted window.__tritonBridge.methods entry",
+        "supported" : false
+      },
+      "supportsContentEditableTyping" : {
+        "nextAction" : {
+          "args" : [
+            "--json"
+          ],
+          "category" : "act",
+          "command" : "input",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "focused contenteditable insertion is supported after runtime focus",
+        "supported" : true
+      },
+      "supportsCurrentURL" : {
+        "nextAction" : {
+          "args" : [
+            "current-url",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "supported" : true
+      },
+      "supportsDOMInput" : {
+        "nextAction" : {
+          "args" : [
+            "--json"
+          ],
+          "category" : "act",
+          "command" : "input",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "focused activeElement text insertion is supported after runtime focus",
+        "supported" : true
+      },
+      "supportsEvents" : {
+        "nextAction" : {
+          "args" : [
+            "events",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "page bridge event buffer is available after bridge installation",
+        "supported" : true
+      },
+      "supportsSnapshot" : {
+        "nextAction" : {
+          "args" : [
+            "snapshot",
+            "--include",
+            "metadata,text,dom,forms",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "supported" : true
+      }
+    },
+    "providerStatus" : "available",
+    "role" : "webview",
+    "source" : "webview-provider",
+    "text" : "Triton WebView Smoke",
+    "title" : "Triton WebView Smoke",
+    "url" : "https:\/\/tritonkit.local\/smoke",
+    "visibleRatio" : 1,
+    "webViewID" : "ios-webkit:322"
+  }
+}

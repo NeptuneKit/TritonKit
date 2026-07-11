@@ -202,6 +202,14 @@ triton wait-idle --timeout 2 --json
 - Then 输出最近请求、动作、错误、耗时、target 和 source command
 - And secure input 不包含明文
 
+### 场景 8：WebView-aware tap 用业务文本闭环验证
+
+- Given 真实 iOS Simulator 中的 Demo WebView 已加载且存在 `#submit`
+- When 执行 `triton act tap --webview-aware --selector "#submit" --expect-text "submitted=true" --json`
+- Then 页面通过 DOM click handler 显示精确文本 `submitted=true`
+- And 输出 `status=passed`、`attempts[].method=dom_dispatch`、`trusted=false`
+- And 输出 `verification.textMatched=true`，不把 DOM dispatch 本身误判为业务完成
+
 ## 测试门禁
 
 1. Shared DTO：新增模型必须有 encode/decode、默认值、Release disabled/no-op、redaction 测试。
@@ -233,3 +241,11 @@ triton wait-idle --timeout 2 --json
 - [AI CLI Readable Control](../../dev/ai-cli-readable-control.md)
 - [iOS integration guide](../../dev/20260519-ios-integration-guide.md)
 - [Hybrid Transport Smoke](../20260516-hybrid-transport-smoke/README.md)
+
+## 2026-07-11 路线裁决
+
+- 状态：已归档。
+- S0-S4 和 WebView-aware `act tap` 的实现、schema、共享模型与定向测试已完成。
+- 真实 iOS Simulator WebView harness 已完成 `selector -> DOM dispatch -> expect-text` 动态闭环；`#submit` 点击后显示 `submitted=true`，输出 `status=passed`、`trusted=false`、`verification.textMatched=true`。
+- 验收证据见 [20260711 WebView-aware tap smoke](evidence/20260711-webview-aware-tap-smoke/README.md)。
+- 本 space 不再滚动扩张 P1/P2；需要时另建有限切片。

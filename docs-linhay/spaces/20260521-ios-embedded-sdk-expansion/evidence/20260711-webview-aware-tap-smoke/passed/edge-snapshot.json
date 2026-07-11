@@ -1,0 +1,412 @@
+{
+  "action" : "webview.snapshot",
+  "capturedAt" : "2026-07-11T01:48:25Z",
+  "dom" : [
+    {
+      "frame" : {
+        "height" : 324,
+        "width" : 370,
+        "x" : 0,
+        "y" : 0
+      },
+      "nodeID" : "dom-1",
+      "tagName" : "main",
+      "text" : "Triton WebView Edge route=\/edge ready=true long-text=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz Edge Keyword Edge Secret Edge Link 1 Edge Link 2 Edge Link 3 Edge Link 4 Edge Link 5 Edge Ready"
+    },
+    {
+      "frame" : {
+        "height" : 23,
+        "width" : 342,
+        "x" : 14,
+        "y" : 14
+      },
+      "nodeID" : "dom-2",
+      "role" : "heading",
+      "tagName" : "h1",
+      "text" : "Triton WebView Edge"
+    },
+    {
+      "frame" : {
+        "height" : 38,
+        "width" : 342,
+        "x" : 14,
+        "y" : 45
+      },
+      "nodeID" : "edge-route",
+      "tagName" : "p",
+      "text" : "route=\/edge ready=true long-text=abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"
+    },
+    {
+      "frame" : {
+        "height" : 22,
+        "width" : 109.09716796875,
+        "x" : 14,
+        "y" : 95
+      },
+      "nodeID" : "dom-4",
+      "tagName" : "label",
+      "text" : "Edge Keyword"
+    },
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 127.4375,
+        "y" : 93
+      },
+      "nodeID" : "keyword:edge.1",
+      "role" : "form-field",
+      "tagName" : "input"
+    },
+    {
+      "frame" : {
+        "height" : 60,
+        "width" : 322.71044921875,
+        "x" : 14,
+        "y" : 95
+      },
+      "nodeID" : "dom-6",
+      "tagName" : "label",
+      "text" : "Edge Secret"
+    }
+  ],
+  "forms" : [
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 127.4375,
+        "y" : 93
+      },
+      "inputType" : "text",
+      "label" : "Edge Keyword",
+      "name" : "keyword-edge",
+      "valueLength" : 11,
+      "valueRedaction" : "length-only"
+    },
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 67.921875,
+        "y" : 131
+      },
+      "inputType" : "password",
+      "label" : "Edge Secret",
+      "name" : "edge-password",
+      "valueLength" : 12,
+      "valueRedaction" : "length-only"
+    },
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 14,
+        "y" : 169
+      },
+      "inputType" : "text",
+      "name" : "edge-extra-1",
+      "valueLength" : 3,
+      "valueRedaction" : "length-only"
+    },
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 184.34375,
+        "y" : 169
+      },
+      "inputType" : "text",
+      "name" : "edge-extra-2",
+      "valueLength" : 3,
+      "valueRedaction" : "length-only"
+    },
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 14,
+        "y" : 207
+      },
+      "inputType" : "text",
+      "name" : "edge-extra-3",
+      "valueLength" : 5,
+      "valueRedaction" : "length-only"
+    },
+    {
+      "frame" : {
+        "height" : 30,
+        "width" : 158,
+        "x" : 184.34375,
+        "y" : 207
+      },
+      "inputType" : "text",
+      "name" : "edge-extra-4",
+      "valueLength" : 4,
+      "valueRedaction" : "length-only"
+    }
+  ],
+  "include" : [
+    "metadata",
+    "dom",
+    "text",
+    "forms",
+    "links"
+  ],
+  "links" : [
+    {
+      "frame" : {
+        "height" : 24,
+        "width" : 86.359375,
+        "x" : 14,
+        "y" : 245
+      },
+      "href" : "https:\/\/tritonkit.local\/edge\/1",
+      "text" : "Edge Link 1"
+    },
+    {
+      "frame" : {
+        "height" : 24,
+        "width" : 88.71875,
+        "x" : 112.703125,
+        "y" : 245
+      },
+      "href" : "https:\/\/tritonkit.local\/edge\/2",
+      "text" : "Edge Link 2"
+    },
+    {
+      "frame" : {
+        "height" : 24,
+        "width" : 89.125,
+        "x" : 213.765625,
+        "y" : 245
+      },
+      "href" : "https:\/\/tritonkit.local\/edge\/3",
+      "text" : "Edge Link 3"
+    },
+    {
+      "frame" : {
+        "height" : 24,
+        "width" : 89.40625,
+        "x" : 14,
+        "y" : 278
+      },
+      "href" : "https:\/\/tritonkit.local\/edge\/4",
+      "text" : "Edge Link 4"
+    },
+    {
+      "frame" : {
+        "height" : 24,
+        "width" : 88.96875,
+        "x" : 115.75,
+        "y" : 278
+      },
+      "href" : "https:\/\/tritonkit.local\/edge\/5",
+      "text" : "Edge Link 5"
+    }
+  ],
+  "ok" : true,
+  "platform" : "ios",
+  "redaction" : {
+    "secureText" : "length-only"
+  },
+  "skipped" : [
+
+  ],
+  "target" : "embedded-runtime",
+  "text" : [
+    "Triton WebView Edge route=\/edge ready=true long-text=abcdefghijklmnopqrstuvwxyza"
+  ],
+  "truncation" : {
+    "maxBytes" : 80,
+    "maxNodes" : 6,
+    "reason" : "maxTextBytes",
+    "returnedBytes" : 80,
+    "returnedNodes" : 17,
+    "truncated" : true
+  },
+  "warnings" : [
+
+  ],
+  "webView" : {
+    "bridgeStatus" : "page-bridge-required",
+    "canGoBack" : false,
+    "canGoForward" : false,
+    "candidateOnly" : false,
+    "capabilities" : [
+      "visible",
+      "webview.current",
+      "webview.list",
+      "webview.current-url",
+      "webview.metadata",
+      "webview.snapshot",
+      "webview.dom",
+      "webview.text",
+      "webview.forms",
+      "webview.links",
+      "webview.tap",
+      "webview.wait",
+      "webview.events",
+      "webview.dom-input",
+      "webview.contenteditable-typing",
+      "webview.type"
+    ],
+    "confidence" : 1,
+    "estimatedProgress" : 1,
+    "frame" : {
+      "height" : 279.99999999999994,
+      "width" : 370,
+      "x" : 16,
+      "y" : 356.3333333333333
+    },
+    "identifier" : "WebViewSmokeWebView",
+    "isLoading" : false,
+    "missingCapabilities" : [
+      "webview.bridge-call"
+    ],
+    "nodeID" : "ios-webkit:371",
+    "pageSessionID" : "ios-webkit:371:page:2805640995122866841",
+    "platform" : "ios",
+    "providerCapabilities" : {
+      "supportsBridgeCall" : {
+        "nextAction" : {
+          "args" : [
+            "call",
+            "<method>",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "page must expose an allowlisted window.__tritonBridge.methods entry",
+        "supported" : false
+      },
+      "supportsContentEditableTyping" : {
+        "nextAction" : {
+          "args" : [
+            "--json"
+          ],
+          "category" : "act",
+          "command" : "input",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "focused contenteditable insertion is supported after runtime focus",
+        "supported" : true
+      },
+      "supportsCurrentURL" : {
+        "nextAction" : {
+          "args" : [
+            "current-url",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "supported" : true
+      },
+      "supportsDOMInput" : {
+        "nextAction" : {
+          "args" : [
+            "--json"
+          ],
+          "category" : "act",
+          "command" : "input",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "focused activeElement text insertion is supported after runtime focus",
+        "supported" : true
+      },
+      "supportsEvents" : {
+        "nextAction" : {
+          "args" : [
+            "events",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "reason" : "page bridge event buffer is available after bridge installation",
+        "supported" : true
+      },
+      "supportsSnapshot" : {
+        "nextAction" : {
+          "args" : [
+            "snapshot",
+            "--include",
+            "metadata,text,dom,forms",
+            "--json"
+          ],
+          "category" : "observe",
+          "command" : "webview",
+          "finalEvents" : [
+
+          ],
+          "readyEvents" : [
+
+          ],
+          "requiresLongRunningProcess" : false,
+          "terminationSignals" : [
+
+          ]
+        },
+        "supported" : true
+      }
+    },
+    "providerStatus" : "available",
+    "role" : "webview",
+    "source" : "webview-provider",
+    "text" : "Triton WebView Edge",
+    "title" : "Triton WebView Edge",
+    "url" : "https:\/\/tritonkit.local\/edge",
+    "visibleRatio" : 1,
+    "webViewID" : "ios-webkit:371"
+  }
+}

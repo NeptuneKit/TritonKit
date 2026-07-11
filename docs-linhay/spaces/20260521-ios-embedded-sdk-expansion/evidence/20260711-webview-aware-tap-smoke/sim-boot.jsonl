@@ -1,0 +1,1 @@
+{"action":"sim.boot.wait","attempt":1,"elapsedMs":174,"ok":true,"ready":true,"simulatorUDID":"83407554-53AB-45B4-A0C1-D59F34E26A67","sourceCommand":"xcrun simctl list devices available --json","state":"Booted"}

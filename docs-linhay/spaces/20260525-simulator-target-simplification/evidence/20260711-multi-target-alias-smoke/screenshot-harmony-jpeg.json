@@ -1,0 +1,60 @@
+{
+  "action" : "screenshot",
+  "artifact" : "\/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260525-simulator-target-simplification\/evidence\/20260711-multi-target-alias-smoke\/20260711-cli-multi-target-harmony-after-v01.jpeg",
+  "bytes" : 125576,
+  "capturedAt" : "2026-07-11T01:49:56Z",
+  "format" : "jpeg",
+  "height" : 2880,
+  "note" : "Host-side Harmony screenshot was captured through snapshot_display using remote artifact \/data\/local\/tmp\/triton-smoke-8FCF6DEC-0028-41B5-AC8F-F4E818D1EA5E.jpeg.",
+  "ok" : true,
+  "platform" : "harmony",
+  "selection" : {
+    "filters" : {
+      "ready" : false,
+      "scope" : "all"
+    },
+    "platform" : "harmony",
+    "selector" : "triton-smoke-harmony-20260711",
+    "source" : "alias",
+    "target" : {
+      "blockedReasons" : [
+
+      ],
+      "current" : false,
+      "id" : "harmony:127.0.0.1:5555",
+      "identityState" : "unknown",
+      "kind" : "emulator",
+      "platform" : "harmony",
+      "ready" : true,
+      "scope" : "emulator",
+      "sensitive" : false,
+      "source" : "hdc",
+      "state" : "Connected",
+      "target" : "127.0.0.1:5555",
+      "transport" : "TCP"
+    }
+  },
+  "sha256" : "e7bcb492e6beb33e0d3cdd9dd3cebe3bb5effd7e571a158ba87902f566d151b9",
+  "sourceCommands" : [
+    "hdc -t 127.0.0.1:5555 shell snapshot_display -f \/data\/local\/tmp\/triton-smoke-8FCF6DEC-0028-41B5-AC8F-F4E818D1EA5E.jpeg",
+    "hdc -t 127.0.0.1:5555 file recv \/data\/local\/tmp\/triton-smoke-8FCF6DEC-0028-41B5-AC8F-F4E818D1EA5E.jpeg \/Users\/linhey\/Desktop\/linhay-open-sources\/TritonKit\/docs-linhay\/spaces\/20260525-simulator-target-simplification\/evidence\/20260711-multi-target-alias-smoke\/20260711-cli-multi-target-harmony-after-v01.jpeg"
+  ],
+  "target" : {
+    "blockedReasons" : [
+
+    ],
+    "current" : false,
+    "id" : "harmony:127.0.0.1:5555",
+    "identityState" : "unknown",
+    "kind" : "emulator",
+    "platform" : "harmony",
+    "ready" : true,
+    "scope" : "emulator",
+    "sensitive" : false,
+    "source" : "hdc",
+    "state" : "Connected",
+    "target" : "127.0.0.1:5555",
+    "transport" : "TCP"
+  },
+  "width" : 1308
+}

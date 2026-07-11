@@ -1,0 +1,55 @@
+{
+  "action" : "act.tap",
+  "attempts" : [
+    {
+      "dispatched" : true,
+      "method" : "dom_dispatch",
+      "performed" : true,
+      "source" : "webview.tap",
+      "trusted" : false
+    }
+  ],
+  "context" : "webview",
+  "note" : "DOM click was dispatched, but the expected WebView text was not observed; business completion is uncertain.",
+  "ok" : true,
+  "recoveryCommand" : "triton act tap --at 61.4,762 --json",
+  "selector" : "#submit",
+  "sourceCommands" : [
+    "triton act tap --webview-aware --selector '#submit' --expect-text 'submitted=true' --json",
+    "triton webview wait --text <expect> --json"
+  ],
+  "status" : "uncertain",
+  "target" : {
+    "disabled" : false,
+    "domRect" : {
+      "height" : 30,
+      "width" : 62.84375,
+      "x" : 14,
+      "y" : 74
+    },
+    "nativeRect" : {
+      "height" : 30,
+      "width" : 62.84375,
+      "x" : 30,
+      "y" : 747
+    },
+    "nodeID" : "submit",
+    "pageSessionID" : "ios-webkit:322:page:983739906334447604",
+    "selector" : "#submit",
+    "tagName" : "BUTTON",
+    "text" : "Submit",
+    "visible" : true,
+    "webViewFrame" : {
+      "height" : 150.33333333333326,
+      "width" : 370,
+      "x" : 16,
+      "y" : 673
+    },
+    "webViewID" : "ios-webkit:322"
+  },
+  "verification" : {
+    "expectProvided" : true,
+    "expectText" : "submitted=true",
+    "textMatched" : false
+  }
+}

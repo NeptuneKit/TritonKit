@@ -183,3 +183,10 @@ Revyl 的 `doctor/init/config/dev` 很强调新手体验，但它同时给 CI/ag
 ## 执行计划
 
 详见 [implementation-plan-v01.md](plans/implementation-plan-v01.md)。
+
+## 2026-07-11 路线裁决
+
+- 状态：废弃。
+- 原 M1-M6 不再作为独立 roadmap 执行。
+- 研究中的 skill、schema、evidence summary、update 和 agent workflow 价值已被后续实现及 Agent Mobile Runtime Platform 吸收。
+- 保留本 space 和参考源码作为历史研究材料；未来不得直接按旧计划恢复实现。

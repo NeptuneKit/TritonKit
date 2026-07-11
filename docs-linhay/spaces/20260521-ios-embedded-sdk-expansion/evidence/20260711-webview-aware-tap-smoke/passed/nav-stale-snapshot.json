@@ -1,0 +1,11 @@
+{
+  "action" : "webview.snapshot",
+  "error" : {
+    "code" : "webview_navigation_changed",
+    "hint" : "Run `triton webview current --json` and retry against the new pageSessionID.",
+    "message" : "WebView page session changed."
+  },
+  "ok" : false,
+  "platform" : "ios",
+  "target" : "embedded-runtime"
+}

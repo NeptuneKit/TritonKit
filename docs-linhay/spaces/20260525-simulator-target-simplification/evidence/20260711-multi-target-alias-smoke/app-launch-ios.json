@@ -1,0 +1,69 @@
+{
+  "action" : "app.launch",
+  "artifacts" : [
+
+  ],
+  "exitCode" : 0,
+  "hostAction" : {
+    "businessReady" : false,
+    "nextAction" : {
+      "args" : [
+        "<platform>",
+        "--device",
+        "<selector>",
+        "--json"
+      ],
+      "category" : "smoke",
+      "command" : "smoke",
+      "finalEvents" : [
+
+      ],
+      "readyEvents" : [
+
+      ],
+      "requiresLongRunningProcess" : false,
+      "terminationSignals" : [
+
+      ]
+    },
+    "ok" : true,
+    "proofSource" : "host-action"
+  },
+  "note" : "Host action was submitted for app.launch; hostAction.ok=true is not business readiness. Verify with `triton status`, wait\/assert, smoke, or evidence.",
+  "ok" : true,
+  "riskLevel" : "automation",
+  "runtimeScope" : "host-simulator",
+  "selection" : {
+    "filters" : {
+      "ready" : false
+    },
+    "platform" : "ios",
+    "selector" : "triton-smoke-ios-20260711",
+    "source" : "alias",
+    "target" : {
+      "blockedReasons" : [
+
+      ],
+      "id" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67",
+      "kind" : "simulator",
+      "name" : "iPhone 17 Pro",
+      "platform" : "ios",
+      "ready" : true,
+      "runtime" : "iOS 26.5",
+      "scope" : "simulator",
+      "sensitive" : false,
+      "source" : "simctl",
+      "state" : "Booted",
+      "target" : "83407554-53AB-45B4-A0C1-D59F34E26A67"
+    }
+  },
+  "sourceCommand" : "xcrun simctl launch 83407554-53AB-45B4-A0C1-D59F34E26A67 com.neptunekit.tritonkit.demo",
+  "stderrTruncated" : false,
+  "stdout" : "com.neptunekit.tritonkit.demo: 63159",
+  "stdoutTruncated" : false,
+  "suggestedCommands" : [
+    "triton smoke <platform> --device <selector> --json"
+  ],
+  "target" : "sim:83407554-53AB-45B4-A0C1-D59F34E26A67\/app:com.neptunekit.tritonkit.demo",
+  "tool" : "xcrun"
+}

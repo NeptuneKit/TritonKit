@@ -61,3 +61,10 @@ sequenceDiagram
 - [ ] **M2：高频硬件 JPEG 编码器**：使用 CoreImage/Metal 编写宿主侧图像转换与 JPEG 压缩。
 - [ ] **M3：MJPEG 宿主流服务端集成**：在 `CLIServeCommand` 中增加 `/web/ios-simulator/framebuffer` 极速流接口。
 - [ ] **M4：Node.js 桥接层及前端挂载**：在 Node 桥接层检测并优先代理至该接口，完成端到端 120 FPS / <15ms 延迟交付。
+
+## 2026-07-11 路线裁决
+
+- 状态：已归档。
+- `CLIHostSimulatorFramebufferService`、IOSurface 捕获、MJPEG route 和 Web bridge 已存在，历史记录也保留了高帧率测量。
+- 本实现作为实验性 Web mock 能力保留，不再把 `<15ms`、`120 FPS` 或“零占用”作为对外产品 SLA。
+- 当前不继续补 M1-M4 勾选或性能优化；正式恢复 Web 产品体验时必须重新立项并定义可复现基准。

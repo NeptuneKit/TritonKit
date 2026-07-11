@@ -27,6 +27,12 @@ if ! grep -F 'type="password" value="secret-value" autocomplete="off" autocorrec
   exit 1
 fi
 
+if ! grep -F 'document.getElementById("submit").addEventListener("click"' "$demo_source" >/dev/null ||
+   ! grep -F 'document.getElementById("submit-status").textContent = "submitted=true"' "$demo_source" >/dev/null; then
+  echo "Demo basic WebView must expose a submit click business-state transition" >&2
+  exit 1
+fi
+
 if [[ "${TRITON_STATIC_ONLY:-0}" == "1" ]]; then
   echo "iOS WebView harness static checks passed"
   exit 0
@@ -63,10 +69,10 @@ tap_label_center() {
   local tap_json="$out_dir/tap-${name}.json"
   local x y
 
-  "$triton" find "$label" --host "$host" --port "$port" --target "$target" --all --json >"$find_json"
+  "$triton" act find "$label" --host "$host" --port "$port" --target "$target" --all --json >"$find_json"
   x="$(jq -er '.frame.x + (.frame.width / 2)' "$find_json")"
   y="$(jq -er '.frame.y + (.frame.height / 2)' "$find_json")"
-  "$triton" tap --host "$host" --port "$port" --target "$target" --x "$x" --y "$y" --json >"$tap_json"
+  "$triton" act tap --host "$host" --port "$port" --target "$target" --x "$x" --y "$y" --json >"$tap_json"
   jq -e '.ok == true' "$tap_json" >/dev/null
 }
 
@@ -124,6 +130,32 @@ for attempt in {1..20}; do
   fi
   sleep 0.5
 done
+
+"$triton" act tap \
+  --webview-aware \
+  --selector "#submit" \
+  --expect-text "submitted=true" \
+  --timeout 3 \
+  --host "$host" \
+  --port "$port" \
+  --target "$target" \
+  --json \
+  >"$out_dir/webview-aware-tap.json"
+
+jq -e '
+  .ok == true and
+  .status == "passed" and
+  .context == "webview" and
+  .selector == "#submit" and
+  ([.attempts[] | select(
+    .method == "dom_dispatch" and
+    .dispatched == true and
+    .trusted == false and
+    .performed == true
+  )] | length) == 1 and
+  .verification.expectText == "submitted=true" and
+  .verification.textMatched == true
+' "$out_dir/webview-aware-tap.json" >/dev/null
 
 tap_label_center "Web Edge" "web-edge"
 sleep 1

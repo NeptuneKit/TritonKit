@@ -58,3 +58,10 @@
 - [x] **静止零开销**：当屏幕没有任何交互、画面静止时，宿主与端侧的截图指令自动降频为 1Hz（1 FPS），避免 CPU 和 ADB/HDC 通信空转。
 - [x] **资源自动释放**：当 Web 前端断开 MJPEG 连接时，后台的 adb/hdc 截图 loop 线程在 1 秒内优雅退出，不残留僵尸进程。
 - [x] **三端页面无缝融合**：Web 端的 `StreamCard` 支持自适应不同平台的目标渲染，并能够根据选择的设备（iOS/Android/Harmony）自动切换不同的推流端点。
+
+## 2026-07-11 路线裁决
+
+- 状态：已归档。
+- Android/Harmony host pull service、HTTP route、Web bridge 与历史截图证据均已落地。
+- 当前 Web 仍是 mock 原型，本 space 不再追加帧率、解码器、断连或降频优化。
+- 若未来正式产品化实时画面流，必须新建 space，重新定义 CLI/HTTP 事实面、性能基准、资源释放和跨平台验收。

@@ -1,0 +1,2291 @@
+{
+  "action" : "observe.tree",
+  "artifacts" : [
+    "\/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-layout-C10D616C-1041-4B9C-AB63-F936651FF65F.json"
+  ],
+  "capturedAt" : "2026-07-11T01:58:27Z",
+  "nodes" : [
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "frame" : {
+        "height" : 2880,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:0",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : true,
+      "frame" : {
+        "height" : 2743,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 137
+      },
+      "hidden" : false,
+      "identifier" : "session19",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19",
+      "role" : "WindowScene",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : true,
+      "frame" : {
+        "height" : 2743,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 137
+      },
+      "hidden" : false,
+      "identifier" : "ScreenLockRootComponent",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2743,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 137
+      },
+      "hidden" : false,
+      "identifier" : "BackGroundView",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2743,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 137
+      },
+      "hidden" : false,
+      "identifier" : "396",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2743,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 137
+      },
+      "hidden" : false,
+      "identifier" : "MainPageView_Screen_Lock_Home",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2743,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 137
+      },
+      "hidden" : false,
+      "identifier" : "400",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0",
+      "role" : "EffectComponent",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2743,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 137
+      },
+      "hidden" : false,
+      "identifier" : "403",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1",
+      "role" : "RelativeContainer",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 154,
+        "width" : 1140,
+        "x" : 84,
+        "y" : 192
+      },
+      "hidden" : false,
+      "identifier" : "sl_lock_head",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,0",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 154,
+        "width" : 1140,
+        "x" : 84,
+        "y" : 192
+      },
+      "hidden" : false,
+      "identifier" : "437",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 1140,
+        "x" : 84,
+        "y" : 227
+      },
+      "hidden" : false,
+      "identifier" : "sl_lock_head_lock_anim",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,0,0,1",
+      "role" : "Flex",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 84,
+        "x" : 612,
+        "y" : 227
+      },
+      "hidden" : false,
+      "identifier" : "440",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,0,0,1,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 154,
+        "width" : 1140,
+        "x" : 84,
+        "y" : 192
+      },
+      "hidden" : false,
+      "identifier" : "444",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,0,0,2",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 154,
+        "width" : 1140,
+        "x" : 84,
+        "y" : 192
+      },
+      "hidden" : false,
+      "identifier" : "446",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,0,0,3",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 572,
+        "x" : 369,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "sl_clock",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1",
+      "role" : "Stack",
+      "source" : "host-layout",
+      "text" : "0, 9, 5, 8, 7月11日, 星期六, 五月廿七"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 570,
+        "x" : 369,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "451",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,0",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 572,
+        "x" : 369,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "453",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 572,
+        "x" : 369,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "Text_Digital",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "460",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "461",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "462",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,1",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "463",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "normal_clock",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,0",
+      "role" : "Stack",
+      "source" : "host-layout",
+      "text" : "0, 9, 5, 8"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 373,
+        "width" : 258,
+        "x" : 398,
+        "y" : 404
+      },
+      "hidden" : false,
+      "identifier" : "Text_Digital_Text_0_0",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,0,0",
+      "role" : "Text",
+      "source" : "host-layout",
+      "text" : "0"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 373,
+        "width" : 258,
+        "x" : 650,
+        "y" : 404
+      },
+      "hidden" : false,
+      "identifier" : "Text_Digital_Text_0_1",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,0,1",
+      "role" : "Text",
+      "source" : "host-layout",
+      "text" : "9"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 373,
+        "width" : 258,
+        "x" : 398,
+        "y" : 792
+      },
+      "hidden" : false,
+      "identifier" : "Text_Digital_Text_1_0",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,0,4",
+      "role" : "Text",
+      "source" : "host-layout",
+      "text" : "5"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 373,
+        "width" : 258,
+        "x" : 650,
+        "y" : 792
+      },
+      "hidden" : false,
+      "identifier" : "Text_Digital_Text_1_1",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,0,5",
+      "role" : "Text",
+      "source" : "host-layout",
+      "text" : "8"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1140,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "date_lunar",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,1",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 69,
+        "width" : 423,
+        "x" : 444,
+        "y" : 1194
+      },
+      "hidden" : false,
+      "identifier" : "482",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,1,0",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 69,
+        "width" : 219,
+        "x" : 444,
+        "y" : 1194
+      },
+      "hidden" : false,
+      "identifier" : "485",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,1,0,0",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 69,
+        "width" : 219,
+        "x" : 444,
+        "y" : 1194
+      },
+      "hidden" : false,
+      "identifier" : "date_normal_multiline",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,1,0,0,0",
+      "role" : "Text",
+      "source" : "host-layout",
+      "text" : "7月11日"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 69,
+        "width" : 176,
+        "x" : 691,
+        "y" : 1194
+      },
+      "hidden" : false,
+      "identifier" : "489",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,1,0,1",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 69,
+        "width" : 176,
+        "x" : 691,
+        "y" : 1194
+      },
+      "hidden" : false,
+      "identifier" : "week_multiline",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,1,0,1,0",
+      "role" : "Text",
+      "source" : "host-layout",
+      "text" : "星期六"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 69,
+        "width" : 234,
+        "x" : 538,
+        "y" : 1278
+      },
+      "hidden" : false,
+      "identifier" : "493",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,1,1",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 69,
+        "width" : 234,
+        "x" : 538,
+        "y" : 1278
+      },
+      "hidden" : false,
+      "identifier" : "lunar_multiline",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,1,1,0,0,2,1,1,0",
+      "role" : "Text",
+      "source" : "host-layout",
+      "text" : "五月廿七"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 350,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "sl_bottom_tools_icon",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3",
+      "role" : "RelativeContainer",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 56,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "sl_quick_tools_icon",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,0",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 56,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "QuickToolsHotZone",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 56,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "ScreenLock-QuickToolBar",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,0,0,0",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 56,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "1169",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,0,0,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 56,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "1172",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,0,0,0,0,0",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 56,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "1173",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,0,0,0,0,1",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 84,
+        "x" : 98,
+        "y" : 2572
+      },
+      "hidden" : false,
+      "identifier" : "1174",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,0,0,0,0,2",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 84,
+        "x" : 98,
+        "y" : 2572
+      },
+      "hidden" : false,
+      "identifier" : "QuickToolCommon_QUICK_TOOLS_ICON_IMAGE",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,0,0,0,0,2,0",
+      "role" : "SymbolGlyph",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 1084,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "sl_camera_icon",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,1",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 1084,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "id_persist_camera_icon",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,1,0",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 1084,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "620",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,1,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 1084,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "623",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,1,0,0,0",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 168,
+        "width" : 168,
+        "x" : 1084,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "624",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,1,0,0,1",
+      "role" : "Column",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 84,
+        "x" : 1126,
+        "y" : 2572
+      },
+      "hidden" : false,
+      "identifier" : "625",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,1,0,0,2",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 84,
+        "x" : 1126,
+        "y" : 2572
+      },
+      "hidden" : false,
+      "identifier" : "QuickToolCommon_QUICK_TOOLS_ICON_IMAGE",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,3,1,0,0,2,0",
+      "role" : "SymbolGlyph",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2534,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "sl_immersive_list",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,4",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2478,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 402
+      },
+      "hidden" : false,
+      "identifier" : "sl_immersive_list_show_area",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,4,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1682,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 792
+      },
+      "hidden" : false,
+      "identifier" : "654",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,4,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1682,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 792
+      },
+      "hidden" : false,
+      "identifier" : "652",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,4,0,3",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2184,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "sl_immersive_card",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,5",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 2184,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 346
+      },
+      "hidden" : false,
+      "identifier" : "636",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,5,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1682,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 792
+      },
+      "hidden" : false,
+      "identifier" : "sl_immersive_card_show_area",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,5,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 1682,
+        "width" : 1196,
+        "x" : 56,
+        "y" : 792
+      },
+      "hidden" : false,
+      "identifier" : "sl_immersive_card_for_aod",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,5,0,0,1",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 189,
+        "width" : 776,
+        "x" : 266,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "sl_immersive_capsule",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,6",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : false,
+      "focused" : false,
+      "frame" : {
+        "height" : 189,
+        "width" : 776,
+        "x" : 266,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "sl_immersive_cap_show_area",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,6,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 189,
+        "width" : 776,
+        "x" : 266,
+        "y" : 2530
+      },
+      "hidden" : false,
+      "identifier" : "sl_immersive_cap_for_aod",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT19,0,1,0,0,1,6,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 203,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "session24",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24",
+      "role" : "WindowScene",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 203,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarBox",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 203,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "838",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 203,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarBridgeView",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0",
+      "role" : "__Common__",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 203,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarViewV2",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 203,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "849",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0",
+      "role" : "EffectComponent",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 203,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarView",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 137,
+        "width" : 1308,
+        "x" : 0,
+        "y" : 0
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarBackground_Row_0",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,0",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 1252,
+        "x" : 56,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "sbg_left",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,1",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 1252,
+        "x" : 56,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "857",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,1,0",
+      "role" : "RelativeContainer",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 1252,
+        "x" : 0,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "sbg_right",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2",
+      "role" : "RelativeContainer",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 63,
+        "x" : 915,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarIconWrapper_status_bar_do_not_disturb",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 56,
+        "x" : 922,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "2055",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,0,0",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 56,
+        "width" : 56,
+        "x" : 922,
+        "y" : 51
+      },
+      "hidden" : false,
+      "identifier" : "FocusMode-StatusBarFocusModeComponent_Image_icon",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,0,0,0",
+      "role" : "SymbolGlyph",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 87,
+        "x" : 978,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarIconWrapper_status_bar_ethernet",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,1",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 81,
+        "x" : 985,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "1014",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,1,0",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 56,
+        "width" : 81,
+        "x" : 985,
+        "y" : 51
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarIconItemEthernetComponent_Image_icon",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,1,0,0",
+      "role" : "Image",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 79,
+        "x" : 1065,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarIconWrapper_status_bar_signal",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,2",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 72,
+        "x" : 1072,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "1059",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,2,0",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 56,
+        "width" : 72,
+        "x" : 1072,
+        "y" : 51
+      },
+      "hidden" : false,
+      "identifier" : "1064",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,2,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 56,
+        "width" : 72,
+        "x" : 1072,
+        "y" : 51
+      },
+      "hidden" : false,
+      "identifier" : "SignalComponent-SignalIcon_Image_cellular",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,2,0,0,0",
+      "role" : "Image",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 56,
+        "width" : 72,
+        "x" : 1072,
+        "y" : 51
+      },
+      "hidden" : false,
+      "identifier" : "SignalComponent-SignalIcon_Image_cellularImage",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,2,0,0,1",
+      "role" : "Image",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 108,
+        "x" : 1144,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarIconWrapper_status_bar_battery",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,3",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 84,
+        "width" : 101,
+        "x" : 1151,
+        "y" : 37
+      },
+      "hidden" : false,
+      "identifier" : "BatteryComponent-batteryIcon_Image_batteryIcon",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,3,0",
+      "role" : "Row",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 59,
+        "width" : 101,
+        "x" : 1151,
+        "y" : 50
+      },
+      "hidden" : false,
+      "identifier" : "996",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,3,0,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 56,
+        "width" : 101,
+        "x" : 1151,
+        "y" : 52
+      },
+      "hidden" : false,
+      "identifier" : "BatteryComponent-batteryIcon_Image_batteryBorder",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,3,0,0,0",
+      "role" : "Image",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 56,
+        "width" : 101,
+        "x" : 1151,
+        "y" : 52
+      },
+      "hidden" : false,
+      "identifier" : "BatteryComponent-batteryIcon_Image_batteryProgress",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,3,0,0,1",
+      "role" : "Image",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 56,
+        "width" : 101,
+        "x" : 1146,
+        "y" : 53
+      },
+      "hidden" : false,
+      "identifier" : "BatteryComponent-batteryIcon_Text_batterySoc",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,0,2,3,0,0,2",
+      "role" : "Text",
+      "source" : "host-layout",
+      "text" : "100"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 98,
+        "width" : 307,
+        "x" : 505,
+        "y" : 30
+      },
+      "hidden" : false,
+      "identifier" : "StatusBarView_LiveCapsuleListContainer",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,1",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 98,
+        "width" : 307,
+        "x" : 505,
+        "y" : 30
+      },
+      "hidden" : false,
+      "identifier" : "[Live]LiveCapsuleListView",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,1,0",
+      "role" : "Stack",
+      "source" : "host-layout"
+    },
+    {
+      "candidateOnly" : false,
+      "capabilities" : [
+        "visible",
+        "tap"
+      ],
+      "confidence" : 0.7,
+      "enabled" : true,
+      "focused" : false,
+      "frame" : {
+        "height" : 157,
+        "width" : 614,
+        "x" : 352,
+        "y" : 1
+      },
+      "hidden" : false,
+      "identifier" : "LiveMetaBallBaseVm",
+      "missingCapabilities" : [
+        "semantic-action"
+      ],
+      "nodeID" : "harmony:host:ROOT24,0,0,0,0,0,1,0,0",
+      "role" : "metaballNode",
+      "source" : "host-layout"
+    }
+  ],
+  "note" : "Host layout proves visible text, bounds, and coordinate actions only; DOM, JavaScript, and WebView bridge remain unavailable without a provider.",
+  "ok" : true,
+  "partial" : true,
+  "platform" : "harmony",
+  "primarySource" : {
+    "artifact" : "\/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-layout-C10D616C-1041-4B9C-AB63-F936651FF65F.json",
+    "available" : true,
+    "name" : "host-layout",
+    "sourceCommands" : [
+      "hdc -t 127.0.0.1:5555 shell uitest dumpLayout",
+      "hdc -t 127.0.0.1:5555 file recv \/data\/local\/tmp\/layout_38278460627.json \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-layout-C10D616C-1041-4B9C-AB63-F936651FF65F.json"
+    ]
+  },
+  "sourceCommands" : [
+    "hdc -t 127.0.0.1:5555 shell uitest dumpLayout",
+    "hdc -t 127.0.0.1:5555 file recv \/data\/local\/tmp\/layout_38278460627.json \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-layout-C10D616C-1041-4B9C-AB63-F936651FF65F.json"
+  ],
+  "sources" : [
+    {
+      "artifact" : "\/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-layout-C10D616C-1041-4B9C-AB63-F936651FF65F.json",
+      "available" : true,
+      "name" : "host-layout",
+      "sourceCommands" : [
+        "hdc -t 127.0.0.1:5555 shell uitest dumpLayout",
+        "hdc -t 127.0.0.1:5555 file recv \/data\/local\/tmp\/layout_38278460627.json \/var\/folders\/rk\/yj_4tlx92sz7t5k73kxppyl80000gn\/T\/triton-layout-C10D616C-1041-4B9C-AB63-F936651FF65F.json"
+      ]
+    },
+    {
+      "available" : false,
+      "name" : "runtime-tree",
+      "reason" : "runtime-base-url not provided",
+      "sourceCommands" : [
+
+      ]
+    },
+    {
+      "available" : false,
+      "name" : "webview-provider",
+      "reason" : "provider not registered",
+      "sourceCommands" : [
+
+      ]
+    }
+  ],
+  "target" : "127.0.0.1:5555"
+}

@@ -1,0 +1,17 @@
+{
+  "action" : "webview.call",
+  "capturedAt" : "2026-07-11T01:48:25Z",
+  "elapsedMs" : 6,
+  "method" : "emitEdgeEvent",
+  "ok" : true,
+  "pageSessionID" : "ios-webkit:371:page:2805640995122866841",
+  "platform" : "ios",
+  "redaction" : {
+
+  },
+  "result" : {
+    "ok" : true
+  },
+  "target" : "embedded-runtime",
+  "webViewID" : "ios-webkit:371"
+}
