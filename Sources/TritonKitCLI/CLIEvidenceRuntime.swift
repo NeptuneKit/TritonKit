@@ -512,7 +512,11 @@ func printEvidenceManifest(_ manifest: TKEvidenceManifest, format: ClientOutputF
         print(try encodeJSON(manifest))
     case .text:
         print("ok: \(manifest.ok)")
+        print("partial: \(manifest.partial)")
         print("output: \(manifest.output)")
+        if let error = manifest.error {
+            print("error: \(error.code): \(error.message)")
+        }
         if let name = manifest.name { print("name: \(name)") }
         print("artifacts: \(manifest.artifacts.count)")
         if !manifest.skipped.isEmpty {

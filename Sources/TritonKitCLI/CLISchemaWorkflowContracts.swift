@@ -123,6 +123,8 @@ func evidenceManifestOutputContract() -> TKCommandOutputContract {
         model: "TKEvidenceManifest",
         fields: schemaContractFields([
             ("ok", "Bool", true, "Whether the evidence operation succeeded"),
+            ("partial", "Bool", true, "Whether one or more requested artifacts were skipped"),
+            ("error", "TKCLIErrorDetail?", false, "Aggregate capture failure when artifact requests fail"),
             ("formatVersion", "Int", true, "Evidence manifest format version"),
             ("name", "String?", false, "Scenario name"),
             ("note", "String?", false, "Human note"),
@@ -134,6 +136,7 @@ func evidenceManifestOutputContract() -> TKCommandOutputContract {
             ("primaryArtifact", "TKEvidenceArtifactSummary?", false, "Primary artifact summary agents should inspect first"),
             ("primaryArtifacts", "[TKEvidenceArtifactSummary]", true, "High-signal artifact summaries agents should inspect first"),
             ("skipped", "[TKEvidenceSkippedArtifact]", true, "Skipped artifact records"),
+            ("skipped[].error", "TKCLIErrorDetail?", false, "Structured artifact failure when the skip was caused by a request or write error"),
             ("target", "TKEvidenceTarget?", false, "Target metadata"),
             ("cli", "TKEvidenceCLI", true, "CLI metadata"),
             ("run", "TKEvidenceRunManifest?", false, "Run events and screenshots metadata"),

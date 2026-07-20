@@ -2,6 +2,8 @@ import Foundation
 
 public struct TKEvidenceManifest: Codable, Equatable {
     public let ok: Bool
+    public let partial: Bool
+    public let error: TKCLIErrorDetail?
     public let formatVersion: Int
     public let name: String?
     public let note: String?
@@ -18,6 +20,8 @@ public struct TKEvidenceManifest: Codable, Equatable {
 
     public init(
         ok: Bool,
+        partial: Bool? = nil,
+        error: TKCLIErrorDetail? = nil,
         formatVersion: Int = 1,
         name: String? = nil,
         note: String? = nil,
@@ -33,6 +37,8 @@ public struct TKEvidenceManifest: Codable, Equatable {
         screenWorkspace: TKEvidenceScreenWorkspaceManifest? = nil
     ) {
         self.ok = ok
+        self.partial = partial ?? !skipped.isEmpty
+        self.error = error
         self.formatVersion = formatVersion
         self.name = name
         self.note = note
@@ -50,6 +56,8 @@ public struct TKEvidenceManifest: Codable, Equatable {
 
     enum CodingKeys: String, CodingKey {
         case ok
+        case partial
+        case error
         case formatVersion
         case name
         case note
@@ -68,7 +76,10 @@ public struct TKEvidenceManifest: Codable, Equatable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let artifacts = try container.decode([TKEvidenceArtifact].self, forKey: .artifacts)
+        let skipped = try container.decodeIfPresent([TKEvidenceSkippedArtifact].self, forKey: .skipped) ?? []
         self.ok = try container.decode(Bool.self, forKey: .ok)
+        self.partial = try container.decodeIfPresent(Bool.self, forKey: .partial) ?? !skipped.isEmpty
+        self.error = try container.decodeIfPresent(TKCLIErrorDetail.self, forKey: .error)
         self.formatVersion = try container.decode(Int.self, forKey: .formatVersion)
         self.name = try container.decodeIfPresent(String.self, forKey: .name)
         self.note = try container.decodeIfPresent(String.self, forKey: .note)
@@ -79,7 +90,7 @@ public struct TKEvidenceManifest: Codable, Equatable {
             ?? TKEvidenceArtifactSummary.defaultPrimaryArtifacts(from: artifacts.map(TKEvidenceArtifactSummary.init))
         self.primaryArtifact = try container.decodeIfPresent(TKEvidenceArtifactSummary.self, forKey: .primaryArtifact)
             ?? self.primaryArtifacts.first
-        self.skipped = try container.decodeIfPresent([TKEvidenceSkippedArtifact].self, forKey: .skipped) ?? []
+        self.skipped = skipped
         self.target = try container.decodeIfPresent(TKEvidenceTarget.self, forKey: .target)
         self.cli = try container.decode(TKEvidenceCLI.self, forKey: .cli)
         self.run = try container.decodeIfPresent(TKEvidenceRunManifest.self, forKey: .run)
@@ -186,10 +197,12 @@ public struct TKEvidenceArtifact: Codable, Equatable {
 public struct TKEvidenceSkippedArtifact: Codable, Equatable {
     public let kind: String
     public let reason: String
+    public let error: TKCLIErrorDetail?
 
-    public init(kind: String, reason: String) {
+    public init(kind: String, reason: String, error: TKCLIErrorDetail? = nil) {
         self.kind = kind
         self.reason = reason
+        self.error = error
     }
 }
 

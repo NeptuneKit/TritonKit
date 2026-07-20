@@ -75,6 +75,8 @@ struct TKEvidenceModelsTests {
         let decoded = try JSONDecoder().decode(TKEvidenceManifest.self, from: data)
 
         #expect(decoded.formatVersion == 1)
+        #expect(decoded.partial)
+        #expect(decoded.error == nil)
         #expect(decoded.name == "login-success")
         #expect(decoded.artifacts.map(\.kind) == ["run.events", "run.meta", "screenshot", "status", "harmony.layout", "harmony.webview-snapshot", "harmony.route-warning", "harmony.hdc-recovery-plan"])
         #expect(decoded.primaryArtifact?.kind == "screenshot")
@@ -117,6 +119,8 @@ struct TKEvidenceModelsTests {
         let decoded = try JSONDecoder().decode(TKEvidenceManifest.self, from: data)
 
         #expect(decoded.run == nil)
+        #expect(!decoded.partial)
+        #expect(decoded.error == nil)
         #expect(decoded.artifacts.isEmpty)
         #expect(decoded.primaryArtifact == nil)
         #expect(decoded.primaryArtifacts.isEmpty)

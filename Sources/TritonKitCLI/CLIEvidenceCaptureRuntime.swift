@@ -33,6 +33,7 @@ func captureEvidenceBundle(
     let startedAt = ISO8601DateFormatter().string(from: Date())
     var artifacts: [TKEvidenceArtifact] = []
     var skipped: [TKEvidenceSkippedArtifact] = []
+    var artifactErrors: [TKCLIErrorDetail] = []
     var status: TKStatusResponse?
     var targetSummary: TKTargetSummary?
 
@@ -52,7 +53,7 @@ func captureEvidenceBundle(
                     artifacts: &artifacts
                 )
             } catch {
-                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+                appendEvidenceArtifactFailure(kind: kind, error: error, endpoint: "/evidence/artifacts/version", host: host, port: port, skipped: &skipped, artifactErrors: &artifactErrors)
             }
         case "status":
             do {
@@ -68,7 +69,7 @@ func captureEvidenceBundle(
                     artifacts: &artifacts
                 )
             } catch {
-                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+                appendEvidenceArtifactFailure(kind: kind, error: error, endpoint: "/status", host: host, port: port, skipped: &skipped, artifactErrors: &artifactErrors)
             }
         case "list":
             do {
@@ -90,7 +91,7 @@ func captureEvidenceBundle(
                     artifacts: &artifacts
                 )
             } catch {
-                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+                appendEvidenceArtifactFailure(kind: kind, error: error, endpoint: "/targets", host: host, port: port, skipped: &skipped, artifactErrors: &artifactErrors)
             }
         case "logs":
             skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "unsupported in the current embedded runtime"))
@@ -101,7 +102,7 @@ func captureEvidenceBundle(
         case "runtime.snapshot":
             do {
                 if targetSummary == nil {
-                    let resolved = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                    let resolved = try await resolveEvidenceRuntimeClient(target: target, host: host, port: port, session: urlSession)
                     targetSummary = resolved.summary
                     client = resolved.client
                 }
@@ -117,7 +118,7 @@ func captureEvidenceBundle(
                     artifacts: &artifacts
                 )
             } catch {
-                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+                appendEvidenceArtifactFailure(kind: kind, error: error, endpoint: "/request", host: host, port: port, skipped: &skipped, artifactErrors: &artifactErrors)
             }
         case "host.layout":
             skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "host layout capture requires a platform smoke/observe path such as Android uiautomator or Harmony uitest"))
@@ -148,7 +149,7 @@ func captureEvidenceBundle(
         case "hierarchy", "ax", "geometry", "screenshot", "archive":
             do {
                 if targetSummary == nil {
-                    let resolved = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: true)
+                    let resolved = try await resolveEvidenceRuntimeClient(target: target, host: host, port: port, session: urlSession)
                     targetSummary = resolved.summary
                     client = resolved.client
                 }
@@ -213,15 +214,23 @@ func captureEvidenceBundle(
                     break
                 }
             } catch {
-                skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error)))
+                appendEvidenceArtifactFailure(kind: kind, error: error, endpoint: "/request", host: host, port: port, skipped: &skipped, artifactErrors: &artifactErrors)
             }
         default:
             skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: "unsupported"))
         }
     }
 
+    let captureError = evidencePartialCaptureError(
+        artifactErrors: artifactErrors,
+        skipped: skipped,
+        artifacts: artifacts
+    )
+    let targetUnavailable = artifactErrors.contains { $0.code == "target_not_found" }
     let manifest = TKEvidenceManifest(
-        ok: true,
+        ok: captureError == nil,
+        partial: !skipped.isEmpty,
+        error: captureError,
         name: name,
         note: note,
         createdAt: startedAt,
@@ -231,13 +240,13 @@ func captureEvidenceBundle(
         target: targetSummary.map { summary in
             TKEvidenceTarget(
                 id: summary.id,
-                connected: summary.connected,
+                connected: targetUnavailable ? false : summary.connected,
                 appName: summary.appName,
                 bundleIdentifier: summary.bundleIdentifier,
                 deviceDescription: summary.deviceDescription,
                 osDescription: summary.osDescription,
                 identityState: summary.identityState ?? "unknown",
-                targetConnectionState: status?.targetConnectionState ?? (summary.connected ? "connected" : "disconnected"),
+                targetConnectionState: targetUnavailable ? "disconnected" : (status?.targetConnectionState ?? (summary.connected ? "connected" : "disconnected")),
                 hierarchyCacheState: summary.hierarchyCacheState ?? status?.hierarchyCacheState
             )
         },
@@ -245,6 +254,55 @@ func captureEvidenceBundle(
     )
     try prettyEncodedData(manifest).write(to: outputURL.appendingPathComponent("manifest.json"), options: .atomic)
     return manifest
+}
+
+private func resolveEvidenceRuntimeClient(
+    target: String,
+    host: String,
+    port: Int,
+    session: URLSession
+) async throws -> (summary: TKTargetSummary, client: TritonKitHTTPClient) {
+    let resolver = TritonKitHTTPClient(host: host, port: port, session: session)
+    let targets: TKTargetsResponse = try await resolver.getJSON("/targets")
+    let summary = try TKResolveTargetSummary(target, in: targets.targets)
+    return (
+        summary,
+        TritonKitHTTPClient(host: host, port: port, target: summary.id, session: session)
+    )
+}
+
+private func appendEvidenceArtifactFailure(
+    kind: String,
+    error: Error,
+    endpoint: String,
+    host: String,
+    port: Int,
+    skipped: inout [TKEvidenceSkippedArtifact],
+    artifactErrors: inout [TKCLIErrorDetail]
+) {
+    let detail = cliErrorDetail(for: error, endpoint: endpoint, host: host, port: port)
+    skipped.append(TKEvidenceSkippedArtifact(kind: kind, reason: evidenceSkipReason(error), error: detail))
+    artifactErrors.append(detail)
+}
+
+private func evidencePartialCaptureError(
+    artifactErrors: [TKCLIErrorDetail],
+    skipped: [TKEvidenceSkippedArtifact],
+    artifacts: [TKEvidenceArtifact]
+) -> TKCLIErrorDetail? {
+    guard let first = artifactErrors.first else { return nil }
+    let failedKinds = skipped.compactMap { $0.error == nil ? nil : $0.kind }
+    return TKCLIErrorDetail(
+        code: "evidence_capture_partial",
+        message: "Evidence capture wrote \(artifacts.count) artifact(s) and failed to capture \(failedKinds.count): \(failedKinds.joined(separator: ", ")). First failure: \(first.code).",
+        endpoint: first.endpoint,
+        hint: first.hint ?? "Inspect skipped[].error and reconnect the target before retrying evidence capture.",
+        nextAction: first.nextAction,
+        suggestedCommands: first.suggestedCommands ?? [
+            "triton list --json",
+            "triton status --json",
+        ]
+    )
 }
 
 func captureEvidenceScreenshot(
