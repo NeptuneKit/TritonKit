@@ -1,6 +1,6 @@
 # GitHub Issue #153：iOS 真机 App Container 文件拉取
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#153](https://github.com/NeptuneKit/TritonKit/issues/153)
 >
@@ -90,3 +90,4 @@
 - `docs-linhay/scripts/verify.sh --local` 全量通过：SwiftPM dependency boundary、Debug isolation、根包 226 项 Swift tests、release CLI build/smoke、Harmony/iOS runtime smoke、iOS Simulator build、docs 与 whitespace gate 均成功。
 - Debug TestFixture 会生成固定 `Library/Application Support/TritonKitFixture/app-pull-sentinel.json`，内容仅含 issue/kind/pass，用于安全真机 smoke。
 - `triton xcode run` 已完成 TestFixture iphoneos Debug build 与真机 install，并由 devicectl 启用 DDI services；设备在 launch 时锁定，Triton 返回 `device_locked`，sentinel 未生成。随后 `triton app pull` 返回 `ddi_missing`。本轮保留这组稳定环境 blocker，不绕过 Triton 或宣称动态成功。
+- 已以 `eaf99bb0` 合入 `main`；GitHub Actions [run 29738161353](https://github.com/NeptuneKit/TritonKit/actions/runs/29738161353) 全部通过后关闭 #153。

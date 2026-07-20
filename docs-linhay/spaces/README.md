@@ -19,7 +19,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 执行 | [20260720-issue-153-real-device-app-pull](./20260720-issue-153-real-device-app-pull/README.md) | 真机 data/app-group container 文件拉取必须成为 schema-backed Triton artifact command | BDD/TDD 实现 app pull、安全边界与仓库 fixture 真机 smoke 后合入 #153 |
+| 已归档 | [20260720-issue-153-real-device-app-pull](./20260720-issue-153-real-device-app-pull/README.md) | 真机 data/app-group container 文件拉取已成为 schema-backed、受目录/字节/覆盖安全边界约束的 Triton artifact command | 已合入 `main`；CI 全绿后关闭 #153，真机锁屏 blocker 如实保留 |
 | 已归档 | [20260720-issue-152-real-device-launch-env](./20260720-issue-152-real-device-launch-env/README.md) | 真机 launch env 已改用 devicectl 显式 JSON flag，sourceCommand 按 argv index 脱敏 | 已合入 `main`；推送并等待 CI 后关闭 #152 |
 | 已归档 | [20260720-issue-150-xcode-package-build](./20260720-issue-150-xcode-package-build/README.md) | Xcode discovery 返回的 `Package.swift` 已可被 defaults、schemes/build/test/run 与点分 schema 直接消费 | 已合入 `main`；推送并等待 CI 后关闭 #150 |
 | 已归档 | [20260720-issue-149-ios-host-wait](./20260720-issue-149-ios-host-wait/README.md) | iOS Simulator wait 已复用 host AX observer，help/schema/capability 与 disconnected 执行边界已统一 | 已合入 `main`；推送并等待 CI 后关闭 #149 |
