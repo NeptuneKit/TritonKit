@@ -9,12 +9,14 @@ public enum TKDevicectlCommand {
         capturesArtifacts: Bool = true,
         sensitiveOutput: Bool = true,
         environment: [String: String] = [:],
-        redactedEnvironmentKeys: Set<String> = []
+        redactedEnvironmentKeys: Set<String> = [],
+        redactedArgumentIndexes: Set<Int> = []
     ) -> TKHostCommand {
         TKHostCommand(
             arguments: arguments,
             environment: environment,
             redactedEnvironmentKeys: redactedEnvironmentKeys,
+            redactedArgumentIndexes: redactedArgumentIndexes,
             riskLevel: riskLevel,
             requiredConfig: requiredConfig,
             defaultTimeoutSeconds: defaultTimeoutSeconds,
@@ -69,20 +71,33 @@ public enum TKDevicectlCommand {
         if let payloadURL {
             arguments += ["--payload-url", payloadURL]
         }
+        var redactedArgumentIndexes: Set<Int> = []
+        if !environment.isEmpty {
+            arguments += ["--environment-variables", encodedEnvironmentVariables(environment)]
+            redactedArgumentIndexes.insert(arguments.count - 1)
+        }
         arguments += artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput)
         arguments.append(bundleID)
         arguments += appArguments
-        let childEnvironment = environment.reduce(into: [String: String]()) { result, pair in
-            result["DEVICECTL_CHILD_\(pair.key)"] = pair.value
-        }
         return command(
             arguments,
             riskLevel: .automation,
             requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
             defaultTimeoutSeconds: 60,
-            environment: childEnvironment,
-            redactedEnvironmentKeys: Set(childEnvironment.keys)
+            redactedArgumentIndexes: redactedArgumentIndexes
         )
+    }
+
+    private static func encodedEnvironmentVariables(_ environment: [String: String]) -> String {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        guard
+            let data = try? encoder.encode(environment),
+            let json = String(data: data, encoding: .utf8)
+        else {
+            return "{}"
+        }
+        return json
     }
 
     public static func terminateApp(identifier: String, bundleID: String, jsonOutput: String, logOutput: String) -> TKHostCommand {

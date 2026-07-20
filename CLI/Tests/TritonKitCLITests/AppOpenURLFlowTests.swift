@@ -107,10 +107,11 @@ struct AppOpenURLFlowTests {
         #expect(realPlan.command.argv.contains("00008110-001C195E0A10801E"))
         #expect(realPlan.command.argv.contains("ios-real:abc123") == false)
         #expect(realPlan.command.argv.contains("debug-route"))
-        #expect(realPlan.command.environment["DEVICECTL_CHILD_TRITON_HOST"] == "192.168.1.2")
-        #expect(realPlan.command.environment["DEVICECTL_CHILD_TRITON_PORT"] == "19431")
+        #expect(realPlan.command.environment.isEmpty)
+        #expect(realPlan.command.argv.contains("--environment-variables"))
         let realSourceCommand = hostSourceCommand(realPlan.command)
-        #expect(realSourceCommand.contains("DEVICECTL_CHILD_TRITON_HOST=<redacted>"))
+        #expect(realSourceCommand.contains("--environment-variables <redacted>"))
+        #expect(realSourceCommand.contains("TRITON_HOST") == false)
         #expect(realSourceCommand.contains("192.168.1.2") == false)
     }
 
@@ -126,7 +127,7 @@ struct AppOpenURLFlowTests {
     func appSchemaExposesLaunchEnvAndArgumentOptions() throws {
         let app = try #require(commandSchemas().first { $0.name == "app" })
         #expect(app.usageForms.contains { $0.form == "launch --bundle-id <id>" && $0.description.contains("simulator or real-device") })
-        #expect(app.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") && $0.description.contains("DEVICECTL_CHILD") })
+        #expect(app.options.contains { $0.name == "--env" && $0.description.contains("SIMCTL_CHILD") && $0.description.contains("--environment-variables") })
         #expect(app.options.contains { $0.name == "--arg" && $0.description.contains("launch argument") })
         #expect(app.examples.contains("triton app launch --device iphone15 --bundle-id com.example.app --env FEATURE_FLAG=1 --arg debug-route --arg demo.home --json"))
     }

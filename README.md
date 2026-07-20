@@ -582,6 +582,8 @@ If `triton xcode build/test/run` returns `xcodebuild_interrupted` or `orphaned_x
 
 `xcode run` proves build, install, and launch were submitted. It does not prove business readiness; continue with `triton status`, `triton wait`, `triton verify`, screenshot, or evidence.
 
+For iOS launch environment, repeat `--env KEY=VALUE`. Simulator launch maps values to `SIMCTL_CHILD_*`; physical-device launch sends a `devicectl --environment-variables` JSON dictionary. Machine-readable `sourceCommand` keeps the flag visible but redacts the whole JSON value.
+
 `xctrace record` and `coverage report` are artifact commands. They return paths, source commands, and byte summaries; they do not inline large `.trace` or coverage payloads and do not prove app business readiness by themselves. Stdout-backed artifact writes reject existing files and symbolic links by default to avoid accidental overwrite during agent runs.
 
 Common host target discovery, selection, and readiness are exposed through `triton target`. `target resolve/use` accept `--scope simulator|emulator|real|all`, and the target command family accepts `--adb` / `--hdc` so workspace evidence can reproduce Android and Harmony discovery with custom tool paths. Keep `triton device` for host-side tool probing, aliasing, Android Emulator start/stop, runtime-url, screenshot, and Harmony stop orchestration, and keep `triton sim` for iOS-only advanced maintenance such as runtime, privacy, location, status bar, pasteboard, push, logs, and diagnostics.

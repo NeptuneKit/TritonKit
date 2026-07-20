@@ -358,7 +358,10 @@ func hostSourceCommand(_ command: TKHostCommand) -> String {
         let value = command.redactedEnvironmentKeys.contains(key) ? "<redacted>" : (command.environment[key] ?? "")
         return "\(key)=\(shellEscaped(value))"
     }
-    let invocation = (environment + ([command.executable] + command.arguments).map(shellEscaped)).joined(separator: " ")
+    let arguments = command.arguments.enumerated().map { index, argument in
+        shellEscaped(command.redactedArgumentIndexes.contains(index) ? "<redacted>" : argument)
+    }
+    let invocation = (environment + [shellEscaped(command.executable)] + arguments).joined(separator: " ")
     guard let workingDirectory = command.workingDirectory, !workingDirectory.isEmpty else {
         return invocation
     }
