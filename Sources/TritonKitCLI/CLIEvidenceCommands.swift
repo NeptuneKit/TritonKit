@@ -248,7 +248,7 @@ struct Capture: AsyncParsableCommand {
     }
 }
 
-private func runEvidenceCaptureEntrypoint(
+func runEvidenceCaptureEntrypoint(
     caseName: String?,
     output: String,
     target: String,
@@ -262,7 +262,8 @@ private func runEvidenceCaptureEntrypoint(
     json: Bool,
     refresh: Bool,
     command: String,
-    endpoint: String
+    endpoint: String,
+    urlSession: URLSession = .shared
 ) async throws {
     let outputFormat = effectiveFormat(format, json: json)
     let includes: [String]
@@ -282,9 +283,13 @@ private func runEvidenceCaptureEntrypoint(
             port: port,
             refresh: refresh,
             xcodeSummaryPath: xcodeSummary,
-            proxySessionPath: proxySession
+            proxySessionPath: proxySession,
+            urlSession: urlSession
         )
         try printEvidenceManifest(manifest, format: outputFormat)
+        if !manifest.ok {
+            throw ExitCode.failure
+        }
     } catch {
         if error is ExitCode { throw error }
         try failCommand(error, outputFormat: outputFormat, endpoint: endpoint, host: host, port: port)

@@ -497,8 +497,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton evidence redact /tmp/login-success.tritonevidence --profile ios-private --output /tmp/login-redacted.tritonevidence --json",
             ],
             successShape: "TKEvidenceManifest, TKEvidenceSummaryResponse, TKEvidenceRedactionResponse, or TKScreenWorkspaceProjectionResponse",
-            failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use evidence after a failed or completed run to capture auditable artifacts. Summaries, redaction, and screen projection are offline and do not require a runtime connection.",
+            failureShape: "Validation failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }; partial capture writes one TKEvidenceManifest with ok:false, partial:true, aggregate error, and skipped[].error before exiting non-zero",
+            outputSemantics: "Use evidence after a failed or completed run to capture auditable artifacts. JSON mode emits exactly one document. Expected unsupported artifacts produce ok:true, partial:true; request/write failures produce ok:false, partial:true and a non-zero exit. Summaries, redaction, and screen projection are offline and do not require a runtime connection.",
             artifacts: ["evidence-bundle", "manifest", "screenshots", "logs", "host-artifacts", "xcode-artifacts", "real-device.diagnostics", "host.app-action", "runtime.snapshot", "host.layout", "build.summary", "network-capture", "proxy-restore", "app.structured-evidence", "screen-workspace", "screen-workspace.screens", "screen-workspace.transitions"],
             nextCommands: [
                 "triton status --json",
@@ -517,9 +517,9 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 evidenceRedactionOutputContract(),
                 evidenceScreenWorkspaceProjectionOutputContract(),
             ],
-            failureCodes: ["validation_failed", "missing_observation_events", "missing_run_events", "invalid_run_events", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"],
+            failureCodes: ["validation_failed", "missing_observation_events", "missing_run_events", "invalid_run_events", "evidence_capture_partial", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"],
             subcommands: [
-                TKCommandSubcommandSchema(name: "capture", summary: "Capture a runtime-backed evidence bundle", requiredOptions: ["--output"], optionalOptions: ["--case", "--target", "--host", "--port", "--include", "--note", "--xcode-summary", "--proxy-session", "--refresh", "--no-refresh", "--format", "--json"], outputSelectors: ["evidence.manifest"], failureCodes: ["validation_failed", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"]),
+                TKCommandSubcommandSchema(name: "capture", summary: "Capture a runtime-backed evidence bundle", requiredOptions: ["--output"], optionalOptions: ["--case", "--target", "--host", "--port", "--include", "--note", "--xcode-summary", "--proxy-session", "--refresh", "--no-refresh", "--format", "--json"], outputSelectors: ["evidence.manifest"], failureCodes: ["validation_failed", "evidence_capture_partial", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"]),
                 TKCommandSubcommandSchema(name: "inspect", summary: "Read an existing bundle manifest", requiredOptions: ["<path>"], optionalOptions: ["--format", "--json"], outputSelectors: ["evidence.manifest"], failureCodes: ["validation_failed"]),
                 TKCommandSubcommandSchema(name: "summary", summary: "Print a safe high-level evidence summary", requiredOptions: ["<path>"], optionalOptions: ["--profile", "--format", "--json"], outputSelectors: ["evidence.summary"], failureCodes: ["validation_failed"]),
                 TKCommandSubcommandSchema(name: "redact", summary: "Write a redacted evidence bundle", requiredOptions: ["<path>", "--output"], optionalOptions: ["--profile", "--format", "--json"], outputSelectors: ["evidence.redact"], failureCodes: ["validation_failed"]),
@@ -554,8 +554,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton capture --include network.proxy-session --proxy-session /tmp/android-network --output /tmp/network.tritonevidence --json",
             ],
             successShape: "TKEvidenceManifest with freshness metadata for captured artifacts",
-            failureShape: "Validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use capture as the short evidence entrypoint for runtime-backed regression evidence bundles.",
+            failureShape: "Validation failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }; partial capture writes one TKEvidenceManifest with ok:false, partial:true, aggregate error, and skipped[].error before exiting non-zero",
+            outputSemantics: "Use capture as the short evidence entrypoint for runtime-backed regression evidence bundles. JSON mode emits exactly one document; inspect ok, partial, error, and skipped[].error together.",
             artifacts: ["evidence-bundle", "manifest", "screenshots", "hierarchy", "ax", "geometry", "logs", "host-artifacts", "xcode-artifacts", "network-capture", "proxy-restore"],
             nextCommands: [
                 "triton status --json",
@@ -564,7 +564,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton verify text-exists <text> --json",
             ],
             outputContracts: [evidenceManifestOutputContract()],
-            failureCodes: ["validation_failed", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"],
+            failureCodes: ["validation_failed", "evidence_capture_partial", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"],
             providedCapabilities: ["capture", "evidence"]
         ),
         TKCommandSchema(

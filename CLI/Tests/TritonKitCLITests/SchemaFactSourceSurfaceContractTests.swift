@@ -88,7 +88,7 @@ extension SchemaFactSourceTests {
         #expect(evidence.nextCommands.contains("triton evidence project-screens <dir.tritonevidence> --json"))
         #expect(Set(evidence.providedCapabilities).isSubset(of: connectedCapabilityNames))
         expectContract(evidence, selector: "evidence.manifest", fields: [
-            "ok", "formatVersion", "output", "artifacts", "primaryArtifact", "primaryArtifacts", "skipped", "target", "cli", "run", "screenWorkspace",
+            "ok", "partial", "error", "formatVersion", "output", "artifacts", "primaryArtifact", "primaryArtifacts", "skipped", "skipped[].error", "target", "cli", "run", "screenWorkspace",
         ])
         expectContract(evidence, selector: "evidence.summary", fields: [
             "ok", "action", "input", "profile", "output", "artifactCount", "sensitiveArtifactCount", "artifacts", "primaryArtifact", "primaryArtifacts", "screenWorkspace", "suggestedCommands",

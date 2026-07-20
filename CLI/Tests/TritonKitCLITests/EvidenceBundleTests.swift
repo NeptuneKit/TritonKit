@@ -71,6 +71,78 @@ struct EvidenceBundleTests {
         #expect(fakeServer.latestHierarchyTargets == [expectedTarget])
     }
 
+    @Test("evidence capture emits one failed partial manifest when target disappears")
+    func evidenceCaptureEmitsOneFailedPartialManifestWhenTargetDisappears() async throws {
+        let expectedTarget = "triton:connection:151"
+        let fakeServer = EvidenceTargetPropagationFakeServer(
+            expectedTarget: expectedTarget,
+            disconnectRuntimeRequests: true
+        )
+        defer { fakeServer.stop() }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-target-disappeared-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let result = await captureEvidenceCommandOutputAndError {
+            try await runEvidenceCaptureEntrypoint(
+                caseName: "target-disappeared",
+                output: root.path,
+                target: expectedTarget,
+                host: fakeServer.host,
+                port: fakeServer.port,
+                include: "status,list,version,hierarchy,ax,screenshot,geometry,archive",
+                note: nil,
+                xcodeSummary: nil,
+                proxySession: nil,
+                format: .json,
+                json: true,
+                refresh: true,
+                command: "evidence capture",
+                endpoint: "/evidence/capture",
+                urlSession: fakeServer.session
+            )
+        }
+
+        #expect(result.error is ExitCode)
+        let manifest = try JSONDecoder().decode(TKEvidenceManifest.self, from: Data(result.stdout.utf8))
+        #expect(!manifest.ok)
+        #expect(manifest.partial)
+        #expect(manifest.error?.code == "evidence_capture_partial")
+        #expect(manifest.artifacts.map(\.kind) == ["status", "list", "version"])
+        #expect(manifest.skipped.map(\.kind) == ["hierarchy", "ax", "screenshot", "geometry", "archive"])
+        #expect(manifest.skipped.allSatisfy { $0.error?.code == "target_not_found" })
+
+        let persisted = try JSONDecoder().decode(
+            TKEvidenceManifest.self,
+            from: Data(contentsOf: root.appendingPathComponent("manifest.json"))
+        )
+        #expect(persisted == manifest)
+    }
+
+    @Test("evidence manifest distinguishes unsupported partial capture from request failure")
+    func evidenceManifestDistinguishesUnsupportedPartialCaptureFromRequestFailure() async throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-unsupported-partial-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["version", "logs"],
+            name: "unsupported-partial",
+            note: nil,
+            target: TKLocalTargetID,
+            host: "127.0.0.1",
+            port: 19421,
+            refresh: true
+        )
+
+        #expect(manifest.ok)
+        #expect(manifest.partial)
+        #expect(manifest.error == nil)
+        #expect(manifest.skipped.first?.error == nil)
+    }
+
     @Test("schema exposes explicit xcode summary evidence import option")
     func schemaExposesExplicitXcodeSummaryEvidenceImportOption() throws {
         let evidence = try #require(commandSchemas().first { $0.name == "evidence" })
@@ -931,13 +1003,17 @@ private final class EvidenceTargetPropagationFakeServer {
 
     private let server: URLProtocol.Type
 
-    init(expectedTarget: String) {
+    init(expectedTarget: String, disconnectRuntimeRequests: Bool = false) {
         self.port = Int.random(in: 20_000...40_000)
         self.server = EvidenceTargetPropagationURLProtocol.self
         let configuration = URLSessionConfiguration.ephemeral
         configuration.protocolClasses = [server]
         self.session = URLSession(configuration: configuration)
-        EvidenceTargetPropagationURLProtocol.configure(port: port, expectedTarget: expectedTarget)
+        EvidenceTargetPropagationURLProtocol.configure(
+            port: port,
+            expectedTarget: expectedTarget,
+            disconnectRuntimeRequests: disconnectRuntimeRequests
+        )
         URLProtocol.registerClass(server)
     }
 
@@ -963,6 +1039,7 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
     private static let lock = NSLock()
     private static var configuredPort: Int?
     private static var configuredExpectedTarget: String?
+    private static var disconnectRuntimeRequests = false
     private static var recordedTargets: [String?] = []
     private static var recordedTypes: [String] = []
     private static var recordedLatestHierarchyTargets: [String?] = []
@@ -979,10 +1056,11 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
         lock.withEvidenceLock { recordedLatestHierarchyTargets }
     }
 
-    static func configure(port: Int, expectedTarget: String) {
+    static func configure(port: Int, expectedTarget: String, disconnectRuntimeRequests: Bool) {
         lock.withEvidenceLock {
             configuredPort = port
             configuredExpectedTarget = expectedTarget
+            self.disconnectRuntimeRequests = disconnectRuntimeRequests
             recordedTargets = []
             recordedTypes = []
             recordedLatestHierarchyTargets = []
@@ -993,6 +1071,7 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
         lock.withEvidenceLock {
             configuredPort = nil
             configuredExpectedTarget = nil
+            disconnectRuntimeRequests = false
             recordedTargets = []
             recordedTypes = []
             recordedLatestHierarchyTargets = []
@@ -1065,6 +1144,9 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
                     statusCode: 409
                 )
             }
+            if lock.withEvidenceLock({ disconnectRuntimeRequests }) {
+                return try targetNotFound(expectedTarget)
+            }
             return try runtimeResponse(for: "hierarchy")
         case ("POST", "/request"):
             let body = request.httpBodyStream.map(readBodyStream) ?? request.httpBody ?? Data()
@@ -1083,10 +1165,23 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
                     statusCode: 409
                 )
             }
+            if lock.withEvidenceLock({ disconnectRuntimeRequests }) {
+                return try targetNotFound(expectedTarget)
+            }
             return try runtimeResponse(for: command.type)
         default:
             return (404, "text/plain", Data("not found".utf8))
         }
+    }
+
+    private static func targetNotFound(_ target: String?) throws -> (statusCode: Int, contentType: String, data: Data) {
+        try json(
+            TKCLIErrorResponse(error: TKCLIErrorDetail(
+                code: "target_not_found",
+                message: "Target not found: \(target ?? TKLocalTargetID)"
+            )),
+            statusCode: 409
+        )
     }
 
     private static func runtimeResponse(for type: String) throws -> (statusCode: Int, contentType: String, data: Data) {

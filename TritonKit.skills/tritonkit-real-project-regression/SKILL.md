@@ -68,6 +68,8 @@ triton screenshot --output /tmp/<case>.png --json
 triton evidence capture --case <case> --output /tmp/<case>.tritonevidence --json
 ```
 
+Treat evidence capture as one machine-readable completion gate: parse stdout as exactly one manifest and inspect `ok`, `partial`, top-level `error`, and every `skipped[].error`. Expected unsupported artifacts may yield `ok:true, partial:true`; request or artifact-write failures yield `ok:false, partial:true`, `error.code=evidence_capture_partial`, and a non-zero exit. Do not accept a bundle merely because some status/list/version artifacts exist.
+
 Planning and replay:
 
 ```bash
