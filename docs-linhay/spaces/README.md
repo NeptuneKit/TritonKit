@@ -19,7 +19,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 执行 | [20260720-issue-151-evidence-partial-capture](./20260720-issue-151-evidence-partial-capture/README.md) | 修复 evidence partial capture 多 JSON、假成功与无结构化 artifact error | BDD/TDD、evidence/schema 回归、合入后关闭 #151 |
+| 已归档 | [20260720-issue-151-evidence-partial-capture](./20260720-issue-151-evidence-partial-capture/README.md) | evidence JSON 已收敛为单一 manifest；partial/request failure、artifact error 与退出码契约已对齐 | 已合入 `main`；推送并关闭 #151 |
 | 已归档 | [20260720-issue-148-xcode-simulator-destination](./20260720-issue-148-xcode-simulator-destination/README.md) | 显式 `--simulator` 已覆盖旧 default destination；UUID / 名称分别合成 `id=` / `name=` | 已合入 `main`；推送并关闭 #148 |
 | 已归档 | [20260720-issue-146-sim-record-duration](./20260720-issue-146-sim-record-duration/README.md) | `sim record` 已按 encoded sample 时长校验；一帧 MOV 返回 `sim_record_truncated`，成功契约暴露 requested/actual/container/track duration | 已合入 `main`；推送并关闭 #146 |
 | 已归档 | [20260521-ios-embedded-sdk-expansion](./20260521-ios-embedded-sdk-expansion/README.md) | S0-S4 与 WebView-aware `act tap` 已完成，真实 iOS Simulator 证明 `selector -> DOM dispatch -> expect-text` 返回 `status=passed` | 保留动态 smoke 证据；P1/P2 需求另建有限 space |

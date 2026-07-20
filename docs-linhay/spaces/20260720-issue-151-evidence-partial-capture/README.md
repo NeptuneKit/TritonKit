@@ -1,12 +1,16 @@
 # GitHub Issue #151：Evidence Partial Capture Contract
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#151](https://github.com/NeptuneKit/TritonKit/issues/151)
 >
 > Branch：`feat/20260720-issue-151-evidence-partial-capture`
 >
 > Worktree：`../TritonKit-worktrees/20260720-issue-151-evidence-partial-capture/`
+>
+> 实现提交：`1d404d72`
+>
+> Main 合并提交：`196d4cc9`
 
 ## 背景
 
