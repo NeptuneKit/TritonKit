@@ -158,6 +158,8 @@ triton act swipe --target <ios-runtime-target-from-triton-list> --start-x 110 --
 triton act tap --webview-aware --selector "#submit" --webview-id <webview-id> --page-session-id <page-session-id> --expect-text "成功" --json
 triton observe current --platform ios --json
 triton observe tree --platform ios --runtime-base-url <baseURL> --outline --json
+triton observe tree --platform ios --device <simulator-selector> --json
+triton wait --platform ios --device <simulator-selector> --text "登录" --json
 triton node resolve @1 --platform ios --json
 triton node resolve --platform ios --text "登录" --json
 triton webview list --platform ios --json
@@ -171,6 +173,8 @@ triton evidence redact /tmp/<case>.tritonevidence --profile ios-private --output
 triton xctrace record --template "Time Profiler" --device <SIMULATOR_UDID> --time-limit 5s --output /tmp/<case>.trace --json
 triton coverage report --xcresult /tmp/<case>.xcresult --output /tmp/<case>-coverage.json --json
 ```
+
+For iOS Simulator host AX flows, `wait --platform ios` polls the same `host-layout` source as `observe tree --platform ios --device <selector>`. It supports `--text`, `--exists`, `--gone`, and optional `--role`, returns the `host.ios-wait` contract, and remains available when the management server or embedded runtime is disconnected. It is Simulator-only; do not route iOS real-device selectors into the private-framework AX adapter. Embedded idle, hierarchy-change, and predicate waits still use plain `wait` with a runtime target.
 
 `triton evidence summary` / `inspect` now expose `primaryArtifacts[]`; agent should inspect those first before traversing the entire artifact set.
 

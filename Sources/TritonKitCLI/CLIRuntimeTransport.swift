@@ -229,6 +229,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "observe", supported: true),
         TKRuntimeCapability(name: "observe-ios", supported: connected, reason: requiresRuntime),
         TKRuntimeCapability(name: "observe-ios-host-ax", supported: true),
+        TKRuntimeCapability(name: "ios-simulator-host-wait", supported: true),
         TKRuntimeCapability(name: "observe-android", supported: true),
         TKRuntimeCapability(name: "observe-harmony", supported: true),
         TKRuntimeCapability(name: "observe-outline", supported: true),
@@ -361,7 +362,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "assert"
     case "plan-inspect", "replay":
         return "replay"
-    case "act", "action-provider-parse", "tap", "webview-aware-tap", "swipe", "type", "paste", "clear", "input", "press", "ios-simulator-host-tap", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
+    case "act", "action-provider-parse", "tap", "webview-aware-tap", "swipe", "type", "paste", "clear", "input", "press", "ios-simulator-host-tap", "ios-simulator-host-wait", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
         return "action"
     default:
         return "misc"
@@ -404,7 +405,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["replay"]
     case "smoke-ios", "smoke-android", "smoke-harmony":
         return ["smoke", "evidence", "replay"]
-    case "act", "action-provider-parse", "tap", "swipe", "type", "paste", "clear", "input", "press", "ios-simulator-host-tap", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
+    case "act", "action-provider-parse", "tap", "swipe", "type", "paste", "clear", "input", "press", "ios-simulator-host-tap", "ios-simulator-host-wait", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key", "harmony-clear-text":
         return ["action", "assert", "evidence"]
     default:
         return []
@@ -719,6 +720,8 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "observe", args: ["current", "--platform", "ios", "--json"])
     case "observe-ios-host-ax":
         return TKCLINextAction(command: "observe", args: ["tree", "--platform", "ios", "--device", "<selector>", "--json"])
+    case "ios-simulator-host-wait":
+        return TKCLINextAction(command: "wait", args: ["--platform", "ios", "--device", "<selector>", "--text", "<text>", "--json"])
     case "observe-android":
         return TKCLINextAction(command: "observe", args: ["tree", "--platform", "android", "--device", "<selector>", "--json"])
     case "observe-harmony":
@@ -1005,7 +1008,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["wait.result", "runtime-samples"]
     case "act", "tap", "swipe", "type", "paste", "clear", "input":
         return ["input.result", "runtime-ledger"]
-    case "ios-simulator-host-tap", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key":
+    case "ios-simulator-host-tap", "ios-simulator-host-wait", "android-tap-text", "android-wait-text", "android-swipe", "android-type-text", "android-paste-text", "android-press-key", "harmony-tap-text", "harmony-wait-text", "harmony-swipe", "harmony-type-text", "harmony-paste-text", "harmony-press-key":
         return ["host-command-json", "host-artifact"]
     case "harmony-clear-text":
         return ["unsupported-envelope", "command-schema"]

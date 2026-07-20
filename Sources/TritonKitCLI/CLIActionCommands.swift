@@ -194,6 +194,49 @@ struct Wait: AsyncParsableCommand {
                 throw RuntimeError("--since currently supports only latest")
             }
 
+            if platform == .ios {
+                guard text != nil || gone != nil || exists != nil else {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "iOS host wait currently supports --text, --exists, or --gone for Simulator targets.",
+                        hint: "Use `triton observe tree --platform ios --device <selector> --json` for raw host AX evidence.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let query = text ?? gone ?? exists ?? ""
+                let selected = try resolveHostDeviceSelection(
+                    request: iosHostWaitSelectionRequest(target: target),
+                    hdc: hdc,
+                    adb: adb
+                ).target
+                guard usesIOSHostSimulatorAX(selected) else {
+                    try failHostValidation(
+                        code: "unsupported_capability",
+                        message: "iOS host wait is scoped to local Simulator targets.",
+                        hint: "Pass a booted Simulator selector such as `--device booted` or `--device sim:<udid>`.",
+                        outputFormat: outputFormat
+                    )
+                }
+                let response = try await waitForIOSHostText(
+                    selected: selected,
+                    text: query,
+                    role: role,
+                    timeout: timeout,
+                    interval: interval,
+                    gone: gone != nil
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print(response.ok ? "matched \(query)" : "timed out waiting for \(query)")
+                }
+                if !response.ok {
+                    throw ExitCode.failure
+                }
+                return
+            }
+
             if platform == .android {
                 guard text != nil || gone != nil || exists != nil else {
                     try failHostValidation(

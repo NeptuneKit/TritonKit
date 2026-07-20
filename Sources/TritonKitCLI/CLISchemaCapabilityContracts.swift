@@ -931,6 +931,30 @@ func hostHarmonyWaitOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostIOSWaitOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.ios-wait",
+        format: "json",
+        kind: "host-action",
+        model: "HostIOSWaitOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the iOS Simulator host wait matched before timeout"),
+            ("action", "String", true, "Host action name"),
+            ("platform", "String", true, "ios"),
+            ("target", "HostDeviceTarget", true, "Resolved booted Simulator target"),
+            ("condition", "String", true, "text or gone"),
+            ("query", "String", true, "Text or identifier query used for host AX polling"),
+            ("role", "String?", false, "Optional AX role filter"),
+            ("matched", "Bool", true, "Whether the condition matched"),
+            ("timedOut", "Bool", true, "Whether the host wait timed out"),
+            ("elapsedMs", "Int", true, "Elapsed milliseconds"),
+            ("pollCount", "Int", true, "Number of host AX polling attempts"),
+            ("match", "ObserveNodeOutput?", false, "Last matched host AX node"),
+            ("sourceCommands", "[String]", true, "Underlying Triton host AX commands"),
+        ])
+    )
+}
+
 func hostAndroidWaitOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.android-wait",
