@@ -1,12 +1,14 @@
 # GitHub Issue #149：iOS Simulator Host AX Wait
 
-> 状态：待集成
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#149](https://github.com/NeptuneKit/TritonKit/issues/149)
 >
 > Branch：`feat/20260720-issue-149-ios-host-wait`
 >
 > Worktree：`../TritonKit-worktrees/20260720-issue-149-ios-host-wait/`
+>
+> 集成：feature `35835128`，merge `6afd807a`
 
 ## 背景
 
@@ -95,3 +97,4 @@
 - 正式本地门禁：`docs-linhay/scripts/verify.sh --local` 通过，包含根 Swift 225 项、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build、docs 与 diff check。
 - 对外 skill 包：`docs-linhay/scripts/verify-skill-package.sh` 通过。
 - 扩展 `SchemaFactSourceTests` 仍有既存 device proxy/schema 与 `evidence_capture_partial` 分类失败；本次新增 iOS host wait 的 capability/schema 门禁均单独通过，失败集合未新增本期字段。
+- `main` 集成回归：iOS host wait 4 项与 schema surface 4 项通过，docs / diff check 通过。
