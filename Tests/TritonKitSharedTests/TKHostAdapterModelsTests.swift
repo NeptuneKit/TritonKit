@@ -46,10 +46,17 @@ struct TKHostAdapterModelsTests {
             jsonOutput: "/tmp/launch.json",
             logOutput: "/tmp/launch.log"
         )
-        #expect(launchWithEnv.argv == ["devicectl", "device", "process", "launch", "--device", "00008110", "--json-output", "/tmp/launch.json", "--log-output", "/tmp/launch.log", "com.example.demo", "debug-route"])
-        #expect(launchWithEnv.environment["DEVICECTL_CHILD_TRITON_HOST"] == "192.168.1.2")
-        #expect(launchWithEnv.environment["DEVICECTL_CHILD_TRITON_PORT"] == "19431")
-        #expect(launchWithEnv.redactedEnvironmentKeys == Set(["DEVICECTL_CHILD_TRITON_HOST", "DEVICECTL_CHILD_TRITON_PORT"]))
+        #expect(launchWithEnv.argv == [
+            "devicectl", "device", "process", "launch",
+            "--device", "00008110",
+            "--environment-variables", "{\"TRITON_HOST\":\"192.168.1.2\",\"TRITON_PORT\":\"19431\"}",
+            "--json-output", "/tmp/launch.json",
+            "--log-output", "/tmp/launch.log",
+            "com.example.demo", "debug-route",
+        ])
+        #expect(launchWithEnv.environment.isEmpty)
+        #expect(launchWithEnv.redactedEnvironmentKeys.isEmpty)
+        #expect(launchWithEnv.redactedArgumentIndexes == Set([7]))
         #expect(TKDevicectlCommand.terminateApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/terminate.json", logOutput: "/tmp/terminate.log").argv == ["devicectl", "device", "process", "terminate", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/terminate.json", "--log-output", "/tmp/terminate.log"])
         #expect(TKDevicectlCommand.uninstallApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/uninstall.json", logOutput: "/tmp/uninstall.log").argv == ["devicectl", "device", "uninstall", "app", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/uninstall.json", "--log-output", "/tmp/uninstall.log"])
     }

@@ -210,6 +210,7 @@ public struct TKHostCommand: Codable, Equatable {
     public let workingDirectory: String?
     public let environment: [String: String]
     public let redactedEnvironmentKeys: Set<String>
+    public let redactedArgumentIndexes: Set<Int>
     public let riskLevel: TKHostRiskLevel
     public let requiredConfig: Set<TKHostRequiredConfig>
     public let defaultTimeoutSeconds: Double
@@ -223,6 +224,7 @@ public struct TKHostCommand: Codable, Equatable {
         workingDirectory: String? = nil,
         environment: [String: String] = [:],
         redactedEnvironmentKeys: Set<String> = [],
+        redactedArgumentIndexes: Set<Int> = [],
         riskLevel: TKHostRiskLevel = .readonly,
         requiredConfig: Set<TKHostRequiredConfig> = [.timeout],
         defaultTimeoutSeconds: Double = 30,
@@ -235,6 +237,7 @@ public struct TKHostCommand: Codable, Equatable {
         self.workingDirectory = workingDirectory
         self.environment = environment
         self.redactedEnvironmentKeys = redactedEnvironmentKeys
+        self.redactedArgumentIndexes = redactedArgumentIndexes
         self.riskLevel = riskLevel
         self.requiredConfig = requiredConfig
         self.defaultTimeoutSeconds = defaultTimeoutSeconds
@@ -265,6 +268,7 @@ public struct TKHostCommand: Codable, Equatable {
             workingDirectory: workingDirectory,
             environment: environment,
             redactedEnvironmentKeys: redactedEnvironmentKeys,
+            redactedArgumentIndexes: redactedArgumentIndexes,
             riskLevel: riskLevel,
             requiredConfig: requiredConfig,
             defaultTimeoutSeconds: timeoutSeconds,

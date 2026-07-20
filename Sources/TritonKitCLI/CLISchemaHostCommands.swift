@@ -804,7 +804,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--activity", type: "String", description: "Android activity name for explicit component launch"),
                 TKCommandSchemaOption(name: "--bundle", type: "String", description: "Harmony bundle name for inspect, uninstall, launch, terminate, and open-url"),
                 TKCommandSchemaOption(name: "--ability", type: "String", description: "Harmony ability name for launch and open-url"),
-                TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS launch environment for app launch; values are passed as SIMCTL_CHILD_* on Simulator or DEVICECTL_CHILD_* on real devices and redacted in sourceCommand"),
+                TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS launch environment for app launch; values are passed as SIMCTL_CHILD_* on Simulator or devicectl --environment-variables JSON on real devices and redacted in sourceCommand"),
                 TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable iOS Simulator app launch argument passed after the bundle identifier"),
                 TKCommandSchemaOption(name: "--app", type: "Path", description: "Path to iOS .app bundle or Harmony signed .app archive for install"),
                 TKCommandSchemaOption(name: "--apk", type: "Path", description: "Path to Android .apk package for install"),
