@@ -57,6 +57,33 @@ struct TKHostAdapterModelsTests {
         #expect(launchWithEnv.environment.isEmpty)
         #expect(launchWithEnv.redactedEnvironmentKeys.isEmpty)
         #expect(launchWithEnv.redactedArgumentIndexes == Set([7]))
+        #expect(TKDevicectlCommand.copyFromDevice(
+            identifier: "00008110",
+            source: "Library/Application Support/bench/evidence.json",
+            destination: "/tmp/evidence.json",
+            domainType: .appDataContainer,
+            domainIdentifier: "com.example.demo",
+            jsonOutput: "/tmp/pull.json",
+            logOutput: "/tmp/pull.log"
+        ).argv == [
+            "devicectl", "device", "copy", "from",
+            "--device", "00008110",
+            "--source", "Library/Application Support/bench/evidence.json",
+            "--destination", "/tmp/evidence.json",
+            "--domain-type", "appDataContainer",
+            "--domain-identifier", "com.example.demo",
+            "--json-output", "/tmp/pull.json",
+            "--log-output", "/tmp/pull.log",
+        ])
+        #expect(TKDevicectlCommand.copyFromDevice(
+            identifier: "00008110",
+            source: "Shared/report.json",
+            destination: "/tmp/group-report.json",
+            domainType: .appGroupDataContainer,
+            domainIdentifier: "group.com.example.demo",
+            jsonOutput: "/tmp/group-pull.json",
+            logOutput: "/tmp/group-pull.log"
+        ).argv.contains("appGroupDataContainer"))
         #expect(TKDevicectlCommand.terminateApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/terminate.json", logOutput: "/tmp/terminate.log").argv == ["devicectl", "device", "process", "terminate", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/terminate.json", "--log-output", "/tmp/terminate.log"])
         #expect(TKDevicectlCommand.uninstallApp(identifier: "00008110", bundleID: "com.example.demo", jsonOutput: "/tmp/uninstall.json", logOutput: "/tmp/uninstall.log").argv == ["devicectl", "device", "uninstall", "app", "--device", "00008110", "com.example.demo", "--json-output", "/tmp/uninstall.json", "--log-output", "/tmp/uninstall.log"])
     }

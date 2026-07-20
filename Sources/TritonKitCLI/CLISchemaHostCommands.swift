@@ -758,10 +758,10 @@ func hostCommandSchemas() -> [TKCommandSchema] {
         ),
         TKCommandSchema(
             name: "app",
-            summary: "Control local simulator and emulator apps through host-side tools",
+            summary: "Control local simulator, emulator, and real-device apps through host-side tools",
             requiresServer: false,
             requiresTarget: false,
-            runtimeScope: "host-simulator|host-android|host-harmony",
+            runtimeScope: "host-simulator|host-ios-real-device|host-android|host-harmony",
             exitCodeOnFailure: 1,
             outputFormats: jsonText,
             options: [
@@ -791,6 +791,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "open-url --platform harmony --bundle <bundle> --ability <ability> <url>", type: "Subcommand", description: "Open a Harmony deep link through aa start -U"),
                 TKCommandSchemaOption(name: "open-url <url> --device <selector> --scope real --bundle-id|--package-name|--bundle <id>", type: "Subcommand", description: "Real-device deep-link contract placeholder; host action submission is not business proof"),
                 TKCommandSchemaOption(name: "container --bundle-id <id>", type: "Subcommand", description: "Print app container path"),
+                TKCommandSchemaOption(name: "pull --source <path> --destination <path>", type: "Subcommand", description: "Copy a bounded artifact from an iOS real-device app data or app group container"),
                 TKCommandSchemaOption(name: "prefs dump --bundle-id <id>", type: "Subcommand", description: "Dump app preferences plist as JSON"),
                 TKCommandSchemaOption(name: "prefs get <key> --bundle-id <id>", type: "Subcommand", description: "Read one app preference"),
                 TKCommandSchemaOption(name: "prefs set <key> <json-value> --bundle-id <id>", type: "Subcommand", description: "Set one simulator app preference from a property-list compatible JSON value"),
@@ -812,6 +813,13 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--user-only", type: "Bool", defaultValue: "false", description: "List only user-installed simulator apps"),
                 TKCommandSchemaOption(name: "--confirm", type: "Bool", defaultValue: "false", description: "Required for destructive app operations such as uninstall"),
                 TKCommandSchemaOption(name: "--kind", type: "String", defaultValue: "data", description: "Container kind to resolve, for example app, data, groups, or all"),
+                TKCommandSchemaOption(name: "--domain", type: "app-data|app-group", defaultValue: "app-data", description: "Real-device app pull container domain"),
+                TKCommandSchemaOption(name: "--group-id", type: "String", description: "App group identifier for app pull --domain app-group"),
+                TKCommandSchemaOption(name: "--source", type: "Path", description: "Source path relative to the selected real-device container"),
+                TKCommandSchemaOption(name: "--destination", type: "Path", description: "Host destination artifact path"),
+                TKCommandSchemaOption(name: "--overwrite", type: "Bool", defaultValue: "false", description: "Atomically replace an existing non-symlink pull destination after successful validation"),
+                TKCommandSchemaOption(name: "--allow-directory", type: "Bool", defaultValue: "false", description: "Allow app pull to publish a directory result"),
+                TKCommandSchemaOption(name: "--max-bytes", type: "UInt64", defaultValue: "104857600", description: "Maximum accepted app pull artifact bytes"),
                 TKCommandSchemaOption(name: "--type", type: "json|data", defaultValue: "json", description: "Preference set value type; data requires exactly one of --base64 or --hex"),
                 TKCommandSchemaOption(name: "--base64", type: "String", description: "Base64 payload for prefs set --type data"),
                 TKCommandSchemaOption(name: "--hex", type: "String", description: "Hex payload for prefs set --type data; optional 0x prefix and whitespace are accepted"),
@@ -874,14 +882,15 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 #"triton app open-url "example://debug" --device iphone15 --json"#,
                 #"triton app open-url "example://debug" --device iphone15 --wait-ready --snapshot --json"#,
                 "triton app container --device iphone15 --bundle-id com.example.app --kind data --json",
+                "triton app pull --device <ios-real-target> --scope real --bundle-id com.example.app --source 'Library/Application Support/report.json' --destination /tmp/report.json --max-bytes 1048576 --json",
                 "triton app prefs get DEBUG-mock --device iphone15 --bundle-id com.example.app --json",
                 #"triton app prefs set DEBUG-mock true --device iphone15 --bundle-id com.example.app --json"#,
                 #"triton app prefs set SeedState --type data --base64 W3t9XQ== --device iphone15 --bundle-id com.example.app --json"#,
             ],
-            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? with launch env values redacted } or { ok, action, plistPath, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
+            successShape: "{ ok, action, simulatorUDID?, apps[]?, app?, bundleID?, path?, target?, sourceCommand? with launch env values redacted } or app pull { ok, action:app.pull, target, selection, domain, domainIdentifier, source, destination, artifact:{ path,kind,bytes,entryCount }, artifacts, sourceCommand } or { ok, action, plistPath, value?, valuePlistType?, preferences?, preferencesPlistTypes? } or { ok, action:app.prefs.set, plistPath, key, previousValue?, previousPlistType?, newValue, newPlistType, restartAdvice } or enhanced open-url { ok, status, hostAction, ready?, snapshot? }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, and preferences across iOS Simulator, Android Emulator, and Harmony Emulator. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence. If `triton camera on` enabled the launched iOS Simulator bundle, app launch injects the configured camera hook environment.",
-            artifacts: ["app-container", "app-preferences", "runtime-snapshot"],
+            outputSemantics: "Use app for host-side install, launch, terminate, open-url, container, pull, and preferences. app pull is iOS real-device-only, stages the transfer before atomic publication, rejects overwrite/symlink by default, and bounds directory/byte acceptance. For iOS runtime readiness, prefer open-url with --wait-ready --snapshot; for Android host flows, verify business completion with wait/observe/screenshot or smoke evidence. If `triton camera on` enabled the launched iOS Simulator bundle, app launch injects the configured camera hook environment.",
+            artifacts: ["app-container", "host-artifacts", "app-preferences", "runtime-snapshot"],
             nextCommands: [
                 "triton app go <url>",
                 "triton status --json",
@@ -889,7 +898,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
             ],
             outputContracts: [
-                hostActionOutputContract(selector: "host.app-action", model: "HostActionOutput|HostAppContainerOutput|HostAppPreferenceOutput"),
+                hostActionOutputContract(selector: "host.app-action", model: "HostActionOutput|HostAppContainerOutput|HostAppPullOutput|HostAppPreferenceOutput"),
                 hostAppInfoOutputContract(selector: "host.android-app-inspect"),
                 hostActionOutputContract(selector: "host.android-app-install", model: "HostActionOutput"),
                 hostActionOutputContract(selector: "host.android-app-launch", model: "HostActionOutput"),
@@ -929,6 +938,15 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "harmony_ability_launch_failed",
                 "app_info_not_available",
                 "app_container_not_found",
+                "app_pull_real_device_required",
+                "app_pull_source_not_found",
+                "app_pull_domain_not_found",
+                "app_pull_destination_missing",
+                "app_pull_directory_not_allowed",
+                "app_pull_artifact_too_large",
+                "app_pull_unsafe_artifact",
+                "app_pull_failed",
+                "artifact_output_rejected",
                 "app_install_failed",
                 "app_launch_failed",
                 "app_terminate_failed",
@@ -1012,6 +1030,16 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.app-action"]
                 ),
                 TKCommandSubcommandSchema(
+                    name: "pull",
+                    summary: "Copy a bounded artifact from an iOS real-device container",
+                    requiredOptions: ["--source", "--destination"],
+                    oneOfRequiredOptions: [["--bundle-id"], ["--group-id"]],
+                    optionalOptions: ["--device", "--scope", "--domain", "--overwrite", "--allow-directory", "--max-bytes", "--format", "--json"],
+                    artifacts: ["host-artifacts"],
+                    outputSelectors: ["host.app-action"],
+                    failureCodes: ["app_pull_real_device_required", "app_pull_source_not_found", "app_pull_domain_not_found", "app_pull_destination_missing", "app_pull_directory_not_allowed", "app_pull_artifact_too_large", "app_pull_unsafe_artifact", "app_pull_failed", "artifact_output_rejected", "device_locked", "host_command_timeout"]
+                ),
+                TKCommandSubcommandSchema(
                     name: "prefs",
                     summary: "Dump, read, or set simulator app preferences",
                     requiredOptions: ["--bundle-id"],
@@ -1019,7 +1047,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.app-action"]
                 ),
             ],
-            providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]
+            providedCapabilities: ["host-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "ios-real-app", "ios-real-app-pull", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-install", "harmony-app-open-url", "harmony-app-info"]
         ),
     ]
 }

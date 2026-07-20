@@ -485,6 +485,7 @@ struct HostApp: AsyncParsableCommand {
             HostAppGo.self,
             HostAppOpenURL.self,
             HostAppContainer.self,
+            HostAppPull.self,
             HostAppPrefs.self,
         ]
     )

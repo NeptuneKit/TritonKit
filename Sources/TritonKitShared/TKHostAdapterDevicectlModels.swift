@@ -1,5 +1,10 @@
 import Foundation
 
+public enum TKDevicectlFileDomainType: String, Codable, Equatable {
+    case appDataContainer
+    case appGroupDataContainer
+}
+
 public enum TKDevicectlCommand {
     private static func command(
         _ arguments: [String],
@@ -45,6 +50,30 @@ public enum TKDevicectlCommand {
         command(
             ["devicectl", "device", "install", "app", "--device", identifier, appPath] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput),
             riskLevel: .automation,
+            requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
+            defaultTimeoutSeconds: 120
+        )
+    }
+
+    public static func copyFromDevice(
+        identifier: String,
+        source: String,
+        destination: String,
+        domainType: TKDevicectlFileDomainType,
+        domainIdentifier: String,
+        jsonOutput: String,
+        logOutput: String
+    ) -> TKHostCommand {
+        command(
+            [
+                "devicectl", "device", "copy", "from",
+                "--device", identifier,
+                "--source", source,
+                "--destination", destination,
+                "--domain-type", domainType.rawValue,
+                "--domain-identifier", domainIdentifier,
+            ] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput),
+            riskLevel: .evidence,
             requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
             defaultTimeoutSeconds: 120
         )

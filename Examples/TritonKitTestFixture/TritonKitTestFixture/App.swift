@@ -44,8 +44,31 @@ final class FixtureModel: ObservableObject {
     }
 
     func autoConnect() {
+        #if DEBUG
+        writeAppPullSentinel()
+        #endif
         connect()
     }
+
+    #if DEBUG
+    private func writeAppPullSentinel() {
+        guard let applicationSupport = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first else {
+            return
+        }
+        let directory = applicationSupport.appendingPathComponent("TritonKitFixture", isDirectory: true)
+        let file = directory.appendingPathComponent("app-pull-sentinel.json")
+        let payload: [String: Any] = [
+            "issue": 153,
+            "kind": "triton.app-pull.fixture",
+            "pass": true,
+        ]
+        guard let data = try? JSONSerialization.data(withJSONObject: payload, options: [.sortedKeys]) else {
+            return
+        }
+        try? FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        try? data.write(to: file, options: .atomic)
+    }
+    #endif
 
     func connect() {
         guard let portNumber = UInt16(port) else {
