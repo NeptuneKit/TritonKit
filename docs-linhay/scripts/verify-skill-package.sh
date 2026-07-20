@@ -114,4 +114,24 @@ test -f "${source_install_dir}/TritonKit.skills/tritonkit-real-project-regressio
 test -f "${source_install_dir}/TritonKit.skills/tritonkit-update/SKILL.md"
 test ! -e "${source_install_dir}/tritonkit-dev-feedback"
 
+legacy_skill_root="${tmp_dir}/legacy-skills"
+cp -R "${root}/TritonKit.skills" "${legacy_skill_root}"
+printf '\n```sh\ntriton find "More" --json\ntriton ax --json --with-hierarchy\n```\n' \
+  >> "${legacy_skill_root}/tritonkit-dev-feedback/SKILL.md"
+if "${root}/docs-linhay/scripts/package-public-skills.py" \
+  --repo-root "${root}" \
+  --skill-root "${legacy_skill_root}" \
+  --version "9.8.7-dev+abcdef0" \
+  --output "${tmp_dir}/legacy-skills.tar.gz" \
+  2> "${tmp_dir}/legacy-skills.stderr"
+then
+  echo "skill package should reject retired top-level Triton commands" >&2
+  exit 1
+fi
+grep -q 'unknown Triton command root `find`' "${tmp_dir}/legacy-skills.stderr"
+grep -q 'use `triton act find`' "${tmp_dir}/legacy-skills.stderr"
+grep -q 'unknown Triton command root `ax`' "${tmp_dir}/legacy-skills.stderr"
+grep -q 'use `triton debug ax`' "${tmp_dir}/legacy-skills.stderr"
+test ! -e "${tmp_dir}/legacy-skills.tar.gz"
+
 echo "skill package verification passed"

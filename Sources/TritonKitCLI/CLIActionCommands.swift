@@ -13,7 +13,7 @@ struct Action: AsyncParsableCommand {
     static let configuration = CommandConfiguration(
         commandName: "action",
         abstract: "Grouped UI action commands for agent discovery",
-        discussion: "Use this help surface to discover Triton UI action commands. Existing top-level commands such as triton tap remain supported.",
+        discussion: "Use `triton act <command>` to discover and execute Triton UI action commands. Retired top-level action aliases are not supported.",
         subcommands: [
             Tap.self,
             Swipe.self,

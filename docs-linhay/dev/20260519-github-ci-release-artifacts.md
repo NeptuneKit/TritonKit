@@ -40,7 +40,9 @@ TritonKit 需要把云端验证和发布产物固定下来：使用者不仅要�
 
 Skill 源码分层约束：release packaging 只能读取 `TritonKit.skills/`。`.agents/skills/` 只存放 repo 维护、治理、实现和监督用 skill，不进入 `tritonkit-skills.tar.gz`，也不作为 release packaging 源。
 
-Skill 打包流程参考 `harmony-next.skills` 的独立脚本式产物生成：TritonKit 使用 `docs-linhay/scripts/package-public-skills.py` 统一完成 public skill 复制、版本 stamp、`TritonKit.skills/BUILD_INFO.json` 写入和 `tritonkit-skills.tar.gz` 生成。与 `harmony-next.skills` 不同，TritonKit 保持既有 release 契约：只发布合并后的 tar.gz，不发布 `.skill.zip` 或单个 skill tarball。
+Skill 打包流程参考 `harmony-next.skills` 的独立脚本式产物生成：TritonKit 使用 `docs-linhay/scripts/package-public-skills.py` 统一完成 public skill 复制、版本 stamp、命令存在性校验、`TritonKit.skills/BUILD_INFO.json` 写入和 `tritonkit-skills.tar.gz` 生成。与 `harmony-next.skills` 不同，TritonKit 保持既有 release 契约：只发布合并后的 tar.gz，不发布 `.skill.zip` 或单个 skill tarball。
+
+Public skill 中的 literal `triton` 命令必须通过 `docs-linhay/scripts/verify-public-skill-commands.py`。它以 `public-skill-command-schema.json` 为事实快照校验所有 root，并严格校验 `act` / `debug` 子命令；快照由 CLI test 与 `commandSchemas()` 全量对齐。这样 `find/tap/type/paste/clear/focus/set-text/input` 被误写回顶层，或 `ax/geometry` 未放到 `debug` 下时，会在 tarball 创建前失败。当前官方 bundle 不包含 `tritonkit-runtime`；外部同名 skill 不得被描述成 TritonKit release asset 成员。
 
 安装与升级约定：外部用户默认把整个 `TritonKit.skills/` 文件夹放到对应 agent skills 目录下。若用户曾按旧文档安装过顶层目录 `tritonkit-dev-feedback`、`tritonkit-emulator-cli-takeover`、`tritonkit-real-project-regression` 或 `tritonkit-update`，升级到本版时先删除这些旧目录，再安装 `TritonKit.skills/`。维护者可用 `docs-linhay/scripts/install-public-skills.sh <agent-skills-dir> [--from-tar tritonkit-skills.tar.gz]` 自动完成删除与安装。
 
@@ -93,7 +95,7 @@ brew upgrade triton
 - Docs-only 与 contract-only fast path 不再单独启动 `Validate Docs` / `Validate Contracts` job；它们复用分类 job 的 checkout 与 runner，聚合 `Validate` 只负责检查 `Classify Validate Scope` 成功。
 - Full validate 在 CI 中并行运行 Swift tests、`TritonKit.podspec` lint 与 release/homebrew 契约检查；本地仍可用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。
-- 运行 `docs-linhay/scripts/verify-skill-package.sh`，验证 `package-public-skills.py` 生成的 `tritonkit-skills.tar.gz` 顶层包含 `TritonKit.skills/`、三个 public skills、版本 stamp 和 `BUILD_INFO.json`，并验证安装脚本会删除旧三个独立目录。
+- 运行 `docs-linhay/scripts/verify-skill-package.sh`，验证 `package-public-skills.py` 生成的 `tritonkit-skills.tar.gz` 顶层包含 `TritonKit.skills/`、四个 public skills、版本 stamp 和 `BUILD_INFO.json`，验证安装脚本会删除旧四个独立目录，并用注入的 retired root fixture 证明旧命令层级不能进入 release 包。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
 - 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。
 - Release tarball README 校验必须先把 `tar -xOf ... README.txt` 写入临时文件，再对临时文件执行 `grep -Fq`；禁止直接把 `tar` 输出管给 `grep -q`，否则 grep 命中后提前关闭 pipe，GNU tar 可能在 x86_64 runner 上因 stdout write error 失败。

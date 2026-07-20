@@ -176,7 +176,7 @@
    - summarize evidence before public handoff: `triton evidence summary /tmp/<case>.tritonevidence --json`.
    - use `primaryArtifacts[]` as the first inspection order; only fall back to full `artifacts[]` when those high-signal entries are insufficient.
    - write a safe handoff bundle: `triton evidence redact /tmp/<case>.tritonevidence --profile ios-private --output /tmp/<case>-redacted.tritonevidence --json`.
-   - `triton geometry --json`
+   - `triton debug geometry --json`
    - `triton debug ax --json`
    - `triton screenshot --json --output <path>`
    - `triton export --format archive --output <path>`

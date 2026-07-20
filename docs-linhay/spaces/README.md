@@ -19,6 +19,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 执行 | [20260720-issue-154-runtime-skill-command-hierarchy](./20260720-issue-154-runtime-skill-command-hierarchy/README.md) | Public skill 打包必须以当前 CLI schema 阻断 retired root command；`tritonkit-runtime` 不冒充官方 bundle 成员 | BDD/TDD 增加命令存在性门禁、迁移说明与 release contract 后合入 #154 |
 | 已归档 | [20260720-issue-153-real-device-app-pull](./20260720-issue-153-real-device-app-pull/README.md) | 真机 data/app-group container 文件拉取已成为 schema-backed、受目录/字节/覆盖安全边界约束的 Triton artifact command | 已合入 `main`；CI 全绿后关闭 #153，真机锁屏 blocker 如实保留 |
 | 已归档 | [20260720-issue-152-real-device-launch-env](./20260720-issue-152-real-device-launch-env/README.md) | 真机 launch env 已改用 devicectl 显式 JSON flag，sourceCommand 按 argv index 脱敏 | 已合入 `main`；推送并等待 CI 后关闭 #152 |
 | 已归档 | [20260720-issue-150-xcode-package-build](./20260720-issue-150-xcode-package-build/README.md) | Xcode discovery 返回的 `Package.swift` 已可被 defaults、schemes/build/test/run 与点分 schema 直接消费 | 已合入 `main`；推送并等待 CI 后关闭 #150 |

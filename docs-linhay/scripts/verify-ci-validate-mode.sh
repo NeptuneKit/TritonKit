@@ -36,6 +36,8 @@ expect_mode contracts .github/workflows/ci.yml
 expect_mode contracts docs-linhay/scripts/ci-validate-mode.sh
 expect_mode contracts docs-linhay/scripts/verify-release-automation.sh README.md
 expect_mode contracts docs-linhay/scripts/package-public-skills.py
+expect_mode contracts docs-linhay/scripts/public-skill-command-schema.json
+expect_mode contracts docs-linhay/scripts/verify-public-skill-commands.py
 expect_mode contracts docs-linhay/scripts/install-public-skills.sh
 expect_mode contracts docs-linhay/scripts/verify-skill-package.sh
 

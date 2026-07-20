@@ -1,5 +1,6 @@
 import Foundation
 import Testing
+@testable import TritonKitCLI
 
 @Suite
 struct CLIHelpTests {
@@ -27,6 +28,12 @@ struct CLIHelpTests {
         #expect(result.exitCode != 0)
         #expect(result.stderr.contains("Unknown subcommand 'tap'"))
         #expect(result.stderr.contains("triton act tap"))
+    }
+
+    @Test("action discovery text does not promise retired top-level aliases")
+    func actionDiscoveryTextDoesNotPromiseRetiredTopLevelAliases() {
+        #expect(Action.configuration.discussion.contains("triton tap remain supported") == false)
+        #expect(Action.configuration.discussion.contains("triton act") == true)
     }
 
     @Test("retired state root suggests current debug and observation commands")
