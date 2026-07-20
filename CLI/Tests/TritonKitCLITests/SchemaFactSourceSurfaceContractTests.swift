@@ -292,6 +292,13 @@ extension SchemaFactSourceTests {
             "pixelWidth", "pixelHeight", "display", "display.rawLine", "display.displayID",
             "display.screenID", "display.name", "orientationPolicy", "orientationNote", "note",
         ])
+        expectContract(sim, selector: "host.simulator-recording", fields: [
+            "ok", "action", "runtimeScope", "target", "tool", "exitCode", "riskLevel",
+            "sourceCommand", "stdoutTruncated", "stderrTruncated", "stderr", "artifacts",
+            "fileBytes", "containerDurationSeconds", "videoTrackDurationSeconds",
+            "requestedDurationSeconds", "actualDurationSeconds", "minimumAcceptedDurationSeconds",
+            "durationValidation", "note",
+        ])
         expectContract(sim, selector: "host.simulator-action", fields: [
             "ok", "action", "runtimeScope", "target", "tool", "exitCode", "riskLevel",
             "sourceCommand", "stdoutTruncated", "stderrTruncated", "artifacts", "screenshot", "note",

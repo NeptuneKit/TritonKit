@@ -29,7 +29,10 @@ triton sim boot <udid> --json
 triton sim boot <udid> --wait --jsonl
 triton sim shutdown <udid-or-booted> --json
 triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json
+triton sim record --simulator <udid-or-booted> --output /tmp/<case>-sim.mov --duration 10 --json
 ```
+
+`sim record` success requires media validation, not only `simctl` exit zero. The JSON response exposes requested, actual encoded-sample, minimum accepted, container, and track durations. Container/track timelines can report the requested duration even when the MOV has only one frame, so Triton computes `actualDurationSeconds` from `AVSampleCursor` encoded samples. Treat `sim_record_truncated` and `sim_record_invalid_artifact` as failed evidence and never claim a usable recording from the file path alone.
 
 App commands:
 
@@ -205,7 +208,7 @@ Keep P0/P1 focused on real-project regression value:
 - P0 remaining: safer default simulator resolution, app install result enrichment.
 - P1: `sim privacy`, `sim location`, `sim ui/status-bar`, push notification, media/contact import, keychain certificates, pasteboard, iCloud sync, `.xcappdata`, logs, host evidence artifacts.
 - P1: Simulator proxy record/mock/block/throttle/export with host-side certificate and restore workflow.
-- P2+: host UI snapshot/tap/type/press, record video, diagnose, xctrace, Xcode build/test, coverage, SwiftPM.
+- P2+: host UI snapshot/tap/type/press, richer record-video progress/diagnostics, diagnose, xctrace, Xcode build/test, coverage, SwiftPM.
 
 ## Boundaries
 

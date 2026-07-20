@@ -179,8 +179,10 @@ TritonKit 需要从单一 `triton:local` 扩展为可绑定的多层 target：
 - Given simulator 已 boot
 - When 执行 `triton sim screenshot --output <png> --json`
 - Then 写出 framebuffer 截图并返回 metadata
-- When 执行 `triton sim record --output <mov> --duration 10 --jsonl`
-- Then 输出开始、结束和文件路径事件
+- When 执行 `triton sim record --output <mov> --duration 10 --json`
+- Then 成功结果包含 requested/actual/minimum duration 和文件路径
+- And actual duration 基于 encoded video sample 时间戳，不以 container timeline 代替
+- And 截断产物返回 `sim_record_truncated`，不能作为成功证据
 - When 执行 `triton logs stream --bundle-id <id> --jsonl`
 - Then 输出结构化日志行，并可通过 SIGINT 收敛为 summary
 

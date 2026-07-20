@@ -498,9 +498,8 @@ struct SimRecord: AsyncParsableCommand {
                 outputFormat: outputFormat
             )
         }
-        try runSimpleHostCommand(
-            action: "sim.record",
-            target: "sim:\(simulator)",
+        try await runHostSimulatorRecordingCommand(
+            simulator: simulator,
             command: TKSimctlCommand.recordVideo(
                 udid: simulator,
                 output: output,
@@ -510,10 +509,9 @@ struct SimRecord: AsyncParsableCommand {
                 force: force,
                 defaultTimeoutSeconds: duration + 30
             ),
+            outputPath: output,
+            requestedDurationSeconds: duration,
             outputFormat: outputFormat,
-            artifacts: [output],
-            note: "Host-side simulator video recording was written.",
-            interruptAfter: duration
         )
     }
 }

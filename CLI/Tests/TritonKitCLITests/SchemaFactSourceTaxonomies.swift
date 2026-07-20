@@ -97,6 +97,7 @@ func outputContractKindTaxonomy() -> Set<String> {
         "runtime-manifest",
         "runtime-node-property-patch",
         "simulator-screenshot",
+        "simulator-video",
         "xcode-status",
         "runtime-snapshot",
         "runtime-state",
@@ -321,6 +322,8 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
     case "assertion_failed", "route_mismatch", "text_not_found", "timeout":
         return ["verify", "observe", "archive"]
     case "artifact_write_failed", "file_write_failed", "overwrite_refused":
+        return ["archive", "diagnose"]
+    case "sim_record_truncated", "sim_record_invalid_artifact":
         return ["archive", "diagnose"]
     case "app_map_error", "unconfirmed_path", "non_replayable_path":
         return ["archive", "plan", "diagnose"]
