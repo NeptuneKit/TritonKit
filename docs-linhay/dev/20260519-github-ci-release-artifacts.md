@@ -61,6 +61,12 @@ GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免
 
 后续新增面向使用者的项目级 skill 时，应同步纳入 CI/release packaging。
 
+## v0.2.12 发布边界
+
+`v0.2.12` 汇总 GitHub issues #146–#154 的修复，发布边界保持为 macOS 双架构 `triton` CLI、checksum manifest、四个 public skills 的合并包，以及同步版本的 SwiftPM/CocoaPods/Web 分发入口。本次不扩大到真机产品面、Web/Wails 业务控制入口或 CocoaPods trunk 自动推送；podspec 只随 tag 对齐并完成 lint，是否推送 trunk 必须单独执行并记录。
+
+tag 前必须先在 `main` 完成版本契约、本地门禁和远端 validate；tag 后再以 Release assets、checksum、Homebrew formula/安装测试、CLI version、public skill build info 与仓库外 packaged Web HTTP smoke 作为完成证据。arm64 首发成功不代表完整发布完成，必须等待 x86_64 后补 job 与第二次 tap 刷新成功。
+
 ## Homebrew
 
 新增 Homebrew 二进制安装链路：
