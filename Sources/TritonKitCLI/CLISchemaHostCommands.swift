@@ -487,9 +487,9 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim personalization scan-and-personalize --json",
                 "triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim type remains a reserved host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive.",
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim type remains a reserved host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive.",
             artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
@@ -503,6 +503,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
             outputContracts: [
                 hostSimulatorListOutputContract(),
                 hostSimulatorScreenshotOutputContract(),
+                hostSimulatorRecordingOutputContract(),
                 hostSimulatorAXOutputContract(),
                 hostSimulatorInputOutputContract(),
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorCreateOutput|HostSimulatorReadyEvent"),
@@ -536,6 +537,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "sim_erase_failed",
                 "sim_upgrade_failed",
                 "sim_record_failed",
+                "sim_record_truncated",
+                "sim_record_invalid_artifact",
                 "sim_logs_failed",
                 "sim_diagnose_failed",
                 "sim_logverbose_failed",
@@ -622,7 +625,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     summary: "Record a bounded simulator video",
                     requiredOptions: ["--output"],
                     optionalOptions: ["--simulator", "--duration", "--display", "--format", "--json"],
-                    outputSelectors: ["host.simulator-action"]
+                    outputSelectors: ["host.simulator-recording"],
+                    failureCodes: ["sim_record_failed", "sim_record_truncated", "sim_record_invalid_artifact", "invalid_duration", "host_command_timeout", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "logs",

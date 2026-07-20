@@ -79,6 +79,7 @@ triton wait text "成功" --platform <ios|android|harmony> --device <selector> -
 Evidence:
 
 ```bash
+triton sim record --simulator <udid-or-booted> --output /tmp/<case>.mov --duration 10 --json
 triton evidence capture --case <case> --output <dir.tritonevidence> --json
 triton evidence summary <dir.tritonevidence> --json
 triton evidence redact <dir.tritonevidence> --profile ios-private --output <redacted.tritonevidence> --json
@@ -88,6 +89,7 @@ triton evidence redact <dir.tritonevidence> --profile ios-private --output <reda
 
 - Destructive or state-changing host actions require explicit flags or policy.
 - Host command success is not business success. Verify with `wait`, `find`, `assert`, screenshot, app prefs, layout/AX, or evidence.
+- Simulator video success is not `simctl` exit zero or MOV container duration. Require `durationValidation=passed` and inspect `actualDurationSeconds`; `sim_record_truncated` or `sim_record_invalid_artifact` means the MOV is failed evidence.
 - Multiple local targets must return `ambiguous_target`; do not pick an unsafe default.
 - Logs, screenshots, layout dumps, and data snapshots must be bounded and redacted when persisted into evidence.
 - When host layout, embedded runtime, and WebView provider sources coexist, preserve source boundaries, `confidence`, `missingSources`, and `candidateOnly` state.

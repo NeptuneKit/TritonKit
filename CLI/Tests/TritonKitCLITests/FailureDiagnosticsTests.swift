@@ -323,6 +323,8 @@ struct FailureDiagnosticsTests {
             include: [
                 "confirmation_required",
                 "invalid_duration",
+                "sim_record_truncated",
+                "sim_record_invalid_artifact",
                 "invalid_location_value",
                 "runtime_delete_selector_required",
                 "runtime_dyld_cache_selector_required",

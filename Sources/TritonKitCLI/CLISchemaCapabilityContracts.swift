@@ -599,6 +599,37 @@ func hostSimulatorScreenshotOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostSimulatorRecordingOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-recording",
+        format: "json",
+        kind: "simulator-video",
+        model: "HostSimulatorRecordingOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether simulator recording completed and passed duration validation"),
+            ("action", "String", true, "sim.record"),
+            ("runtimeScope", "String", true, "host-simulator"),
+            ("target", "String", true, "Simulator target selector"),
+            ("tool", "String", true, "Host executable"),
+            ("exitCode", "Int32", true, "Host process exit code"),
+            ("riskLevel", "String", true, "Host command risk level"),
+            ("sourceCommand", "String", true, "Underlying xcrun simctl recordVideo command"),
+            ("stdoutTruncated", "Bool", true, "Whether stdout sample was truncated"),
+            ("stderrTruncated", "Bool", true, "Whether stderr sample was truncated"),
+            ("stderr", "String?", false, "Bounded stderr sample from simctl"),
+            ("artifacts", "[String]", true, "Written MOV artifact paths"),
+            ("fileBytes", "UInt64?", false, "MOV file size when readable"),
+            ("containerDurationSeconds", "Double", true, "AVAsset container timeline duration for diagnostics only"),
+            ("videoTrackDurationSeconds", "[Double]", true, "AVAsset video track timeline durations for diagnostics only"),
+            ("requestedDurationSeconds", "Double", true, "Requested bounded recording duration"),
+            ("actualDurationSeconds", "Double", true, "Actual encoded video sample duration used for validation"),
+            ("minimumAcceptedDurationSeconds", "Double", true, "Minimum duration accepted by the bounded recording contract"),
+            ("durationValidation", "String", true, "passed when actual encoded sample duration meets the contract"),
+            ("note", "String", true, "Artifact validation note"),
+        ])
+    )
+}
+
 func hostSimulatorAXOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.simulator-ax",

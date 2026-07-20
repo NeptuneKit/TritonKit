@@ -446,6 +446,18 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
     switch error {
     case _ as ValidationError:
         detail = hostValidationErrorDetail(error)
+    case HostSimulatorRecordingValidationError.truncated:
+        detail = TKCLIErrorDetail(
+            code: "sim_record_truncated",
+            message: "\(error)",
+            hint: "Retry while the Simulator display is actively rendering. Treat the current MOV as unusable evidence."
+        )
+    case HostSimulatorRecordingValidationError.unreadable:
+        detail = TKCLIErrorDetail(
+            code: "sim_record_invalid_artifact",
+            message: "\(error)",
+            hint: "Verify the Simulator is booted, the MOV exists, and CoreSimulator finalized readable media metadata."
+        )
     case let aliasError as NodeAliasResolutionError:
         detail = aliasError.detail()
     case XcodeWorkflowError.missingContainer:

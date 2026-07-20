@@ -60,6 +60,29 @@ struct HostSimulatorScreenshotOutput: Encodable {
     let note: String
 }
 
+struct HostSimulatorRecordingOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let stdoutTruncated: Bool
+    let stderrTruncated: Bool
+    let stderr: String?
+    let artifacts: [String]
+    let fileBytes: UInt64?
+    let containerDurationSeconds: Double
+    let videoTrackDurationSeconds: [Double]
+    let requestedDurationSeconds: Double
+    let actualDurationSeconds: Double
+    let minimumAcceptedDurationSeconds: Double
+    let durationValidation: String
+    let note: String
+}
+
 struct HostSimulatorInputOutput: Encodable {
     let ok: Bool
     let action: String
