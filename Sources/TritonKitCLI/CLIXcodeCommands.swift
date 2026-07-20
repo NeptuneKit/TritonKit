@@ -52,6 +52,7 @@ struct XcodeUse: AsyncParsableCommand {
 
     @Option(help: "Path to .xcworkspace") var workspace: String?
     @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String
     @Option(help: "Build configuration") var configuration: String = "Debug"
     @Option(help: "SDK, for example iphonesimulator") var sdk: String = "iphonesimulator"
@@ -64,12 +65,13 @@ struct XcodeUse: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            try validateXcodeContainer(workspace: workspace, project: project, outputFormat: outputFormat)
+            try validateXcodeContainer(workspace: workspace, project: project, package: package, outputFormat: outputFormat)
             let existing = (try? loadHostWorkspaceDefaults()) ?? TKHostWorkspaceDefaults()
             let resolvedDestination = destination ?? simulator.map(xcodeSimulatorDestination(selector:))
             let xcode = TKXcodeWorkspaceDefaults(
                 workspace: workspace,
                 project: project,
+                package: package,
                 scheme: scheme,
                 configuration: configuration,
                 sdk: sdk,
@@ -105,20 +107,22 @@ struct XcodeSchemes: AsyncParsableCommand {
 
     @Option(help: "Path to .xcworkspace") var workspace: String?
     @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let resolved = try resolveXcodeContainer(workspace: workspace, project: project)
-            let command = TKXcodebuildCommand.listSchemes(workspace: resolved.workspace, project: resolved.project)
+            let resolved = try resolveXcodeContainer(workspace: workspace, project: project, package: package)
+            let command = TKXcodebuildCommand.listSchemes(workspace: resolved.workspace, project: resolved.project, package: resolved.package)
             let result = try runHostCommand(command)
             let schemes = try TKXcodebuildListParser.parseSchemes(result.stdoutData)
             let output = XcodeSchemesOutput(
                 ok: true,
                 workspace: resolved.workspace,
                 project: resolved.project,
+                package: resolved.package,
                 schemes: schemes.schemes,
                 sourceCommand: result.sourceCommand
             )
@@ -198,6 +202,7 @@ struct XcodeSettings: AsyncParsableCommand {
 
     @Option(help: "Path to .xcworkspace") var workspace: String?
     @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
@@ -217,6 +222,7 @@ struct XcodeSettings: AsyncParsableCommand {
             let resolved = try resolveXcodeInvocation(
                 workspace: workspace,
                 project: project,
+                package: package,
                 scheme: scheme,
                 configuration: configuration,
                 sdk: sdk,
@@ -228,6 +234,7 @@ struct XcodeSettings: AsyncParsableCommand {
             let command = TKXcodebuildCommand.showBuildSettings(
                 workspace: resolved.workspace,
                 project: resolved.project,
+                package: resolved.package,
                 scheme: resolved.scheme,
                 configuration: resolved.configuration,
                 sdk: resolved.sdk,
@@ -263,6 +270,7 @@ struct XcodeBuild: AsyncParsableCommand {
 
     @Option(help: "Path to .xcworkspace") var workspace: String?
     @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
@@ -282,6 +290,7 @@ struct XcodeBuild: AsyncParsableCommand {
             let resolved = try resolveXcodeInvocation(
                 workspace: workspace,
                 project: project,
+                package: package,
                 scheme: scheme,
                 configuration: configuration,
                 sdk: sdk,
@@ -313,6 +322,7 @@ struct XcodeTest: AsyncParsableCommand {
 
     @Option(help: "Path to .xcworkspace") var workspace: String?
     @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
@@ -332,6 +342,7 @@ struct XcodeTest: AsyncParsableCommand {
             let resolved = try resolveXcodeInvocation(
                 workspace: workspace,
                 project: project,
+                package: package,
                 scheme: scheme,
                 configuration: configuration,
                 sdk: sdk,
@@ -358,6 +369,7 @@ struct XcodeRun: AsyncParsableCommand {
 
     @Option(help: "Path to .xcworkspace") var workspace: String?
     @Option(help: "Path to .xcodeproj") var project: String?
+    @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
@@ -378,6 +390,7 @@ struct XcodeRun: AsyncParsableCommand {
             let resolved = try resolveXcodeInvocation(
                 workspace: workspace,
                 project: project,
+                package: package,
                 scheme: scheme,
                 configuration: configuration,
                 sdk: sdk,

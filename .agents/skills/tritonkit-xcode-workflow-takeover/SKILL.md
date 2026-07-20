@@ -48,11 +48,13 @@ Start from:
 ```bash
 triton xcode discover --path . --json
 triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator <udid> --json
+triton xcode use --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --json
 triton xcode schemes --json
 triton xcode status --json
 triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json
 triton xcode settings --jsonl --timeout <seconds>
 triton xcode build --jsonl
+triton xcode build --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcode run --jsonl
 triton xcresult summary --path /tmp/App.xcresult --json
@@ -66,6 +68,7 @@ Current boundaries:
 - `xcode run` covers build, simulator install, and simulator launch; it does not prove business readiness.
 - Continue readiness checks with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
 - Real workspaces may exceed default timeouts. Use `triton xcode settings/build/test/run --timeout <seconds>` and preserve the JSONL summary or stable error envelope before falling back to raw `xcodebuild`.
+- When `xcode discover` returns `Package.swift`, consume that path through `--package` or persist it with `xcode use --package ...`. Do not fall back merely because no `.xcworkspace` / `.xcodeproj` exists. Package actions run `xcodebuild` from the package directory, expose `package` in invocation/final output, and share the same JSONL artifacts as project actions.
 - Treat target identity as one contract across the resolved invocation and generated `xcodebuild` command. Explicit precedence is `--destination` > real-device selector > `--simulator` > workspace default destination. For `--simulator`, UUID and `sim:<UUID>` selectors synthesize `id=<UUID>`; human-readable names synthesize `name=<name>`. Never persist or generate `id=<device name>`.
 - When build/test behavior looks stuck, run `triton xcode status --json` first, then `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`; timeout returns `xcode_not_idle` with blocking PIDs.
 - `xcode status` should only classify `xcodebuild`, `SwiftBuildService`, `XCBBuildService`, and `xctest` as Xcode-lane blockers. Do not treat unrelated SwiftPM `swift-build --package-path ...` provider builds as active Xcode workflow blockers.
@@ -78,7 +81,7 @@ Current boundaries:
 - `xctrace record --output <path.trace>` rejects existing output unless `--append-run` is explicit; `--append-run` requires an existing non-symlink trace path. Symlink outputs are always rejected before invoking `xctrace`.
 - Stdout-backed artifact writes reject existing output files and symbolic links by default. Use fresh paths under `/tmp`, `.triton/`, or an explicit artifact directory for repeatable agent runs.
 - `xcresult summary/failures` is available for result bundle triage. Output is redacted by default across JSON and text, including `path`, `sourceCommand/sourceCommands`, private paths, emails, Bearer/token/password/API-key fragments, and long token-like strings. Use `--include-sensitive` only for local private debugging. `triton evidence --include xcode,host` captures only small read-only host/Xcode artifacts for now: repo-local defaults, simulator list, Xcode process status, and shallow discovery. If an Xcode build/test/run `TKXcodeActionSummary` was explicitly saved, `--xcode-summary <summary.json>` imports only that summary into `artifacts/xcode/action-summary.json`; it does not copy stdout/stderr logs, raw `.xcresult`, `.trace`, attachments, or scan temp/DerivedData. Raw `.xcresult` ingestion, attachments, semantic coverage summaries, logs, and automatic build/test/run collection are still follow-up slices.
-- `triton schema --command xcode|xcresult|xctrace|coverage --json` exposes structured agent-planning fields in addition to prose shapes: `requiredOptions`, `inheritsDefaultsFrom`, `jsonlEvents`, `finalEventKind`, `artifacts`, `retryable`, `nextCommands`, `outputContracts`, `failureCodes`, and `subcommands[]`. Prefer `subcommands[]` for planning: it uses atomic `requiredOptions`, `oneOfRequiredOptions`, `optionalOptions`, `defaultProviders`, `outputSelectors`, and subcommand-level failure codes so agents do not parse human strings like `summary/failures:--path`. Treat these as planning/output-selection hints; concrete commands still validate their own arguments.
+- `triton schema --command xcode|xcode.build|xcresult|xctrace|coverage --json` exposes structured agent-planning fields in addition to prose shapes: `requiredOptions`, `inheritsDefaultsFrom`, `jsonlEvents`, `finalEventKind`, `artifacts`, `retryable`, `nextCommands`, `outputContracts`, `failureCodes`, and `subcommands[]`. Dotted and space-separated nested selectors both narrow the parent envelope to one subcommand. Prefer `subcommands[]` for planning: it uses atomic `requiredOptions`, `oneOfRequiredOptions`, `optionalOptions`, `defaultProviders`, `outputSelectors`, and subcommand-level failure codes so agents do not parse human strings like `summary/failures:--path`. Treat these as planning/output-selection hints; concrete commands still validate their own arguments.
 
 ## Error Recovery
 
@@ -86,8 +89,8 @@ Use this table before falling back to raw `xcodebuild`:
 
 | Error code | Meaning | Next action |
 | --- | --- | --- |
-| `invalid_workspace_path` | Missing or invalid workspace/project/repo path | Run `triton xcode discover --path . --json`, then pass an explicit `--workspace` or `--project`. |
-| `ambiguous_workspace` | Multiple containers or conflicting options | Pick exactly one discovered `.xcworkspace` or `.xcodeproj`; then run `triton xcode use ... --json`. |
+| `invalid_workspace_path` | Missing or invalid workspace/project/package/repo path | Run `triton xcode discover --path . --json`, then pass an explicit `--workspace`, `--project`, or `--package`. |
+| `ambiguous_workspace` | Multiple containers or conflicting options | Pick exactly one discovered `.xcworkspace`, `.xcodeproj`, or `Package.swift`; then run `triton xcode use ... --json`. |
 | `scheme_not_found` | Scheme is absent or not shared | Run `triton xcode schemes --workspace <path> --json`; use a shared scheme or fix the project. |
 | `simulator_not_found` | No simulator default or invalid UDID | Run `triton sim list --json`, boot/select one simulator, then pass `--simulator <udid>` or `triton sim use <udid> --json`. |
 | `xcode_not_idle` | Existing build/test processes still match the workspace | Run `triton xcode status --json`; wait, cancel stale PIDs manually, or retry with a more specific workspace. |
@@ -126,6 +129,7 @@ Minimum validation:
 swift test
 swift build --package-path CLI --scratch-path .build/cli --product triton
 .build/cli/debug/triton schema --command xcode --json
+.build/cli/debug/triton schema --command xcode.build --json
 docs-linhay/scripts/check-docs.sh
 ```
 
@@ -133,6 +137,7 @@ When implementation exists, add focused smoke:
 
 ```bash
 .build/cli/debug/triton xcode discover --path <repo> --json
+.build/cli/debug/triton xcode build --package <repo>/Package.swift --scheme <scheme> --destination 'generic/platform=iOS Simulator' --jsonl
 .build/cli/debug/triton xcode build --workspace <workspace> --scheme <scheme> --simulator <udid> --jsonl
 .build/cli/debug/triton xcode test --workspace <workspace> --scheme <scheme> --result-bundle /tmp/<case>.xcresult --jsonl
 .build/cli/debug/triton xctrace record --template "Time Profiler" --device <udid> --time-limit 1s --output /tmp/<case>.trace --json

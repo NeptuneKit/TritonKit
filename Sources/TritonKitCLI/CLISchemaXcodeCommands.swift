@@ -8,7 +8,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
     return [
         TKCommandSchema(
             name: "xcode",
-            summary: "Discover, configure, build, test, and run Xcode projects without exposing XcodeBuildMCP APIs",
+            summary: "Discover, configure, build, test, and run Xcode projects and Swift packages without exposing XcodeBuildMCP APIs",
             requiresServer: false,
             requiresTarget: false,
             runtimeScope: "host-xcode",
@@ -16,7 +16,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
             outputFormats: jsonText + ["jsonl"],
             options: [
                 TKCommandSchemaOption(name: "discover --path <path>", type: "Subcommand", description: "Discover .xcworkspace, .xcodeproj, and Package.swift candidates"),
-                TKCommandSchemaOption(name: "use --workspace <path>|--project <path> --scheme <scheme>", type: "Subcommand", description: "Set repo-local Xcode defaults in .triton/host-defaults.json"),
+                TKCommandSchemaOption(name: "use --workspace <path>|--project <path>|--package <path> --scheme <scheme>", type: "Subcommand", description: "Set repo-local Xcode defaults in .triton/host-defaults.json"),
                 TKCommandSchemaOption(name: "schemes", type: "Subcommand", description: "List schemes via xcodebuild -list -json"),
                 TKCommandSchemaOption(name: "status", type: "Subcommand", description: "Inspect active xcodebuild and build-service processes"),
                 TKCommandSchemaOption(name: "wait-idle", type: "Subcommand", description: "Wait until matching Xcode build/test processes are idle"),
@@ -27,6 +27,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--path", type: "Path", defaultValue: ".", description: "Directory to scan for Xcode workspace, project, or Package.swift candidates"),
                 TKCommandSchemaOption(name: "--workspace", type: "Path", description: "Path to .xcworkspace"),
                 TKCommandSchemaOption(name: "--project", type: "Path", description: "Path to .xcodeproj"),
+                TKCommandSchemaOption(name: "--package", type: "Path", description: "Path to Package.swift or its package directory; xcodebuild executes from that directory"),
                 TKCommandSchemaOption(name: "--scheme", type: "String", description: "Xcode scheme"),
                 TKCommandSchemaOption(name: "--configuration", type: "String", defaultValue: "Debug", description: "Build configuration"),
                 TKCommandSchemaOption(name: "--sdk", type: "String", defaultValue: "iphonesimulator", description: "xcodebuild SDK"),
@@ -46,6 +47,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
             examples: [
                 "triton xcode discover --path . --json",
                 "triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
+                "triton xcode build --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --jsonl",
                 "triton xcode schemes --json",
                 "triton xcode status --json",
                 "triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json",
@@ -124,6 +126,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                         ("failureCode", "String?", false, "Stable failure code such as xcodebuild_failed, xcodebuild_interrupted, or orphaned_xcodebuild when ok=false"),
                         ("workspace", "String?", false, "Workspace path"),
                         ("project", "String?", false, "Project path"),
+                        ("package", "String?", false, "Package.swift path used as the xcodebuild working directory identity"),
                         ("scheme", "String", true, "Scheme name"),
                         ("configuration", "String", true, "Build configuration"),
                         ("sdk", "String?", false, "SDK"),
@@ -187,14 +190,14 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     summary: "Discover Xcode workspaces, projects, and packages",
                     optionalOptions: ["--path"],
                     retryable: true,
-                    nextCommands: ["triton xcode use --workspace <workspace> --scheme <scheme> --json"],
+                    nextCommands: ["triton xcode use --workspace <workspace> --scheme <scheme> --json", "triton xcode use --package <Package.swift> --scheme <scheme> --json"],
                     failureCodes: ["invalid_workspace_path"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "use",
                     summary: "Persist repo-local Xcode defaults",
                     requiredOptions: ["--scheme"],
-                    oneOfRequiredOptions: [["--workspace"], ["--project"]],
+                    oneOfRequiredOptions: [["--workspace"], ["--project"], ["--package"]],
                     optionalOptions: ["--configuration", "--simulator"],
                     defaultProviders: ["triton sim use"],
                     inheritsDefaultsFrom: ["triton sim use"],
@@ -205,7 +208,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "schemes",
                     summary: "List shared Xcode schemes",
-                    optionalOptions: ["--workspace", "--project"],
+                    optionalOptions: ["--workspace", "--project", "--package"],
                     defaultProviders: ["triton xcode use"],
                     inheritsDefaultsFrom: ["triton xcode use"],
                     retryable: true,
@@ -230,7 +233,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "settings",
                     summary: "Resolve build settings, app path, and bundle id",
-                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--timeout"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--timeout"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
@@ -250,7 +253,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "build",
                     summary: "Run xcodebuild build and emit bounded JSONL progress",
-                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--env", "--arg", "--timeout", "--jsonl"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--env", "--arg", "--timeout", "--jsonl"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
@@ -270,7 +273,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "test",
                     summary: "Run xcodebuild test and optionally write a result bundle",
-                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--result-bundle", "--timeout", "--jsonl"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--result-bundle", "--timeout", "--jsonl"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
@@ -293,7 +296,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "run",
                     summary: "Build, install, and launch on a selected simulator or real device without claiming business readiness",
-                    optionalOptions: ["--workspace", "--project", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--env", "--arg", "--timeout", "--jsonl"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--scheme", "--configuration", "--sdk", "--destination", "--simulator", "--device", "--derived-data-path", "--env", "--arg", "--timeout", "--jsonl"],
                     defaultProviders: ["triton xcode use", "triton sim use"],
                     inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
                     jsonlEvents: [
@@ -311,7 +314,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                     failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "scheme_not_found", "simulator_not_found", "device_not_ready", "device_not_trusted", "developer_mode_required", "ddi_missing", "xcode_signing_failed", "provisioning_profile_missing", "xcodebuild_failed", "xcodebuild_interrupted", "orphaned_xcodebuild", "swift_macro_plugin_malformed_response", "app_path_unresolved", "bundle_id_unresolved"]
                 ),
             ],
-            providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-run"]
+            providedCapabilities: ["xcode-discovery", "xcode-defaults", "xcode-package-build", "xcode-diagnostics", "xcodebuild", "xcode-run"]
         ),
         TKCommandSchema(
             name: "xcresult",

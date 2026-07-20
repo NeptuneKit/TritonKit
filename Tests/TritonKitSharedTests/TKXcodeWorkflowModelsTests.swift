@@ -27,6 +27,36 @@ struct TKXcodeWorkflowModelsTests {
         #expect(decoded.xcode?.destination == "platform=iOS Simulator,id=SIM-1")
     }
 
+    @Test("xcode package defaults round trip and command executes from package directory")
+    func xcodePackageDefaultsAndCommand() throws {
+        let defaults = TKXcodeWorkspaceDefaults(
+            package: "/tmp/Demo/Package.swift",
+            scheme: "Demo",
+            destination: "generic/platform=iOS Simulator"
+        )
+
+        let decoded = try JSONDecoder().decode(
+            TKXcodeWorkspaceDefaults.self,
+            from: JSONEncoder().encode(defaults)
+        )
+        let command = TKXcodebuildCommand.build(
+            workspace: nil,
+            project: nil,
+            package: decoded.package,
+            scheme: decoded.scheme,
+            configuration: decoded.configuration,
+            sdk: nil,
+            destination: decoded.destination,
+            derivedDataPath: "/tmp/Demo/.triton/DerivedData"
+        )
+
+        #expect(decoded.package == "/tmp/Demo/Package.swift")
+        #expect(command.workingDirectory == "/tmp/Demo")
+        #expect(!command.argv.contains("-workspace"))
+        #expect(!command.argv.contains("-project"))
+        #expect(command.argv.contains("generic/platform=iOS Simulator"))
+    }
+
     @Test("xcodebuild command builder emits stable argv")
     func xcodebuildCommandBuilder() {
         let build = TKXcodebuildCommand.build(

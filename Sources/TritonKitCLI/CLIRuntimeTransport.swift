@@ -217,6 +217,7 @@ func runtimeCapabilities(host: String, port: Int, serverReachable: Bool, connect
         TKRuntimeCapability(name: "harmony-app", supported: true),
         TKRuntimeCapability(name: "xcode-discovery", supported: true),
         TKRuntimeCapability(name: "xcode-defaults", supported: true),
+        TKRuntimeCapability(name: "xcode-package-build", supported: true),
         TKRuntimeCapability(name: "xcode-diagnostics", supported: true),
         TKRuntimeCapability(name: "xcodebuild", supported: true),
         TKRuntimeCapability(name: "xcode-build", supported: true),
@@ -344,7 +345,7 @@ func runtimeCapabilityGroup(for name: String) -> String {
         return "target"
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "app-semantic-state", "app-semantic-action", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
         return "runtime"
-    case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
+    case "xcode-discovery", "xcode-defaults", "xcode-package-build", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return "xcode"
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "ios-host-ax", "ios-host-hid", "ios-simulator-host-type", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "android-ax", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-certificate-plan", "network-certificate-install", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "host-app", "ios-real-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-info":
         return "host"
@@ -381,7 +382,7 @@ func runtimeCapabilityRequiredBy(for name: String) -> [String] {
         return ["app", "runtime", "observe", "action", "assert", "evidence", "smoke"]
     case "runtime-manifest", "state-app", "state-scene", "state-route", "state-responder", "snapshot", "app-semantic-state", "app-semantic-action", "media-playback", "focus", "set-text", "select-segment", "set-switch", "semantic-action", "ledger":
         return ["app", "observe", "action", "assert", "evidence"]
-    case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
+    case "xcode-discovery", "xcode-defaults", "xcode-package-build", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return ["project", "xcode", "evidence"]
     case "host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "host-device-screenshot", "ios-device", "ios-device-list", "ios-device-use", "ios-device-wait-ready", "ios-device-screenshot", "ios-screenshot", "ios-host-ax", "ios-host-hid", "ios-simulator-host-type", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "android-ax", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-certificate-plan", "network-certificate-install", "harmony-device", "harmony-device-doctor", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-device-use", "harmony-device-wait-ready", "harmony-device-screenshot", "harmony-device-stop", "harmony-runtime-url", "harmony-app-install", "harmony-app-open-url", "harmony-ax", "harmony-screenshot", "host-simulator", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "host-app", "ios-real-app", "host-app-open-url-ready", "host-app-open-url-snapshot", "host-preferences", "android-app", "android-app-inspect", "android-app-install", "android-app-launch", "android-app-terminate", "android-app-open-url", "harmony-app", "harmony-app-info":
         return ["target", "app", "smoke", "evidence"]
@@ -610,6 +611,8 @@ func runtimeCapabilityNextAction(
         return TKCLINextAction(command: "app", args: ["prefs", "get", "<key>", "--device", "<selector>", "--bundle-id", "<bundle-id>", "--json"])
     case "xcode-discovery", "xcode-build", "xcode-test", "xcode-run":
         return TKCLINextAction(command: "xcode", args: ["discover", "--path", ".", "--json"])
+    case "xcode-package-build":
+        return TKCLINextAction(command: "xcode", args: ["build", "--package", "Package.swift", "--scheme", "<scheme>", "--jsonl"])
     case "xcode-defaults":
         return TKCLINextAction(command: "xcode", args: ["status", "--json"])
     case "xcode-diagnostics":
@@ -962,7 +965,7 @@ func runtimeCapabilityEvidence(for name: String) -> [String] {
         return ["webview-provider", "act.webview-aware-tap"]
     case "route-current-url-assert":
         return ["webview-provider", "route-assertion"]
-    case "xcode-discovery", "xcode-defaults", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
+    case "xcode-discovery", "xcode-defaults", "xcode-package-build", "xcode-diagnostics", "xcodebuild", "xcode-build", "xcode-test", "xcode-run", "xcresult-summary", "xcresult-failures", "xctrace-record", "coverage-report":
         return ["xcodebuild-json", "xcresult", "trace", "coverage"]
     case "capture", "evidence", "evidence-summary", "evidence-redact":
         return ["evidence-bundle"]

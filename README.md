@@ -551,7 +551,7 @@ Add `--execute-actions` only when the model-selected candidate should be execute
 
 Long-lived workspace app-map merges now preserve screen `stateVariants` from run-local Atlas states and expose `coverage` in `app-map.json`, `triton map inspect`, `workspace merge-map`, and HTTP `POST /workspace/runs/:runId/merge-map`. Coverage includes observed run, screen, state, transition, path, suite, confirmed path, replayable path, pass, fail, and flake counts. `triton map health --map <dir.tritonmap> --json` and HTTP `GET /v1/app-map/health?map=<dir.tritonmap>` additionally expose `stateHealth[]`, `transitionHealth[]`, `unhealthyStateRefs`, and `unhealthyTransitionIds`, so agents can distinguish missing state evidence, non-replayable transitions, and candidate transitions that are not yet covered by a suite path.
 
-Xcode project discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts; if fallback is still required, keep the `triton schema --command xcode --json` or `triton xcode ...` failure / unsupported evidence with the fallback log:
+Xcode project / Swift package discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts; if fallback is still required, keep the `triton schema --command xcode --json` or `triton xcode ...` failure / unsupported evidence with the fallback log:
 
 ```bash
 triton xcode discover --path . --json
@@ -561,6 +561,7 @@ triton xcode status --json
 triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json
 triton xcode settings --jsonl --timeout 1800
 triton xcode build --jsonl --timeout 1800
+triton xcode build --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcresult summary --path /tmp/App.xcresult --json
 triton xcresult failures --path /tmp/App.xcresult --json
@@ -568,6 +569,8 @@ triton xcode run --jsonl
 triton xctrace record --template "Time Profiler" --device 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --time-limit 5s --output /tmp/App.trace --json
 triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
 ```
+
+When discovery returns `Package.swift`, pass it directly with `--package` or persist it with `triton xcode use --package <Package.swift> --scheme <scheme> --json`. `schemes/settings/build/test/run` then execute `xcodebuild` from the package directory and expose `package` in their machine-readable invocation/summary. `triton schema --command xcode.build --json` is the point-selector form for the narrowed build contract; the existing space-separated `xcode build` selector remains compatible.
 
 If `triton xcode build/test/run` returns `xcodebuild_interrupted` or `orphaned_xcodebuild`, inspect the final summary's stdout/stderr artifact paths and run `triton xcode status --json` followed by `triton xcode wait-idle --workspace <workspace> --timeout 120 --json` before retrying or falling back.
 
