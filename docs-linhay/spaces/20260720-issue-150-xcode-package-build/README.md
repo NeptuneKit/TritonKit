@@ -1,12 +1,14 @@
 # GitHub Issue #150：Xcode Workflow 构建 Swift Package
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#150](https://github.com/NeptuneKit/TritonKit/issues/150)
 >
 > Branch：`feat/20260720-issue-150-xcode-package-build`
 >
 > Worktree：`../TritonKit-worktrees/20260720-issue-150-xcode-package-build/`
+>
+> 集成：feature `664c72f4`，merge `96b94c63`
 
 ## 背景
 
@@ -91,3 +93,6 @@
 - 聚焦 shared `TKXcodeWorkflowModelsTests` 15 项、CLI `XcodeCommandTests` 14 项通过。
 - release CLI 对临时 standalone package 完成 `discover`（唯一 recommended `Package.swift`）、`schemes`（`Issue150Package`）、显式 package build 与 `xcode use --package` 后无 container 参数 build；两次 generic iOS Simulator build 均返回 `ok=true, exitCode=0`，产物同时覆盖 arm64/x86_64。
 - `schema --command xcode.build --json` 返回单个 build subcommand，optional options 含 `--package`，final contract 含 `package`。
+- 正式本地门禁 `docs-linhay/scripts/verify.sh --local` 通过，覆盖根 Swift 226 项、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build、docs 与 diff check。
+- main 集成回归：`XcodeCommandTests` 14 项、`TKXcodeWorkflowModelsTests` 15 项通过。
+- 扩展 `SchemaFactSourceWorkflowTests` 中新增 `xcode-package-build` capability 的缺口已清零；剩余失败仅为既存 device proxy 子命令/schema 漂移，未新增本期失败。
