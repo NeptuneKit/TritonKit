@@ -119,6 +119,146 @@ struct SimulatorAdvancedControlsTests {
         #expect(!FileManager.default.fileExists(atPath: output.path))
     }
 
+    @Test("bounded combined artifact capture merges stdout and stderr")
+    func boundedCombinedArtifactCaptureMergesStreams() throws {
+        let output = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-combined-console-\(UUID().uuidString).log")
+        defer { try? FileManager.default.removeItem(at: output) }
+        let command = TKHostCommand(
+            executable: "/bin/sh",
+            arguments: ["-c", "trap 'exit 0' INT; printf stdout-line; printf stderr-line >&2; while :; do :; done"],
+            defaultTimeoutSeconds: 2,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
+
+        let result = try runHostCommandWritingCombinedOutputArtifact(
+            command,
+            outputPath: output.path,
+            interruptAfter: 0.05,
+            maximumBytes: 1_024
+        )
+
+        let artifact = try String(contentsOf: output, encoding: .utf8)
+        #expect(artifact.contains("stdout-line"))
+        #expect(artifact.contains("stderr-line"))
+        #expect(result.captureEndedBy == "duration")
+        #expect(result.interruptionRequested)
+        #expect(!result.artifactTruncated)
+        #expect(result.artifactBytes == artifact.utf8.count)
+        #expect(result.observedBytes == artifact.utf8.count)
+    }
+
+    @Test("bounded combined artifact capture truncates by max bytes while draining")
+    func boundedCombinedArtifactCaptureTruncatesByBytes() throws {
+        let output = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-truncated-console-\(UUID().uuidString).log")
+        defer { try? FileManager.default.removeItem(at: output) }
+        let command = TKHostCommand(
+            executable: "/usr/bin/perl",
+            arguments: ["-e", "print 'o' x 1024; print STDERR 'e' x 1024"],
+            defaultTimeoutSeconds: 2,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
+
+        let result = try runHostCommandWritingCombinedOutputArtifact(
+            command,
+            outputPath: output.path,
+            interruptAfter: 1,
+            maximumBytes: 128
+        )
+
+        let artifact = try Data(contentsOf: output)
+        #expect(artifact.count == 128)
+        #expect(result.captureEndedBy == "process-exit")
+        #expect(!result.interruptionRequested)
+        #expect(result.artifactTruncated)
+        #expect(result.artifactBytes == 128)
+        #expect(result.observedBytes == 2048)
+    }
+
+    @Test("combined artifact capture removes output on early command failure")
+    func combinedArtifactCaptureRemovesOutputOnFailure() throws {
+        let output = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-failed-console-\(UUID().uuidString).log")
+        defer { try? FileManager.default.removeItem(at: output) }
+        let command = TKHostCommand(
+            executable: "/bin/sh",
+            arguments: ["-c", "printf partial; exit 7"],
+            defaultTimeoutSeconds: 2,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
+
+        #expect(throws: HostCommandRunError.self) {
+            _ = try runHostCommandWritingCombinedOutputArtifact(
+                command,
+                outputPath: output.path,
+                interruptAfter: 1,
+                maximumBytes: 1_024
+            )
+        }
+        #expect(!FileManager.default.fileExists(atPath: output.path))
+    }
+
+    @Test("process console source command redacts launch environment")
+    func processConsoleSourceCommandRedactsLaunchEnvironment() {
+        let command = TKSimctlCommand.appProcessConsole(
+            udid: "SIM-1",
+            bundleID: "com.example.app",
+            environment: ["PROBE_SECRET": "private-value"],
+            arguments: ["debug-route"]
+        )
+
+        let sourceCommand = hostSourceCommand(command)
+        #expect(sourceCommand.contains("SIMCTL_CHILD_PROBE_SECRET=<redacted>"))
+        #expect(!sourceCommand.contains("private-value"))
+        #expect(sourceCommand.contains("--console-pty"))
+        #expect(sourceCommand.contains("--terminate-running-process"))
+    }
+
+    @Test("process console output encodes metadata without inline console body")
+    func processConsoleOutputDoesNotInlineConsoleBody() throws {
+        let output = HostSimulatorProcessConsoleOutput(
+            ok: true,
+            action: "sim.app-console",
+            runtimeScope: "host-simulator",
+            target: "sim:SIM-1",
+            bundleID: "com.example.app",
+            tool: "xcrun",
+            exitCode: 0,
+            riskLevel: "evidence",
+            sourceCommand: "xcrun simctl launch --console-pty --terminate-running-process SIM-1 com.example.app",
+            sourceCommands: [
+                "xcrun simctl appinfo SIM-1 com.example.app",
+                "xcrun simctl launch --console-pty --terminate-running-process SIM-1 com.example.app",
+            ],
+            artifact: "/tmp/app-console.log",
+            artifactBytes: 32,
+            observedBytes: 64,
+            artifactTruncated: true,
+            maximumBytes: 32,
+            requestedDurationSeconds: 5,
+            elapsedDurationSeconds: 5.1,
+            captureEndedBy: "duration",
+            terminationReason: "exit",
+            sourcesCaptured: ["process-stdout", "process-stderr"],
+            streamLayout: "merged-pty",
+            artifactSensitive: true,
+            note: "bounded"
+        )
+
+        let object = try #require(JSONSerialization.jsonObject(with: JSONEncoder().encode(output)) as? [String: Any])
+        #expect(object["stdout"] == nil)
+        #expect(object["stderr"] == nil)
+        #expect(object["sourcesCaptured"] as? [String] == ["process-stdout", "process-stderr"])
+        #expect(object["streamLayout"] as? String == "merged-pty")
+        #expect(object["artifactSensitive"] as? Bool == true)
+        #expect(object["artifactTruncated"] as? Bool == true)
+        #expect((object["sourceCommands"] as? [String])?.count == 2)
+    }
+
     @Test("host command drains large stdout while keeping only a bounded sample")
     func runHostCommandBoundsLargeStdoutSample() throws {
         let expectedBytes = 1_048_576 + 128
@@ -277,6 +417,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(usageForms.contains("media seed --manifest <path>"))
         #expect(usageForms.contains(where: { $0.hasPrefix("record") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("logs") }))
+        #expect(usageForms.contains("app-console --simulator <udid|booted> --bundle-id <bundle-id> --output <path>"))
         #expect(usageForms.contains(where: { $0.hasPrefix("diagnose") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("logverbose") }))
         #expect(usageForms.contains(where: { $0.hasPrefix("create") }))
@@ -307,6 +448,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.providedCapabilities.contains("ios-host-ax"))
         #expect(sim.providedCapabilities.contains("sim-video"))
         #expect(sim.providedCapabilities.contains("sim-logs"))
+        #expect(sim.providedCapabilities.contains("sim-app-process-console"))
         #expect(sim.providedCapabilities.contains("sim-diagnostics"))
         #expect(sim.providedCapabilities.contains("sim-runtime"))
         #expect(sim.providedCapabilities.contains("sim-device-maintenance"))
@@ -318,6 +460,9 @@ struct SimulatorAdvancedControlsTests {
         #expect(sim.providedCapabilities.contains("network-capture-export"))
         #expect(sim.failureCodes.contains("media_seed_manifest_invalid"))
         #expect(sim.outputContracts.contains { $0.selector == "host.simulator-media-seed" })
+        #expect(sim.outputContracts.contains { $0.selector == "host.simulator-app-process-console" })
+        #expect(sim.artifacts.contains("simulator-app-process-console"))
+        #expect(sim.failureCodes.contains("sim_app_console_failed"))
         #expect(sim.failureCodes.contains("proxy_platform_not_supported"))
         #expect(sim.outputContracts.contains { $0.selector == "host.device-proxy" })
         #expect(sim.examples.contains("triton sim proxy start --simulator booted --mode record --output /tmp/ios-network --plan-only --json"))
@@ -561,7 +706,7 @@ struct SimulatorAdvancedControlsTests {
         #expect(xcodeRun.nextCommands.contains("triton verify text-exists <text> --json"))
         let xcodeUse = try #require(xcode.subcommands.first { $0.name == "use" })
         #expect(xcodeUse.requiredOptions == ["--scheme"])
-        #expect(xcodeUse.oneOfRequiredOptions == [["--workspace"], ["--project"]])
+        #expect(xcodeUse.oneOfRequiredOptions == [["--workspace"], ["--project"], ["--package"]])
         let xcodeTest = try #require(xcode.subcommands.first { $0.name == "test" })
         #expect(xcodeTest.artifacts.contains("result-bundle"))
         #expect(xcodeTest.nextCommands.contains("triton xcresult failures --path <result.xcresult> --json"))

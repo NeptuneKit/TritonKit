@@ -630,6 +630,61 @@ func hostSimulatorRecordingOutputContract() -> TKCommandOutputContract {
     )
 }
 
+func hostSimulatorLogsOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-logs",
+        format: "json",
+        kind: "simulator-logs",
+        model: "HostArtifactCaptureOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether bounded unified-log capture completed"),
+            ("action", "String", true, "sim.logs"),
+            ("runtimeScope", "String", true, "host-simulator"),
+            ("target", "String", true, "Simulator target selector"),
+            ("sourceCommand", "String", true, "Underlying simctl spawn log stream command"),
+            ("artifact", "String", true, "Written unified-log artifact path"),
+            ("stdoutBytes", "Int", true, "Observed unified-log bytes"),
+            ("stderrBytes", "Int", true, "Observed simctl stderr bytes"),
+            ("sourceType", "String", true, "unified-log"),
+            ("sourcesCaptured", "[String]", true, "Contains unified-log only; excludes App process stdout/stderr"),
+            ("streamLayout", "String", true, "Requested log stream style"),
+            ("artifactSensitive", "Bool", true, "Whether the artifact can contain sensitive App/system data"),
+            ("note", "String", true, "Explicit source coverage note"),
+        ])
+    )
+}
+
+func hostSimulatorProcessConsoleOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "host.simulator-app-process-console",
+        format: "json",
+        kind: "simulator-app-process-console",
+        model: "HostSimulatorProcessConsoleOutput",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether bounded App process console capture completed"),
+            ("action", "String", true, "sim.app-console"),
+            ("runtimeScope", "String", true, "host-simulator"),
+            ("target", "String", true, "Simulator target selector"),
+            ("bundleID", "String", true, "Relaunched App bundle identifier"),
+            ("sourceCommand", "String", true, "Underlying simctl launch --console-pty command with launch environment values redacted"),
+            ("sourceCommands", "[String]", true, "Ordered appinfo preflight and console-pty capture commands"),
+            ("artifact", "String", true, "Merged PTY process console artifact path"),
+            ("artifactBytes", "Int", true, "Bytes written after maximum size enforcement"),
+            ("observedBytes", "Int", true, "Total bytes drained from the merged PTY"),
+            ("artifactTruncated", "Bool", true, "Whether observed output exceeded maximumBytes"),
+            ("maximumBytes", "Int", true, "Maximum artifact bytes"),
+            ("requestedDurationSeconds", "Double", true, "Requested bounded capture duration"),
+            ("elapsedDurationSeconds", "Double", true, "Observed host process capture duration"),
+            ("captureEndedBy", "String", true, "duration or process-exit"),
+            ("terminationReason", "String", true, "exit or uncaught-signal"),
+            ("sourcesCaptured", "[String]", true, "process-stdout and process-stderr"),
+            ("streamLayout", "String", true, "merged-pty"),
+            ("artifactSensitive", "Bool", true, "Always true; console content is never inlined in JSON"),
+            ("note", "String", true, "Relaunch and truncation semantics"),
+        ])
+    )
+}
+
 func hostSimulatorAXOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "host.simulator-ax",

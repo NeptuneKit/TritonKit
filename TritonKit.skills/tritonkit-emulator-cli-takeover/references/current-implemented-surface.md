@@ -61,6 +61,7 @@ triton sim shutdown <udid-or-booted> --json
 triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json
 triton sim record --simulator <udid-or-booted> --output /tmp/<case>-sim.mov --duration 10 --json
 triton sim logs --simulator <udid-or-booted> --output /tmp/<case>-sim.ndjson --duration 5 --json
+triton sim app-console --simulator <udid-or-booted> --bundle-id <bundle-id> --output /tmp/<case>-app-console.log --duration 5 --max-bytes 10485760 --json
 triton sim status-bar list --simulator booted --json
 triton sim privacy grant location com.example.app --simulator booted --json
 triton sim location set 37.7749,-122.4194 --simulator booted --json
@@ -109,6 +110,8 @@ triton app prefs set <key> --type data --base64 <base64> --device iphone15 --bun
 triton app prefs set <key> --type data --hex <hex> --device iphone15 --bundle-id <bundle-id> --json
 triton smoke ios --device iphone15 --bundle-id <bundle-id> --open-url '<url>' --wait-text '<text>' --screenshot /tmp/<case>.png --evidence /tmp/<case>.tritonevidence --json
 ```
+
+Treat the two log paths as separate fact sources. `sim logs` returns `sourceType=unified-log` and `sourcesCaptured=[unified-log]`; it does not capture App process stdout/stderr. `sim app-console` performs an App metadata preflight, terminates/relaunches the selected bundle through `console-pty`, and returns `sourcesCaptured=[process-stdout,process-stderr]` with `streamLayout=merged-pty`. Its artifact is sensitive, bounded by `--duration` and `--max-bytes`, and never inlined in JSON. Environment values in `--env KEY=VALUE` must be redacted from source commands.
 
 HarmonyOS / DevEco Emulator:
 

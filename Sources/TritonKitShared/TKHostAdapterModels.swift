@@ -488,6 +488,36 @@ public enum TKSimctlCommand {
         )
     }
 
+    public static func appProcessConsole(
+        udid: String,
+        bundleID: String,
+        environment: [String: String] = [:],
+        arguments appArguments: [String] = [],
+        defaultTimeoutSeconds: Double = 20
+    ) -> TKHostCommand {
+        let simctlEnvironment = Dictionary(
+            uniqueKeysWithValues: environment.map { key, value in
+                ("SIMCTL_CHILD_\(key)", value)
+            }
+        )
+        return command(
+            [
+                "simctl", "launch",
+                "--console-pty",
+                "--terminate-running-process",
+                udid,
+                bundleID,
+            ] + appArguments,
+            environment: simctlEnvironment,
+            redactedEnvironmentKeys: Set(simctlEnvironment.keys),
+            riskLevel: .evidence,
+            requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
+            defaultTimeoutSeconds: defaultTimeoutSeconds,
+            capturesArtifacts: true,
+            sensitiveOutput: true
+        )
+    }
+
     public static func logVerbose(udid: String? = nil, enabled: Bool) -> TKHostCommand {
         var arguments = ["simctl", "logverbose"]
         if let udid {

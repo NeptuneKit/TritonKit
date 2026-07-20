@@ -187,7 +187,7 @@ Command-level `requiredOptions[]` is for direct command invocation only. If a co
 
 Default providers and inherited defaults must be schema-backed Triton commands. Use values such as `triton xcode use` or `triton sim use`; do not put raw tool names, README references, or prose setup notes into `defaultProviders[]` or `inheritsDefaultsFrom[]`.
 
-Command and subcommand `artifacts[]` values must stay in the fixed schema artifact taxonomy. For emulator and host flows, use stable names such as `simulator-screenshot`, `simulator-video`, `simulator-logs`, `simulator-diagnostics`, `app-container`, `app-preferences`, `harmony-layout`, `screenshot`, `evidence-bundle`, `stdout-log`, `stderr-log`, `trace`, and `coverage-json`.
+Command and subcommand `artifacts[]` values must stay in the fixed schema artifact taxonomy. For emulator and host flows, use stable names such as `simulator-screenshot`, `simulator-video`, `simulator-logs`, `simulator-app-process-console`, `simulator-diagnostics`, `app-container`, `app-preferences`, `harmony-layout`, `screenshot`, `evidence-bundle`, `stdout-log`, `stderr-log`, `trace`, and `coverage-json`.
 
 JSONL long-running event contracts must be stable. Keep `jsonlEvents[]` as dot-separated event keys, keep subcommand final events concrete such as `xcode.build.summary`, and ensure `finalEventKind` appears in the same `jsonlEvents[]` list.
 

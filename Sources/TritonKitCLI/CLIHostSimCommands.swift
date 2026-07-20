@@ -128,6 +128,7 @@ struct Sim: AsyncParsableCommand {
             SimType.self,
             SimRecord.self,
             SimLogs.self,
+            SimAppConsole.self,
             SimDiagnose.self,
             SimLogVerbose.self,
             SimProxy.self,
@@ -554,7 +555,11 @@ struct SimLogs: AsyncParsableCommand {
             ),
             outputPath: output,
             outputFormat: outputFormat,
-            note: "Bounded simulator log stream was written."
+            sourceType: "unified-log",
+            sourcesCaptured: ["unified-log"],
+            streamLayout: style.rawValue,
+            artifactSensitive: true,
+            note: "Bounded Simulator unified log stream was written. This artifact does not capture App process stdout or stderr."
         )
     }
 }

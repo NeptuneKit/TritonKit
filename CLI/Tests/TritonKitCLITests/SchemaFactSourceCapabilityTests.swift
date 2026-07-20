@@ -536,6 +536,7 @@ extension SchemaFactSourceTests {
             "harmony-device-screenshot": ["<path>"],
             "sim-video": ["<path.mov>"],
             "sim-logs": ["<path.ndjson>"],
+            "sim-app-process-console": ["<path.log>"],
             "sim-diagnostics": ["<path>"],
             "capture": ["<dir.tritonevidence>"],
             "evidence": ["<dir.tritonevidence>"],

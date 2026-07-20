@@ -197,6 +197,19 @@ struct TKHostAdapterModelsTests {
         #expect(TKSimctlCommand.diagnose(output: "/tmp/sim-diagnostics", timeout: 15, noArchive: true, allLogs: true, dataContainers: true, udids: ["U1", "U2"]).argv == ["simctl", "diagnose", "--timeout=15.0", "--output=/tmp/sim-diagnostics", "--no-archive", "--all-logs", "--data-container", "--udid=U1", "--udid=U2"])
         #expect(TKSimctlCommand.recordVideo(udid: "U", output: "/tmp/sim.mov", codec: "hevc", display: "internal", mask: "black", force: true, defaultTimeoutSeconds: 90).argv == ["simctl", "io", "U", "recordVideo", "--codec=hevc", "--display=internal", "--mask=black", "--force", "/tmp/sim.mov"])
         #expect(TKSimctlCommand.logStream(udid: "U", duration: 5, style: "ndjson", level: "debug", predicate: "subsystem == \"com.example.app\"", source: true, type: "log").argv == ["simctl", "spawn", "U", "log", "stream", "--style", "ndjson", "--timeout", "5", "--level", "debug", "--predicate", "subsystem == \"com.example.app\"", "--source", "--type", "log"])
+        let appConsole = TKSimctlCommand.appProcessConsole(
+            udid: "U",
+            bundleID: "com.example.app",
+            environment: ["SECRET": "value"],
+            arguments: ["debug-route"],
+            defaultTimeoutSeconds: 15
+        )
+        #expect(appConsole.argv == ["simctl", "launch", "--console-pty", "--terminate-running-process", "U", "com.example.app", "debug-route"])
+        #expect(appConsole.environment == ["SIMCTL_CHILD_SECRET": "value"])
+        #expect(appConsole.redactedEnvironmentKeys == ["SIMCTL_CHILD_SECRET"])
+        #expect(appConsole.defaultTimeoutSeconds == 15)
+        #expect(appConsole.capturesArtifacts)
+        #expect(appConsole.sensitiveOutput)
         #expect(TKSimctlCommand.logVerbose(udid: "U", enabled: true).argv == ["simctl", "logverbose", "U", "enable"])
         #expect(TKSimctlCommand.logVerbose(enabled: false).argv == ["simctl", "logverbose", "disable"])
         #expect(TKSimctlCommand.runtimeList().argv == ["simctl", "runtime", "list", "-j"])

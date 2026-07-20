@@ -469,6 +469,7 @@ triton sim boot 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --wait --jsonl
 triton sim screenshot --simulator booted --output /tmp/sim.png --json
 triton sim record --simulator booted --output /tmp/sim.mov --duration 10 --json
 triton sim logs --simulator booted --output /tmp/sim.ndjson --duration 5 --style ndjson --json
+triton sim app-console --simulator booted --bundle-id com.example.app --output /tmp/app-console.log --duration 5 --max-bytes 10485760 --json
 triton sim pair <watch-udid> <phone-udid> --json
 triton sim unpair <pair-uuid> --json
 triton sim clone <udid> "Clone for Smoke" --json
@@ -534,6 +535,8 @@ triton workspace export-flow <run-id> --output flow.tritontest.yaml --json
 triton test validate flow.tritontest.yaml --json
 triton workspace merge-map <run-id> --map-dir .triton/maps/com.example.app.tritonmap --confirm --json
 ```
+
+`sim logs` captures bounded unified logging only. Use `sim app-console` when a relaunched Simulator App's process `stdout` / `stderr` is required. The latter writes a sensitive, duration- and byte-bounded merged PTY artifact; JSON reports `sourcesCaptured=["process-stdout","process-stderr"]`, `streamLayout="merged-pty"`, byte/truncation metadata, and redacted source commands without inlining console content.
 
 `sim screenshot` captures the CoreSimulator framebuffer. Its JSON output includes `pixelWidth`, `pixelHeight`, `display.*`, `orientationPolicy=raw-framebuffer`, and `orientationNote`; use `--display internal|external|<screen-id>|<display-uuid>` when the default display selected by `simctl` is not the one you want. Triton does not rotate iPad framebuffer screenshots yet, so downstream evidence viewers should treat the orientation metadata as authoritative.
 

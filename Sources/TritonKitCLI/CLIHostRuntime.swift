@@ -69,6 +69,10 @@ func runHostCommandCapturingStdoutArtifact(
     command: TKHostCommand,
     outputPath: String,
     outputFormat: ClientOutputFormat,
+    sourceType: String? = nil,
+    sourcesCaptured: [String]? = nil,
+    streamLayout: String? = nil,
+    artifactSensitive: Bool? = nil,
     note: String? = nil
 ) throws {
     do {
@@ -90,6 +94,10 @@ func runHostCommandCapturingStdoutArtifact(
             stdoutTruncated: result.stdoutTruncated,
             stderrTruncated: result.stderrTruncated,
             stderr: stderr.isEmpty ? nil : stderr,
+            sourceType: sourceType,
+            sourcesCaptured: sourcesCaptured,
+            streamLayout: streamLayout,
+            artifactSensitive: artifactSensitive,
             note: note
         )
         switch outputFormat {
