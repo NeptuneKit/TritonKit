@@ -1,6 +1,6 @@
 # GitHub Issue #152：真机 Launch Environment 传播
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#152](https://github.com/NeptuneKit/TritonKit/issues/152)
 >
@@ -79,3 +79,10 @@
 - 已通过 `TKHostAdapterModelsTests` 38 项、`AppOpenURLFlowTests` 7 项、`XcodeCommandTests` 14 项。
 - `docs-linhay/scripts/verify.sh --local` 通过：Swift tests 226 项、Release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator package build、docs 与 diff 门禁全部成功。
 - connected iOS 26.5.2 真机可由 Triton 解析为 wired/ready；`triton app list` 未发现 Triton/Demo/Bench sentinel App，因此未启动无关 App，真实 `ProcessInfo.environment` 动态回读保留为外部业务 App 回归边界。
+
+## 集成记录
+
+- feature commit：`c81073633e184badcc96213eb766e752bcd15ebc`
+- main merge commit：`dc7e4e05dc74f3c1c54fc092d68b9c2f125bfb20`
+- merge 后复跑：`TKHostAdapterModelsTests` 38 项、`AppOpenURLFlowTests` 7 项、`XcodeCommandTests` 14 项全部通过。
+- 本期代码、测试、README、技术文档、memory 与 Xcode workflow skill 已同步；等待 GitHub Actions 通过后关闭 #152 并删除临时 worktree/branch。
