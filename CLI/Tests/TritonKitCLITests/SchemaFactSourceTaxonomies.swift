@@ -323,6 +323,10 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["verify", "observe", "archive"]
     case "artifact_write_failed", "file_write_failed", "overwrite_refused":
         return ["archive", "diagnose"]
+    case "app_pull_destination_missing", "app_pull_directory_not_allowed", "app_pull_artifact_too_large", "app_pull_unsafe_artifact":
+        return ["archive", "diagnose"]
+    case "app_pull_real_device_required", "app_pull_source_not_found", "app_pull_domain_not_found", "app_pull_failed":
+        return ["diagnose", "prepare-target", "archive"]
     case "sim_record_truncated", "sim_record_invalid_artifact":
         return ["archive", "diagnose"]
     case "app_map_error", "unconfirmed_path", "non_replayable_path":

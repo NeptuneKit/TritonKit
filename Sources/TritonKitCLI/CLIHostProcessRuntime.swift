@@ -408,7 +408,7 @@ func simulatorNotBootedErrorDetail(target: String, message: String) -> TKCLIErro
     )
 }
 
-private func iosDevicectlErrorMapping(stderr: String) -> (code: String, hint: String) {
+func iosDevicectlErrorMapping(stderr: String) -> (code: String, hint: String) {
     let lowercased = stderr.lowercased()
     if lowercased.contains("unable to find utility") || lowercased.contains("devicectl") && lowercased.contains("not found") {
         return (
@@ -443,6 +443,38 @@ private func iosDevicectlErrorMapping(stderr: String) -> (code: String, hint: St
     return (
         "host_action_failed",
         "Inspect the devicectl log artifact, verify the iOS device is connected, trusted, unlocked, and supported by the selected Xcode."
+    )
+}
+
+func iosDevicectlPullErrorMapping(stderr: String) -> (code: String, hint: String) {
+    let baseline = iosDevicectlErrorMapping(stderr: stderr)
+    if baseline.code != "host_action_failed" {
+        return baseline
+    }
+    let lowercased = stderr.lowercased()
+    if lowercased.contains("source") && (
+        lowercased.contains("does not exist")
+        || lowercased.contains("no such file")
+        || lowercased.contains("not found")
+    ) {
+        return (
+            "app_pull_source_not_found",
+            "Verify --source is relative to the selected app data or app group container and that the app created the artifact."
+        )
+    }
+    if lowercased.contains("application") && (
+        lowercased.contains("not installed")
+        || lowercased.contains("not found")
+        || lowercased.contains("domain identifier")
+    ) {
+        return (
+            "app_pull_domain_not_found",
+            "Verify the app or app group is installed on the selected device and pass the matching --bundle-id or --group-id."
+        )
+    }
+    return (
+        "app_pull_failed",
+        "Inspect the devicectl JSON/log artifacts and verify the target, domain identifier, source path, device lock state, and host destination."
     )
 }
 
@@ -637,6 +669,36 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: "Use a smaller result bundle or wait for the follow-up artifact-backed xcresult parser; do not attach raw private xcresult JSON to public issues."
         )
+    case HostAppPullError.realDeviceRequired:
+        detail = TKCLIErrorDetail(
+            code: "app_pull_real_device_required",
+            message: "\(error)",
+            hint: "Run `triton device list --platform ios --scope real --json`, then pass a ready ios-real selector with `--device`."
+        )
+    case HostAppPullError.destinationMissing:
+        detail = TKCLIErrorDetail(
+            code: "app_pull_destination_missing",
+            message: "\(error)",
+            hint: "Inspect the paired devicectl JSON/log artifacts; a successful pull must produce the staging destination before publication."
+        )
+    case HostAppPullError.directoryNotAllowed:
+        detail = TKCLIErrorDetail(
+            code: "app_pull_directory_not_allowed",
+            message: "\(error)",
+            hint: "Pull one file, or pass --allow-directory with an explicit --max-bytes bound."
+        )
+    case HostAppPullError.artifactTooLarge:
+        detail = TKCLIErrorDetail(
+            code: "app_pull_artifact_too_large",
+            message: "\(error)",
+            hint: "Narrow --source to one file or increase --max-bytes intentionally. The rejected staging artifact was removed."
+        )
+    case HostAppPullError.unsafeArtifact:
+        detail = TKCLIErrorDetail(
+            code: "app_pull_unsafe_artifact",
+            message: "\(error)",
+            hint: "Pull regular files/directories only; symbolic links and special files are rejected."
+        )
     case let error as HostArtifactOutputError:
         detail = TKCLIErrorDetail(
             code: "artifact_output_rejected",
@@ -704,7 +766,10 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             code = "coverage_report_failed"
             hint = "Verify the .xcresult contains coverage data and that --target or --file matches the coverage report."
         } else if command.arguments.first == "devicectl" {
-            let mapping = iosDevicectlErrorMapping(stderr: result.stderr)
+            let isPull = command.arguments.starts(with: ["devicectl", "device", "copy", "from"])
+            let mapping = isPull
+                ? iosDevicectlPullErrorMapping(stderr: [result.stderr, result.stdout].joined(separator: "\n"))
+                : iosDevicectlErrorMapping(stderr: result.stderr)
             code = mapping.code
             hint = mapping.hint
         } else if isHDC && command.arguments.contains("list") && command.arguments.contains("targets") {
