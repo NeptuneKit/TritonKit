@@ -68,7 +68,8 @@ extension SchemaFactSourceTests {
         ])
         expectContract(wait, selector: "host.harmony-wait", fields: [
             "ok", "action", "platform", "target", "condition", "query", "matched",
-            "timedOut", "elapsedMs", "pollCount", "match", "sourceCommands",
+            "timedOut", "elapsedMs", "pollCount", "match", "transientFailureCount",
+            "lastTransientError", "sourceCommands",
         ])
         #expect(!wait.outputContracts.map(\.selector).contains("host.wait"))
 

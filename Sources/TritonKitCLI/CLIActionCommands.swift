@@ -279,67 +279,24 @@ struct Wait: AsyncParsableCommand {
                 }
                 let query = text ?? gone ?? exists ?? ""
                 let selected = try resolveHarmonyTarget(target: target, hdc: hdc)
-                let startedAt = Date()
-                let deadline = startedAt.addingTimeInterval(timeout)
-                var pollCount = 0
-                var lastMatch: TKHarmonyLayoutTextMatch?
-                var sourceCommands: [String] = []
-                while true {
-                    pollCount += 1
-                    let layout = try dumpHarmonyLayout(selected: selected, hdc: hdc, output: nil)
-                    sourceCommands.append(contentsOf: layout.sourceCommands)
-                    lastMatch = try TKHarmonyLayoutParser.firstTextMatch(in: layout.data, text: query)
-                    let matched = gone != nil ? lastMatch == nil : lastMatch != nil
-                    if matched {
-                        let response = HostHarmonyWaitOutput(
-                            ok: true,
-                            action: "wait",
-                            platform: "harmony",
-                            target: selected,
-                            condition: gone != nil ? "gone" : "text",
-                            query: query,
-                            matched: true,
-                            timedOut: false,
-                            elapsedMs: elapsedMilliseconds(since: startedAt),
-                            pollCount: pollCount,
-                            match: lastMatch,
-                            sourceCommands: sourceCommands
-                        )
-                        switch outputFormat {
-                        case .json:
-                            print(try encodeJSON(response))
-                        case .text:
-                            print("matched \(query)")
-                        }
-                        return
-                    }
-                    if Date() >= deadline {
-                        let response = HostHarmonyWaitOutput(
-                            ok: false,
-                            action: "wait",
-                            platform: "harmony",
-                            target: selected,
-                            condition: gone != nil ? "gone" : "text",
-                            query: query,
-                            matched: false,
-                            timedOut: true,
-                            elapsedMs: elapsedMilliseconds(since: startedAt),
-                            pollCount: pollCount,
-                            match: lastMatch,
-                            sourceCommands: sourceCommands
-                        )
-                        switch outputFormat {
-                        case .json:
-                            print(try encodeJSON(response))
-                        case .text:
-                            print("timed out waiting for \(query)")
-                        }
-                        throw ExitCode.failure
-                    }
-                    let remaining = deadline.timeIntervalSinceNow
-                    let sleepSeconds = max(0.01, min(interval, remaining))
-                    try await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
+                let response = try await waitForHarmonyText(
+                    selected: selected,
+                    hdc: hdc,
+                    text: query,
+                    timeout: timeout,
+                    interval: interval,
+                    gone: gone != nil
+                )
+                switch outputFormat {
+                case .json:
+                    print(try encodeJSON(response))
+                case .text:
+                    print(response.ok ? "matched \(query)" : "timed out waiting for \(query)")
                 }
+                if !response.ok {
+                    throw ExitCode.failure
+                }
+                return
             }
 
             let (_, client) = try await resolveRuntimeClient(target: target, host: host, port: port, jsonError: outputFormat == .json)

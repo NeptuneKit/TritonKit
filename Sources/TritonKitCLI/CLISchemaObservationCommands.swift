@@ -886,8 +886,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 #"triton wait --predicate "text.exists(\"console\") && !text.exists(\"点我登录\")" --timeout 15 --json"#,
             ],
             successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? } or HostAndroidWaitOutput or HostHarmonyWaitOutput",
-            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, lastObservedTextSample }; validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error.",
+            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, lastObservedTextSample }; Harmony host timeout may also include transientFailureCount and lastTransientError; validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error. Harmony layout dump/recv timeouts are bounded by the remaining wait budget, retried as transient polls, and retained in lastTransientError.",
             nextCommands: [
                 "triton status --json",
                 "triton verify text-exists <text> --json",
