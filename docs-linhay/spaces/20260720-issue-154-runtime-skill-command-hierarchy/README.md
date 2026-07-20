@@ -1,6 +1,6 @@
 # GitHub Issue #154：Public skill 命令层级与 CLI schema 对齐
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#154](https://github.com/NeptuneKit/TritonKit/issues/154)
 >
@@ -79,3 +79,4 @@ Issue 反馈一个名为 `tritonkit-runtime` 的已安装 skill 在 Triton CLI 0
 - `PublicSkillCommandSchemaTests` 1 项、`CLIHelpTests` 7 项、`verify-skill-package.sh`、`verify-ci-validate-mode.sh` 与 `verify-release-automation.sh` 已通过。
 - `docs-linhay/scripts/verify.sh --local` 全量通过：根包 226 项 Swift tests、release CLI build/smoke、Harmony/iOS runtime smoke、iOS Simulator build、docs 与 whitespace gate 均成功。
 - 完整 CLI suite 运行 651 项；本期新增两个 suite 均通过，余下 21 个 issue 仍是既存 schema fact、暂停 testrec 与旧 xcode-use 断言基线。
+- 已以 `462d2002` 合入 `main`；GitHub Actions [run 29747265165](https://github.com/NeptuneKit/TritonKit/actions/runs/29747265165) 全部通过后关闭 #154。本期未发布 tag 或 CocoaPods。
