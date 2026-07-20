@@ -1,12 +1,14 @@
 # GitHub Issue #146：Simulator 录屏时长校验
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#146](https://github.com/NeptuneKit/TritonKit/issues/146)
 >
 > Branch：`feat/20260720-issue-146-sim-record-duration`
 >
 > Worktree：`../TritonKit-worktrees/20260720-issue-146-sim-record-duration/`
+>
+> 实现提交：`f61f6498`；合并提交：`32770515`
 
 ## 背景
 
@@ -65,3 +67,5 @@
 - 扩展 CLI suite：本次新增的 failure recovery/output kind 两项 schema 问题已清零；全量仍受基线已有的 10 项 `device proxy/alias/bridge` schema 对齐断言与暂停中的 `testrec` local-device 选择断言阻塞，未在 #146 中混修。
 
 真实 smoke 前已保存 `status/doctor/capabilities/schema sim/sim list` 的 Triton-first 事实；server 未启动只影响 embedded runtime，host-side Simulator discovery 与 recording schema 均可用。未调用裸 `simctl` 进行设备动作，`ffprobe` 仅用于独立核对已生成 MOV 的媒体时长。
+
+本期 DoD 已满足并合入 `main`；后续若需要录屏 progress JSONL、可配置容差或跨平台录屏，应另建有限 space。
