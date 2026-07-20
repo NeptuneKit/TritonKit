@@ -1,12 +1,16 @@
 # GitHub Issue #148：Xcode Simulator Destination Selector
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#148](https://github.com/NeptuneKit/TritonKit/issues/148)
 >
 > Branch：`feat/20260720-issue-148-xcode-simulator-destination`
 >
 > Worktree：`../TritonKit-worktrees/20260720-issue-148-xcode-simulator-destination/`
+>
+> 实现提交：`07f1bb99`
+>
+> Main 合并提交：`6c4b4ad8`
 
 ## 背景
 

@@ -19,7 +19,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 执行 | [20260720-issue-148-xcode-simulator-destination](./20260720-issue-148-xcode-simulator-destination/README.md) | 修复 `xcode test --simulator` 被旧 default destination 覆盖及 `id=<name>` 错配 | BDD/TDD、Xcode command/schema 回归、合入后关闭 #148 |
+| 已归档 | [20260720-issue-148-xcode-simulator-destination](./20260720-issue-148-xcode-simulator-destination/README.md) | 显式 `--simulator` 已覆盖旧 default destination；UUID / 名称分别合成 `id=` / `name=` | 已合入 `main`；推送并关闭 #148 |
 | 已归档 | [20260720-issue-146-sim-record-duration](./20260720-issue-146-sim-record-duration/README.md) | `sim record` 已按 encoded sample 时长校验；一帧 MOV 返回 `sim_record_truncated`，成功契约暴露 requested/actual/container/track duration | 已合入 `main`；推送并关闭 #146 |
 | 已归档 | [20260521-ios-embedded-sdk-expansion](./20260521-ios-embedded-sdk-expansion/README.md) | S0-S4 与 WebView-aware `act tap` 已完成，真实 iOS Simulator 证明 `selector -> DOM dispatch -> expect-text` 返回 `status=passed` | 保留动态 smoke 证据；P1/P2 需求另建有限 space |
 | 已归档 | [20260525-simulator-target-simplification](./20260525-simulator-target-simplification/README.md) | 真实多开 iOS、Harmony alias、指定目标动作和多候选拒绝均通过；同时修复 observation alias 缺省 platform 被误判为 iOS | 不实现 `--bundle` 反向过滤；批量 fan-out 或新 selector 能力另建 space |
