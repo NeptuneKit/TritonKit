@@ -55,7 +55,7 @@ struct XcodeUse: AsyncParsableCommand {
     @Option(help: "Scheme name") var scheme: String
     @Option(help: "Build configuration") var configuration: String = "Debug"
     @Option(help: "SDK, for example iphonesimulator") var sdk: String = "iphonesimulator"
-    @Option(help: "Simulator UDID") var simulator: String?
+    @Option(help: "Simulator UDID or name; synthesizes an id= or name= destination") var simulator: String?
     @Option(help: "xcodebuild destination") var destination: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String = defaultXcodeDerivedDataPath
     @Flag(help: "Alias for --format json") var json = false
@@ -66,7 +66,7 @@ struct XcodeUse: AsyncParsableCommand {
         do {
             try validateXcodeContainer(workspace: workspace, project: project, outputFormat: outputFormat)
             let existing = (try? loadHostWorkspaceDefaults()) ?? TKHostWorkspaceDefaults()
-            let resolvedDestination = destination ?? simulator.map { "platform=iOS Simulator,id=\($0)" }
+            let resolvedDestination = destination ?? simulator.map(xcodeSimulatorDestination(selector:))
             let xcode = TKXcodeWorkspaceDefaults(
                 workspace: workspace,
                 project: project,
@@ -202,7 +202,7 @@ struct XcodeSettings: AsyncParsableCommand {
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
-    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
@@ -267,7 +267,7 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
-    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
@@ -317,7 +317,7 @@ struct XcodeTest: AsyncParsableCommand {
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
-    @Option(help: "Simulator UDID used to synthesize destination") var simulator: String?
+    @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(help: "Result bundle output path") var resultBundle: String?
@@ -362,7 +362,7 @@ struct XcodeRun: AsyncParsableCommand {
     @Option(help: "Build configuration") var configuration: String?
     @Option(help: "SDK, for example iphonesimulator") var sdk: String?
     @Option(help: "xcodebuild destination") var destination: String?
-    @Option(help: "Simulator UDID") var simulator: String?
+    @Option(help: "Simulator UDID or name; synthesizes an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector used to build, install, and launch through devicectl") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(name: .customLong("env"), help: "iOS app launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []

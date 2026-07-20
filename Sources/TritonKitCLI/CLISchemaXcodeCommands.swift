@@ -31,7 +31,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--configuration", type: "String", defaultValue: "Debug", description: "Build configuration"),
                 TKCommandSchemaOption(name: "--sdk", type: "String", defaultValue: "iphonesimulator", description: "xcodebuild SDK"),
                 TKCommandSchemaOption(name: "--destination", type: "String", description: "xcodebuild destination"),
-                TKCommandSchemaOption(name: "--simulator", type: "String", description: "Simulator UDID; also used to synthesize destination"),
+                TKCommandSchemaOption(name: "--simulator", type: "String", description: "Simulator UDID, sim:<UDID>, or name; synthesizes id=<UDID> or name=<name> and overrides saved destination when explicit"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Real-device selector from `triton device`; real-device builds use sdk=iphoneos and a device destination"),
                 TKCommandSchemaOption(name: "--derived-data-path", type: "Path", defaultValue: ".triton/DerivedData", description: "Repo-local DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default; use a fresh path to recover Swift macro plugin malformed-response failures"),
                 TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable iOS app launch environment for xcode run; values are passed as SIMCTL_CHILD_* on Simulator or DEVICECTL_CHILD_* on real devices and redacted in sourceCommand"),
