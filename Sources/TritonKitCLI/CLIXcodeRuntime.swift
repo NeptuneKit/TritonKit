@@ -18,41 +18,52 @@ func makeXcodeDerivedDataCacheInfo(path: String?) -> TKXcodeDerivedDataCacheInfo
     )
 }
 
-func validateXcodeContainer(workspace: String?, project: String?, outputFormat: ClientOutputFormat) throws {
-    if workspace != nil, project != nil {
+func validateXcodeContainer(workspace: String?, project: String?, package: String?, outputFormat: ClientOutputFormat) throws {
+    let containers = [workspace, project, package].compactMap { $0 }.filter { !$0.isEmpty }
+    if containers.count > 1 {
         try failHostValidation(
             code: "validation_failed",
-            message: "Pass either --workspace or --project, not both.",
+            message: "Pass exactly one of --workspace, --project, or --package.",
             hint: "Run `triton xcode discover --path . --json` to inspect candidates.",
             outputFormat: outputFormat
         )
     }
-    if workspace == nil, project == nil {
+    if containers.isEmpty {
         try failHostValidation(
             code: "validation_failed",
-            message: "Xcode workflow requires --workspace or --project.",
+            message: "Xcode workflow requires --workspace, --project, or --package.",
             hint: "Run `triton xcode discover --path . --json` and then `triton xcode use ...`.",
             outputFormat: outputFormat
         )
     }
 }
 
-func resolveXcodeContainer(workspace: String? = nil, project: String? = nil) throws -> (workspace: String?, project: String?) {
-    let defaults = try loadHostWorkspaceDefaults()
-    let resolvedWorkspace = workspace ?? defaults?.xcode?.workspace
-    let resolvedProject = project ?? defaults?.xcode?.project
-    guard !(resolvedWorkspace != nil && resolvedProject != nil) else {
+func resolveXcodeContainer(workspace: String? = nil, project: String? = nil, package: String? = nil) throws -> (workspace: String?, project: String?, package: String?) {
+    let explicitContainers = [workspace, project, package].compactMap { $0 }.filter { !$0.isEmpty }
+    guard explicitContainers.count <= 1 else {
         throw XcodeWorkflowError.ambiguousContainer
     }
-    guard resolvedWorkspace != nil || resolvedProject != nil else {
+    if explicitContainers.count == 1 {
+        return (workspace, project, package)
+    }
+    let defaults = try loadHostWorkspaceDefaults()
+    let resolvedWorkspace = defaults?.xcode?.workspace
+    let resolvedProject = defaults?.xcode?.project
+    let resolvedPackage = defaults?.xcode?.package
+    let containers = [resolvedWorkspace, resolvedProject, resolvedPackage].compactMap { $0 }.filter { !$0.isEmpty }
+    guard containers.count <= 1 else {
+        throw XcodeWorkflowError.ambiguousContainer
+    }
+    guard containers.count == 1 else {
         throw XcodeWorkflowError.missingContainer
     }
-    return (resolvedWorkspace, resolvedProject)
+    return (resolvedWorkspace, resolvedProject, resolvedPackage)
 }
 
 func resolveXcodeInvocation(
     workspace: String? = nil,
     project: String? = nil,
+    package: String? = nil,
     scheme: String? = nil,
     configuration: String? = nil,
     sdk: String? = nil,
@@ -63,9 +74,10 @@ func resolveXcodeInvocation(
 ) throws -> ResolvedXcodeInvocation {
     let defaults = try loadHostWorkspaceDefaults()
     let xcode = defaults?.xcode
-    let container = try resolveXcodeContainer(workspace: workspace, project: project)
+    let container = try resolveXcodeContainer(workspace: workspace, project: project, package: package)
     let resolvedWorkspace = container.workspace
     let resolvedProject = container.project
+    let resolvedPackage = container.package
     guard let resolvedScheme = scheme ?? xcode?.scheme, !resolvedScheme.isEmpty else {
         throw XcodeWorkflowError.missingScheme
     }
@@ -93,6 +105,7 @@ func resolveXcodeInvocation(
     return ResolvedXcodeInvocation(
         workspace: resolvedWorkspace,
         project: resolvedProject,
+        package: resolvedPackage,
         scheme: resolvedScheme,
         configuration: resolvedConfiguration,
         sdk: resolvedSDK,
@@ -181,9 +194,9 @@ enum XcodeWorkflowError: Error, CustomStringConvertible {
     var description: String {
         switch self {
         case .missingContainer:
-            "Xcode workflow requires --workspace or --project, or saved defaults from `triton xcode use`."
+            "Xcode workflow requires --workspace, --project, or --package, or saved defaults from `triton xcode use`."
         case .ambiguousContainer:
-            "Pass either --workspace or --project, not both."
+            "Pass exactly one of --workspace, --project, or --package."
         case .missingScheme:
             "Xcode workflow requires --scheme or saved defaults from `triton xcode use`."
         case .appPathUnresolved:
@@ -209,6 +222,7 @@ func runXcodeBuild(
     let command = TKXcodebuildCommand.build(
         workspace: invocation.workspace,
         project: invocation.project,
+        package: invocation.package,
         scheme: invocation.scheme,
         configuration: invocation.configuration,
         sdk: invocation.sdk,
@@ -238,6 +252,7 @@ func runXcodeBuild(
         failureCode: failureCode,
         workspace: invocation.workspace,
         project: invocation.project,
+        package: invocation.package,
         scheme: invocation.scheme,
         configuration: invocation.configuration,
         sdk: invocation.sdk,
@@ -277,6 +292,7 @@ func runXcodeTest(
     let command = TKXcodebuildCommand.test(
         workspace: invocation.workspace,
         project: invocation.project,
+        package: invocation.package,
         scheme: invocation.scheme,
         configuration: invocation.configuration,
         sdk: invocation.sdk,
@@ -307,6 +323,7 @@ func runXcodeTest(
         failureCode: failureCode,
         workspace: invocation.workspace,
         project: invocation.project,
+        package: invocation.package,
         scheme: invocation.scheme,
         configuration: invocation.configuration,
         sdk: invocation.sdk,
@@ -368,6 +385,7 @@ func runXcodeBuildInstallLaunch(
             failureCode: buildSummary.failureCode,
             workspace: invocation.workspace,
             project: invocation.project,
+            package: invocation.package,
             scheme: invocation.scheme,
             configuration: invocation.configuration,
             sdk: invocation.sdk,
@@ -419,6 +437,7 @@ func runXcodeBuildInstallLaunch(
         action: "xcode.run",
         workspace: invocation.workspace,
         project: invocation.project,
+        package: invocation.package,
         scheme: invocation.scheme,
         configuration: invocation.configuration,
         sdk: invocation.sdk,
@@ -506,6 +525,7 @@ func runXcodeRealDeviceBuildInstallLaunch(
         action: "xcode.run",
         workspace: invocation.workspace,
         project: invocation.project,
+        package: invocation.package,
         scheme: invocation.scheme,
         configuration: invocation.configuration,
         sdk: invocation.sdk,
@@ -716,16 +736,7 @@ func runStreamingHostCommand(
 ) throws -> HostProcessResult {
     let timeoutSeconds = command.defaultTimeoutSeconds
     let process = Process()
-    if command.executable.contains("/") {
-        process.executableURL = URL(fileURLWithPath: command.executable)
-        process.arguments = command.processArguments
-    } else if command.executable == "xcrun" {
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/xcrun")
-        process.arguments = command.processArguments
-    } else {
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = [command.executable] + command.processArguments
-    }
+    configureHostProcessExecutable(process, command: command)
 
     FileManager.default.createFile(atPath: artifactPaths.stdout.path, contents: nil)
     FileManager.default.createFile(atPath: artifactPaths.stderr.path, contents: nil)
@@ -921,6 +932,7 @@ func resolveBuiltAppProduct(
     let command = TKXcodebuildCommand.showBuildSettings(
         workspace: invocation.workspace,
         project: invocation.project,
+        package: invocation.package,
         scheme: invocation.scheme,
         configuration: invocation.configuration,
         sdk: invocation.sdk,

@@ -105,7 +105,10 @@ private func hostCommandHasSemanticFailure(_ command: TKHostCommand, result: Hos
         || combinedOutput.contains("install failed")
 }
 
-private func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) {
+func configureHostProcessExecutable(_ process: Process, command: TKHostCommand) {
+    if let workingDirectory = command.workingDirectory, !workingDirectory.isEmpty {
+        process.currentDirectoryURL = URL(fileURLWithPath: workingDirectory, isDirectory: true)
+    }
     if !command.environment.isEmpty {
         var environment = ProcessInfo.processInfo.environment
         for (key, value) in command.environment {
@@ -355,7 +358,11 @@ func hostSourceCommand(_ command: TKHostCommand) -> String {
         let value = command.redactedEnvironmentKeys.contains(key) ? "<redacted>" : (command.environment[key] ?? "")
         return "\(key)=\(shellEscaped(value))"
     }
-    return (environment + ([command.executable] + command.arguments).map(shellEscaped)).joined(separator: " ")
+    let invocation = (environment + ([command.executable] + command.arguments).map(shellEscaped)).joined(separator: " ")
+    guard let workingDirectory = command.workingDirectory, !workingDirectory.isEmpty else {
+        return invocation
+    }
+    return "cd \(shellEscaped(workingDirectory)) && \(invocation)"
 }
 
 func shellEscaped(_ value: String) -> String {

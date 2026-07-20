@@ -13,6 +13,7 @@ struct XcodeSchemesOutput: Encodable {
     let ok: Bool
     let workspace: String?
     let project: String?
+    let package: String?
     let schemes: [String]
     let sourceCommand: String
 }
@@ -20,6 +21,7 @@ struct XcodeSchemesOutput: Encodable {
 struct ResolvedXcodeInvocation: Encodable {
     let workspace: String?
     let project: String?
+    let package: String?
     let scheme: String
     let configuration: String
     let sdk: String?

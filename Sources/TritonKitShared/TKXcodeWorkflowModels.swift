@@ -3,6 +3,7 @@ import Foundation
 public struct TKXcodeWorkspaceDefaults: Codable, Equatable {
     public let workspace: String?
     public let project: String?
+    public let package: String?
     public let scheme: String
     public let configuration: String
     public let sdk: String
@@ -12,6 +13,7 @@ public struct TKXcodeWorkspaceDefaults: Codable, Equatable {
     public init(
         workspace: String? = nil,
         project: String? = nil,
+        package: String? = nil,
         scheme: String,
         configuration: String = "Debug",
         sdk: String = "iphonesimulator",
@@ -20,6 +22,7 @@ public struct TKXcodeWorkspaceDefaults: Codable, Equatable {
     ) {
         self.workspace = workspace
         self.project = project
+        self.package = package
         self.scheme = scheme
         self.configuration = configuration
         self.sdk = sdk
@@ -169,10 +172,11 @@ public enum TKXcodeDiscoveryError: Error, Equatable {
 }
 
 public enum TKXcodebuildCommand {
-    public static func listSchemes(workspace: String?, project: String?) -> TKHostCommand {
+    public static func listSchemes(workspace: String?, project: String?, package: String? = nil) -> TKHostCommand {
         return TKHostCommand(
             executable: "xcodebuild",
             arguments: containerArguments(workspace: workspace, project: project) + ["-list", "-json"],
+            workingDirectory: packageWorkingDirectory(package),
             defaultTimeoutSeconds: 60
         )
     }
@@ -180,6 +184,7 @@ public enum TKXcodebuildCommand {
     public static func showBuildSettings(
         workspace: String?,
         project: String?,
+        package: String? = nil,
         scheme: String,
         configuration: String,
         sdk: String?,
@@ -197,6 +202,7 @@ public enum TKXcodebuildCommand {
                 destination: destination,
                 derivedDataPath: derivedDataPath
             ) + ["-showBuildSettings", "-json"],
+            workingDirectory: packageWorkingDirectory(package),
             defaultTimeoutSeconds: 300
         )
     }
@@ -204,6 +210,7 @@ public enum TKXcodebuildCommand {
     public static func build(
         workspace: String?,
         project: String?,
+        package: String? = nil,
         scheme: String,
         configuration: String,
         sdk: String?,
@@ -227,6 +234,7 @@ public enum TKXcodebuildCommand {
         return TKHostCommand(
             executable: "xcodebuild",
             arguments: arguments,
+            workingDirectory: packageWorkingDirectory(package),
             riskLevel: .automation,
             requiredConfig: [.timeout, .auditRecord],
             defaultTimeoutSeconds: 900
@@ -236,6 +244,7 @@ public enum TKXcodebuildCommand {
     public static func test(
         workspace: String?,
         project: String?,
+        package: String? = nil,
         scheme: String,
         configuration: String,
         sdk: String?,
@@ -259,6 +268,7 @@ public enum TKXcodebuildCommand {
         return TKHostCommand(
             executable: "xcodebuild",
             arguments: arguments,
+            workingDirectory: packageWorkingDirectory(package),
             riskLevel: .automation,
             requiredConfig: [.timeout, .auditRecord],
             defaultTimeoutSeconds: 1_200,
@@ -274,6 +284,12 @@ public enum TKXcodebuildCommand {
             return ["-project", project]
         }
         return []
+    }
+
+    private static func packageWorkingDirectory(_ package: String?) -> String? {
+        guard let package, !package.isEmpty else { return nil }
+        let url = URL(fileURLWithPath: package).standardizedFileURL
+        return url.lastPathComponent == "Package.swift" ? url.deletingLastPathComponent().path : url.path
     }
 
     private static func buildArguments(
@@ -1186,6 +1202,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let failureCode: String?
     public let workspace: String?
     public let project: String?
+    public let package: String?
     public let scheme: String
     public let configuration: String
     public let sdk: String?
@@ -1220,6 +1237,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         failureCode: String? = nil,
         workspace: String?,
         project: String?,
+        package: String? = nil,
         scheme: String,
         configuration: String,
         sdk: String?,
@@ -1253,6 +1271,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.failureCode = failureCode
         self.workspace = workspace
         self.project = project
+        self.package = package
         self.scheme = scheme
         self.configuration = configuration
         self.sdk = sdk

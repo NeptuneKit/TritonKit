@@ -207,6 +207,7 @@ public struct TKSimulatorMediaSeedManifest: Codable, Equatable {
 public struct TKHostCommand: Codable, Equatable {
     public let executable: String
     public let arguments: [String]
+    public let workingDirectory: String?
     public let environment: [String: String]
     public let redactedEnvironmentKeys: Set<String>
     public let riskLevel: TKHostRiskLevel
@@ -219,6 +220,7 @@ public struct TKHostCommand: Codable, Equatable {
     public init(
         executable: String = "xcrun",
         arguments: [String],
+        workingDirectory: String? = nil,
         environment: [String: String] = [:],
         redactedEnvironmentKeys: Set<String> = [],
         riskLevel: TKHostRiskLevel = .readonly,
@@ -230,6 +232,7 @@ public struct TKHostCommand: Codable, Equatable {
     ) {
         self.executable = executable
         self.arguments = arguments
+        self.workingDirectory = workingDirectory
         self.environment = environment
         self.redactedEnvironmentKeys = redactedEnvironmentKeys
         self.riskLevel = riskLevel
@@ -259,6 +262,7 @@ public struct TKHostCommand: Codable, Equatable {
         return TKHostCommand(
             executable: executable,
             arguments: arguments,
+            workingDirectory: workingDirectory,
             environment: environment,
             redactedEnvironmentKeys: redactedEnvironmentKeys,
             riskLevel: riskLevel,

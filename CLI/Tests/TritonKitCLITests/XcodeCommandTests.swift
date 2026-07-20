@@ -1,10 +1,64 @@
 import ArgumentParser
+import Foundation
 import Testing
 import TritonKitShared
 @testable import TritonKitCLI
 
 @Suite
 struct XcodeCommandTests {
+    @Test("xcode workflow commands accept Package.swift container")
+    func xcodeWorkflowCommandsAcceptPackageOption() throws {
+        let use = try XcodeUse.parse(["--package", "/tmp/Demo/Package.swift", "--scheme", "Demo", "--json"])
+        let schemes = try XcodeSchemes.parse(["--package", "/tmp/Demo/Package.swift", "--json"])
+        let settings = try XcodeSettings.parse(["--package", "/tmp/Demo/Package.swift", "--scheme", "Demo", "--json"])
+        let build = try XcodeBuild.parse(["--package", "/tmp/Demo/Package.swift", "--scheme", "Demo", "--jsonl"])
+        let test = try XcodeTest.parse(["--package", "/tmp/Demo/Package.swift", "--scheme", "Demo", "--jsonl"])
+        let run = try XcodeRun.parse(["--package", "/tmp/Demo/Package.swift", "--scheme", "Demo", "--jsonl"])
+
+        #expect(use.package == "/tmp/Demo/Package.swift")
+        #expect(schemes.package == "/tmp/Demo/Package.swift")
+        #expect(settings.package == "/tmp/Demo/Package.swift")
+        #expect(build.package == "/tmp/Demo/Package.swift")
+        #expect(test.package == "/tmp/Demo/Package.swift")
+        #expect(run.package == "/tmp/Demo/Package.swift")
+    }
+
+    @Test("xcode package source command records working directory")
+    func xcodePackageSourceCommandRecordsWorkingDirectory() {
+        let command = TKXcodebuildCommand.build(
+            workspace: nil,
+            project: nil,
+            package: "/tmp/Demo/Package.swift",
+            scheme: "Demo",
+            configuration: "Debug",
+            sdk: nil,
+            destination: "generic/platform=iOS Simulator",
+            derivedDataPath: "/tmp/Demo/.triton/DerivedData"
+        )
+
+        #expect(hostSourceCommand(command).hasPrefix("cd /tmp/Demo && xcodebuild "))
+    }
+
+    @Test("streaming xcode runner honors package working directory")
+    func streamingXcodeRunnerHonorsWorkingDirectory() throws {
+        let directory = URL(fileURLWithPath: NSTemporaryDirectory())
+            .appendingPathComponent("triton-xcode-cwd-\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+        let command = TKHostCommand(
+            executable: "/bin/pwd",
+            arguments: [],
+            workingDirectory: directory.path
+        )
+
+        let (result, _) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: false)
+
+        let observedDirectory = URL(
+            fileURLWithPath: result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
+        )
+        #expect(observedDirectory.lastPathComponent == directory.lastPathComponent)
+    }
+
     @Test("streaming xcode host command honors command timeout and returns artifact paths")
     func streamingHostCommandHonorsCommandTimeoutAndReturnsArtifactPaths() throws {
         let command = TKHostCommand(
@@ -61,6 +115,19 @@ struct XcodeCommandTests {
         let runSchema = try #require(xcode.subcommands.first { $0.name == "run" })
         #expect(runSchema.optionalOptions.contains("--env"))
         #expect(runSchema.optionalOptions.contains("--arg"))
+    }
+
+    @Test("dotted nested schema selector narrows xcode build contract")
+    func dottedNestedSchemaSelectorNarrowsXcodeBuild() throws {
+        let response = try buildSchemaResponse(command: "xcode.build")
+        let xcode = try #require(response.commands.first)
+        let build = try #require(xcode.subcommands.first)
+
+        #expect(response.commands.count == 1)
+        #expect(xcode.name == "xcode")
+        #expect(xcode.subcommands.count == 1)
+        #expect(build.name == "build")
+        #expect(build.optionalOptions.contains("--package"))
     }
 
     @Test("xcode real-device selector resolves iphoneos and generic iOS destination")
