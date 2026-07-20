@@ -230,6 +230,7 @@ struct FailureDiagnosticsTests {
             "sim_logverbose_failed",
             "sim_record_failed",
             "sim_logs_failed",
+            "sim_app_console_failed",
             "privacy_operation_failed",
             "location_operation_failed",
             "ui_operation_failed",

@@ -64,6 +64,47 @@ private func drainPipeToFile(_ pipe: Pipe, outputPath: String) -> (bytes: Int, e
     }
     return (bytes, nil)
 }
+
+private func drainPipeToBoundedFile(
+    _ pipe: Pipe,
+    outputPath: String,
+    maximumBytes: Int
+) -> (observedBytes: Int, artifactBytes: Int, truncated: Bool, error: Error?) {
+    let flags = O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW
+    let fd = open(outputPath, flags, S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)
+    guard fd >= 0 else {
+        let message = String(cString: strerror(errno))
+        return (0, 0, false, HostArtifactOutputError.rejected(path: outputPath, reason: message))
+    }
+    let output = FileHandle(fileDescriptor: fd, closeOnDealloc: true)
+    defer { try? output.close() }
+    let input = pipe.fileHandleForReading
+    var observedBytes = 0
+    var artifactBytes = 0
+    var truncated = false
+    while true {
+        guard let chunk = try? input.read(upToCount: 64 * 1024), !chunk.isEmpty else {
+            break
+        }
+        observedBytes += chunk.count
+        let remaining = maximumBytes - artifactBytes
+        guard remaining > 0 else {
+            truncated = true
+            continue
+        }
+        let writeData = chunk.prefix(remaining)
+        do {
+            try output.write(contentsOf: writeData)
+            artifactBytes += writeData.count
+        } catch {
+            return (observedBytes, artifactBytes, truncated, error)
+        }
+        if writeData.count < chunk.count {
+            truncated = true
+        }
+    }
+    return (observedBytes, artifactBytes, truncated, nil)
+}
 func ensureParentDirectory(for path: String) throws {
     let directory = URL(fileURLWithPath: path).deletingLastPathComponent()
     try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
@@ -343,6 +384,101 @@ func runHostCommandWritingStdoutArtifact(_ command: TKHostCommand, outputPath: S
     return result
 }
 
+func runHostCommandWritingCombinedOutputArtifact(
+    _ command: TKHostCommand,
+    outputPath: String,
+    interruptAfter: Double,
+    maximumBytes: Int
+) throws -> HostCombinedArtifactProcessResult {
+    try prepareHostArtifactOutputPath(outputPath)
+    let process = Process()
+    configureHostProcessExecutable(process, command: command)
+    let combined = Pipe()
+    process.standardOutput = combined
+    process.standardError = combined
+    process.standardInput = FileHandle.nullDevice
+    let semaphore = DispatchSemaphore(value: 0)
+    process.terminationHandler = { _ in semaphore.signal() }
+    let startedAt = Date()
+
+    do {
+        try process.run()
+    } catch {
+        throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
+
+    let drainGroup = DispatchGroup()
+    var drainResult = (observedBytes: 0, artifactBytes: 0, truncated: false, error: Optional<Error>.none)
+    drainGroup.enter()
+    hostCommandIOQueue.async {
+        drainResult = drainPipeToBoundedFile(combined, outputPath: outputPath, maximumBytes: maximumBytes)
+        drainGroup.leave()
+    }
+
+    var interruptionRequested = false
+    if semaphore.wait(timeout: .now() + interruptAfter) == .timedOut {
+        interruptionRequested = true
+        if process.isRunning {
+            process.interrupt()
+        }
+        let remainingTimeout = max(0.1, command.defaultTimeoutSeconds - interruptAfter)
+        if semaphore.wait(timeout: .now() + remainingTimeout) == .timedOut {
+            process.terminate()
+            if semaphore.wait(timeout: .now() + 2) == .timedOut {
+                kill(process.processIdentifier, SIGKILL)
+                _ = semaphore.wait(timeout: .now() + 2)
+            }
+            if drainGroup.wait(timeout: .now() + 2) == .timedOut {
+                try? combined.fileHandleForReading.close()
+                _ = drainGroup.wait(timeout: .now() + 1)
+            }
+            try? FileManager.default.removeItem(atPath: outputPath)
+            throw HostCommandRunError.timeout(
+                command: command,
+                timeoutSeconds: command.defaultTimeoutSeconds,
+                stdoutLogPath: outputPath,
+                stderrLogPath: outputPath
+            )
+        }
+    }
+
+    drainGroup.wait()
+    if let error = drainResult.error {
+        try? FileManager.default.removeItem(atPath: outputPath)
+        throw HostCommandRunError.launchFailed(error.localizedDescription)
+    }
+
+    let elapsedDurationSeconds = Date().timeIntervalSince(startedAt)
+    if !interruptionRequested && process.terminationStatus != 0 {
+        let failure = HostProcessResult(
+            stdoutData: Data(),
+            stderrData: Data(),
+            exitCode: process.terminationStatus,
+            sourceCommand: hostSourceCommand(command),
+            stdoutTruncated: drainResult.truncated,
+            stderrTruncated: drainResult.truncated,
+            stdoutLogPath: outputPath,
+            stderrLogPath: outputPath,
+            stdoutBytes: drainResult.observedBytes,
+            stderrBytes: 0
+        )
+        try? FileManager.default.removeItem(atPath: outputPath)
+        throw HostCommandRunError.nonZeroExit(command: command, result: failure)
+    }
+
+    return HostCombinedArtifactProcessResult(
+        exitCode: process.terminationStatus,
+        sourceCommand: hostSourceCommand(command),
+        artifactBytes: drainResult.artifactBytes,
+        observedBytes: drainResult.observedBytes,
+        artifactTruncated: drainResult.truncated,
+        elapsedDurationSeconds: elapsedDurationSeconds,
+        interruptionRequested: interruptionRequested,
+        captureEndedBy: interruptionRequested ? "duration" : "process-exit",
+        terminationReason: process.terminationReason == .exit ? "exit" : "uncaught-signal"
+    )
+}
+
 func truncatedData(_ data: Data, maximumBytes: Int? = 1_048_576) -> (data: Data, truncated: Bool) {
     guard let maximumBytes else {
         return (data, false)
@@ -499,6 +635,12 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             code: "sim_record_invalid_artifact",
             message: "\(error)",
             hint: "Verify the Simulator is booted, the MOV exists, and CoreSimulator finalized readable media metadata."
+        )
+    case let error as HostSimulatorProcessConsoleError:
+        detail = TKCLIErrorDetail(
+            code: "sim_app_console_failed",
+            message: "\(error)",
+            hint: "Verify the simulator is booted and the bundle id is installed before relaunching it for bounded process console capture."
         )
     case let aliasError as NodeAliasResolutionError:
         detail = aliasError.detail()
@@ -787,6 +929,9 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         } else if command.arguments.contains("recordVideo") {
             code = "sim_record_failed"
             hint = "Verify the simulator is booted, the output path is writable, and the requested codec, display, and mask options are supported."
+        } else if command.arguments.contains("launch") && command.arguments.contains("--console-pty") {
+            code = "sim_app_console_failed"
+            hint = "Verify the simulator is booted, the bundle id is installed, the output path is fresh, and the App can be terminated and relaunched for bounded process console capture."
         } else if command.arguments.contains("stream") && command.arguments.contains("log") {
             code = "sim_logs_failed"
             hint = "Verify the simulator is booted, the output path is writable, and the requested predicate, level, style, and type options are supported."
@@ -892,7 +1037,9 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
         }
         detail = TKCLIErrorDetail(
             code: code,
-            message: "\(error)",
+            message: command.arguments.contains("--console-pty")
+                ? "\(error)\nsourceCommand: \(hostSourceCommand(command))"
+                : "\(error)",
             hint: hint
         )
     default:

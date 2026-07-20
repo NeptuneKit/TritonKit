@@ -1,3 +1,4 @@
+import Foundation
 import SwiftUI
 import UIKit
 
@@ -36,11 +37,23 @@ final class FixtureModel: ObservableObject {
     #endif
 
     init() {
+        emitProcessConsoleSentinel()
         #if DEBUG
         runtime.onStatusChange = { [weak self] status in
             Task { @MainActor in self?.status = status }
         }
         #endif
+    }
+
+    private func emitProcessConsoleSentinel() {
+        guard let sentinel = ProcessInfo.processInfo.environment["TRITONKIT_PROCESS_CONSOLE_SENTINEL"],
+              !sentinel.isEmpty
+        else {
+            return
+        }
+        print("TRITONKIT_PROCESS_CONSOLE_STDOUT \(sentinel)")
+        let stderrLine = "TRITONKIT_PROCESS_CONSOLE_STDERR \(sentinel)\n"
+        try? FileHandle.standardError.write(contentsOf: Data(stderrLine.utf8))
     }
 
     func autoConnect() {

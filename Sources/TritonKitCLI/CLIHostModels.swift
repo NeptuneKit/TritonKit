@@ -959,6 +959,18 @@ struct HostProcessResult {
     }
 }
 
+struct HostCombinedArtifactProcessResult {
+    let exitCode: Int32
+    let sourceCommand: String
+    let artifactBytes: Int
+    let observedBytes: Int
+    let artifactTruncated: Bool
+    let elapsedDurationSeconds: Double
+    let interruptionRequested: Bool
+    let captureEndedBy: String
+    let terminationReason: String
+}
+
 enum HostCommandRunError: Error, CustomStringConvertible {
     case launchFailed(String)
     case timeout(command: TKHostCommand, timeoutSeconds: Double, stdoutLogPath: String?, stderrLogPath: String?)
@@ -994,6 +1006,17 @@ enum HostCommandRunError: Error, CustomStringConvertible {
             "Harmony uitest dumpLayout output did not include a remote layout path"
         case .layoutTextNotFound(let text):
             "Harmony layout text was not found: \(text)"
+        }
+    }
+}
+
+enum HostSimulatorProcessConsoleError: Error, CustomStringConvertible {
+    case appUnavailable(bundleID: String, sourceCommand: String, reason: String)
+
+    var description: String {
+        switch self {
+        case .appUnavailable(let bundleID, let sourceCommand, let reason):
+            "App process console preflight failed for \(bundleID): \(reason)\nsourceCommand: \(sourceCommand)"
         }
     }
 }
@@ -1179,7 +1202,37 @@ struct HostArtifactCaptureOutput: Encodable {
     let stdoutTruncated: Bool
     let stderrTruncated: Bool
     let stderr: String?
+    let sourceType: String?
+    let sourcesCaptured: [String]?
+    let streamLayout: String?
+    let artifactSensitive: Bool?
     let note: String?
+}
+
+struct HostSimulatorProcessConsoleOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let runtimeScope: String
+    let target: String
+    let bundleID: String
+    let tool: String
+    let exitCode: Int32
+    let riskLevel: String
+    let sourceCommand: String
+    let sourceCommands: [String]
+    let artifact: String
+    let artifactBytes: Int
+    let observedBytes: Int
+    let artifactTruncated: Bool
+    let maximumBytes: Int
+    let requestedDurationSeconds: Double
+    let elapsedDurationSeconds: Double
+    let captureEndedBy: String
+    let terminationReason: String
+    let sourcesCaptured: [String]
+    let streamLayout: String
+    let artifactSensitive: Bool
+    let note: String
 }
 
 struct HostAppContainerOutput: Encodable {

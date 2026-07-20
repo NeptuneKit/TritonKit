@@ -255,7 +255,18 @@ private func schemaWithProductSurfaceMetadata(_ schema: TKCommandSchema) -> TKCo
 }
 
 private func subcommandWithFailureFamilyRecovery(_ subcommand: TKCommandSubcommandSchema) -> TKCommandSubcommandSchema {
-    TKCommandSubcommandSchema(
+    let nextCommands = nextCommandsWithFailureFamilyRecovery(
+        subcommand.nextCommands,
+        failureCodes: subcommand.failureCodes
+    )
+    let recoveryCommands = nextCommands
+        .compactMap(TKCommandRecoveryCommand.init(commandString:))
+        .reduce(into: subcommand.recoveryCommands) { commands, command in
+            guard !commands.contains(where: { $0.command == command.command }) else { return }
+            commands.append(command)
+        }
+
+    return TKCommandSubcommandSchema(
         name: subcommand.name,
         summary: subcommand.summary,
         requiredOptions: subcommand.requiredOptions,
@@ -267,7 +278,8 @@ private func subcommandWithFailureFamilyRecovery(_ subcommand: TKCommandSubcomma
         finalEventKind: subcommand.finalEventKind,
         artifacts: subcommand.artifacts,
         retryable: subcommand.retryable,
-        nextCommands: nextCommandsWithFailureFamilyRecovery(subcommand.nextCommands, failureCodes: subcommand.failureCodes),
+        nextCommands: nextCommands,
+        recoveryCommands: recoveryCommands,
         outputSelectors: subcommand.outputSelectors,
         failureCodes: subcommand.failureCodes
     )

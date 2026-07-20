@@ -76,6 +76,38 @@ struct CLIHelpTests {
         #expect(result.stdout.contains("sim:<udid>"))
     }
 
+    @Test("sim app-console help exposes bounded sensitive artifact controls")
+    func simAppConsoleHelpExposesBoundedArtifactControls() throws {
+        let result = try runTritonHelp(["sim", "app-console", "--help"])
+
+        #expect(result.exitCode == 0)
+        #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        #expect(result.stdout.contains("USAGE: triton sim app-console"))
+        #expect(result.stdout.contains("--bundle-id"))
+        #expect(result.stdout.contains("--duration"))
+        #expect(result.stdout.contains("--max-bytes"))
+        #expect(result.stdout.contains("stdout/stderr"))
+        #expect(result.stdout.contains("merged PTY"))
+    }
+
+    @Test("sim app-console rejects invalid duration as one JSON failure")
+    func simAppConsoleRejectsInvalidDurationAsJSON() throws {
+        let result = try runTritonHelp([
+            "sim", "app-console",
+            "--bundle-id", "com.example.app",
+            "--output", "/tmp/triton-invalid-console.log",
+            "--duration", "0",
+            "--json",
+        ])
+
+        #expect(result.exitCode != 0)
+        #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+        let object = try #require(JSONSerialization.jsonObject(with: Data(result.stdout.utf8)) as? [String: Any])
+        let error = try #require(object["error"] as? [String: Any])
+        #expect(object["ok"] as? Bool == false)
+        #expect(error["code"] as? String == "invalid_duration")
+    }
+
     private func runTritonHelp(_ arguments: [String]) throws -> CLIHelpRunResult {
         let process = Process()
         process.executableURL = try tritonExecutableURL()

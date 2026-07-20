@@ -64,3 +64,14 @@
 ## 停止条件
 
 上述四个场景、自动化门禁、真实 Simulator 证据、文档/memory/public skill 写回全部满足，并将实现合入 `main`、关闭 #155。发布时创建下一 patch tag，不移动已发布的 `v0.2.12`。
+
+## 实现与验收记录
+
+- 新增 `triton sim app-console`，参数覆盖 simulator、bundle id、output、duration、max bytes、重复 `--env` 与 `--arg`；底层先运行 `simctl appinfo` preflight，再运行 `simctl launch --console-pty --terminate-running-process`。
+- combined pipe capture 在持续 drain 的同时按 `--max-bytes` 截断落盘，deadline 到点发送 interrupt；失败与早退会删除 partial artifact，既有 output/symlink 继续由 host artifact 安全边界拒绝。
+- 成功 JSON 固定返回 `sourcesCaptured=[process-stdout,process-stderr]`、`streamLayout=merged-pty`、artifact/observed bytes、truncation、duration/end reason 与脱敏 `sourceCommands`，不内联 console 正文。`sim logs` 同步声明 `sourceType=unified-log`、`sourcesCaptured=[unified-log]`。
+- BDD/TDD 红灯由缺少 `TKSimctlCommand.appProcessConsole` 的编译失败建立；shared builder、bounded capture、失败清理、help、schema、capability、env 脱敏和输出编码聚焦测试均转绿。
+- Triton-first baseline 保存在 `/private/tmp/triton-issue-155-baseline`；已发布 `v0.2.12` 的 `schema --command sim --json` 不含 process-console 能力，确认 missing-schema 后才读取 raw `simctl help launch`，没有以裸 `simctl` 执行产品动作。
+- 真实 Simulator `0333546D-2AC6-4C22-AF01-293E2F4BA5BC` 通过 `triton xcode run` 构建、安装并启动 TestFixture。`sim app-console` 以 `TRITONKIT_PROCESS_CONSOLE_SENTINEL=issue-155-smoke` 捕获 791-byte artifact，同时包含 stdout/stderr sentinel，约 2.02 秒结束、未截断、env 值已脱敏；独立 `sim logs` artifact 返回 `sourcesCaptured=[unified-log]`，证明来源可区分。
+- 新 scratch 的 #155 聚焦与 schema/public-skill snapshot 测试全绿。完整 CLI suite 共 658 项，#155 所有新增断言通过；余下 28 个 issue 是既存 device-proxy/schema、暂停 testrec 与 Harmony timing fixture 基线，详见 `/private/tmp/triton-issue155-cli-tests.log`，不扩大本 issue 产品范围。
+- `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local` 全绿：根包测试、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、docs 与 whitespace 门禁通过；Xcode build 按已完成的真实 `triton xcode run` 证据显式跳过。

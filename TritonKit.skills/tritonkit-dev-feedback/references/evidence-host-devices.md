@@ -25,6 +25,8 @@ triton device alias set iphone15 --platform ios --target <udid> --json
 triton sim use <udid> --json
 triton sim boot <udid> --wait --jsonl
 triton sim screenshot --simulator booted --output /tmp/<case>-sim.png --json
+triton sim logs --simulator booted --output /tmp/<case>-sim.ndjson --duration 5 --json
+triton sim app-console --simulator booted --bundle-id <bundle-id> --output /tmp/<case>-app-console.log --duration 5 --max-bytes 10485760 --json
 triton app list --device iphone15 --user-only --json
 triton app info --device iphone15 --bundle-id <bundle-id> --json
 triton app install --device iphone15 --app <path.app> --json
@@ -34,6 +36,8 @@ triton app open-url "<url>" --device iphone15 --wait-ready --snapshot --json
 triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json
 triton app prefs get <key> --device iphone15 --bundle-id <bundle-id> --json
 ```
+
+Preserve log provenance in feedback: `sim logs` is `unified-log` only; `sim app-console` is merged App process stdout/stderr and relaunches the App. Console artifacts are sensitive. Report only bounded, sanitized excerpts, retain `sourcesCaptured` and truncation metadata, and never paste a full private artifact into a public issue.
 
 Destructive commands such as uninstall, erase, runtime delete, dyld-cache remove, or pairing changes must show `--dry-run` or `--confirm` behavior in the report.
 

@@ -384,6 +384,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "type --text <ascii-text>", type: "Subcommand", description: "Reserved host-side simulator text entry; currently returns unsupported_host_input after ASCII validation"),
                 TKCommandSchemaOption(name: "record --output <path.mov> --duration <seconds>", type: "Subcommand", description: "Record a simulator video"),
                 TKCommandSchemaOption(name: "logs --output <path.log> --duration <seconds>", type: "Subcommand", description: "Capture bounded simulator OSLog stream output"),
+                TKCommandSchemaOption(name: "app-console --simulator <udid|booted> --bundle-id <bundle-id> --output <path>", type: "Subcommand", description: "Relaunch an iOS Simulator App and capture duration/byte-bounded merged process stdout/stderr through console-pty"),
                 TKCommandSchemaOption(name: "diagnose [--output <path>]", type: "Subcommand", description: "Collect simulator diagnostics and logs"),
                 TKCommandSchemaOption(name: "logverbose [--simulator <udid>] enable|disable", type: "Subcommand", description: "Enable or disable verbose simulator logging"),
                 TKCommandSchemaOption(name: "ax --device <udid|booted>", type: "Subcommand", description: "Read host-side iOS Simulator Accessibility tree through private framework adapter"),
@@ -435,15 +436,18 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--manifest", type: "Path", description: "Media seed manifest JSON path"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "ASCII text for host-side simulator type"),
                 TKCommandSchemaOption(name: "--display", type: "String", description: "CoreSimulator display selector for screenshot or video, for example internal, external, screen id, or display UUID"),
-                TKCommandSchemaOption(name: "--output", type: "Path", description: "Artifact output path for screenshot, record, logs, or diagnose"),
-                TKCommandSchemaOption(name: "--duration", type: "Double", description: "Bounded record or log capture duration in seconds"),
+                TKCommandSchemaOption(name: "--output", type: "Path", description: "Artifact output path for screenshot, record, unified logs, App process console, or diagnose"),
+                TKCommandSchemaOption(name: "--duration", type: "Double", description: "Bounded record, unified log, or App process console capture duration in seconds"),
+                TKCommandSchemaOption(name: "--max-bytes", type: "Int", defaultValue: "10485760", description: "Maximum App process console artifact bytes; excess output is drained but not written"),
+                TKCommandSchemaOption(name: "--env", type: "KEY=VALUE", description: "Repeatable App process console launch environment; values use SIMCTL_CHILD_* and are redacted from sourceCommand"),
+                TKCommandSchemaOption(name: "--arg", type: "String", description: "Repeatable App process console launch argument"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", defaultValue: "300", description: "Host command timeout in seconds"),
                 TKCommandSchemaOption(name: "--no-archive", type: "Bool", defaultValue: "false", description: "Leave simulator diagnostics uncompressed"),
                 TKCommandSchemaOption(name: "--all-logs", type: "Bool", defaultValue: "false", description: "Include all simulator logs"),
                 TKCommandSchemaOption(name: "--data-container", type: "Bool", defaultValue: "false", description: "Include booted simulator data containers in diagnostics"),
                 TKCommandSchemaOption(name: "--udid", type: "String", description: "Limit diagnostics to a simulator UDID; may be repeated"),
                 TKCommandSchemaOption(name: "--style", type: "String", description: "Log output style, for example compact or ndjson"),
-                TKCommandSchemaOption(name: "--bundle-id", type: "String", description: "Bundle identifier for push payload delivery"),
+                TKCommandSchemaOption(name: "--bundle-id", type: "String", description: "Bundle identifier for push payload delivery or App process console capture"),
                 TKCommandSchemaOption(name: "--payload", type: "Path|-", description: "Push payload JSON file path or stdin"),
                 TKCommandSchemaOption(name: "--mode", type: "record|mock|block|throttle", description: "Host-side proxy takeover mode for Simulator network capture or policy enforcement"),
                 TKCommandSchemaOption(name: "--restore", type: "Bool", defaultValue: "false", description: "Restore simulator proxy settings when stopping a host-side proxy session"),
@@ -471,6 +475,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim type --simulator booted --text http://127.0.0.1:8000 --json",
                 "triton sim record --simulator booted --output /tmp/sim.mov --duration 10 --json",
                 "triton sim logs --simulator booted --output /tmp/sim.ndjson --duration 5 --style ndjson --json",
+                "triton sim app-console --simulator booted --bundle-id com.example.app --output /tmp/app-console.log --duration 5 --max-bytes 10485760 --json",
                 "triton sim diagnose --output /tmp/sim-diagnostics --json",
                 "triton sim logverbose booted enable --json",
                 "triton sim proxy start --simulator booted --mode record --output /tmp/ios-network --plan-only --json",
@@ -487,10 +492,10 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton sim personalization scan-and-personalize --json",
                 "triton sim media seed --manifest /tmp/gallery/manifest.json --simulator booted --json",
             ],
-            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or { ok, action, artifact, stdoutBytes, stderrBytes, stdoutTruncated, stderrTruncated } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
+            successShape: "{ ok, simulators[] } or { ok, runtimes[], count, verbose, sourceCommand } or { ok, action, simulator?, defaultsPath? } or { ok, action:sim.screenshot, artifact, pixelWidth?, pixelHeight?, display, orientationPolicy, orientationNote } or { ok, action:sim.record, artifacts[], requestedDurationSeconds, actualDurationSeconds, minimumAcceptedDurationSeconds, containerDurationSeconds, videoTrackDurationSeconds[], durationValidation } or { ok, action:sim.logs, artifact, sourceType:unified-log, sourcesCaptured:[unified-log] } or { ok, action:sim.app-console, bundleID, artifact, artifactBytes, observedBytes, artifactTruncated, maximumBytes, requestedDurationSeconds, elapsedDurationSeconds, captureEndedBy, sourcesCaptured:[process-stdout,process-stderr], streamLayout:merged-pty } or { ok, action:sim.type, runtimeScope:host-simulator, target, adapter, tool, exitCode, sourceCommand, textEncoding?, note } or { ok, action, runtimeScope, target, tool, exitCode, sourceCommand, stdout?, stderr?, stdoutTruncated?, stderrTruncated?, artifacts[], note? } or JSONL { ok, action, state, ready, attempt, elapsedMs }",
             failureShape: "{ ok:false, error:{ code, message, hint, nextAction? } }",
-            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim type remains a reserved host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive.",
-            artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-diagnostics"],
+            outputSemantics: "Use sim for Apple Simulator host control and maintenance. Destructive operations require explicit confirm flags; agents should resolve/use a simulator before app or smoke flows. sim screenshot preserves simctl raw framebuffer orientation and returns screenshot metadata so agents do not assume display-normalized orientation. sim record validates actual encoded video sample duration rather than the MOV container timeline and rejects materially truncated evidence. sim logs captures unified-log only and does not cover App stdout/stderr. sim app-console terminates and relaunches the selected App through console-pty, writes merged process stdout/stderr to a duration/byte-bounded sensitive artifact, and never inlines console content in JSON. sim type remains a reserved host input entry and returns unsupported_host_input because the current public simctl io contract exposes no stable keyboard type primitive.",
+            artifacts: ["simulator-screenshot", "simulator-video", "simulator-logs", "simulator-app-process-console", "simulator-diagnostics"],
             nextCommands: [
                 "triton sim use <udid> --json",
                 "triton device use <sim-target-id> --json",
@@ -504,6 +509,8 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 hostSimulatorListOutputContract(),
                 hostSimulatorScreenshotOutputContract(),
                 hostSimulatorRecordingOutputContract(),
+                hostSimulatorLogsOutputContract(),
+                hostSimulatorProcessConsoleOutputContract(),
                 hostSimulatorAXOutputContract(),
                 hostSimulatorInputOutputContract(),
                 hostActionOutputContract(selector: "host.simulator-action", model: "HostActionOutput|HostArtifactCaptureOutput|HostSimulatorUseOutput|HostSimulatorCreateOutput|HostSimulatorReadyEvent"),
@@ -540,6 +547,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "sim_record_truncated",
                 "sim_record_invalid_artifact",
                 "sim_logs_failed",
+                "sim_app_console_failed",
                 "sim_diagnose_failed",
                 "sim_logverbose_failed",
                 "ios_host_ax_unavailable",
@@ -559,6 +567,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "runtime_dyld_cache_failed",
                 "confirmation_required",
                 "invalid_duration",
+                "invalid_max_bytes",
                 "invalid_location_value",
                 "runtime_delete_selector_required",
                 "runtime_dyld_cache_selector_required",
@@ -633,7 +642,23 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     summary: "Capture bounded simulator OSLog stream output",
                     requiredOptions: ["--output"],
                     optionalOptions: ["--simulator", "--duration", "--style", "--format", "--json"],
-                    outputSelectors: ["host.simulator-action"]
+                    outputSelectors: ["host.simulator-logs"],
+                    failureCodes: ["sim_logs_failed", "invalid_duration", "host_command_timeout", "artifact_output_rejected", "validation_failed"]
+                ),
+                TKCommandSubcommandSchema(
+                    name: "app-console",
+                    summary: "Relaunch an iOS Simulator App and capture bounded merged process stdout/stderr",
+                    requiredOptions: ["--bundle-id", "--output"],
+                    optionalOptions: ["--simulator", "--duration", "--max-bytes", "--env", "--arg", "--format", "--json"],
+                    nextCommands: ["triton sim logs --simulator <udid|booted> --output <path.ndjson> --duration <seconds> --json"],
+                    recoveryCommands: [
+                        TKCommandRecoveryCommand(
+                            command: "triton sim app-console --simulator <udid|booted> --bundle-id <bundle-id> --output <new-path.log> --json",
+                            category: "archive"
+                        ),
+                    ],
+                    outputSelectors: ["host.simulator-app-process-console"],
+                    failureCodes: ["sim_app_console_failed", "invalid_duration", "invalid_max_bytes", "host_command_timeout", "artifact_output_rejected", "validation_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "diagnose",
@@ -754,7 +779,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     failureCodes: ["media_seed_manifest_invalid", "host_command_failed", "host_command_timeout", "simulator_not_found", "validation_failed"]
                 ),
             ],
-            providedCapabilities: ["host-simulator", "ios-simulator-host-type", "ios-host-ax", "sim-video", "sim-logs", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
+            providedCapabilities: ["host-simulator", "ios-simulator-host-type", "ios-host-ax", "sim-video", "sim-logs", "sim-app-process-console", "sim-diagnostics", "sim-runtime", "sim-runtime-maintenance", "sim-device-maintenance", "sim-personalization", "sim-status-bar", "sim-privacy", "sim-location", "sim-ui", "sim-pasteboard", "sim-push", "sim-media-seed", "device-proxy-ios", "network-capture-export"]
         ),
         TKCommandSchema(
             name: "app",

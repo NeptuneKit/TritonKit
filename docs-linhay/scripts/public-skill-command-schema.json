@@ -29,7 +29,7 @@
     "schema": [],
     "screenshot": [],
     "serve": [],
-    "sim": ["list", "use", "create", "boot", "shutdown", "screenshot", "type", "record", "logs", "diagnose", "logverbose", "ax", "proxy", "pair", "unpair", "clone", "erase", "upgrade", "runtime", "personalization", "status-bar", "privacy", "location", "ui", "pasteboard", "push", "media"],
+    "sim": ["list", "use", "create", "boot", "shutdown", "screenshot", "type", "record", "logs", "app-console", "diagnose", "logverbose", "ax", "proxy", "pair", "unpair", "clone", "erase", "upgrade", "runtime", "personalization", "status-bar", "privacy", "location", "ui", "pasteboard", "push", "media"],
     "smoke": [],
     "status": [],
     "target": [],
