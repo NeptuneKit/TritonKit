@@ -30,7 +30,11 @@ triton sim boot <udid> --wait --jsonl
 triton sim shutdown <udid-or-booted> --json
 triton sim screenshot --simulator <udid-or-booted> --output /tmp/<case>-sim.png --json
 triton sim record --simulator <udid-or-booted> --output /tmp/<case>-sim.mov --duration 10 --json
+triton observe tree --platform ios --device <udid-or-booted> --json
+triton wait --platform ios --device <udid-or-booted> --text <visible-text> --json
 ```
+
+`wait --platform ios` is the host-side companion to Simulator AX observation. It supports `--text`, `--exists`, and `--gone` with an optional AX `--role`, resolves only ready local Simulator targets, and returns `host.ios-wait`. It must not query embedded `/targets` or require `triton serve`; use plain `wait` without `--platform ios` for embedded runtime conditions such as idle, hierarchy change, or predicates.
 
 `sim record` success requires media validation, not only `simctl` exit zero. The JSON response exposes requested, actual encoded-sample, minimum accepted, container, and track durations. Container/track timelines can report the requested duration even when the MOV has only one frame, so Triton computes `actualDurationSeconds` from `AVSampleCursor` encoded samples. Treat `sim_record_truncated` and `sim_record_invalid_artifact` as failed evidence and never claim a usable recording from the file path alone.
 

@@ -823,6 +823,22 @@ struct HostAndroidWaitOutput: Encodable {
     let sourceCommands: [String]
 }
 
+struct HostIOSWaitOutput: Encodable {
+    let ok: Bool
+    let action: String
+    let platform: String
+    let target: HostDeviceTarget
+    let condition: String
+    let query: String
+    let role: String?
+    let matched: Bool
+    let timedOut: Bool
+    let elapsedMs: Int
+    let pollCount: Int
+    let match: ObserveNodeOutput?
+    let sourceCommands: [String]
+}
+
 enum HostSimulatorRunError: Error, CustomStringConvertible {
     case simulatorNotFound(String)
 

@@ -854,13 +854,13 @@ func observationCommandSchemas() -> [TKCommandSchema] {
         TKCommandSchema(
             name: "wait",
             summary: "Wait for text, disappearance, idle state, hierarchy change, or a safe predicate",
-            requiresServer: true,
+            requiresServer: false,
             requiresTarget: true,
-            runtimeScope: "embedded|host-harmony",
+            runtimeScope: "embedded|host-ios|host-android|host-harmony",
             outputFormats: jsonText,
             options: hostPort + [
                 targetDeviceAlias,
-                TKCommandSchemaOption(name: "--platform", type: "android|harmony", description: "Use Android or Harmony host-side layout polling instead of embedded runtime"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Use iOS Simulator AX, Android UIAutomator, or Harmony layout polling instead of embedded runtime"),
                 TKCommandSchemaOption(name: "--adb", type: "Path", defaultValue: "adb", description: "ADB executable path for --platform android"),
                 TKCommandSchemaOption(name: "--hdc", type: "Path", defaultValue: "hdc", description: "HDC executable path for --platform harmony"),
                 TKCommandSchemaOption(name: "--text", type: "String", description: "Wait for visible text, AX label, identifier, title, or value"),
@@ -878,6 +878,7 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: [
                 #"triton wait --text "console" --timeout 15 --interval 0.5 --json"#,
+                #"triton wait --platform ios --device booted --text "Settings" --timeout 15 --json"#,
                 #"triton wait --platform harmony --text "目标页" --timeout 15 --json"#,
                 #"triton wait --gone "登录" --timeout 15 --json"#,
                 #"triton wait --exists "我的" --role button --timeout 10 --json"#,
@@ -885,18 +886,18 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton wait --hierarchy-change --since latest --timeout 10 --json",
                 #"triton wait --predicate "text.exists(\"console\") && !text.exists(\"点我登录\")" --timeout 15 --json"#,
             ],
-            successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? } or HostAndroidWaitOutput or HostHarmonyWaitOutput",
-            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, lastObservedTextSample }; Harmony host timeout may also include transientFailureCount and lastTransientError; validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
-            outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error. Harmony layout dump/recv timeouts are bounded by the remaining wait budget, retried as transient polls, and retained in lastTransientError.",
+            successShape: "{ ok, matched, condition, query?, predicate?, elapsedMs, pollCount, timedOut, targetConnectionState, hierarchyCacheState, lastObservedNodeCount?, lastObservedTextSample, match? } or HostIOSWaitOutput or HostAndroidWaitOutput or HostHarmonyWaitOutput",
+            failureShape: "Timeout: { ok:false, matched:false, timedOut:true, condition, elapsedMs, pollCount, match?, sourceCommands? }; Harmony host timeout may also include transientFailureCount and lastTransientError; validation/request failures use { ok:false, error:{ code, message, endpoint, hint, nextAction? } }",
+            outputSemantics: "Use wait before assert or after action commands. Timeout returns a structured wait result instead of an untyped error. With --platform ios, wait polls the same Simulator host AX source as observe tree and does not require an embedded runtime. Harmony layout dump/recv timeouts are bounded by the remaining wait budget, retried as transient polls, and retained in lastTransientError.",
             nextCommands: [
                 "triton status --json",
                 "triton verify text-exists <text> --json",
                 "triton evidence capture --case <case> --output <dir.tritonevidence> --json",
                 "triton act find <text> --all --json",
             ],
-            outputContracts: [waitResultOutputContract(), hostAndroidWaitOutputContract(), hostHarmonyWaitOutputContract()],
-            failureCodes: ["timeout", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"],
-            providedCapabilities: ["wait", "android-wait-text", "harmony-wait-text"]
+            outputContracts: [waitResultOutputContract(), hostIOSWaitOutputContract(), hostAndroidWaitOutputContract(), hostHarmonyWaitOutputContract()],
+            failureCodes: ["timeout", "validation_failed", "unsupported_capability", "server_unavailable", "target_not_found", "ambiguous_target", "request_failed"] + schemaIOSHostAXFailureCodes,
+            providedCapabilities: ["wait", "ios-simulator-host-wait", "android-wait-text", "harmony-wait-text"]
         ),
         TKCommandSchema(
             name: "ax",

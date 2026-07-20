@@ -61,10 +61,17 @@ extension SchemaFactSourceTests {
 
         #expect(wait.failureCodes.contains("timeout"))
         #expect(wait.failureCodes.contains("validation_failed"))
+        #expect(wait.runtimeScope.contains("host-ios"))
+        #expect(wait.options.first(where: { $0.name == "--platform" })?.type == "ios|android|harmony")
+        #expect(wait.providedCapabilities.contains("ios-simulator-host-wait"))
         #expect(wait.nextCommands.contains("triton verify text-exists <text> --json"))
         #expect(wait.nextCommands.contains("triton evidence capture --case <case> --output <dir.tritonevidence> --json"))
         expectContract(wait, selector: "wait.result", fields: [
             "ok", "matched", "condition", "timedOut", "elapsedMs", "pollCount", "lastObservedTextSample", "match",
+        ])
+        expectContract(wait, selector: "host.ios-wait", fields: [
+            "ok", "action", "platform", "target", "condition", "query", "role",
+            "matched", "timedOut", "elapsedMs", "pollCount", "match", "sourceCommands",
         ])
         expectContract(wait, selector: "host.harmony-wait", fields: [
             "ok", "action", "platform", "target", "condition", "query", "matched",
