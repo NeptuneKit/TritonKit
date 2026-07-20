@@ -135,6 +135,40 @@ struct XcodeCommandTests {
         #expect(build.argv.contains("iphonesimulator"))
     }
 
+    @Test("xcode explicit simulator UDID overrides stale workspace destination")
+    func explicitSimulatorUDIDOverridesStaleDefaultDestination() {
+        let udid = "60667794-96F8-40E6-8664-85538EC4663E"
+        let destination = resolvedXcodeDestination(
+            destination: nil,
+            defaultDestination: "platform=iOS Simulator,id=iPhone 17",
+            simulatorUDID: udid,
+            device: nil
+        )
+
+        #expect(destination == "platform=iOS Simulator,id=\(udid)")
+    }
+
+    @Test("xcode simulator selector keeps id and name destination keys aligned")
+    func simulatorSelectorKeepsDestinationKeyAligned() {
+        let udid = "60667794-96F8-40E6-8664-85538EC4663E"
+
+        #expect(xcodeSimulatorDestination(selector: udid) == "platform=iOS Simulator,id=\(udid)")
+        #expect(xcodeSimulatorDestination(selector: "sim:\(udid)") == "platform=iOS Simulator,id=\(udid)")
+        #expect(xcodeSimulatorDestination(selector: "iPhone 17") == "platform=iOS Simulator,name=iPhone 17")
+    }
+
+    @Test("xcode explicit destination remains above simulator selector")
+    func explicitDestinationRemainsAboveSimulatorSelector() {
+        let destination = resolvedXcodeDestination(
+            destination: "platform=iOS Simulator,id=EXPLICIT",
+            defaultDestination: "platform=iOS Simulator,id=STALE",
+            simulatorUDID: "60667794-96F8-40E6-8664-85538EC4663E",
+            device: nil
+        )
+
+        #expect(destination == "platform=iOS Simulator,id=EXPLICIT")
+    }
+
     @Test("xcode explicit destination overrides synthesized real-device destination")
     func explicitDestinationOverridesDeviceDestination() throws {
         let destination = resolvedXcodeDestination(

@@ -66,6 +66,7 @@ Current boundaries:
 - `xcode run` covers build, simulator install, and simulator launch; it does not prove business readiness.
 - Continue readiness checks with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
 - Real workspaces may exceed default timeouts. Use `triton xcode settings/build/test/run --timeout <seconds>` and preserve the JSONL summary or stable error envelope before falling back to raw `xcodebuild`.
+- Treat target identity as one contract across the resolved invocation and generated `xcodebuild` command. Explicit precedence is `--destination` > real-device selector > `--simulator` > workspace default destination. For `--simulator`, UUID and `sim:<UUID>` selectors synthesize `id=<UUID>`; human-readable names synthesize `name=<name>`. Never persist or generate `id=<device name>`.
 - When build/test behavior looks stuck, run `triton xcode status --json` first, then `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`; timeout returns `xcode_not_idle` with blocking PIDs.
 - `xcode status` should only classify `xcodebuild`, `SwiftBuildService`, `XCBBuildService`, and `xctest` as Xcode-lane blockers. Do not treat unrelated SwiftPM `swift-build --package-path ...` provider builds as active Xcode workflow blockers.
 - `xcode wait-idle` treats transient internal `pgrep` / `ps` timeout as poll noise when later status can be observed; final timeout should prefer `xcode_not_idle` with the latest process context over a bare host probe timeout.

@@ -78,7 +78,8 @@ func resolveXcodeInvocation(
         destination: destination,
         defaultDestination: xcode?.destination,
         simulatorUDID: resolvedSimulator,
-        device: device
+        device: device,
+        simulatorOverridesDefaultDestination: hasXcodeSelector(simulator)
     )
     let resolvedSDK = resolvedXcodeSDK(
         sdk: sdk,
@@ -126,7 +127,8 @@ func resolvedXcodeDestination(
     destination: String?,
     defaultDestination: String?,
     simulatorUDID: String?,
-    device: String?
+    device: String?,
+    simulatorOverridesDefaultDestination: Bool = true
 ) -> String? {
     if let destination, !destination.isEmpty {
         return destination
@@ -134,10 +136,27 @@ func resolvedXcodeDestination(
     if hasXcodeSelector(device) {
         return "generic/platform=iOS"
     }
+    if simulatorOverridesDefaultDestination, let simulatorUDID, hasXcodeSelector(simulatorUDID) {
+        return xcodeSimulatorDestination(selector: simulatorUDID)
+    }
     if let defaultDestination, !defaultDestination.isEmpty {
         return defaultDestination
     }
-    return simulatorUDID.map { "platform=iOS Simulator,id=\($0)" }
+    return simulatorUDID.map(xcodeSimulatorDestination(selector:))
+}
+
+func xcodeSimulatorDestination(selector: String) -> String {
+    let trimmed = selector.trimmingCharacters(in: .whitespacesAndNewlines)
+    let normalized: String
+    if trimmed.lowercased().hasPrefix("sim:") {
+        normalized = String(trimmed.dropFirst("sim:".count))
+    } else {
+        normalized = trimmed
+    }
+    if UUID(uuidString: normalized) != nil {
+        return "platform=iOS Simulator,id=\(normalized)"
+    }
+    return "platform=iOS Simulator,name=\(normalized)"
 }
 
 private func hasXcodeSelector(_ value: String?) -> Bool {
