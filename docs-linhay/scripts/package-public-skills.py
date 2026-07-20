@@ -5,6 +5,7 @@ import argparse
 import json
 import shutil
 import subprocess
+import sys
 import tarfile
 import tempfile
 from datetime import datetime, timezone
@@ -68,6 +69,22 @@ def stamp_skill(repo_root: Path, version: str, skill_file: Path) -> None:
     )
 
 
+def validate_skill_commands(repo_root: Path, skill_root: Path) -> None:
+    subprocess.run(
+        [
+            sys.executable,
+            str(repo_root / "docs-linhay/scripts/verify-public-skill-commands.py"),
+            "--skill-root",
+            str(skill_root),
+            "--schema",
+            str(repo_root / "docs-linhay/scripts/public-skill-command-schema.json"),
+        ],
+        cwd=repo_root,
+        check=True,
+        stdout=subprocess.DEVNULL,
+    )
+
+
 def build_info(repo_root: Path, work_dir: Path, version: str, release_tag: str | None) -> dict[str, Any]:
     skills = []
     for skill_name in PUBLIC_SKILLS:
@@ -115,6 +132,8 @@ def package_public_skills(
             destination = work_dir / skill_name
             copy_skill(source, destination)
             stamp_skill(repo_root, version, destination / "SKILL.md")
+
+        validate_skill_commands(repo_root, work_dir)
 
         info = build_info(repo_root, work_dir, version, release_tag)
         (work_dir / "BUILD_INFO.json").write_text(json.dumps(info, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")

@@ -34,6 +34,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
    - `docs-linhay/scripts/check-docs.sh`
    - `npm --prefix Web run build`
    - `pod lib lint TritonKit.podspec --allow-warnings --skip-tests`
+   - `docs-linhay/scripts/verify-skill-package.sh`; public skill Markdown commands must pass `verify-public-skill-commands.py`, and `public-skill-command-schema.json` must remain aligned with CLI `commandSchemas()`.
 6. Run release preflight with Xcode simulator checks disabled only when the local environment does not need that coverage: `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local`.
 7. Update `docs-linhay/dev/` and `docs-linhay/memory/YYYY-MM-DD.md` for release contract changes.
 8. Commit and push `main`, then publish through `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/release.sh v<version> --yes`.
@@ -54,6 +55,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 - x86_64 CLI is a backfill asset. Build it on the arm64 macOS runner with `swift build --package-path CLI --scratch-path .build/cli-x86 -c release --product triton --triple x86_64-apple-macosx14.0`, then verify `file` reports `Mach-O 64-bit executable x86_64` before upload.
 - Release SwiftPM cache keys are architecture-specific: keep separate `release-cli-arm64` and `release-cli-x86_64` cache keys so dependency/build cache does not force the release path back onto the Intel runner.
 - `publish-x86-release-asset` must checkout the repository before calling `gh release download`; the GitHub CLI requires git repository context for release lookup.
+- Public skill packaging must fail before tarball creation when a Markdown command uses a root absent from the checked CLI command snapshot. Keep `act` and `debug` subcommands strict so retired action/inspection roots cannot silently re-enter release documentation.
 
 ## Reporting
 
