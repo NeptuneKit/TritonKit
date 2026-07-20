@@ -67,6 +67,8 @@ GitHub Actions 的 `actions/checkout` 固定使用 Node 24 兼容版本，避免
 
 tag 前必须先在 `main` 完成版本契约、本地门禁和远端 validate；tag 后再以 Release assets、checksum、Homebrew formula/安装测试、CLI version、public skill build info 与仓库外 packaged Web HTTP smoke 作为完成证据。arm64 首发成功不代表完整发布完成，必须等待 x86_64 后补 job 与第二次 tap 刷新成功。
 
+2026-07-20 的 `v0.2.12` 发布已按上述完整口径验收：Release workflow 双架构、两次 tap 更新均成功，四个资产与 checksum 一致，Homebrew 从 `0.2.9` 升级到 `0.2.12` 后通过 formula test，仓库外 packaged Web 在 `127.0.0.1:34127` 返回 HTTP 200。CocoaPods 仅完成 podspec lint，未推送 trunk。
+
 ## Homebrew
 
 新增 Homebrew 二进制安装链路：
