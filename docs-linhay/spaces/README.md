@@ -19,7 +19,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 执行 | [20260720-issue-147-harmony-wait-layout-recv](./20260720-issue-147-harmony-wait-layout-recv/README.md) | Harmony layout transfer 已受 wait deadline 约束，瞬态 timeout 可重试并保留结构化诊断 | 本地门禁已通过；待合入 `main`、GitHub CI 成功后关闭 #147 |
+| 已归档 | [20260720-issue-147-harmony-wait-layout-recv](./20260720-issue-147-harmony-wait-layout-recv/README.md) | Harmony layout transfer 已受 wait deadline 约束，瞬态 timeout 可重试并保留结构化诊断 | 已合入 `main`；推送并等待 CI 后关闭 #147 |
 | 已归档 | [20260720-issue-151-evidence-partial-capture](./20260720-issue-151-evidence-partial-capture/README.md) | evidence JSON 已收敛为单一 manifest；partial/request failure、artifact error 与退出码契约已对齐 | 已合入 `main`；推送并关闭 #151 |
 | 已归档 | [20260720-issue-148-xcode-simulator-destination](./20260720-issue-148-xcode-simulator-destination/README.md) | 显式 `--simulator` 已覆盖旧 default destination；UUID / 名称分别合成 `id=` / `name=` | 已合入 `main`；推送并关闭 #148 |
 | 已归档 | [20260720-issue-146-sim-record-duration](./20260720-issue-146-sim-record-duration/README.md) | `sim record` 已按 encoded sample 时长校验；一帧 MOV 返回 `sim_record_truncated`，成功契约暴露 requested/actual/container/track duration | 已合入 `main`；推送并关闭 #146 |

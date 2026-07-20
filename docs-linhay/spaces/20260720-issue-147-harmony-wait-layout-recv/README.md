@@ -1,12 +1,14 @@
 # GitHub Issue #147：Harmony Wait Layout Receive
 
-> 状态：待集成
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#147](https://github.com/NeptuneKit/TritonKit/issues/147)
 >
 > Branch：`feat/20260720-issue-147-harmony-wait-layout-recv`
 >
 > Worktree：`../TritonKit-worktrees/20260720-issue-147-harmony-wait-layout-recv/`
+>
+> 集成：feature `a251164d`，merge `b2d90c2d`
 
 ## 背景
 
@@ -83,3 +85,4 @@ Harmony host-side `wait --text` 会轮询 `uitest dumpLayout` 与 `hdc file recv
 - 正式本地门禁：`docs-linhay/scripts/verify.sh --local` 通过，包含根 Swift 225 项、release CLI build/smoke、Harmony host smoke、iOS runtime smoke、iOS Simulator build、docs 与 diff check。
 - 对外 skill 包：`docs-linhay/scripts/verify-skill-package.sh` 通过。
 - 真实 Harmony smoke 未运行：Triton-first `device list --platform harmony --json` 证明唯一 DevEco emulator 为 Offline；未绕过 Triton 调用裸 HDC。
+- `main` 集成回归：Harmony wait 4 项与 schema surface 4 项通过，docs / diff check 通过。
