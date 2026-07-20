@@ -445,52 +445,82 @@ func waitForHarmonyText(
     hdc: String,
     text: String,
     timeout: Double,
-    interval: Double
+    interval: Double,
+    gone: Bool = false,
+    captureLayout: (
+        _ selected: TKHarmonyTarget,
+        _ hdc: String,
+        _ output: String?,
+        _ timeout: Double?
+    ) throws -> HarmonyLayoutCapture = { selected, hdc, output, timeout in
+        try dumpHarmonyLayout(selected: selected, hdc: hdc, output: output, timeout: timeout)
+    }
 ) async throws -> HostHarmonyWaitOutput {
     let startedAt = Date()
     let deadline = startedAt.addingTimeInterval(timeout)
     var pollCount = 0
     var lastMatch: TKHarmonyLayoutTextMatch?
     var sourceCommands: [String] = []
+    var transientFailureCount = 0
+    var lastTransientError: TKCLIErrorDetail?
+
+    func response(matched: Bool, timedOut: Bool) -> HostHarmonyWaitOutput {
+        HostHarmonyWaitOutput(
+            ok: matched,
+            action: "wait",
+            platform: "harmony",
+            target: selected,
+            condition: gone ? "gone" : "text",
+            query: text,
+            matched: matched,
+            timedOut: timedOut,
+            elapsedMs: elapsedMilliseconds(since: startedAt),
+            pollCount: pollCount,
+            match: lastMatch,
+            transientFailureCount: transientFailureCount,
+            lastTransientError: lastTransientError,
+            sourceCommands: sourceCommands
+        )
+    }
+
     while true {
+        let remaining = deadline.timeIntervalSinceNow
+        if remaining <= 0 {
+            return response(matched: false, timedOut: true)
+        }
         pollCount += 1
-        let layout = try dumpHarmonyLayout(selected: selected, hdc: hdc, output: nil)
-        sourceCommands.append(contentsOf: layout.sourceCommands)
-        lastMatch = try TKHarmonyLayoutParser.firstTextMatch(in: layout.data, text: text)
-        if lastMatch != nil {
-            return HostHarmonyWaitOutput(
-                ok: true,
-                action: "wait",
-                platform: "harmony",
-                target: selected,
-                condition: "text",
-                query: text,
-                matched: true,
-                timedOut: false,
-                elapsedMs: elapsedMilliseconds(since: startedAt),
-                pollCount: pollCount,
-                match: lastMatch,
-                sourceCommands: sourceCommands
+        var capturedLayout = false
+        do {
+            let layout = try captureLayout(selected, hdc, nil, min(5, remaining))
+            sourceCommands.append(contentsOf: layout.sourceCommands)
+            lastMatch = try TKHarmonyLayoutParser.firstTextMatch(in: layout.data, text: text)
+            capturedLayout = true
+        } catch let error as HostCommandRunError {
+            guard case .timeout(let command, _, _, _) = error else {
+                throw error
+            }
+            sourceCommands.append(hostSourceCommand(command))
+            transientFailureCount += 1
+            let isReceive = command.arguments.contains("recv")
+            lastTransientError = TKCLIErrorDetail(
+                code: isReceive ? "harmony_layout_recv_timeout" : "harmony_layout_dump_timeout",
+                message: error.description,
+                hint: "Retry the wait or inspect one layout capture with `triton debug ax --platform harmony --device \(selected.target) --output <path> --json`.",
+                suggestedCommands: [
+                    "triton device wait-ready --platform harmony --device \(selected.target) --json",
+                    "triton debug ax --platform harmony --device \(selected.target) --output <path> --json",
+                ]
             )
+        }
+
+        let matched = capturedLayout && (gone ? lastMatch == nil : lastMatch != nil)
+        if matched {
+            return response(matched: true, timedOut: false)
         }
         if Date() >= deadline {
-            return HostHarmonyWaitOutput(
-                ok: false,
-                action: "wait",
-                platform: "harmony",
-                target: selected,
-                condition: "text",
-                query: text,
-                matched: false,
-                timedOut: true,
-                elapsedMs: elapsedMilliseconds(since: startedAt),
-                pollCount: pollCount,
-                match: lastMatch,
-                sourceCommands: sourceCommands
-            )
+            return response(matched: false, timedOut: true)
         }
-        let remaining = deadline.timeIntervalSinceNow
-        let sleepSeconds = max(0.01, min(interval, remaining))
+        let sleepSeconds = max(0.001, min(interval, deadline.timeIntervalSinceNow))
         try await Task.sleep(nanoseconds: UInt64(sleepSeconds * 1_000_000_000))
     }
 }

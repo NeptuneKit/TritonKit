@@ -291,24 +291,57 @@ func remoteHarmonyArtifactPath(prefix: String, extension fileExtension: String) 
     "/data/local/tmp/\(prefix)-\(UUID().uuidString).\(fileExtension)"
 }
 
+struct HarmonyLayoutCapture {
+    let localPath: String
+    let remotePath: String
+    let sourceCommands: [String]
+    let data: Data
+}
+
 func dumpHarmonyLayout(
     selected: TKHarmonyTarget,
     hdc: String,
-    output: String?
-) throws -> (localPath: String, sourceCommands: [String], data: Data) {
+    output: String?,
+    timeout: Double? = nil,
+    commandRunner: (TKHostCommand) throws -> HostProcessResult = { command in
+        try runHostCommand(command)
+    },
+    dataLoader: (String) throws -> Data = { path in
+        try Data(contentsOf: URL(fileURLWithPath: path))
+    }
+) throws -> HarmonyLayoutCapture {
     let localPath = output ?? temporaryHarmonyArtifactPath(prefix: "triton-layout", extension: "json")
     try ensureParentDirectory(for: localPath)
+    let deadline = timeout.map { Date().addingTimeInterval($0) }
 
-    let dumpResult = try runHostCommand(TKHarmonyHDCCommand.dumpLayout(target: selected.target, executable: hdc))
+    var dumpCommand = TKHarmonyHDCCommand.dumpLayout(target: selected.target, executable: hdc)
+    if let deadline {
+        dumpCommand = dumpCommand.withTimeout(max(0.001, deadline.timeIntervalSinceNow))
+    }
+    let dumpResult = try commandRunner(dumpCommand)
     let remotePath: String
     do {
         remotePath = try TKHarmonyDumpLayoutParser.remotePath(from: dumpResult.stdout)
     } catch {
         throw HostCommandRunError.layoutPathNotFound
     }
-    let recvResult = try runHostCommand(TKHarmonyHDCCommand.recvFile(target: selected.target, remotePath: remotePath, localPath: localPath, executable: hdc))
-    let data = try Data(contentsOf: URL(fileURLWithPath: localPath))
-    return (localPath, [dumpResult.sourceCommand, recvResult.sourceCommand], data)
+    var recvCommand = TKHarmonyHDCCommand.recvFile(
+        target: selected.target,
+        remotePath: remotePath,
+        localPath: localPath,
+        executable: hdc
+    )
+    if let deadline {
+        recvCommand = recvCommand.withTimeout(max(0.001, deadline.timeIntervalSinceNow))
+    }
+    let recvResult = try commandRunner(recvCommand)
+    let data = try dataLoader(localPath)
+    return HarmonyLayoutCapture(
+        localPath: localPath,
+        remotePath: remotePath,
+        sourceCommands: [dumpResult.sourceCommand, recvResult.sourceCommand],
+        data: data
+    )
 }
 
 func captureHarmonyScreenshot(

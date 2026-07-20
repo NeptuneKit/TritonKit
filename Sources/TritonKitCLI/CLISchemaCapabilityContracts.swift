@@ -924,6 +924,8 @@ func hostHarmonyWaitOutputContract() -> TKCommandOutputContract {
             ("elapsedMs", "Int", true, "Elapsed milliseconds"),
             ("pollCount", "Int", true, "Number of layout polling attempts"),
             ("match", "TKHarmonyLayoutTextMatch?", false, "Last matched host layout text node"),
+            ("transientFailureCount", "Int", true, "Number of retryable layout dump or receive timeouts"),
+            ("lastTransientError", "TKCLIErrorDetail?", false, "Last retryable layout transfer error, including command and log metadata"),
             ("sourceCommands", "[String]", true, "Underlying host commands"),
         ])
     )

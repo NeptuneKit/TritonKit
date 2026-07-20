@@ -712,7 +712,41 @@ struct HostHarmonyWaitOutput: Encodable {
     let elapsedMs: Int
     let pollCount: Int
     let match: TKHarmonyLayoutTextMatch?
+    let transientFailureCount: Int
+    let lastTransientError: TKCLIErrorDetail?
     let sourceCommands: [String]
+
+    init(
+        ok: Bool,
+        action: String,
+        platform: String,
+        target: TKHarmonyTarget,
+        condition: String,
+        query: String,
+        matched: Bool,
+        timedOut: Bool,
+        elapsedMs: Int,
+        pollCount: Int,
+        match: TKHarmonyLayoutTextMatch?,
+        transientFailureCount: Int = 0,
+        lastTransientError: TKCLIErrorDetail? = nil,
+        sourceCommands: [String]
+    ) {
+        self.ok = ok
+        self.action = action
+        self.platform = platform
+        self.target = target
+        self.condition = condition
+        self.query = query
+        self.matched = matched
+        self.timedOut = timedOut
+        self.elapsedMs = elapsedMs
+        self.pollCount = pollCount
+        self.match = match
+        self.transientFailureCount = transientFailureCount
+        self.lastTransientError = lastTransientError
+        self.sourceCommands = sourceCommands
+    }
 }
 
 struct HostAndroidTapMatch: Encodable, Equatable {
