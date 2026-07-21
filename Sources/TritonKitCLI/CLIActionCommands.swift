@@ -1679,8 +1679,8 @@ struct Hit: AsyncParsableCommand {
 struct Screenshot: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Capture current app screenshot as PNG")
 
-    @Option(help: "Host platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
-    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Host platform adapter: ios|android|harmony; iOS host capture supports Simulator scope only") var platform: HostDevicePlatform?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, ios-real:<id>, android:<serial>, harmony:<target>, raw id, booted, or current; iOS real-device selectors return unsupported_scope") var device: String?
     @Option(help: "Runtime target id from `triton list`; when used with --platform/--device, this may also be a raw host target id") var target: String = TKLocalTargetID
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?

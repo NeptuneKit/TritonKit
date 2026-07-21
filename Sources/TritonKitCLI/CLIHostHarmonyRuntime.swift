@@ -372,6 +372,9 @@ func captureHostDeviceScreenshot(platform: HostDevicePlatform, target: HostDevic
         }
         throw HostCommandRunError.deviceNotReady(target: target.target, timeoutSeconds: 0)
     }
+    if platform == .ios, target.scope == HostDeviceScope.real.rawValue || target.kind == "real-device" {
+        throw HostDeviceScreenshotError.unsupportedIOSRealDevice
+    }
     switch platform {
     case .ios:
         try prepareHostArtifactOutputPath(output)

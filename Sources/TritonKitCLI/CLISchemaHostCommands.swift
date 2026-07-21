@@ -53,7 +53,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "resolve <selector>", type: "Subcommand", description: "Resolve a target selector without executing an action"),
                 TKCommandSchemaOption(name: "resolve --platform ios|android|harmony --device <selector>", type: "Subcommand", description: "Resolve a unified target selector without executing an action"),
                 TKCommandSchemaOption(name: "wait-ready --device <selector>", type: "Subcommand", description: "Wait for iOS Booted, Android adb state/package manager, or Harmony bootevent.boot.completed"),
-                TKCommandSchemaOption(name: "screenshot --device <selector> --output <path>", type: "Subcommand", description: "Capture a host-side iOS, Android, or Harmony screenshot artifact"),
+                TKCommandSchemaOption(name: "screenshot --device <selector> --output <path>", type: "Subcommand", description: "Capture an iOS Simulator, Android, or Harmony screenshot; an explicit iOS real-device selector returns unsupported_scope"),
                 TKCommandSchemaOption(name: "runtime-url --device <selector>", type: "Subcommand", description: "Prepare HDC fport and print a direct Harmony embedded runtime base URL"),
                 TKCommandSchemaOption(name: "runtime-url --platform harmony --target <target>", type: "Subcommand", description: "Compatibility path for preparing a direct Harmony embedded runtime base URL"),
                 TKCommandSchemaOption(name: "start --platform android --avd <name> --plan-only", type: "Subcommand", description: "Return an Android Emulator launch ledger without starting the emulator"),
@@ -61,7 +61,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "stop --platform android --device <selector> --confirm", type: "Subcommand", description: "Stop a selected Android Emulator through adb emu kill"),
                 TKCommandSchemaOption(name: "stop --platform harmony --hvd <name> --path <deployed-path> --confirm", type: "Subcommand", description: "Unload Triton launchd supervision and stop a Harmony HVD"),
                 TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", defaultValue: "harmony", description: "Host device platform adapter"),
-                TKCommandSchemaOption(name: "--scope", type: "simulator|emulator|real|all", defaultValue: "all", description: "Device scope filter; Android real excludes emulator-* adb serials"),
+                TKCommandSchemaOption(name: "--scope", type: "simulator|emulator|real|all", defaultValue: "all", description: "Device scope filter; Android real excludes emulator-* adb serials, while iOS real-device screenshot is unsupported"),
                 TKCommandSchemaOption(name: "--device", type: "String", description: "Unified target selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current"),
                 TKCommandSchemaOption(name: "--apk", type: "Path", description: "Android bridge APK path for device bridge install"),
                 TKCommandSchemaOption(name: "--mode", type: "record|mock|block|throttle", description: "Host-side proxy takeover mode for network capture or policy enforcement; proxy serve currently supports record|mock|block|throttle"),
@@ -172,7 +172,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "triton device stop --platform harmony --hvd 'Codex Test Phone' --path ~/.Huawei/Emulator/deployed --confirm --json",
             ],
             successShape: "{ ok, platform, tools[]?, strongControl[]?, bridge?, targets[]?, defaultTarget?, target?, defaultsPath?, ready?, artifact?, baseURL?, manifest?, hvd?, launchdLabel?, launchdDomain?, planOnly?, started?, pid?, nextAction?, sourceCommand?, sourceCommands?[] }",
-            failureShape: "{ ok:false, error:{ code: ambiguous_target|target_offline|device_not_ready|simulator_not_booted|emulator_license_agreement_required|harmony_emulator_stop_failed|host_action_failed, message, hint, nextAction? } }",
+            failureShape: "{ ok:false, error:{ code: unsupported_scope|ambiguous_target|target_offline|device_not_ready|simulator_not_booted|emulator_license_agreement_required|harmony_emulator_stop_failed|host_action_failed, message, hint, nextAction? } }",
             outputSemantics: "Use device as the host target fact source before simulator, Harmony, app, screenshot, or smoke actions. Prefer aliases and current target to avoid repeated disambiguation.",
             jsonlEvents: [
                 "proxy.serve.ready",
@@ -215,6 +215,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "runtime_not_connected",
                 "host_command_timeout",
                 "host_action_failed",
+                "unsupported_scope",
                 "emulator_license_agreement_required",
                 "harmony_emulator_stop_failed",
                 "unsupported_host_action",
@@ -306,10 +307,11 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "screenshot",
-                    summary: "Capture a host-side iOS, Android, or Harmony screenshot artifact",
+                    summary: "Capture an iOS Simulator, Android, or Harmony screenshot artifact; iOS real-device scope is unsupported",
                     requiredOptions: ["--output"],
                     optionalOptions: ["--platform", "--device", "--target", "--scope", "--name", "--runtime", "--state", "--ready", "--timeout", "--hdc", "--adb", "--format", "--json"],
-                    outputSelectors: ["host.device-screenshot"]
+                    outputSelectors: ["host.device-screenshot"],
+                    failureCodes: ["unsupported_scope", "device_not_ready", "host_command_timeout", "host_action_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "runtime-url",
@@ -318,7 +320,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                     outputSelectors: ["host.harmony-runtime-url"]
                 ),
             ],
-            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
+            providedCapabilities: ["host-device", "host-device-selector", "device-alias", "device-list", "device-use", "device-current", "device-resolve", "device-wait-ready", "device-screenshot", "ios-device", "ios-simulator-screenshot", "ios-host-ax", "ios-host-hid", "android-device", "android-device-doctor", "android-device-list", "android-device-start", "android-device-stop", "android-device-wait-ready", "android-device-screenshot", "android-bridge", "android-bridge-install", "android-bridge-forward", "harmony-device", "harmony-device-list", "harmony-device-start", "harmony-foreground-app-identity", "harmony-runtime-url", "harmony-device-stop", "device-proxy-ios", "device-proxy-android", "device-proxy-harmony", "network-capture-export", "network-certificate-plan", "network-certificate-install"]
         ),
         TKCommandSchema(
             name: "camera",

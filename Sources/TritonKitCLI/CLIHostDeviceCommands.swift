@@ -796,6 +796,22 @@ func printHostDeviceBridgeOutput(_ output: HostDeviceBridgeOutput, outputFormat:
     }
 }
 
+func iosHostDeviceDoctorCapabilities(scope: HostDeviceScope) -> [String] {
+    var capabilities = [
+        "device.list",
+        "device.use",
+        "device.wait-ready",
+        "ios.real-device",
+        "ios.devicectl",
+        "ios-host-ax",
+        "ios-host-hid",
+    ]
+    if scope != .real {
+        capabilities += ["ios.simctl-targets", "ios.simulator-screenshot", "device.screenshot"]
+    }
+    return capabilities
+}
+
 struct DeviceDoctor: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "doctor", abstract: "Probe platform host tools")
 
@@ -832,7 +848,7 @@ struct DeviceDoctor: AsyncParsableCommand {
                 ok: ok,
                 platform: platform.rawValue,
                 tools: tools,
-                capabilities: ["device.list", "device.use", "device.wait-ready", "device.screenshot", "ios.simctl-targets", "ios.real-device", "ios.devicectl", "ios-host-ax", "ios-host-hid"],
+                capabilities: iosHostDeviceDoctorCapabilities(scope: scope),
                 strongControl: iosStrongControlProbes(idbProbe: idbProbe),
                 artifactsSaved: false
             )
@@ -1187,11 +1203,11 @@ struct DeviceWaitReady: AsyncParsableCommand {
 }
 
 struct DeviceScreenshot: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "screenshot", abstract: "Capture a host-side device screenshot")
+    static let configuration = CommandConfiguration(commandName: "screenshot", abstract: "Capture a host-side device screenshot; iOS supports Simulator scope only")
 
-    @Option(help: "Unified host device selector: alias, sim:<udid>, android:<serial>, harmony:<target>, raw id, booted, or current") var device: String?
+    @Option(help: "Unified host device selector: alias, sim:<udid>, ios-real:<id>, android:<serial>, harmony:<target>, raw id, booted, or current; iOS real-device selectors return unsupported_scope") var device: String?
     @Option(help: "Platform adapter: ios|android|harmony") var platform: HostDevicePlatform?
-    @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope = .all
+    @Option(help: "Device scope: simulator|emulator|real|all; iOS real-device screenshot is unsupported") var scope: HostDeviceScope = .all
     @Option(help: "Explicit Harmony target id, for example 127.0.0.1:10100") var target: String?
     @Option(help: "Device name filter, for example iPhone 15") var name: String?
     @Option(help: "Runtime filter, for example iOS 26.5") var runtime: String?

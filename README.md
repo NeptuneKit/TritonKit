@@ -603,6 +603,8 @@ triton device list --platform ios --json
 triton device screenshot --platform ios --target 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --output /tmp/sim.png --json
 ```
 
+iOS host screenshot capture is Simulator-only. An explicit ready `ios-real:*` selector is resolved as `scope=real` and then returns `error.code=unsupported_scope` with a schema `nextAction` before Triton invokes `simctl`; it is never reinterpreted as a Simulator UDID. `triton device doctor --platform ios --scope real --json` therefore omits `device.screenshot`, while `triton capabilities --json` exposes `ios-simulator-screenshot` as supported and `ios-real-device-screenshot` as unsupported. For a physical DEBUG device, prefer a connected embedded TritonKit runtime screenshot when available; otherwise keep the `unsupported_scope` envelope and record an external manual-capture fallback as evidence.
+
 Android Emulator host-side discovery and smoke do not require an embedded TritonKit runtime:
 
 ```bash
