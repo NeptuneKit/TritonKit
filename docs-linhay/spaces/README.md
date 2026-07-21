@@ -19,6 +19,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 执行 | [20260721-issue-158-ios-real-device-screenshot-scope](./20260721-issue-158-ios-real-device-screenshot-scope/README.md) | screenshot 必须在 host action 前区分显式 iOS real-device 与 Simulator selector | 先用失败测试锁定 real selector 不得进入 simctl validator，再对齐 unsupported/capture 契约与门禁 |
 | 已归档 | [20260721-issue-156-ios-button-primary-menu](./20260721-issue-156-ios-button-primary-menu/README.md) | iOS embedded runtime 已用 UIKit public primary-action API 打开标准 UIButton menu，并对菜单项选择保留明确 unsupported 边界 | 已合入 `main`、线上 CI 全绿并关闭 #156；随下一 patch release 发布 |
 | 已归档 | [20260721-issue-157-table-cell-selection-callback](./20260721-issue-157-table-cell-selection-callback/README.md) | UITableViewCell ancestor selection 已在成功返回前完成 willSelect、selection state 与 didSelect callback | merge `3981467f` 与 CI `29799367673` 全绿，GitHub #157 已关闭；进入下一 patch release |
 | 已归档 | [20260720-issue-155-ios-simulator-process-console](./20260720-issue-155-ios-simulator-process-console/README.md) | iOS Simulator App stdout/stderr 已成为 bounded、source-explicit 的 Triton host artifact 契约；与 unified log 明确分源 | 已合入 `main`、线上 CI 全绿并关闭 #155；随下一 patch release 发布 |
