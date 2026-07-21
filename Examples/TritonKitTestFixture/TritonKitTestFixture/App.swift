@@ -241,6 +241,27 @@ final class FixtureUIKitView: UIView {
         stack.addArrangedSubview(label)
     }
 
+    private func addPrimaryMenuButton() {
+        let button = UIButton(type: .system)
+        button.setTitle("Open Fixture Menu", for: .normal)
+        button.titleLabel?.font = .systemFont(ofSize: 22, weight: .semibold)
+        button.accessibilityIdentifier = "fixture.home.openMenu"
+        button.accessibilityLabel = "Open Fixture Menu"
+        button.menu = UIMenu(children: [
+            UIAction(title: "Fixture Menu Action") { [weak self] _ in
+                self?.subtitleLabel.text = "Fixture Menu Action Selected"
+                self?.subtitleLabel.accessibilityLabel = "Fixture Menu Action Selected"
+                self?.subtitleLabel.accessibilityIdentifier = "fixture.home.menu.selected"
+                if let subtitleLabel = self?.subtitleLabel,
+                   subtitleLabel.superview == nil {
+                    self?.stack.insertArrangedSubview(subtitleLabel, at: min(3, self?.stack.arrangedSubviews.count ?? 0))
+                }
+            },
+        ])
+        button.showsMenuAsPrimaryAction = true
+        stack.addArrangedSubview(button)
+    }
+
     @objc private func showLogin() {
         screen = .login
         reset(
@@ -260,6 +281,7 @@ final class FixtureUIKitView: UIView {
         addButton("Open Dynamic List", identifier: "fixture.home.openDynamicList", action: #selector(showDynamicList))
         addButton("Open Error State", identifier: "fixture.home.openError", action: #selector(showError))
         addButton("Open Fixture Alert", identifier: "fixture.home.openAlert", action: #selector(showAlert))
+        addPrimaryMenuButton()
         addButton("Back to Login", identifier: "fixture.home.backLogin", action: #selector(showLogin))
     }
 

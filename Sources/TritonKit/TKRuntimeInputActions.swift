@@ -343,6 +343,37 @@ func performControlTap(
         return result
     }
 
+    if #available(iOS 14.0, *),
+       let button = control as? UIButton,
+       button.menu != nil,
+       button.showsMenuAsPrimaryAction {
+        if #available(iOS 17.4, *) {
+            button.performPrimaryAction()
+            return TKInputResult.success(
+                action: action,
+                message: "Performed UIButton primary-action menu activation",
+                targetOID: activationOID,
+                targetClassName: activationClassName,
+                matchedOID: matched.oid,
+                matchedClassName: matched.className,
+                activationOID: activationOID,
+                activationClassName: activationClassName,
+                strategy: "button-primary-menu-action"
+            )
+        }
+        return TKInputResult.failure(
+            action: action,
+            message: "UIButton primary-action menus require the public performPrimaryAction API available on iOS 17.4 or newer",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: "button-primary-menu-action-unsupported"
+        )
+    }
+
     if control.accessibilityActivate() {
         return TKInputResult.success(
             action: action,
@@ -761,6 +792,13 @@ func performCollectionCellTap(
     }
     if collectionView.delegate?.responds(to: #selector(UICollectionViewDelegate.collectionView(_:shouldSelectItemAt:))) == true,
        collectionView.delegate?.collectionView?(collectionView, shouldSelectItemAt: indexPath) == false {
+        if let result = unsupportedPrimaryMenuItemActivation(
+            matchedView: matchedView,
+            request: request,
+            action: action
+        ) {
+            return result
+        }
         return TKInputResult.failure(
             action: action,
             message: "UICollectionViewCell ancestor selection was denied by delegate",
@@ -791,6 +829,79 @@ func performCollectionCellTap(
         activationClassName: activationClassName,
         strategy: "ancestor-collection-cell-selection"
     )
+}
+
+@MainActor
+func unsupportedPrimaryMenuItemActivation(
+    matchedView: UIView,
+    request: TKInputRequest,
+    action: String
+) -> TKInputResult? {
+    guard #available(iOS 15.0, *),
+          let title = matchedView.accessibilityLabel ?? (matchedView as? UILabel)?.text,
+          !title.isEmpty
+    else {
+        return nil
+    }
+    var actionTitles: [String] = []
+    for window in keyWindows() {
+        for button in allSubviews(of: window, matching: UIButton.self) {
+            guard button.window != nil,
+                  !button.isHidden,
+                  button.alpha > 0.01,
+                  button.showsMenuAsPrimaryAction,
+                  let menu = button.menu
+            else {
+                continue
+            }
+            for actionTitle in primaryMenuActionTitles(in: menu.children) {
+                if !actionTitles.contains(actionTitle) {
+                    actionTitles.append(actionTitle)
+                }
+            }
+        }
+    }
+    guard actionTitles.contains(title) else {
+        return nil
+    }
+
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let activationOID = oid(for: matchedView)
+    let activationClassName = NSStringFromClass(type(of: matchedView))
+    let message = "Visible UIMenu actions cannot be selected through a safe public embedded-runtime API"
+    return TKInputResult.unsupported(
+        action: action,
+        message: message,
+        strategy: "button-primary-menu-item-unsupported",
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        error: TKCLIErrorDetail(
+            code: "unsupported_capability",
+            message: message,
+            hint: "Keep the menu-open result as observation only. Use a host HID adapter or an app-owned semantic debug action when the menu item must be selected.",
+            nearestCandidates: actionTitles,
+            suggestedCommands: [
+                "triton verify text-exists <menu-title> --target <target> --json",
+                "triton schema --command act --json",
+            ],
+            candidateCount: actionTitles.count
+        )
+    )
+}
+
+@available(iOS 14.0, *)
+func primaryMenuActionTitles(in elements: [UIMenuElement]) -> [String] {
+    elements.flatMap { element -> [String] in
+        if let action = element as? UIAction {
+            return [action.title]
+        }
+        if let menu = element as? UIMenu {
+            return primaryMenuActionTitles(in: menu.children)
+        }
+        return []
+    }
 }
 
 func shouldUseAncestorTapActivation(_ request: TKInputRequest) -> Bool {

@@ -1,3 +1,4 @@
+import ArgumentParser
 import Darwin
 import Foundation
 import Testing
@@ -64,6 +65,29 @@ struct InputOutputTests {
         #expect(output.contains("activationOID: 11"))
         #expect(output.contains("activationClassName: UIControl"))
         #expect(output.contains("strategy: ancestor-control-action"))
+    }
+
+    @Test("failed input result emits one JSON object and preserves runtime error")
+    func failedInputResultEmitsOneJSONAndPreservesRuntimeError() throws {
+        let result = TKInputResult.unsupported(
+            action: "tap",
+            message: "Visible primary-menu items require host HID activation",
+            strategy: "button-primary-menu-item-unsupported",
+            error: TKCLIErrorDetail(
+                code: "unsupported_capability",
+                message: "Visible primary-menu items require host HID activation"
+            )
+        )
+
+        #expect(throws: ExitCode.self) {
+            try requireInputResultSuccess(result)
+        }
+        let output = try encodeCompactJSON(result)
+        let lines = output.split(whereSeparator: { $0.isNewline })
+        #expect(lines.count == 1)
+        let decoded = try JSONDecoder().decode(TKInputResult.self, from: Data(lines[0].utf8))
+        #expect(decoded.error?.code == "unsupported_capability")
+        #expect(decoded.strategy == "button-primary-menu-item-unsupported")
     }
 
     private func captureStandardOutput(_ body: () throws -> Void) throws -> String {

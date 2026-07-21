@@ -8,6 +8,50 @@ import UIKit
 @Suite
 struct TKRuntimeInputActionsTests {
     @MainActor
+    @Test("UIButton primary-action menu uses public UIKit activation")
+    func buttonPrimaryActionMenuUsesPublicUIKitActivation() async {
+        guard #available(iOS 17.4, *) else { return }
+        let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 320, height: 240))
+        let rootViewController = UIViewController()
+        let button = UIButton(type: .system)
+        button.frame = CGRect(x: 40, y: 80, width: 240, height: 44)
+        button.menu = UIMenu(children: [UIAction(title: "Fixture action") { _ in }])
+        button.showsMenuAsPrimaryAction = true
+        rootViewController.view.addSubview(button)
+        window.rootViewController = rootViewController
+        window.makeKeyAndVisible()
+        defer { window.isHidden = true }
+        let request = TKInputRequest.tap(targetOID: nil)
+
+        let result = performControlTap(
+            button,
+            request: request,
+            action: "tap",
+            matchedView: nil,
+            strategy: nil
+        )
+
+        #expect(result.ok)
+        #expect(result.message == "Performed UIButton primary-action menu activation")
+        #expect(result.strategy == "button-primary-menu-action")
+        await Task.yield()
+    }
+
+    @MainActor
+    @Test("primary menu action titles flatten nested public UIMenu elements")
+    func primaryMenuActionTitlesFlattenNestedMenus() {
+        guard #available(iOS 14.0, *) else { return }
+        let menu = UIMenu(children: [
+            UIAction(title: "First") { _ in },
+            UIMenu(title: "Nested", children: [
+                UIAction(title: "Second") { _ in },
+            ]),
+        ])
+
+        #expect(primaryMenuActionTitles(in: menu.children) == ["First", "Second"])
+    }
+
+    @MainActor
     @Test("UIControl tap falls back to accessibilityActivate when target actions are absent")
     func controlTapFallsBackToAccessibilityActivateWithoutTargetActions() {
         let button = ActivatingControl(frame: .zero)
@@ -180,7 +224,7 @@ struct TKRuntimeInputActionsTests {
 
     @MainActor
     @Test("UITabBar duplicate private button layers map by visual slot")
-    func duplicateTabBarButtonLayersMapByVisualSlot() async {
+    func duplicateTabBarButtonLayersMapByVisualSlot() async throws {
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 428, height: 926))
         let tabBar = UITabBar(frame: CGRect(x: 0, y: 843, width: 428, height: 83))
         let items = ["Server", "Photos", "Music", "Settings"].map { UITabBarItem(title: $0, image: nil, tag: 0) }

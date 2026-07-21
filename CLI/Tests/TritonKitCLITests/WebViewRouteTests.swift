@@ -250,6 +250,7 @@ struct WebViewRouteTests {
         #expect(tapStrategy.description.contains("UICollectionViewCell"))
         #expect(tap.outputSemantics?.contains("ancestor-collection-cell-selection") == true)
         #expect(tap.outputSemantics?.contains("ancestor-table-cell-selection") == true)
+        #expect(tap.outputSemantics?.contains("button-primary-menu-action") == true)
     }
 
     @Test("Harmony route WebView warnings expose next actions")
