@@ -73,3 +73,4 @@
 - 另用 `triton xcode test` 跑过全量 iOS suite：本次新增 4 项均通过；suite 仍保留 35 个既有失败（主要为 key-window/concurrency 与根 Package cwd 基线），结果保存在 `/private/tmp/triton-issue157-full.xcresult`，不把无关基线伪报为本次已修复。
 - Triton-first baseline 保存于 `/private/tmp/triton-issue-157-baseline/`；`triton xcode` schema 未暴露 `only-testing`，因此 focused iOS test 保存缺口证据后回退 raw `xcodebuild`。
 - feature commit `99fae7a5` 已通过 merge commit `3981467f` 合入并推送 `main`；线上 CI run `29799367673` 全绿，完成评论留证后关闭 GitHub #157。
+- 已随 `v0.2.14` 正式发布；Release workflow run `29801929752` 全绿，公开双架构 CLI、checksum、skill bundle 与 Homebrew `0.2.14` 均完成独立验收。

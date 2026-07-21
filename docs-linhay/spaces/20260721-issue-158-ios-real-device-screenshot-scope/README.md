@@ -63,3 +63,4 @@
 - `docs-linhay/scripts/verify.sh --local` 全绿：根包 226 项、CLI release build/smoke、Harmony host smoke、iOS runtime observe smoke、docs/diff gate 均通过；public skill bundle 打包验证通过。
 - 非标准 `/private/tmp` scratch 的 CLI 全量 662 项中，本次新增及受影响测试通过；整套仍有 43 个既有路径/schema/Harmony timing 基线 issue（其中多项因测试硬编码寻找 `CLI/.build` 下 binary），不把它们伪报为 #158 已修复。标准仓库门禁不依赖该非标准 scratch 布局。
 - feature commit `ddf3fde6` 已通过 merge commit `a61ed5d7` 合入并推送 `main`；线上 CI run `29801150199` 全绿，完成评论留证后关闭 GitHub #158。
+- 已随 `v0.2.14` 正式发布；公开 release CLI 的 screenshot schema 复验包含 `unsupported_scope` 与 iOS real-device pre-host-tool 拒绝边界，Release workflow run `29801929752` 全绿。

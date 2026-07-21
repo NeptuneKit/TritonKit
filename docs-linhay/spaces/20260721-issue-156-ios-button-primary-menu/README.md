@@ -72,3 +72,4 @@
 - iOS Simulator focused tests：primary menu、nested menu titles、普通 UIControl accessibility fallback 共 3 项通过；根包 `swift test` 226 项通过；CLI `InputOutputTests` 聚焦用例与 `WebViewRouteTests` 18 项通过。
 - Triton-first baseline 保存于 `/private/tmp/triton-issue-156-baseline/`；`triton xcode` schema 缺少 `only-testing`，因此聚焦 iOS test 在保存缺口证据后回退 raw `xcodebuild`。
 - 已由 merge commit `c44273e5` 合入 `main`；线上 CI run `29797634616` 全绿后关闭 GitHub #156。
+- 已随 `v0.2.14` 正式发布；Release workflow run `29801929752` 全绿，公开双架构 CLI、checksum、skill bundle 与 Homebrew `0.2.14` 均完成独立验收。

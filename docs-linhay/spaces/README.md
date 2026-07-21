@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 最近审计：2026-07-20
+> 最近审计：2026-07-21
 
 本文件是 `docs-linhay/spaces/` 的总索引，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -19,9 +19,9 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 已归档 | [20260721-issue-158-ios-real-device-screenshot-scope](./20260721-issue-158-ios-real-device-screenshot-scope/README.md) | screenshot 已在 host action 前区分 iOS real-device 与 Simulator selector，真机稳定返回 unsupported_scope | merge `a61ed5d7` 与 CI `29801150199` 全绿，GitHub #158 已关闭；进入下一 patch release |
-| 已归档 | [20260721-issue-156-ios-button-primary-menu](./20260721-issue-156-ios-button-primary-menu/README.md) | iOS embedded runtime 已用 UIKit public primary-action API 打开标准 UIButton menu，并对菜单项选择保留明确 unsupported 边界 | 已合入 `main`、线上 CI 全绿并关闭 #156；随下一 patch release 发布 |
-| 已归档 | [20260721-issue-157-table-cell-selection-callback](./20260721-issue-157-table-cell-selection-callback/README.md) | UITableViewCell ancestor selection 已在成功返回前完成 willSelect、selection state 与 didSelect callback | merge `3981467f` 与 CI `29799367673` 全绿，GitHub #157 已关闭；进入下一 patch release |
+| 已归档 | [20260721-issue-158-ios-real-device-screenshot-scope](./20260721-issue-158-ios-real-device-screenshot-scope/README.md) | screenshot 已在 host action 前区分 iOS real-device 与 Simulator selector，真机稳定返回 unsupported_scope | merge `a61ed5d7` 与 CI `29801150199` 全绿，GitHub #158 已关闭并随 `v0.2.14` 发布 |
+| 已归档 | [20260721-issue-156-ios-button-primary-menu](./20260721-issue-156-ios-button-primary-menu/README.md) | iOS embedded runtime 已用 UIKit public primary-action API 打开标准 UIButton menu，并对菜单项选择保留明确 unsupported 边界 | 已合入 `main`、线上 CI 全绿并关闭 #156；已随 `v0.2.14` 发布 |
+| 已归档 | [20260721-issue-157-table-cell-selection-callback](./20260721-issue-157-table-cell-selection-callback/README.md) | UITableViewCell ancestor selection 已在成功返回前完成 willSelect、selection state 与 didSelect callback | merge `3981467f` 与 CI `29799367673` 全绿，GitHub #157 已关闭并随 `v0.2.14` 发布 |
 | 已归档 | [20260720-issue-155-ios-simulator-process-console](./20260720-issue-155-ios-simulator-process-console/README.md) | iOS Simulator App stdout/stderr 已成为 bounded、source-explicit 的 Triton host artifact 契约；与 unified log 明确分源 | 已合入 `main`、线上 CI 全绿并关闭 #155；随下一 patch release 发布 |
 | 已归档 | [20260720-issue-154-runtime-skill-command-hierarchy](./20260720-issue-154-runtime-skill-command-hierarchy/README.md) | Public skill 打包已由 CLI schema snapshot 阻断 retired root command；`tritonkit-runtime` provenance 边界已澄清 | 已合入 `main`；CI 全绿后关闭 #154，本期不发布 tag |
 | 已归档 | [20260720-issue-153-real-device-app-pull](./20260720-issue-153-real-device-app-pull/README.md) | 真机 data/app-group container 文件拉取已成为 schema-backed、受目录/字节/覆盖安全边界约束的 Triton artifact command | 已合入 `main`；CI 全绿后关闭 #153，真机锁屏 blocker 如实保留 |
