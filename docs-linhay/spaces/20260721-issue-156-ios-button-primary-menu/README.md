@@ -1,6 +1,6 @@
 # GitHub Issue #156：iOS UIButton Primary-Action Menu Activation
 
-> 状态：待集成
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#156](https://github.com/NeptuneKit/TritonKit/issues/156)
 >
@@ -71,3 +71,4 @@
 - 再点击 `Fixture Menu Action` 返回退出码 1，stdout 经 `jq -s` 证明只有 1 个对象，且 `error.code=unsupported_capability`、`strategy=button-primary-menu-item-unsupported`。
 - iOS Simulator focused tests：primary menu、nested menu titles、普通 UIControl accessibility fallback 共 3 项通过；根包 `swift test` 226 项通过；CLI `InputOutputTests` 聚焦用例与 `WebViewRouteTests` 18 项通过。
 - Triton-first baseline 保存于 `/private/tmp/triton-issue-156-baseline/`；`triton xcode` schema 缺少 `only-testing`，因此聚焦 iOS test 在保存缺口证据后回退 raw `xcodebuild`。
+- 已由 merge commit `c44273e5` 合入 `main`；线上 CI run `29797634616` 全绿后关闭 GitHub #156。
