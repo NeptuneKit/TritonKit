@@ -19,7 +19,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 执行 | [20260720-issue-155-ios-simulator-process-console](./20260720-issue-155-ios-simulator-process-console/README.md) | 为 iOS Simulator App stdout/stderr 增加 bounded、source-explicit 的 Triton host artifact 契约；不与 unified log 混淆 | 独立 worktree 按 BDD/TDD 实现、真实 Simulator 取证后合入并关闭 #155 |
+| 已归档 | [20260720-issue-155-ios-simulator-process-console](./20260720-issue-155-ios-simulator-process-console/README.md) | iOS Simulator App stdout/stderr 已成为 bounded、source-explicit 的 Triton host artifact 契约；与 unified log 明确分源 | 已合入 `main`、线上 CI 全绿并关闭 #155；随下一 patch release 发布 |
 | 已归档 | [20260720-issue-154-runtime-skill-command-hierarchy](./20260720-issue-154-runtime-skill-command-hierarchy/README.md) | Public skill 打包已由 CLI schema snapshot 阻断 retired root command；`tritonkit-runtime` provenance 边界已澄清 | 已合入 `main`；CI 全绿后关闭 #154，本期不发布 tag |
 | 已归档 | [20260720-issue-153-real-device-app-pull](./20260720-issue-153-real-device-app-pull/README.md) | 真机 data/app-group container 文件拉取已成为 schema-backed、受目录/字节/覆盖安全边界约束的 Triton artifact command | 已合入 `main`；CI 全绿后关闭 #153，真机锁屏 blocker 如实保留 |
 | 已归档 | [20260720-issue-152-real-device-launch-env](./20260720-issue-152-real-device-launch-env/README.md) | 真机 launch env 已改用 devicectl 显式 JSON flag，sourceCommand 按 argv index 脱敏 | 已合入 `main`；推送并等待 CI 后关闭 #152 |

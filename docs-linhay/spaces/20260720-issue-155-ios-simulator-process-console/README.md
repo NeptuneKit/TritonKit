@@ -1,6 +1,6 @@
 # GitHub Issue #155：iOS Simulator App Process Console Capture
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#155](https://github.com/NeptuneKit/TritonKit/issues/155)
 >
@@ -75,3 +75,4 @@
 - 真实 Simulator `0333546D-2AC6-4C22-AF01-293E2F4BA5BC` 通过 `triton xcode run` 构建、安装并启动 TestFixture。`sim app-console` 以 `TRITONKIT_PROCESS_CONSOLE_SENTINEL=issue-155-smoke` 捕获 791-byte artifact，同时包含 stdout/stderr sentinel，约 2.02 秒结束、未截断、env 值已脱敏；独立 `sim logs` artifact 返回 `sourcesCaptured=[unified-log]`，证明来源可区分。
 - 新 scratch 的 #155 聚焦与 schema/public-skill snapshot 测试全绿。完整 CLI suite 共 658 项，#155 所有新增断言通过；余下 28 个 issue 是既存 device-proxy/schema、暂停 testrec 与 Harmony timing fixture 基线，详见 `/private/tmp/triton-issue155-cli-tests.log`，不扩大本 issue 产品范围。
 - `TRITON_VERIFY_XCODE=0 docs-linhay/scripts/verify.sh --local` 全绿：根包测试、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、docs 与 whitespace 门禁通过；Xcode build 按已完成的真实 `triton xcode run` 证据显式跳过。
+- 实现以 merge commit `db25d202` 合入 `main`；GitHub Actions run `29757859096` 的 contracts、Swift tests、CLI release build、podspec 与聚合 Validate 全绿，#155 已按 completed 关闭。
