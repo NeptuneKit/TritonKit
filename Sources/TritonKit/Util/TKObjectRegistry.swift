@@ -13,7 +13,13 @@ public final class TKObjectRegistry {
     public func register(_ object: AnyObject) -> UInt {
         lock.lock(); defer { lock.unlock() }
         let id = ObjectIdentifier(object)
-        if let existing = objects[id] { return existing }
+        if let existing = objects[id] {
+            if reverse[existing]?.value != nil {
+                return existing
+            }
+            objects.removeValue(forKey: id)
+            reverse.removeValue(forKey: existing)
+        }
         let oid = nextOid
         nextOid += 1
         objects[id] = oid

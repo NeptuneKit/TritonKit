@@ -713,45 +713,64 @@ func performTableCellTap(
     }
 
     let matched = tapMatchedContext(request, fallback: matchedView)
-    let activationOID = oid(for: cell)
-    let activationClassName = NSStringFromClass(type(of: cell))
+    let originalActivationOID = oid(for: cell)
+    let originalActivationClassName = NSStringFromClass(type(of: cell))
     guard tableView.allowsSelection, cell.isUserInteractionEnabled else {
         return TKInputResult.failure(
             action: action,
             message: "UITableViewCell ancestor is not selectable",
-            targetOID: activationOID,
-            targetClassName: activationClassName,
+            targetOID: originalActivationOID,
+            targetClassName: originalActivationClassName,
             matchedOID: matched.oid,
             matchedClassName: matched.className,
-            activationOID: activationOID,
-            activationClassName: activationClassName,
+            activationOID: originalActivationOID,
+            activationClassName: originalActivationClassName,
             strategy: "ancestor-table-cell-selection-blocked"
         )
     }
-    if tableView.delegate?.responds(to: #selector(UITableViewDelegate.tableView(_:willSelectRowAt:))) == true,
-       tableView.delegate?.tableView?(tableView, willSelectRowAt: indexPath) == nil {
+
+    let selectedIndexPath: IndexPath
+    if tableView.delegate?.responds(to: #selector(UITableViewDelegate.tableView(_:willSelectRowAt:))) == true {
+        guard let redirectedIndexPath = tableView.delegate?.tableView?(tableView, willSelectRowAt: indexPath) else {
+            return TKInputResult.failure(
+                action: action,
+                message: "UITableViewCell ancestor selection was denied by delegate",
+                targetOID: originalActivationOID,
+                targetClassName: originalActivationClassName,
+                matchedOID: matched.oid,
+                matchedClassName: matched.className,
+                activationOID: originalActivationOID,
+                activationClassName: originalActivationClassName,
+                strategy: "ancestor-table-cell-selection-denied"
+            )
+        }
+        selectedIndexPath = redirectedIndexPath
+    } else {
+        selectedIndexPath = indexPath
+    }
+
+    let selectedCell = tableView.cellForRow(at: selectedIndexPath) ?? cell
+    let activationOID = oid(for: selectedCell)
+    let activationClassName = NSStringFromClass(type(of: selectedCell))
+    tableView.selectRow(at: selectedIndexPath, animated: false, scrollPosition: .none)
+    guard tableView.indexPathsForSelectedRows?.contains(selectedIndexPath) == true else {
         return TKInputResult.failure(
             action: action,
-            message: "UITableViewCell ancestor selection was denied by delegate",
+            message: "UITableViewCell ancestor selection state did not update",
             targetOID: activationOID,
             targetClassName: activationClassName,
             matchedOID: matched.oid,
             matchedClassName: matched.className,
             activationOID: activationOID,
             activationClassName: activationClassName,
-            strategy: "ancestor-table-cell-selection-denied"
+            strategy: "ancestor-table-cell-selection-failed"
         )
     }
-
-    DispatchQueue.main.async { [weak tableView] in
-        guard let tableView else { return }
-        tableView.selectRow(at: indexPath, animated: false, scrollPosition: .none)
-        tableView.delegate?.tableView?(tableView, didSelectRowAt: indexPath)
-    }
+    tableView.delegate?.tableView?(tableView, didSelectRowAt: selectedIndexPath)
 
     return TKInputResult.success(
         action: action,
-        message: "Submitted UITableViewCell ancestor selection",
+        message: "Selected UITableViewCell ancestor and invoked delegate callback",
         targetOID: activationOID,
         targetClassName: activationClassName,
         matchedOID: matched.oid,
