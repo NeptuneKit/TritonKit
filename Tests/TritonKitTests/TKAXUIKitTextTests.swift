@@ -6,7 +6,7 @@ import TritonKitShared
 import UIKit
 
 @MainActor
-@Suite
+@Suite(.serialized)
 struct TKAXUIKitTextTests {
     final class CustomEditorView: UIView, UIKeyInput {
         var insertedText = ""
@@ -33,21 +33,30 @@ struct TKAXUIKitTextTests {
 
     final class TableDataSource: NSObject, UITableViewDataSource {
         func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-            1
+            2
         }
 
         func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
             let cell = UITableViewCell(style: .default, reuseIdentifier: nil)
-            cell.textLabel?.text = "内科医生"
+            cell.textLabel?.text = indexPath.row == 0 ? "内科医生" : "外科医生"
             return cell
         }
     }
 
     final class TableDelegate: NSObject, UITableViewDelegate {
         var selectedIndexPath: IndexPath?
+        var didSelectCount = 0
+        var selectionTransform: ((IndexPath) -> IndexPath?)?
+        var deniesSelection = false
+
+        func tableView(_ tableView: UITableView, willSelectRowAt indexPath: IndexPath) -> IndexPath? {
+            if deniesSelection { return nil }
+            return selectionTransform?(indexPath) ?? indexPath
+        }
 
         func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
             selectedIndexPath = indexPath
+            didSelectCount += 1
         }
     }
 
@@ -131,7 +140,7 @@ struct TKAXUIKitTextTests {
 
         let editor = CustomEditorView(frame: CGRect(x: 40, y: 80, width: 260, height: 120))
         window.addSubview(editor)
-        TKObjectRegistry.shared.register(window)
+        _ = TKObjectRegistry.shared.register(window)
 
         let request = TKInputRequest.tap(x: 70, y: 135)
         let message = TKMessage(id: 1, type: .input, payload: try JSONEncoder().encode(request))
@@ -253,6 +262,122 @@ struct TKAXUIKitTextTests {
         #expect(result.targetOID == cellOID)
         #expect(result.activationClassName == NSStringFromClass(UITableViewCell.self))
         #expect(result.strategy == "ancestor-table-cell-selection")
+    }
+
+    @Test("table cell helper completes selection and delegate callback before success")
+    func tableCellHelperCompletesSelectionAndCallbackBeforeSuccess() throws {
+        let window = makeVisibleTestWindow()
+        defer { window.isHidden = true }
+        let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
+        let dataSource = TableDataSource()
+        let delegate = TableDelegate()
+        tableView.dataSource = dataSource
+        tableView.delegate = delegate
+        window.addSubview(tableView)
+        tableView.reloadData()
+        tableView.layoutIfNeeded()
+
+        let indexPath = IndexPath(row: 0, section: 0)
+        let cell = try #require(tableView.cellForRow(at: indexPath))
+        let label = try #require(cell.textLabel)
+        let result = try #require(performTableCellTap(
+            cell,
+            request: .tap(targetOID: TKObjectRegistry.shared.register(label)),
+            action: "tap",
+            matchedView: label
+        ))
+
+        #expect(result.ok)
+        #expect(tableView.indexPathForSelectedRow == indexPath)
+        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(delegate.didSelectCount == 1)
+        #expect(result.message == "Selected UITableViewCell ancestor and invoked delegate callback")
+    }
+
+    @Test("table cell helper honors willSelect redirect")
+    func tableCellHelperHonorsWillSelectRedirect() throws {
+        let window = makeVisibleTestWindow()
+        defer { window.isHidden = true }
+        let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
+        let dataSource = TableDataSource()
+        let delegate = TableDelegate()
+        let redirected = IndexPath(row: 1, section: 0)
+        delegate.selectionTransform = { _ in redirected }
+        tableView.dataSource = dataSource
+        tableView.delegate = delegate
+        window.addSubview(tableView)
+        tableView.reloadData()
+        tableView.layoutIfNeeded()
+
+        let original = IndexPath(row: 0, section: 0)
+        let cell = try #require(tableView.cellForRow(at: original))
+        let result = try #require(performTableCellTap(
+            cell,
+            request: .tap(targetOID: TKObjectRegistry.shared.register(cell)),
+            action: "tap",
+            matchedView: cell
+        ))
+
+        #expect(result.ok)
+        #expect(tableView.indexPathForSelectedRow == redirected)
+        #expect(delegate.selectedIndexPath == redirected)
+        #expect(delegate.didSelectCount == 1)
+    }
+
+    @Test("table cell helper reports willSelect denial without callback")
+    func tableCellHelperReportsWillSelectDenial() throws {
+        let window = makeVisibleTestWindow()
+        defer { window.isHidden = true }
+        let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
+        let dataSource = TableDataSource()
+        let delegate = TableDelegate()
+        delegate.deniesSelection = true
+        tableView.dataSource = dataSource
+        tableView.delegate = delegate
+        window.addSubview(tableView)
+        tableView.reloadData()
+        tableView.layoutIfNeeded()
+
+        let indexPath = IndexPath(row: 0, section: 0)
+        let cell = try #require(tableView.cellForRow(at: indexPath))
+        let result = try #require(performTableCellTap(
+            cell,
+            request: .tap(targetOID: TKObjectRegistry.shared.register(cell)),
+            action: "tap",
+            matchedView: cell
+        ))
+
+        #expect(!result.ok)
+        #expect(result.strategy == "ancestor-table-cell-selection-denied")
+        #expect(tableView.indexPathForSelectedRow == nil)
+        #expect(delegate.didSelectCount == 0)
+    }
+
+    @Test("coordinate table cell tap completes callback before returning")
+    func coordinateTableCellTapCompletesCallbackBeforeReturning() throws {
+        let window = makeVisibleTestWindow()
+        defer { window.isHidden = true }
+        let tableView = UITableView(frame: CGRect(x: 0, y: 80, width: 390, height: 240))
+        let dataSource = TableDataSource()
+        let delegate = TableDelegate()
+        tableView.dataSource = dataSource
+        tableView.delegate = delegate
+        window.addSubview(tableView)
+        tableView.reloadData()
+        tableView.layoutIfNeeded()
+        window.isHidden = false
+        _ = TKObjectRegistry.shared.register(window)
+
+        let indexPath = IndexPath(row: 0, section: 0)
+        let cell = try #require(tableView.cellForRow(at: indexPath))
+        let frame = cell.convert(cell.bounds, to: nil)
+        let result = performTap(.tap(x: Double(frame.midX), y: Double(frame.midY)))
+
+        #expect(result.ok)
+        #expect(result.strategy == "ancestor-table-cell-selection")
+        #expect(tableView.indexPathForSelectedRow == indexPath)
+        #expect(delegate.selectedIndexPath == indexPath)
+        #expect(delegate.didSelectCount == 1)
     }
 
     @Test("smart tap selects collection view cell ancestor for matched label nodes")

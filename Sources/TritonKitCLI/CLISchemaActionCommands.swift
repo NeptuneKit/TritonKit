@@ -249,7 +249,7 @@ func actionCommandSchemas() -> [TKCommandSchema] {
                 "triton tap --ax-label Save",
             ],
             successShape: "{ ok, action, message, targetOID, targetClassName, matchedOID?, matchedClassName?, activationOID?, activationClassName?, strategy? } or HostIOSTapOutput or HostAndroidTapOutput or HostHarmonyTapOutput",
-            outputSemantics: "Use tap after find when targets are ambiguous. Embedded iOS smart/ancestor activation can select UITableViewCell or UICollectionViewCell ancestors and reports strategy=ancestor-table-cell-selection or strategy=ancestor-collection-cell-selection. UIButton controls with menu and showsMenuAsPrimaryAction use the public iOS 17.4+ performPrimaryAction path and report strategy=button-primary-menu-action; verify a visible menu title or business postcondition before claiming completion. Follow successful taps with wait/assert and capture evidence on failure.",
+            outputSemantics: "Use tap after find when targets are ambiguous. Embedded iOS smart/ancestor activation synchronously selects UITableViewCell ancestors and invokes didSelectRowAt before returning strategy=ancestor-table-cell-selection; UICollectionViewCell ancestors report strategy=ancestor-collection-cell-selection. UIButton controls with menu and showsMenuAsPrimaryAction use the public iOS 17.4+ performPrimaryAction path and report strategy=button-primary-menu-action; verify a visible menu title or business postcondition before claiming completion. Follow successful taps with wait/assert and capture evidence on failure.",
             nextCommands: [
                 "triton status --json",
                 "triton wait --text <text> --json",

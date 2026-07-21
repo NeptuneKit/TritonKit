@@ -142,11 +142,13 @@ struct FixtureUIKitPanel: UIViewRepresentable {
     }
 }
 
-final class FixtureUIKitView: UIView {
+final class FixtureUIKitView: UIView, UITableViewDataSource, UITableViewDelegate {
     private let statusLabel = UILabel()
     private let titleLabel = UILabel()
     private let subtitleLabel = UILabel()
     private let stack = UIStackView()
+    private let selectionTableView = UITableView(frame: .zero, style: .plain)
+    private var selectionTableConstraints: [NSLayoutConstraint] = []
     private var screen: FixtureScreen = .login
 
     override init(frame: CGRect) {
@@ -192,6 +194,11 @@ final class FixtureUIKitView: UIView {
         subtitleLabel.numberOfLines = 0
         subtitleLabel.isAccessibilityElement = true
 
+        selectionTableView.dataSource = self
+        selectionTableView.delegate = self
+        selectionTableView.register(UITableViewCell.self, forCellReuseIdentifier: "fixture-row")
+        selectionTableView.accessibilityIdentifier = "fixture.home.selectionTable"
+
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: safeAreaLayoutGuide.leadingAnchor, constant: 24),
             stack.trailingAnchor.constraint(equalTo: safeAreaLayoutGuide.trailingAnchor, constant: -24),
@@ -201,6 +208,10 @@ final class FixtureUIKitView: UIView {
 
     private func reset(title: String, titleID: String, subtitle: String? = nil, subtitleID: String? = nil) {
         stack.arrangedSubviews.forEach { view in
+            if view === selectionTableView {
+                NSLayoutConstraint.deactivate(selectionTableConstraints)
+                selectionTableConstraints.removeAll()
+            }
             stack.removeArrangedSubview(view)
             view.removeFromSuperview()
         }
@@ -262,6 +273,39 @@ final class FixtureUIKitView: UIView {
         stack.addArrangedSubview(button)
     }
 
+    private func addTableSelectionFixture() {
+        stack.addArrangedSubview(selectionTableView)
+        if selectionTableConstraints.isEmpty {
+            selectionTableConstraints = [
+                selectionTableView.widthAnchor.constraint(equalTo: stack.widthAnchor),
+                selectionTableView.heightAnchor.constraint(equalToConstant: 64),
+            ]
+            NSLayoutConstraint.activate(selectionTableConstraints)
+        }
+        selectionTableView.reloadData()
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        1
+    }
+
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "fixture-row", for: indexPath)
+        cell.textLabel?.text = "Select Fixture Row"
+        cell.textLabel?.accessibilityIdentifier = "fixture.home.selectionRow.label"
+        cell.accessibilityIdentifier = "fixture.home.selectionRow"
+        return cell
+    }
+
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        subtitleLabel.text = "Fixture Table Selection Complete"
+        subtitleLabel.accessibilityLabel = "Fixture Table Selection Complete"
+        subtitleLabel.accessibilityIdentifier = "fixture.home.selection.complete"
+        if subtitleLabel.superview == nil {
+            stack.insertArrangedSubview(subtitleLabel, at: min(3, stack.arrangedSubviews.count))
+        }
+    }
+
     @objc private func showLogin() {
         screen = .login
         reset(
@@ -282,6 +326,7 @@ final class FixtureUIKitView: UIView {
         addButton("Open Error State", identifier: "fixture.home.openError", action: #selector(showError))
         addButton("Open Fixture Alert", identifier: "fixture.home.openAlert", action: #selector(showAlert))
         addPrimaryMenuButton()
+        addTableSelectionFixture()
         addButton("Back to Login", identifier: "fixture.home.backLogin", action: #selector(showLogin))
     }
 

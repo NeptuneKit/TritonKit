@@ -1,6 +1,6 @@
 # GitHub Issue #157：UITableViewCell Ancestor Selection Callback
 
-> 状态：执行
+> 状态：待集成
 >
 > GitHub：[NeptuneKit/TritonKit#157](https://github.com/NeptuneKit/TritonKit/issues/157)
 >
@@ -61,3 +61,14 @@
 ## 停止条件
 
 四个场景、自动化门禁、真实 Simulator 证据、文档/memory、main 集成与线上 CI 全部满足后关闭 #157。随后与 #156 一起进入下一 patch release，不移动 `v0.2.13`。
+
+## 实现与验收记录
+
+- `performTableCellTap` 已移除 `DispatchQueue.main.async`，同步执行 `willSelectRowAt → selectRow → selection state check → didSelectRowAt`；重定向使用实际 index path，拒绝返回 `ancestor-table-cell-selection-denied`。
+- 成功 message 改为 `Selected UITableViewCell ancestor and invoked delegate callback`；selection 未更新返回 `ancestor-table-cell-selection-failed`，不再用 `Submitted` 伪报已完成。
+- `TKObjectRegistry` 会在 ObjectIdentifier 对应弱引用已释放时清理 stale mapping，再为地址复用的新对象分配 OID，避免长生命周期 runtime 把新 window/view 解析为失效对象。
+- iOS focused tests 对同步 callback、willSelect redirect/deny、coordinate entry 共 4 项先红后绿；UIKit suite 串行化以隔离 key-window 竞争。
+- TestFixture 新增 `Select Fixture Row`；真实 Simulator 中 label/ancestor 与坐标 `(201,584)` 两条入口均返回 `ancestor-table-cell-selection` 与同步 callback message，随后 `verify text-exists "Fixture Table Selection Complete"` 返回 `ok=true,count=1`。
+- 根包 `swift test` 226 项通过；CLI `WebViewRouteTests` 18 项通过；TestFixture 由 `triton xcode run` 完成 build/install/launch。
+- 另用 `triton xcode test` 跑过全量 iOS suite：本次新增 4 项均通过；suite 仍保留 35 个既有失败（主要为 key-window/concurrency 与根 Package cwd 基线），结果保存在 `/private/tmp/triton-issue157-full.xcresult`，不把无关基线伪报为本次已修复。
+- Triton-first baseline 保存于 `/private/tmp/triton-issue-157-baseline/`；`triton xcode` schema 未暴露 `only-testing`，因此 focused iOS test 保存缺口证据后回退 raw `xcodebuild`。

@@ -679,6 +679,8 @@ triton act tap "hello" --within 180,0,220,500 --json
 
 On iOS 17.4 or newer, embedded `act tap` opens a `UIButton` configured only with `menu` and `showsMenuAsPrimaryAction=true` through public UIKit `performPrimaryAction()`. A successful result uses `strategy=button-primary-menu-action`; verify the visible menu title before treating the menu as open. Selecting the presented menu item is outside the safe public embedded-runtime boundary and returns one failed `TKInputResult` with `error.code=unsupported_capability` and `strategy=button-primary-menu-item-unsupported`; use a host HID adapter or an app-owned semantic DEBUG action when item selection itself must be automated.
 
+For an embedded iOS `UITableViewCell` match, smart/ancestor and coordinate taps synchronously honor `willSelectRowAt`, update the selected row, and invoke `didSelectRowAt` before returning `strategy=ancestor-table-cell-selection`. The success message is `Selected UITableViewCell ancestor and invoked delegate callback`; still verify the business postcondition because the delegate may start additional asynchronous work.
+
 For form-like flows, prefer embedded semantic commands over a fragile `tap` plus `type` chain:
 
 ```bash

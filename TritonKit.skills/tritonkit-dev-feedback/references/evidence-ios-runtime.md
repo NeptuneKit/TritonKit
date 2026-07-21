@@ -58,6 +58,8 @@ When `tap` or `verify` fails, preserve candidate count, nearest candidates / nea
 
 For a `UIButton` primary-action menu on iOS 17.4+, expect the button tap to return `strategy=button-primary-menu-action`, then prove that the menu opened with `triton verify text-exists "<menu-action-title>" --json`. Do not report a presented `UIAction` as selected through the embedded runtime: direct item selection has no safe public embedded API and returns one failed input result with `error.code=unsupported_capability` and `strategy=button-primary-menu-item-unsupported`. Use host HID or an app-owned semantic DEBUG action when selection is required.
 
+For an embedded `UITableViewCell` match, `strategy=ancestor-table-cell-selection` now means Triton honored `willSelectRowAt`, selected the resolved row, and invoked `didSelectRowAt` before returning. Preserve the success message and then verify the delegate's visible business postcondition; do not treat row selection state alone as proof when the delegate starts asynchronous work.
+
 ## WebView evidence
 
 ```bash
