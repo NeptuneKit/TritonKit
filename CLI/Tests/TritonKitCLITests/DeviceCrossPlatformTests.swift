@@ -3667,6 +3667,49 @@ struct DeviceCrossPlatformTests {
         }
     }
 
+    @Test("host device screenshot rejects ready iOS real devices before invoking simulator tools")
+    func hostDeviceScreenshotRejectsReadyIOSRealDevicesBeforeSimulatorTools() {
+        let target = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:abc123",
+            target: "ios-real:abc123",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "Fixture iPhone",
+            runtime: "iOS 26.5",
+            transport: "wired",
+            scope: "real",
+            kind: "real-device",
+            blockedReasons: [],
+            rawTarget: "COREDEVICE-IDENTIFIER"
+        )
+
+        do {
+            _ = try captureHostDeviceScreenshot(
+                platform: .ios,
+                target: target,
+                hdc: "hdc",
+                output: "/tmp/should-not-be-written.png"
+            )
+            Issue.record("Expected ready iOS real-device screenshot to be rejected")
+        } catch {
+            #expect(String(describing: error).contains("iOS real-device screenshot is not supported"))
+            #expect(!(error is HostCommandRunError))
+        }
+    }
+
+    @Test("iOS real-device doctor scope does not advertise screenshot support")
+    func iosRealDeviceDoctorScopeDoesNotAdvertiseScreenshotSupport() {
+        let realCapabilities = iosHostDeviceDoctorCapabilities(scope: .real)
+        let allCapabilities = iosHostDeviceDoctorCapabilities(scope: .all)
+
+        #expect(!realCapabilities.contains("device.screenshot"))
+        #expect(!realCapabilities.contains("ios.simulator-screenshot"))
+        #expect(allCapabilities.contains("device.screenshot"))
+        #expect(allCapabilities.contains("ios.simulator-screenshot"))
+    }
+
     @Test("host device selector resolves aliases before raw platform ids")
     func hostDeviceSelectorResolvesAliasesBeforeRawPlatformIDs() throws {
         let store = HostTargetAliasStore(

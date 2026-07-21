@@ -1004,8 +1004,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             outputFormats: ["file", "json-metadata"],
             options: hostPort + [
                 target,
-                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Capture host-side screenshot through iOS simctl, Android adb, or Harmony hdc"),
-                TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, sim:<udid>, harmony:<target>, raw id, booted, or current"),
+                TKCommandSchemaOption(name: "--platform", type: "ios|android|harmony", description: "Capture through iOS Simulator simctl, Android adb, or Harmony hdc; iOS real-device screenshot is unsupported"),
+                TKCommandSchemaOption(name: "--device", type: "String", description: "Unified host target selector: alias, sim:<udid>, ios-real:<id>, android:<serial>, harmony:<target>, raw id, booted, or current; an iOS real-device selector returns unsupported_scope before any host tool runs"),
                 TKCommandSchemaOption(name: "--name", type: "String", description: "Device name filter, for example iPhone 15"),
                 TKCommandSchemaOption(name: "--runtime", type: "String", description: "Runtime filter, for example iOS 26.5"),
                 TKCommandSchemaOption(name: "--state", type: "String", description: "Target state filter, for example booted or connected"),
@@ -1017,8 +1017,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
             ],
             examples: ["triton screenshot --output /tmp/triton.png --metadata", "triton screenshot --device iphone15 --output /tmp/sim.png --json", "triton screenshot --device harmony-a --output /tmp/smoke.jpeg --json"],
             successShape: "{ format, width, height, scale, output, bytes } when embedded runtime --metadata is used; HostDeviceArtifactOutput with bytes/width/height/sha256/capturedAt for --device/--platform",
-            failureShape: "{ ok:false, error:{ code: server_unavailable|target_unavailable|target_not_found|ambiguous_target|artifact_write_failed|host_command_failed|validation_failed, message, hint, nextAction? }, candidates?[] }",
-            outputSemantics: "Use screenshot as a visual artifact capture. Prefer --metadata/--json for machine-readable output and pair failures with evidence for audit.",
+            failureShape: "{ ok:false, error:{ code: unsupported_scope|server_unavailable|target_unavailable|target_not_found|ambiguous_target|artifact_write_failed|host_command_failed|validation_failed, message, hint, nextAction? }, candidates?[] }",
+            outputSemantics: "Use screenshot as a visual artifact capture. Host-side iOS capture supports Simulator scope only; an explicit ios-real selector is resolved and then rejected as unsupported_scope before simctl. Prefer --metadata/--json and pair failures with evidence for audit.",
             artifacts: ["screenshot"],
             nextCommands: [
                 "triton status --json",
@@ -1027,8 +1027,8 @@ func observationCommandSchemas() -> [TKCommandSchema] {
                 "triton verify text-exists <text> --json",
             ],
             outputContracts: [screenshotMetadataOutputContract(), hostArtifactOutputContract(), hostAndroidArtifactOutputContract(selector: "host.android-screenshot"), hostHarmonyArtifactOutputContract()],
-            failureCodes: ["server_unavailable", "target_unavailable", "target_not_found", "ambiguous_target", "artifact_write_failed", "host_command_failed", "validation_failed"],
-            providedCapabilities: ["screenshot", "host-device-screenshot", "ios-screenshot", "android-device-screenshot", "harmony-screenshot"]
+            failureCodes: ["unsupported_scope", "server_unavailable", "target_unavailable", "target_not_found", "ambiguous_target", "artifact_write_failed", "host_command_failed", "validation_failed"],
+            providedCapabilities: ["screenshot", "host-device-screenshot", "ios-screenshot", "ios-simulator-screenshot", "android-device-screenshot", "harmony-screenshot"]
         ),
     ]
 }

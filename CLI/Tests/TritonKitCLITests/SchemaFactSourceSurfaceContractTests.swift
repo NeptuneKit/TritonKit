@@ -249,6 +249,10 @@ extension SchemaFactSourceTests {
 
         #expect(screenshot.failureCodes.contains("server_unavailable"))
         #expect(screenshot.failureCodes.contains("artifact_write_failed"))
+        #expect(screenshot.failureCodes.contains("unsupported_scope"))
+        #expect(screenshot.options.first { $0.name == "--platform" }?.description.contains("iOS real-device screenshot is unsupported") == true)
+        #expect(screenshot.providedCapabilities.contains("ios-simulator-screenshot"))
+        #expect(screenshot.providedCapabilities.contains("ios-real-device-screenshot") == false)
         #expect(screenshot.artifacts.contains("screenshot"))
         #expect(screenshot.nextCommands.contains("triton evidence capture --case <case> --output <dir.tritonevidence> --json"))
         expectContract(screenshot, selector: "screenshot.metadata", fields: [

@@ -3,6 +3,20 @@ import TritonKitShared
 @testable import TritonKitCLI
 
 extension SchemaFactSourceTests {
+    @Test("iOS screenshot capabilities expose Simulator-only host scope")
+    func iosScreenshotCapabilitiesExposeSimulatorOnlyHostScope() throws {
+        let capabilities = connectedCapabilityMap()
+        let deviceScreenshot = try #require(capabilities["ios-device-screenshot"])
+        let simulatorScreenshot = try #require(capabilities["ios-simulator-screenshot"])
+        let realDeviceScreenshot = try #require(capabilities["ios-real-device-screenshot"])
+
+        #expect(deviceScreenshot.supported)
+        #expect(simulatorScreenshot.supported)
+        #expect(!realDeviceScreenshot.supported)
+        #expect(realDeviceScreenshot.reason == "iOS real-device screenshot is not supported by the current host adapter")
+        #expect(realDeviceScreenshot.nextAction?.command == "schema")
+    }
+
     @Test("capability reason and next-action keep stable recovery transitions")
     func capabilityReasonAndNextActionKeepStableRecoveryTransitions() throws {
         let requiresRuntime = "Requires connected embedded TritonKit runtime"
@@ -531,6 +545,7 @@ extension SchemaFactSourceTests {
             "host-device-screenshot": ["<path>"],
             "ios-screenshot": ["<path>"],
             "ios-device-screenshot": ["<path>"],
+            "ios-simulator-screenshot": ["<path>"],
             "android-device-screenshot": ["<path>"],
             "harmony-screenshot": ["<path>"],
             "harmony-device-screenshot": ["<path>"],

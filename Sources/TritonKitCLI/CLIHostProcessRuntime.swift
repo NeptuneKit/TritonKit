@@ -759,6 +759,16 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: "Use --device as the unified selector, or choose one explicit selector path (--simulator or --target), but do not combine them."
         )
+    case HostDeviceScreenshotError.unsupportedIOSRealDevice:
+        detail = TKCLIErrorDetail(
+            code: "unsupported_scope",
+            message: "\(error)",
+            hint: "Host capture supports iOS Simulator through simctl, but the current Xcode devicectl surface has no screenshot command. Use a connected embedded TritonKit runtime target when available, or record an external manual-capture fallback as evidence.",
+            nextAction: TKCLINextAction(
+                command: "schema",
+                args: ["--command", "screenshot", "--json"]
+            )
+        )
     case HostCommandRunError.deviceNotReady:
         detail = TKCLIErrorDetail(
             code: "device_not_ready",

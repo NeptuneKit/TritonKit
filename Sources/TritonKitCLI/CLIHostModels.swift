@@ -623,6 +623,17 @@ enum HostDeviceSelectionError: Error, CustomStringConvertible {
     }
 }
 
+enum HostDeviceScreenshotError: Error, Equatable, CustomStringConvertible {
+    case unsupportedIOSRealDevice
+
+    var description: String {
+        switch self {
+        case .unsupportedIOSRealDevice:
+            "iOS real-device screenshot is not supported by the current Triton host adapter."
+        }
+    }
+}
+
 struct HostRuntimeURLOutput: Encodable {
     let ok: Bool
     let platform: String

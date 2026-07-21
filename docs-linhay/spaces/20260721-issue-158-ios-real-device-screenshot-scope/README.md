@@ -52,3 +52,13 @@
 ## 停止条件
 
 三个场景、自动化门禁、机器可读证据、main 集成与线上 CI 全部满足后关闭 #158；确认线上 open issues 清零后发布下一 patch，不移动 `v0.2.13`。
+
+## 实现与验收记录
+
+- 当前 Xcode `devicectl device` 帮助面只有 copy/info/install/notification/orientation/process/reboot/sysdiagnose/uninstall，没有 screenshot/capture；因此本期选择明确 unsupported，而不是引入未验证第三方真机工具。
+- `captureHostDeviceScreenshot` 在 ready 检查后、输出路径与平台工具执行前识别 iOS `scope=real` / `kind=real-device`，抛出专用边界错误；JSON 映射为 `unsupported_scope`、Simulator-only hint 与 `schema --command screenshot --json` nextAction。
+- root `screenshot` 与 `device screenshot` help/schema 已声明 iOS host capture 只支持 Simulator；`device doctor --platform ios --scope real` 不再广告 `device.screenshot`，capabilities 分离 `ios-simulator-screenshot` 与 unsupported `ios-real-device-screenshot`。
+- 失败测试先证明 real selector 会落入 simctl `Invalid device`；实现后同 selector 返回 `unsupported_scope` 且 exit=1。真实 booted Simulator 同时返回 `ok=true` 并写出 PNG，证明原路径未回归。机器可读证据保存于 `/private/tmp/triton-issue-158-baseline/` 与 `/private/tmp/triton-issue-158-green/`。
+- release CLI 再验同样得到 real exit=1 / `unsupported_scope` / `nextAction.category=diagnose`，Simulator exit=0 且 PNG 非空；`ios-simulator-screenshot.supported=true`、`ios-real-device-screenshot.supported=false`。
+- `docs-linhay/scripts/verify.sh --local` 全绿：根包 226 项、CLI release build/smoke、Harmony host smoke、iOS runtime observe smoke、docs/diff gate 均通过；public skill bundle 打包验证通过。
+- 非标准 `/private/tmp` scratch 的 CLI 全量 662 项中，本次新增及受影响测试通过；整套仍有 43 个既有路径/schema/Harmony timing 基线 issue（其中多项因测试硬编码寻找 `CLI/.build` 下 binary），不把它们伪报为 #158 已修复。标准仓库门禁不依赖该非标准 scratch 布局。

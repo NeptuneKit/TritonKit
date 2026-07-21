@@ -656,11 +656,13 @@ extension SchemaFactSourceTests {
         let requiresWebViewProvider = "Requires WebView provider metadata from embedded runtime or --runtime-base-url"
         let harmonyClearBoundary = "Host-side Harmony clear is not available in the current adapter"
         let pressBoundary = "Host-side HID is not available in the embedded runtime"
+        let iosRealScreenshotBoundary = "iOS real-device screenshot is not supported by the current host adapter"
         let knownUnsupportedReasons = Set([
             requiresRuntime,
             requiresWebViewProvider,
             harmonyClearBoundary,
             pressBoundary,
+            iosRealScreenshotBoundary,
         ])
 
         var supportedWithReason: [String] = []
@@ -689,11 +691,13 @@ extension SchemaFactSourceTests {
                 }
 
                 if fixture.name == "runtime-connected" {
-                    if !["press", "harmony-clear-text"].contains(capability.name) {
+                    if !["press", "harmony-clear-text", "ios-real-device-screenshot"].contains(capability.name) {
                         connectedUnexpectedUnsupported.append("\(capability.name):\(reason)")
                     } else if capability.name == "press", reason != pressBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     } else if capability.name == "harmony-clear-text", reason != harmonyClearBoundary {
+                        connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
+                    } else if capability.name == "ios-real-device-screenshot", reason != iosRealScreenshotBoundary {
                         connectedBoundaryReasonMismatch.append("\(capability.name):\(reason)")
                     }
                 }
