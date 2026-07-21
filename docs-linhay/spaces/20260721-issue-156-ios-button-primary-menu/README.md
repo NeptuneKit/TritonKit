@@ -1,6 +1,6 @@
 # GitHub Issue #156：iOS UIButton Primary-Action Menu Activation
 
-> 状态：执行
+> 状态：待集成
 >
 > GitHub：[NeptuneKit/TritonKit#156](https://github.com/NeptuneKit/TritonKit/issues/156)
 >
@@ -61,3 +61,13 @@
 ## 停止条件
 
 四个场景、自动化门禁、真实 Simulator 证据、文档/memory 写回、main 集成与线上 CI 全部满足后关闭 #156。若需发布，创建 `v0.2.14` 或当时下一 patch，不移动 `v0.2.13`。
+
+## 实现与验收记录
+
+- embedded runtime 在 iOS 17.4+ 对 primary-action menu button 调用 public `performPrimaryAction()`，成功结果为 `button-primary-menu-action`；低版本返回 `button-primary-menu-action-unsupported`。
+- 可见菜单项标题若来自当前可见 primary menu 的 public `UIMenu` / `UIAction` 树，embedded 选择返回 `button-primary-menu-item-unsupported` 与 `unsupported_capability`，不依赖 UIKit 私有 class 名或 selector。
+- CLI 已修复“先输出 `TKInputResult`、再泛化输出 `request_failed`”的双 JSON 问题；运行时失败对象只输出一次并以非零退出。
+- TestFixture 的 `Open Fixture Menu` 通过 Triton 打开，返回 `ok=true`、`strategy=button-primary-menu-action`；`verify text-exists "Fixture Menu Action"` 返回 `ok=true,count=1`。
+- 再点击 `Fixture Menu Action` 返回退出码 1，stdout 经 `jq -s` 证明只有 1 个对象，且 `error.code=unsupported_capability`、`strategy=button-primary-menu-item-unsupported`。
+- iOS Simulator focused tests：primary menu、nested menu titles、普通 UIControl accessibility fallback 共 3 项通过；根包 `swift test` 226 项通过；CLI `InputOutputTests` 聚焦用例与 `WebViewRouteTests` 18 项通过。
+- Triton-first baseline 保存于 `/private/tmp/triton-issue-156-baseline/`；`triton xcode` schema 缺少 `only-testing`，因此聚焦 iOS test 在保存缺口证据后回退 raw `xcodebuild`。

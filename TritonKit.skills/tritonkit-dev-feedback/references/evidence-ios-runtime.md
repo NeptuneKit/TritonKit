@@ -56,6 +56,8 @@ triton verify text-not-exists "<text>" --json
 
 When `tap` or `verify` fails, preserve candidate count, nearest candidates / nearestText, error code, and `suggestedCommands[]`.
 
+For a `UIButton` primary-action menu on iOS 17.4+, expect the button tap to return `strategy=button-primary-menu-action`, then prove that the menu opened with `triton verify text-exists "<menu-action-title>" --json`. Do not report a presented `UIAction` as selected through the embedded runtime: direct item selection has no safe public embedded API and returns one failed input result with `error.code=unsupported_capability` and `strategy=button-primary-menu-item-unsupported`. Use host HID or an app-owned semantic DEBUG action when selection is required.
+
 ## WebView evidence
 
 ```bash

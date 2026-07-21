@@ -590,9 +590,20 @@ func runInputRequest(
     format: ClientOutputFormat
 ) async throws {
     let result = try await executeInputRequest(request, client: client)
+    try printInputResultAndRequireSuccess(result, format: format)
+}
+
+func printInputResultAndRequireSuccess(
+    _ result: TKInputResult,
+    format: ClientOutputFormat
+) throws {
     try printInputResult(result, format: format)
+    try requireInputResultSuccess(result)
+}
+
+func requireInputResultSuccess(_ result: TKInputResult) throws {
     if !result.ok {
-        throw RuntimeError(result.message ?? "Input request failed")
+        throw ExitCode.failure
     }
 }
 
