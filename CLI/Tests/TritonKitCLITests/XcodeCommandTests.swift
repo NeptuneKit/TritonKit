@@ -23,6 +23,76 @@ struct XcodeCommandTests {
         #expect(run.package == "/tmp/Demo/Package.swift")
     }
 
+    @Test("xcode workflow commands accept repeatable one-off build settings")
+    func xcodeWorkflowCommandsAcceptBuildSettings() throws {
+        let arguments = [
+            "--project", "App.xcodeproj",
+            "--scheme", "App",
+            "--build-setting", "CLANG_ENABLE_EXPLICIT_MODULES=NO",
+            "--build-setting", "OTHER_SWIFT_FLAGS=$(inherited) -D DEMO",
+            "--jsonl",
+        ]
+
+        let settings = try XcodeSettings.parse(arguments)
+        let build = try XcodeBuild.parse(arguments)
+        let test = try XcodeTest.parse(arguments)
+        let run = try XcodeRun.parse(arguments)
+
+        let expected = ["CLANG_ENABLE_EXPLICIT_MODULES=NO", "OTHER_SWIFT_FLAGS=$(inherited) -D DEMO"]
+        #expect(settings.buildSettings == expected)
+        #expect(build.buildSettings == expected)
+        #expect(test.buildSettings == expected)
+        #expect(run.buildSettings == expected)
+    }
+
+    @Test("xcode build setting validation preserves values and rejects malformed keys")
+    func xcodeBuildSettingValidation() throws {
+        let values = [
+            "CLANG_ENABLE_EXPLICIT_MODULES=NO",
+            "OTHER_SWIFT_FLAGS=$(inherited) -D DEMO",
+            "EMPTY=",
+        ]
+
+        #expect(try validateXcodeBuildSettings(values) == values)
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeBuildSettings(["NO_SEPARATOR"])
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeBuildSettings(["1INVALID=value"])
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeBuildSettings(["=value"])
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeBuildSettings(["BAD-KEY=value"])
+        }
+
+        let command = TKXcodebuildCommand.build(
+            workspace: nil,
+            project: "App.xcodeproj",
+            scheme: "App",
+            configuration: "Debug",
+            sdk: nil,
+            destination: nil,
+            derivedDataPath: nil,
+            buildSettings: values
+        )
+        #expect(hostSourceCommand(command).contains("CLANG_ENABLE_EXPLICIT_MODULES=NO"))
+        #expect(hostSourceCommand(command).contains("'OTHER_SWIFT_FLAGS=$(inherited) -D DEMO'"))
+    }
+
+    @Test("xcode schema exposes repeatable build setting on settings build test and run")
+    func xcodeSchemaExposesBuildSettings() throws {
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        let option = try #require(xcode.options.first { $0.name == "--build-setting" })
+        #expect(option.type == "KEY=VALUE[]")
+        #expect(xcode.examples.contains { $0.contains("--build-setting CLANG_ENABLE_EXPLICIT_MODULES=NO") })
+        for name in ["settings", "build", "test", "run"] {
+            let subcommand = try #require(xcode.subcommands.first { $0.name == name })
+            #expect(subcommand.optionalOptions.contains("--build-setting"))
+        }
+    }
+
     @Test("xcode package source command records working directory")
     func xcodePackageSourceCommandRecordsWorkingDirectory() {
         let command = TKXcodebuildCommand.build(

@@ -189,7 +189,8 @@ public enum TKXcodebuildCommand {
         configuration: String,
         sdk: String?,
         destination: String?,
-        derivedDataPath: String?
+        derivedDataPath: String?,
+        buildSettings: [String] = []
     ) -> TKHostCommand {
         TKHostCommand(
             executable: "xcodebuild",
@@ -200,7 +201,8 @@ public enum TKXcodebuildCommand {
                 configuration: configuration,
                 sdk: sdk,
                 destination: destination,
-                derivedDataPath: derivedDataPath
+                derivedDataPath: derivedDataPath,
+                buildSettings: buildSettings
             ) + ["-showBuildSettings", "-json"],
             workingDirectory: packageWorkingDirectory(package),
             defaultTimeoutSeconds: 300
@@ -216,6 +218,7 @@ public enum TKXcodebuildCommand {
         sdk: String?,
         destination: String?,
         derivedDataPath: String?,
+        buildSettings: [String] = [],
         allowProvisioningUpdates: Bool = false
     ) -> TKHostCommand {
         var arguments = buildArguments(
@@ -225,7 +228,8 @@ public enum TKXcodebuildCommand {
             configuration: configuration,
             sdk: sdk,
             destination: destination,
-            derivedDataPath: derivedDataPath
+            derivedDataPath: derivedDataPath,
+            buildSettings: buildSettings
         )
         if allowProvisioningUpdates {
             arguments.append("-allowProvisioningUpdates")
@@ -250,7 +254,8 @@ public enum TKXcodebuildCommand {
         sdk: String?,
         destination: String?,
         derivedDataPath: String?,
-        resultBundlePath: String?
+        resultBundlePath: String?,
+        buildSettings: [String] = []
     ) -> TKHostCommand {
         var arguments = buildArguments(
             workspace: workspace,
@@ -259,7 +264,8 @@ public enum TKXcodebuildCommand {
             configuration: configuration,
             sdk: sdk,
             destination: destination,
-            derivedDataPath: derivedDataPath
+            derivedDataPath: derivedDataPath,
+            buildSettings: buildSettings
         )
         if let resultBundlePath, !resultBundlePath.isEmpty {
             arguments += ["-resultBundlePath", resultBundlePath]
@@ -299,7 +305,8 @@ public enum TKXcodebuildCommand {
         configuration: String,
         sdk: String?,
         destination: String?,
-        derivedDataPath: String?
+        derivedDataPath: String?,
+        buildSettings: [String]
     ) -> [String] {
         var arguments = containerArguments(workspace: workspace, project: project)
         arguments += ["-scheme", scheme, "-configuration", configuration]
@@ -312,6 +319,7 @@ public enum TKXcodebuildCommand {
         if let derivedDataPath, !derivedDataPath.isEmpty {
             arguments += ["-derivedDataPath", derivedDataPath]
         }
+        arguments += buildSettings
         return arguments
     }
 }

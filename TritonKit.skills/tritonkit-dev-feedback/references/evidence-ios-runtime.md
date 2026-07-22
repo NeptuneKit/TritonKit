@@ -102,4 +102,6 @@ triton xcresult summary --path /tmp/<case>.xcresult --json
 triton xcresult failures --path /tmp/<case>.xcresult --json
 ```
 
+For temporary Xcode dependency diagnosis, `xcode settings/build/test/run` accepts repeatable `--build-setting KEY=VALUE`. Preserve the resulting `sourceCommand` as evidence that argument boundaries were retained; values are intentionally auditable, so do not use this option for secrets.
+
 If fallback is required, include the missing schema/capability evidence and the fallback command. State whether build/install/launch completed and whether runtime status/wait/assert/screenshot/evidence proved app readiness.

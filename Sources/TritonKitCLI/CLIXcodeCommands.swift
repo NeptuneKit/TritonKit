@@ -210,6 +210,7 @@ struct XcodeSettings: AsyncParsableCommand {
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
+    @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
@@ -229,7 +230,8 @@ struct XcodeSettings: AsyncParsableCommand {
                 destination: destination,
                 simulator: simulator,
                 device: device,
-                derivedDataPath: derivedDataPath
+                derivedDataPath: derivedDataPath,
+                buildSettings: buildSettings
             )
             let command = TKXcodebuildCommand.showBuildSettings(
                 workspace: resolved.workspace,
@@ -239,7 +241,8 @@ struct XcodeSettings: AsyncParsableCommand {
                 configuration: resolved.configuration,
                 sdk: resolved.sdk,
                 destination: resolved.destination,
-                derivedDataPath: resolved.derivedDataPath
+                derivedDataPath: resolved.derivedDataPath,
+                buildSettings: resolved.buildSettings
             ).withTimeout(timeout)
             let (result, _) = try runXcodeHostCommand(command, event: "xcode.settings", jsonl: jsonl)
             let product = try TKXcodeBuildSettingsParser.resolveBuiltApp(result.stdoutData)
@@ -278,6 +281,7 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
+    @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices") var allowProvisioningUpdates = false
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
@@ -297,7 +301,8 @@ struct XcodeBuild: AsyncParsableCommand {
                 destination: destination,
                 simulator: simulator,
                 device: device,
-                derivedDataPath: derivedDataPath
+                derivedDataPath: derivedDataPath,
+                buildSettings: buildSettings
             )
             let summary = try runXcodeBuild(
                 invocation: resolved,
@@ -330,6 +335,7 @@ struct XcodeTest: AsyncParsableCommand {
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
+    @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Result bundle output path") var resultBundle: String?
     @Option(help: "Timeout in seconds") var timeout: Double?
     @Flag(help: "Emit JSON Lines progress") var jsonl = false
@@ -349,7 +355,8 @@ struct XcodeTest: AsyncParsableCommand {
                 destination: destination,
                 simulator: simulator,
                 device: device,
-                derivedDataPath: derivedDataPath
+                derivedDataPath: derivedDataPath,
+                buildSettings: buildSettings
             )
             let summary = try runXcodeTest(invocation: resolved, resultBundlePath: resultBundle, jsonl: jsonl, timeout: timeout)
             try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
@@ -377,6 +384,7 @@ struct XcodeRun: AsyncParsableCommand {
     @Option(help: "Simulator UDID or name; synthesizes an id= or name= destination") var simulator: String?
     @Option(help: "Real-device selector used to build, install, and launch through devicectl") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
+    @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(name: .customLong("env"), help: "iOS app launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []
     @Option(name: .customLong("arg"), help: "Argument passed to the launched iOS app; repeat for multiple arguments") var launchArguments: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
@@ -397,7 +405,8 @@ struct XcodeRun: AsyncParsableCommand {
                 destination: destination,
                 simulator: simulator,
                 device: device,
-                derivedDataPath: derivedDataPath
+                derivedDataPath: derivedDataPath,
+                buildSettings: buildSettings
             )
             let summary = try runXcodeBuildInstallLaunch(
                 invocation: resolved,

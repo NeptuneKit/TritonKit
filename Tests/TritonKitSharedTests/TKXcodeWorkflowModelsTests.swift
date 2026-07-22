@@ -107,6 +107,49 @@ struct TKXcodeWorkflowModelsTests {
         ])
     }
 
+    @Test("xcodebuild command builders preserve one-off build setting argument boundaries")
+    func xcodebuildCommandBuildersPreserveBuildSettings() {
+        let buildSettings = [
+            "CLANG_ENABLE_EXPLICIT_MODULES=NO",
+            "OTHER_SWIFT_FLAGS=$(inherited) -D DEMO",
+        ]
+        let settings = TKXcodebuildCommand.showBuildSettings(
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData/App",
+            buildSettings: buildSettings
+        )
+        let build = TKXcodebuildCommand.build(
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData/App",
+            buildSettings: buildSettings
+        )
+        let test = TKXcodebuildCommand.test(
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData/App",
+            resultBundlePath: nil,
+            buildSettings: buildSettings
+        )
+
+        #expect(settings.argv.suffix(4) == buildSettings + ["-showBuildSettings", "-json"])
+        #expect(build.argv.suffix(3) == buildSettings + ["build"])
+        #expect(test.argv.suffix(3) == buildSettings + ["test"])
+    }
+
     @Test("xctrace and coverage command builders emit stable argv")
     func xctraceAndCoverageCommandBuilders() {
         let trace = TKXctraceCommand.record(

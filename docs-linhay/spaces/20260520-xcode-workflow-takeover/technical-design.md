@@ -298,8 +298,9 @@ process.exit
 1. 默认 DerivedData 必须 workspace-scoped，避免污染全局 DerivedData，也避免不同仓库互相覆盖。
 2. 用户显式指定 `--derived-data-path`、`--result-bundle`、`--output` 时以显式路径为准。
 3. `.app` path 优先从 `xcodebuild -showBuildSettings` 的 `BUILT_PRODUCTS_DIR + FULL_PRODUCT_NAME` 解析，不手猜 `Build/Products`。
-4. bundle id 通过 Info.plist 读取，失败时返回 `bundle_id_unresolved`。
-5. build/test/log/coverage artifact 后续必须能进入 `.tritonevidence`。
+4. `settings/build/test/run` 的一次性 build setting 统一建模为有序 `[String]`，CLI 在 host command 前验证 `KEY=VALUE` 与 key grammar，共享 command builder 只把每个已验证值追加为一个 argv 元素。禁止拼接 shell command；`sourceCommand` 通过统一 shell escaping 仅用于审计展示。
+5. bundle id 通过 Info.plist 读取，失败时返回 `bundle_id_unresolved`。
+6. build/test/log/coverage artifact 后续必须能进入 `.tritonevidence`。
 
 ## Parser Strategy
 

@@ -154,6 +154,14 @@
 - And 恢复命令至少包含 `triton xcode status --json` 与 `triton xcode wait-idle --workspace <workspace> --timeout 120 --json`
 - And 如果没有匹配活跃进程，summary 使用 `failureCode=xcodebuild_interrupted`，不能泛化成普通 `xcodebuild_failed`
 
+### 场景十一：一次性 build setting 保持 argv 边界
+
+- Given agent 需要临时覆盖第三方依赖的 Xcode build setting，且不能修改工程或生成目录
+- When 在 `xcode settings/build/test/run` 重复传入 `--build-setting KEY=VALUE`
+- Then 每个完整 setting 按输入顺序成为一个 `xcodebuild` argv 元素，并进入可审计 `sourceCommand`
+- And 包含空格、空 value 或 `$(inherited)` 的 value 保持原样
+- And 缺少 `=`、空 key 或非法 key 在启动 host command 前返回 `validation_failed`
+
 ## 分期
 
 ### 当前实现状态（2026-05-24）
@@ -190,6 +198,7 @@ P0 最小 `triton xcode` 入口已落地：
 9. `schema --command` 支持 `xcode run` 这类一层嵌套 selector，返回父命令 schema envelope 并把 `subcommands[]` 收窄到目标子命令；`xcode run --device` 的真机 selector 支持按 `device list` 返回的 `name` 精确匹配。
 10. Xcode destination 的显式选择优先级固定为 `--destination` > real-device selector > `--simulator` > workspace default destination；UUID / `sim:<uuid>` 使用 `id=`，设备名称使用 `name=`。显式 simulator 必须同时驱动 invocation summary 与 source command，不能被旧 workspace destination 覆盖。
 11. discovery 返回的 standalone `Package.swift` 已能通过 `xcode use/schemes/settings/build/test/run --package <Package.swift|dir>` 直接消费。package container 通过受审计 working directory 驱动 `xcodebuild`，不伪造 `-packagePath`；`schema --command xcode.build --json` 可直接发现收窄后的 build contract。
+12. `xcode settings/build/test/run` 支持可重复的 `--build-setting KEY=VALUE`。key 按 `[A-Za-z_][A-Za-z0-9_]*` 校验，value 不做 shell 解析，每个 setting 保持一个 argv 边界并写入 `sourceCommand`；该一次性参数不进入 workspace defaults，也不得承载 secret。
 
 ### P0：Xcode workflow 最小闭环
 
