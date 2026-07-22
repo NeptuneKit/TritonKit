@@ -124,6 +124,7 @@
    - install simulator builds: `triton app install --device iphone15 --app <path.app> --json`;
    - uninstall disposable simulator apps only with explicit policy: `triton app uninstall --device iphone15 --bundle-id <bundle-id> --confirm --json`;
    - launch apps: `triton app launch --device iphone15 --bundle-id <bundle-id> --json`;
+   - for a physical iOS device, pass the redacted `ios-real:*` selector directly to `app install`, `app info`, or `app launch`; `--platform ios --scope real` is optional because all three commands use the same live real-device discovery. If the device remains unavailable, preserve the stable lock/trust/Developer Mode/DDI readiness error rather than falling back to raw `devicectl` merely because an older launch path returned `target_not_found`;
    - terminate apps: `triton app terminate --device iphone15 --bundle-id <bundle-id> --json`;
    - submit app debug routes: `triton app open-url '<url>' --device iphone15 --json`; when a DEBUG embedded runtime is connected, prefer `triton app open-url '<url>' --device iphone15 --wait-ready --snapshot --json` to capture readiness and snapshot summary in the same result;
    - locate containers: `triton app container --device iphone15 --bundle-id <bundle-id> --kind data --json`;

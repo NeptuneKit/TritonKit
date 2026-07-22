@@ -53,3 +53,15 @@
 ## 停止条件
 
 三个场景、自动化验证、可用环境下的脱敏真机 smoke、main 集成与线上 CI 全部满足后评论并关闭 #162。
+
+## 实施记录
+
+- 根因是 `hostDeviceDiscoveryScope` 仅在 request 已显式携带 `platform=ios` 时把 selector discovery 扩为 `.all`。`app install/info` 会注入默认 iOS 平台，而 `app launch --device ios-real:*` 在未传 `--platform` 时保留 nil，导致 iOS discovery 只枚举 Simulator 并在 devicectl 前误报 `target_not_found`。
+- resolver 现在把无显式 platform 的 `ios-real:*` / `triton:ios-real:*` 识别为 iOS real-device selector，并进入与 install/info 相同的 live `.all` discovery；raw CoreDevice identity 只用于 host argv，公开 target 仍为 redacted stable selector。
+- devicectl non-zero handling 现在读取配套 `--json-output` artifact。CoreDevice error 1011 / “unable to locate a device” 稳定映射为 `target_offline`，同时返回 category=`prepare-target` 的 `triton device wait-ready --platform ios --scope real --device <selector> --json` next action；既有 lock/trust/Developer Mode/DDI mappings 保持不变。
+- 红灯：无 `--platform` 的 `HostDeviceSelectionRequest(device: "ios-real:abc123")` discovery scope 原为 nil；devicectl JSON 参数测试最初因 mapper 不支持 `jsonData` 编译失败。实现后 DeviceCrossPlatform 96 tests 与 AppOpenURLFlow 7 tests 通过。
+- Triton-first facts 已采集并脱敏：status/doctor/capabilities/schema/plan 均可读，schema 暴露 `ios-real-app` 和 app lifecycle failure codes；当前 real-device inventory 全部为 offline/DDI-missing。修复后的 platform-less `triton target resolve <ios-real:*> --json` 成功解析 real-device。
+- 真实 host user-entry smoke 使用不存在的测试 bundle id，确保不会启动业务 App：`triton app launch --device <ios-real-selector> --bundle-id dev.tritonkit.issue162.nonexistent --json` 已进入 devicectl，并返回 `target_offline` + structured `prepare-target` nextAction，而非 `target_not_found`。设备当前不可用，因此未宣称真实 App 启动成功；该结果覆盖不可用设备的 BDD 边界。
+- README、agent 控制文档、app schema 与两个 public skill reference 已同步。
+- nested CLI focused suites 已通过：`DeviceCrossPlatformTests` 96 tests、`AppOpenURLFlowTests` 7 tests。nested CLI 全量测试仍有 22 个既有环境/契约基线问题，其中 `SchemaFactSourceTests` 的 13 个失败已在未改动的 main 独立复现，另有 TestRecorder 对本机 target 状态的环境依赖；这些失败不由本 issue 引入，未纳入本次修复范围。
+- 完整本地门禁通过：`git diff --check`、`check-docs.sh`、SwiftPM boundary、iOS DEBUG isolation、Swift 227 tests / 27 suites、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build 均成功。main 集成和线上 CI 待收口。

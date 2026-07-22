@@ -536,6 +536,8 @@ triton test validate flow.tritontest.yaml --json
 triton workspace merge-map <run-id> --map-dir .triton/maps/com.example.app.tritonmap --confirm --json
 ```
 
+An explicit `ios-real:*` selector is sufficient for iOS real-device `app install`, `app info`, and `app launch`; `--platform ios --scope real` remains optional. All three commands run the same live real-device discovery before building the `devicectl` action, preserve the raw CoreDevice identity only inside the host command, and expose the redacted selector in public output. A device that remains offline, locked, untrusted, Developer Mode-disabled, or DDI-missing returns the corresponding actionable readiness code instead of a launch-only `target_not_found`.
+
 `sim logs` captures bounded unified logging only. Use `sim app-console` when a relaunched Simulator App's process `stdout` / `stderr` is required. The latter writes a sensitive, duration- and byte-bounded merged PTY artifact; JSON reports `sourcesCaptured=["process-stdout","process-stderr"]`, `streamLayout="merged-pty"`, byte/truncation metadata, and redacted source commands without inlining console content.
 
 `sim screenshot` captures the CoreSimulator framebuffer. Its JSON output includes `pixelWidth`, `pixelHeight`, `display.*`, `orientationPolicy=raw-framebuffer`, and `orientationNote`; use `--display internal|external|<screen-id>|<display-uuid>` when the default display selected by `simctl` is not the one you want. Triton does not rotate iPad framebuffer screenshots yet, so downstream evidence viewers should treat the orientation metadata as authoritative.
