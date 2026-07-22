@@ -1210,7 +1210,7 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
                 width: 1,
                 height: 1,
                 scale: 1,
-                dataBase64: Data("png".utf8).base64EncodedString()
+                dataBase64: Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00]).base64EncodedString()
             ))
         default:
             return (400, "text/plain", Data("unsupported request".utf8))

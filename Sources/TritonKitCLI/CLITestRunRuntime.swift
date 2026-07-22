@@ -1327,6 +1327,11 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
             let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
             let imageData = try await screenshotImageData(screenshot, client: runtime.client)
             let screenshotPath = "debug/\(step.id)-failure.png"
+            _ = try validateRuntimeScreenshotArtifact(
+                imageData,
+                declaredFormat: screenshot.format,
+                outputPath: screenshotPath
+            )
             let metadataPath = "debug/\(step.id)-failure-screenshot.json"
             try writeTestRunArtifact(imageData, relativePath: screenshotPath, evidenceDirectory: context.evidenceDirectory)
             try writeTestRunArtifact(
@@ -1356,6 +1361,11 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         let screenshotData = try await runtime.client.request(type: "screenshot")
         let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
         let imageData = try await screenshotImageData(screenshot, client: runtime.client)
+        _ = try validateRuntimeScreenshotArtifact(
+            imageData,
+            declaredFormat: screenshot.format,
+            outputPath: screenshotPath
+        )
         let accessibilityData = try await runtime.client.request(type: "accessibility")
         let nodes = try JSONDecoder().decode([TKAXNode].self, from: accessibilityData)
         let hierarchyData = try await runtime.client.latestHierarchyData()

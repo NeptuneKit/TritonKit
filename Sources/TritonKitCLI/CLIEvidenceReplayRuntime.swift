@@ -521,6 +521,11 @@ func executeReplayStep(
         let data = try await client.request(type: "screenshot")
         let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
         let imageData = try await screenshotImageData(screenshot, client: client)
+        _ = try validateRuntimeScreenshotArtifact(
+            imageData,
+            declaredFormat: screenshot.format,
+            outputPath: output
+        )
         let outputURL = URL(fileURLWithPath: output)
         try FileManager.default.createDirectory(
             at: outputURL.deletingLastPathComponent(),
