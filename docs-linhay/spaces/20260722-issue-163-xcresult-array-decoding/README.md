@@ -1,12 +1,12 @@
 # GitHub Issue #163：Xcode 26.6 xcresult Array Decoding
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#163](https://github.com/NeptuneKit/TritonKit/issues/163)
 >
-> Branch：`feat/20260722-issue-163-xcresult-array-decoding`
+> Branch：已合并并删除
 >
-> Worktree：`../TritonKit-worktrees/20260722-issue-163-xcresult-array-decoding/`
+> Worktree：已移除
 
 `docs-linhay/scripts/create-space.sh` 当前不存在，因此本 space 按固定模板直接建立并同步总索引。
 
@@ -64,4 +64,4 @@ Xcode 26.6 `xcresulttool get test-results summary` 把 `devicesAndConfigurations
 - README、agent 控制文档、Xcode takeover 技术设计、项目级 skill 与 public dev-feedback skill 已同步。
 - 完整本地门禁通过：`git diff --check`、`check-docs.sh`、SwiftPM boundary、iOS DEBUG isolation、Swift 230 tests / 27 suites、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build 均成功。release CLI 对同一真实 bundle 也返回 227 total / 226 passed / 1 failed 与 1 条 failure record。
 - nested CLI 全量执行 669 tests / 52 suites，其中 issue-focused `XcresultCommandTests` 4 tests 全过；全量仍有 23 个非本 issue 问题：13 个既有 schema fact-source 基线、9 个依赖本机 target 状态的 TestRecorder 基线，以及仅在全量序列中出现的 streaming `/bin/pwd` 30 秒超时。前 22 个已在 main 基线复现；streaming 测试单独重跑 0.076 秒通过，判定为测试隔离/时序瞬态，不由 xcresult decoder 改动引入。
-- main 集成和线上 CI 待收口。
+- feature commit `f07bed6e` 已由 merge commit `938f9640` 合入 `main`；GitHub Actions CI `29929843919` 全部通过，验证评论已发布并关闭 #163。
