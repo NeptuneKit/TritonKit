@@ -268,9 +268,12 @@ private func explicitHostDeviceMatch(selector: String, candidates: [HostDeviceTa
 }
 
 func hostDeviceDiscoveryScope(for request: HostDeviceSelectionRequest) -> HostDeviceScope? {
-    guard request.scope == nil, request.platform == .ios, let selector = request.device, !selector.isEmpty else {
+    guard request.scope == nil, let selector = request.device, !selector.isEmpty else {
         return request.scope
     }
+    let explicitlyIOS = request.platform == .ios
+        || (request.platform == nil && (selector.hasPrefix("ios-real:") || selector.hasPrefix("triton:ios-real:")))
+    guard explicitlyIOS else { return request.scope }
     if selector == "booted" {
         return .simulator
     }

@@ -2980,6 +2980,9 @@ struct DeviceCrossPlatformTests {
         #expect(app.examples.contains("triton app uninstall --platform harmony --target 127.0.0.1:10100 --bundle-id com.example.app --confirm --json"))
         #expect(app.examples.contains("triton app uninstall --platform harmony --device harmony-a --bundle com.example.app --confirm --json"))
         #expect(app.examples.contains("triton app info --device <ios-real-target> --platform ios --scope real --bundle-id com.example.app --json"))
+        #expect(app.examples.contains("triton app launch --device <ios-real-target> --bundle-id com.example.app --json"))
+        #expect(app.outputSemantics?.contains("ios-real:*") == true)
+        #expect(app.outputSemantics?.contains("live real-device discovery") == true)
         #expect(app.examples.contains("triton app list --device <android-real-target> --platform android --scope real --user-only --json"))
         #expect(app.examples.contains("triton app terminate --device <harmony-real-target> --platform harmony --scope real --bundle com.example.app --json"))
         #expect(app.examples.contains(#"triton app go "example://debug""#))
@@ -3383,11 +3386,84 @@ struct DeviceCrossPlatformTests {
     @Test("explicit iOS host selectors discover real devices without requiring scope real")
     func explicitIOSHostSelectorsDiscoverRealDevicesWithoutRequiringScopeReal() {
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "ios-real:abc123", platform: .ios)) == .all)
+        #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "ios-real:abc123")) == .all)
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "COREDEVICE-IDENTIFIER", platform: .ios)) == .all)
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "IOS-DEVICE-UDID", platform: .ios)) == .all)
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "booted", platform: .ios)) == .simulator)
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(platform: .ios)) == nil)
         #expect(hostDeviceDiscoveryScope(for: HostDeviceSelectionRequest(device: "android-real:abc123", platform: .android)) == nil)
+
+        let ddiFailure = iosDevicectlErrorMapping(stderr: "Developer Disk Image (DDI) is unavailable")
+        #expect(ddiFailure.code == "ddi_missing")
+        #expect(ddiFailure.hint.contains("retry"))
+
+        let offlineJSON = Data(#"{"error":{"code":1011,"domain":"com.apple.dt.CoreDeviceError","userInfo":{"NSLocalizedDescription":{"string":"CoreDevice was unable to locate a device matching the requested device identifier."}}}}"#.utf8)
+        let offlineFailure = iosDevicectlErrorMapping(stderr: "", jsonData: offlineJSON)
+        #expect(offlineFailure.code == "target_offline")
+        #expect(offlineFailure.hint.contains("device wait-ready"))
+    }
+
+    @Test("iOS real selector keeps launch identity across offline and ready live inventories")
+    func iosRealSelectorKeepsLaunchIdentityAcrossLiveInventories() throws {
+        let request = HostDeviceSelectionRequest(device: "ios-real:abc123")
+        let offline = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:abc123",
+            target: "ios-real:abc123",
+            state: "unavailable",
+            ready: false,
+            source: "devicectl",
+            name: "Test iPhone",
+            runtime: "iOS 26.5",
+            transport: "usb",
+            scope: "real",
+            kind: "real-device",
+            blockedReasons: ["ddi-missing"],
+            rawTarget: "COREDEVICE-IDENTIFIER"
+        )
+        let ready = HostDeviceTarget(
+            platform: "ios",
+            id: offline.id,
+            target: offline.target,
+            state: "connected",
+            ready: true,
+            source: offline.source,
+            name: offline.name,
+            runtime: offline.runtime,
+            transport: offline.transport,
+            scope: offline.scope,
+            kind: offline.kind,
+            blockedReasons: [],
+            rawTarget: offline.rawTarget
+        )
+
+        let initial = try resolveHostDeviceSelection(
+            request: request,
+            candidates: [.ios: [offline]],
+            aliases: .empty
+        )
+        let live = try resolveHostDeviceSelection(
+            request: request,
+            candidates: [.ios: [ready]],
+            aliases: .empty
+        )
+        let launch = try planHostAppLaunch(
+            selection: live,
+            bundleID: "com.example.demo",
+            packageName: nil,
+            activity: nil,
+            bundle: nil,
+            ability: nil,
+            payloadURL: nil,
+            adb: "adb",
+            hdc: "hdc",
+            devicectlArtifacts: ("/tmp/launch.json", "/tmp/launch.log")
+        )
+
+        #expect(initial.target.rawTarget == live.target.rawTarget)
+        #expect(launch.command.argv.contains("COREDEVICE-IDENTIFIER"))
+        #expect(launch.command.argv.contains("ios-real:abc123") == false)
+        #expect(launch.target == "ios-real:abc123/app:com.example.demo")
     }
 
     @Test("host device target mapping carries Harmony foreground app identity")

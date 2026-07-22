@@ -544,8 +544,9 @@ func simulatorNotBootedErrorDetail(target: String, message: String) -> TKCLIErro
     )
 }
 
-func iosDevicectlErrorMapping(stderr: String) -> (code: String, hint: String) {
-    let lowercased = stderr.lowercased()
+func iosDevicectlErrorMapping(stderr: String, jsonData: Data? = nil) -> (code: String, hint: String) {
+    let jsonText = jsonData.flatMap { String(data: $0, encoding: .utf8) } ?? ""
+    let lowercased = [stderr, jsonText].joined(separator: "\n").lowercased()
     if lowercased.contains("unable to find utility") || lowercased.contains("devicectl") && lowercased.contains("not found") {
         return (
             "devicectl_not_found",
@@ -570,6 +571,13 @@ func iosDevicectlErrorMapping(stderr: String) -> (code: String, hint: String) {
             "Unlock the selected iOS device and keep it awake while waiting for readiness."
         )
     }
+    if lowercased.contains("unable to locate a device matching the requested device identifier")
+        || (lowercased.contains("com.apple.dt.coredeviceerror") && lowercased.contains("\"code\":1011")) {
+        return (
+            "target_offline",
+            "Run `triton device wait-ready --platform ios --scope real --device <selector> --json`; reconnect the selected device if live discovery still reports it offline."
+        )
+    }
     if lowercased.contains("developer disk image") || lowercased.contains("ddi") {
         return (
             "ddi_missing",
@@ -582,8 +590,8 @@ func iosDevicectlErrorMapping(stderr: String) -> (code: String, hint: String) {
     )
 }
 
-func iosDevicectlPullErrorMapping(stderr: String) -> (code: String, hint: String) {
-    let baseline = iosDevicectlErrorMapping(stderr: stderr)
+func iosDevicectlPullErrorMapping(stderr: String, jsonData: Data? = nil) -> (code: String, hint: String) {
+    let baseline = iosDevicectlErrorMapping(stderr: stderr, jsonData: jsonData)
     if baseline.code != "host_action_failed" {
         return baseline
     }
@@ -612,6 +620,13 @@ func iosDevicectlPullErrorMapping(stderr: String) -> (code: String, hint: String
         "app_pull_failed",
         "Inspect the devicectl JSON/log artifacts and verify the target, domain identifier, source path, device lock state, and host destination."
     )
+}
+
+private func devicectlJSONOutputData(command: TKHostCommand) -> Data? {
+    guard let optionIndex = command.arguments.firstIndex(of: "--json-output") else { return nil }
+    let pathIndex = command.arguments.index(after: optionIndex)
+    guard pathIndex < command.arguments.endIndex else { return nil }
+    return try? Data(contentsOf: URL(fileURLWithPath: command.arguments[pathIndex]))
 }
 
 func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws -> Never {
@@ -919,9 +934,10 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             hint = "Verify the .xcresult contains coverage data and that --target or --file matches the coverage report."
         } else if command.arguments.first == "devicectl" {
             let isPull = command.arguments.starts(with: ["devicectl", "device", "copy", "from"])
+            let jsonData = devicectlJSONOutputData(command: command)
             let mapping = isPull
-                ? iosDevicectlPullErrorMapping(stderr: [result.stderr, result.stdout].joined(separator: "\n"))
-                : iosDevicectlErrorMapping(stderr: result.stderr)
+                ? iosDevicectlPullErrorMapping(stderr: [result.stderr, result.stdout].joined(separator: "\n"), jsonData: jsonData)
+                : iosDevicectlErrorMapping(stderr: result.stderr, jsonData: jsonData)
             code = mapping.code
             hint = mapping.hint
         } else if isHDC && command.arguments.contains("list") && command.arguments.contains("targets") {
@@ -1050,7 +1066,14 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: command.arguments.contains("--console-pty")
                 ? "\(error)\nsourceCommand: \(hostSourceCommand(command))"
                 : "\(error)",
-            hint: hint
+            hint: hint,
+            nextAction: code == "target_offline"
+                ? TKCLINextAction(
+                    command: "device",
+                    args: ["wait-ready", "--platform", "ios", "--scope", "real", "--device", "<selector>", "--json"],
+                    category: "prepare-target"
+                )
+                : nil
         )
     default:
         detail = TKCLIErrorDetail(
