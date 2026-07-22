@@ -590,6 +590,8 @@ If `triton xcode build/test/run` returns `xcodebuild_interrupted` or `orphaned_x
 
 `xcresult summary/failures` redact private paths, emails, bearer tokens, password/token/API-key fragments, and long token-like strings by default across JSON and text output, including `path` and `sourceCommand`. Use `--include-sensitive` only for local private debugging, not for public issues.
 
+The xcresult compatibility layer accepts both the legacy singleton and Xcode 26.6 array forms of summary `devicesAndConfigurations` / `testFailures`. It also recognizes Xcode 26.6 failed `Test Case` nodes whose failure messages are direct children, while preserving the existing Triton summary and failure-record output shapes.
+
 `xcode run` proves build, install, and launch were submitted. It does not prove business readiness; continue with `triton status`, `triton wait`, `triton verify`, screenshot, or evidence.
 
 For iOS launch environment, repeat `--env KEY=VALUE`. Simulator launch maps values to `SIMCTL_CHILD_*`; physical-device launch sends a `devicectl --environment-variables` JSON dictionary. Machine-readable `sourceCommand` keeps the flag visible but redacts the whole JSON value.

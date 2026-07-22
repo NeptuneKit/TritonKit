@@ -12,7 +12,7 @@
 
 ## 背景
 
-Xcode 26.6 `xcresulttool get test-results tests` 把 `devicesAndConfigurations` 输出为 array，而当前 decoder 只接受 dictionary，导致有效 `.xcresult` 被映射为 `xcresult_parse_failed`。
+Xcode 26.6 `xcresulttool get test-results summary` 把 `devicesAndConfigurations` 输出为 array，而当前 decoder 只接受 dictionary，导致有效 `.xcresult` 被映射为 `xcresult_parse_failed`；`xcresult failures` 会先解析 summary，因此也被同一错误阻断。
 
 ## 范围
 
@@ -25,7 +25,7 @@ Xcode 26.6 `xcresulttool get test-results tests` 把 `devicesAndConfigurations` 
 
 ### 场景 1：Xcode 26.6 array 可解码
 
-- Given `devicesAndConfigurations` 为 array 的 test-results JSON
+- Given `devicesAndConfigurations` 为 array 的 test-results summary JSON
 - When 解析 summary/failures
 - Then 返回正常计数与失败列表
 - And 不返回 `xcresult_parse_failed`
@@ -53,3 +53,15 @@ Xcode 26.6 `xcresulttool get test-results tests` 把 `devicesAndConfigurations` 
 ## 停止条件
 
 三个场景、自动化验证、main 集成与线上 CI 全部满足后评论并关闭 #163。
+
+## 实施记录
+
+- Triton-first facts 已采集：0.2.14 的 status/doctor/capabilities 正常，`xcode` / `xcresult` schema 暴露测试和 result reader 契约；`triton plan xcresult --json` 返回 `validation_failed`，证明该 plan action 尚未覆盖，后续仅以脱敏 shape 查询回退到原生 `xcresulttool`。
+- 使用 `triton xcode test --package Package.swift --scheme TritonKit-Package --destination platform=macOS --result-bundle ... --jsonl` 生成本机 Xcode 26.6 bundle，真实复现 summary 在 `devicesAndConfigurations` array 上 type mismatch。首层修复后又确认 `testFailures` 同为 array；两者已收敛为受类型约束的 single-or-array decoder，公开 summary DTO 保持既有单值形状。
+- 同一个真实 bundle 的 tests tree 不再包含 `Test Case Run`，失败诊断直接挂在 failed `Test Case` 下。parser 现在兼容历史 nested run 与 Xcode 26.6 flattened case，并避免在同时存在 run child 时重复生成 failure record。
+- 红灯分别确认 array summary type mismatch、`testFailures` type mismatch 与 flattened failed case 返回 0 records。实现后 `TKXcodeWorkflowModelsTests` 19 tests、`XcresultCommandTests` 4 tests 通过。
+- 修复后的 debug CLI 对真实 bundle 返回 `ok:true`、227 total / 226 passed / 1 failed，并输出 1 条结构化 failure record；输出仅检查脱敏计数、类型和测试标识，未提交或公开原始 `.xcresult`。
+- README、agent 控制文档、Xcode takeover 技术设计、项目级 skill 与 public dev-feedback skill 已同步。
+- 完整本地门禁通过：`git diff --check`、`check-docs.sh`、SwiftPM boundary、iOS DEBUG isolation、Swift 230 tests / 27 suites、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build 均成功。release CLI 对同一真实 bundle 也返回 227 total / 226 passed / 1 failed 与 1 条 failure record。
+- nested CLI 全量执行 669 tests / 52 suites，其中 issue-focused `XcresultCommandTests` 4 tests 全过；全量仍有 23 个非本 issue 问题：13 个既有 schema fact-source 基线、9 个依赖本机 target 状态的 TestRecorder 基线，以及仅在全量序列中出现的 streaming `/bin/pwd` 30 秒超时。前 22 个已在 main 基线复现；streaming 测试单独重跑 0.076 秒通过，判定为测试隔离/时序瞬态，不由 xcresult decoder 改动引入。
+- main 集成和线上 CI 待收口。

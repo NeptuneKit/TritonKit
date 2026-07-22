@@ -104,6 +104,8 @@ triton xcresult summary --path /tmp/<case>.xcresult --json
 triton xcresult failures --path /tmp/<case>.xcresult --json
 ```
 
+On Xcode 26.6, summary fields such as `devicesAndConfigurations` and `testFailures` can be arrays, and failed tests can appear as flattened `Test Case` nodes with direct failure-message children. Current Triton normalizes these forms to the existing summary and failure-record contract. When reporting a compatibility regression, keep only a sanitized compact shape summary and Triton error code; do not attach the raw `.xcresult`.
+
 For temporary Xcode dependency diagnosis, `xcode settings/build/test/run` accepts repeatable `--build-setting KEY=VALUE`. Preserve the resulting `sourceCommand` as evidence that argument boundaries were retained; values are intentionally auditable, so do not use this option for secrets.
 
 If fallback is required, include the missing schema/capability evidence and the fallback command. State whether build/install/launch completed and whether runtime status/wait/assert/screenshot/evidence proved app readiness.

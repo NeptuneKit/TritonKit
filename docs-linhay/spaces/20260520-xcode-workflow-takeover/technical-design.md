@@ -307,8 +307,8 @@ process.exit
 `xcodebuild` 输出不稳定，P0 parser 采用 best-effort 策略：
 
 1. stdout/stderr streaming parser 只提取 progress、warning、error、test case、test summary 和 xcresult path。
-2. final test counts 首选 `xcrun xcresulttool get test-results summary --path <xcresult>`。
-3. test failures 首选 `xcrun xcresulttool get test-results tests --path <xcresult>`。
+2. final test counts 首选 `xcrun xcresulttool get test-results summary --path <xcresult>`；decoder 必须兼容历史 singleton 与 Xcode 26.6 array 形态的 `devicesAndConfigurations` / `testFailures`。
+3. test failures 首选 `xcrun xcresulttool get test-results tests --path <xcresult>`；同时识别历史 `Test Case Run` 与 Xcode 26.6 failed `Test Case` + direct `Failure Message` 扁平树，避免 summary 有失败但 failure list 为空。
 4. coverage 首选 `xcrun xccov view --report --json <xcresult>` 与 `--functions-for-file`。
 5. 解析失败时保留 raw log artifact，并返回 diagnostics，不吞掉原始错误。
 

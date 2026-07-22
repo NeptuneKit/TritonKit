@@ -416,6 +416,39 @@ struct TKXcodeWorkflowModelsTests {
         #expect(summary.testFailure?.testIdentifierString == "42")
     }
 
+    @Test("xcresult summary parser accepts Xcode 26.6 device configuration arrays")
+    func xcresultSummaryParserAcceptsDeviceConfigurationArrays() throws {
+        let json = #"{"title":"AppTests","startTime":10,"finishTime":12.5,"environmentDescription":"macOS 26.4","topInsights":[],"result":"Failed","totalTestCount":3,"passedTests":2,"failedTests":1,"skippedTests":0,"expectedFailures":0,"statistics":[],"devicesAndConfigurations":[{"device":{"deviceId":"DEVICE-1","deviceName":"Test Mac","architecture":"arm64","modelName":"Mac","platform":"macOS","osVersion":"26.4","osBuildNumber":"25E"},"testPlanConfiguration":{"configurationId":"cfg-1","configurationName":"Test Scheme Action"},"passedTests":2,"failedTests":1,"skippedTests":0,"expectedFailures":0}],"testFailures":[{"testName":"AppTests/testFailure()","targetName":"AppTests","failureText":"Expected true","testIdentifierString":"case-1"}]}"#
+
+        let summary = try TKXcresultSummaryParser.parse(Data(json.utf8))
+
+        #expect(summary.failedTests == 1)
+        #expect(summary.devicesAndConfigurations?.device.deviceName == "Test Mac")
+        #expect(summary.devicesAndConfigurations?.testPlanConfiguration.configurationName == "Test Scheme Action")
+        #expect(summary.testFailure?.testIdentifierString == "case-1")
+
+        let encoded = try JSONSerialization.jsonObject(with: JSONEncoder().encode(summary)) as? [String: Any]
+        #expect(encoded?["devicesAndConfigurations"] is [String: Any])
+    }
+
+    @Test("xcresult summary parser rejects invalid device configuration shapes")
+    func xcresultSummaryParserRejectsInvalidDeviceConfigurationShapes() {
+        let invalidValues = [
+            #"42"#,
+            #"[{"device":{"deviceId":"DEVICE-1"}}]"#,
+        ]
+
+        for invalidValue in invalidValues {
+            let json = #"{"title":"AppTests","environmentDescription":"macOS 26.4","topInsights":[],"result":"Failed","totalTestCount":1,"passedTests":0,"failedTests":1,"skippedTests":0,"expectedFailures":0,"statistics":[],"devicesAndConfigurations":\#(invalidValue)}"#
+            do {
+                _ = try TKXcresultSummaryParser.parse(Data(json.utf8))
+                Issue.record("Expected invalid devicesAndConfigurations shape to fail: \(invalidValue)")
+            } catch {
+                #expect(error is DecodingError)
+            }
+        }
+    }
+
     @Test("xcresult redaction removes private paths emails and token-like values")
     func xcresultRedactionRemovesSensitiveStrings() {
         let summary = TKXcresultSummaryMetrics(
@@ -557,6 +590,19 @@ struct TKXcodeWorkflowModelsTests {
         #expect(failures.first?.location == "Tests/AppTests.swift:42")
         #expect(failures.first?.attachmentNames == ["Screenshot"])
         #expect(failures.first?.message.contains("XCTAssertEqual failed") == true)
+    }
+
+    @Test("xcresult tests parser accepts Xcode 26.6 flattened failed test cases")
+    func xcresultTestsParserAcceptsFlattenedFailedTestCases() throws {
+        let json = #"{"testPlanConfigurations":[],"devices":[],"testNodes":[{"nodeType":"Test Plan","name":"Test Plan","result":"Failed","children":[{"nodeType":"Unit test bundle","name":"AppTests","result":"Failed","children":[{"nodeType":"Test Suite","name":"AppTests","result":"Failed","children":[{"nodeIdentifier":"case-1","nodeIdentifierURL":"xcresult://case/1","nodeType":"Test Case","name":"testLogin()","result":"Failed","children":[{"nodeType":"Failure Message","name":"XCTAssertEqual failed: 1 is not equal to 2"}]}]}]}]}]}"#
+
+        let failures = try TKXcresultTestsParser.parseFailures(Data(json.utf8))
+
+        #expect(failures.count == 1)
+        #expect(failures.first?.testName == "testLogin()")
+        #expect(failures.first?.targetName == "AppTests")
+        #expect(failures.first?.message == "XCTAssertEqual failed: 1 is not equal to 2")
+        #expect(failures.first?.testIdentifierString == "case-1")
     }
 
     @Test("xcresult tests parser tolerates nodes without identifiers")

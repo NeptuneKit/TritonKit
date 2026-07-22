@@ -49,6 +49,25 @@ struct XcresultCommandTests {
         }
     }
 
+    @Test("xcresult failures accepts Xcode 26.6 summary device arrays")
+    func failuresOutputAcceptsXcode266SummaryDeviceArrays() throws {
+        let summary = hostProcessResult(stdout: validArraySummaryJSON)
+        let tests = hostProcessResult(stdout: validTestsJSON)
+
+        let output = try makeHostXcresultFailuresOutput(
+            path: "/tmp/App.xcresult",
+            includeSensitive: false,
+            summaryResult: summary,
+            testsResult: tests
+        )
+
+        #expect(output.ok)
+        #expect(output.action == "xcresult.failures")
+        #expect(output.summary.devicesAndConfigurations?.device.deviceName == "Test Mac")
+        #expect(output.summary.testFailure?.testIdentifierString == "case-1")
+        #expect(output.failures.map(\.testName) == ["testLogin()"])
+    }
+
     private func hostProcessResult(stdout: String) -> HostProcessResult {
         let stdoutData = Data(stdout.utf8)
         return HostProcessResult(
@@ -82,6 +101,8 @@ private let validSummaryJSON = """
   "statistics": []
 }
 """
+
+private let validArraySummaryJSON = #"{"title":"AppTests","startTime":10,"finishTime":12.5,"environmentDescription":"macOS 26.4","topInsights":[],"result":"Failed","totalTestCount":3,"passedTests":2,"failedTests":1,"skippedTests":0,"expectedFailures":0,"statistics":[],"devicesAndConfigurations":[{"device":{"deviceId":"DEVICE-1","deviceName":"Test Mac","architecture":"arm64","modelName":"Mac","platform":"macOS","osVersion":"26.4","osBuildNumber":"25E"},"testPlanConfiguration":{"configurationId":"cfg-1","configurationName":"Test Scheme Action"},"passedTests":2,"failedTests":1,"skippedTests":0,"expectedFailures":0}],"testFailures":[{"testName":"AppTests/testFailure()","targetName":"AppTests","failureText":"Expected true","testIdentifierString":"case-1"}]}"#
 
 private let validTestsJSON = """
 {
