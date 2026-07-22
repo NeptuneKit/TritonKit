@@ -657,6 +657,49 @@ public struct TKXcresultSummaryResponse: Codable, Equatable {
         self.devicesAndConfigurations = devicesAndConfigurations
         self.testFailures = testFailures
     }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.title = try container.decode(String.self, forKey: .title)
+        self.startTime = try container.decodeIfPresent(Double.self, forKey: .startTime)
+        self.finishTime = try container.decodeIfPresent(Double.self, forKey: .finishTime)
+        self.environmentDescription = try container.decode(String.self, forKey: .environmentDescription)
+        self.topInsights = try container.decode([TKXcresultInsightSummary].self, forKey: .topInsights)
+        self.result = try container.decode(String.self, forKey: .result)
+        self.totalTestCount = try container.decode(Int.self, forKey: .totalTestCount)
+        self.passedTests = try container.decode(Int.self, forKey: .passedTests)
+        self.failedTests = try container.decode(Int.self, forKey: .failedTests)
+        self.skippedTests = try container.decode(Int.self, forKey: .skippedTests)
+        self.expectedFailures = try container.decode(Int.self, forKey: .expectedFailures)
+        self.statistics = try container.decode([TKXcresultStatistic].self, forKey: .statistics)
+        self.devicesAndConfigurations = try container
+            .decodeIfPresent(TKXcresultSingleOrArrayInput<TKXcresultDeviceAndConfigurationSummary>.self, forKey: .devicesAndConfigurations)?
+            .primary
+        self.testFailures = try container
+            .decodeIfPresent(TKXcresultSingleOrArrayInput<TKXcresultTestFailure>.self, forKey: .testFailures)?
+            .primary
+    }
+}
+
+// Xcode 26.6 changed plural summary fields from one object to an array. Keep
+// Triton's released single-value DTO stable while accepting either wire shape.
+private struct TKXcresultSingleOrArrayInput<Value: Decodable>: Decodable {
+    let primary: Value?
+
+    init(from decoder: Decoder) throws {
+        if var array = try? decoder.unkeyedContainer() {
+            var first: Value?
+            while !array.isAtEnd {
+                let value = try array.decode(Value.self)
+                if first == nil {
+                    first = value
+                }
+            }
+            self.primary = first
+        } else {
+            self.primary = try Value(from: decoder)
+        }
+    }
 }
 
 public enum TKXcresultSummaryParser {
@@ -969,7 +1012,12 @@ public enum TKXcresultTestsParser {
         var failures: [TKXcresultFailureRecord] = []
         for node in nodes {
             let chain = ancestors + [node]
-            if node.nodeType == .testCaseRun, node.result?.localizedCaseInsensitiveCompare("Failed") == .orderedSame {
+            let isFailedRun = node.nodeType == .testCaseRun
+                && node.result?.localizedCaseInsensitiveCompare("Failed") == .orderedSame
+            let isFlattenedFailedCase = node.nodeType == .testCase
+                && node.result?.localizedCaseInsensitiveCompare("Failed") == .orderedSame
+                && !node.children.contains(where: { $0.nodeType == .testCaseRun })
+            if isFailedRun || isFlattenedFailedCase {
                 if let record = failureRecord(for: node, ancestors: ancestors) {
                     failures.append(record)
                 }
