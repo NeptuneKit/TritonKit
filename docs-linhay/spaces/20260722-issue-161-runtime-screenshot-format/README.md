@@ -1,12 +1,12 @@
 # GitHub Issue #161：Embedded Screenshot Format Contract
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#161](https://github.com/NeptuneKit/TritonKit/issues/161)
 >
-> Branch：`feat/20260722-issue-161-runtime-screenshot-format`
+> Branch：`feat/20260722-issue-161-runtime-screenshot-format`（已合并并清理）
 >
-> Worktree：`../TritonKit-worktrees/20260722-issue-161-runtime-screenshot-format/`
+> Worktree：`../TritonKit-worktrees/20260722-issue-161-runtime-screenshot-format/`（已清理）
 
 `docs-linhay/scripts/create-space.sh` 当前不存在，因此本 space 按固定模板直接建立并同步总索引。
 
@@ -63,5 +63,6 @@ embedded runtime screenshot 返回 JPEG 数据，但 CLI/help/schema 把输出�
 - Triton-first 事实：`status` 为 connected embedded runtime；`doctor` 的 server/target/runtime/host-device 检查通过；capabilities 暴露 screenshot 能力；`schema screenshot` 已声明 PNG 校验和 `artifact_write_failed`；bootstrap plan 包含 screenshot step。事实采集未保留设备、App 或 bundle 标识。
 - 连接中的旧 embedded runtime smoke 返回 JPEG metadata/JPEG magic；新 CLI 稳定返回 `artifact_write_failed`，且 `/private/tmp/triton-issue-161-runtime-guard.png` 不存在，证明未发布伪装 artifact。
 - host non-regression 使用 `triton sim screenshot --simulator booted` 成功，`file` 识别 PNG，magic 为 `89504e470d0a1a0a`。
-- `triton xcode test` 成功进入 Simulator 全量套件，但既有并行 UIKit tests 存在共享 key-window 基线失败；`triton schema --command xcode.test --json` 未提供 `only-testing`，因此保留 missing-schema 证据后 fallback 到 `xcodebuild -only-testing:TritonKitTests/TKRuntimeScreenshotFormatTests`，定向测试通过。main 集成与线上 CI 待收口。
-- 完整本地门禁 `docs-linhay/scripts/verify.sh --local` 已通过：根包 227 tests / 27 suites、release CLI build、release CLI / Harmony host / iOS runtime observe smoke、iOS Simulator build、docs structure 与 diff whitespace 均成功。结构重构后 Observation 12 tests 与 Evidence 21 tests 再次通过；main 集成与线上 CI 待收口。
+- `triton xcode test` 成功进入 Simulator 全量套件，但既有并行 UIKit tests 存在共享 key-window 基线失败；`triton schema --command xcode.test --json` 未提供 `only-testing`，因此保留 missing-schema 证据后 fallback 到 `xcodebuild -only-testing:TritonKitTests/TKRuntimeScreenshotFormatTests`，定向测试通过。
+- 完整本地门禁 `docs-linhay/scripts/verify.sh --local` 已通过：根包 227 tests / 27 suites、release CLI build、release CLI / Harmony host / iOS runtime observe smoke、iOS Simulator build、docs structure 与 diff whitespace 均成功。结构重构后 Observation 12 tests 与 Evidence 21 tests 再次通过。
+- `0db4120b` 已合并并推送到 `main`；GitHub Actions CI `29924383924` 的 contracts、Podspec、Swift tests 与总 validate 全部通过，GitHub #161 已评论并关闭。
