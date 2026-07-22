@@ -1,12 +1,12 @@
 # GitHub Issue #162：iOS Real-Device Launch Resolution
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#162](https://github.com/NeptuneKit/TritonKit/issues/162)
 >
-> Branch：`feat/20260722-issue-162-ios-real-device-launch-resolution`
+> Branch：已合并并删除
 >
-> Worktree：`../TritonKit-worktrees/20260722-issue-162-ios-real-device-launch-resolution/`
+> Worktree：已移除
 
 `docs-linhay/scripts/create-space.sh` 当前不存在，因此本 space 按固定模板直接建立并同步总索引。本 issue 明确建立 iOS 真机 app lifecycle 的有限边界，不扩展到远端设备、设备云或 Web 控制面。
 
@@ -64,4 +64,5 @@
 - 真实 host user-entry smoke 使用不存在的测试 bundle id，确保不会启动业务 App：`triton app launch --device <ios-real-selector> --bundle-id dev.tritonkit.issue162.nonexistent --json` 已进入 devicectl，并返回 `target_offline` + structured `prepare-target` nextAction，而非 `target_not_found`。设备当前不可用，因此未宣称真实 App 启动成功；该结果覆盖不可用设备的 BDD 边界。
 - README、agent 控制文档、app schema 与两个 public skill reference 已同步。
 - nested CLI focused suites 已通过：`DeviceCrossPlatformTests` 96 tests、`AppOpenURLFlowTests` 7 tests。nested CLI 全量测试仍有 22 个既有环境/契约基线问题，其中 `SchemaFactSourceTests` 的 13 个失败已在未改动的 main 独立复现，另有 TestRecorder 对本机 target 状态的环境依赖；这些失败不由本 issue 引入，未纳入本次修复范围。
-- 完整本地门禁通过：`git diff --check`、`check-docs.sh`、SwiftPM boundary、iOS DEBUG isolation、Swift 227 tests / 27 suites、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build 均成功。main 集成和线上 CI 待收口。
+- 完整本地门禁通过：`git diff --check`、`check-docs.sh`、SwiftPM boundary、iOS DEBUG isolation、Swift 227 tests / 27 suites、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build 均成功。
+- feature commit `e23e4d8a` 已由 merge commit `f263c399` 合入 `main`；GitHub Actions CI `29927019645` 全部通过，验证评论已发布并关闭 #162。
