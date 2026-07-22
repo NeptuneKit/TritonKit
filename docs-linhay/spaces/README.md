@@ -20,7 +20,7 @@
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
 | 归档 | [20260722-issue-159-alert-modal-boundary](./20260722-issue-159-alert-modal-boundary/README.md) | UIKit tap 已尊重 presented alert modal boundary，禁止激活背后 collection/table cell | `01d88c4b` 已合并，CI `29910680723` 通过，GitHub #159 已关闭 |
-| 执行 | [20260722-issue-160-xcode-build-settings](./20260722-issue-160-xcode-build-settings/README.md) | Xcode settings/build/test/run 需要 schema-backed repeatable `KEY=VALUE`，且保持 argv 边界 | 先补解析、argv 与 schema 红灯测试，再进入共享 invocation model |
+| 已归档 | [20260722-issue-160-xcode-build-settings](./20260722-issue-160-xcode-build-settings/README.md) | Xcode settings/build/test/run 已支持 schema-backed repeatable `KEY=VALUE`，并保持输入顺序与 argv 边界 | `cb3e61d8` 已合并，CI `29912995906` 通过，GitHub #160 已关闭 |
 | 执行 | [20260722-issue-161-runtime-screenshot-format](./20260722-issue-161-runtime-screenshot-format/README.md) | embedded screenshot 的扩展名、magic bytes 与 metadata 必须一致 | 先补 PNG contract 红灯测试，再在 runtime/CLI 边界完成格式一致化 |
 | 执行 | [20260722-issue-162-ios-real-device-launch-resolution](./20260722-issue-162-ios-real-device-launch-resolution/README.md) | 显式 iOS 真机 selector 的 install/info/launch 必须共享 live resolution/readiness 语义 | 先补 fake live tunnel sequence 红灯测试，再复用 resolver 修复 launch |
 | 执行 | [20260722-issue-163-xcresult-array-decoding](./20260722-issue-163-xcresult-array-decoding/README.md) | xcresult decoder 同时兼容历史 dictionary 与 Xcode 26.6 array shape | 先补脱敏 array fixture 红灯测试，再规范化 decoder |

@@ -1,12 +1,12 @@
 # GitHub Issue #160：Xcode One-off Build Settings
 
-> 状态：执行
+> 状态：已归档
 >
 > GitHub：[NeptuneKit/TritonKit#160](https://github.com/NeptuneKit/TritonKit/issues/160)
 >
-> Branch：`feat/20260722-issue-160-xcode-build-settings`
+> Merge：`cb3e61d8`（`main`）
 >
-> Worktree：`../TritonKit-worktrees/20260722-issue-160-xcode-build-settings/`
+> CI：`29912995906`（success）
 
 `docs-linhay/scripts/create-space.sh` 当前不存在，因此本 space 按固定模板直接建立并同步总索引。
 
@@ -64,4 +64,4 @@
 - 证据保存在 `/private/tmp/triton-issue-160-schema.json`、`/private/tmp/triton-issue-160-build.json` 与 `/private/tmp/triton-issue-160-xcodebuild-argv.txt`；独立 schema 校验确认 parent 与四个 subcommand 均覆盖 `validation_failed`。
 - `docs-linhay/scripts/verify.sh --local` 全部通过：根包 227 tests / 27 suites、release CLI build、release/Harmony/iOS runtime smoke、iOS Simulator build、docs 与 diff gate 均成功。
 - 额外运行 nested CLI 全量套件时，#160 的 17 tests 全部通过；套件仍命中仓库既有 device/schema/test-recorder 基线失败，并在既有 device proxy 测试处停滞，已在 `/private/tmp/triton-issue-160-cli-full-after.log` 留痕。本 issue 新增的 parent failure-code 缺口已修复并由独立 schema 校验通过，不扩大范围顺手修复其他设备治理项。
-- main 集成与线上 CI 待收口。
+- `cb3e61d8` 已合入 `main`，GitHub CI `29912995906` 全部通过，#160 已评论并关闭。
