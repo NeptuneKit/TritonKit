@@ -19,7 +19,7 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 执行 | [20260722-issue-159-alert-modal-boundary](./20260722-issue-159-alert-modal-boundary/README.md) | UIKit tap 必须尊重 presented alert 的 modal boundary，禁止激活背后 collection/table cell | 先补 alert + background collection 红灯测试，再实现安全 action 或明确 unsupported |
+| 归档 | [20260722-issue-159-alert-modal-boundary](./20260722-issue-159-alert-modal-boundary/README.md) | UIKit tap 已尊重 presented alert modal boundary，禁止激活背后 collection/table cell | `01d88c4b` 已合并，CI `29910680723` 通过，GitHub #159 已关闭 |
 | 执行 | [20260722-issue-160-xcode-build-settings](./20260722-issue-160-xcode-build-settings/README.md) | Xcode settings/build/test/run 需要 schema-backed repeatable `KEY=VALUE`，且保持 argv 边界 | 先补解析、argv 与 schema 红灯测试，再进入共享 invocation model |
 | 执行 | [20260722-issue-161-runtime-screenshot-format](./20260722-issue-161-runtime-screenshot-format/README.md) | embedded screenshot 的扩展名、magic bytes 与 metadata 必须一致 | 先补 PNG contract 红灯测试，再在 runtime/CLI 边界完成格式一致化 |
 | 执行 | [20260722-issue-162-ios-real-device-launch-resolution](./20260722-issue-162-ios-real-device-launch-resolution/README.md) | 显式 iOS 真机 selector 的 install/info/launch 必须共享 live resolution/readiness 语义 | 先补 fake live tunnel sequence 红灯测试，再复用 resolver 修复 launch |

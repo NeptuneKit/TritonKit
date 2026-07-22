@@ -1,6 +1,6 @@
 # GitHub Issue #159：UIAlert Modal Tap Boundary
 
-> 状态：执行
+> 状态：归档
 >
 > GitHub：[NeptuneKit/TritonKit#159](https://github.com/NeptuneKit/TritonKit/issues/159)
 >
@@ -62,4 +62,5 @@ embedded iOS runtime 对可见 `UIAlertController` action 的坐标点击会命�
 - 新增三条 iOS Simulator fixture 回归，覆盖 action 不可激活、无法映射以及可公开激活三种路径，并断言背景 collection selection 始终不变。
 - Triton-first 基线保存在 `/private/tmp/triton-issue-159-baseline/`；`triton schema --command xcode --json` 未暴露 `only-testing`，因此 focused 测试临时回退 raw `xcodebuild`。
 - 红灯证据：`/private/tmp/triton-issue-159-baseline/red-xcodebuild.log`；绿灯证据：`/private/tmp/triton-issue-159-green/focused-xcodebuild.log`（3 tests）。
-- 根包 `swift test` 通过 226 tests / 27 suites；CLI `WebViewRouteTests` 通过 18 tests。main 合并与线上 CI 状态待收口。
+- 根包 `swift test` 通过 226 tests / 27 suites；CLI `WebViewRouteTests` 通过 18 tests。
+- 已由 `01d88c4b` 合并到 `main`；GitHub CI run `29910680723` 全部通过，issue #159 已评论并关闭。
