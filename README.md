@@ -566,6 +566,7 @@ triton xcode status --json
 triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json
 triton xcode settings --jsonl --timeout 1800
 triton xcode build --jsonl --timeout 1800
+triton xcode build --build-setting CLANG_ENABLE_EXPLICIT_MODULES=NO --jsonl
 triton xcode build --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
 triton xcresult summary --path /tmp/App.xcresult --json
@@ -580,6 +581,8 @@ When discovery returns `Package.swift`, pass it directly with `--package` or per
 If `triton xcode build/test/run` returns `xcodebuild_interrupted` or `orphaned_xcodebuild`, inspect the final summary's stdout/stderr artifact paths and run `triton xcode status --json` followed by `triton xcode wait-idle --workspace <workspace> --timeout 120 --json` before retrying or falling back.
 
 `xcode settings/build/test/run --jsonl` emits invocation, stdout/stderr samples, heartbeat, and summary events with stdout/stderr log paths and byte counts, which gives agents a way to inspect long-running builds without waiting blindly.
+
+`xcode settings/build/test/run` also accepts repeatable one-off `--build-setting KEY=VALUE`. Triton validates keys against `[A-Za-z_][A-Za-z0-9_]*`, preserves each complete setting as one `xcodebuild` argv element (including spaces or `$(inherited)`), and records it in `sourceCommand`. Use it for temporary diagnosis without editing project or generated dependency files; because the value is intentionally visible in the audit command, do not pass secrets through this option.
 
 `xcode test` writes the result bundle but does not yet inline all test counts or failures into the final build summary. Run `triton xcresult summary` and `triton xcresult failures` against the bundle to produce issue-ready test evidence.
 

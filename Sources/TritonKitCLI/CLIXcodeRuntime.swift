@@ -70,7 +70,8 @@ func resolveXcodeInvocation(
     destination: String? = nil,
     simulator: String? = nil,
     device: String? = nil,
-    derivedDataPath: String? = nil
+    derivedDataPath: String? = nil,
+    buildSettings: [String] = []
 ) throws -> ResolvedXcodeInvocation {
     let defaults = try loadHostWorkspaceDefaults()
     let xcode = defaults?.xcode
@@ -101,6 +102,7 @@ func resolveXcodeInvocation(
         device: device
     )
     let resolvedDerivedDataPath = derivedDataPath ?? xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath
+    let resolvedBuildSettings = try validateXcodeBuildSettings(buildSettings)
     let derivedDataCache = makeXcodeDerivedDataCacheInfo(path: resolvedDerivedDataPath)
     return ResolvedXcodeInvocation(
         workspace: resolvedWorkspace,
@@ -111,10 +113,28 @@ func resolveXcodeInvocation(
         sdk: resolvedSDK,
         destination: resolvedDestination,
         derivedDataPath: resolvedDerivedDataPath,
+        buildSettings: resolvedBuildSettings,
         derivedDataCache: derivedDataCache,
         simulatorUDID: resolvedSimulator,
         device: device
     )
+}
+
+func validateXcodeBuildSettings(_ values: [String]) throws -> [String] {
+    let firstAllowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_")
+    let restAllowed = CharacterSet(charactersIn: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_0123456789")
+    for value in values {
+        guard let separator = value.firstIndex(of: "=") else {
+            throw ValidationError("Xcode build settings must use KEY=VALUE.")
+        }
+        let key = String(value[..<separator])
+        guard let first = key.unicodeScalars.first,
+              firstAllowed.contains(first),
+              key.unicodeScalars.dropFirst().allSatisfy({ restAllowed.contains($0) }) else {
+            throw ValidationError("Xcode build setting key must match [A-Za-z_][A-Za-z0-9_]*: \(key)")
+        }
+    }
+    return values
 }
 
 func resolvedXcodeSDK(
@@ -228,6 +248,7 @@ func runXcodeBuild(
         sdk: invocation.sdk,
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath,
+        buildSettings: invocation.buildSettings,
         allowProvisioningUpdates: allowProvisioningUpdates
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl, allowNonZeroExit: allowNonZeroExit)
@@ -298,7 +319,8 @@ func runXcodeTest(
         sdk: invocation.sdk,
         destination: invocation.destination,
         derivedDataPath: invocation.derivedDataPath,
-        resultBundlePath: resultBundlePath
+        resultBundlePath: resultBundlePath,
+        buildSettings: invocation.buildSettings
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl, allowNonZeroExit: true)
     let diagnostics = xcodeBuildOutputDiagnostics(result)
@@ -937,7 +959,8 @@ func resolveBuiltAppProduct(
         configuration: invocation.configuration,
         sdk: invocation.sdk,
         destination: invocation.destination,
-        derivedDataPath: invocation.derivedDataPath
+        derivedDataPath: invocation.derivedDataPath,
+        buildSettings: invocation.buildSettings
     ).withTimeout(timeout)
     let result: HostProcessResult
     if jsonl {

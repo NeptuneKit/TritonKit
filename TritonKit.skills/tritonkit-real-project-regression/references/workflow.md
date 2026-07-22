@@ -141,7 +141,7 @@
    - diagnose current Xcode build/test occupancy before starting a smoke run: `triton xcode status --json`;
    - wait for the current workspace to stop building/testing: `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`;
    - inspect app product settings: `triton xcode settings --jsonl --timeout <seconds>` for large workspaces, or `triton xcode settings --json` for quick projects;
-   - build: `triton xcode build --jsonl`;
+   - build: `triton xcode build --jsonl`; when dependency diagnosis needs a temporary Xcode override, repeat `--build-setting KEY=VALUE` instead of editing the project or generated dependencies; values containing spaces or `$(inherited)` remain one argv element and are visible in `sourceCommand`, so never put secrets there;
    - test: `triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl`;
    - build/install/launch: `triton xcode run --jsonl`;
    - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton verify`, screenshot, or evidence.

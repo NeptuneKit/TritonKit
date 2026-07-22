@@ -27,6 +27,7 @@ struct ResolvedXcodeInvocation: Encodable {
     let sdk: String?
     let destination: String?
     let derivedDataPath: String?
+    let buildSettings: [String]
     let derivedDataCache: TKXcodeDerivedDataCacheInfo
     let simulatorUDID: String?
     let device: String?
