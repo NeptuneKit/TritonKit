@@ -570,7 +570,8 @@ struct Serve: AsyncParsableCommand {
                     target: queryTarget(from: request)
                 )
                 guard let screenshot = try? JSONDecoder().decode(TKScreenshotResponse.self, from: payload),
-                      let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)) else {
+                      let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)),
+                      (try? validateRuntimeScreenshotArtifact(imageData, declaredFormat: screenshot.format, outputPath: "screenshot.png")) != nil else {
                     return jsonError(
                         code: "invalid_payload",
                         message: "Invalid screenshot payload",
@@ -624,7 +625,8 @@ struct Serve: AsyncParsableCommand {
                     target: requestedTarget
                 )
                 guard let screenshot = try? JSONDecoder().decode(TKScreenshotResponse.self, from: payload),
-                      let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)) else {
+                      let imageData = try? await screenshotImageData(screenshot, client: TritonKitHTTPClient(host: host, port: port)),
+                      let format = try? validateRuntimeScreenshotPayload(imageData, declaredFormat: screenshot.format) else {
                     return jsonError(
                         code: "invalid_payload",
                         message: "Invalid screenshot payload",
@@ -633,7 +635,6 @@ struct Serve: AsyncParsableCommand {
                         status: .internalServerError
                     )
                 }
-                let format = screenshot.format.lowercased()
                 let contentType = format == "png" ? "image/png" : "image/jpeg"
                 return Response(status: .ok, headers: [.contentType: contentType],
                                 body: .init(byteBuffer: ByteBuffer(data: imageData)))

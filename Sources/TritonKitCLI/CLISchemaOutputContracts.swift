@@ -1080,7 +1080,7 @@ func screenshotMetadataOutputContract() -> TKCommandOutputContract {
         kind: "screenshot-metadata",
         model: "ScreenshotMetadataOutput",
         fields: schemaContractFields([
-            ("format", "String", true, "Image format"),
+            ("format", "String", true, "Validated image format; embedded runtime success is png"),
             ("width", "Double", true, "Image width in points or pixels depending on source"),
             ("height", "Double", true, "Image height in points or pixels depending on source"),
             ("scale", "Double", true, "Image scale"),

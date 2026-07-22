@@ -705,9 +705,11 @@ For iOS video regression with `AVPlayer` or `AVPlayerViewController`, include th
 
 ```bash
 triton debug snapshot --include media,ax,screenshot-metadata --json
-triton screenshot --json
+triton screenshot --output /tmp/runtime.png --metadata
 triton evidence capture --case video-regression --output /tmp/video-regression.tritonevidence --json
 ```
+
+Embedded runtime screenshot success is a strict PNG contract: the runtime encodes PNG, while CLI/evidence/replay/test writers validate the `.png` extension, `format: "png"`, and PNG magic bytes before atomic write. A legacy or malformed JPEG payload returns `artifact_write_failed` and is not published under a PNG path.
 
 The `media` section reports visible AVPlayer-backed surfaces, player status/rate/time metadata when public APIs expose it, AX playback-control candidates, automation confidence, fallback advice, and evidence commands. System `AVPlayerViewController` controls are not guaranteed to expose stable actionable AX nodes in every route; when the snapshot is `surface-only`, add app-owned DEBUG overlay controls with stable accessibility identifiers for play, pause, seek, progress, elapsed time, and duration, then verify those controls with `wait`, `act find`, `act tap`, and `verify`.
 

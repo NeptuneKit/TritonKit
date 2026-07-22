@@ -166,6 +166,14 @@ func cliErrorDetail(for error: Error, endpoint: String, host: String, port: Int)
             hint: "Check `triton doctor --format json` for server and target state"
         )
     }
+    if let screenshotError = error as? RuntimeScreenshotArtifactError {
+        return TKCLIErrorDetail(
+            code: "artifact_write_failed",
+            message: screenshotError.description,
+            endpoint: url,
+            hint: "Update the embedded runtime to a PNG-capable TritonKit build and retry with a .png output path."
+        )
+    }
     if let targetError = error as? TKTargetResolutionError {
         let code: String
         switch targetError {

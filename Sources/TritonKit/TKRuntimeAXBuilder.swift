@@ -53,10 +53,25 @@ struct ScreenshotCapture {
     let data: Data
 }
 
+func makePNGScreenshotCapture(
+    image: UIImage,
+    width: Double,
+    height: Double,
+    scale: Double
+) -> ScreenshotCapture {
+    ScreenshotCapture(
+        format: "png",
+        width: width,
+        height: height,
+        scale: scale,
+        data: image.pngData() ?? Data()
+    )
+}
+
 @MainActor
 func captureCurrentScreenshotData() -> ScreenshotCapture {
     guard let window = keyWindows().first else {
-        return ScreenshotCapture(format: "jpeg", width: 0, height: 0, scale: UIScreen.main.scale, data: Data())
+        return ScreenshotCapture(format: "png", width: 0, height: 0, scale: UIScreen.main.scale, data: Data())
     }
     let format = UIGraphicsImageRendererFormat()
     format.scale = 1
@@ -65,14 +80,11 @@ func captureCurrentScreenshotData() -> ScreenshotCapture {
     let image = renderer.image { context in
         window.layer.render(in: context.cgContext)
     }
-    // 性能优化：使用极其轻量高效的 JPEG 替换 PNG 压缩，耗时从 120ms 降至 3ms，实现流畅的 60 FPS 推送
-    let data = image.jpegData(compressionQuality: 0.6) ?? Data()
-    return ScreenshotCapture(
-        format: "jpeg",
+    return makePNGScreenshotCapture(
+        image: image,
         width: Double(window.bounds.width),
         height: Double(window.bounds.height),
-        scale: Double(format.scale),
-        data: data
+        scale: Double(format.scale)
     )
 }
 

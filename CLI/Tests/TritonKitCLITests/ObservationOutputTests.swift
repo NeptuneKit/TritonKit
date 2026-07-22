@@ -5,6 +5,58 @@ import TritonKitShared
 
 @Suite
 struct ObservationOutputTests {
+    @Test("runtime screenshot artifact requires PNG extension metadata and magic bytes")
+    func runtimeScreenshotArtifactRequiresConsistentPNGContract() throws {
+        let png = Data([0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0x00])
+
+        #expect(try validateRuntimeScreenshotArtifact(
+            png,
+            declaredFormat: "png",
+            outputPath: "/tmp/runtime-shot.png"
+        ) == "png")
+
+        let jpeg = Data([0xFF, 0xD8, 0xFF, 0xE0, 0x00])
+        #expect(throws: RuntimeScreenshotArtifactError.self) {
+            try validateRuntimeScreenshotArtifact(
+                jpeg,
+                declaredFormat: "jpeg",
+                outputPath: "/tmp/runtime-shot.png"
+            )
+        }
+        #expect(throws: RuntimeScreenshotArtifactError.self) {
+            try validateRuntimeScreenshotArtifact(
+                png,
+                declaredFormat: "jpeg",
+                outputPath: "/tmp/runtime-shot.png"
+            )
+        }
+        #expect(throws: RuntimeScreenshotArtifactError.self) {
+            try validateRuntimeScreenshotArtifact(
+                png,
+                declaredFormat: "png",
+                outputPath: "/tmp/runtime-shot.jpeg"
+            )
+        }
+    }
+
+    @Test("runtime screenshot mismatch maps to stable artifact failure")
+    func runtimeScreenshotMismatchMapsToArtifactFailure() {
+        let detail = cliErrorDetail(
+            for: RuntimeScreenshotArtifactError(
+                declaredFormat: "jpeg",
+                detectedFormat: "jpeg",
+                outputExtension: "png"
+            ),
+            endpoint: "/request",
+            host: "127.0.0.1",
+            port: 19421
+        )
+
+        #expect(detail.code == "artifact_write_failed")
+        #expect(detail.message.contains("JPEG"))
+        #expect(detail.hint?.contains("embedded runtime") == true)
+    }
+
     @Test("observe output prioritizes runtime tree as primary source")
     func observeOutputPrioritizesRuntimeTree() {
         let output = ObserveOutput(

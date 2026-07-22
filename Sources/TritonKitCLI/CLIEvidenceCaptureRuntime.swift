@@ -314,6 +314,11 @@ func captureEvidenceScreenshot(
     let screenshotData = try await client.request(type: "screenshot")
     let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
     let imageData = try await screenshotImageData(screenshot, client: client)
+    let artifactFormat = try validateRuntimeScreenshotArtifact(
+        imageData,
+        declaredFormat: screenshot.format,
+        outputPath: "screenshot.png"
+    )
     let freshness = evidenceFreshness(source: "runtime", status: status)
     try appendEvidenceArtifact(
         kind: "screenshot",
@@ -325,7 +330,7 @@ func captureEvidenceScreenshot(
         artifacts: &artifacts
     )
     let metadata = EvidenceScreenshotMetadata(
-        format: screenshot.format,
+        format: artifactFormat,
         width: screenshot.width,
         height: screenshot.height,
         scale: screenshot.scale,

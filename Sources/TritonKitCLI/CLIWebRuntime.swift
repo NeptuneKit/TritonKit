@@ -908,6 +908,7 @@ private func makeWebHostScreenshotBridgeResponse(
         let data = try await client.request(type: "screenshot")
         let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
         let imageData = try await screenshotImageData(screenshot, client: client)
+        let imageFormat = try validateRuntimeScreenshotPayload(imageData, declaredFormat: screenshot.format)
         return WebHostScreenshotBridgeResponse(
             ok: true,
             simulator: target,
@@ -920,7 +921,7 @@ private func makeWebHostScreenshotBridgeResponse(
             artifact: "",
             pixelWidth: Int(screenshot.width.rounded()),
             pixelHeight: Int(screenshot.height.rounded()),
-            dataUrl: "data:image/png;base64,\(imageData.base64EncodedString())"
+            dataUrl: "data:image/\(imageFormat);base64,\(imageData.base64EncodedString())"
         )
     }
     let id = webHostDeviceTargetID(HostDeviceTarget(
