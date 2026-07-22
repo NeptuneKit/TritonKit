@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 最近审计：2026-07-21
+> 最近审计：2026-07-22
 
 本文件是 `docs-linhay/spaces/` 的总索引，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -19,6 +19,11 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
+| 执行 | [20260722-issue-159-alert-modal-boundary](./20260722-issue-159-alert-modal-boundary/README.md) | UIKit tap 必须尊重 presented alert 的 modal boundary，禁止激活背后 collection/table cell | 先补 alert + background collection 红灯测试，再实现安全 action 或明确 unsupported |
+| 执行 | [20260722-issue-160-xcode-build-settings](./20260722-issue-160-xcode-build-settings/README.md) | Xcode settings/build/test/run 需要 schema-backed repeatable `KEY=VALUE`，且保持 argv 边界 | 先补解析、argv 与 schema 红灯测试，再进入共享 invocation model |
+| 执行 | [20260722-issue-161-runtime-screenshot-format](./20260722-issue-161-runtime-screenshot-format/README.md) | embedded screenshot 的扩展名、magic bytes 与 metadata 必须一致 | 先补 PNG contract 红灯测试，再在 runtime/CLI 边界完成格式一致化 |
+| 执行 | [20260722-issue-162-ios-real-device-launch-resolution](./20260722-issue-162-ios-real-device-launch-resolution/README.md) | 显式 iOS 真机 selector 的 install/info/launch 必须共享 live resolution/readiness 语义 | 先补 fake live tunnel sequence 红灯测试，再复用 resolver 修复 launch |
+| 执行 | [20260722-issue-163-xcresult-array-decoding](./20260722-issue-163-xcresult-array-decoding/README.md) | xcresult decoder 同时兼容历史 dictionary 与 Xcode 26.6 array shape | 先补脱敏 array fixture 红灯测试，再规范化 decoder |
 | 已归档 | [20260721-issue-158-ios-real-device-screenshot-scope](./20260721-issue-158-ios-real-device-screenshot-scope/README.md) | screenshot 已在 host action 前区分 iOS real-device 与 Simulator selector，真机稳定返回 unsupported_scope | merge `a61ed5d7` 与 CI `29801150199` 全绿，GitHub #158 已关闭并随 `v0.2.14` 发布 |
 | 已归档 | [20260721-issue-156-ios-button-primary-menu](./20260721-issue-156-ios-button-primary-menu/README.md) | iOS embedded runtime 已用 UIKit public primary-action API 打开标准 UIButton menu，并对菜单项选择保留明确 unsupported 边界 | 已合入 `main`、线上 CI 全绿并关闭 #156；已随 `v0.2.14` 发布 |
 | 已归档 | [20260721-issue-157-table-cell-selection-callback](./20260721-issue-157-table-cell-selection-callback/README.md) | UITableViewCell ancestor selection 已在成功返回前完成 willSelect、selection state 与 didSelect callback | merge `3981467f` 与 CI `29799367673` 全绿，GitHub #157 已关闭并随 `v0.2.14` 发布 |
