@@ -251,6 +251,8 @@ struct WebViewRouteTests {
         #expect(tap.outputSemantics?.contains("ancestor-collection-cell-selection") == true)
         #expect(tap.outputSemantics?.contains("ancestor-table-cell-selection") == true)
         #expect(tap.outputSemantics?.contains("invokes didSelectRowAt before returning") == true)
+        #expect(tap.outputSemantics?.contains("alert-action-accessibility-activate") == true)
+        #expect(tap.outputSemantics?.contains("alert-action-unsupported") == true)
         #expect(tap.outputSemantics?.contains("button-primary-menu-action") == true)
     }
 

@@ -54,3 +54,12 @@ embedded iOS runtime 对可见 `UIAlertController` action 的坐标点击会命�
 ## 停止条件
 
 三个场景、自动化验证、main 集成与线上 CI 全部满足后评论并关闭 #159。
+
+## 实施记录
+
+- `performTap` 在任何 text-input、ancestor、coordinate cell fallback 之前识别 `UIAlertController` responder chain；整个 alert subtree 都是不可跨越的 modal boundary。
+- 只有 action title 对应的 accessibility view 才尝试公开 `accessibilityActivate()`；成功返回 `alert-action-accessibility-activate`，无法映射或激活则返回单一 `unsupported_capability` / `alert-action-unsupported`。
+- 新增三条 iOS Simulator fixture 回归，覆盖 action 不可激活、无法映射以及可公开激活三种路径，并断言背景 collection selection 始终不变。
+- Triton-first 基线保存在 `/private/tmp/triton-issue-159-baseline/`；`triton schema --command xcode --json` 未暴露 `only-testing`，因此 focused 测试临时回退 raw `xcodebuild`。
+- 红灯证据：`/private/tmp/triton-issue-159-baseline/red-xcodebuild.log`；绿灯证据：`/private/tmp/triton-issue-159-green/focused-xcodebuild.log`（3 tests）。
+- 根包 `swift test` 通过 226 tests / 27 suites；CLI `WebViewRouteTests` 通过 18 tests。main 合并与线上 CI 状态待收口。

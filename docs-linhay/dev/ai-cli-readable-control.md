@@ -397,6 +397,8 @@ embedded runtime 的 `tap` 会对常见公开 UIKit 控件执行确定性动作�
 
 只配置 `menu` 与 `showsMenuAsPrimaryAction=true` 的 `UIButton` 是单独的公开 UIKit 路径：iOS 17.4+ 由 `performPrimaryAction()` 打开菜单，返回 `strategy=button-primary-menu-action`，随后必须用 `verify text-exists <action-title>` 证明菜单确实可见。embedded runtime 没有安全 public API 直接执行已呈现的 `UIAction`；若 agent 再点击菜单项标题，结果以单个 `TKInputResult` 返回 `error.code=unsupported_capability` 与 `strategy=button-primary-menu-item-unsupported`，不得外层重包成第二个 `request_failed`。需要完成菜单项选择时，改用 host HID 或 App 自有 semantic DEBUG action。
 
+已呈现的 `UIAlertController` action 是 modal boundary。命中 action title 后，embedded runtime 只对该 alert subtree 内的 accessibility element 调用公开 `accessibilityActivate()`；成功返回 `strategy=alert-action-accessibility-activate`，无法安全激活则返回单个 `unsupported_capability` 与 `strategy=alert-action-unsupported`。不得继续按相同坐标扫描并激活 alert 背后的 collection/table cell；即使 activation 返回成功，仍要以 `wait --gone` 或业务后置文本验证 alert 已消失。
+
 `UITableViewCell` 的 smart/ancestor 与坐标入口统一走同步 selection helper：先尊重 optional `willSelectRowAt` 的重定向或拒绝，再调用 public `selectRow` 并确认 selection state，最后在返回前调用 `didSelectRowAt`。成功 message 为 `Selected UITableViewCell ancestor and invoked delegate callback`、strategy 为 `ancestor-table-cell-selection`，不再用只表示任务排队的 `Submitted`。delegate 后续若启动异步业务仍需 wait/verify；对象注册表同时会清理已释放对象的 stale address mapping，避免 UIKit 地址复用后把新 window/view 解析为失效 OID。
 
 `UISegmentedControl` 的 valueChanged 触发不再直接依赖 `UIControl.sendActions(for:)` 的内部枚举，而是先稳定写入 `selectedSegmentIndex`，再在下一次 main queue tick 对已注册 target/action 调用 `UIApplication.sendAction`。这避免 Triton 侧 dispatch 与 App 侧重建 cell 时出现额外的 UIControl 内部重入。Overloaded 的 `HTTP`/`HTTPS` 协议切换冒烟还暴露了 App 自身 `SKPublished` setter 内同步 sink 读取同一属性的 Swift 独占访问问题；测试用 App 已在本地把 `scheme` 变化后的 `updateModels()` 延后一拍执行。

@@ -135,6 +135,25 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         return TKInputResult.failure(action: action, message: resolved.message)
     }
 
+    if let alert = nearestAlertController(from: view) {
+        guard let activationView = alertActionActivationView(from: view, in: alert) else {
+            return unsupportedAlertActionTap(
+                alert: alert,
+                request: request,
+                action: action,
+                matchedView: view,
+                activationView: nil
+            )
+        }
+        return performAlertActionTap(
+            activationView,
+            alert: alert,
+            request: request,
+            action: action,
+            matchedView: view
+        )
+    }
+
     if let textView = nearestSuperview(of: view, matching: UITextView.self) {
         let matched = tapMatchedContext(request, fallback: view)
         let activationOID = oid(for: textView)
@@ -207,6 +226,103 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
         matchedView: nil,
         strategy: request.activationStrategy?.rawValue
     )
+}
+
+@MainActor
+func performAlertActionTap(
+    _ activationView: UIView,
+    alert: UIAlertController,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView
+) -> TKInputResult {
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let activationOID = oid(for: activationView)
+    let activationClassName = NSStringFromClass(type(of: activationView))
+    if activationView.accessibilityActivate() {
+        return TKInputResult.success(
+            action: action,
+            message: "Activated UIAlertController action via accessibilityActivate",
+            targetOID: activationOID,
+            targetClassName: activationClassName,
+            matchedOID: matched.oid,
+            matchedClassName: matched.className,
+            activationOID: activationOID,
+            activationClassName: activationClassName,
+            strategy: "alert-action-accessibility-activate"
+        )
+    }
+
+    return unsupportedAlertActionTap(
+        alert: alert,
+        request: request,
+        action: action,
+        matchedView: matchedView,
+        activationView: activationView
+    )
+}
+
+@MainActor
+func unsupportedAlertActionTap(
+    alert: UIAlertController,
+    request: TKInputRequest,
+    action: String,
+    matchedView: UIView,
+    activationView: UIView?
+) -> TKInputResult {
+    let matched = tapMatchedContext(request, fallback: matchedView)
+    let activationOID = activationView.flatMap { oid(for: $0) }
+    let activationClassName = activationView.map { NSStringFromClass(type(of: $0)) }
+    let actionTitles = alert.actions.compactMap(\.title).filter { !$0.isEmpty }
+    let message = "UIAlertController actions cannot fall back to content behind the presented modal"
+    return TKInputResult.unsupported(
+        action: action,
+        message: message,
+        strategy: "alert-action-unsupported",
+        matchedOID: matched.oid,
+        matchedClassName: matched.className,
+        activationOID: activationOID,
+        activationClassName: activationClassName,
+        error: TKCLIErrorDetail(
+            code: "unsupported_capability",
+            message: message,
+            hint: "Use an app-owned semantic DEBUG action or a host HID adapter when the visible alert action does not support public UIKit accessibility activation.",
+            nearestCandidates: actionTitles,
+            suggestedCommands: [
+                "triton verify text-exists <alert-title> --target <target> --json",
+                "triton schema --command act --json",
+            ],
+            candidateCount: actionTitles.count
+        )
+    )
+}
+
+func nearestAlertController(from view: UIView) -> UIAlertController? {
+    var responder: UIResponder? = view
+    while let current = responder {
+        if let alert = current as? UIAlertController {
+            return alert
+        }
+        responder = current.next
+    }
+    return nil
+}
+
+func alertActionActivationView(from view: UIView, in alert: UIAlertController) -> UIView? {
+    let titles = Set(alert.actions.compactMap(\.title).filter { !$0.isEmpty })
+    guard !titles.isEmpty else { return nil }
+
+    var current: UIView? = view
+    while let candidate = current,
+          candidate === alert.view || candidate.isDescendant(of: alert.view) {
+        if let label = candidate.accessibilityLabel,
+           titles.contains(label) {
+            return candidate
+        }
+        if candidate === alert.view { break }
+        current = candidate.superview
+    }
+    return nil
 }
 
 @MainActor
