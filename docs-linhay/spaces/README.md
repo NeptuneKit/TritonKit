@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 最近审计：2026-07-22
+> 最近审计：2026-07-23
 
 本文件是 `docs-linhay/spaces/` 的总索引，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -19,8 +19,8 @@
 
 | 状态 | Space | 裁决 | 下一步 |
 | --- | --- | --- | --- |
-| 执行 | [20260722-issue-165-xcode-schemes-discovery-timeout](./20260722-issue-165-xcode-schemes-discovery-timeout/README.md) | Xcode discover 默认递归事实需与 schemes container 一致；schemes 必须支持 timeout override、禁用自动 package resolution 与机器恢复动作 | 按 BDD/TDD 补递归 discovery、schemes 参数/argv/schema 与 timeout recovery；权限恢复后独立提交 |
-| 执行 | [20260722-issue-164-evidence-simulator-screenshot-fidelity](./20260722-issue-164-evidence-simulator-screenshot-fidelity/README.md) | iOS Simulator evidence 必须区分 host-composited 与 runtime App-layer screenshot，默认视觉验收不能丢失系统 sheet compositor 内容 | 按 BDD/TDD 实现双来源 artifact、fidelity metadata、partial fallback，并完成真实 Simulator smoke |
+| 已归档 | [20260722-issue-165-xcode-schemes-discovery-timeout](./20260722-issue-165-xcode-schemes-discovery-timeout/README.md) | Xcode discover 默认递归事实已与 schemes container 对齐；schemes 支持 timeout override、禁用自动 package resolution 与机器恢复动作 | `b3cdd40c` 已推送，CI `29973762696` 通过，GitHub #165 已关闭 |
+| 已归档 | [20260722-issue-164-evidence-simulator-screenshot-fidelity](./20260722-issue-164-evidence-simulator-screenshot-fidelity/README.md) | iOS Simulator evidence 已区分 host-composited 与 runtime App-layer screenshot，默认视觉验收使用 host framebuffer | `e489dcfd` 已推送，CI `29973762696` 通过，GitHub #164 已关闭 |
 | 归档 | [20260722-issue-159-alert-modal-boundary](./20260722-issue-159-alert-modal-boundary/README.md) | UIKit tap 已尊重 presented alert modal boundary，禁止激活背后 collection/table cell | `01d88c4b` 已合并，CI `29910680723` 通过，GitHub #159 已关闭 |
 | 已归档 | [20260722-issue-160-xcode-build-settings](./20260722-issue-160-xcode-build-settings/README.md) | Xcode settings/build/test/run 已支持 schema-backed repeatable `KEY=VALUE`，并保持输入顺序与 argv 边界 | `cb3e61d8` 已合并，CI `29912995906` 通过，GitHub #160 已关闭 |
 | 已归档 | [20260722-issue-161-runtime-screenshot-format](./20260722-issue-161-runtime-screenshot-format/README.md) | embedded screenshot 已统一为真实 PNG，并在 artifact 发布前校验扩展名、metadata 与 magic bytes | `0db4120b` 已合并，CI `29924383924` 通过，GitHub #161 已关闭 |

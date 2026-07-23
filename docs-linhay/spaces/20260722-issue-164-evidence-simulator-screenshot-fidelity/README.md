@@ -3,9 +3,10 @@
 ## 状态
 
 - GitHub：[#164](https://github.com/NeptuneKit/TritonKit/issues/164)
-- 状态：待发布
-- Branch：`codex/20260722-issue-164-evidence-simulator-screenshot-fidelity`
-- Worktree：`../TritonKit-worktrees/20260722-issue-164-evidence-simulator-screenshot-fidelity/`
+- 状态：已归档
+- 交付分支：`main`
+- 实现提交：`e489dcfd`
+- CI：[`29973762696`](https://github.com/NeptuneKit/TritonKit/actions/runs/29973762696)（通过）
 
 ## 背景
 
@@ -92,4 +93,4 @@
 - 原样 `docs-linhay/scripts/verify.sh --local` 在权限恢复后完整通过：SwiftPM dependency boundary、iOS DEBUG isolation、231 项 Swift tests、release CLI build/smoke、Harmony host smoke、iOS runtime observe smoke、iOS Simulator build、docs 与 diff 门禁均为绿灯。
 - Triton-first 真实 Simulator smoke：`triton sim list --json` 发现 booted Simulator；`triton sim screenshot --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --output /private/tmp/triton-issue164-host-20260723-01.png --json` 成功返回 1206×2622 PNG、`runtimeScope=host-simulator` 与可审计 source command。
 - Triton-first 真实 evidence smoke：启动本机 `triton serve` 后连接到带 `simulatorUDID` 的 iOS runtime，`evidence capture --include list,screenshot` 把 187271-byte host framebuffer 发布为主 `screenshot.png`，manifest 明确 `scope=host-simulator`、`source=simctl-framebuffer`、`fidelity=full-screen`、`visualAcceptance=true`。连接 App 仍返回旧 JPEG runtime screenshot，因此 runtime 辅助 artifact 按 PNG 契约被拒绝为 `artifact_write_failed`，bundle 为 failed-partial，但 host 全屏主 artifact 保持有效；runtime PNG 成功分支由 `EvidenceBundleTests` 直接覆盖。
-- 项目内部 host-simulator skill、public skills 与长期技术文档均已同步；尚待提交/推送、main CI、GitHub issue 关闭与 space 归档。
+- 项目内部 host-simulator skill、public skills 与长期技术文档均已同步；实现由 `e489dcfd` 推送到 `main`，GitHub CI `29973762696` 全绿后关闭 #164。

@@ -3,9 +3,10 @@
 ## 状态
 
 - GitHub：[#165](https://github.com/NeptuneKit/TritonKit/issues/165)
-- 状态：待发布
-- Branch：待 `.git` 写权限恢复后创建 `codex/20260722-issue-165-xcode-schemes-discovery-timeout`
-- Worktree：短改动，计划在主工作区按独立提交收口
+- 状态：已归档
+- 交付分支：`main`
+- 实现提交：`b3cdd40c`
+- CI：[`29973762696`](https://github.com/NeptuneKit/TritonKit/actions/runs/29973762696)（通过）
 
 ## 背景
 
@@ -93,4 +94,4 @@
 - release 真实 Xcode smoke：`triton xcode discover --path . --json` 成功返回根 package、CLI package 与深层 reference/example containers；`triton xcode schemes --package Package.swift --timeout-seconds 300 --disable-automatic-package-resolution --json` 在约 3 秒内成功返回 `TritonKit`、`TritonKit-Package`、`TritonKitShared`，`sourceCommand` 明确包含 `-disableAutomaticPackageResolution`。
 - README、AI CLI 控制文档、三个 public skill reference 与项目内部 `.agents/skills/tritonkit-xcode-workflow-takeover` 均已同步。
 - 2026-07-23 复审：`XcodeDiscover.parse([])` 直接断言 CLI 默认深度为 8；workspace/project/package timeout recovery 与 18 项 `XcodeCommandTests`、12 项 `FailureDiagnosticsTests` 合并运行共 30 项全部通过。
-- 尚待：Git 独立提交/推送、main CI、GitHub #165 关闭与 space 归档。
+- 实现由 `b3cdd40c` 推送到 `main`，GitHub CI `29973762696` 全绿后关闭 #165，本 space 完成归档。
