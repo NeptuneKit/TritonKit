@@ -273,6 +273,7 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         "scheme_not_found",
         "workspace_not_found",
         "xcode_not_idle",
+        "xcode_schemes_timeout",
         "xcodebuild_interrupted",
         "orphaned_xcodebuild",
     ]

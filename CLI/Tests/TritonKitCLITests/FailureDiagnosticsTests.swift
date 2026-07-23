@@ -6,6 +6,59 @@ import TritonKitShared
 
 @Suite
 struct FailureDiagnosticsTests {
+    @Test("xcode schemes timeout exposes executable Triton recovery")
+    func xcodeSchemesTimeoutExposesExecutableRecovery() {
+        let command = TKXcodebuildCommand.listSchemes(
+            workspace: "App.xcworkspace",
+            project: nil,
+            timeoutSeconds: 120
+        )
+
+        let detail = hostCommandTimeoutErrorDetail(command: command, message: "timed out")
+
+        #expect(detail.code == "xcode_schemes_timeout")
+        #expect(detail.nextAction?.command == "xcode")
+        #expect(detail.nextAction?.args == [
+            "schemes",
+            "--workspace", "App.xcworkspace",
+            "--timeout-seconds", "300",
+            "--disable-automatic-package-resolution",
+            "--json",
+        ])
+    }
+
+    @Test("xcode schemes timeout recovery preserves project and package containers")
+    func xcodeSchemesTimeoutRecoveryPreservesProjectAndPackageContainers() {
+        let projectCommand = TKXcodebuildCommand.listSchemes(
+            workspace: nil,
+            project: "apps/ios/App.xcodeproj",
+            timeoutSeconds: 700
+        )
+        let projectDetail = hostCommandTimeoutErrorDetail(command: projectCommand, message: "timed out")
+        #expect(projectDetail.nextAction?.args == [
+            "schemes",
+            "--project", "apps/ios/App.xcodeproj",
+            "--timeout-seconds", "1400",
+            "--disable-automatic-package-resolution",
+            "--json",
+        ])
+
+        let packageCommand = TKXcodebuildCommand.listSchemes(
+            workspace: nil,
+            project: nil,
+            package: "/private/tmp/TritonPackage/Package.swift",
+            timeoutSeconds: 300
+        )
+        let packageDetail = hostCommandTimeoutErrorDetail(command: packageCommand, message: "timed out")
+        #expect(packageDetail.nextAction?.args == [
+            "schemes",
+            "--package", "/private/tmp/TritonPackage",
+            "--timeout-seconds", "600",
+            "--disable-automatic-package-resolution",
+            "--json",
+        ])
+    }
+
     @Test("assert failure includes nearest text and suggested commands")
     func assertFailureIncludesDiagnostics() {
         let result = TKUIAssertEvaluate(
@@ -189,6 +242,7 @@ struct FailureDiagnosticsTests {
             "plist_not_found",
             "preference_key_not_found",
             "xcode_not_idle",
+            "xcode_schemes_timeout",
             "xcresult_parse_failed",
             "xcresult_output_too_large",
             "artifact_output_rejected",

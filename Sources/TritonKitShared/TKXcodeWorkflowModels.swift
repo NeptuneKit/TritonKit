@@ -102,7 +102,7 @@ public struct TKXcodeDiscoveryResult: Codable, Equatable {
 }
 
 public enum TKXcodeProjectDiscovery {
-    public static func discover(path: String, maxDepth: Int = 2) throws -> TKXcodeDiscoveryResult {
+    public static func discover(path: String, maxDepth: Int = 8) throws -> TKXcodeDiscoveryResult {
         let root = URL(fileURLWithPath: path)
         let rootDepth = root.standardizedFileURL.pathComponents.count
         var workspaces: [TKXcodeContainerReference] = []
@@ -172,12 +172,22 @@ public enum TKXcodeDiscoveryError: Error, Equatable {
 }
 
 public enum TKXcodebuildCommand {
-    public static func listSchemes(workspace: String?, project: String?, package: String? = nil) -> TKHostCommand {
+    public static func listSchemes(
+        workspace: String?,
+        project: String?,
+        package: String? = nil,
+        disableAutomaticPackageResolution: Bool = false,
+        timeoutSeconds: Double = 300
+    ) -> TKHostCommand {
+        var arguments = containerArguments(workspace: workspace, project: project) + ["-list", "-json"]
+        if disableAutomaticPackageResolution {
+            arguments.append("-disableAutomaticPackageResolution")
+        }
         return TKHostCommand(
             executable: "xcodebuild",
-            arguments: containerArguments(workspace: workspace, project: project) + ["-list", "-json"],
+            arguments: arguments,
             workingDirectory: packageWorkingDirectory(package),
-            defaultTimeoutSeconds: 60
+            defaultTimeoutSeconds: timeoutSeconds
         )
     }
 

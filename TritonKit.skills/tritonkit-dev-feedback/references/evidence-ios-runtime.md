@@ -97,7 +97,8 @@ Prefer Triton Xcode commands before XcodeBuildMCP or raw `xcodebuild`:
 
 ```bash
 triton schema --command xcode --json
-triton xcode discover --path . --json
+triton xcode discover --path . --max-depth 8 --json
+triton xcode schemes --timeout-seconds 300 --disable-automatic-package-resolution --json
 triton xcode build --jsonl --timeout <seconds>
 triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl
 triton xcresult summary --path /tmp/<case>.xcresult --json
@@ -105,6 +106,8 @@ triton xcresult failures --path /tmp/<case>.xcresult --json
 ```
 
 On Xcode 26.6, summary fields such as `devicesAndConfigurations` and `testFailures` can be arrays, and failed tests can appear as flattened `Test Case` nodes with direct failure-message children. Current Triton normalizes these forms to the existing summary and failure-record contract. When reporting a compatibility regression, keep only a sanitized compact shape summary and Triton error code; do not attach the raw `.xcresult`.
+
+Project discovery defaults to eight recursive levels and excludes generated dependency/build directories. If `xcode schemes` can trigger slow Swift package work, use the schemes-specific timeout and optionally disable automatic package resolution. Preserve `xcode_schemes_timeout` plus its structured `nextAction`; it keeps the selected container and is the preferred recovery before raw `xcodebuild`.
 
 For temporary Xcode dependency diagnosis, `xcode settings/build/test/run` accepts repeatable `--build-setting KEY=VALUE`. Preserve the resulting `sourceCommand` as evidence that argument boundaries were retained; values are intentionally auditable, so do not use this option for secrets.
 

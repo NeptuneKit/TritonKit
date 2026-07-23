@@ -6,6 +6,36 @@ import TritonKitShared
 
 @Suite
 struct XcodeCommandTests {
+    @Test("xcode schemes accepts timeout and package resolution controls")
+    func xcodeSchemesAcceptsTimeoutAndPackageResolutionControls() throws {
+        let discover = try XcodeDiscover.parse([])
+        #expect(discover.maxDepth == 8)
+
+        let schemes = try XcodeSchemes.parse([
+            "--project", "apps/ios/App.xcodeproj",
+            "--timeout-seconds", "300",
+            "--disable-automatic-package-resolution",
+            "--json",
+        ])
+
+        #expect(schemes.timeoutSeconds == 300)
+        #expect(schemes.disableAutomaticPackageResolution)
+
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        let timeout = try #require(xcode.options.first { $0.name == "--timeout-seconds" })
+        #expect(timeout.defaultValue == "300")
+        let subcommand = try #require(xcode.subcommands.first { $0.name == "schemes" })
+        #expect(subcommand.optionalOptions.contains("--timeout-seconds"))
+        #expect(subcommand.optionalOptions.contains("--disable-automatic-package-resolution"))
+        #expect(subcommand.failureCodes.contains("xcode_schemes_timeout"))
+        #expect(try validateXcodeSchemesTimeout(300) == 300)
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeSchemesTimeout(0)
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try validateXcodeSchemesTimeout(.infinity)
+        }
+    }
     @Test("xcode workflow commands accept Package.swift container")
     func xcodeWorkflowCommandsAcceptPackageOption() throws {
         let use = try XcodeUse.parse(["--package", "/tmp/Demo/Package.swift", "--scheme", "Demo", "--json"])

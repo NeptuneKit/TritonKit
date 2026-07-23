@@ -561,9 +561,9 @@ Long-lived workspace app-map merges now preserve screen `stateVariants` from run
 Xcode project / Swift package discovery and `xcodebuild` execution are also exposed through Triton CLI. Use this path before falling back to XcodeBuildMCP or raw `xcodebuild` so the agent sees stable JSON/JSONL contracts; if fallback is still required, keep the `triton schema --command xcode --json` or `triton xcode ...` failure / unsupported evidence with the fallback log:
 
 ```bash
-triton xcode discover --path . --json
+triton xcode discover --path . --max-depth 8 --json
 triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json
-triton xcode schemes --json
+triton xcode schemes --timeout-seconds 300 --disable-automatic-package-resolution --json
 triton xcode status --json
 triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json
 triton xcode settings --jsonl --timeout 1800
@@ -577,6 +577,8 @@ triton xcode run --jsonl
 triton xctrace record --template "Time Profiler" --device 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --time-limit 5s --output /tmp/App.trace --json
 triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json --json
 ```
+
+`xcode discover` recursively scans eight directory levels by default while excluding build/dependency noise such as `.build`, `build`, DerivedData, Pods, Carthage, and node_modules; override it with `--max-depth` for unusual repositories. `xcode schemes` defaults to a 300-second host timeout and accepts `--timeout-seconds`. Add `--disable-automatic-package-resolution` when cached Swift package state is sufficient and scheme listing must not trigger automatic resolution or updates. A schemes timeout returns `xcode_schemes_timeout` with a structured Triton retry that preserves the selected workspace/project/package.
 
 When discovery returns `Package.swift`, pass it directly with `--package` or persist it with `triton xcode use --package <Package.swift> --scheme <scheme> --json`. `schemes/settings/build/test/run` then execute `xcodebuild` from the package directory and expose `package` in their machine-readable invocation/summary. `triton schema --command xcode.build --json` is the point-selector form for the narrowed build contract; the existing space-separated `xcode build` selector remains compatible.
 

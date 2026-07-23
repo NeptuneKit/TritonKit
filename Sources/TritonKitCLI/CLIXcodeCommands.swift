@@ -25,7 +25,7 @@ struct XcodeDiscover: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "discover", abstract: "Discover Xcode workspaces, projects, and Swift packages")
 
     @Option(help: "Repository or workspace root path") var path: String = "."
-    @Option(help: "Maximum directory depth to scan") var maxDepth: Int = 2
+    @Option(help: "Maximum directory depth to scan") var maxDepth: Int = 8
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
@@ -108,14 +108,23 @@ struct XcodeSchemes: AsyncParsableCommand {
     @Option(help: "Path to .xcworkspace") var workspace: String?
     @Option(help: "Path to .xcodeproj") var project: String?
     @Option(help: "Path to Package.swift or its package directory") var package: String?
+    @Option(name: .customLong("timeout-seconds"), help: "Host xcodebuild timeout in seconds") var timeoutSeconds: Double = 300
+    @Flag(name: .customLong("disable-automatic-package-resolution"), help: "Prevent xcodebuild from automatically resolving or updating Swift packages") var disableAutomaticPackageResolution = false
     @Flag(help: "Alias for --format json") var json = false
     @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
 
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
+            let validatedTimeout = try validateXcodeSchemesTimeout(timeoutSeconds)
             let resolved = try resolveXcodeContainer(workspace: workspace, project: project, package: package)
-            let command = TKXcodebuildCommand.listSchemes(workspace: resolved.workspace, project: resolved.project, package: resolved.package)
+            let command = TKXcodebuildCommand.listSchemes(
+                workspace: resolved.workspace,
+                project: resolved.project,
+                package: resolved.package,
+                disableAutomaticPackageResolution: disableAutomaticPackageResolution,
+                timeoutSeconds: validatedTimeout
+            )
             let result = try runHostCommand(command)
             let schemes = try TKXcodebuildListParser.parseSchemes(result.stdoutData)
             let output = XcodeSchemesOutput(

@@ -520,12 +520,54 @@ private func isHarmonyDiscoveryCommand(_ command: TKHostCommand) -> Bool {
         || command.arguments == ["list", "targets"]
 }
 
+private func isXcodeSchemesCommand(_ command: TKHostCommand) -> Bool {
+    URL(fileURLWithPath: command.executable).lastPathComponent == "xcodebuild"
+        && command.arguments.contains("-list")
+        && command.arguments.contains("-json")
+}
+
+private func xcodeSchemesRecoveryArguments(_ command: TKHostCommand) -> [String] {
+    var arguments = ["schemes"]
+    for (hostOption, tritonOption) in [("-workspace", "--workspace"), ("-project", "--project")] {
+        if let optionIndex = command.arguments.firstIndex(of: hostOption) {
+            let valueIndex = command.arguments.index(after: optionIndex)
+            if valueIndex < command.arguments.endIndex {
+                arguments.append(contentsOf: [tritonOption, command.arguments[valueIndex]])
+                break
+            }
+        }
+    }
+    if !arguments.contains("--workspace"), !arguments.contains("--project"), let workingDirectory = command.workingDirectory {
+        arguments.append(contentsOf: ["--package", workingDirectory])
+    }
+    let doubledTimeout = command.defaultTimeoutSeconds.isFinite
+        ? min(command.defaultTimeoutSeconds * 2, 86_400)
+        : 300
+    let timeoutSeconds = Int(ceil(max(300, doubledTimeout)))
+    arguments.append(contentsOf: [
+        "--timeout-seconds", String(timeoutSeconds),
+        "--disable-automatic-package-resolution",
+        "--json",
+    ])
+    return arguments
+}
+
 func hostCommandTimeoutErrorDetail(command: TKHostCommand, message: String) -> TKCLIErrorDetail {
     if isHarmonyDiscoveryCommand(command) {
         return TKCLIErrorDetail(
             code: "harmony_discovery_timeout",
             message: message,
             hint: "Check that hdc and DevEco Emulator are responsive, then rerun `triton device doctor --platform harmony --json`."
+        )
+    }
+    if isXcodeSchemesCommand(command) {
+        let recoveryArguments = xcodeSchemesRecoveryArguments(command)
+        return TKCLIErrorDetail(
+            code: "xcode_schemes_timeout",
+            message: message,
+            hint: "Retry scheme discovery with a larger timeout and disable automatic Swift package resolution when cached package state is sufficient.",
+            nextAction: TKCLINextAction(command: "xcode", args: recoveryArguments, category: "project"),
+            suggestedCommands: ["triton " + (["xcode"] + recoveryArguments).map(shellEscaped).joined(separator: " ")]
         )
     }
     return TKCLIErrorDetail(

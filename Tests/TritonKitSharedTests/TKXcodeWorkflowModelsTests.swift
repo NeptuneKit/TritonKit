@@ -4,6 +4,23 @@ import Testing
 
 @Suite
 struct TKXcodeWorkflowModelsTests {
+    @Test("xcode discovery default finds nested app containers and skips build noise")
+    func xcodeDiscoveryFindsNestedAppContainers() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("triton-xcode-discovery-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        let nestedProject = root.appendingPathComponent("apps/ios/Customer/App.xcodeproj", isDirectory: true)
+        let buildNoise = root.appendingPathComponent("build/generated/Noise.xcodeproj", isDirectory: true)
+        try FileManager.default.createDirectory(at: nestedProject, withIntermediateDirectories: true)
+        try FileManager.default.createDirectory(at: buildNoise, withIntermediateDirectories: true)
+
+        let result = try TKXcodeProjectDiscovery.discover(path: root.path)
+
+        #expect(result.projects.count == 1)
+        #expect(result.projects.first?.path.hasSuffix("/apps/ios/Customer/App.xcodeproj") == true)
+        #expect(result.recommendedContainer == result.projects.first)
+    }
+
     @Test("xcode workspace defaults round trip without losing simulator default")
     func xcodeDefaultsRoundTrip() throws {
         let defaults = TKHostWorkspaceDefaults(
@@ -84,6 +101,19 @@ struct TKXcodeWorkflowModelsTests {
             "-derivedDataPath", ".triton/DerivedData/App",
             "build",
         ])
+
+        let schemes = TKXcodebuildCommand.listSchemes(
+            workspace: "App.xcworkspace",
+            project: nil,
+            disableAutomaticPackageResolution: true,
+            timeoutSeconds: 300
+        )
+        #expect(schemes.argv == [
+            "-workspace", "App.xcworkspace",
+            "-list", "-json",
+            "-disableAutomaticPackageResolution",
+        ])
+        #expect(schemes.defaultTimeoutSeconds == 300)
 
         let signedDeviceBuild = TKXcodebuildCommand.build(
             workspace: nil,

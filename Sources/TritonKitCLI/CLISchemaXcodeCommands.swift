@@ -25,6 +25,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "test", type: "Subcommand", description: "Run xcodebuild test"),
                 TKCommandSchemaOption(name: "run", type: "Subcommand", description: "Run build, simulator install, and simulator launch"),
                 TKCommandSchemaOption(name: "--path", type: "Path", defaultValue: ".", description: "Directory to scan for Xcode workspace, project, or Package.swift candidates"),
+                TKCommandSchemaOption(name: "--max-depth", type: "Int", defaultValue: "8", description: "Maximum recursive directory depth for xcode discover; generated dependency and build directories remain excluded"),
                 TKCommandSchemaOption(name: "--workspace", type: "Path", description: "Path to .xcworkspace"),
                 TKCommandSchemaOption(name: "--project", type: "Path", description: "Path to .xcodeproj"),
                 TKCommandSchemaOption(name: "--package", type: "Path", description: "Path to Package.swift or its package directory; xcodebuild executes from that directory"),
@@ -41,15 +42,17 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "--allow-provisioning-updates", type: "Bool", defaultValue: "false", description: "Pass -allowProvisioningUpdates to xcodebuild for automatic signing on real devices"),
                 TKCommandSchemaOption(name: "--result-bundle", type: "Path", description: "Result bundle path for test"),
                 TKCommandSchemaOption(name: "--timeout", type: "Double", description: "Command timeout in seconds for large workspaces"),
+                TKCommandSchemaOption(name: "--timeout-seconds", type: "Double", defaultValue: "300", description: "Host xcodebuild timeout for xcode schemes"),
+                TKCommandSchemaOption(name: "--disable-automatic-package-resolution", type: "Bool", defaultValue: "false", description: "Pass -disableAutomaticPackageResolution while listing schemes to avoid automatic Swift package resolution or updates"),
                 TKCommandSchemaOption(name: "--jsonl", type: "Bool", defaultValue: "false", description: "Emit JSON Lines progress for long commands"),
                 TKCommandSchemaOption(name: "--format", type: "text|json", defaultValue: "json", description: "Output format"),
                 jsonAlias,
             ],
             examples: [
-                "triton xcode discover --path . --json",
+                "triton xcode discover --path . --max-depth 8 --json",
                 "triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator 0333546D-2AC6-4C22-AF01-293E2F4BA5BC --json",
                 "triton xcode build --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --jsonl",
-                "triton xcode schemes --json",
+                "triton xcode schemes --timeout-seconds 300 --disable-automatic-package-resolution --json",
                 "triton xcode status --json",
                 "triton xcode wait-idle --workspace App.xcworkspace --timeout 120 --json",
                 "triton xcode settings --json",
@@ -62,7 +65,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "triton xcode run --device <ios-real-target> --sdk iphoneos --jsonl",
             ],
             successShape: "discover/use/schemes/status/wait-idle/settings JSON envelopes or JSONL progress plus final TKXcodeActionSummary",
-            failureShape: "{ ok:false, error:{ code: validation_failed|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|xcode_not_idle|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
+            failureShape: "{ ok:false, error:{ code: validation_failed|invalid_workspace_path|ambiguous_workspace|scheme_not_found|simulator_not_found|device_not_ready|device_not_trusted|developer_mode_required|ddi_missing|xcode_signing_failed|provisioning_profile_missing|xcode_not_idle|xcode_schemes_timeout|xcodebuild_failed|xcodebuild_interrupted|orphaned_xcodebuild|swift_macro_plugin_malformed_response|app_path_unresolved|bundle_id_unresolved, message, hint, nextAction?{ command,args,category,requiresLongRunningProcess?,readyEvents,finalEvents,terminationSignals } } }",
             inheritsDefaultsFrom: ["triton xcode use", "triton sim use"],
             jsonlEvents: [
                 "xcode.<action>.invocation",
@@ -180,6 +183,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 "xcode_signing_failed",
                 "provisioning_profile_missing",
                 "xcode_not_idle",
+                "xcode_schemes_timeout",
                 "xcodebuild_failed",
                 "xcodebuild_interrupted",
                 "orphaned_xcodebuild",
@@ -191,7 +195,7 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "discover",
                     summary: "Discover Xcode workspaces, projects, and packages",
-                    optionalOptions: ["--path"],
+                    optionalOptions: ["--path", "--max-depth"],
                     retryable: true,
                     nextCommands: ["triton xcode use --workspace <workspace> --scheme <scheme> --json", "triton xcode use --package <Package.swift> --scheme <scheme> --json"],
                     failureCodes: ["invalid_workspace_path"]
@@ -211,12 +215,12 @@ func xcodeCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSubcommandSchema(
                     name: "schemes",
                     summary: "List shared Xcode schemes",
-                    optionalOptions: ["--workspace", "--project", "--package"],
+                    optionalOptions: ["--workspace", "--project", "--package", "--timeout-seconds", "--disable-automatic-package-resolution"],
                     defaultProviders: ["triton xcode use"],
                     inheritsDefaultsFrom: ["triton xcode use"],
                     retryable: true,
-                    nextCommands: ["triton xcode use --workspace <workspace> --scheme <scheme> --json"],
-                    failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "xcodebuild_failed"]
+                    nextCommands: ["triton xcode use --workspace <workspace> --scheme <scheme> --json", "triton xcode schemes --timeout-seconds 300 --disable-automatic-package-resolution --json"],
+                    failureCodes: ["invalid_workspace_path", "ambiguous_workspace", "xcode_schemes_timeout", "xcodebuild_failed"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "status",

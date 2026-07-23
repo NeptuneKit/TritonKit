@@ -136,9 +136,9 @@
    - capture bounded unified logging with `triton sim logs --simulator <udid-or-booted> --output /tmp/<case>-sim.ndjson --duration 5 --json`; when the App's direct process output is required, use `triton sim app-console --simulator <udid-or-booted> --bundle-id <bundle-id> --output /tmp/<case>-app-console.log --duration 5 --max-bytes 10485760 --json`. The latter terminates/relaunches the App and merges stdout/stderr into a sensitive PTY artifact, so verify `sourcesCaptured`, truncation, and the relaunch side effect rather than treating it as OSLog;
    - only use raw `xcrun simctl` when the needed capability is not in `triton schema --command sim --json` or `triton schema --command app --json`, and include that schema gap or Triton error envelope in the regression report.
 8. Prepare Xcode build/test/run through Triton before falling back to XcodeBuildMCP or raw `xcodebuild`:
-   - discover project containers: `triton xcode discover --path <repo> --json`;
+   - discover project containers: `triton xcode discover --path <repo> --max-depth 8 --json`;
    - set reusable defaults: `triton xcode use --workspace <workspace>|--project <project> --scheme <scheme> --configuration Debug --simulator <udid> --json`;
-   - list schemes: `triton xcode schemes --json`;
+   - list schemes: `triton xcode schemes --timeout-seconds 300 --disable-automatic-package-resolution --json`; omit the package-resolution flag only when the project intentionally needs Xcode to resolve or update packages;
    - diagnose current Xcode build/test occupancy before starting a smoke run: `triton xcode status --json`;
    - wait for the current workspace to stop building/testing: `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`;
    - inspect app product settings: `triton xcode settings --jsonl --timeout <seconds>` for large workspaces, or `triton xcode settings --json` for quick projects;

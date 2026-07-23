@@ -4,6 +4,13 @@ import TritonKitShared
 
 let defaultXcodeDerivedDataPath = ".triton/DerivedData"
 
+func validateXcodeSchemesTimeout(_ value: Double) throws -> Double {
+    guard value.isFinite, value > 0 else {
+        throw ValidationError("xcode schemes --timeout-seconds must be greater than zero.")
+    }
+    return value
+}
+
 func makeXcodeDerivedDataCacheInfo(path: String?) -> TKXcodeDerivedDataCacheInfo {
     let resolvedPath = (path?.isEmpty == false ? path : nil) ?? defaultXcodeDerivedDataPath
     var isDirectory: ObjCBool = false

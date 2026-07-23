@@ -46,10 +46,10 @@ Start from:
 ## Current Implemented Surface
 
 ```bash
-triton xcode discover --path . --json
+triton xcode discover --path . --max-depth 8 --json
 triton xcode use --workspace App.xcworkspace --scheme App --configuration Debug --simulator <udid> --json
 triton xcode use --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --json
-triton xcode schemes --json
+triton xcode schemes --timeout-seconds 300 --disable-automatic-package-resolution --json
 triton xcode status --json
 triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json
 triton xcode settings --jsonl --timeout <seconds>
@@ -65,6 +65,8 @@ triton coverage report --xcresult /tmp/App.xcresult --output /tmp/coverage.json 
 
 Current boundaries:
 
+- `xcode discover` defaults to a depth of 8 so nested real-project containers are discoverable while build/dependency noise stays excluded. Keep `--max-depth` explicit when a repository needs a different bound.
+- `xcode schemes` defaults to a 300-second timeout and supports `--disable-automatic-package-resolution` for deterministic discovery. On `xcode_schemes_timeout`, preserve the selected workspace/project/package in `nextAction` and retry with a bounded longer timeout before raw `xcodebuild` fallback.
 - `xcode run` covers build, simulator install, and simulator launch; it does not prove business readiness.
 - Continue readiness checks with `triton status`, `triton wait`, `triton assert`, screenshot, or evidence.
 - Real workspaces may exceed default timeouts. Use `triton xcode settings/build/test/run --timeout <seconds>` and preserve the JSONL summary or stable error envelope before falling back to raw `xcodebuild`.
@@ -95,6 +97,7 @@ Use this table before falling back to raw `xcodebuild`:
 | `invalid_workspace_path` | Missing or invalid workspace/project/package/repo path | Run `triton xcode discover --path . --json`, then pass an explicit `--workspace`, `--project`, or `--package`. |
 | `ambiguous_workspace` | Multiple containers or conflicting options | Pick exactly one discovered `.xcworkspace`, `.xcodeproj`, or `Package.swift`; then run `triton xcode use ... --json`. |
 | `scheme_not_found` | Scheme is absent or not shared | Run `triton xcode schemes --workspace <path> --json`; use a shared scheme or fix the project. |
+| `xcode_schemes_timeout` | `xcodebuild -list -json` exceeded the schemes discovery timeout | Retry the suggested `triton xcode schemes` command with the preserved workspace/project/package, a bounded longer `--timeout-seconds`, and optionally `--disable-automatic-package-resolution`; inspect the stable error envelope before falling back. |
 | `simulator_not_found` | No simulator default or invalid UDID | Run `triton sim list --json`, boot/select one simulator, then pass `--simulator <udid>` or `triton sim use <udid> --json`. |
 | `xcode_not_idle` | Existing build/test processes still match the workspace | Run `triton xcode status --json`; wait, cancel stale PIDs manually, or retry with a more specific workspace. |
 | `xcodebuild_failed` | Underlying build/test failed | Inspect stdout/stderr artifact paths from the JSONL summary; then run `triton xcresult summary/failures` if a result bundle exists. |

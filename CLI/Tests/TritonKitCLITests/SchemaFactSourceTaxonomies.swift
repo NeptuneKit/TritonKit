@@ -319,7 +319,7 @@ func recoveryCategories(forFailureCode failureCode: String) -> Set<String>? {
         return ["discover", "prepare-target", "diagnose"]
     case "ios_host_ax_unsupported_platform":
         return ["diagnose", "plan"]
-    case "ambiguous_workspace", "invalid_workspace_path", "scheme_not_found", "workspace_not_found", "xcode_not_idle", "xcodebuild_interrupted", "orphaned_xcodebuild":
+    case "ambiguous_workspace", "invalid_workspace_path", "scheme_not_found", "workspace_not_found", "xcode_not_idle", "xcode_schemes_timeout", "xcodebuild_interrupted", "orphaned_xcodebuild":
         return ["project", "diagnose"]
     case "assertion_failed", "route_mismatch", "text_not_found", "timeout":
         return ["verify", "observe", "archive"]
