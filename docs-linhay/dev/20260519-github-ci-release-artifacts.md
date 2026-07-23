@@ -77,6 +77,8 @@ tag 前必须先在 `main` 完成版本契约、本地门禁和远端 validate�
 
 发布完成判定仍需等待 x86_64 backfill 和第二次 tap 刷新，并独立复验公开 checksum、双架构 Mach-O、CLI/skill build info、Homebrew upgrade/test 与仓库外 packaged Web HTTP smoke；不能只以 arm64 Release 已出现作为完成。
 
+2026-07-23 的 `v0.2.15` 已按上述完整口径发布：Release workflow `29974713055` 的双架构构建、arm64 首发、x86_64 backfill 与两次 tap 更新全部通过；重新下载的三个 tarball 与公开 checksum manifest 一致，两个 CLI 分别验证为 arm64/x86_64 Mach-O 且均报告 `0.2.15`。public skill bundle 的 `BUILD_INFO.json` 与四个必需 skill 均为 `v0.2.15` / commit `29798f0d`。Homebrew 从 `0.2.14` 升级到 `0.2.15` 并通过 formula test，仓库外 packaged Web 返回 HTTP 200。CocoaPods 仅完成 podspec lint，未推送 trunk。
+
 ## Homebrew
 
 新增 Homebrew 二进制安装链路：
