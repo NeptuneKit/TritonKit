@@ -44,6 +44,7 @@ SwiftPM has no version field in `Package.swift`; consumers update by resolving t
 
 - If the wrong tag was pushed but GitHub Release has not been created, cancel only that superseded release workflow, delete the mistaken local and remote tag, correct version manifests on `main`, commit, push, and publish the intended tag. Do not cancel a valid current release workflow.
 - If `release.sh` reports that GitHub Actions completed before assets were visible, treat it as a possible observation race first: inspect `gh release view v<version>`, the Release workflow jobs, checksum file, Homebrew tap commit, and installed `triton version --json` before deciding the release failed.
+- Re-download public assets into a fresh temporary directory and wait for `gh release download` to exit successfully before running checksum or archive validation. A still-running download can leave smaller, truncated `.tar.gz` files that produce a false checksum mismatch; inspect the download process, release asset sizes, and `gzip -t` before rewriting any published asset or checksum manifest.
 - Do not move an already published tag. If a GitHub Release exists for the wrong version, stop and make an explicit maintainer decision; the default recovery is a new higher version tag, not retagging history.
 - For Homebrew validation, check the remote formula first, then run `brew update`, `brew upgrade NeptuneKit/tap/triton`, `brew test NeptuneKit/tap/triton`, and verify packaged web mode from outside the repository so a source checkout does not mask release behavior with dev mode.
 

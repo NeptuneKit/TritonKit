@@ -113,6 +113,7 @@ brew upgrade triton
 - Docs-only 与 contract-only fast path 不再单独启动 `Validate Docs` / `Validate Contracts` job；它们复用分类 job 的 checkout 与 runner，聚合 `Validate` 只负责检查 `Classify Validate Scope` 成功。
 - Full validate 在 CI 中并行运行 Swift tests、`TritonKit.podspec` lint 与 release/homebrew 契约检查；本地仍可用 `docs-linhay/scripts/verify.sh --ci-validate` 串行复现完整门禁。
 - 使用临时目录复现 CI 打包命令，生成 CLI 与 skill 的 `.tar.gz` 产物。
+- 公开资产复验必须下载到新的临时目录，并等待 `gh release download` 完整退出且返回成功后再执行 `shasum -a 256 -c`、`gzip -t` 与解包检查。若下载中的本地文件明显小于 Release API 记录的 size，且 `gh release download` 进程仍存在，应先等待下载完成；不能把流式下载中的截断文件误判为远端 checksum 损坏，更不能据此覆盖已发布资产。
 - 运行 `docs-linhay/scripts/verify-skill-package.sh`，验证 `package-public-skills.py` 生成的 `tritonkit-skills.tar.gz` 顶层包含 `TritonKit.skills/`、四个 public skills、版本 stamp 和 `BUILD_INFO.json`，验证安装脚本会删除旧四个独立目录，并用注入的 retired root fixture 证明旧命令层级不能进入 release 包。
 - 运行 `docs-linhay/scripts/verify-homebrew-formula.sh`，验证 formula 模板可用。
 - 运行 `docs-linhay/scripts/verify-version-stamping.sh`，验证 CI 版本解析、Swift 版本常量写入和 skill front matter `metadata.version` 写入。
