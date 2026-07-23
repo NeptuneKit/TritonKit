@@ -263,6 +263,7 @@ func runEvidenceCaptureEntrypoint(
     refresh: Bool,
     command: String,
     endpoint: String,
+    simulatorScreenshotProviders: EvidenceSimulatorScreenshotProviders = .live,
     urlSession: URLSession = .shared
 ) async throws {
     let outputFormat = effectiveFormat(format, json: json)
@@ -284,6 +285,7 @@ func runEvidenceCaptureEntrypoint(
             refresh: refresh,
             xcodeSummaryPath: xcodeSummary,
             proxySessionPath: proxySession,
+            simulatorScreenshotProviders: simulatorScreenshotProviders,
             urlSession: urlSession
         )
         try printEvidenceManifest(manifest, format: outputFormat)

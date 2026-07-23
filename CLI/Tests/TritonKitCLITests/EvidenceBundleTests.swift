@@ -26,6 +26,7 @@ struct EvidenceBundleTests {
             host: fakeServer.host,
             port: fakeServer.port,
             refresh: true,
+            simulatorScreenshotProviders: .fixture(),
             urlSession: fakeServer.session
         )
 
@@ -41,6 +42,145 @@ struct EvidenceBundleTests {
         #expect(fakeServer.requestTypes.contains("accessibility"))
         #expect(fakeServer.requestTypes.contains("screenshot"))
         #expect(fakeServer.requestTypes.contains("geometry"))
+    }
+
+    @Test("iOS Simulator evidence prefers host framebuffer and keeps runtime app-layer screenshot")
+    func iosSimulatorEvidencePrefersHostFramebufferAndKeepsRuntimeScreenshot() async throws {
+        let expectedTarget = "triton:ios-simulator:SIM-2"
+        let fakeServer = EvidenceTargetPropagationFakeServer(expectedTarget: expectedTarget)
+        defer { fakeServer.stop() }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-host-framebuffer-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["list", "screenshot"],
+            name: "host-framebuffer",
+            note: nil,
+            target: expectedTarget,
+            host: fakeServer.host,
+            port: fakeServer.port,
+            refresh: true,
+            simulatorScreenshotProviders: .fixture(),
+            urlSession: fakeServer.session
+        )
+
+        #expect(manifest.ok)
+        #expect(!manifest.partial)
+        #expect(manifest.artifacts.map(\.kind) == [
+            "list",
+            "screenshot",
+            "screenshot-metadata",
+            "screenshot.runtime",
+            "screenshot.runtime-metadata",
+        ])
+        let hostScreenshot = try #require(manifest.artifacts.first { $0.kind == "screenshot" })
+        #expect(hostScreenshot.path == "screenshot.png")
+        #expect(hostScreenshot.scope == "host-simulator")
+        #expect(hostScreenshot.source == "simctl-framebuffer")
+        #expect(hostScreenshot.fidelity == "full-screen")
+        #expect(hostScreenshot.target == "sim:SIM-2")
+        #expect(manifest.primaryArtifact?.path == "screenshot.png")
+        #expect(manifest.primaryArtifact?.fidelity == "full-screen")
+
+        let runtimeScreenshot = try #require(manifest.artifacts.first { $0.kind == "screenshot.runtime" })
+        #expect(runtimeScreenshot.path == "artifacts/runtime/screenshot.png")
+        #expect(runtimeScreenshot.scope == "runtime-app-layer")
+        #expect(runtimeScreenshot.source == "embedded-runtime")
+        #expect(runtimeScreenshot.fidelity == "app-layer")
+        #expect(evidenceArtifactIsSensitive(runtimeScreenshot))
+        #expect(try Data(contentsOf: root.appendingPathComponent("screenshot.png")) == EvidenceSimulatorScreenshotProviders.fixturePNG)
+        #expect(try Data(contentsOf: root.appendingPathComponent("artifacts/runtime/screenshot.png")) != EvidenceSimulatorScreenshotProviders.fixturePNG)
+        let runtimeMetadata = try JSONDecoder().decode(
+            EvidenceScreenshotMetadata.self,
+            from: Data(contentsOf: root.appendingPathComponent("artifacts/runtime/screenshot.json"))
+        )
+        #expect(!runtimeMetadata.visualAcceptance)
+        #expect(runtimeMetadata.fallbackCommand == nil)
+    }
+
+    @Test("iOS Simulator evidence marks host screenshot failure partial with Triton fallback")
+    func iosSimulatorEvidenceMarksHostScreenshotFailurePartialWithFallback() async throws {
+        let expectedTarget = "triton:ios-simulator:SIM-2"
+        let fakeServer = EvidenceTargetPropagationFakeServer(expectedTarget: expectedTarget)
+        defer { fakeServer.stop() }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-host-framebuffer-failure-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["list", "screenshot"],
+            name: "host-framebuffer-failure",
+            note: nil,
+            target: expectedTarget,
+            host: fakeServer.host,
+            port: fakeServer.port,
+            refresh: true,
+            simulatorScreenshotProviders: EvidenceSimulatorScreenshotProviders(
+                capture: { _, _ in throw RuntimeError("simctl framebuffer unavailable") }
+            ),
+            urlSession: fakeServer.session
+        )
+
+        #expect(!manifest.ok)
+        #expect(manifest.partial)
+        #expect(manifest.error?.code == "evidence_capture_partial")
+        let skippedHost = try #require(manifest.skipped.first { $0.kind == "screenshot.host" })
+        #expect(skippedHost.error?.code == "host_screenshot_unavailable")
+        #expect(skippedHost.error?.nextAction?.command == "sim")
+        #expect(skippedHost.error?.nextAction?.args.contains("SIM-2") == true)
+
+        let runtimeScreenshot = try #require(manifest.artifacts.first { $0.kind == "screenshot" })
+        #expect(runtimeScreenshot.path == "screenshot.png")
+        #expect(runtimeScreenshot.scope == "runtime-app-layer")
+        #expect(runtimeScreenshot.fidelity == "app-layer")
+        #expect(manifest.primaryArtifact?.fidelity == "app-layer")
+        let runtimeMetadata = try JSONDecoder().decode(
+            EvidenceScreenshotMetadata.self,
+            from: Data(contentsOf: root.appendingPathComponent("screenshot.json"))
+        )
+        #expect(runtimeMetadata.fallbackCommand?.contains("triton sim screenshot --simulator SIM-2") == true)
+    }
+
+    @Test("non-iOS runtime evidence does not guess a Simulator framebuffer target")
+    func nonIOSRuntimeEvidenceDoesNotGuessSimulatorFramebufferTarget() async throws {
+        let expectedTarget = "triton:android-emulator:emulator-5554"
+        let fakeServer = EvidenceTargetPropagationFakeServer(
+            expectedTarget: expectedTarget,
+            simulatorUDID: nil
+        )
+        defer { fakeServer.stop() }
+
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("evidence-runtime-only-screenshot-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+
+        let manifest = try await captureEvidenceBundle(
+            output: root.path,
+            includes: ["list", "screenshot"],
+            name: "runtime-only",
+            note: nil,
+            target: expectedTarget,
+            host: fakeServer.host,
+            port: fakeServer.port,
+            refresh: true,
+            simulatorScreenshotProviders: EvidenceSimulatorScreenshotProviders(
+                capture: { _, _ in throw RuntimeError("must not capture host Simulator screenshot") }
+            ),
+            urlSession: fakeServer.session
+        )
+
+        #expect(manifest.ok)
+        #expect(manifest.skipped.isEmpty)
+        let screenshot = try #require(manifest.artifacts.first { $0.kind == "screenshot" })
+        #expect(screenshot.scope == "runtime-app-layer")
+        #expect(screenshot.source == "embedded-runtime")
+        #expect(screenshot.fidelity == "app-layer")
+        #expect(screenshot.target == expectedTarget)
     }
 
     @Test("evidence capture propagates explicit target to cached hierarchy requests")
@@ -100,6 +240,9 @@ struct EvidenceBundleTests {
                 refresh: true,
                 command: "evidence capture",
                 endpoint: "/evidence/capture",
+                simulatorScreenshotProviders: EvidenceSimulatorScreenshotProviders(
+                    capture: { _, _ in throw RuntimeError("simulator unavailable") }
+                ),
                 urlSession: fakeServer.session
             )
         }
@@ -110,8 +253,9 @@ struct EvidenceBundleTests {
         #expect(manifest.partial)
         #expect(manifest.error?.code == "evidence_capture_partial")
         #expect(manifest.artifacts.map(\.kind) == ["status", "list", "version"])
-        #expect(manifest.skipped.map(\.kind) == ["hierarchy", "ax", "screenshot", "geometry", "archive"])
-        #expect(manifest.skipped.allSatisfy { $0.error?.code == "target_not_found" })
+        #expect(manifest.skipped.map(\.kind) == ["hierarchy", "ax", "screenshot.host", "screenshot", "geometry", "archive"])
+        #expect(manifest.skipped.first { $0.kind == "screenshot.host" }?.error?.code == "host_screenshot_unavailable")
+        #expect(manifest.skipped.filter { $0.kind != "screenshot.host" }.allSatisfy { $0.error?.code == "target_not_found" })
 
         let persisted = try JSONDecoder().decode(
             TKEvidenceManifest.self,
@@ -157,6 +301,12 @@ struct EvidenceBundleTests {
         #expect(evidence.options.map { $0.name }.contains("--xcode-summary"))
         #expect(evidence.options.map { $0.name }.contains("--proxy-session"))
         #expect(evidence.artifacts.contains("proxy-restore"))
+        let manifestContract = try #require(evidence.outputContracts.first { $0.selector == "evidence.manifest" })
+        #expect(manifestContract.fields.contains { $0.name == "artifacts[].scope" })
+        #expect(manifestContract.fields.contains { $0.name == "artifacts[].source" })
+        #expect(manifestContract.fields.contains { $0.name == "artifacts[].fidelity" })
+        #expect(evidence.failureCodes.contains("host_screenshot_unavailable"))
+        #expect(evidence.outputSemantics?.contains("screenshot.runtime") == true)
         #expect(evidence.examples.contains { $0.contains("--xcode-summary") })
         #expect(evidence.examples.contains { $0.contains("--proxy-session") })
     }
@@ -996,6 +1146,23 @@ private func captureEvidenceCommandOutputAndError(_ body: () async throws -> Voi
     return (String(decoding: data, as: UTF8.self), caughtError)
 }
 
+private extension EvidenceSimulatorScreenshotProviders {
+    static let fixturePNG = Data(base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=")!
+
+    static func fixture() -> EvidenceSimulatorScreenshotProviders {
+        EvidenceSimulatorScreenshotProviders(
+            capture: { simulatorUDID, _ in
+                EvidenceSimulatorScreenshotPayload(
+                    data: fixturePNG,
+                    sourceCommand: "xcrun simctl io \(simulatorUDID) screenshot <evidence>/screenshot.png",
+                    pixelWidth: 1,
+                    pixelHeight: 1
+                )
+            }
+        )
+    }
+}
+
 private final class EvidenceTargetPropagationFakeServer {
     let host = "127.0.0.1"
     let port: Int
@@ -1003,7 +1170,11 @@ private final class EvidenceTargetPropagationFakeServer {
 
     private let server: URLProtocol.Type
 
-    init(expectedTarget: String, disconnectRuntimeRequests: Bool = false) {
+    init(
+        expectedTarget: String,
+        simulatorUDID: String? = "SIM-2",
+        disconnectRuntimeRequests: Bool = false
+    ) {
         self.port = Int.random(in: 20_000...40_000)
         self.server = EvidenceTargetPropagationURLProtocol.self
         let configuration = URLSessionConfiguration.ephemeral
@@ -1012,6 +1183,7 @@ private final class EvidenceTargetPropagationFakeServer {
         EvidenceTargetPropagationURLProtocol.configure(
             port: port,
             expectedTarget: expectedTarget,
+            simulatorUDID: simulatorUDID,
             disconnectRuntimeRequests: disconnectRuntimeRequests
         )
         URLProtocol.registerClass(server)
@@ -1039,6 +1211,7 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
     private static let lock = NSLock()
     private static var configuredPort: Int?
     private static var configuredExpectedTarget: String?
+    private static var configuredSimulatorUDID: String?
     private static var disconnectRuntimeRequests = false
     private static var recordedTargets: [String?] = []
     private static var recordedTypes: [String] = []
@@ -1056,10 +1229,16 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
         lock.withEvidenceLock { recordedLatestHierarchyTargets }
     }
 
-    static func configure(port: Int, expectedTarget: String, disconnectRuntimeRequests: Bool) {
+    static func configure(
+        port: Int,
+        expectedTarget: String,
+        simulatorUDID: String?,
+        disconnectRuntimeRequests: Bool
+    ) {
         lock.withEvidenceLock {
             configuredPort = port
             configuredExpectedTarget = expectedTarget
+            configuredSimulatorUDID = simulatorUDID
             self.disconnectRuntimeRequests = disconnectRuntimeRequests
             recordedTargets = []
             recordedTypes = []
@@ -1071,6 +1250,7 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
         lock.withEvidenceLock {
             configuredPort = nil
             configuredExpectedTarget = nil
+            configuredSimulatorUDID = nil
             disconnectRuntimeRequests = false
             recordedTargets = []
             recordedTypes = []
@@ -1123,7 +1303,12 @@ private final class EvidenceTargetPropagationURLProtocol: URLProtocol {
         case ("GET", "/targets"):
             let targets = [
                 TKTargetSummary(id: "triton:ios-simulator:SIM-1", connected: true, latestHierarchyAvailable: true, simulatorUDID: "SIM-1"),
-                TKTargetSummary(id: configuredExpectedTarget ?? "triton:ios-simulator:SIM-2", connected: true, latestHierarchyAvailable: true, simulatorUDID: "SIM-2"),
+                TKTargetSummary(
+                    id: configuredExpectedTarget ?? "triton:ios-simulator:SIM-2",
+                    connected: true,
+                    latestHierarchyAvailable: true,
+                    simulatorUDID: configuredSimulatorUDID
+                ),
             ]
             return try json(TKTargetsResponse(targets: targets))
         case ("GET", "/hierarchy/latest"):

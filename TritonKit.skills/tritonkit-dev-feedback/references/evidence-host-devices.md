@@ -41,6 +41,8 @@ For a physical iOS target, the redacted `ios-real:*` selector is enough for `app
 
 iOS host screenshot is Simulator-only. When `device list` returns a ready physical target, `triton screenshot --platform ios --device <ios-real-selector> --output <path> --json` must return `unsupported_scope` before any `simctl` invocation, and `device doctor --platform ios --scope real --json` must omit `device.screenshot`. Preserve that envelope and its schema `nextAction`; use a connected embedded DEBUG runtime screenshot if available, otherwise label any external manual screenshot as fallback evidence rather than Triton host capture.
 
+For an iOS Simulator runtime evidence bundle, `manifest.primaryArtifact.fidelity=full-screen` is the visual acceptance gate. The primary `screenshot` must come from `simctl-framebuffer`; `screenshot.runtime` is App-layer diagnostics only and may omit system-composited sheets, grabbers, navigation chrome, keyboards, or SpringBoard UI. If the host framebuffer is unavailable, report the failed-partial manifest, `screenshot.host` skip, `host_screenshot_unavailable`, and the structured Triton fallback command instead of attaching the runtime image as faithful visual proof.
+
 Preserve log provenance in feedback: `sim logs` is `unified-log` only; `sim app-console` is merged App process stdout/stderr and relaunches the App. Console artifacts are sensitive. Report only bounded, sanitized excerpts, retain `sourcesCaptured` and truncation metadata, and never paste a full private artifact into a public issue.
 
 Destructive commands such as uninstall, erase, runtime delete, dyld-cache remove, or pairing changes must show `--dry-run` or `--confirm` behavior in the report.

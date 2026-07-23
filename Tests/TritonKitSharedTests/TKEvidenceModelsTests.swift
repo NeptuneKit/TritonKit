@@ -20,6 +20,9 @@ struct TKEvidenceModelsTests {
                     path: "run/step-001.png",
                     contentType: "image/png",
                     bytes: 3,
+                    scope: "host-simulator",
+                    source: "simctl-framebuffer",
+                    fidelity: "full-screen",
                     freshness: TKEvidenceFreshness(
                         capturedAt: "2026-05-20T00:00:01Z",
                         source: "runtime",
@@ -83,6 +86,9 @@ struct TKEvidenceModelsTests {
         #expect(decoded.primaryArtifact?.path == "run/step-001.png")
         #expect(decoded.primaryArtifacts.map(\.kind) == ["screenshot", "run.events", "run.meta", "status", "harmony.layout"])
         #expect(decoded.artifacts.first { $0.kind == "screenshot" }?.freshness?.source == "runtime")
+        #expect(decoded.primaryArtifact?.scope == "host-simulator")
+        #expect(decoded.primaryArtifact?.source == "simctl-framebuffer")
+        #expect(decoded.primaryArtifact?.fidelity == "full-screen")
         let harmonyLayout = try #require(decoded.artifacts.first { $0.kind == "harmony.layout" })
         #expect(harmonyLayout.platform == "harmony")
         #expect(harmonyLayout.riskLevel == "evidence")

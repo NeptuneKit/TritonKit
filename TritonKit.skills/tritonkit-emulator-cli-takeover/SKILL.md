@@ -87,6 +87,8 @@ triton evidence summary <dir.tritonevidence> --json
 triton evidence redact <dir.tritonevidence> --profile ios-private --output <redacted.tritonevidence> --json
 ```
 
+For iOS Simulator evidence, inspect `manifest.primaryArtifact.fidelity` before visual acceptance. A successful host-composited capture uses `kind=screenshot`, `scope=host-simulator`, `source=simctl-framebuffer`, and `fidelity=full-screen`; the embedded App-layer image remains `kind=screenshot.runtime`, `scope=runtime-app-layer`, and `fidelity=app-layer`. If the host framebuffer cannot be captured, expect `ok=false`, `partial=true`, `skipped[].kind=screenshot.host`, `error.code=host_screenshot_unavailable`, and a structured `triton sim screenshot` fallback. Never treat a runtime-only App-layer screenshot as proof that system sheets or compositor UI are visible.
+
 ## Safety Rules
 
 - Destructive or state-changing host actions require explicit flags or policy.

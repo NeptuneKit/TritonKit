@@ -179,6 +179,9 @@ public struct TKCommandRecoveryCommand: Codable, Equatable {
         if ["sim_record_truncated", "sim_record_invalid_artifact"].contains(failureCode) {
             categories.append(contentsOf: ["archive", "diagnose"])
         }
+        if ["host_screenshot_unavailable", "evidence_capture_partial"].contains(failureCode) {
+            categories.append(contentsOf: ["archive", "diagnose"])
+        }
         if failureCode == "app_map_error" || failureCode == "unconfirmed_path" || failureCode == "non_replayable_path" {
             categories.append(contentsOf: ["archive", "plan"])
         }

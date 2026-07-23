@@ -471,3 +471,14 @@ HostProcessRunning.stream(command, args, env, cwd, timeout) -> AsyncSequence<Hos
 - `TritonKit.skills/tritonkit-dev-feedback`
 - `docs-linhay/spaces/20260520-xcrun-host-adapter-research/README.md`
 - GitHub issue #11 和 #12 的状态
+
+## Evidence Screenshot Fidelity
+
+iOS Simulator 的 evidence screenshot 必须区分 host compositor 与 embedded runtime App layer：
+
+1. runtime identity 能提供可靠 `simulatorUDID` 时，`evidence capture --include screenshot` 先经现有 Simulator host adapter 采集 framebuffer PNG，并把它作为默认视觉验收 artifact。
+2. host artifact 使用 `scope=host-simulator`、`source=simctl-framebuffer`、`fidelity=full-screen`；embedded runtime screenshot 独立保存，并使用 `scope=runtime-app-layer`、`source=embedded-runtime`、`fidelity=app-layer`。
+3. runtime App-layer screenshot 不能声明 `visualAcceptance=true`，因为 UIKit / SwiftUI runtime 采集可能遗漏 system-composited sheet、键盘或其他系统层。
+4. host capture 失败时不能把 runtime screenshot 冒充完整成功；bundle 返回 partial 事实、稳定 `host_screenshot_unavailable` 错误码，并提供 `triton sim screenshot --simulator <udid> ... --json` 恢复动作。
+5. target 非 iOS Simulator 或缺少可靠 identity 时不得猜测 host target，只保留显式标注 fidelity 的 runtime artifact。
+6. 两类 screenshot 都继续执行扩展名、content type 与 magic bytes 一致性校验；artifact redaction 必须覆盖 `screenshot` 与 `screenshot.*` kind。

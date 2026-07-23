@@ -156,6 +156,9 @@ public struct TKEvidenceArtifact: Codable, Equatable {
     public let path: String
     public let contentType: String?
     public let bytes: Int?
+    public let scope: String?
+    public let source: String?
+    public let fidelity: String?
     public let freshness: TKEvidenceFreshness?
     public let platform: String?
     public let riskLevel: String?
@@ -170,6 +173,9 @@ public struct TKEvidenceArtifact: Codable, Equatable {
         path: String,
         contentType: String? = nil,
         bytes: Int? = nil,
+        scope: String? = nil,
+        source: String? = nil,
+        fidelity: String? = nil,
         freshness: TKEvidenceFreshness? = nil,
         platform: String? = nil,
         riskLevel: String? = nil,
@@ -183,6 +189,9 @@ public struct TKEvidenceArtifact: Codable, Equatable {
         self.path = path
         self.contentType = contentType
         self.bytes = bytes
+        self.scope = scope
+        self.source = source
+        self.fidelity = fidelity
         self.freshness = freshness
         self.platform = platform
         self.riskLevel = riskLevel
@@ -274,6 +283,9 @@ public struct TKEvidenceArtifactSummary: Codable, Equatable {
     public let path: String
     public let contentType: String?
     public let bytes: Int?
+    public let scope: String?
+    public let source: String?
+    public let fidelity: String?
     public let platform: String?
     public let riskLevel: String?
     public let policy: String?
@@ -285,6 +297,9 @@ public struct TKEvidenceArtifactSummary: Codable, Equatable {
         path: String,
         contentType: String? = nil,
         bytes: Int? = nil,
+        scope: String? = nil,
+        source: String? = nil,
+        fidelity: String? = nil,
         platform: String? = nil,
         riskLevel: String? = nil,
         policy: String? = nil,
@@ -295,6 +310,9 @@ public struct TKEvidenceArtifactSummary: Codable, Equatable {
         self.path = path
         self.contentType = contentType
         self.bytes = bytes
+        self.scope = scope
+        self.source = source
+        self.fidelity = fidelity
         self.platform = platform
         self.riskLevel = riskLevel
         self.policy = policy
@@ -308,6 +326,9 @@ public struct TKEvidenceArtifactSummary: Codable, Equatable {
             path: artifact.path,
             contentType: artifact.contentType,
             bytes: artifact.bytes,
+            scope: artifact.scope,
+            source: artifact.source,
+            fidelity: artifact.fidelity,
             platform: artifact.platform,
             riskLevel: artifact.riskLevel,
             policy: artifact.policy,

@@ -54,6 +54,9 @@ func evidenceArtifactSummary(_ artifact: TKEvidenceArtifact) -> TKEvidenceArtifa
         path: artifact.path,
         contentType: artifact.contentType,
         bytes: artifact.bytes,
+        scope: artifact.scope,
+        source: artifact.source,
+        fidelity: artifact.fidelity,
         platform: artifact.platform,
         riskLevel: artifact.riskLevel,
         policy: artifact.policy,
@@ -78,6 +81,7 @@ func evidenceArtifactIsSensitive(_ artifact: TKEvidenceArtifact) -> Bool {
         "proxy-restore",
     ]
     return sensitiveKinds.contains(artifact.kind)
+        || artifact.kind.hasPrefix("screenshot")
         || artifact.kind.hasPrefix("host.")
         || artifact.kind.hasPrefix("xcode.")
         || artifact.path.hasSuffix(".log")
@@ -120,6 +124,9 @@ func appendEvidenceArtifact(
     directory: URL,
     freshness: TKEvidenceFreshness,
     artifacts: inout [TKEvidenceArtifact],
+    scope: String? = nil,
+    source: String? = nil,
+    fidelity: String? = nil,
     platform: String? = nil,
     riskLevel: String? = nil,
     policy: String? = nil,
@@ -139,6 +146,9 @@ func appendEvidenceArtifact(
         path: relativePath,
         contentType: contentType,
         bytes: data.count,
+        scope: scope,
+        source: source,
+        fidelity: fidelity,
         freshness: freshness,
         platform: platform,
         riskLevel: riskLevel,

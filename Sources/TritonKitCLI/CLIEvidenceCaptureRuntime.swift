@@ -6,10 +6,42 @@ struct EvidenceScreenshotMetadata: Codable {
     let format: String
     let width: Double
     let height: Double
-    let scale: Double
+    let scale: Double?
     let dataRef: String?
     let imagePath: String
     let bytes: Int
+    let scope: String
+    let source: String
+    let fidelity: String
+    let visualAcceptance: Bool
+    let fallbackCommand: String?
+}
+
+struct EvidenceSimulatorScreenshotPayload {
+    let data: Data
+    let sourceCommand: String
+    let pixelWidth: Int?
+    let pixelHeight: Int?
+}
+
+struct EvidenceSimulatorScreenshotProviders {
+    var capture: (_ simulatorUDID: String, _ outputPath: String) throws -> EvidenceSimulatorScreenshotPayload
+
+    static let live = EvidenceSimulatorScreenshotProviders(
+        capture: { simulatorUDID, outputPath in
+            try prepareHostArtifactOutputPath(outputPath)
+            let result = try runHostCommand(TKSimctlCommand.screenshot(udid: simulatorUDID, output: outputPath))
+            let data = try Data(contentsOf: URL(fileURLWithPath: outputPath), options: [.mappedIfSafe])
+            _ = try validateRuntimeScreenshotArtifact(data, declaredFormat: "png", outputPath: outputPath)
+            let dimensions = imagePixelSize(path: outputPath)
+            return EvidenceSimulatorScreenshotPayload(
+                data: data,
+                sourceCommand: result.sourceCommand,
+                pixelWidth: dimensions?.width,
+                pixelHeight: dimensions?.height
+            )
+        }
+    )
 }
 
 func captureEvidenceBundle(
@@ -24,6 +56,7 @@ func captureEvidenceBundle(
     xcodeSummaryPath: String? = nil,
     proxySessionPath: String? = nil,
     hostXcodeProviders: EvidenceHostXcodeArtifactProviders = .live,
+    simulatorScreenshotProviders: EvidenceSimulatorScreenshotProviders = .live,
     urlSession: URLSession = .shared
 ) async throws -> TKEvidenceManifest {
     let outputURL = URL(fileURLWithPath: output)
@@ -188,11 +221,17 @@ func captureEvidenceBundle(
                         artifacts: &artifacts
                     )
                 case "screenshot":
-                    try await captureEvidenceScreenshot(
+                    await captureEvidenceScreenshots(
                         client: client,
                         directory: outputURL,
                         status: status,
-                        artifacts: &artifacts
+                        target: targetSummary,
+                        providers: simulatorScreenshotProviders,
+                        host: host,
+                        port: port,
+                        artifacts: &artifacts,
+                        skipped: &skipped,
+                        artifactErrors: &artifactErrors
                     )
                 case "archive":
                     let hierarchyData = try await evidenceHierarchyData(client: client, refresh: refresh)
@@ -305,48 +344,185 @@ private func evidencePartialCaptureError(
     )
 }
 
-func captureEvidenceScreenshot(
+func captureEvidenceScreenshots(
     client: TritonKitHTTPClient,
     directory: URL,
     status: TKStatusResponse?,
-    artifacts: inout [TKEvidenceArtifact]
-) async throws {
-    let screenshotData = try await client.request(type: "screenshot")
-    let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
-    let imageData = try await screenshotImageData(screenshot, client: client)
-    let artifactFormat = try validateRuntimeScreenshotArtifact(
-        imageData,
-        declaredFormat: screenshot.format,
-        outputPath: "screenshot.png"
-    )
-    let freshness = evidenceFreshness(source: "runtime", status: status)
-    try appendEvidenceArtifact(
-        kind: "screenshot",
-        relativePath: "screenshot.png",
-        data: imageData,
-        contentType: "image/png",
-        directory: directory,
-        freshness: freshness,
-        artifacts: &artifacts
-    )
-    let metadata = EvidenceScreenshotMetadata(
-        format: artifactFormat,
-        width: screenshot.width,
-        height: screenshot.height,
-        scale: screenshot.scale,
-        dataRef: screenshot.dataRef,
-        imagePath: "screenshot.png",
-        bytes: imageData.count
-    )
-    try appendEvidenceArtifact(
-        kind: "screenshot-metadata",
-        relativePath: "screenshot.json",
-        data: try prettyEncodedData(metadata),
-        contentType: "application/json",
-        directory: directory,
-        freshness: freshness,
-        artifacts: &artifacts
-    )
+    target: TKTargetSummary?,
+    providers: EvidenceSimulatorScreenshotProviders,
+    host: String,
+    port: Int,
+    artifacts: inout [TKEvidenceArtifact],
+    skipped: inout [TKEvidenceSkippedArtifact],
+    artifactErrors: inout [TKCLIErrorDetail]
+) async {
+    let simulatorUDID = target?.platform == "ios" ? target?.simulatorUDID : nil
+    var hostScreenshotCaptured = false
+
+    if let simulatorUDID, !simulatorUDID.isEmpty {
+        let temporaryPath = directory
+            .appendingPathComponent(".triton-host-screenshot-\(UUID().uuidString).png")
+            .path
+        defer { try? FileManager.default.removeItem(atPath: temporaryPath) }
+        do {
+            let payload = try providers.capture(simulatorUDID, temporaryPath)
+            _ = try validateRuntimeScreenshotArtifact(payload.data, declaredFormat: "png", outputPath: "screenshot.png")
+            let freshness = evidenceFreshness(source: "host-simulator", status: status)
+            try appendEvidenceArtifact(
+                kind: "screenshot",
+                relativePath: "screenshot.png",
+                data: payload.data,
+                contentType: "image/png",
+                directory: directory,
+                freshness: freshness,
+                artifacts: &artifacts,
+                scope: "host-simulator",
+                source: "simctl-framebuffer",
+                fidelity: "full-screen",
+                platform: "ios",
+                riskLevel: "evidence",
+                policy: "host-composited-visual-acceptance",
+                redactionStatus: "sensitive",
+                sourceCommand: payload.sourceCommand,
+                metadata: [
+                    "pixelWidth": payload.pixelWidth.map(TKJSONValue.int) ?? .null,
+                    "pixelHeight": payload.pixelHeight.map(TKJSONValue.int) ?? .null,
+                    "visualAcceptance": .bool(true),
+                ],
+                target: "sim:\(simulatorUDID)"
+            )
+            let metadata = EvidenceScreenshotMetadata(
+                format: "png",
+                width: Double(payload.pixelWidth ?? 0),
+                height: Double(payload.pixelHeight ?? 0),
+                scale: nil,
+                dataRef: nil,
+                imagePath: "screenshot.png",
+                bytes: payload.data.count,
+                scope: "host-simulator",
+                source: "simctl-framebuffer",
+                fidelity: "full-screen",
+                visualAcceptance: true,
+                fallbackCommand: nil
+            )
+            try appendEvidenceArtifact(
+                kind: "screenshot-metadata",
+                relativePath: "screenshot.json",
+                data: try prettyEncodedData(metadata),
+                contentType: "application/json",
+                directory: directory,
+                freshness: freshness,
+                artifacts: &artifacts,
+                scope: "host-simulator",
+                source: "simctl-framebuffer",
+                fidelity: "full-screen",
+                platform: "ios",
+                riskLevel: "summary",
+                policy: "host-composited-visual-acceptance",
+                redactionStatus: "included",
+                sourceCommand: payload.sourceCommand,
+                target: "sim:\(simulatorUDID)"
+            )
+            hostScreenshotCaptured = true
+        } catch {
+            let fallback = "triton sim screenshot --simulator \(simulatorUDID) --output <path.png> --json"
+            let detail = TKCLIErrorDetail(
+                code: "host_screenshot_unavailable",
+                message: "Host-composited Simulator framebuffer screenshot could not be captured: \(error)",
+                endpoint: "/evidence/capture",
+                hint: "Retry the host screenshot through Triton; runtime screenshot is App-layer only and is not full visual acceptance evidence.",
+                nextAction: TKCLINextAction(
+                    command: "sim",
+                    args: ["screenshot", "--simulator", simulatorUDID, "--output", "<path.png>", "--json"]
+                ),
+                suggestedCommands: [fallback]
+            )
+            skipped.append(TKEvidenceSkippedArtifact(
+                kind: "screenshot.host",
+                reason: "host-composited screenshot unavailable; runtime screenshot is retained as app-layer evidence",
+                error: detail
+            ))
+            artifactErrors.append(detail)
+        }
+    }
+
+    do {
+        let screenshotData = try await client.request(type: "screenshot")
+        let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
+        let imageData = try await screenshotImageData(screenshot, client: client)
+        let runtimeRelativePath = hostScreenshotCaptured ? "artifacts/runtime/screenshot.png" : "screenshot.png"
+        let runtimeMetadataPath = hostScreenshotCaptured ? "artifacts/runtime/screenshot.json" : "screenshot.json"
+        let runtimeKind = hostScreenshotCaptured ? "screenshot.runtime" : "screenshot"
+        let runtimeMetadataKind = hostScreenshotCaptured ? "screenshot.runtime-metadata" : "screenshot-metadata"
+        let artifactFormat = try validateRuntimeScreenshotArtifact(
+            imageData,
+            declaredFormat: screenshot.format,
+            outputPath: runtimeRelativePath
+        )
+        let freshness = evidenceFreshness(source: "runtime", status: status)
+        try appendEvidenceArtifact(
+            kind: runtimeKind,
+            relativePath: runtimeRelativePath,
+            data: imageData,
+            contentType: "image/png",
+            directory: directory,
+            freshness: freshness,
+            artifacts: &artifacts,
+            scope: "runtime-app-layer",
+            source: "embedded-runtime",
+            fidelity: "app-layer",
+            platform: target?.platform,
+            riskLevel: "evidence",
+            policy: "not-full-screen-visual-acceptance",
+            redactionStatus: "sensitive",
+            metadata: ["visualAcceptance": .bool(false)],
+            target: target?.id
+        )
+        let fallbackCommand = hostScreenshotCaptured ? nil : simulatorUDID.map {
+            "triton sim screenshot --simulator \($0) --output <path.png> --json"
+        }
+        let metadata = EvidenceScreenshotMetadata(
+            format: artifactFormat,
+            width: screenshot.width,
+            height: screenshot.height,
+            scale: screenshot.scale,
+            dataRef: screenshot.dataRef,
+            imagePath: runtimeRelativePath,
+            bytes: imageData.count,
+            scope: "runtime-app-layer",
+            source: "embedded-runtime",
+            fidelity: "app-layer",
+            visualAcceptance: false,
+            fallbackCommand: fallbackCommand
+        )
+        try appendEvidenceArtifact(
+            kind: runtimeMetadataKind,
+            relativePath: runtimeMetadataPath,
+            data: try prettyEncodedData(metadata),
+            contentType: "application/json",
+            directory: directory,
+            freshness: freshness,
+            artifacts: &artifacts,
+            scope: "runtime-app-layer",
+            source: "embedded-runtime",
+            fidelity: "app-layer",
+            platform: target?.platform,
+            riskLevel: "summary",
+            policy: "not-full-screen-visual-acceptance",
+            redactionStatus: "included",
+            target: target?.id
+        )
+    } catch {
+        appendEvidenceArtifactFailure(
+            kind: hostScreenshotCaptured ? "screenshot.runtime" : "screenshot",
+            error: error,
+            endpoint: "/request",
+            host: host,
+            port: port,
+            skipped: &skipped,
+            artifactErrors: &artifactErrors
+        )
+    }
 }
 
 func evidenceHierarchyData(client: TritonKitHTTPClient, refresh: Bool) async throws -> Data {
