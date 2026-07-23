@@ -1,17 +1,17 @@
 ---
 name: tritonkit-subagent-supervision
-description: TritonKit 监督交付模式：用户要求 subagent 实做且主控 agent 监督闭环时触发。
+description: TritonKit 监督交付模式：任务可安全拆分或用户要求并行时，由主控调度 subagent 并完成集成闭环。
 ---
 
 # TritonKit Subagent Supervision
 
-当用户明确要求“用 subagent 做、主控 agent 负责监督到完成”时，默认进入本模式。
+当任务可安全拆分且预计能明显提升速度或质量，或用户明确要求“用 subagent 做、主控 agent 负责监督到完成”时，进入本模式。简单任务、同一文件的紧耦合改动、共享环境或副作用冲突不强行并行。
 
 ## 目标
 
 1. subagent 负责边界清晰的实现任务。
 2. 主控 agent 负责需求边界、任务拆分、集成、验证、文档、memory 和最终完成判断。
-3. 当用户授权主控 agent 作为 leader 自主管理 subagents 时，主控 agent 应主动创建、调度、改派、停止或续跑 subagent，目标是快速推进完整闭环，而不是等待用户逐步指挥。
+3. 主控 agent 可主动创建、调度、改派、停止或续跑 subagent，目标是快速推进完整闭环，而不是等待用户逐步指挥。
 4. subagent 和其他 agent 的报告只作为证据线索；主控 agent 必须复核关键文件、diff、命令输出、截图或 CI 状态后才能宣称完成。
 
 ## 监督模式
@@ -66,9 +66,9 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
    - 文档结构检查
 6. 如果仍有未完成项，继续推进；如果卡住，明确写出 blocker 和剩余工作。
 
-## Leader 自主管理
+## 主控自主管理
 
-用户明确授权后，同一需求后续执行默认不再逐项请求用户介入。主控 agent 可以自行：
+进入本模式后，主控 agent 默认不再为每次调度逐项请求用户介入，可以自行：
 
 1. 按 `space`、计划和 `.codex/agents/` 配置选择 subagent。
 2. 分批启动互不冲突的 subagent。
@@ -97,7 +97,7 @@ description: TritonKit 监督交付模式：用户要求 subagent 实做且主�
 
 1. 一个 GitHub issue 对应一个 `space`、一个 branch、一个同 key worktree。
 2. worktree 路径使用 `../TritonKit-worktrees/<space-key>/`，不要放进主仓目录或 `/tmp`。
-3. branch 默认使用 `feat/<space-key>`；`space-key` 推荐 `<YYYYMMDD>-issue-<number>-<topic>`。
+3. branch 默认使用 `feat/SP-<三位序号>-<topic>`；space 规范名与 `docs-linhay/spaces/INDEX.md` 的登记一致，例如 `SP-001-issue-20-tap-activation`。
 4. 每个 subagent 只负责自己的 issue worktree，不跨 worktree 读取或修改同一批实现文件。
 5. 主控 agent 在主仓或独立只读上下文里监督，不把多个 issue 的代码、文档、memory 提交混在同一个 commit。
 6. 若主仓已有未提交改动，先记录为并行上下文，只读核对；除非用户明确要求，不 stage、不重置、不顺手修。

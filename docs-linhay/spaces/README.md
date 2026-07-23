@@ -2,9 +2,11 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
+> 编号登记册：[INDEX.md](./INDEX.md)（125/125 个 space 已登记；历史目录物理迁移 0/125）
+>
 > 最近审计：2026-07-23
 
-本文件是 `docs-linhay/spaces/` 的总索引，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
+本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
 ## 状态定义
 

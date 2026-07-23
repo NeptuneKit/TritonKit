@@ -14,7 +14,7 @@ description: TritonKit 内部自动巡航流程。用户要求长期计划、自
 ## 启动前边界
 
 1. 明确巡航目标、时间/预算、禁止事项和停止条件。
-2. 建立或复用 `docs-linhay/spaces/<space-key>/`；长期巡航默认使用可追踪英文 slug，例如 `20260524-autonomous-evolution`。
+2. 建立或复用 `docs-linhay/spaces/SP-<三位序号>-<topic>/`；先在 `INDEX.md` 分配全局递增编号，例如 `SP-001-autonomous-evolution`。
 3. 写入 BDD 验收边界：本轮要交付什么、明确不做什么、哪些结果只进入 backlog。
 4. 确认风险护栏：
    - 不 push、不 tag、不 release、不更新 Homebrew，除非用户明确授权。

@@ -2,9 +2,9 @@
 
 ## Canonical Indexes
 
-- Spaces 总索引固定为 [`docs-linhay/spaces/README.md`](../spaces/README.md)。
-- 新建 space、状态变化、worktree 集成或 space 收口时，必须同步更新该索引。
-- 单个需求的详细边界、BDD、计划和证据仍以对应 `docs-linhay/spaces/<space-key>/README.md` 为事实源。
+- Spaces 的固定入口分为 [编号索引](../spaces/INDEX.md) 与 [路线总览](../spaces/README.md)：前者登记 SP 规范名、兼容目录与迁移进度，后者登记状态和队列。
+- 新建 space、状态变化、worktree 集成或 space 收口时，必须同步更新两个入口。
+- 新 space 采用 `SP-<三位序号>-<topic>`；单个需求的详细边界、BDD、计划和证据仍以对应 `docs-linhay/spaces/<space-id>-<topic>/README.md` 为事实源。
 
 ## Memory Rules
 

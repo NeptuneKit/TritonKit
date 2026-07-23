@@ -9,8 +9,9 @@ metadata:
 
 ## CLI / HTTP / Wails 开发回路
 
-- 新单需求优先在 `docs-linhay/spaces/<space-key>/README.md` 写清 BDD 场景和验收边界；历史或项目级规格再使用 `docs-linhay/features/`。
-- `docs-linhay/spaces/README.md` 是 space 固定总索引；新建 space、状态变化、独立 worktree 待集成或需求收口时，同步更新索引的当前队列、下一步和历史归档。
+- 新单需求优先在 `docs-linhay/spaces/SP-<三位序号>-<topic>/README.md` 写清 BDD 场景和验收边界；历史或项目级规格再使用 `docs-linhay/features/`。
+- 新 space 使用 `SP-<三位序号>-<topic>` 规范名，例如 `SP-001-hybrid-transport-smoke`；序号全局递增且永不复用。历史目录通过 `docs-linhay/spaces/INDEX.md` 映射，不在普通需求中直接重命名。
+- `docs-linhay/spaces/INDEX.md` 是全量编号登记册，`docs-linhay/spaces/README.md` 是路线总览；新建 space、状态变化、独立 worktree 待集成或需求收口时，同步更新编号、迁移进度、当前队列、下一步和历史归档。
 - 先补失败测试，再实现最小代码。
 - HTTP handler 用 `httptest` 优先验证，只有进程生命周期或信号处理才启动真实 server。
 - CLI 行为优先测试参数解析和命令分发，不在单元测试里长期占用端口。
@@ -61,7 +62,7 @@ metadata:
 
 ## 文档与记忆
 
-- Space 总索引：`docs-linhay/spaces/README.md`。
+- Space 编号索引：`docs-linhay/spaces/INDEX.md`；路线总览：`docs-linhay/spaces/README.md`。
 - 需求与验收：`docs-linhay/features/`。
 - 架构、技术方案、测试策略：`docs-linhay/dev/`。
 - 关键决策、里程碑、风险结论：`docs-linhay/memory/YYYY-MM-DD.md`。
@@ -113,7 +114,7 @@ SwiftPM / CLI 修复沉淀：
 
 ## Subagent 监督交付
 
-- 只有用户明确要求 subagent / 并行 agent / 监督交付时才启用。
+- 当任务可安全拆分且并行能明显提升速度或质量时，主控 agent 主动启用 subagent；用户明确要求时同样启用。简单、紧耦合或共享副作用任务保持单 agent / 串行。
 - 主控 agent 负责边界、拆分、集成、验证、文档和最终完成判断。
 - subagent 任务必须有清晰写入面；多个 subagent 不应写同一批文件。
 - issue 级并行任务默认一 issue 一 worktree；主仓已有未提交改动时只读核对，不 stage、不重置、不顺手修。
@@ -124,6 +125,6 @@ SwiftPM / CLI 修复沉淀：
 - BDD 场景满足。
 - 相关测试已运行并通过，或明确说明阻塞和风险。
 - 文档与 memory 已更新。
-- Space 新增、状态变化、worktree 集成或收口时，`docs-linhay/spaces/README.md` 已同步。
+- Space 新增、状态变化、worktree 集成或收口时，`docs-linhay/spaces/INDEX.md` 与 `docs-linhay/spaces/README.md` 已同步。
 - 若产生可复用模式，已更新对应 skill 或说明暂不沉淀。
 - 若任务要求“从头开始”，需同步检查 docs、skills 和 AGENTS 是否仍残留旧方向规则。
