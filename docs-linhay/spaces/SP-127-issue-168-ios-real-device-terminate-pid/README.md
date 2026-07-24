@@ -2,7 +2,7 @@
 
 ## 状态与范围
 
-- 状态：执行（安全 fallback 已实现；等待主控 checkpoint 审核）。
+- 状态：本地集成已验证；等待主分支收口（真实设备 smoke 仍 blocked）。
 - Issue：[#168](https://github.com/NeptuneKit/TritonKit/issues/168)。
 - Owner：`linhay`；当前 issue 为 open，无 assignee。
 - 基线：`feat/SP-126-testrec-convergence@5f6c2f6f`。
@@ -107,5 +107,5 @@ slice 收口前再按变更范围运行 `docs-linhay/scripts/verify.sh --local` 
 ## 当前收口状态
 
 - 已实现：shared builder 只接受明确 PID 并生成 `--pid <pid>`；iOS real plan 在 builder 前抛出 `app_terminate_pid_resolution_unavailable`；error detail 使用 public selector，raw target 不进入 envelope；`app` root 与 `terminate` 子命令 schema 均登记该 code。
-- 已验证：focused shared/CLI tests 通过；`SchemaFactSourceTests` 全 suite 仍有 baseline 中与本 slice 无关的 schema contract failures，详见当日 memory/最终报告。
-- 未完成：真实设备 smoke 被 live target/server 不可用阻塞；本 worktree 保持未 stage、未 commit，等待主控 checkpoint 审核。
+- 已验证：source checkpoint `cef52ea2` 与本地 integration commit `99daebea` 已保留；联合验证的 `TKHostAdapterModelsTests` 38/38、`HostAppTerminatePIDTests` 5/5、`FailureDiagnosticsTests` 13/13 通过。新增断言锁住 CLI help 与 app root usage schema 对 iOS real-device fail-closed 边界的披露。`SchemaFactSourceTests` 与共同基线同为 119 tests / 12 个既有 contract failures，详见当日 memory。
+- 未完成：真实设备 smoke 仍被 live target/server 不可用阻塞；本地 integration branch 尚未合入 `main`，且没有 push、PR、tag、release 或 issue 操作。

@@ -284,6 +284,28 @@ struct XcodeCommandTests {
         #expect(!buildCalled)
     }
 
+    @Test("xcode real-device selection failure emits contextual target recovery")
+    func xcodeRealDeviceSelectionFailureEmitsContextualTargetRecovery() throws {
+        let detail = xcodeRealDeviceSelectionErrorDetail(
+            .targetNotFound("missing-alias"),
+            selector: "missing-alias"
+        )
+
+        #expect(detail.code == "target_not_found")
+        #expect(detail.nextAction?.command == "target")
+        #expect(detail.nextAction?.args == [
+            "resolve", "missing-alias", "--platform", "ios", "--scope", "real", "--ready", "--json",
+        ])
+        #expect(detail.nextAction?.category == "prepare-target")
+
+        let response = try JSONDecoder().decode(
+            TKCLIErrorResponse.self,
+            from: JSONEncoder().encode(TKCLIErrorResponse(error: detail))
+        )
+        #expect(response.ok == false)
+        #expect(response.error == detail)
+    }
+
     @Test("xcode real-device preflight preserves alias selection and build argv order")
     func xcodeRealDevicePreflightPreservesAliasSelectionAndBuildArguments() throws {
         let target = HostDeviceTarget(

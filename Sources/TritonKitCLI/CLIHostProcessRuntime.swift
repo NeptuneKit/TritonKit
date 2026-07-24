@@ -718,7 +718,11 @@ func hostDeviceSelectionErrorDetail(_ error: HostDeviceSelectionError) -> (detai
     }
 }
 
-func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws -> Never {
+func failHostCommand(
+    _ error: Error,
+    outputFormat: ClientOutputFormat,
+    hostDeviceSelectionDetailOverride: ((HostDeviceSelectionError) -> TKCLIErrorDetail)? = nil
+) throws -> Never {
     if let exitCode = error as? ExitCode {
         throw exitCode
     }
@@ -835,7 +839,7 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
     case let error as HostDeviceSelectionError:
         let selectionDetail = hostDeviceSelectionErrorDetail(error)
         hostDeviceCandidates = selectionDetail.candidates
-        detail = selectionDetail.detail
+        detail = hostDeviceSelectionDetailOverride?(error) ?? selectionDetail.detail
     case HostDeviceScreenshotError.unsupportedIOSRealDevice:
         detail = TKCLIErrorDetail(
             code: "unsupported_scope",

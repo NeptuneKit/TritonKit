@@ -64,6 +64,17 @@ struct HostAppTerminatePIDTests {
         ])
     }
 
+    @Test("app terminate help and root schema disclose the real-device fail-closed boundary")
+    func appTerminateHelpAndRootSchemaDiscloseFailClosedBoundary() throws {
+        let app = try #require(hostCommandSchemas().first { $0.name == "app" })
+        let terminateUsage = try #require(app.usageForms.first { $0.form == "terminate --bundle-id <id>" })
+
+        #expect(HostAppTerminate.configuration.abstract.contains("iOS real-device"))
+        #expect(HostAppTerminate.configuration.abstract.contains("fail closed"))
+        #expect(terminateUsage.description.contains("iOS real-device"))
+        #expect(terminateUsage.description.contains("fail closed"))
+    }
+
     @Test("terminate plan keeps simulator Android and Harmony builders unchanged")
     func nonRealTerminatePlansUseExistingBuilders() throws {
         let simulatorBundleID = "com.example.simulator"

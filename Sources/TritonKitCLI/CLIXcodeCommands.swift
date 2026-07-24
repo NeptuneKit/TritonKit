@@ -380,6 +380,27 @@ struct XcodeTest: AsyncParsableCommand {
     }
 }
 
+func xcodeRealDeviceSelectionErrorDetail(
+    _ error: HostDeviceSelectionError,
+    selector: String
+) -> TKCLIErrorDetail {
+    let selectionDetail = hostDeviceSelectionErrorDetail(error).detail
+    return TKCLIErrorDetail(
+        code: selectionDetail.code,
+        message: selectionDetail.message,
+        endpoint: selectionDetail.endpoint,
+        hint: selectionDetail.hint,
+        nextAction: TKCLINextAction(
+            command: "target",
+            args: ["resolve", selector, "--platform", "ios", "--scope", "real", "--ready", "--json"],
+            category: "prepare-target"
+        ),
+        nearestCandidates: selectionDetail.nearestCandidates,
+        suggestedCommands: selectionDetail.suggestedCommands,
+        candidateCount: selectionDetail.candidateCount
+    )
+}
+
 struct XcodeRun: AsyncParsableCommand {
     static let configuration = CommandConfiguration(commandName: "run", abstract: "Build, install, and launch an Xcode app on a simulator or real device")
 
@@ -425,6 +446,17 @@ struct XcodeRun: AsyncParsableCommand {
                 timeout: timeout
             )
             try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
+        } catch let error as HostDeviceSelectionError {
+            if let device, !device.isEmpty {
+                try failHostCommand(
+                    error,
+                    outputFormat: outputFormat,
+                    hostDeviceSelectionDetailOverride: {
+                        xcodeRealDeviceSelectionErrorDetail($0, selector: device)
+                    }
+                )
+            }
+            try failHostCommand(error, outputFormat: outputFormat)
         } catch {
             try failHostCommand(error, outputFormat: outputFormat)
         }

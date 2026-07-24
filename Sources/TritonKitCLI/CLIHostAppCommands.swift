@@ -1069,7 +1069,7 @@ private func runAndroidAppLaunchCommand(
 }
 
 struct HostAppTerminate: AsyncParsableCommand {
-    static let configuration = CommandConfiguration(commandName: "terminate", abstract: "Terminate a running simulator or Harmony app")
+    static let configuration = CommandConfiguration(commandName: "terminate", abstract: "Terminate a running app; iOS real-device bundle-ID requests fail closed without a verified PID")
 
     @Option(help: "Platform adapter: ios, android, or harmony") var platform: HostAppPlatform?
     @Option(help: "Device scope: simulator|emulator|real|all") var scope: HostDeviceScope?

@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：执行（路线已裁决；当前先完成可信基线，再进入首个可运行纵切）。
+- 状态：执行（路线已裁决；可信基线的三个有限修复已完成本地集成，下一步才是首个可运行纵切）。
 - 负责人：Codex。
 - Branch：`feat/SP-126-testrec-convergence`。
 - Worktree：`../TritonKit-worktrees/SP-126-testrec-convergence/`。
@@ -21,6 +21,12 @@
 | `replay` | `.tritonplan` 的低层 smoke / 验证能力 | 继续作为低层能力，不吸收录制包、质量审查或测试生命周期 |
 
 因此：`testrec` 有价值的原始合同不会丢失，但其 `local-simulated` 只能作为兼容和诊断基线，不能再被包装成真实回放成功；真实设备动作、前后 observation、证据和最终判定一律落到现有 `test run`。
+
+## 可信基线本地集成（2026-07-24）
+
+`SP-127`（#168 iOS 真机 terminate fail-closed）、`SP-128`（#167 Xcode 真机 target preflight）与 `SP-129`（`serve` 默认 loopback）已按编号纳入独立的 `codex/sp126-trusted-baseline-integration` worktree，并完成联合 focused、schema、CLI 与本地门禁验证。
+
+该分支只形成可审查的本地集成 checkpoint：未合入 `main`、未 push/PR/tag/release，也没有触碰 #164 dirty evidence worktree。真实设备 smoke、真实 Xcode build 与 Bonjour 广播语义仍按各自 space 的显式风险记录保留；它们不阻塞本期的 fail-closed / preflight / 默认绑定契约，但不能被误报为已验证能力。
 
 ## 本期边界
 

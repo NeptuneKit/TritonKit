@@ -808,7 +808,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 TKCommandSchemaOption(name: "launch --platform android --package-name <package>", type: "Subcommand", description: "Launch an Android package; when --activity is omitted Triton resolves the default activity before adb am start"),
                 TKCommandSchemaOption(name: "launch --platform harmony --bundle <bundle> --ability <ability>", type: "Subcommand", description: "Launch a Harmony app ability"),
                 TKCommandSchemaOption(name: "launch --device <selector> --scope real --bundle-id|--package-name|--bundle <id>", type: "Subcommand", description: "Real-device launch contract placeholder; use wait/assert/evidence for business readiness"),
-                TKCommandSchemaOption(name: "terminate --bundle-id <id>", type: "Subcommand", description: "Terminate a running simulator app"),
+                TKCommandSchemaOption(name: "terminate --bundle-id <id>", type: "Subcommand", description: "Terminate a running app; iOS real-device bundle-ID requests fail closed without a verified PID"),
                 TKCommandSchemaOption(name: "terminate --platform android --package-name <package>", type: "Subcommand", description: "Force-stop an Android package through adb shell am force-stop"),
                 TKCommandSchemaOption(name: "terminate --platform harmony --bundle <bundle>", type: "Subcommand", description: "Force-stop a Harmony app"),
                 TKCommandSchemaOption(name: "go <url>", type: "Subcommand", description: "Open an iOS URL, wait for embedded runtime readiness, and return a snapshot summary"),

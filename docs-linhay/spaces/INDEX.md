@@ -151,6 +151,6 @@
 | `SP-124-issue-164-evidence-simulator-screenshot-fidelity` | [`20260722-issue-164-evidence-simulator-screenshot-fidelity`](./20260722-issue-164-evidence-simulator-screenshot-fidelity/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-125-issue-165-xcode-schemes-discovery-timeout` | [`20260722-issue-165-xcode-schemes-discovery-timeout`](./20260722-issue-165-xcode-schemes-discovery-timeout/README.md) | 已登记 | 历史目录保留，待按独立迁移批次重命名 |
 | `SP-126-testrec-convergence` | [`SP-126-testrec-convergence`](./SP-126-testrec-convergence/README.md) | 已登记 | 规范目录；非历史迁移对象 |
-| `SP-127-issue-168-ios-real-device-terminate-pid` | [`SP-127-issue-168-ios-real-device-terminate-pid`](./SP-127-issue-168-ios-real-device-terminate-pid/README.md) | 已登记 | 规范目录；安全 fallback 已实现，待 checkpoint 审核 |
-| `SP-128-issue-167-xcode-device-alias-preflight` | [`SP-128-issue-167-xcode-device-alias-preflight`](./SP-128-issue-167-xcode-device-alias-preflight/README.md) | 已登记 | 规范目录；独立 worktree；非历史迁移对象 |
-| `SP-129-serve-loopback-default` | [`SP-129-serve-loopback-default`](./SP-129-serve-loopback-default/README.md) | 已登记 | 规范目录；非历史迁移对象 |
+| `SP-127-issue-168-ios-real-device-terminate-pid` | [`SP-127-issue-168-ios-real-device-terminate-pid`](./SP-127-issue-168-ios-real-device-terminate-pid/README.md) | 已登记 | 规范目录；source checkpoint 已纳入本地 integration branch，待 main 收口 |
+| `SP-128-issue-167-xcode-device-alias-preflight` | [`SP-128-issue-167-xcode-device-alias-preflight`](./SP-128-issue-167-xcode-device-alias-preflight/README.md) | 已登记 | 规范目录；source checkpoint 已纳入本地 integration branch，待 main 收口 |
+| `SP-129-serve-loopback-default` | [`SP-129-serve-loopback-default`](./SP-129-serve-loopback-default/README.md) | 已登记 | 规范目录；source checkpoint 已纳入本地 integration branch，待 main 收口 |
