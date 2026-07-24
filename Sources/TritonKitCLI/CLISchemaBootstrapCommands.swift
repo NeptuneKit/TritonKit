@@ -30,7 +30,7 @@ func bootstrapCommandSchemas() -> [TKCommandSchema] {
             exitCodeOnFailure: 1,
             outputFormats: ["logs"],
             options: [
-                TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "0.0.0.0", description: "Host to bind to"),
+                TKCommandSchemaOption(name: "--host", type: "String", defaultValue: "127.0.0.1", description: "Host to bind to"),
                 TKCommandSchemaOption(name: "--port", type: "Int", defaultValue: "19421", description: "Port to listen on"),
             ],
             examples: ["triton serve --host 127.0.0.1 --port 19421"],

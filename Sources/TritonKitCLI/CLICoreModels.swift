@@ -242,7 +242,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
     let formatTextJSON = [("--format <format>", "输出格式：text 或 json"), ("--json", "等价于 --format json")]
     return [
         "serve": ChineseCommandHelp(name: "serve", overview: "启动本地控制服务。", usage: "triton serve [--host <host>] [--port <port>]", options: [
-            ("--host <host>", "监听 host，默认 0.0.0.0"),
+            ("--host <host>", "监听 host，默认 127.0.0.1"),
             ("--port <port>", "监听端口，默认 19421"),
         ]),
         "web": ChineseCommandHelp(name: "web", overview: "从 TritonKit checkout 启动 Vite dev 模式，或从 release/Homebrew 随包 web/ 静态产物启动 packaged 模式。", usage: "triton web [--root <path>] [--host <host>] [--port <port>] [--print-command] [--json]", options: [

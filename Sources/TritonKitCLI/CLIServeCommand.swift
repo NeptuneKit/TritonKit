@@ -12,7 +12,7 @@ struct Serve: AsyncParsableCommand {
     static let configuration = CommandConfiguration(abstract: "Start server")
 
     @Option(name: .shortAndLong, help: "Port to listen on") var port: Int = 19421
-    @Option(name: .shortAndLong, help: "Host to bind to") var host: String = "0.0.0.0"
+    @Option(name: .shortAndLong, help: "Host to bind to") var host: String = "127.0.0.1"
 
     func run() async throws {
         let store = DataStore()
