@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（129/129 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（130/130 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-24
 
@@ -47,6 +47,7 @@
 | 执行 | [SP-127-issue-168-ios-real-device-terminate-pid](./SP-127-issue-168-ios-real-device-terminate-pid/README.md) | #168 已采用安全 fallback：shared terminate 只接受显式 PID，iOS real bundle-ID terminate 无可证实 PID 时 fail closed；不实现猜测式 PID join | source checkpoint 已纳入本地 integration branch；真实设备 smoke blocker 与 12 个既有 schema failures 单独保留，待 main 收口 |
 | 执行 | [SP-128-issue-167-xcode-device-alias-preflight](./SP-128-issue-167-xcode-device-alias-preflight/README.md) | Xcode real-device run 已确定先做 target selection preflight，再进入昂贵 build；保持既有 build/install/launch 合同 | source checkpoint 已纳入本地 integration branch；真实 Xcode/device 与 live alias store 验证仍按环境边界保留，待 main 收口 |
 | 执行 | [SP-129-serve-loopback-default](./SP-129-serve-loopback-default/README.md) | `triton serve` 无 `--host` 时默认绑定 `127.0.0.1:19421`；显式非 loopback host 保持兼容；Bonjour publish 语义暂不改变 | source checkpoint 已纳入本地 integration branch；联合 docs/CLI 门禁通过，Bonjour 风险不变，待 main 收口 |
+| 执行 | [SP-130-issue-166-runtime-jpeg-normalization](./SP-130-issue-166-runtime-jpeg-normalization/README.md) | #166 已将 legacy embedded JPEG 解码并统一规范化为 PNG，避免 CLI/evidence/replay/test-run 发布伪 PNG 或丢弃有效证据 | fixture、release/schema 与本地总门禁完成；#164 dirty evidence WIP 保持隔离，待后续 integration 收口 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -62,6 +63,7 @@
 | `SP-127-issue-168-ios-real-device-terminate-pid` | `feat/SP-127-issue-168-ios-real-device-terminate-pid` | `../TritonKit-worktrees/SP-127-issue-168-ios-real-device-terminate-pid/` | `5f6c2f6f` | `cef52ea2` 已纳入 `../TritonKit-worktrees/SP-126-trusted-baseline-integration/` 的 `codex/sp126-trusted-baseline-integration`；待 main 收口，保留真机 smoke blocker |
 | `SP-128-issue-167-xcode-device-alias-preflight` | `feat/SP-128-issue-167-xcode-device-alias-preflight` | `../TritonKit-worktrees/SP-128-issue-167-xcode-device-alias-preflight/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `25f7e048` 已纳入同一 local integration branch；待 main 收口，保留真实 Xcode/device 覆盖缺口 |
 | `SP-129-serve-loopback-default` | `feat/SP-129-serve-loopback-default` | `../TritonKit-worktrees/SP-129-serve-loopback-default/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `f0f3b0a0` 已纳入同一 local integration branch；待 main 收口，保留 Bonjour 广播语义风险 |
+| `SP-130-issue-166-runtime-jpeg-normalization` | `feat/SP-130-issue-166-runtime-jpeg-normalization` | `../TritonKit-worktrees/SP-130-issue-166-runtime-jpeg-normalization/` | `codex/sp126-trusted-baseline-integration@2fddf6a0` | #166 JPEG -> PNG normalizer 已完成 fixture/release/schema 与本地总门禁；不读取或修改 #164 dirty WIP，待后续 integration 收口 |
 
 ## 维护规则
 

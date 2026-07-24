@@ -1736,20 +1736,20 @@ struct Screenshot: AsyncParsableCommand {
             let data = try await client.request(type: "screenshot")
             let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
             let imageData = try await screenshotImageData(screenshot, client: client)
-            let artifactFormat = try validateRuntimeScreenshotArtifact(
+            let artifactData = try normalizeRuntimeScreenshotToPNG(
                 imageData,
                 declaredFormat: screenshot.format,
                 outputPath: output
             )
-            try imageData.write(to: URL(fileURLWithPath: output), options: .atomic)
+            try artifactData.write(to: URL(fileURLWithPath: output), options: .atomic)
             if outputFormat == .json {
                 let summary: [String: Any] = [
-                    "format": artifactFormat,
+                    "format": "png",
                     "width": screenshot.width,
                     "height": screenshot.height,
                     "scale": screenshot.scale,
                     "output": output,
-                    "bytes": imageData.count,
+                    "bytes": artifactData.count,
                 ]
                 print(try encodeJSONObject(summary))
             } else {

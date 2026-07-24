@@ -521,7 +521,7 @@ func executeReplayStep(
         let data = try await client.request(type: "screenshot")
         let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: data)
         let imageData = try await screenshotImageData(screenshot, client: client)
-        _ = try validateRuntimeScreenshotArtifact(
+        let artifactData = try normalizeRuntimeScreenshotToPNG(
             imageData,
             declaredFormat: screenshot.format,
             outputPath: output
@@ -531,7 +531,7 @@ func executeReplayStep(
             at: outputURL.deletingLastPathComponent(),
             withIntermediateDirectories: true
         )
-        try imageData.write(to: outputURL, options: .atomic)
+        try artifactData.write(to: outputURL, options: .atomic)
         return TKReplayStepResult(
             index: index,
             action: step.action.rawValue,
@@ -541,7 +541,7 @@ func executeReplayStep(
             elapsedMs: elapsedMilliseconds(since: startedAt),
             command: command,
             message: "screenshot captured",
-            file: TKReplayFileArtifact(path: outputURL.path, bytes: imageData.count, contentType: "image/png")
+            file: TKReplayFileArtifact(path: outputURL.path, bytes: artifactData.count, contentType: "image/png")
         )
     case .evidence:
         let output = try replayOutputPath(

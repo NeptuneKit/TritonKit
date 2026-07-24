@@ -32,7 +32,7 @@ triton debug state responder --json
 triton debug ledger --limit 50 --jsonl
 ```
 
-For an embedded runtime screenshot, always use a `.png` output and inspect both metadata and magic bytes. A successful current runtime returns `format=png` with `89 50 4e 47 0d 0a 1a 0a`; `artifact_write_failed` means the runtime metadata, bytes, or output extension disagreed, and Triton intentionally did not publish the artifact. Do not rename JPEG bytes to `.png` or attach a mismatched artifact to evidence.
+For an embedded runtime screenshot, always use a `.png` output and inspect both metadata and magic bytes. A successful current runtime returns `format=png` with `89 50 4e 47 0d 0a 1a 0a`; a legacy runtime that truthfully returns a decodable JPEG is normalized by TritonKit before publication, so the written artifact and returned metadata are still PNG. `artifact_write_failed` means the declared format, bytes, output extension, or JPEG decode was invalid, and Triton intentionally did not publish the artifact. Do not rename raw JPEG bytes to `.png` or attach a mismatched artifact to evidence.
 
 For media reports, preserve `media.surfaces[]`, `media.controls[]`, `automationConfidence`, `fallbackAdvice[]`, and `evidenceCommands[]`. If confidence is `surface-only`, report the missing controllable surface and recommend app-owned DEBUG overlay controls rather than claiming pause/resume/seek proof.
 

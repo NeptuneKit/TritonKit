@@ -181,7 +181,7 @@ Fallback 记录必须同时包含 Triton 命令、稳定错误码或 unsupported
 - `triton geometry --target triton:local --format json`：读取当前可见 window 的 bounds、safe area、scale 与 orientation。
 - `triton debug ax --target triton:local --format json`：读取当前 App 内安全可操作控件索引树。
 - `triton debug hit --target triton:local --at <x,y> --format json`：按坐标命中最深 UI 节点，并返回中心点；`--x/--y` 保持兼容。
-- `triton screenshot --target triton:local --output <path.png> --metadata`：输出当前 App 截图；embedded runtime 成功契约固定为 PNG，CLI 在原子写入前同时校验 `.png` 扩展名、metadata `format=png` 与 PNG magic bytes。旧 runtime 或异常 payload 若返回 JPEG/未知字节，命令返回 `artifact_write_failed` 且不发布伪装 PNG；evidence、replay、test-run 的 embedded `.png` 写入复用同一边界。host-side adapter 仍可按平台返回自己的格式契约。
+- `triton screenshot --target triton:local --output <path.png> --metadata`：输出当前 App 截图；embedded runtime 发布契约固定为 PNG，CLI 在原子写入前校验 `.png` 输出与 PNG magic bytes。旧 runtime 若如实声明并返回可解码 JPEG，CLI 会先规范化为真实 PNG，随后以 `format=png`、PNG bytes 与 PNG artifact 写出；声明/字节不匹配或不可解码的 payload 仍返回 `artifact_write_failed` 且不发布伪装 PNG。evidence、replay、test-run 的 embedded `.png` 写入复用同一边界。host-side adapter 仍可按平台返回自己的格式契约。
 - `triton act input --target triton:local --format json --summary --strict < gestures.ndjson`：批量读取 Baguette 风格 NDJSON 动作，每行返回一行 `TKInputResult`；`--summary` 输出最终 `{ok,actionCount,failedCount}`，`--strict` 在任一 action 失败时以非 0 退出。
 
 面向 AI agent 的 JSON 入口统一支持 `--json` alias；`screenshot --json` 等价于 `--metadata`，用于在写出 PNG 后额外输出机器可读截图元数据。

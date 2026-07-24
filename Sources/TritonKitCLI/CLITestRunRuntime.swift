@@ -1327,21 +1327,22 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
             let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
             let imageData = try await screenshotImageData(screenshot, client: runtime.client)
             let screenshotPath = "debug/\(step.id)-failure.png"
-            _ = try validateRuntimeScreenshotArtifact(
+            let artifactData = try normalizeRuntimeScreenshotToPNG(
                 imageData,
                 declaredFormat: screenshot.format,
                 outputPath: screenshotPath
             )
             let metadataPath = "debug/\(step.id)-failure-screenshot.json"
-            try writeTestRunArtifact(imageData, relativePath: screenshotPath, evidenceDirectory: context.evidenceDirectory)
+            let metadataData = try prettyEncodedData(screenshot)
+            try writeTestRunArtifact(artifactData, relativePath: screenshotPath, evidenceDirectory: context.evidenceDirectory)
             try writeTestRunArtifact(
-                try prettyEncodedData(screenshot),
+                metadataData,
                 relativePath: metadataPath,
                 evidenceDirectory: context.evidenceDirectory
             )
             return [
-                TKEvidenceArtifact(kind: "screenshot", path: screenshotPath, contentType: "image/png", bytes: imageData.count, target: runtime.summary.id),
-                TKEvidenceArtifact(kind: "screenshot.metadata", path: metadataPath, contentType: "application/json", bytes: screenshotData.count, target: runtime.summary.id),
+                TKEvidenceArtifact(kind: "screenshot", path: screenshotPath, contentType: "image/png", bytes: artifactData.count, target: runtime.summary.id),
+                TKEvidenceArtifact(kind: "screenshot.metadata", path: metadataPath, contentType: "application/json", bytes: metadataData.count, target: runtime.summary.id),
             ]
         } catch {
             return []
@@ -1361,7 +1362,7 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         let screenshotData = try await runtime.client.request(type: "screenshot")
         let screenshot = try JSONDecoder().decode(TKScreenshotResponse.self, from: screenshotData)
         let imageData = try await screenshotImageData(screenshot, client: runtime.client)
-        _ = try validateRuntimeScreenshotArtifact(
+        let artifactData = try normalizeRuntimeScreenshotToPNG(
             imageData,
             declaredFormat: screenshot.format,
             outputPath: screenshotPath
@@ -1371,10 +1372,11 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
         let hierarchyData = try await runtime.client.latestHierarchyData()
         let geometryData = try await runtime.client.request(type: "geometry")
         let geometry = try JSONDecoder().decode(TKGeometryResponse.self, from: geometryData)
+        let metadataData = try prettyEncodedData(screenshot)
 
-        try writeTestRunArtifact(imageData, relativePath: screenshotPath, evidenceDirectory: context.evidenceDirectory)
+        try writeTestRunArtifact(artifactData, relativePath: screenshotPath, evidenceDirectory: context.evidenceDirectory)
         try writeTestRunArtifact(
-            try prettyEncodedData(screenshot),
+            metadataData,
             relativePath: metadataPath,
             evidenceDirectory: context.evidenceDirectory
         )
@@ -1388,7 +1390,7 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
 
         let visibleTexts = testRunVisibleTexts(from: nodes)
         let screenCandidate = TKTestRunScreenCandidate(
-            screenshotSha256: testRunSHA256(imageData),
+            screenshotSha256: testRunSHA256(artifactData),
             axTextHash: testRunSHA256(Data(visibleTexts.joined(separator: "\n").utf8)),
             hierarchySha256: testRunSHA256(hierarchyData),
             visibleTexts: visibleTexts
@@ -1402,8 +1404,8 @@ final class TKLiveTestRunPrimitiveExecutor: TKTestRunPrimitiveExecutor {
             ),
             screenCandidate: screenCandidate,
             evidenceArtifacts: [
-                TKEvidenceArtifact(kind: "screenshot", path: screenshotPath, contentType: "image/png", bytes: imageData.count, target: runtime.summary.id),
-                TKEvidenceArtifact(kind: "screenshot.metadata", path: metadataPath, contentType: "application/json", bytes: screenshotData.count, target: runtime.summary.id),
+                TKEvidenceArtifact(kind: "screenshot", path: screenshotPath, contentType: "image/png", bytes: artifactData.count, target: runtime.summary.id),
+                TKEvidenceArtifact(kind: "screenshot.metadata", path: metadataPath, contentType: "application/json", bytes: metadataData.count, target: runtime.summary.id),
                 TKEvidenceArtifact(kind: "accessibility", path: axPath, contentType: "application/json", bytes: accessibilityData.count, target: runtime.summary.id),
                 TKEvidenceArtifact(kind: "hierarchy", path: hierarchyPath, contentType: "application/json", bytes: hierarchyData.count, target: runtime.summary.id),
             ]

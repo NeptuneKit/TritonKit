@@ -17,7 +17,7 @@ Inspect `primaryArtifacts[]` before traversing the full artifact set.
 
 Store outputs under `/tmp` during iteration. Copy only durable screenshots/docs into the owning `docs-linhay/spaces/<space-key>/` when worth keeping.
 
-For embedded iOS screenshot evidence, require `.png`, metadata `format=png`, and PNG magic bytes to agree. Treat `artifact_write_failed` as a rejected artifact contract, not a partial success; do not rename legacy JPEG bytes or add them to a `.tritonevidence` bundle as PNG.
+For embedded iOS screenshot evidence, require `.png`, metadata `format=png`, and PNG magic bytes to agree. A legacy runtime that truthfully returns a decodable JPEG is normalized by TritonKit into a real PNG before its artifact and metadata are published. Treat `artifact_write_failed` as a rejected artifact contract, not a partial success; do not rename raw JPEG bytes or add a mismatched payload to a `.tritonevidence` bundle as PNG.
 
 ## Redaction
 

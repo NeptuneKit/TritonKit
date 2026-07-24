@@ -454,7 +454,7 @@ func captureEvidenceScreenshots(
         let runtimeMetadataPath = hostScreenshotCaptured ? "artifacts/runtime/screenshot.json" : "screenshot.json"
         let runtimeKind = hostScreenshotCaptured ? "screenshot.runtime" : "screenshot"
         let runtimeMetadataKind = hostScreenshotCaptured ? "screenshot.runtime-metadata" : "screenshot-metadata"
-        let artifactFormat = try validateRuntimeScreenshotArtifact(
+        let artifactData = try normalizeRuntimeScreenshotToPNG(
             imageData,
             declaredFormat: screenshot.format,
             outputPath: runtimeRelativePath
@@ -463,7 +463,7 @@ func captureEvidenceScreenshots(
         try appendEvidenceArtifact(
             kind: runtimeKind,
             relativePath: runtimeRelativePath,
-            data: imageData,
+            data: artifactData,
             contentType: "image/png",
             directory: directory,
             freshness: freshness,
@@ -482,13 +482,14 @@ func captureEvidenceScreenshots(
             "triton sim screenshot --simulator \($0) --output <path.png> --json"
         }
         let metadata = EvidenceScreenshotMetadata(
-            format: artifactFormat,
+            format: "png",
             width: screenshot.width,
             height: screenshot.height,
             scale: screenshot.scale,
-            dataRef: screenshot.dataRef,
+            // A legacy JPEG dataRef points at the pre-normalized source bytes, not this PNG artifact.
+            dataRef: artifactData == imageData ? screenshot.dataRef : nil,
             imagePath: runtimeRelativePath,
-            bytes: imageData.count,
+            bytes: artifactData.count,
             scope: "runtime-app-layer",
             source: "embedded-runtime",
             fidelity: "app-layer",
