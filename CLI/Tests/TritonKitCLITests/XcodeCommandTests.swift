@@ -250,6 +250,152 @@ struct XcodeCommandTests {
         #expect(destination == "generic/platform=iOS")
     }
 
+    @Test("xcode real-device preflight rejects a missing selector before build")
+    func xcodeRealDevicePreflightRejectsMissingSelectorBeforeBuild() throws {
+        let request = HostDeviceSelectionRequest(
+            device: "missing-alias",
+            platform: .ios,
+            scope: .real,
+            ready: true
+        )
+        var buildCalled = false
+
+        do {
+            _ = try runXcodeRealDevicePreflightThenBuild(
+                resolveSelection: {
+                    try resolveHostDeviceSelection(
+                        request: request,
+                        candidates: [.ios: []],
+                        aliases: .empty
+                    )
+                },
+                build: {
+                    buildCalled = true
+                    return "build-called"
+                }
+            )
+            Issue.record("Expected target preflight to reject the missing selector")
+        } catch HostDeviceSelectionError.targetNotFound(let selector) {
+            #expect(selector == "missing-alias")
+        } catch {
+            Issue.record("Unexpected target preflight error: \(error)")
+        }
+
+        #expect(!buildCalled)
+    }
+
+    @Test("xcode real-device preflight preserves alias selection and build argv order")
+    func xcodeRealDevicePreflightPreservesAliasSelectionAndBuildArguments() throws {
+        let target = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:abc123",
+            target: "ios-real:abc123",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "Lin iPhone",
+            runtime: "iOS 26.5",
+            transport: "usb",
+            scope: "real",
+            kind: "real-device"
+        )
+        let request = HostDeviceSelectionRequest(
+            device: "iphone15",
+            platform: .ios,
+            scope: .real,
+            ready: true
+        )
+        let aliases = HostTargetAliasStore(
+            aliases: [
+                "iphone15": HostTargetAlias(platform: .ios, target: "ios-real:abc123")
+            ]
+        )
+        let cache = TKXcodeDerivedDataCacheInfo(
+            path: ".triton/DerivedData",
+            exists: false,
+            cacheState: "empty",
+            incrementalExpected: false,
+            cleanupPolicy: "preserve-by-default",
+            guidance: "preserve"
+        )
+        let invocation = ResolvedXcodeInvocation(
+            workspace: "App.xcworkspace",
+            project: nil,
+            package: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: "generic/platform=iOS",
+            derivedDataPath: ".triton/DerivedData",
+            buildSettings: [],
+            derivedDataCache: cache,
+            simulatorUDID: nil,
+            device: "iphone15"
+        )
+        var events: [String] = []
+
+        let prepared = try runXcodeRealDevicePreflightThenBuild(
+            resolveSelection: {
+                events.append("preflight")
+                return try resolveHostDeviceSelection(
+                    request: request,
+                    candidates: [.ios: [target]],
+                    aliases: aliases
+                )
+            },
+            build: {
+                events.append("build")
+                return TKXcodebuildCommand.build(
+                    workspace: invocation.workspace,
+                    project: invocation.project,
+                    package: invocation.package,
+                    scheme: invocation.scheme,
+                    configuration: invocation.configuration,
+                    sdk: invocation.sdk,
+                    destination: invocation.destination,
+                    derivedDataPath: invocation.derivedDataPath,
+                    buildSettings: invocation.buildSettings
+                ).argv
+            }
+        )
+
+        #expect(events == ["preflight", "build"])
+        #expect(prepared.selection.source == .alias)
+        #expect(prepared.selection.target == target)
+        #expect(prepared.buildSummary == [
+            "-workspace", "App.xcworkspace",
+            "-scheme", "App",
+            "-configuration", "Debug",
+            "-sdk", "iphoneos",
+            "-destination", "generic/platform=iOS",
+            "-derivedDataPath", ".triton/DerivedData",
+            "build",
+        ])
+    }
+
+    @Test("xcode schemas declare target selection failures and recovery")
+    func xcodeSchemasDeclareTargetSelectionFailuresAndRecovery() throws {
+        let schemas = commandSchemas()
+        let xcode = try #require(schemas.first { $0.name == "xcode" })
+        let run = try #require(xcode.subcommands.first { $0.name == "run" })
+        let target = try #require(schemas.first { $0.name == "target" })
+        let genericRecovery = "triton target resolve <selector> --json"
+        let realDeviceRecovery = "triton target resolve <selector> --platform ios --scope real --ready --json"
+
+        for code in ["target_not_found", "ambiguous_target", "target_platform_mismatch"] {
+            #expect(xcode.failureCodes.contains(code))
+            #expect(run.failureCodes.contains(code))
+        }
+        #expect(xcode.nextCommands.contains(realDeviceRecovery))
+        #expect(run.nextCommands.contains(realDeviceRecovery))
+        #expect(xcode.nextCommands.contains(genericRecovery) == false)
+        #expect(run.nextCommands.contains(genericRecovery) == false)
+        #expect(xcode.recoveryCommands.map(\.command).contains(realDeviceRecovery))
+        #expect(run.recoveryCommands.map(\.command).contains(realDeviceRecovery))
+        #expect(target.nextCommands.contains(genericRecovery))
+        #expect(target.recoveryCommands.map(\.command).contains(genericRecovery))
+    }
+
     @Test("xcode simulator destination omits inherited default simulator SDK")
     func xcodeSimulatorDestinationOmitsInheritedDefaultSimulatorSDK() throws {
         let sdk = resolvedXcodeSDK(

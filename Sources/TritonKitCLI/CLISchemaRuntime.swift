@@ -37,6 +37,7 @@ private let retiredRootCommandNames: Set<String> = [
 ]
 
 private let targetFailureRecoveryCommand = "triton target resolve <selector> --json"
+private let xcodeRealDeviceTargetFailureRecoveryCommand = "triton target resolve <selector> --platform ios --scope real --ready --json"
 private let projectFailureRecoveryCommand = "triton xcode discover --path . --json"
 private let actionFailureRecoveryCommand = "triton act input --json --summary --strict"
 private let destructivePolicyFailureRecoveryCommand = "triton plan --format json"
@@ -47,6 +48,7 @@ private let targetFailureCodesRequiringRecovery: Set<String> = [
     "simulator_not_found",
     "target_not_found",
     "target_offline",
+    "target_platform_mismatch",
     "target_unavailable",
 ]
 
@@ -94,7 +96,10 @@ private let verificationFailureCodesRequiringRecovery: Set<String> = [
 ]
 
 private func schemaWithFailureFamilyRecovery(_ schema: TKCommandSchema) -> TKCommandSchema {
-    TKCommandSchema(
+    let targetRecoveryOverride = schema.name == "xcode"
+        ? xcodeRealDeviceTargetFailureRecoveryCommand
+        : nil
+    return TKCommandSchema(
         name: schema.name,
         summary: schema.summary,
         requiresServer: schema.requiresServer,
@@ -116,10 +121,21 @@ private func schemaWithFailureFamilyRecovery(_ schema: TKCommandSchema) -> TKCom
         finalEventKind: schema.finalEventKind,
         artifacts: schema.artifacts,
         retryable: schema.retryable,
-        nextCommands: nextCommandsWithFailureFamilyRecovery(schema.nextCommands, failureCodes: schema.failureCodes),
+        nextCommands: nextCommandsWithFailureFamilyRecovery(
+            schema.nextCommands,
+            failureCodes: schema.failureCodes,
+            targetRecoveryOverride: targetRecoveryOverride
+        ),
         outputContracts: schema.outputContracts,
         failureCodes: schema.failureCodes,
-        subcommands: schema.subcommands.map(subcommandWithFailureFamilyRecovery),
+        subcommands: schema.subcommands.map { subcommand in
+            subcommandWithFailureFamilyRecovery(
+                subcommand,
+                targetRecoveryOverride: schema.name == "xcode" && subcommand.name == "run"
+                    ? xcodeRealDeviceTargetFailureRecoveryCommand
+                    : nil
+            )
+        },
         inputActions: schema.inputActions,
         providedCapabilities: schema.providedCapabilities,
         surfaceLayer: schema.surfaceLayer,
@@ -254,10 +270,14 @@ private func schemaWithProductSurfaceMetadata(_ schema: TKCommandSchema) -> TKCo
     )
 }
 
-private func subcommandWithFailureFamilyRecovery(_ subcommand: TKCommandSubcommandSchema) -> TKCommandSubcommandSchema {
+private func subcommandWithFailureFamilyRecovery(
+    _ subcommand: TKCommandSubcommandSchema,
+    targetRecoveryOverride: String? = nil
+) -> TKCommandSubcommandSchema {
     let nextCommands = nextCommandsWithFailureFamilyRecovery(
         subcommand.nextCommands,
-        failureCodes: subcommand.failureCodes
+        failureCodes: subcommand.failureCodes,
+        targetRecoveryOverride: targetRecoveryOverride
     )
     let recoveryCommands = nextCommands
         .compactMap(TKCommandRecoveryCommand.init(commandString:))
@@ -285,11 +305,15 @@ private func subcommandWithFailureFamilyRecovery(_ subcommand: TKCommandSubcomma
     )
 }
 
-private func nextCommandsWithFailureFamilyRecovery(_ nextCommands: [String], failureCodes: [String]) -> [String] {
+private func nextCommandsWithFailureFamilyRecovery(
+    _ nextCommands: [String],
+    failureCodes: [String],
+    targetRecoveryOverride: String? = nil
+) -> [String] {
     let failureCodes = Set(failureCodes)
     var commands = nextCommands
     if !failureCodes.isDisjoint(with: targetFailureCodesRequiringRecovery) {
-        commands = commands.appendingUnique(targetFailureRecoveryCommand)
+        commands = commands.appendingUnique(targetRecoveryOverride ?? targetFailureRecoveryCommand)
     }
     if !failureCodes.isDisjoint(with: runtimeTransportFailureCodesRequiringRecovery) {
         commands = commands.appendingUnique("triton doctor --json")

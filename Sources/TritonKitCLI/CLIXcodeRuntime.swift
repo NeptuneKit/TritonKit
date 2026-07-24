@@ -490,6 +490,15 @@ func runXcodeBuildInstallLaunch(
     )
 }
 
+func runXcodeRealDevicePreflightThenBuild<Selection, BuildResult>(
+    resolveSelection: () throws -> Selection,
+    build: () throws -> BuildResult
+) throws -> (selection: Selection, buildSummary: BuildResult) {
+    let selection = try resolveSelection()
+    let buildSummary = try build()
+    return (selection: selection, buildSummary: buildSummary)
+}
+
 func runXcodeRealDeviceBuildInstallLaunch(
     invocation: ResolvedXcodeInvocation,
     launchEnvironment: [String: String] = [:],
@@ -500,7 +509,24 @@ func runXcodeRealDeviceBuildInstallLaunch(
     guard let device = invocation.device, !device.isEmpty else {
         throw XcodeWorkflowError.simulatorRequired
     }
-    let buildSummary = try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: false)
+    let prepared = try runXcodeRealDevicePreflightThenBuild(
+        resolveSelection: {
+            try resolveHostDeviceSelection(
+                request: HostDeviceSelectionRequest(
+                    device: device,
+                    platform: .ios,
+                    scope: .real,
+                    ready: true
+                ),
+                hdc: "hdc"
+            )
+        },
+        build: {
+            try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: false)
+        }
+    )
+    let selection = prepared.selection
+    let buildSummary = prepared.buildSummary
     let product = try resolveBuiltAppProduct(
         invocation: invocation,
         timeout: timeout,
@@ -514,15 +540,6 @@ func runXcodeRealDeviceBuildInstallLaunch(
         bundleID = try bundleIdentifier(appPath: product.appPath)
     }
 
-    let selection = try resolveHostDeviceSelection(
-        request: HostDeviceSelectionRequest(
-            device: device,
-            platform: .ios,
-            scope: .real,
-            ready: true
-        ),
-        hdc: "hdc"
-    )
     let installPlan = try planHostAppInstall(
         selection: selection,
         app: product.appPath,
