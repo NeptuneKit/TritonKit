@@ -55,9 +55,9 @@ Exclude：
 5. 实现或先设计 `triton testrec replay <case> --platform <target> --json` 的最小单端回放合同。
 6. Web mock 暂不进入 P0 主线；如需展示，只做只读 DTO mock，不阻塞 CLI / HTTP 合同打通。
 
-## 当前停止点
+## 历史停止点
 
-产品需求讨论到此冻结。下一步不继续扩需求，直接进入 P0 schema / DTO 设计、`inspect` focused tests 和最小实现验证。
+以下记录保留 2026-06 的原始实施上下文。它已被 2026-07-24 的 Hybrid 收敛裁决取代；不得据此继续新建独立 `testrec` executor。
 
 ## 当前实现进度
 
@@ -123,3 +123,10 @@ Exclude：
 - 暂停 `local-device`、系统级动作监听、真实 VLM fingerprint、proposal apply 和 live network policy 的新增实现。
 - 原因：这些能力与 `workspace run`、`.tritontest`、现有 replay/evidence 和 Atlas map 已形成明显重叠，继续独立实现会制造第二套运行时与成功判定。
 - 恢复条件：先裁决 `testrec` 是否保留独立产品面，或将 `.tritontestcase` 的有效合同合并进现有 workspace/test/replay 契约。
+
+## 2026-07-24 收敛交接
+
+- 后继执行 space：[SP-126 Testrec Convergence](../SP-126-testrec-convergence/README.md)。
+- 裁决：采用 Hybrid；保留 `.tritontestcase`、确定性编译、质量/脱敏、proposal 与 page matcher 作为录制/导入兼容层，停止扩展独立 `local-device`、矩阵和真实 network executor。
+- 真实执行、步骤 observation、动作与最终 evidence/verdict 统一进入现有 `test` runtime；workspace 后续复用相同测试合同，`replay` 保持 `.tritonplan` 的低层 smoke 边界。
+- 本历史 space 不再承接新实现；后续 BDD、计划、实现和证据必须写入 SP-126。

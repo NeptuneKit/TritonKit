@@ -2,9 +2,9 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（125/125 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（126/126 个 space 已登记；历史目录物理迁移 0/125）
 >
-> 最近审计：2026-07-23
+> 最近审计：2026-07-24
 
 本文件是 `docs-linhay/spaces/` 的路线总览，用于跟踪需求空间、实施进度、独立 worktree 和文档收口状态。全部 space 的 SP 编号、兼容目录和目录迁移进度以 [INDEX.md](./INDEX.md) 为事实源；单个需求的详细边界、BDD、计划和证据仍以对应 space 的 `README.md` 为事实源。
 
@@ -43,12 +43,19 @@
 | 已归档 | [20260720-issue-146-sim-record-duration](./20260720-issue-146-sim-record-duration/README.md) | `sim record` 已按 encoded sample 时长校验；一帧 MOV 返回 `sim_record_truncated`，成功契约暴露 requested/actual/container/track duration | 已合入 `main`；推送并关闭 #146 |
 | 已归档 | [20260521-ios-embedded-sdk-expansion](./20260521-ios-embedded-sdk-expansion/README.md) | S0-S4 与 WebView-aware `act tap` 已完成，真实 iOS Simulator 证明 `selector -> DOM dispatch -> expect-text` 返回 `status=passed` | 保留动态 smoke 证据；P1/P2 需求另建有限 space |
 | 已归档 | [20260525-simulator-target-simplification](./20260525-simulator-target-simplification/README.md) | 真实多开 iOS、Harmony alias、指定目标动作和多候选拒绝均通过；同时修复 observation alias 缺省 platform 被误判为 iOS | 不实现 `--bundle` 反向过滤；批量 fan-out 或新 selector 能力另建 space |
-| 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | P0 合同与 local-simulated executor 已形成大体量实现，但真实 executor 与 `workspace run`、`.tritontest`、replay/evidence/Atlas 高度重叠 | 暂停新代码；先裁决 `testrec` 是否保留独立产品面，还是并入现有 workspace/test/replay 契约 |
+| 执行 | [SP-126-testrec-convergence](./SP-126-testrec-convergence/README.md) | 已裁决 Hybrid：保留 `testrec` 的录制/编译/质量兼容价值，真实执行统一进入 `test run`，workspace 后续复用同一合同 | 先完成可信基线与 `.tritontestcase -> test import -> test validate` seam；通过后验证 iOS Simulator 单动作真实证据闭环，Android 另以 host adapter 立项 |
+| 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
 | 已归档 | [20260701-host-framebuffer-stream](./20260701-host-framebuffer-stream/README.md) | SimulatorKit/IOSurface host stream、MJPEG route 和历史高帧率测量已落地 | 作为实验性 Web mock 能力保留，不再承诺 `<15ms/120 FPS` 产品 SLA；正式 Web 恢复时重新立项 |
 | 已归档 | [20260702-cross-platform-framebuffer-stream](./20260702-cross-platform-framebuffer-stream/README.md) | Android/Harmony host pull stream、HTTP route、Web bridge 和截图证据已落地 | 作为 Web mock 原型归档，不再追加性能优化；正式产品化需重新定义边界和证据门禁 |
 | 已归档 | [20260617-issue-61-android-emulator-adapter](./20260617-issue-61-android-emulator-adapter/README.md) | 旧 Web 编译 blocker 已消失，当前 `DeviceCrossPlatformTests` 93 项通过；Android Emulator 主链已有历史真实 smoke | 不再单独执行；后续 Android 回归走现有 emulator takeover 与 strong-control spaces |
+
+## 待集成 worktree
+
+| Space | Branch | Worktree | 基线 | 待集成动作 |
+| --- | --- | --- | --- | --- |
+| `SP-126-testrec-convergence` | `feat/SP-126-testrec-convergence` | `../TritonKit-worktrees/SP-126-testrec-convergence/` | `main@931645ed` | 路线、边界与 Luna 执行交接已收口；先完成可信基线与 iOS canonical runtime 证明，再进入 P0 importer；未合入 |
 
 ## 维护规则
 
