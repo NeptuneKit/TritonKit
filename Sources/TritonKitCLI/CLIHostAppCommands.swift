@@ -154,6 +154,47 @@ struct HostAppCommandPlan {
     let note: String
 }
 
+enum HostAppTerminateError: Error, Equatable, CustomStringConvertible {
+    case pidResolutionUnavailable(bundleID: String, selector: String)
+
+    var description: String {
+        switch self {
+        case .pidResolutionUnavailable(let bundleID, _):
+            "iOS real-device app termination is unavailable for \(bundleID): Xcode/CoreDevice does not expose a verified bundle ID to running PID mapping."
+        }
+    }
+}
+
+func hostAppTerminateErrorDetail(_ error: HostAppTerminateError) -> TKCLIErrorDetail {
+    switch error {
+    case .pidResolutionUnavailable(let bundleID, let selector):
+        return TKCLIErrorDetail(
+            code: "app_terminate_pid_resolution_unavailable",
+            message: "Xcode/CoreDevice cannot verify a running PID from an iOS real-device bundle ID, so no terminate command was submitted for \(bundleID).",
+            hint: "The host tool requires an explicit PID for iOS real-device termination; Triton does not infer one from an app URL, executable name, path, or process name. The suggested `nextAction` app launch is an optional cold-restart alternative chosen by the user; it does not mean terminate succeeded.",
+            nextAction: TKCLINextAction(
+                command: "app",
+                args: [
+                    "launch", "--device", selector, "--scope", "real", "--platform", "ios",
+                    "--bundle-id", bundleID, "--json",
+                ],
+                category: "act"
+            )
+        )
+    }
+}
+
+private func hostAppPublicSelector(for selection: HostDeviceSelectionResult) -> String {
+    guard selection.platform == .ios, selection.target.scope == "real" else {
+        return selection.selector
+    }
+    if selection.selector != selection.target.rawTarget,
+       !selection.target.rawTargetAliases.contains(selection.selector) {
+        return selection.selector
+    }
+    return selection.target.id
+}
+
 private func hostAppRuntimeScope(selection: HostDeviceSelectionResult) -> String {
     if selection.target.scope == "real", selection.platform == .ios {
         return "host-ios-real-device"
@@ -368,9 +409,10 @@ func planHostAppTerminate(
         let command: TKHostCommand
         let artifacts: [String]
         if selection.target.scope == "real" {
-            let devicectlArtifacts = try devicectlArtifacts ?? freshDevicectlArtifactPaths(action: "app-terminate")
-            command = TKDevicectlCommand.terminateApp(identifier: selection.target.rawTarget, bundleID: bundleID, jsonOutput: devicectlArtifacts.json, logOutput: devicectlArtifacts.log)
-            artifacts = [devicectlArtifacts.json, devicectlArtifacts.log]
+            throw HostAppTerminateError.pidResolutionUnavailable(
+                bundleID: bundleID,
+                selector: hostAppPublicSelector(for: selection)
+            )
         } else {
             command = TKSimctlCommand.terminateApp(udid: selection.target.target, bundleID: bundleID)
             artifacts = []

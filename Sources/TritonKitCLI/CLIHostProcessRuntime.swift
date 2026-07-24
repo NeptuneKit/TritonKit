@@ -908,6 +908,8 @@ func failHostCommand(_ error: Error, outputFormat: ClientOutputFormat) throws ->
             message: "\(error)",
             hint: "Pull regular files/directories only; symbolic links and special files are rejected."
         )
+    case let error as HostAppTerminateError:
+        detail = hostAppTerminateErrorDetail(error)
     case let error as HostArtifactOutputError:
         detail = TKCLIErrorDetail(
             code: "artifact_output_rejected",

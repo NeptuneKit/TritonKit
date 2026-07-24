@@ -129,9 +129,9 @@ public enum TKDevicectlCommand {
         return json
     }
 
-    public static func terminateApp(identifier: String, bundleID: String, jsonOutput: String, logOutput: String) -> TKHostCommand {
+    public static func terminateApp(identifier: String, pid: Int, jsonOutput: String, logOutput: String) -> TKHostCommand {
         command(
-            ["devicectl", "device", "process", "terminate", "--device", identifier, bundleID] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput),
+            ["devicectl", "device", "process", "terminate", "--device", identifier, "--pid", String(pid)] + artifactArguments(jsonOutput: jsonOutput, logOutput: logOutput),
             riskLevel: .automation,
             requiredConfig: [.target, .artifactDir, .redactionPolicy, .timeout, .auditRecord],
             defaultTimeoutSeconds: 60

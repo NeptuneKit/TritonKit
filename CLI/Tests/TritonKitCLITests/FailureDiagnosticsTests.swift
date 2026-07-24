@@ -308,6 +308,7 @@ struct FailureDiagnosticsTests {
             "host_open_url_failed",
             "app_launch_failed",
             "app_terminate_failed",
+            "app_terminate_pid_resolution_unavailable",
             "harmony_layout_failed",
             "harmony_artifact_recv_failed",
             "harmony_screenshot_failed",

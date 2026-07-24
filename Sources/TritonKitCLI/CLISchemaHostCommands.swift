@@ -977,6 +977,7 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 "app_install_failed",
                 "app_launch_failed",
                 "app_terminate_failed",
+                "app_terminate_pid_resolution_unavailable",
                 "host_open_url_failed",
                 "host_command_timeout",
                 "host_action_failed",
@@ -1030,10 +1031,11 @@ func hostCommandSchemas() -> [TKCommandSchema] {
                 ),
                 TKCommandSubcommandSchema(
                     name: "terminate",
-                    summary: "Terminate a running app",
+                    summary: "Terminate a running app; iOS real-device bundle-ID requests fail closed when no verified PID is available",
                     oneOfRequiredOptions: [["--bundle-id"], ["--package-name"], ["--bundle"]],
                     optionalOptions: ["--platform", "--device", "--scope", "--simulator", "--format", "--json"],
-                    outputSelectors: ["host.app-action"]
+                    outputSelectors: ["host.app-action"],
+                    failureCodes: ["app_terminate_failed", "app_terminate_pid_resolution_unavailable"]
                 ),
                 TKCommandSubcommandSchema(
                     name: "go",
