@@ -11,6 +11,7 @@ struct TestCommand: AsyncParsableCommand {
             TestNormalize.self,
             TestRun.self,
             TestReport.self,
+            TestReliability.self,
             TestCreate.self,
             TestImport.self,
         ]
@@ -117,6 +118,24 @@ struct TestReport: ParsableCommand {
     func run() throws {
         try runTestReportCommand(
             input: input,
+            format: effectiveFormat(format, json: json)
+        )
+    }
+}
+
+struct TestReliability: ParsableCommand {
+    static let configuration = CommandConfiguration(
+        commandName: "reliability",
+        abstract: "Evaluate private iOS Simulator test evidence against the canonical reliability gate"
+    )
+
+    @Option(name: .customLong("samples"), help: "Private reliability sample manifest JSON") var samples: String?
+    @Option(help: "Output format: text or json") var format: ClientOutputFormat = .json
+    @Flag(name: .customLong("json"), help: "Alias for --format json") var json = false
+
+    func run() throws {
+        try runTestReliabilityCommand(
+            samples: samples,
             format: effectiveFormat(format, json: json)
         )
     }
@@ -307,6 +326,92 @@ private func runTestReportCommand(
         }
         throw ExitCode.failure
     }
+}
+
+private func runTestReliabilityCommand(
+    samples: String?,
+    format: ClientOutputFormat
+) throws {
+    do {
+        guard let samples, !samples.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+            throw TestReliabilityCommandFailure(detail: testReliabilityFailure(
+                code: "missing_required_field",
+                message: "--samples is required.",
+                hint: "Provide a private reliability sample manifest with --samples <file.json>."
+            ))
+        }
+        let report = try buildTritonTestReliabilityReport(samplesPath: samples)
+        switch format {
+        case .json:
+            print(try encodeJSON(report))
+        case .text:
+            print("ok: true")
+            print("gate: \(report.gate.status.rawValue)")
+            print("evidenceCompleteness: \(report.evidenceCompleteness.rate)")
+            print("failureExplainability: \(report.failureExplainability.rate)")
+            print("outcomeRepeatability: \(report.outcomeRepeatability.rate)")
+        }
+        if report.gate.status == .blocked {
+            throw ExitCode.failure
+        }
+    } catch let failure as TestReliabilityCommandFailure {
+        let detail = failure.detail
+        switch format {
+        case .json:
+            print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+        case .text:
+            fputs("\(detail.code): \(detail.message)\n", stderr)
+        }
+        throw ExitCode.failure
+    } catch let error as TKTestReliabilityError {
+        let detail = testReliabilityErrorDetail(error)
+        switch format {
+        case .json:
+            print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+        case .text:
+            fputs("\(detail.code): \(detail.message)\n", stderr)
+        }
+        throw ExitCode.failure
+    } catch {
+        if error is ExitCode { throw error }
+        let detail = testReliabilityFailure(
+            code: "test_reliability_failed",
+            message: "Reliability report could not be generated from the private sample manifest.",
+            hint: "Verify the manifest schema and evidence bundle completeness."
+        )
+        switch format {
+        case .json:
+            print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+        case .text:
+            fputs("\(detail.code): \(detail.message)\n", stderr)
+        }
+        throw ExitCode.failure
+    }
+}
+
+private func testReliabilityErrorDetail(_ error: TKTestReliabilityError) -> TKCLIErrorDetail {
+    switch error {
+    case .invalidSampleSet:
+        return testReliabilityFailure(
+            code: "invalid_reliability_sample_set",
+            message: "Reliability samples must use the supported private manifest schema.",
+            hint: "Use flow ids, explicit reset evidence ids, target tokens, and existing evidence bundle paths."
+        )
+    case .invalidThresholds:
+        return testReliabilityFailure(
+            code: "invalid_reliability_thresholds",
+            message: "Reliability thresholds must be non-negative rates between zero and one.",
+            hint: "Use the canonical reliability gate thresholds."
+        )
+    }
+}
+
+private func testReliabilityFailure(code: String, message: String, hint: String) -> TKCLIErrorDetail {
+    TKCLIErrorDetail(code: code, message: message, hint: hint)
+}
+
+private struct TestReliabilityCommandFailure: Error {
+    let detail: TKCLIErrorDetail
 }
 
 private func runTestCreateCommand(

@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（132/132 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（134/134 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-27
 
@@ -43,7 +43,7 @@
 | 已归档 | [20260720-issue-146-sim-record-duration](./20260720-issue-146-sim-record-duration/README.md) | `sim record` 已按 encoded sample 时长校验；一帧 MOV 返回 `sim_record_truncated`，成功契约暴露 requested/actual/container/track duration | 已合入 `main`；推送并关闭 #146 |
 | 已归档 | [20260521-ios-embedded-sdk-expansion](./20260521-ios-embedded-sdk-expansion/README.md) | S0-S4 与 WebView-aware `act tap` 已完成，真实 iOS Simulator 证明 `selector -> DOM dispatch -> expect-text` 返回 `status=passed` | 保留动态 smoke 证据；P1/P2 需求另建有限 space |
 | 已归档 | [20260525-simulator-target-simplification](./20260525-simulator-target-simplification/README.md) | 真实多开 iOS、Harmony alias、指定目标动作和多候选拒绝均通过；同时修复 observation alias 缺省 platform 被误判为 iOS | 不实现 `--bundle` 反向过滤；批量 fan-out 或新 selector 能力另建 space |
-| 执行 | [SP-126-testrec-convergence](./SP-126-testrec-convergence/README.md) | 已裁决 Hybrid：保留 `testrec` 的录制/编译/质量兼容价值，真实执行统一进入 `test run`，workspace 后续复用同一合同 | 先完成可信基线与 `.tritontestcase -> test import -> test validate` seam；通过后验证 iOS Simulator 单动作真实证据闭环，Android 另以 host adapter 立项 |
+| 执行 | [SP-126-testrec-convergence](./SP-126-testrec-convergence/README.md) | 已裁决 Hybrid：保留 `testrec` 的录制/编译/质量兼容价值，真实执行统一进入 `test run`，workspace 后续复用同一合同 | SP-132/133 已完成 importer 与单条真实 proof；SP-134 先建立可靠性 gate，门槛前不接 workspace 或新平台 |
 | 执行 | [SP-127-issue-168-ios-real-device-terminate-pid](./SP-127-issue-168-ios-real-device-terminate-pid/README.md) | #168 已采用安全 fallback：shared terminate 只接受显式 PID，iOS real bundle-ID terminate 无可证实 PID 时 fail closed；不实现猜测式 PID join | source checkpoint 已纳入本地 integration branch；真实设备 smoke blocker 与 12 个既有 schema failures 单独保留，待 main 收口 |
 | 执行 | [SP-128-issue-167-xcode-device-alias-preflight](./SP-128-issue-167-xcode-device-alias-preflight/README.md) | Xcode real-device run 已确定先做 target selection preflight，再进入昂贵 build；保持既有 build/install/launch 合同 | source checkpoint 已纳入本地 integration branch；真实 Xcode/device 与 live alias store 验证仍按环境边界保留，待 main 收口 |
 | 执行 | [SP-129-serve-loopback-default](./SP-129-serve-loopback-default/README.md) | `triton serve` 无 `--host` 时默认绑定 `127.0.0.1:19421`；显式非 loopback host 保持兼容；Bonjour publish 语义暂不改变 | source checkpoint 已纳入本地 integration branch；联合 docs/CLI 门禁通过，Bonjour 风险不变，待 main 收口 |
@@ -51,6 +51,7 @@
 | 已归档 | [SP-131-ios-simulator-canonical-proof](./SP-131-ios-simulator-canonical-proof/README.md) | 仓内 Debug fixture 已在 dedicated iOS Simulator 上真实完成 `test validate -> test run -> evidence`：6 steps、2 assertions、0 failures，证据含 runtime target、PNG、AX/hierarchy | local checkpoint 已完成；后续仅回到 SP-126 的 `.tritontestcase -> test import -> test validate`，不扩 Android/Web/Wails/真机；#164 WIP 继续隔离 |
 | 已归档 | [SP-132-testrec-import-seam](./SP-132-testrec-import-seam/README.md) | P0 已建立 `.tritontestcase -> test import -> test validate` 的 offline seam；bundle identity 与 `ios-simulator` target 均显式输入，映射不足一律 fail-closed | P1 才运行 imported plan；不扩 testrec executor、Android/Web/Wails/真机；#164 WIP 继续隔离 |
 | 已归档 | [SP-133-imported-ios-simulator-proof](./SP-133-imported-ios-simulator-proof/README.md) | imported AX plan 已在 dedicated iOS Simulator 经既有 `test run` 产生真实 passed verdict/evidence：6 steps、2 assertions、0 failures，并保留 normalized-plan provenance | 自管 server 已停止、Simulator 已恢复 Shutdown；sensitive evidence 仅作本机可恢复处置、不入 Git，不扩 executor/Android/Web/Wails/真机；#164 WIP 继续隔离 |
+| 执行 | [SP-134-ios-simulator-reliability-gate](./SP-134-ios-simulator-reliability-gate/README.md) | 纯离线 ECR / FER / ORR gate 已收紧为 duplicate、partial、逐 step 覆盖与 target binding 均 fail-closed；不把一条 fixture proof 放大为产品可靠性 | 真实 3 flow × 20 仅在初态 reset、专用 Simulator、self-managed server 与私有 evidence 门禁均满足时另立受控 harness 串行执行 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -70,6 +71,7 @@
 | `SP-131-ios-simulator-canonical-proof` | `feat/SP-131-ios-simulator-canonical-proof` | `../TritonKit-worktrees/SP-131-ios-simulator-canonical-proof/` | `feat/SP-130-issue-166-runtime-jpeg-normalization@a7404033` | local checkpoint 将记录真实 dedicated Simulator 的手写最小 plan proof；server 已停止、Simulator 已恢复 Shutdown；不读取或修改 #164 dirty WIP |
 | `SP-132-testrec-import-seam` | `feat/SP-132-testrec-import-seam` | `../TritonKit-worktrees/SP-132-testrec-import-seam/` | `feat/SP-131-ios-simulator-canonical-proof@6f700b13` | P0 local checkpoint：只读 compiled contract，显式 ios-simulator target，输出可 validate YAML 与 typed provenance；P1 才运行 device，#164 dirty WIP 未读取或修改 |
 | `SP-133-imported-ios-simulator-proof` | `feat/SP-133-imported-ios-simulator-proof` | `../TritonKit-worktrees/SP-133-imported-ios-simulator-proof/` | `feat/SP-132-testrec-import-seam@b065b3f0` | P1 local proof 已通过：新鲜 source/import/validate、专用 Simulator、self-managed 19421 server、Debug fixture、真实 `test run` 与 evidence/provenance 已串行验证；server 已停止、Simulator 已恢复 Shutdown，#164 dirty WIP 未读取或修改 |
+| `SP-134-ios-simulator-reliability-gate` | `feat/SP-134-ios-simulator-reliability-gate` | `../TritonKit-worktrees/SP-134-ios-simulator-reliability-gate/` | `feat/SP-133-imported-ios-simulator-proof@19e2c35f` | 本地 checkpoint 收口纯离线 reliability gate；不启动测试 runtime 或共享设备/server。真实 sampling 需要另行通过 dedicated/reset/privacy gate，#164 dirty WIP 不读取或修改 |
 
 ## 维护规则
 

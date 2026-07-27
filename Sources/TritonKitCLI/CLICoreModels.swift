@@ -261,7 +261,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
         "schema": ChineseCommandHelp(name: "schema", overview: "输出机器可读命令 schema 和示例。", usage: "triton schema [--command <command>] [--format <format>] [--json]", options: [
             ("--command <command>", "筛选单个命令，例如 input 或 tap"),
         ] + formatTextJSON),
-        "test": ChineseCommandHelp(name: "test", overview: "可离线导入、校验、执行和报告 .tritontest.yaml 合约；import 不会启动 App、设备、runner 或 VLM。", usage: "triton test <import|validate|normalize|run|report|create> <path> [选项]", options: formatTextJSON + [
+        "test": ChineseCommandHelp(name: "test", overview: "可离线导入、校验、执行、报告和评估 .tritontest.yaml 合约；import 与 reliability 不会启动 App、设备、runner 或 VLM。", usage: "triton test <import|validate|normalize|run|report|reliability|create> <path> [选项]", options: formatTextJSON + [
             ("import <case.tritontestcase>", "只读已编译 contract，显式指定 --bundle-id 与 --device-platform ios-simulator 后生成并校验 YAML；不可保真动作会失败，不会执行设备操作"),
             ("--bundle-id <id>", "import 必填；v1 testcase 不含 App bundle id"),
             ("--device-platform ios-simulator", "import 必填；明确导入计划的执行平台，避免把 source ios 静默标成模拟器"),
@@ -270,6 +270,7 @@ func chineseCommandHelps() -> [String: ChineseCommandHelp] {
             ("normalize <path>", "校验 YAML 并只输出 triton.test.normalized-plan JSON"),
             ("run <path>", "校验后通过既有唯一 runner 执行测试，并写 .tritonevidence；不是 import 的副作用"),
             ("report <dir.tritonevidence>", "读取既有测试证据并输出机器可读报告"),
+            ("reliability --samples <private.json>", "读取私有 iOS Simulator 样本清单，输出不含路径、selector、target 或 run id 的可靠性门禁指标"),
             ("create --from-session <dir.tritonevidence>", "从既有 normalized-plan evidence 生成可编辑 YAML"),
             ("--emit-normalized-plan", "validate 成功时只输出 normalized plan"),
         ]),

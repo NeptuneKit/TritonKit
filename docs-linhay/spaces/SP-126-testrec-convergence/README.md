@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：执行（路线已裁决；可信基线、SP-132 P0 importer 与 SP-133 P1 imported iOS Simulator proof 均已形成独立本地 checkpoint；下一步必须另立有限 space，不自动扩张）。
+- 状态：执行（路线已裁决；可信基线、SP-132 P0 importer、SP-133 P1 imported iOS Simulator proof 与 SP-134 离线 reliability gate 均形成独立本地 checkpoint；真实采样与 workspace 扩张继续后置）。
 - 负责人：Codex。
 - Branch：`feat/SP-126-testrec-convergence`。
 - Worktree：`../TritonKit-worktrees/SP-126-testrec-convergence/`。
@@ -55,7 +55,7 @@
 
 ## 完成定义
 
-本 space 的第一个有限里程碑已完成：SP-132 P0 importer 的 focused tests 已通过，SP-131 提供手写 canonical iOS Simulator 真实动作证据闭环，SP-133 又以 imported plan（不是 hand-written fixture）复现了同一纵切并直接读取 provenance。该结果只证明一条 iOS fixture flow，不证明可靠性矩阵、workspace 编排、Android/真机 parity 或对外项目采用；后续任一扩张必须另建有限 space、先写 BDD 与环境/隐私门禁，不能回填 `testrec` 的第二执行器。
+本 space 的第一个有限里程碑已完成：SP-132 P0 importer 的 focused tests 已通过，SP-131 提供手写 canonical iOS Simulator 真实动作证据闭环，SP-133 又以 imported plan（不是 hand-written fixture）复现了同一纵切并直接读取 provenance。SP-134 已把 ECR / FER / ORR 的离线 gate 收紧为 evidence/target/step 覆盖 fail-closed。该结果仍只证明一条 iOS fixture flow，且尚无真实 3 flow × 20 样本；不证明可靠性矩阵、workspace 编排、Android/真机 parity 或对外项目采用。后续任一扩张必须另建有限 space、先写 BDD 与环境/隐私门禁，不能回填 `testrec` 的第二执行器；未有可审计门槛数据前，不启动 workspace 接入。
 
 详细方案见 [Hybrid Convergence Plan v01](./plans/20260724-hybrid-convergence-plan-v01.md)。
 

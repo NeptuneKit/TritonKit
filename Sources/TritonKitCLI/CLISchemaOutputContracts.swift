@@ -212,6 +212,31 @@ func testReportOutputContract() -> TKCommandOutputContract {
         ])
     )
 }
+
+func testReliabilityOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.reliability",
+        format: "json",
+        kind: "test-reliability-report",
+        model: "TKTestReliabilityReport",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the offline report was generated; gate status is reported separately"),
+            ("schemaVersion", "Int", true, "Report schema version; always 1"),
+            ("kind", "String", true, "Stable kind; triton.test.reliability-report"),
+            ("thresholds", "TKTestReliabilityThresholds", true, "Exact thresholds used to calculate the reported gate"),
+            ("evidenceCompleteness", "TKTestReliabilityMetric", true, "Completeness over private sample evidence bundles"),
+            ("failureExplainability", "TKTestReliabilityMetric", true, "Measured only when one or more samples have a non-passed terminal status"),
+            ("outcomeRepeatability", "TKTestReliabilityMetric", true, "Supported-flow semantic repeatability; ignores timestamps, run ids, and screenshot bytes"),
+            ("flows", "[TKTestReliabilityFlow]", true, "Per-report opaque flow aliases, sample counts, and normalized-plan digests only"),
+            ("flows[].flowID", "String", true, "Deterministic per-report opaque alias such as flow_001; never the private input flow id, a path, run id, or selector"),
+            ("flows[].planDigest", "String", true, "FNV-1a digest of normalized-plan.json, not raw plan content"),
+            ("issueCounts", "[String:Int]", true, "Stable evidence, duplicate-identity, failure-taxonomy, target-binding, or semantic-drift issue counts"),
+            ("gate", "TKTestReliabilityGate", true, "Canonical gate status and stable blocker codes"),
+            ("gate.status", "String", true, "passed or blocked"),
+            ("gate.blockerCodes", "[String]", true, "Stable threshold and stop-expansion blocker codes"),
+        ])
+    )
+}
 func testCreateOutputContract() -> TKCommandOutputContract {
     TKCommandOutputContract(
         selector: "test.create",

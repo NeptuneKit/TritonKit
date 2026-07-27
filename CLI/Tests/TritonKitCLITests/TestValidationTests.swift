@@ -295,8 +295,8 @@ struct TestValidationTests {
 
         #expect(schema.requiresServer == false)
         #expect(schema.requiresTarget == false)
-        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/create; runtime target required for run")
-        #expect(schema.providedCapabilities == ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session"])
+        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/reliability/create; runtime target required for run")
+        #expect(schema.providedCapabilities == ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-reliability-gate", "test-create-from-session"])
         #expect(schema.failureCodes.contains("unsupported_step"))
         #expect(validate.requiredOptions == ["<path.tritontest.yaml>"])
         #expect(validate.outputSelectors == ["test.validation", "test.normalized-plan"])
@@ -304,6 +304,7 @@ struct TestValidationTests {
         #expect(run.outputSelectors == ["test.run-result", "test.validation", "test.normalized-plan"])
         #expect(schema.outputContracts.contains { $0.selector == "test.run-result" })
         #expect(schema.outputContracts.contains { $0.selector == "test.report" })
+        #expect(schema.outputContracts.contains { $0.selector == "test.reliability" })
         #expect(schema.outputContracts.contains { $0.selector == "test.create" })
     }
 
