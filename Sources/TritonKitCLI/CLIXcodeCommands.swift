@@ -214,10 +214,10 @@ struct XcodeSettings: AsyncParsableCommand {
     @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
-    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
-    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "SDK, for example iphonesimulator; iphoneos requires --device") var sdk: String?
+    @Option(help: "Simulator xcodebuild destination; platform=iOS requires --device") var destination: String?
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
-    @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
+    @Option(help: "Real-device selector preflighted as a ready iOS target before xcodebuild") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
@@ -229,7 +229,7 @@ struct XcodeSettings: AsyncParsableCommand {
     func run() async throws {
         let outputFormat = effectiveFormat(format, json: json)
         do {
-            let resolved = try resolveXcodeInvocation(
+            let invocation = try resolveXcodeInvocation(
                 workspace: workspace,
                 project: project,
                 package: package,
@@ -242,6 +242,7 @@ struct XcodeSettings: AsyncParsableCommand {
                 derivedDataPath: derivedDataPath,
                 buildSettings: buildSettings
             )
+            let resolved = try preparedXcodeInvocationForExecution(invocation)
             let command = TKXcodebuildCommand.showBuildSettings(
                 workspace: resolved.workspace,
                 project: resolved.project,
@@ -249,9 +250,10 @@ struct XcodeSettings: AsyncParsableCommand {
                 scheme: resolved.scheme,
                 configuration: resolved.configuration,
                 sdk: resolved.sdk,
-                destination: resolved.destination,
+                destination: resolved.xcodebuildDestination,
                 derivedDataPath: resolved.derivedDataPath,
-                buildSettings: resolved.buildSettings
+                buildSettings: resolved.buildSettings,
+                redactDestination: resolved.redactsXcodebuildDestination
             ).withTimeout(timeout)
             let (result, _) = try runXcodeHostCommand(command, event: "xcode.settings", jsonl: jsonl)
             let product = try TKXcodeBuildSettingsParser.resolveBuiltApp(result.stdoutData)
@@ -272,7 +274,7 @@ struct XcodeSettings: AsyncParsableCommand {
                 print(product.appPath)
             }
         } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
+            try failXcodeCommand(error, device: device, outputFormat: outputFormat)
         }
     }
 }
@@ -285,10 +287,10 @@ struct XcodeBuild: AsyncParsableCommand {
     @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
-    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
-    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "SDK, for example iphonesimulator; iphoneos requires --device") var sdk: String?
+    @Option(help: "Simulator xcodebuild destination; platform=iOS requires --device") var destination: String?
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
-    @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
+    @Option(help: "Real-device selector preflighted as a ready iOS target before xcodebuild") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Timeout in seconds") var timeout: Double?
@@ -326,7 +328,7 @@ struct XcodeBuild: AsyncParsableCommand {
         } catch let exitCode as ExitCode {
             throw exitCode
         } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
+            try failXcodeCommand(error, device: device, outputFormat: outputFormat)
         }
     }
 }
@@ -339,10 +341,10 @@ struct XcodeTest: AsyncParsableCommand {
     @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
-    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
-    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "SDK, for example iphonesimulator; iphoneos requires --device") var sdk: String?
+    @Option(help: "Simulator xcodebuild destination; platform=iOS requires --device") var destination: String?
     @Option(help: "Simulator UDID or name used to synthesize an id= or name= destination") var simulator: String?
-    @Option(help: "Real-device selector used to synthesize an iphoneos build target") var device: String?
+    @Option(help: "Real-device selector preflighted as a ready iOS target before xcodebuild") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(help: "Result bundle output path") var resultBundle: String?
@@ -375,7 +377,7 @@ struct XcodeTest: AsyncParsableCommand {
         } catch let exitCode as ExitCode {
             throw exitCode
         } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
+            try failXcodeCommand(error, device: device, outputFormat: outputFormat)
         }
     }
 }
@@ -385,20 +387,116 @@ func xcodeRealDeviceSelectionErrorDetail(
     selector: String
 ) -> TKCLIErrorDetail {
     let selectionDetail = hostDeviceSelectionErrorDetail(error).detail
+    if case .parameterConflict = error {
+        return selectionDetail
+    }
     return TKCLIErrorDetail(
         code: selectionDetail.code,
-        message: selectionDetail.message,
+        message: redactedXcodeDeviceSelectorText(selectionDetail.message, selector: selector),
         endpoint: selectionDetail.endpoint,
-        hint: selectionDetail.hint,
-        nextAction: TKCLINextAction(
-            command: "target",
-            args: ["resolve", selector, "--platform", "ios", "--scope", "real", "--ready", "--json"],
-            category: "prepare-target"
-        ),
-        nearestCandidates: selectionDetail.nearestCandidates,
-        suggestedCommands: selectionDetail.suggestedCommands,
+        hint: selectionDetail.hint.map { redactedXcodeDeviceSelectorText($0, selector: selector) },
+        nextAction: xcodeRealDeviceTargetRecoveryAction(),
+        nearestCandidates: selectionDetail.nearestCandidates?.map {
+            redactedXcodeDeviceSelectorText($0, selector: selector)
+        },
+        suggestedCommands: selectionDetail.suggestedCommands?.map {
+            redactedXcodeDeviceSelectorText($0, selector: selector)
+        },
         candidateCount: selectionDetail.candidateCount
     )
+}
+
+func xcodeRealDeviceTargetRecoveryAction() -> TKCLINextAction {
+    TKCLINextAction(
+        command: "target",
+        args: ["resolve", "<selector>", "--platform", "ios", "--scope", "real", "--ready", "--json"],
+        category: "prepare-target"
+    )
+}
+
+func redactedXcodeDeviceSelectorText(_ value: String, selector: String) -> String {
+    redactedXcodeRealDeviceDestinationInPublicText(value)
+        .replacingOccurrences(of: selector, with: "<selector>")
+}
+
+func xcodeRealDevicePreflightErrorDetail(
+    _ error: Error,
+    selector: String
+) -> TKCLIErrorDetail {
+    if let selectionError = error as? HostDeviceSelectionError {
+        return xcodeRealDeviceSelectionErrorDetail(selectionError, selector: selector)
+    }
+    if let hostError = error as? HostCommandRunError,
+       case .deviceNotReady = hostError {
+        return TKCLIErrorDetail(
+            code: "device_not_ready",
+            message: "The selected iOS real device is not ready for xcodebuild.",
+            hint: "Resolve a ready iOS real-device target before retrying.",
+            nextAction: xcodeRealDeviceTargetRecoveryAction()
+        )
+    }
+    return TKCLIErrorDetail(
+        code: "validation_failed",
+        message: "Xcode real-device preflight failed.",
+        hint: "Fix the selected real-device target and retry.",
+        nextAction: xcodeRealDeviceTargetRecoveryAction()
+    )
+}
+
+func failXcodeCommand(
+    _ error: Error,
+    device: String?,
+    outputFormat: ClientOutputFormat
+) throws -> Never {
+    let selector = device?.trimmingCharacters(in: .whitespacesAndNewlines)
+    let hasSelector = selector?.isEmpty == false
+    if let hostError = error as? HostCommandRunError,
+       case let .nonZeroExit(command, result) = hostError,
+       hasSelector || !command.redactedArgumentIndexes.isEmpty {
+        try failHostCommand(
+            HostCommandRunError.nonZeroExit(
+                command: command,
+                result: redactedXcodePublicProcessResult(
+                    result,
+                    command: command,
+                    additionalSensitiveValues: selector.map { [$0] } ?? [],
+                    redactDevicectlDiscoveryOutput: hasSelector
+                )
+            ),
+            outputFormat: outputFormat
+        )
+    }
+    guard let selector, !selector.isEmpty else {
+        try failHostCommand(error, outputFormat: outputFormat)
+    }
+    if let selectionError = error as? HostDeviceSelectionError {
+        try failXcodeRealDevicePreflight(
+            xcodeRealDeviceSelectionErrorDetail(selectionError, selector: selector),
+            outputFormat: outputFormat
+        )
+    }
+    if let hostError = error as? HostCommandRunError,
+       case .deviceNotReady = hostError {
+        try failXcodeRealDevicePreflight(
+            xcodeRealDevicePreflightErrorDetail(error, selector: selector),
+            outputFormat: outputFormat
+        )
+    }
+    try failHostCommand(error, outputFormat: outputFormat)
+}
+
+func failXcodeRealDevicePreflight(
+    _ detail: TKCLIErrorDetail,
+    outputFormat: ClientOutputFormat
+) throws -> Never {
+    switch outputFormat {
+    case .json:
+        print(try encodeJSON(TKCLIErrorResponse(error: detail)))
+    case .text:
+        print(detail.message)
+        if let hint = detail.hint { print("hint: \(hint)") }
+    }
+    throw ExitCode.failure
 }
 
 struct XcodeRun: AsyncParsableCommand {
@@ -409,10 +507,10 @@ struct XcodeRun: AsyncParsableCommand {
     @Option(help: "Path to Package.swift or its package directory") var package: String?
     @Option(help: "Scheme name") var scheme: String?
     @Option(help: "Build configuration") var configuration: String?
-    @Option(help: "SDK, for example iphonesimulator") var sdk: String?
-    @Option(help: "xcodebuild destination") var destination: String?
+    @Option(help: "SDK, for example iphonesimulator; iphoneos requires --device") var sdk: String?
+    @Option(help: "Simulator xcodebuild destination; platform=iOS requires --device") var destination: String?
     @Option(help: "Simulator UDID or name; synthesizes an id= or name= destination") var simulator: String?
-    @Option(help: "Real-device selector used to build, install, and launch through devicectl") var device: String?
+    @Option(help: "Real-device selector preflighted as a ready iOS target before build, install, and launch") var device: String?
     @Option(help: "DerivedData path used as the Xcode incremental build cache; cleanup should preserve it by default") var derivedDataPath: String?
     @Option(name: .customLong("build-setting"), help: "One-off xcodebuild setting in KEY=VALUE form; repeat for multiple settings") var buildSettings: [String] = []
     @Option(name: .customLong("env"), help: "iOS app launch environment in KEY=VALUE form; values are redacted in output") var launchEnvironment: [String] = []
@@ -446,19 +544,8 @@ struct XcodeRun: AsyncParsableCommand {
                 timeout: timeout
             )
             try printXcodeSummary(summary, jsonl: jsonl, outputFormat: outputFormat)
-        } catch let error as HostDeviceSelectionError {
-            if let device, !device.isEmpty {
-                try failHostCommand(
-                    error,
-                    outputFormat: outputFormat,
-                    hostDeviceSelectionDetailOverride: {
-                        xcodeRealDeviceSelectionErrorDetail($0, selector: device)
-                    }
-                )
-            }
-            try failHostCommand(error, outputFormat: outputFormat)
         } catch {
-            try failHostCommand(error, outputFormat: outputFormat)
+            try failXcodeCommand(error, device: device, outputFormat: outputFormat)
         }
     }
 }

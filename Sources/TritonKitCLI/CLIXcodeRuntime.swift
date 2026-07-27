@@ -80,6 +80,23 @@ func resolveXcodeInvocation(
     derivedDataPath: String? = nil,
     buildSettings: [String] = []
 ) throws -> ResolvedXcodeInvocation {
+    let hasDevice = hasXcodeSelector(device)
+    if hasDevice, hasXcodeSelector(destination) {
+        throw HostDeviceSelectionError.parameterConflict(
+            "Pass either --device or --destination, not both. Real-device xcodebuild destinations are resolved from the selected target."
+        )
+    }
+    if hasDevice, hasXcodeSelector(simulator) {
+        throw HostDeviceSelectionError.parameterConflict(
+            "Pass either --simulator or --device, not both."
+        )
+    }
+    if hasDevice,
+       let sdk,
+       !sdk.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+       !usesXcodeRealDeviceSDK(sdk) {
+        throw ValidationError("--device requires an iPhoneOS SDK when an SDK is explicit.")
+    }
     let defaults = try loadHostWorkspaceDefaults()
     let xcode = defaults?.xcode
     let container = try resolveXcodeContainer(workspace: workspace, project: project, package: package)
@@ -90,10 +107,7 @@ func resolveXcodeInvocation(
         throw XcodeWorkflowError.missingScheme
     }
     let resolvedConfiguration = configuration ?? xcode?.configuration ?? "Debug"
-    if hasXcodeSelector(device), hasXcodeSelector(simulator) {
-        throw XcodeWorkflowError.conflictingTargetSelectors
-    }
-    let resolvedSimulator = hasXcodeSelector(device) ? nil : simulator ?? defaults?.defaultSimulatorUDID
+    let resolvedSimulator = hasDevice ? nil : simulator ?? defaults?.defaultSimulatorUDID
     let resolvedDestination = resolvedXcodeDestination(
         destination: destination,
         defaultDestination: xcode?.destination,
@@ -108,6 +122,12 @@ func resolveXcodeInvocation(
         simulatorUDID: resolvedSimulator,
         device: device
     )
+    if !hasDevice,
+       usesXcodeRealDeviceSDK(resolvedSDK) || isXcodeRealDeviceDestination(resolvedDestination) {
+        throw ValidationError(
+            "Physical iOS xcodebuild execution requires --device so Triton can resolve a ready target and keep its raw destination execution-only."
+        )
+    }
     let resolvedDerivedDataPath = derivedDataPath ?? xcode?.derivedDataPath ?? defaultXcodeDerivedDataPath
     let resolvedBuildSettings = try validateXcodeBuildSettings(buildSettings)
     let derivedDataCache = makeXcodeDerivedDataCacheInfo(path: resolvedDerivedDataPath)
@@ -151,11 +171,11 @@ func resolvedXcodeSDK(
     simulatorUDID: String?,
     device: String?
 ) -> String? {
-    if let sdk, !sdk.isEmpty {
-        return sdk
-    }
     if hasXcodeSelector(device) {
         return "iphoneos"
+    }
+    if let sdk, !sdk.isEmpty {
+        return sdk
     }
     if isSimulatorBuildDestination(resolvedDestination) || hasXcodeSelector(simulatorUDID) {
         return nil
@@ -170,11 +190,11 @@ func resolvedXcodeDestination(
     device: String?,
     simulatorOverridesDefaultDestination: Bool = true
 ) -> String? {
+    if hasXcodeSelector(device) {
+        return nil
+    }
     if let destination, !destination.isEmpty {
         return destination
-    }
-    if hasXcodeSelector(device) {
-        return "generic/platform=iOS"
     }
     if simulatorOverridesDefaultDestination, let simulatorUDID, hasXcodeSelector(simulatorUDID) {
         return xcodeSimulatorDestination(selector: simulatorUDID)
@@ -202,6 +222,102 @@ func xcodeSimulatorDestination(selector: String) -> String {
 private func hasXcodeSelector(_ value: String?) -> Bool {
     guard let value else { return false }
     return !value.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+}
+
+func usesXcodeRealDeviceSDK(_ sdk: String?) -> Bool {
+    guard let sdk else { return false }
+    let normalized = sdk.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    guard normalized.hasPrefix("iphoneos") else { return false }
+    let version = normalized.dropFirst("iphoneos".count)
+    guard !version.isEmpty else { return true }
+    return version
+        .split(separator: ".", omittingEmptySubsequences: false)
+        .allSatisfy { component in
+            !component.isEmpty && component.allSatisfy(\.isNumber)
+        }
+}
+
+func isXcodeRealDeviceDestination(_ destination: String?) -> Bool {
+    guard let destination else { return false }
+    let normalized = destination.lowercased()
+    return normalized.contains("platform=ios") && !normalized.contains("platform=ios simulator")
+}
+
+func redactedXcodeRealDeviceDestination(_ destination: String) -> String {
+    guard isXcodeRealDeviceDestination(destination) else { return destination }
+    return "platform=iOS,id=<redacted>"
+}
+
+func redactedXcodeRealDeviceDestinationInPublicText(_ value: String) -> String {
+    guard let expression = try? NSRegularExpression(
+        pattern: #"(?i)(?:generic/)?platform=iOS,id=[^\s\"']+"#
+    ) else {
+        return value
+    }
+    let range = NSRange(value.startIndex..<value.endIndex, in: value)
+    let redactedIdentifiers = expression.stringByReplacingMatches(
+        in: value,
+        range: range,
+        withTemplate: "platform=iOS,id=<redacted>"
+    )
+    return redactedXcodeRealDeviceNameDestinations(in: redactedIdentifiers)
+}
+
+private func redactedXcodeRealDeviceNameDestinations(in value: String) -> String {
+    guard let expression = try? NSRegularExpression(
+        pattern: #"(?i)(?:generic/)?platform=iOS,name="#
+    ) else {
+        return value
+    }
+    let range = NSRange(value.startIndex..<value.endIndex, in: value)
+    let matches = expression.matches(in: value, range: range)
+    guard !matches.isEmpty else { return value }
+
+    var redacted = ""
+    var cursor = value.startIndex
+    for match in matches {
+        guard let matchRange = Range(match.range, in: value), matchRange.lowerBound >= cursor else {
+            continue
+        }
+        redacted += value[cursor..<matchRange.lowerBound]
+        let destinationEnd = value[matchRange.upperBound...].firstIndex(where: \.isNewline) ?? value.endIndex
+        redacted += "platform=iOS,id=<redacted>"
+        cursor = destinationEnd
+    }
+    redacted += value[cursor...]
+    return redacted
+}
+
+func redactedXcodePublicCommandLine(_ commandLine: String, destination: String?) -> String {
+    let redacted = redactedXcodeRealDeviceDestinationInPublicText(commandLine)
+    guard let destination, isXcodeRealDeviceDestination(destination) else {
+        return redacted
+    }
+    return redacted.replacingOccurrences(
+        of: destination,
+        with: redactedXcodeRealDeviceDestination(destination)
+    )
+}
+
+func xcodeRealDeviceDestinationSensitiveValues(_ destination: String?) -> [String] {
+    guard let destination, isXcodeRealDeviceDestination(destination) else { return [] }
+    let values = destination
+        .split(separator: ",")
+        .compactMap { component -> String? in
+            let component = String(component)
+            let normalizedComponent = component.lowercased()
+            let prefix: String
+            if normalizedComponent.hasPrefix("id=") {
+                prefix = "id="
+            } else if normalizedComponent.hasPrefix("name=") {
+                prefix = "name="
+            } else {
+                return nil
+            }
+            let value = String(component.dropFirst(prefix.count))
+            return value.isEmpty ? nil : value
+        }
+    return [destination] + values
 }
 
 private func isSimulatorBuildDestination(_ destination: String?) -> Bool {
@@ -238,6 +354,72 @@ enum XcodeWorkflowError: Error, CustomStringConvertible {
     }
 }
 
+func prepareXcodeRealDeviceInvocation(
+    invocation: ResolvedXcodeInvocation,
+    resolveSelection: () throws -> HostDeviceSelectionResult
+) throws -> PreparedXcodeRealDeviceInvocation {
+    guard let selector = invocation.realDeviceSelector,
+          !selector.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        throw ValidationError("Xcode real-device preflight requires --device.")
+    }
+
+    let selection = try resolveSelection()
+    guard selection.platform == .ios else {
+        throw HostDeviceSelectionError.platformMismatch(
+            selector: selector,
+            expected: .ios,
+            actual: selection.platform
+        )
+    }
+    guard selection.target.ready else {
+        throw HostCommandRunError.deviceNotReady(
+            target: selection.target.target,
+            timeoutSeconds: 0
+        )
+    }
+    let rawTarget = selection.target.rawTarget.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !rawTarget.isEmpty else {
+        throw ValidationError("The selected iOS real device has no executable raw target identifier.")
+    }
+
+    return PreparedXcodeRealDeviceInvocation(
+        invocation: invocation.withRealDeviceExecutionDestination(rawTarget: rawTarget),
+        selection: selection
+    )
+}
+
+func prepareXcodeRealDeviceInvocation(
+    invocation: ResolvedXcodeInvocation
+) throws -> PreparedXcodeRealDeviceInvocation {
+    guard let selector = invocation.realDeviceSelector,
+          !selector.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+        throw ValidationError("Xcode real-device preflight requires --device.")
+    }
+    return try prepareXcodeRealDeviceInvocation(invocation: invocation) {
+        try resolveHostDeviceSelection(
+            request: HostDeviceSelectionRequest(
+                device: selector,
+                platform: .ios,
+                scope: .real,
+                ready: false
+            ),
+            hdc: "hdc"
+        )
+    }
+}
+
+func preparedXcodeInvocationForExecution(
+    _ invocation: ResolvedXcodeInvocation
+) throws -> ResolvedXcodeInvocation {
+    guard invocation.hasRealDeviceSelection else {
+        return invocation
+    }
+    if invocation.redactsXcodebuildDestination {
+        return invocation
+    }
+    return try prepareXcodeRealDeviceInvocation(invocation: invocation).invocation
+}
+
 func runXcodeBuild(
     invocation: ResolvedXcodeInvocation,
     jsonl: Bool,
@@ -246,27 +428,32 @@ func runXcodeBuild(
     allowProvisioningUpdates: Bool = false,
     statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
 ) throws -> TKXcodeActionSummary {
+    let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
     let command = TKXcodebuildCommand.build(
-        workspace: invocation.workspace,
-        project: invocation.project,
-        package: invocation.package,
-        scheme: invocation.scheme,
-        configuration: invocation.configuration,
-        sdk: invocation.sdk,
-        destination: invocation.destination,
-        derivedDataPath: invocation.derivedDataPath,
-        buildSettings: invocation.buildSettings,
-        allowProvisioningUpdates: allowProvisioningUpdates
+        workspace: executionInvocation.workspace,
+        project: executionInvocation.project,
+        package: executionInvocation.package,
+        scheme: executionInvocation.scheme,
+        configuration: executionInvocation.configuration,
+        sdk: executionInvocation.sdk,
+        destination: executionInvocation.xcodebuildDestination,
+        derivedDataPath: executionInvocation.derivedDataPath,
+        buildSettings: executionInvocation.buildSettings,
+        allowProvisioningUpdates: allowProvisioningUpdates,
+        redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.build", jsonl: jsonl, allowNonZeroExit: allowNonZeroExit)
-    let diagnostics = xcodeBuildOutputDiagnostics(result)
+    let diagnostics = xcodeBuildOutputDiagnostics(result, redacting: command)
     let ok = result.exitCode == 0
-    let workspaceFilter = xcodeWorkspaceFilter(for: invocation)
-    let postActionProcessStatus = xcodePostActionProcessStatusIfInterrupted(
-        ok: ok,
-        result: result,
-        workspaceFilter: workspaceFilter,
-        statusProvider: statusProvider
+    let workspaceFilter = xcodeWorkspaceFilter(for: executionInvocation)
+    let postActionProcessStatus = redactedXcodePostActionProcessStatus(
+        xcodePostActionProcessStatusIfInterrupted(
+            ok: ok,
+            result: result,
+            workspaceFilter: workspaceFilter,
+            statusProvider: statusProvider
+        ),
+        command: command
     )
     let failureCode = xcodeBuildFailureCode(
         ok: ok,
@@ -278,17 +465,17 @@ func runXcodeBuild(
         ok: ok,
         action: "xcode.build",
         failureCode: failureCode,
-        workspace: invocation.workspace,
-        project: invocation.project,
-        package: invocation.package,
-        scheme: invocation.scheme,
-        configuration: invocation.configuration,
-        sdk: invocation.sdk,
-        destination: invocation.destination,
-        derivedDataPath: invocation.derivedDataPath,
-        derivedDataCache: invocation.derivedDataCache,
-        simulatorUDID: invocation.simulatorUDID,
-        device: invocation.device,
+        workspace: executionInvocation.workspace,
+        project: executionInvocation.project,
+        package: executionInvocation.package,
+        scheme: executionInvocation.scheme,
+        configuration: executionInvocation.configuration,
+        sdk: executionInvocation.sdk,
+        destination: executionInvocation.destination,
+        derivedDataPath: executionInvocation.derivedDataPath,
+        derivedDataCache: executionInvocation.derivedDataCache,
+        simulatorUDID: executionInvocation.simulatorUDID,
+        device: executionInvocation.device,
         durationMs: durationMs,
         sourceCommand: result.sourceCommand,
         exitCode: result.exitCode,
@@ -317,27 +504,32 @@ func runXcodeTest(
     timeout: Double? = nil,
     statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
 ) throws -> TKXcodeActionSummary {
+    let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
     let command = TKXcodebuildCommand.test(
-        workspace: invocation.workspace,
-        project: invocation.project,
-        package: invocation.package,
-        scheme: invocation.scheme,
-        configuration: invocation.configuration,
-        sdk: invocation.sdk,
-        destination: invocation.destination,
-        derivedDataPath: invocation.derivedDataPath,
+        workspace: executionInvocation.workspace,
+        project: executionInvocation.project,
+        package: executionInvocation.package,
+        scheme: executionInvocation.scheme,
+        configuration: executionInvocation.configuration,
+        sdk: executionInvocation.sdk,
+        destination: executionInvocation.xcodebuildDestination,
+        derivedDataPath: executionInvocation.derivedDataPath,
         resultBundlePath: resultBundlePath,
-        buildSettings: invocation.buildSettings
+        buildSettings: executionInvocation.buildSettings,
+        redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl, allowNonZeroExit: true)
-    let diagnostics = xcodeBuildOutputDiagnostics(result)
+    let diagnostics = xcodeBuildOutputDiagnostics(result, redacting: command)
     let ok = result.exitCode == 0
-    let workspaceFilter = xcodeWorkspaceFilter(for: invocation)
-    let postActionProcessStatus = xcodePostActionProcessStatusIfInterrupted(
-        ok: ok,
-        result: result,
-        workspaceFilter: workspaceFilter,
-        statusProvider: statusProvider
+    let workspaceFilter = xcodeWorkspaceFilter(for: executionInvocation)
+    let postActionProcessStatus = redactedXcodePostActionProcessStatus(
+        xcodePostActionProcessStatusIfInterrupted(
+            ok: ok,
+            result: result,
+            workspaceFilter: workspaceFilter,
+            statusProvider: statusProvider
+        ),
+        command: command
     )
     let failureCode = xcodeBuildFailureCode(
         ok: ok,
@@ -345,23 +537,26 @@ func runXcodeTest(
         result: result,
         postActionProcessStatus: postActionProcessStatus
     )
-    let resultDetails = xcodeTestResultBundleDetails(resultBundlePath: resultBundlePath)
+    let resultDetails = xcodeTestResultBundleDetails(
+        resultBundlePath: resultBundlePath,
+        redacting: command
+    )
     return TKXcodeActionSummary(
         ok: ok,
         action: "xcode.test",
         failureCode: failureCode,
-        workspace: invocation.workspace,
-        project: invocation.project,
-        package: invocation.package,
-        scheme: invocation.scheme,
-        configuration: invocation.configuration,
-        sdk: invocation.sdk,
-        destination: invocation.destination,
-        derivedDataPath: invocation.derivedDataPath,
-        derivedDataCache: invocation.derivedDataCache,
+        workspace: executionInvocation.workspace,
+        project: executionInvocation.project,
+        package: executionInvocation.package,
+        scheme: executionInvocation.scheme,
+        configuration: executionInvocation.configuration,
+        sdk: executionInvocation.sdk,
+        destination: executionInvocation.destination,
+        derivedDataPath: executionInvocation.derivedDataPath,
+        derivedDataCache: executionInvocation.derivedDataCache,
         resultBundlePath: resultBundlePath,
-        simulatorUDID: invocation.simulatorUDID,
-        device: invocation.device,
+        simulatorUDID: executionInvocation.simulatorUDID,
+        device: executionInvocation.device,
         durationMs: durationMs,
         sourceCommand: result.sourceCommand,
         exitCode: result.exitCode,
@@ -393,7 +588,7 @@ func runXcodeBuildInstallLaunch(
     jsonl: Bool,
     timeout: Double? = nil
 ) throws -> TKXcodeActionSummary {
-    if hasXcodeSelector(invocation.device) {
+    if invocation.hasRealDeviceSelection {
         return try runXcodeRealDeviceBuildInstallLaunch(
             invocation: invocation,
             launchEnvironment: launchEnvironment,
@@ -506,29 +701,20 @@ func runXcodeRealDeviceBuildInstallLaunch(
     jsonl: Bool,
     timeout: Double? = nil
 ) throws -> TKXcodeActionSummary {
-    guard let device = invocation.device, !device.isEmpty else {
+    guard invocation.hasRealDeviceSelection else {
         throw XcodeWorkflowError.simulatorRequired
     }
-    let prepared = try runXcodeRealDevicePreflightThenBuild(
-        resolveSelection: {
-            try resolveHostDeviceSelection(
-                request: HostDeviceSelectionRequest(
-                    device: device,
-                    platform: .ios,
-                    scope: .real,
-                    ready: true
-                ),
-                hdc: "hdc"
-            )
-        },
-        build: {
-            try runXcodeBuild(invocation: invocation, jsonl: jsonl, timeout: timeout, allowNonZeroExit: false)
-        }
-    )
+    let prepared = try prepareXcodeRealDeviceInvocation(invocation: invocation)
+    let executionInvocation = prepared.invocation
     let selection = prepared.selection
-    let buildSummary = prepared.buildSummary
+    let buildSummary = try runXcodeBuild(
+        invocation: executionInvocation,
+        jsonl: jsonl,
+        timeout: timeout,
+        allowNonZeroExit: false
+    )
     let product = try resolveBuiltAppProduct(
-        invocation: invocation,
+        invocation: executionInvocation,
         timeout: timeout,
         jsonl: jsonl,
         event: "xcode.run.settings"
@@ -549,7 +735,11 @@ func runXcodeRealDeviceBuildInstallLaunch(
         hdc: "hdc",
         devicectlArtifacts: nil
     )
-    let (_, installDurationMs) = try runXcodeHostCommand(installPlan.command, event: "xcode.run.install", jsonl: jsonl)
+    let installCommand = redactingXcodeRealDeviceCommand(
+        installPlan.command,
+        rawTarget: selection.target.rawTarget
+    )
+    let (_, installDurationMs) = try runXcodeHostCommand(installCommand, event: "xcode.run.install", jsonl: jsonl)
     let launchPlan = try planHostAppLaunch(
         selection: selection,
         bundleID: bundleID,
@@ -564,23 +754,28 @@ func runXcodeRealDeviceBuildInstallLaunch(
         hdc: "hdc",
         devicectlArtifacts: nil
     )
-    let (launchResult, launchDurationMs) = try runXcodeHostCommand(launchPlan.command, event: "xcode.run.launch", jsonl: jsonl)
+    let launchCommand = redactingXcodeRealDeviceCommand(
+        launchPlan.command,
+        rawTarget: selection.target.rawTarget
+    )
+    let (launchResult, launchDurationMs) = try runXcodeHostCommand(launchCommand, event: "xcode.run.launch", jsonl: jsonl)
 
     return TKXcodeActionSummary(
         ok: true,
         action: "xcode.run",
-        workspace: invocation.workspace,
-        project: invocation.project,
-        package: invocation.package,
-        scheme: invocation.scheme,
-        configuration: invocation.configuration,
-        sdk: invocation.sdk,
-        destination: invocation.destination,
-        derivedDataPath: invocation.derivedDataPath,
+        workspace: executionInvocation.workspace,
+        project: executionInvocation.project,
+        package: executionInvocation.package,
+        scheme: executionInvocation.scheme,
+        configuration: executionInvocation.configuration,
+        sdk: executionInvocation.sdk,
+        destination: executionInvocation.destination,
+        derivedDataPath: executionInvocation.derivedDataPath,
+        derivedDataCache: executionInvocation.derivedDataCache,
         appPath: product.appPath,
         bundleID: bundleID,
         simulatorUDID: nil,
-        device: device,
+        device: executionInvocation.device,
         durationMs: buildSummary.durationMs + installDurationMs + launchDurationMs,
         sourceCommand: launchResult.sourceCommand,
         exitCode: launchResult.exitCode,
@@ -594,11 +789,122 @@ func runXcodeRealDeviceBuildInstallLaunch(
     )
 }
 
-func xcodeBuildOutputDiagnostics(_ result: HostProcessResult) -> [TKXcodeOutputDiagnostic]? {
-    guard let diagnostic = XcodeBuildOutputDiagnosticsParser.parse(stdout: result.stdout, stderr: result.stderr) else {
+func xcodeBuildOutputDiagnostics(
+    _ result: HostProcessResult,
+    redacting command: TKHostCommand? = nil
+) -> [TKXcodeOutputDiagnostic]? {
+    let stdout = command.map { redactedXcodePublicText(result.stdout, command: $0) } ?? result.stdout
+    let stderr = command.map { redactedXcodePublicText(result.stderr, command: $0) } ?? result.stderr
+    guard let diagnostic = XcodeBuildOutputDiagnosticsParser.parse(stdout: stdout, stderr: stderr) else {
         return nil
     }
     return [diagnostic]
+}
+
+func redactingXcodeRealDeviceCommand(
+    _ command: TKHostCommand,
+    rawTarget: String
+) -> TKHostCommand {
+    let rawTarget = rawTarget.trimmingCharacters(in: .whitespacesAndNewlines)
+    guard !rawTarget.isEmpty else { return command }
+    let redactedIndexes = Set(command.arguments.indices.filter { command.arguments[$0] == rawTarget })
+    guard !redactedIndexes.isEmpty else { return command }
+    return TKHostCommand(
+        executable: command.executable,
+        arguments: command.arguments,
+        workingDirectory: command.workingDirectory,
+        environment: command.environment,
+        redactedEnvironmentKeys: command.redactedEnvironmentKeys,
+        redactedArgumentIndexes: command.redactedArgumentIndexes.union(redactedIndexes),
+        riskLevel: command.riskLevel,
+        requiredConfig: command.requiredConfig,
+        defaultTimeoutSeconds: command.defaultTimeoutSeconds,
+        capturesArtifacts: command.capturesArtifacts,
+        sensitiveOutput: command.sensitiveOutput,
+        stdinData: command.stdinData
+    )
+}
+
+func xcodeExecutionSensitiveValues(
+    command: TKHostCommand,
+    additionalSensitiveValues: [String] = []
+) -> [String] {
+    Set(command.redactedArgumentIndexes
+        .compactMap { index in command.arguments.indices.contains(index) ? command.arguments[index] : nil }
+        .flatMap { argument -> [String] in
+            let exactIdentifiers = argument
+                .split(separator: ",")
+                .compactMap { component -> String? in
+                    let component = String(component)
+                    guard component.hasPrefix("id=") else { return nil }
+                    let identifier = String(component.dropFirst("id=".count))
+                    return identifier.isEmpty ? nil : identifier
+            }
+            return [argument] + exactIdentifiers
+        }
+        + additionalSensitiveValues
+        .filter { !$0.isEmpty })
+        .sorted { $0.count > $1.count }
+}
+
+func redactedXcodePublicText(
+    _ value: String,
+    command: TKHostCommand,
+    additionalSensitiveValues: [String] = []
+) -> String {
+    let redactedPhysicalDestinations = redactedXcodeRealDeviceDestinationInPublicText(value)
+    return xcodeExecutionSensitiveValues(
+        command: command,
+        additionalSensitiveValues: additionalSensitiveValues
+    ).reduce(redactedPhysicalDestinations) { partialResult, sensitiveValue in
+        partialResult.replacingOccurrences(of: sensitiveValue, with: "<redacted>")
+    }
+}
+
+func redactedXcodePublicProcessResult(
+    _ result: HostProcessResult,
+    command: TKHostCommand,
+    additionalSensitiveValues: [String] = [],
+    redactDevicectlDiscoveryOutput: Bool = false
+) -> HostProcessResult {
+    let shouldRedactDiscoveryOutput = redactDevicectlDiscoveryOutput && isXcodeRealDeviceDiscoveryCommand(command)
+    let publicStdout = shouldRedactDiscoveryOutput
+        ? "<redacted devicectl discovery output>"
+        : redactedXcodePublicText(
+            result.stdout,
+            command: command,
+            additionalSensitiveValues: additionalSensitiveValues
+        )
+    let publicStderr = shouldRedactDiscoveryOutput
+        ? "<redacted devicectl discovery output>"
+        : redactedXcodePublicText(
+            result.stderr,
+            command: command,
+            additionalSensitiveValues: additionalSensitiveValues
+        )
+    return HostProcessResult(
+        stdoutData: Data(publicStdout.utf8),
+        stderrData: Data(publicStderr.utf8),
+        exitCode: result.exitCode,
+        sourceCommand: redactedXcodePublicText(
+            result.sourceCommand,
+            command: command,
+            additionalSensitiveValues: additionalSensitiveValues
+        ),
+        stdoutTruncated: result.stdoutTruncated,
+        stderrTruncated: result.stderrTruncated,
+        stdoutLogPath: result.stdoutLogPath,
+        stderrLogPath: result.stderrLogPath,
+        stdoutBytes: result.stdoutBytes,
+        stderrBytes: result.stderrBytes
+    )
+}
+
+private func isXcodeRealDeviceDiscoveryCommand(_ command: TKHostCommand) -> Bool {
+    let directDevicectl = command.executable == "devicectl" || command.executable.hasSuffix("/devicectl")
+    let arguments = command.arguments
+    return arguments.starts(with: ["devicectl", "list", "devices"])
+        || (directDevicectl && arguments.starts(with: ["list", "devices"]))
 }
 
 func xcodeBuildFailureCode(
@@ -626,6 +932,52 @@ func xcodePostActionProcessStatusIfInterrupted(
     guard !ok, xcodeBuildWasInterrupted(result) else { return nil }
     guard let status = try? statusProvider(workspaceFilter), status.active else { return nil }
     return status.sharedPostActionStatus()
+}
+
+func redactedXcodePostActionProcessStatus(
+    _ status: TKXcodePostActionProcessStatus?,
+    command: TKHostCommand
+) -> TKXcodePostActionProcessStatus? {
+    guard let status, !command.redactedArgumentIndexes.isEmpty else {
+        return status
+    }
+    let statusSensitiveValues = status.processes.flatMap {
+        xcodeRealDeviceDestinationSensitiveValues($0.destination)
+    }
+    return TKXcodePostActionProcessStatus(
+        active: status.active,
+        workspaceFilter: status.workspaceFilter,
+        processes: status.processes.map { process in
+            TKXcodeActiveProcessSummary(
+                pid: process.pid,
+                name: process.name,
+                commandLine: redactedXcodePublicText(
+                    process.commandLine,
+                    command: command,
+                    additionalSensitiveValues: statusSensitiveValues
+                ),
+                elapsed: process.elapsed,
+                elapsedSeconds: process.elapsedSeconds,
+                workspace: process.workspace,
+                project: process.project,
+                scheme: process.scheme,
+                destination: process.destination.map {
+                    redactedXcodePublicText(
+                        $0,
+                        command: command,
+                        additionalSensitiveValues: statusSensitiveValues
+                    )
+                },
+                derivedDataPath: process.derivedDataPath,
+                confidence: process.confidence
+            )
+        },
+        sourceCommand: redactedXcodePublicText(
+            status.sourceCommand,
+            command: command,
+            additionalSensitiveValues: statusSensitiveValues
+        )
+    )
 }
 
 func xcodeBuildRecoveryActions(failureCode: String?, workspaceFilter: String?) -> [TKCLINextAction]? {
@@ -819,7 +1171,7 @@ func runStreamingHostCommand(
         let snapshot = accumulator.snapshot()
         emitProgress(TKXcodeProgressEvent(
             event: "\(event).\(stream)",
-            message: streamingSample(stream: stream, data: data),
+            message: streamingSample(stream: stream, data: data, redacting: command),
             sourceCommand: hostSourceCommand(command),
             elapsedMs: Int(Date().timeIntervalSince(startedAt) * 1000),
             stdoutLogPath: artifactPaths.stdout.path,
@@ -927,6 +1279,7 @@ struct XcodeTestResultBundleDetails {
 func xcodeTestResultBundleDetails(
     resultBundlePath: String?,
     maximumFailures: Int = 3,
+    redacting command: TKHostCommand? = nil,
     runCommand: (TKHostCommand) throws -> HostProcessResult = { command in
         try runHostCommand(command, maximumOutputBytes: xcresultInlineJSONLimit)
     }
@@ -944,29 +1297,46 @@ func xcodeTestResultBundleDetails(
             summaryResult: summaryResult,
             testsResult: testsResult
         )
-        let topFailures = Array(output.failures.prefix(maximumFailures))
-        let note = output.failures.count > maximumFailures
-            ? "Showing top \(maximumFailures) of \(output.failures.count) failures. Use `triton xcresult failures --path <result.xcresult> --json` for the full list."
+        let exactValues = command.map { xcodeExecutionSensitiveValues(command: $0) } ?? []
+        let publicSummary = exactValues.isEmpty
+            ? output.summary
+            : TKXcresultRedaction.redact(output.summary, exactValues: exactValues)
+        let publicFailures = exactValues.isEmpty
+            ? output.failures
+            : TKXcresultRedaction.redact(output.failures, exactValues: exactValues)
+        let topFailures = Array(publicFailures.prefix(maximumFailures))
+        let note = publicFailures.count > maximumFailures
+            ? "Showing top \(maximumFailures) of \(publicFailures.count) failures. Use `triton xcresult failures --path <result.xcresult> --json` for the full list."
             : nil
         return XcodeTestResultBundleDetails(
-            summary: output.summary,
+            summary: publicSummary,
             topFailures: topFailures,
             note: note
         )
     } catch {
+        let errorDescription = String(describing: error)
+        let publicErrorDescription = command.map {
+            redactedXcodePublicText(errorDescription, command: $0)
+        } ?? TKXcresultRedaction.redact(errorDescription)
         return XcodeTestResultBundleDetails(
             summary: nil,
             topFailures: [],
-            note: "Result bundle was not parsed for inline failures: \(TKXcresultRedaction.redact(String(describing: error)))"
+            note: "Result bundle was not parsed for inline failures: \(publicErrorDescription)"
         )
     }
 }
 
-func streamingSample(stream: String, data: Data, maximumBytes: Int = 2_000) -> String {
+func streamingSample(
+    stream: String,
+    data: Data,
+    maximumBytes: Int = 2_000,
+    redacting command: TKHostCommand? = nil
+) -> String {
     let prefix = data.prefix(maximumBytes)
     let text = String(data: prefix, encoding: .utf8) ?? "<\(data.count) bytes>"
     let suffix = data.count > maximumBytes ? " ...<truncated>" : ""
-    return "\(stream): \(text)\(suffix)"
+    let sample = "\(stream): \(text)\(suffix)"
+    return command.map { redactedXcodePublicText(sample, command: $0) } ?? sample
 }
 
 func resolveBuiltAppProduct(
@@ -975,16 +1345,18 @@ func resolveBuiltAppProduct(
     jsonl: Bool = false,
     event: String = "xcode.settings.resolve"
 ) throws -> TKXcodeBuiltAppProduct {
+    let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
     let command = TKXcodebuildCommand.showBuildSettings(
-        workspace: invocation.workspace,
-        project: invocation.project,
-        package: invocation.package,
-        scheme: invocation.scheme,
-        configuration: invocation.configuration,
-        sdk: invocation.sdk,
-        destination: invocation.destination,
-        derivedDataPath: invocation.derivedDataPath,
-        buildSettings: invocation.buildSettings
+        workspace: executionInvocation.workspace,
+        project: executionInvocation.project,
+        package: executionInvocation.package,
+        scheme: executionInvocation.scheme,
+        configuration: executionInvocation.configuration,
+        sdk: executionInvocation.sdk,
+        destination: executionInvocation.xcodebuildDestination,
+        derivedDataPath: executionInvocation.derivedDataPath,
+        buildSettings: executionInvocation.buildSettings,
+        redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
     let result: HostProcessResult
     if jsonl {

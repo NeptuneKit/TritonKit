@@ -160,16 +160,17 @@ enum XcodeProcessDiagnosticsParser {
         let elapsed = String(parts[2])
         let commandLine = String(parts[3])
         let name = processName(commandPath: commandPath, commandLine: commandLine)
+        let destination = argument(after: "-destination", in: commandLine)
         return XcodeProcessSummary(
             pid: pid,
             name: name,
-            commandLine: commandLine,
+            commandLine: redactedXcodePublicCommandLine(commandLine, destination: destination),
             elapsed: elapsed,
             elapsedSeconds: elapsedSeconds(elapsed),
             workspace: argument(after: "-workspace", in: commandLine),
             project: argument(after: "-project", in: commandLine),
             scheme: argument(after: "-scheme", in: commandLine),
-            destination: argument(after: "-destination", in: commandLine),
+            destination: destination.map(redactedXcodeRealDeviceDestination(_:)),
             derivedDataPath: argument(after: "-derivedDataPath", in: commandLine),
             confidence: name == "xcodebuild" ? "medium" : "low"
         )

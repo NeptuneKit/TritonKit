@@ -1,10 +1,22 @@
 import ArgumentParser
+import Darwin
 import Foundation
 import Testing
 import TritonKitShared
 @testable import TritonKitCLI
 
-@Suite
+private func testXcodeDerivedDataCache() -> TKXcodeDerivedDataCacheInfo {
+    TKXcodeDerivedDataCacheInfo(
+        path: ".triton/DerivedData",
+        exists: false,
+        cacheState: "empty",
+        incrementalExpected: false,
+        cleanupPolicy: "preserve-by-default",
+        guidance: "preserve"
+    )
+}
+
+@Suite(.serialized)
 struct XcodeCommandTests {
     @Test("xcode schemes accepts timeout and package resolution controls")
     func xcodeSchemesAcceptsTimeoutAndPackageResolutionControls() throws {
@@ -230,8 +242,8 @@ struct XcodeCommandTests {
         #expect(build.optionalOptions.contains("--package"))
     }
 
-    @Test("xcode real-device selector resolves iphoneos and generic iOS destination")
-    func xcodeDeviceSelectorResolvesRealDeviceBuildTarget() throws {
+    @Test("xcode real-device selector resolves iphoneos without a generic fallback destination")
+    func xcodeDeviceSelectorDefersRealDeviceDestinationUntilPreflight() throws {
         let sdk = resolvedXcodeSDK(
             sdk: nil,
             defaultSDK: "iphonesimulator",
@@ -247,7 +259,484 @@ struct XcodeCommandTests {
         )
 
         #expect(sdk == "iphoneos")
-        #expect(destination == "generic/platform=iOS")
+        #expect(destination == nil)
+    }
+
+    @Test("xcode real-device preflight uses raw target only for argv and redacts public invocation")
+    func xcodeRealDevicePreflightUsesRawTargetOnlyForExecution() throws {
+        let rawTarget = "00008110-RAW-DEVICE-ID"
+        let otherPhysicalName = "Other - Private Phone"
+        let publicTarget = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:public-id",
+            target: "ios-real:public-target",
+            state: "connected",
+            ready: true,
+            source: "devicectl",
+            name: "Public Device Name",
+            runtime: "iOS 26.5",
+            transport: "usb",
+            scope: "real",
+            kind: "real-device",
+            rawTarget: rawTarget,
+            rawTargetAliases: ["PUBLIC-ALTERNATE-ID"]
+        )
+        let selection = HostDeviceSelectionResult(
+            platform: .ios,
+            target: publicTarget,
+            selector: "team-phone",
+            source: .alias,
+            filters: HostDeviceSelectionFilters(
+                request: HostDeviceSelectionRequest(
+                    device: "team-phone",
+                    platform: .ios,
+                    scope: .real,
+                    ready: true
+                )
+            )
+        )
+        let invocation = ResolvedXcodeInvocation(
+            workspace: "App.xcworkspace",
+            project: nil,
+            package: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: nil,
+            derivedDataPath: ".triton/DerivedData",
+            buildSettings: [],
+            derivedDataCache: testXcodeDerivedDataCache(),
+            simulatorUDID: nil,
+            device: "team-phone"
+        )
+
+        let prepared = try prepareXcodeRealDeviceInvocation(
+            invocation: invocation,
+            resolveSelection: { selection }
+        )
+        let command = TKXcodebuildCommand.build(
+            workspace: prepared.invocation.workspace,
+            project: prepared.invocation.project,
+            package: prepared.invocation.package,
+            scheme: prepared.invocation.scheme,
+            configuration: prepared.invocation.configuration,
+            sdk: prepared.invocation.sdk,
+            destination: prepared.invocation.xcodebuildDestination,
+            derivedDataPath: prepared.invocation.derivedDataPath,
+            buildSettings: prepared.invocation.buildSettings,
+            redactDestination: prepared.invocation.redactsXcodebuildDestination
+        )
+        let encodedInvocation = String(
+            decoding: try JSONEncoder().encode(prepared.invocation),
+            as: UTF8.self
+        )
+        let sourceCommand = hostSourceCommand(command)
+        let diagnosticsResult = HostProcessResult(
+            stdoutData: Data("Stale file '/tmp/\(rawTarget)/.triton/DerivedData/App' is located outside of the allowed root paths".utf8),
+            stderrData: Data(),
+            exitCode: 1,
+            sourceCommand: sourceCommand,
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: nil,
+            stderrLogPath: nil,
+            stdoutBytes: 0,
+            stderrBytes: 0
+        )
+        let diagnostics = try #require(xcodeBuildOutputDiagnostics(diagnosticsResult, redacting: command))
+        let encodedDiagnostics = String(
+            decoding: try JSONEncoder().encode(diagnostics),
+            as: UTF8.self
+        )
+        let redactedFailureResult = redactedXcodePublicProcessResult(diagnosticsResult, command: command)
+        let redactedFailureMessage = String(describing: HostCommandRunError.nonZeroExit(
+            command: command,
+            result: redactedFailureResult
+        ))
+        let streamSample = streamingSample(
+            stream: "stderr",
+            data: Data("target=\(rawTarget)".utf8),
+            redacting: command
+        )
+        let postActionStatus = redactedXcodePostActionProcessStatus(
+            TKXcodePostActionProcessStatus(
+                active: true,
+                processes: [
+                    TKXcodeActiveProcessSummary(
+                        pid: 1,
+                        name: "xcodebuild",
+                        commandLine: "xcodebuild -destination platform=iOS,id=\(rawTarget)",
+                        destination: "platform=iOS,id=\(rawTarget)",
+                        confidence: "medium"
+                    ),
+                    TKXcodeActiveProcessSummary(
+                        pid: 2,
+                        name: "xcodebuild",
+                        commandLine: "xcodebuild -destination platform=iOS,name=\(otherPhysicalName) test",
+                        destination: "platform=iOS,name=\(otherPhysicalName)",
+                        confidence: "medium"
+                    )
+                ],
+                sourceCommand: "ps xcodebuild \(rawTarget) \(otherPhysicalName)"
+            ),
+            command: command
+        )
+        let encodedPostActionStatus = String(
+            decoding: try JSONEncoder().encode(postActionStatus),
+            as: UTF8.self
+        )
+
+        #expect(command.argv.contains("platform=iOS,id=\(rawTarget)"))
+        #expect(!command.argv.contains("generic/platform=iOS"))
+        #expect(prepared.invocation.destination == "platform=iOS,id=<redacted>")
+        #expect(prepared.invocation.device == "<redacted>")
+        for forbidden in [rawTarget, otherPhysicalName, "- Private Phone", publicTarget.id, publicTarget.target, publicTarget.name!, publicTarget.rawTargetAliases[0]] {
+            #expect(!encodedInvocation.contains(forbidden))
+            #expect(!sourceCommand.contains(forbidden))
+            #expect(!encodedDiagnostics.contains(forbidden))
+            #expect(!redactedFailureMessage.contains(forbidden))
+            #expect(!streamSample.contains(forbidden))
+            #expect(!encodedPostActionStatus.contains(forbidden))
+        }
+    }
+
+    @Test("xcode real-device preflight blocks settings build test and run closures before xcodebuild")
+    func xcodeRealDevicePreflightBlocksEveryXcodeActionBeforeBuild() throws {
+        let request = HostDeviceSelectionRequest(
+            device: "missing-alias",
+            platform: .ios,
+            scope: .real,
+            ready: true
+        )
+
+        for action in ["settings", "build", "test", "run"] {
+            var xcodebuildCalled = false
+            do {
+                _ = try runXcodeRealDevicePreflightThenBuild(
+                    resolveSelection: {
+                        try resolveHostDeviceSelection(
+                            request: request,
+                            candidates: [.ios: []],
+                            aliases: .empty
+                        )
+                    },
+                    build: {
+                        xcodebuildCalled = true
+                        return action
+                    }
+                )
+                Issue.record("Expected \(action) real-device preflight to reject the missing selector")
+            } catch HostDeviceSelectionError.targetNotFound(let selector) {
+                #expect(selector == "missing-alias")
+            } catch {
+                Issue.record("Unexpected \(action) preflight error: \(error)")
+            }
+            #expect(!xcodebuildCalled)
+        }
+    }
+
+    @Test("xcode process status redacts every physical destination before public encoding")
+    func xcodeProcessStatusRedactsAllRealDeviceDestinations() throws {
+        let primaryRawTarget = "00008110-PRIMARY-RAW-TARGET"
+        let otherPhysicalName = "Other - Private Phone"
+        let status = try XcodeProcessDiagnosticsParser.parse(psOutput: """
+          101 /usr/bin/xcodebuild 00:30 xcodebuild -workspace App.xcworkspace -destination platform=iOS,id=\(primaryRawTarget) build
+          102 /usr/bin/xcodebuild 00:30 xcodebuild -workspace App.xcworkspace -destination platform=iOS,name=\(otherPhysicalName) test
+        """)
+        let encoded = String(decoding: try JSONEncoder().encode(status), as: UTF8.self)
+
+        #expect(status.processes.map(\.destination) == [
+            "platform=iOS,id=<redacted>",
+            "platform=iOS,id=<redacted>",
+        ])
+        #expect(!encoded.contains(primaryRawTarget))
+        #expect(!encoded.contains(otherPhysicalName))
+        #expect(!encoded.contains("- Private Phone"))
+    }
+
+    @Test("xcode parsed unquoted physical name stays redacted in post-action status")
+    func xcodeUnquotedPhysicalNameStaysRedactedInPostActionStatus() throws {
+        let rawTarget = "00008110-POST-ACTION-RAW-TARGET"
+        let otherPhysicalName = "Other - Private Phone"
+        let command = TKXcodebuildCommand.build(
+            workspace: "App.xcworkspace",
+            project: nil,
+            package: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: "platform=iOS,id=\(rawTarget)",
+            derivedDataPath: ".triton/DerivedData",
+            buildSettings: [],
+            redactDestination: true
+        )
+        let status = try XcodeProcessDiagnosticsParser.parse(psOutput: """
+          102 /usr/bin/xcodebuild 00:30 xcodebuild -workspace App.xcworkspace -destination platform=iOS,name=\(otherPhysicalName) test
+        """)
+        let postActionStatus = redactedXcodePostActionProcessStatus(
+            status.sharedPostActionStatus(),
+            command: command
+        )
+        let encoded = String(
+            decoding: try JSONEncoder().encode(postActionStatus),
+            as: UTF8.self
+        )
+
+        #expect(!encoded.contains(otherPhysicalName))
+        #expect(!encoded.contains("- Private Phone"))
+    }
+
+    @Test("xcode real-device devicectl discovery nonzero output is redacted in public JSON and JSONL envelopes")
+    func xcodeRealDeviceDevicectlDiscoveryFailureRedactsPublicOutput() throws {
+        let rawTarget = "00008110-DEVICectl-RAW-TARGET"
+        let selector = "private-team-phone"
+        let command = TKDevicectlCommand.listDevices(
+            jsonOutput: "/tmp/triton-devicectl-list.json",
+            logOutput: "/tmp/triton-devicectl-list.log"
+        )
+        let result = HostProcessResult(
+            stdoutData: Data("{\"identifier\":\"\(rawTarget)\"}".utf8),
+            stderrData: Data("devicectl failed for \(rawTarget) selector=\(selector)".utf8),
+            exitCode: 1,
+            sourceCommand: hostSourceCommand(command),
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: nil,
+            stderrLogPath: nil,
+            stdoutBytes: 0,
+            stderrBytes: 0
+        )
+
+        #expect(command.executable == "xcrun")
+        let captured = captureXcodeCommandOutputAllowingFailure {
+            try failXcodeCommand(
+                HostCommandRunError.nonZeroExit(command: command, result: result),
+                device: selector,
+                outputFormat: .json
+            )
+        }
+        #expect(captured.error is ExitCode)
+
+        let response = try JSONDecoder().decode(
+            TKCLIErrorResponse.self,
+            from: Data(captured.output.utf8)
+        )
+        let jsonl = try encodeCompactJSON(response)
+        #expect(jsonl.split(whereSeparator: { $0.isNewline }).count == 1)
+        for publicOutput in [captured.output, jsonl] {
+            #expect(publicOutput.contains("<redacted devicectl discovery output>"))
+            #expect(!publicOutput.contains(rawTarget))
+            #expect(!publicOutput.contains(selector))
+        }
+    }
+
+    @Test("xcode nonzero output redacts an unquoted physical name in public JSON and JSONL envelopes")
+    func xcodeNonzeroFailureRedactsUnquotedPhysicalName() throws {
+        let rawTarget = "00008110-NONZERO-RAW-TARGET"
+        let otherPhysicalName = "P1 - Private Phone Tail"
+        let command = TKXcodebuildCommand.build(
+            workspace: "App.xcworkspace",
+            project: nil,
+            package: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: "platform=iOS,id=\(rawTarget)",
+            derivedDataPath: ".triton/DerivedData",
+            buildSettings: [],
+            redactDestination: true
+        )
+        let result = HostProcessResult(
+            stdoutData: Data("xcodebuild -destination platform=iOS,name=\(otherPhysicalName) build".utf8),
+            stderrData: Data("failed destination platform=iOS,name=\(otherPhysicalName) test".utf8),
+            exitCode: 1,
+            sourceCommand: hostSourceCommand(command),
+            stdoutTruncated: false,
+            stderrTruncated: false,
+            stdoutLogPath: nil,
+            stderrLogPath: nil,
+            stdoutBytes: 0,
+            stderrBytes: 0
+        )
+
+        let captured = captureXcodeCommandOutputAllowingFailure {
+            try failXcodeCommand(
+                HostCommandRunError.nonZeroExit(command: command, result: result),
+                device: "private-team-phone",
+                outputFormat: .json
+            )
+        }
+        #expect(captured.error is ExitCode)
+
+        let response = try JSONDecoder().decode(
+            TKCLIErrorResponse.self,
+            from: Data(captured.output.utf8)
+        )
+        let jsonl = try encodeCompactJSON(response)
+        for publicOutput in [captured.output, jsonl] {
+            #expect(publicOutput.contains("platform=iOS,id=<redacted>"))
+            #expect(!publicOutput.contains(otherPhysicalName))
+            #expect(!publicOutput.contains("- Private Phone Tail"))
+        }
+    }
+
+    @Test("xcode public destination redaction preserves Simulator name form")
+    func xcodePublicDestinationRedactionPreservesSimulatorName() {
+        let simulatorDestination = "platform=iOS Simulator,name=Private Simulator Name"
+        let publicText = redactedXcodePublicText(
+            "xcodebuild -destination \(simulatorDestination) test",
+            command: TKHostCommand(arguments: ["xcodebuild"])
+        )
+
+        #expect(publicText.contains(simulatorDestination))
+    }
+
+    @Test("xcode public name redaction never changes the execution argv")
+    func xcodePublicNameRedactionNeverChangesExecutionArguments() {
+        let rawTarget = "00008110-EXECUTION-RAW-TARGET"
+        let executionDestination = "platform=iOS,id=\(rawTarget)"
+        let physicalName = "P1 - Private Phone Tail"
+        let command = TKXcodebuildCommand.build(
+            workspace: "App.xcworkspace",
+            project: nil,
+            package: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: executionDestination,
+            derivedDataPath: ".triton/DerivedData",
+            buildSettings: [],
+            redactDestination: true
+        )
+        let publicText = redactedXcodePublicText(
+            "xcodebuild -destination platform=iOS,name=\(physicalName) test",
+            command: command
+        )
+
+        #expect(command.argv.contains(executionDestination))
+        #expect(!publicText.contains(physicalName))
+        #expect(!publicText.contains("- Private Phone Tail"))
+    }
+
+    @Test("xcode public name redaction handles apostrophes without leaking a tail")
+    func xcodePublicNameRedactionHandlesApostrophes() {
+        let physicalName = "Alice's - Private Phone"
+        let publicText = redactedXcodePublicText(
+            "couldn't resolve destination platform=iOS,name=\(physicalName) test",
+            command: TKHostCommand(arguments: ["xcodebuild"])
+        )
+
+        #expect(!publicText.contains(physicalName))
+        #expect(!publicText.contains("s - Private Phone"))
+    }
+
+    @Test("xcode test inline xcresult details redact the execution-only device target")
+    func xcodeTestInlineXcresultDetailsRedactRawTarget() throws {
+        let rawTarget = "00008110-XCRESULT-RAW-TARGET"
+        let command = TKXcodebuildCommand.test(
+            workspace: "App.xcworkspace",
+            project: nil,
+            package: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: "platform=iOS,id=\(rawTarget)",
+            derivedDataPath: ".triton/DerivedData",
+            resultBundlePath: nil,
+            buildSettings: [],
+            redactDestination: true
+        )
+        let summary = """
+        {
+          "title": "AppTests",
+          "startTime": 10.0,
+          "finishTime": 12.5,
+          "environmentDescription": "iPhone target=\(rawTarget)",
+          "topInsights": [],
+          "result": "Failed",
+          "totalTestCount": 1,
+          "passedTests": 0,
+          "failedTests": 1,
+          "skippedTests": 0,
+          "expectedFailures": 0,
+          "statistics": []
+        }
+        """
+        let tests = """
+        {
+          "testPlanConfigurations": [],
+          "devices": [],
+          "testNodes": [
+            {
+              "nodeIdentifier": "bundle-1",
+              "nodeType": "Unit test bundle",
+              "name": "AppTests",
+              "children": [
+                {
+                  "nodeIdentifier": "case-1",
+                  "nodeType": "Test Case",
+                  "name": "testLogin()",
+                  "children": [
+                    {
+                      "nodeIdentifier": "run-1",
+                      "nodeType": "Test Case Run",
+                      "name": "testLogin()",
+                      "result": "Failed",
+                      "children": [
+                        {
+                          "nodeIdentifier": "failure-1",
+                          "nodeType": "Failure Message",
+                          "name": "XCTAssertEqual failed",
+                          "details": "target=\(rawTarget)"
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+        """
+        func result(_ stdout: String) -> HostProcessResult {
+            let data = Data(stdout.utf8)
+            return HostProcessResult(
+                stdoutData: data,
+                stderrData: Data(),
+                exitCode: 0,
+                sourceCommand: "xcrun xcresulttool \(rawTarget)",
+                stdoutTruncated: false,
+                stderrTruncated: false,
+                stdoutLogPath: nil,
+                stderrLogPath: nil,
+                stdoutBytes: data.count,
+                stderrBytes: 0
+            )
+        }
+
+        let details = xcodeTestResultBundleDetails(
+            resultBundlePath: "/tmp/App.xcresult",
+            redacting: command
+        ) { xcresultCommand in
+            result(xcresultCommand.arguments.contains("summary") ? summary : tests)
+        }
+        let publicDetails = [
+            details.summary?.environmentDescription,
+            details.topFailures?.first?.message,
+            details.note,
+        ].compactMap { $0 }.joined(separator: "\n")
+        #expect(!publicDetails.contains(rawTarget))
+        #expect(details.summary?.environmentDescription.contains("<redacted>") == true)
+        #expect(details.topFailures?.first?.message.contains("<redacted>") == true)
+
+        let failedDetails = xcodeTestResultBundleDetails(
+            resultBundlePath: "/tmp/App.xcresult",
+            redacting: command
+        ) { _ in
+            throw XcodeWorkflowError.bundleIDUnresolved(rawTarget)
+        }
+        #expect(failedDetails.note?.contains(rawTarget) == false)
+        #expect(failedDetails.note?.contains("<redacted>") == true)
     }
 
     @Test("xcode real-device preflight rejects a missing selector before build")
@@ -286,15 +775,16 @@ struct XcodeCommandTests {
 
     @Test("xcode real-device selection failure emits contextual target recovery")
     func xcodeRealDeviceSelectionFailureEmitsContextualTargetRecovery() throws {
+        let rawSelector = "00008110-RAW-SELECTOR"
         let detail = xcodeRealDeviceSelectionErrorDetail(
-            .targetNotFound("missing-alias"),
-            selector: "missing-alias"
+            .targetNotFound(rawSelector),
+            selector: rawSelector
         )
 
         #expect(detail.code == "target_not_found")
         #expect(detail.nextAction?.command == "target")
         #expect(detail.nextAction?.args == [
-            "resolve", "missing-alias", "--platform", "ios", "--scope", "real", "--ready", "--json",
+            "resolve", "<selector>", "--platform", "ios", "--scope", "real", "--ready", "--json",
         ])
         #expect(detail.nextAction?.category == "prepare-target")
 
@@ -304,10 +794,132 @@ struct XcodeCommandTests {
         )
         #expect(response.ok == false)
         #expect(response.error == detail)
+        let encoded = String(decoding: try JSONEncoder().encode(response), as: UTF8.self)
+        #expect(!encoded.contains(rawSelector))
     }
 
-    @Test("xcode real-device preflight preserves alias selection and build argv order")
-    func xcodeRealDevicePreflightPreservesAliasSelectionAndBuildArguments() throws {
+    @Test("xcode real-device preflight maps every target failure to contextual recovery")
+    func xcodeRealDevicePreflightFailureFamilyUsesContextualRecovery() {
+        let candidate = HostDeviceTarget(
+            platform: "ios",
+            id: "ios-real:public-id",
+            target: "ios-real:public-target",
+            state: "connected",
+            ready: false,
+            source: "devicectl",
+            name: "Public Device Name",
+            runtime: "iOS 26.5",
+            transport: "usb",
+            scope: "real",
+            kind: "real-device",
+            rawTarget: "00008110-PRIVATE"
+        )
+        let failures: [(error: Error, code: String)] = [
+            (HostDeviceSelectionError.targetNotFound("team-phone"), "target_not_found"),
+            (HostDeviceSelectionError.ambiguousTargets([candidate]), "ambiguous_target"),
+            (HostDeviceSelectionError.platformMismatch(selector: "team-phone", expected: .ios, actual: .android), "target_platform_mismatch"),
+            (HostCommandRunError.deviceNotReady(target: candidate.target, timeoutSeconds: 0), "device_not_ready"),
+        ]
+
+        for failure in failures {
+            let detail = xcodeRealDevicePreflightErrorDetail(failure.error, selector: "team-phone")
+            let encoded = String(
+                decoding: try! JSONEncoder().encode(TKCLIErrorResponse(error: detail)),
+                as: UTF8.self
+            )
+            #expect(detail.code == failure.code)
+            #expect(detail.nextAction?.command == "target")
+            #expect(detail.nextAction?.args == [
+                "resolve", "<selector>", "--platform", "ios", "--scope", "real", "--ready", "--json",
+            ])
+            #expect(detail.nextAction?.category == "prepare-target")
+            #expect(!encoded.contains(candidate.rawTarget))
+            #expect(!encoded.contains("\"candidates\""))
+        }
+    }
+
+    @Test("xcode real-device argument conflicts do not suggest target resolution")
+    func xcodeRealDeviceArgumentConflictKeepsParameterRecoveryLocal() {
+        let detail = xcodeRealDevicePreflightErrorDetail(
+            HostDeviceSelectionError.parameterConflict("--device conflicts with --destination"),
+            selector: "team-phone"
+        )
+
+        #expect(detail.code == "parameter_conflict")
+        #expect(detail.nextAction == nil)
+    }
+
+    @Test("xcode real-device arguments reject destination simulator and non-iphoneos SDK")
+    func xcodeRealDeviceArgumentsRejectConflictingTargetsAndSDK() throws {
+        func assertParameterConflict(
+            destination: String? = nil,
+            simulator: String? = nil
+        ) {
+            do {
+                _ = try resolveXcodeInvocation(
+                    workspace: "App.xcworkspace",
+                    scheme: "App",
+                    destination: destination,
+                    simulator: simulator,
+                    device: "team-phone"
+                )
+                Issue.record("Expected real-device target parameter conflict")
+            } catch let error as HostDeviceSelectionError {
+                guard case .parameterConflict = error else {
+                    Issue.record("Expected parameter_conflict, got \(error)")
+                    return
+                }
+            } catch {
+                Issue.record("Unexpected target parameter error: \(error)")
+            }
+        }
+
+        assertParameterConflict(destination: "platform=iOS,id=EXPLICIT")
+        assertParameterConflict(simulator: "SIM-1")
+
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphonesimulator",
+                device: "team-phone"
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos",
+                destination: "platform=iOS,id=00008110-RAW-BYPASS"
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos"
+            )
+        }
+        #expect(throws: ValidationError.self) {
+            _ = try resolveXcodeInvocation(
+                workspace: "App.xcworkspace",
+                scheme: "App",
+                sdk: "iphoneos18.0"
+            )
+        }
+        let valid = try resolveXcodeInvocation(
+            workspace: "App.xcworkspace",
+            scheme: "App",
+            sdk: "iPhoneOS18.0",
+            device: "team-phone"
+        )
+        #expect(valid.sdk == "iphoneos")
+        #expect(valid.destination == nil)
+    }
+
+    @Test("xcode real-device preflight never falls back to public identity or generic destination")
+    func xcodeRealDevicePreflightUsesOnlyRawTargetForDestination() throws {
+        let rawTarget = "00008110-UNIQUE-RAW-TARGET"
         let target = HostDeviceTarget(
             platform: "ios",
             id: "ios-real:abc123",
@@ -319,7 +931,9 @@ struct XcodeCommandTests {
             runtime: "iOS 26.5",
             transport: "usb",
             scope: "real",
-            kind: "real-device"
+            kind: "real-device",
+            rawTarget: rawTarget,
+            rawTargetAliases: ["ALTERNATE-RAW-TARGET"]
         )
         let request = HostDeviceSelectionRequest(
             device: "iphone15",
@@ -332,14 +946,6 @@ struct XcodeCommandTests {
                 "iphone15": HostTargetAlias(platform: .ios, target: "ios-real:abc123")
             ]
         )
-        let cache = TKXcodeDerivedDataCacheInfo(
-            path: ".triton/DerivedData",
-            exists: false,
-            cacheState: "empty",
-            incrementalExpected: false,
-            cleanupPolicy: "preserve-by-default",
-            guidance: "preserve"
-        )
         let invocation = ResolvedXcodeInvocation(
             workspace: "App.xcworkspace",
             project: nil,
@@ -347,73 +953,70 @@ struct XcodeCommandTests {
             scheme: "App",
             configuration: "Debug",
             sdk: "iphoneos",
-            destination: "generic/platform=iOS",
+            destination: nil,
             derivedDataPath: ".triton/DerivedData",
             buildSettings: [],
-            derivedDataCache: cache,
+            derivedDataCache: testXcodeDerivedDataCache(),
             simulatorUDID: nil,
             device: "iphone15"
         )
-        var events: [String] = []
-
-        let prepared = try runXcodeRealDevicePreflightThenBuild(
+        let selection = try resolveHostDeviceSelection(
+            request: request,
+            candidates: [.ios: [target]],
+            aliases: aliases
+        )
+        let prepared = try prepareXcodeRealDeviceInvocation(
+            invocation: invocation,
             resolveSelection: {
-                events.append("preflight")
-                return try resolveHostDeviceSelection(
-                    request: request,
-                    candidates: [.ios: [target]],
-                    aliases: aliases
-                )
-            },
-            build: {
-                events.append("build")
-                return TKXcodebuildCommand.build(
-                    workspace: invocation.workspace,
-                    project: invocation.project,
-                    package: invocation.package,
-                    scheme: invocation.scheme,
-                    configuration: invocation.configuration,
-                    sdk: invocation.sdk,
-                    destination: invocation.destination,
-                    derivedDataPath: invocation.derivedDataPath,
-                    buildSettings: invocation.buildSettings
-                ).argv
+                selection
             }
         )
+        let build = TKXcodebuildCommand.build(
+            workspace: prepared.invocation.workspace,
+            project: prepared.invocation.project,
+            package: prepared.invocation.package,
+            scheme: prepared.invocation.scheme,
+            configuration: prepared.invocation.configuration,
+            sdk: prepared.invocation.sdk,
+            destination: prepared.invocation.xcodebuildDestination,
+            derivedDataPath: prepared.invocation.derivedDataPath,
+            buildSettings: prepared.invocation.buildSettings,
+            redactDestination: prepared.invocation.redactsXcodebuildDestination
+        )
 
-        #expect(events == ["preflight", "build"])
         #expect(prepared.selection.source == .alias)
         #expect(prepared.selection.target == target)
-        #expect(prepared.buildSummary == [
-            "-workspace", "App.xcworkspace",
-            "-scheme", "App",
-            "-configuration", "Debug",
-            "-sdk", "iphoneos",
-            "-destination", "generic/platform=iOS",
-            "-derivedDataPath", ".triton/DerivedData",
-            "build",
-        ])
+        #expect(build.argv.contains("platform=iOS,id=\(rawTarget)"))
+        #expect(!build.argv.contains("generic/platform=iOS"))
+        #expect(!build.argv.contains(target.id))
+        #expect(!build.argv.contains(target.target))
+        #expect(!build.argv.contains(target.name!))
+        #expect(!build.argv.contains(target.rawTargetAliases[0]))
     }
 
     @Test("xcode schemas declare target selection failures and recovery")
     func xcodeSchemasDeclareTargetSelectionFailuresAndRecovery() throws {
         let schemas = commandSchemas()
         let xcode = try #require(schemas.first { $0.name == "xcode" })
-        let run = try #require(xcode.subcommands.first { $0.name == "run" })
         let target = try #require(schemas.first { $0.name == "target" })
         let genericRecovery = "triton target resolve <selector> --json"
         let realDeviceRecovery = "triton target resolve <selector> --platform ios --scope real --ready --json"
 
-        for code in ["target_not_found", "ambiguous_target", "target_platform_mismatch"] {
+        for code in ["target_not_found", "ambiguous_target", "target_platform_mismatch", "device_not_ready", "parameter_conflict"] {
             #expect(xcode.failureCodes.contains(code))
-            #expect(run.failureCodes.contains(code))
         }
         #expect(xcode.nextCommands.contains(realDeviceRecovery))
-        #expect(run.nextCommands.contains(realDeviceRecovery))
         #expect(xcode.nextCommands.contains(genericRecovery) == false)
-        #expect(run.nextCommands.contains(genericRecovery) == false)
         #expect(xcode.recoveryCommands.map(\.command).contains(realDeviceRecovery))
-        #expect(run.recoveryCommands.map(\.command).contains(realDeviceRecovery))
+        for action in ["settings", "build", "test", "run"] {
+            let subcommand = try #require(xcode.subcommands.first { $0.name == action })
+            for code in ["target_not_found", "ambiguous_target", "target_platform_mismatch", "device_not_ready", "parameter_conflict"] {
+                #expect(subcommand.failureCodes.contains(code))
+            }
+            #expect(subcommand.nextCommands.contains(realDeviceRecovery))
+            #expect(subcommand.nextCommands.contains(genericRecovery) == false)
+            #expect(subcommand.recoveryCommands.map(\.command).contains(realDeviceRecovery))
+        }
         #expect(target.nextCommands.contains(genericRecovery))
         #expect(target.recoveryCommands.map(\.command).contains(genericRecovery))
     }
@@ -504,8 +1107,8 @@ struct XcodeCommandTests {
         #expect(destination == "platform=iOS Simulator,id=EXPLICIT")
     }
 
-    @Test("xcode explicit destination overrides synthesized real-device destination")
-    func explicitDestinationOverridesDeviceDestination() throws {
+    @Test("xcode real-device selector defers an explicit destination to preflight validation")
+    func explicitDestinationDoesNotOverrideDevicePreflight() throws {
         let destination = resolvedXcodeDestination(
             destination: "platform=iOS,id=RAW-UDID",
             defaultDestination: "platform=iOS Simulator,id=SIM-1",
@@ -513,6 +1116,29 @@ struct XcodeCommandTests {
             device: "ios-real:abc123"
         )
 
-        #expect(destination == "platform=iOS,id=RAW-UDID")
+        #expect(destination == nil)
     }
+}
+
+private func captureXcodeCommandOutputAllowingFailure(
+    _ body: () throws -> Void
+) -> (output: String, error: Error?) {
+    let pipe = Pipe()
+    let originalStdout = dup(STDOUT_FILENO)
+    var caughtError: Error?
+
+    fflush(stdout)
+    dup2(pipe.fileHandleForWriting.fileDescriptor, STDOUT_FILENO)
+    do {
+        try body()
+    } catch {
+        caughtError = error
+    }
+    fflush(stdout)
+    dup2(originalStdout, STDOUT_FILENO)
+    close(originalStdout)
+    pipe.fileHandleForWriting.closeFile()
+
+    let data = pipe.fileHandleForReading.readDataToEndOfFile()
+    return (String(decoding: data, as: UTF8.self), caughtError)
 }

@@ -41,6 +41,7 @@ private let xcodeRealDeviceTargetFailureRecoveryCommand = "triton target resolve
 private let projectFailureRecoveryCommand = "triton xcode discover --path . --json"
 private let actionFailureRecoveryCommand = "triton act input --json --summary --strict"
 private let destructivePolicyFailureRecoveryCommand = "triton plan --format json"
+private let xcodeRealDevicePreflightActions: Set<String> = ["settings", "build", "test", "run"]
 
 private let targetFailureCodesRequiringRecovery: Set<String> = [
     "ambiguous_target",
@@ -136,7 +137,7 @@ private func schemaWithFailureFamilyRecovery(_ schema: TKCommandSchema) -> TKCom
         subcommands: schema.subcommands.map { subcommand in
             subcommandWithFailureFamilyRecovery(
                 subcommand,
-                targetRecoveryOverride: schema.name == "xcode" && subcommand.name == "run"
+                targetRecoveryOverride: schema.name == "xcode" && xcodeRealDevicePreflightActions.contains(subcommand.name)
                     ? xcodeRealDeviceTargetFailureRecoveryCommand
                     : nil
             )

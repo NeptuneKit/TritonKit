@@ -137,6 +137,49 @@ struct TKXcodeWorkflowModelsTests {
         ])
     }
 
+    @Test("real-device xcode destination keeps raw target in argv and marks it redacted")
+    func realDeviceDestinationIsExecutionOnlyAndRedactedForPublicCommands() throws {
+        let rawTarget = "00008110-RAW-XCODE-TARGET"
+        let destination = "platform=iOS,id=\(rawTarget)"
+        let settings = TKXcodebuildCommand.showBuildSettings(
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: destination,
+            derivedDataPath: ".triton/DerivedData/App",
+            redactDestination: true
+        )
+        let build = TKXcodebuildCommand.build(
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: destination,
+            derivedDataPath: ".triton/DerivedData/App",
+            redactDestination: true
+        )
+        let test = TKXcodebuildCommand.test(
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphoneos",
+            destination: destination,
+            derivedDataPath: ".triton/DerivedData/App",
+            resultBundlePath: "/tmp/App.xcresult",
+            redactDestination: true
+        )
+
+        for command in [settings, build, test] {
+            let destinationIndex = try #require(command.argv.firstIndex(of: destination))
+            #expect(command.argv[destinationIndex] == destination)
+            #expect(command.redactedArgumentIndexes == Set([destinationIndex]))
+        }
+    }
+
     @Test("xcodebuild command builders preserve one-off build setting argument boundaries")
     func xcodebuildCommandBuildersPreserveBuildSettings() {
         let buildSettings = [
@@ -481,11 +524,12 @@ struct TKXcodeWorkflowModelsTests {
 
     @Test("xcresult redaction removes private paths emails and token-like values")
     func xcresultRedactionRemovesSensitiveStrings() {
+        let rawTarget = "CORE-DEVICE-SHORT-ID"
         let summary = TKXcresultSummaryMetrics(
             title: "AppTests",
             startTime: nil,
             finishTime: nil,
-            environmentDescription: "runner=/Users/alice/Private/App token=abc123456789secret alice@example.com",
+            environmentDescription: "runner=/Users/alice/Private/App token=abc123456789secret alice@example.com target=\(rawTarget)",
             topInsights: [
                 TKXcresultInsightSummary(
                     impact: "high",
@@ -514,25 +558,27 @@ struct TKXcodeWorkflowModelsTests {
                 suiteName: "LoginSuite",
                 testName: "testLogin()",
                 targetName: "AppTests",
-                message: "XCTAssert failed at /Users/alice/App/Tests/LoginTests.swift with token=1234567890abcdef1234567890abcdef",
+                message: "XCTAssert failed at /Users/alice/App/Tests/LoginTests.swift with token=1234567890abcdef1234567890abcdef target=\(rawTarget)",
                 location: "/Users/alice/App/Tests/LoginTests.swift:42",
                 attachmentNames: ["file:///Users/alice/App/shot.png"]
             )
         ]
 
-        let redactedSummary = TKXcresultRedaction.redact(summary)
-        let redactedFailures = TKXcresultRedaction.redact(failures)
+        let redactedSummary = TKXcresultRedaction.redact(summary, exactValues: [rawTarget])
+        let redactedFailures = TKXcresultRedaction.redact(failures, exactValues: [rawTarget])
         let encodedSummary = String(data: try! JSONEncoder().encode(redactedSummary), encoding: .utf8)!
         let encodedFailures = String(data: try! JSONEncoder().encode(redactedFailures), encoding: .utf8)!
 
         #expect(!encodedSummary.contains("/Users/alice"))
         #expect(!encodedSummary.contains("alice@example.com"))
         #expect(!encodedSummary.contains("sk_test_1234567890abcdef1234567890abcdef"))
+        #expect(!encodedSummary.contains(rawTarget))
         #expect(encodedSummary.contains("<private-path>"))
         #expect(encodedSummary.contains("<email>"))
         #expect(encodedSummary.contains("Bearer <redacted>"))
         #expect(!encodedFailures.contains("/Users/alice"))
         #expect(!encodedFailures.contains("1234567890abcdef1234567890abcdef"))
+        #expect(!encodedFailures.contains(rawTarget))
         #expect(encodedFailures.contains("<private-path>"))
         #expect(encodedFailures.contains("token=<redacted>"))
     }

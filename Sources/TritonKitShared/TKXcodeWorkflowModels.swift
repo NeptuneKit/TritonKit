@@ -200,21 +200,24 @@ public enum TKXcodebuildCommand {
         sdk: String?,
         destination: String?,
         derivedDataPath: String?,
-        buildSettings: [String] = []
+        buildSettings: [String] = [],
+        redactDestination: Bool = false
     ) -> TKHostCommand {
-        TKHostCommand(
+        let arguments = buildArguments(
+            workspace: workspace,
+            project: project,
+            scheme: scheme,
+            configuration: configuration,
+            sdk: sdk,
+            destination: destination,
+            derivedDataPath: derivedDataPath,
+            buildSettings: buildSettings
+        ) + ["-showBuildSettings", "-json"]
+        return TKHostCommand(
             executable: "xcodebuild",
-            arguments: buildArguments(
-                workspace: workspace,
-                project: project,
-                scheme: scheme,
-                configuration: configuration,
-                sdk: sdk,
-                destination: destination,
-                derivedDataPath: derivedDataPath,
-                buildSettings: buildSettings
-            ) + ["-showBuildSettings", "-json"],
+            arguments: arguments,
             workingDirectory: packageWorkingDirectory(package),
+            redactedArgumentIndexes: redactedDestinationArgumentIndexes(arguments, redactDestination: redactDestination),
             defaultTimeoutSeconds: 300
         )
     }
@@ -229,7 +232,8 @@ public enum TKXcodebuildCommand {
         destination: String?,
         derivedDataPath: String?,
         buildSettings: [String] = [],
-        allowProvisioningUpdates: Bool = false
+        allowProvisioningUpdates: Bool = false,
+        redactDestination: Bool = false
     ) -> TKHostCommand {
         var arguments = buildArguments(
             workspace: workspace,
@@ -249,6 +253,7 @@ public enum TKXcodebuildCommand {
             executable: "xcodebuild",
             arguments: arguments,
             workingDirectory: packageWorkingDirectory(package),
+            redactedArgumentIndexes: redactedDestinationArgumentIndexes(arguments, redactDestination: redactDestination),
             riskLevel: .automation,
             requiredConfig: [.timeout, .auditRecord],
             defaultTimeoutSeconds: 900
@@ -265,7 +270,8 @@ public enum TKXcodebuildCommand {
         destination: String?,
         derivedDataPath: String?,
         resultBundlePath: String?,
-        buildSettings: [String] = []
+        buildSettings: [String] = [],
+        redactDestination: Bool = false
     ) -> TKHostCommand {
         var arguments = buildArguments(
             workspace: workspace,
@@ -285,6 +291,7 @@ public enum TKXcodebuildCommand {
             executable: "xcodebuild",
             arguments: arguments,
             workingDirectory: packageWorkingDirectory(package),
+            redactedArgumentIndexes: redactedDestinationArgumentIndexes(arguments, redactDestination: redactDestination),
             riskLevel: .automation,
             requiredConfig: [.timeout, .auditRecord],
             defaultTimeoutSeconds: 1_200,
@@ -331,6 +338,21 @@ public enum TKXcodebuildCommand {
         }
         arguments += buildSettings
         return arguments
+    }
+
+    private static func redactedDestinationArgumentIndexes(
+        _ arguments: [String],
+        redactDestination: Bool
+    ) -> Set<Int> {
+        guard redactDestination,
+              let optionIndex = arguments.firstIndex(of: "-destination") else {
+            return []
+        }
+        let destinationIndex = arguments.index(after: optionIndex)
+        guard destinationIndex < arguments.endIndex else {
+            return []
+        }
+        return [destinationIndex]
     }
 }
 
@@ -908,13 +930,51 @@ public enum TKXcresultRedaction {
         return redacted
     }
 
+    /// Applies the standard xcresult redaction plus exact values which are known to be
+    /// execution-only for the caller (for example a CoreDevice raw target identifier).
+    public static func redact(_ value: String, exactValues: [String]) -> String {
+        let values = exactValues
+            .filter { !$0.isEmpty }
+            .sorted { $0.count > $1.count }
+        return values.reduce(redact(value)) { partialResult, sensitiveValue in
+            partialResult.replacingOccurrences(of: sensitiveValue, with: "<redacted>")
+        }
+    }
+
     public static func redact(_ summary: TKXcresultSummaryMetrics) -> TKXcresultSummaryMetrics {
+        redact(summary, transforming: { redact($0) })
+    }
+
+    /// Redacts a parsed xcresult summary with caller-supplied execution-only values.
+    public static func redact(
+        _ summary: TKXcresultSummaryMetrics,
+        exactValues: [String]
+    ) -> TKXcresultSummaryMetrics {
+        redact(summary, transforming: { redact($0, exactValues: exactValues) })
+    }
+
+    public static func redact(_ failures: [TKXcresultFailureRecord]) -> [TKXcresultFailureRecord] {
+        failures.map { redact($0, transforming: { redact($0) }) }
+    }
+
+    /// Redacts parsed xcresult failures with caller-supplied execution-only values.
+    public static func redact(
+        _ failures: [TKXcresultFailureRecord],
+        exactValues: [String]
+    ) -> [TKXcresultFailureRecord] {
+        failures.map { redact($0, transforming: { redact($0, exactValues: exactValues) }) }
+    }
+
+    private static func redact(
+        _ summary: TKXcresultSummaryMetrics,
+        transforming transform: (String) -> String
+    ) -> TKXcresultSummaryMetrics {
         TKXcresultSummaryMetrics(
-            title: redact(summary.title),
+            title: transform(summary.title),
             startTime: summary.startTime,
             finishTime: summary.finishTime,
-            environmentDescription: redact(summary.environmentDescription),
-            topInsights: summary.topInsights.map(redact(_:)),
+            environmentDescription: transform(summary.environmentDescription),
+            topInsights: summary.topInsights.map { redact($0, transforming: transform) },
             result: summary.result,
             durationMs: summary.durationMs,
             totalTestCount: summary.totalTestCount,
@@ -922,32 +982,37 @@ public enum TKXcresultRedaction {
             failedTests: summary.failedTests,
             skippedTests: summary.skippedTests,
             expectedFailures: summary.expectedFailures,
-            statistics: summary.statistics.map(redact(_:)),
-            devicesAndConfigurations: summary.devicesAndConfigurations.map(redact(_:)),
-            testFailure: summary.testFailure.map(redact(_:))
+            statistics: summary.statistics.map { redact($0, transforming: transform) },
+            devicesAndConfigurations: summary.devicesAndConfigurations.map { redact($0, transforming: transform) },
+            testFailure: summary.testFailure.map { redact($0, transforming: transform) }
         )
     }
 
-    public static func redact(_ failures: [TKXcresultFailureRecord]) -> [TKXcresultFailureRecord] {
-        failures.map(redact(_:))
-    }
-
-    private static func redact(_ insight: TKXcresultInsightSummary) -> TKXcresultInsightSummary {
+    private static func redact(
+        _ insight: TKXcresultInsightSummary,
+        transforming transform: (String) -> String
+    ) -> TKXcresultInsightSummary {
         TKXcresultInsightSummary(
-            impact: redact(insight.impact),
-            category: redact(insight.category),
-            text: redact(insight.text)
+            impact: transform(insight.impact),
+            category: transform(insight.category),
+            text: transform(insight.text)
         )
     }
 
-    private static func redact(_ statistic: TKXcresultStatistic) -> TKXcresultStatistic {
-        TKXcresultStatistic(title: redact(statistic.title), subtitle: redact(statistic.subtitle))
+    private static func redact(
+        _ statistic: TKXcresultStatistic,
+        transforming transform: (String) -> String
+    ) -> TKXcresultStatistic {
+        TKXcresultStatistic(title: transform(statistic.title), subtitle: transform(statistic.subtitle))
     }
 
-    private static func redact(_ summary: TKXcresultDeviceAndConfigurationSummary) -> TKXcresultDeviceAndConfigurationSummary {
+    private static func redact(
+        _ summary: TKXcresultDeviceAndConfigurationSummary,
+        transforming transform: (String) -> String
+    ) -> TKXcresultDeviceAndConfigurationSummary {
         TKXcresultDeviceAndConfigurationSummary(
-            device: redact(summary.device),
-            testPlanConfiguration: redact(summary.testPlanConfiguration),
+            device: redact(summary.device, transforming: transform),
+            testPlanConfiguration: redact(summary.testPlanConfiguration, transforming: transform),
             passedTests: summary.passedTests,
             failedTests: summary.failedTests,
             skippedTests: summary.skippedTests,
@@ -955,46 +1020,58 @@ public enum TKXcresultRedaction {
         )
     }
 
-    private static func redact(_ device: TKXcresultDeviceSummary) -> TKXcresultDeviceSummary {
+    private static func redact(
+        _ device: TKXcresultDeviceSummary,
+        transforming transform: (String) -> String
+    ) -> TKXcresultDeviceSummary {
         TKXcresultDeviceSummary(
-            deviceId: redact(device.deviceId),
-            deviceName: redact(device.deviceName),
-            architecture: device.architecture.map(redact(_:)),
-            modelName: device.modelName.map(redact(_:)),
-            platform: device.platform.map(redact(_:)),
-            osVersion: redact(device.osVersion),
-            osBuildNumber: device.osBuildNumber.map(redact(_:))
+            deviceId: transform(device.deviceId),
+            deviceName: transform(device.deviceName),
+            architecture: device.architecture.map(transform),
+            modelName: device.modelName.map(transform),
+            platform: device.platform.map(transform),
+            osVersion: transform(device.osVersion),
+            osBuildNumber: device.osBuildNumber.map(transform)
         )
     }
 
-    private static func redact(_ configuration: TKXcresultConfigurationSummary) -> TKXcresultConfigurationSummary {
+    private static func redact(
+        _ configuration: TKXcresultConfigurationSummary,
+        transforming transform: (String) -> String
+    ) -> TKXcresultConfigurationSummary {
         TKXcresultConfigurationSummary(
-            configurationId: redact(configuration.configurationId),
-            configurationName: redact(configuration.configurationName)
+            configurationId: transform(configuration.configurationId),
+            configurationName: transform(configuration.configurationName)
         )
     }
 
-    private static func redact(_ failure: TKXcresultTestFailure) -> TKXcresultTestFailure {
+    private static func redact(
+        _ failure: TKXcresultTestFailure,
+        transforming transform: (String) -> String
+    ) -> TKXcresultTestFailure {
         TKXcresultTestFailure(
-            testName: redact(failure.testName),
-            targetName: redact(failure.targetName),
-            failureText: redact(failure.failureText),
+            testName: transform(failure.testName),
+            targetName: transform(failure.targetName),
+            failureText: transform(failure.failureText),
             testIdentifier: failure.testIdentifier,
-            testIdentifierString: redact(failure.testIdentifierString),
-            testIdentifierURL: failure.testIdentifierURL.map(redact(_:))
+            testIdentifierString: transform(failure.testIdentifierString),
+            testIdentifierURL: failure.testIdentifierURL.map(transform)
         )
     }
 
-    private static func redact(_ failure: TKXcresultFailureRecord) -> TKXcresultFailureRecord {
+    private static func redact(
+        _ failure: TKXcresultFailureRecord,
+        transforming transform: (String) -> String
+    ) -> TKXcresultFailureRecord {
         TKXcresultFailureRecord(
-            suiteName: failure.suiteName.map(redact(_:)),
-            testName: redact(failure.testName),
-            targetName: redact(failure.targetName),
-            message: redact(failure.message),
-            location: failure.location.map(redact(_:)),
-            testIdentifierString: failure.testIdentifierString.map(redact(_:)),
-            testIdentifierURL: failure.testIdentifierURL.map(redact(_:)),
-            attachmentNames: failure.attachmentNames.map(redact(_:))
+            suiteName: failure.suiteName.map(transform),
+            testName: transform(failure.testName),
+            targetName: transform(failure.targetName),
+            message: transform(failure.message),
+            location: failure.location.map(transform),
+            testIdentifierString: failure.testIdentifierString.map(transform),
+            testIdentifierURL: failure.testIdentifierURL.map(transform),
+            attachmentNames: failure.attachmentNames.map(transform)
         )
     }
 
