@@ -79,6 +79,8 @@ triton replay <file.tritonplan> --dry-run --json
 triton replay <file.tritonplan> --json
 ```
 
+For recorder-derived flows, only `triton test import <case.tritontestcase> --output <plan.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json`, then `triton test validate`, then `triton test run --target <target-id>` can lead to a real runtime verdict. `testrec replay --dry-run`, `local-simulated`, and `matrix` are offline diagnostics: even if their compatibility fields say `ready`, `passed`, or `passedCount`, require `verdictBoundary.countsAsRealTestVerdict=false` and do not use them as regression evidence or reliability-gate samples. Treat an older replay result without this boundary as legacy/unknown, not affirmative proof.
+
 ## Completion Gate
 
 - Requirement has machine-readable pass/fail evidence.

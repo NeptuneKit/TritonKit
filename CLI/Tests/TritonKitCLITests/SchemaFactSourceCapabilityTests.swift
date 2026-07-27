@@ -561,6 +561,7 @@ extension SchemaFactSourceTests {
             "screenshot": ["<path.png>"],
             "app-map-viewer": ["<file.html>"],
             "test-import-compiled-contract": ["<path.tritontest.yaml>"],
+            "testrec-replay-local-simulated": ["<path.tritontest.yaml>"],
             "test-create-from-session": ["<path.tritontest.yaml>"],
             "testrec-session-start": ["<case.tritontestcase>"],
         ]

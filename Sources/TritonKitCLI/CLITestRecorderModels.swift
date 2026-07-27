@@ -552,6 +552,28 @@ struct TKTestRecorderReplayPageCheck: Codable, Equatable {
     let stopConditions: [String]
 }
 
+struct TKTestRecorderReplayVerdictBoundary: Codable, Equatable {
+    let classification: String
+    let countsAsRealTestVerdict: Bool
+    let eligibleForReliabilityGate: Bool
+    let migrationCommands: [String]
+
+    static let importCommand = "triton test import <case.tritontestcase> --output <path.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json"
+
+    static func offlineDiagnostic() -> TKTestRecorderReplayVerdictBoundary {
+        TKTestRecorderReplayVerdictBoundary(
+            classification: "offline-diagnostic",
+            countsAsRealTestVerdict: false,
+            eligibleForReliabilityGate: false,
+            migrationCommands: [
+                importCommand,
+                "triton test validate <path.tritontest.yaml> --json",
+                "triton test run <path.tritontest.yaml> --target <target-id> --evidence-dir <dir.tritonevidence> --json",
+            ]
+        )
+    }
+}
+
 struct TKTestRecorderReplayExecutorProfile: Codable, Equatable {
     let id: String
     let status: String
@@ -559,6 +581,7 @@ struct TKTestRecorderReplayExecutorProfile: Codable, Equatable {
     let message: String
     let requirements: [TKTestRecorderReplayExecutorRequirement]
     let nextCommand: String?
+    let verdictBoundary: TKTestRecorderReplayVerdictBoundary?
 
     static func localSimulated(path: String, platform: String) -> TKTestRecorderReplayExecutorProfile {
         TKTestRecorderReplayExecutorProfile(
@@ -572,7 +595,8 @@ struct TKTestRecorderReplayExecutorProfile: Codable, Equatable {
                 TKTestRecorderReplayExecutorRequirement(name: "device-action-execution", required: false, status: "not-required", evidence: ["no-device-command-executed"]),
                 TKTestRecorderReplayExecutorRequirement(name: "evidence-artifact-capture", required: false, status: "optional", evidence: ["--evidence-dir"]),
             ],
-            nextCommand: "triton testrec replay \(path) --platform \(platform) --executor local-simulated --target-fingerprints-json <json> --evidence-dir <dir.tritonevidence> --json"
+            nextCommand: "triton testrec replay \(path) --platform \(platform) --executor local-simulated --target-fingerprints-json <json> --evidence-dir <dir.tritonevidence> --json",
+            verdictBoundary: .offlineDiagnostic()
         )
     }
 
@@ -581,7 +605,7 @@ struct TKTestRecorderReplayExecutorProfile: Codable, Equatable {
             id: "local-device",
             status: "unsupported",
             mode: "device-execution",
-            message: "Real device replay executor is not implemented yet; use local-simulated until all required capabilities are satisfied.",
+            message: "testrec does not provide a real device replay executor. Import the compiled contract into triton test before validating and running it on an explicit target.",
             requirements: [
                 TKTestRecorderReplayExecutorRequirement(name: "compiled-contract", required: true, status: "satisfied", evidence: ["compiled-contract"]),
                 TKTestRecorderReplayExecutorRequirement(name: "live-target-device", required: true, status: "missing", evidence: ["target-readiness:not-wired"]),
@@ -589,7 +613,8 @@ struct TKTestRecorderReplayExecutorProfile: Codable, Equatable {
                 TKTestRecorderReplayExecutorRequirement(name: "evidence-artifact-capture", required: true, status: "missing", evidence: ["artifact-writer:not-wired"]),
                 TKTestRecorderReplayExecutorRequirement(name: "network-policy-application", required: true, status: "missing", evidence: ["network-policy:not-wired"]),
             ],
-            nextCommand: "triton schema --command testrec --json"
+            nextCommand: TKTestRecorderReplayVerdictBoundary.importCommand,
+            verdictBoundary: .offlineDiagnostic()
         )
     }
 }
@@ -609,6 +634,7 @@ struct TKTestRecorderReplayDryRunResponse: Codable, Equatable {
     let contractRef: TKTestRecorderReplayContractRef?
     let pageChecks: [TKTestRecorderReplayPageCheck]
     let executorProfiles: [TKTestRecorderReplayExecutorProfile]
+    let verdictBoundary: TKTestRecorderReplayVerdictBoundary?
     let plannedSteps: [TKTestRecorderReplayPlannedStep]
     let blockers: [TKTestRecorderReplayBlocker]
     let suggestedCommands: [String]
@@ -631,6 +657,7 @@ struct TKTestRecorderReplayDryRunResponse: Codable, Equatable {
             .localSimulated(path: path, platform: platform),
             .localDeviceUnsupported(),
         ]
+        self.verdictBoundary = .offlineDiagnostic()
         self.plannedSteps = plannedSteps
         self.blockers = blockers
         self.suggestedCommands = [
@@ -856,6 +883,7 @@ struct TKTestRecorderReplayRunResponse: Codable, Equatable {
     let steps: [TKTestRecorderReplayStepResult]
     let blockers: [TKTestRecorderReplayBlocker]
     let suggestedCommands: [String]
+    let verdictBoundary: TKTestRecorderReplayVerdictBoundary?
 
     init(plan: TKTestRecorderReplayDryRunResponse, executor: String, evidenceDir: String? = nil, artifactRefs: [String] = [], pageResults: [TKTestRecorderReplayPageResult], networkResults: [TKTestRecorderReplayNetworkResult] = [], steps: [TKTestRecorderReplayStepResult], blockers: [TKTestRecorderReplayBlocker], execution: TKTestRecorderReplayExecutionSummary? = nil) {
         self.ok = blockers.isEmpty
@@ -890,6 +918,7 @@ struct TKTestRecorderReplayRunResponse: Codable, Equatable {
         self.networkResults = networkResults
         self.steps = steps
         self.blockers = blockers
+        self.verdictBoundary = .offlineDiagnostic()
         self.suggestedCommands = [
             "triton testrec inspect \(plan.path) --json",
             "triton testrec replay \(plan.path) --platform \(plan.platform) --dry-run --json",
@@ -917,6 +946,7 @@ struct TKTestRecorderMatrixTargetResult: Codable, Equatable {
     let evidenceDir: String?
     let blockers: [TKTestRecorderReplayBlocker]
     let suggestedCommand: String
+    let verdictBoundary: TKTestRecorderReplayVerdictBoundary?
 
     init(target: TKTestRecorderMatrixTarget, plan: TKTestRecorderReplayDryRunResponse) {
         self.target = target.raw
@@ -931,6 +961,7 @@ struct TKTestRecorderMatrixTargetResult: Codable, Equatable {
         self.stepResultCount = 0
         self.evidenceDir = nil
         self.blockers = plan.blockers
+        self.verdictBoundary = plan.verdictBoundary ?? .offlineDiagnostic()
         var command = "triton testrec replay \(shellQuotedEvidencePath(plan.path)) --platform \(target.platform)"
         if let device = target.device {
             command += " --device \(shellQuotedEvidencePath(device))"
@@ -951,6 +982,7 @@ struct TKTestRecorderMatrixTargetResult: Codable, Equatable {
         self.stepResultCount = run.steps.count
         self.evidenceDir = evidenceDir
         self.blockers = run.blockers
+        self.verdictBoundary = run.verdictBoundary ?? .offlineDiagnostic()
         var command = "triton testrec replay \(shellQuotedEvidencePath(run.path)) --platform \(target.platform)"
         if let device = target.device {
             command += " --device \(shellQuotedEvidencePath(device))"
@@ -977,6 +1009,7 @@ struct TKTestRecorderMatrixResponse: Codable, Equatable {
     let blockedCount: Int
     let results: [TKTestRecorderMatrixTargetResult]
     let suggestedCommands: [String]
+    let verdictBoundary: TKTestRecorderReplayVerdictBoundary?
 
     init(path: String, targets: String, executor: String?, evidenceRoot: String?, results: [TKTestRecorderMatrixTargetResult]) {
         self.ok = results.allSatisfy { ["ready", "passed"].contains($0.status) }
@@ -991,6 +1024,7 @@ struct TKTestRecorderMatrixResponse: Codable, Equatable {
         self.blockedCount = results.filter { $0.status == "blocked" }.count
         self.status = blockedCount == 0 ? (executor == nil ? "ready" : "passed") : "blocked"
         self.results = results
+        self.verdictBoundary = .offlineDiagnostic()
         var suggestedCommands = ["triton testrec matrix \(path) --targets \(targets) --json"]
         suggestedCommands += results.compactMap(\.evidenceDir).map { "triton evidence summary \(shellQuotedEvidencePath($0)) --json" }
         self.suggestedCommands = suggestedCommands

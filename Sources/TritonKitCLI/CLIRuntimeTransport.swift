@@ -477,7 +477,7 @@ func runtimeCapabilityNextAction(
     case "testrec-replay-dry-run":
         return TKCLINextAction(command: "testrec", args: ["replay", "<case.tritontestcase>", "--platform", "android", "--dry-run", "--json"])
     case "testrec-replay-local-simulated":
-        return TKCLINextAction(command: "testrec", args: ["replay", "<case.tritontestcase>", "--platform", "android", "--executor", "local-simulated", "--target-fingerprints-json", "<json>", "--evidence-dir", "<dir.tritonevidence>", "--json"])
+        return TKCLINextAction(command: "test", args: ["import", "<case.tritontestcase>", "--output", "<path.tritontest.yaml>", "--bundle-id", "<bundle-id>", "--device-platform", "ios-simulator", "--json"])
     case "testrec-matrix":
         return TKCLINextAction(command: "testrec", args: ["matrix", "<case.tritontestcase>", "--targets", "ios:sim-a,android:emu-a", "--json"])
     case "action-provider-parse":

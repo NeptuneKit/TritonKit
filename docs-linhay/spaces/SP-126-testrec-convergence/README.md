@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：执行（路线已裁决；可信基线、SP-132 P0 importer、SP-133 P1 imported iOS Simulator proof 与 SP-134 离线 reliability gate 均形成独立本地 checkpoint；真实采样与 workspace 扩张继续后置）。
+- 状态：执行（路线已裁决；可信基线、SP-132 P0 importer、SP-133 P1 imported iOS Simulator proof 与 SP-134 离线 reliability gate 均形成独立本地 checkpoint；SP-135 正收紧 testrec simulated compatibility contract；真实采样与 workspace 扩张继续后置）。
 - 负责人：Codex。
 - Branch：`feat/SP-126-testrec-convergence`。
 - Worktree：`../TritonKit-worktrees/SP-126-testrec-convergence/`。
@@ -52,6 +52,8 @@
 3. **真实纵切**：SP-133 已验证：给定经 Triton-first 事实检查确认的 iOS Simulator / Debug embedded runtime 和一条可映射动作，`triton test run` 以导入计划顺序完成 target resolve、before observation、exact-AX-text action、after observation 和 `.tritonevidence`，最终 passed verdict 不来自 `local-simulated`。
 4. **来源可审计**：SP-133 已验证：最终 evidence 的 `normalized-plan.json` 保留 source case / compiled-contract 的稳定身份和导入版本；`run.planRef` 指向该 artifact，公开摘要不记录敏感原文。
 5. **兼容不误导**：既有 `triton testrec` CLI/HTTP 在迁移期继续可读可诊断；任何真实执行请求都明确导向 `test import` / `test run`，不会把 simulated result 表示为设备执行成功。
+
+SP-135 负责把这条兼容边界写进 replay/matrix 的 machine-readable output：旧 `ready` / `passed` 字段保留，但新增 boundary 明示它们不能计为真实 test verdict 或 reliability sample。
 
 ## 完成定义
 
