@@ -581,6 +581,7 @@ triton xcode build --jsonl --timeout 1800
 triton xcode build --build-setting CLANG_ENABLE_EXPLICIT_MODULES=NO --jsonl
 triton xcode build --package Package.swift --scheme PackageName --destination 'generic/platform=iOS Simulator' --jsonl
 triton xcode test --result-bundle /tmp/App.xcresult --jsonl
+triton xcode test --only-testing AppTests/LoginTests/testSubmit --only-testing AppTests/SettingsTests --result-bundle /tmp/App.xcresult --jsonl
 triton xcresult summary --path /tmp/App.xcresult --json
 triton xcresult failures --path /tmp/App.xcresult --json
 triton xcode run --jsonl
@@ -599,6 +600,8 @@ If `triton xcode build/test/run` returns `xcodebuild_interrupted` or `orphaned_x
 `xcode settings/build/test/run` also accepts repeatable one-off `--build-setting KEY=VALUE`. Triton validates keys against `[A-Za-z_][A-Za-z0-9_]*`, preserves each complete setting as one `xcodebuild` argv element (including spaces or `$(inherited)`), and records it in `sourceCommand`. Use it for temporary diagnosis without editing project or generated dependency files; because the value is intentionally visible in the audit command, do not pass secrets through this option.
 
 `xcode test` writes the result bundle but does not yet inline all test counts or failures into the final build summary. Run `triton xcresult summary` and `triton xcresult failures` against the bundle to produce issue-ready test evidence.
+
+To narrow a real XCTest run, repeat `--only-testing <target>/<class-or-method>`. Triton keeps every selection as one ordered `-only-testing:<identifier>` xcodebuild argument (duplicates are preserved), echoes them in `sourceCommand`, and exposes `onlyTesting` in JSON/JSONL only when supplied. Blank values, leading/trailing whitespace, control characters, and values beginning with `-` are rejected as `validation_failed` before xcodebuild starts; actual XCTest-name matching remains xcodebuild's responsibility. `--skip-testing` is not part of this Triton command contract.
 
 `xcresult summary/failures` redact private paths, emails, bearer tokens, password/token/API-key fragments, and long token-like strings by default across JSON and text output, including `path` and `sourceCommand`. Use `--include-sensitive` only for local private debugging, not for public issues.
 

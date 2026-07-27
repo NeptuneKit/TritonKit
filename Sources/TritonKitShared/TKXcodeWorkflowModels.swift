@@ -271,6 +271,7 @@ public enum TKXcodebuildCommand {
         derivedDataPath: String?,
         resultBundlePath: String?,
         buildSettings: [String] = [],
+        onlyTesting: [String] = [],
         redactDestination: Bool = false
     ) -> TKHostCommand {
         var arguments = buildArguments(
@@ -287,6 +288,7 @@ public enum TKXcodebuildCommand {
             arguments += ["-resultBundlePath", resultBundlePath]
         }
         arguments.append("test")
+        arguments += onlyTesting.map { "-only-testing:\($0)" }
         return TKHostCommand(
             executable: "xcodebuild",
             arguments: arguments,
@@ -1355,6 +1357,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
     public let appPath: String?
     public let bundleID: String?
     public let resultBundlePath: String?
+    public let onlyTesting: [String]?
     public let simulatorUDID: String?
     public let device: String?
     public let durationMs: Int
@@ -1390,6 +1393,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         appPath: String? = nil,
         bundleID: String? = nil,
         resultBundlePath: String? = nil,
+        onlyTesting: [String]? = nil,
         simulatorUDID: String? = nil,
         device: String? = nil,
         durationMs: Int,
@@ -1424,6 +1428,7 @@ public struct TKXcodeActionSummary: Codable, Equatable {
         self.appPath = appPath
         self.bundleID = bundleID
         self.resultBundlePath = resultBundlePath
+        self.onlyTesting = onlyTesting
         self.simulatorUDID = simulatorUDID
         self.device = device
         self.durationMs = durationMs

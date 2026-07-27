@@ -164,6 +164,25 @@ func validateXcodeBuildSettings(_ values: [String]) throws -> [String] {
     return values
 }
 
+func validateXcodeOnlyTesting(_ values: [String]) throws -> [String] {
+    for value in values {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else {
+            throw ValidationError("xcode test --only-testing cannot be blank.")
+        }
+        guard value == trimmed else {
+            throw ValidationError("xcode test --only-testing cannot include leading or trailing whitespace.")
+        }
+        guard value.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) }) else {
+            throw ValidationError("xcode test --only-testing cannot contain control characters.")
+        }
+        guard !trimmed.hasPrefix("-") else {
+            throw ValidationError("xcode test --only-testing cannot start with '-'.")
+        }
+    }
+    return values
+}
+
 func resolvedXcodeSDK(
     sdk: String?,
     defaultSDK: String?,
@@ -500,10 +519,12 @@ func runXcodeBuild(
 func runXcodeTest(
     invocation: ResolvedXcodeInvocation,
     resultBundlePath: String?,
+    onlyTesting: [String] = [],
     jsonl: Bool,
     timeout: Double? = nil,
     statusProvider: (String?) throws -> XcodeProcessStatusOutput = { try currentXcodeProcessStatus(workspace: $0) }
 ) throws -> TKXcodeActionSummary {
+    let onlyTesting = try validateXcodeOnlyTesting(onlyTesting)
     let executionInvocation = try preparedXcodeInvocationForExecution(invocation)
     let command = TKXcodebuildCommand.test(
         workspace: executionInvocation.workspace,
@@ -516,6 +537,7 @@ func runXcodeTest(
         derivedDataPath: executionInvocation.derivedDataPath,
         resultBundlePath: resultBundlePath,
         buildSettings: executionInvocation.buildSettings,
+        onlyTesting: onlyTesting,
         redactDestination: executionInvocation.redactsXcodebuildDestination
     ).withTimeout(timeout)
     let (result, durationMs) = try runXcodeHostCommand(command, event: "xcode.test", jsonl: jsonl, allowNonZeroExit: true)
@@ -555,6 +577,7 @@ func runXcodeTest(
         derivedDataPath: executionInvocation.derivedDataPath,
         derivedDataCache: executionInvocation.derivedDataCache,
         resultBundlePath: resultBundlePath,
+        onlyTesting: onlyTesting.isEmpty ? nil : onlyTesting,
         simulatorUDID: executionInvocation.simulatorUDID,
         device: executionInvocation.device,
         durationMs: durationMs,

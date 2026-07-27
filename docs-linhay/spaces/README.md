@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（138/138 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（139/139 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-27
 
@@ -56,6 +56,7 @@
 | 已完成（本地） | [SP-136-ios-simulator-reliability-collection-preflight](./SP-136-ios-simulator-reliability-collection-preflight/README.md) | 已离线冻结 3 flow × 20 的 imported-plan、canonical target、reset/negative-control 与 fresh evidence layout 合同 | 不启动或选择 Simulator/server/target，不生成样本/receipt/可靠性结论；真实 harness 仍须另立 space |
 | 已完成（本地） | [SP-137-issue-171-safe-collection-tap](./SP-137-issue-171-safe-collection-tap/README.md) | #171 已收紧 embedded `UICollectionViewCell` tap：无公开可证实 activation 时固定返回 `unsupported_capability`，且 accessibility gesture 候选不会越过当前 cell | 保留 table 同步语义与 host iOS AX；已进入本地 `main@f68587be` |
 | 执行 | [SP-138-issue-170-xcode-real-device-destination](./SP-138-issue-170-xcode-real-device-destination/README.md) | #170 将 Xcode `--device` 的 settings/build/test/run 收敛为统一真机 preflight 与 exact raw execution destination，并将 public output 全链路脱敏 | focused unit/CLI tests 与本地 checkpoint 后交主控；不启动真实 Xcode、Simulator、真机或服务 |
+| 执行 | [SP-139-issue-169-xcode-focused-testing](./SP-139-issue-169-xcode-focused-testing/README.md) | #169 为 `triton xcode test` 增加 repeatable `--only-testing`，把每个 focused XCTest identifier 保留为独立 xcodebuild argv，并让 JSON/JSONL 可审计 sourceCommand | focused/shared/schema/docs gate 后交主控复核；不实现 `--skip-testing`，不启动真实 Xcode、Simulator、真机或服务 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -80,6 +81,7 @@
 | `SP-136-ios-simulator-reliability-collection-preflight` | `feat/SP-136-ios-simulator-reliability-collection-preflight` | `../TritonKit-worktrees/SP-136-ios-simulator-reliability-collection-preflight/` | `feat/SP-135-testrec-compatibility-guidance@107eac45` | 本地 checkpoint：纯离线 collection contract；只读 private plans，拒绝生成 sample/evidence/reset receipt 或占用 runtime/device/server，#164 WIP 持续隔离 |
 | `SP-137-issue-171-safe-collection-tap` | `feat/SP-137-issue-171-safe-collection-tap` | `../TritonKit-worktrees/SP-137-issue-171-safe-collection-tap/` | `main@0c2e38da` | 本地 checkpoint：collection cell fallback 只返回 unsupported，cell 外 gesture 不可越界激活；保留 cell 内 UIControl/accessibility 真实成功、table/host AX 语义，#164 WIP 持续隔离 |
 | `SP-138-issue-170-xcode-real-device-destination` | `feat/SP-138-issue-170-xcode-real-device-destination` | `../TritonKit-worktrees/SP-138-issue-170-xcode-real-device-destination/` | `main@f68587be` | 统一 Xcode 真机 preflight、raw argv execution destination 与 public-output redaction；只跑 focused tests，不启动真实 Xcode/Simulator/设备/服务 |
+| `SP-139-issue-169-xcode-focused-testing` | `feat/SP-139-issue-169-xcode-focused-testing` | `../TritonKit-worktrees/SP-139-issue-169-xcode-focused-testing/` | `main@5d7ffff0` | repeatable focused XCTest selection：每项保持独立 `-only-testing:<identifier>` argv，并在 JSON/JSONL summary/sourceCommand 可审计；不实现 `--skip-testing`，不启动真实 Xcode/Simulator/设备/服务 |
 
 ## 维护规则
 

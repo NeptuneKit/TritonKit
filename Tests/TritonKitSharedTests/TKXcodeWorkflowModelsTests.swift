@@ -223,6 +223,72 @@ struct TKXcodeWorkflowModelsTests {
         #expect(test.argv.suffix(3) == buildSettings + ["test"])
     }
 
+    @Test("xcode test command keeps focused selectors ordered and summary omits an empty selection")
+    func xcodeTestFocusedSelectorsAndSummaryWireContract() throws {
+        let selections = [
+            "AppTests/LoginTests/testSubmit",
+            "AppTests/SettingsTests",
+        ]
+        let command = TKXcodebuildCommand.test(
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData/App",
+            resultBundlePath: nil,
+            onlyTesting: selections
+        )
+        #expect(command.argv.suffix(3) == [
+            "test",
+            "-only-testing:AppTests/LoginTests/testSubmit",
+            "-only-testing:AppTests/SettingsTests",
+        ])
+
+        let focusedSummary = TKXcodeActionSummary(
+            ok: true,
+            action: "xcode.test",
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData/App",
+            onlyTesting: selections,
+            durationMs: 1,
+            sourceCommand: "xcodebuild test -only-testing:AppTests/LoginTests/testSubmit -only-testing:AppTests/SettingsTests",
+            exitCode: 0,
+            stdoutTruncated: false,
+            stderrTruncated: false
+        )
+        let focusedData = try JSONEncoder().encode(focusedSummary)
+        let decodedFocused = try JSONDecoder().decode(TKXcodeActionSummary.self, from: focusedData)
+        #expect(decodedFocused.onlyTesting == selections)
+
+        let unselectedSummary = TKXcodeActionSummary(
+            ok: true,
+            action: "xcode.test",
+            workspace: "App.xcworkspace",
+            project: nil,
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData/App",
+            durationMs: 1,
+            sourceCommand: "xcodebuild test",
+            exitCode: 0,
+            stdoutTruncated: false,
+            stderrTruncated: false
+        )
+        let unselectedData = try JSONEncoder().encode(unselectedSummary)
+        let decodedUnselected = try JSONDecoder().decode(TKXcodeActionSummary.self, from: unselectedData)
+        #expect(decodedUnselected.onlyTesting == nil)
+        #expect(!String(decoding: unselectedData, as: UTF8.self).contains("\"onlyTesting\""))
+    }
+
     @Test("xctrace and coverage command builders emit stable argv")
     func xctraceAndCoverageCommandBuilders() {
         let trace = TKXctraceCommand.record(

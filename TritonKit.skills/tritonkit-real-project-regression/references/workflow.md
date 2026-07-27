@@ -143,7 +143,7 @@
    - wait for the current workspace to stop building/testing: `triton xcode wait-idle --workspace <workspace> --timeout <seconds> --json`;
    - inspect app product settings: `triton xcode settings --jsonl --timeout <seconds>` for large workspaces, or `triton xcode settings --json` for quick projects;
    - build: `triton xcode build --jsonl`; when dependency diagnosis needs a temporary Xcode override, repeat `--build-setting KEY=VALUE` instead of editing the project or generated dependencies; values containing spaces or `$(inherited)` remain one argv element and are visible in `sourceCommand`, so never put secrets there;
-   - test: `triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl`;
+   - test: `triton xcode test --result-bundle /tmp/<case>.xcresult --jsonl`；需要聚焦 XCTest 时重复 `--only-testing <target>/<class-or-method>`，每项会保留为一个 `-only-testing:<identifier>` argv，并出现在 JSON/JSONL 的 `sourceCommand` 与 optional `onlyTesting`；空白、首尾空白、控制字符或以 `-` 开头的 selection 会在 xcodebuild 前以 `validation_failed` 拒绝；
    - build/install/launch: `triton xcode run --jsonl`;
    - `xcode run` only proves build/install/launch submission; verify business readiness with `triton status`, `triton wait`, `triton verify`, screenshot, or evidence.
    - `xcode settings/build/test/run --jsonl` includes stdout/stderr log paths and byte counts; inspect those artifacts before waiting longer or falling back.

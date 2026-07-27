@@ -135,6 +135,148 @@ struct XcodeCommandTests {
         }
     }
 
+    @Test("xcode test preserves repeatable focused XCTest selections as individual argv values")
+    func xcodeTestPreservesRepeatableOnlyTestingSelections() throws {
+        let selections = [
+            "AppTests/LoginTests/testSubmit",
+            "AppTests/SettingsTests",
+        ]
+        let test = try XcodeTest.parse([
+            "--project", "App.xcodeproj",
+            "--scheme", "App",
+            "--only-testing", selections[0],
+            "--only-testing", selections[1],
+            "--jsonl",
+        ])
+
+        #expect(test.onlyTesting == selections)
+
+        let command = TKXcodebuildCommand.test(
+            workspace: nil,
+            project: "App.xcodeproj",
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData",
+            resultBundlePath: nil,
+            onlyTesting: selections
+        )
+        let expectedArguments = ["test"] + selections.map { "-only-testing:\($0)" }
+
+        #expect(command.argv.suffix(expectedArguments.count) == expectedArguments)
+        let sourceCommand = hostSourceCommand(command)
+        #expect(sourceCommand.contains("-only-testing:AppTests/LoginTests/testSubmit"))
+        #expect(sourceCommand.contains("-only-testing:AppTests/SettingsTests"))
+
+        let summary = TKXcodeActionSummary(
+            ok: true,
+            action: "xcode.test",
+            workspace: nil,
+            project: "App.xcodeproj",
+            scheme: "App",
+            configuration: "Debug",
+            sdk: "iphonesimulator",
+            destination: "platform=iOS Simulator,id=SIM-1",
+            derivedDataPath: ".triton/DerivedData",
+            onlyTesting: selections,
+            durationMs: 1,
+            sourceCommand: sourceCommand,
+            exitCode: 0,
+            stdoutTruncated: false,
+            stderrTruncated: false
+        )
+        let json = try encodeJSON(summary)
+        let jsonl = try encodeCompactJSON(summary)
+        #expect(jsonl.split(whereSeparator: { $0.isNewline }).count == 1)
+        for publicOutput in [json, jsonl] {
+            let decoded = try JSONDecoder().decode(TKXcodeActionSummary.self, from: Data(publicOutput.utf8))
+            #expect(decoded.onlyTesting == selections)
+            #expect(decoded.sourceCommand.contains("-only-testing:AppTests/LoginTests/testSubmit"))
+            #expect(decoded.sourceCommand.contains("-only-testing:AppTests/SettingsTests"))
+        }
+
+        let duplicate = try XcodeTest.parse([
+            "--project", "App.xcodeproj",
+            "--scheme", "App",
+            "--only-testing", selections[0],
+            "--only-testing", selections[0],
+        ])
+        #expect(duplicate.onlyTesting == [selections[0], selections[0]])
+    }
+
+    @Test("xcode focused XCTest selection is scoped to test in parser and schema")
+    func xcodeFocusedXCTestSelectionIsScopedToTest() throws {
+        let xcode = try #require(commandSchemas().first { $0.name == "xcode" })
+        let option = try #require(xcode.options.first { $0.name == "--only-testing" })
+        #expect(option.type == "String[]")
+        #expect(option.description.contains("xcode test"))
+        #expect(option.description.contains("sourceCommand"))
+        #expect(xcode.examples.contains {
+            $0.contains("triton xcode test") && $0.contains("--only-testing")
+        })
+
+        let testSchema = try #require(xcode.subcommands.first { $0.name == "test" })
+        #expect(testSchema.optionalOptions.contains("--only-testing"))
+        for name in ["settings", "build", "run"] {
+            let subcommand = try #require(xcode.subcommands.first { $0.name == name })
+            #expect(!subcommand.optionalOptions.contains("--only-testing"))
+        }
+
+        let scoped = try buildSchemaResponse(command: "xcode.test")
+        let scopedXcode = try #require(scoped.commands.first)
+        #expect(scopedXcode.subcommands.map(\.name) == ["test"])
+        #expect(scopedXcode.subcommands.first?.optionalOptions.contains("--only-testing") == true)
+        let final = try #require(scopedXcode.outputContracts.first { $0.selector == "xcode.final" })
+        #expect(final.fields.first { $0.name == "onlyTesting" }?.required == false)
+    }
+
+    @Test("xcode focused XCTest selection rejects unsafe identifiers with one validation envelope")
+    func xcodeFocusedXCTestSelectionRejectsUnsafeIdentifiersWithOneValidationEnvelope() throws {
+        let unsafeValues = ["", "  \n", " AppTests/LoginTests", "AppTests/LoginTests ", "AppTests/Bad\u{0000}Name", "-skip-testing:AppTests"]
+        for value in unsafeValues {
+            #expect(throws: ValidationError.self) {
+                _ = try validateXcodeOnlyTesting([value])
+            }
+        }
+
+        let invalidArguments = [
+            ["--only-testing", ""],
+            ["--only-testing", " AppTests/LoginTests"],
+            ["--only-testing", "AppTests/LoginTests "],
+            ["--only-testing=-skip-testing:AppTests"],
+        ]
+        for arguments in invalidArguments {
+            let result = try runXcodeTriton(["xcode", "test"] + arguments + ["--json"])
+
+            #expect(result.exitCode != 0)
+            #expect(result.stderr.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+            let response = try JSONDecoder().decode(TKCLIErrorResponse.self, from: Data(result.stdout.utf8))
+            #expect(response.ok == false)
+            #expect(response.error.code == "validation_failed")
+            #expect(response.error.message.contains("--only-testing"))
+        }
+    }
+
+    @Test("xcode subprocess test fixes triton to its current test-bundle sibling, not older build decoys")
+    func xcodeSubprocessTritonCandidateRejectsOlderBuildDecoys() throws {
+        let currentBundle = URL(fileURLWithPath: "/private/tmp/sp139/current/arm64-apple-macosx/debug/TritonKitCLIPackageTests.xctest")
+        let currentTestExecutable = currentBundle
+            .appendingPathComponent("Contents", isDirectory: true)
+            .appendingPathComponent("MacOS", isDirectory: true)
+            .appendingPathComponent("TritonKitCLIPackageTests", isDirectory: false)
+        let candidate = try #require(xcodeTritonExecutableCandidate(testBundleURL: currentBundle))
+        let executableCandidate = try #require(xcodeTritonExecutableCandidate(testBundleURL: currentTestExecutable))
+        let parentDecoy = URL(fileURLWithPath: "/private/tmp/sp139/current/arm64-apple-macosx/triton")
+        let staleScratchDecoy = URL(fileURLWithPath: "/private/tmp/sp139/stale/arm64-apple-macosx/debug/triton")
+
+        #expect(candidate.path == "/private/tmp/sp139/current/arm64-apple-macosx/debug/triton")
+        #expect(executableCandidate == candidate)
+        #expect(candidate != parentDecoy)
+        #expect(candidate != staleScratchDecoy)
+        #expect(xcodeTritonExecutableCandidate(testBundleURL: URL(fileURLWithPath: "/private/tmp/sp139/current/unknown-test-runner")) == nil)
+    }
+
     @Test("xcode package source command records working directory")
     func xcodePackageSourceCommandRecordsWorkingDirectory() {
         let command = TKXcodebuildCommand.build(
@@ -1141,4 +1283,78 @@ private func captureXcodeCommandOutputAllowingFailure(
 
     let data = pipe.fileHandleForReading.readDataToEndOfFile()
     return (String(decoding: data, as: UTF8.self), caughtError)
+}
+
+private struct XcodeCLIRunResult {
+    let exitCode: Int32
+    let stdout: String
+    let stderr: String
+}
+
+private func runXcodeTriton(_ arguments: [String]) throws -> XcodeCLIRunResult {
+    let process = Process()
+    process.executableURL = try xcodeTritonExecutableURL()
+    process.arguments = arguments
+
+    let stdout = Pipe()
+    let stderr = Pipe()
+    process.standardOutput = stdout
+    process.standardError = stderr
+
+    try process.run()
+    process.waitUntilExit()
+
+    return XcodeCLIRunResult(
+        exitCode: process.terminationStatus,
+        stdout: String(decoding: stdout.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self),
+        stderr: String(decoding: stderr.fileHandleForReading.readDataToEndOfFile(), as: UTF8.self)
+    )
+}
+
+private func xcodeTritonExecutableURL() throws -> URL {
+    guard let testBundleURL = xcodeTestBundleURL() else {
+        throw missingXcodeTritonExecutableError()
+    }
+    guard let candidate = xcodeTritonExecutableCandidate(testBundleURL: testBundleURL),
+          FileManager.default.isExecutableFile(atPath: candidate.path) else {
+        throw missingXcodeTritonExecutableError()
+    }
+    return candidate
+}
+
+private func xcodeTritonExecutableCandidate(testBundleURL: URL) -> URL? {
+    let bundleURL: URL
+    if testBundleURL.pathExtension == "xctest" {
+        bundleURL = testBundleURL
+    } else {
+        let macOSDirectory = testBundleURL.deletingLastPathComponent()
+        let contentsDirectory = macOSDirectory.deletingLastPathComponent()
+        let possibleBundle = contentsDirectory.deletingLastPathComponent()
+        guard macOSDirectory.lastPathComponent == "MacOS",
+              contentsDirectory.lastPathComponent == "Contents",
+              possibleBundle.pathExtension == "xctest" else {
+            return nil
+        }
+        bundleURL = possibleBundle
+    }
+    return bundleURL
+        .deletingLastPathComponent()
+        .appendingPathComponent("triton", isDirectory: false)
+}
+
+private func missingXcodeTritonExecutableError() -> NSError {
+    NSError(
+        domain: "TritonKitCLITests.XcodeCommandTests",
+        code: 1,
+        userInfo: [NSLocalizedDescriptionKey: "Missing current SwiftPM triton executable for Xcode command test"]
+    )
+}
+
+private func xcodeTestBundleURL() -> URL? {
+    let arguments = CommandLine.arguments
+    guard let flagIndex = arguments.firstIndex(of: "--test-bundle-path"),
+          arguments.indices.contains(flagIndex + 1) else {
+        return nil
+    }
+    return URL(fileURLWithPath: arguments[flagIndex + 1])
 }
