@@ -1,6 +1,6 @@
 # SP-133 Imported iOS Simulator Proof
 
-> 状态：环境等待（offline source/import/validate 已通过；真实纵切等待独占 server 与确认的 dedicated Simulator）
+> 状态：已完成（P1 imported plan 的真实 iOS Simulator evidence/provenance 纵切已通过）
 >
 > Branch：`feat/SP-133-imported-ios-simulator-proof`
 >
@@ -35,11 +35,13 @@
 ## 当前审计结果（2026-07-27）
 
 - 已用独立临时根和隔离的 `TRITONKIT_TESTREC_SESSION_DIR` 通过真实 CLI 生成 source：5 个 action（screenshot、AX assert `Fixture Login`、AX tap `Go Home`、screenshot、AX assert `Fixture Home`）与 2 个 route event。`testrec compile` 返回 `compiled`、deterministic-offline、无 LLM/VLM、无 quality finding；没有调用 replay 或 `local-simulated`。
-- `test import` 与独立 `test validate --emit-normalized-plan` 均通过，得到 `launch + 5` 步，provenance 为 importer v1 / `triton.testrec.compiled-contract` / source `ios` / package-relative `compiled-contract.json` FNV ref。source 与 plan/evidence 都只留在本地临时目录，未纳入 Git。
+- `test import` 与独立 `test validate --emit-normalized-plan` 均通过，得到 `launch + 5` 步，provenance 为 importer v1 / `triton.testrec.compiled-contract` / source `ios` / package-relative `compiled-contract.json` FNV ref。source、plan 与 evidence 均只在本机临时根产生；proof 后该根已移入本机废纸篓以便可恢复处置，未纳入 Git。
 - 本 space 独立 scratch 已成功构建 CLI；`TestImportTests` 11/11、`TestValidationTests` 13/13、`TestRunExecutionTests` 9/9 通过。
-- Triton-first preflight 发现固定 loopback port 已存在一个与本任务 bundle 不同的 connected runtime，且候选 dedicated Simulator 处于 Shutdown、没有可审计的本 space ownership marker。按隔离边界，本轮没有复用/停止该 server，也没有 boot/选择任何 Simulator、build/launch fixture 或执行 `test run`。
-- 恢复真实 P1 前需要一个空闲的 `127.0.0.1:19421` server lane，以及操作者明确确认可独占的 dedicated Simulator UDID；届时从新鲜临时根重做 preflight 与 source/import，不能复用本轮临时路径或猜测 target。
+- 授权后的新鲜 Triton-first preflight 确认 `127.0.0.1:19421` 不可达、Xcode lane 空闲、专用 iOS Simulator 处于 Shutdown；本轮才启动该 Simulator、启动自己管理的 loopback server，并先验证 server 的 `targetCount=0`，没有复用或停止外部 runtime。
+- `triton xcode run` 在专用 Simulator 上构建、安装、启动 Debug fixture；随后 `triton list` 只返回一个同时匹配预期 bundle 与 Simulator identity 的 embedded runtime target。导入后的 `test run` 真实通过：6 steps、2 次 AX assertion、4 次 observation、43 events、0 failures；其中 exact-AX-text `Go Home` tap 将界面从 `Fixture Login` 改为 `Fixture Home`，没有使用 `local-simulated` 或 fake executor。
+- `test report` 与直接读取 `run/run.json` 确认 passed verdict 和 `run.planRef -> normalized-plan.json`；`evidence inspect` 与 `evidence summary --profile ios-private` 则交叉确认 manifest、runtime target、PNG、AX 与 hierarchy artifacts。直接读取 evidence 的 normalized plan 也确认它与 import/validate 的 typed provenance 完全一致；report/summary 仍只作为交叉证据，不能替代 provenance 本体。
+- proof 后已停止本轮 loopback server、确认 19421 不再可达，并通过 `triton sim shutdown` 将本轮启动的专用 Simulator 恢复 Shutdown；Xcode lane 无遗留进程。sensitive evidence 已随本轮临时根移入本机废纸篓，未执行不足以安全外发的 redaction，也未纳入 Git。
 
 ## 后续
 
-P1 只回答“imported plan 是否能真实复用现有 runner”。通过后再单独裁决可靠性样本、workspace 编排和第二平台，不把一次 fixture proof 夸大为通用 replay 产品承诺。
+P1 已回答“imported plan 能否真实复用现有 runner”。可靠性样本、workspace 编排和第二平台仍须各自新建有限 space 与 BDD；本次 fixture proof 不构成通用 replay、跨平台或对外项目验证承诺。

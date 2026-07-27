@@ -2,7 +2,7 @@
 
 ## 状态
 
-- 状态：执行（路线已裁决；可信基线的三个有限修复已完成本地集成，下一步才是首个可运行纵切）。
+- 状态：执行（路线已裁决；可信基线、SP-132 P0 importer 与 SP-133 P1 imported iOS Simulator proof 均已形成独立本地 checkpoint；下一步必须另立有限 space，不自动扩张）。
 - 负责人：Codex。
 - Branch：`feat/SP-126-testrec-convergence`。
 - Worktree：`../TritonKit-worktrees/SP-126-testrec-convergence/`。
@@ -49,13 +49,13 @@
 
 1. **可导入的录制包**：SP-132 已完成 P0：给定已编译、无 blocker 的 `.tritontestcase`，当执行 `triton test import <case> --output <plan.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json` 时，得到确定性的测试计划与来源 digest；随后 `triton test validate` 成功。该导入严格只读 compiled contract，不能静默把泛化 iOS source 标成 Simulator。
 2. **安全失败**：给定含未审查脱敏 finding、未知 action 或缺失 page/action 证据的 case，当导入时，返回单一 JSON error envelope，并且不产生可运行计划、不连接目标设备。
-3. **真实纵切**：给定已启动并经 Triton-first 事实检查确认的 iOS Simulator / Debug embedded runtime 和一条可映射动作，当 `triton test run` 执行导入计划时，顺序完成 target resolve、before observation、动作、after observation 和 `.tritonevidence`，最终 verdict 不来自 `local-simulated`。
-4. **来源可审计**：给定由录制包导入的测试计划，当读取最终 evidence 时，能够追到 source case / compiled-contract 的稳定身份和导入版本，而不记录敏感原文。
+3. **真实纵切**：SP-133 已验证：给定经 Triton-first 事实检查确认的 iOS Simulator / Debug embedded runtime 和一条可映射动作，`triton test run` 以导入计划顺序完成 target resolve、before observation、exact-AX-text action、after observation 和 `.tritonevidence`，最终 passed verdict 不来自 `local-simulated`。
+4. **来源可审计**：SP-133 已验证：最终 evidence 的 `normalized-plan.json` 保留 source case / compiled-contract 的稳定身份和导入版本；`run.planRef` 指向该 artifact，公开摘要不记录敏感原文。
 5. **兼容不误导**：既有 `triton testrec` CLI/HTTP 在迁移期继续可读可诊断；任何真实执行请求都明确导向 `test import` / `test run`，不会把 simulated result 表示为设备执行成功。
 
 ## 完成定义
 
-本 space 的第一个有限停止点是：SP-132 P0 importer 的 focused tests 已通过，SP-131 已提供一条手写 canonical iOS Simulator 真实动作证据闭环，且历史 `testrec` surface 有可机读的迁移指引。下一步必须是单独立项的 P1：用 imported plan（不是 hand-written fixture）复现该纵切并读取 provenance；在此之前不启动删除、workspace 编排接入或跨端矩阵工作。
+本 space 的第一个有限里程碑已完成：SP-132 P0 importer 的 focused tests 已通过，SP-131 提供手写 canonical iOS Simulator 真实动作证据闭环，SP-133 又以 imported plan（不是 hand-written fixture）复现了同一纵切并直接读取 provenance。该结果只证明一条 iOS fixture flow，不证明可靠性矩阵、workspace 编排、Android/真机 parity 或对外项目采用；后续任一扩张必须另建有限 space、先写 BDD 与环境/隐私门禁，不能回填 `testrec` 的第二执行器。
 
 详细方案见 [Hybrid Convergence Plan v01](./plans/20260724-hybrid-convergence-plan-v01.md)。
 
