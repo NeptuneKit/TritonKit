@@ -604,6 +604,59 @@ struct TKAXUIKitTextTests {
         #expect(delegate.didSelectCount == 0)
     }
 
+    @Test("collection cell tap does not escape to an outer accessible gesture")
+    func collectionCellTapRejectsOuterAccessibleGesture() async throws {
+        let window = makeVisibleTestWindow()
+        defer {
+            window.isHidden = true
+        }
+
+        let outerGestureSurface = AccessibleTapGestureSurface(frame: window.bounds)
+        outerGestureSurface.addGestureRecognizer(UITapGestureRecognizer())
+        window.addSubview(outerGestureSurface)
+
+        let layout = UICollectionViewFlowLayout()
+        layout.itemSize = CGSize(width: 300, height: 60)
+        let collectionView = UICollectionView(frame: CGRect(x: 0, y: 80, width: 390, height: 240), collectionViewLayout: layout)
+        let dataSource = CollectionDataSource()
+        let delegate = CollectionDelegate()
+        collectionView.register(CollectionCell.self, forCellWithReuseIdentifier: "cell")
+        collectionView.dataSource = dataSource
+        collectionView.delegate = delegate
+        outerGestureSurface.addSubview(collectionView)
+        collectionView.reloadData()
+        collectionView.layoutIfNeeded()
+        for gesture in collectionView.gestureRecognizers?.compactMap({ $0 as? UITapGestureRecognizer }) ?? [] {
+            gesture.isEnabled = false
+        }
+
+        let indexPath = IndexPath(item: 0, section: 0)
+        let cell = try #require(collectionView.cellForItem(at: indexPath) as? CollectionCell)
+        let labelOID = TKObjectRegistry.shared.register(cell.label)
+
+        let smart = try await performInputRequest(.tap(
+            targetOID: labelOID,
+            matchedOID: labelOID,
+            matchedClassName: NSStringFromClass(UILabel.self),
+            activationStrategy: .smart
+        ))
+        let exact = try await performInputRequest(.tap(
+            targetOID: labelOID,
+            matchedOID: labelOID,
+            matchedClassName: NSStringFromClass(UILabel.self),
+            activationStrategy: .exact
+        ))
+        await Task.yield()
+
+        #expect(!smart.ok)
+        #expect(smart.error?.code == "unsupported_capability")
+        #expect(!exact.ok)
+        #expect(exact.error?.code == "unsupported_capability")
+        #expect(outerGestureSurface.activationCount == 0)
+        #expect(delegate.selectedIndexPath == nil)
+        #expect(delegate.didSelectCount == 0)
+    }
+
     @Test("smart tap reports gesture parent unsupported without private introspection")
     func smartTapReportsGestureParentUnsupportedWithoutPrivateIntrospection() async throws {
         let window = makeVisibleTestWindow()

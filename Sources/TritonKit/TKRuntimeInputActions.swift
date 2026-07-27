@@ -206,6 +206,7 @@ func performTap(_ request: TKInputRequest) -> TKInputResult {
             ?? collectionCellContaining(request: request) {
             if let result = performTapGestureAccessibilityActivation(
                 from: view,
+                within: collectionCell,
                 request: request,
                 action: action,
                 matchedView: view
@@ -681,6 +682,7 @@ func performAncestorTapActivation(from view: UIView, request: TKInputRequest, ac
         ?? collectionCellContaining(request: request) {
         if let result = performTapGestureAccessibilityActivation(
             from: view,
+            within: collectionCell,
             request: request,
             action: action,
             matchedView: view
@@ -749,11 +751,12 @@ func performTapGestureActivation(
 @MainActor
 func performTapGestureAccessibilityActivation(
     from view: UIView,
+    within collectionCell: UICollectionViewCell,
     request: TKInputRequest,
     action: String,
     matchedView: UIView?
 ) -> TKInputResult? {
-    guard let candidate = nearestTapGestureCandidate(from: view),
+    guard let candidate = nearestTapGestureCandidate(from: view, stoppingAt: collectionCell),
           candidate.view.accessibilityActivate() else {
         return nil
     }
@@ -774,7 +777,16 @@ func performTapGestureAccessibilityActivation(
     )
 }
 
-func nearestTapGestureCandidate(from view: UIView) -> (view: UIView, gesture: UITapGestureRecognizer)? {
+func nearestTapGestureCandidate(
+    from view: UIView,
+    stoppingAt boundary: UIView? = nil
+) -> (view: UIView, gesture: UITapGestureRecognizer)? {
+    if let boundary,
+       view !== boundary,
+       !view.isDescendant(of: boundary) {
+        return nil
+    }
+
     var current: UIView? = view
     while let view = current {
         if view.isUserInteractionEnabled,
@@ -782,6 +794,9 @@ func nearestTapGestureCandidate(from view: UIView) -> (view: UIView, gesture: UI
                gesture.isEnabled && gesture.numberOfTapsRequired <= 1 && gesture.numberOfTouchesRequired <= 1
            }) {
             return (view, gesture)
+        }
+        if let boundary, view === boundary {
+            break
         }
         current = view.superview
     }

@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-07-27
-> 覆盖范围：135/135 个已存在 space
+> 覆盖范围：137/137 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,9 +17,9 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 135/135 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 135/135 | 每条记录链接到现有 space README |
-| 历史目录物理迁移 | 0/125 | 留待独立迁移批次，当前旧路径保持兼容 |
+| 编号登记 | 137/137 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 137/137 | 每条记录链接到现有 space README |
+| 历史目录物理迁移 | 0/125 | 125 个历史兼容目录留待独立迁移批次；SP-126～137 已是规范目录 |
 
 ## Space 登记表
 
@@ -161,4 +161,4 @@
 | `SP-134-ios-simulator-reliability-gate` | [`SP-134-ios-simulator-reliability-gate`](./SP-134-ios-simulator-reliability-gate/README.md) | 已登记 | 规范目录；privacy-safe ECR/FER/ORR 离线 gate 已完成 local checkpoint，duplicate/partial/target binding fail-closed；真实 3 flow × 20 采样与 workspace 接入均后置 |
 | `SP-135-testrec-compatibility-guidance` | [`SP-135-testrec-compatibility-guidance`](./SP-135-testrec-compatibility-guidance/README.md) | 已登记 | 规范目录；本地 checkpoint `37d8f9c7` 已收紧 testrec local-simulated/dry-run/matrix 的 offline diagnostic 与迁移合同，不新增 executor |
 | `SP-136-ios-simulator-reliability-collection-preflight` | [`SP-136-ios-simulator-reliability-collection-preflight`](./SP-136-ios-simulator-reliability-collection-preflight/README.md) | 已完成（本地） | 规范目录；已冻结 3 flow × 20 的 offline collection preflight，不启动 runtime/device/server，不生成 evidence 或 receipt |
-| `SP-137-issue-171-safe-collection-tap` | [`SP-137-issue-171-safe-collection-tap`](./SP-137-issue-171-safe-collection-tap/README.md) | 已完成（本地） | 规范目录；#171 collection cell fallback 已 fail closed 为 `unsupported_capability`，不伪造 touch 或异步 selection success，并保留公开 UIControl/accessibility 成功 |
+| `SP-137-issue-171-safe-collection-tap` | [`SP-137-issue-171-safe-collection-tap`](./SP-137-issue-171-safe-collection-tap/README.md) | 已完成（本地） | 规范目录；#171 collection cell fallback 已 fail closed 为 `unsupported_capability`，cell 内公开 UIControl/accessibility 成功保留，但候选不会越过当前 cell |
