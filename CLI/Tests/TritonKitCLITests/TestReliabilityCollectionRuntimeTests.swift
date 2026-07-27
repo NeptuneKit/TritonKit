@@ -48,6 +48,18 @@ struct TestReliabilityCollectionRuntimeTests {
             bundleID: fixture.bundleID,
             bindingDigest: fixture.targetBindingDigest
         )
+        let lowerCaseTarget = TKTestReliabilityCollectionTarget(
+            id: fixture.targetID,
+            simulatorUDID: fixture.simulatorUDID.lowercased(),
+            bundleID: fixture.bundleID,
+            bindingDigest: fixture.targetBindingDigest
+        )
+        let mixedCaseTarget = TKTestReliabilityCollectionTarget(
+            id: fixture.targetID,
+            simulatorUDID: "A0b1C2D3-E4F5-4A6B-8C9D-0E1F2A3B4C5D",
+            bundleID: fixture.bundleID,
+            bindingDigest: fixture.targetBindingDigest
+        )
         let duplicateSlots = TKTestReliabilityCollectionFlow(
             flowID: valid.flows[0].flowID,
             plan: valid.flows[0].plan,
@@ -85,6 +97,8 @@ struct TestReliabilityCollectionRuntimeTests {
 
         let variants = [
             fixture.collection(from: valid, target: invalidTarget),
+            fixture.collection(from: valid, target: lowerCaseTarget),
+            fixture.collection(from: valid, target: mixedCaseTarget),
             fixture.collection(from: valid, flows: Array(valid.flows.prefix(2))),
             fixture.collection(from: valid, flows: valid.flows + [valid.flows[0]]),
             fixture.collection(from: valid, flows: [duplicateSlots, valid.flows[1], valid.flows[2]]),

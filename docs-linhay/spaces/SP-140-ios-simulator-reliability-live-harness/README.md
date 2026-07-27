@@ -2,11 +2,11 @@
 
 ## 状态
 
-- 状态：本地 checkpoint 待创建（receipt、严格 target preflight、schema 合同与 focused Swift 验证已完成；真实采样仍未授权）。
+- 状态：已完成（本地；receipt、严格 target preflight、schema 合同与 focused Swift 验证已完成；真实采样仍未授权）。
 - 负责人：Codex。
 - Branch：`feat/SP-140-ios-simulator-reliability-live-harness`。
 - Worktree：`../TritonKit-worktrees/SP-140-ios-simulator-reliability-live-harness/`。
-- 基线：`main@5d7ffff0`（checkpoint 前须 rebase 到当时的 `main`）。
+- 基线：`main@0cb7e958`。
 
 ## 裁决
 
@@ -27,7 +27,7 @@ SP-136 的 `reliability-preflight` 只能离线检查仍可变的 collection。S
 
 不包括：
 
-- 自动 boot / shutdown / select / reset / install / launch Simulator 或 App，启动、停止、复用任何 server，或真实采样。
+- 自动 boot / shutdown / select / reset / install / launch Simulator 或 App，启动、停止或接管任何 server 生命周期，或真实采样。
 - `--force`、删除、覆盖、重置既有 root / receipt / slot / `run/` / manifest。
 - Android、Harmony、真机、Web、Wails、testrec replay、#164 WIP 或公开 collection / evidence / receipt fixture。
 
@@ -47,9 +47,9 @@ SP-136 的 `reliability-preflight` 只能离线检查仍可变的 collection。S
 ## 验证与停止条件
 
 - 已执行独立 scratch 的 focused Swift 验证，覆盖 receipt/slot 的 fail-closed、strict `/targets`、canonical UUID、server exact-only fallback、business result/exit 合同、parser/schema/recovery、shared schema model；未启动 server、Simulator、Xcode、test run runtime 或设备。
-- 已通过：`TestReliabilityHarnessRuntimeTests` (3)、`TestReliabilityHarnessTests` (11)、`ServerTargetSelectionTests` (2)、`TestReliabilityCollectionRuntimeTests` (4)、`TestReliabilityRuntimeTests` (28)、`TestValidationTests` (16，使用 `CLI/.build/...` 以支撑 subprocess)、`FailureDiagnosticsTests` (13)、`SchemaFactSourceCapabilityTests` (22)、`TestCreateFromSessionTests` (2) 与根 package `TKCLITransportModelsTests` (28)。`git diff --check` 通过。
+- 已通过：`TestReliabilityHarnessRuntimeTests` (3)、`TestReliabilityHarnessTests` (11)、`ServerTargetSelectionTests` (2)、`TestReliabilityCollectionRuntimeTests` (4)、`TestReliabilityRuntimeTests` (28)、`TestValidationTests` (16，使用 `CLI/.build/...` 以支撑 subprocess)、`FailureDiagnosticsTests` (13)、`SchemaFactSourceCapabilityTests` (22)、`TestCreateFromSessionTests` (2)、`PublicSkillCommandSchemaTests` (1) 与根 package `TKCLITransportModelsTests` (28)。同时将 public skill schema snapshot 补齐 `test import` 与 reliability 系列命令。`git diff --check` 通过。
 - `SchemaFactSourceContractTests` 仍有 6 个已知无关基线失败，集中于既有 `device` 子命令参数/selector、`sim app-console` recovery 分类与 device capability 示例；该 suite 没有报告 reliability/receipt/target 相关 failure。本 space 不扩大到这些设备 schema 账务。
-- 本地 checkpoint 前由主控 rebase、再更新 `spaces/README.md`、`INDEX.md` 与当日日志；真实 3×20 仍需用户授予 dedicated Simulator、server ownership、reset recipe 与证据目录权限。
+- 已 rebase 到 `main@0cb7e958`；主控随后同步 `spaces/README.md`、`INDEX.md`、项目级 CLI/skill 指南与当日日志。真实 3×20 仍需用户授予 dedicated Simulator、server ownership、reset recipe 与证据目录权限。
 
 ## 已知残余风险
 

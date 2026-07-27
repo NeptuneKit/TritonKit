@@ -192,7 +192,7 @@ private func validateReliabilityCollectionTarget(
     _ target: TKTestReliabilityCollectionTarget
 ) throws -> String {
     guard let uuid = UUID(uuidString: target.simulatorUDID),
-          uuid.uuidString == target.simulatorUDID.uppercased(),
+          uuid.uuidString == target.simulatorUDID,
           !target.bundleID.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
         throw TKTestReliabilityCollectionError.invalidCollection
     }

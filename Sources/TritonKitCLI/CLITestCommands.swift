@@ -516,7 +516,7 @@ private func runTestReliabilityReserveCommand(
     }
 }
 
-private func runTestReliabilitySampleCommand(
+func runTestReliabilitySampleCommand(
     collectionReceipt: String?,
     flow: String?,
     slot: String?,
@@ -525,7 +525,9 @@ private func runTestReliabilitySampleCommand(
     host: String,
     port: String,
     confirm: Bool,
-    format: ClientOutputFormat
+    format: ClientOutputFormat,
+    executeSample: ((TKTestReliabilitySampleRequest) async throws -> TKTestReliabilitySampleResponse)? = nil,
+    write: (String) -> Void = { print($0) }
 ) async throws {
     do {
         guard let collectionReceipt,
@@ -552,22 +554,28 @@ private func runTestReliabilitySampleCommand(
                 hint: "Use a declared positive receipt slot and port 19421."
             ))
         }
-        let executor = TKLiveTestRunPrimitiveExecutor()
-        let response = try await runTritonTestReliabilitySample(
-            request: TKTestReliabilitySampleRequest(
-                collectionReceipt: collectionReceipt,
-                flow: flow,
-                slot: parsedSlot,
-                resetReceipt: resetReceipt,
-                target: target,
-                host: host,
-                port: parsedPort,
-                confirm: confirm
-            ),
-            executor: executor,
-            targetResolver: TKLiveTestReliabilityRuntimeTargetResolver()
+        let request = TKTestReliabilitySampleRequest(
+            collectionReceipt: collectionReceipt,
+            flow: flow,
+            slot: parsedSlot,
+            resetReceipt: resetReceipt,
+            target: target,
+            host: host,
+            port: parsedPort,
+            confirm: confirm
         )
-        try emitTestReliabilitySampleResult(response, format: format)
+        let response: TKTestReliabilitySampleResponse
+        if let executeSample {
+            response = try await executeSample(request)
+        } else {
+            let executor = TKLiveTestRunPrimitiveExecutor()
+            response = try await runTritonTestReliabilitySample(
+                request: request,
+                executor: executor,
+                targetResolver: TKLiveTestReliabilityRuntimeTargetResolver()
+            )
+        }
+        try emitTestReliabilitySampleResult(response, format: format, write: write)
     } catch let failure as TestReliabilityCommandFailure {
         try printTestReliabilityHarnessFailure(failure.detail, format: format)
     } catch let error as TKTestReliabilityHarnessError {

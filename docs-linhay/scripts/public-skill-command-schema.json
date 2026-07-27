@@ -33,7 +33,7 @@
     "smoke": [],
     "status": [],
     "target": [],
-    "test": ["validate", "normalize", "run", "report", "create"],
+    "test": ["create", "import", "normalize", "reliability", "reliability-preflight", "reliability-reserve", "reliability-sample", "report", "run", "validate"],
     "testrec": ["start", "event", "stop", "inspect", "compile", "proposals", "match-page", "matrix", "replay"],
     "update": ["check"],
     "verify": ["text-exists", "text-not-exists"],

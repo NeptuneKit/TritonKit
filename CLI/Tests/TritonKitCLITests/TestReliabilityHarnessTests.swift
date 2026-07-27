@@ -554,7 +554,7 @@ struct TestReliabilityHarnessTests {
     }
 
     @Test("sample command emits one typed result before its business exit status")
-    func sampleCommandOutputPreservesTypedBusinessResults() throws {
+    func sampleCommandOutputPreservesTypedBusinessResults() async throws {
         let fixture = try ReliabilityHarnessFixture()
         defer { fixture.cleanup() }
         let collection = try fixture.writeCollection(fixture.validCollection())
@@ -576,9 +576,17 @@ struct TestReliabilityHarnessTests {
             runStatus: .failed
         )
         var expectedNegativeOutput: [String] = []
-        try emitTestReliabilitySampleResult(
-            expectedNegative,
+        try await runTestReliabilitySampleCommand(
+            collectionReceipt: "private-receipt.json",
+            flow: expectedNegative.flowID,
+            slot: String(expectedNegative.slot),
+            resetReceipt: "private-reset.json",
+            target: fixture.targetID,
+            host: "127.0.0.1",
+            port: "19421",
+            confirm: true,
             format: .json,
+            executeSample: { _ in expectedNegative },
             write: { expectedNegativeOutput.append($0) }
         )
         #expect(expectedNegativeOutput.count == 1)
@@ -611,9 +619,17 @@ struct TestReliabilityHarnessTests {
             var output: [String] = []
             let exitedWithFailure: Bool
             do {
-                try emitTestReliabilitySampleResult(
-                    response,
+                try await runTestReliabilitySampleCommand(
+                    collectionReceipt: "private-receipt.json",
+                    flow: response.flowID,
+                    slot: String(response.slot),
+                    resetReceipt: "private-reset.json",
+                    target: fixture.targetID,
+                    host: "127.0.0.1",
+                    port: "19421",
+                    confirm: true,
                     format: .json,
+                    executeSample: { _ in response },
                     write: { output.append($0) }
                 )
                 exitedWithFailure = false
