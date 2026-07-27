@@ -55,9 +55,9 @@ Exclude：
 5. 实现或先设计 `triton testrec replay <case> --platform <target> --json` 的最小单端回放合同。
 6. Web mock 暂不进入 P0 主线；如需展示，只做只读 DTO mock，不阻塞 CLI / HTTP 合同打通。
 
-## 当前停止点
+## 当前停止点（历史记录）
 
-产品需求讨论到此冻结。下一步不继续扩需求，直接进入 P0 schema / DTO 设计、`inspect` focused tests 和最小实现验证。
+本段记录 2026-06 的阶段性计划，已被下方 **2026-07-11 路线裁决** 覆盖，不能作为恢复实现的依据。当时产品需求讨论冻结，并计划直接进入 P0 schema / DTO 设计、`inspect` focused tests 和最小实现验证；当时必须先完成该裁决要求的产品取舍，再决定是否恢复任何新增实现。
 
 ## 当前实现进度
 
@@ -119,7 +119,15 @@ Exclude：
 
 ## 2026-07-11 路线裁决
 
-- 状态：待定。
+- 状态：历史待定；其后已在本地 SP-126 收敛链完成 Hybrid 产品裁决，尚待受控集成至 `main`。
 - 暂停 `local-device`、系统级动作监听、真实 VLM fingerprint、proposal apply 和 live network policy 的新增实现。
 - 原因：这些能力与 `workspace run`、`.tritontest`、现有 replay/evidence 和 Atlas map 已形成明显重叠，继续独立实现会制造第二套运行时与成功判定。
-- 恢复条件：先裁决 `testrec` 是否保留独立产品面，或将 `.tritontestcase` 的有效合同合并进现有 workspace/test/replay 契约。
+- 当时的恢复条件是先裁决 `testrec` 是否保留独立产品面，或将 `.tritontestcase` 的有效合同合并进现有 workspace/test/replay 契约。
+
+## 2026-07-27 后续收敛（本地 checkpoint，未合入 `main`）
+
+- 已采用 **Hybrid**：`testrec` 保留 `.tritontestcase` 的显式录制、离线编译与兼容读取；`test` 是唯一真实执行、evidence 与最终 verdict 入口；`workspace` 后续只复用同一测试合同；`replay` 继续作为低层 `.tritonplan` smoke 能力。
+- 本地候选链已完成 `.tritontestcase -> test import -> test validate -> test run`：import 只接受可保真映射、显式 `ios-simulator` 与 bundle 输入，带 typed provenance、隐私保护和 no-clobber 输出；一条 dedicated iOS Simulator imported-plan 纵切已获得真实 passed evidence。
+- `testrec replay --dry-run`、`local-simulated` 与 matrix 的兼容 status 仍保留，但 machine-readable `verdictBoundary` 明确它们仅是 offline diagnostic，不能视作真实测试 verdict 或 reliability sample；不恢复独立 `local-device` executor。
+- 本地还完成只读 ECR/FER/ORR reliability gate 与 3 flow × 20 collection preflight。`ready_to_collect` 只表示私有离线合同完整，不代表已启动 Simulator/server、已重置 App、已采样或 gate 通过。
+- 该栈最新 checkpoint 为 `feat/SP-136-ios-simulator-reliability-collection-preflight@16e5ec81`，尚未合并、推送或发布。真实 3 × 20 采样必须另建受控 live-harness space，持有专用 Simulator、自管 loopback server、逐样本 reset receipt 与私有 evidence；不得自动执行。
