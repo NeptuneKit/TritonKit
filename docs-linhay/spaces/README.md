@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/README.md`
 >
-> 编号登记册：[INDEX.md](./INDEX.md)（131/131 个 space 已登记；历史目录物理迁移 0/125）
+> 编号登记册：[INDEX.md](./INDEX.md)（132/132 个 space 已登记；历史目录物理迁移 0/125）
 >
 > 最近审计：2026-07-27
 
@@ -49,6 +49,7 @@
 | 执行 | [SP-129-serve-loopback-default](./SP-129-serve-loopback-default/README.md) | `triton serve` 无 `--host` 时默认绑定 `127.0.0.1:19421`；显式非 loopback host 保持兼容；Bonjour publish 语义暂不改变 | source checkpoint 已纳入本地 integration branch；联合 docs/CLI 门禁通过，Bonjour 风险不变，待 main 收口 |
 | 执行 | [SP-130-issue-166-runtime-jpeg-normalization](./SP-130-issue-166-runtime-jpeg-normalization/README.md) | #166 已将 legacy embedded JPEG 解码并统一规范化为 PNG，避免 CLI/evidence/replay/test-run 发布伪 PNG 或丢弃有效证据 | fixture、release/schema 与本地总门禁完成；#164 dirty evidence WIP 保持隔离，待后续 integration 收口 |
 | 已归档 | [SP-131-ios-simulator-canonical-proof](./SP-131-ios-simulator-canonical-proof/README.md) | 仓内 Debug fixture 已在 dedicated iOS Simulator 上真实完成 `test validate -> test run -> evidence`：6 steps、2 assertions、0 failures，证据含 runtime target、PNG、AX/hierarchy | local checkpoint 已完成；后续仅回到 SP-126 的 `.tritontestcase -> test import -> test validate`，不扩 Android/Web/Wails/真机；#164 WIP 继续隔离 |
+| 已归档 | [SP-132-testrec-import-seam](./SP-132-testrec-import-seam/README.md) | P0 已建立 `.tritontestcase -> test import -> test validate` 的 offline seam；bundle identity 与 `ios-simulator` target 均显式输入，映射不足一律 fail-closed | P1 才运行 imported plan；不扩 testrec executor、Android/Web/Wails/真机；#164 WIP 继续隔离 |
 | 待定 | [20260622-test-recorder-replay](./20260622-test-recorder-replay/README.md) | 历史 P0 合同与 local-simulated executor 保留为兼容资产；执行裁决已移交 SP-126 | 不再新增 `testrec local-device` / matrix / live network 实现；所有后续工作在 SP-126 收敛 |
 | 废弃 | [20260527-revyl-cli-agent-entrypoint-research](./20260527-revyl-cli-agent-entrypoint-research/README.md) | 研究价值已被 skill、schema、evidence、update 和 Agent Mobile Runtime Platform 吸收 | 不再按原 M1-M6 独立实施；历史材料继续作为参考 |
 | 已归档 | [20260706-agent-mobile-runtime-platform](./20260706-agent-mobile-runtime-platform/README.md) | iOS Demo 已完成 target discovery、launch、action、evidence、LLM/VLM、Atlas、flow export 全链 smoke，满足“一期至少一个 target scope”验收 | Overloaded bootstrap 作为外部项目回归问题另行处理；其他 target scope 扩展必须新建有限 space |
@@ -66,6 +67,7 @@
 | `SP-129-serve-loopback-default` | `feat/SP-129-serve-loopback-default` | `../TritonKit-worktrees/SP-129-serve-loopback-default/` | `feat/SP-126-testrec-convergence@5f6c2f6f` | `f0f3b0a0` 已纳入同一 local integration branch；待 main 收口，保留 Bonjour 广播语义风险 |
 | `SP-130-issue-166-runtime-jpeg-normalization` | `feat/SP-130-issue-166-runtime-jpeg-normalization` | `../TritonKit-worktrees/SP-130-issue-166-runtime-jpeg-normalization/` | `codex/sp126-trusted-baseline-integration@2fddf6a0` | #166 JPEG -> PNG normalizer 已完成 fixture/release/schema 与本地总门禁；不读取或修改 #164 dirty WIP，待后续 integration 收口 |
 | `SP-131-ios-simulator-canonical-proof` | `feat/SP-131-ios-simulator-canonical-proof` | `../TritonKit-worktrees/SP-131-ios-simulator-canonical-proof/` | `feat/SP-130-issue-166-runtime-jpeg-normalization@a7404033` | local checkpoint 将记录真实 dedicated Simulator 的手写最小 plan proof；server 已停止、Simulator 已恢复 Shutdown；不读取或修改 #164 dirty WIP |
+| `SP-132-testrec-import-seam` | `feat/SP-132-testrec-import-seam` | `../TritonKit-worktrees/SP-132-testrec-import-seam/` | `feat/SP-131-ios-simulator-canonical-proof@6f700b13` | P0 local checkpoint：只读 compiled contract，显式 ios-simulator target，输出可 validate YAML 与 typed provenance；P1 才运行 device，#164 dirty WIP 未读取或修改 |
 
 ## 维护规则
 

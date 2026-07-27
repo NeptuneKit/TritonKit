@@ -533,8 +533,12 @@ triton workspace run --target booted --platform ios --scope simulator --resolve-
 triton workspace inspect <run-id> --json
 triton workspace export-flow <run-id> --output flow.tritontest.yaml --json
 triton test validate flow.tritontest.yaml --json
+triton test import recording.tritontestcase --output imported.tritontest.yaml --bundle-id com.example.app --device-platform ios-simulator --json
+triton test validate imported.tritontest.yaml --json
 triton workspace merge-map <run-id> --map-dir .triton/maps/com.example.app.tritonmap --confirm --json
 ```
+
+`triton test import` 只读取已存在的 recorder compiled contract，生成可验证的 test plan；它不会连接设备、重编 raw event stream 或执行动作。source artifacts 必须留在 `.tritontestcase` 内，output 必须在 source package 外且默认 no-clobber。`--bundle-id` 与 `--device-platform ios-simulator` 均为显式 fail-closed 输入：源 case 不含 App identity，且泛化 iOS source 不可被静默标成 Simulator。导入会拒绝 quality/redaction finding、截断、缺 page evidence、敏感或不可保真动作；成功后的 `test validate` 仍是运行前必须的独立步骤，实际执行只由 `test run` 承担。
 
 An explicit `ios-real:*` selector is sufficient for iOS real-device `app install`, `app info`, and `app launch`; `--platform ios --scope real` remains optional. All three commands run the same live real-device discovery before building the `devicectl` action, preserve the raw CoreDevice identity only inside the host command, and expose the redacted selector in public output. A device that remains offline, locked, untrusted, Developer Mode-disabled, or DDI-missing returns the corresponding actionable readiness code instead of a launch-only `target_not_found`.
 

@@ -295,8 +295,8 @@ struct TestValidationTests {
 
         #expect(schema.requiresServer == false)
         #expect(schema.requiresTarget == false)
-        #expect(schema.runtimeScope == "offline for validate/normalize/report/create; runtime target required for run")
-        #expect(schema.providedCapabilities == ["test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session"])
+        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/create; runtime target required for run")
+        #expect(schema.providedCapabilities == ["test-import-compiled-contract", "test-validate", "test-normalized-plan", "test-run-minimal", "test-run-deterministic", "test-run-vlm-assisted", "test-run-ai-mock", "test-report", "test-create-from-session"])
         #expect(schema.failureCodes.contains("unsupported_step"))
         #expect(validate.requiredOptions == ["<path.tritontest.yaml>"])
         #expect(validate.outputSelectors == ["test.validation", "test.normalized-plan"])
@@ -305,6 +305,22 @@ struct TestValidationTests {
         #expect(schema.outputContracts.contains { $0.selector == "test.run-result" })
         #expect(schema.outputContracts.contains { $0.selector == "test.report" })
         #expect(schema.outputContracts.contains { $0.selector == "test.create" })
+    }
+
+    @Test("test import reports omitted required fields as one JSON validation envelope")
+    func testImportMissingFieldsUseJSONValidationEnvelope() throws {
+        let result = try runTriton(["test", "import", "--json"])
+
+        #expect(result.exitCode == 1)
+        #expect(result.stderr.isEmpty)
+        let response = try JSONDecoder().decode(
+            TKTestValidationFailureResponse.self,
+            from: Data(result.stdout.utf8)
+        )
+        #expect(!response.ok)
+        #expect(response.error.type == "validation_error")
+        #expect(response.error.code == "missing_required_field")
+        #expect(response.error.path == "<case.tritontestcase>")
     }
 
     private func validContractYAML() -> String {

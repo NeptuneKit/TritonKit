@@ -16,6 +16,15 @@ struct TestCreateFromSessionTests {
               bundleId: com.neptunekit.tritonkit.testfixture
             device:
               platform: ios-simulator
+            provenance:
+              importerVersion: 1
+              sourceKind: triton.testrec.compiled-contract
+              sourcePlatform: ios
+              contractRef:
+                path: compiled-contract.json
+                byteCount: 42
+                digestAlgorithm: fnv1a64
+                digest: 0123456789abcdef
             steps:
               - launch: {}
               - takeScreenshot: {}
@@ -55,6 +64,7 @@ struct TestCreateFromSessionTests {
         #expect(response.source == "normalized-plan.json")
         #expect(response.stepCount == 5)
         #expect(response.validation.normalizedPlan.steps.map(\.type) == ["launch", "takeScreenshot", "assertVisible", "tap", "assertVisible"])
+        #expect(response.validation.normalizedPlan.provenance?.contractRef.digest == "0123456789abcdef")
         #expect(FileManager.default.fileExists(atPath: output.path))
 
         let yaml = try String(contentsOf: output, encoding: .utf8)
@@ -65,10 +75,13 @@ struct TestCreateFromSessionTests {
         #expect(yaml.contains("x: 201"))
         #expect(yaml.contains("y: 289.5"))
         #expect(yaml.contains("coordinateSpace: \"runtime-point\""))
+        #expect(yaml.contains("provenance:"))
+        #expect(yaml.contains("digest: \"0123456789abcdef\""))
 
         let validated = try validateTritonTestContract(yaml: yaml, inputPath: output.path)
         #expect(validated.name == "fixture-session")
         #expect(validated.steps.count == 5)
+        #expect(validated.provenance?.contractRef.digest == "0123456789abcdef")
     }
 
     @Test("test command schema exposes create from session contract")
@@ -76,7 +89,7 @@ struct TestCreateFromSessionTests {
         let schema = try #require(commandSchemas().first { $0.name == "test" })
         let create = try #require(schema.subcommands.first { $0.name == "create" })
 
-        #expect(schema.runtimeScope == "offline for validate/normalize/report/create; runtime target required for run")
+        #expect(schema.runtimeScope == "offline for import/validate/normalize/report/create; runtime target required for run")
         #expect(schema.providedCapabilities.contains("test-create-from-session"))
         #expect(schema.outputContracts.contains { $0.selector == "test.create" })
         #expect(create.requiredOptions == ["--from-session", "--output"])

@@ -118,6 +118,14 @@ func testNormalizedPlanOutputContract() -> TKCommandOutputContract {
             ("settings.retry", "TKTestPlanRetry", true, "Retry policy"),
             ("settings.retry.count", "Int", true, "Retry count"),
             ("settings.retry.intervalMs", "Int", true, "Retry interval in milliseconds"),
+            ("provenance", "TKTestPlanProvenance?", false, "Optional package-relative source identity retained by test validate/run"),
+            ("provenance.importerVersion", "Int?", false, "Importer provenance schema version"),
+            ("provenance.sourceKind", "String?", false, "Stable source artifact kind"),
+            ("provenance.sourcePlatform", "String?", false, "Recorded source platform"),
+            ("provenance.contractRef.path", "String?", false, "Package-relative compiled contract path"),
+            ("provenance.contractRef.byteCount", "Int?", false, "Compiled contract byte count"),
+            ("provenance.contractRef.digestAlgorithm", "String?", false, "Stable digest algorithm"),
+            ("provenance.contractRef.digest", "String?", false, "Stable compiled contract digest; not a signature"),
             ("steps", "[TKTestPlanStep]", true, "0-based normalized steps"),
             ("steps[].index", "Int", true, "0-based step index"),
             ("steps[].id", "String", true, "Stable step id, generated as step-000 when omitted"),
@@ -221,6 +229,41 @@ func testCreateOutputContract() -> TKCommandOutputContract {
             ("stepCount", "Int", true, "Number of generated test steps"),
             ("validation", "TKTestValidationResponse", true, "Validation result for the generated YAML"),
             ("suggestedCommands", "[String]", true, "Follow-up validate/run commands"),
+        ])
+    )
+}
+
+func testImportOutputContract() -> TKCommandOutputContract {
+    TKCommandOutputContract(
+        selector: "test.import",
+        format: "json",
+        kind: "test-import-result",
+        model: "TKTestImportResponse|TKTestValidationFailureResponse",
+        fields: schemaContractFields([
+            ("ok", "Bool", true, "Whether the compiled testrec contract was imported"),
+            ("schemaVersion", "Int?", false, "Import response schema version for ok responses"),
+            ("kind", "String?", false, "Stable response kind; triton.test.import-result when ok"),
+            ("input", "String?", false, "Source .tritontestcase package filename when import succeeds; never an absolute source path"),
+            ("output", "String?", false, "Written .tritontest.yaml filename when import succeeds; never an absolute host path"),
+            ("importedPlan", "TKTestNormalizedPlan?", false, "Validated normalized plan generated from the compiled contract"),
+            ("validation", "TKTestValidationResponse?", false, "In-memory validation result completed before the output write"),
+            ("provenance", "TKTestPlanProvenance?", false, "Package-relative stable identity of compiled-contract.json; not a cryptographic signature"),
+            ("provenance.importerVersion", "Int?", false, "Importer provenance schema version"),
+            ("provenance.sourceKind", "String?", false, "Stable compiled source kind"),
+            ("provenance.sourcePlatform", "String?", false, "Recorded source platform; target device.platform remains explicitly selected"),
+            ("provenance.contractRef", "TKTestRecorderReplayContractRef?", false, "Package-relative FNV-1a reference for compiled-contract.json"),
+            ("provenance.contractRef.path", "String?", false, "Package-relative compiled contract artifact path"),
+            ("provenance.contractRef.byteCount", "Int?", false, "Compiled contract byte count"),
+            ("provenance.contractRef.digestAlgorithm", "String?", false, "Stable digest algorithm; fnv1a64"),
+            ("provenance.contractRef.digest", "String?", false, "Stable compiled contract digest; not a signature"),
+            ("unmapped", "[TKTestImportUnmappedFeature]?", false, "Always empty on success because P0 fails instead of silently dropping semantics"),
+            ("suggestedCommands", "[String]?", false, "Validate then optionally run the generated plan through the existing sole executor"),
+            ("error", "TKTestValidationErrorDetail?", false, "Machine-readable import failure when ok is false"),
+            ("error.type", "String?", false, "Stable failure type; validation_error"),
+            ("error.message", "String?", false, "Human-readable import failure summary without raw sensitive action payloads"),
+            ("error.path", "String?", false, "Source field, source artifact, or import option that was rejected"),
+            ("error.code", "String?", false, "Stable import failure code"),
+            ("error.allowed", "[String]?", false, "Allowed values for constrained import options when applicable"),
         ])
     )
 }

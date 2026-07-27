@@ -2,7 +2,7 @@
 
 > 固定入口：`docs-linhay/spaces/INDEX.md`
 > 最近同步：2026-07-27
-> 覆盖范围：131/131 个已存在 space
+> 覆盖范围：132/132 个已存在 space
 
 本文件是所有 space 的编号登记册。每个 space 获得一个不可复用的规范标识，格式为 `SP-<三位序号>-<英文-topic>`，例如 `SP-001-hybrid-transport-smoke`。单个 space 的需求、BDD、计划和证据仍以其 `README.md` 为事实源；路线状态摘要仍在 [README.md](./README.md)。
 
@@ -17,8 +17,8 @@
 
 | 项目 | 进度 | 说明 |
 | --- | --- | --- |
-| 编号登记 | 131/131 | 所有当前 space 均已分配唯一 SP 编号 |
-| README 链接核对 | 131/131 | 每条记录链接到现有 space README |
+| 编号登记 | 132/132 | 所有当前 space 均已分配唯一 SP 编号 |
+| README 链接核对 | 132/132 | 每条记录链接到现有 space README |
 | 历史目录物理迁移 | 0/125 | 留待独立迁移批次，当前旧路径保持兼容 |
 
 ## Space 登记表
@@ -156,3 +156,4 @@
 | `SP-129-serve-loopback-default` | [`SP-129-serve-loopback-default`](./SP-129-serve-loopback-default/README.md) | 已登记 | 规范目录；source checkpoint 已纳入本地 integration branch，待 main 收口 |
 | `SP-130-issue-166-runtime-jpeg-normalization` | [`SP-130-issue-166-runtime-jpeg-normalization`](./SP-130-issue-166-runtime-jpeg-normalization/README.md) | 已登记 | 规范目录；JPEG->PNG fixture/release/schema 验证完成，待集成；#164 WIP 继续隔离 |
 | `SP-131-ios-simulator-canonical-proof` | [`SP-131-ios-simulator-canonical-proof`](./SP-131-ios-simulator-canonical-proof/README.md) | 已登记 | 规范目录；真实 dedicated Simulator proof 已通过并形成 local checkpoint，不扩 testrec/Android/Web |
+| `SP-132-testrec-import-seam` | [`SP-132-testrec-import-seam`](./SP-132-testrec-import-seam/README.md) | 已登记 | 规范目录；P0 离线 importer 已完成本地 checkpoint：显式 bundle/ios-simulator target、严格 fail-closed、typed provenance，不扩 executor/Android/Web |

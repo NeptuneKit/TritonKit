@@ -47,7 +47,7 @@
 
 ## BDD 验收
 
-1. **可导入的录制包**：给定已编译、无 blocker 的 `.tritontestcase`，当执行 `triton test import <case> --output <plan.tritontest.yaml> --json` 时，得到确定性的测试计划、来源 digest 和显式的未映射项；随后 `triton test validate` 成功。
+1. **可导入的录制包**：SP-132 已完成 P0：给定已编译、无 blocker 的 `.tritontestcase`，当执行 `triton test import <case> --output <plan.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json` 时，得到确定性的测试计划与来源 digest；随后 `triton test validate` 成功。该导入严格只读 compiled contract，不能静默把泛化 iOS source 标成 Simulator。
 2. **安全失败**：给定含未审查脱敏 finding、未知 action 或缺失 page/action 证据的 case，当导入时，返回单一 JSON error envelope，并且不产生可运行计划、不连接目标设备。
 3. **真实纵切**：给定已启动并经 Triton-first 事实检查确认的 iOS Simulator / Debug embedded runtime 和一条可映射动作，当 `triton test run` 执行导入计划时，顺序完成 target resolve、before observation、动作、after observation 和 `.tritonevidence`，最终 verdict 不来自 `local-simulated`。
 4. **来源可审计**：给定由录制包导入的测试计划，当读取最终 evidence 时，能够追到 source case / compiled-contract 的稳定身份和导入版本，而不记录敏感原文。
@@ -55,7 +55,7 @@
 
 ## 完成定义
 
-本 space 的第一个有限停止点是：上述 BDD 场景的 focused tests 通过，iOS Simulator 一条真实动作的证据闭环可复现，且历史 `testrec` surface 有可机读的迁移指引。届时再决定是否进入 workspace 编排接入与第二平台；在此之前不启动删除或跨端矩阵工作。
+本 space 的第一个有限停止点是：SP-132 P0 importer 的 focused tests 已通过，SP-131 已提供一条手写 canonical iOS Simulator 真实动作证据闭环，且历史 `testrec` surface 有可机读的迁移指引。下一步必须是单独立项的 P1：用 imported plan（不是 hand-written fixture）复现该纵切并读取 provenance；在此之前不启动删除、workspace 编排接入或跨端矩阵工作。
 
 详细方案见 [Hybrid Convergence Plan v01](./plans/20260724-hybrid-convergence-plan-v01.md)。
 

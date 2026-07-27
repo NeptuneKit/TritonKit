@@ -186,6 +186,10 @@ Fallback 记录必须同时包含 Triton 命令、稳定错误码或 unsupported
 
 面向 AI agent 的 JSON 入口统一支持 `--json` alias；`screenshot --json` 等价于 `--metadata`，用于在写出 PNG 后额外输出机器可读截图元数据。
 
+### Testrec compiled-contract import
+
+- `triton test import <case.tritontestcase> --output <plan.tritontest.yaml> --bundle-id <bundle-id> --device-platform ios-simulator --json`：只读既有 `compiled-contract.json` 的离线转换入口，不重编 raw event stream、不连接 target，也不创建第二 executor。source manifest/capabilities/compiled contract 必须经 canonical containment 留在 package 内；output 也必须在 package 外，既有目标或并发创建目标均以 no-clobber publish 拒绝。v1 recorder case 没有 app identity，必须显式给 `--bundle-id`；泛化 `sourcePlatform: ios` 也不能被静默重标成 Simulator，因此 P0 必须显式给 `--device-platform ios-simulator`。只映射可保真的 tap/assert/screenshot 加 launch；quality/redaction finding、截断、缺 page evidence、敏感或不可映射 action 一律以单一 JSON error fail-closed，且不会写 output；漏掉必填参数时 `--json` 也保持相同 envelope。成功后先运行 `triton test validate <plan.tritontest.yaml> --json`；只有后续明确的 runtime 流程才调用唯一执行器 `triton test run`。成功 response 只带 source/output filename、命令模板与 package-relative compiled-contract FNV-1a provenance；它是审计 identity，不是加密签名。
+
 ## 边界
 
 CLI/HTTP 是 AI 自动化控制入口；Web/Wails 不参与首期闭环。后续如果需要 UI，也应只消费只读 DTO，不能先于 CLI/HTTP 定义业务控制能力。

@@ -72,8 +72,13 @@ private let destructivePolicyFailureCodesRequiringRecovery: Set<String> = [
 
 private let unsupportedFailureCodesRequiringRecovery: Set<String> = [
     "action_not_supported",
+    "contract_quality_review_required",
     "ios_host_ax_unsupported_platform",
+    "redaction_review_required",
+    "unmapped_contract_feature",
+    "unsupported_compiled_contract",
     "unsupported_host_action",
+    "unsupported_import_platform",
     "unsupported_capability",
     "unsupported_runtime_scope",
     "webview_method_not_allowed",
